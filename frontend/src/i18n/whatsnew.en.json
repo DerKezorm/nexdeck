@@ -1,0 +1,15 @@
+{
+  "entries": {
+    "0.1.0": {
+      "lead": "nexdeck is here: a live dashboard for your homelab with thirty integrations, boards for desktop, phone and wall displays, and actions right on the cards.",
+      "sections": [
+        { "title": "Live boards", "body": "Values change in front of you. The server collects every service once and pushes changes to every open browser.", "path": "Edit mode (pencil) > Add widget" },
+        { "title": "Integrations", "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, the *arr family, Home Assistant, Uptime Kuma and more.", "path": "Settings > Integrations" },
+        { "title": "Wall displays", "body": "A kiosk link shows a board without sign-in, cycles pages and dims at night.", "path": "Board menu > Kiosk" },
+        { "title": "Notifications", "body": "Outages and failed actions reach you via Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.", "path": "Settings > Channels" }
+      ],
+      "smallTitle": "Also new",
+      "small": ["Boards export and import as YAML, and files in data/boards provision them.", "Docker labels nexdeck.* and homepage.* create tiles automatically.", "Personal API tokens for scripts and automations."]
+    }
+  }
+}

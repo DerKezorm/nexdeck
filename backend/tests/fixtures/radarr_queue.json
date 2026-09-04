@@ -1,0 +1,31 @@
+{
+  "page": 1,
+  "pageSize": 100,
+  "totalRecords": 2,
+  "records": [
+    {
+      "id": 11,
+      "movie": {
+        "title": "Copper Sky"
+      },
+      "title": "Copper.Sky.2025.2160p",
+      "size": 4000,
+      "sizeleft": 1000,
+      "status": "downloading",
+      "timeleft": "00:12:00",
+      "trackedDownloadState": "downloading"
+    },
+    {
+      "id": 12,
+      "movie": {
+        "title": "Nightshift"
+      },
+      "title": "Nightshift.2026.1080p",
+      "size": 8000,
+      "sizeleft": 8000,
+      "status": "warning",
+      "timeleft": "",
+      "trackedDownloadState": "importPending"
+    }
+  ]
+}

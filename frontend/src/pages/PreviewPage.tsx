@@ -14,6 +14,15 @@ export function PreviewPage() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+  // The preview runs without a backend, so logos come straight from the CDN here.
+  useEffect(() => {
+    const scope = globalThis as { __NEXDECK_ICON_BASE__?: string }
+    const previous = scope.__NEXDECK_ICON_BASE__
+    scope.__NEXDECK_ICON_BASE__ = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/'
+    return () => {
+      scope.__NEXDECK_ICON_BASE__ = previous
+    }
+  }, [])
   const noop = () => undefined
   return (
     <div className="min-h-full pb-20 md:pb-8">

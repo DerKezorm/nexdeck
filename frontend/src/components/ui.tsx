@@ -1,0 +1,165 @@
+/**
+ * Small primitives: sheet, dialog, confirm, switch, select, field, toast.
+ * Every switch carries an accessible name; a label pointing at a div names
+ * nothing for a screen reader, so the switch takes ``aria-labelledby``.
+ */
+import { X } from 'lucide-react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+
+export function Sheet({ open, onClose, title, children, wide, footer }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
+      <aside className={`relative glass-strong h-full ${wide ? 'w-full max-w-[640px]' : 'w-full max-w-[420px]'} flex flex-col shadow-2xl rounded-none border-y-0 border-r-0`}>
+        <header className="flex items-center gap-2 px-4 h-12 border-b border-line">
+          <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
+          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
+        </header>
+        <div className="flex-1 min-h-0 scroll p-4">{children}</div>
+        {footer && <footer className="px-4 py-3 border-t border-line flex justify-end gap-2">{footer}</footer>}
+      </aside>
+    </div>
+  )
+}
+
+export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+  if (!open) return null
+  const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' }[size]
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
+      <div className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
+        <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
+          <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
+          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
+        </header>
+        <div className="flex-1 min-h-0 scroll p-5">{children}</div>
+        {footer && <footer className="px-5 py-3 border-t border-line flex justify-end gap-2">{footer}</footer>}
+      </div>
+    </div>
+  )
+}
+
+export function Confirm({ open, title, body, danger, onCancel, onConfirm, confirmLabel }: { open: boolean; title: string; body?: string; danger?: boolean; onCancel: () => void; onConfirm: () => void; confirmLabel?: string }) {
+  const { t } = useTranslation()
+  return (
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      title={title}
+      size="sm"
+      footer={
+        <>
+          <button className="btn" onClick={onCancel}>
+            {t('common.cancel')}
+          </button>
+          <button className={`btn ${danger ? 'btn-danger' : 'btn-accent'}`} onClick={onConfirm} autoFocus>
+            {confirmLabel ?? t('common.confirm')}
+          </button>
+        </>
+      }
+    >
+      {body && <p className="text-sm text-muted">{body}</p>}
+    </Dialog>
+  )
+}
+
+export function Switch({ checked, onChange, label, description, disabled }: { checked: boolean; onChange: (value: boolean) => void; label: string; description?: string; disabled?: boolean }) {
+  const id = useId()
+  return (
+    <div className="flex items-start justify-between gap-4 py-2">
+      <div className="min-w-0">
+        <span id={id} className="text-sm font-medium block">
+          {label}
+        </span>
+        {description && <span className="text-xs text-muted block">{description}</span>}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={id}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative flex-none w-10 h-6 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-[color-mix(in_srgb,var(--nd-text)_18%,transparent)]'} disabled:opacity-50`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
+      </button>
+    </div>
+  )
+}
+
+export function Field({ label, help, children, htmlFor, required }: { label: string; help?: string; children: ReactNode; htmlFor?: string; required?: boolean }) {
+  return (
+    <div className="mb-3">
+      <label htmlFor={htmlFor} className="block text-xs font-medium text-muted mb-1">
+        {label}
+        {required && <span className="text-bad ml-0.5">*</span>}
+      </label>
+      {children}
+      {help && <p className="text-[11px] text-faint mt-1">{help}</p>}
+    </div>
+  )
+}
+
+export function Select({ value, onChange, options, id, className = '' }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; id?: string; className?: string }) {
+  return (
+    <select id={id} className={`input ${className}`} value={value} onChange={(event) => onChange(event.target.value)}>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+export function Toast({ children, onClose, level = 'info' }: { children: ReactNode; onClose: () => void; level?: 'info' | 'warn' | 'error' | 'ok' }) {
+  const colour = { info: 'border-accent/50', warn: 'border-warn/60', error: 'border-bad/60', ok: 'border-ok/60' }[level]
+  const timer = useRef<number>(0)
+  useEffect(() => {
+    timer.current = window.setTimeout(onClose, 5000)
+    return () => window.clearTimeout(timer.current)
+  }, [onClose])
+  return (
+    <div className={`fixed bottom-20 md:bottom-6 right-4 z-50 glass-strong rounded-xl px-4 py-3 text-sm max-w-sm border ${colour} shadow-2xl rise`} role="status">
+      {children}
+    </div>
+  )
+}
+
+export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+  return (
+    <div className="glass rounded-2xl p-8 text-center max-w-md mx-auto">
+      <h3 className="font-semibold">{title}</h3>
+      {body && <p className="text-sm text-muted mt-1">{body}</p>}
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </div>
+  )
+}
+
+export function Spinner() {
+  return <span className="inline-block w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" aria-label="Loading" />
+}

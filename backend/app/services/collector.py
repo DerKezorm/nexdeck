@@ -28,6 +28,7 @@ from ..db import db_session
 from ..models import ActionLog, Integration, Widget, utcnow
 from . import history
 from .integrations import resolve_config
+from .loop import run_on_loop, spawn
 from .sse import board_topic, hub
 from .state import live
 
@@ -81,18 +82,28 @@ class Collector:
             self._client = None
 
     def schedule(self, widget_id: int) -> None:
-        """(Re)start the loop of one widget, e.g. after its settings changed."""
-        self.unschedule(widget_id)
-        if not self.running:
-            return
-        self._failures.pop(widget_id, None)
-        self._tasks[widget_id] = asyncio.create_task(self._loop(widget_id), name=f"widget-{widget_id}")
+        """(Re)start the loop of one widget, e.g. after its settings changed.
+
+        Safe to call from a worker thread: the task is created on the main loop.
+        """
+
+        def _start() -> None:
+            self._cancel(widget_id)
+            if not self.running:
+                return
+            self._failures.pop(widget_id, None)
+            self._tasks[widget_id] = asyncio.get_running_loop().create_task(self._loop(widget_id), name=f"widget-{widget_id}")
+
+        run_on_loop(_start)
 
     def unschedule(self, widget_id: int) -> None:
+        live.forget(widget_id)
+        run_on_loop(lambda: self._cancel(widget_id))
+
+    def _cancel(self, widget_id: int) -> None:
         task = self._tasks.pop(widget_id, None)
         if task is not None:
             task.cancel()
-        live.forget(widget_id)
 
     def reschedule_integration(self, integration_id: int) -> None:
         self._caches.pop(integration_id, None)
@@ -294,7 +305,7 @@ class Collector:
         if not ok:
             raise AdapterError(message, code="action_failed")
         # Show the effect right away instead of waiting for the next interval.
-        asyncio.create_task(self.refresh(widget_id))
+        spawn(lambda: self.refresh(widget_id), name=f"refresh-{widget_id}")
         return message
 
 

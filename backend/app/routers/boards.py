@@ -72,6 +72,40 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
     return view
 
 
+@router.get("/kiosk", summary="Open the board that belongs to a kiosk token")
+def kiosk_board(request: Request, db: DbSession) -> dict:
+    """The wall display knows only its token; this resolves the board."""
+    kiosk = kiosk_from_request(request, db)
+    if kiosk is None:
+        raise error("unauthenticated", "A kiosk token is required.", status.HTTP_401_UNAUTHORIZED)
+    board = db.get(Board, kiosk.board_id)
+    if board is None:
+        raise error("not_found", "The board of this kiosk token is gone.", status.HTTP_404_NOT_FOUND)
+    view = board_view(db, board, "act" if kiosk.allow_actions else "view")
+    view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name}
+    return view
+
+
+@router.get("/boards/{slug}/history", summary="Read the metric history of every widget on a board")
+def board_history(slug: str, request: Request, user: OptionalUser, db: DbSession, hours: float = 24) -> dict:
+    """One call for all sparklines: ``{widget id: {metric: [[ts, value], ...]}}``."""
+    from ..services import history
+    from ..services.state import live
+
+    board, _ = board_for_viewer(db, slug, user, kiosk_from_request(request, db))
+    hours = max(0.1, min(24.0, hours))
+    result: dict[str, dict[str, list[tuple[int, float]]]] = {}
+    widgets = db.scalars(select(Widget).join(Page).where(Page.board_id == board.id)).all()
+    for widget in widgets:
+        data = live.get(widget.id)
+        names = list(data.metrics.keys()) if data and data.metrics else []
+        if widget.health_check is not None:
+            names.extend(["latency", "up"])
+        if names:
+            result[str(widget.id)] = {name: history.series(db, widget.id, name, hours=hours) for name in names}
+    return result
+
+
 @router.patch("/boards/{slug}", summary="Change a board's name, look or settings")
 def patch_board(slug: str, body: BoardPatch, user: CurrentUser, db: DbSession) -> dict:
     board, permission = require_board(db, slug, user, "edit")

@@ -1,7 +1,7 @@
 import { ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import type { WidgetData, WidgetView } from '../lib/types'
+import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { ServiceIcon } from './ServiceIcon'
 
@@ -11,7 +11,7 @@ interface Props {
   series?: Record<string, number[]>
   editing?: boolean
   canAct?: boolean
-  onAction?: (action: string, params?: Record<string, unknown>) => void
+  onAction?: (action: Action) => void
   onRefresh?: () => void
   onSettings?: () => void
   onRemove?: () => void

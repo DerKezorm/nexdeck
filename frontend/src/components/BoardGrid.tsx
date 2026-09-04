@@ -2,7 +2,7 @@ import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-import type { Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { WidgetCard } from './WidgetCard'
 
 const ResponsiveGrid = WidthProvider(Responsive)
@@ -20,7 +20,7 @@ interface Props {
   editing?: boolean
   canAct?: boolean
   onLayoutChange?: (breakpoint: Breakpoint, layout: LayoutItem[]) => void
-  onAction?: (widgetId: number, action: string, params?: Record<string, unknown>) => void
+  onAction?: (widgetId: number, action: Action) => void
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void
@@ -65,7 +65,7 @@ export function BoardGrid(props: Props) {
             series={series?.[widget.id]}
             editing={editing}
             canAct={canAct}
-            onAction={onAction ? (action, params) => onAction(widget.id, action, params) : undefined}
+            onAction={onAction ? (action) => onAction(widget.id, action) : undefined}
             onRefresh={onRefresh && !editing ? () => onRefresh(widget.id) : undefined}
             onSettings={onSettings ? () => onSettings(widget.id) : undefined}
             onRemove={onRemove ? () => onRemove(widget.id) : undefined}

@@ -79,7 +79,7 @@ KINDS: dict[str, ChannelKind] = {
     "apprise": ChannelKind(
         "apprise", "Apprise",
         (Field("urls", "Apprise URLs", type="textarea", secret=True, required=True,
-               help="One per line, e.g. pover://user@token or mailto://...")),
+               help="One per line, e.g. pover://user@token or mailto://..."),),
         "One channel, a hundred services. See the Apprise documentation for URL formats.",
     ),
 }

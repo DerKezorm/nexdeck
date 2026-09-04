@@ -1,0 +1,32 @@
+[
+  {
+    "Id": "abc123def456789",
+    "Names": [
+      "/radarr"
+    ],
+    "Image": "lscr.io/linuxserver/radarr:latest",
+    "State": "running",
+    "Status": "Up 6 days",
+    "Labels": {
+      "nexdeck.group": "Media"
+    },
+    "Ports": [
+      {
+        "PrivatePort": 7878,
+        "PublicPort": 7878,
+        "Type": "tcp"
+      }
+    ]
+  },
+  {
+    "Id": "fed987654321cba",
+    "Names": [
+      "/sabnzbd"
+    ],
+    "Image": "lscr.io/linuxserver/sabnzbd:latest",
+    "State": "exited",
+    "Status": "Exited (1) 4 minutes ago",
+    "Labels": {},
+    "Ports": []
+  }
+]

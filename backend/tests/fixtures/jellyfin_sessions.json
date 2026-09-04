@@ -1,0 +1,35 @@
+[
+  {
+    "UserName": "alex",
+    "DeviceName": "Living room TV",
+    "Client": "Jellyfin Web",
+    "PlayState": {
+      "PositionTicks": 18000000000,
+      "IsPaused": true
+    },
+    "NowPlayingItem": {
+      "Id": "e1",
+      "SeriesId": "s1",
+      "Name": "The Old Harbour",
+      "Type": "Episode",
+      "SeriesName": "Harbour Lights",
+      "ParentIndexNumber": 3,
+      "IndexNumber": 4,
+      "RunTimeTicks": 36000000000,
+      "MediaStreams": [
+        {
+          "Type": "Video",
+          "Height": 1080
+        }
+      ]
+    },
+    "TranscodingInfo": {
+      "IsVideoDirect": false
+    }
+  },
+  {
+    "UserName": "idle",
+    "DeviceName": "Phone",
+    "Client": "Jellyfin Mobile"
+  }
+]

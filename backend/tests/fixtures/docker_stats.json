@@ -1,0 +1,28 @@
+{
+  "cpu_stats": {
+    "cpu_usage": {
+      "total_usage": 200000000
+    },
+    "system_cpu_usage": 2000000000,
+    "online_cpus": 1
+  },
+  "precpu_stats": {
+    "cpu_usage": {
+      "total_usage": 100000000
+    },
+    "system_cpu_usage": 1000000000
+  },
+  "memory_stats": {
+    "usage": 104857600,
+    "stats": {
+      "inactive_file": 10485760
+    },
+    "limit": 4294967296
+  },
+  "networks": {
+    "eth0": {
+      "rx_bytes": 100,
+      "tx_bytes": 50
+    }
+  }
+}

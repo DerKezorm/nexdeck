@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { createElement, useState } from 'react'
 import { Box, type LucideProps } from 'lucide-react'
 import * as icons from 'lucide-react'
 
@@ -17,8 +17,7 @@ interface Props {
 export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   const [failed, setFailed] = useState(false)
   if (icon && icon.startsWith('lucide:')) {
-    const Symbol = lucideIcon(icon.slice(7))
-    return <Symbol size={size} className={className} aria-hidden="true" />
+    return createElement(lucideIcon(icon.slice(7)), { size, className, 'aria-hidden': 'true' })
   }
   const url = iconUrl(icon)
   if (!url || failed) {

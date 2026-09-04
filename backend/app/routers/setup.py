@@ -42,6 +42,15 @@ async def run_setup(body: SetupBody, request: Request, response: Response, db: D
     db.flush()
     if body.demo:
         board = demo_board.create_demo(db, owner_id=user.id)
+        # Widgets without a connection (weather, feeds, calendar) fake their
+        # data too: the whole installation runs in demo mode until switched off.
+        from ..services.collector import set_demo_flag
+        from .system import get_setting, put_setting
+
+        general = get_setting(db, "general")
+        general["demo"] = True
+        put_setting(db, "general", general)
+        set_demo_flag(True)
     else:
         board = demo_board.create_starter(db, owner_id=user.id, docker_host=body.docker_host.strip())
     user.start_board_id = board.id

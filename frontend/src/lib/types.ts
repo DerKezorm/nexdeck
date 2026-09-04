@@ -90,6 +90,7 @@ export interface BoardView {
   slug: string
   name: string
   icon: string
+  owner_id: number | null
   background: { kind: string; value?: string; blur?: number; dim?: number }
   settings: Record<string, unknown>
   provisioned: boolean

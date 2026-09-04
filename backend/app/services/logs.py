@@ -15,6 +15,7 @@ from ..config import get_settings
 from ..db import db_session
 from ..models import LogLine, Page, Widget
 from .integrations import resolve_config
+from .loop import run_on_loop
 from .sse import board_topic, hub
 
 logger = logging.getLogger("nexdeck.logs")
@@ -27,14 +28,20 @@ class LogTailer:
         self._tasks: dict[int, asyncio.Task[None]] = {}
 
     def ensure(self, widget_id: int) -> None:
-        task = self._tasks.get(widget_id)
-        if task is None or task.done():
-            self._tasks[widget_id] = asyncio.create_task(self._follow(widget_id), name=f"logs-{widget_id}")
+        def _start() -> None:
+            task = self._tasks.get(widget_id)
+            if task is None or task.done():
+                self._tasks[widget_id] = asyncio.get_running_loop().create_task(self._follow(widget_id), name=f"logs-{widget_id}")
+
+        run_on_loop(_start)
 
     def stop_widget(self, widget_id: int) -> None:
-        task = self._tasks.pop(widget_id, None)
-        if task:
-            task.cancel()
+        def _stop() -> None:
+            task = self._tasks.pop(widget_id, None)
+            if task:
+                task.cancel()
+
+        run_on_loop(_stop)
 
     async def stop(self) -> None:
         for task in self._tasks.values():

@@ -241,7 +241,7 @@ def uptime_bars(db, widget_id: int, hours: int = 24, bars: int = 48) -> list[flo
     slice_seconds = hours * 3600 / bars
     buckets: list[list[float]] = [[] for _ in range(bars)]
     for ts, value in points:
-        index = int((ts - (now - hours * 3600)) / slice_seconds)
+        index = min(bars - 1, int((ts - (now - hours * 3600)) / slice_seconds))
         if 0 <= index < bars:
             buckets[index].append(value)
     return [round(sum(b) / len(b), 2) if b else None for b in buckets]
