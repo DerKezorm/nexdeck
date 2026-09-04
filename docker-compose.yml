@@ -1,0 +1,29 @@
+# nexdeck: the live homelab dashboard.
+#
+#   docker compose up -d
+#   open http://your-host:5175
+#
+# The Docker socket is optional. Mount it to see containers, start and stop
+# them and follow their logs. Read the notes on DOCKER_GID in .env.example.
+services:
+  nexdeck:
+    image: ghcr.io/nexapps/nexdeck:latest
+    container_name: nexdeck
+    restart: unless-stopped
+    ports:
+      - "5175:8000"
+    environment:
+      - TZ=${TZ:-Etc/UTC}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      # Set once and keep: it encrypts the stored API keys and signs sessions.
+      # Leave empty to let nexdeck generate one into the data volume.
+      - NEXDECK_SECRET_KEY=${NEXDECK_SECRET_KEY:-}
+      # As browsers reach nexdeck, e.g. https://deck.example.com. Needed for
+      # identity providers and Web Push.
+      - NEXDECK_PUBLIC_URL=${NEXDECK_PUBLIC_URL:-}
+      - NEXDECK_LOG_LEVEL=${NEXDECK_LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/data
+      # Optional: containers, actions and logs of this host.
+      - /var/run/docker.sock:/var/run/docker.sock:ro

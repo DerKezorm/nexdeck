@@ -15,7 +15,9 @@ from typing import Any
 QUEUE_SIZE = 500
 
 
-@dataclass
+# eq=False keeps identity hashing: subscribers live in a set, and a dataclass
+# with generated equality is not hashable.
+@dataclass(eq=False)
 class Subscriber:
     topics: set[str]
     queue: asyncio.Queue[str] = field(default_factory=lambda: asyncio.Queue(maxsize=QUEUE_SIZE))

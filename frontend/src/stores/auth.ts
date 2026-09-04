@@ -59,6 +59,12 @@ export const useAuth = create<AuthState>((set, getState) => ({
 }))
 
 export function applyTheme(theme: 'dark' | 'light' | 'system') {
+  // ?theme=… in the address wins for this page load (screenshots, displays).
+  const forced = (globalThis as { __NEXDECK_FORCED_THEME__?: string }).__NEXDECK_FORCED_THEME__
+  if (forced === 'light' || forced === 'dark') {
+    document.documentElement.dataset.theme = forced
+    return
+  }
   const resolved = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : theme
   document.documentElement.dataset.theme = resolved
   try {

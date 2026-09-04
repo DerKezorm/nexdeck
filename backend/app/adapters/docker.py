@@ -125,7 +125,8 @@ class DockerAdapter(Adapter):
     category = "hosts"
     description = "Containers with state, CPU and memory; start, stop and restart; logs."
     icon = "docker"
-    beta = False
+    # Not yet confirmed against a live instance from this machine.
+    beta = True
     docs_url = "https://docs.docker.com/engine/api/"
     fields = (
         Field("host", "Engine address", default=DEFAULT_HOST, required=True,

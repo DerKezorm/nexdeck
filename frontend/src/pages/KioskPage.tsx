@@ -48,7 +48,7 @@ export function KioskPage() {
     for (const [id, series] of Object.entries(history.data)) live.setSeries(Number(id), series)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data])
-  useStream({ board: data?.slug, enabled: Boolean(data), onBoardChanged: () => void board.refetch() })
+  useStream({ board: data?.slug, enabled: Boolean(data), onBoardChanged: () => void board.refetch(), onConnected: () => void board.refetch() })
 
   const cycle = data?.kiosk?.cycle_seconds ?? 0
   useEffect(() => {

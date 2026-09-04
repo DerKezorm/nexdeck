@@ -13,6 +13,7 @@ const stored = (() => {
 })()
 // ?theme=light forces a mode, useful for screenshots and kiosk links.
 const forced = new URLSearchParams(window.location.search).get('theme')
+if (forced === 'light' || forced === 'dark') (globalThis as { __NEXDECK_FORCED_THEME__?: string }).__NEXDECK_FORCED_THEME__ = forced
 document.documentElement.dataset.theme = forced === 'light' || (forced !== 'dark' && stored === 'light') ? 'light' : 'dark'
 
 createRoot(document.getElementById('root')!).render(

@@ -19,7 +19,8 @@ class NexviewAdapter(Adapter):
     category = "media"
     description = "Open requests, findings, library size and instance health from Nexview."
     icon = "lucide:clapperboard"
-    beta = False
+    # Not yet confirmed against a live instance from this machine.
+    beta = True
     docs_url = "https://nexview.nexapps.dev"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://nexview:8000"),

@@ -69,6 +69,7 @@ export function BoardPage() {
     board: slug,
     enabled: Boolean(data),
     onBoardChanged: () => void board.refetch(),
+    onConnected: () => void board.refetch(),
     onLayout: (payload) => {
       queryClient.setQueryData<BoardWithLive>(['board', slug], (old) =>
         old ? { ...old, pages: old.pages.map((p) => (p.id === payload.page_id ? { ...p, layouts: payload.layouts as typeof p.layouts } : p)) } : old,
