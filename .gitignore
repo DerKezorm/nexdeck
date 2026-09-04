@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+backend/data/
+backend/.e2e-data/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/dist-dev/
+frontend/.e2e-data/
+frontend/playwright-report/
+frontend/test-results/
+
+# Local
+.env
+*.local
+tools/personal-data.local.txt
+.DS_Store
+Thumbs.db

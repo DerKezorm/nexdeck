@@ -1,0 +1,8 @@
+-r requirements.txt
+pytest==8.4.2
+pytest-asyncio==1.3.0
+# Records HTTP conversations for adapter tests; no adapter test talks to the network.
+respx==0.22.0
+# Pinned exactly on purpose: ruff adds rules to its defaults with every minor
+# release, and an unpinned build would turn red one day without any change.
+ruff==0.16.5

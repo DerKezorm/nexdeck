@@ -1,0 +1,123 @@
+"""Home Assistant WebSocket listener: state changes arrive instead of being polled.
+
+One task per Home Assistant integration. It authenticates, loads all states
+once, subscribes to ``state_changed`` and keeps ``ctx.cache["hass_states"]``
+current. Whenever an entity that a widget shows changes, the widget is
+refreshed right away.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+from typing import Any
+
+from sqlalchemy import select
+
+from ..adapters.base import base_url
+from ..db import db_session
+from ..models import Integration, Widget
+from .integrations import resolve_config
+
+logger = logging.getLogger("nexdeck.hass")
+
+RECONNECT_SECONDS = 15
+
+
+class HassListener:
+    def __init__(self) -> None:
+        self._tasks: dict[int, asyncio.Task[None]] = {}
+        self.running = False
+
+    async def start(self) -> None:
+        self.running = True
+        with db_session() as db:
+            ids = list(db.scalars(select(Integration.id).where(Integration.kind == "homeassistant", Integration.enabled.is_(True), Integration.demo.is_(False))))
+        for integration_id in ids:
+            self.watch(integration_id)
+
+    async def stop(self) -> None:
+        self.running = False
+        for task in self._tasks.values():
+            task.cancel()
+        for task in self._tasks.values():
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        self._tasks.clear()
+
+    def watch(self, integration_id: int) -> None:
+        self.unwatch(integration_id)
+        if self.running:
+            self._tasks[integration_id] = asyncio.create_task(self._run(integration_id), name=f"hass-{integration_id}")
+
+    def unwatch(self, integration_id: int) -> None:
+        task = self._tasks.pop(integration_id, None)
+        if task:
+            task.cancel()
+
+    async def _run(self, integration_id: int) -> None:
+        import websockets
+
+        from .collector import collector
+
+        while self.running:
+            with db_session() as db:
+                integration = db.get(Integration, integration_id)
+                if integration is None or not integration.enabled or integration.demo or integration.kind != "homeassistant":
+                    return
+                config = resolve_config(integration)
+            cache = collector._caches.setdefault(integration_id, {})
+            url = base_url(config).replace("http://", "ws://", 1).replace("https://", "wss://", 1) + "/api/websocket"
+            try:
+                async with websockets.connect(url, max_size=16 * 1024 * 1024, open_timeout=15) as socket:
+                    await socket.recv()  # auth_required
+                    await socket.send(json.dumps({"type": "auth", "access_token": config.get("token", "")}))
+                    reply = json.loads(await socket.recv())
+                    if reply.get("type") != "auth_ok":
+                        logger.warning("Home Assistant %s rejected the token over WebSocket.", integration_id)
+                        cache.pop("hass_states", None)
+                        await asyncio.sleep(RECONNECT_SECONDS * 4)
+                        continue
+                    await socket.send(json.dumps({"id": 1, "type": "get_states"}))
+                    await socket.send(json.dumps({"id": 2, "type": "subscribe_events", "event_type": "state_changed"}))
+                    states: dict[str, Any] = cache.setdefault("hass_states", {})
+                    async for raw in socket:
+                        message = json.loads(raw)
+                        if message.get("id") == 1 and message.get("type") == "result":
+                            for entity in message.get("result") or []:
+                                states[entity["entity_id"]] = entity
+                            logger.info("Home Assistant %s: %d states loaded.", integration_id, len(states))
+                        elif message.get("type") == "event":
+                            data = (message.get("event") or {}).get("data") or {}
+                            entity_id = data.get("entity_id")
+                            new_state = data.get("new_state")
+                            if entity_id and new_state:
+                                states[entity_id] = new_state
+                                self._touch(integration_id, entity_id)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:  # noqa: BLE001
+                logger.info("Home Assistant %s WebSocket closed (%s); reconnecting.", integration_id, error.__class__.__name__)
+                cache.pop("hass_states", None)
+            await asyncio.sleep(RECONNECT_SECONDS)
+
+    def _touch(self, integration_id: int, entity_id: str) -> None:
+        """Refresh the widgets that show this entity, at most once per second each."""
+        from .collector import collector
+
+        with db_session() as db:
+            widgets = list(db.scalars(select(Widget).where(Widget.integration_id == integration_id)))
+            targets = []
+            for widget in widgets:
+                options = widget.options or {}
+                shown = [options.get("entity_id", "")] + str(options.get("entity_ids") or "").splitlines()
+                if entity_id in [s.strip() for s in shown]:
+                    targets.append(widget.id)
+        for widget_id in targets:
+            asyncio.create_task(collector.refresh(widget_id))
+
+
+hass_listener = HassListener()

@@ -1,0 +1,23 @@
+fastapi==0.121.2
+uvicorn[standard]==0.38.0
+sqlalchemy==2.0.44
+pydantic==2.12.4
+pydantic-settings==2.14.2
+bcrypt==5.0.0
+pyjwt==2.13.0
+httpx==0.28.1
+cryptography==50.0.1
+# Web Push: py-vapid signs each message for the push service (RFC 8292),
+# http-ece encrypts it for the browser (RFC 8291). Both only depend on
+# cryptography; pywebpush would pull in requests and aiohttp.
+py-vapid==1.9.4
+http-ece==1.2.1
+# Board files, provisioning and export.
+pyyaml==6.0.3
+# Home Assistant speaks WebSocket; httpx does not.
+websockets==15.0.1
+# One adapter, a hundred notification services.
+apprise==1.9.5
+# RSS and Atom parsing for the feed widget.
+feedparser==6.0.12
+python-multipart==0.0.31

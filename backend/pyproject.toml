@@ -1,0 +1,30 @@
+[project]
+name = "nexdeck-backend"
+version = "0.1.0"
+description = "nexdeck backend: the live homelab dashboard of the nexapps family."
+requires-python = ">=3.13"
+license = "AGPL-3.0-or-later"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# The defaults plus import sorting, bugbear and pyupgrade. Every exception
+# below carries its reason; a new one needs one too.
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC"]
+ignore = [
+    # Line length is enforced by the formatter, not by the linter.
+    "E501",
+    # Timeouts are passed through to HTTP clients and subprocesses on purpose.
+    "ASYNC109",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use assert and long descriptive names freely.
+"tests/*" = ["B011"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["error::DeprecationWarning:app.*"]
