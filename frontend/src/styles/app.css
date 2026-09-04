@@ -1,0 +1,424 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/* ------------------------------------------------------------------------
+ * Design tokens. Dark is the default; light redefines the same names.
+ * Cinematic: a deep, cool anthracite with a blue tint, glass surfaces over
+ * a soft aurora, one electric cyan accent. Green, amber and rose are reserved
+ * for states and never used as decoration.
+ * ---------------------------------------------------------------------- */
+:root {
+  --nd-bg: #0a0d12;
+  --nd-bg-elev: #0f131a;
+  --nd-surface: rgba(17, 22, 31, 0.64);
+  --nd-surface-strong: rgba(17, 22, 31, 0.92);
+  --nd-surface-hover: rgba(24, 31, 43, 0.78);
+  --nd-border: rgba(255, 255, 255, 0.07);
+  --nd-border-strong: rgba(255, 255, 255, 0.16);
+  --nd-text: #e7eaf0;
+  --nd-text-muted: #94a0b3;
+  --nd-text-faint: #5d6a7d;
+  --nd-accent: #22d3ee;
+  --nd-accent-strong: #06b6d4;
+  --nd-accent-soft: rgba(34, 211, 238, 0.14);
+  --nd-accent-glow: rgba(34, 211, 238, 0.35);
+  --nd-ok: #34d399;
+  --nd-warn: #fbbf24;
+  --nd-bad: #fb7185;
+  --nd-unknown: #64748b;
+  --nd-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --nd-radius: 16px;
+  --nd-radius-sm: 10px;
+  --nd-aurora-1: rgba(34, 211, 238, 0.16);
+  --nd-aurora-2: rgba(99, 102, 241, 0.14);
+  --nd-aurora-3: rgba(6, 182, 212, 0.1);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --nd-bg: #eef1f5;
+  --nd-bg-elev: #ffffff;
+  --nd-surface: rgba(255, 255, 255, 0.7);
+  --nd-surface-strong: rgba(255, 255, 255, 0.94);
+  --nd-surface-hover: rgba(255, 255, 255, 0.9);
+  --nd-border: rgba(15, 23, 42, 0.08);
+  --nd-border-strong: rgba(15, 23, 42, 0.16);
+  --nd-text: #0f172a;
+  --nd-text-muted: #55627a;
+  --nd-text-faint: #8a95a8;
+  --nd-accent: #0891b2;
+  --nd-accent-strong: #0e7490;
+  --nd-accent-soft: rgba(8, 145, 178, 0.12);
+  --nd-accent-glow: rgba(8, 145, 178, 0.25);
+  --nd-ok: #059669;
+  --nd-warn: #d97706;
+  --nd-bad: #e11d48;
+  --nd-unknown: #94a3b8;
+  --nd-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --nd-aurora-1: rgba(8, 145, 178, 0.14);
+  --nd-aurora-2: rgba(99, 102, 241, 0.1);
+  --nd-aurora-3: rgba(14, 165, 233, 0.1);
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-bg: var(--nd-bg);
+  --color-elev: var(--nd-bg-elev);
+  --color-surface: var(--nd-surface);
+  --color-surface-strong: var(--nd-surface-strong);
+  --color-surface-hover: var(--nd-surface-hover);
+  --color-line: var(--nd-border);
+  --color-line-strong: var(--nd-border-strong);
+  --color-ink: var(--nd-text);
+  --color-muted: var(--nd-text-muted);
+  --color-faint: var(--nd-text-faint);
+  --color-accent: var(--nd-accent);
+  --color-accent-strong: var(--nd-accent-strong);
+  --color-accent-soft: var(--nd-accent-soft);
+  --color-ok: var(--nd-ok);
+  --color-warn: var(--nd-warn);
+  --color-bad: var(--nd-bad);
+  --color-unknown: var(--nd-unknown);
+  --radius-card: var(--nd-radius);
+  --radius-sm: var(--nd-radius-sm);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--nd-bg);
+  color: var(--nd-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--nd-accent-soft);
+}
+
+/* Numbers everywhere align as tables. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Glass surface used by cards, bars and sheets. */
+.glass {
+  background: var(--nd-surface);
+  border: 1px solid var(--nd-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.glass-strong {
+  background: var(--nd-surface-strong);
+  border: 1px solid var(--nd-border);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+
+/* The widget card. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--nd-radius);
+  box-shadow: var(--nd-shadow);
+  overflow: hidden;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.card:hover {
+  border-color: var(--nd-border-strong);
+}
+
+.card[data-status='bad'] {
+  border-color: color-mix(in srgb, var(--nd-bad) 45%, var(--nd-border));
+}
+
+.card[data-status='warn'] {
+  border-color: color-mix(in srgb, var(--nd-warn) 35%, var(--nd-border));
+}
+
+.card.is-editing {
+  cursor: grab;
+  border-style: dashed;
+  border-color: var(--nd-accent);
+}
+
+.card.is-editing:active {
+  cursor: grabbing;
+}
+
+/* Status dot with a soft halo. */
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--nd-unknown);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-unknown) 25%, transparent);
+  flex: none;
+}
+
+.dot[data-status='ok'] {
+  background: var(--nd-ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-ok) 22%, transparent);
+}
+
+.dot[data-status='warn'] {
+  background: var(--nd-warn);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-warn) 22%, transparent);
+}
+
+.dot[data-status='bad'] {
+  background: var(--nd-bad);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-bad) 25%, transparent);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-bad) 25%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--nd-bad) 8%, transparent);
+  }
+}
+
+/* Chips in card footers. */
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nd-text) 6%, transparent);
+  color: var(--nd-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.chip b {
+  color: var(--nd-text);
+  font-weight: 600;
+}
+
+/* Thin progress bar. */
+.bar {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+  overflow: hidden;
+}
+
+.bar > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--nd-accent);
+  transition: width 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.bar[data-status='warn'] > i {
+  background: var(--nd-warn);
+}
+
+.bar[data-status='bad'] > i {
+  background: var(--nd-bad);
+}
+
+/* Buttons. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--nd-border);
+  background: color-mix(in srgb, var(--nd-text) 5%, transparent);
+  color: var(--nd-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+  border-color: var(--nd-border-strong);
+}
+
+.btn-icon {
+  width: 32px;
+  padding: 0;
+}
+
+.btn-accent {
+  background: var(--nd-accent);
+  border-color: transparent;
+  color: #041016;
+}
+
+.btn-accent:hover {
+  background: var(--nd-accent-strong);
+}
+
+.btn-danger {
+  color: var(--nd-bad);
+}
+
+.btn[aria-pressed='true'] {
+  background: var(--nd-accent-soft);
+  border-color: color-mix(in srgb, var(--nd-accent) 45%, transparent);
+  color: var(--nd-accent);
+}
+
+/* Inputs. */
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--nd-border);
+  background: color-mix(in srgb, var(--nd-bg) 55%, transparent);
+  color: var(--nd-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.input:focus {
+  border-color: var(--nd-accent);
+  box-shadow: 0 0 0 3px var(--nd-accent-soft);
+}
+
+textarea.input {
+  height: auto;
+  min-height: 96px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Scrollbars inside cards. */
+.scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--nd-text) 18%, transparent) transparent;
+}
+
+/* Grid library overrides. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--nd-accent-soft) !important;
+  border: 1px dashed var(--nd-accent);
+  border-radius: var(--nd-radius);
+  opacity: 1 !important;
+}
+
+.react-grid-item > .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 0.6;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--nd-accent) !important;
+}
+
+/* Text card content. */
+.prose-card :is(h1, h2, h3) {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.prose-card p {
+  margin: 0 0 8px;
+  color: var(--nd-text-muted);
+}
+
+.prose-card ul {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--nd-text-muted);
+}
+
+.prose-card a {
+  color: var(--nd-accent);
+}
+
+.prose-card code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: color-mix(in srgb, var(--nd-text) 8%, transparent);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Motion respects the system setting. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Kiosk: bigger, calmer. */
+.kiosk .card {
+  border-radius: 20px;
+}
+
+.kiosk.dimmed::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Value ticker animation. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 360ms ease both;
+}
