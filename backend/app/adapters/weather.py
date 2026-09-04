@@ -27,7 +27,7 @@ class WeatherAdapter(Adapter):
     label = "Weather"
     category = "basics"
     description = "Current conditions and a five-day forecast from Open-Meteo."
-    icon = "open-meteo"
+    icon = "lucide:cloud-sun"
     beta = False
     needs_integration = False
     docs_url = "https://open-meteo.com/en/docs"

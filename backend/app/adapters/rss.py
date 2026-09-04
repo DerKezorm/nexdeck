@@ -16,7 +16,7 @@ class RssAdapter(Adapter):
     label = "RSS feeds"
     category = "basics"
     description = "Headlines from one or more RSS or Atom feeds."
-    icon = "rss"
+    icon = "lucide:rss"
     beta = False
     needs_integration = False
     widgets = (

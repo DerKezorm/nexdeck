@@ -1,0 +1,94 @@
+# Integrations and widgets
+
+An **integration** is one configured connection to a service: an address and
+credentials. A **widget** shows one view of it on a board. Many widgets can
+share one integration; the server asks the service once per widget interval
+and caches identical requests for a few seconds.
+
+Every adapter lives in one file under `backend/app/adapters/`. It declares
+its connection fields, its widgets, and how to fetch, act and fake data.
+The frontend never knows a service: every widget returns a `WidgetData`
+that one of fifteen renderers draws.
+
+## Adapters in 0.1.0
+
+| Adapter | Widgets | Actions | Credentials |
+|---|---|---|---|
+| Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
+| Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
+| Portainer | containers, summary | container actions | access token |
+| Synology DSM | system, volumes, disks | | user and password |
+| Unraid | system, array, guests | | API key (GraphQL) |
+| TrueNAS | system, pools, alerts | | API key |
+| Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
+| AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
+| UniFi Network | summary, devices | | local account |
+| Speedtest Tracker | latest | | API token |
+| Plex | now playing, library | | X-Plex-Token |
+| Jellyfin, Emby | now playing, library | | API key |
+| Nexview | requests, library, instances | | API key |
+| Seerr | requests, counts | approve, decline | API key |
+| Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
+| Prowlarr | indexers, status | | API key |
+| SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
+| Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
+| Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
+| Beszel | hosts, host | | user and password |
+| Glances | system, file systems, sensors | | optional password |
+| Prometheus | query value, query list | | optional basic auth |
+| JSON API | value, list | | optional bearer token |
+| iCal | events | | feed address |
+| Weather (Open-Meteo), RSS, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
+
+Adapters marked **beta** in the interface have not been confirmed against a
+live instance yet. They are built against the documented API and recorded
+answers; a report with the service's version is welcome.
+
+## Renderers
+
+`value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
+`bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`.
+
+## Writing an adapter
+
+```python
+from .base import Adapter, Context, Field, WidgetData, WidgetType, base_url
+
+class ExampleAdapter(Adapter):
+    kind = "example"
+    label = "Example"
+    category = "monitoring"
+    description = "What it shows."
+    icon = "example"          # a dashboard-icons name
+    fields = (
+        Field("url", "URL", type="url", required=True),
+        Field("api_key", "API key", type="password", secret=True, required=True),
+    )
+    widgets = (
+        WidgetType(kind="status", label="Status", description="...", renderer="value",
+                   default_size=(2, 2), refresh_seconds=30, metrics=("value",)),
+    )
+
+    async def test(self, config, ctx):
+        payload = await ctx.get_json(f"{base_url(config)}/api/version", headers={"X-Api-Key": config["api_key"]})
+        return f"Example {payload['version']} answers."
+
+    async def fetch(self, widget_kind, config, options, ctx):
+        payload = await ctx.get_json(f"{base_url(config)}/api/status", headers={"X-Api-Key": config["api_key"]})
+        return WidgetData(primary={"label": "Load", "value": payload["load"], "unit": "%"}, metrics={"value": payload["load"]})
+
+    def demo(self, widget_kind, options, tick):
+        from . import demo as fake
+        value = fake.walk("example", tick, 5, 60)
+        return WidgetData(primary={"label": "Load", "value": value, "unit": "%"}, metrics={"value": value})
+
+ADAPTER = ExampleAdapter()
+```
+
+Rules:
+
+- Secrets are fields with `secret=True`; they are encrypted at rest and never returned by the API.
+- Raise `AdapterError` (or `AuthFailed`, `Unreachable`) with an English message and a hint; the card shows both.
+- `metrics` are numbers recorded for sparklines; name them stably.
+- `demo()` must return believable, moving data for every widget kind; a test checks that.
+- Add a test with recorded answers under `backend/tests/`, using `respx`.

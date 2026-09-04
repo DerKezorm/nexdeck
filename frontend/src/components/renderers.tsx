@@ -23,11 +23,11 @@ import {
   type LucideProps,
 } from 'lucide-react'
 import { marked } from 'marked'
-import { createElement, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import { formatValue, timeAgo } from '../lib/format'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
-import { ServiceIcon, lucideIcon } from './ServiceIcon'
+import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
 export interface RenderProps {
@@ -106,7 +106,7 @@ function ActionButtons({
   return (
     <div className={`flex items-center gap-1 ${compact ? '' : 'mt-2'}`}>
       {(actions as Action[]).map((action) => {
-        const symbol = action.icon ? (symbols[action.icon] ?? lucideIcon(action.icon)) : null
+        const Known = action.icon ? symbols[action.icon] : undefined
         return (
           <button
             key={action.id}
@@ -118,7 +118,7 @@ function ActionButtons({
             aria-label={action.label}
             title={action.label}
           >
-            {symbol ? createElement(symbol, { size: 13 }) : null}
+            {Known ? <Known size={13} /> : action.icon ? <LucideByName name={action.icon} size={13} /> : null}
             {!compact && <span>{action.label}</span>}
           </button>
         )
@@ -221,7 +221,7 @@ export function StatsCard({ data, series }: RenderProps) {
         const points = row.metric ? series?.[row.metric] : undefined
         return (
           <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3">
-            <div className="text-[11px] text-muted w-14 truncate">{row.label}</div>
+            <div className="text-[11px] text-muted w-[4.6rem] truncate">{row.label}</div>
             <div className="min-w-0">
               {points && points.length > 1 ? (
                 <Sparkline values={points} height={16} min={isPercent ? 0 : undefined} max={isPercent ? 100 : undefined} />

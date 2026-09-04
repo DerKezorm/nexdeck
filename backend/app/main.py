@@ -110,6 +110,16 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        # The app talks only to its own origin; icons and uploads are proxied.
+        # Images may come from anywhere (media art from Plex or Jellyfin on
+        # the LAN), and the iframe widget embeds any page by design.
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self'; "
+            "frame-src *; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; "
+            "frame-ancestors 'self'",
+        )
     return response
 
 

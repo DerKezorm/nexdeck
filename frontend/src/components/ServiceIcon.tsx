@@ -1,6 +1,64 @@
-import { createElement, useState } from 'react'
-import { Box, type LucideProps } from 'lucide-react'
-import * as icons from 'lucide-react'
+import {
+  Activity,
+  AlarmClock,
+  Archive,
+  BarChart3,
+  Bell,
+  Book,
+  BookOpen,
+  Box,
+  Calendar,
+  CalendarDays,
+  Camera,
+  Check,
+  ChevronsUpDown,
+  Clapperboard,
+  Clock,
+  Cloud,
+  CloudSun,
+  Cpu,
+  Database,
+  Download,
+  Film,
+  Flame,
+  Gauge,
+  Globe,
+  HardDrive,
+  Home,
+  Image,
+  Lamp,
+  Laptop,
+  LayoutDashboard,
+  Link,
+  Lock,
+  Mail,
+  MessageSquare,
+  Monitor,
+  Music,
+  Network,
+  Pause,
+  Play,
+  Power,
+  Printer,
+  Radio,
+  RotateCw,
+  Router,
+  Rss,
+  Search,
+  Server,
+  Shield,
+  ShieldCheck,
+  Square,
+  Sun,
+  Thermometer,
+  Tv,
+  Wifi,
+  Wrench,
+  X,
+  Zap,
+  type LucideProps,
+} from 'lucide-react'
+import { useState, type ComponentType } from 'react'
 
 import { iconUrl } from '../lib/format'
 
@@ -11,13 +69,78 @@ interface Props {
 }
 
 /**
+ * The symbols available as ``lucide:<name>``. A fixed set on purpose: the
+ * full icon library would put a megabyte into the first load for the handful
+ * a board uses. Unknown names fall back to a box.
+ */
+export const SYMBOLS: Record<string, ComponentType<LucideProps>> = {
+  activity: Activity,
+  'alarm-clock': AlarmClock,
+  archive: Archive,
+  'bar-chart-3': BarChart3,
+  bell: Bell,
+  book: Book,
+  'book-open': BookOpen,
+  box: Box,
+  calendar: Calendar,
+  'calendar-days': CalendarDays,
+  camera: Camera,
+  check: Check,
+  'chevrons-up-down': ChevronsUpDown,
+  clapperboard: Clapperboard,
+  clock: Clock,
+  cloud: Cloud,
+  'cloud-sun': CloudSun,
+  cpu: Cpu,
+  database: Database,
+  download: Download,
+  film: Film,
+  flame: Flame,
+  gauge: Gauge,
+  globe: Globe,
+  'hard-drive': HardDrive,
+  home: Home,
+  image: Image,
+  lamp: Lamp,
+  laptop: Laptop,
+  'layout-dashboard': LayoutDashboard,
+  link: Link,
+  lock: Lock,
+  mail: Mail,
+  'message-square': MessageSquare,
+  monitor: Monitor,
+  music: Music,
+  network: Network,
+  pause: Pause,
+  play: Play,
+  power: Power,
+  printer: Printer,
+  radio: Radio,
+  'rotate-cw': RotateCw,
+  router: Router,
+  rss: Rss,
+  search: Search,
+  server: Server,
+  shield: Shield,
+  'shield-check': ShieldCheck,
+  square: Square,
+  sun: Sun,
+  thermometer: Thermometer,
+  tv: Tv,
+  wifi: Wifi,
+  wrench: Wrench,
+  x: X,
+  zap: Zap,
+}
+
+/**
  * A service logo (dashboard-icons name, URL or upload) or, with the
- * ``lucide:`` prefix, a symbol from the UI icon set.
+ * ``lucide:`` prefix, a symbol from the set above.
  */
 export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   const [failed, setFailed] = useState(false)
   if (icon && icon.startsWith('lucide:')) {
-    return createElement(lucideIcon(icon.slice(7)), { size, className, 'aria-hidden': 'true' })
+    return <LucideByName name={icon.slice(7)} size={size} className={className} />
   }
   const url = iconUrl(icon)
   if (!url || failed) {
@@ -37,11 +160,7 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   )
 }
 
-export function lucideIcon(name: string): React.ComponentType<LucideProps> {
-  const pascal = name
-    .split(/[-_ ]/)
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join('')
-  const found = (icons as unknown as Record<string, React.ComponentType<LucideProps>>)[pascal]
-  return found ?? Box
+export function LucideByName({ name, size = 16, className = '' }: { name: string; size?: number; className?: string }) {
+  const Symbol = SYMBOLS[name] ?? Box
+  return <Symbol size={size} className={className} aria-hidden="true" />
 }
