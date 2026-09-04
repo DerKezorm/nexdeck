@@ -41,7 +41,7 @@ def condense(db: Session, now: int | None = None) -> None:
     minute_cutoff = now - settings.history_minute_hours * 3600
 
     rows = db.execute(
-        select(HistorySample.key, HistorySample.ts, HistorySample.value).where(HistorySample.ts < raw_cutoff)
+        select(HistorySample.key, HistorySample.ts, HistorySample.value).where(HistorySample.ts <= raw_cutoff)
     ).all()
     buckets: dict[tuple[str, int], list[float]] = defaultdict(list)
     for key, ts, value in rows:
@@ -72,9 +72,9 @@ def condense(db: Session, now: int | None = None) -> None:
                 row.avg = total / row.count
                 row.min = min(row.min, *values)
                 row.max = max(row.max, *values)
-        db.execute(delete(HistorySample).where(HistorySample.ts < raw_cutoff))
+        db.execute(delete(HistorySample).where(HistorySample.ts <= raw_cutoff))
 
-    db.execute(delete(HistoryMinute).where(HistoryMinute.ts < minute_cutoff))
+    db.execute(delete(HistoryMinute).where(HistoryMinute.ts <= minute_cutoff))
 
 
 def series(db: Session, widget_id: int, metric: str, hours: float = 24) -> list[tuple[int, float]]:

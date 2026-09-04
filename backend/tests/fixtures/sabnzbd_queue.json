@@ -1,0 +1,33 @@
+{
+  "queue": {
+    "status": "Downloading",
+    "speed": "12.5 M",
+    "kbpersec": "12800",
+    "mbleft": "5200.5",
+    "mb": "9000",
+    "timeleft": "0:25:00",
+    "paused": false,
+    "noofslots": 2,
+    "diskspace1": "1800.5",
+    "slots": [
+      {
+        "nzo_id": "SABnzbd_nzo_1",
+        "filename": "Copper.Sky.2025.2160p",
+        "percentage": "42",
+        "mbleft": "2900",
+        "mb": "5000",
+        "status": "Downloading",
+        "timeleft": "0:12:34"
+      },
+      {
+        "nzo_id": "SABnzbd_nzo_2",
+        "filename": "Nightshift.2026.1080p",
+        "percentage": "0",
+        "mbleft": "4000",
+        "mb": "4000",
+        "status": "Queued",
+        "timeleft": "0:00:00"
+      }
+    ]
+  }
+}

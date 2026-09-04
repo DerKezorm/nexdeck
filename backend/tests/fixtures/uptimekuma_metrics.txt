@@ -1,0 +1,8 @@
+# HELP monitor_status Monitor Status (1 = UP, 0= DOWN, 2= PENDING, 3= MAINTENANCE)
+# TYPE monitor_status gauge
+monitor_status{monitor_name="Reverse proxy",monitor_type="http",monitor_url="https://proxy.example.com",monitor_hostname="null",monitor_port="null"} 1
+monitor_status{monitor_name="SABnzbd",monitor_type="http",monitor_url="http://sab:8080",monitor_hostname="null",monitor_port="null"} 0
+# HELP monitor_response_time Monitor Response Time (ms)
+# TYPE monitor_response_time gauge
+monitor_response_time{monitor_name="Reverse proxy",monitor_type="http",monitor_url="https://proxy.example.com",monitor_hostname="null",monitor_port="null"} 18
+monitor_response_time{monitor_name="SABnzbd",monitor_type="http",monitor_url="http://sab:8080",monitor_hostname="null",monitor_port="null"} -1

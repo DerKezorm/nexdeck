@@ -23,7 +23,7 @@ import {
   type LucideProps,
 } from 'lucide-react'
 import { marked } from 'marked'
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { createElement, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import { formatValue, timeAgo } from '../lib/format'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
@@ -35,7 +35,7 @@ export interface RenderProps {
   data: WidgetData | undefined
   series?: Record<string, number[]>
   canAct?: boolean
-  onAction?: (action: string, params?: Record<string, unknown>) => void
+  onAction?: (action: Action) => void
   link?: string
   editing?: boolean
 }
@@ -106,19 +106,19 @@ function ActionButtons({
   return (
     <div className={`flex items-center gap-1 ${compact ? '' : 'mt-2'}`}>
       {(actions as Action[]).map((action) => {
-        const Symbol = action.icon ? (symbols[action.icon] ?? lucideIcon(action.icon)) : null
+        const symbol = action.icon ? (symbols[action.icon] ?? lucideIcon(action.icon)) : null
         return (
           <button
             key={action.id}
             className={`btn ${compact ? 'btn-icon h-6 w-6 border-0 bg-transparent' : 'h-7 px-2 text-xs'} ${action.danger ? 'btn-danger' : ''}`}
             onClick={(event) => {
               event.stopPropagation()
-              onAction(action.id, action.params)
+              onAction(action)
             }}
             aria-label={action.label}
             title={action.label}
           >
-            {Symbol ? <Symbol size={13} /> : null}
+            {symbol ? createElement(symbol, { size: 13 }) : null}
             {!compact && <span>{action.label}</span>}
           </button>
         )
@@ -454,7 +454,7 @@ export function ClockCard({ data }: RenderProps) {
   }, [seconds])
   const timeZone = (data?.meta?.timezone as string) || undefined
   const hour12 = data?.meta?.format === '12h'
-  let time = '--:--'
+  let time: string
   let date = ''
   try {
     time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: seconds ? '2-digit' : undefined, hour12, timeZone })

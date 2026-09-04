@@ -8,7 +8,6 @@ caller.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -17,6 +16,7 @@ from sqlalchemy import select
 
 from ..db import db_session
 from ..models import Notice, NotificationChannel, Role, Subscription, User
+from .loop import spawn
 from .sse import hub, user_topic
 
 logger = logging.getLogger("nexdeck.notify")
@@ -60,11 +60,7 @@ def emit(event: str, title: str, body: str = "", *, level: str = "info", link: s
         payloads = [(n.user_id, notice_payload(n)) for n in notices]
     for user_id, payload in payloads:
         hub.publish(user_topic(user_id), "notice", payload)
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return
-    loop.create_task(dispatch(message, targets))
+    spawn(lambda: dispatch(message, targets), name="notify-dispatch")
 
 
 def notice_payload(notice: Notice) -> dict[str, Any]:

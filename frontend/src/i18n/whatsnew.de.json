@@ -1,0 +1,15 @@
+{
+  "entries": {
+    "0.1.0": {
+      "lead": "nexdeck ist da: ein lebendiges Dashboard für dein Homelab mit dreißig Anbindungen, Boards für Desktop, Handy und Wandtablet, und Aktionen direkt auf den Karten.",
+      "sections": [
+        { "title": "Lebendige Boards", "body": "Werte ändern sich vor deinen Augen. Der Server fragt jeden Dienst einmal ab und schiebt Änderungen an jeden offenen Browser.", "path": "Bearbeiten (Stift) > Widget hinzufügen" },
+        { "title": "Anbindungen", "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, die arr-Familie, Home Assistant, Uptime Kuma und mehr.", "path": "Einstellungen > Anbindungen" },
+        { "title": "Wandtablets", "body": "Ein Kiosk-Link zeigt ein Board ohne Anmeldung, wechselt Seiten und dunkelt nachts ab.", "path": "Board-Menü > Kiosk" },
+        { "title": "Meldungen", "body": "Ausfälle und fehlgeschlagene Aktionen erreichen dich über Telegram, E-Mail, Web Push, ntfy, Gotify, Discord, Slack oder Apprise.", "path": "Einstellungen > Kanäle" }
+      ],
+      "smallTitle": "Außerdem neu",
+      "small": ["Boards lassen sich als YAML exportieren und importieren, Dateien in data/boards provisionieren sie.", "Docker-Labels nexdeck.* und homepage.* erzeugen Kacheln von selbst.", "Persönliche API-Token für Skripte und Automationen."]
+    }
+  }
+}

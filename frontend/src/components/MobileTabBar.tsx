@@ -3,6 +3,7 @@ import { Bell, LayoutDashboard, Menu, Search } from 'lucide-react'
 interface Board {
   id: number
   name: string
+  slug?: string
 }
 
 interface Props {

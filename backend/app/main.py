@@ -40,6 +40,7 @@ from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
 from .services.logs import log_tailer
+from .services.loop import set_main_loop
 
 logger = logging.getLogger("nexdeck")
 
@@ -60,6 +61,7 @@ async def _housekeeping() -> None:
 async def lifespan(app: FastAPI):
     settings = get_settings()
     logging.basicConfig(level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    set_main_loop(asyncio.get_running_loop())
     get_engine()
     migrate()
     with db_session() as db:
@@ -80,6 +82,7 @@ async def lifespan(app: FastAPI):
         await health_service.stop()
         await log_tailer.stop()
         await collector.stop()
+        set_main_loop(None)
 
 
 app = FastAPI(

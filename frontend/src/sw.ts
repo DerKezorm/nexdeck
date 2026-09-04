@@ -45,7 +45,7 @@ self.addEventListener('fetch', (event) => {
 })
 
 self.addEventListener('push', (event) => {
-  let payload: { title?: string; body?: string; url?: string; tag?: string } = {}
+  let payload: { title?: string; body?: string; url?: string; tag?: string }
   try {
     payload = event.data?.json() ?? {}
   } catch {

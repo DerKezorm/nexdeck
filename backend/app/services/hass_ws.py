@@ -19,6 +19,7 @@ from ..adapters.base import base_url
 from ..db import db_session
 from ..models import Integration, Widget
 from .integrations import resolve_config
+from .loop import run_on_loop, spawn
 
 logger = logging.getLogger("nexdeck.hass")
 
@@ -49,11 +50,17 @@ class HassListener:
         self._tasks.clear()
 
     def watch(self, integration_id: int) -> None:
-        self.unwatch(integration_id)
-        if self.running:
-            self._tasks[integration_id] = asyncio.create_task(self._run(integration_id), name=f"hass-{integration_id}")
+        def _start() -> None:
+            self._cancel(integration_id)
+            if self.running:
+                self._tasks[integration_id] = asyncio.get_running_loop().create_task(self._run(integration_id), name=f"hass-{integration_id}")
+
+        run_on_loop(_start)
 
     def unwatch(self, integration_id: int) -> None:
+        run_on_loop(lambda: self._cancel(integration_id))
+
+    def _cancel(self, integration_id: int) -> None:
         task = self._tasks.pop(integration_id, None)
         if task:
             task.cancel()
@@ -117,7 +124,7 @@ class HassListener:
                 if entity_id in [s.strip() for s in shown]:
                     targets.append(widget.id)
         for widget_id in targets:
-            asyncio.create_task(collector.refresh(widget_id))
+            spawn(lambda widget_id=widget_id: collector.refresh(widget_id))
 
 
 hass_listener = HassListener()
