@@ -18,6 +18,8 @@ class TransmissionAdapter(DownloadAdapter):
     description = "Torrents, speed and pause or resume over RPC."
     icon = "transmission"
     docs_url = "https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md"
+    #: Seen against a live Transmission (linuxserver) (05.09.2026).
+    beta = False
     has_upload = True
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://transmission:9091"),

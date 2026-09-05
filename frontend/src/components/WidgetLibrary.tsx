@@ -18,15 +18,25 @@ interface Props {
 }
 
 /**
- * "UniFi Network" + "Network" must not become "UniFi Network Network": a widget
- * named like the end of its adapter takes the adapter's name alone.
+ * The name a new card is born with, in the language of whoever adds it.
+ *
+ * ⚠️ **The widget name is translated, the service name is not.** Somebody who
+ * picks "Fehlende Untertitel" in the library used to get a card called
+ * "Missing subtitles": the title is stored text, and the server only knows the
+ * English word. Bazarr, Plex and UniFi stay as they write themselves.
+ *
+ * The rule against a doubled word still looks at the **English** pair, because
+ * that is where the doubling comes from: "UniFi Network" + "Network" is one
+ * name in every language, and comparing it with "Netzwerk" would bring the
+ * repetition back in German.
  */
 export function defaultTitle(adapter: { kind: string; label: string }, widget: { label: string }): string {
-  if (adapter.kind === 'core') return widget.label
+  const kind = tAdapter(widget.label).trim()
+  if (adapter.kind === 'core') return kind
   const service = adapter.label.trim()
-  const kind = widget.label.trim()
-  if (service.toLowerCase().endsWith(kind.toLowerCase())) return service
-  if (kind.toLowerCase().startsWith(service.toLowerCase())) return kind
+  const english = widget.label.trim()
+  if (service.toLowerCase().endsWith(english.toLowerCase())) return service
+  if (english.toLowerCase().startsWith(service.toLowerCase())) return kind
   return `${service} ${kind}`
 }
 

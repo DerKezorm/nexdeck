@@ -15,6 +15,8 @@ class ProwlarrAdapter(ArrAdapter):
     category = "downloads"
     description = "Indexers, their health and today's grabs."
     icon = "prowlarr"
+    #: Seen against a live Prowlarr 2.5.2 (05.09.2026).
+    beta = False
     api_version = "v1"
     noun = "indexer"
     list_path = "indexer"

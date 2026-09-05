@@ -17,18 +17,49 @@ that one of fifteen renderers draws.
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
 | Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
+| Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
 | Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
+| Nextcloud | overview, active users, free space | | serverinfo token, or an administrator account |
 | TrueNAS | system, pools, alerts | | API key |
+| Proxmox Backup Server | datastores, host, tasks | | API token; DatastoreAudit on /datastore and Sys.Audit on /system |
+| Syncthing | folders, status | | API key |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest | | API token |
+| Traefik | overview, routers | | none, or basic authentication |
+| Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
+| OPNsense | system, gateways | | API key and secret |
+| pfSense | system, interfaces | | API key of the package pfSense-pkg-RESTAPI |
+| MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
+| FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
+| Tailscale | devices, status | | API access token from the admin console |
+| Headscale | nodes, status | | API key from `headscale apikeys create` |
+| Gluetun | tunnel | | none, or the API key if the control server has roles |
+| Technitium DNS | blocking, top blocked | | API token |
+| NextDNS | blocking, top blocked | | API key and the profile ID |
+| authentik | status, failed sign-ins | | API token of a service account with read access |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
+| Frigate | cameras, detections, status | | none |
 | Plex | now playing, library, recently added (covers), findings, server load, users and devices, top of the week | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library, recently added (covers), findings, users and devices, top of the week | | API key |
 | Nexview | requests, library, instances | | API key |
 | Seerr | requests, counts | approve, decline | API key |
+| Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
+| Tautulli | now playing, streams, most watched | | API key |
+| Immich | archive, storage, users | | API key of an administrator |
+| Bazarr | status, missing subtitles, recently fetched | | API key |
+| Audiobookshelf | library, listening now | | API key |
+| Navidrome | library, playing now | | account; the Subsonic API signs each request with a salted token |
+| Komga | library, recently added | | API key, or the account on older versions |
+| Kavita | library, recently added | | API key; the token is fetched once and kept |
+| Calibre-Web | library, recently added | | account; it has no API, so the address of its own table view is used |
+| Tdarr | queue, nodes | | optional API key |
+| Unmanic | workers, queue | | none |
+| FileFlows | status, running | | optional access token |
+| Maintainerr | collections, status | | none |
+| Jellystat | libraries, most watched | | API key |
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
@@ -36,9 +67,16 @@ that one of fifteen renderers draws.
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
 | Beszel | hosts, host | | user and password |
 | Glances | system, file systems, sensors | | optional password |
+| Scrutiny | disks, disk health | | none |
+| UPS (PeaNUT) | UPS, UPS details | | optional sign-in |
+| Gotify | messages, message count | | client token (an application token may only write) |
+| ntfy | messages | | topic, and a token for a protected one |
 | Prometheus | query value, query list | | optional basic auth |
+| Grafana | alerts, status | | service account token; needs unified alerting, so Grafana 9.0 or newer |
 | JSON API | value, list | | optional bearer token |
 | iCal | events | | feed address |
+| Paperless-ngx | archive, latest documents | | API token from the user profile |
+| evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 
 Adapters marked **beta** in the interface have not been confirmed against a

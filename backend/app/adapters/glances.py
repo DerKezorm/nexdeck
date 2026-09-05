@@ -17,6 +17,11 @@ from .base import (
     status_from_percent,
 )
 
+#: Docker mounts three files into every container, and Glances reports each of
+#: them as a file system with the host disk's size. Seen against Glances 4 in a
+#: container: three identical rows above the real ones.
+FILES_NOT_DISKS = {"/etc/resolv.conf", "/etc/hostname", "/etc/hosts"}
+
 
 class GlancesAdapter(Adapter):
     kind = "glances"
@@ -25,6 +30,8 @@ class GlancesAdapter(Adapter):
     description = "CPU, memory, load, disks and sensors of the host running Glances."
     icon = "glances"
     docs_url = "https://glances.readthedocs.io/en/latest/api.html"
+    #: Seen against a live Glances 4 (05.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://glances:61208"),
         Field("username", "User name", help="Only if Glances runs with a password."),
@@ -66,8 +73,11 @@ class GlancesAdapter(Adapter):
         if widget_kind == "disks":
             items = []
             for fs in await self._get(config, ctx, "fs", cache=60):
+                mount = str(fs.get("mnt_point") or "?")
+                if mount in FILES_NOT_DISKS:
+                    continue
                 used = round(float(fs.get("percent") or 0), 1)
-                items.append({"title": fs.get("mnt_point", "?"), "subtitle": f"{human_bytes(fs.get('used'))} of {human_bytes(fs.get('size'))}", "progress": used, "value": f"{used:.0f}%", "status": status_from_percent(used)})
+                items.append({"title": mount, "subtitle": f"{human_bytes(fs.get('used'))} of {human_bytes(fs.get('size'))}", "progress": used, "value": f"{used:.0f}%", "status": status_from_percent(used)})
             return WidgetData(items=items)
         items = []
         for sensor in await self._get(config, ctx, "sensors", cache=30):

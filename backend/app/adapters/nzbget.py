@@ -14,6 +14,8 @@ class NzbgetAdapter(DownloadAdapter):
     description = "Queue, speed and pause or resume over JSON-RPC."
     icon = "nzbget"
     docs_url = "https://nzbget.com/documentation/api/"
+    #: Seen against a live NZBGet (linuxserver) (05.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://nzbget:6789"),
         Field("username", "User name", default="nzbget"),

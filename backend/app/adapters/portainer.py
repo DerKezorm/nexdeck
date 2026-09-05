@@ -15,6 +15,8 @@ class PortainerAdapter(Adapter):
     description = "Containers of a Portainer environment with start, stop and restart."
     icon = "portainer"
     docs_url = "https://app.swaggerhub.com/apis/portainer/portainer-ce/"
+    #: Seen against a live Portainer 2.34 (05.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://portainer:9443"),
         Field("api_key", "Access token", type="password", secret=True, required=True, help="User menu > My account > Access tokens"),

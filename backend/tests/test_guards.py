@@ -190,6 +190,22 @@ def test_every_adapter_text_has_a_german_translation() -> None:
     assert not missing, f"adapter texts without a German entry: {sorted(missing)}"
 
 
+def test_every_drawn_symbol_exists_in_the_frontend() -> None:
+    """An adapter without a logo in the collections may name a drawn symbol
+    instead. The frontend bundles a fixed set of them and quietly falls back to
+    a grey box for anything else, which looks exactly like a broken logo."""
+    source = (FRONTEND / "components" / "ServiceIcon.tsx").read_text(encoding="utf-8")
+    block = source.split("SYMBOLS: Record", 1)[1].split("\n}", 1)[0]
+    known = set(re.findall(r"^\s+'?([a-z0-9-]+)'?:", block, re.MULTILINE))
+    assert len(known) > 40, "the symbol map was not found"
+    missing = sorted(
+        f"{adapter.kind}: {adapter.icon}"
+        for adapter in all_adapters()
+        if adapter.icon.startswith("lucide:") and adapter.icon.removeprefix("lucide:") not in known
+    )
+    assert missing == [], "adapters naming a symbol the frontend does not bundle:\n  " + "\n  ".join(missing)
+
+
 def test_every_channel_text_has_a_german_translation() -> None:
     """The notification channels are written in English like the adapters, and
     the settings page translates them the same way. Without this guard a new
@@ -262,4 +278,4 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
-    assert confirmed == {"emby", "homeassistant", "ical", "jellyfin", "jsonapi", "lidarr", "nexview", "plex", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "synology", "unifi"}
+    assert confirmed == {"authentik", "emby", "glances", "gotify", "grafana", "homeassistant", "ical", "jellyfin", "jsonapi", "lidarr", "nexview", "npm", "ntfy", "nzbget", "plex", "portainer", "prometheus", "prowlarr", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "syncthing", "synology", "technitium", "traefik", "transmission", "unifi"}
