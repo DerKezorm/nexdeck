@@ -16,18 +16,21 @@ interface Props {
   canEdit: boolean
   onClose: () => void
   onChanged: () => void
+  /** Shows a background on the board while it is being chosen. */
+  onPreview?: (background: BoardWithLive['background']) => void
 }
 
 type Tab = 'boards' | 'look' | 'pages' | 'sharing' | 'kiosk' | 'file'
 
 /** Board switcher plus the board's own settings: look, pages, sharing, kiosk, file. */
-export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onChanged }: Props) {
+export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onChanged, onPreview }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('boards')
   const [name, setName] = useState(board.name)
   const [background, setBackground] = useState(board.background)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [newBoard, setNewBoard] = useState('')
   const [importText, setImportText] = useState('')
@@ -37,16 +40,24 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const shares = useQuery({ queryKey: ['shares', board.slug], queryFn: () => get<{ id: number; user_id: number | null; role: string | null; level: string }[]>(`/boards/${board.slug}/shares`), enabled: open && tab === 'sharing' && canEdit })
   const kiosks = useQuery({ queryKey: ['kiosk', board.slug], queryFn: () => get<KioskToken[]>(`/boards/${board.slug}/kiosk-tokens`), enabled: open && tab === 'kiosk' && canEdit })
 
+  // Opening the sheet starts from what is saved: an unsaved draft from last
+  // time is gone, exactly as closing without saving promised.
   useEffect(() => {
     setName(board.name)
     setBackground(board.background)
-  }, [board])
+    setError('')
+  }, [board, open])
+  useEffect(() => {
+    if (open) onPreview?.(background)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [background, open])
 
   const saveLook = async () => {
     setError('')
     try {
       await patch(`/boards/${board.slug}`, { name, background })
       onChanged()
+      onClose()
     } catch (failure) {
       setError(failure instanceof ApiError ? failure.message : t('errors.network'))
     }
@@ -133,12 +144,19 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               className="input pt-1.5"
               type="file"
               accept="image/*"
+              disabled={uploading}
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (!file) return
-                void upload('/assets', file, { kind: 'background' }).then((asset) => setBackground({ kind: 'upload', value: (asset as { url: string }).url, blur: background.blur ?? 18, dim: background.dim ?? 45 }))
+                setError('')
+                setUploading(true)
+                upload('/assets', file, { kind: 'background' })
+                  .then((asset) => setBackground({ kind: 'upload', value: (asset as { url: string }).url, blur: background.blur ?? 18, dim: background.dim ?? 45 }))
+                  .catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))
+                  .finally(() => setUploading(false))
               }}
             />
+            {uploading && <p className="text-[11px] text-muted mt-1">{t('common.loading')}</p>}
           </Field>
           {background.kind === 'upload' && (
             <div className="grid grid-cols-2 gap-3">
@@ -150,6 +168,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               </Field>
             </div>
           )}
+          <p className="text-[11px] text-faint mb-3">{t('board.previewHint')}</p>
           <button className="btn btn-accent" onClick={() => void saveLook()}>
             {t('common.save')}
           </button>

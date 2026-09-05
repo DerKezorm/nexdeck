@@ -263,7 +263,8 @@
     "importHelp": "Füge das YAML eines exportierten Boards ein.",
     "importRun": "Importieren",
     "delete": "Dieses Board löschen",
-    "deleteBody": "Jede Seite und jedes Widget darauf geht mit."
+    "deleteBody": "Jede Seite und jedes Widget darauf geht mit.",
+    "previewHint": "Das Board zeigt die Änderung sofort. Speichern behält sie, Schließen verwirft sie."
   },
   "widget": {
     "remove": {
@@ -292,7 +293,8 @@
       "insecure": "TLS-Fehler ignorieren"
     },
     "refreshNow": "Jetzt aktualisieren",
-    "openLink": "Dienst öffnen"
+    "openLink": "Dienst öffnen",
+    "previewHint": "Titel, Symbol und Link erscheinen sofort auf der Karte. Optionen wirken erst nach dem Speichern, weil der Server die Daten holt."
   },
   "library": {
     "title": "Widget hinzufügen",

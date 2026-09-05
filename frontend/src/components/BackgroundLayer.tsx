@@ -13,11 +13,11 @@ export interface Background {
 export const BUNDLED: Record<string, string> = {
   aurora:
     'radial-gradient(1200px 600px at 8% -10%, var(--nd-aurora-1), transparent 60%), radial-gradient(900px 520px at 92% 8%, var(--nd-aurora-2), transparent 60%), radial-gradient(900px 600px at 50% 115%, var(--nd-aurora-3), transparent 60%)',
-  dusk: 'radial-gradient(1000px 600px at 20% 0%, rgba(244,114,182,0.16), transparent 60%), radial-gradient(900px 600px at 90% 100%, rgba(129,140,248,0.18), transparent 60%)',
-  ember: 'radial-gradient(1000px 600px at 90% -10%, rgba(251,146,60,0.16), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(244,63,94,0.12), transparent 60%)',
-  ocean: 'radial-gradient(1100px 600px at 50% -20%, rgba(14,165,233,0.2), transparent 60%), radial-gradient(900px 600px at 100% 100%, rgba(20,184,166,0.14), transparent 60%)',
-  forest: 'radial-gradient(1100px 600px at 0% 0%, rgba(34,197,94,0.14), transparent 60%), radial-gradient(900px 600px at 100% 90%, rgba(132,204,22,0.1), transparent 60%)',
-  violet: 'radial-gradient(1100px 600px at 80% -10%, rgba(168,85,247,0.2), transparent 60%), radial-gradient(900px 600px at 10% 100%, rgba(99,102,241,0.16), transparent 60%)',
+  dusk: 'radial-gradient(1000px 600px at 20% 0%, rgba(244,114,182,0.26), transparent 60%), radial-gradient(900px 600px at 90% 100%, rgba(129,140,248,0.26), transparent 60%)',
+  ember: 'radial-gradient(1000px 600px at 90% -10%, rgba(251,146,60,0.28), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(244,63,94,0.2), transparent 60%)',
+  ocean: 'radial-gradient(1100px 600px at 50% -20%, rgba(14,165,233,0.3), transparent 60%), radial-gradient(900px 600px at 100% 100%, rgba(20,184,166,0.22), transparent 60%)',
+  forest: 'radial-gradient(1100px 600px at 0% 0%, rgba(34,197,94,0.24), transparent 60%), radial-gradient(900px 600px at 100% 90%, rgba(132,204,22,0.18), transparent 60%)',
+  violet: 'radial-gradient(1100px 600px at 80% -10%, rgba(168,85,247,0.3), transparent 60%), radial-gradient(900px 600px at 10% 100%, rgba(99,102,241,0.24), transparent 60%)',
   mono: 'radial-gradient(1100px 600px at 50% -20%, rgba(148,163,184,0.12), transparent 60%)',
   none: 'none',
 }

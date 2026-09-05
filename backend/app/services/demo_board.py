@@ -111,7 +111,7 @@ def create_demo(db: Session, owner_id: int | None) -> Board:
             adapter, _ = split_widget_kind(kind)
             integration = _integration(db, cache, integration_kind, owner_id) if integration_kind else None
             link = f"https://{title.lower().replace(' ', '-')}.example.com" if kind == "core.app" else ""
-            widget = Widget(page_id=page.id, kind=kind, title=title, icon=DEMO_ICONS.get(title, adapter.icon), link=link,
+            widget = Widget(page_id=page.id, kind=kind, title=title, icon=DEMO_ICONS.get(title, adapter.icon if adapter.kind != "core" else ""), link=link,
                             integration_id=integration.id if integration else None, options=options)
             db.add(widget)
             db.flush()
