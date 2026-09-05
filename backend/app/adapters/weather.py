@@ -1,4 +1,9 @@
-"""Weather from Open-Meteo: no key, no account, one request per widget."""
+"""Weather from Open-Meteo: no key, no account, one request per widget.
+
+A place name is enough: Open-Meteo's geocoder turns a town or a postcode into
+coordinates, looked up once a day. Latitude and longitude stay available for
+anyone who wants a precise spot.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +13,7 @@ from . import demo as fake
 from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType
 
 API = "https://api.open-meteo.com/v1/forecast"
+GEOCODING = "https://geocoding-api.open-meteo.com/v1/search"
 
 #: WMO weather codes grouped into the handful of conditions the card draws.
 CONDITIONS: dict[int, str] = {
@@ -20,6 +26,13 @@ CONDITIONS: dict[int, str] = {
     85: "snow", 86: "snow",
     95: "thunderstorm", 96: "thunderstorm", 99: "thunderstorm",
 }
+
+
+def _coordinates(options: dict[str, Any]) -> tuple[float, float] | None:
+    try:
+        return float(options.get("latitude")), float(options.get("longitude"))
+    except (TypeError, ValueError):
+        return None
 
 
 class WeatherAdapter(Adapter):
@@ -41,9 +54,9 @@ class WeatherAdapter(Adapter):
             refresh_seconds=900,
             metrics=("temperature",),
             options=(
-                Field("latitude", "Latitude", type="number", required=True, placeholder="52.52"),
-                Field("longitude", "Longitude", type="number", required=True, placeholder="13.41"),
-                Field("place", "Place name", placeholder="Berlin"),
+                Field("place", "Place", placeholder="Berlin", help="A town, a postcode or a place name; the coordinates are looked up. Fill in latitude and longitude instead to be exact."),
+                Field("latitude", "Latitude", type="number", placeholder="52.52"),
+                Field("longitude", "Longitude", type="number", placeholder="13.41"),
                 Field("units", "Units", type="select", default="metric", options=(("metric", "Celsius, km/h"), ("imperial", "Fahrenheit, mph"))),
                 Field("days", "Forecast days", type="number", default=5),
             ),
@@ -53,13 +66,25 @@ class WeatherAdapter(Adapter):
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         return "Nothing to test."
 
+    async def _geocode(self, place: str, ctx: Context) -> tuple[float, float]:
+        payload = await ctx.get_json(GEOCODING, params={"name": place, "count": 1, "language": "en", "format": "json"}, cache_seconds=86400)
+        results = payload.get("results") or []
+        if not results:
+            raise AdapterError(
+                f"The place {place!r} could not be found.", code="place_not_found",
+                hint="Try the town name alone, or fill in latitude and longitude.",
+            )
+        return float(results[0]["latitude"]), float(results[0]["longitude"])
+
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
-        try:
-            latitude = float(options.get("latitude"))
-            longitude = float(options.get("longitude"))
-        except (TypeError, ValueError) as error:
-            raise AdapterError("Latitude and longitude are missing.", code="missing_location",
-                               hint="Open the widget settings and pick a place.") from error
+        place = str(options.get("place") or "").strip()
+        coordinates = _coordinates(options)
+        if coordinates is None:
+            if not place:
+                raise AdapterError("A place or coordinates are missing.", code="missing_location",
+                                   hint="Open the widget settings and enter a town, or latitude and longitude.")
+            coordinates = await self._geocode(place, ctx)
+        latitude, longitude = coordinates
         imperial = options.get("units") == "imperial"
         days = max(1, min(7, int(options.get("days") or 5)))
         params = {
@@ -87,7 +112,7 @@ class WeatherAdapter(Adapter):
             })
         temperature = current.get("temperature_2m")
         return WidgetData(
-            primary={"label": options.get("place") or "", "value": temperature, "unit": unit},
+            primary={"label": place, "value": temperature, "unit": unit},
             secondary=[
                 {"label": "Feels like", "value": current.get("apparent_temperature"), "unit": unit},
                 {"label": "Humidity", "value": current.get("relative_humidity_2m"), "unit": "%"},
@@ -98,7 +123,7 @@ class WeatherAdapter(Adapter):
             meta={
                 "condition": CONDITIONS.get(int(current.get("weather_code") or 0), "overcast"),
                 "is_day": bool(current.get("is_day", 1)),
-                "place": options.get("place") or "",
+                "place": place,
             },
         )
 

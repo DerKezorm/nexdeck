@@ -17,7 +17,7 @@ from ..deps import (
     require_board,
 )
 from ..models import HealthCheck, Integration, Page, Widget
-from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch
+from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
 from ..services import health as health_service
 from ..services import history
 from ..services.boards import place_widget, remove_from_layouts, widget_view
@@ -121,6 +121,23 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
 
 
+@router.post("/widgets/{widget_id}/preview", summary="Fetch a widget's data with draft settings, without saving")
+async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser, db: DbSession) -> dict:
+    """The settings sheet shows what a change would look like before it is saved."""
+    widget, page = _widget(db, widget_id)
+    require_board(db, str(page.board_id), user, "edit")
+    if body.integration_id is not None:
+        _validate_kind(db, widget.kind, body.integration_id)
+    if body.clear_integration:
+        integration_id = None
+    elif body.integration_id is not None:
+        integration_id = body.integration_id
+    else:
+        integration_id = widget.integration_id
+    data = await collector.preview(widget_id, body.options, integration_id)
+    return data.model_dump()
+
+
 @router.post("/widgets/{widget_id}/refresh", summary="Fetch a widget's data right now")
 async def refresh_widget(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
@@ -164,7 +181,7 @@ def get_health(widget_id: int, request: Request, user: OptionalUser, db: DbSessi
     if widget.health_check is None:
         return {}
     payload = health_service.check_payload(widget.health_check)
-    payload["bars"] = health_service.uptime_bars(db, widget.id)
+    payload["bars"] = health_service.uptime_bars(db, widget.id, health_service.bars_window(widget.options))
     return payload
 
 

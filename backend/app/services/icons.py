@@ -22,6 +22,8 @@ SOURCES = (
     ("dashboard-icons", "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/{ext}/{name}.{ext}", "https://api.github.com/repos/homarr-labs/dashboard-icons/git/trees/main?recursive=1"),
     ("selfhst", "https://cdn.jsdelivr.net/gh/selfhst/icons/{ext}/{name}.{ext}", "https://api.github.com/repos/selfhst/icons/git/trees/main?recursive=1"),
 )
+#: Logos that ship with nexdeck: the nexapps family, which no collection carries.
+BUNDLED = Path(__file__).resolve().parent.parent / "bundled_icons"
 SAFE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,80}$")
 NEGATIVE_SECONDS = 3600
 INDEX_SECONDS = 86400
@@ -44,6 +46,9 @@ async def fetch_icon(name: str, ext: str) -> tuple[bytes, str] | None:
     """Return ``(bytes, content_type)`` or None when no source has the icon."""
     if not valid_name(name) or ext not in ("svg", "png", "webp"):
         return None
+    shipped = BUNDLED / f"{name}.svg"
+    if ext == "svg" and shipped.is_file():
+        return shipped.read_bytes(), _content_type("svg")
     key = f"{name}.{ext}"
     cached = _cache_dir() / key
     max_age = get_settings().icon_cache_days * 86400
@@ -95,12 +100,29 @@ async def _names(source: str, tree_url: str) -> list[str]:
     return names
 
 
+async def all_names() -> list[dict[str, str]]:
+    """Every logo name of both collections, sorted, each once: the picker browses this."""
+    results: list[dict[str, str]] = [{"name": name, "source": "bundled"} for name in bundled_names()]
+    seen: set[str] = {entry["name"] for entry in results}
+    for source, _pattern, tree_url in SOURCES:
+        for name in await _names(source, tree_url):
+            if name not in seen:
+                seen.add(name)
+                results.append({"name": name, "source": source})
+    results.sort(key=lambda entry: entry["name"])
+    return results
+
+
+def bundled_names() -> list[str]:
+    return sorted(path.stem for path in BUNDLED.glob("*.svg")) if BUNDLED.is_dir() else []
+
+
 async def search(query: str, limit: int = 30) -> list[dict[str, str]]:
     query = query.lower().strip()
     if not query:
         return []
-    results: list[dict[str, str]] = []
-    seen: set[str] = set()
+    results: list[dict[str, str]] = [{"name": name, "source": "bundled"} for name in bundled_names() if query in name]
+    seen: set[str] = {entry["name"] for entry in results}
     for source, _pattern, tree_url in SOURCES:
         for name in await _names(source, tree_url):
             if query in name and name not in seen:

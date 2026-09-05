@@ -2,6 +2,9 @@
  * The renderers: one small component per data shape. Every adapter maps its
  * service onto one of these, which keeps thirty integrations drawable with
  * fifteen components.
+ *
+ * Labels arrive from the adapters in English and are translated by wording
+ * (``tLabel``); the renderers' own words are translation keys.
  */
 import DOMPurify from 'dompurify'
 import {
@@ -24,7 +27,10 @@ import {
 } from 'lucide-react'
 import { marked } from 'marked'
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
+import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
@@ -67,17 +73,22 @@ export function renderWidget(props: RenderProps) {
 // Shared pieces
 // ---------------------------------------------------------------------------
 
+/** A history line is worth drawing once it has a few points and moves at all. */
+function worthDrawing(points: number[] | undefined): points is number[] {
+  return Boolean(points && points.length >= 5 && new Set(points).size > 1)
+}
+
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
   if (!items?.length) return null
   return (
     <div className="flex flex-wrap gap-1.5">
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
-          {item.label}
+          {tLabel(item.label)}
           <b className="num">{formatValue(item.value, item.unit)}</b>
-          {item.metric && series?.[item.metric] && (
+          {item.metric && worthDrawing(series?.[item.metric]) && (
             <span className="inline-block w-8 ml-1 -mb-0.5">
-              <Sparkline values={series[item.metric]} height={10} fill={false} />
+              <Sparkline values={series![item.metric]} height={10} fill={false} />
             </span>
           )}
         </span>
@@ -107,6 +118,7 @@ function ActionButtons({
     <div className={`flex items-center gap-1 ${compact ? '' : 'mt-2'}`}>
       {(actions as Action[]).map((action) => {
         const Known = action.icon ? symbols[action.icon] : undefined
+        const label = tLabel(action.label)
         return (
           <button
             key={action.id}
@@ -115,11 +127,11 @@ function ActionButtons({
               event.stopPropagation()
               onAction(action)
             }}
-            aria-label={action.label}
-            title={action.label}
+            aria-label={label}
+            title={label}
           >
             {Known ? <Known size={13} /> : action.icon ? <LucideByName name={action.icon} size={13} /> : null}
-            {!compact && <span>{action.label}</span>}
+            {!compact && <span>{label}</span>}
           </button>
         )
       })}
@@ -136,14 +148,15 @@ function statusOf(value: unknown): Status {
 // ---------------------------------------------------------------------------
 
 export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
+  const { t } = useTranslation()
   const primary = data?.primary
   const metric = Object.keys(data?.metrics ?? {})[0]
   const points = metric ? series?.[metric] : undefined
   const hasFooter = Boolean(data?.secondary?.length || data?.actions?.length)
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      {points && points.length > 1 && (
-        <div className="absolute inset-x-0 bottom-0 h-[55%] opacity-60 pointer-events-none" aria-hidden="true">
+      {worthDrawing(points) && (
+        <div className="absolute inset-x-0 bottom-0 h-[55%] opacity-60" title={t('card.history')} aria-hidden="true">
           <Sparkline values={points} height={60} className="!h-full" />
         </div>
       )}
@@ -152,7 +165,7 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
           {formatValue(primary?.value)}
           {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{primary.unit}</span>}
         </div>
-        {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{primary.label}</div>}
+        {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{tLabel(primary.label)}</div>}
       </div>
       {hasFooter && (
         <div className="px-3 pb-2.5 pt-1 flex items-end justify-between gap-2 relative">
@@ -195,7 +208,7 @@ export function GaugeCard({ data }: RenderProps) {
         </text>
       </svg>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] text-muted uppercase tracking-wide">{data?.primary?.label}</div>
+        <div className="text-[11px] text-muted uppercase tracking-wide">{tLabel(data?.primary?.label)}</div>
         <div className="mt-2">
           <Chips items={data?.secondary} />
         </div>
@@ -215,28 +228,33 @@ export function StatsCard({ data, series }: RenderProps) {
   return (
     <div className="flex-1 flex flex-col px-3 pb-2.5 min-h-0 scroll">
       <div className="my-auto flex flex-col gap-1.5">
-      {rows.map((row, index) => {
-        const numeric = typeof row.value === 'number' ? row.value : null
-        const isPercent = row.unit === '%'
-        const points = row.metric ? series?.[row.metric] : undefined
-        return (
-          <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3">
-            <div className="text-[11px] text-muted w-[4.6rem] truncate">{row.label}</div>
-            <div className="min-w-0">
-              {points && points.length > 1 ? (
-                <Sparkline values={points} height={16} min={isPercent ? 0 : undefined} max={isPercent ? 100 : undefined} />
-              ) : isPercent && numeric !== null ? (
-                <div className="bar" data-status={numeric >= 90 ? 'bad' : numeric >= 75 ? 'warn' : 'ok'}>
-                  <i style={{ width: `${Math.min(100, numeric)}%` }} />
-                </div>
-              ) : (
-                <div className="bar"><i style={{ width: 0 }} /></div>
-              )}
+        {rows.map((row, index) => {
+          const numeric = typeof row.value === 'number' ? row.value : null
+          const isPercent = row.unit === '%'
+          const points = row.metric ? series?.[row.metric] : undefined
+          return (
+            <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3">
+              {/* Labels grow with the language, values never wrap: "WAN eingehend" and "95.8 MB/s" must both fit. */}
+              <div className="text-[11px] text-muted min-w-[4.6rem] max-w-[10rem] truncate" title={tLabel(row.label)}>
+                {tLabel(row.label)}
+              </div>
+              <div className="min-w-0">
+                {worthDrawing(points) ? (
+                  <Sparkline values={points} height={16} min={isPercent ? 0 : undefined} max={isPercent ? 100 : undefined} />
+                ) : isPercent && numeric !== null ? (
+                  <div className="bar" data-status={numeric >= 90 ? 'bad' : numeric >= 75 ? 'warn' : 'ok'}>
+                    <i style={{ width: `${Math.min(100, numeric)}%` }} />
+                  </div>
+                ) : (
+                  <div className="bar">
+                    <i style={{ width: 0 }} />
+                  </div>
+                )}
+              </div>
+              <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">{formatValue(row.value, row.unit)}</div>
             </div>
-            <div className="num text-[13px] font-semibold text-right w-16">{formatValue(row.value, row.unit)}</div>
-          </div>
-        )
-      })}
+          )
+        })}
       </div>
     </div>
   )
@@ -247,8 +265,15 @@ export function StatsCard({ data, series }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function ListCard({ data, onAction, canAct, series }: RenderProps) {
+  const { t, i18n } = useTranslation()
   const items = data?.items ?? []
-  if (!items.length && !data?.error) return <Empty>Nothing to show</Empty>
+  if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
+  // A row that carries an error code is translated by the code; other subtitles by wording.
+  const subtitleOf = (item: Record<string, unknown>): string => {
+    const text = String(item.subtitle ?? '')
+    if (item.error_code && i18n.language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text })
+    return tLabel(text)
+  }
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <ul className="flex-1 min-h-0 scroll px-1.5 pb-1">
@@ -264,7 +289,7 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
                   <span className="text-[13px] font-medium truncate">{String(item.title ?? '')}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
-                {item.subtitle ? <div className="text-[11px] text-muted truncate">{String(item.subtitle)}</div> : null}
+                {item.subtitle ? <div className="text-[11px] text-muted truncate">{subtitleOf(item)}</div> : null}
                 {progress !== null && (
                   <div className="bar mt-1" data-status={status}>
                     <i style={{ width: `${progress}%` }} />
@@ -281,11 +306,9 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
                   <ActionButtons actions={item.actions as Action[]} onAction={onAction} canAct={canAct} compact />
                 </span>
               ) : null}
-              {item.value !== undefined && item.value !== '' && (
-                <span className="num text-xs text-muted whitespace-nowrap">{String(item.value)}</span>
-              )}
+              {item.value !== undefined && item.value !== '' && <span className="num text-xs text-muted whitespace-nowrap">{String(item.value)}</span>}
               {item.url ? (
-                <a href={String(item.url)} target="_blank" rel="noreferrer" className="text-faint hover:text-accent" aria-label="Open">
+                <a href={String(item.url)} target="_blank" rel="noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')}>
                   <ExternalLink size={12} />
                 </a>
               ) : null}
@@ -293,7 +316,7 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
           )
         })}
       </ul>
-      {(data?.secondary?.length || data?.actions?.length) ? (
+      {data?.secondary?.length || data?.actions?.length ? (
         <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
           <Chips items={data?.secondary} series={series} />
           <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
@@ -308,8 +331,9 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function NowPlayingCard({ data }: RenderProps) {
+  const { t } = useTranslation()
   const items = data?.items ?? []
-  if (!items.length) return <Empty>Nothing is playing</Empty>
+  if (!items.length) return <Empty>{t('card.nothingPlaying')}</Empty>
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <ul className="flex-1 min-h-0 scroll px-3 pb-2 space-y-2">
@@ -326,7 +350,7 @@ export function NowPlayingCard({ data }: RenderProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-medium truncate">{String(item.title ?? '')}</div>
-                <div className="text-[11px] text-muted truncate">{String(item.subtitle ?? '')}</div>
+                <div className="text-[11px] text-muted truncate">{tLabel(String(item.subtitle ?? ''))}</div>
                 <div className="flex items-center gap-2 mt-1.5">
                   {paused ? <Pause size={11} className="text-warn flex-none" /> : <Play size={11} className="text-ok flex-none" />}
                   <div className="bar flex-1">
@@ -351,8 +375,9 @@ export function NowPlayingCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function CalendarCard({ data }: RenderProps) {
+  const { t } = useTranslation()
   const items = data?.items ?? []
-  if (!items.length) return <Empty>Nothing coming up</Empty>
+  if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
   for (const item of items) {
     const key = String(item.date ?? '')
@@ -363,12 +388,12 @@ export function CalendarCard({ data }: RenderProps) {
     <ul className="flex-1 min-h-0 scroll px-3 pb-2">
       {[...groups.entries()].map(([date, entries]) => (
         <li key={date} className="py-1">
-          <div className="text-[10px] uppercase tracking-wide text-faint mb-1">{dayLabel(date)}</div>
+          <div className="text-[10px] uppercase tracking-wide text-faint mb-1">{dayLabel(date, t)}</div>
           {entries.map((entry, index) => (
             <div key={index} className="flex items-center gap-2 py-1">
               <span className="dot" data-status={statusOf(entry.status)} />
               <span className="text-[13px] font-medium truncate flex-1">{String(entry.title ?? '')}</span>
-              <span className="text-[11px] text-muted truncate max-w-[45%]">{String(entry.subtitle ?? '')}</span>
+              <span className="text-[11px] text-muted truncate max-w-[45%]">{tLabel(String(entry.subtitle ?? ''))}</span>
             </div>
           ))}
         </li>
@@ -377,12 +402,12 @@ export function CalendarCard({ data }: RenderProps) {
   )
 }
 
-function dayLabel(date: string): string {
+function dayLabel(date: string, t: TFunction): string {
   const today = new Date()
   const target = new Date(date + 'T00:00:00')
   const diff = Math.round((target.getTime() - new Date(today.toDateString()).getTime()) / 86400000)
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Tomorrow'
+  if (diff === 0) return t('card.today')
+  if (diff === 1) return t('card.tomorrow')
   if (Number.isNaN(diff)) return date
   return target.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
 }
@@ -404,9 +429,10 @@ export function TextCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function BookmarksCard({ data }: RenderProps) {
+  const { t } = useTranslation()
   const items = data?.items ?? []
   const grid = data?.meta?.layout === 'grid'
-  if (!items.length) return <Empty>No links yet</Empty>
+  if (!items.length) return <Empty>{t('card.noLinks')}</Empty>
   return (
     <ul className={`flex-1 min-h-0 scroll px-2 pb-2 ${grid ? 'grid grid-cols-3 gap-1 content-start' : ''}`}>
       {items.map((item, index) => (
@@ -431,11 +457,12 @@ export function BookmarksCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function IframeCard({ data, editing }: RenderProps) {
+  const { t } = useTranslation()
   const url = String(data?.meta?.url ?? '')
-  if (!url) return <Empty>No URL set</Empty>
+  if (!url) return <Empty>{t('card.noUrl')}</Empty>
   return (
     <div className="flex-1 min-h-0 relative">
-      <iframe src={url} title="Embedded page" className="absolute inset-0 w-full h-full border-0 rounded-b-[var(--nd-radius)] bg-white" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" />
+      <iframe src={url} title={t('card.embedded')} className="absolute inset-0 w-full h-full border-0 rounded-b-[var(--nd-radius)] bg-white" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" />
       {editing && <div className="absolute inset-0" />}
     </div>
   )
@@ -504,7 +531,7 @@ export function WeatherCard({ data }: RenderProps) {
           </div>
           <div className="text-[11px] text-muted mt-1 capitalize truncate">
             {condition.replace('-', ' ')}
-            {data?.primary?.label ? ` · ${data.primary.label}` : ''}
+            {data?.primary?.label ? ` · ${tLabel(data.primary.label)}` : ''}
           </div>
         </div>
         <div className="ml-auto hidden lg:block">
@@ -536,8 +563,9 @@ export function WeatherCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function FeedCard({ data }: RenderProps) {
+  const { t } = useTranslation()
   const items = data?.items ?? []
-  if (!items.length) return <Empty>No entries</Empty>
+  if (!items.length) return <Empty>{t('card.noEntries')}</Empty>
   const cards = data?.meta?.style === 'cards'
   return (
     <ul className={`flex-1 min-h-0 scroll px-2 pb-2 ${cards ? 'grid grid-cols-2 gap-2 content-start' : ''}`}>
@@ -562,14 +590,19 @@ export function FeedCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function LogCard({ data }: RenderProps) {
+  const { t } = useTranslation()
   const lines = (data?.meta?.lines_preview as string[] | undefined) ?? []
   return (
     <pre className="flex-1 min-h-0 scroll px-3 pb-3 m-0 font-mono text-[11px] leading-[1.5] text-muted whitespace-pre-wrap">
-      {lines.length ? lines.map((line, index) => (
-        <div key={index} className={/error|fatal/i.test(line) ? 'text-bad' : /warn/i.test(line) ? 'text-warn' : ''}>
-          {line}
-        </div>
-      )) : <span className="text-faint">Waiting for log lines…</span>}
+      {lines.length ? (
+        lines.map((line, index) => (
+          <div key={index} className={/error|fatal/i.test(line) ? 'text-bad' : /warn/i.test(line) ? 'text-warn' : ''}>
+            {line}
+          </div>
+        ))
+      ) : (
+        <span className="text-faint">{t('card.waitingLog')}</span>
+      )}
     </pre>
   )
 }
@@ -579,6 +612,7 @@ export function LogCard({ data }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function ChartCard({ data, series }: RenderProps) {
+  const { t } = useTranslation()
   const metric = Object.keys(data?.metrics ?? {})[0]
   const points = (metric && series?.[metric]) || []
   const current = data?.primary?.value
@@ -587,15 +621,15 @@ export function ChartCard({ data, series }: RenderProps) {
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-3">
       <div className="flex items-baseline gap-2">
         <span className="num text-2xl font-semibold">{formatValue(current, unit)}</span>
-        <span className="text-[11px] text-muted">{data?.primary?.label}</span>
+        <span className="text-[11px] text-muted">{tLabel(data?.primary?.label)}</span>
         {points.length > 1 && (
           <span className="ml-auto num text-[10px] text-faint">
-            min {formatValue(Math.min(...points))} · max {formatValue(Math.max(...points))}
+            {t('card.min')} {formatValue(Math.min(...points))} · {t('card.max')} {formatValue(Math.max(...points))}
           </span>
         )}
       </div>
-      <div className="flex-1 min-h-0 mt-1">
-        {points.length > 1 ? <Sparkline values={points} height={64} /> : <Empty>Collecting…</Empty>}
+      <div className="flex-1 min-h-0 mt-1" title={t('card.history')}>
+        {points.length > 1 ? <Sparkline values={points} height={64} /> : <Empty>{t('card.collecting')}</Empty>}
       </div>
     </div>
   )
@@ -606,7 +640,9 @@ export function ChartCard({ data, series }: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function AppTile({ widget, data, link }: RenderProps) {
+  const { t } = useTranslation()
   const health = widget.health
+  const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
   const description = String(data?.meta?.description ?? '')
   const href = link || widget.link || undefined
@@ -627,13 +663,11 @@ export function AppTile({ widget, data, link }: RenderProps) {
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className="dot" data-status={widget.options?.check === false ? 'unknown' : status} />
-          {health?.last_latency_ms !== null && health?.last_latency_ms !== undefined && (
-            <span className="num text-[10px] text-faint">{health.last_latency_ms} ms</span>
-          )}
+          {health?.last_latency_ms !== null && health?.last_latency_ms !== undefined && <span className="num text-[10px] text-faint">{health.last_latency_ms} ms</span>}
         </div>
       </div>
       {bars.length > 0 && (
-        <div className="flex gap-[2px] mt-2 h-[6px]" aria-hidden="true">
+        <div className="flex gap-[2px] mt-2 h-[6px]" title={t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })} aria-hidden="true">
           {bars.map((bar, index) => (
             <span
               key={index}

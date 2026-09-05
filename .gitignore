@@ -24,3 +24,6 @@ Thumbs.db
 
 # Working notes, not part of the product
 notes/
+
+# Build output of tsc -b
+frontend/*.tsbuildinfo

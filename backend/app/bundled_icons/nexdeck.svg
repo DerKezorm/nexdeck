@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="256" height="256">
+  <defs>
+    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a5f3fc"/>
+      <stop offset="0.55" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#0891b2"/>
+    </linearGradient>
+    <linearGradient id="m" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0e7490" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="8.5" fill="#0f1420" stroke="rgba(255,255,255,0.12)"/>
+  <rect x="11" y="7.5" width="14" height="9" rx="2.2" fill="#22d3ee" fill-opacity="0.22"/>
+  <rect x="8.5" y="11" width="14" height="9" rx="2.2" fill="url(#m)"/>
+  <rect x="6" y="14.5" width="14" height="9" rx="2.2" fill="url(#f)"/>
+  <path d="M8.5 21.2l2.4-2.3 2 1.4 2.3-3.1 2.3 1.6" fill="none" stroke="#062a33" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24.6" cy="8.2" r="2.4" fill="#22d3ee"/>
+  <circle cx="24.6" cy="8.2" r="4.4" fill="none" stroke="#22d3ee" stroke-opacity="0.35"/>
+</svg>

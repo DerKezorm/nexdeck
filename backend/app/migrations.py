@@ -18,8 +18,16 @@ from .models import Base
 
 logger = logging.getLogger("nexdeck.migrations")
 
+def _nexview_logo(connection: Connection) -> None:
+    """Nexview widgets created before the logo shipped carry the placeholder symbol."""
+    connection.execute(
+        text("UPDATE widgets SET icon = 'nexview' WHERE kind LIKE 'nexview.%' AND icon = 'lucide:clapperboard'")
+    )
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
+    (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
 ]
 
 

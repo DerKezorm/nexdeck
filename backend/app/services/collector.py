@@ -263,6 +263,42 @@ class Collector:
 
     # -- on demand -----------------------------------------------------------
 
+    async def preview(self, widget_id: int, options: dict[str, Any], integration_id: int | None) -> WidgetData:
+        """Fetch once with draft options and integration. Nothing is published or recorded."""
+        with db_session() as db:
+            widget = db.get(Widget, widget_id)
+            if widget is None:
+                return WidgetData(status="unknown", error="There is no such widget.")
+            kind = widget.kind
+            integration = db.get(Integration, integration_id) if integration_id is not None else None
+            config = resolve_config(integration) if integration is not None else {}
+            demo = self._demo_active(integration)
+        try:
+            adapter, widget_kind = split_widget_kind(kind)
+        except KeyError as error:
+            return WidgetData(status="unknown", error=str(error))
+        try:
+            if demo:
+                return adapter.demo(widget_kind, options, self.tick)
+            if adapter.needs_integration and integration is None:
+                raise AdapterError(
+                    "This widget needs a connection to a service.", code="no_integration",
+                    hint="Pick an integration first.",
+                )
+            ctx = Context(
+                self.client, integration_id=integration_id, widget_id=widget_id,
+                cache=self._caches.setdefault(integration_id or 0, {}),
+                resolve_integration=self.resolve_integration,
+            )
+            return await asyncio.wait_for(adapter.fetch(widget_kind, config, options, ctx), timeout=20)
+        except AdapterError as error:
+            return WidgetData(status="unknown", error=error.message, meta={"code": error.code, "hint": error.hint})
+        except TimeoutError:
+            return WidgetData(status="unknown", error="The service did not answer within twenty seconds.", meta={"code": "timeout"})
+        except Exception as error:  # noqa: BLE001 - a broken adapter must answer the preview, not crash it
+            logger.exception("Preview of widget %s (%s) failed.", widget_id, kind)
+            return WidgetData(status="unknown", error=f"Unexpected error: {error.__class__.__name__}.", meta={"code": "crash"})
+
     async def refresh_now(self, widget_id: int) -> WidgetData | None:
         await self.refresh(widget_id)
         return live.get(widget_id)

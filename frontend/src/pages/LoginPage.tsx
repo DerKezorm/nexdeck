@@ -5,7 +5,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { Logo } from '../components/Logo'
-import { Field } from '../components/ui'
+import { Field, PasswordInput } from '../components/ui'
 import { useAuth } from '../stores/auth'
 
 export function LoginPage() {
@@ -49,7 +49,7 @@ export function LoginPage() {
           <input id="username" className="input" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
         </Field>
         <Field label={t('auth.password')} htmlFor="password">
-          <input id="password" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordInput id="password" autoComplete="current-password" value={password} onChange={setPassword} />
         </Field>
         {(error || oidcError) && (
           <p className="text-sm text-bad mb-3" role="alert">

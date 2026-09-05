@@ -61,6 +61,9 @@ export interface WidgetView {
   integration_name?: string
   refresh_seconds: number | null
   beta?: boolean
+  client_only?: boolean
+  default_size?: [number, number]
+  min_size?: [number, number]
   health?: HealthView | null
 }
 

@@ -16,12 +16,15 @@ import { TopBar } from '../components/TopBar'
 import { Confirm, Dialog, Spinner, Toast } from '../components/ui'
 import { WhatsNewDialog } from '../components/WhatsNewDialog'
 import { WidgetLibrary } from '../components/WidgetLibrary'
-import { WidgetSettingsSheet } from '../components/WidgetSettingsSheet'
+import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
 import { useStream } from '../hooks/useStream'
-import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
+import { tLabel } from '../i18n/texts'
+import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { applyTheme, currentTheme, useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
+
+const EDIT_HINT_SEEN = 'nexdeck.editHintSeen'
 
 export function BoardPage() {
   const { t } = useTranslation()
@@ -42,19 +45,22 @@ export function BoardPage() {
   const [boardSettings, setBoardSettings] = useState(false)
   const [palette, setPalette] = useState(false)
   const [pending, setPending] = useState<{ widgetId: number; action: Action } | null>(null)
-  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' | 'info' } | null>(null)
   const [removing, setRemoving] = useState<number | null>(null)
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
   const [theme, setTheme] = useState(currentTheme())
   const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
-  const [draftWidget, setDraftWidget] = useState<{ id: number; title: string; icon: string; link: string } | null>(null)
+  const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null)
+  const [draftWidget, setDraftWidget] = useState<WidgetDraft | null>(null)
+  const [previewData, setPreviewData] = useState<{ id: number; data: WidgetData } | null>(null)
 
   const data = board.data
   const pages = useMemo(() => data?.pages ?? [], [data])
   const activePage = pages.find((p) => p.slug === pageSlug) ?? pages[0]
   const canEdit = data ? ['edit', 'act', 'owner'].includes(data.permission) && !data.provisioned : false
   const canAct = data ? ['act', 'owner'].includes(data.permission) : false
+  const settings = previewSettings ?? data?.settings ?? {}
 
   // Snapshot and history into the live store.
   useEffect(() => {
@@ -107,15 +113,29 @@ export function BoardPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // The first time edit mode opens, say how moving and resizing work.
+  useEffect(() => {
+    if (!editing) return
+    try {
+      if (localStorage.getItem(EDIT_HINT_SEEN)) return
+      localStorage.setItem(EDIT_HINT_SEEN, '1')
+    } catch {
+      // storage may be unavailable; the hint then shows every time, which is fine
+    }
+    setToast({ text: t('board.editHint'), level: 'info' })
+  }, [editing, t])
+
   const widgets: WidgetView[] = useMemo(
     () =>
       (activePage?.widgets ?? []).map((w) => {
         const merged = w.health ? { ...w, health: { ...w.health, ...(live.health[w.id] ?? {}) } } : w
         // While the settings sheet is open, the card shows the draft.
-        return draftWidget && draftWidget.id === w.id ? { ...merged, title: draftWidget.title, icon: draftWidget.icon, link: draftWidget.link } : merged
+        return draftWidget && draftWidget.id === w.id ? { ...merged, title: draftWidget.title, icon: draftWidget.icon, link: draftWidget.link, options: draftWidget.options } : merged
       }),
     [activePage, live.health, draftWidget],
   )
+  // Data fetched with draft options replaces the live data of that one card.
+  const gridData = useMemo(() => (previewData ? { ...live.data, [previewData.id]: previewData.data } : live.data), [live.data, previewData])
 
   const runAction = async (widgetId: number, action: Action) => {
     try {
@@ -138,6 +158,12 @@ export function BoardPage() {
     }
     return list
   }, [widgets, live.data, canAct])
+
+  const closeWidgetSettings = () => {
+    setSettingsFor(null)
+    setDraftWidget(null)
+    setPreviewData(null)
+  }
 
   if (board.isLoading) {
     return (
@@ -215,10 +241,11 @@ export function BoardPage() {
           key={activePage.id}
           widgets={widgets}
           layouts={activePage.layouts}
-          data={live.data}
+          data={gridData}
           series={live.series}
           editing={editing}
           canAct={canAct}
+          autoCompact={Boolean(settings.compact)}
           onLayoutChange={onLayoutChange}
           onAction={onAction}
           onRefresh={(id) => void post(`/widgets/${id}/refresh`)}
@@ -271,17 +298,15 @@ export function BoardPage() {
         widget={activePage.widgets.find((w) => w.id === settingsFor) ?? null}
         pages={pages.map((p) => ({ id: p.id, name: p.name }))}
         onPreview={setDraftWidget}
-        onClose={() => {
-          setSettingsFor(null)
-          setDraftWidget(null)
-        }}
+        onPreviewData={(id, preview) => setPreviewData(preview ? { id, data: preview } : null)}
+        onClose={closeWidgetSettings}
         onSaved={() => {
           setDraftWidget(null)
+          setPreviewData(null)
           void board.refetch()
         }}
         onDeleted={() => {
-          setSettingsFor(null)
-          setDraftWidget(null)
+          closeWidgetSettings()
           void board.refetch()
         }}
       />
@@ -290,10 +315,14 @@ export function BoardPage() {
         board={data}
         boards={boards.data ?? []}
         canEdit={canEdit}
-        onPreview={setPreviewBackground}
+        onPreview={(background, draftSettings) => {
+          setPreviewBackground(background)
+          setPreviewSettings(draftSettings)
+        }}
         onClose={() => {
           setBoardSettings(false)
           setPreviewBackground(null)
+          setPreviewSettings(null)
         }}
         onChanged={() => void Promise.all([board.refetch(), boards.refetch()])}
       />
@@ -303,7 +332,7 @@ export function BoardPage() {
 
       <Confirm
         open={pending !== null}
-        title={pending ? `${pending.action.label}?` : ''}
+        title={pending ? `${tLabel(pending.action.label)}?` : ''}
         body={t('board.confirmAction')}
         danger={pending?.action.danger}
         onCancel={() => setPending(null)}
@@ -322,7 +351,11 @@ export function BoardPage() {
           const id = removing
           setRemoving(null)
           if (id !== null) {
-            void import('../api/client').then(({ del }) => del(`/widgets/${id}`).then(() => board.refetch()))
+            void import('../api/client').then(({ del }) =>
+              del(`/widgets/${id}`)
+                .then(() => board.refetch())
+                .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('widget.remove.failed'), level: 'error' })),
+            )
           }
         }}
       />

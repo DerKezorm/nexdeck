@@ -101,6 +101,7 @@ export function KioskPage() {
           layouts={page.layouts}
           data={live.data}
           series={live.series}
+          autoCompact={Boolean(data.settings?.compact)}
           canAct={canAct}
           onAction={(widgetId, action) => (action.confirm ? setPending({ widgetId, action }) : run(widgetId, action))}
         />

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, post } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
-import { Field, Select, Toast } from '../../components/ui'
+import { Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsPage'
@@ -17,8 +17,10 @@ export function ProfileSettings() {
   const [displayName, setDisplayName] = useState(user?.display_name ?? '')
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   if (!user) return null
+  const mismatch = confirm.length > 0 && confirm !== next
   return (
     <>
       <SettingsCard title={t('settings.profile.title')}>
@@ -44,24 +46,29 @@ export function ProfileSettings() {
       </SettingsCard>
 
       <SettingsCard title={t('settings.profile.password')} description={t('settings.profile.passwordHelp')}>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
           {user.has_password && (
             <Field label={t('settings.profile.currentPassword')} htmlFor="p-cur">
-              <input id="p-cur" className="input" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+              <PasswordInput id="p-cur" autoComplete="current-password" value={current} onChange={setCurrent} />
             </Field>
           )}
-          <Field label={t('settings.profile.newPassword')} htmlFor="p-new">
-            <input id="p-new" className="input" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
+          <Field label={t('settings.profile.newPassword')} htmlFor="p-new" help={t('setup.passwordHelp')}>
+            <PasswordInput id="p-new" autoComplete="new-password" value={next} onChange={setNext} />
+          </Field>
+          <Field label={t('settings.profile.confirmPassword')} htmlFor="p-new2">
+            <PasswordInput id="p-new2" autoComplete="new-password" value={confirm} onChange={setConfirm} />
+            {mismatch && <p className="text-[11px] mt-1 text-warn">{t('auth.mismatch')}</p>}
           </Field>
         </div>
         <button
           className="btn"
-          disabled={next.length < 8}
+          disabled={next.length < 8 || confirm !== next}
           onClick={() =>
             void post('/auth/password', { current_password: current, new_password: next })
               .then(() => {
                 setCurrent('')
                 setNext('')
+                setConfirm('')
                 setToast({ text: t('common.saved'), level: 'ok' })
               })
               .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))

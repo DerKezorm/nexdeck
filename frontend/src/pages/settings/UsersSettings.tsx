@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
 import type { User } from '../../api/types'
-import { Confirm, Field, Select, Toast } from '../../components/ui'
+import { Confirm, Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsPage'
 
@@ -51,7 +51,7 @@ export function UsersSettings() {
             <input id="u-name" className="input" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
           </Field>
           <Field label={t('auth.password')} htmlFor="u-pass">
-            <input id="u-pass" className="input" type="password" autoComplete="new-password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+            <PasswordInput id="u-pass" autoComplete="new-password" value={form.password} onChange={(password) => setForm((f) => ({ ...f, password }))} />
           </Field>
           <Field label={t('settings.profile.displayName')} htmlFor="u-display">
             <input id="u-display" className="input" value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />

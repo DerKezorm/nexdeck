@@ -23,7 +23,7 @@ from pydantic import Field as PydanticField
 
 logger = logging.getLogger("nexdeck.adapters")
 
-FieldType = Literal["text", "password", "url", "number", "bool", "select", "textarea"]
+FieldType = Literal["text", "password", "url", "number", "bool", "select", "textarea", "timezone"]
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
@@ -70,6 +70,9 @@ class WidgetType:
     refresh_seconds: int = 30
     #: Metric names this widget records for sparklines.
     metrics: tuple[str, ...] = ()
+    #: True for widgets that need no server refresh: clocks, notes, bookmarks,
+    #: embedded pages and app tiles draw themselves from their options.
+    client_only: bool = False
 
     def to_dict(self, adapter_kind: str) -> dict[str, Any]:
         return {
@@ -82,6 +85,7 @@ class WidgetType:
             "options": [f.to_dict() for f in self.options],
             "refresh_seconds": self.refresh_seconds,
             "metrics": list(self.metrics),
+            "client_only": self.client_only,
         }
 
 

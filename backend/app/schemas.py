@@ -166,6 +166,14 @@ class WidgetPatch(BaseModel):
     page_id: int | None = None
 
 
+class WidgetPreview(BaseModel):
+    """Draft settings for a preview fetch. Nothing is saved."""
+
+    options: dict[str, Any] = Field(default_factory=dict)
+    integration_id: int | None = None
+    clear_integration: bool = False
+
+
 class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 

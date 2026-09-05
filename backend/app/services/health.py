@@ -29,12 +29,27 @@ WAKE_SECONDS = 5
 PARALLEL = 16
 
 
+_clients: dict[bool, httpx.AsyncClient] = {}
+
+
+def http_client(insecure: bool) -> httpx.AsyncClient:
+    """One client per TLS mode, kept for the life of the process.
+
+    A fresh client builds a TLS context and loads the CA bundle, which costs
+    about a second on Windows. Measured as latency, that made a LAN service
+    look a second away.
+    """
+    client = _clients.get(insecure)
+    if client is None or client.is_closed:
+        client = httpx.AsyncClient(verify=not insecure, follow_redirects=True, headers={"User-Agent": "nexdeck-check"})
+        _clients[insecure] = client
+    return client
+
+
 async def check_http(target: str, timeout: float, expect_status: int, insecure: bool) -> tuple[bool, int, str]:
     started = time.perf_counter()
     try:
-        async with httpx.AsyncClient(verify=not insecure, follow_redirects=True, timeout=timeout,
-                                     headers={"User-Agent": "nexdeck-check"}) as client:
-            response = await client.get(target)
+        response = await http_client(insecure).get(target, timeout=timeout)
     except httpx.HTTPError as error:
         return False, int((time.perf_counter() - started) * 1000), error.__class__.__name__
     latency = int((time.perf_counter() - started) * 1000)
@@ -69,6 +84,9 @@ async def check_ping(target: str, timeout: float) -> tuple[bool, int, str]:
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
         )
         code = await asyncio.wait_for(process.wait(), timeout + 2)
+    except NotImplementedError:
+        # Windows with the selector event loop cannot spawn processes.
+        return False, 0, "Ping is not available on this system; use an HTTP or TCP check."
     except (OSError, TimeoutError) as error:
         return False, int((time.perf_counter() - started) * 1000), error.__class__.__name__
     return code == 0, int((time.perf_counter() - started) * 1000), "reply" if code == 0 else "no reply"
@@ -128,7 +146,11 @@ class HealthService:
             async with semaphore:
                 probe = HealthCheck(id=check_id, kind=kind, target=target, timeout_seconds=timeout,
                                     expect_status=expect, insecure=insecure)
-                ok, latency, detail = await run_check(probe)
+                try:
+                    ok, latency, detail = await run_check(probe)
+                except Exception as error:  # noqa: BLE001 - one broken check must not stop the others
+                    logger.warning("Check %s (%s %s) failed: %s", check_id, kind, target, error.__class__.__name__)
+                    ok, latency, detail = False, 0, f"Check failed: {error.__class__.__name__}"
             self._next_due[check_id] = time.monotonic() + max(5, interval or get_settings().health_interval_seconds)
             self._record(check_id, ok, latency, detail)
 
@@ -183,6 +205,9 @@ class HealthService:
                 "check_id": check.id, "widget_id": check.widget_id, "ok": ok, "latency_ms": latency,
                 "detail": detail, "down_since": check.down_since.isoformat() if check.down_since else None,
                 "changed": was_ok is not None and was_ok != ok,
+                # The tile's bars travel with every result; otherwise they only
+                # moved when the whole board was loaded again.
+                "bars": uptime_bars(db, check.widget.id, bars_window(check.widget.options)) if check.widget is not None else None,
             }
         if board_id is not None:
             hub.publish(board_topic(board_id), "health", payload)
@@ -232,8 +257,29 @@ def ensure_check_for_widget(db, widget: Widget) -> HealthCheck | None:  # noqa: 
     return existing
 
 
-def uptime_bars(db, widget_id: int, hours: int = 24, bars: int = 48) -> list[float | None]:  # noqa: ANN001
-    """Availability per slice of the last day: 1.0 up, 0.0 down, None unknown."""
+#: The windows an app tile can show: hours covered and number of bars.
+BAR_WINDOWS: dict[str, tuple[int, int]] = {"24h": (24, 48), "6h": (6, 48), "1h": (1, 60)}
+LIVE_BARS = 48
+
+
+def bars_window(options: dict | None) -> str:
+    window = str((options or {}).get("bars") or "24h")
+    return window if window in BAR_WINDOWS or window == "live" else "24h"
+
+
+def uptime_bars(db, widget_id: int, window: str = "24h") -> list[float | None]:  # noqa: ANN001
+    """Availability as a row of bars: 1.0 up, 0.0 down, None unknown.
+
+    ``24h``, ``6h`` and ``1h`` slice the window evenly; ``live`` takes the
+    last checks as they were recorded, one bar each. Raw checks are kept for
+    a few hours and then folded into minute averages, so an old "check" in
+    the live row is really a minute.
+    """
+    if window == "live":
+        points = history.series(db, widget_id, "up", hours=24)[-LIVE_BARS:]
+        values: list[float | None] = [round(value, 2) for _ts, value in points]
+        return [None] * (LIVE_BARS - len(values)) + values
+    hours, bars = BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])
     points = history.series(db, widget_id, "up", hours=hours)
     if not points:
         return [None] * bars

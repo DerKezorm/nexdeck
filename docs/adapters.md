@@ -22,7 +22,7 @@ that one of fifteen renderers draws.
 | TrueNAS | system, pools, alerts | | API key |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
-| UniFi Network | summary, devices | | local account |
+| UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest | | API token |
 | Plex | now playing, library | | X-Plex-Token |
 | Jellyfin, Emby | now playing, library | | API key |
@@ -43,6 +43,25 @@ that one of fifteen renderers draws.
 Adapters marked **beta** in the interface have not been confirmed against a
 live instance yet. They are built against the documented API and recorded
 answers; a report with the service's version is welcome.
+
+### Texts
+
+Everything an adapter says is English: field labels, help texts, widget names
+and descriptions, and the labels of values, chips, rows and actions. The
+interface translates them by their English wording from
+`frontend/src/i18n/texts.de.json`; a guard in `backend/tests/test_guards.py`
+fails when a new text has no German entry. Data that is not a label (names,
+sizes, identifiers) passes through untouched.
+
+A widget that draws itself from its options (clock, notes, bookmarks, embedded
+page, app tile) sets `client_only=True`; the settings sheet then hides the
+refresh interval. A field of type `timezone` is offered as a list of IANA
+zones. `POST /api/v1/widgets/{id}/preview` runs a fetch with draft options
+without saving; the settings sheet uses it for its live preview.
+
+A card can be enlarged but never made smaller than its `default_size`;
+`min_size` is what the server uses when it has to squeeze a new widget into
+a tight spot.
 
 ## Renderers
 

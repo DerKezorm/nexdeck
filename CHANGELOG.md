@@ -16,3 +16,6 @@ project uses semantic versioning.
 - **Notifications** through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack and Apprise.
 - **Boards as files.** Export and import as YAML; files in `data/boards/` provision boards; Docker labels `nexdeck.*` and `homepage.*` create tiles.
 - **OpenID Connect** sign-in next to local accounts, personal API tokens, English and German interface.
+- **Live preview while editing.** Widget settings and the board look show every change on the card before it is saved; closing the sheet discards it.
+- **Free placement.** Cards stay where they are dropped, gaps allowed; a board option pushes them up instead.
+- **UniFi with an API key.** Network 9.0 consoles are read through the Integration API with a key from the console; no local account and no two-factor exception needed. Older controllers keep the account sign-in.

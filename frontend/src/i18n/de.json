@@ -17,7 +17,18 @@
     "toggleTheme": "Hell und Dunkel wechseln"
   },
   "errors": {
-    "network": "Der Server ist nicht erreichbar."
+    "network": "Der Server ist nicht erreichbar.",
+    "widget": {
+      "unreachable": "Der Dienst ist nicht erreichbar.",
+      "auth_failed": "Der Dienst lehnt die Zugangsdaten ab.",
+      "timeout": "Der Dienst antwortet nicht rechtzeitig.",
+      "no_integration": "Dieses Widget braucht eine Anbindung an einen Dienst.",
+      "http_error": "Der Dienst antwortet mit einem Fehler.",
+      "not_json": "Der Dienst liefert keine Daten, vermutlich eine Anmeldeseite.",
+      "crash": "Der Adapter ist unerwartet gescheitert.",
+      "missing_location": "Ort oder Koordinaten fehlen.",
+      "place_not_found": "Der Ort wurde nicht gefunden."
+    }
   },
   "auth": {
     "username": "Benutzername",
@@ -37,7 +48,11 @@
       "oidc_token_refused": "Der Anbieter hat den Anmeldecode abgelehnt.",
       "oidc_no_public_url": "Die öffentliche Adresse ist nicht eingestellt. Das muss ein Administrator zuerst tun.",
       "oidc_bad_discovery": "Die Konfiguration des Anbieters ist unvollständig."
-    }
+    },
+    "confirmPassword": "Passwort bestätigen",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "mismatch": "Die beiden Passwörter sind verschieden."
   },
   "setup": {
     "step": {
@@ -93,7 +108,8 @@
       "sessions": "Sitzungen",
       "sessionsHelp": "Jeder Browser, der mit diesem Konto angemeldet ist.",
       "signOutSession": "Abmelden",
-      "signOut": "Hier abmelden"
+      "signOut": "Hier abmelden",
+      "confirmPassword": "Neues Passwort wiederholen"
     },
     "integrations": {
       "title": "Anbindungen",
@@ -265,24 +281,27 @@
     "importRun": "Importieren",
     "delete": "Dieses Board löschen",
     "deleteBody": "Jede Seite und jedes Widget darauf geht mit.",
-    "previewHint": "Das Board zeigt die Änderung sofort. Speichern behält sie, Schließen verwirft sie."
+    "previewHint": "Das Board zeigt die Änderung sofort. Speichern behält sie, Schließen verwirft sie.",
+    "autoCompact": "Karten nach oben rücken",
+    "autoCompactHelp": "Aus: Karten bleiben, wo du sie ablegst, Lücken sind erlaubt und keine Karte bewegt sich von selbst. An: Alles rückt nach oben auf, und Karten machen beim Ziehen Platz.",
+    "editHint": "Ziehen verschiebt eine Karte. Die Ecke unten rechts ändert die Größe."
   },
   "widget": {
     "remove": {
       "title": "Dieses Widget entfernen?",
-      "body": "Sein Verlauf geht mit."
+      "body": "Sein Verlauf geht mit.",
+      "failed": "Das Widget ließ sich nicht entfernen. Ist der Server erreichbar?"
     },
     "settings": "Widget-Einstellungen",
     "title": "Titel",
     "icon": "Symbol",
-    "iconHelp": "Ein Name aus dashboard-icons, lucide:name für ein Zeichen oder eine Bildadresse.",
-    "iconSearch": "Logos suchen…",
+    "iconHelp": "Tippe einen Dienstnamen, passende Logos erscheinen darunter. Oder lucide:name für ein Zeichen oder eine Bildadresse.",
     "link": "Link",
     "linkHelp": "Wohin die Karte beim Klick führt. Leer nimmt die Adresse des Dienstes.",
     "integration": "Anbindung",
     "noIntegration": "Keine",
     "refresh": "Aktualisieren (s)",
-    "refreshHelp": "Leer nimmt die Vorgabe des Widgets von {{seconds}} Sekunden.",
+    "refreshHelp": "Wie oft der Server den Dienst abfragt. Leer nimmt die Vorgabe des Widgets von {{seconds}} Sekunden.",
     "page": "Seite",
     "keepPage": "Auf dieser Seite lassen",
     "health": {
@@ -291,11 +310,28 @@
       "kind": "Prüfung",
       "interval": "Alle (s)",
       "target": "Ziel",
-      "insecure": "TLS-Fehler ignorieren"
+      "insecure": "TLS-Fehler ignorieren",
+      "kindHelp": "HTTP fragt die Adresse des Dienstes selbst an; jede Antwort zählt als erreichbar, auch eine Anmeldeseite. TCP prüft nur, ob der Port offen ist. Ping erreicht den Rechner, nicht den Dienst."
     },
     "refreshNow": "Jetzt aktualisieren",
     "openLink": "Dienst öffnen",
-    "previewHint": "Titel, Symbol und Link erscheinen sofort auf der Karte. Optionen wirken erst nach dem Speichern, weil der Server die Daten holt."
+    "previewHint": "Jede Änderung erscheint sofort auf der Karte. Speichern übernimmt sie, Schließen verwirft sie.",
+    "iconSearching": "Suche läuft…",
+    "iconNothing": "Kein Logo passt zu „{{query}}“.",
+    "iconSearchFailed": "Das Logo-Verzeichnis ließ sich nicht laden. Versuch es gleich noch einmal.",
+    "betaHelp": "Dieser Adapter wurde noch nicht an einer echten Instanz bestätigt. Wenn etwas falsch aussieht, melde es bitte.",
+    "timezoneBrowser": "Zeitzone des Browsers",
+    "timezoneUnknown": "Diese Zone steht nicht in der Liste des Browsers. Prüfe die Schreibweise.",
+    "iconPlaceholder": "radarr, proxmox, lucide:rss, https://…",
+    "iconPick": "Auswählen…",
+    "iconDialogTitle": "Symbol wählen",
+    "iconDialogSearch": "Nach Namen filtern…",
+    "iconSymbols": "Zeichen",
+    "iconLogos": "Logos",
+    "iconCount": "{{count}} Logos",
+    "iconMore": "{{count}} weitere anzeigen",
+    "showFindings": "Befunde anzeigen",
+    "showFindingsHelp": "Aus: Die Karte zeigt weder Grund noch Warnfarbe. Sinnvoll, wenn eine Befunde-Karte daneben sagt, was los ist."
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -338,5 +374,35 @@
   "whatsnew": {
     "title": "Was ist neu",
     "gotIt": "Verstanden"
+  },
+  "status": {
+    "ok": "Alles in Ordnung",
+    "warn": "Warnung",
+    "bad": "Fehler",
+    "unknown": "Noch keine Daten"
+  },
+  "card": {
+    "nothing": "Nichts anzuzeigen",
+    "nothingPlaying": "Es läuft nichts",
+    "nothingUpcoming": "Nichts steht an",
+    "noLinks": "Noch keine Links",
+    "noUrl": "Keine Adresse gesetzt",
+    "noEntries": "Keine Einträge",
+    "waitingLog": "Warte auf Protokollzeilen…",
+    "collecting": "Sammle…",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "min": "min",
+    "max": "max",
+    "open": "Öffnen",
+    "embedded": "Eingebettete Seite",
+    "history": "Verlauf der letzten 24 Stunden",
+    "bars": {
+      "24h": "Verfügbarkeit der letzten 24 Stunden, ein Balken je 30 Minuten",
+      "6h": "Verfügbarkeit der letzten 6 Stunden, ein Balken je 7,5 Minuten",
+      "1h": "Verfügbarkeit der letzten Stunde, ein Balken je Minute",
+      "live": "Die letzten 48 Prüfungen, ein Balken je Prüfung"
+    },
+    "staleData": "Zeigt die letzten guten Werte"
   }
 }

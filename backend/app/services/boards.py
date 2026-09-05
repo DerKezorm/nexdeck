@@ -71,13 +71,17 @@ def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
         widget_type = adapter.widget(kind)
         renderer = widget_type.renderer
         beta = adapter.beta
+        client_only = widget_type.client_only
+        default_size, min_size = list(widget_type.default_size), list(widget_type.min_size)
     except KeyError:
         renderer = "value"
         beta = False
+        client_only = False
+        default_size, min_size = [3, 2], [1, 1]
     health = None
     if widget.health_check is not None:
         health = health_service.check_payload(widget.health_check)
-        health["bars"] = health_service.uptime_bars(db, widget.id)
+        health["bars"] = health_service.uptime_bars(db, widget.id, health_service.bars_window(widget.options))
     return {
         "id": widget.id,
         "kind": widget.kind,
@@ -90,6 +94,9 @@ def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
         "integration_name": widget.integration.name if widget.integration else None,
         "refresh_seconds": widget.refresh_seconds,
         "beta": beta,
+        "client_only": client_only,
+        "default_size": default_size,
+        "min_size": min_size,
         "health": health,
     }
 

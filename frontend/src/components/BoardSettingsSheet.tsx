@@ -16,8 +16,8 @@ interface Props {
   canEdit: boolean
   onClose: () => void
   onChanged: () => void
-  /** Shows a background on the board while it is being chosen. */
-  onPreview?: (background: BoardWithLive['background']) => void
+  /** Shows a background and the layout settings on the board while they are being chosen. */
+  onPreview?: (background: BoardWithLive['background'], settings: Record<string, unknown>) => void
 }
 
 type Tab = 'boards' | 'look' | 'pages' | 'sharing' | 'kiosk' | 'file'
@@ -29,6 +29,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [tab, setTab] = useState<Tab>('boards')
   const [name, setName] = useState(board.name)
   const [background, setBackground] = useState(board.background)
+  const [settings, setSettings] = useState<Record<string, unknown>>(board.settings ?? {})
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -45,17 +46,18 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   useEffect(() => {
     setName(board.name)
     setBackground(board.background)
+    setSettings(board.settings ?? {})
     setError('')
   }, [board, open])
   useEffect(() => {
-    if (open) onPreview?.(background)
+    if (open) onPreview?.(background, settings)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [background, open])
+  }, [background, settings, open])
 
   const saveLook = async () => {
     setError('')
     try {
-      await patch(`/boards/${board.slug}`, { name, background })
+      await patch(`/boards/${board.slug}`, { name, background, settings })
       onChanged()
       onClose()
     } catch (failure) {
@@ -168,6 +170,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               </Field>
             </div>
           )}
+          <Switch checked={Boolean(settings.compact)} onChange={(compact) => setSettings((current) => ({ ...current, compact }))} label={t('board.autoCompact')} description={t('board.autoCompactHelp')} />
           <p className="text-[11px] text-faint mb-3">{t('board.previewHint')}</p>
           <button className="btn btn-accent" onClick={() => void saveLook()}>
             {t('common.save')}

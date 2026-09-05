@@ -289,6 +289,33 @@ async def test_weather_maps_codes_and_days(ctx: Context) -> None:
     assert failure.value.code == "missing_location"
 
 
+@respx.mock
+async def test_weather_looks_up_a_place_name(ctx: Context) -> None:
+    """A town is enough: the geocoder supplies the coordinates, once a day."""
+    geocoder = respx.get("https://geocoding-api.open-meteo.com/v1/search").mock(return_value=httpx.Response(200, json={"results": [{"name": "Aachen", "latitude": 50.7762, "longitude": 6.0838}]}))
+    forecast = respx.get("https://api.open-meteo.com/v1/forecast").mock(return_value=httpx.Response(200, json=fixture("open_meteo.json")))
+    data = await get_adapter("weather").fetch("current", {}, {"place": "Aachen", "days": 3}, ctx)
+    assert data.primary["label"] == "Aachen"
+    assert geocoder.calls.last.request.url.params["name"] == "Aachen"
+    assert forecast.calls.last.request.url.params["latitude"] == "50.7762"
+    # The second fetch reuses the cached coordinates instead of asking again.
+    await get_adapter("weather").fetch("current", {}, {"place": "Aachen", "days": 3}, ctx)
+    assert geocoder.call_count == 1
+    # Coordinates win over the place name when both are set.
+    await get_adapter("weather").fetch("current", {}, {"place": "Aachen", "latitude": 52.5, "longitude": 13.4}, ctx)
+    assert forecast.calls.last.request.url.params["latitude"] == "52.5"
+    assert geocoder.call_count == 1
+
+
+@respx.mock
+async def test_weather_unknown_place_is_a_readable_error(ctx: Context) -> None:
+    respx.get("https://geocoding-api.open-meteo.com/v1/search").mock(return_value=httpx.Response(200, json={"generationtime_ms": 0.4}))
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("weather").fetch("current", {}, {"place": "Nowhere-at-all"}, ctx)
+    assert failure.value.code == "place_not_found"
+    assert "Nowhere-at-all" in failure.value.message
+
+
 # -- home assistant ----------------------------------------------------------
 
 
@@ -308,3 +335,185 @@ async def test_home_assistant_entity_and_toggle(ctx: Context) -> None:
     live = await ha.fetch("entity", config, {"entity_id": "sensor.temp"}, ctx)
     assert live.primary == {"label": "Temp", "value": 21.5, "unit": "°C"}
     assert live.metrics == {"value": 21.5}
+
+
+# -- unifi -------------------------------------------------------------------
+
+UNIFI = "https://udm"
+UNIFI_API = f"{UNIFI}/proxy/network/integration/v1"
+SITE = "88f7af54-98f8-306a-a1c7-c9349722b1f6"
+
+
+def _unifi_integration_routes() -> None:
+    respx.get(f"{UNIFI_API}/info").mock(return_value=httpx.Response(200, json={"applicationVersion": "9.1.120"}))
+    respx.get(f"{UNIFI_API}/sites").mock(return_value=httpx.Response(200, json={"offset": 0, "limit": 200, "count": 1, "totalCount": 1, "data": [{"id": SITE, "internalReference": "default", "name": "Home"}]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices").mock(return_value=httpx.Response(200, json={"offset": 0, "limit": 200, "count": 3, "totalCount": 3, "data": [
+        {"id": "gw", "name": "Dream Machine", "model": "UniFi Dream Machine PRO SE", "state": "ONLINE", "ipAddress": "192.168.1.1", "features": ["switching"]},
+        {"id": "ap1", "name": "Living room", "model": "U6-Pro", "state": "ONLINE", "ipAddress": "192.168.1.20", "features": ["accessPoint"], "firmwareUpdatable": True},
+        {"id": "sw1", "name": "Garage", "model": "USW-Flex", "state": "OFFLINE", "ipAddress": "192.168.1.30", "features": ["switching"]},
+    ]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices/gw/statistics/latest").mock(return_value=httpx.Response(200, json={"uptimeSec": 86400, "cpuUtilizationPct": 12.4, "memoryUtilizationPct": 41.0, "uplink": {"txRateBps": 8_000_000, "rxRateBps": 80_000_000}}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices/ap1/statistics/latest").mock(return_value=httpx.Response(200, json={"uptimeSec": 3600, "cpuUtilizationPct": 33.7, "memoryUtilizationPct": 50.0}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices/sw1/statistics/latest").mock(return_value=httpx.Response(404, json={"statusCode": 404}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/clients").mock(return_value=httpx.Response(200, json={"offset": 0, "limit": 200, "count": 3, "totalCount": 3, "data": [
+        {"id": "c1", "name": "phone", "type": "WIRELESS", "ipAddress": "192.168.1.101"},
+        {"id": "c2", "name": "laptop", "type": "WIRELESS", "ipAddress": "192.168.1.102"},
+        {"id": "c3", "name": "nas", "type": "WIRED", "ipAddress": "192.168.1.10"},
+    ]}))
+
+
+@respx.mock
+async def test_unifi_api_key_summary_and_devices(ctx: Context) -> None:
+    """The Integration API path: key in the header, WAN from the gateway's uplink, clients counted from the console's total."""
+    _unifi_integration_routes()
+    config = {"url": UNIFI, "api_key": "nd-key", "site": "default", "unifi_os": True, "insecure": True}
+    adapter = get_adapter("unifi")
+    assert (await adapter.test(config, ctx)) == "UniFi Network 9.1.120 answers, site 'default' found."
+    summary = await adapter.fetch("summary", config, {}, ctx)
+    assert summary.primary == {"label": "Clients", "value": 3}
+    assert summary.status == "warn", "one switch is offline"
+    chips = {chip["label"]: chip["value"] for chip in summary.secondary}
+    assert chips["Wi-Fi"] == 2 and chips["Devices"] == "2 / 3"
+    assert chips["WAN down"] == "80.0 Mbit/s" and chips["WAN up"] == "8.0 Mbit/s", "shown in bits, as UniFi shows them"
+    assert summary.metrics["wan_down"] == 80.0
+    assert summary.metrics["clients"] == 3.0
+    assert summary.meta["status_reason"] == "1 device(s) offline"
+    devices = await adapter.fetch("devices", config, {}, ctx)
+    assert [item["title"] for item in devices.items] == ["Dream Machine", "Garage", "Living room"], "gateway first, then whatever is offline, then the rest"
+    assert devices.items[0]["subtitle"] == "Gateway · UniFi Dream Machine PRO SE · 192.168.1.1" and devices.items[0]["value"] == "12% cpu"
+    assert devices.items[1]["status"] == "bad" and devices.items[1]["value"] == ""
+    assert devices.status == "warn", "the same rule as the summary: yellow while the gateway answers"
+    assert devices.meta["status_reason"] == "1 device(s) offline"
+    findings = await adapter.fetch("findings", config, {}, ctx)
+    assert findings.status == "warn"
+    assert [(item["title"], item["status"], item["subtitle"]) for item in findings.items] == [
+        ("Garage", "warn", "Switch · USW-Flex · offline"),
+        ("Living room", "unknown", "Access point · U6-Pro · firmware update available"),
+    ]
+    assert findings.meta["empty"] == "UniFi answers · 3 devices online · 3 clients"
+    console = await adapter.fetch("console", config, {}, ctx)
+    rows = {item["title"]: item for item in console.items}
+    assert rows["Dream Machine"]["subtitle"] == "UniFi Dream Machine PRO SE · 192.168.1.1" and rows["Dream Machine"]["value"] == "24h"
+    assert rows["Network application"]["subtitle"] == "9.1.120"
+    assert rows["Devices"]["subtitle"] == "1 gateway · 1 switch · 1 access point" and rows["Devices"]["value"] == "2 / 3"
+    assert rows["Firmware"]["subtitle"] == "1 update(s) available" and rows["Firmware"]["status"] == "unknown"
+    assert rows["Clients"]["subtitle"] == "2 wireless · 1 wired" and rows["Clients"]["value"] == "3"
+    assert rows["WAN"]["subtitle"] == "↓ 80.0 Mbit/s · ↑ 8.0 Mbit/s"
+    assert console.metrics == {"wan_down": 80.0, "wan_up": 8.0}
+    sent = respx.calls.last.request
+    assert sent.headers["x-api-key"] == "nd-key"
+    # The site list and the device list were fetched once each, not once per widget.
+    assert respx.get(f"{UNIFI_API}/sites").call_count == 1
+    assert respx.get(f"{UNIFI_API}/sites/{SITE}/devices").call_count == 1
+
+
+@respx.mock
+async def test_unifi_api_key_errors_are_readable(ctx: Context) -> None:
+    respx.get(f"{UNIFI_API}/info").mock(return_value=httpx.Response(401, json={"statusCode": 401}))
+    adapter = get_adapter("unifi")
+    with pytest.raises(AuthFailed):
+        await adapter.test({"url": UNIFI, "api_key": "wrong"}, ctx)
+    respx.get(f"{UNIFI_API}/info").mock(return_value=httpx.Response(404, text="not found"))
+    with pytest.raises(AdapterError) as failure:
+        await adapter.test({"url": UNIFI, "api_key": "nd-key"}, ctx)
+    assert failure.value.code == "no_integration_api"
+    with pytest.raises(AdapterError) as missing:
+        await adapter.fetch("summary", {"url": UNIFI}, {}, ctx)
+    assert missing.value.code == "missing_credentials"
+    respx.get(f"{UNIFI_API}/sites").mock(return_value=httpx.Response(200, json={"totalCount": 1, "data": [{"id": SITE, "internalReference": "default", "name": "Home"}]}))
+    with pytest.raises(AdapterError) as site:
+        await adapter.fetch("summary", {"url": UNIFI, "api_key": "nd-key", "site": "garage"}, {}, ctx)
+    assert site.value.code == "site_not_found" and "default" in site.value.message
+
+
+@respx.mock
+async def test_unifi_local_account_logs_in_and_reads_the_classic_api(ctx: Context) -> None:
+    """Without a key the old way still works: cookie login, then the classic endpoints."""
+    respx.post(f"{UNIFI}/api/auth/login").mock(return_value=httpx.Response(200, json={}, headers={"x-csrf-token": "csrf-1"}))
+    calls = {"health": 0}
+
+    def health(request: httpx.Request) -> httpx.Response:
+        calls["health"] += 1
+        if calls["health"] == 1:
+            return httpx.Response(401, json={})
+        assert request.headers["x-csrf-token"] == "csrf-1"
+        return httpx.Response(200, json={"data": [{"subsystem": "wan", "status": "ok", "rx_bytes-r": 1048576, "tx_bytes-r": 524288}, {"subsystem": "wlan", "num_user": 5}]})
+
+    respx.get(f"{UNIFI}/proxy/network/api/s/default/stat/health").mock(side_effect=health)
+    respx.get(f"{UNIFI}/proxy/network/api/s/default/stat/device").mock(return_value=httpx.Response(200, json={"data": [{"name": "AP", "type": "uap", "model": "U6", "state": 1, "num_sta": 5}]}))
+    respx.get(f"{UNIFI}/proxy/network/api/s/default/stat/sta").mock(return_value=httpx.Response(200, json={"data": [{}, {}, {}, {}, {}, {}, {}]}))
+    config = {"url": UNIFI, "username": "nexdeck", "password": "secret", "site": "default", "unifi_os": True, "insecure": True}
+    summary = await get_adapter("unifi").fetch("summary", config, {}, ctx)
+    assert summary.primary == {"label": "Clients", "value": 7}
+    assert {chip["label"]: chip["value"] for chip in summary.secondary}["WAN down"] == "8.4 Mbit/s", "the classic API counts bytes"
+    assert calls["health"] == 2, "a 401 triggers one login and one retry"
+
+
+@respx.mock
+async def test_unifi_follows_the_http_to_https_redirect_and_names_html_answers(ctx: Context) -> None:
+    """A Dream Machine answers http with a redirect to https; a page instead of data gets a hint, not a JSON error."""
+    respx.get("http://udm/proxy/network/integration/v1/info").mock(return_value=httpx.Response(302, headers={"location": "https://udm/proxy/network/integration/v1/info"}))
+    respx.get("https://udm/proxy/network/integration/v1/info").mock(return_value=httpx.Response(200, json={"applicationVersion": "9.1.120"}))
+    respx.get("http://udm/proxy/network/integration/v1/sites").mock(return_value=httpx.Response(302, headers={"location": "https://udm/proxy/network/integration/v1/sites"}))
+    respx.get("https://udm/proxy/network/integration/v1/sites").mock(return_value=httpx.Response(200, json={"totalCount": 1, "data": [{"id": SITE, "internalReference": "default", "name": "Home"}]}))
+    adapter = get_adapter("unifi")
+    assert "9.1.120" in await adapter.test({"url": "http://udm", "api_key": "nd-key"}, ctx)
+    respx.get("https://udm/proxy/network/integration/v1/info").mock(return_value=httpx.Response(200, text="<html>login</html>", headers={"content-type": "text/html"}))
+    with pytest.raises(AdapterError) as failure:
+        await adapter.test({"url": "https://udm", "api_key": "nd-key"}, Context(httpx.AsyncClient(), integration_id=2, widget_id=2, cache={}))
+    assert failure.value.code == "not_json" and "https://" in failure.value.hint
+
+
+@respx.mock
+async def test_unifi_findings_are_calm_when_everything_runs(ctx: Context) -> None:
+    respx.get(f"{UNIFI_API}/sites").mock(return_value=httpx.Response(200, json={"totalCount": 1, "data": [{"id": SITE, "internalReference": "default", "name": "Home"}]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices").mock(return_value=httpx.Response(200, json={"totalCount": 2, "data": [
+        {"id": "gw", "name": "Dream Machine", "model": "UDM-SE", "state": "ONLINE", "features": ["switching"]},
+        {"id": "ap1", "name": "Living room", "model": "U6-Pro", "state": "ONLINE", "features": ["accessPoint"]},
+    ]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices/gw/statistics/latest").mock(return_value=httpx.Response(200, json={"uptimeSec": 120, "cpuUtilizationPct": 95.0, "memoryUtilizationPct": 40.0, "uplink": {"txRateBps": 1, "rxRateBps": 1}}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/clients").mock(return_value=httpx.Response(200, json={"totalCount": 41, "data": []}))
+    findings = await get_adapter("unifi").fetch("findings", {"url": UNIFI, "api_key": "nd-key"}, {}, ctx)
+    # A strained, freshly restarted gateway is worth two rows; nothing is offline, so the card stays green.
+    assert findings.status == "ok"
+    assert [(item["subtitle"], item["status"]) for item in findings.items] == [("CPU 95%", "warn"), ("restarted 2 min ago", "unknown")]
+    calm_ctx = Context(httpx.AsyncClient(), integration_id=3, widget_id=3, cache={})
+    respx.get(f"{UNIFI_API}/sites/{SITE}/devices/gw/statistics/latest").mock(return_value=httpx.Response(200, json={"uptimeSec": 86400, "cpuUtilizationPct": 12.0, "memoryUtilizationPct": 40.0}))
+    calm = await get_adapter("unifi").fetch("findings", {"url": UNIFI, "api_key": "nd-key"}, {}, calm_ctx)
+    assert calm.items == [] and calm.meta["empty"] == "UniFi answers · 2 devices online · 41 clients"
+
+
+@respx.mock
+async def test_unifi_wlans_describe_each_network(ctx: Context) -> None:
+    respx.get(f"{UNIFI_API}/sites").mock(return_value=httpx.Response(200, json={"totalCount": 1, "data": [{"id": SITE, "internalReference": "default", "name": "Home"}]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/networks").mock(return_value=httpx.Response(200, json={"totalCount": 2, "data": [
+        {"id": "n1", "name": "Default", "vlanId": 1, "enabled": True, "default": True},
+        {"id": "n2", "name": "Guests", "vlanId": 80, "enabled": True, "default": False},
+    ]}))
+    respx.get(f"{UNIFI_API}/sites/{SITE}/wifi/broadcasts").mock(return_value=httpx.Response(200, json={"totalCount": 3, "data": [
+        {"type": "STANDARD", "id": "w1", "name": "Home", "enabled": True, "network": {"type": "NATIVE"}, "securityConfiguration": {"type": "WPA2_WPA3_PERSONAL"}, "broadcastingFrequenciesGHz": [2.4, 5]},
+        {"type": "STANDARD", "id": "w2", "name": "Guests", "enabled": True, "network": {"type": "SPECIFIC", "networkId": "n2"}, "securityConfiguration": {"type": "OPEN"}, "broadcastingDeviceFilter": {"type": "DEVICES", "deviceIds": ["a", "b", "c"]}, "broadcastingFrequenciesGHz": [2.4, 5], "hotspotConfiguration": {}},
+        {"type": "IOT_OPTIMIZED", "id": "w3", "name": "Things", "enabled": False, "network": {"type": "NATIVE"}, "securityConfiguration": {"type": "WPA2_PERSONAL"}, "broadcastingDeviceFilter": {"type": "DEVICES", "deviceIds": ["a"]}},
+    ]}))
+    data = await get_adapter("unifi").fetch("wifi", {"url": UNIFI, "api_key": "nd-key"}, {}, ctx)
+    assert data.status == "ok"
+    assert [(item["title"], item["subtitle"], item["status"]) for item in data.items] == [
+        ("Guests", "Guests (VLAN 80) · open · 2.4 + 5 GHz · guest portal · on 3 access points", "ok"),
+        ("Home", "Default (VLAN 1) · WPA2/WPA3 · 2.4 + 5 GHz · all access points", "ok"),
+        ("Things", "Default (VLAN 1) · WPA2 · IoT · on 1 access point · off", "unknown"),
+    ], "enabled first, then by name; switched-off WLANs go last and grey"
+
+
+@respx.mock
+async def test_unifi_wlans_over_the_classic_api(ctx: Context) -> None:
+    respx.post(f"{UNIFI}/api/auth/login").mock(return_value=httpx.Response(200, json={}, headers={"x-csrf-token": "c"}))
+    respx.get(f"{UNIFI}/proxy/network/api/s/default/rest/wlanconf").mock(return_value=httpx.Response(200, json={"data": [
+        {"name": "Home", "enabled": True, "security": "wpapsk", "wpa3_support": True, "wlan_bands": ["2g", "5g"], "networkconf_id": "n1"},
+        {"name": "Guests", "enabled": True, "security": "open", "is_guest": True, "wlan_bands": ["5g"], "networkconf_id": "n2"},
+    ]}))
+    respx.get(f"{UNIFI}/proxy/network/api/s/default/rest/networkconf").mock(return_value=httpx.Response(200, json={"data": [{"_id": "n1", "name": "Default", "vlan": 1}, {"_id": "n2", "name": "Guests", "vlan": 80}]}))
+    data = await get_adapter("unifi").fetch("wifi", {"url": UNIFI, "username": "u", "password": "p"}, {}, ctx)
+    assert [item["subtitle"] for item in data.items] == [
+        "Guests (VLAN 80) · open · 5 GHz · guest portal · all access points",
+        "Default (VLAN 1) · WPA2/WPA3 · 2.4 + 5 GHz · all access points",
+    ]
