@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, Request, Response, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, base_url
+from ..adapters.base import AdapterError, Context
 from ..deps import (
     CurrentUser,
     DbSession,
@@ -25,7 +27,6 @@ from ..services import health as health_service
 from ..services import history
 from ..services.boards import place_widget, remove_from_layouts, widget_view
 from ..services.collector import collector
-from ..services.integrations import resolve_config
 from ..services.notify import emit
 from ..services.sse import board_topic, hub
 from ..services.state import live
@@ -51,7 +52,8 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None) -> None
         integration = db.get(Integration, integration_id)
         if integration is None:
             raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
-        if integration.kind != adapter.kind:
+        # An app tile may follow any service; every other widget needs its own kind.
+        if integration.kind != adapter.kind and kind != "core.app":
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
 
 
@@ -193,12 +195,27 @@ def _image_client(insecure: bool) -> httpx.AsyncClient:
     return _insecure_client
 
 
+async def _service_of(widget: Widget) -> tuple[Any, dict[str, Any], Context]:
+    """The adapter, configuration and shared context behind a widget's integration.
+
+    The context is the collector's, so a session token the adapter already holds
+    (Reolink, Synology) serves images and streams too instead of a fresh login.
+    """
+    if not widget.integration_id:
+        raise error("not_found", "This widget has no service to fetch from.", status.HTTP_404_NOT_FOUND)
+    try:
+        return await collector.resolve_integration(widget.integration_id)
+    except AdapterError as failure:
+        raise error("not_found", str(failure), status.HTTP_404_NOT_FOUND) from failure
+
+
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
 async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
-    """Posters and thumbnails come from the service with the server's credentials; the browser never sees a token.
+    """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
 
     ``path`` is relative to the integration's address, so the server only ever
-    fetches from the service the widget already talks to.
+    fetches from the service the widget already talks to. The adapter may
+    redirect a path (``/snap/0``) to the real request through ``image_source``.
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
@@ -207,23 +224,74 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     hit = _images.get((widget_id, path))
     if hit and hit[0] > time.monotonic():
         return Response(content=hit[1], media_type=hit[2], headers={"Cache-Control": "private, max-age=3600"})
-    integration = db.get(Integration, widget.integration_id) if widget.integration_id else None
-    if integration is None:
-        raise error("not_found", "This widget has no service to fetch images from.", status.HTTP_404_NOT_FOUND)
-    adapter, _kind = split_widget_kind(widget.kind)
-    config = resolve_config(integration)
+    adapter, config, ctx = await _service_of(widget)
     try:
-        response = await _image_client(bool(config.get("insecure"))).get(f"{base_url(config)}{path}", headers=adapter.image_headers(config))
+        source = await adapter.image_source(config, path, ctx)
+    except AdapterError as failure:
+        code = getattr(failure, "code", "") or "no_image"
+        raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
+    try:
+        response = await _image_client(bool(config.get("insecure"))).get(source.url, headers=source.headers, params=source.params or None)
     except httpx.HTTPError as failure:
         raise error("unreachable", f"The service did not deliver the image: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
-    content_type = response.headers.get("content-type", "")
+    content_type = response.headers.get("content-type", "") or source.media_type
     if response.status_code >= 400 or not content_type.startswith("image/") or len(response.content) > IMAGE_MAX_BYTES:
         raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND)
+    if source.cache_seconds <= 0:
+        return Response(content=response.content, media_type=content_type, headers={"Cache-Control": "no-store"})
     if len(_images) >= IMAGE_LIMIT:
         oldest = min(_images, key=lambda key: _images[key][0])
         _images.pop(oldest, None)
-    _images[(widget_id, path)] = (time.monotonic() + IMAGE_TTL, response.content, content_type)
+    _images[(widget_id, path)] = (time.monotonic() + min(IMAGE_TTL, source.cache_seconds), response.content, content_type)
     return Response(content=response.content, media_type=content_type, headers={"Cache-Control": "private, max-age=3600"})
+
+
+# -- live video of a widget's service -------------------------------------------
+
+#: How many live streams the server relays at once; every one is an open connection to a camera.
+STREAM_LIMIT = 12
+_streams_open = 0
+
+
+@router.get("/widgets/{widget_id}/stream", summary="Relay a widget's live video through the server")
+async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> StreamingResponse:
+    """Live video (HTTP-FLV from a camera or recorder) flows through the server with
+    the service's credentials; the browser only ever talks to nexdeck and plays
+    the bytes with Media Source Extensions, no transcoder anywhere."""
+    global _streams_open
+    widget, page = _widget(db, widget_id)
+    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    adapter, config, ctx = await _service_of(widget)
+    try:
+        source = await adapter.stream_source(config, dict(widget.options or {}), ctx)
+    except AdapterError as failure:
+        raise error(getattr(failure, "code", "") or "no_stream", str(failure), status.HTTP_404_NOT_FOUND) from failure
+    if _streams_open >= STREAM_LIMIT:
+        raise error("too_many_streams", f"The server relays at most {STREAM_LIMIT} live streams at once.", status.HTTP_503_SERVICE_UNAVAILABLE)
+    client = _image_client(bool(config.get("insecure")))
+    upstream = client.build_request("GET", source.url, headers=source.headers, params=source.params or None, timeout=httpx.Timeout(15.0, read=60.0))
+    try:
+        response = await client.send(upstream, stream=True)
+    except httpx.HTTPError as failure:
+        raise error("unreachable", f"The service did not deliver the stream: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
+    if response.status_code >= 400:
+        await response.aclose()
+        raise error("no_stream", f"The service answered the stream request with HTTP {response.status_code}.", status.HTTP_502_BAD_GATEWAY)
+    media_type = source.media_type or response.headers.get("content-type", "video/x-flv")
+    _streams_open += 1
+
+    async def relay():
+        # Every chunk goes out as it arrives. Collecting 64 kB first would hold
+        # up to a second of a small stream back and the player would stutter.
+        global _streams_open
+        try:
+            async for chunk in response.aiter_raw():
+                yield chunk
+        finally:
+            _streams_open -= 1
+            await response.aclose()
+
+    return StreamingResponse(relay(), media_type=media_type, headers={"Cache-Control": "no-store"})
 
 
 # -- reachability checks -----------------------------------------------------
@@ -244,8 +312,11 @@ def get_health(widget_id: int, request: Request, user: OptionalUser, db: DbSessi
 def put_health(widget_id: int, body: HealthBody, user: CurrentUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
     require_board(db, str(page.board_id), user, "edit")
+    if not body.target.strip() and widget.integration_id is None:
+        raise error("target_missing", "A check needs a target, or the widget an integration whose address it follows.")
     check = widget.health_check or HealthCheck(widget_id=widget.id, target=body.target)
     check.kind = body.kind
+    # An empty target means: the address of the widget's integration, looked up at every check.
     check.target = body.target.strip()
     check.interval_seconds = body.interval_seconds
     check.timeout_seconds = body.timeout_seconds

@@ -335,3 +335,56 @@ def test_uptime_bars_windows_and_live_row(client: TestClient) -> None:
     assert empty == [None] * 48
     assert health.bars_window({"bars": "live"}) == "live"
     assert health.bars_window({"bars": "nonsense"}) == "24h" and health.bars_window(None) == "24h"
+
+
+def test_a_check_without_target_takes_the_shape_the_probe_needs() -> None:
+    from types import SimpleNamespace
+
+    from app.services.health import service_target
+
+    widget = SimpleNamespace(integration=SimpleNamespace(kind="sonarr", config={"url": "https://sonarr.example.com/", "api_key": "k"}))
+    assert service_target("http", widget) == "https://sonarr.example.com"
+    assert service_target("tcp", widget) == "sonarr.example.com:443", "tcp wants host:port; https means 443 unless the address says otherwise"
+    assert service_target("ping", widget) == "sonarr.example.com"
+    widget.integration.config = {"url": "http://10.0.0.5:8989", "api_key": "k"}
+    assert service_target("tcp", widget) == "10.0.0.5:8989"
+    assert service_target("http", SimpleNamespace(integration=None)) == "" and service_target("http", None) == ""
+
+
+async def test_a_check_without_target_probes_the_integration_address_of_the_moment(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import health
+
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
+    integration = client.post("/api/v1/integrations", json={"kind": "sonarr", "name": "Sonarr", "config": {"url": "http://sonarr:8989", "api_key": "k"}}, headers=CSRF).json()
+    tile = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.app", "integration_id": integration["id"]}, headers=CSRF).json()["widget"]
+    client.put(f"/api/v1/widgets/{tile['id']}/health", json={"kind": "tcp", "target": ""}, headers=CSRF)
+    probed: list[str] = []
+
+    async def capture(check: HealthCheck) -> tuple[bool, int, str]:
+        probed.append(check.target)
+        return True, 3, "open"
+
+    monkeypatch.setattr(health, "run_check", capture)
+    await health.health.run_due(force=True)
+    client.patch(f"/api/v1/integrations/{integration['id']}", json={"config": {"url": "https://10.0.0.5", "api_key": "k"}}, headers=CSRF)
+    await health.health.run_due(force=True)
+    assert probed == ["sonarr:8989", "10.0.0.5:443"], "the probe reads the integration's address every time, shaped as host:port for tcp"
+
+
+async def test_the_collector_says_goodbye_to_its_sessions(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A server that stops without logging out leaves a session behind at every restart; Reolink counts them."""
+    from app.adapters import get_adapter
+    from app.services.collector import collector
+
+    setup_admin(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "reolink", "name": "Cams", "config": {"url": "http://cam", "username": "nexdeck", "password": "pw"}}, headers=CSRF).json()
+    collector._caches[integration["id"]] = {"reolink_token": ("T1", 9e12)}
+    goodbyes: list[tuple[int | None, object]] = []
+
+    async def remember(self: object, config: dict, ctx: object) -> None:
+        goodbyes.append((getattr(ctx, "integration_id", None), getattr(ctx, "cache", {}).get("reolink_token")))
+
+    monkeypatch.setattr(type(get_adapter("reolink")), "close", remember)
+    await collector.stop()
+    assert goodbyes == [(integration["id"], ("T1", 9e12))]

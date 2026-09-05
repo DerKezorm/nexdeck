@@ -9,6 +9,8 @@ from .arr_base import ArrAdapter
 
 class LidarrAdapter(ArrAdapter):
     kind = "lidarr"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Lidarr"
     category = "downloads"
     description = "Queue, upcoming albums and health."

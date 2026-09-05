@@ -92,8 +92,19 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   }, [options, integrationId, widget?.id])
 
   if (!widget) return null
-  const matching = (integrations.data ?? []).filter((i) => i.kind === adapterKind)
   const isApp = widget.kind === 'core.app'
+  // A service widget needs an integration of its own kind; an app tile may follow any service.
+  const matching = (integrations.data ?? []).filter((i) => isApp || i.kind === adapterKind)
+  const followed = isApp ? matching.find((i) => String(i.id) === integrationId) : undefined
+  const followedUrl = typeof followed?.config?.url === 'string' ? followed.config.url : ''
+  const chooseIntegration = (value: string) => {
+    setIntegrationId(value)
+    const chosen = matching.find((i) => String(i.id) === value)
+    if (!isApp || !chosen) return
+    // Name and icon are suggestions, filled only while the tile still carries the defaults.
+    if (!title.trim() || title === spec?.label || title === tAdapter(spec?.label)) setTitle(chosen.name)
+    if (!icon) setIcon(chosen.icon)
+  }
 
   const save = async () => {
     setBusy(true)
@@ -104,12 +115,13 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         icon,
         link,
         integration_id: integrationId ? Number(integrationId) : undefined,
-        clear_integration: !integrationId && adapter?.needs_integration ? true : undefined,
+        clear_integration: !integrationId && (adapter?.needs_integration || isApp) ? true : undefined,
         options,
         refresh_seconds: refresh ? Number(refresh) : undefined,
         page_id: pageId ? Number(pageId) : undefined,
       })
-      if (isApp && link && options.check !== false) {
+      if (isApp && (link || integrationId) && options.check !== false) {
+        // An empty target follows the integration's address on the server, at every check.
         await put(`/widgets/${widget.id}/health`, { kind: health.kind, target: health.kind === 'http' ? link : (options.check_target as string) || link, interval_seconds: health.interval_seconds, enabled: true, insecure: health.insecure })
       }
       onSaved()
@@ -159,12 +171,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         <input id="w-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
       <IconPicker value={icon} onChange={setIcon} label={t('widget.icon')} />
-      <Field label={t('widget.link')} htmlFor="w-link" help={t('widget.linkHelp')}>
-        <input id="w-link" className="input" type="url" value={link} placeholder="https://" onChange={(e) => setLink(e.target.value)} />
+      <Field label={t('widget.link')} htmlFor="w-link" help={followed ? t('widget.linkFollows') : t('widget.linkHelp')}>
+        <input id="w-link" className="input" type="url" value={link} placeholder={followedUrl || 'https://'} onChange={(e) => setLink(e.target.value)} />
       </Field>
-      {adapter?.needs_integration && (
-        <Field label={t('widget.integration')} htmlFor="w-int">
-          <Select id="w-int" value={integrationId} onChange={setIntegrationId} options={[{ value: '', label: t('widget.noIntegration') }, ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
+      {(adapter?.needs_integration || isApp) && (
+        <Field label={isApp ? t('widget.integrationOptional') : t('widget.integration')} htmlFor="w-int" help={isApp ? t('widget.integrationFollowHelp') : undefined}>
+          <Select id="w-int" value={integrationId} onChange={chooseIntegration} options={[{ value: '', label: t('widget.noIntegration') }, ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
         </Field>
       )}
       {spec?.options.map((option) => (

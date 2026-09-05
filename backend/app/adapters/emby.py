@@ -8,6 +8,8 @@ from .jellyfin import JellyfinAdapter
 
 class EmbyAdapter(JellyfinAdapter):
     kind = "emby"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Emby"
     description = "Active streams, library size and what was added last, with covers."
     icon = "emby"

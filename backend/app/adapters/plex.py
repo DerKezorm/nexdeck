@@ -23,6 +23,8 @@ def device_names(ids: set[int], devices: dict[int, str]) -> str:
 
 class PlexAdapter(MediaAdapter):
     kind = "plex"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Plex"
     description = "Active streams, library size and what was added last, with covers."
     icon = "plex"

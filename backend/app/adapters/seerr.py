@@ -11,6 +11,8 @@ STATUS_LABELS = {1: "pending", 2: "approved", 3: "declined"}
 
 class SeerrAdapter(Adapter):
     kind = "seerr"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Seerr"
     category = "media"
     description = "Open requests with approve as an action. Works with Overseerr and Jellyseerr too."

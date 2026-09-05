@@ -9,6 +9,8 @@ from .arr_base import ArrAdapter
 
 class SonarrAdapter(ArrAdapter):
     kind = "sonarr"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Sonarr"
     category = "downloads"
     description = "Queue, upcoming episodes, missing episodes and health."

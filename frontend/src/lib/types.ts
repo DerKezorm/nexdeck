@@ -55,6 +55,8 @@ export interface WidgetView {
   title: string
   icon: string
   link: string
+  /** The address of the widget's integration, for cards without a link of their own. */
+  service_link?: string
   renderer: string
   options: Record<string, unknown>
   integration_id: number | null

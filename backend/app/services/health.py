@@ -12,6 +12,7 @@ import logging
 import platform
 import time
 from datetime import UTC, datetime
+from urllib.parse import urlsplit
 
 import httpx
 from sqlalchemy import select
@@ -92,6 +93,26 @@ async def check_ping(target: str, timeout: float) -> tuple[bool, int, str]:
     return code == 0, int((time.perf_counter() - started) * 1000), "reply" if code == 0 else "no reply"
 
 
+def service_target(kind: str, widget: Widget | None) -> str:
+    """The address of a widget's integration, shaped for the check: the URL, host:port, or the host."""
+    if widget is None or widget.integration is None:
+        return ""
+    from ..adapters import get_adapter
+    from .integrations import resolve_config
+
+    try:
+        url = get_adapter(widget.integration.kind).default_link(resolve_config(widget.integration))
+    except (KeyError, ValueError):
+        return ""
+    if kind == "http" or not url:
+        return url
+    parsed = urlsplit(url if "://" in url else f"http://{url}")
+    host = parsed.hostname or ""
+    if kind == "tcp":
+        return f"{host}:{parsed.port or (443 if parsed.scheme == 'https' else 80)}"
+    return host
+
+
 async def run_check(check: HealthCheck) -> tuple[bool, int, str]:
     timeout = float(check.timeout_seconds or 5)
     if check.kind == "tcp":
@@ -134,9 +155,12 @@ class HealthService:
     async def run_due(self, force: bool = False) -> None:
         now = time.monotonic()
         with db_session() as db:
-            checks = list(db.scalars(select(HealthCheck).where(HealthCheck.enabled.is_(True))))
+            checks = list(db.scalars(
+                select(HealthCheck).options(selectinload(HealthCheck.widget).selectinload(Widget.integration)).where(HealthCheck.enabled.is_(True))
+            ))
             due = [c for c in checks if force or self._next_due.get(c.id, 0) <= now]
-            snapshot = [(c.id, c.kind, c.target, c.timeout_seconds, c.expect_status, c.insecure, c.interval_seconds) for c in due]
+            # A check without a target follows its widget's integration, read afresh every time.
+            snapshot = [(c.id, c.kind, c.target or service_target(c.kind, c.widget), c.timeout_seconds, c.expect_status, c.insecure, c.interval_seconds) for c in due]
         if not snapshot:
             return
         semaphore = asyncio.Semaphore(PARALLEL)
@@ -224,6 +248,7 @@ def check_payload(check: HealthCheck) -> dict:
         "id": check.id,
         "kind": check.kind,
         "target": check.target,
+        "follows_integration": not check.target,
         "interval_seconds": check.interval_seconds,
         "timeout_seconds": check.timeout_seconds,
         "expect_status": check.expect_status,

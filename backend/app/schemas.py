@@ -180,7 +180,8 @@ class ActionBody(BaseModel):
 
 class HealthBody(BaseModel):
     kind: Literal["http", "tcp", "ping"] = "http"
-    target: str = Field(min_length=1, max_length=600)
+    #: Empty follows the address of the widget's integration.
+    target: str = Field(default="", max_length=600)
     interval_seconds: int = Field(default=30, ge=5, le=3600)
     timeout_seconds: int = Field(default=5, ge=1, le=60)
     expect_status: int = Field(default=0, ge=0, le=599)

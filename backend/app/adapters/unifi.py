@@ -58,6 +58,8 @@ GATEWAY_MODELS = ("DREAM MACHINE", "DREAM ROUTER", "DREAM WALL", "CLOUD GATEWAY"
 
 class UnifiAdapter(Adapter):
     kind = "unifi"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "UniFi Network"
     category = "network"
     description = "Connected clients, access points and switches, WAN traffic."

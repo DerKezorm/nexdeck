@@ -29,6 +29,8 @@ def _seconds(text: Any) -> float | None:
 
 class SabnzbdAdapter(DownloadAdapter):
     kind = "sabnzbd"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "SABnzbd"
     description = "Queue, speed, remaining data and pause or resume."
     icon = "sabnzbd"

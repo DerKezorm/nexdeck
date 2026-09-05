@@ -34,6 +34,7 @@ import { mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import { CameraCard } from './CameraCard'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
@@ -65,6 +66,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   app: AppTile,
   posters: PostersCard,
   counters: CountersCard,
+  camera: CameraCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -695,7 +697,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
   const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
   const description = String(data?.meta?.description ?? '')
-  const href = link || widget.link || undefined
+  const href = link || widget.link || widget.service_link || undefined
   const bars = health?.bars ?? []
   const Tag = href ? 'a' : 'div'
   return (

@@ -35,7 +35,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
   const status = failed ? 'bad' : !showFindings && (reported === 'warn' || reported === 'bad') ? 'ok' : reported
   const errorCode = String(data?.meta?.code ?? '')
   const errorText = failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : ''
-  const link = widget.link || data?.link || undefined
+  const link = widget.link || data?.link || widget.service_link || undefined
   // Clocks and app tiles draw themselves without a header.
   const bare = widget.renderer === 'app' || widget.renderer === 'clock'
   // With a link, the whole card is the link; app tiles are anchors already.
