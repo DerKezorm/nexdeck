@@ -44,6 +44,16 @@ describe('server texts', () => {
     expect(translateText('labels', '52 wireless · 24 wired')).toBe('52 WLAN · 24 Kabel')
     expect(translateText('labels', 'restic/restic · Exited (0) 5 months ago')).toBe('restic/restic · Beendet (0) vor 5 Monaten')
     expect(translateText('labels', 'paperless-ngx · Up 6 hours · unhealthy')).toBe('paperless-ngx · Läuft seit 6 Stunden · ungesund')
+    expect(translateText('labels', 'Music last scanned 12 days ago')).toBe('Music zuletzt vor 12 Tagen gescannt')
+    expect(translateText('labels', 'Plex answers · 1.42.0 · 3 libraries')).toBe('Plex antwortet · 1.42.0 · 3 Bibliotheken')
+    expect(translateText('labels', '6 play(s) · Living room TV, iPhone')).toBe('6 Wiedergabe(n) · Living room TV, iPhone')
+    expect(translateText('labels', '649 play(s) · Apple TV ×2')).toBe('649 Wiedergabe(n) · Apple TV ×2')
+    expect(translateText('labels', 'Jellyfin answers · 10.11.0 · 2 libraries')).toBe('Jellyfin antwortet · 10.11.0 · 2 Bibliotheken')
+    expect(translateText('labels', '6 failed sign-ins in 24 h')).toBe('6 gescheiterte Anmeldungen in 24 h')
+    expect(translateText('labels', '1 error(s) in 24 h · Scan media library failed')).toBe('1 Fehler in 24 h · Scan media library failed')
+    expect(translateText('labels', 'The last run failed · Access denied')).toBe('Der letzte Lauf ist fehlgeschlagen · Access denied')
+    expect(translateText('labels', '2.0 GB free')).toBe('2.0 GB frei')
+    expect(translateText('labels', 'signed in, no plays · Chrome ×2')).toBe('angemeldet, keine Wiedergaben · Chrome ×2')
   })
 
   it('leave unknown text alone', async () => {
