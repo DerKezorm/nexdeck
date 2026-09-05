@@ -43,6 +43,19 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   await expect(page.getByRole('dialog').getByText('Basics')).toBeVisible()
   await expect(page.getByRole('dialog').getByText('Hosts and containers')).toBeVisible()
   await page.keyboard.press('Escape')
+
+  // The settings button on a card opens the sheet with a real mouse click,
+  // even though the card is draggable in edit mode.
+  await containers.hover()
+  const settingsButton = containers.getByRole('button', { name: 'Widget settings' })
+  const box = await settingsButton.boundingBox()
+  if (!box) throw new Error('settings button has no box')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByRole('dialog').getByRole('heading', { name: 'Widget settings' })).toBeVisible()
+  await expect(page.getByRole('dialog').getByLabel('Title')).toHaveValue('Containers')
+  await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Done' }).click()
 
   // Reload keeps the session: the cookie survives a navigation.

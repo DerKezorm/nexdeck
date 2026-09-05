@@ -47,6 +47,9 @@ export function BoardGrid(props: Props) {
       containerPadding={[0, 0]}
       isDraggable={Boolean(editing)}
       isResizable={Boolean(editing)}
+      // A press on a button or link must not start a drag: the drag machinery
+      // swallows the click, and the settings button on a card did nothing.
+      draggableCancel="button, a, input, select, textarea, [role='button'], .no-drag"
       compactType="vertical"
       useCSSTransforms
       onLayoutChange={(_current: Layout[], all: Layouts) => {
