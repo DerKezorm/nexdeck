@@ -24,8 +24,8 @@ that one of fifteen renderers draws.
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest | | API token |
-| Plex | now playing, library, recently added (covers) | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
-| Jellyfin, Emby | now playing, library | | API key |
+| Plex | now playing, library, recently added (covers), findings, server load, users and devices, top of the week | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
+| Jellyfin, Emby | now playing, library, recently added (covers), findings, users and devices, top of the week | | API key |
 | Nexview | requests, library, instances | | API key |
 | Seerr | requests, counts | approve, decline | API key |
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
