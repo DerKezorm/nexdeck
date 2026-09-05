@@ -60,7 +60,10 @@ describe('server texts', () => {
 
   it('leave unknown text alone', async () => {
     await i18next.changeLanguage('de')
-    expect(translateText('labels', 'Living room · 4K · Direct play')).toBe('Living room · 4K · Direct play')
+    expect(translateText('labels', 'Living room · 4K · Hi10P')).toBe('Living room · 4K · Hi10P')
+    // "Direct play" used to stand here as the unknown one. Since Tautulli
+    // arrived it is in the table, and the Plex card gets the German word too.
+    expect(translateText('labels', 'Living room · 4K · Direct play')).toBe('Living room · 4K · Direktwiedergabe')
     expect(translateText('labels', 'A sentence made of steel')).toBe('A sentence made of steel')
     expect(translateText('labels', '')).toBe('')
     expect(translateText('labels', null)).toBe('')

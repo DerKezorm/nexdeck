@@ -17,6 +17,8 @@ class PrometheusAdapter(Adapter):
     description = "Any PromQL query as a number with a sparkline, or as a list of series."
     icon = "prometheus"
     docs_url = "https://prometheus.io/docs/prometheus/latest/querying/api/"
+    #: Seen against a live Prometheus (05.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://prometheus:9090"),
         Field("username", "User name", help="Only behind basic authentication."),

@@ -1135,3 +1135,57 @@ async def test_reolink_hands_back_its_session_and_backs_off_at_the_limit(ctx: Co
     with pytest.raises(AuthFailed):
         await reolink.fetch("cameras", CONFIG, {}, fresh)
     assert device.logins == logins, "within the cooldown the device is not asked again"
+
+
+# -- qbittorrent: two generations of the same sign-in --------------------------
+
+QB = "http://qbittorrent:8080"
+QB_CONFIG = {"url": QB, "username": "admin", "password": "secret"}
+
+
+def _qbittorrent_routes(login: httpx.Response) -> None:
+    """Everything needs a cookie; without one the API answers 403."""
+    signed_in = {"value": False}
+
+    def sign_in(request: httpx.Request) -> httpx.Response:
+        signed_in["value"] = login.status_code < 400
+        return login
+
+    def guarded(payload: object):
+        def answer(request: httpx.Request) -> httpx.Response:
+            if not signed_in["value"]:
+                return httpx.Response(403, text="Forbidden")
+            return httpx.Response(200, json=payload)
+        return answer
+
+    respx.post(f"{QB}/api/v2/auth/login").mock(side_effect=sign_in)
+    respx.get(f"{QB}/api/v2/transfer/info").mock(side_effect=guarded({"dl_info_speed": 2048, "up_info_speed": 512}))
+    respx.get(f"{QB}/api/v2/torrents/info").mock(side_effect=guarded([
+        {"name": "lab-sample.bin", "size": 4194304, "progress": 0.25, "state": "stalledDL", "hash": "abc", "eta": 8640000},
+    ]))
+
+
+@respx.mock
+async def test_qbittorrent_understands_the_answer_of_version_five(ctx: Context) -> None:
+    """5.x answers the sign-in with 204 and no body at all. Read as the old
+    "200 Ok." the connection test fails while every card works, because the
+    session cookie arrives with that 204 either way."""
+    _qbittorrent_routes(httpx.Response(204))
+    assert "1 items" in await get_adapter("qbittorrent").test(QB_CONFIG, ctx)
+
+
+@respx.mock
+async def test_qbittorrent_still_understands_the_answer_of_version_four(ctx: Context) -> None:
+    _qbittorrent_routes(httpx.Response(200, text="Ok."))
+    data = await get_adapter("qbittorrent").fetch("queue", QB_CONFIG, {}, ctx)
+    assert data.items[0]["title"] == "lab-sample.bin"
+
+
+@respx.mock
+async def test_qbittorrent_reads_a_refused_sign_in_as_a_refusal(ctx: Context) -> None:
+    """4.x says 200 with "Fails.", 5.x says 401. Both mean the same thing."""
+    for refusal in (httpx.Response(200, text="Fails."), httpx.Response(401, text="Unauthorized")):
+        respx.clear()
+        _qbittorrent_routes(refusal)
+        with pytest.raises(AuthFailed):
+            await get_adapter("qbittorrent").test(QB_CONFIG, Context(httpx.AsyncClient(), cache={}))

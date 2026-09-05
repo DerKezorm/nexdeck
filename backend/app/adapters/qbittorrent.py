@@ -18,6 +18,8 @@ class QbittorrentAdapter(DownloadAdapter):
     description = "Torrents, speed and pause or resume."
     icon = "qbittorrent"
     docs_url = "https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)"
+    #: Seen against a live qBittorrent 5.1 (05.09.2026).
+    beta = False
     has_upload = True
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://qbittorrent:8080"),
@@ -34,6 +36,14 @@ class QbittorrentAdapter(DownloadAdapter):
         return client
 
     async def _login(self, config: dict[str, Any], ctx: Context) -> None:
+        """Sign in, and understand both answers qBittorrent gives.
+
+        ⚠️ Version 5 changed the reply. Version 4 answers ``200`` with the body
+        ``Ok.`` and ``200`` with ``Fails.``; version 5 answers ``204`` with no
+        body at all, and ``401``. Measured against 5.1.2: reading the old
+        answer only, the connection test fails while every card works, because
+        the session cookie arrives with that 204 either way.
+        """
         client = self._client(config, ctx)
         try:
             response = await client.post(
@@ -43,7 +53,12 @@ class QbittorrentAdapter(DownloadAdapter):
             )
         except httpx.HTTPError as error:
             raise Unreachable(f"qBittorrent could not be reached: {error.__class__.__name__}.") from error
-        if response.status_code != 200 or response.text.strip() != "Ok.":
+        if response.status_code in (401, 403):
+            raise AuthFailed("qBittorrent rejected the user name or password.")
+        if response.status_code >= 400:
+            raise AdapterError(f"qBittorrent answered with HTTP {response.status_code} on the sign-in.", code="http_error")
+        body = response.text.strip()
+        if body and body != "Ok.":
             raise AuthFailed("qBittorrent rejected the user name or password.")
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, params: dict[str, Any] | None = None, retry: bool = True) -> Any:
