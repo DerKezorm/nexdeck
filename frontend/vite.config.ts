@@ -1,11 +1,14 @@
 import { defineConfig } from 'vitest/config'
+import { loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Where the API lives during development. NEXDECK_API overrides it when the
-// backend of another session already occupies port 8000.
-const apiTarget = process.env.NEXDECK_API || 'http://127.0.0.1:8000'
+// Where the API lives during development. NEXDECK_API overrides it, from the
+// environment or from a gitignored .env.local next to this file, when the
+// backend runs on another port than 8000.
+const fileEnv = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), 'NEXDECK_')
+const apiTarget = process.env.NEXDECK_API || fileEnv.NEXDECK_API || 'http://127.0.0.1:8000'
 
 export default defineConfig({
   plugins: [
