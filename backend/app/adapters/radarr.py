@@ -9,6 +9,8 @@ from .arr_base import ArrAdapter
 
 class RadarrAdapter(ArrAdapter):
     kind = "radarr"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Radarr"
     category = "downloads"
     description = "Queue, calendar, missing movies and health."

@@ -53,6 +53,8 @@ describe('server texts', () => {
     expect(translateText('labels', '1 error(s) in 24 h · Scan media library failed')).toBe('1 Fehler in 24 h · Scan media library failed')
     expect(translateText('labels', 'The last run failed · Access denied')).toBe('Der letzte Lauf ist fehlgeschlagen · Access denied')
     expect(translateText('labels', '2.0 GB free')).toBe('2.0 GB frei')
+    expect(translateText('labels', 'online · battery 84% · Person')).toBe('online · Akku 84 % · Person')
+    expect(translateText('labels', 'Reolink answers · Home Hub · 3 cameras')).toBe('Reolink antwortet · Home Hub · 3 Kameras')
     expect(translateText('labels', 'signed in, no plays · Chrome ×2')).toBe('angemeldet, keine Wiedergaben · Chrome ×2')
   })
 

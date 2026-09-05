@@ -27,7 +27,11 @@
       "not_json": "The service did not answer with data; probably a login page.",
       "crash": "The adapter failed unexpectedly.",
       "missing_location": "A place or coordinates are missing.",
-      "place_not_found": "The place could not be found."
+      "place_not_found": "The place could not be found.",
+      "no_stream": "This widget has no live video.",
+      "too_many_streams": "The server relays only a limited number of live streams at once.",
+      "no_channel": "There is no camera with this channel number.",
+      "device_error": "The device answered with an error."
     }
   },
   "auth": {
@@ -303,6 +307,9 @@
     "iconHelp": "Type a service name and matching logos appear below. Or lucide:name for a symbol, or an image address.",
     "link": "Link",
     "linkHelp": "Where the card leads when clicked. Empty uses the service address.",
+    "integrationOptional": "Integration (optional)",
+    "integrationFollowHelp": "Address, icon and reachability check follow the integration. Change its address once and every tile follows.",
+    "linkFollows": "Empty: the address of the integration.",
     "integration": "Integration",
     "noIntegration": "None",
     "refresh": "Refresh (s)",
@@ -402,6 +409,10 @@
     "max": "max",
     "open": "Open",
     "embedded": "Embedded page",
+    "liveVideo": "Live",
+    "liveUnsupported": "Live video needs a newer browser; showing snapshots.",
+    "liveFailed": "Live video stopped; showing snapshots and retrying.",
+    "noImage": "No image from the camera",
     "history": "History of the last 24 hours",
     "bars": {
       "24h": "Availability of the last 24 hours, one bar per 30 minutes",

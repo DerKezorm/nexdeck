@@ -233,3 +233,85 @@ def test_widget_images_come_through_the_server_with_the_service_token(client: Te
         assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/login"}).status_code == 404
     other = TestClient(client.app)
     assert other.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"}).status_code in (401, 403), "no session, no image"
+
+
+def _reolink_device(request) -> object:
+    """Login and GetNetPort as a Reolink hub answers them."""
+    from httpx import Response
+
+    if b"GetNetPort" in request.content:
+        return Response(200, json=[{"cmd": "GetNetPort", "code": 0, "value": {"NetPort": {"rtmpEnable": 1, "rtmpPort": 1935}}}])
+    return Response(200, json=[{"cmd": "Login", "code": 0, "value": {"Token": {"leaseTime": 3600, "name": "T0K"}}}])
+
+
+def test_camera_snapshots_are_fresh_and_keep_the_session_token_on_the_server(client: TestClient) -> None:
+    import respx
+    from httpx import Response
+
+    setup_admin(client)
+    board = _board(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "reolink", "name": "Cams", "config": {"url": "http://cam", "username": "nexdeck", "password": "pw", "insecure": False}}, headers=CSRF).json()
+    widget = _widget(client, board["pages"][0]["id"], kind="reolink.camera", integration_id=integration["id"], options={"channel": 1})
+    with respx.mock:
+        respx.post("http://cam/api.cgi").mock(side_effect=_reolink_device)
+        snap = respx.get("http://cam/cgi-bin/api.cgi").mock(return_value=Response(200, content=b"\xff\xd8JPEG", headers={"content-type": "image/jpeg"}))
+        first = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/snap/1"})
+        assert first.status_code == 200 and first.content.startswith(b"\xff\xd8") and first.headers["cache-control"] == "no-store"
+        sent = snap.calls.last.request.url.params
+        assert sent["cmd"] == "Snap" and sent["channel"] == "1" and sent["snapType"] == "sub" and sent["token"] == "T0K", "the device's token travels only between server and device"
+        client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/snap/1"})
+        assert snap.call_count == 2, "a snapshot is never served from the cache"
+        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/login"}).status_code == 400, "a Reolink widget only serves snapshots"
+
+
+def test_live_video_is_relayed_through_the_server(client: TestClient) -> None:
+    import respx
+    from httpx import Response
+
+    setup_admin(client)
+    board = _board(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "reolink", "name": "Cams", "config": {"url": "http://cam", "username": "nexdeck", "password": "pw", "insecure": False}}, headers=CSRF).json()
+    widget = _widget(client, board["pages"][0]["id"], kind="reolink.camera", integration_id=integration["id"], options={"channel": 0, "mode": "live", "quality": "sub"})
+    with respx.mock:
+        respx.post("http://cam/api.cgi").mock(side_effect=_reolink_device)
+        flv = respx.get("http://cam/flv").mock(return_value=Response(200, content=b"FLV" + bytes(102), headers={"content-type": "video/x-flv"}))
+        with client.stream("GET", f"/api/v1/widgets/{widget['id']}/stream") as response:
+            assert response.status_code == 200, response.read()
+            assert response.headers["content-type"].startswith("video/x-flv") and response.headers["cache-control"] == "no-store"
+            body = b"".join(response.iter_bytes())
+        assert body.startswith(b"FLV") and len(body) == 105, "the bytes pass through untouched"
+        sent = flv.calls.last.request.url.params
+        assert sent["stream"] == "channel0_sub.bcs" and sent["token"] == "T0K" and "password" not in sent, "the session token goes to the device, never the account"
+        respx.get("http://cam/flv").mock(return_value=Response(404))
+        assert client.get(f"/api/v1/widgets/{widget['id']}/stream").status_code == 502
+    clock = _widget(client, board["pages"][0]["id"])
+    assert client.get(f"/api/v1/widgets/{clock['id']}/stream").status_code == 404, "a widget without a service has no stream"
+    other = TestClient(client.app)
+    assert other.get(f"/api/v1/widgets/{widget['id']}/stream").status_code in (401, 403), "no session, no video"
+
+
+def test_the_content_security_policy_lets_live_video_and_images_through(client: TestClient) -> None:
+    """The Service Worker once died of a CSP nobody saw in development; the live player plays from a blob: MediaSource."""
+    policy = client.get("/").headers.get("content-security-policy", "")
+    assert "media-src 'self' blob:" in policy
+    assert "img-src 'self' data: blob: https: http:" in policy
+
+
+def test_an_app_tile_follows_its_integration(client: TestClient) -> None:
+    """Pick a connected service for a tile and its address is read from the integration on every view;
+    the reachability check without a target follows the same address."""
+    setup_admin(client)
+    board = _board(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "sonarr", "name": "Sonarr", "config": {"url": "http://sonarr:8989/", "api_key": "k"}}, headers=CSRF).json()
+    tile = _widget(client, board["pages"][0]["id"], kind="core.app", title="Sonarr", integration_id=integration["id"])
+    assert tile["link"] == "" and tile["service_link"] == "http://sonarr:8989", "the tile stores no address of its own"
+    check = client.put(f"/api/v1/widgets/{tile['id']}/health", json={"kind": "http", "target": ""}, headers=CSRF)
+    assert check.status_code == 200 and check.json()["follows_integration"] is True
+    client.patch(f"/api/v1/integrations/{integration['id']}", json={"config": {"url": "http://10.0.0.5:8989", "api_key": "k"}}, headers=CSRF)
+    view = client.get(f"/api/v1/boards/{board['slug']}").json()
+    moved = next(w for w in view["pages"][0]["widgets"] if w["id"] == tile["id"])
+    assert moved["service_link"] == "http://10.0.0.5:8989", "one change of the integration moves every tile that follows it"
+    clock = _widget(client, board["pages"][0]["id"])
+    assert client.put(f"/api/v1/widgets/{clock['id']}/health", json={"kind": "http", "target": ""}, headers=CSRF).status_code == 400, "without an integration a check needs a target"
+    other = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "radarr.queue", "integration_id": integration["id"]}, headers=CSRF)
+    assert other.status_code == 400, "only app tiles may follow a service of another kind"

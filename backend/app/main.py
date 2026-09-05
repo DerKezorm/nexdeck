@@ -113,11 +113,12 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         # The app talks only to its own origin; icons and uploads are proxied.
         # Images may come from anywhere (media art from Plex or Jellyfin on
-        # the LAN), and the iframe widget embeds any page by design.
+        # the LAN), and the iframe widget embeds any page by design. Live video
+        # plays from a blob: MediaSource, so media-src must allow blob:.
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self'; "
+            "img-src 'self' data: blob: https: http:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; "
             "frame-src *; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; "
             "frame-ancestors 'self'",
         )

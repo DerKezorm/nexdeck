@@ -44,6 +44,8 @@ def actions_for(entity_id: str, state: str) -> list[Action]:
 
 class HomeAssistantAdapter(Adapter):
     kind = "homeassistant"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Home Assistant"
     category = "monitoring"
     description = "Any entity as a value or list, switches and scenes as actions, live over WebSocket."

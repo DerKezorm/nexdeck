@@ -244,6 +244,18 @@ def base_url(config: dict[str, Any], key: str = "url") -> str:
     return str(config.get(key, "")).strip().rstrip("/")
 
 
+@dataclass
+class MediaSource:
+    """An image or a live stream the server fetches from a service on a widget's behalf."""
+
+    url: str
+    headers: dict[str, str] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
+    #: How long the server may keep an image; 0 means every request goes to the service.
+    cache_seconds: float = 3600
+    media_type: str = ""
+
+
 class Adapter:
     """Base class. Subclasses set the class attributes and override the hooks."""
 
@@ -277,6 +289,19 @@ class Adapter:
         so a token never travels into an image URL in the browser.
         """
         return {}
+
+    async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
+        """Where an image behind ``proxy:/path`` really comes from.
+
+        The default fetches the path from the service with ``image_headers`` and
+        lets the server keep it for an hour. Adapters whose images need a
+        session token or must stay fresh (camera snapshots) override this.
+        """
+        return MediaSource(url=f"{base_url(config)}{path}", headers=self.image_headers(config))
+
+    async def stream_source(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> MediaSource:
+        """Where a widget's live video comes from; only camera adapters have one."""
+        raise AdapterError("This widget has no live stream.", code="no_stream")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -316,6 +341,13 @@ class Adapter:
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         raise NotImplementedError
+
+    async def close(self, config: dict[str, Any], ctx: Context) -> None:
+        """Hand back a session the adapter holds at the service; called when the server stops.
+
+        Devices that count sessions (Reolink) fill up otherwise, one restart at a time.
+        """
+        return None
 
     def secret_field_names(self) -> set[str]:
         return {f.name for f in self.fields if f.secret}

@@ -27,7 +27,11 @@
       "not_json": "Der Dienst liefert keine Daten, vermutlich eine Anmeldeseite.",
       "crash": "Der Adapter ist unerwartet gescheitert.",
       "missing_location": "Ort oder Koordinaten fehlen.",
-      "place_not_found": "Der Ort wurde nicht gefunden."
+      "place_not_found": "Der Ort wurde nicht gefunden.",
+      "no_stream": "Diese Kachel hat kein Livebild.",
+      "too_many_streams": "Der Server leitet nur eine begrenzte Zahl von Livebildern gleichzeitig weiter.",
+      "no_channel": "Es gibt keine Kamera mit dieser Kanalnummer.",
+      "device_error": "Das Gerät hat mit einem Fehler geantwortet."
     }
   },
   "auth": {
@@ -303,6 +307,9 @@
     "iconHelp": "Tippe einen Dienstnamen, passende Logos erscheinen darunter. Oder lucide:name für ein Zeichen oder eine Bildadresse.",
     "link": "Link",
     "linkHelp": "Wohin die Karte beim Klick führt. Leer nimmt die Adresse des Dienstes.",
+    "integrationOptional": "Anbindung (optional)",
+    "integrationFollowHelp": "Adresse, Symbol und Erreichbarkeitsprüfung folgen der Anbindung. Ändert sich ihre Adresse, ziehen alle Kacheln mit.",
+    "linkFollows": "Leer: die Adresse der Anbindung.",
     "integration": "Anbindung",
     "noIntegration": "Keine",
     "refresh": "Aktualisieren (s)",
@@ -402,6 +409,10 @@
     "max": "max",
     "open": "Öffnen",
     "embedded": "Eingebettete Seite",
+    "liveVideo": "Live",
+    "liveUnsupported": "Livebild braucht einen neueren Browser, zeige Standbilder.",
+    "liveFailed": "Livebild abgebrochen, zeige Standbilder und versuche es erneut.",
+    "noImage": "Kein Bild von der Kamera",
     "history": "Verlauf der letzten 24 Stunden",
     "bars": {
       "24h": "Verfügbarkeit der letzten 24 Stunden, ein Balken je 30 Minuten",

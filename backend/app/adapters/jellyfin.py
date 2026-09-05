@@ -54,6 +54,8 @@ def device_names(names: Counter[str]) -> str:
 
 class JellyfinAdapter(MediaAdapter):
     kind = "jellyfin"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Jellyfin"
     description = "Active streams, library size and what was added last, with covers."
     icon = "jellyfin"

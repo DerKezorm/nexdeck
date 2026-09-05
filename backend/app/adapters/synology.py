@@ -35,6 +35,8 @@ KB = 1024
 
 class SynologyAdapter(Adapter):
     kind = "synology"
+    #: Confirmed against a live instance on 2026-09-05.
+    beta = False
     label = "Synology DSM"
     category = "nas"
     description = "CPU, memory, volumes, disk temperatures and health, plus the containers of the Container Manager."

@@ -24,6 +24,7 @@ that one of fifteen renderers draws.
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest | | API token |
+| Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
 | Plex | now playing, library, recently added (covers), findings, server load, users and devices, top of the week | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library, recently added (covers), findings, users and devices, top of the week | | API key |
 | Nexview | requests, library, instances | | API key |
@@ -59,6 +60,11 @@ refresh interval. A field of type `timezone` is offered as a list of IANA
 zones. `POST /api/v1/widgets/{id}/preview` runs a fetch with draft options
 without saving; the settings sheet uses it for its live preview.
 
+An app tile may follow an integration: pick one in its settings and the
+tile's link and its reachability check take the integration's address on
+every read, so a changed address is changed once. A link of the tile's own
+still wins.
+
 A card can be enlarged but never made smaller than its `default_size`;
 `min_size` is what the server uses when it has to squeeze a new widget into
 a tight spot.
@@ -67,12 +73,18 @@ a tight spot.
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
-`counters`. A fetch may pick another renderer for its data through
+`counters`, `camera`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
 
 Images such as posters are never linked with a token in the browser: an adapter
 hands out `proxy:/path`, and `GET /api/v1/widgets/{id}/image?path=` fetches it
-from the service with the adapter's `image_headers`, cached for an hour.
+from the service with the adapter's `image_headers`, cached for an hour. An adapter
+may override `image_source(config, path, ctx)` to turn a path into another request,
+for example a camera snapshot with a session token that must not be cached
+(`cache_seconds=0`). Live video goes the same way: `stream_source(config, options,
+ctx)` names an HTTP-FLV stream, and `GET /api/v1/widgets/{id}/stream` relays its
+bytes to the browser, which plays them with Media Source Extensions. The server
+relays at most twelve streams at once.
 
 ## Writing an adapter
 

@@ -77,9 +77,29 @@ class Collector:
             except (asyncio.CancelledError, Exception):
                 pass
         self._tasks.clear()
+        await self._say_goodbye()
         if self._client is not None:
             await self._client.aclose()
             self._client = None
+
+    async def _say_goodbye(self) -> None:
+        """Adapters holding a session at a service log out, so restarts do not pile sessions up."""
+        from ..adapters import get_adapter
+
+        for integration_id, cache in list(self._caches.items()):
+            if not integration_id or not cache:
+                continue
+            try:
+                with db_session() as db:
+                    integration = db.get(Integration, integration_id)
+                    if integration is None:
+                        continue
+                    adapter = get_adapter(integration.kind)
+                    config = resolve_config(integration)
+                ctx = Context(self.client, integration_id=integration_id, cache=cache)
+                await asyncio.wait_for(adapter.close(config, ctx), timeout=3)
+            except Exception:  # noqa: BLE001 - a goodbye that fails must not hold up the shutdown
+                logger.debug("Integration %s could not say goodbye.", integration_id)
 
     def schedule(self, widget_id: int) -> None:
         """(Re)start the loop of one widget, e.g. after its settings changed.

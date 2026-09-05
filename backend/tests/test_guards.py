@@ -229,3 +229,12 @@ def test_client_only_widgets_are_exactly_the_basics() -> None:
     assert all(widget.client_only or widget.kind == "problems" for widget in get_adapter("core").widgets), "problems reads the server's live state"
     others = [f"{adapter.kind}.{widget.kind}" for adapter in all_adapters() if adapter.kind != "core" for widget in adapter.widgets if widget.client_only]
     assert others == []
+
+
+def test_only_confirmed_adapters_are_out_of_beta() -> None:
+    """Beta means "not yet seen against a live instance". The list below is what was
+    confirmed, every widget of every adapter against a real service (2026-09-05);
+    an adapter leaves it only by being confirmed, never by default."""
+    confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
+    # iCal and the JSON API talk to no particular product; they were never beta.
+    assert confirmed == {"emby", "homeassistant", "ical", "jellyfin", "jsonapi", "lidarr", "nexview", "plex", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "synology", "unifi"}

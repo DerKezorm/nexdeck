@@ -65,6 +65,23 @@ def remove_from_layouts(page: Page, widget_id: int) -> None:
     page.layouts = layouts
 
 
+def service_link(widget: Widget) -> str:
+    """The address of the widget's integration, so a card without its own link leads there.
+
+    Computed on every read: when the integration's address changes, every
+    card that follows it changes with it.
+    """
+    if widget.integration is None:
+        return ""
+    from ..adapters import get_adapter
+    from .integrations import resolve_config
+
+    try:
+        return get_adapter(widget.integration.kind).default_link(resolve_config(widget.integration))
+    except (KeyError, ValueError):
+        return ""
+
+
 def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
     try:
         adapter, kind = split_widget_kind(widget.kind)
@@ -88,6 +105,7 @@ def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
         "title": widget.title,
         "icon": widget.icon,
         "link": widget.link,
+        "service_link": service_link(widget),
         "renderer": renderer,
         "options": widget.options or {},
         "integration_id": widget.integration_id,

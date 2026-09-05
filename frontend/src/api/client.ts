@@ -40,6 +40,14 @@ export function mediaUrl(widgetId: number, art: string | null | undefined): stri
   return `${BASE}/widgets/${widgetId}/image?${params.toString()}`
 }
 
+/** The relayed live video of a camera widget; a kiosk token rides along as it does for images. */
+export function videoUrl(widgetId: number): string {
+  const params = new URLSearchParams()
+  if (kioskToken) params.set('kiosk', kioskToken)
+  const query = params.toString()
+  return `${BASE}/widgets/${widgetId}/stream${query ? `?${query}` : ''}`
+}
+
 export async function api<T = unknown>(path: string, init: RequestInit & { json?: unknown; raw?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { ...(init.headers as Record<string, string>), ...kioskHeaders() }
   const method = (init.method ?? 'GET').toUpperCase()

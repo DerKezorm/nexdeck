@@ -46,6 +46,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // The video demuxer loads only when a live camera card is on the board; it must not ride in the vendor chunk.
+          if (id.includes('mpegts.js')) return undefined
           if (id.includes('node_modules')) return 'vendor'
           return undefined
         },

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from datetime import UTC
 from pathlib import Path
 from typing import Any
@@ -963,3 +964,174 @@ async def test_emby_reads_its_own_activity_log_names(ctx: Context) -> None:
     assert "6 failed sign-ins in 24 h" in subtitles
     assert "1 error(s) in 24 h · Scan media library failed" in subtitles, "Emby marks failed sign-ins as errors; they are not counted twice"
     assert findings.meta["empty"] == "Emby answers · 10.11.0 · 2 libraries"
+
+
+# -- reolink ------------------------------------------------------------------------
+
+REO = "http://cam"
+
+
+class _Reolink:
+    """A Reolink device behind respx: answers batched commands from a table and counts logins."""
+
+    def __init__(self, **answers: Any) -> None:
+        self.answers: dict[str, Any] = {
+            "GetDevInfo": {"DevInfo": {"model": "Reolink Home Hub", "name": "Hub", "firmVer": "v3.5.1", "channelNum": 3}},
+            "GetChannelstatus": {"count": 4, "status": [
+                {"channel": 0, "name": "Front door", "online": 1, "sleep": 0},
+                {"channel": 1, "name": "Garden", "online": 1, "sleep": 1},
+                {"channel": 2, "name": "Garage", "online": 0},
+                {"channel": 3, "name": "", "online": 0},
+            ]},
+            "GetAbility": {"Ability": {"abilityChn": [
+                {"battery": {"permit": 0, "ver": 0}, "supportAi": {"permit": 6, "ver": 1}, "alarmMd": {"permit": 6, "ver": 1}},
+                {"battery": {"permit": 6, "ver": 1}, "supportAi": {"permit": 6, "ver": 1}, "alarmMd": {"permit": 6, "ver": 1}},
+                {"battery": {"permit": 0, "ver": 0}, "supportAi": {"permit": 6, "ver": 1}, "alarmMd": {"permit": 6, "ver": 1}},
+                {"battery": {"permit": 0, "ver": 0}, "supportAi": {"permit": 0, "ver": 0}, "alarmMd": {"permit": 0, "ver": 0}},
+            ]}},
+            "GetBatteryInfo": lambda param: {"Battery": {"batteryPercent": 15, "chargeStatus": "charging"}},
+            "GetAiState": lambda param: {"channel": param["channel"], "people": {"alarm_state": 1 if param["channel"] == 0 else 0, "support": 1}, "vehicle": {"alarm_state": 0, "support": 1}, "dog_cat": {"alarm_state": 0, "support": 1}},
+            "GetMdState": {"state": 0},
+            "GetHddInfo": {"HddInfo": [{"number": 0, "capacity": 953869, "size": 12000, "format": 1, "mount": 1}]},
+            "GetNetPort": {"NetPort": {"rtmpEnable": 1, "rtmpPort": 1935, "httpPort": 80}},
+        }
+        self.answers.update(answers)
+        self.logins = 0
+        self.bodies: list[list[dict[str, Any]]] = []
+        self.limit = False
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content or b"[]")
+        self.bodies.append(body)
+        if body and body[0].get("cmd") == "Login":
+            self.logins += 1
+            if self.limit:
+                return httpx.Response(200, json=[{"cmd": "Login", "code": 1, "error": {"rspCode": -5, "detail": "max session"}}])
+            user = body[0]["param"]["User"]
+            if user["password"] != "pw":
+                return httpx.Response(200, json=[{"cmd": "Login", "code": 1, "error": {"rspCode": -7, "detail": "login failed"}}])
+            return httpx.Response(200, json=[{"cmd": "Login", "code": 0, "value": {"Token": {"leaseTime": 3600, "name": f"T{self.logins}"}}}])
+        if request.url.params.get("token") != f"T{self.logins}":
+            return httpx.Response(200, json=[{"cmd": c.get("cmd"), "code": 1, "error": {"rspCode": -6, "detail": "please login first"}} for c in body])
+        out = []
+        for command in body:
+            answer = self.answers.get(command["cmd"], "unsupported")
+            if callable(answer):
+                answer = answer(command.get("param") or {})
+            if answer == "unsupported":
+                out.append({"cmd": command["cmd"], "code": 1, "error": {"rspCode": -9, "detail": "not support"}})
+            else:
+                out.append({"cmd": command["cmd"], "code": 0, "value": answer})
+        return httpx.Response(200, json=out)
+
+
+CONFIG = {"url": REO, "username": "nexdeck", "password": "pw", "insecure": False}
+
+
+@respx.mock
+async def test_reolink_cameras_card_batches_battery_and_detections(ctx: Context) -> None:
+    device = _Reolink()
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    data = await get_adapter("reolink").fetch("cameras", CONFIG, {}, ctx)
+    assert [(item["title"], item["subtitle"], item["status"], item["value"]) for item in data.items] == [
+        ("Front door", "online · Person", "ok", ""),
+        ("Garden", "sleeping · battery 15% · charging", "warn", "15%"),
+        ("Garage", "offline", "bad", ""),
+    ], "a wired camera has no battery line, a sleeping battery camera is fine, a low one warns, an offline one is bad; the empty slot is no camera"
+    assert {chip["label"]: chip["value"] for chip in data.secondary} == {"Cameras": 3, "Online": 2, "Detecting": 1}
+    assert data.status == "bad"
+    assert device.logins == 1
+    asked = [(command["cmd"], command["param"].get("channel")) for body in device.bodies for command in body if command.get("cmd") == "GetBatteryInfo"]
+    assert asked == [("GetBatteryInfo", 1)], "battery is asked only where GetAbility lists one; a wired camera would block the hub for 15 s"
+    assert max(len(body) for body in device.bodies) == 5, "battery, AI and motion of both online cameras travel in one request"
+    again = await get_adapter("reolink").fetch("cameras", CONFIG, {}, ctx)
+    assert again.items == data.items and device.logins == 1, "the token is reused"
+
+
+@respx.mock
+async def test_reolink_logs_in_again_when_the_session_expired(ctx: Context) -> None:
+    device = _Reolink()
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    ctx.cache["reolink_token"] = ("stale", time.monotonic() + 3000)
+    result = await get_adapter("reolink").test(CONFIG, ctx)
+    assert result == "Reolink Home Hub with firmware v3.5.1, 3 channel(s)."
+    assert device.logins == 1, "a stale token costs one new login, not an error"
+    with pytest.raises(AuthFailed):
+        await get_adapter("reolink").test({**CONFIG, "password": "wrong"}, Context(httpx.AsyncClient(), cache={}))
+
+
+@respx.mock
+async def test_reolink_single_camera_is_its_own_channel(ctx: Context) -> None:
+    device = _Reolink(GetChannelstatus="unsupported", GetDevInfo={"DevInfo": {"model": "RLC-810A", "name": "Driveway", "firmVer": "v3.1", "channelNum": 1}}, GetAbility="unsupported", GetBatteryInfo="unsupported", GetAiState="unsupported", GetHddInfo="unsupported")
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    data = await get_adapter("reolink").fetch("cameras", CONFIG, {}, ctx)
+    assert [(item["title"], item["subtitle"], item["status"]) for item in data.items] == [("Driveway", "online", "ok")], "no channel list, no battery: one plain row"
+    findings = await get_adapter("reolink").fetch("findings", CONFIG, {}, ctx)
+    assert findings.items == [] and findings.meta == {"empty": "Reolink answers · RLC-810A · 1 cameras"}, "a camera without a card is not a storage finding"
+
+
+@respx.mock
+async def test_reolink_findings_offline_low_battery_and_storage(ctx: Context) -> None:
+    device = _Reolink(GetHddInfo={"HddInfo": [{"number": 0, "capacity": 953869, "size": 0, "format": 0, "mount": 1}]})
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    data = await get_adapter("reolink").fetch("findings", CONFIG, {}, ctx)
+    assert [(item["title"], item["subtitle"], item["status"]) for item in data.items] == [
+        ("Garage", "offline", "bad"),
+        ("Garden", "battery 15%", "warn"),
+        ("Storage", "Storage not ready", "warn"),
+    ]
+    assert data.status == "bad" and data.meta["status_reason"] == "1 error finding(s), 2 warning(s)"
+    assert data.meta["empty"] == "Reolink answers · Reolink Home Hub · 3 cameras"
+    empty = _Reolink(GetHddInfo={"HddInfo": []})
+    respx.post(f"{REO}/api.cgi").mock(side_effect=empty)
+    without = await get_adapter("reolink").fetch("findings", CONFIG, {}, Context(httpx.AsyncClient(), cache={}))
+    assert ("Storage", "No storage", "warn") in [(item["title"], item["subtitle"], item["status"]) for item in without.items]
+
+
+@respx.mock
+async def test_reolink_camera_card_snapshot_and_stream_sources(ctx: Context) -> None:
+    device = _Reolink()
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    reolink = get_adapter("reolink")
+    card = await reolink.fetch("camera", CONFIG, {"channel": 1, "mode": "live", "interval": 10}, ctx)
+    assert card.items == [{"title": "Garden", "subtitle": "sleeping", "status": "unknown", "art": "proxy:/snap/1/sub"}]
+    clear = await reolink.fetch("camera", CONFIG, {"channel": 1, "quality": "main"}, ctx)
+    assert clear.items[0]["art"] == "proxy:/snap/1/main"
+    assert card.meta == {"mode": "live", "live": True, "interval": 10, "channel": 1, "empty": "No cameras"}
+    offline = await reolink.fetch("camera", CONFIG, {"channel": 2, "mode": "live"}, ctx)
+    assert offline.status == "bad" and offline.meta["live"] is False, "no live video from an offline camera"
+    with pytest.raises(AdapterError) as missing:
+        await reolink.fetch("camera", CONFIG, {"channel": 7}, ctx)
+    assert missing.value.code == "no_channel"
+    snapshot = await reolink.image_source(CONFIG, "/snap/1/main", ctx)
+    assert snapshot.url == f"{REO}/cgi-bin/api.cgi" and snapshot.cache_seconds == 0
+    assert snapshot.params["cmd"] == "Snap" and snapshot.params["channel"] == 1 and snapshot.params["snapType"] == "main" and snapshot.params["token"] == "T1" and snapshot.params["rs"]
+    assert (await reolink.image_source(CONFIG, "/snap/1", ctx)).params["snapType"] == "sub", "the small picture unless asked otherwise"
+    for bad in ("/library/metadata/1/thumb", "/snap/x", "/snap/1/huge"):
+        with pytest.raises(AdapterError):
+            await reolink.image_source(CONFIG, bad, ctx)
+    stream = await reolink.stream_source(CONFIG, {"channel": 1, "quality": "main"}, ctx)
+    assert stream.url == f"{REO}/flv" and stream.media_type == "video/x-flv"
+    assert stream.params == {"port": 1935, "app": "bcs", "stream": "channel1_main.bcs", "token": "T1"}, "the session token instead of the account; RTMP need not be switched on"
+
+
+@respx.mock
+async def test_reolink_hands_back_its_session_and_backs_off_at_the_limit(ctx: Context) -> None:
+    device = _Reolink()
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    reolink = get_adapter("reolink")
+    await reolink.fetch("cameras", CONFIG, {}, ctx)
+    await reolink.close(CONFIG, ctx)
+    logouts = [body for body in device.bodies if body and body[0].get("cmd") == "Logout"]
+    assert len(logouts) == 1 and "reolink_token" not in ctx.cache, "the session goes back to the device"
+    await reolink.close(CONFIG, ctx)
+    assert len([body for body in device.bodies if body and body[0].get("cmd") == "Logout"]) == 1, "nothing cached, nothing sent"
+    device.limit = True
+    fresh = Context(httpx.AsyncClient(), cache={})
+    with pytest.raises(AuthFailed) as refused:
+        await reolink.fetch("cameras", CONFIG, {}, fresh)
+    assert "session limit" in str(refused.value)
+    logins = device.logins
+    with pytest.raises(AuthFailed):
+        await reolink.fetch("cameras", CONFIG, {}, fresh)
+    assert device.logins == logins, "within the cooldown the device is not asked again"
