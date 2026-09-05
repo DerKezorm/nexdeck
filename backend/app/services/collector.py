@@ -146,7 +146,9 @@ class Collector:
             config = resolve_config(integration) if integration is not None else {}
             demo = self._demo_active(integration)
             integration_id = integration.id if integration else None
-            link = widget.link or (integration and self._safe_link(kind, config)) or None
+            # Demo integrations point nowhere; a card without a link is better
+            # than a link to demo.invalid.
+            link = widget.link or (integration and not demo and self._safe_link(kind, config)) or None
 
         try:
             adapter, widget_kind = split_widget_kind(kind)
