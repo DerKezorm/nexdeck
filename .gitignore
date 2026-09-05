@@ -21,3 +21,6 @@ frontend/test-results/
 tools/personal-data.local.txt
 .DS_Store
 Thumbs.db
+
+# Working notes, not part of the product
+notes/
