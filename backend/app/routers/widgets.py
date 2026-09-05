@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, status
+import time
+
+import httpx
+from fastapi import APIRouter, Request, Response, status
 from sqlalchemy import select
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError
+from ..adapters.base import AdapterError, base_url
 from ..deps import (
     CurrentUser,
     DbSession,
@@ -22,6 +25,7 @@ from ..services import health as health_service
 from ..services import history
 from ..services.boards import place_widget, remove_from_layouts, widget_view
 from ..services.collector import collector
+from ..services.integrations import resolve_config
 from ..services.notify import emit
 from ..services.sse import board_topic, hub
 from ..services.state import live
@@ -169,6 +173,57 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
         emit("action_failed", f"{action_id} on {widget.title} failed", failure.message, level="warn", user_ids=[user.id] if user else None)
         raise error(failure.code, failure.message) from failure
     return {"ok": True, "message": message}
+
+
+# -- images of a widget's service ----------------------------------------------
+
+IMAGE_TTL = 3600
+IMAGE_LIMIT = 300
+IMAGE_MAX_BYTES = 5 * 1024 * 1024
+_images: dict[tuple[int, str], tuple[float, bytes, str]] = {}
+_insecure_client: httpx.AsyncClient | None = None
+
+
+def _image_client(insecure: bool) -> httpx.AsyncClient:
+    global _insecure_client
+    if not insecure:
+        return collector.client
+    if _insecure_client is None or _insecure_client.is_closed:
+        _insecure_client = httpx.AsyncClient(verify=False, follow_redirects=True, timeout=15.0, headers={"User-Agent": "nexdeck"})
+    return _insecure_client
+
+
+@router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
+async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
+    """Posters and thumbnails come from the service with the server's credentials; the browser never sees a token.
+
+    ``path`` is relative to the integration's address, so the server only ever
+    fetches from the service the widget already talks to.
+    """
+    widget, page = _widget(db, widget_id)
+    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    if not path.startswith("/") or path.startswith("//") or "://" in path:
+        raise error("bad_path", "An image path is relative to the service, starting with a slash.")
+    hit = _images.get((widget_id, path))
+    if hit and hit[0] > time.monotonic():
+        return Response(content=hit[1], media_type=hit[2], headers={"Cache-Control": "private, max-age=3600"})
+    integration = db.get(Integration, widget.integration_id) if widget.integration_id else None
+    if integration is None:
+        raise error("not_found", "This widget has no service to fetch images from.", status.HTTP_404_NOT_FOUND)
+    adapter, _kind = split_widget_kind(widget.kind)
+    config = resolve_config(integration)
+    try:
+        response = await _image_client(bool(config.get("insecure"))).get(f"{base_url(config)}{path}", headers=adapter.image_headers(config))
+    except httpx.HTTPError as failure:
+        raise error("unreachable", f"The service did not deliver the image: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
+    content_type = response.headers.get("content-type", "")
+    if response.status_code >= 400 or not content_type.startswith("image/") or len(response.content) > IMAGE_MAX_BYTES:
+        raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND)
+    if len(_images) >= IMAGE_LIMIT:
+        oldest = min(_images, key=lambda key: _images[key][0])
+        _images.pop(oldest, None)
+    _images[(widget_id, path)] = (time.monotonic() + IMAGE_TTL, response.content, content_type)
+    return Response(content=response.content, media_type=content_type, headers={"Cache-Control": "private, max-age=3600"})
 
 
 # -- reachability checks -----------------------------------------------------

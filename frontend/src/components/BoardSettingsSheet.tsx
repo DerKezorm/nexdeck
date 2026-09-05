@@ -33,6 +33,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deletingPage, setDeletingPage] = useState<{ id: number; name: string; widgets: number } | null>(null)
   const [newBoard, setNewBoard] = useState('')
   const [importText, setImportText] = useState('')
   const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '' })
@@ -189,7 +190,13 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
                   if (e.target.value.trim() && e.target.value !== page.name) void patch(`/pages/${page.id}`, { name: e.target.value.trim() }).then(onChanged)
                 }}
               />
-              <button className="btn btn-icon btn-danger" disabled={board.pages.length <= 1} onClick={() => void del(`/pages/${page.id}`).then(onChanged)} aria-label={t('common.delete')}>
+              <button
+                className="btn btn-icon btn-danger"
+                disabled={board.pages.length <= 1}
+                onClick={() => setDeletingPage({ id: page.id, name: page.name, widgets: page.widgets.length })}
+                aria-label={t('board.deletePageTitle', { name: page.name })}
+                title={board.pages.length <= 1 ? t('board.lastPage') : t('board.deletePage')}
+              >
                 <Trash2 size={14} />
               </button>
             </li>
@@ -320,6 +327,18 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           )}
         </div>
       )}
+      <Confirm
+        open={deletingPage !== null}
+        title={deletingPage ? t('board.deletePageTitle', { name: deletingPage.name }) : ''}
+        body={deletingPage && deletingPage.widgets > 0 ? t('board.deletePageBody', { count: deletingPage.widgets }) : t('board.deletePageEmpty')}
+        danger
+        onCancel={() => setDeletingPage(null)}
+        onConfirm={() => {
+          const page = deletingPage
+          setDeletingPage(null)
+          if (page) void del(`/pages/${page.id}`).then(onChanged).catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))
+        }}
+      />
       <Confirm
         open={confirmDelete}
         title={t('board.delete')}

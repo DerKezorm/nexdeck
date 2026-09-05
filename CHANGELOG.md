@@ -18,4 +18,6 @@ project uses semantic versioning.
 - **OpenID Connect** sign-in next to local accounts, personal API tokens, English and German interface.
 - **Live preview while editing.** Widget settings and the board look show every change on the card before it is saved; closing the sheet discards it.
 - **Free placement.** Cards stay where they are dropped, gaps allowed; a board option pushes them up instead.
+- **Recently added with covers.** Plex shows the newest movies, series or albums as a poster grid; posters and stream thumbnails come through the server, so no service token ever appears in an image address.
+- **Sign in with Plex.** The Plex integration gets its token from plex.tv through a PIN and offers the account's own server, local address first; no token to copy out of an XML page.
 - **UniFi with an API key.** Network 9.0 consoles are read through the Integration API with a key from the console; no local account and no two-factor exception needed. Older controllers keep the account sign-in.

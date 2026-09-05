@@ -44,6 +44,7 @@ export interface FieldSpec {
   help: string
   placeholder: string
   options: { value: string; label: string }[]
+  helper?: string
 }
 
 export interface WidgetTypeSpec {

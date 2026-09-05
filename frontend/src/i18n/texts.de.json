@@ -294,7 +294,25 @@
     "WLANs": "WLANs",
     "Every wireless network with its VLAN, security, bands and the access points that carry it.": "Jedes Funknetz mit VLAN, Sicherheit, Bändern und den Access Points, die es ausstrahlen.",
     "Console": "Konsole",
-    "The console at a glance: gateway, uptime, versions, firmware state, device and client counts, WAN throughput.": "Die Konsole auf einen Blick: Gateway, Laufzeit, Versionen, Firmware-Stand, Geräte- und Client-Zahlen, WAN-Durchsatz."
+    "The console at a glance: gateway, uptime, versions, firmware state, device and client counts, WAN throughput.": "Die Konsole auf einen Blick: Gateway, Laufzeit, Versionen, Firmware-Stand, Geräte- und Client-Zahlen, WAN-Durchsatz.",
+    "The containers of the Container Manager with state, CPU and memory, plus start, stop and restart.": "Die Container des Container Managers mit Zustand, CPU und Speicher, dazu Starten, Stoppen und Neustarten.",
+    "CPU, memory, volumes, disk temperatures and health, plus the containers of the Container Manager.": "CPU, Speicher, Volumes, Plattentemperaturen und Zustand, dazu die Container des Container Managers.",
+    "Virtual machines": "Virtuelle Maschinen",
+    "The VMs of the Virtual Machine Manager with state, CPU and memory, plus start, shutdown and restart.": "Die VMs des Virtual Machine Managers mit Zustand, CPU und Speicher, dazu Starten, Herunterfahren und Neustarten.",
+    "Filled in by the sign-in below. By hand: in Plex Web open any item, choose Get Info, then View XML, and copy the value after X-Plex-Token=. The server owner's token sees every stream; a shared user's only their own.": "Wird von der Anmeldung darunter eingetragen. Von Hand: In Plex Web einen beliebigen Titel öffnen, Get Info wählen, dann View XML, und aus der Adresse den Wert hinter X-Plex-Token= kopieren. Der Token des Server-Besitzers sieht alle Streams, der eines geteilten Nutzers nur die eigenen.",
+    "Active streams, library size and what was added last, with covers.": "Aktive Streams, Bibliotheksgröße und was zuletzt dazukam, mit Covern.",
+    "Recently added": "Zuletzt hinzugefügt",
+    "The newest movies, series or albums with their covers.": "Die neuesten Filme, Serien oder Alben mit ihren Covern.",
+    "Type": "Art",
+    "Everything": "Alles",
+    "Music": "Musik",
+    "Items": "Einträge",
+    "Movies": "Filme",
+    "Series": "Serien",
+    "Show": "Anzeigen",
+    "Big number with chips": "Große Zahl mit Chips",
+    "Icons with numbers": "Symbole mit Zahlen",
+    "The style applies when everything is shown.": "Die Darstellung gilt, wenn alles angezeigt wird."
   },
   "labels": {
     "Blocked": "Geblockt",
@@ -422,6 +440,15 @@
     "Network application": "Network-Anwendung",
     "Firmware": "Firmware",
     "all devices up to date": "alle Geräte aktuell",
-    "WAN": "WAN"
+    "WAN": "WAN",
+    "unhealthy": "ungesund",
+    "No containers": "Keine Container",
+    "No virtual machines": "Keine virtuellen Maschinen",
+    "shutdown": "ausgeschaltet",
+    "Nothing new": "Nichts Neues",
+    "Artists": "Künstler",
+    "Albums": "Alben",
+    "Photos": "Fotos",
+    "Tracks": "Titel"
   }
 }

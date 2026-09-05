@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { FieldSpec } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { PlexSignIn } from './PlexSignIn'
 import { Field, Select, Switch } from './ui'
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   value: unknown
   onChange: (value: unknown) => void
   labelOverride?: string
+  /** Lets a helper fill several fields at once, such as a token and the server address. */
+  onFill?: (values: Record<string, unknown>) => void
 }
 
 /** The browser's own list of IANA zones; empty in browsers that cannot say. */
@@ -23,7 +26,7 @@ const TIME_ZONES: string[] = (() => {
 })()
 
 /** Draws one adapter field from its spec: text, password, number, bool, select, textarea or time zone. */
-export function FieldInput({ spec, value, onChange, labelOverride }: Props) {
+export function FieldInput({ spec, value, onChange, labelOverride, onFill }: Props) {
   const { t } = useTranslation()
   const id = useId()
   // Adapters speak English; the field is shown in the user's language.
@@ -93,6 +96,7 @@ export function FieldInput({ spec, value, onChange, labelOverride }: Props) {
         autoComplete={spec.type === 'password' ? 'new-password' : 'off'}
         onChange={(event) => onChange(spec.type === 'number' ? (event.target.value === '' ? '' : Number(event.target.value)) : event.target.value)}
       />
+      {spec.helper === 'plex-signin' && <PlexSignIn onFill={(values) => (onFill ? onFill(values) : onChange(values[spec.name]))} />}
     </Field>
   )
 }

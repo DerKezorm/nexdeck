@@ -211,3 +211,25 @@ async def test_problems_widget_lists_the_yellow_and_red_cards_of_its_board(clien
     live.set(radarr["id"], WidgetData(status="ok"))
     calm = await get_adapter("core").fetch("problems", {}, {}, ctx)
     assert calm.status == "ok" and calm.items == [] and calm.meta["empty"] == "Everything is fine"
+
+
+def test_widget_images_come_through_the_server_with_the_service_token(client: TestClient) -> None:
+    import respx
+    from httpx import Response
+
+    setup_admin(client)
+    board = _board(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "plex", "name": "P", "config": {"url": "http://plex:32400", "token": "tok"}}, headers=CSRF).json()
+    widget = _widget(client, board["pages"][0]["id"], kind="plex.recent", integration_id=integration["id"])
+    with respx.mock:
+        poster = respx.get("http://plex:32400/library/metadata/10/thumb/1").mock(return_value=Response(200, content=b"\x89PNG...", headers={"content-type": "image/png"}))
+        first = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"})
+        assert first.status_code == 200 and first.headers["content-type"] == "image/png" and first.content.startswith(b"\x89PNG")
+        assert poster.calls.last.request.headers["X-Plex-Token"] == "tok", "the token stays between server and service"
+        second = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"})
+        assert second.status_code == 200 and poster.call_count == 1, "the second request is served from the cache"
+        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "http://evil.example.com/x.png"}).status_code == 400
+        respx.get("http://plex:32400/login").mock(return_value=Response(200, text="<html>", headers={"content-type": "text/html"}))
+        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/login"}).status_code == 404
+    other = TestClient(client.app)
+    assert other.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"}).status_code in (401, 403), "no session, no image"

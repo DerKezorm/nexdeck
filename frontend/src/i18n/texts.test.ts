@@ -42,6 +42,8 @@ describe('server texts', () => {
     expect(translateText('labels', 'Guests (VLAN 80) · open · 2.4 + 5 GHz · guest portal · on 3 access points · off')).toBe('Guests (VLAN 80) · offen · 2.4 + 5 GHz · Gästeportal · auf 3 Access Points · aus')
     expect(translateText('labels', '1 gateway · 13 switches · 10 access points')).toBe('1 Gateway · 13 Switches · 10 Access Points')
     expect(translateText('labels', '52 wireless · 24 wired')).toBe('52 WLAN · 24 Kabel')
+    expect(translateText('labels', 'restic/restic · Exited (0) 5 months ago')).toBe('restic/restic · Beendet (0) vor 5 Monaten')
+    expect(translateText('labels', 'paperless-ngx · Up 6 hours · unhealthy')).toBe('paperless-ngx · Läuft seit 6 Stunden · ungesund')
   })
 
   it('leave unknown text alone', async () => {

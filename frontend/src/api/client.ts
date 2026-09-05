@@ -27,6 +27,19 @@ export function kioskHeaders(): Record<string, string> {
   return kioskToken ? { 'X-Kiosk-Token': kioskToken } : {}
 }
 
+/**
+ * An image of a widget's service, fetched through the server. Adapters hand
+ * out ``proxy:/path`` so no token ever sits in an image address; anything
+ * else (a full URL, a data URL) is used as it is.
+ */
+export function mediaUrl(widgetId: number, art: string | null | undefined): string {
+  if (!art) return ''
+  if (!art.startsWith('proxy:')) return art
+  const params = new URLSearchParams({ path: art.slice(6) })
+  if (kioskToken) params.set('kiosk', kioskToken)
+  return `${BASE}/widgets/${widgetId}/image?${params.toString()}`
+}
+
 export async function api<T = unknown>(path: string, init: RequestInit & { json?: unknown; raw?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { ...(init.headers as Record<string, string>), ...kioskHeaders() }
   const method = (init.method ?? 'GET').toUpperCase()
