@@ -12,7 +12,7 @@ class CoreAdapter(Adapter):
     label = "Basics"
     category = "basics"
     description = "Clock, notes, bookmarks and embedded pages. No connection needed."
-    icon = "nexdeck"
+    icon = "lucide:layout-dashboard"
     beta = False
     needs_integration = False
     widgets = (

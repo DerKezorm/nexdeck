@@ -47,6 +47,8 @@ export function BoardPage() {
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
   const [theme, setTheme] = useState(currentTheme())
+  const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
+  const [draftWidget, setDraftWidget] = useState<{ id: number; title: string; icon: string; link: string } | null>(null)
 
   const data = board.data
   const pages = useMemo(() => data?.pages ?? [], [data])
@@ -106,8 +108,13 @@ export function BoardPage() {
   }, [])
 
   const widgets: WidgetView[] = useMemo(
-    () => (activePage?.widgets ?? []).map((w) => (w.health ? { ...w, health: { ...w.health, ...(live.health[w.id] ?? {}) } } : w)),
-    [activePage, live.health],
+    () =>
+      (activePage?.widgets ?? []).map((w) => {
+        const merged = w.health ? { ...w, health: { ...w.health, ...(live.health[w.id] ?? {}) } } : w
+        // While the settings sheet is open, the card shows the draft.
+        return draftWidget && draftWidget.id === w.id ? { ...merged, title: draftWidget.title, icon: draftWidget.icon, link: draftWidget.link } : merged
+      }),
+    [activePage, live.health, draftWidget],
   )
 
   const runAction = async (widgetId: number, action: Action) => {
@@ -157,7 +164,7 @@ export function BoardPage() {
 
   return (
     <div className="min-h-full pb-24 md:pb-10">
-      <BackgroundLayer background={data.background} />
+      <BackgroundLayer background={previewBackground ?? data.background} />
       <TopBar
         boardName={data.name}
         pages={pages.map((p) => ({ id: p.id, name: p.name }))}
@@ -261,16 +268,35 @@ export function BoardPage() {
         }}
       />
       <WidgetSettingsSheet
-        widget={widgets.find((w) => w.id === settingsFor) ?? null}
+        widget={activePage.widgets.find((w) => w.id === settingsFor) ?? null}
         pages={pages.map((p) => ({ id: p.id, name: p.name }))}
-        onClose={() => setSettingsFor(null)}
-        onSaved={() => void board.refetch()}
+        onPreview={setDraftWidget}
+        onClose={() => {
+          setSettingsFor(null)
+          setDraftWidget(null)
+        }}
+        onSaved={() => {
+          setDraftWidget(null)
+          void board.refetch()
+        }}
         onDeleted={() => {
           setSettingsFor(null)
+          setDraftWidget(null)
           void board.refetch()
         }}
       />
-      <BoardSettingsSheet open={boardSettings} board={data} boards={boards.data ?? []} canEdit={canEdit} onClose={() => setBoardSettings(false)} onChanged={() => void Promise.all([board.refetch(), boards.refetch()])} />
+      <BoardSettingsSheet
+        open={boardSettings}
+        board={data}
+        boards={boards.data ?? []}
+        canEdit={canEdit}
+        onPreview={setPreviewBackground}
+        onClose={() => {
+          setBoardSettings(false)
+          setPreviewBackground(null)
+        }}
+        onChanged={() => void Promise.all([board.refetch(), boards.refetch()])}
+      />
       <NoticeDrawer />
       <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} />
       <WhatsNewDialog />

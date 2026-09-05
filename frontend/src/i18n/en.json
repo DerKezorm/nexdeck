@@ -263,7 +263,8 @@
     "importHelp": "Paste the YAML of an exported board.",
     "importRun": "Import",
     "delete": "Delete this board",
-    "deleteBody": "Every page and widget on it goes with it."
+    "deleteBody": "Every page and widget on it goes with it.",
+    "previewHint": "The board shows the change right away. Save keeps it, closing the sheet discards it."
   },
   "widget": {
     "remove": {
@@ -292,7 +293,8 @@
       "insecure": "Ignore TLS errors"
     },
     "refreshNow": "Refresh now",
-    "openLink": "Open the service"
+    "openLink": "Open the service",
+    "previewHint": "Title, icon and link show on the card right away. Options take effect when you save, because the server fetches the data."
   },
   "library": {
     "title": "Add a widget",

@@ -15,10 +15,12 @@ interface Props {
   onClose: () => void
   onSaved: () => void
   onDeleted: () => void
+  /** Shows title, icon and link on the card while they are being edited. */
+  onPreview?: (draft: { id: number; title: string; icon: string; link: string } | null) => void
 }
 
 /** Everything about one widget: title, icon, link, connection, options, reachability check. */
-export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted }: Props) {
+export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted, onPreview }: Props) {
   const { t } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
@@ -44,7 +46,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     setOptions({ ...widget.options })
     setError('')
     if (widget.health) setHealth({ kind: widget.health.kind, interval_seconds: (widget.health as { interval_seconds?: number }).interval_seconds ?? 30, enabled: true, insecure: false })
-  }, [widget])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widget?.id])
+  useEffect(() => {
+    if (widget) onPreview?.({ id: widget.id, title, icon, link })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, icon, link, widget?.id])
 
   if (!widget) return null
   const adapterKind = widget.kind.split('.')[0]
@@ -98,10 +105,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         </>
       }
     >
-      <p className="text-xs text-muted mb-3">
+      <p className="text-xs text-muted mb-1">
         {adapter?.label} · {spec?.label}
         {adapter?.beta && <span className="chip ml-1.5 !py-0 text-[10px]">beta</span>}
       </p>
+      <p className="text-[11px] text-faint mb-3">{t('widget.previewHint')}</p>
       <Field label={t('widget.title')} htmlFor="w-title">
         <input id="w-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
