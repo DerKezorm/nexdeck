@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="nexapps">
+  <rect width="32" height="32" rx="7" fill="#0b0f0f"></rect>
+  <g fill="none" stroke-linecap="round" stroke-width="4.5">
+    <path d="M10 24V12" stroke="#edf1f1"></path>
+    <path d="M22 24V8" stroke="#edf1f1"></path>
+    <path d="M10 12l12 12" stroke="#23d19e"></path>
+  </g>
+</svg>

@@ -203,3 +203,135 @@ def test_ics_parser_and_recurrence() -> None:
 def test_prometheus_text_parser_handles_labels_with_commas() -> None:
     rows = parse_metrics('monitor_status{monitor_name="A, B",monitor_type="http"} 1\n# comment\nbad line\n')
     assert rows == [("monitor_status", {"monitor_name": "A, B", "monitor_type": "http"}, 1.0)]
+
+
+def test_icon_names_and_search_merge_both_collections(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The picker browses every name once; the search ranks prefix matches first. No network here."""
+    import time
+
+    from app.services import icons
+
+    far = time.monotonic() + 3600
+    monkeypatch.setattr(icons, "_index", {"dashboard-icons": (far, ["sonarr", "radarr", "radarr-4k"]), "selfhst": (far, ["plex", "sonarr"])})
+    setup_admin(client)
+    names = [entry for entry in client.get("/api/v1/icons/names").json() if entry["source"] != "bundled"]
+    assert [entry["name"] for entry in names] == ["plex", "radarr", "radarr-4k", "sonarr"]
+    assert names[0]["source"] == "selfhst" and names[3]["source"] == "dashboard-icons"
+    hits = client.get("/api/v1/icons/search?q=rad").json()
+    assert [entry["name"] for entry in hits] == ["radarr", "radarr-4k"]
+    assert client.get("/api/v1/icons/search?q=nothing-here").json() == []
+
+
+def test_bundled_logos_are_served_and_listed_without_network(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The nexapps logos ship with nexdeck: no collection carries them, and no request leaves the house."""
+    import time
+
+    from app.services import icons
+
+    far = time.monotonic() + 3600
+    monkeypatch.setattr(icons, "_index", {"dashboard-icons": (far, ["radarr"]), "selfhst": (far, [])})
+    setup_admin(client)
+    logo = client.get("/api/v1/icons/nexview.svg")
+    assert logo.status_code == 200 and logo.headers["content-type"].startswith("image/svg+xml")
+    assert b"<svg" in logo.content and b"<!--" not in logo.content
+    names = client.get("/api/v1/icons/names").json()
+    assert {"name": "nexview", "source": "bundled"} in names
+    assert [entry["name"] for entry in client.get("/api/v1/icons/search?q=nex").json()] == ["nexdeck", "nexmail", "nexview"]
+
+
+async def test_ping_without_subprocess_support_is_a_readable_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Windows with the selector loop cannot spawn ping; the tile says so instead of the log filling up."""
+    import asyncio
+
+    from app.services import health
+
+    async def no_processes(*_args, **_kwargs):
+        raise NotImplementedError
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", no_processes)
+    ok, latency, detail = await health.check_ping("example.com", 2)
+    assert ok is False and latency == 0
+    assert "HTTP or TCP" in detail
+
+
+async def test_one_broken_check_does_not_stop_the_others(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from sqlalchemy import select
+
+    from app.db import db_session
+    from app.models import HealthCheck
+    from app.services import health
+
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
+    page_id = board["pages"][0]["id"]
+    for target in ("http://one.example.com", "http://two.example.com"):
+        widget = client.post(f"/api/v1/pages/{page_id}/widgets", json={"kind": "core.app", "link": target}, headers=CSRF).json()["widget"]
+        client.put(f"/api/v1/widgets/{widget['id']}/health", json={"kind": "http", "target": target}, headers=CSRF)
+
+    async def flaky(check: HealthCheck) -> tuple[bool, int, str]:
+        if "one" in check.target:
+            raise RuntimeError("boom")
+        return True, 12, "HTTP 200"
+
+    monkeypatch.setattr(health, "run_check", flaky)
+    await health.health.run_due(force=True)
+    with db_session() as db:
+        rows = {check.target: (check.last_ok, check.last_error) for check in db.scalars(select(HealthCheck))}
+    assert rows["http://one.example.com"] == (False, "Check failed: RuntimeError")
+    assert rows["http://two.example.com"] == (True, "")
+
+
+def test_health_event_carries_fresh_uptime_bars(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every check result pushes the tile's bars, so they move without a page reload."""
+    from app.services import health
+
+    published: list[tuple[str, dict]] = []
+    monkeypatch.setattr(health.hub, "publish", lambda topic, event, payload: published.append((event, payload)))
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
+    widget = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.app", "link": "http://svc.example.com"}, headers=CSRF).json()["widget"]
+    check = client.put(f"/api/v1/widgets/{widget['id']}/health", json={"kind": "http", "target": "http://svc.example.com"}, headers=CSRF).json()
+    health.health._record(check["id"], True, 12, "HTTP 200")
+    health.health._record(check["id"], False, 0, "ConnectError")
+    events = [payload for event, payload in published if event == "health"]
+    assert len(events) == 2
+    bars = events[-1]["bars"]
+    assert isinstance(bars, list) and len(bars) == 48
+    assert bars[-1] == 0.5, "the current slice averages one success and one failure"
+    assert all(bar is None for bar in bars[:-1])
+
+
+def test_http_checks_share_one_client_per_tls_mode() -> None:
+    """Building a TLS context per check cost a second on Windows and showed up as latency."""
+    from app.services import health
+
+    assert health.http_client(False) is health.http_client(False)
+    assert health.http_client(True) is health.http_client(True)
+    assert health.http_client(False) is not health.http_client(True)
+
+
+def test_uptime_bars_windows_and_live_row(client: TestClient) -> None:
+    """The same three checks, seen through every window an app tile offers."""
+    import time
+
+    from app.db import db_session
+    from app.services import health, history
+
+    setup_admin(client)
+    now = int(time.time())
+    with db_session() as db:
+        for offset, value in ((30, 1.0), (20, 0.0), (10, 1.0)):
+            history.record(db, 4242, {"up": value}, ts=now - offset)
+        db.commit()
+        live = health.uptime_bars(db, 4242, "live")
+        hour = health.uptime_bars(db, 4242, "1h")
+        day = health.uptime_bars(db, 4242, "24h")
+        six = health.uptime_bars(db, 4242, "6h")
+        empty = health.uptime_bars(db, 4243, "live")
+    assert len(live) == 48 and live[-3:] == [1.0, 0.0, 1.0] and live[:-3] == [None] * 45
+    assert len(hour) == 60 and hour[-1] == 0.67 and hour[-2] is None
+    assert len(day) == 48 and day[-1] == 0.67
+    assert len(six) == 48 and six[-1] == 0.67
+    assert empty == [None] * 48
+    assert health.bars_window({"bars": "live"}) == "live"
+    assert health.bars_window({"bars": "nonsense"}) == "24h" and health.bars_window(None) == "24h"

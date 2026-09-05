@@ -138,12 +138,14 @@ export const SYMBOLS: Record<string, ComponentType<LucideProps>> = {
  * ``lucide:`` prefix, a symbol from the set above.
  */
 export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
-  const [failed, setFailed] = useState(false)
+  // Remember which address failed, not that one did: while a name is being
+  // typed, "r" and "ra" fail and "radarr" must still get its chance.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   if (icon && icon.startsWith('lucide:')) {
     return <LucideByName name={icon.slice(7)} size={size} className={className} />
   }
   const url = iconUrl(icon)
-  if (!url || failed) {
+  if (!url || failedUrl === url) {
     return <Box size={size} className={`${className} text-muted`} aria-hidden="true" />
   }
   return (
@@ -155,7 +157,7 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
       className={`${className} object-contain`}
       style={{ width: size, height: size }}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setFailedUrl(url)}
     />
   )
 }

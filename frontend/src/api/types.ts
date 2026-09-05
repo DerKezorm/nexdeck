@@ -37,7 +37,7 @@ export interface BoardSummary {
 export interface FieldSpec {
   name: string
   label: string
-  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'textarea'
+  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'textarea' | 'timezone'
   required: boolean
   secret: boolean
   default: unknown
@@ -56,6 +56,7 @@ export interface WidgetTypeSpec {
   options: FieldSpec[]
   refresh_seconds: number
   metrics: string[]
+  client_only: boolean
 }
 
 export interface AdapterSpec {

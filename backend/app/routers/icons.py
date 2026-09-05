@@ -15,6 +15,11 @@ async def search_icons(q: str, user: CurrentUser) -> list[dict]:
     return await icons.search(q)
 
 
+@router.get("/names", summary="Every logo name the picker can offer")
+async def icon_names(user: CurrentUser) -> list[dict]:
+    return await icons.all_names()
+
+
 @router.get("/{name}.{ext}", summary="Serve a service logo from the cache")
 async def icon(name: str, ext: str) -> Response:
     """Public, like any image: kiosk displays load icons without a session."""

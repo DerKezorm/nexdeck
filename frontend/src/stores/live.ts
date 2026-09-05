@@ -12,7 +12,7 @@ interface LiveState {
   setSnapshot: (snapshot: Record<string, WidgetData>) => void
   applyWidget: (id: number, data: WidgetData) => void
   setSeries: (id: number, series: Record<string, [number, number][]>) => void
-  applyHealth: (payload: { widget_id: number | null; ok: boolean; latency_ms: number; down_since: string | null; detail: string }) => void
+  applyHealth: (payload: { widget_id: number | null; ok: boolean; latency_ms: number; down_since: string | null; detail: string; bars?: (number | null)[] | null }) => void
   appendLog: (id: number, entry: { ts: number; line: string }, limit: number) => void
   setLogs: (id: number, entries: { ts: number; line: string }[]) => void
   forget: (id: number) => void
@@ -55,7 +55,16 @@ export const useLive = create<LiveState>((set) => ({
       return {
         health: {
           ...state.health,
-          [payload.widget_id]: { ...previous, last_ok: payload.ok, last_latency_ms: payload.latency_ms, down_since: payload.down_since, last_error: payload.ok ? '' : payload.detail },
+          [payload.widget_id]: {
+            ...previous,
+            last_ok: payload.ok,
+            last_latency_ms: payload.latency_ms,
+            down_since: payload.down_since,
+            last_error: payload.ok ? '' : payload.detail,
+            // Fresh bars ride along with every result; without them the tile
+            // only moved when the board was loaded again.
+            ...(Array.isArray(payload.bars) ? { bars: payload.bars } : {}),
+          },
         },
       }
     }),

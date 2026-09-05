@@ -1,10 +1,12 @@
 /**
- * Small primitives: sheet, dialog, confirm, switch, select, field, toast.
- * Every switch carries an accessible name; a label pointing at a div names
- * nothing for a screen reader, so the switch takes ``aria-labelledby``.
+ * Small primitives: sheet, dialog, confirm, switch, select, field, toast,
+ * password input. Every switch carries an accessible name; a label pointing
+ * at a div names nothing for a screen reader, so the switch takes
+ * ``aria-labelledby``.
  */
-import { X } from 'lucide-react'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { Eye, EyeOff, X } from 'lucide-react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 export function Sheet({ open, onClose, title, children, wide, footer }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
@@ -37,15 +39,23 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
 export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
   useEffect(() => {
     if (!open) return
+    // A dialog may sit on top of a sheet. Escape closes the dialog alone: the
+    // capture-phase listener runs first and stops the event before the sheet
+    // sees it.
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      onClose()
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
   }, [open, onClose])
   if (!open) return null
   const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' }[size]
-  return (
+  // Rendered at the body: a glass surface with backdrop-filter would otherwise
+  // confine a fixed dialog to itself, and a dialog opened from a sheet would
+  // be squeezed into the sheet's column.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
@@ -58,7 +68,8 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
         <div className="flex-1 min-h-0 scroll p-5">{children}</div>
         {footer && <footer className="px-5 py-3 border-t border-line flex justify-end gap-2">{footer}</footer>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -133,6 +144,51 @@ export function Select({ value, onChange, options, id, className = '' }: { value
         </option>
       ))}
     </select>
+  )
+}
+
+/** A password field with an eye: what was typed can be checked before it is sent. */
+export function PasswordInput({
+  id,
+  value,
+  onChange,
+  autoComplete = 'current-password',
+  placeholder,
+  autoFocus,
+  className = '',
+}: {
+  id?: string
+  value: string
+  onChange: (value: string) => void
+  autoComplete?: 'current-password' | 'new-password'
+  placeholder?: string
+  autoFocus?: boolean
+  className?: string
+}) {
+  const { t } = useTranslation()
+  const [shown, setShown] = useState(false)
+  return (
+    <div className={`relative ${className}`}>
+      <input
+        id={id}
+        className="input pr-10"
+        type={shown ? 'text' : 'password'}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <button
+        type="button"
+        className="btn btn-icon absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 border-0 bg-transparent text-muted"
+        onClick={() => setShown((current) => !current)}
+        aria-label={shown ? t('auth.hidePassword') : t('auth.showPassword')}
+        title={shown ? t('auth.hidePassword') : t('auth.showPassword')}
+      >
+        {shown ? <EyeOff size={15} /> : <Eye size={15} />}
+      </button>
+    </div>
   )
 }
 

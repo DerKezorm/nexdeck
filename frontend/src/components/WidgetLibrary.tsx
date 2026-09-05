@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 
 import { ApiError, get, post } from '../api/client'
 import type { AdapterSpec, Integration, WidgetTypeSpec } from '../api/types'
+import { tAdapter } from '../i18n/texts'
 import { ServiceIcon } from './ServiceIcon'
 import { Select, Sheet } from './ui'
 
@@ -14,6 +15,19 @@ interface Props {
   onClose: () => void
   pageId: number
   onCreated: (widgetId: number) => void
+}
+
+/**
+ * "UniFi Network" + "Network" must not become "UniFi Network Network": a widget
+ * named like the end of its adapter takes the adapter's name alone.
+ */
+export function defaultTitle(adapter: { kind: string; label: string }, widget: { label: string }): string {
+  if (adapter.kind === 'core') return widget.label
+  const service = adapter.label.trim()
+  const kind = widget.label.trim()
+  if (service.toLowerCase().endsWith(kind.toLowerCase())) return service
+  if (kind.toLowerCase().startsWith(service.toLowerCase())) return kind
+  return `${service} ${kind}`
 }
 
 const CATEGORY_ORDER = ['basics', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
@@ -34,7 +48,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     const result: Record<string, { adapter: AdapterSpec; widget: WidgetTypeSpec }[]> = {}
     for (const adapter of adapters.data ?? []) {
       for (const widget of adapter.widgets) {
-        const haystack = `${adapter.label} ${widget.label} ${widget.description} ${adapter.category}`.toLowerCase()
+        const haystack = `${adapter.label} ${widget.label} ${tAdapter(widget.label)} ${widget.description} ${tAdapter(widget.description)} ${adapter.category}`.toLowerCase()
         if (needle && !haystack.includes(needle)) continue
         ;(result[adapter.category] ??= []).push({ adapter, widget })
       }
@@ -48,7 +62,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     try {
       const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
         kind: widget.kind,
-        title: adapter.kind === 'core' ? widget.label : `${adapter.label} ${widget.label}`.replace(/^(\w+) \1/, '$1'),
+        title: defaultTitle(adapter, widget),
         integration_id: chosen,
         options: Object.fromEntries(widget.options.filter((o) => o.default !== null && o.default !== undefined).map((o) => [o.name, o.default])),
       })
@@ -119,10 +133,14 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
                   <ServiceIcon icon={adapter.icon} size={22} className="mt-0.5" />
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium">
-                      {adapter.kind === 'core' ? widget.label : `${adapter.label} · ${widget.label}`}
-                      {adapter.beta && <span className="chip ml-1.5 !py-0 text-[10px]">beta</span>}
+                      {adapter.kind === 'core' ? tAdapter(widget.label) : `${adapter.label} · ${tAdapter(widget.label)}`}
+                      {adapter.beta && (
+                        <span className="chip ml-1.5 !py-0 text-[10px] cursor-help" title={t('widget.betaHelp')}>
+                          beta
+                        </span>
+                      )}
                     </span>
-                    <span className="block text-[11px] text-muted leading-snug">{widget.description}</span>
+                    <span className="block text-[11px] text-muted leading-snug">{tAdapter(widget.description)}</span>
                   </span>
                 </button>
               </li>

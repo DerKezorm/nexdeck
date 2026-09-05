@@ -130,3 +130,84 @@ def test_history_endpoint_lists_metrics_of_live_widgets(client: TestClient) -> N
     response = client.get(f"/api/v1/boards/{board['slug']}/history")
     assert response.status_code == 200
     assert isinstance(response.json(), dict)
+
+
+def test_widget_preview_shows_draft_options_without_saving(client: TestClient) -> None:
+    setup_admin(client)
+    board = _board(client)
+    page = board["pages"][0]
+    widget = _widget(client, page["id"], options={"seconds": False})
+    response = client.post(f"/api/v1/widgets/{widget['id']}/preview", json={"options": {"seconds": True, "label": "Draft"}}, headers=CSRF)
+    assert response.status_code == 200, response.text
+    assert response.json()["meta"]["seconds"] is True
+    assert response.json()["meta"]["label"] == "Draft"
+    # Nothing was saved: the stored widget still has the old options.
+    view = client.get(f"/api/v1/boards/{board['slug']}").json()
+    assert view["pages"][0]["widgets"][0]["options"] == {"seconds": False}
+    assert view["pages"][0]["widgets"][0]["client_only"] is True
+    assert view["pages"][0]["widgets"][0]["default_size"] == [3, 2]
+
+
+def test_widget_preview_needs_edit_permission(client: TestClient) -> None:
+    setup_admin(client)
+    board = _board(client)
+    widget = _widget(client, board["pages"][0]["id"])
+    create_user(client, "viewer")
+    shared = client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"user_id": None, "role": "user", "level": "view"}]}, headers=CSRF)
+    assert shared.status_code in (200, 204), shared.text
+    viewer = TestClient(client.app)
+    login(viewer, "viewer", "another-long-password")
+    assert viewer.get(f"/api/v1/boards/{board['slug']}").status_code == 200
+    assert viewer.post(f"/api/v1/widgets/{widget['id']}/preview", json={"options": {}}, headers=CSRF).status_code == 403
+
+
+def test_migration_gives_old_nexview_widgets_the_logo(client: TestClient) -> None:
+    from sqlalchemy import text
+
+    from app.db import get_engine
+    from app.migrations import MIGRATIONS, schema_version
+
+    setup_admin(client)
+    board = _board(client)
+    integration = client.post("/api/v1/integrations", json={"kind": "nexview", "name": "N", "config": {"url": "http://n", "api_key": "k"}}, headers=CSRF).json()
+    widget = _widget(client, board["pages"][0]["id"], kind="nexview.requests", integration_id=integration["id"], icon="lucide:clapperboard")
+    other = _widget(client, board["pages"][0]["id"], kind="core.clock", icon="lucide:clapperboard")
+    assert schema_version() >= 2
+    step = {version: function for version, _description, function in MIGRATIONS}[2]
+    with get_engine().begin() as connection:
+        step(connection)
+        icons = dict(connection.execute(text("SELECT id, icon FROM widgets")).all())
+    assert icons[widget["id"]] == "nexview"
+    assert icons[other["id"]] == "lucide:clapperboard", "only Nexview widgets change"
+
+
+async def test_problems_widget_lists_the_yellow_and_red_cards_of_its_board(client: TestClient) -> None:
+    import httpx
+
+    from app.adapters import get_adapter
+    from app.adapters.base import Context, WidgetData
+    from app.services.state import live
+
+    setup_admin(client)
+    board = _board(client)
+    page_id = board["pages"][0]["id"]
+    second = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Media"}, headers=CSRF).json()
+    unifi = _widget(client, page_id, title="UniFi Network")
+    radarr = _widget(client, second["pages"][-1]["id"] if "pages" in second else second["id"], title="Radarr")
+    fine = _widget(client, page_id, title="Clock")
+    problems = _widget(client, page_id, kind="core.problems", title="Problems")
+    live.set(unifi["id"], WidgetData(status="warn", meta={"status_reason": "3 device(s) offline"}))
+    live.set(radarr["id"], WidgetData(status="unknown", error="The service could not be reached.", meta={"code": "unreachable"}))
+    live.set(fine["id"], WidgetData(status="ok"))
+    ctx = Context(httpx.AsyncClient(), widget_id=problems["id"], cache={})
+    data = await get_adapter("core").fetch("problems", {}, {}, ctx)
+    assert data.status == "bad"
+    assert [(item["title"], item["status"], item["subtitle"], item["value"]) for item in data.items] == [
+        ("Radarr", "bad", "The service could not be reached.", "Media"),
+        ("UniFi Network", "warn", "3 device(s) offline", "Overview"),
+    ]
+    assert data.items[0]["error_code"] == "unreachable"
+    live.set(unifi["id"], WidgetData(status="ok"))
+    live.set(radarr["id"], WidgetData(status="ok"))
+    calm = await get_adapter("core").fetch("problems", {}, {}, ctx)
+    assert calm.status == "ok" and calm.items == [] and calm.meta["empty"] == "Everything is fine"

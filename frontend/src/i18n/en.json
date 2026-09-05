@@ -17,7 +17,18 @@
     "toggleTheme": "Switch light and dark"
   },
   "errors": {
-    "network": "The server could not be reached."
+    "network": "The server could not be reached.",
+    "widget": {
+      "unreachable": "The service could not be reached.",
+      "auth_failed": "The service rejected the credentials.",
+      "timeout": "The service did not answer in time.",
+      "no_integration": "This widget needs a connection to a service.",
+      "http_error": "The service answered with an error.",
+      "not_json": "The service did not answer with data; probably a login page.",
+      "crash": "The adapter failed unexpectedly.",
+      "missing_location": "A place or coordinates are missing.",
+      "place_not_found": "The place could not be found."
+    }
   },
   "auth": {
     "username": "User name",
@@ -37,7 +48,11 @@
       "oidc_token_refused": "The identity provider refused the sign-in code.",
       "oidc_no_public_url": "The public URL is not set. An administrator has to set it first.",
       "oidc_bad_discovery": "The identity provider's configuration is incomplete."
-    }
+    },
+    "confirmPassword": "Confirm password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "mismatch": "The two passwords differ."
   },
   "setup": {
     "step": {
@@ -93,7 +108,8 @@
       "sessions": "Sessions",
       "sessionsHelp": "Every browser that is signed in with this account.",
       "signOutSession": "Sign out",
-      "signOut": "Sign out here"
+      "signOut": "Sign out here",
+      "confirmPassword": "Repeat new password"
     },
     "integrations": {
       "title": "Integrations",
@@ -265,24 +281,27 @@
     "importRun": "Import",
     "delete": "Delete this board",
     "deleteBody": "Every page and widget on it goes with it.",
-    "previewHint": "The board shows the change right away. Save keeps it, closing the sheet discards it."
+    "previewHint": "The board shows the change right away. Save keeps it, closing the sheet discards it.",
+    "autoCompact": "Push cards up",
+    "autoCompactHelp": "Off: cards stay where you drop them, gaps are allowed and no card ever moves on its own. On: everything moves up to fill space, and cards make room while you drag.",
+    "editHint": "Drag a card to move it. Drag the corner at the bottom right to resize it."
   },
   "widget": {
     "remove": {
       "title": "Remove this widget?",
-      "body": "Its history goes with it."
+      "body": "Its history goes with it.",
+      "failed": "The widget could not be removed. Is the server reachable?"
     },
     "settings": "Widget settings",
     "title": "Title",
     "icon": "Icon",
-    "iconHelp": "A dashboard-icons name, lucide:name for a symbol, or an image URL.",
-    "iconSearch": "Search logos…",
+    "iconHelp": "Type a service name and matching logos appear below. Or lucide:name for a symbol, or an image address.",
     "link": "Link",
     "linkHelp": "Where the card leads when clicked. Empty uses the service address.",
     "integration": "Integration",
     "noIntegration": "None",
     "refresh": "Refresh (s)",
-    "refreshHelp": "Empty uses the widget's default of {{seconds}} seconds.",
+    "refreshHelp": "How often the server asks the service. Empty uses the widget's default of {{seconds}} seconds.",
     "page": "Page",
     "keepPage": "Keep on this page",
     "health": {
@@ -291,11 +310,28 @@
       "kind": "Check",
       "interval": "Every (s)",
       "target": "Target",
-      "insecure": "Ignore TLS errors"
+      "insecure": "Ignore TLS errors",
+      "kindHelp": "HTTP asks the service's own address and counts any answer as reachable, a login page included. TCP only checks that the port is open. Ping reaches the machine, not the service."
     },
     "refreshNow": "Refresh now",
     "openLink": "Open the service",
-    "previewHint": "Title, icon and link show on the card right away. Options take effect when you save, because the server fetches the data."
+    "previewHint": "Every change shows on the card right away. Save keeps it, closing the sheet discards it.",
+    "iconSearching": "Searching…",
+    "iconNothing": "No logo matches \"{{query}}\".",
+    "iconSearchFailed": "The logo index could not be loaded. Try again in a moment.",
+    "betaHelp": "This adapter has not been confirmed against a live instance yet. If something looks wrong, please report it.",
+    "timezoneBrowser": "Browser time zone",
+    "timezoneUnknown": "This zone is not in the browser's list. Check the spelling.",
+    "iconPlaceholder": "radarr, proxmox, lucide:rss, https://…",
+    "iconPick": "Choose…",
+    "iconDialogTitle": "Choose a symbol",
+    "iconDialogSearch": "Filter by name…",
+    "iconSymbols": "Symbols",
+    "iconLogos": "Logos",
+    "iconCount": "{{count}} logos",
+    "iconMore": "Show {{count}} more",
+    "showFindings": "Show findings",
+    "showFindingsHelp": "Off: the card shows neither the reason nor the warning colour. Use it when a Findings card next to it says what is wrong."
   },
   "library": {
     "title": "Add a widget",
@@ -338,5 +374,35 @@
   "whatsnew": {
     "title": "What's new",
     "gotIt": "Got it"
+  },
+  "status": {
+    "ok": "Everything is fine",
+    "warn": "Warning",
+    "bad": "Error",
+    "unknown": "No data yet"
+  },
+  "card": {
+    "nothing": "Nothing to show",
+    "nothingPlaying": "Nothing is playing",
+    "nothingUpcoming": "Nothing coming up",
+    "noLinks": "No links yet",
+    "noUrl": "No URL set",
+    "noEntries": "No entries",
+    "waitingLog": "Waiting for log lines…",
+    "collecting": "Collecting…",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "min": "min",
+    "max": "max",
+    "open": "Open",
+    "embedded": "Embedded page",
+    "history": "History of the last 24 hours",
+    "bars": {
+      "24h": "Availability of the last 24 hours, one bar per 30 minutes",
+      "6h": "Availability of the last 6 hours, one bar per 7.5 minutes",
+      "1h": "Availability of the last hour, one bar per minute",
+      "live": "The last 48 checks, one bar each"
+    },
+    "staleData": "Showing the last good values"
   }
 }

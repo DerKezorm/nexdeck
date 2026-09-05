@@ -6,7 +6,7 @@ import { ApiError, post } from '../api/client'
 import type { User } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { Logo } from '../components/Logo'
-import { Field, Select, Switch } from '../components/ui'
+import { Field, PasswordInput, Select, Switch } from '../components/ui'
 import { LANGUAGES, setLanguage } from '../i18n'
 import { applyTheme, useAuth } from '../stores/auth'
 
@@ -18,6 +18,7 @@ export function SetupPage() {
   const [step, setStep] = useState(0)
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [locale, setLocale] = useState(i18n.language)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
@@ -45,6 +46,9 @@ export function SetupPage() {
   }
 
   const steps = [t('setup.step.account'), t('setup.step.look'), t('setup.step.start')]
+  const tooShort = password.length > 0 && password.length < 8
+  const mismatch = confirm.length > 0 && confirm !== password
+  const accountReady = Boolean(username.trim()) && password.length >= 8 && confirm === password
 
   return (
     <div className="min-h-full flex items-center justify-center p-6">
@@ -65,10 +69,12 @@ export function SetupPage() {
               <input id="su-user" className="input" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             </Field>
             <Field label={t('auth.password')} htmlFor="su-pass">
-              <input id="su-pass" className="input" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-              <p className={`text-[11px] mt-1 ${password.length > 0 && password.length < 8 ? 'text-warn' : 'text-faint'}`}>
-                {password.length > 0 && password.length < 8 ? t('setup.passwordShort', { missing: 8 - password.length }) : t('setup.passwordHelp')}
-              </p>
+              <PasswordInput id="su-pass" autoComplete="new-password" value={password} onChange={setPassword} />
+              <p className={`text-[11px] mt-1 ${tooShort ? 'text-warn' : 'text-faint'}`}>{tooShort ? t('setup.passwordShort', { missing: 8 - password.length }) : t('setup.passwordHelp')}</p>
+            </Field>
+            <Field label={t('auth.confirmPassword')} htmlFor="su-pass2">
+              <PasswordInput id="su-pass2" autoComplete="new-password" value={confirm} onChange={setConfirm} />
+              {mismatch && <p className="text-[11px] mt-1 text-warn">{t('auth.mismatch')}</p>}
             </Field>
             <Field label={t('settings.profile.displayName')} htmlFor="su-name">
               <input id="su-name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -134,11 +140,16 @@ export function SetupPage() {
         )}
 
         <div className="flex justify-between mt-6">
-          <button className="btn" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
-            {t('common.back')}
-          </button>
+          {/* The first step has nothing to go back to, so it shows no button. */}
+          {step > 0 ? (
+            <button className="btn" onClick={() => setStep((s) => s - 1)}>
+              {t('common.back')}
+            </button>
+          ) : (
+            <span />
+          )}
           {step < steps.length - 1 ? (
-            <button className="btn btn-accent" disabled={step === 0 && (!username.trim() || password.length < 8)} onClick={() => setStep((s) => s + 1)}>
+            <button className="btn btn-accent" disabled={step === 0 && !accountReady} onClick={() => setStep((s) => s + 1)}>
               {t('common.next')}
             </button>
           ) : (

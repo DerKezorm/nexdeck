@@ -25,20 +25,21 @@ interface Props {
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void
   compact?: boolean
+  /** On, every card moves up to fill space. Off, cards stay where they are dropped and gaps are allowed. */
+  autoCompact?: boolean
 }
 
 /** The board: a responsive grid with one layout per form factor. */
 export function BoardGrid(props: Props) {
-  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact } = props
-  const byId = new Map(widgets.map((w) => [String(w.id), w]))
+  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact } = props
   const gridLayouts: Layouts = {
-    lg: fill(layouts.lg, widgets, 12),
-    md: fill(layouts.md, widgets, 8),
-    sm: fill(layouts.sm, widgets, 4),
+    lg: layoutFor(layouts.lg, widgets, 12),
+    md: layoutFor(layouts.md, widgets, 8),
+    sm: layoutFor(layouts.sm, widgets, 4),
   }
   return (
     <ResponsiveGrid
-      className="board"
+      className={`board ${editing ? 'board-editing' : ''}`}
       layouts={gridLayouts}
       breakpoints={BREAKPOINTS}
       cols={COLUMNS}
@@ -50,7 +51,11 @@ export function BoardGrid(props: Props) {
       // A press on a button or link must not start a drag: the drag machinery
       // swallows the click, and the settings button on a card did nothing.
       draggableCancel="button, a, input, select, textarea, [role='button'], .no-drag"
-      compactType="vertical"
+      compactType={autoCompact ? 'vertical' : null}
+      // Without compaction, other cards must never move on their own: a card
+      // dragged across the board used to push everything aside, and nothing
+      // came back. Occupied cells are simply not a drop target.
+      preventCollision={!autoCompact}
       useCSSTransforms
       onLayoutChange={(_current: Layout[], all: Layouts) => {
         if (!onLayoutChange || !editing) return
@@ -69,37 +74,48 @@ export function BoardGrid(props: Props) {
             editing={editing}
             canAct={canAct}
             onAction={onAction ? (action) => onAction(widget.id, action) : undefined}
-            onRefresh={onRefresh && !editing ? () => onRefresh(widget.id) : undefined}
+            onRefresh={onRefresh && !editing && !widget.client_only ? () => onRefresh(widget.id) : undefined}
             onSettings={onSettings ? () => onSettings(widget.id) : undefined}
             onRemove={onRemove ? () => onRemove(widget.id) : undefined}
           />
         </div>
       ))}
-      {byId.size === 0 ? null : null}
     </ResponsiveGrid>
   )
 }
 
-/** Widgets without a saved position get one at the bottom, so nothing is lost. */
-function fill(layout: LayoutItem[] | undefined, widgets: WidgetView[], cols: number): Layout[] {
+/**
+ * The layout the grid draws: saved positions, a spot at the bottom for widgets
+ * without one, and a floor under every size. A card can grow, but it can not
+ * be made smaller than the size it was created with (decided 2026-09-05:
+ * a shrunken card cuts its content and looks broken).
+ */
+export function layoutFor(layout: LayoutItem[] | undefined, widgets: WidgetView[], cols: number): Layout[] {
   const known = new Map((layout ?? []).map((item) => [item.i, item]))
   const result: Layout[] = []
   let y = Math.max(0, ...(layout ?? []).map((item) => item.y + item.h))
   let x = 0
   for (const widget of widgets) {
     const id = String(widget.id)
+    const [minW, minH] = floorOf(widget, cols)
     const item = known.get(id)
     if (item) {
-      result.push({ ...item, minW: item.minW ?? 1, minH: item.minH ?? 1 })
+      result.push({ ...item, w: Math.max(item.w, minW), h: Math.max(item.h, minH), minW, minH })
       continue
     }
-    const w = Math.min(cols, 3)
+    const w = Math.min(cols, Math.max(3, minW))
     if (x + w > cols) {
       x = 0
       y += 2
     }
-    result.push({ i: id, x, y, w, h: 2, minW: 1, minH: 1 })
+    result.push({ i: id, x, y, w, h: Math.max(2, minH), minW, minH })
     x += w
   }
   return result
+}
+
+/** The size a widget was created with, capped at the columns of the form factor. */
+function floorOf(widget: WidgetView, cols: number): [number, number] {
+  const [w, h] = widget.default_size ?? widget.min_size ?? [1, 1]
+  return [Math.max(1, Math.min(cols, w)), Math.max(1, h)]
 }

@@ -17,7 +17,8 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
 
   // Step 1: account.
   await page.getByLabel('User name').fill(ACCOUNT.username)
-  await page.getByLabel('Password').fill(ACCOUNT.password)
+  await page.getByLabel('Password', { exact: true }).fill(ACCOUNT.password)
+  await page.getByLabel('Confirm password').fill(ACCOUNT.password)
   await page.getByRole('button', { name: 'Next' }).click()
   // Step 2: language and look stay as they are.
   await page.getByRole('button', { name: 'Next' }).click()
@@ -56,11 +57,28 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   await expect(page.getByRole('dialog').getByRole('heading', { name: 'Widget settings' })).toBeVisible()
   await expect(page.getByRole('dialog').getByLabel('Title')).toHaveValue('Containers')
   await page.keyboard.press('Escape')
+
+  // Free placement: dragging a card across the others moves nothing but that
+  // card, and a drop on an occupied spot snaps back to where it came from.
+  const clock = page.locator('section[aria-label="Clock"]').first()
+  const positions = async () => Promise.all((await page.locator('section.card').all()).map(async (card) => `${await card.getAttribute('aria-label')}:${JSON.stringify(await card.boundingBox())}`))
+  const before = await positions()
+  const from = (await clock.boundingBox())!
+  const to = (await containers.boundingBox())!
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height - 12)
+  await page.mouse.down()
+  for (let step = 1; step <= 12; step += 1) {
+    await page.mouse.move(from.x + ((to.x - from.x) * step) / 12 + from.width / 2, from.y + ((to.y - from.y) * step) / 12 + from.height - 12)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+  expect(await positions()).toEqual(before)
   await page.getByRole('button', { name: 'Done' }).click()
 
   // Reload keeps the session: the cookie survives a navigation.
   await page.reload()
-  await expect(page.locator('section[aria-label="Containers"]')).toBeVisible()
+  // A cold reload on a busy machine can take longer than the default five seconds.
+  await expect(page.locator('section[aria-label="Containers"]')).toBeVisible({ timeout: 15_000 })
 
   // A kiosk link opens the board in a browser without any session.
   const created = await page.request.post('/api/v1/boards/home/kiosk-tokens', { data: { name: 'e2e wall' }, headers: { 'X-Nexdeck-Request': '1' } })
@@ -84,7 +102,7 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
 test('wrong password is refused with a readable message', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('User name').fill(ACCOUNT.username)
-  await page.getByLabel('Password').fill('not-it')
+  await page.getByLabel('Password', { exact: true }).fill('not-it')
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page.getByRole('alert')).toHaveText('User name or password is wrong.')
 })

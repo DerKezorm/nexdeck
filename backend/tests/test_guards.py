@@ -6,12 +6,15 @@ never pass by accident.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 from fastapi.routing import APIRoute
 
 from app import deps
+from app.adapters import all_adapters, get_adapter
+from app.adapters.nexview import FINDING_LABELS
 from app.main import app
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -141,3 +144,88 @@ def test_error_details_carry_code_and_message() -> None:
             if '"code"' not in body or '"message"' not in body:
                 offenders.append(f"{path.name}: {body[:60]!r}")
     assert offenders == []
+
+
+# -- texts the frontend translates by their English wording --------------------
+
+GERMAN_TEXTS = ROOT / "frontend" / "src" / "i18n" / "texts.de.json"
+ADAPTERS = BACKEND / "adapters"
+LABEL_LITERAL = re.compile(r'"(?:label|subtitle)": "([^"]+)"')
+ACTION_LABEL = re.compile(r'Action\([^)]*?label="([^"]+)"')
+
+
+def _german_texts() -> dict[str, dict[str, str]]:
+    return json.loads(GERMAN_TEXTS.read_text(encoding="utf-8"))
+
+
+def _looks_like_data(text: str) -> bool:
+    """Sizes, dates, sensor identifiers and protocol names pass through untranslated."""
+    if len(text) < 3 or any(ch.isdigit() for ch in text) or "_" in text or "=" in text:
+        return True
+    if not any(ch.isalpha() for ch in text):
+        return True
+    return text.islower() and " " not in text and len(text) <= 5
+
+
+def test_every_adapter_text_has_a_german_translation() -> None:
+    """Field labels, help texts, widget names and descriptions are English in the
+    adapters; the interface translates them by their English text."""
+    german = _german_texts()["adapter"]
+    missing: set[str] = set()
+    checked = 0
+    for adapter in all_adapters():
+        texts = [adapter.description]
+        for field in adapter.fields:
+            texts += [field.label, field.help, *(label for _value, label in field.options)]
+        for widget in adapter.widgets:
+            texts += [widget.label, widget.description]
+            for field in widget.options:
+                texts += [field.label, field.help, *(label for _value, label in field.options)]
+        for text in texts:
+            if text:
+                checked += 1
+                if text not in german:
+                    missing.add(text)
+    assert checked > 200
+    assert not missing, f"adapter texts without a German entry: {sorted(missing)}"
+
+
+def test_every_data_label_has_a_german_translation() -> None:
+    """Labels of values, chips, rows and actions come from the adapters as English
+    words; the cards translate them by text."""
+    texts = _german_texts()
+    # A word that names a widget may also label a value; the frontend falls back the same way.
+    german = {**texts["adapter"], **texts["labels"]}
+    missing: set[str] = set()
+    checked = 0
+    for path in ADAPTERS.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        for pattern in (LABEL_LITERAL, ACTION_LABEL):
+            for text in pattern.findall(source):
+                if _looks_like_data(text):
+                    continue
+                checked += 1
+                if text not in german:
+                    missing.add(text)
+    for text in FINDING_LABELS.values():
+        checked += 1
+        if text not in german:
+            missing.add(text)
+    assert checked > 80
+    assert not missing, f"data labels without a German entry: {sorted(missing)}"
+
+
+def test_german_texts_are_complete_and_clean() -> None:
+    texts = _german_texts()
+    assert len(texts["adapter"]) > 200 and len(texts["labels"]) > 80
+    for section in ("adapter", "labels"):
+        for english, german in texts[section].items():
+            assert english.strip() and german.strip(), (section, english)
+            assert "\u2014" not in german, (section, english)
+
+
+def test_client_only_widgets_are_exactly_the_basics() -> None:
+    """The settings sheet hides the refresh interval for widgets that draw themselves."""
+    assert all(widget.client_only or widget.kind == "problems" for widget in get_adapter("core").widgets), "problems reads the server's live state"
+    others = [f"{adapter.kind}.{widget.kind}" for adapter in all_adapters() if adapter.kind != "core" for widget in adapter.widgets if widget.client_only]
+    assert others == []
