@@ -108,7 +108,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
           ) : (
             <p className="text-xs text-muted">
               {t('library.noIntegration')}{' '}
-              <Link to={`/settings/integrations?add=${picking.adapter.kind}`} className="text-accent">
+              <Link to={`/system/integrations?add=${picking.adapter.kind}`} className="text-accent">
                 {t('library.addIntegration')}
               </Link>
             </p>

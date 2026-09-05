@@ -21,7 +21,7 @@ from ..deps import (
     kiosk_from_request,
     require_board,
 )
-from ..models import HealthCheck, Integration, Page, Widget
+from ..models import HealthCheck, Integration, Page, Role, User, Widget
 from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
 from ..services import health as health_service
 from ..services import history
@@ -43,7 +43,7 @@ def _widget(db: DbSession, widget_id: int) -> tuple[Widget, Page]:
     return widget, page
 
 
-def _validate_kind(db: DbSession, kind: str, integration_id: int | None) -> None:
+def _validate_kind(db: DbSession, kind: str, integration_id: int | None, user: User | None = None) -> None:
     try:
         adapter, _ = split_widget_kind(kind)
     except KeyError as failure:
@@ -52,6 +52,10 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None) -> None
         integration = db.get(Integration, integration_id)
         if integration is None:
             raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
+        # A locked connection is the administrator's alone to build on. What he
+        # has already built keeps running for everyone he shared it with.
+        if integration.admin_only and user is not None and user.role != Role.admin.value:
+            raise error("integration_locked", "This connection is reserved for administrators.", status.HTTP_403_FORBIDDEN)
         # An app tile may follow any service; every other widget needs its own kind.
         if integration.kind != adapter.kind and kind != "core.app":
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
@@ -63,7 +67,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
     board, _ = require_board(db, str(page.board_id), user, "edit")
-    _validate_kind(db, body.kind, body.integration_id)
+    _validate_kind(db, body.kind, body.integration_id, user)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or widget_type.label, icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
@@ -85,7 +89,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     widget, page = _widget(db, widget_id)
     board, _ = require_board(db, str(page.board_id), user, "edit")
     if body.integration_id is not None or body.clear_integration:
-        _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id)
+        _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id, user)
         widget.integration_id = None if body.clear_integration else body.integration_id
     if body.title is not None:
         widget.title = body.title.strip()
@@ -133,7 +137,7 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
     widget, page = _widget(db, widget_id)
     require_board(db, str(page.board_id), user, "edit")
     if body.integration_id is not None:
-        _validate_kind(db, widget.kind, body.integration_id)
+        _validate_kind(db, widget.kind, body.integration_id, user)
     if body.clear_integration:
         integration_id = None
     elif body.integration_id is not None:

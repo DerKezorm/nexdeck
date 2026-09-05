@@ -40,6 +40,47 @@ def test_board_pages_widgets_and_layouts(client: TestClient) -> None:
     assert client.delete(f"/api/v1/pages/{page['id']}", headers=CSRF).status_code == 409
 
 
+def test_the_board_list_counts_the_cards_of_every_page(client: TestClient) -> None:
+    """The settings list opens a board and offers to delete a page; before it
+    asks, it has to know what would go with it."""
+    setup_admin(client)
+    board = _board(client)
+    first = board["pages"][0]
+    _widget(client, first["id"], title="Clock")
+    _widget(client, first["id"], title="Second clock")
+    second = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Network"}, headers=CSRF).json()["pages"][1]
+    _widget(client, second["id"], title="Third clock")
+
+    listed = next(entry for entry in client.get("/api/v1/boards").json() if entry["id"] == board["id"])
+    assert [(page["name"], page["widget_count"]) for page in listed["pages"]] == [("Overview", 2), ("Network", 1)]
+    assert listed["widget_count"] == 3, "the board's own count stays the sum of its pages"
+
+    # An empty page reports zero rather than being left out.
+    third = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Empty"}, headers=CSRF).json()["pages"][2]
+    listed = next(entry for entry in client.get("/api/v1/boards").json() if entry["id"] == board["id"])
+    assert listed["pages"][2] == {"id": third["id"], "name": "Empty", "slug": third["slug"], "widget_count": 0}
+
+
+def test_the_board_list_names_the_owner(client: TestClient) -> None:
+    """An administrator holds every board at the owner level. Without the name
+    the list would tell him a colleague's board is his own."""
+    setup_admin(client)
+    create_user(client, "kim")
+    other = TestClient(client.app)
+    login(other, "kim", "another-long-password")
+    board = other.post("/api/v1/boards", json={"name": "Kim's lab"}, headers=CSRF).json()
+
+    # Somebody else's board shows up only when the administrator asks for all of them.
+    assert [entry["id"] for entry in client.get("/api/v1/boards").json() if entry["id"] == board["id"]] == []
+    listed = next(entry for entry in client.get("/api/v1/boards?all_boards=true").json() if entry["id"] == board["id"])
+    assert listed["owner_name"] == "kim"
+    assert listed["permission"] == "owner", "the administrator may still do everything"
+    assert listed["owner_id"] != client.get("/api/v1/auth/me").json()["id"]
+
+    own = next(entry for entry in client.get("/api/v1/boards").json() if entry["name"] != "Kim's lab")
+    assert own["owner_name"] == "admin"
+
+
 def test_unknown_widget_kind_and_mismatched_integration(client: TestClient) -> None:
     setup_admin(client)
     board = _board(client)
@@ -196,6 +237,15 @@ async def test_problems_widget_lists_the_yellow_and_red_cards_of_its_board(clien
     radarr = _widget(client, second["pages"][-1]["id"] if "pages" in second else second["id"], title="Radarr")
     fine = _widget(client, page_id, title="Clock")
     problems = _widget(client, page_id, kind="core.problems", title="Problems")
+    # ⚠️ **Take the cards off the collector first.** Creating a widget schedules
+    # it, and a clock answers at once with "ok" - which is exactly the state
+    # this test writes over. Fast enough machines won the race, loaded ones lost
+    # it, and the test failed for a reason that had nothing to do with the
+    # widget under test.
+    from app.services.collector import collector
+
+    for widget in (unifi, radarr, fine, problems):
+        collector.unschedule(widget["id"])
     live.set(unifi["id"], WidgetData(status="warn", meta={"status_reason": "3 device(s) offline"}))
     live.set(radarr["id"], WidgetData(status="unknown", error="The service could not be reached.", meta={"code": "unreachable"}))
     live.set(fine["id"], WidgetData(status="ok"))

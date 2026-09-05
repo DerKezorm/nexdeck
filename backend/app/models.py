@@ -63,6 +63,10 @@ class User(Base):
     password_changed_ms: Mapped[int] = mapped_column(Integer, default=0)
     #: Which "what's new" version the user has already seen.
     seen_version: Mapped[str] = mapped_column(String(16), default="")
+    #: File name of the profile picture in ``data/avatars``; empty means none.
+    avatar: Mapped[str] = mapped_column(String(120), default="")
+    #: Where a password reset would go. Optional, unique when set.
+    email: Mapped[str] = mapped_column(String(200), default="")
 
     sessions: Mapped[list[Session]] = relationship(back_populates="user", cascade="all, delete-orphan")
     api_tokens: Mapped[list[ApiToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -138,6 +142,9 @@ class Board(Base):
     #: Free-form board settings: density, accent override, kiosk defaults.
     settings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     position: Mapped[int] = mapped_column(Integer, default=0)
+    #: Whether the board stands in the menu at the top. Off is not hidden: the
+    #: board list still holds it, and its address still works.
+    in_menu: Mapped[bool] = mapped_column(Boolean, default=True)
     #: Boards read from ``data/boards/*.yaml`` are shown but not editable.
     provisioned: Mapped[bool] = mapped_column(Boolean, default=False)
     source_file: Mapped[str] = mapped_column(String(300), default="")
@@ -199,6 +206,9 @@ class Integration(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     #: Demo mode: the adapter's fake data instead of the real service.
     demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: Locked: only administrators may build cards on this connection. Users
+    #: still see its cards on a board that was shared with them.
+    admin_only: Mapped[bool] = mapped_column(Boolean, default=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_ok_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

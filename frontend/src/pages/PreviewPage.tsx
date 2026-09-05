@@ -8,12 +8,8 @@ import { DEMO_DATA, DEMO_LAYOUTS, DEMO_SERIES, DEMO_VIEWS } from '../demo/board'
 
 /** The design preview: the real components, invented data, no backend. */
 export function PreviewPage() {
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'))
   const [editing, setEditing] = useState(false)
   const [page, setPage] = useState(1)
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-  }, [theme])
   // The preview runs without a backend, so logos come straight from the CDN here.
   useEffect(() => {
     const scope = globalThis as { __NEXDECK_ICON_BASE__?: string }
@@ -43,10 +39,7 @@ export function PreviewPage() {
         onNotices={noop}
         onSearch={noop}
         onBoards={noop}
-        theme={theme}
-        onTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-        userInitial="A"
-        onProfile={noop}
+        user={{ display_name: 'Demo', username: 'demo', role: 'admin', avatar_url: null }}
       />
       <main className="max-w-[1480px] mx-auto px-3 sm:px-4 pt-4">
         <BoardGrid widgets={DEMO_VIEWS} layouts={DEMO_LAYOUTS} data={DEMO_DATA} series={DEMO_SERIES} editing={editing} canAct onAction={noop} onRefresh={noop} onSettings={noop} onRemove={noop} />

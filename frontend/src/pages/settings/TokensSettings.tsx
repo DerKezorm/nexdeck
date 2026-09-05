@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { del, get, post } from '../../api/client'
 import type { ApiToken } from '../../api/types'
 import { Field } from '../../components/ui'
-import { SettingsCard } from './SettingsPage'
+import { SettingsCard } from './SettingsCard'
 
 export function TokensSettings() {
   const { t } = useTranslation()

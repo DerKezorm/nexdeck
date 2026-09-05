@@ -11,6 +11,7 @@ from ..deps import (
     MemberUser,
     OptionalUser,
     board_for_viewer,
+    board_is_shared_with,
     board_permission,
     error,
     kiosk_from_request,
@@ -41,12 +42,24 @@ def _announce(board_id: int) -> None:
 
 
 @router.get("/boards", summary="List boards I may open")
-def list_boards(user: CurrentUser, db: DbSession) -> list[dict]:
+def list_boards(user: CurrentUser, db: DbSession, all_boards: bool = False) -> list[dict]:
+    """My own boards and the ones shared with me.
+
+    ⚠️ **An administrator is not shown everything by default.** He may open
+    every board, so the plain list handed him ten colleagues' boards along with
+    his own, in his menu and in his settings. ``all_boards=true`` asks for the
+    full list on purpose; the settings page has a switch for it.
+    """
     result = []
     for board in db.scalars(select(Board).order_by(Board.position, Board.id)):
         permission = board_permission(db, board, user)
-        if permission is not None:
-            result.append(board_summary(db, board, permission))
+        if permission is None:
+            continue
+        mine = board.owner_id == user.id
+        shared = board_is_shared_with(db, board, user)
+        if not (all_boards or mine or shared or board.provisioned):
+            continue
+        result.append(board_summary(db, board, permission))
     return result
 
 
@@ -119,6 +132,8 @@ def patch_board(slug: str, body: BoardPatch, user: CurrentUser, db: DbSession) -
         board.settings = body.settings
     if body.position is not None:
         board.position = body.position
+    if body.in_menu is not None:
+        board.in_menu = body.in_menu
     if body.owner_id is not None and permission == "owner":
         board.owner_id = body.owner_id
     db.commit()

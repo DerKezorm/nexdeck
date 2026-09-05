@@ -84,19 +84,50 @@
     "passwordShort": "Mindestens acht Zeichen, es fehlen noch {{missing}}."
   },
   "settings": {
-    "title": "Einstellungen",
+    "title": "Meine Einstellungen",
+    "systemTitle": "System",
     "nav": {
       "profile": "Profil",
       "boards": "Boards",
       "integrations": "Anbindungen",
-      "channels": "Kanäle",
+      "channels": "Benachrichtigungen",
       "tokens": "API-Token",
       "users": "Benutzer",
-      "system": "System"
+      "address": "Adresse",
+      "mail": "Mailserver",
+      "oidc": "Anmeldeanbieter",
+      "about": "Über"
+    },
+    "mail": {
+      "title": "Mailserver",
+      "help": "Wie nexdeck selbst Mail verschickt: vergessene Passwörter und alles, was hinaus muss, bevor jemand angemeldet ist. Benachrichtigungswege behalten ihren eigenen Server.",
+      "host": "SMTP-Server",
+      "hostHelp": "Leer heißt: nexdeck verschickt gar keine Mail.",
+      "port": "Port",
+      "security": "Verschlüsselung",
+      "securityNone": "Keine",
+      "username": "Benutzername",
+      "usernameHelp": "Leer lassen, wenn der Server keine Anmeldung verlangt.",
+      "password": "Passwort",
+      "fromAddress": "Absenderadresse",
+      "fromAddressHelp": "Die Adresse, die der Empfänger sieht, und oft die, auf der der Server besteht.",
+      "fromName": "Absendername",
+      "test": "Testnachricht",
+      "testHelp": "Verschickt eine Mail mit den Angaben von oben. So fällt ein falsches Passwort hier auf und nicht erst, wenn sich jemand ausgesperrt hat.",
+      "testTo": "Empfänger",
+      "testSent": "Testnachricht an {{address}} verschickt.",
+      "send": "Senden",
+      "notConfigured": "Erst einen SMTP-Server eintragen und speichern."
     },
     "profile": {
       "title": "Profil",
+      "picture": "Profilbild",
+      "pictureHelp": "Steht oben in der Leiste und überall dort, wo dein Name auftaucht. PNG, JPEG, GIF oder WebP, bis 2 MB.",
+      "chooseImage": "Bild auswählen",
+      "removeImage": "Bild entfernen",
       "displayName": "Anzeigename",
+      "email": "E-Mail-Adresse",
+      "emailHelp": "Nur für ein vergessenes Passwort. Sonst geht nichts dorthin.",
       "language": "Sprache",
       "theme": "Darstellung",
       "theme_dark": "Dunkel",
@@ -132,6 +163,9 @@
       "name": "Name",
       "demo": "Vorführmodus",
       "demoHelp": "Erfundene, lebendige Daten statt des echten Dienstes.",
+      "adminOnly": "Für Benutzer sperren",
+      "adminOnlyHelp": "Nur Administratoren bauen Karten auf dieser Anbindung. Benutzer sehen ihre Karten weiterhin auf einem Board, das mit ihnen geteilt ist, und in ihrer Liste taucht sie nicht auf.",
+      "adminOnlyChip": "gesperrt",
       "enabled": "Aktiv"
     },
     "users": {
@@ -185,6 +219,11 @@
       "oidcAdd": "Anbieter hinzufügen"
     }
   },
+  "menu": {
+    "settings": "Meine Einstellungen",
+    "system": "System",
+    "signOut": "Abmelden"
+  },
   "users": {
     "role": {
       "admin": "Administrator",
@@ -196,7 +235,10 @@
     "enable": "Freigeben",
     "disable": "Sperren",
     "remove": "{{name}} löschen?",
-    "removeBody": "Die Boards bleiben und verlieren ihren Besitzer."
+    "removeBody": "Die Boards bleiben und verlieren ihren Besitzer.",
+    "setPassword": "Passwort",
+    "setPasswordFor": "Neues Passwort für {{name}}",
+    "setPasswordHelp": "Wird ohne das alte gesetzt. Danach ist jede Sitzung dieses Kontos abgemeldet, sag ihm also das neue Passwort."
   },
   "channels": {
     "push": "Web Push auf diesem Gerät",
@@ -206,20 +248,63 @@
     "pushDenied": "Der Browser hat Mitteilungen abgelehnt. Erlaube sie in den Seiteneinstellungen.",
     "pushUnsupported": "Dieser Browser kann kein Web Push.",
     "noEvents": "Keine Ereignisse abonniert",
-    "test": "Testen",
+    "test": "Test verschicken",
     "add": "Kanal hinzufügen",
+    "addOne": "{{label}} hinzufügen",
+    "emptyHint": "Für diesen Dienst ist noch nichts eingerichtet. Jeder Dienst darf mehrere Wege haben: einen für Ausfälle, einen für alles.",
     "remove": "{{name}} entfernen?",
     "edit": "{{name}} bearbeiten",
     "new": "Neuer Kanal: {{name}}",
     "name": "Name",
-    "events": "Ereignisse",
-    "eventsHelp": "Welche Ereignisse dieser Kanal bekommt.",
-    "enabled": "Aktiv"
+    "nameHelp": "Frei wählbar. Er unterscheidet diesen Weg von den anderen desselben Dienstes.",
+    "events": "Was gemeldet wird",
+    "eventsHelp": "Welche Ereignisse diesen Weg nehmen.",
+    "enabled": "Aktiv",
+    "disable": "Stilllegen",
+    "enable": "In Betrieb nehmen",
+    "guideHeading": "So richtest du es ein",
+    "guide": {
+      "telegram": {
+        "account": "Telegram braucht ein Konto. Melde dich am Handy oder im Browser an.",
+        "botfather": "Schreibe @BotFather an, den Bot, der Bots ausgibt.",
+        "token": "Schicke /newbot, wähle einen Namen und trage das Token, das er antwortet, links ein.",
+        "chat": "Schreibe deinem neuen Bot einmal, dann frag @userinfobot nach deiner Chat-ID. Ein Bot darf nicht zuerst schreiben, ohne diese eine Nachricht kommt also nichts an."
+      },
+      "discord": {
+        "server": "Öffne die Servereinstellungen des Kanals, der die Meldungen bekommen soll.",
+        "webhook": "Integrationen, dann Webhook erstellen. Namen vergeben und die Webhook-Adresse kopieren.",
+        "paste": "Adresse links einsetzen. Wer sie hat, kann in diesem Kanal schreiben, behandle sie wie ein Passwort."
+      },
+      "slack": {
+        "app": "Lege unter api.slack.com/apps eine App in deinem Workspace an.",
+        "webhook": "Incoming Webhooks einschalten, einen für einen Kanal anlegen und die Adresse kopieren.",
+        "paste": "Adresse links einsetzen."
+      },
+      "ntfy": {
+        "server": "Nimm ntfy.sh oder deinen eigenen Server; die Adresse kommt links ins Feld.",
+        "topic": "Wähle einen Topic-Namen. Auf einem öffentlichen Server liest mit, wer ihn kennt, also lang und nicht zu erraten.",
+        "subscribe": "Abonniere das Topic in der ntfy-App und schick dann die Testnachricht."
+      },
+      "gotify": {
+        "server": "Trage links die Adresse deines Gotify-Servers ein.",
+        "app": "Lege in Gotify unter Apps eine Anwendung für nexdeck an.",
+        "token": "Kopiere das Application-Token und setze es links ein."
+      },
+      "apprise": {
+        "urls": "Apprise spricht mit hundert Diensten über je eine Adresse. Das Wiki nennt das Format für jeden davon.",
+        "paste": "Links eine Adresse je Zeile eintragen. Alle bekommen jede Meldung, die diesen Weg nimmt."
+      },
+      "email": {
+        "server": "Das ist ein eigener Kanal mit eigenem SMTP-Server; der unter System ist für vergessene Passwörter da.",
+        "addresses": "Absender- und Empfängeradresse werden beide gebraucht. Viele Anbieter lehnen einen fremden Absender ab."
+      }
+    }
   },
   "board": {
     "none": {
       "title": "Noch kein Board",
       "body": "Leg eines an, dann erscheint es hier.",
+      "guest": "Gäste sehen die Boards, die mit ihnen geteilt sind. Bitte einen Administrator, eines freizugeben.",
       "create": "Board anlegen"
     },
     "saveFailed": "Die Anordnung ließ sich nicht speichern.",
@@ -247,6 +332,19 @@
       "file": "Datei"
     },
     "widgetCount": "{{count}} Widgets",
+    "widgetCount_one": "{{count}} Widget",
+    "widgetCount_other": "{{count}} Widgets",
+    "pageCount": "{{count}} Seiten",
+    "inMenu": "Im Menü",
+    "inMenuHelp": "Nur Boards mit diesem Haken stehen oben im Menü. Die anderen bleiben in dieser Liste und behalten ihre Adresse.",
+    "showAll": "Alle Boards dieser Installation zeigen",
+    "ownedBy": "gehört {{name}}",
+    "pageCount_one": "{{count}} Seite",
+    "pageCount_other": "{{count}} Seiten",
+    "showPages": "Seiten von {{name}} zeigen",
+    "hidePages": "Seiten von {{name}} verbergen",
+    "remove": "Board {{name}} löschen?",
+    "removeBody": "Seine {{count}} Karten gehen mit, samt Verlauf und Kiosk-Links. Das lässt sich nicht rückgängig machen.",
     "newName": "Name des neuen Boards",
     "name": "Name",
     "background": "Hintergrund",
@@ -387,6 +485,43 @@
   "whatsnew": {
     "title": "Was ist neu",
     "gotIt": "Verstanden"
+  },
+  "about": {
+    "tagline": "Das lebende Dashboard für dein Homelab: jeder Dienst auf einem Board, mit den Zahlen, auf die es ankommt, und den Knöpfen, die etwas tun.",
+    "thisInstallation": "Diese Installation",
+    "project": "Das Projekt",
+    "source": "Quelltext",
+    "onGithub": "Auf GitHub",
+    "releases": "Veröffentlichungen",
+    "allVersions": "Alle Fassungen",
+    "issues": "Fehler und Ideen",
+    "issuesOpen": "Eintrag anlegen",
+    "website": "Projektseite",
+    "license": "Lizenz",
+    "whatsNewOpen": "Noch einmal lesen",
+    "updateCheckLabel": "Einmal am Tag bei GitHub fragen",
+    "checkNow": "Jetzt nachsehen",
+    "checked": "Bei GitHub nachgefragt.",
+    "lastChecked": "Zuletzt gefragt {{when}}",
+    "upToDate": "Das ist die neueste Fassung.",
+    "neverChecked": "Noch nicht gefragt.",
+    "askFailed": "GitHub hat nicht geantwortet. Über die neueste Fassung ist damit nichts gesagt.",
+    "updateAvailable": "{{version}} ist da",
+    "thanks": "Danksagung",
+    "thanksIntro": "nexdeck steht auf der Arbeit anderer. Manches davon ist Höflichkeit, manches sind ihre Bedingungen.",
+    "forerunners": "Waren zuerst da",
+    "forerunnersNote": "Homarr, Homepage und Glance haben gezeigt, was ein Homelab-Dashboard sein kann. nexdeck ist einen eigenen Weg gegangen, losgelaufen ist es auf ihrem.",
+    "icons": "Symbole",
+    "iconsNote": "Dashboard Icons hält die Logos der Dienste bereit, Lucide die gezeichneten Zeichen. Beide laufen über den Server, kein Browser spricht mit einem fremden Netz.",
+    "dataSources": "Daten",
+    "weatherNote": "Die Wetterkarte fragt Open-Meteo, kostenlos und ohne Konto. Die Daten kommen von den staatlichen Wetterdiensten.",
+    "services": "Plex, Jellyfin, Emby, Radarr, Sonarr, Home Assistant und die anderen",
+    "servicesNote": "nexdeck liest ihre Schnittstellen. Namen und Logos gehören ihnen, und keines dieser Projekte hat mit nexdeck etwas zu tun.",
+    "notifyServices": "Meldedienste",
+    "notifyNote": "Wohin nexdeck schreibt, wenn etwas passiert. Apprise allein spricht mit hundert weiteren.",
+    "builtWith": "Gebaut mit",
+    "family": "Die nexapps-Familie",
+    "familyNote": "Nexview fragt Filme und Serien an, nexmail ist der Mail-Client, nexdeck sieht den Maschinen zu, auf denen beide laufen."
   },
   "status": {
     "ok": "Alles in Ordnung",

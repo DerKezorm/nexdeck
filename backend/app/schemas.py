@@ -21,6 +21,10 @@ class UserPublic(BaseModel):
     seen_version: str
     has_password: bool = True
     auth_kind: str = "session"
+    #: Address of the profile picture, or None while there is none.
+    avatar_url: str | None = None
+    #: Where a password reset would go; empty while none is stored.
+    email: str = ""
 
 
 class LoginBody(BaseModel):
@@ -30,6 +34,8 @@ class LoginBody(BaseModel):
 
 class MePatch(BaseModel):
     display_name: str | None = Field(default=None, max_length=120)
+    #: An empty string clears the address.
+    email: str | None = Field(default=None, max_length=200)
     locale: str | None = Field(default=None, max_length=8)
     theme: Literal["dark", "light", "system"] | None = None
     start_board_id: int | None = None
@@ -89,6 +95,7 @@ class BoardPatch(BaseModel):
     settings: dict[str, Any] | None = None
     position: int | None = None
     owner_id: int | None = None
+    in_menu: bool | None = None
 
 
 class PageCreate(BaseModel):
@@ -198,6 +205,7 @@ class IntegrationCreate(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
     enabled: bool = True
     demo: bool = False
+    admin_only: bool = False
 
 
 class IntegrationPatch(BaseModel):
@@ -205,6 +213,7 @@ class IntegrationPatch(BaseModel):
     config: dict[str, Any] | None = None
     enabled: bool | None = None
     demo: bool | None = None
+    admin_only: bool | None = None
 
 
 class IntegrationTest(BaseModel):
@@ -260,3 +269,20 @@ class SettingsBody(BaseModel):
     update_check: bool | None = None
     demo: bool | None = None
     default_locale: str | None = Field(default=None, max_length=8)
+
+
+class SmtpBody(BaseModel):
+    """The installation's mail server. Sending is off while the host is empty."""
+
+    host: str = Field(default="", max_length=200)
+    port: int = Field(default=587, ge=1, le=65535)
+    security: Literal["starttls", "ssl", "none"] = "starttls"
+    username: str = Field(default="", max_length=200)
+    #: Left out or sent back as ``********`` keeps the stored one.
+    password: str | None = Field(default=None, max_length=300)
+    from_address: str = Field(default="", max_length=200)
+    from_name: str = Field(default="nexdeck", max_length=120)
+
+
+class MailTestBody(BaseModel):
+    to_address: str = Field(default="", max_length=200)

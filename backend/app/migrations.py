@@ -25,9 +25,32 @@ def _nexview_logo(connection: Connection) -> None:
     )
 
 
+def _add_column(connection: Connection, table: str, column: str, definition: str) -> None:
+    """``create_all`` builds missing tables, never missing columns."""
+    columns = {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}
+    if column not in columns:
+        connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+
+
+def _avatar_column(connection: Connection) -> None:
+    _add_column(connection, "users", "avatar", "VARCHAR(120) NOT NULL DEFAULT ''")
+
+
+def _email_column(connection: Connection) -> None:
+    _add_column(connection, "users", "email", "VARCHAR(200) NOT NULL DEFAULT ''")
+
+
+def _menu_and_lock_columns(connection: Connection) -> None:
+    _add_column(connection, "boards", "in_menu", "BOOLEAN NOT NULL DEFAULT 1")
+    _add_column(connection, "integrations", "admin_only", "BOOLEAN NOT NULL DEFAULT 0")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
+    (3, "Users can have a profile picture", _avatar_column),
+    (4, "Users can have an e-mail address", _email_column),
+    (5, "Boards can stay out of the menu, connections can be locked", _menu_and_lock_columns),
 ]
 
 

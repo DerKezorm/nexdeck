@@ -17,6 +17,11 @@ export class ApiError extends Error {
 
 const BASE = ((globalThis as { __NEXDECK_BASE__?: string }).__NEXDECK_BASE__ ?? '') + '/api/v1'
 
+/** An address the server handed out (a profile picture, an upload), as the browser must call it. */
+export function serverUrl(path: string): string {
+  return ((globalThis as { __NEXDECK_BASE__?: string }).__NEXDECK_BASE__ ?? '') + path
+}
+
 let kioskToken: string | null = null
 
 export function setKioskToken(token: string | null) {

@@ -9,6 +9,7 @@ from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import Role, User
 from ..schemas import UserCreate, UserPatch, UserPublic
 from ..security import hash_password, now_ms
+from ..services import avatars
 from .auth import user_public
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
@@ -20,7 +21,11 @@ def list_users(user: CurrentUser, db: DbSession) -> list[dict]:
     rows = db.scalars(select(User).order_by(User.username))
     if user.role == Role.admin.value:
         return [user_public(u).model_dump() for u in rows]
-    return [{"id": u.id, "username": u.username, "display_name": u.display_name or u.username, "role": u.role} for u in rows if not u.disabled]
+    return [
+        {"id": u.id, "username": u.username, "display_name": u.display_name or u.username, "role": u.role, "avatar_url": avatars.url_for(u.avatar)}
+        for u in rows
+        if not u.disabled
+    ]
 
 
 @router.post("", response_model=UserPublic, status_code=status.HTTP_201_CREATED, summary="Create a user")
@@ -69,5 +74,6 @@ def delete_user(user_id: int, admin: AdminUser, db: DbSession) -> None:
     admins = db.scalar(select(func.count(User.id)).where(User.role == Role.admin.value, User.disabled.is_(False))) or 0
     if user.role == Role.admin.value and admins <= 1:
         raise error("last_admin", "The last administrator cannot be deleted.")
+    avatars.remove(user.avatar)
     db.delete(user)
     db.commit()

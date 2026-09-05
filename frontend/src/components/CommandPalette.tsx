@@ -57,7 +57,14 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
         list.push({ id: `p${page.id}`, title: `${board.name} › ${page.name}`, subtitle: t('palette.page'), icon: <LayoutDashboard size={16} />, keywords: `${board.name} ${page.name}`.toLowerCase(), run: () => navigate(`/b/${board.slug}/${page.slug}`) })
       }
     }
-    for (const [path, label] of [['/settings', t('settings.title')], ['/settings/integrations', t('settings.integrations.title')], ['/settings/boards', t('settings.boards.title')], ['/settings/channels', t('settings.channels.title')], ['/notices', t('notices.title')]]) {
+    for (const [path, label] of [
+      ['/settings', t('settings.title')],
+      ['/settings/boards', t('settings.boards.title')],
+      ['/settings/channels', t('settings.channels.title')],
+      ['/system/integrations', t('settings.integrations.title')],
+      ['/system/about', t('settings.systemTitle')],
+      ['/notices', t('notices.title')],
+    ]) {
       list.push({ id: `s${path}`, title: label, subtitle: t('palette.settings'), icon: <Settings size={16} />, keywords: label.toLowerCase(), run: () => navigate(path) })
     }
     return list

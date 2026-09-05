@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..adapters import get_adapter, split_widget_kind
-from ..models import Board, Integration, Page, Widget
+from ..models import Board, Integration, Page, User, Widget
 from . import health as health_service
 from .integrations import export_config, store_config
 from .state import live
@@ -137,7 +137,7 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
     view = {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
         "background": board.background or {"kind": "bundled", "value": "aurora"}, "settings": board.settings or {},
-        "provisioned": board.provisioned, "permission": permission, "pages": page_views,
+        "provisioned": board.provisioned, "permission": permission, "in_menu": board.in_menu, "pages": page_views,
     }
     if include_live:
         view["live"] = {str(k): v.model_dump() for k, v in live.snapshot(widget_ids).items()}
@@ -145,12 +145,25 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
 
 
 def board_summary(db: Session, board: Board, permission: str) -> dict[str, Any]:
-    pages = db.execute(select(Page.id, Page.name, Page.slug).where(Page.board_id == board.id).order_by(Page.position)).all()
-    widgets = db.scalar(select(func.count(Widget.id)).join(Page).where(Page.board_id == board.id)) or 0
+    # One query with the count per page: the settings list asks what a page
+    # would take with it before it offers to delete one.
+    pages = db.execute(
+        select(Page.id, Page.name, Page.slug, func.count(Widget.id))
+        .outerjoin(Widget, Widget.page_id == Page.id)
+        .where(Page.board_id == board.id)
+        .group_by(Page.id)
+        .order_by(Page.position)
+    ).all()
+    # Who owns it, by name. An administrator holds every board at the "owner"
+    # level, so the level alone would tell everyone their own board is theirs
+    # and everybody else's too.
+    owner = db.get(User, board.owner_id) if board.owner_id else None
     return {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
-        "permission": permission, "provisioned": board.provisioned, "position": board.position,
-        "pages": [{"id": p.id, "name": p.name, "slug": p.slug} for p in pages], "widget_count": int(widgets),
+        "owner_name": (owner.display_name or owner.username) if owner else "",
+        "permission": permission, "provisioned": board.provisioned, "position": board.position, "in_menu": board.in_menu,
+        "pages": [{"id": p[0], "name": p[1], "slug": p[2], "widget_count": int(p[3])} for p in pages],
+        "widget_count": sum(int(p[3]) for p in pages),
     }
 
 
