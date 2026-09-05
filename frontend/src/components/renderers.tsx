@@ -30,6 +30,7 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
+import { mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
@@ -62,10 +63,14 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   log: LogCard,
   chart: ChartCard,
   app: AppTile,
+  posters: PostersCard,
+  counters: CountersCard,
 }
 
 export function renderWidget(props: RenderProps) {
-  const Renderer = RENDERERS[props.widget.renderer] ?? ValueCard
+  // A widget may ask for another drawing per option; the data says so.
+  const name = typeof props.data?.meta?.renderer === 'string' ? props.data.meta.renderer : props.widget.renderer
+  const Renderer = RENDERERS[name] ?? ValueCard
   return <Renderer {...props} />
 }
 
@@ -330,7 +335,7 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
 // Now playing: media streams
 // ---------------------------------------------------------------------------
 
-export function NowPlayingCard({ data }: RenderProps) {
+export function NowPlayingCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{t('card.nothingPlaying')}</Empty>
@@ -344,7 +349,7 @@ export function NowPlayingCard({ data }: RenderProps) {
             <li key={index} className="flex gap-3 items-center">
               <div
                 className="w-10 h-14 rounded-md flex-none overflow-hidden bg-gradient-to-br from-accent/40 to-indigo-500/40 flex items-center justify-center text-[10px] font-semibold text-white/80"
-                style={item.art ? { backgroundImage: `url(${item.art})`, backgroundSize: 'cover' } : undefined}
+                style={item.art ? { backgroundImage: `url(${mediaUrl(widget.id, String(item.art))})`, backgroundSize: 'cover' } : undefined}
               >
                 {!item.art && String(item.title ?? '?').slice(0, 2).toUpperCase()}
               </div>
@@ -367,6 +372,51 @@ export function NowPlayingCard({ data }: RenderProps) {
         <Chips items={data?.secondary} />
       </div>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Counters: a row of icons, each with its number
+// ---------------------------------------------------------------------------
+
+export function CountersCard({ data }: RenderProps) {
+  const items = data?.items ?? []
+  return (
+    <div className="flex-1 flex items-center justify-around gap-3 px-4 pb-4 min-h-0" data-testid="counters">
+      {items.map((item, index) => (
+        <div key={index} className="flex flex-col items-center gap-2.5 min-w-0">
+          <ServiceIcon icon={String(item.icon ?? 'lucide:box')} size={26} className="text-accent" />
+          <div className="num text-2xl font-semibold leading-none">{formatValue(item.value as number | string | null | undefined)}</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted truncate max-w-full">{tLabel(String(item.label ?? ''))}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Posters: covers in a grid, newest first
+// ---------------------------------------------------------------------------
+
+export function PostersCard({ widget, data }: RenderProps) {
+  const { t } = useTranslation()
+  const items = data?.items ?? []
+  if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
+  return (
+    <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
+      {items.map((item, index) => {
+        const art = mediaUrl(widget.id, item.art as string | undefined)
+        return (
+          <li key={String(item.id ?? index)} className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${String(item.title ?? '')}${item.subtitle ? ` · ${String(item.subtitle)}` : ''}`}>
+            {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{String(item.title ?? '?').slice(0, 2).toUpperCase()}</span>}
+            <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
+              <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{String(item.title ?? '')}</div>
+              {item.subtitle ? <div className="text-[10px] text-white/70 truncate">{tLabel(String(item.subtitle))}</div> : null}
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

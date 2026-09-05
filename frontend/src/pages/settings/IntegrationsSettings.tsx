@@ -195,7 +195,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
         <input id="i-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <Switch checked={demo} onChange={setDemo} label={t('settings.integrations.demo')} description={t('settings.integrations.demoHelp')} />
-      {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} />)}
+      {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} />)}
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (
         <div className={`rounded-xl border p-3 text-sm mt-3 ${result.ok ? 'border-ok/50' : 'border-bad/50'}`} role="status">

@@ -284,7 +284,12 @@
     "previewHint": "The board shows the change right away. Save keeps it, closing the sheet discards it.",
     "autoCompact": "Push cards up",
     "autoCompactHelp": "Off: cards stay where you drop them, gaps are allowed and no card ever moves on its own. On: everything moves up to fill space, and cards make room while you drag.",
-    "editHint": "Drag a card to move it. Drag the corner at the bottom right to resize it."
+    "editHint": "Drag a card to move it. Drag the corner at the bottom right to resize it.",
+    "deletePage": "Delete page",
+    "deletePageTitle": "Delete the page {{name}}?",
+    "deletePageEmpty": "The page is empty; nothing is lost.",
+    "deletePageBody": "Its {{count}} cards go with it, including their history.",
+    "lastPage": "A board keeps at least one page."
   },
   "widget": {
     "remove": {
@@ -302,7 +307,7 @@
     "noIntegration": "None",
     "refresh": "Refresh (s)",
     "refreshHelp": "How often the server asks the service. Empty uses the widget's default of {{seconds}} seconds.",
-    "page": "Page",
+    "page": "Move to page",
     "keepPage": "Keep on this page",
     "health": {
       "enable": "Check reachability",
@@ -331,7 +336,8 @@
     "iconCount": "{{count}} logos",
     "iconMore": "Show {{count}} more",
     "showFindings": "Show findings",
-    "showFindingsHelp": "Off: the card shows neither the reason nor the warning colour. Use it when a Findings card next to it says what is wrong."
+    "showFindingsHelp": "Off: the card shows neither the reason nor the warning colour. Use it when a Findings card next to it says what is wrong.",
+    "pageHelp": "Puts the card on another page of this board. Leave it to keep the card here."
   },
   "library": {
     "title": "Add a widget",
@@ -404,5 +410,17 @@
       "live": "The last 48 checks, one bar each"
     },
     "staleData": "Showing the last good values"
+  },
+  "plex": {
+    "signIn": "Sign in with Plex",
+    "help": "Fills the token and your server's address; nothing to copy.",
+    "waiting": "Waiting for the sign-in at plex.tv…",
+    "openLink": "Open the sign-in page",
+    "done": "Signed in as {{name}}.",
+    "timeout": "Plex did not confirm the sign-in in time. Try again.",
+    "server": "Server",
+    "shared": "shared",
+    "pickServer": "Local addresses come first; pick another one if nexdeck cannot reach it.",
+    "noServers": "This account has no Plex server of its own."
   }
 }

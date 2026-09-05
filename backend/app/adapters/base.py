@@ -40,6 +40,8 @@ class Field:
     help: str = ""
     placeholder: str = ""
     options: tuple[tuple[str, str], ...] = ()
+    #: A frontend helper drawn under the field, such as ``plex-signin``.
+    helper: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -52,6 +54,7 @@ class Field:
             "help": self.help,
             "placeholder": self.placeholder,
             "options": [{"value": v, "label": lab} for v, lab in self.options],
+            "helper": self.helper,
         }
 
 
@@ -266,6 +269,14 @@ class Adapter:
 
     def default_link(self, config: dict[str, Any]) -> str:
         return base_url(config)
+
+    def image_headers(self, config: dict[str, Any]) -> dict[str, str]:
+        """Headers for fetching a service's images (posters, thumbnails) through the server.
+
+        Adapters put an image behind ``proxy:/path`` instead of a full address,
+        so a token never travels into an image URL in the browser.
+        """
+        return {}
 
     def to_dict(self) -> dict[str, Any]:
         return {

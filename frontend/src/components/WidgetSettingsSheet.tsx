@@ -58,6 +58,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     setLink(widget.link)
     setIntegrationId(widget.integration_id ? String(widget.integration_id) : '')
     setRefresh(widget.refresh_seconds ? String(widget.refresh_seconds) : '')
+    setPageId('')
     setOptions({ ...widget.options })
     setError('')
     if (widget.health) setHealth({ kind: widget.health.kind, interval_seconds: (widget.health as { interval_seconds?: number }).interval_seconds ?? 30, enabled: true, insecure: false })
@@ -205,9 +206,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
             <input id="w-refresh" className="input" type="number" min={5} value={refresh} placeholder={String(spec?.refresh_seconds ?? 30)} onChange={(e) => setRefresh(e.target.value)} />
           </Field>
         )}
-        <Field label={t('widget.page')} htmlFor="w-page">
-          <Select id="w-page" value={pageId} onChange={setPageId} options={[{ value: '', label: t('widget.keepPage') }, ...pages.map((p) => ({ value: String(p.id), label: p.name }))]} />
-        </Field>
+        {/* Moving between pages only makes sense once the board has more than one. */}
+        {pages.length > 1 && (
+          <Field label={t('widget.page')} htmlFor="w-page" help={t('widget.pageHelp')}>
+            <Select id="w-page" value={pageId} onChange={setPageId} options={[{ value: '', label: t('widget.keepPage') }, ...pages.map((p) => ({ value: String(p.id), label: p.name }))]} />
+          </Field>
+        )}
       </div>
       <Confirm
         open={confirmDelete}

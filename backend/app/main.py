@@ -27,6 +27,7 @@ from .routers import (
     logs,
     notices,
     oidc,
+    plex,
     push,
     setup,
     stream,
@@ -99,7 +100,7 @@ _cors = [o.strip() for o in get_settings().cors_origins.split(",") if o.strip()]
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=_cors, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-for module in (system, setup, auth, users, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, oidc):
+for module in (system, setup, auth, users, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, oidc, plex):
     app.include_router(module.router)
 
 

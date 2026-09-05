@@ -284,7 +284,12 @@
     "previewHint": "Das Board zeigt die Änderung sofort. Speichern behält sie, Schließen verwirft sie.",
     "autoCompact": "Karten nach oben rücken",
     "autoCompactHelp": "Aus: Karten bleiben, wo du sie ablegst, Lücken sind erlaubt und keine Karte bewegt sich von selbst. An: Alles rückt nach oben auf, und Karten machen beim Ziehen Platz.",
-    "editHint": "Ziehen verschiebt eine Karte. Die Ecke unten rechts ändert die Größe."
+    "editHint": "Ziehen verschiebt eine Karte. Die Ecke unten rechts ändert die Größe.",
+    "deletePage": "Seite löschen",
+    "deletePageTitle": "Seite {{name}} löschen?",
+    "deletePageEmpty": "Die Seite ist leer, es geht nichts verloren.",
+    "deletePageBody": "Ihre {{count}} Karten gehen mit, samt Verlauf.",
+    "lastPage": "Ein Board behält mindestens eine Seite."
   },
   "widget": {
     "remove": {
@@ -302,7 +307,7 @@
     "noIntegration": "Keine",
     "refresh": "Aktualisieren (s)",
     "refreshHelp": "Wie oft der Server den Dienst abfragt. Leer nimmt die Vorgabe des Widgets von {{seconds}} Sekunden.",
-    "page": "Seite",
+    "page": "Auf Seite verschieben",
     "keepPage": "Auf dieser Seite lassen",
     "health": {
       "enable": "Erreichbarkeit prüfen",
@@ -331,7 +336,8 @@
     "iconCount": "{{count}} Logos",
     "iconMore": "{{count}} weitere anzeigen",
     "showFindings": "Befunde anzeigen",
-    "showFindingsHelp": "Aus: Die Karte zeigt weder Grund noch Warnfarbe. Sinnvoll, wenn eine Befunde-Karte daneben sagt, was los ist."
+    "showFindingsHelp": "Aus: Die Karte zeigt weder Grund noch Warnfarbe. Sinnvoll, wenn eine Befunde-Karte daneben sagt, was los ist.",
+    "pageHelp": "Legt die Karte auf eine andere Seite dieses Boards. Leer lassen, dann bleibt sie hier."
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -404,5 +410,17 @@
       "live": "Die letzten 48 Prüfungen, ein Balken je Prüfung"
     },
     "staleData": "Zeigt die letzten guten Werte"
+  },
+  "plex": {
+    "signIn": "Mit Plex anmelden",
+    "help": "Trägt Token und Serveradresse ein; nichts zu kopieren.",
+    "waiting": "Warte auf die Anmeldung bei plex.tv…",
+    "openLink": "Anmeldeseite öffnen",
+    "done": "Angemeldet als {{name}}.",
+    "timeout": "Plex hat die Anmeldung nicht rechtzeitig bestätigt. Versuch es noch einmal.",
+    "server": "Server",
+    "shared": "geteilt",
+    "pickServer": "Lokale Adressen stehen zuerst; wähle eine andere, wenn nexdeck sie nicht erreicht.",
+    "noServers": "Dieses Konto hat keinen eigenen Plex-Server."
   }
 }

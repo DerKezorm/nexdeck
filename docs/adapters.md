@@ -17,14 +17,14 @@ that one of fifteen renderers draws.
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
 | Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
-| Synology DSM | system, volumes, disks | | user and password |
+| Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
 | TrueNAS | system, pools, alerts | | API key |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest | | API token |
-| Plex | now playing, library | | X-Plex-Token |
+| Plex | now playing, library, recently added (covers) | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library | | API key |
 | Nexview | requests, library, instances | | API key |
 | Seerr | requests, counts | approve, decline | API key |
@@ -66,7 +66,13 @@ a tight spot.
 ## Renderers
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
-`bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`.
+`bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
+`counters`. A fetch may pick another renderer for its data through
+`meta["renderer"]`; the media library card uses that for its icon row.
+
+Images such as posters are never linked with a token in the browser: an adapter
+hands out `proxy:/path`, and `GET /api/v1/widgets/{id}/image?path=` fetches it
+from the service with the adapter's `image_headers`, cached for an hour.
 
 ## Writing an adapter
 

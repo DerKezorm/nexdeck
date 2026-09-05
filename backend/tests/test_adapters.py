@@ -517,3 +517,164 @@ async def test_unifi_wlans_over_the_classic_api(ctx: Context) -> None:
         "Guests (VLAN 80) · open · 5 GHz · guest portal · all access points",
         "Default (VLAN 1) · WPA2/WPA3 · 2.4 + 5 GHz · all access points",
     ]
+
+
+# -- synology containers -------------------------------------------------------
+
+NAS = "https://nas.example.com:5001"
+
+
+def _dsm(handler):
+    """One DSM entry point, many APIs: the handler picks by api and method."""
+    respx.get(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
+
+    def route(request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+        return httpx.Response(200, json=handler(params.get("api"), params.get("method"), params))
+
+    respx.get(f"{NAS}/webapi/entry.cgi").mock(side_effect=route)
+
+
+@respx.mock
+async def test_synology_containers_with_load_and_actions(ctx: Context) -> None:
+    seen: list[tuple[str, str, str]] = []
+
+    def handler(api: str, method: str, params) -> dict:
+        seen.append((api, method, params.get("name", "")))
+        if api == "SYNO.Docker.Container" and method == "list":
+            assert params.get("type") == "all" and params.get("limit") == "-1"
+            return {"success": True, "data": {"total": 3, "containers": [
+                {"id": "c1", "name": "nexview", "image": "ghcr.io/derkezorm/nexview:latest", "status": "running", "up_status": "Up 3 days (healthy)"},
+                {"id": "c2", "name": "paperless", "image": "paperless-ngx", "status": "running", "up_status": "Up 6 hours (unhealthy)"},
+                {"id": "c3", "name": "backup", "image": "restic/restic", "status": "stopped", "up_status": "Exited (0) 5 months ago"},
+            ]}}
+        if api == "SYNO.Docker.Container.Resource" and method == "get":
+            return {"success": True, "data": {"resources": [{"name": "nexview", "cpu": 1.24, "memory": 210632704, "memoryPercent": 0.31}, {"name": "paperless", "cpu": 3.8, "memory": 1200000000, "memoryPercent": 12.06}]}}
+        if api == "SYNO.Docker.Container" and method in ("start", "stop", "restart"):
+            return {"success": True, "data": {}}
+        return {"success": False, "error": {"code": 101}}
+
+    _dsm(handler)
+    config = {"url": NAS, "username": "nexdeck", "password": "secret", "insecure": True}
+    adapter = get_adapter("synology")
+    data = await adapter.fetch("containers", config, {}, ctx)
+    assert data.status == "warn", "one container is unhealthy"
+    assert [item["title"] for item in data.items] == ["nexview", "paperless", "backup"], "running first, then by name"
+    assert data.items[0]["subtitle"] == "ghcr.io/derkezorm/nexview:latest · Up 3 days" and data.items[0]["cpu"] == 1.2 and data.items[0]["memory_percent"] == 0.3 and data.items[0]["value"] == "200.9 MB"
+    assert data.items[1]["subtitle"] == "paperless-ngx · Up 6 hours · unhealthy" and data.items[1]["status"] == "warn"
+    assert data.items[2]["status"] == "unknown" and "cpu" not in data.items[2] and [a.id for a in data.items[2]["actions"]] == ["start"]
+    assert [a.id for a in data.items[0]["actions"]] == ["stop", "restart"] and all(a.confirm for a in data.items[0]["actions"])
+    assert {chip["label"]: chip["value"] for chip in data.secondary} == {"Running": 2, "Stopped": 1}
+    assert data.metrics == {"running": 2.0}
+    filtered = await adapter.fetch("containers", config, {"filter": "pap", "show_stopped": False}, ctx)
+    assert [item["title"] for item in filtered.items] == ["paperless"]
+    # The card sends back exactly the params the action carried; nothing else names the container.
+    restart = next(a for a in data.items[1]["actions"] if a.id == "restart")
+    message = await adapter.action("containers", "restart", restart.params, config, {}, ctx)
+    assert message == "paperless: restart requested."
+    with pytest.raises(AdapterError) as nameless:
+        await adapter.action("containers", "restart", {}, config, {}, ctx)
+    assert nameless.value.code == "bad_params"
+    assert ("SYNO.Docker.Container", "restart", "paperless") in seen
+    with pytest.raises(AdapterError) as failure:
+        await adapter.action("containers", "explode", {"id": "paperless"}, config, {}, ctx)
+    assert failure.value.code == "no_such_action"
+
+
+@respx.mock
+async def test_synology_virtual_machines_with_usage_and_actions(ctx: Context) -> None:
+    seen: list[tuple[str, str, str]] = []
+
+    def handler(api: str, method: str, params) -> dict:
+        seen.append((api, method, params.get("guest_id", "")))
+        if api == "SYNO.Virtualization.Guest" and method == "list":
+            assert params.get("version") == "2"
+            return {"success": True, "data": {"guests": [
+                {"guest_id": "g1", "name": "Home Assistant", "status": "running", "status_type": "healthy", "host_name": "storage-nas", "vcpu_num": 2, "vram_size": 4194304, "ip": "192.168.1.40"},
+                {"guest_id": "g2", "name": "Lab", "status": "shutdown", "status_type": "", "host_name": "storage-nas", "vcpu_num": 1, "vram_size": 2097152, "ip": ""},
+                {"guest_id": "g3", "name": "Small", "status": "running", "status_type": "healthy", "host_name": "storage-nas", "vcpu_num": 1, "vram_size": 1048576, "ip": ""},
+            ]}}
+        if api == "SYNO.Virtualization.Guest" and method == "get":
+            if params.get("guest_id") == "g3":
+                # The hypervisor reports more than the configured size: overhead, shown as full.
+                return {"success": True, "data": {"guest_id": "g3", "vcpu_usage": 2, "ram_used": 1177600}}
+            return {"success": True, "data": {"guest_id": params.get("guest_id"), "vcpu_usage": 12, "ram_used": 2621440}}
+        if api == "SYNO.Virtualization.API.Guest.Action":
+            return {"success": True, "data": {}}
+        return {"success": False, "error": {"code": 103}}
+
+    _dsm(handler)
+    config = {"url": NAS, "username": "nexdeck", "password": "secret", "insecure": True}
+    adapter = get_adapter("synology")
+    data = await adapter.fetch("vms", config, {}, ctx)
+    assert data.status == "ok"
+    assert [item["title"] for item in data.items] == ["Home Assistant", "Small", "Lab"], "running first, then by name"
+    assert data.items[1]["memory_percent"] == 100.0 and data.items[1]["value"] == "1.1 GB"
+    first = data.items[0]
+    assert first["subtitle"] == "storage-nas · 2 vCPU · 4.0 GB RAM · 192.168.1.40"
+    assert first["cpu"] == 12.0 and first["memory_percent"] == 62.5 and first["value"] == "2.5 GB"
+    assert [a.id for a in first["actions"]] == ["shutdown", "reboot"] and first["actions"][0].params == {"guest_id": "g1"}
+    assert data.items[2]["subtitle"] == "storage-nas · 1 vCPU · 2.0 GB RAM · shutdown" and data.items[2]["status"] == "unknown"
+    assert [a.id for a in data.items[2]["actions"]] == ["poweron"] and "cpu" not in data.items[2]
+    assert ("SYNO.Virtualization.Guest", "get", "g2") not in seen, "no detail call for a guest that is off"
+    assert {chip["label"]: chip["value"] for chip in data.secondary} == {"Running": 2, "Stopped": 1}
+    assert await adapter.action("vms", "reboot", first["actions"][1].params, config, {}, ctx) == "Virtual machine: reboot requested."
+    assert ("SYNO.Virtualization.API.Guest.Action", "reboot", "g1") in seen
+    with pytest.raises(AdapterError) as failure:
+        await adapter.action("vms", "poweron", {}, config, {}, ctx)
+    assert failure.value.code == "bad_params"
+
+
+@respx.mock
+async def test_synology_unknown_method_is_named(ctx: Context) -> None:
+    _dsm(lambda api, method, params: {"success": False, "error": {"code": 103}})
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("synology").fetch("vms", {"url": NAS, "username": "u", "password": "p"}, {}, ctx)
+    assert "the method does not exist on this DSM" in failure.value.message
+
+
+# -- plex ----------------------------------------------------------------------
+
+PLEX = "http://plex:32400"
+
+
+@respx.mock
+async def test_plex_recently_added_merges_sections_newest_first(ctx: Context) -> None:
+    respx.get(f"{PLEX}/library/sections").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Directory": [
+        {"key": "1", "type": "movie", "title": "Movies"}, {"key": "2", "type": "show", "title": "Series"}, {"key": "3", "type": "artist", "title": "Music"}, {"key": "4", "type": "photo", "title": "Photos"},
+    ]}}))
+    respx.get(f"{PLEX}/library/sections/1/recentlyAdded").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Metadata": [
+        {"type": "movie", "title": "Orbital", "year": 2025, "thumb": "/library/metadata/10/thumb/1", "addedAt": 200},
+    ]}}))
+    respx.get(f"{PLEX}/library/sections/2/recentlyAdded").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Metadata": [
+        {"type": "season", "title": "Season 3", "parentTitle": "Harbour Lights", "thumb": "/library/metadata/20/thumb/1", "addedAt": 300},
+        {"type": "episode", "title": "Landfall", "grandparentTitle": "Harbour Lights", "parentIndex": 3, "index": 4, "grandparentThumb": "/library/metadata/21/thumb/1", "addedAt": 100},
+    ]}}))
+    respx.get(f"{PLEX}/library/sections/3/recentlyAdded").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Metadata": [
+        {"type": "album", "title": "Aurora Fields", "parentTitle": "Northern Sky", "thumb": "/library/metadata/30/thumb/1", "addedAt": 250},
+    ]}}))
+    config = {"url": PLEX, "token": "tok"}
+    data = await get_adapter("plex").fetch("recent", config, {"kind": "all", "limit": 8}, ctx)
+    assert [(item["title"], item["subtitle"]) for item in data.items] == [("Harbour Lights", "Season 3"), ("Aurora Fields", "Northern Sky"), ("Orbital", "2025"), ("Harbour Lights", "S03E04 · Landfall")], "newest first across sections, photos skipped; an album shows its title over the artist"
+    assert data.items[0]["art"] == "proxy:/library/metadata/20/thumb/1", "the browser gets a path, never the token"
+    movies = await get_adapter("plex").fetch("recent", config, {"kind": "movies", "limit": 8}, ctx)
+    assert [item["title"] for item in movies.items] == ["Orbital"]
+    sent = respx.get(f"{PLEX}/library/sections/1/recentlyAdded").calls.last.request
+    assert sent.headers["X-Plex-Token"] == "tok" and sent.url.params["X-Plex-Container-Size"] == "8"
+    assert get_adapter("plex").demo("recent", {"kind": "music", "limit": 8}, 0).items == [{"title": "Aurora Fields", "subtitle": "Northern Sky", "art": "", "kind": "album"}]
+
+
+def test_media_library_card_has_three_forms() -> None:
+    plex = get_adapter("plex")
+    number = plex.demo("library", {}, 0)
+    assert number.primary["label"] == "Movies" and [chip["label"] for chip in number.secondary] == ["Series", "Artists", "Playing"]
+    assert number.metrics == {}, "the streams line has no business under a library count"
+    movies = plex.demo("library", {"show": "movies"}, 0)
+    assert movies.primary == {"label": "Movies", "value": 1284} and [chip["label"] for chip in movies.secondary] == ["Playing"]
+    music = plex.demo("library", {"show": "music"}, 0)
+    assert music.primary["label"] == "Artists"
+    icons = plex.demo("library", {"style": "icons"}, 0)
+    assert icons.meta["renderer"] == "counters"
+    assert [(item["label"], item["icon"]) for item in icons.items] == [("Movies", "lucide:film"), ("Series", "lucide:tv"), ("Artists", "lucide:speaker"), ("Playing", "lucide:play")]
+    single_with_icons = plex.demo("library", {"show": "series", "style": "icons"}, 0)
+    assert "renderer" not in single_with_icons.meta, "the style only applies when everything is shown"

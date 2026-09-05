@@ -49,11 +49,14 @@ export function BoardPage() {
   const [removing, setRemoving] = useState<number | null>(null)
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
+  const [deletingPage, setDeletingPage] = useState(false)
   const [theme, setTheme] = useState(currentTheme())
   const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
   const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null)
   const [draftWidget, setDraftWidget] = useState<WidgetDraft | null>(null)
-  const [previewData, setPreviewData] = useState<{ id: number; data: WidgetData } | null>(null)
+  // holdUntilChange: after a save the preview stays until the server has fetched with the new options,
+  // so the card does not flash its old numbers in between.
+  const [previewData, setPreviewData] = useState<{ id: number; data: WidgetData; holdUntilChange?: number } | null>(null)
 
   const data = board.data
   const pages = useMemo(() => data?.pages ?? [], [data])
@@ -136,6 +139,16 @@ export function BoardPage() {
   )
   // Data fetched with draft options replaces the live data of that one card.
   const gridData = useMemo(() => (previewData ? { ...live.data, [previewData.id]: previewData.data } : live.data), [live.data, previewData])
+  useEffect(() => {
+    if (previewData?.holdUntilChange === undefined) return
+    const current = live.data[previewData.id]?.updated_at ?? 0
+    if (current !== previewData.holdUntilChange) setPreviewData(null)
+  }, [live.data, previewData])
+  useEffect(() => {
+    if (previewData?.holdUntilChange === undefined) return
+    const id = window.setTimeout(() => setPreviewData(null), 20_000)
+    return () => window.clearTimeout(id)
+  }, [previewData])
 
   const runAction = async (widgetId: number, action: Action) => {
     try {
@@ -225,15 +238,23 @@ export function BoardPage() {
             <h2 className="font-semibold mt-3">{t('board.empty.title')}</h2>
             <p className="text-sm text-muted mt-1">{canEdit ? t('board.empty.body') : t('board.empty.readonly')}</p>
             {canEdit && (
-              <button
-                className="btn btn-accent mt-4"
-                onClick={() => {
-                  setEditing(true)
-                  setLibrary(true)
-                }}
-              >
-                <Plus size={14} /> {t('board.addWidget')}
-              </button>
+              <div className="mt-4 flex justify-center gap-2">
+                <button
+                  className="btn btn-accent"
+                  onClick={() => {
+                    setEditing(true)
+                    setLibrary(true)
+                  }}
+                >
+                  <Plus size={14} /> {t('board.addWidget')}
+                </button>
+                {/* An empty page is where one wonders how to get rid of it; the last page stays. */}
+                {pages.length > 1 && (
+                  <button className="btn" onClick={() => setDeletingPage(true)}>
+                    {t('board.deletePage')}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -302,7 +323,7 @@ export function BoardPage() {
         onClose={closeWidgetSettings}
         onSaved={() => {
           setDraftWidget(null)
-          setPreviewData(null)
+          setPreviewData((current) => (current ? { ...current, holdUntilChange: live.data[current.id]?.updated_at ?? 0 } : null))
           void board.refetch()
         }}
         onDeleted={() => {
@@ -357,6 +378,24 @@ export function BoardPage() {
                 .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('widget.remove.failed'), level: 'error' })),
             )
           }
+        }}
+      />
+      <Confirm
+        open={deletingPage}
+        title={t('board.deletePageTitle', { name: activePage.name })}
+        body={t('board.deletePageEmpty')}
+        danger
+        onCancel={() => setDeletingPage(false)}
+        onConfirm={() => {
+          setDeletingPage(false)
+          void import('../api/client').then(({ del }) =>
+            del(`/pages/${activePage.id}`)
+              .then(() => {
+                navigate(`/b/${slug}`)
+                void board.refetch()
+              })
+              .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })),
+          )
         }}
       />
       <Dialog
