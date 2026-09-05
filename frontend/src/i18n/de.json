@@ -40,14 +40,21 @@
     }
   },
   "setup": {
-    "step": { "account": "Dein Konto", "look": "Sprache und Aussehen", "start": "Wie es losgeht" },
+    "step": {
+      "account": "Dein Konto",
+      "look": "Sprache und Aussehen",
+      "start": "Wie es losgeht"
+    },
     "intro": {
       "0": "Das erste Konto ist der Administrator. Alles andere lässt sich später ändern.",
       "1": "Beides lässt sich jederzeit im Profil ändern.",
       "2": "Die Vorführung füllt ein Board mit erfundenen, lebendigen Daten, damit du siehst, was nexdeck kann. Ein echter Docker-Host bringt dir sofort deine Container."
     },
     "passwordHelp": "Mindestens acht Zeichen.",
-    "demo": { "label": "Mit einem Vorführ-Board starten", "help": "Jede Anbindung läuft im Vorführmodus mit erfundenen Daten. Später unter Einstellungen > System abschalten." },
+    "demo": {
+      "label": "Mit einem Vorführ-Board starten",
+      "help": "Jede Anbindung läuft im Vorführmodus mit erfundenen Daten. Später unter Einstellungen > System abschalten."
+    },
     "docker": {
       "label": "Einen Docker-Host anbinden",
       "help": "Container werden zu Kacheln, ihr Zustand, CPU und Speicher erscheinen live.",
@@ -106,8 +113,15 @@
       "demoHelp": "Erfundene, lebendige Daten statt des echten Dienstes.",
       "enabled": "Aktiv"
     },
-    "users": { "title": "Benutzer", "help": "Administratoren verwalten alles. Benutzer besitzen Boards. Gäste schauen nur.", "add": "Benutzer anlegen" },
-    "channels": { "title": "Meldekanäle", "help": "Wohin Ausfälle, Rückkehr und fehlgeschlagene Aktionen gemeldet werden." },
+    "users": {
+      "title": "Benutzer",
+      "help": "Administratoren verwalten alles. Benutzer besitzen Boards. Gäste schauen nur.",
+      "add": "Benutzer anlegen"
+    },
+    "channels": {
+      "title": "Meldekanäle",
+      "help": "Wohin Ausfälle, Rückkehr und fehlgeschlagene Aktionen gemeldet werden."
+    },
     "tokens": {
       "title": "API-Token",
       "help": "Ein Token trägt die Rechte deines Kontos. Für Skripte und Automationen.",
@@ -151,7 +165,11 @@
     }
   },
   "users": {
-    "role": { "admin": "Administrator", "user": "Benutzer", "guest": "Gast" },
+    "role": {
+      "admin": "Administrator",
+      "user": "Benutzer",
+      "guest": "Gast"
+    },
     "roleLabel": "Rolle",
     "disabled": "gesperrt",
     "enable": "Freigeben",
@@ -178,11 +196,19 @@
     "enabled": "Aktiv"
   },
   "board": {
-    "none": { "title": "Noch kein Board", "body": "Leg eines an, dann erscheint es hier.", "create": "Board anlegen" },
+    "none": {
+      "title": "Noch kein Board",
+      "body": "Leg eines an, dann erscheint es hier.",
+      "create": "Board anlegen"
+    },
     "saveFailed": "Die Anordnung ließ sich nicht speichern.",
     "notFound": "Dieses Board gibt es nicht.",
     "loadFailed": "Das Board ließ sich nicht laden.",
-    "empty": { "title": "Eine leere Seite", "body": "Füge das erste Widget hinzu.", "readonly": "Hier liegt noch nichts." },
+    "empty": {
+      "title": "Eine leere Seite",
+      "body": "Füge das erste Widget hinzu.",
+      "readonly": "Hier liegt noch nichts."
+    },
     "addWidget": "Widget hinzufügen",
     "addPage": "Seite hinzufügen",
     "settings": "Board-Einstellungen",
@@ -191,7 +217,14 @@
     "edit": "Board bearbeiten",
     "confirmAction": "Diese Aktion jetzt ausführen?",
     "pageName": "Name der Seite",
-    "tabs": { "boards": "Boards", "look": "Aussehen", "pages": "Seiten", "sharing": "Freigabe", "kiosk": "Kiosk", "file": "Datei" },
+    "tabs": {
+      "boards": "Boards",
+      "look": "Aussehen",
+      "pages": "Seiten",
+      "sharing": "Freigabe",
+      "kiosk": "Kiosk",
+      "file": "Datei"
+    },
     "widgetCount": "{{count}} Widgets",
     "newName": "Name des neuen Boards",
     "name": "Name",
@@ -201,8 +234,17 @@
     "blur": "Unschärfe",
     "dim": "Abdunkeln",
     "sharingHelp": "Der Besitzer und Administratoren haben immer alle Rechte.",
-    "shareRole": { "user": "Alle Benutzer", "guest": "Alle Gäste" },
-    "level": { "none": "Kein Zugriff", "view": "Sehen", "edit": "Bearbeiten", "act": "Sehen und handeln", "owner": "Besitzer" },
+    "shareRole": {
+      "user": "Alle Benutzer",
+      "guest": "Alle Gäste"
+    },
+    "level": {
+      "none": "Kein Zugriff",
+      "view": "Sehen",
+      "edit": "Bearbeiten",
+      "act": "Sehen und handeln",
+      "owner": "Besitzer"
+    },
     "shareUsers": "Einzelne Benutzer",
     "kioskHelp": "Ein Kiosk-Link öffnet das Board ohne Anmeldung: für ein Wandtablet oder einen Fernseher.",
     "kioskActions": "Aktionen erlaubt",
@@ -224,7 +266,10 @@
     "deleteBody": "Jede Seite und jedes Widget darauf geht mit."
   },
   "widget": {
-    "remove": { "title": "Dieses Widget entfernen?", "body": "Sein Verlauf geht mit." },
+    "remove": {
+      "title": "Dieses Widget entfernen?",
+      "body": "Sein Verlauf geht mit."
+    },
     "settings": "Widget-Einstellungen",
     "title": "Titel",
     "icon": "Symbol",
@@ -245,7 +290,9 @@
       "interval": "Alle (s)",
       "target": "Ziel",
       "insecure": "TLS-Fehler ignorieren"
-    }
+    },
+    "refreshNow": "Jetzt aktualisieren",
+    "openLink": "Dienst öffnen"
   },
   "library": {
     "title": "Widget hinzufügen",

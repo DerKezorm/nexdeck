@@ -40,14 +40,21 @@
     }
   },
   "setup": {
-    "step": { "account": "Your account", "look": "Language and look", "start": "How to start" },
+    "step": {
+      "account": "Your account",
+      "look": "Language and look",
+      "start": "How to start"
+    },
     "intro": {
       "0": "The first account is the administrator. Everything else can be changed later.",
       "1": "Both can be changed any time in the profile.",
       "2": "The demo fills a board with invented, moving data so you see what nexdeck can do. A real Docker host gives you your containers right away."
     },
     "passwordHelp": "At least eight characters.",
-    "demo": { "label": "Start with a demo board", "help": "Every integration runs in demo mode with fake data. Switch it off later under Settings > System." },
+    "demo": {
+      "label": "Start with a demo board",
+      "help": "Every integration runs in demo mode with fake data. Switch it off later under Settings > System."
+    },
     "docker": {
       "label": "Connect a Docker host",
       "help": "Containers become tiles, and their state, CPU and memory appear live.",
@@ -106,8 +113,15 @@
       "demoHelp": "Fake, moving data instead of the real service.",
       "enabled": "Enabled"
     },
-    "users": { "title": "Users", "help": "Administrators manage everything. Users own boards. Guests only look.", "add": "Add a user" },
-    "channels": { "title": "Notification channels", "help": "Where outages, recoveries and failed actions are sent." },
+    "users": {
+      "title": "Users",
+      "help": "Administrators manage everything. Users own boards. Guests only look.",
+      "add": "Add a user"
+    },
+    "channels": {
+      "title": "Notification channels",
+      "help": "Where outages, recoveries and failed actions are sent."
+    },
     "tokens": {
       "title": "API tokens",
       "help": "A token carries the rights of your account. Use it in scripts and automations.",
@@ -151,7 +165,11 @@
     }
   },
   "users": {
-    "role": { "admin": "Administrator", "user": "User", "guest": "Guest" },
+    "role": {
+      "admin": "Administrator",
+      "user": "User",
+      "guest": "Guest"
+    },
     "roleLabel": "Role",
     "disabled": "disabled",
     "enable": "Enable",
@@ -178,11 +196,19 @@
     "enabled": "Enabled"
   },
   "board": {
-    "none": { "title": "No board yet", "body": "Create one and it appears here.", "create": "Create a board" },
+    "none": {
+      "title": "No board yet",
+      "body": "Create one and it appears here.",
+      "create": "Create a board"
+    },
     "saveFailed": "The layout could not be saved.",
     "notFound": "There is no such board.",
     "loadFailed": "The board could not be loaded.",
-    "empty": { "title": "An empty page", "body": "Add the first widget.", "readonly": "Nothing has been placed here yet." },
+    "empty": {
+      "title": "An empty page",
+      "body": "Add the first widget.",
+      "readonly": "Nothing has been placed here yet."
+    },
     "addWidget": "Add widget",
     "addPage": "Add page",
     "settings": "Board settings",
@@ -191,7 +217,14 @@
     "edit": "Edit board",
     "confirmAction": "Run this action now?",
     "pageName": "Page name",
-    "tabs": { "boards": "Boards", "look": "Look", "pages": "Pages", "sharing": "Sharing", "kiosk": "Kiosk", "file": "File" },
+    "tabs": {
+      "boards": "Boards",
+      "look": "Look",
+      "pages": "Pages",
+      "sharing": "Sharing",
+      "kiosk": "Kiosk",
+      "file": "File"
+    },
     "widgetCount": "{{count}} widgets",
     "newName": "Name of the new board",
     "name": "Name",
@@ -201,8 +234,17 @@
     "blur": "Blur",
     "dim": "Dim",
     "sharingHelp": "The owner and administrators always have every right.",
-    "shareRole": { "user": "All users", "guest": "All guests" },
-    "level": { "none": "No access", "view": "View", "edit": "Edit", "act": "View and act", "owner": "Owner" },
+    "shareRole": {
+      "user": "All users",
+      "guest": "All guests"
+    },
+    "level": {
+      "none": "No access",
+      "view": "View",
+      "edit": "Edit",
+      "act": "View and act",
+      "owner": "Owner"
+    },
     "shareUsers": "Individual users",
     "kioskHelp": "A kiosk link opens the board without sign-in: for a wall tablet or a TV.",
     "kioskActions": "actions allowed",
@@ -224,7 +266,10 @@
     "deleteBody": "Every page and widget on it goes with it."
   },
   "widget": {
-    "remove": { "title": "Remove this widget?", "body": "Its history goes with it." },
+    "remove": {
+      "title": "Remove this widget?",
+      "body": "Its history goes with it."
+    },
     "settings": "Widget settings",
     "title": "Title",
     "icon": "Icon",
@@ -245,7 +290,9 @@
       "interval": "Every (s)",
       "target": "Target",
       "insecure": "Ignore TLS errors"
-    }
+    },
+    "refreshNow": "Refresh now",
+    "openLink": "Open the service"
   },
   "library": {
     "title": "Add a widget",
