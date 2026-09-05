@@ -1,5 +1,6 @@
 import { ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
@@ -19,6 +20,7 @@ interface Props {
 
 /** The frame every widget shares: header, body, error strip. */
 export function WidgetCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove }: Props) {
+  const { t } = useTranslation()
   const status = data?.error ? 'unknown' : (data?.status ?? 'unknown')
   const link = widget.link || data?.link || undefined
   const bare = widget.renderer === 'app' || widget.renderer === 'clock'
@@ -35,22 +37,22 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
           <h3 className="text-[13px] font-medium truncate flex-1 text-ink/90">{widget.title}</h3>
           <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 [.card:hover_&]:opacity-100">
             {onRefresh && (
-              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onRefresh} aria-label="Refresh">
+              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onRefresh} aria-label={t('widget.refreshNow')} title={t('widget.refreshNow')}>
                 <RefreshCw size={13} />
               </button>
             )}
             {link && !editing && (
-              <a className="btn btn-icon h-6 w-6 border-0 bg-transparent" href={link} target="_blank" rel="noreferrer" aria-label="Open">
+              <a className="btn btn-icon h-6 w-6 border-0 bg-transparent" href={link} target="_blank" rel="noreferrer" aria-label={t('widget.openLink')} title={t('widget.openLink')}>
                 <ExternalLink size={13} />
               </a>
             )}
             {editing && onSettings && (
-              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onSettings} aria-label="Settings">
+              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onSettings} aria-label={t('widget.settings')} title={t('widget.settings')}>
                 <Settings2 size={13} />
               </button>
             )}
             {editing && onRemove && (
-              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent btn-danger" onClick={onRemove} aria-label="Remove">
+              <button className="btn btn-icon h-6 w-6 border-0 bg-transparent btn-danger" onClick={onRemove} aria-label={t('widget.remove.title')} title={t('widget.remove.title')}>
                 <Trash2 size={13} />
               </button>
             )}
