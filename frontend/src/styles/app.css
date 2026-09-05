@@ -272,6 +272,17 @@ body {
   border-color: var(--nd-border-strong);
 }
 
+/* A disabled button has to look disabled, or it reads as broken. */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background: color-mix(in srgb, var(--nd-text) 5%, transparent);
+  border-color: var(--nd-border);
+}
+
 .btn-icon {
   width: 32px;
   padding: 0;

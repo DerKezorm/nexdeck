@@ -61,7 +61,8 @@
       "host": "Engine address",
       "hostHelp": "Mount /var/run/docker.sock into the container, or use tcp://host:2375."
     },
-    "finish": "Finish"
+    "finish": "Finish",
+    "passwordShort": "At least eight characters: {{missing}} more to go."
   },
   "settings": {
     "title": "Settings",

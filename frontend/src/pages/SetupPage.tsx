@@ -64,8 +64,11 @@ export function SetupPage() {
             <Field label={t('auth.username')} htmlFor="su-user">
               <input id="su-user" className="input" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             </Field>
-            <Field label={t('auth.password')} htmlFor="su-pass" help={t('setup.passwordHelp')}>
+            <Field label={t('auth.password')} htmlFor="su-pass">
               <input id="su-pass" className="input" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <p className={`text-[11px] mt-1 ${password.length > 0 && password.length < 8 ? 'text-warn' : 'text-faint'}`}>
+                {password.length > 0 && password.length < 8 ? t('setup.passwordShort', { missing: 8 - password.length }) : t('setup.passwordHelp')}
+              </p>
             </Field>
             <Field label={t('settings.profile.displayName')} htmlFor="su-name">
               <input id="su-name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />

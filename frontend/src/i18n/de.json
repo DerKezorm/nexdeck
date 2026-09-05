@@ -61,7 +61,8 @@
       "host": "Engine-Adresse",
       "hostHelp": "/var/run/docker.sock in den Container einhängen oder tcp://host:2375 verwenden."
     },
-    "finish": "Fertigstellen"
+    "finish": "Fertigstellen",
+    "passwordShort": "Mindestens acht Zeichen, es fehlen noch {{missing}}."
   },
   "settings": {
     "title": "Einstellungen",
