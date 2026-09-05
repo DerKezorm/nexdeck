@@ -11,7 +11,9 @@ interface AuthState {
   refresh: () => Promise<void>
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  update: (fields: Partial<Pick<User, 'display_name' | 'locale' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
+  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
+  /** Take an account the server just handed back, after an upload for instance. */
+  setUser: (user: User) => void
 }
 
 export const useAuth = create<AuthState>((set, getState) => ({
@@ -56,6 +58,7 @@ export const useAuth = create<AuthState>((set, getState) => ({
     if (fields.theme) applyTheme(fields.theme)
     void getState
   },
+  setUser: (user) => set({ user }),
 }))
 
 export function applyTheme(theme: 'dark' | 'light' | 'system') {

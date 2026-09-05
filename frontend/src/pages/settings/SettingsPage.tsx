@@ -1,71 +1,61 @@
-import { Bell, Info, KeyRound, LayoutDashboard, Plug, User, Users } from 'lucide-react'
+import { Bell, KeyRound, LayoutDashboard, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AppShell } from '../../components/AppShell'
 import { useAuth } from '../../stores/auth'
 import { BoardsSettings } from './BoardsSettings'
 import { ChannelsSettings } from './ChannelsSettings'
-import { IntegrationsSettings } from './IntegrationsSettings'
 import { ProfileSettings } from './ProfileSettings'
-import { SystemSettings } from './SystemSettings'
+import { SettingsNav, type NavEntry } from './SettingsNav'
 import { TokensSettings } from './TokensSettings'
-import { UsersSettings } from './UsersSettings'
 
+/**
+ * The old address of a page that now lives under ``/system``.
+ *
+ * The query string rides along: the widget library links straight to
+ * ``?add=<kind>`` to open the sheet for a new connection.
+ */
+function Moved({ to }: { to: string }) {
+  const { search } = useLocation()
+  return <Navigate to={to + search} replace />
+}
+
+/**
+ * Everything that belongs to the person signed in.
+ *
+ * Split from the system settings on purpose: one list held the own password
+ * next to the instance's identity provider, and nothing said which of the two
+ * a change would reach. What is here changes nobody else's dashboard.
+ */
 export function SettingsPage() {
   const { t } = useTranslation()
-  const user = useAuth((s) => s.user)
-  const admin = user?.role === 'admin'
+  const user = useAuth((state) => state.user)
   const member = user?.role !== 'guest'
-  const entries = [
+  const entries: NavEntry[] = [
     { to: '', icon: User, label: t('settings.nav.profile') },
     { to: 'boards', icon: LayoutDashboard, label: t('settings.nav.boards'), show: member },
-    { to: 'integrations', icon: Plug, label: t('settings.nav.integrations'), show: true },
     { to: 'channels', icon: Bell, label: t('settings.nav.channels'), show: member },
     { to: 'tokens', icon: KeyRound, label: t('settings.nav.tokens'), show: member },
-    { to: 'users', icon: Users, label: t('settings.nav.users'), show: admin },
-    { to: 'system', icon: Info, label: t('settings.nav.system'), show: true },
-  ].filter((e) => e.show !== false)
+  ]
   return (
     <AppShell title={t('settings.title')}>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 grid md:grid-cols-[200px_1fr] gap-5">
-        <nav className="flex md:flex-col gap-1 overflow-x-auto" aria-label={t('settings.title')}>
-          {entries.map((entry) => (
-            <NavLink
-              key={entry.to}
-              to={`/settings/${entry.to}`}
-              end={entry.to === ''}
-              className={({ isActive }) => `flex items-center gap-2 h-9 px-3 rounded-lg text-sm whitespace-nowrap ${isActive ? 'bg-accent-soft text-accent font-medium' : 'text-muted hover:text-ink hover:bg-surface-hover'}`}
-            >
-              <entry.icon size={15} />
-              {entry.label}
-            </NavLink>
-          ))}
-        </nav>
+        <SettingsNav base="/settings" entries={entries} label={t('settings.title')} />
         <section className="min-w-0">
           <Routes>
             <Route index element={<ProfileSettings />} />
             <Route path="boards" element={<BoardsSettings />} />
-            <Route path="integrations" element={<IntegrationsSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
             <Route path="tokens" element={<TokensSettings />} />
-            <Route path="users" element={admin ? <UsersSettings /> : <Navigate to="/settings" replace />} />
-            <Route path="system" element={<SystemSettings />} />
+            {/* The three that moved to /system; old links and bookmarks keep working. */}
+            <Route path="integrations" element={<Moved to="/system/integrations" />} />
+            <Route path="users" element={<Moved to="/system/users" />} />
+            <Route path="system" element={<Moved to="/system/about" />} />
             <Route path="*" element={<Navigate to="/settings" replace />} />
           </Routes>
         </section>
       </div>
     </AppShell>
-  )
-}
-
-export function SettingsCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
-  return (
-    <div className="glass rounded-2xl p-5 mb-4">
-      <h2 className="font-semibold text-[15px]">{title}</h2>
-      {description && <p className="text-sm text-muted mt-0.5 mb-3">{description}</p>}
-      {!description && <div className="mb-3" />}
-      {children}
-    </div>
   )
 }

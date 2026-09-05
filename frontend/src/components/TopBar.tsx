@@ -1,8 +1,9 @@
-import { Bell, Check, ChevronDown, LayoutDashboard, Moon, Pencil, Search, Settings, Sun } from 'lucide-react'
+import { Check, ChevronDown, LayoutDashboard, Pencil, Search, Settings } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
+import { HeaderTools, type HeaderUser } from './HeaderTools'
 import { LogoMark } from './Logo'
 
 interface Page {
@@ -28,17 +29,14 @@ interface Props {
   onNotices: () => void
   onSearch: () => void
   onBoards: () => void
-  theme: 'dark' | 'light'
-  onTheme: () => void
-  userInitial: string
-  onProfile: () => void
+  user: HeaderUser | null
   boards?: BoardEntry[]
   onSwitchBoard?: (slug: string) => void
 }
 
 /** The slim top bar: board and pages left, search in the middle, tools right. */
 export function TopBar(props: Props) {
-  const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, theme, onTheme, userInitial, onProfile, boards = [], onSwitchBoard } = props
+  const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, user, boards = [], onSwitchBoard } = props
   const { t } = useTranslation()
   const [menu, setMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -119,30 +117,13 @@ export function TopBar(props: Props) {
           <kbd className="num text-[10px] px-1.5 py-0.5 rounded border border-line text-faint">Ctrl K</kbd>
         </button>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {canEdit && (
           <button className="btn btn-icon" onClick={onEdit} aria-pressed={editing} aria-label={t('board.edit')} title={t('board.edit')}>
             <Pencil size={15} />
           </button>
         )}
-        <button className="btn btn-icon relative" onClick={onNotices} aria-label={t('notices.title')}>
-          <Bell size={15} />
-          {unread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-accent text-[10px] font-semibold text-[#041016] flex items-center justify-center num">
-              {unread}
-            </span>
-          )}
-        </button>
-        <button className="btn btn-icon" onClick={onTheme} aria-label={t('common.toggleTheme')}>
-          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
-        <button
-          className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-indigo-500 text-[#041016] font-semibold text-[13px] flex items-center justify-center ml-1"
-          onClick={onProfile}
-          aria-label={t('settings.title')}
-        >
-          {userInitial}
-        </button>
+        <HeaderTools user={user} unread={unread} onNotices={onNotices} />
       </div>
     </header>
   )

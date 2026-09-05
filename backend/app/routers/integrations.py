@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import AdapterError, Context
 from ..deps import AdminUser, CurrentUser, DbSession, error
-from ..models import Integration, Widget
+from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
 from ..services.collector import collector
 from ..services.hass_ws import hass_listener
@@ -29,14 +29,22 @@ def _public(db: DbSession, integration: Integration) -> dict:
         "id": integration.id, "kind": integration.kind, "label": adapter.label, "icon": adapter.icon, "beta": adapter.beta,
         "name": integration.name, "config": public_config(integration), "enabled": integration.enabled, "demo": integration.demo,
         "last_ok_at": integration.last_ok_at, "last_error": integration.last_error, "widget_count": int(widgets),
+        "admin_only": integration.admin_only,
         "created_at": integration.created_at,
     }
 
 
 @router.get("/integrations", summary="List configured integrations")
 def list_integrations(user: CurrentUser, db: DbSession) -> list[dict]:
-    """Secrets never leave the server; the API says only whether one is set."""
-    return [_public(db, i) for i in db.scalars(select(Integration).order_by(Integration.name))]
+    """Secrets never leave the server; the API says only whether one is set.
+
+    A locked connection is left out for everyone but administrators: its cards
+    still run on a board that was shared, but nobody else builds new ones from
+    it, and it is not in the catalogue they choose from.
+    """
+    rows = db.scalars(select(Integration).order_by(Integration.name))
+    admin = user.role == Role.admin.value
+    return [_public(db, i) for i in rows if admin or not i.admin_only]
 
 
 @router.post("/integrations", status_code=status.HTTP_201_CREATED, summary="Add an integration")
@@ -50,7 +58,8 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
         missing = validate_required(body.kind, config)
         if missing:
             raise error("missing_fields", f"Required fields are missing: {', '.join(missing)}.")
-    integration = Integration(kind=body.kind, name=body.name.strip(), config=config, enabled=body.enabled, demo=body.demo, created_by=user.id)
+    integration = Integration(kind=body.kind, name=body.name.strip(), config=config, enabled=body.enabled, demo=body.demo,
+                              admin_only=body.admin_only, created_by=user.id)
     db.add(integration)
     db.commit()
     if integration.kind == "homeassistant":
@@ -71,6 +80,8 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
         integration.enabled = body.enabled
     if body.demo is not None:
         integration.demo = body.demo
+    if body.admin_only is not None:
+        integration.admin_only = body.admin_only
     integration.last_error = ""
     db.commit()
     collector.reschedule_integration(integration.id)

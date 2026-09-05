@@ -190,6 +190,31 @@ def test_every_adapter_text_has_a_german_translation() -> None:
     assert not missing, f"adapter texts without a German entry: {sorted(missing)}"
 
 
+def test_every_channel_text_has_a_german_translation() -> None:
+    """The notification channels are written in English like the adapters, and
+    the settings page translates them the same way. Without this guard a new
+    field would stand there in English in a German interface, which is exactly
+    what the walkthrough found on the adapters."""
+    from app.services.channels import KINDS
+    from app.services.notify import EVENTS
+
+    german = _german_texts()["adapter"]
+    missing: set[str] = set()
+    checked = 0
+    texts: list[str] = [kind.help for kind in KINDS.values()]
+    for kind in KINDS.values():
+        for field in kind.fields:
+            texts += [field.label, field.help, *(label for _value, label in field.options)]
+    texts += list(EVENTS.values())
+    for text in texts:
+        if text:
+            checked += 1
+            if text not in german:
+                missing.add(text)
+    assert checked > 25
+    assert not missing, f"channel texts without a German entry: {sorted(missing)}"
+
+
 def test_every_data_label_has_a_german_translation() -> None:
     """Labels of values, chips, rows and actions come from the adapters as English
     words; the cards translate them by text."""

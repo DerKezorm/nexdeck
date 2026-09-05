@@ -6,10 +6,11 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
-import { applyTheme, currentTheme, useAuth } from '../stores/auth'
+import { useAuth } from '../stores/auth'
 import { useNotices } from '../stores/notices'
 import { BackgroundLayer } from './BackgroundLayer'
 import { CommandPalette } from './CommandPalette'
+import { HeaderTools } from './HeaderTools'
 import { LogoMark } from './Logo'
 import { MobileTabBar } from './MobileTabBar'
 import { NoticeDrawer } from './NoticeDrawer'
@@ -18,7 +19,7 @@ import { NoticeDrawer } from './NoticeDrawer'
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user, update } = useAuth()
+  const user = useAuth((state) => state.user)
   const { unread, setOpen } = useNotices()
   const [palette, setPalette] = useState(false)
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
@@ -42,21 +43,11 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <LogoMark size={24} />
         <span className="font-semibold text-[15px] truncate">{title}</span>
         <span className="flex-1" />
-        <button
-          className="btn btn-icon"
-          onClick={() => {
-            const next = currentTheme() === 'dark' ? 'light' : 'dark'
-            applyTheme(next)
-            if (user) void update({ theme: next })
-          }}
-          aria-label={t('common.toggleTheme')}
-        >
-          <span className="text-xs">{currentTheme() === 'dark' ? '☀' : '☾'}</span>
-        </button>
+        <HeaderTools user={user} unread={unread} onNotices={() => setOpen(true)} />
       </header>
       <main>{children}</main>
       <MobileTabBar
-        boards={(boards.data ?? []).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
+        boards={(boards.data ?? []).filter((b) => b.in_menu).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={-1}
         onBoard={(id) => {
           const board = boards.data?.find((b) => b.id === id)

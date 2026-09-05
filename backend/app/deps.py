@@ -142,6 +142,19 @@ def board_permission(db: DbSessionType, board: Board, user: User | None) -> str 
     return best
 
 
+def board_is_shared_with(db: DbSessionType, board: Board, user: User) -> bool:
+    """Is there a share for this person or their role?
+
+    Asked apart from ``board_permission`` on purpose: that one answers "owner"
+    for every administrator, which says what he may do, not what belongs to him
+    or was handed to him.
+    """
+    for share in db.scalars(select(BoardShare).where(BoardShare.board_id == board.id)):
+        if (share.user_id is not None and share.user_id == user.id) or (share.role is not None and share.role == user.role):
+            return True
+    return False
+
+
 def require_board(db: DbSessionType, slug_or_id: str, user: User | None, level: str) -> tuple[Board, str]:
     board = db.scalar(select(Board).where(Board.slug == slug_or_id))
     if board is None and slug_or_id.isdigit():

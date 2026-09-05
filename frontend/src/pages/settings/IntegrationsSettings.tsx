@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
-import type { AdapterSpec, Integration } from '../../api/types'
+import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, Field, Select, Sheet, Switch } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
-import { SettingsCard } from './SettingsPage'
+import { SettingsCard } from './SettingsCard'
 
 /** Configured connections, and a sheet to add or edit one with a live test. */
 export function IntegrationsSettings() {
@@ -20,6 +20,7 @@ export function IntegrationsSettings() {
   const [params, setParams] = useSearchParams()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
+  const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about') })
   const [editing, setEditing] = useState<Integration | null>(null)
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
@@ -42,6 +43,19 @@ export function IntegrationsSettings() {
 
   return (
     <>
+      {/* The switch that puts every connection at once into demo mode. It sits
+          here and not on a page of its own: it says what the connections show,
+          and each one carries the same switch for itself. */}
+      {admin && about.data && (
+        <SettingsCard title={t('settings.system.demo')}>
+          <Switch
+            checked={about.data.demo}
+            onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())}
+            label={t('settings.system.demo')}
+            description={t('settings.system.demoHelp')}
+          />
+        </SettingsCard>
+      )}
       <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>
         {integrations.data?.length === 0 && <p className="text-sm text-muted mb-3">{t('settings.integrations.empty')}</p>}
         <ul className="space-y-1.5">
@@ -52,6 +66,11 @@ export function IntegrationsSettings() {
                 <div className="text-sm font-medium truncate">
                   {integration.name}
                   {integration.demo && <span className="chip ml-2 !py-0 text-[10px]">demo</span>}
+                  {integration.admin_only && (
+                    <span className="chip ml-1 !py-0 text-[10px]" title={t('settings.integrations.adminOnlyHelp')}>
+                      {t('settings.integrations.adminOnlyChip')}
+                    </span>
+                  )}
                   {integration.beta && <span className="chip ml-1 !py-0 text-[10px]">beta</span>}
                 </div>
                 <div className="text-[11px] text-muted truncate">
@@ -131,6 +150,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
   const [config, setConfig] = useState<Record<string, unknown>>(() => integration?.config ?? Object.fromEntries((adapter?.fields ?? []).filter((f) => f.default !== null && f.default !== undefined).map((f) => [f.name, f.default])))
   const [enabled, setEnabled] = useState(integration?.enabled ?? true)
   const [demo, setDemo] = useState(integration?.demo ?? false)
+  const [adminOnly, setAdminOnly] = useState(integration?.admin_only ?? false)
   const [result, setResult] = useState<{ ok: boolean; message: string; hint?: string } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -151,8 +171,8 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
     setBusy(true)
     setError('')
     try {
-      if (integration) await patch(`/integrations/${integration.id}`, { name, config, enabled, demo })
-      else await post('/integrations', { kind: adapter.kind, name, config, enabled, demo })
+      if (integration) await patch(`/integrations/${integration.id}`, { name, config, enabled, demo, admin_only: adminOnly })
+      else await post('/integrations', { kind: adapter.kind, name, config, enabled, demo, admin_only: adminOnly })
       onSaved()
     } catch (failure) {
       setError(failure instanceof ApiError ? failure.message : t('errors.network'))
@@ -195,6 +215,9 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
         <input id="i-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <Switch checked={demo} onChange={setDemo} label={t('settings.integrations.demo')} description={t('settings.integrations.demoHelp')} />
+      {/* Locked: users neither build on it nor see it in their list. What
+          the administrator has built with it keeps running for them. */}
+      <Switch checked={adminOnly} onChange={setAdminOnly} label={t('settings.integrations.adminOnly')} description={t('settings.integrations.adminOnlyHelp')} />
       {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} />)}
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (

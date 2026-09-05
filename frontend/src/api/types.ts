@@ -12,6 +12,10 @@ export interface User {
   seen_version: string
   has_password: boolean
   auth_kind: string
+  /** Address of the profile picture, or null while the account has none. */
+  avatar_url: string | null
+  /** Where a password reset would go; empty while none is stored. */
+  email: string
 }
 
 export interface SetupStatus {
@@ -27,10 +31,14 @@ export interface BoardSummary {
   name: string
   icon: string
   owner_id: number | null
+  /** Name of the owner; empty when the account is gone. */
+  owner_name: string
   permission: 'view' | 'edit' | 'act' | 'owner'
   provisioned: boolean
   position: number
-  pages: { id: number; name: string; slug: string }[]
+  /** Whether the board stands in the menu at the top. */
+  in_menu: boolean
+  pages: { id: number; name: string; slug: string; widget_count: number }[]
   widget_count: number
 }
 
@@ -83,6 +91,8 @@ export interface Integration {
   config: Record<string, unknown>
   enabled: boolean
   demo: boolean
+  /** Locked: only administrators may build cards on it, and only they see it listed. */
+  admin_only: boolean
   last_ok_at: string | null
   last_error: string
   widget_count: number
@@ -155,6 +165,13 @@ export interface About {
   counts: { boards: number; widgets: number; integrations: number; users: number }
   connections: number
   latest_version: string | null
+  repo_url: string
+  release_url: string
+  issues_url: string
+  website_url: string
+  license: string
+  /** When the update check last asked GitHub, or null while it never has. */
+  checked_at: string | null
 }
 
 export interface Suggestion {

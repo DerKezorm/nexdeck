@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Request, Response, UploadFile, status
 from sqlalchemy import func, select
 
 from ..config import get_settings
@@ -19,7 +19,7 @@ from ..security import (
     now_ms,
     verify_password,
 )
-from ..services import login_guard
+from ..services import avatars, login_guard, mail
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 logger = logging.getLogger("nexdeck.auth")
@@ -53,6 +53,8 @@ def user_public(user: User, request: Request | None = None) -> UserPublic:
         locale=user.locale, theme=user.theme, start_board_id=user.start_board_id, disabled=user.disabled,
         seen_version=user.seen_version, has_password=has_usable_password(user.password_hash),
         auth_kind=getattr(request.state, "auth_kind", "session") if request is not None else "session",
+        avatar_url=avatars.url_for(user.avatar),
+        email=user.email,
     )
 
 
@@ -92,6 +94,23 @@ def logout(request: Request, response: Response, db: DbSession) -> None:
     clear_session_cookie(response)
 
 
+def own_address(db: DbSession, user: User, value: str) -> str:
+    """Check an address before it is stored. An empty one clears the field.
+
+    Unique across accounts, because a password reset has to end at exactly one
+    of them; without that rule the address would name two people.
+    """
+    address = value.strip()
+    if not address:
+        return ""
+    if not mail.valid_address(address):
+        raise error("bad_address", "That does not look like an e-mail address.")
+    taken = db.scalar(select(User).where(func.lower(User.email) == address.lower(), User.id != user.id))
+    if taken is not None:
+        raise error("taken", "Another account already uses that address.", status.HTTP_409_CONFLICT)
+    return address
+
+
 @router.get("/me", response_model=UserPublic, summary="Who am I")
 def me(user: CurrentUser, request: Request) -> UserPublic:
     return user_public(user, request)
@@ -101,6 +120,8 @@ def me(user: CurrentUser, request: Request) -> UserPublic:
 def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
     if body.display_name is not None:
         user.display_name = body.display_name.strip()
+    if body.email is not None:
+        user.email = own_address(db, user, body.email)
     if body.locale is not None:
         user.locale = body.locale
     if body.theme is not None:
@@ -109,6 +130,26 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
         user.start_board_id = body.start_board_id or None
     if body.seen_version is not None:
         user.seen_version = body.seen_version
+    db.commit()
+    return user_public(user, request)
+
+
+@router.post("/me/avatar", response_model=UserPublic, summary="Upload own profile picture")
+async def upload_avatar(file: UploadFile, user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
+    """Replaces the picture that was there; the old file is deleted."""
+    data = await file.read()
+    try:
+        user.avatar = avatars.save(data, user.avatar)
+    except avatars.AvatarError as failure:
+        raise error(failure.code, failure.message) from failure
+    db.commit()
+    return user_public(user, request)
+
+
+@router.delete("/me/avatar", response_model=UserPublic, summary="Remove own profile picture")
+def delete_avatar(user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
+    avatars.remove(user.avatar)
+    user.avatar = ""
     db.commit()
     return user_public(user, request)
 

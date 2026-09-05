@@ -84,19 +84,50 @@
     "passwordShort": "At least eight characters: {{missing}} more to go."
   },
   "settings": {
-    "title": "Settings",
+    "title": "My settings",
+    "systemTitle": "System",
     "nav": {
       "profile": "Profile",
       "boards": "Boards",
       "integrations": "Integrations",
-      "channels": "Channels",
+      "channels": "Notifications",
       "tokens": "API tokens",
       "users": "Users",
-      "system": "System"
+      "address": "Address",
+      "mail": "Mail server",
+      "oidc": "Sign-in providers",
+      "about": "About"
+    },
+    "mail": {
+      "title": "Mail server",
+      "help": "How nexdeck itself sends mail: password resets and other messages that have to go out before anyone is signed in. Notification channels keep their own server.",
+      "host": "SMTP server",
+      "hostHelp": "Empty means nexdeck sends no mail at all.",
+      "port": "Port",
+      "security": "Encryption",
+      "securityNone": "None",
+      "username": "User name",
+      "usernameHelp": "Leave empty for a server that needs no sign-in.",
+      "password": "Password",
+      "fromAddress": "From address",
+      "fromAddressHelp": "The address recipients see, and often the one the server insists on.",
+      "fromName": "From name",
+      "test": "Test message",
+      "testHelp": "Sends one mail through the settings above, so a wrong password shows up here and not at the moment someone is locked out.",
+      "testTo": "To address",
+      "testSent": "Test message sent to {{address}}.",
+      "send": "Send",
+      "notConfigured": "Enter an SMTP server and save it first."
     },
     "profile": {
       "title": "Profile",
+      "picture": "Profile picture",
+      "pictureHelp": "Shown in the bar at the top and wherever your name appears. PNG, JPEG, GIF or WebP, up to 2 MB.",
+      "chooseImage": "Choose picture",
+      "removeImage": "Remove picture",
       "displayName": "Display name",
+      "email": "E-mail address",
+      "emailHelp": "Only for a forgotten password. Nothing else is sent to it.",
       "language": "Language",
       "theme": "Appearance",
       "theme_dark": "Dark",
@@ -132,6 +163,9 @@
       "name": "Name",
       "demo": "Demo mode",
       "demoHelp": "Fake, moving data instead of the real service.",
+      "adminOnly": "Lock for users",
+      "adminOnlyHelp": "Only administrators build cards on this connection. Users still see its cards on a board that was shared with them, and it stays out of their list.",
+      "adminOnlyChip": "locked",
       "enabled": "Enabled"
     },
     "users": {
@@ -185,6 +219,11 @@
       "oidcAdd": "Add provider"
     }
   },
+  "menu": {
+    "settings": "My settings",
+    "system": "System",
+    "signOut": "Sign out"
+  },
   "users": {
     "role": {
       "admin": "Administrator",
@@ -196,7 +235,10 @@
     "enable": "Enable",
     "disable": "Disable",
     "remove": "Delete {{name}}?",
-    "removeBody": "Their boards stay and lose their owner."
+    "removeBody": "Their boards stay and lose their owner.",
+    "setPassword": "Password",
+    "setPasswordFor": "New password for {{name}}",
+    "setPasswordHelp": "Set without the old one. Every session of that account is signed out afterwards, so tell them the new password."
   },
   "channels": {
     "push": "Web Push on this device",
@@ -206,20 +248,63 @@
     "pushDenied": "The browser refused notifications. Allow them in the site settings.",
     "pushUnsupported": "This browser does not support Web Push.",
     "noEvents": "No events subscribed",
-    "test": "Test",
+    "test": "Send a test",
     "add": "Add a channel",
+    "addOne": "Add {{label}}",
+    "emptyHint": "Nothing set up for this service yet. Every service can hold several ways: one for outages, another for everything.",
     "remove": "Remove {{name}}?",
     "edit": "Edit {{name}}",
     "new": "New {{name}} channel",
     "name": "Name",
-    "events": "Events",
-    "eventsHelp": "Which events this channel receives.",
-    "enabled": "Enabled"
+    "nameHelp": "Yours to pick. It tells this way apart from the others of the same service.",
+    "events": "What it reports",
+    "eventsHelp": "Which events go this way.",
+    "enabled": "Enabled",
+    "disable": "Switch off",
+    "enable": "Switch on",
+    "guideHeading": "How to set it up",
+    "guide": {
+      "telegram": {
+        "account": "Telegram needs an account. Sign in on the phone or in the browser.",
+        "botfather": "Write to @BotFather, the bot that hands out bots.",
+        "token": "Send /newbot, pick a name, and copy the token it answers with into the field on the left.",
+        "chat": "Write to your new bot once, then ask @userinfobot for your chat ID. A bot may not write first, so without that one message nothing arrives."
+      },
+      "discord": {
+        "server": "Open the server settings of the channel that should receive the messages.",
+        "webhook": "Integrations, then New Webhook. Give it a name and copy the webhook URL.",
+        "paste": "Paste the URL on the left. Anyone holding it can post in that channel, so treat it like a password."
+      },
+      "slack": {
+        "app": "Create an app in your workspace at api.slack.com/apps.",
+        "webhook": "Turn on Incoming Webhooks, add one for a channel and copy its URL.",
+        "paste": "Paste the URL on the left."
+      },
+      "ntfy": {
+        "server": "Use ntfy.sh or your own server; the address goes in the field on the left.",
+        "topic": "Pick a topic name. Anyone who knows it can read along on a public server, so make it long and unguessable.",
+        "subscribe": "Subscribe to the topic in the ntfy app, then send the test message."
+      },
+      "gotify": {
+        "server": "Enter the address of your Gotify server on the left.",
+        "app": "In Gotify, open Apps and create one for nexdeck.",
+        "token": "Copy the application token and paste it on the left."
+      },
+      "apprise": {
+        "urls": "Apprise speaks to a hundred services through one URL each. The wiki lists the format for every one of them.",
+        "paste": "Paste one URL per line on the left. All of them get every message that goes this way."
+      },
+      "email": {
+        "server": "This is a channel of its own, with its own SMTP server; the one under System is for password resets.",
+        "addresses": "From address and to address are both needed. Many providers refuse a from address that is not their own."
+      }
+    }
   },
   "board": {
     "none": {
       "title": "No board yet",
       "body": "Create one and it appears here.",
+      "guest": "Guests see the boards that are shared with them. Ask an administrator to share one.",
       "create": "Create a board"
     },
     "saveFailed": "The layout could not be saved.",
@@ -247,6 +332,19 @@
       "file": "File"
     },
     "widgetCount": "{{count}} widgets",
+    "widgetCount_one": "{{count}} widget",
+    "widgetCount_other": "{{count}} widgets",
+    "pageCount": "{{count}} pages",
+    "inMenu": "In the menu",
+    "inMenuHelp": "Only boards with this tick stand in the menu at the top. The others keep their place in this list and their address.",
+    "showAll": "Show every board of this installation",
+    "ownedBy": "belongs to {{name}}",
+    "pageCount_one": "{{count}} page",
+    "pageCount_other": "{{count}} pages",
+    "showPages": "Show the pages of {{name}}",
+    "hidePages": "Hide the pages of {{name}}",
+    "remove": "Delete the board {{name}}?",
+    "removeBody": "Its {{count}} cards go with it, along with their history and kiosk links. This cannot be undone.",
     "newName": "Name of the new board",
     "name": "Name",
     "background": "Background",
@@ -387,6 +485,43 @@
   "whatsnew": {
     "title": "What's new",
     "gotIt": "Got it"
+  },
+  "about": {
+    "tagline": "The live dashboard for your homelab: every service on one board, with the numbers that matter and the buttons that act.",
+    "thisInstallation": "This installation",
+    "project": "The project",
+    "source": "Source code",
+    "onGithub": "On GitHub",
+    "releases": "Releases",
+    "allVersions": "All versions",
+    "issues": "Bugs and ideas",
+    "issuesOpen": "Open an issue",
+    "website": "Website",
+    "license": "License",
+    "whatsNewOpen": "Read it again",
+    "updateCheckLabel": "Ask GitHub once a day",
+    "checkNow": "Check now",
+    "checked": "Asked GitHub.",
+    "lastChecked": "Last asked {{when}}",
+    "upToDate": "This is the newest version.",
+    "neverChecked": "Not asked yet.",
+    "askFailed": "GitHub did not answer. Nothing said about the newest version.",
+    "updateAvailable": "{{version}} is out",
+    "thanks": "Thanks",
+    "thanksIntro": "nexdeck is built on other people's work. Some of the following is politeness, some of it is their terms.",
+    "forerunners": "Came first",
+    "forerunnersNote": "Homarr, Homepage and Glance showed what a homelab dashboard can be. nexdeck went its own way, and it started from theirs.",
+    "icons": "Icons",
+    "iconsNote": "Dashboard Icons holds the logos of the services, Lucide the drawn symbols. Both come through the server, so no browser talks to a content network.",
+    "dataSources": "Data",
+    "weatherNote": "The weather widget asks Open-Meteo, free and without an account. Their data comes from national weather services.",
+    "services": "Plex, Jellyfin, Emby, Radarr, Sonarr, Home Assistant and the others",
+    "servicesNote": "nexdeck reads their APIs. The names and logos belong to them, and none of these projects has anything to do with nexdeck.",
+    "notifyServices": "Notification services",
+    "notifyNote": "Where nexdeck writes when something happens. Apprise alone speaks to a hundred more.",
+    "builtWith": "Built with",
+    "family": "The nexapps family",
+    "familyNote": "Nexview asks for films and series, nexmail is the mail client, nexdeck watches the machines they run on."
   },
   "status": {
     "ok": "Everything is fine",

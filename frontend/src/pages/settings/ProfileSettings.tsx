@@ -1,37 +1,98 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, del, get, post } from '../../api/client'
-import type { BoardSummary } from '../../api/types'
+import { ApiError, del, get, post, upload } from '../../api/client'
+import type { BoardSummary, User } from '../../api/types'
+import { Avatar } from '../../components/Avatar'
 import { Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
-import { SettingsCard } from './SettingsPage'
+import { SettingsCard } from './SettingsCard'
 
 export function ProfileSettings() {
   const { t } = useTranslation()
-  const { user, update, logout } = useAuth()
+  const { user, update, logout, setUser } = useAuth()
+  const fileRef = useRef<HTMLInputElement>(null)
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
   const sessions = useQuery({ queryKey: ['sessions'], queryFn: () => get<{ id: number; user_agent: string; last_seen_at: string }[]>('/auth/sessions') })
   const [displayName, setDisplayName] = useState(user?.display_name ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
+  const failed = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+  const pickPicture = (file: File) => {
+    void upload('/auth/me/avatar', file)
+      .then((updated) => {
+        setUser(updated as User)
+        setToast({ text: t('common.saved'), level: 'ok' })
+      })
+      .catch(failed)
+  }
   return (
     <>
-      <SettingsCard title={t('settings.profile.title')}>
-        <Field label={t('settings.profile.displayName')} htmlFor="p-name">
-          <div className="flex gap-2">
-            <input id="p-name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-            <button className="btn flex-none" onClick={() => void update({ display_name: displayName }).then(() => setToast({ text: t('common.saved'), level: 'ok' }))}>
-              {t('common.save')}
+      <SettingsCard title={t('settings.profile.picture')} description={t('settings.profile.pictureHelp')}>
+        <div className="flex flex-wrap items-center gap-4">
+          <Avatar url={user.avatar_url} name={user.display_name || user.username} size={72} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) pickPicture(file)
+              // Cleared, so choosing the same file again is a change again.
+              e.target.value = ''
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button className="btn" onClick={() => fileRef.current?.click()}>
+              {t('settings.profile.chooseImage')}
             </button>
+            {user.avatar_url && (
+              <button
+                className="btn"
+                onClick={() =>
+                  void del<User>('/auth/me/avatar')
+                    .then((updated) => {
+                      setUser(updated)
+                      setToast({ text: t('common.saved'), level: 'ok' })
+                    })
+                    .catch(failed)
+                }
+              >
+                {t('settings.profile.removeImage')}
+              </button>
+            )}
           </div>
-        </Field>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title={t('settings.profile.title')}>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Field label={t('settings.profile.displayName')} htmlFor="p-name">
+            <input id="p-name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          </Field>
+          {/* The address is what a password reset needs; nothing is sent to it otherwise. */}
+          <Field label={t('settings.profile.email')} htmlFor="p-mail" help={t('settings.profile.emailHelp')}>
+            <input id="p-mail" className="input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+        </div>
+        <button
+          className="btn mb-3"
+          onClick={() =>
+            void update({ display_name: displayName, email })
+              .then(() => setToast({ text: t('common.saved'), level: 'ok' }))
+              .catch(failed)
+          }
+        >
+          {t('common.save')}
+        </button>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label={t('settings.profile.language')} htmlFor="p-lang">
             <Select id="p-lang" value={user.locale} onChange={(locale) => void update({ locale })} options={Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))} />

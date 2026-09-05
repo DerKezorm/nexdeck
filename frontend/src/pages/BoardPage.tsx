@@ -20,7 +20,7 @@ import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSetti
 import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
-import { applyTheme, currentTheme, useAuth } from '../stores/auth'
+import { useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 
@@ -31,12 +31,15 @@ export function BoardPage() {
   const { slug = '', page: pageSlug } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user, update } = useAuth()
+  const user = useAuth((state) => state.user)
   const { unread, setOpen: openNotices } = useNotices()
   const live = useLive()
 
   const board = useQuery({ queryKey: ['board', slug], queryFn: () => get<BoardWithLive>(`/boards/${slug}`), enabled: Boolean(slug) })
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
+  /** What the menu shows: boards with the flag, plus the one being looked at,
+      because a board that hid itself must still say where you are. */
+  const menuBoards = useMemo(() => (boards.data ?? []).filter((entry) => entry.in_menu || entry.slug === slug), [boards.data, slug])
   const history = useQuery({ queryKey: ['board-history', slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${slug}/history`), enabled: Boolean(board.data), staleTime: 60_000 })
 
   const [editing, setEditing] = useState(false)
@@ -50,7 +53,6 @@ export function BoardPage() {
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
   const [deletingPage, setDeletingPage] = useState(false)
-  const [theme, setTheme] = useState(currentTheme())
   const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
   const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null)
   const [draftWidget, setDraftWidget] = useState<WidgetDraft | null>(null)
@@ -219,16 +221,8 @@ export function BoardPage() {
         onNotices={() => openNotices(true)}
         onSearch={() => setPalette(true)}
         onBoards={() => setBoardSettings(true)}
-        theme={theme}
-        onTheme={() => {
-          const next = theme === 'dark' ? 'light' : 'dark'
-          setTheme(next)
-          applyTheme(next)
-          if (user) void update({ theme: next })
-        }}
-        userInitial={(user?.display_name || user?.username || '?').charAt(0).toUpperCase()}
-        onProfile={() => navigate('/settings')}
-        boards={(boards.data ?? []).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
+        user={user}
+        boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
       />
       <main className="max-w-[1480px] mx-auto px-3 sm:px-4 pt-4">
@@ -293,7 +287,7 @@ export function BoardPage() {
       )}
 
       <MobileTabBar
-        boards={(boards.data ?? []).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
+        boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={data.id}
         onBoard={(id) => {
           const target = boards.data?.find((b) => b.id === id)

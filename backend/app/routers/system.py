@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import UTC, datetime
 
 import httpx
 from fastapi import APIRouter
@@ -11,7 +12,7 @@ from sqlalchemy import func, select
 
 from .. import __version__
 from ..config import get_settings
-from ..deps import AdminUser, CurrentUser, DbSession
+from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import Board, Integration, Setting, User, Widget
 from ..schemas import SettingsBody
 from ..services import collector as collector_module
@@ -21,7 +22,12 @@ from ..services.sse import hub
 router = APIRouter(tags=["system"])
 logger = logging.getLogger("nexdeck.system")
 
-RELEASES_URL = "https://api.github.com/repos/nexapps/nexdeck/releases/latest"
+#: Where nexdeck lives. One place, so the About page and the update check can
+#: never point at two different repositories.
+REPO_URL = "https://github.com/DerKezorm/nexdeck"
+WEBSITE_URL = "https://nexdeck.nexapps.dev"
+LICENSE = "AGPL-3.0-or-later"
+RELEASES_URL = "https://api.github.com/repos/DerKezorm/nexdeck/releases/latest"
 _update_cache: dict[str, object] = {}
 
 
@@ -50,6 +56,12 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
         "public_url": general.get("public_url") or settings.public_url,
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),
+        "repo_url": REPO_URL,
+        "release_url": f"{REPO_URL}/releases",
+        "issues_url": f"{REPO_URL}/issues",
+        "website_url": WEBSITE_URL,
+        "license": LICENSE,
+        "checked_at": _update_cache.get("at"),
         "counts": {
             "boards": int(db.scalar(select(func.count(Board.id))) or 0),
             "widgets": int(db.scalar(select(func.count(Widget.id))) or 0),
@@ -64,9 +76,9 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
     return payload
 
 
-async def latest_version() -> str | None:
+async def latest_version(force: bool = False) -> str | None:
     now = time.monotonic()
-    if _update_cache.get("until", 0) > now:
+    if not force and _update_cache.get("until", 0) > now:
         return _update_cache.get("version")  # type: ignore[return-value]
     version: str | None = None
     try:
@@ -76,8 +88,20 @@ async def latest_version() -> str | None:
             version = str(response.json().get("tag_name", "")).lstrip("v") or None
     except httpx.HTTPError:
         version = None
-    _update_cache.update({"until": now + 6 * 3600, "version": version})
+    _update_cache.update({"until": now + 6 * 3600, "version": version, "at": datetime.now(UTC).isoformat()})
     return version
+
+
+@router.post("/api/v1/about/check", summary="Ask GitHub for the newest version now")
+async def check_now(admin: AdminUser, db: DbSession) -> dict:
+    """The daily question, asked by hand. Off by default like the daily one:
+    it is the one call nexdeck makes to the outside, and only an administrator
+    who has switched it on gets it."""
+    general = get_setting(db, "general")
+    if not bool(general.get("update_check", get_settings().update_check)):
+        raise error("update_check_off", "The update check is switched off.")
+    await latest_version(force=True)
+    return await about(admin, db)
 
 
 @router.patch("/api/v1/settings", summary="Change installation settings")

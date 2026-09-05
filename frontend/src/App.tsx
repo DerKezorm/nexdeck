@@ -14,6 +14,7 @@ import { useAuth } from './stores/auth'
 
 const KioskPage = lazy(() => import('./pages/KioskPage').then((m) => ({ default: m.KioskPage })))
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const SystemPage = lazy(() => import('./pages/settings/SystemPage').then((m) => ({ default: m.SystemPage })))
 const NoticesPage = lazy(() => import('./pages/NoticesPage').then((m) => ({ default: m.NoticesPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 
@@ -72,6 +73,14 @@ export function App() {
               element={
                 <Guard>
                   <SettingsPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system/*"
+              element={
+                <Guard>
+                  <SystemPage />
                 </Guard>
               }
             />
