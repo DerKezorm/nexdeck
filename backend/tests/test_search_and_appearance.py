@@ -181,3 +181,39 @@ def test_only_an_administrator_changes_the_look(user_client: TestClient) -> None
 def test_the_search_url_puts_the_words_in_safely() -> None:
     target = {"url": "https://example.com/?q={query}"}
     assert search.build(target, "dune part two&x=1") == "https://example.com/?q=dune%20part%20two%26x%3D1"
+
+
+def test_a_wall_display_may_read_the_search_targets(client: TestClient) -> None:
+    """⚠️ A kiosk has no session. The endpoint answered 401, and the search
+    card on a kiosk board drew "no search target is set up yet" next to a link
+    into settings that nobody standing at a wall can open.
+
+    A target is a name and an address with a placeholder in it. There is
+    nothing in one that a display may not see.
+    """
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Hall"}, headers=CSRF).json()
+    client.put("/api/v1/settings/search", json={"enabled": True, "targets": [
+        {"name": "DuckDuckGo", "url": "https://duckduckgo.com/?q={query}", "prefix": "d", "icon": ""},
+    ]}, headers=CSRF)
+    made = client.post(f"/api/v1/boards/{board['slug']}/kiosk-tokens", json={"name": "Hall display"}, headers=CSRF)
+    assert made.status_code == 201, made.text
+
+    display = TestClient(client.app)
+    assert display.get("/api/v1/settings/search").status_code == 401, "a stranger still gets nothing"
+    display.post("/api/v1/kiosk/session", json={"token": made.json()["token"]}, headers=CSRF)
+
+    answer = display.get("/api/v1/settings/search")
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["targets"][0]["name"] == "DuckDuckGo"
+
+
+def test_a_wall_display_may_not_change_them(client: TestClient) -> None:
+    """Reading is one thing; the targets stay the administrator's."""
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Hall"}, headers=CSRF).json()
+    made = client.post(f"/api/v1/boards/{board['slug']}/kiosk-tokens", json={"name": "Hall display"}, headers=CSRF)
+    display = TestClient(client.app)
+    display.post("/api/v1/kiosk/session", json={"token": made.json()["token"]}, headers=CSRF)
+    refused = display.put("/api/v1/settings/search", json={"enabled": False, "targets": []}, headers=CSRF)
+    assert refused.status_code == 401

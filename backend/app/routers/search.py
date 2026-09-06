@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, status
 
-from ..deps import AdminUser, CurrentUser, DbSession, error
+from ..deps import AdminUser, DbSession, OptionalUser, error, kiosk_from_request
 from ..schemas import SearchBody
 from ..services import search
 
@@ -12,8 +12,17 @@ router = APIRouter(prefix="/api/v1/settings/search", tags=["system"])
 
 
 @router.get("", summary="Read the search targets of the bar")
-def read(user: CurrentUser, db: DbSession) -> dict:
-    """Everyone signed in may read them: the bar needs them on every page."""
+def read(request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """Everyone signed in may read them: the bar needs them on every page.
+
+    ⚠️ A wall display too. It has no session, so this used to answer 401 and
+    the search card on a kiosk board drew "no search target is set up yet"
+    next to a link into settings that nobody at a wall can open. A target is
+    a name and an address with a placeholder in it; there is nothing in one
+    that a display may not see.
+    """
+    if user is None and kiosk_from_request(request, db) is None:
+        raise error("unauthenticated", "Sign in first.", status.HTTP_401_UNAUTHORIZED)
     return search.stored(db)
 
 

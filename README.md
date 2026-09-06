@@ -1,29 +1,49 @@
 # nexdeck
 
-The live homelab dashboard. Cards that move, actions on the cards, boards for the desk, the phone and the wall.
+**The live homelab dashboard.** Cards that move, actions on the cards, boards for the desk, the phone and the wall.
 
 nexdeck is the fourth member of the nexapps family, next to [Nexview](https://nexview.nexapps.dev), nexmail and the Nexview Home Assistant integration.
 
-![nexdeck board](docs/screenshot-desktop.png)
+![A nexdeck board: clock, search, weather, Docker load, Pi-hole, what is playing on Plex, monitors, app tiles and feeds](docs/screenshot-overview.png)
 
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **Seventy-eight integrations.** Docker, Proxmox, Proxmox Backup Server, Portainer, Coolify, Synology DSM, Unraid, TrueNAS, Nextcloud, Syncthing, Pi-hole, AdGuard Home, Technitium, NextDNS, UniFi, MikroTik, FRITZ!Box, Traefik, Nginx Proxy Manager, OPNsense, pfSense, Tailscale, Headscale, Gluetun, authentik, Speedtest Tracker, Scrutiny, UPS through PeaNUT, Reolink, Plex, Jellyfin, Emby, Tautulli, Immich, Nexview, Seerr, Overseerr, Jellyseerr, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, Bazarr, SABnzbd, NZBGet, qBittorrent, Transmission, Deluge, Home Assistant, Uptime Kuma, Beszel, Glances, Prometheus, Grafana, Gotify, ntfy, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, Tdarr, Unmanic, FileFlows, Maintainerr, Jellystat, Paperless-ngx, evcc, Frigate, Hacker News, YouTube, GitHub releases, share prices, Twitch and Wake-on-LAN. Generic building blocks for everything else: a JSON API widget, iframes, RSS, iCal, notes and bookmarks.
-- **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, flip a light. Destructive actions confirm once. Everything is logged.
+- **Seventy-nine integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid with its own arrangement per screen size, an installable phone app with a bottom bar, and kiosk links for wall tablets that cycle pages and dim at night.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
 - **Sign in your way.** Local accounts, OpenID Connect (authentik, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
 
-Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
+## A board is whatever you put on it
+
+Every card is a widget of one integration, dropped on a free grid and sized by hand. Nothing here is a fixed template.
+
+### Media
+
+What is playing, what the library holds, what is on its way in, and the covers of what arrived last.
+
+![A media board: what is playing on Plex, the size of the library, open requests, a row of recently added covers, and the queues of Radarr, Sonarr and SABnzbd](docs/screenshot-media.png)
+
+### Infrastructure
+
+The same grid, a different question. Hosts, containers, pools, disks, certificates and what answers.
+
+![An infrastructure board: Proxmox and Docker counts, Synology load, node and pool usage, containers, UniFi devices, disk temperatures, certificate expiry and reachability](docs/screenshot-infrastructure.png)
+
+### On the wall
+
+A kiosk link opens one board without a sign-in, read-only unless you say otherwise. It cycles through the pages and dims at night. The token is handed in once at the door and never rides in an address afterwards.
+
+![The same board as a kiosk display, without the top bar and without a sign-in](docs/screenshot-kiosk.png)
 
 ## Quick start
 
 ```bash
 mkdir nexdeck && cd nexdeck
-curl -fsSL https://raw.githubusercontent.com/nexapps/nexdeck/main/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/DerKezorm/nexdeck/main/docker-compose.yml -o docker-compose.yml
 docker compose up -d
 ```
 
@@ -48,6 +68,20 @@ All variables are listed in [`.env.example`](.env.example).
 ### Reverse proxy
 
 nexdeck speaks plain HTTP on port 8000 and trusts `X-Forwarded-Proto` for its cookies. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
+
+## The services it speaks to
+
+**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Portainer, Coolify, Synology DSM, Unraid, TrueNAS, Glances, Beszel, Prometheus, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN.
+
+**Network.** UniFi, MikroTik, FRITZ!Box, OPNsense, pfSense, Traefik, Nginx Proxy Manager, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, Gluetun, authentik, Speedtest Tracker, Uptime Kuma.
+
+**Media.** Plex, Jellyfin, Emby, Tautulli, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, Bazarr, SABnzbd, NZBGet, qBittorrent, Transmission, Deluge, Seerr, Overseerr, Jellyseerr, Nexview, Maintainerr, Tdarr, Unmanic, FileFlows.
+
+**Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, Syncthing, Paperless-ngx, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web.
+
+**Feeds, weather and messages.** Hacker News, YouTube, GitHub releases, share prices, Twitch, RSS, iCal, Weather, ntfy, Gotify.
+
+Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
 
 ## Documentation
 
