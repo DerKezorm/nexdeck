@@ -304,7 +304,9 @@ def test_somebody_elses_account_is_not_touched(client: TestClient) -> None:
 @pytest.mark.parametrize("code", ["", "   ", "abcdef", "12345", "1234567"])
 def test_nonsense_never_passes(client: TestClient, code: str) -> None:
     setup_admin(client)
-    secret = _secret(client)
+    # A secret has to be there, or every code below would be refused for the
+    # trivial reason that there is nothing to check it against.
+    assert _secret(client)
     with db_session() as db:
         person = db.get(User, 1)
         assert person is not None
