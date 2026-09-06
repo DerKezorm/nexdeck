@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -32,11 +33,17 @@ interface Props {
 /** The board: a responsive grid with one layout per form factor. */
 export function BoardGrid(props: Props) {
   const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact } = props
-  const gridLayouts: Layouts = {
-    lg: layoutFor(layouts.lg, widgets, 12),
-    md: layoutFor(layouts.md, widgets, 8),
-    sm: layoutFor(layouts.sm, widgets, 4),
-  }
+  // ⚠️ Three full layouts, rebuilt from scratch. Without the memo this ran on
+  // every widget tick, once or twice a second on a board of thirty, and handed
+  // react-grid-layout a new object identity each time.
+  const gridLayouts: Layouts = useMemo(
+    () => ({
+      lg: layoutFor(layouts.lg, widgets, 12),
+      md: layoutFor(layouts.md, widgets, 8),
+      sm: layoutFor(layouts.sm, widgets, 4),
+    }),
+    [layouts, widgets],
+  )
   return (
     <ResponsiveGrid
       className={`board ${editing ? 'board-editing' : ''}`}
@@ -86,9 +93,14 @@ export function BoardGrid(props: Props) {
 
 /**
  * The layout the grid draws: saved positions, a spot at the bottom for widgets
- * without one, and a floor under every size. A card can grow, but it can not
- * be made smaller than the size it was created with (decided 2026-09-05:
- * a shrunken card cuts its content and looks broken).
+ * without one, and a floor under every size.
+ *
+ * ⚠️ The floor was the size a card was created with, from 2026-09-05, so that
+ * a shrunken card could not cut its content. The side effect was that
+ * ``min_size`` did nothing at all: every one of the 195 widgets declares one
+ * smaller than its default, so the declared minimum was never reachable and a
+ * search bar could not be made into a bar. Reversed 2026-09-06: the floor is
+ * what the adapter says is still usable, which is what the field is for.
  */
 export function layoutFor(layout: LayoutItem[] | undefined, widgets: WidgetView[], cols: number): Layout[] {
   const known = new Map((layout ?? []).map((item) => [item.i, item]))
@@ -114,8 +126,8 @@ export function layoutFor(layout: LayoutItem[] | undefined, widgets: WidgetView[
   return result
 }
 
-/** The size a widget was created with, capped at the columns of the form factor. */
+/** The smallest the adapter says this card is still usable at. */
 function floorOf(widget: WidgetView, cols: number): [number, number] {
-  const [w, h] = widget.default_size ?? widget.min_size ?? [1, 1]
+  const [w, h] = widget.min_size ?? widget.default_size ?? [1, 1]
   return [Math.max(1, Math.min(cols, w)), Math.max(1, h)]
 }

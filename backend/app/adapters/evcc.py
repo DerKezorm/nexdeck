@@ -27,6 +27,8 @@ class EvccAdapter(Adapter):
     category = "other"
     description = "House, solar, grid and battery, and what the wallbox is charging."
     icon = "evcc"
+    #: Seen against a live evcc 0.315.0 (06.09.2026).
+    beta = False
     docs_url = "https://docs.evcc.io/en/integrations/rest-api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://evcc:7070"),

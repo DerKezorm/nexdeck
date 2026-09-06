@@ -16,8 +16,8 @@ from sqlalchemy import select
 from ..adapters.base import AdapterError, Context
 from ..adapters.docker import ADAPTER as DOCKER
 from ..adapters.docker import container_name
-from ..deps import CurrentUser, DbSession, error, require_board
-from ..models import Integration, Page, Widget
+from ..deps import CurrentUser, DbSession, error, require_board_id, require_integration
+from ..models import Page, Widget
 from ..services import health as health_service
 from ..services.boards import place_widget, widget_view
 from ..services.collector import collector
@@ -61,8 +61,11 @@ def suggestion(entry: dict[str, Any], host_hint: str) -> dict[str, Any]:
 @router.get("/docker", summary="Suggest tiles from running containers")
 async def docker_suggestions(integration_id: int, user: CurrentUser, db: DbSession, host: str = "") -> list[dict]:
     """``host`` is used for links to published ports; it defaults to the engine's host name."""
-    integration = db.get(Integration, integration_id)
-    if integration is None or integration.kind != "docker":
+    # ⚠️ This used to load the connection straight from the number in the
+    # query string. Every member could list the containers of a Docker engine
+    # reserved for administrators, and turn them into tiles.
+    integration = require_integration(db, integration_id, user)
+    if integration.kind != "docker":
         raise error("not_found", "There is no such Docker integration.", status.HTTP_404_NOT_FOUND)
     if integration.demo:
         return [suggestion(c, host or "docker.local") for c in _demo_containers()]
@@ -88,7 +91,7 @@ async def apply_suggestions(body: ApplyBody, user: CurrentUser, db: DbSession) -
     page = db.get(Page, body.page_id)
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
-    board, _ = require_board(db, str(page.board_id), user, "edit")
+    board, _ = require_board_id(db, page.board_id, user, "edit")
     suggestions = await docker_suggestions(body.integration_id, user, db, body.host)
     wanted = set(body.containers)
     created = []

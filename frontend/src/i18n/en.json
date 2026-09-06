@@ -31,7 +31,8 @@
       "no_stream": "This widget has no live video.",
       "too_many_streams": "The server relays only a limited number of live streams at once.",
       "no_channel": "There is no camera with this channel number.",
-      "device_error": "The device answered with an error."
+      "device_error": "The device answered with an error.",
+      "not_ready": "The service has not been set up yet."
     }
   },
   "auth": {
@@ -96,7 +97,9 @@
       "address": "Address",
       "mail": "Mail server",
       "oidc": "Sign-in providers",
-      "about": "About"
+      "about": "About",
+      "search": "Search",
+      "appearance": "Appearance"
     },
     "mail": {
       "title": "Mail server",
@@ -217,6 +220,50 @@
       "oidcAutoCreateHelp": "Off means only linked accounts may sign in.",
       "oidcRedirect": "Redirect URI to register at the provider: {{url}}",
       "oidcAdd": "Add provider"
+    },
+    "search": {
+      "title": "Search that leaves the house",
+      "help": "The bar behind Ctrl+K finds boards, cards and settings. This is where a typed word may go besides: to a search engine, or to a service that is already connected.",
+      "enabled": "Offer the way out",
+      "enabledHelp": "Off means the bar stays inside nexdeck.",
+      "name": "Name",
+      "url": "Address with {query}",
+      "prefix": "Shortcut",
+      "add": "Add a target",
+      "remove": "Remove {{name}}",
+      "empty": "No target yet. Without one the bar stays inside nexdeck.",
+      "fromIntegrations": "Take them from the connections",
+      "nothingNew": "Nothing new found.",
+      "added": "{{count}} target taken.",
+      "added_other": "{{count}} targets taken.",
+      "hint": "A shortcut in front jumps straight there: !y for YouTube."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "help": "nexdeck ships one look in two brightnesses. Here you set the accent colour for everyone, and you may add a style sheet of your own.",
+      "accent": "Accent colour",
+      "accentHelp": "Applies to every account and both brightnesses.",
+      "own": "A colour of your own",
+      "ownHelp": "Left empty, the colour chosen above wins.",
+      "ownHex": "Colour as a hex value",
+      "backToPreset": "Back to the choice",
+      "css": "Style sheet of your own",
+      "cssHelp": "Loaded on every page, after everything nexdeck ships.",
+      "cssLimits": "At most 20,000 characters. @import is not allowed: it would fetch a file from somewhere else.",
+      "reset": "Back to what it shipped with",
+      "previewTitle": "Preview",
+      "previewHelp": "This is what buttons, marks and highlights look like with it.",
+      "previewChip": "Running",
+      "previewText": "Highlighted",
+      "colours": {
+        "cyan": "Cyan",
+        "violet": "Violet",
+        "emerald": "Emerald",
+        "amber": "Amber",
+        "rose": "Rose",
+        "sky": "Sky",
+        "slate": "Slate"
+      }
     }
   },
   "menu": {
@@ -442,7 +489,8 @@
     "iconMore": "Show {{count}} more",
     "showFindings": "Show findings",
     "showFindingsHelp": "Off: the card shows neither the reason nor the warning colour. Use it when a Findings card next to it says what is wrong.",
-    "pageHelp": "Puts the card on another page of this board. Leave it to keep the card here."
+    "pageHelp": "Puts the card on another page of this board. Leave it to keep the card here.",
+    "noSources": "No connection of a suitable kind is set up yet."
   },
   "library": {
     "title": "Add a widget",
@@ -452,6 +500,7 @@
     "addIntegration": "Add one",
     "category": {
       "basics": "Basics",
+      "feeds": "Content",
       "generic": "Generic",
       "hosts": "Hosts and containers",
       "nas": "NAS",
@@ -477,7 +526,8 @@
     "action": "Action",
     "board": "Board",
     "page": "Page",
-    "settings": "Settings"
+    "settings": "Settings",
+    "waiting": "type what to search for"
   },
   "kiosk": {
     "invalid": "This kiosk link is not valid any more."
@@ -555,7 +605,21 @@
       "1h": "Availability of the last hour, one bar per minute",
       "live": "The last 48 checks, one bar each"
     },
-    "staleData": "Showing the last good values"
+    "staleData": "Showing the last good values",
+    "search": {
+      "placeholder": "Search with {{name}}",
+      "label": "Search",
+      "notSetUp": "No search target is set up yet.",
+      "setUpNow": "Set one up",
+      "searchWith": "Search with {{name}}"
+    },
+    "wol": {
+      "wake": "Wake {{name}}",
+      "wakeShort": "Wake",
+      "awake": "Awake",
+      "asleep": "Asleep",
+      "unknown": "Unknown"
+    }
   },
   "plex": {
     "signIn": "Sign in with Plex",

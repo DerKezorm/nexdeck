@@ -9,6 +9,25 @@ from . import demo as fake
 from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
 
 
+def join_path(base: str, path: str) -> str:
+    """The request path, always underneath the base URL.
+
+    ⚠️ A path beginning with ``http`` used to replace the whole address, and
+    the bearer token and the extra headers were still sent with it. The path
+    is a widget option, so anyone who could edit the card could point it at a
+    server of their own and read the token out of their own access log. The
+    address belongs to the connection, which only an administrator sets.
+    """
+    path = (path or "").strip()
+    if not path:
+        return base
+    # A leading "//" would be read as a new host, and "\" as one on Windows.
+    path = path.lstrip("/\\")
+    if not path:
+        return base
+    return base.rstrip("/") + "/" + path
+
+
 def parse_headers(text: str) -> dict[str, str]:
     headers: dict[str, str] = {}
     for line in (text or "").splitlines():
@@ -75,9 +94,7 @@ class JsonApiAdapter(Adapter):
         return f"Reachable, the base URL answers with a JSON {kind}."
 
     async def _get(self, config: dict[str, Any], path: str, ctx: Context) -> Any:
-        url = base_url(config)
-        if path:
-            url = url + ("" if path.startswith("/") else "/") + path if not path.startswith("http") else path
+        url = join_path(base_url(config), path)
         headers = parse_headers(config.get("headers") or "")
         if config.get("token"):
             headers["Authorization"] = f"Bearer {config['token']}"

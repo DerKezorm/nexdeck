@@ -6,10 +6,12 @@ import { BackgroundLayer } from './components/BackgroundLayer'
 import { NoticeToast } from './components/NoticeDrawer'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
+import { applyAppearance, type Appearance } from './lib/appearance'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
 import { SetupPage } from './pages/SetupPage'
+import { get } from './api/client'
 import { useAuth } from './stores/auth'
 
 const KioskPage = lazy(() => import('./pages/KioskPage').then((m) => ({ default: m.KioskPage })))
@@ -38,6 +40,29 @@ function Guard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/**
+ * The look the operator chose, painted on once the browser is signed in.
+ *
+ * Signed out there is nothing to read and nothing to paint, so the sign-in
+ * page keeps the colours nexdeck ships with.
+ */
+function Look() {
+  const user = useAuth((s) => s.user)
+  useEffect(() => {
+    if (!user) return
+    let dropped = false
+    void get<Appearance>('/settings/appearance')
+      .then((look) => {
+        if (!dropped) applyAppearance(look)
+      })
+      .catch(() => undefined)
+    return () => {
+      dropped = true
+    }
+  }, [user])
+  return null
+}
+
 export function App() {
   const refresh = useAuth((s) => s.refresh)
   useEffect(() => {
@@ -45,6 +70,7 @@ export function App() {
   }, [refresh])
   return (
     <QueryClientProvider client={queryClient}>
+      <Look />
       <BrowserRouter>
         <Suspense fallback={<Loading />}>
           <Routes>

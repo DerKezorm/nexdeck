@@ -30,6 +30,8 @@ class NextcloudAdapter(Adapter):
     category = "nas"
     description = "Users, files, free space and what the server says about itself."
     icon = "nextcloud"
+    #: Seen against a live Nextcloud 34.0.3 (06.09.2026).
+    beta = False
     docs_url = "https://docs.nextcloud.com/server/latest/admin_manual/operations/monitoring.html"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://cloud.example.com"),

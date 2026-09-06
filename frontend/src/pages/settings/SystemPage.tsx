@@ -1,14 +1,16 @@
-import { Globe, Info, KeyRound, Mail, Plug, Users } from 'lucide-react'
+import { Globe, Info, KeyRound, Mail, Palette, Plug, Search, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { AppShell } from '../../components/AppShell'
 import { useAuth } from '../../stores/auth'
 import { AboutSettings } from './AboutSettings'
+import { AppearanceSettings } from './AppearanceSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
 import { MailSettings } from './MailSettings'
 import { OidcSettings } from './OidcSettings'
+import { SearchSettings } from './SearchSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
 import { UsersSettings } from './UsersSettings'
 
@@ -29,6 +31,8 @@ export function SystemPage() {
     { to: 'users', icon: Users, label: t('settings.nav.users'), show: admin },
     { to: 'address', icon: Globe, label: t('settings.nav.address'), show: admin },
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
+    { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
+    { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
     { to: 'oidc', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
     { to: 'about', icon: Info, label: t('settings.nav.about') },
   ]
@@ -47,6 +51,8 @@ export function SystemPage() {
             <Route path="users" element={forAdmin(<UsersSettings />)} />
             <Route path="address" element={forAdmin(<AddressSettings />)} />
             <Route path="mail" element={forAdmin(<MailSettings />)} />
+            <Route path="search" element={forAdmin(<SearchSettings />)} />
+            <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="oidc" element={forAdmin(<OidcSettings />)} />
             <Route path="about" element={<AboutSettings />} />
             <Route path="*" element={<Navigate to="/system" replace />} />

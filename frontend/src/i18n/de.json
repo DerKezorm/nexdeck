@@ -31,7 +31,8 @@
       "no_stream": "Diese Kachel hat kein Livebild.",
       "too_many_streams": "Der Server leitet nur eine begrenzte Zahl von Livebildern gleichzeitig weiter.",
       "no_channel": "Es gibt keine Kamera mit dieser Kanalnummer.",
-      "device_error": "Das Gerät hat mit einem Fehler geantwortet."
+      "device_error": "Das Gerät hat mit einem Fehler geantwortet.",
+      "not_ready": "Der Dienst ist noch nicht eingerichtet."
     }
   },
   "auth": {
@@ -96,7 +97,9 @@
       "address": "Adresse",
       "mail": "Mailserver",
       "oidc": "Anmeldeanbieter",
-      "about": "Über"
+      "about": "Über",
+      "search": "Suche",
+      "appearance": "Aussehen"
     },
     "mail": {
       "title": "Mailserver",
@@ -217,6 +220,50 @@
       "oidcAutoCreateHelp": "Aus heißt: Nur verknüpfte Konten dürfen sich anmelden.",
       "oidcRedirect": "Beim Anbieter einzutragende Rücksprungadresse: {{url}}",
       "oidcAdd": "Anbieter hinzufügen"
+    },
+    "search": {
+      "title": "Suche nach draußen",
+      "help": "Die Leiste mit Strg+K findet Bretter, Karten und Einstellungen. Hier steht, wohin ein getipptes Wort außerdem gehen darf: an eine Suchmaschine oder an einen Dienst, der schon angebunden ist.",
+      "enabled": "Suche nach draußen anbieten",
+      "enabledHelp": "Aus heißt: die Leiste bleibt im eigenen Haus.",
+      "name": "Name",
+      "url": "Adresse mit {query}",
+      "prefix": "Kürzel",
+      "add": "Ziel hinzufügen",
+      "remove": "{{name}} entfernen",
+      "empty": "Noch kein Ziel. Ohne Ziel bleibt die Leiste im eigenen Haus.",
+      "fromIntegrations": "Aus den Anbindungen übernehmen",
+      "nothingNew": "Nichts Neues gefunden.",
+      "added": "{{count}} Ziel übernommen.",
+      "added_other": "{{count}} Ziele übernommen.",
+      "hint": "Kürzel voran tippen springt direkt: !y für YouTube."
+    },
+    "appearance": {
+      "title": "Aussehen",
+      "help": "nexdeck bringt einen Look in zwei Helligkeiten mit. Hier stellst du die Akzentfarbe für alle ein und kannst ein eigenes Stylesheet dazulegen.",
+      "accent": "Akzentfarbe",
+      "accentHelp": "Gilt für alle Konten und beide Helligkeiten.",
+      "own": "Eigene Farbe",
+      "ownHelp": "Leer lassen heißt: die gewählte Farbe oben gilt.",
+      "ownHex": "Farbe als Hex-Wert",
+      "backToPreset": "Zurück zur Auswahl",
+      "css": "Eigenes Stylesheet",
+      "cssHelp": "Wird auf jeder Seite geladen, nach allem, was nexdeck mitbringt.",
+      "cssLimits": "Höchstens 20.000 Zeichen. @import ist nicht erlaubt: es würde eine Datei von außerhalb nachladen.",
+      "reset": "Auf Werkseinstellung",
+      "previewTitle": "Vorschau",
+      "previewHelp": "So sehen Knöpfe, Marken und Hervorhebungen damit aus.",
+      "previewChip": "Läuft",
+      "previewText": "Hervorgehoben",
+      "colours": {
+        "cyan": "Cyan",
+        "violet": "Violett",
+        "emerald": "Smaragd",
+        "amber": "Bernstein",
+        "rose": "Rosé",
+        "sky": "Himmel",
+        "slate": "Schiefer"
+      }
     }
   },
   "menu": {
@@ -442,7 +489,8 @@
     "iconMore": "{{count}} weitere anzeigen",
     "showFindings": "Befunde anzeigen",
     "showFindingsHelp": "Aus: Die Karte zeigt weder Grund noch Warnfarbe. Sinnvoll, wenn eine Befunde-Karte daneben sagt, was los ist.",
-    "pageHelp": "Legt die Karte auf eine andere Seite dieses Boards. Leer lassen, dann bleibt sie hier."
+    "pageHelp": "Legt die Karte auf eine andere Seite dieses Boards. Leer lassen, dann bleibt sie hier.",
+    "noSources": "Es ist noch keine passende Anbindung eingerichtet."
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -452,6 +500,7 @@
     "addIntegration": "Eine anlegen",
     "category": {
       "basics": "Grundlagen",
+      "feeds": "Inhalte",
       "generic": "Generisch",
       "hosts": "Hosts und Container",
       "nas": "NAS",
@@ -477,7 +526,8 @@
     "action": "Aktion",
     "board": "Board",
     "page": "Seite",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "waiting": "Suchbegriff eingeben"
   },
   "kiosk": {
     "invalid": "Dieser Kiosk-Link gilt nicht mehr."
@@ -555,7 +605,21 @@
       "1h": "Verfügbarkeit der letzten Stunde, ein Balken je Minute",
       "live": "Die letzten 48 Prüfungen, ein Balken je Prüfung"
     },
-    "staleData": "Zeigt die letzten guten Werte"
+    "staleData": "Zeigt die letzten guten Werte",
+    "search": {
+      "placeholder": "Mit {{name}} suchen",
+      "label": "Suchen",
+      "notSetUp": "Es ist noch kein Suchziel eingerichtet.",
+      "setUpNow": "Jetzt einrichten",
+      "searchWith": "Mit {{name}} suchen"
+    },
+    "wol": {
+      "wake": "{{name}} wecken",
+      "wakeShort": "Wecken",
+      "awake": "Wach",
+      "asleep": "Schläft",
+      "unknown": "Unbekannt"
+    }
   },
   "plex": {
     "signIn": "Mit Plex anmelden",

@@ -24,6 +24,8 @@ class PiholeAdapter(Adapter):
     category = "network"
     description = "Queries, blocked share, top domains, and blocking on or off."
     icon = "pi-hole"
+    #: Seen against a live Pi-hole v6.4.3 (06.09.2026).
+    beta = False
     docs_url = "https://docs.pi-hole.net/api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://pi.hole"),

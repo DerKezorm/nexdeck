@@ -78,6 +78,12 @@ that one of fifteen renderers draws.
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
 | evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
+| Hacker News | stories | | none |
+| YouTube | videos | | none; the channel feeds need no account |
+| GitHub releases | releases | | none; sixty requests an hour per address |
+| Share prices | prices | | none |
+| Twitch | live | | client ID and secret of an application at dev.twitch.tv |
+| Wake-on-LAN | wake | wake | none; a MAC address and a network that carries the broadcast |
 
 Adapters marked **beta** in the interface have not been confirmed against a
 live instance yet. They are built against the documented API and recorded

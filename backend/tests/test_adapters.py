@@ -1189,3 +1189,44 @@ async def test_qbittorrent_reads_a_refused_sign_in_as_a_refusal(ctx: Context) ->
         _qbittorrent_routes(refusal)
         with pytest.raises(AuthFailed):
             await get_adapter("qbittorrent").test(QB_CONFIG, Context(httpx.AsyncClient(), cache={}))
+
+
+# -- what a live run turned up -------------------------------------------------
+
+
+@respx.mock
+async def test_deluge_hides_a_free_space_it_could_not_read(ctx: Context) -> None:
+    """Deluge answers -1 when it cannot read the disk. Passed on, the card
+    says "-1 B"."""
+    config = {"url": "http://deluge:8112", "password": "deluge"}
+    respx.post("http://deluge:8112/json").mock(return_value=httpx.Response(200, json={"result": {
+        "torrents": {}, "stats": {"download_rate": 0, "upload_rate": 0, "free_space": -1},
+    }}))
+    data = await get_adapter("deluge").fetch("speed", config, {}, ctx)
+    assert "Free" not in {entry["label"] for entry in data.secondary}
+
+
+@respx.mock
+async def test_deluge_shows_a_free_space_it_could_read(ctx: Context) -> None:
+    config = {"url": "http://deluge:8112", "password": "deluge"}
+    respx.post("http://deluge:8112/json").mock(return_value=httpx.Response(200, json={"result": {
+        "torrents": {}, "stats": {"download_rate": 0, "upload_rate": 0, "free_space": 2_000_000_000_000},
+    }}))
+    data = await get_adapter("deluge").fetch("speed", config, {}, ctx)
+    assert {entry["label"]: entry["value"] for entry in data.secondary}["Free"] == "1.8 TB"
+
+
+@respx.mock
+async def test_fileflows_says_it_has_not_been_set_up(ctx: Context) -> None:
+    """A FileFlows before its wizard sends every address to /initial-config.
+    Followed, that is HTML, and "did not answer with JSON" sends the operator
+    looking for a proxy that is not there."""
+    config = {"url": "http://fileflows:19200"}
+    respx.get("http://fileflows:19200/api/worker").mock(
+        return_value=httpx.Response(302, headers={"Location": "http://fileflows:19200/initial-config"}),
+    )
+    respx.get("http://fileflows:19200/initial-config").mock(return_value=httpx.Response(200, text="<!DOCTYPE html>"))
+    with pytest.raises(AdapterError) as refused:
+        await get_adapter("fileflows").fetch("running", config, {}, ctx)
+    assert refused.value.code == "not_ready"
+    assert "set up" in refused.value.message

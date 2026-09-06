@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 
-import { get, post, setKioskToken } from '../api/client'
+import { get, openKioskSession, post } from '../api/client'
 import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
@@ -26,26 +26,42 @@ function withinWindow(from: string, to: string, now: Date): boolean {
 export function KioskPage() {
   const { t } = useTranslation()
   const { token = '' } = useParams()
-  const live = useLive()
+  // The same reason as on the board page: a wall display runs for weeks, and
+  // one subscription to the whole store repaints everything on every tick.
+  const liveData = useLive((state) => state.data)
+  const liveSeries = useLive((state) => state.series)
+  const liveHealth = useLive((state) => state.health)
+  const setSnapshot = useLive((state) => state.setSnapshot)
+  const setSeriesFor = useLive((state) => state.setSeries)
   const [pageIndex, setPageIndex] = useState(0)
   const [dimmed, setDimmed] = useState(false)
   const [pending, setPending] = useState<{ widgetId: number; action: Action } | null>(null)
+  const [admitted, setAdmitted] = useState(false)
   useEffect(() => {
-    setKioskToken(token)
     document.documentElement.dataset.theme = 'dark'
-    return () => setKioskToken(null)
+  }, [])
+  useEffect(() => {
+    // The token is handed in once and never appears in an address again.
+    let current = true
+    setAdmitted(false)
+    if (!token) return
+    openKioskSession(token).then(
+      () => { if (current) setAdmitted(true) },
+      () => { if (current) setAdmitted(false) },
+    )
+    return () => { current = false }
   }, [token])
 
-  const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: Boolean(token), refetchInterval: 5 * 60_000 })
+  const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: admitted, refetchInterval: 5 * 60_000 })
   const history = useQuery({ queryKey: ['kiosk-history', token, board.data?.slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${board.data?.slug}/history`), enabled: Boolean(board.data) })
   const data = board.data
   useEffect(() => {
-    if (data?.live) live.setSnapshot(data.live)
+    if (data?.live) setSnapshot(data.live)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
   useEffect(() => {
     if (!history.data) return
-    for (const [id, series] of Object.entries(history.data)) live.setSeries(Number(id), series)
+    for (const [id, series] of Object.entries(history.data)) setSeriesFor(Number(id), series)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data])
   useStream({ board: data?.slug, enabled: Boolean(data), onBoardChanged: () => void board.refetch(), onConnected: () => void board.refetch() })
@@ -64,7 +80,7 @@ export function KioskPage() {
   }, [data])
 
   const page = data?.pages[pageIndex % Math.max(1, data?.pages.length ?? 1)]
-  const widgets: WidgetView[] = useMemo(() => (page?.widgets ?? []).map((w) => (w.health ? { ...w, health: { ...w.health, ...(live.health[w.id] ?? {}) } } : w)), [page, live.health])
+  const widgets: WidgetView[] = useMemo(() => (page?.widgets ?? []).map((w) => (w.health ? { ...w, health: { ...w.health, ...(liveHealth[w.id] ?? {}) } } : w)), [page, liveHealth])
 
   if (board.isLoading) {
     return (
@@ -99,8 +115,8 @@ export function KioskPage() {
           key={page.id}
           widgets={widgets}
           layouts={page.layouts}
-          data={live.data}
-          series={live.series}
+          data={liveData}
+          series={liveSeries}
           autoCompact={Boolean(data.settings?.compact)}
           canAct={canAct}
           onAction={(widgetId, action) => (action.confirm ? setPending({ widgetId, action }) : run(widgetId, action))}

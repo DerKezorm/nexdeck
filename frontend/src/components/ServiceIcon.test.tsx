@@ -1,28 +1,35 @@
 /**
- * A logo that failed to load must not poison the next one: while a name is
- * typed, "r" and "ra" have no logo, and "radarr" must still get its image.
+ * The icon of a service, and the symbol that is not one.
+ *
+ * A name like `book` is a drawn symbol, not a logo any collection has. Asked
+ * for as a logo it answers 404 on every single board load, and the bookmarks
+ * card shipped with two of them.
  */
-import { fireEvent, render } from '@testing-library/react'
+import { render } from '@testing-library/react'
 
 import { ServiceIcon } from './ServiceIcon'
 
 describe('ServiceIcon', () => {
-  it('tries again with a new name after an earlier one failed', () => {
-    const { container, rerender } = render(<ServiceIcon icon="ra" />)
-    const image = container.querySelector('img')
-    expect(image).not.toBeNull()
-    fireEvent.error(image!)
-    // The failed name shows the fallback box, not a broken image.
+  it('draws a known symbol instead of fetching it', () => {
+    const { container } = render(<ServiceIcon icon="book" />)
     expect(container.querySelector('img')).toBeNull()
-    rerender(<ServiceIcon icon="radarr" />)
-    expect(container.querySelector('img')?.getAttribute('src')).toContain('radarr.svg')
+    expect(container.querySelector('svg')).not.toBeNull()
   })
 
-  it('shows a symbol for lucide names and the box for unknown ones', () => {
-    const { container, rerender } = render(<ServiceIcon icon="lucide:rss" />)
-    expect(container.querySelector('svg')).not.toBeNull()
+  it('draws a symbol written with the prefix as well', () => {
+    const { container } = render(<ServiceIcon icon="lucide:activity" />)
     expect(container.querySelector('img')).toBeNull()
-    rerender(<ServiceIcon icon="" />)
+  })
+
+  it('still fetches a real service logo', () => {
+    const { container } = render(<ServiceIcon icon="radarr" />)
+    const image = container.querySelector('img')
+    expect(image?.getAttribute('src')).toContain('radarr')
+  })
+
+  it('falls back to a plain box for a name nobody knows', () => {
+    const { container } = render(<ServiceIcon icon="" />)
+    expect(container.querySelector('img')).toBeNull()
     expect(container.querySelector('svg')).not.toBeNull()
   })
 })

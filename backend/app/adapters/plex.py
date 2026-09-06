@@ -12,6 +12,8 @@ from .media_base import MediaAdapter, Stream
 #: Which Plex library types a "recently added" widget draws from.
 KINDS = {"all": ("movie", "show", "artist"), "movies": ("movie",), "series": ("show",), "music": ("artist",)}
 HISTORY_PAGE = 500
+#: The window the history question is rounded to, so the cache can hit.
+HISTORY_BUCKET = 300
 HISTORY_LIMIT = 5000
 
 
@@ -287,7 +289,10 @@ class PlexAdapter(MediaAdapter):
 
     async def _history(self, config: dict[str, Any], ctx: Context, days: int) -> list[dict[str, Any]]:
         """Every play of the period. Plex hands out one page per call, so this walks the pages."""
-        since = int(time.time()) - days * 86400
+        # ⚠️ Rounded to the cache window on purpose. With the raw second in
+        # it, every fetch asked a question it had never asked before, so the
+        # cache never hit and every answer stayed in it forever.
+        since = (int(time.time()) // HISTORY_BUCKET) * HISTORY_BUCKET - days * 86400
         rows: list[dict[str, Any]] = []
         start = 0
         while True:

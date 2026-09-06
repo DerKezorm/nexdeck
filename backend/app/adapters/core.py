@@ -1,4 +1,4 @@
-"""Widgets that need no service: clock, notes, bookmarks, iframe."""
+"""Widgets that need no service: clock, notes, bookmarks, search, iframe."""
 
 from __future__ import annotations
 
@@ -56,10 +56,34 @@ class CoreAdapter(Adapter):
                     "links",
                     "Links",
                     type="textarea",
-                    help="One per line: Title | URL | icon (optional, a dashboard-icons name).",
-                    default="Documentation | https://example.com/docs | book\nStatus page | https://example.com/status | activity",
+                    help="One per line: Title | URL | icon (optional, a service name like plex, or lucide:book for a drawn symbol).",
+                    # ⚠️ book and activity are drawn symbols, not service
+                    # logos. Written without the prefix they were looked up
+                    # as logos, and every board answered two 404s per load.
+                    default="Documentation | https://example.com/docs | lucide:book\nStatus page | https://example.com/status | lucide:activity",
                 ),
                 Field("layout", "Layout", type="select", default="list", options=(("list", "List"), ("grid", "Icon grid"))),
+            ),
+        ),
+        WidgetType(
+            kind="search",
+            label="Search",
+            description="A search field on the board, for the engines and services set up under Search.",
+            renderer="search",
+            # Two rows: the field, and the row of targets under it. With the
+            # row switched off one row is enough, and two columns is still a
+            # usable bar: a search field in a corner is a reasonable want.
+            default_size=(4, 2),
+            min_size=(2, 1),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("placeholder", "Placeholder", placeholder="Search", help="The grey text in the empty field."),
+                Field("target", "Default target", placeholder="g", help="The shortcut of the target that Enter uses. Empty means the first one in the list."),
+                Field("show_targets", "Show the other targets", type="bool", default=True, help="A row of buttons under the field, one per target. With a dozen targets a card two rows high is mostly buttons."),
+                Field("show_shortcuts", "Show the shortcuts on the buttons", type="bool", default=True, help="The !x behind each name. Off makes the row narrower."),
+                Field("new_tab", "Open in a new tab", type="bool", default=True),
+                Field("autofocus", "Put the cursor in the field", type="bool", default=False, help="Only sensible once on a board, and it takes the keyboard from everything else."),
             ),
         ),
         WidgetType(
@@ -181,6 +205,15 @@ class CoreAdapter(Adapter):
             return WidgetData(meta={"markdown": options.get("content") or ""})
         if widget_kind == "bookmarks":
             return WidgetData(items=parse_links(options.get("links") or ""), meta={"layout": options.get("layout") or "list"})
+        if widget_kind == "search":
+            return WidgetData(meta={
+                "placeholder": options.get("placeholder") or "",
+                "target": options.get("target") or "",
+                "show_targets": options.get("show_targets", True),
+                "show_shortcuts": options.get("show_shortcuts", True),
+                "new_tab": options.get("new_tab", True),
+                "autofocus": bool(options.get("autofocus")),
+            })
         if widget_kind == "iframe":
             return WidgetData(meta={"url": options.get("url") or "", "refresh": int(options.get("refresh") or 0)})
         if widget_kind == "problems":

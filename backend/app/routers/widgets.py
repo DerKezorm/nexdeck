@@ -16,10 +16,11 @@ from ..deps import (
     CurrentUser,
     DbSession,
     OptionalUser,
-    board_for_viewer,
+    board_for_viewer_id,
     error,
     kiosk_from_request,
-    require_board,
+    require_board_id,
+    require_integration,
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
 from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
@@ -27,6 +28,7 @@ from ..services import health as health_service
 from ..services import history
 from ..services.boards import place_widget, remove_from_layouts, widget_view
 from ..services.collector import collector
+from ..services.hass_ws import hass_listener
 from ..services.notify import emit
 from ..services.sse import board_topic, hub
 from ..services.state import live
@@ -61,13 +63,39 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None, user: U
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
 
 
+def _validate_options(db: DbSession, kind: str, options: dict | None, user: User | None) -> None:
+    """Check every option that names a connection.
+
+    ⚠️ ``integration_id`` was checked from the start and the options were not.
+    The merged calendar keeps its sources in one, so a member could write the
+    number of a connection reserved for administrators into it and read its
+    release calendar. The same check now covers both.
+    """
+    if not options:
+        return
+    adapter, widget_kind = split_widget_kind(kind)
+    for field in adapter.widget(widget_kind).options:
+        if field.type != "integrations":
+            continue
+        allowed = {value for value, _label in field.options}
+        for entry in options.get(field.name) or []:
+            try:
+                integration_id = int(entry)
+            except (TypeError, ValueError):
+                raise error("bad_source", f"{entry!r} is not a connection.") from None
+            integration = require_integration(db, integration_id, user)
+            if allowed and integration.kind not in allowed:
+                raise error("bad_source", f"A {integration.kind} connection cannot be a source here.")
+
+
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")
 def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSession) -> dict:
     page = db.get(Page, page_id)
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
-    board, _ = require_board(db, str(page.board_id), user, "edit")
+    board, _ = require_board_id(db, page.board_id, user, "edit")
     _validate_kind(db, body.kind, body.integration_id, user)
+    _validate_options(db, body.kind, body.options, user)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or widget_type.label, icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
@@ -80,6 +108,9 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     db.commit()
     db.refresh(widget)
     collector.schedule(widget.id)
+    # The Home Assistant listener keeps a map of entity to widget so a state
+    # change costs no query; it has to hear that the map changed.
+    hass_listener.forget_widgets(body.integration_id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
     return {"widget": widget_view(db, widget), "layouts": page.layouts}
 
@@ -87,7 +118,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
 @router.patch("/widgets/{widget_id}", summary="Change a widget's settings")
 def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
-    board, _ = require_board(db, str(page.board_id), user, "edit")
+    board, _ = require_board_id(db, page.board_id, user, "edit")
     if body.integration_id is not None or body.clear_integration:
         _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id, user)
         widget.integration_id = None if body.clear_integration else body.integration_id
@@ -98,6 +129,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     if body.link is not None:
         widget.link = body.link.strip()
     if body.options is not None:
+        _validate_options(db, widget.kind, body.options, user)
         widget.options = body.options
     if body.refresh_seconds is not None:
         widget.refresh_seconds = body.refresh_seconds
@@ -113,6 +145,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     db.commit()
     db.refresh(widget)
     collector.schedule(widget.id)
+    hass_listener.forget_widgets(widget.integration_id)
     if widget.health_check is not None:
         health_service.health.reset(widget.health_check.id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
@@ -122,12 +155,14 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
 @router.delete("/widgets/{widget_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove a widget")
 def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     widget, page = _widget(db, widget_id)
-    board, _ = require_board(db, str(page.board_id), user, "edit")
+    board, _ = require_board_id(db, page.board_id, user, "edit")
+    integration_id = widget.integration_id
     remove_from_layouts(page, widget.id)
     history.forget_widget(db, widget.id)
     db.delete(widget)
     db.commit()
     collector.unschedule(widget_id)
+    hass_listener.forget_widgets(integration_id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
 
 
@@ -135,9 +170,12 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
 async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser, db: DbSession) -> dict:
     """The settings sheet shows what a change would look like before it is saved."""
     widget, page = _widget(db, widget_id)
-    require_board(db, str(page.board_id), user, "edit")
+    require_board_id(db, page.board_id, user, "edit")
     if body.integration_id is not None:
         _validate_kind(db, widget.kind, body.integration_id, user)
+    # A preview reaches the adapter with unsaved options, so it needs the
+    # same check; otherwise the sheet is the way around it.
+    _validate_options(db, widget.kind, body.options, user)
     if body.clear_integration:
         integration_id = None
     elif body.integration_id is not None:
@@ -151,7 +189,7 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
 @router.post("/widgets/{widget_id}/refresh", summary="Fetch a widget's data right now")
 async def refresh_widget(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     data = await collector.refresh_now(widget_id)
     return data.model_dump() if data else {}
 
@@ -159,7 +197,7 @@ async def refresh_widget(widget_id: int, request: Request, user: OptionalUser, d
 @router.get("/widgets/{widget_id}/data", summary="Read a widget's latest data")
 def widget_data(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     data = live.get(widget_id)
     return data.model_dump() if data else {}
 
@@ -169,7 +207,7 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
     """Needs the act permission on the board, or a kiosk token that allows actions. Every call is logged."""
     widget, page = _widget(db, widget_id)
     kiosk = kiosk_from_request(request, db)
-    board, permission = board_for_viewer(db, str(page.board_id), user, kiosk)
+    board, permission = board_for_viewer_id(db, page.board_id, user, kiosk)
     if permission not in ("act", "owner"):
         raise error("forbidden", "You may look at this board, but not act on it.", status.HTTP_403_FORBIDDEN)
     actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
@@ -222,7 +260,7 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     redirect a path (``/snap/0``) to the real request through ``image_source``.
     """
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     if not path.startswith("/") or path.startswith("//") or "://" in path:
         raise error("bad_path", "An image path is relative to the service, starting with a slash.")
     hit = _images.get((widget_id, path))
@@ -264,7 +302,7 @@ async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db
     the bytes with Media Source Extensions, no transcoder anywhere."""
     global _streams_open
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     adapter, config, ctx = await _service_of(widget)
     try:
         source = await adapter.stream_source(config, dict(widget.options or {}), ctx)
@@ -304,7 +342,7 @@ async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db
 @router.get("/widgets/{widget_id}/health", summary="Read a widget's reachability check")
 def get_health(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     if widget.health_check is None:
         return {}
     payload = health_service.check_payload(widget.health_check)
@@ -315,7 +353,7 @@ def get_health(widget_id: int, request: Request, user: OptionalUser, db: DbSessi
 @router.put("/widgets/{widget_id}/health", summary="Set a widget's reachability check")
 def put_health(widget_id: int, body: HealthBody, user: CurrentUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
-    require_board(db, str(page.board_id), user, "edit")
+    require_board_id(db, page.board_id, user, "edit")
     if not body.target.strip() and widget.integration_id is None:
         raise error("target_missing", "A check needs a target, or the widget an integration whose address it follows.")
     check = widget.health_check or HealthCheck(widget_id=widget.id, target=body.target)
@@ -336,7 +374,7 @@ def put_health(widget_id: int, body: HealthBody, user: CurrentUser, db: DbSessio
 @router.delete("/widgets/{widget_id}/health", status_code=status.HTTP_204_NO_CONTENT, summary="Remove a widget's reachability check")
 def delete_health(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     widget, page = _widget(db, widget_id)
-    require_board(db, str(page.board_id), user, "edit")
+    require_board_id(db, page.board_id, user, "edit")
     if widget.health_check is not None:
         db.delete(widget.health_check)
         db.commit()
@@ -349,7 +387,7 @@ def delete_health(widget_id: int, user: CurrentUser, db: DbSession) -> None:
 def widget_history(widget_id: int, request: Request, user: OptionalUser, db: DbSession, metric: str = "", hours: float = 24) -> dict:
     """``metric`` empty returns every metric the widget has recorded."""
     widget, page = _widget(db, widget_id)
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     hours = max(0.1, min(24.0, hours))
     if metric:
         names = [metric]

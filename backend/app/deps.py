@@ -16,10 +16,22 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSessionType
 
 from .db import get_db
-from .models import ApiToken, Board, BoardShare, KioskToken, Role, Session, ShareLevel, User, utcnow
-from .security import hash_token, read_session_token
+from .models import (
+    ApiToken,
+    Board,
+    BoardShare,
+    Integration,
+    KioskToken,
+    Role,
+    Session,
+    ShareLevel,
+    User,
+    utcnow,
+)
+from .security import hash_token, read_kiosk_cookie, read_session_token
 
 COOKIE_NAME = "nexdeck_session"
+KIOSK_COOKIE = "nexdeck_kiosk"
 CSRF_HEADER = "x-nexdeck-request"
 KIOSK_HEADER = "x-kiosk-token"
 
@@ -32,7 +44,7 @@ def error(code: str, message: str, status_code: int = status.HTTP_400_BAD_REQUES
 
 def _touch_session(db: DbSessionType, session: Session) -> None:
     # Write at most once a minute; every request would be a write on SQLite.
-    last = session.last_seen_at.replace(tzinfo=UTC) if session.last_seen_at else None
+    last = session.last_seen_at
     if last is None or datetime.now(UTC) - last > timedelta(minutes=1):
         session.last_seen_at = utcnow()
         db.commit()
@@ -66,17 +78,31 @@ def _user_from_bearer(request: Request, db: DbSessionType) -> User | None:
     if not token.startswith("nd_"):
         return None
     row = db.scalar(select(ApiToken).where(ApiToken.token_hash == hash_token(token)))
-    if row is None:
+    if row is None or not usable_token(row):
         return None
     user = db.get(User, row.user_id)
     if user is None or user.disabled:
         return None
-    last = row.last_used_at.replace(tzinfo=UTC) if row.last_used_at else None
+    # ⚠️ A password change ended every session cookie from the start and left
+    # every API token alone. Someone who had made one kept their way in after
+    # the account was locked out and the password reset.
+    if int(row.created_at.timestamp() * 1000) < user.password_changed_ms:
+        return None
+    last = row.last_used_at
     if last is None or datetime.now(UTC) - last > timedelta(minutes=1):
         row.last_used_at = utcnow()
         db.commit()
     request.state.auth_kind = "token"
     return user
+
+
+def usable_token(row: ApiToken | KioskToken) -> bool:
+    """Not withdrawn, and not past its end."""
+    if row.revoked:
+        return False
+    if row.expires_at is None:
+        return True
+    return row.expires_at > datetime.now(UTC)
 
 
 def optional_user(request: Request, db: DbSession) -> User | None:
@@ -118,6 +144,32 @@ MemberUser = Annotated[User, Depends(not_guest)]
 
 
 # ---------------------------------------------------------------------------
+# Connections
+# ---------------------------------------------------------------------------
+
+
+def require_integration(db: DbSessionType, integration_id: int, user: User | None) -> Integration:
+    """A connection by its number, if this person may build on it.
+
+    ⚠️ Four places used to load a connection straight from a number that came
+    out of a widget option or a query string: the merged calendar, the JSON
+    card, the Docker discovery and the log card. A connection reserved for
+    administrators was reachable through all four by anyone who could edit a
+    widget, which is every member with a board of their own.
+
+    Reading a card that an administrator built on a locked connection stays
+    allowed; that is his decision when he shares the board. This is about
+    naming a connection yourself.
+    """
+    integration = db.get(Integration, int(integration_id))
+    if integration is None:
+        raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
+    if integration.admin_only and (user is None or user.role != Role.admin.value):
+        raise error("integration_locked", "This connection is reserved for administrators.", status.HTTP_403_FORBIDDEN)
+    return integration
+
+
+# ---------------------------------------------------------------------------
 # Board permissions
 # ---------------------------------------------------------------------------
 
@@ -155,10 +207,8 @@ def board_is_shared_with(db: DbSessionType, board: Board, user: User) -> bool:
     return False
 
 
-def require_board(db: DbSessionType, slug_or_id: str, user: User | None, level: str) -> tuple[Board, str]:
-    board = db.scalar(select(Board).where(Board.slug == slug_or_id))
-    if board is None and slug_or_id.isdigit():
-        board = db.get(Board, int(slug_or_id))
+def _decide(db: DbSessionType, board: Board | None, user: User | None, level: str) -> tuple[Board, str]:
+    """The permission part, once the board itself is beyond doubt."""
     if board is None:
         raise error("not_found", "There is no such board.", status.HTTP_404_NOT_FOUND)
     permission = board_permission(db, board, user)
@@ -173,24 +223,62 @@ def require_board(db: DbSessionType, slug_or_id: str, user: User | None, level: 
     return board, permission
 
 
+def require_board_id(db: DbSessionType, board_id: int, user: User | None, level: str) -> tuple[Board, str]:
+    """A board by its number, for the code that already holds one.
+
+    ⚠️ Never route an id through the slug lookup. A slug may be digits, so a
+    user who names a board "7" would be asked about board 7 whenever the
+    server looked up the board a page or a widget belongs to, and would be
+    told they own it. That was reachable from every widget address.
+    """
+    return _decide(db, db.get(Board, int(board_id)), user, level)
+
+
+def require_board(db: DbSessionType, slug_or_id: str, user: User | None, level: str) -> tuple[Board, str]:
+    """A board by what stands in the address: its slug, or its number."""
+    board = db.scalar(select(Board).where(Board.slug == slug_or_id))
+    if board is None and slug_or_id.isdigit():
+        board = db.get(Board, int(slug_or_id))
+    return _decide(db, board, user, level)
+
+
 # ---------------------------------------------------------------------------
 # Kiosk
 # ---------------------------------------------------------------------------
 
 
 def kiosk_from_request(request: Request, db: DbSessionType) -> KioskToken | None:
-    token = request.headers.get(KIOSK_HEADER) or request.query_params.get("kiosk")
-    if not token or not token.startswith("nk_"):
+    """A wall display, by its cookie or by the header a script would send.
+
+    ⚠️ ``?kiosk=`` used to be read here as well, and the browser appended it to
+    every image, video and event address because none of those can set a
+    header. The display exchanges its token for a cookie at the door instead;
+    see ``routers/kiosk.py``.
+    """
+    row = _kiosk_from_cookie(request, db) or _kiosk_from_header(request, db)
+    if row is None or not usable_token(row):
         return None
-    row = db.scalar(select(KioskToken).where(KioskToken.token_hash == hash_token(token)))
-    if row is None:
-        return None
-    last = row.last_used_at.replace(tzinfo=UTC) if row.last_used_at else None
+    last = row.last_used_at
     if last is None or datetime.now(UTC) - last > timedelta(minutes=5):
         row.last_used_at = utcnow()
         db.commit()
     request.state.auth_kind = "kiosk"
     return row
+
+
+def _kiosk_from_cookie(request: Request, db: DbSessionType) -> KioskToken | None:
+    raw = request.cookies.get(KIOSK_COOKIE)
+    if not raw:
+        return None
+    kiosk_id = read_kiosk_cookie(raw)
+    return None if kiosk_id is None else db.get(KioskToken, kiosk_id)
+
+
+def _kiosk_from_header(request: Request, db: DbSessionType) -> KioskToken | None:
+    token = request.headers.get(KIOSK_HEADER)
+    if not token or not token.startswith("nk_"):
+        return None
+    return db.scalar(select(KioskToken).where(KioskToken.token_hash == hash_token(token)))
 
 
 def board_for_viewer(db: DbSessionType, slug_or_id: str, user: User | None, kiosk: KioskToken | None) -> tuple[Board, str]:
@@ -201,3 +289,15 @@ def board_for_viewer(db: DbSessionType, slug_or_id: str, user: User | None, kios
             raise error("forbidden", "This kiosk token belongs to another board.", status.HTTP_403_FORBIDDEN)
         return board, "act" if kiosk.allow_actions else "view"
     return require_board(db, slug_or_id, user, "view")
+
+
+def board_for_viewer_id(db: DbSessionType, board_id: int, user: User | None, kiosk: KioskToken | None) -> tuple[Board, str]:
+    """The same, for the code that already holds the board's number."""
+    if kiosk is not None:
+        if int(kiosk.board_id) != int(board_id):
+            raise error("forbidden", "This kiosk token belongs to another board.", status.HTTP_403_FORBIDDEN)
+        board = db.get(Board, int(board_id))
+        if board is None:
+            raise error("not_found", "There is no such board.", status.HTTP_404_NOT_FOUND)
+        return board, "act" if kiosk.allow_actions else "view"
+    return require_board_id(db, board_id, user, "view")

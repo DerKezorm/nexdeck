@@ -1,4 +1,8 @@
-fastapi==0.121.2
+# ⚠️ Starlette below 1.0.1 has five open advisories, among them one that
+# poisons request.url.path and walks past path-based checks. FastAPI
+# 0.121 capped starlette under 0.50, so closing them needed both.
+fastapi==0.141.1
+starlette==1.6.0
 uvicorn[standard]==0.38.0
 sqlalchemy==2.0.44
 pydantic==2.12.4

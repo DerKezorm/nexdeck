@@ -146,6 +146,11 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   if (icon && icon.startsWith('lucide:')) {
     return <LucideByName name={icon.slice(7)} size={size} className={className} />
   }
+  // A drawn symbol written without the prefix. Nothing is fetched for it, and
+  // the two the bookmarks card shipped with used to answer 404 on every load.
+  if (icon && icon in SYMBOLS) {
+    return <LucideByName name={icon} size={size} className={className} />
+  }
   const url = iconUrl(icon)
   if (!url || failedUrl === url) {
     return <Box size={size} className={`${className} text-muted`} aria-hidden="true" />

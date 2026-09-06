@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { FieldSpec } from '../api/types'
+import { get } from '../api/client'
+import type { FieldSpec, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
 import { PlexSignIn } from './PlexSignIn'
 import { Field, Select, Switch } from './ui'
@@ -25,7 +27,39 @@ const TIME_ZONES: string[] = (() => {
   }
 })()
 
-/** Draws one adapter field from its spec: text, password, number, bool, select, textarea or time zone. */
+/** Picks connections of the kinds the field names, and stores their numbers.
+ *
+ * The list comes from the same endpoint the settings sheet uses, which leaves
+ * out connections reserved for administrators. The server checks the numbers
+ * again on save; this only keeps the sheet from offering what would be
+ * refused.
+ */
+function IntegrationPicker({ spec, value, onChange, label, help }: { spec: FieldSpec; value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
+  const { t } = useTranslation()
+  const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
+  const kinds = spec.options.map((option) => option.value)
+  const choices = (integrations.data ?? []).filter((one) => kinds.length === 0 || kinds.includes(one.kind))
+  const selected = (Array.isArray(value) ? value : []).map(String)
+  if (integrations.isLoading) return <Field label={label} help={help}><p className="text-sm text-muted">{t('common.loading')}</p></Field>
+  if (choices.length === 0) return <Field label={label} help={help}><p className="text-sm text-muted">{t('widget.noSources')}</p></Field>
+  return (
+    <Field label={label} help={help}>
+      <div className="flex flex-wrap gap-2">
+        {choices.map((one) => {
+          const id = String(one.id)
+          const on = selected.includes(id)
+          return (
+            <button key={one.id} type="button" className="btn" aria-pressed={on} onClick={() => onChange(on ? selected.filter((v) => v !== id) : [...selected, id])}>
+              {one.name}
+            </button>
+          )
+        })}
+      </div>
+    </Field>
+  )
+}
+
+/** Draws one adapter field from its spec: text, password, number, bool, select, connections, textarea or time zone. */
 export function FieldInput({ spec, value, onChange, labelOverride, onFill }: Props) {
   const { t } = useTranslation()
   const id = useId()
@@ -34,6 +68,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill }: Pro
   const help = tAdapter(spec.help) || undefined
   if (spec.type === 'bool') {
     return <Switch checked={Boolean(value ?? spec.default ?? false)} onChange={onChange} label={label} description={help} />
+  }
+  if (spec.type === 'integrations') {
+    return <IntegrationPicker spec={spec} value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'select') {
     const options = spec.options.map((option) => ({ value: option.value, label: tAdapter(option.label) }))

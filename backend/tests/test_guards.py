@@ -35,10 +35,33 @@ PUBLIC: dict[str, str] = {
     "GET /api/v1/icons/{name}.{ext}": "logos, like any image; kiosk displays have no session",
     "GET /api/v1/assets/{asset_id}/{filename}": "board backgrounds for kiosk displays",
     "GET /api/v1/kiosk": "checks the kiosk token itself",
+    "POST /api/v1/kiosk/session": "the door of a wall display: the token in the body is the credential",
     "GET /{path:path}": "the single-page app",
 }
 
 AUTH_DEPENDENCIES = {deps.optional_user, deps.current_user, deps.admin_user, deps.not_guest}
+
+
+def api_routes() -> list[APIRoute]:
+    """Every route of the app, however the framework keeps them.
+
+    ⚠️ FastAPI 0.141 stopped flattening an included router into ``app.routes``
+    and puts a wrapper there instead. Walking the list without descending
+    found one route out of a hundred and eighty, and the guard below would
+    have passed on an app with no authentication at all. That is what the
+    floor in each test is for; this walks both shapes.
+    """
+    found: list[APIRoute] = []
+    pending = list(app.routes)
+    while pending:
+        route = pending.pop()
+        if isinstance(route, APIRoute):
+            found.append(route)
+            continue
+        inner = getattr(route, "original_router", None)
+        if inner is not None:
+            pending.extend(inner.routes)
+    return found
 
 
 def _dependencies(dependant) -> set:  # noqa: ANN001
@@ -53,9 +76,7 @@ def test_every_address_decides_who_may_call_it() -> None:
     """Every route either carries an auth dependency or is listed as public with a reason."""
     unguarded: list[str] = []
     checked = 0
-    for route in app.routes:
-        if not isinstance(route, APIRoute):
-            continue
+    for route in api_routes():
         for method in sorted(route.methods - {"HEAD", "OPTIONS"}):
             key = f"{method} {route.path}"
             checked += 1
@@ -68,15 +89,15 @@ def test_every_address_decides_who_may_call_it() -> None:
 
 
 def test_public_list_has_no_dead_entries() -> None:
-    existing = {f"{m} {r.path}" for r in app.routes if isinstance(r, APIRoute) for m in r.methods}
+    existing = {f"{m} {r.path}" for r in api_routes() for m in r.methods}
     dead = [key for key in PUBLIC if key not in existing]
     assert dead == [], f"PUBLIC lists addresses that no longer exist: {dead}"
 
 
 def test_every_operation_has_a_readable_summary() -> None:
     short: list[str] = []
-    for route in app.routes:
-        if not isinstance(route, APIRoute) or not route.include_in_schema:
+    for route in api_routes():
+        if not route.include_in_schema:
             continue
         if len((route.summary or "").split()) < 2:
             short.append(f"{sorted(route.methods)} {route.path}: {route.summary!r}")
@@ -278,4 +299,4 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
-    assert confirmed == {"authentik", "emby", "glances", "gotify", "grafana", "homeassistant", "ical", "jellyfin", "jsonapi", "lidarr", "nexview", "npm", "ntfy", "nzbget", "plex", "portainer", "prometheus", "prowlarr", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "syncthing", "synology", "technitium", "traefik", "transmission", "unifi"}
+    assert confirmed == {"adguard", "audiobookshelf", "authentik", "beszel", "deluge", "docker", "emby", "evcc", "glances", "gotify", "grafana", "headscale", "homeassistant", "ical", "jellyfin", "jsonapi", "kavita", "komga", "lidarr", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget", "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "syncthing", "synology", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic"}

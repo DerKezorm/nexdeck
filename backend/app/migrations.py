@@ -45,12 +45,20 @@ def _menu_and_lock_columns(connection: Connection) -> None:
     _add_column(connection, "integrations", "admin_only", "BOOLEAN NOT NULL DEFAULT 0")
 
 
+def _token_expiry_columns(connection: Connection) -> None:
+    for table in ("api_tokens", "kiosk_tokens"):
+        _add_column(connection, table, "expires_at", "DATETIME")
+        _add_column(connection, table, "revoked", "BOOLEAN NOT NULL DEFAULT 0")
+        _add_column(connection, table, "revoked_at", "DATETIME")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
     (3, "Users can have a profile picture", _avatar_column),
     (4, "Users can have an e-mail address", _email_column),
     (5, "Boards can stay out of the menu, connections can be locked", _menu_and_lock_columns),
+    (6, "API and kiosk tokens can expire and be withdrawn", _token_expiry_columns),
 ]
 
 

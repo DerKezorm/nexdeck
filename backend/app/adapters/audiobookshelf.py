@@ -27,6 +27,8 @@ class AudiobookshelfAdapter(Adapter):
     category = "media"
     description = "Libraries, listeners and what is playing right now."
     icon = "audiobookshelf"
+    #: Seen against a live Audiobookshelf (06.09.2026).
+    beta = False
     docs_url = "https://api.audiobookshelf.org/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://audiobookshelf:13378"),

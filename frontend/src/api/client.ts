@@ -22,14 +22,17 @@ export function serverUrl(path: string): string {
   return ((globalThis as { __NEXDECK_BASE__?: string }).__NEXDECK_BASE__ ?? '') + path
 }
 
-let kioskToken: string | null = null
-
-export function setKioskToken(token: string | null) {
-  kioskToken = token
-}
-
-export function kioskHeaders(): Record<string, string> {
-  return kioskToken ? { 'X-Kiosk-Token': kioskToken } : {}
+/**
+ * Opens the kiosk session. The token goes to the server once and comes back
+ * as a signed, short-lived cookie.
+ *
+ * It used to be kept here and appended to every image, video and event
+ * address, because none of those can set a header. A wall display makes a few
+ * thousand such requests a day, and each one wrote the token into the reverse
+ * proxy log, where it stays as long as the log does.
+ */
+export async function openKioskSession(token: string): Promise<void> {
+  await api('/kiosk/session', { method: 'POST', json: { token } })
 }
 
 /**
@@ -41,20 +44,16 @@ export function mediaUrl(widgetId: number, art: string | null | undefined): stri
   if (!art) return ''
   if (!art.startsWith('proxy:')) return art
   const params = new URLSearchParams({ path: art.slice(6) })
-  if (kioskToken) params.set('kiosk', kioskToken)
   return `${BASE}/widgets/${widgetId}/image?${params.toString()}`
 }
 
-/** The relayed live video of a camera widget; a kiosk token rides along as it does for images. */
+/** The relayed live video of a camera widget. The kiosk cookie rides along by itself. */
 export function videoUrl(widgetId: number): string {
-  const params = new URLSearchParams()
-  if (kioskToken) params.set('kiosk', kioskToken)
-  const query = params.toString()
-  return `${BASE}/widgets/${widgetId}/stream${query ? `?${query}` : ''}`
+  return `${BASE}/widgets/${widgetId}/stream`
 }
 
 export async function api<T = unknown>(path: string, init: RequestInit & { json?: unknown; raw?: boolean } = {}): Promise<T> {
-  const headers: Record<string, string> = { ...(init.headers as Record<string, string>), ...kioskHeaders() }
+  const headers: Record<string, string> = { ...(init.headers as Record<string, string>) }
   const method = (init.method ?? 'GET').toUpperCase()
   if (method !== 'GET' && method !== 'HEAD') headers['X-Nexdeck-Request'] = '1'
   let body = init.body
@@ -93,11 +92,10 @@ export async function upload(path: string, file: File, fields: Record<string, st
   return api(path + (query ? `?${query}` : ''), { method: 'POST', body: form })
 }
 
-/** Opens an EventSource on the stream endpoint, kiosk token included. */
+/** Opens an EventSource on the stream endpoint. A kiosk is known by its cookie. */
 export function streamUrl(board?: string): string {
   const params = new URLSearchParams()
   if (board) params.set('board', board)
-  if (kioskToken) params.set('kiosk', kioskToken)
   const query = params.toString()
   return `${BASE}/stream${query ? `?${query}` : ''}`
 }

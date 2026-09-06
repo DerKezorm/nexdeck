@@ -11,7 +11,7 @@ import asyncio
 import logging
 import platform
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from urllib.parse import urlsplit
 
 import httpx
@@ -102,7 +102,12 @@ def service_target(kind: str, widget: Widget | None) -> str:
 
     try:
         url = get_adapter(widget.integration.kind).default_link(resolve_config(widget.integration))
-    except (KeyError, ValueError):
+    except Exception:
+        # ⚠️ One connection whose secret cannot be read used to raise out of
+        # the list comprehension that builds the whole round, and then no
+        # check ran at all, for anyone, until the next restart. A target this
+        # code cannot work out is one tile without a check, nothing more.
+        logger.warning("The address of widget %s could not be worked out for its check.", widget.id, exc_info=True)
         return ""
     if kind == "http" or not url:
         return url
@@ -209,7 +214,7 @@ class HealthService:
                     if open_outage is not None:
                         open_outage.ended_at = now
                         if open_outage.announced:
-                            length = int((now - open_outage.started_at.replace(tzinfo=UTC)).total_seconds())
+                            length = int((now - open_outage.started_at).total_seconds())
                             announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info")
                 check.down_since = None
             else:
@@ -217,7 +222,7 @@ class HealthService:
                     check.down_since = now
                     db.add(Outage(check_id=check.id, started_at=now))
                 else:
-                    down_for = (now - check.down_since.replace(tzinfo=UTC)).total_seconds()
+                    down_for = (now - check.down_since).total_seconds()
                     if down_for >= settings.outage_threshold_seconds:
                         open_outage = db.scalar(
                             select(Outage).where(Outage.check_id == check.id, Outage.ended_at.is_(None))

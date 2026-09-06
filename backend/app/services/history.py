@@ -17,6 +17,9 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..models import HistoryMinute, HistorySample
 
+#: What a sparkline can draw. The browser keeps this many anyway.
+MAX_POINTS = 240
+
 
 def key_for(widget_id: int, metric: str) -> str:
     return f"{widget_id}:{metric}"
@@ -92,6 +95,14 @@ def series(db: Session, widget_id: int, metric: str, hours: float = 24) -> list[
         .order_by(HistorySample.ts)
     ).all()
     points = [(int(ts), float(v)) for ts, v in minutes] + [(int(ts), float(v)) for ts, v in raw]
+    # ⚠️ A sparkline is a hundred and twenty points wide. Twenty-four hours of
+    # minute rows is fifteen hundred, and a board asks for fifty metrics at
+    # once: a megabyte and a half of JSON, of which the browser keeps eight
+    # percent. Thin it here, evenly, so the shape survives and the payload does
+    # not.
+    if len(points) > MAX_POINTS:
+        step = len(points) / MAX_POINTS
+        points = [points[int(index * step)] for index in range(MAX_POINTS)] + points[-1:]
     return points
 
 

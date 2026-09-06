@@ -19,6 +19,8 @@ class PaperlessAdapter(Adapter):
     category = "other"
     description = "Documents, the inbox and what was filed last."
     icon = "paperless-ngx"
+    #: Seen against a live Paperless-ngx (06.09.2026).
+    beta = False
     docs_url = "https://docs.paperless-ngx.com/api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://paperless:8000"),

@@ -20,6 +20,8 @@ class HeadscaleAdapter(Adapter):
     description = "Nodes of a self-hosted tailnet, who is online and to whom they belong."
     icon = "headscale"
     docs_url = "https://headscale.net/stable/ref/remote-cli/"
+    #: Seen against a live Headscale v0.29.3 with a registered node (06.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://headscale:8080"),
         Field("api_key", "API key", type="password", secret=True, required=True, help="On the server: headscale apikeys create."),

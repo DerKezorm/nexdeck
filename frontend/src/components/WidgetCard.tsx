@@ -2,6 +2,8 @@ import { AlertTriangle, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucid
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { safeUrl } from '../lib/safeUrl'
+
 import { tLabel } from '../i18n/texts'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
@@ -35,7 +37,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
   const status = failed ? 'bad' : !showFindings && (reported === 'warn' || reported === 'bad') ? 'ok' : reported
   const errorCode = String(data?.meta?.code ?? '')
   const errorText = failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : ''
-  const link = widget.link || data?.link || widget.service_link || undefined
+  // ⚠️ data?.link comes from the service, not from the operator. A
+  // javascript: address here would run as part of nexdeck.
+  const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
   // Clocks and app tiles draw themselves without a header.
   const bare = widget.renderer === 'app' || widget.renderer === 'clock'
   // With a link, the whole card is the link; app tiles are anchors already.
@@ -62,7 +66,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
         </button>
       )}
       {link && !editing && (
-        <a className="btn btn-icon h-6 w-6 border-0 bg-transparent" href={link} target="_blank" rel="noreferrer" aria-label={t('widget.openLink')} title={t('widget.openLink')}>
+        <a className="btn btn-icon h-6 w-6 border-0 bg-transparent" href={link} target="_blank" rel="noopener noreferrer" aria-label={t('widget.openLink')} title={t('widget.openLink')}>
           <ExternalLink size={13} />
         </a>
       )}

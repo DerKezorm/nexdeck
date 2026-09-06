@@ -1,7 +1,8 @@
 /** New widgets get a readable default title, in the language of the person adding them. */
 import i18next from 'i18next'
 
-import { defaultTitle } from './WidgetLibrary'
+import type { AdapterSpec, WidgetTypeSpec } from '../api/types'
+import { defaultTitle, haystack } from './WidgetLibrary'
 
 describe('defaultTitle', () => {
   afterEach(async () => {
@@ -26,5 +27,45 @@ describe('defaultTitle', () => {
     expect(defaultTitle({ kind: 'unifi', label: 'UniFi Network' }, { label: 'Network' })).toBe('UniFi Network')
     // A service that writes itself in one way keeps it; only the widget moves.
     expect(defaultTitle({ kind: 'plex', label: 'Plex' }, { label: 'Recently added' })).toBe('Plex Zuletzt hinzugefügt')
+  })
+})
+
+describe('haystack', () => {
+  const wol = {
+    kind: 'wol',
+    label: 'Wake-on-LAN',
+    category: 'hosts',
+    widgets: [],
+  } as unknown as AdapterSpec
+  const wake = {
+    kind: 'wol.wake',
+    label: 'Wake',
+    description: 'The state of the machine, and the button that wakes it.',
+  } as unknown as WidgetTypeSpec
+
+  it('finds a card by the name people actually type', () => {
+    // ⚠️ "Wake-on-LAN" does not contain "wol". Searching the labels alone
+    // meant the card could not be found by its own name.
+    expect(haystack(wol, wake)).toContain('wol')
+    expect('Wake-on-LAN'.toLowerCase()).not.toContain('wol')
+  })
+
+  it('still finds it by its written name and its German one', () => {
+    const text = haystack(wol, wake)
+    expect(text).toContain('wake-on-lan')
+    expect(text).toContain('hosts')
+  })
+
+  it('covers the short names of the awkward services', () => {
+    const cases: [string, string][] = [
+      ['pbs', 'Proxmox Backup Server'],
+      ['npm', 'Nginx Proxy Manager'],
+    ]
+    for (const [kind, label] of cases) {
+      const adapter = { kind, label, category: 'infra', widgets: [] } as unknown as AdapterSpec
+      const widget = { kind: `${kind}.status`, label: 'Status', description: '' } as unknown as WidgetTypeSpec
+      expect(haystack(adapter, widget), kind).toContain(kind)
+      expect(label.toLowerCase(), label).not.toContain(kind)
+    }
   })
 })

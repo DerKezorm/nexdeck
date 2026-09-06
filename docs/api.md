@@ -28,6 +28,11 @@ interactive documentation lives at `/api/docs` on every installation.
 | `GET /api/v1/settings/mail` | The installation's mail server; the password comes back masked. Administrators only. |
 | `PUT /api/v1/settings/mail` | Change it. Sending the mask back keeps the stored password. |
 | `POST /api/v1/settings/mail/test` | Send a test message, to the given address or to the administrator's own. |
+| `GET /api/v1/settings/search` | The targets the bar may hand a typed word to. Every signed-in account may read them; the bar needs them on every page. |
+| `PUT /api/v1/settings/search` | Change them. Administrators only. |
+| `GET /api/v1/settings/search/suggestions` | Targets built out of the connected services. Administrators only. |
+| `GET /api/v1/settings/appearance` | The accent colour and the style sheet of the installation. Every signed-in account may read them; every page is painted with them. |
+| `PUT /api/v1/settings/appearance` | Change them. Administrators only. |
 
 Errors come as `{"detail": {"code": "...", "message": "..."}}` with an
 English message; the interface translates known codes.

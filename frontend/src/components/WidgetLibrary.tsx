@@ -40,7 +40,29 @@ export function defaultTitle(adapter: { kind: string; label: string }, widget: {
   return `${service} ${kind}`
 }
 
-const CATEGORY_ORDER = ['basics', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
+const CATEGORY_ORDER = ['basics', 'feeds', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
+
+/**
+ * Everything a card can be found by.
+ *
+ * ⚠️ The technical name counts too. "Wake-on-LAN" does not contain "wol",
+ * "Proxmox Backup Server" does not contain "pbs", and "Nginx Proxy Manager"
+ * does not contain "npm". Those are exactly what somebody types.
+ */
+export function haystack(adapter: AdapterSpec, widget: WidgetTypeSpec): string {
+  return [
+    adapter.kind,
+    widget.kind,
+    adapter.label,
+    widget.label,
+    tAdapter(widget.label),
+    widget.description,
+    tAdapter(widget.description),
+    adapter.category,
+  ]
+    .join(' ')
+    .toLowerCase()
+}
 
 /** The widget library: every adapter's widgets, searchable, one click to add. */
 export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
@@ -58,8 +80,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     const result: Record<string, { adapter: AdapterSpec; widget: WidgetTypeSpec }[]> = {}
     for (const adapter of adapters.data ?? []) {
       for (const widget of adapter.widgets) {
-        const haystack = `${adapter.label} ${widget.label} ${tAdapter(widget.label)} ${widget.description} ${tAdapter(widget.description)} ${adapter.category}`.toLowerCase()
-        if (needle && !haystack.includes(needle)) continue
+        if (needle && !haystack(adapter, widget).includes(needle)) continue
         ;(result[adapter.category] ??= []).push({ adapter, widget })
       }
     }
