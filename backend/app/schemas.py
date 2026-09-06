@@ -140,6 +140,12 @@ class KioskCreate(BaseModel):
     cycle_seconds: int = Field(default=0, ge=0, le=3600)
     dim_from: str = Field(default="", max_length=5)
     dim_to: str = Field(default="", max_length=5)
+    #: Days until the link stops working. 0 means it does not expire on its own.
+    expires_days: int = Field(default=0, ge=0, le=3650)
+
+
+class KioskSession(BaseModel):
+    token: str = Field(max_length=200)
 
 
 class ImportBody(BaseModel):
@@ -250,6 +256,8 @@ class PushUnsubscribeBody(BaseModel):
 
 class TokenCreate(BaseModel):
     name: str = Field(min_length=1, max_length=80)
+    #: Days until the token stops working. 0 means it does not expire on its own.
+    expires_days: int = Field(default=0, ge=0, le=3650)
 
 
 class OidcProviderBody(BaseModel):
@@ -286,3 +294,31 @@ class SmtpBody(BaseModel):
 
 class MailTestBody(BaseModel):
     to_address: str = Field(default="", max_length=200)
+
+
+class SearchTargetBody(BaseModel):
+    """One place a typed word can be handed to."""
+
+    name: str = Field(min_length=1, max_length=40)
+    #: Has to carry ``{query}``; the service puts the words in.
+    url: str = Field(min_length=1, max_length=400)
+    prefix: str = Field(default="", max_length=6)
+    icon: str = Field(default="", max_length=80)
+
+
+class SearchBody(BaseModel):
+    """The search bar's targets, in the order they are offered."""
+
+    enabled: bool = True
+    targets: list[SearchTargetBody] = Field(default_factory=list, max_length=20)
+
+
+class AppearanceBody(BaseModel):
+    """The accent colour of the installation, and a style sheet of its own."""
+
+    preset: str = Field(default="cyan", max_length=20)
+    #: A colour of one's own as ``#rrggbb``; empty means the preset wins.
+    #: Roomier than the six digits on purpose, so anything else a person types
+    #: reaches the service and gets a sentence back instead of a 422.
+    accent: str = Field(default="", max_length=32)
+    css: str = Field(default="", max_length=20000)

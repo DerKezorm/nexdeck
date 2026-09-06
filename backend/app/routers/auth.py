@@ -69,13 +69,22 @@ def open_session(db: DbSession, user: User, request: Request, response: Response
 def login(body: LoginBody, request: Request, response: Response, db: DbSession) -> UserPublic:
     """Opens a browser session. Wrong attempts are throttled per address."""
     address = request.client.host if request.client else "?"
-    login_guard.check(address)
+    try:
+        # Counted per address and per account: the address can be spoofed
+        # behind a proxy, the account name cannot.
+        login_guard.check(address, body.username)
+    except login_guard.TooManyAttempts:
+        raise error(
+            "too_many_attempts",
+            "Too many failed sign-ins. Try again in a few minutes.",
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        ) from None
     user = db.scalar(select(User).where(func.lower(User.username) == body.username.lower()))
     if user is None or user.disabled or not verify_password(body.password, user.password_hash):
-        login_guard.failed(address)
+        login_guard.failed(address, body.username)
         logger.info("Sign-in refused for %r from %s.", body.username, address)
         raise error("bad_credentials", "User name or password is wrong.", status.HTTP_401_UNAUTHORIZED)
-    login_guard.succeeded(address)
+    login_guard.succeeded(address, body.username)
     open_session(db, user, request, response)
     return user_public(user, request)
 

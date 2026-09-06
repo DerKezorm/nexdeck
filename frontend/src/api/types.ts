@@ -45,7 +45,8 @@ export interface BoardSummary {
 export interface FieldSpec {
   name: string
   label: string
-  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'textarea' | 'timezone'
+  /** `integrations` is a list of connection numbers; `options` names the kinds that may be picked. */
+  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'integrations' | 'textarea' | 'timezone'
   required: boolean
   secret: boolean
   default: unknown

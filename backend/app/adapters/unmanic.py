@@ -16,6 +16,8 @@ class UnmanicAdapter(Adapter):
     #: Neither dashboard-icons nor selfh.st has a logo for it; a drawn symbol
     #: is honest, a grey box is not.
     icon = "lucide:rotate-cw"
+    #: Seen against a live Unmanic with two workers (06.09.2026).
+    beta = False
     docs_url = "https://docs.unmanic.app/docs/api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://unmanic:8888"),

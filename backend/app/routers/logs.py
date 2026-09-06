@@ -9,7 +9,14 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter, Request, status
 from fastapi.responses import StreamingResponse
 
-from ..deps import DbSession, OptionalUser, board_for_viewer, error, kiosk_from_request
+from ..deps import (
+    DbSession,
+    OptionalUser,
+    board_for_viewer_id,
+    error,
+    kiosk_from_request,
+    require_integration,
+)
 from ..models import Page, Widget
 from ..services.logs import log_tailer, recent_lines
 from ..services.sse import board_topic, hub
@@ -22,10 +29,17 @@ def _log_widget(db: DbSession, widget_id: int, request: Request, user: OptionalU
     if widget is None or widget.kind != "docker.logs":
         raise error("not_found", "There is no such log widget.", status.HTTP_404_NOT_FOUND)
     page = db.get(Page, widget.page_id)
-    assert page is not None
-    board_for_viewer(db, str(page.board_id), user, kiosk_from_request(request, db))
+    if page is None:
+        raise error("not_found", "There is no such log widget.", status.HTTP_404_NOT_FOUND)
+    # ⚠️ A container log is not board furniture. It carries paths, tokens in
+    # tracebacks and whatever the service prints, so looking at the board is
+    # not enough: this needs the same right as pressing a button on it.
+    _board, permission = board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may not read container logs on this board.", status.HTTP_403_FORBIDDEN)
     if widget.integration_id is None:
         raise error("no_integration", "This log widget has no Docker integration.")
+    require_integration(db, widget.integration_id, user)
     source = f"{widget.integration_id}:{(widget.options or {}).get('container', '')}"
     return widget, page.board_id, source
 

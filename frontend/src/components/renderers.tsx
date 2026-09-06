@@ -33,8 +33,11 @@ import type { TFunction } from 'i18next'
 import { mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
+import { safeUrl } from '../lib/safeUrl'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { CameraCard } from './CameraCard'
+import { SearchCard } from './SearchCard'
+import { WolCard } from './WolCard'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
@@ -67,6 +70,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   posters: PostersCard,
   counters: CountersCard,
   camera: CameraCard,
+  search: SearchCard,
+  wol: WolCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -315,7 +320,7 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
               ) : null}
               {item.value !== undefined && item.value !== '' && <span className="num text-xs text-muted whitespace-nowrap">{String(item.value)}</span>}
               {item.url ? (
-                <a href={String(item.url)} target="_blank" rel="noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')}>
+                <a href={safeUrl(item.url)} target="_blank" rel="noopener noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')}>
                   <ExternalLink size={12} />
                 </a>
               ) : null}
@@ -490,7 +495,7 @@ export function BookmarksCard({ data }: RenderProps) {
       {items.map((item, index) => (
         <li key={index}>
           <a
-            href={String(item.url ?? '#')}
+            href={safeUrl(item.url) || '#'}
             target="_blank"
             rel="noreferrer"
             className={`flex items-center gap-2.5 rounded-lg hover:bg-surface-hover ${grid ? 'flex-col justify-center text-center p-2' : 'px-2 py-1.5'}`}
@@ -623,7 +628,7 @@ export function FeedCard({ data }: RenderProps) {
     <ul className={`flex-1 min-h-0 scroll px-2 pb-2 ${cards ? 'grid grid-cols-2 gap-2 content-start' : ''}`}>
       {items.map((item, index) => (
         <li key={index}>
-          <a href={String(item.url ?? '#')} target="_blank" rel="noreferrer" className={`block rounded-lg hover:bg-surface-hover ${cards ? 'p-2' : 'px-2 py-1.5'}`}>
+          <a href={safeUrl(item.url) || '#'} target="_blank" rel="noopener noreferrer" className={`block rounded-lg hover:bg-surface-hover ${cards ? 'p-2' : 'px-2 py-1.5'}`}>
             {cards && item.image ? <div className="aspect-video rounded-md bg-cover bg-center mb-2" style={{ backgroundImage: `url(${item.image})` }} /> : null}
             <div className="text-[13px] font-medium leading-snug line-clamp-2">{String(item.title ?? '')}</div>
             <div className="text-[11px] text-faint mt-0.5 truncate">
@@ -697,14 +702,14 @@ export function AppTile({ widget, data, link }: RenderProps) {
   const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
   const description = String(data?.meta?.description ?? '')
-  const href = link || widget.link || widget.service_link || undefined
+  const href = safeUrl(link || widget.link || widget.service_link) || undefined
   const bars = health?.bars ?? []
   const Tag = href ? 'a' : 'div'
   return (
     <Tag
       href={href}
       target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
-      rel="noreferrer"
+      rel="noopener noreferrer"
       className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit"
     >
       <div className="flex items-center gap-3">

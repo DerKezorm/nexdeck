@@ -17,6 +17,8 @@ class DelugeAdapter(DownloadAdapter):
     label = "Deluge"
     description = "Torrents, speed and pause or resume through the web UI API."
     icon = "deluge"
+    #: Seen against a live Deluge 2.1 (06.09.2026).
+    beta = False
     docs_url = "https://deluge.readthedocs.io/en/latest/reference/api.html"
     has_upload = True
     fields = (
@@ -70,6 +72,9 @@ class DelugeAdapter(DownloadAdapter):
                 identifier=hash_id,
             ))
         paused = bool(items) and all(i.state == "paused" for i in items)
+        # Deluge answers -1 when it cannot read the free space; passed on as it
+        # comes, the card reads "-1 B". Seen against 2.1 in a container.
+        free = float(stats.get("free_space") or 0)
         return Snapshot(
             download_bps=float(stats.get("download_rate") or 0),
             upload_bps=float(stats.get("upload_rate") or 0),
@@ -77,7 +82,7 @@ class DelugeAdapter(DownloadAdapter):
             remaining_bytes=remaining,
             items=items,
             total=len(items),
-            free_bytes=float(stats.get("free_space") or 0) or None,
+            free_bytes=free if free > 0 else None,
         )
 
     async def pause(self, config: dict[str, Any], ctx: Context) -> None:

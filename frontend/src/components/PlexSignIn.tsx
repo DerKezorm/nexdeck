@@ -89,7 +89,13 @@ export function PlexSignIn({ onFill }: { onFill: (values: Record<string, unknown
     try {
       const pin = await post<Pin>('/plex/pin')
       setLink(pin.url)
-      if (popup) popup.location.href = pin.url
+      if (popup) {
+        // The window is opened blank so the popup blocker lets it through, then
+        // sent on its way. Cutting the opener stops plex.tv from steering this
+        // tab through window.opener.
+        popup.opener = null
+        popup.location.href = pin.url
+      }
       setPhase('waiting')
       poll(pin, Date.now())
     } catch (failure) {

@@ -28,6 +28,8 @@ class KavitaAdapter(Adapter):
     category = "media"
     description = "Libraries, series and what was added last."
     icon = "kavita"
+    #: Seen against a live Kavita (06.09.2026).
+    beta = False
     docs_url = "https://wiki.kavitareader.com/guides/settings/api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://kavita:5000"),

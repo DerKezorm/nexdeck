@@ -21,13 +21,25 @@ from .sse import board_topic, hub
 logger = logging.getLogger("nexdeck.logs")
 
 MAX_LINE = 2000
+#: How many lines one write carries, and how long a part-full batch may wait.
+BATCH_LINES = 50
+BATCH_SECONDS = 2.0
+#: A log card nobody has asked for in this long stops being followed.
+UNWATCHED_SECONDS = 300.0
 
 
 class LogTailer:
     def __init__(self) -> None:
         self._tasks: dict[int, asyncio.Task[None]] = {}
+        #: Lines waiting to be written, so one commit carries many.
+        self._pending: list[LogLine] = []
+        self._flushed = time.time()
+        #: When each log card was last asked for, so a forgotten one stops.
+        self._watched: dict[int, float] = {}
 
     def ensure(self, widget_id: int) -> None:
+        self.seen(widget_id)
+
         def _start() -> None:
             task = self._tasks.get(widget_id)
             if task is None or task.done():
@@ -44,6 +56,7 @@ class LogTailer:
         run_on_loop(_stop)
 
     async def stop(self) -> None:
+        self.flush()
         for task in self._tasks.values():
             task.cancel()
         for task in self._tasks.values():
@@ -54,6 +67,7 @@ class LogTailer:
         self._tasks.clear()
 
     def prune(self) -> None:
+        self.drop_unwatched()
         cutoff = time.time() - get_settings().log_history_hours * 3600
         with db_session() as db:
             db.execute(delete(LogLine).where(LogLine.ts < cutoff))
@@ -129,18 +143,61 @@ class LogTailer:
             await asyncio.sleep(2 + (index % 3))
 
     def _last_ts(self, source: str) -> float:
+        # Anything still in the batch has not reached the table yet.
+        self.flush()
         with db_session() as db:
             row = db.scalar(select(LogLine.ts).where(LogLine.source == source).order_by(LogLine.ts.desc()).limit(1))
         return float(row or 0)
 
     def _store(self, board_id: int | None, widget_id: int, source: str, line: str) -> None:
+        """Send the line on at once; write it out in batches.
+
+        ⚠️ This used to open a session and commit for every single line. A
+        container logging fifty lines a second meant fifty synchronous SQLite
+        commits a second on the event loop, which stalls every widget fetch
+        and every request in the whole server. The browser sees the line
+        immediately either way; only the archive can wait.
+        """
         line = line.rstrip("\r")[:MAX_LINE]
         if not line.strip():
             return
         ts = time.time()
-        with db_session() as db:
-            db.add(LogLine(source=source, ts=ts, line=line))
+        self._pending.append(LogLine(source=source, ts=ts, line=line))
         self._emit(board_id, widget_id, line, source, ts)
+        if len(self._pending) >= BATCH_LINES or ts - self._flushed >= BATCH_SECONDS:
+            self.flush()
+
+    def flush(self) -> None:
+        """Write out what has piled up. Called on a batch, a pause, and on stop."""
+        if not self._pending:
+            self._flushed = time.time()
+            return
+        rows, self._pending = self._pending, []
+        self._flushed = time.time()
+        try:
+            with db_session() as db:
+                db.add_all(rows)
+        except Exception:
+            logger.exception("A batch of log lines could not be written.")
+
+    def seen(self, widget_id: int) -> None:
+        """Somebody is looking at this log card right now."""
+        self._watched[widget_id] = time.time()
+
+    def drop_unwatched(self) -> None:
+        """Stop following a log nobody has asked for in a while.
+
+        ⚠️ ``stop_widget`` existed from the start and nothing ever called it.
+        A card opened once kept a follower, a Docker stream and a write every
+        few seconds until the server was restarted.
+        """
+        self.flush()
+        cutoff = time.time() - UNWATCHED_SECONDS
+        for widget_id in [key for key, seen in self._watched.items() if seen < cutoff]:
+            self._watched.pop(widget_id, None)
+            if widget_id in self._tasks:
+                logger.info("Nobody is watching the log of widget %s; stopping the follower.", widget_id)
+                self.stop_widget(widget_id)
 
     @staticmethod
     def _emit(board_id: int | None, widget_id: int, line: str, source: str, ts: float | None = None) -> None:
@@ -152,6 +209,8 @@ log_tailer = LogTailer()
 
 
 def recent_lines(source: str, limit: int = 200) -> list[dict]:
+    # The newest lines may still be in the batch; a reader must see them.
+    log_tailer.flush()
     with db_session() as db:
         rows = db.execute(select(LogLine.ts, LogLine.line).where(LogLine.source == source).order_by(LogLine.ts.desc()).limit(limit)).all()
     return [{"ts": ts, "line": line} for ts, line in reversed(rows)]

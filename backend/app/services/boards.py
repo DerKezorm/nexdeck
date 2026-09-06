@@ -19,8 +19,16 @@ COLUMNS = {"lg": 12, "md": 8, "sm": 4}
 
 
 def slugify(text: str) -> str:
+    """A name turned into something that can stand in an address.
+
+    ⚠️ Never all digits. A board addressed by its number and a board whose
+    slug is that number would be the same address, and the code that looks a
+    board up by number would find the wrong one.
+    """
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug or "board"
+    if not slug:
+        return "board"
+    return f"b-{slug}" if slug.isdigit() else slug
 
 
 def unique_slug(db: Session, wanted: str, ignore_id: int | None = None) -> str:
@@ -206,8 +214,34 @@ class ImportError_(ValueError):
     pass
 
 
-def import_board(db: Session, text: str, *, owner_id: int | None, slug: str | None = None, provisioned: bool = False, source_file: str = "", replace: Board | None = None) -> Board:
-    """Create (or replace) a board from a YAML document."""
+def import_board(
+    db: Session,
+    text: str,
+    *,
+    owner_id: int | None,
+    slug: str | None = None,
+    provisioned: bool = False,
+    source_file: str = "",
+    replace: Board | None = None,
+    trusted: bool = False,
+    allow_locked: bool = False,
+) -> Board:
+    """Create (or replace) a board from a YAML document.
+
+    ⚠️ Two callers, two levels of trust. Provisioning reads files the operator
+    put into ``data/boards/`` on the server, so it may do everything: expand
+    ``${VAR}`` from the environment and create the connections the file names.
+    ``POST /api/v1/boards/import`` is open to every member, and gets neither.
+
+    Without those two rights the import was a way to read any environment
+    variable of the server: a member imported a board whose connection had
+    ``api_key: "${NEXDECK_SECRET_KEY}"``, and read the value straight back out
+    of the connection list. That key signs every session and unlocks every
+    stored secret.
+
+    ``allow_locked`` says whether a widget may be tied to a connection the
+    administrator reserved. It follows the caller, not the file.
+    """
     import os
 
     try:
@@ -229,14 +263,23 @@ def import_board(db: Session, text: str, *, owner_id: int | None, slug: str | No
             raise ImportError_(f"Unknown integration kind {entry['kind']!r}.") from error
         existing = db.scalar(select(Integration).where(Integration.name == str(entry.get("name")), Integration.kind == entry["kind"]))
         if existing is None:
+            if not trusted:
+                raise ImportError_(
+                    f"This file wants a connection called {str(entry.get('name'))!r}, and there is none. "
+                    "An administrator has to set it up first; an import does not create connections.",
+                )
             config = {}
             for key, value in (entry.get("config") or {}).items():
-                if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                # Only a file the operator put on the server may read the
+                # environment. Over HTTP this would hand out the secret key.
+                if trusted and isinstance(value, str) and value.startswith("${") and value.endswith("}"):
                     value = os.environ.get(value[2:-1], "")
                 config[key] = value
             existing = Integration(kind=entry["kind"], name=str(entry.get("name") or entry["kind"]), config=store_config(entry["kind"], config), demo=bool(entry.get("demo")), created_by=owner_id)
             db.add(existing)
             db.flush()
+        if existing.admin_only and not allow_locked:
+            raise ImportError_(f"The connection {existing.name!r} is reserved for administrators.")
         by_name[existing.name] = existing
 
     if replace is not None:

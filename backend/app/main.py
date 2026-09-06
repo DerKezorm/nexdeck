@@ -17,6 +17,7 @@ from .config import get_settings
 from .db import db_session, get_engine
 from .migrations import migrate
 from .routers import (
+    appearance,
     assets,
     auth,
     avatars,
@@ -31,6 +32,7 @@ from .routers import (
     oidc,
     plex,
     push,
+    search,
     setup,
     stream,
     system,
@@ -102,15 +104,17 @@ _cors = [o.strip() for o in get_settings().cors_origins.split(",") if o.strip()]
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=_cors, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-for module in (system, setup, auth, users, avatars, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, mail, oidc, plex):
+for module in (system, setup, auth, users, avatars, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, mail, oidc, plex, search, appearance):
     app.include_router(module.router)
 
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):  # noqa: ANN001
     response: Response = await call_next(request)
+    # Never let a browser guess the type of anything this server sends. It is
+    # the one header that matters as much for an uploaded file as for a page.
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
     if not request.url.path.startswith("/api/"):
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         # The app talks only to its own origin; icons and uploads are proxied.

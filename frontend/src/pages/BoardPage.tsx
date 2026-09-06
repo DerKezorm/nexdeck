@@ -33,7 +33,15 @@ export function BoardPage() {
   const queryClient = useQueryClient()
   const user = useAuth((state) => state.user)
   const { unread, setOpen: openNotices } = useNotices()
-  const live = useLive()
+  // ⚠️ Subscribed piece by piece on purpose. `useLive()` without a selector
+  // re-renders this page, and with it every card, whenever anything in the
+  // store changes: a health result used to rebuild the widget list, and a
+  // widget tick used to rebuild the actions for the palette.
+  const liveData = useLive((state) => state.data)
+  const liveSeries = useLive((state) => state.series)
+  const liveHealth = useLive((state) => state.health)
+  const setSnapshot = useLive((state) => state.setSnapshot)
+  const setSeriesFor = useLive((state) => state.setSeries)
 
   const board = useQuery({ queryKey: ['board', slug], queryFn: () => get<BoardWithLive>(`/boards/${slug}`), enabled: Boolean(slug) })
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
@@ -69,12 +77,12 @@ export function BoardPage() {
 
   // Snapshot and history into the live store.
   useEffect(() => {
-    if (data?.live) live.setSnapshot(data.live)
+    if (data?.live) setSnapshot(data.live)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
   useEffect(() => {
     if (!history.data) return
-    for (const [id, series] of Object.entries(history.data)) live.setSeries(Number(id), series)
+    for (const [id, series] of Object.entries(history.data)) setSeriesFor(Number(id), series)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data])
 
@@ -133,19 +141,19 @@ export function BoardPage() {
   const widgets: WidgetView[] = useMemo(
     () =>
       (activePage?.widgets ?? []).map((w) => {
-        const merged = w.health ? { ...w, health: { ...w.health, ...(live.health[w.id] ?? {}) } } : w
+        const merged = w.health ? { ...w, health: { ...w.health, ...(liveHealth[w.id] ?? {}) } } : w
         // While the settings sheet is open, the card shows the draft.
         return draftWidget && draftWidget.id === w.id ? { ...merged, title: draftWidget.title, icon: draftWidget.icon, link: draftWidget.link, options: draftWidget.options } : merged
       }),
-    [activePage, live.health, draftWidget],
+    [activePage, liveHealth, draftWidget],
   )
   // Data fetched with draft options replaces the live data of that one card.
-  const gridData = useMemo(() => (previewData ? { ...live.data, [previewData.id]: previewData.data } : live.data), [live.data, previewData])
+  const gridData = useMemo(() => (previewData ? { ...liveData, [previewData.id]: previewData.data } : liveData), [liveData, previewData])
   useEffect(() => {
     if (previewData?.holdUntilChange === undefined) return
-    const current = live.data[previewData.id]?.updated_at ?? 0
+    const current = liveData[previewData.id]?.updated_at ?? 0
     if (current !== previewData.holdUntilChange) setPreviewData(null)
-  }, [live.data, previewData])
+  }, [liveData, previewData])
   useEffect(() => {
     if (previewData?.holdUntilChange === undefined) return
     const id = window.setTimeout(() => setPreviewData(null), 20_000)
@@ -169,10 +177,10 @@ export function BoardPage() {
     const list: { widget: WidgetView; action: Action }[] = []
     if (!canAct) return list
     for (const widget of widgets) {
-      for (const action of live.data[widget.id]?.actions ?? []) list.push({ widget, action })
+      for (const action of liveData[widget.id]?.actions ?? []) list.push({ widget, action })
     }
     return list
-  }, [widgets, live.data, canAct])
+  }, [widgets, liveData, canAct])
 
   const closeWidgetSettings = () => {
     setSettingsFor(null)
@@ -257,7 +265,7 @@ export function BoardPage() {
           widgets={widgets}
           layouts={activePage.layouts}
           data={gridData}
-          series={live.series}
+          series={liveSeries}
           editing={editing}
           canAct={canAct}
           autoCompact={Boolean(settings.compact)}
@@ -317,7 +325,7 @@ export function BoardPage() {
         onClose={closeWidgetSettings}
         onSaved={() => {
           setDraftWidget(null)
-          setPreviewData((current) => (current ? { ...current, holdUntilChange: live.data[current.id]?.updated_at ?? 0 } : null))
+          setPreviewData((current) => (current ? { ...current, holdUntilChange: liveData[current.id]?.updated_at ?? 0 } : null))
           void board.refetch()
         }}
         onDeleted={() => {

@@ -25,6 +25,8 @@ class BeszelAdapter(Adapter):
     category = "monitoring"
     description = "CPU, memory, disk and temperature of every host Beszel watches."
     icon = "beszel"
+    #: Seen against a live Beszel 0.19 with an agent (06.09.2026).
+    beta = False
     docs_url = "https://beszel.dev/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://beszel:8090"),

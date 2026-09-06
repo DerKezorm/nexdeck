@@ -14,6 +14,8 @@ class AdguardAdapter(Adapter):
     category = "network"
     description = "Queries, blocked share, top blocked domains, protection on or off."
     icon = "adguard-home"
+    #: Seen against a live AdGuard Home v0.107.79 (06.09.2026).
+    beta = False
     docs_url = "https://github.com/AdguardTeam/AdGuardHome/tree/master/openapi"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://adguard:3000"),

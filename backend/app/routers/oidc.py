@@ -73,7 +73,11 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
         return refuse("oidc_denied", f"provider returned {request.query_params.get('error')!r}")
     if attempt is None or attempt.get("slug") != slug or not code or not state or attempt.get("state") != state:
         return refuse("oidc_state_mismatch", "state or cookie does not match the running attempt")
-    login_guard.check(address)
+    try:
+        # No account name here yet; the address bucket is all there is.
+        login_guard.check(address)
+    except login_guard.TooManyAttempts:
+        return refuse("oidc_too_many", "too many failed attempts from this address")
     try:
         document = await oidc.discovery(provider.issuer_url)
         redirect = oidc.redirect_uri(_public_url(db), slug)

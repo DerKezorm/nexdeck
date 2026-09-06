@@ -22,6 +22,8 @@ STORAGE_FOLDERS = (
 #: Activity log severities that are trouble; sign-in failures are counted on their own.
 TROUBLE = ("Error", "Critical")
 LOG_PAGE = 500
+#: The window the activity question is rounded to.
+LOG_BUCKET = 300
 LOG_LIMIT = 5000
 
 
@@ -235,7 +237,8 @@ class JellyfinAdapter(MediaAdapter):
 
     async def _log(self, config: dict[str, Any], ctx: Context, days: int) -> list[dict[str, Any]]:
         """The activity log of the period, page by page, newest first."""
-        since = (int(time.time()) // 60) * 60 - days * 86400
+        # Rounded to the cache window, so two widgets share one answer.
+        since = (int(time.time()) // LOG_BUCKET) * LOG_BUCKET - days * 86400
         min_date = datetime.fromtimestamp(since, tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         rows: list[dict[str, Any]] = []
         start = 0

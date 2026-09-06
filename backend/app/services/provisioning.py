@@ -49,7 +49,10 @@ def _load(path: Path) -> None:
     with db_session() as db:
         existing = db.scalar(select(Board).where(Board.source_file == path.name, Board.provisioned.is_(True)))
         try:
-            board = import_board(db, text, owner_id=None, provisioned=True, source_file=path.name, replace=existing)
+            board = import_board(db, text, owner_id=None, provisioned=True, source_file=path.name, replace=existing,
+                                 # A file the operator put on the server: it may read the
+                                 # environment and set up the connections it names.
+                                 trusted=True, allow_locked=True)
         except ImportError_ as error:
             logger.warning("Board file %s was not loaded: %s", path.name, error)
             return

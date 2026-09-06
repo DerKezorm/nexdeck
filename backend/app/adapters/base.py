@@ -16,6 +16,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 import httpx
 from pydantic import BaseModel
@@ -23,7 +24,10 @@ from pydantic import Field as PydanticField
 
 logger = logging.getLogger("nexdeck.adapters")
 
-FieldType = Literal["text", "password", "url", "number", "bool", "select", "textarea", "timezone"]
+#: ``integrations`` is a list of connection numbers. Its ``options`` name the
+#: kinds that may be picked; the server checks both the kind and whether the
+#: person editing may build on that connection at all.
+FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations", "textarea", "timezone"]
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
@@ -138,6 +142,36 @@ class Unreachable(AdapterError):
         super().__init__(message, code="unreachable", hint="Check the URL and the network.")
 
 
+#: Addresses that answer only to the machine itself and hand out credentials.
+#: 169.254.169.254 is the metadata service of AWS, Google, Azure, Hetzner and
+#: DigitalOcean; fd00:ec2::254 is the same thing over IPv6. No card wants them,
+#: and a widget option is enough to point the server at one.
+FORBIDDEN_HOSTS = frozenset({
+    "169.254.169.254",
+    "metadata.google.internal",
+    "metadata.goog",
+    "fd00:ec2::254",
+    "[fd00:ec2::254]",
+})
+
+
+def guard_outbound(url: str) -> None:
+    """Refuse the one address family that is never a service of the house."""
+    host = urlsplit(url if "://" in url else f"http://{url}").hostname or ""
+    if host.lower().strip("[]") in {entry.strip("[]") for entry in FORBIDDEN_HOSTS}:
+        raise AdapterError(
+            "That address is the machine's own metadata service, and nexdeck does not fetch it.",
+            code="forbidden_host",
+            hint="It hands out the credentials of the host it runs on.",
+        )
+
+
+#: How many responses one integration may keep. Ten widgets on one service
+#: with a handful of addresses each stay well under it.
+MAX_CACHED_RESPONSES = 64
+CACHE_PREFIX = "resp:"
+
+
 class Context:
     """What an adapter gets besides its configuration.
 
@@ -177,10 +211,19 @@ class Context:
         verify: bool = True,
         auth: tuple[str, str] | None = None,
         cache_seconds: float = 0,
+        auth_errors: bool = True,
     ) -> httpx.Response:
+        """Fetch, with 401 and 403 turned into a readable refusal.
+
+        ``auth_errors=False`` hands those two back as ordinary answers. Some
+        services use 403 for something else entirely: GitHub uses it for the
+        hourly limit, and "the service rejected the credentials" is wrong and
+        unhelpful for a card that has no credentials at all.
+        """
+        guard_outbound(url)
         key = ""
         if method.upper() == "GET" and cache_seconds > 0:
-            key = "resp:" + hashlib.sha1(
+            key = CACHE_PREFIX + hashlib.sha1(
                 json.dumps([url, params, headers], sort_keys=True, default=str).encode()
             ).hexdigest()
             hit = self.cache.get(key)
@@ -202,11 +245,32 @@ class Context:
             raise Unreachable("The service did not answer in time.") from error
         except httpx.HTTPError as error:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
-        if response.status_code in (401, 403):
+        if auth_errors and response.status_code in (401, 403):
             raise AuthFailed()
         if key:
-            self.cache[key] = (time.monotonic() + cache_seconds, response)
+            self._remember(key, time.monotonic() + cache_seconds, response)
         return response
+
+    def _remember(self, key: str, until: float, response: httpx.Response) -> None:
+        """Keep a response, and keep the cache from becoming the leak.
+
+        ⚠️ Nothing used to remove an entry. An expired one was skipped on read
+        and then sat there holding its whole body. Adapters whose address
+        carries a date or a timestamp made a new key every time, so the cache
+        only ever grew: a Plex history card wrote a few hundred megabytes a day
+        into a dict nobody could reach.
+        """
+        now = time.monotonic()
+        self.cache[key] = (until, response)
+        stale = [name for name, entry in self.cache.items()
+                 if name.startswith(CACHE_PREFIX) and isinstance(entry, tuple) and entry[0] <= now]
+        for name in stale:
+            self.cache.pop(name, None)
+        kept = [name for name in self.cache if name.startswith(CACHE_PREFIX)]
+        if len(kept) > MAX_CACHED_RESPONSES:
+            # Oldest expiry first; the newest entries are the ones in use.
+            for name in sorted(kept, key=lambda name: self.cache[name][0])[: len(kept) - MAX_CACHED_RESPONSES]:
+                self.cache.pop(name, None)
 
     async def get_json(
         self,

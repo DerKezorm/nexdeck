@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from fastapi import APIRouter, Request, Response, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
+from ..config import get_settings
 from ..deps import (
+    KIOSK_COOKIE,
     CurrentUser,
     DbSession,
     MemberUser,
@@ -16,19 +21,22 @@ from ..deps import (
     error,
     kiosk_from_request,
     require_board,
+    require_board_id,
+    usable_token,
 )
-from ..models import Board, BoardShare, KioskToken, Page, Widget
+from ..models import Board, BoardShare, KioskToken, Page, Widget, utcnow
 from ..schemas import (
     BoardCreate,
     BoardPatch,
     ImportBody,
     KioskCreate,
+    KioskSession,
     LayoutsBody,
     PageCreate,
     PagePatch,
     SharesBody,
 )
-from ..security import new_opaque_token
+from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
 from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
 from ..services.collector import collector
@@ -85,6 +93,25 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
     return view
 
 
+@router.post("/kiosk/session", summary="Exchange a kiosk token for a session cookie")
+def kiosk_session(body: KioskSession, response: Response, db: DbSession) -> dict:
+    """The door of a wall display: the token goes in here and nowhere else.
+
+    ⚠️ It used to be appended to every image, video and event address, because
+    none of those can carry a header. A display makes a few thousand such
+    requests a day and every one of them wrote the token into the reverse
+    proxy log. The cookie is signed, short-lived and renewed on the next load.
+    """
+    token = body.token.strip()
+    row = db.scalar(select(KioskToken).where(KioskToken.token_hash == hash_token(token))) if token.startswith("nk_") else None
+    if row is None or not usable_token(row):
+        raise error("unauthenticated", "This kiosk link is not valid.", status.HTTP_401_UNAUTHORIZED)
+    cookie, seconds = create_kiosk_cookie(row.id, row.expires_at)
+    response.set_cookie(KIOSK_COOKIE, cookie, max_age=seconds, httponly=True, samesite="lax",
+                        secure=get_settings().public_url.startswith("https://"), path="/")
+    return {"board_id": row.board_id, "expires_in": seconds}
+
+
 @router.get("/kiosk", summary="Open the board that belongs to a kiosk token")
 def kiosk_board(request: Request, db: DbSession) -> dict:
     """The wall display knows only its token; this resolves the board."""
@@ -108,7 +135,12 @@ def board_history(slug: str, request: Request, user: OptionalUser, db: DbSession
     board, _ = board_for_viewer(db, slug, user, kiosk_from_request(request, db))
     hours = max(0.1, min(24.0, hours))
     result: dict[str, dict[str, list[tuple[int, float]]]] = {}
-    widgets = db.scalars(select(Widget).join(Page).where(Page.board_id == board.id)).all()
+    # ⚠️ health_check is a lazy relationship: without this, a board with
+    # thirty cards fires thirty extra queries just to ask whether each
+    # one has a check.
+    widgets = db.scalars(
+        select(Widget).join(Page).where(Page.board_id == board.id).options(selectinload(Widget.health_check))
+    ).all()
     for widget in widgets:
         data = live.get(widget.id)
         names = list(data.metrics.keys()) if data and data.metrics else []
@@ -171,7 +203,7 @@ def _page_for_edit(db: DbSession, page_id: int, user: CurrentUser) -> tuple[Page
     page = db.get(Page, page_id)
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
-    board, permission = require_board(db, str(page.board_id), user, "edit")
+    board, permission = require_board_id(db, page.board_id, user, "edit")
     return page, board, permission
 
 
@@ -262,7 +294,12 @@ def export_board(slug: str, user: CurrentUser, db: DbSession) -> Response:
 @router.post("/boards/import", status_code=status.HTTP_201_CREATED, summary="Import a board from YAML")
 async def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
     try:
-        board = board_service.import_board(db, body.yaml_text, owner_id=user.id, slug=body.slug)
+        board = board_service.import_board(
+            db, body.yaml_text, owner_id=user.id, slug=body.slug,
+            # Anybody may call this, so it reads no environment and makes
+            # no connections; a locked one is only allowed to an administrator.
+            trusted=False, allow_locked=user.role == "admin",
+        )
     except ImportError_ as failure:
         raise error("bad_import", str(failure)) from failure
     db.commit()
@@ -277,16 +314,22 @@ async def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dic
 @router.get("/boards/{slug}/kiosk-tokens", summary="List kiosk links of a board")
 def list_kiosk_tokens(slug: str, user: CurrentUser, db: DbSession) -> list[dict]:
     board, _ = require_board(db, slug, user, "edit")
-    return [_kiosk_public(t) for t in board.kiosk_tokens]
+    return [_kiosk_public(t) for t in board.kiosk_tokens if not t.revoked]
 
 
 @router.post("/boards/{slug}/kiosk-tokens", status_code=status.HTTP_201_CREATED, summary="Create a kiosk link for a wall display")
 def create_kiosk_token(slug: str, body: KioskCreate, user: CurrentUser, db: DbSession) -> dict:
     """The full token is shown once, right here."""
-    board, _ = require_board(db, slug, user, "edit")
+    board, permission = require_board(db, slug, user, "edit")
+    # ⚠️ Creating a link needs "edit" and the body carried "allow_actions", so
+    # a share that was deliberately not allowed to press buttons could mint a
+    # display that could. Nobody hands out more than they hold.
+    if body.allow_actions and permission not in ("act", "owner"):
+        raise error("forbidden", "You may not give a display the right to act on this board.", status.HTTP_403_FORBIDDEN)
     token, token_hash, prefix = new_opaque_token("nk")
+    ends = utcnow() + timedelta(days=body.expires_days) if body.expires_days else None
     row = KioskToken(board_id=board.id, name=body.name, token_hash=token_hash, prefix=prefix, allow_actions=body.allow_actions,
-                     cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to)
+                     cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to, expires_at=ends)
     db.add(row)
     db.commit()
     return {**_kiosk_public(row), "token": token, "url": f"/k/{token}"}
@@ -295,13 +338,19 @@ def create_kiosk_token(slug: str, body: KioskCreate, user: CurrentUser, db: DbSe
 @router.delete("/kiosk-tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Revoke a kiosk link")
 def delete_kiosk_token(token_id: int, user: CurrentUser, db: DbSession) -> None:
     row = db.get(KioskToken, token_id)
-    if row is None:
+    if row is None or row.revoked:
         raise error("not_found", "There is no such kiosk link.", status.HTTP_404_NOT_FOUND)
-    require_board(db, str(row.board_id), user, "edit")
-    db.delete(row)
+    # ⚠️ Never route a number through the slug lookup: a board may be called
+    # after a number, and then the wrong board decides.
+    require_board_id(db, row.board_id, user, "edit")
+    # The row stays. A withdrawn link must never be handed out again under the
+    # same hash, and the cookie it gave out stops at the next request.
+    row.revoked = True
+    row.revoked_at = utcnow()
     db.commit()
 
 
 def _kiosk_public(token: KioskToken) -> dict:
     return {"id": token.id, "name": token.name, "prefix": token.prefix, "allow_actions": token.allow_actions, "cycle_seconds": token.cycle_seconds,
-            "dim_from": token.dim_from, "dim_to": token.dim_to, "created_at": token.created_at, "last_used_at": token.last_used_at}
+            "dim_from": token.dim_from, "dim_to": token.dim_to, "created_at": token.created_at, "last_used_at": token.last_used_at,
+            "expires_at": token.expires_at}

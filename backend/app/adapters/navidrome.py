@@ -21,6 +21,8 @@ class NavidromeAdapter(Adapter):
     category = "media"
     description = "Albums, artists and what is playing right now."
     icon = "navidrome"
+    #: Seen against a live Navidrome 0.63.2 (06.09.2026).
+    beta = False
     docs_url = "https://www.navidrome.org/docs/developers/subsonic-api/"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://navidrome:4533"),

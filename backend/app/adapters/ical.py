@@ -162,7 +162,7 @@ class CalendarAdapter(Adapter):
             default_size=(3, 3),
             refresh_seconds=600,
             options=(
-                Field("sources", "Sources", type="select", options=(("ical", "iCal"), ("radarr", "Radarr"), ("sonarr", "Sonarr"), ("lidarr", "Lidarr"), ("readarr", "Readarr")), help="Pick the integrations to merge.", default=[]),
+                Field("sources", "Sources", type="integrations", options=(("ical", "iCal"), ("radarr", "Radarr"), ("sonarr", "Sonarr"), ("lidarr", "Lidarr"), ("readarr", "Readarr")), help="Pick the calendars and instances to merge.", default=[]),
                 Field("days", "Days ahead", type="number", default=7),
                 Field("limit", "Entries", type="number", default=20),
             ),
@@ -180,6 +180,8 @@ class CalendarAdapter(Adapter):
             raise AdapterError("No sources are chosen.", code="missing_sources", hint="Open the widget settings and pick calendars.")
         if ctx.resolve_integration is None:
             raise AdapterError("Sources cannot be resolved here.", code="no_resolver")
+        # The numbers in here were checked when the card was saved. Anything
+        # that is not a number is left alone rather than guessed at.
         days = int(options.get("days") or 7)
         items: list[dict[str, Any]] = []
         failures: list[str] = []

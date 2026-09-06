@@ -21,6 +21,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    TypeDecorator,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -28,6 +29,36 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+class Utc(TypeDecorator[datetime]):
+    """A moment in time that still knows it is UTC after a round trip.
+
+    ⚠️ SQLite has no type for this. ``DateTime(timezone=True)`` writes the
+    text and drops the offset, so every value read back was naive. Comparing
+    one against ``datetime.now(UTC)`` raises TypeError, and serialised to JSON
+    it lost its ``Z``, which made the browser read it as local time: the same
+    notice showed one time live and another after a reload, off by the zone.
+
+    Both follow from the same missing marker, so both are fixed here rather
+    than at each of the places that read a timestamp.
+    """
+
+    impl = DateTime
+    cache_ok = True
+
+    def __init__(self) -> None:
+        super().__init__(timezone=True)
+
+    def process_bind_param(self, value: datetime | None, dialect: object) -> datetime | None:
+        if value is None:
+            return None
+        return value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+
+    def process_result_value(self, value: datetime | None, dialect: object) -> datetime | None:
+        if value is None:
+            return None
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
 
 
 class Base(DeclarativeBase):
@@ -58,7 +89,7 @@ class User(Base):
     theme: Mapped[str] = mapped_column(String(8), default="dark")
     start_board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     disabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     #: Milliseconds; sessions issued before this moment are invalid.
     password_changed_ms: Mapped[int] = mapped_column(Integer, default=0)
     #: Which "what's new" version the user has already seen.
@@ -78,8 +109,8 @@ class Session(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     user_agent: Mapped[str] = mapped_column(String(300), default="")
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -94,8 +125,14 @@ class ApiToken(Base):
     name: Mapped[str] = mapped_column(String(80))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
     prefix: Mapped[str] = mapped_column(String(16))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: When the token stops working. Empty means it does not expire on its own.
+    expires_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: Withdrawn. The row stays so the hash can never come back and a list can
+    #: still say what happened to it.
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="api_tokens")
 
@@ -148,8 +185,8 @@ class Board(Base):
     #: Boards read from ``data/boards/*.yaml`` are shown but not editable.
     provisioned: Mapped[bool] = mapped_column(Boolean, default=False)
     source_file: Mapped[str] = mapped_column(String(300), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow, onupdate=utcnow)
 
     pages: Mapped[list[Page]] = relationship(
         back_populates="board", cascade="all, delete-orphan", order_by="Page.position"
@@ -210,8 +247,8 @@ class Integration(Base):
     #: still see its cards on a board that was shared with them.
     admin_only: Mapped[bool] = mapped_column(Boolean, default=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    last_ok_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_ok_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     last_error: Mapped[str] = mapped_column(Text, default="")
 
     widgets: Mapped[list[Widget]] = relationship(back_populates="integration")
@@ -232,7 +269,7 @@ class Widget(Base):
     )
     options: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     refresh_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
     page: Mapped[Page] = relationship(back_populates="widgets")
     integration: Mapped[Integration | None] = relationship(back_populates="widgets")
@@ -255,8 +292,15 @@ class KioskToken(Base):
     #: ``HH:MM`` local times; empty means no dimming.
     dim_from: Mapped[str] = mapped_column(String(5), default="")
     dim_to: Mapped[str] = mapped_column(String(5), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: When the display stops being let in. Empty means no end.
+    expires_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: Withdrawn. Deleting the link sets this instead of removing the row, so a
+    #: withdrawn token can never be granted again and the cookie it handed out
+    #: stops working at the next request.
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
     board: Mapped[Board] = relationship(back_populates="kiosk_tokens")
 
@@ -307,9 +351,9 @@ class HealthCheck(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     last_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     last_latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_checked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     last_error: Mapped[str] = mapped_column(String(300), default="")
-    down_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    down_since: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
     widget: Mapped[Widget | None] = relationship(back_populates="health_check")
     outages: Mapped[list[Outage]] = relationship(back_populates="check", cascade="all, delete-orphan")
@@ -320,8 +364,8 @@ class Outage(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     check_id: Mapped[int] = mapped_column(ForeignKey("health_checks.id", ondelete="CASCADE"), index=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(Utc())
+    ended_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     announced: Mapped[bool] = mapped_column(Boolean, default=False)
 
     check: Mapped[HealthCheck] = relationship(back_populates="outages")
@@ -347,7 +391,7 @@ class NotificationChannel(Base):
     name: Mapped[str] = mapped_column(String(80))
     config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     last_error: Mapped[str] = mapped_column(String(300), default="")
 
     subscriptions: Mapped[list[Subscription]] = relationship(
@@ -377,7 +421,7 @@ class PushSubscription(Base):
     p256dh: Mapped[str] = mapped_column(String(300))
     auth: Mapped[str] = mapped_column(String(300))
     user_agent: Mapped[str] = mapped_column(String(300), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
 class Notice(Base):
@@ -392,8 +436,8 @@ class Notice(Base):
     title: Mapped[str] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text, default="")
     link: Mapped[str] = mapped_column(String(600), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    read_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
 
 class ActionLog(Base):
@@ -408,7 +452,7 @@ class ActionLog(Base):
     params: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     ok: Mapped[bool] = mapped_column(Boolean, default=True)
     message: Mapped[str] = mapped_column(String(400), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
 class Asset(Base):
@@ -420,7 +464,7 @@ class Asset(Base):
     content_type: Mapped[str] = mapped_column(String(80))
     size: Mapped[int] = mapped_column(Integer)
     uploaded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
 class Setting(Base):

@@ -24,6 +24,7 @@ from sqlalchemy.orm import selectinload
 from ..adapters import split_widget_kind
 from ..adapters.base import AdapterError, Context, WidgetData
 from ..config import get_settings
+from ..crypto import SecretUnreadable
 from ..db import db_session
 from ..models import ActionLog, Integration, Widget, utcnow
 from . import history
@@ -36,6 +37,8 @@ logger = logging.getLogger("nexdeck.collector")
 
 MAX_BACKOFF = 300
 MIN_INTERVAL = 5
+#: How long to wait before trying a card again that could not even be set up.
+RECOVERY_INTERVAL = 60.0
 
 
 class Collector:
@@ -143,13 +146,50 @@ class Collector:
         # service at the same instant.
         await asyncio.sleep(random.uniform(0.05, 1.5))
         while self.running:
-            interval = await self.refresh(widget_id)
+            try:
+                interval = await self.refresh(widget_id)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                # ⚠️ Anything that escapes here used to end the task for good.
+                # Nothing restarts it and nothing prints it, so the card stayed
+                # blank and the log stayed empty. Say it out loud, put it on
+                # the card, and try again on a long interval.
+                logger.exception("Widget %s could not be read.", widget_id)
+                live.set(widget_id, WidgetData(
+                    status="bad",
+                    error="This card could not be read. The server log says why.",
+                ))
+                await asyncio.sleep(RECOVERY_INTERVAL)
+                continue
             if interval is None:
                 return
             await asyncio.sleep(interval)
 
     async def refresh(self, widget_id: int) -> float | None:
-        """Fetch once, publish, and return the seconds until the next fetch."""
+        """Fetch once, publish, and return the seconds until the next fetch.
+
+        Everything that can fail before the adapter is even chosen (an
+        unreadable secret, a kind this build does not have) is turned into a
+        readable card here, so the caller never has to catch it.
+        """
+        try:
+            return await self._refresh(widget_id)
+        except asyncio.CancelledError:
+            raise
+        except AdapterError as failure:
+            live.set(widget_id, WidgetData(status="bad", error=failure.message, meta={"code": failure.code, "hint": failure.hint}))
+            return RECOVERY_INTERVAL
+        except SecretUnreadable:
+            logger.error("Widget %s has a secret this installation cannot read.", widget_id)
+            live.set(widget_id, WidgetData(
+                status="bad",
+                error="A stored secret cannot be read with this installation's key.",
+                meta={"code": "secret_unreadable", "hint": "The key changed. Enter the credentials of this connection again."},
+            ))
+            return RECOVERY_INTERVAL
+
+    async def _refresh(self, widget_id: int) -> float | None:
         with db_session() as db:
             widget = db.scalar(
                 select(Widget)

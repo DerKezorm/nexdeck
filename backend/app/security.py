@@ -89,6 +89,39 @@ def read_session_token(token: str) -> SessionClaims | None:
         return None
 
 
+def _kiosk_key() -> bytes:
+    secret = get_settings().resolved_secret_key().encode("utf-8")
+    return hashlib.sha256(b"nexdeck-kiosk:" + secret).digest()
+
+
+def create_kiosk_cookie(kiosk_id: int, expires: datetime | None) -> tuple[str, int]:
+    """A signed stand-in for a kiosk token, and how long it is good for.
+
+    ⚠️ The token itself used to be appended to every image, video and event
+    address, because none of those can carry a header. Each of those lines
+    lands in the reverse proxy log, and a display shows a few thousand a day.
+    The display hands its token in once and gets this back.
+    """
+    now = datetime.now(UTC)
+    ends = now + timedelta(days=1)
+    if expires is not None and expires < ends:
+        ends = expires
+    payload = {"kid": int(kiosk_id), "iat": int(now.timestamp()), "exp": int(ends.timestamp())}
+    return jwt.encode(payload, _kiosk_key(), algorithm=ALGORITHM), int((ends - now).total_seconds())
+
+
+def read_kiosk_cookie(raw: str) -> int | None:
+    """The kiosk token's number, or None if the cookie is not ours or is old."""
+    try:
+        payload = jwt.decode(raw, _kiosk_key(), algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        return None
+    try:
+        return int(payload["kid"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Opaque tokens: API tokens and kiosk tokens
 # ---------------------------------------------------------------------------

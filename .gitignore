@@ -27,3 +27,6 @@ notes/
 
 # Build output of tsc -b
 frontend/*.tsbuildinfo
+
+# Local preview helper, not part of the product.
+.claude/

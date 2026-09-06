@@ -288,6 +288,15 @@ body {
   padding: 0;
 }
 
+/* A row of these fits under a search field on a card two rows high. */
+.btn-xs {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  gap: 4px;
+}
+
 .btn-accent {
   background: var(--nd-accent);
   border-color: transparent;

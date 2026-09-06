@@ -18,6 +18,8 @@ class KomgaAdapter(Adapter):
     category = "media"
     description = "Libraries, series and books, and what was added last."
     icon = "komga"
+    #: Seen against a live Komga (06.09.2026).
+    beta = False
     docs_url = "https://komga.org/docs/api/rest"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://komga:25600"),

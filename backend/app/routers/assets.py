@@ -31,6 +31,31 @@ def list_assets(user: CurrentUser, db: DbSession, kind: str = "") -> list[dict]:
     return [_public(a) for a in db.scalars(query)]
 
 
+#: What must not be in an SVG that nexdeck serves.
+#:
+#: ⚠️ A blocklist is the wrong shape for this, and the previous one proved it:
+#: it named three strings, and ``onbegin=``, ``onmouseover=`` and ``onload =``
+#: with a space all walked past. This one is wider, and the response carries a
+#: sandbox on top so that a miss is not a hole.
+SVG_REFUSALS: tuple[tuple[re.Pattern[bytes], str], ...] = (
+    (re.compile(rb"<\s*script", re.I), "it contains a script"),
+    (re.compile(rb"<\s*foreignObject", re.I), "it contains foreign content"),
+    (re.compile(rb"<\s*(set|animate|animateTransform|animateMotion)\b", re.I), "it contains animation that can fire handlers"),
+    (re.compile(rb"\bon[a-z]+\s*=", re.I), "it carries an event handler"),
+    (re.compile(rb"javascript\s*:", re.I), "it carries a javascript: address"),
+    (re.compile(rb"<\s*(iframe|embed|object|handler)\b", re.I), "it embeds something else"),
+    (re.compile(rb"<!ENTITY", re.I), "it declares an entity"),
+)
+
+
+def unsafe_svg(data: bytes) -> str:
+    """Why this SVG is refused, or an empty string when it is fine."""
+    for pattern, why in SVG_REFUSALS:
+        if pattern.search(data):
+            return why
+    return ""
+
+
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Upload a background or icon")
 async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = "background") -> dict:
     if kind not in ("background", "icon"):
@@ -41,8 +66,10 @@ async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = 
     data = await file.read()
     if len(data) > MAX_BYTES:
         raise error("too_large", "The file is larger than 12 MB.")
-    if content_type == "image/svg+xml" and re.search(rb"<script|onload=|onerror=", data, re.IGNORECASE):
-        raise error("bad_svg", "The SVG contains scripting and was refused.")
+    if content_type == "image/svg+xml":
+        refused = unsafe_svg(data)
+        if refused:
+            raise error("bad_svg", f"The SVG was refused: {refused}")
     asset = Asset(kind=kind, filename="pending", content_type=content_type, size=len(data), uploaded_by=user.id)
     db.add(asset)
     db.flush()
@@ -65,7 +92,21 @@ def serve(asset_id: int, filename: str, db: DbSession) -> FileResponse:
     path = get_settings().uploads_dir / f"{asset.id}.{ALLOWED.get(asset.content_type, 'bin')}"
     if not path.exists():
         raise error("not_found", "The file is missing on disk.", status.HTTP_404_NOT_FOUND)
-    return FileResponse(path, media_type=asset.content_type, headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(
+        path,
+        media_type=asset.content_type,
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            # ⚠️ An uploaded file is somebody's bytes served from nexdeck's own
+            # address. "sandbox" puts it in an origin of its own, so even an
+            # SVG that got past the check above cannot read the session, add
+            # the request header the app expects, or touch a page that frames
+            # it. nosniff stops a browser from deciding it is HTML after all.
+            "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": f'inline; filename="{asset.filename}"',
+        },
+    )
 
 
 @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete an uploaded file")

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from . import demo as fake
-from .base import Adapter, Context, Field, WidgetData, WidgetType, base_url
+from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
 
 
 class FileFlowsAdapter(Adapter):
@@ -47,12 +47,29 @@ class FileFlowsAdapter(Adapter):
         return {"x-token": token} if token else {}
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, cache: float = 15) -> Any:
-        return await ctx.get_json(
+        response = await ctx.request(
+            "GET",
             f"{base_url(config)}/api{path}",
             headers=self._headers(config),
             verify=not config.get("insecure"),
             cache_seconds=cache,
         )
+        # ⚠️ A FileFlows that has not been through its wizard sends most of its
+        # addresses to /initial-config. Followed, that is HTML, and the card
+        # would say "did not answer with JSON", which sends the operator
+        # looking for a proxy. Seen against 25.x.
+        if "/initial-config" in str(response.url) or response.status_code in (301, 302, 307, 308):
+            raise AdapterError(
+                "FileFlows has not been set up yet.",
+                code="not_ready",
+                hint="Open FileFlows once in a browser and finish its first-run pages.",
+            )
+        if response.status_code >= 400:
+            raise AdapterError(f"FileFlows answered with HTTP {response.status_code}.", code="http_error")
+        try:
+            return response.json()
+        except ValueError as error:
+            raise AdapterError("FileFlows did not answer with JSON.", code="not_json") from error
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         status = await self._get(config, ctx, "/status", cache=0)

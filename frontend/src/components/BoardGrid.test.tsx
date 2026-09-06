@@ -1,18 +1,30 @@
 /**
- * Every card has a floor under its size: what it was created with. Saved
- * layouts below that floor are lifted, and the floor never exceeds the
- * columns of the form factor.
+ * Every card has a floor under its size: the smallest the adapter says it is
+ * still usable at. Saved layouts below that floor are lifted, and the floor
+ * never exceeds the columns of the form factor.
  */
 import type { WidgetView } from '../lib/types'
 import { layoutFor } from './BoardGrid'
 
-function widget(id: number, size: [number, number]): WidgetView {
-  return { id, kind: 'core.clock', title: 'Clock', icon: '', link: '', renderer: 'clock', options: {}, integration_id: null, refresh_seconds: null, default_size: size }
+function widget(id: number, size: [number, number], min?: [number, number]): WidgetView {
+  return {
+    id, kind: 'core.clock', title: 'Clock', icon: '', link: '', renderer: 'clock',
+    options: {}, integration_id: null, refresh_seconds: null,
+    default_size: size, min_size: min ?? size,
+  } as unknown as WidgetView
 }
 
 describe('layoutFor', () => {
-  it('never lets a card be smaller than the size it was created with', () => {
-    const [item] = layoutFor([{ i: '1', x: 0, y: 0, w: 1, h: 1 }], [widget(1, [3, 2])], 12)
+  it('lets a card go down to the size the adapter calls its minimum', () => {
+    // ⚠️ The floor used to be `default_size`, which made `min_size` dead:
+    // all 195 widgets declare one below their default, so none of them was
+    // ever reachable and a search bar could not be made into a bar.
+    const [item] = layoutFor([{ i: '1', x: 0, y: 0, w: 2, h: 1 }], [widget(1, [4, 2], [2, 1])], 12)
+    expect([item.w, item.h, item.minW, item.minH]).toEqual([2, 1, 2, 1])
+  })
+
+  it('still lifts a card that was saved below its minimum', () => {
+    const [item] = layoutFor([{ i: '1', x: 0, y: 0, w: 1, h: 1 }], [widget(1, [4, 2], [3, 2])], 12)
     expect([item.w, item.h, item.minW, item.minH]).toEqual([3, 2, 3, 2])
   })
 
@@ -29,5 +41,11 @@ describe('layoutFor', () => {
   it('places widgets without a position below the others', () => {
     const items = layoutFor([{ i: '1', x: 0, y: 0, w: 3, h: 2 }], [widget(1, [3, 2]), widget(2, [2, 1])], 12)
     expect(items[1]).toMatchObject({ i: '2', x: 0, y: 2, w: 3, h: 2, minW: 2, minH: 1 })
+  })
+
+  it('falls back to the default size when a widget declares no minimum', () => {
+    const bare = { ...widget(1, [3, 2]), min_size: undefined } as unknown as WidgetView
+    const [item] = layoutFor([{ i: '1', x: 0, y: 0, w: 1, h: 1 }], [bare], 12)
+    expect([item.minW, item.minH]).toEqual([3, 2])
   })
 })
