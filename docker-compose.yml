@@ -7,7 +7,7 @@
 # them and follow their logs. Read the notes on DOCKER_GID in .env.example.
 services:
   nexdeck:
-    image: ghcr.io/nexapps/nexdeck:latest
+    image: ghcr.io/derkezorm/nexdeck:latest
     container_name: nexdeck
     restart: unless-stopped
     ports:
