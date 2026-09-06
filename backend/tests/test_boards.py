@@ -365,3 +365,67 @@ def test_an_app_tile_follows_its_integration(client: TestClient) -> None:
     assert client.put(f"/api/v1/widgets/{clock['id']}/health", json={"kind": "http", "target": ""}, headers=CSRF).status_code == 400, "without an integration a check needs a target"
     other = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "radarr.queue", "integration_id": integration["id"]}, headers=CSRF)
     assert other.status_code == 400, "only app tiles may follow a service of another kind"
+
+
+def test_migration_keeps_findings_on_for_the_cards_that_already_exist(client: TestClient) -> None:
+    """⚠️ A default is retroactive.
+
+    "Show findings" became something you switch on. Cards carry no value of
+    their own, they inherit the default, so flipping it without this would
+    make every card on every board fall silent at once, including the ones
+    the operator wants loud. The old answer is written down once, here.
+    """
+    import json
+
+    from sqlalchemy import text
+
+    from app.db import get_engine
+    from app.migrations import MIGRATIONS
+
+    setup_admin(client)
+    board = _board(client)
+    page_id = board["pages"][0]["id"]
+    inherited = _widget(client, page_id, kind="core.clock")
+    decided = _widget(client, page_id, kind="core.clock")
+
+    with get_engine().begin() as connection:
+        # One card whose owner already said no. That answer has to survive.
+        connection.execute(
+            text("UPDATE widgets SET options = :o WHERE id = :i"),
+            {"o": json.dumps({"show_findings": False}), "i": decided["id"]},
+        )
+
+    step = {version: function for version, _description, function in MIGRATIONS}[8]
+    with get_engine().begin() as connection:
+        step(connection)
+        rows = dict(connection.execute(text("SELECT id, options FROM widgets")).all())
+
+    assert json.loads(rows[inherited["id"]])["show_findings"] is True, "it was loud, it stays loud"
+    assert json.loads(rows[decided["id"]])["show_findings"] is False, "and a decision is not overwritten"
+
+
+def test_the_migration_runs_twice_without_changing_its_mind(client: TestClient) -> None:
+    """It is written once; a second pass must not undo somebody's choice."""
+    import json
+
+    from sqlalchemy import text
+
+    from app.db import get_engine
+    from app.migrations import MIGRATIONS
+
+    setup_admin(client)
+    board = _board(client)
+    widget = _widget(client, board["pages"][0]["id"], kind="core.clock")
+    step = {version: function for version, _description, function in MIGRATIONS}[8]
+
+    with get_engine().begin() as connection:
+        step(connection)
+    with get_engine().begin() as connection:
+        connection.execute(
+            text("UPDATE widgets SET options = :o WHERE id = :i"),
+            {"o": json.dumps({"show_findings": False}), "i": widget["id"]},
+        )
+        step(connection)
+        raw = connection.execute(text("SELECT options FROM widgets WHERE id = :i"), {"i": widget["id"]}).scalar()
+
+    assert json.loads(raw)["show_findings"] is False

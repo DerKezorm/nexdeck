@@ -46,6 +46,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  /** The last answer from the server, kept so a row picker knows the rows. */
+  const [preview, setPreview] = useState<WidgetData | null>(null)
 
   const adapterKind = widget?.kind.split('.')[0] ?? ''
   const adapter = adapters.data?.find((a) => a.kind === adapterKind)
@@ -53,6 +55,9 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
 
   useEffect(() => {
     if (!widget) return
+    // ⚠️ The answer belonged to the card that was open before. Left standing,
+    // the row picker of the next card lists the wrong rows, or none.
+    setPreview(null)
     setTitle(widget.title)
     setIcon(widget.icon)
     setLink(widget.link)
@@ -74,7 +79,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     if (!widget) return
     const savedIntegration = widget.integration_id ? String(widget.integration_id) : ''
     const changed = JSON.stringify(options) !== JSON.stringify(widget.options) || integrationId !== savedIntegration
-    if (!changed) {
+    // ⚠️ One fetch on opening even when nothing changed, but only where a
+    // field needs to list the card's own rows: without it the picker would be
+    // empty until the first edit, which is the one moment nobody edits.
+    const needsRows = !changed && preview === null && (spec?.options ?? []).some((option) => option.type === 'items')
+    if (!changed && !needsRows) {
       onPreviewData?.(widget.id, null)
       return
     }
@@ -84,12 +93,16 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         integration_id: integrationId ? Number(integrationId) : undefined,
         clear_integration: !integrationId && adapter?.needs_integration ? true : undefined,
       })
-        .then((data) => onPreviewData?.(widget.id, data))
+        .then((data) => {
+          setPreview(data)
+          // A fetch made only to fill the picker must not repaint the card.
+          if (changed) onPreviewData?.(widget.id, data)
+        })
         .catch(() => undefined)
-    }, 400)
+    }, changed ? 400 : 0)
     return () => window.clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, integrationId, widget?.id])
+  }, [options, integrationId, widget?.id, spec?.kind])
 
   if (!widget) return null
   const isApp = widget.kind === 'core.app'
@@ -179,12 +192,31 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           <Select id="w-int" value={integrationId} onChange={chooseIntegration} options={[{ value: '', label: t('widget.noIntegration') }, ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
         </Field>
       )}
-      {spec?.options.map((option) => (
-        <FieldInput key={option.name} spec={option} value={options[option.name]} onChange={(value) => setOptions((o) => ({ ...o, [option.name]: value }))} />
-      ))}
+      {/* ⚠️ An option that does nothing is not on screen. The volume card in
+          its dial view offered "usage bar" and "percentage", which describe a
+          row of a list, and a dial has no rows: three switches that moved and
+          changed nothing. */}
+      {spec?.options
+        .filter((option) => {
+          if (!option.only_when) return true
+          const [name, wanted] = option.only_when
+          const current = options[name] ?? spec.options.find((other) => other.name === name)?.default
+          return String(current ?? '') === wanted
+        })
+        .map((option) => (
+          <FieldInput
+            key={option.name}
+            spec={option}
+            value={options[option.name]}
+            items={preview?.items as Record<string, unknown>[] | undefined}
+            allTitles={preview?.meta?.all_items as string[] | undefined}
+            integrationId={integrationId ? Number(integrationId) : undefined}
+            onChange={(value) => setOptions((o) => ({ ...o, [option.name]: value }))}
+          />
+        ))}
       {/* Cards with server data can hand their alarm to a Findings card next to them. */}
       {!spec?.client_only && (
-        <Switch checked={options.show_findings !== false} onChange={(value) => setOptions((o) => ({ ...o, show_findings: value }))} label={t('widget.showFindings')} description={t('widget.showFindingsHelp')} />
+        <Switch checked={options.show_findings === true} onChange={(value) => setOptions((o) => ({ ...o, show_findings: value }))} label={t('widget.showFindings')} description={t('widget.showFindingsHelp')} />
       )}
       {isApp && (
         <div className="rounded-xl border border-line p-3 mb-3">

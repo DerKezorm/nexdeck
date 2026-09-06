@@ -25,6 +25,8 @@ export function ProfileSettings() {
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
+  /** Whether the two fields above the button differ from what is stored. */
+  const dirty = displayName !== (user.display_name ?? '') || email !== (user.email ?? '')
   const failed = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
   const pickPicture = (file: File) => {
     void upload('/auth/me/avatar', file)
@@ -84,16 +86,26 @@ export function ProfileSettings() {
             <input id="p-mail" className="input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
         </div>
-        <button
-          className="btn mb-3"
-          onClick={() =>
-            void update({ display_name: displayName, email })
-              .then(() => setToast({ text: t('common.saved'), level: 'ok' }))
-              .catch(failed)
-          }
-        >
-          {t('common.save')}
-        </button>
+        {/* ⚠️ Everything below this saves the moment it changes; these two
+            fields need a press. A quiet button under the left column reads as
+            belonging to the name above it, so somebody who fills in the
+            address looks for a second one and reports that there is none.
+            It spans both fields, it lights up when there is something to
+            save, and it says so when there is not. */}
+        <div className="mb-3 flex items-center gap-3">
+          <button
+            className={dirty ? 'btn btn-accent' : 'btn'}
+            disabled={!dirty}
+            onClick={() =>
+              void update({ display_name: displayName, email })
+                .then(() => setToast({ text: t('common.saved'), level: 'ok' }))
+                .catch(failed)
+            }
+          >
+            {t('settings.profile.saveProfile')}
+          </button>
+          {dirty && <span className="text-[12px] text-warn">{t('settings.profile.unsaved')}</span>}
+        </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label={t('settings.profile.language')} htmlFor="p-lang">
             <Select id="p-lang" value={user.locale} onChange={(locale) => void update({ locale })} options={Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))} />

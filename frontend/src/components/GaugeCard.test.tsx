@@ -87,3 +87,69 @@ describe('GaugeCard', () => {
     expect(Number(y1)).toBeGreaterThan(50)
   })
 })
+
+describe('the arc itself', () => {
+  /** The filled arc of a card at this share, as SVG path data. */
+  function filledArc(share: number): string {
+    const { container, unmount } = draw({
+      status: 'ok',
+      primary: { label: 'Memory', value: share, unit: '%' },
+      meta: { renderer: 'gauge', gauge: { share } },
+    } as WidgetData)
+    const paths = container.querySelectorAll('path')
+    const arc = paths[1]?.getAttribute('d') ?? ''
+    unmount()
+    return arc
+  }
+
+  /** The large-arc flag SVG was handed: 0 draws the short way, 1 the long way. */
+  function largeFlag(share: number): number {
+    const match = /A [\d.]+ [\d.]+ 0 (\d)/.exec(filledArc(share))
+    return Number(match?.[1])
+  }
+
+  it('goes the short way round below two thirds and the long way above', () => {
+    /**
+     * ⚠️ The face spans 270°, not 360, so the flag flips at two thirds of the
+     * way and not at half. Read as half, every value between 50% and 67% was
+     * drawn the long way round: a ring with a bite out of the wrong side.
+     */
+    expect(largeFlag(10)).toBe(0)
+    expect(largeFlag(53)).toBe(0)
+    expect(largeFlag(66)).toBe(0)
+    expect(largeFlag(68)).toBe(1)
+    expect(largeFlag(100)).toBe(1)
+  })
+
+  it('flips exactly once, and where the arc passes half a turn', () => {
+    // From 2 upwards: a share of 0 draws no filled arc at all, which the next
+    // test is about.
+    const shares = [...Array(99).keys()].map((n) => n + 2)
+    const flipping = shares.filter((share) => largeFlag(share) !== largeFlag(share - 1))
+    expect(flipping, 'one change, at 180 degrees of the 270 the face spans').toEqual([67])
+  })
+
+  it('draws no filled arc at all when there is nothing to fill', () => {
+    const { container } = draw({
+      status: 'ok',
+      primary: { label: 'Memory', value: 0, unit: '%' },
+      meta: { renderer: 'gauge', gauge: { share: 0 } },
+    } as WidgetData)
+    expect(container.querySelectorAll('path')).toHaveLength(1)
+  })
+
+  it('ends where the needle points', () => {
+    /** A filled arc that stops somewhere else than the needle is two answers. */
+    const { container } = draw({
+      status: 'ok',
+      primary: { label: 'Memory', value: 53, unit: '%' },
+      meta: { renderer: 'gauge', gauge: { share: 53 } },
+    } as WidgetData)
+    const arc = container.querySelectorAll('path')[1].getAttribute('d')!
+    const [, ex, ey] = /A [\d.]+ [\d.]+ 0 \d 1 ([\d.-]+) ([\d.-]+)/.exec(arc)!.map(Number) as unknown as number[]
+    const angleOfEnd = (Math.atan2(Number(ey) - 50, Number(ex) - 50) * 180) / Math.PI
+    const needle = needleShare(container)
+    const asShare = (((angleOfEnd < 135 ? angleOfEnd + 360 : angleOfEnd) - 135) / 270) * 100
+    expect(asShare).toBeCloseTo(needle, 0)
+  })
+})

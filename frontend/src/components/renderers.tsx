@@ -193,9 +193,12 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
 // Gauge: a dial, the way a rev counter looks
 // ---------------------------------------------------------------------------
 
+/** How far round the face a full dial goes. Not 360: it opens at the bottom. */
+const SWEEP = 270
+
 /** Where a point sits on an arc that opens downwards, 135° to 405°. */
 function dialPoint(share: number, radius: number): [number, number] {
-  const angle = ((135 + (share / 100) * 270) * Math.PI) / 180
+  const angle = ((135 + (share / 100) * SWEEP) * Math.PI) / 180
   return [50 + radius * Math.cos(angle), 50 + radius * Math.sin(angle)]
 }
 
@@ -203,7 +206,11 @@ function dialPoint(share: number, radius: number): [number, number] {
 function dialArc(from: number, to: number, radius: number): string {
   const [x1, y1] = dialPoint(from, radius)
   const [x2, y2] = dialPoint(to, radius)
-  const large = (to - from) / 100 > 0.5 ? 1 : 0
+  // ⚠️ Measured in degrees, not in share. The flag tells SVG which of the two
+  // arcs between the points to draw, and it flips past a half turn, which on
+  // a 270° face is two thirds of the way and not half. Reading it as half
+  // sent every value between 50% and 67% the long way round the dial.
+  const large = ((to - from) / 100) * SWEEP > 180 ? 1 : 0
   return `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`
 }
 

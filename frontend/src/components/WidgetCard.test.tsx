@@ -45,7 +45,7 @@ describe('WidgetCard', () => {
   })
 
   it('explains the status dot in words, with the reason the service gives', () => {
-    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '', options: { show_findings: true } }
     render(<WidgetCard widget={view} data={{ status: 'bad', primary: { label: 'Waiting', value: 0 }, meta: { status_reason: '1 error finding(s), 0 warning(s)', urgent: ['A service is unreachable'] } }} />)
     const dot = screen.getByRole('img', { name: /^Error/ })
     expect(dot).toHaveAttribute('title', 'Error · 1 error finding(s), 0 warning(s) · A service is unreachable')
@@ -64,15 +64,17 @@ describe('WidgetCard', () => {
   })
 
   it('writes the reason for a warning into the header', () => {
-    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '', options: { show_findings: true } }
     render(<WidgetCard widget={view} data={{ status: 'warn', primary: { label: 'Clients', value: 76 }, meta: { status_reason: '3 device(s) offline' } }} />)
     const header = screen.getByRole('heading', { name: view.title }).parentElement!
     expect(header).toHaveTextContent('3 device(s) offline')
     expect(screen.getByRole('img', { name: 'Warning · 3 device(s) offline' })).toBeInTheDocument()
   })
 
-  it('keeps calm when findings are switched off for the card', () => {
-    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '', options: { show_findings: false } }
+  it('is calm until findings are switched on, which is how a new card starts', () => {
+    /** ⚠️ Switched on, not switched off. A board where every card may shout
+        is a board where the colour stops meaning anything. */
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '', options: {} }
     render(<WidgetCard widget={view} data={{ status: 'warn', primary: { label: 'Clients', value: 76 }, meta: { status_reason: '3 device(s) offline' } }} />)
     expect(screen.queryByText('3 device(s) offline')).toBeNull()
     expect(screen.getByRole('img', { name: 'Everything is fine' })).toBeInTheDocument()

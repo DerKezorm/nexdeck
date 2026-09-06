@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import AdapterError, Context
-from ..deps import AdminUser, CurrentUser, DbSession, error
+from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
 from ..services.collector import collector
@@ -148,6 +148,31 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
     except Exception as failure:  # noqa: BLE001
         return {"ok": False, "message": f"Unexpected error: {failure.__class__.__name__}.", "hint": "", "code": "crash"}
     return {"ok": True, "message": message}
+
+
+@router.get("/integrations/{integration_id}/choices/{field}", summary="What a widget field can be set to, asked of the service")
+async def field_choices(integration_id: int, field: str, user: CurrentUser, db: DbSession) -> list[dict[str, str]]:
+    """Fills a dropdown whose answers live on the service, not in the code.
+
+    ⚠️ Through ``require_integration``, like everything else that reaches a
+    connection by a number out of a widget option. A connection reserved for
+    administrators must not hand out its device names to anybody who can guess
+    a number.
+    """
+    integration = require_integration(db, integration_id, user)
+    try:
+        adapter = get_adapter(integration.kind)
+    except KeyError as failure:
+        raise error("unknown_kind", f"There is no adapter {integration.kind!r}.") from failure
+    ctx = Context(collector.client, integration_id=integration.id, cache={})
+    try:
+        offered = await adapter.choices(field, resolve_config(integration), ctx)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message) from failure
+    except Exception as failure:  # noqa: BLE001 - a dropdown must not take the sheet down
+        logger.warning("Choices for %s.%s failed: %s", integration.kind, field, failure)
+        raise error("choices_failed", "The service did not answer with a list.") from failure
+    return [{"value": value, "label": label} for value, label in offered]
 
 
 @router.post("/integrations/{integration_id}/test", summary="Test a saved integration")

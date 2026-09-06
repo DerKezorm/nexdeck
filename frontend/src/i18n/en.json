@@ -179,7 +179,9 @@
       "sessionsHelp": "Every browser that is signed in with this account.",
       "signOutSession": "Sign out",
       "signOut": "Sign out here",
-      "confirmPassword": "Repeat new password"
+      "confirmPassword": "Repeat new password",
+      "saveProfile": "Save name and address",
+      "unsaved": "Not saved yet"
     },
     "integrations": {
       "title": "Integrations",
@@ -527,7 +529,9 @@
     "deletePageTitle": "Delete the page {{name}}?",
     "deletePageEmpty": "The page is empty; nothing is lost.",
     "deletePageBody": "Its {{count}} cards go with it, including their history.",
-    "lastPage": "A board keeps at least one page."
+    "lastPage": "A board keeps at least one page.",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down"
   },
   "widget": {
     "remove": {
@@ -577,9 +581,19 @@
     "iconCount": "{{count}} logos",
     "iconMore": "Show {{count}} more",
     "showFindings": "Show findings",
-    "showFindingsHelp": "Off: the card shows neither the reason nor the warning colour. Use it when a Findings card next to it says what is wrong.",
+    "showFindingsHelp": "On: the card carries the reason and the warning colour. Off, which is how a new card starts: neither, so the colour on the boards means something when it does appear.",
     "pageHelp": "Puts the card on another page of this board. Leave it to keep the card here.",
-    "noSources": "No connection of a suitable kind is set up yet."
+    "noSources": "No connection of a suitable kind is set up yet.",
+    "rows": {
+      "none": "The card has no entries to pick from right now.",
+      "all": "All entries",
+      "some": "{{count}} of them"
+    },
+    "choices": {
+      "pickConnection": "Pick a connection first, then this fills.",
+      "none": "This connection offers nothing to pick here.",
+      "unset": "Not picked"
+    }
   },
   "library": {
     "title": "Add a widget",

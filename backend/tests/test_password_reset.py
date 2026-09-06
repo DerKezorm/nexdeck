@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -27,8 +28,17 @@ SMTP = {
 NEW = "a-brand-new-long-one"
 
 
-def _with_mail(client: TestClient) -> None:
+PUBLIC = "https://deck.example.com"
+
+
+def _with_mail(client: TestClient, url: str = PUBLIC) -> None:
+    """A mail server and an address to put in front of the link.
+
+    Both, because a link without a host is a line of text nobody can click.
+    """
     assert client.put("/api/v1/settings/mail", json=SMTP, headers=CSRF).status_code == 200
+    if url:
+        assert client.patch("/api/v1/settings", json={"public_url": url}, headers=CSRF).status_code == 200
 
 
 def _stored_hash(username: str) -> str | None:
@@ -57,12 +67,18 @@ def _plant(username: str = "admin", minutes: int = 30) -> str:
     return token
 
 
-def test_it_is_only_offered_with_a_mail_server(client: TestClient) -> None:
-    """Without one there is nowhere to send the link."""
+def test_it_needs_a_mail_server_and_an_address(client: TestClient) -> None:
+    """⚠️ Two conditions, not one. Without a server there is nowhere to send
+    the link; without a public URL there is no link, only a path."""
     setup_admin(client)
     with db_session() as db:
-        assert password_reset.available(db) is False
-    _with_mail(client)
+        assert password_reset.available(db) is False, "neither"
+
+    _with_mail(client, url="")
+    with db_session() as db:
+        assert password_reset.available(db) is False, "a server but no address"
+
+    assert client.patch("/api/v1/settings", json={"public_url": PUBLIC}, headers=CSRF).status_code == 200
     with db_session() as db:
         assert password_reset.available(db) is True
 
@@ -273,3 +289,95 @@ def test_the_sign_in_page_is_told_whether_the_link_can_be_offered(client: TestCl
     assert client.get("/api/v1/setup/status").json()["can_reset_password"] is False
     _with_mail(client)
     assert client.get("/api/v1/setup/status").json()["can_reset_password"] is True
+
+
+# ---------------------------------------------------------------------------
+# What actually lands in the mail
+# ---------------------------------------------------------------------------
+
+
+def _catch_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str]]:
+    """Hold the outgoing mail instead of sending it, and hand it back."""
+    caught: list[tuple[str, str, str]] = []
+
+    def instead(_config: dict, to_address: str, subject: str, body: str) -> None:
+        caught.append((to_address, subject, body))
+
+    monkeypatch.setattr("app.services.mail.send", instead)
+    return caught
+
+
+def test_the_link_in_the_mail_carries_the_host(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The one that made the whole feature useless. The mail carried
+    "/reset/nr_..." with nothing in front of it, because the address was read
+    only from the setting and this installation had it in the environment."""
+    setup_admin(client)
+    client.patch("/api/v1/auth/me", json={"email": "admin@example.com"}, headers=CSRF)
+    _with_mail(client)
+    caught = _catch_mail(monkeypatch)
+
+    client.post("/api/v1/auth/forgot", json={"username": "admin"}, headers=CSRF)
+
+    assert len(caught) == 1
+    _to, _subject, body = caught[0]
+    assert f"{PUBLIC}/reset/nr_" in body
+    assert "\n/reset/" not in body, "a path on its own is not a link"
+
+
+def test_the_address_may_come_from_the_environment(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The ordinary Docker case: NEXDECK_PUBLIC_URL in the compose file and
+    nothing in the settings. The rest of the app falls back to it; this did
+    not, and only this one sends a link out of the building."""
+    monkeypatch.setenv("NEXDECK_PUBLIC_URL", "https://deck.example.org")
+    from app import config
+
+    config.reset_settings_cache()
+
+    setup_admin(client)
+    client.patch("/api/v1/auth/me", json={"email": "admin@example.com"}, headers=CSRF)
+    _with_mail(client, url="")
+    with db_session() as db:
+        assert password_reset.available(db) is True, "the variable counts"
+
+    caught = _catch_mail(monkeypatch)
+    client.post("/api/v1/auth/forgot", json={"username": "admin"}, headers=CSRF)
+    assert "https://deck.example.org/reset/nr_" in caught[0][2]
+
+
+def test_a_stored_address_beats_the_environment(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Somebody who types one into the settings means it."""
+    monkeypatch.setenv("NEXDECK_PUBLIC_URL", "https://from-the-compose-file.example.org")
+    from app import config
+
+    config.reset_settings_cache()
+
+    setup_admin(client)
+    client.patch("/api/v1/auth/me", json={"email": "admin@example.com"}, headers=CSRF)
+    _with_mail(client)
+    caught = _catch_mail(monkeypatch)
+    client.post("/api/v1/auth/forgot", json={"username": "admin"}, headers=CSRF)
+    assert f"{PUBLIC}/reset/nr_" in caught[0][2]
+
+
+def test_no_address_means_no_mail_at_all(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ Refused, not sent half. A mail that arrives with an unusable link is
+    worse than none: the person waits for the one that already came."""
+    setup_admin(client)
+    client.patch("/api/v1/auth/me", json={"email": "admin@example.com"}, headers=CSRF)
+    _with_mail(client, url="")
+    caught = _catch_mail(monkeypatch)
+
+    answer = client.post("/api/v1/auth/forgot", json={"username": "admin"}, headers=CSRF)
+    assert answer.status_code == 202, "and the form still says the same thing"
+    assert caught == []
+    assert _stored_hash("admin") is None, "and no link was written either"
+
+
+def test_a_trailing_slash_does_not_double_up(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    setup_admin(client)
+    client.patch("/api/v1/auth/me", json={"email": "admin@example.com"}, headers=CSRF)
+    _with_mail(client, url="https://deck.example.com/")
+    caught = _catch_mail(monkeypatch)
+    client.post("/api/v1/auth/forgot", json={"username": "admin"}, headers=CSRF)
+    assert "https://deck.example.com/reset/nr_" in caught[0][2]
+    assert "//reset/" not in caught[0][2]
