@@ -6,12 +6,15 @@ export class ApiError extends Error {
   code: string
   status: number
   hint?: string
+  /** Everything else the server put in the detail: a ticket, a count, a name. */
+  detail: Record<string, unknown>
 
-  constructor(status: number, code: string, message: string, hint?: string) {
+  constructor(status: number, code: string, message: string, hint?: string, detail: Record<string, unknown> = {}) {
     super(message)
     this.status = status
     this.code = code
     this.hint = hint
+    this.detail = detail
   }
 }
 
@@ -74,9 +77,45 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   if (!response.ok) {
     const detail = (data as { detail?: { code?: string; message?: string; hint?: string } } | null)?.detail
     const flat = data as { code?: string; message?: string } | null
-    throw new ApiError(response.status, detail?.code ?? flat?.code ?? 'error', detail?.message ?? flat?.message ?? `HTTP ${response.status}`, detail?.hint)
+    throw new ApiError(
+      response.status,
+      detail?.code ?? flat?.code ?? 'error',
+      detail?.message ?? flat?.message ?? `HTTP ${response.status}`,
+      detail?.hint,
+      (detail ?? {}) as Record<string, unknown>,
+    )
   }
   return data as T
+}
+
+/**
+ * Ask for a file and hand it to the browser as a download.
+ *
+ * ⚠️ A POST, not a link. The one caller is the backup archive, whose password
+ * travels in the body: in a query string it would sit in every reverse proxy
+ * log between here and the server.
+ */
+export async function downloadPost(path: string, filename: string, json: unknown): Promise<void> {
+  const response = await api<Response>(path, { method: 'POST', json, raw: true })
+  if (!response.ok) {
+    const text = await response.text()
+    let data: { detail?: { code?: string; message?: string } } | null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = null
+    }
+    throw new ApiError(response.status, data?.detail?.code ?? 'error', data?.detail?.message ?? `HTTP ${response.status}`)
+  }
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.append(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
 }
 
 export const get = <T>(path: string) => api<T>(path)

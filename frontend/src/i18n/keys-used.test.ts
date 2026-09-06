@@ -38,4 +38,23 @@ describe('translation keys used in the source', () => {
     const missing = [...used].filter((key) => !exists(key)).sort()
     expect(missing, 'keys used in components but missing from en.json').toEqual([])
   })
+
+  it('finds keys that are not written inside a t() call', () => {
+    // ⚠️ A key does not have to sit inside a t(…) call to be one. The restore
+    // dialog picks its warning first and translates it afterwards, so the key
+    // lives in a plain string. This guard walked straight past a whole set of
+    // them that pointed at a section which does not exist.
+    const sections = new Set(Object.keys(en))
+    const loose = new Set<string>()
+    for (const file of source) {
+      const text = readFileSync(file, 'utf8')
+      for (const match of text.matchAll(/'([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+){1,4})'/g)) {
+        if (sections.has(match[1].split('.')[0])) loose.add(match[1])
+      }
+    }
+    expect(loose.size, 'the scan found nothing at all').toBeGreaterThan(0)
+    const missing = [...loose].filter((key) => !exists(key)).sort()
+    expect(missing, 'strings shaped like a translation key that point nowhere').toEqual([])
+  })
 })
+

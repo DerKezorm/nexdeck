@@ -5,21 +5,33 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request, Response, UploadFile, status
+from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, status
 from sqlalchemy import func, select
 
 from ..config import get_settings
 from ..deps import COOKIE_NAME, CurrentUser, DbSession, error
 from ..models import Notice, OidcProvider, Session, User, utcnow
-from ..schemas import LoginBody, MePatch, PasswordBody, UserPublic
+from ..schemas import (
+    LoginBody,
+    MePatch,
+    PasswordBody,
+    ResetBody,
+    ResetRequest,
+    SecondStepBody,
+    TwoFactorConfirm,
+    TwoFactorOff,
+    UserPublic,
+)
 from ..security import (
     create_session_token,
+    create_step_token,
     has_usable_password,
     hash_password,
     now_ms,
+    read_step_token,
     verify_password,
 )
-from ..services import avatars, login_guard, mail
+from ..services import avatars, login_guard, mail, password_reset, two_factor
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 logger = logging.getLogger("nexdeck.auth")
@@ -85,7 +97,68 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
         logger.info("Sign-in refused for %r from %s.", body.username, address)
         raise error("bad_credentials", "User name or password is wrong.", status.HTTP_401_UNAUTHORIZED)
     login_guard.succeeded(address, body.username)
+    if two_factor.enabled(user):
+        # ⚠️ No session yet. The ticket says the password was right and can be
+        # exchanged for a session only together with a code; on its own it
+        # opens nothing.
+        logger.info("%s gave the right password from %s and now needs a code.", user.username, address)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "second_step",
+                "message": "Enter the code from your authenticator app.",
+                "ticket": create_step_token(user.id),
+                "recovery": two_factor.codes_left(user) > 0,
+            },
+        )
     open_session(db, user, request, response)
+    logger.info("%s signed in from %s.", user.username, address)
+    if two_factor.must_set_up(db, user):
+        # Signed in, but the installation wants a factor before anything else.
+        logger.info("%s is being asked to set up a second factor.", user.username)
+    return user_public(user, request)
+
+
+@router.post("/login/second-step", response_model=UserPublic, summary="Finish a sign-in with the second factor")
+def second_step(body: SecondStepBody, request: Request, response: Response, db: DbSession) -> UserPublic:
+    """The other half: the ticket from the first step, plus a code.
+
+    Throttled like the first step, and per account, because the ticket already
+    says which account it is: without that, six digits are guessable.
+    """
+    address = request.client.host if request.client else "?"
+    claims = read_step_token(body.ticket)
+    if claims is None:
+        raise error("bad_ticket", "That sign-in took too long. Start again.", status.HTTP_401_UNAUTHORIZED)
+    user_id, issued_ms = claims
+    user = db.get(User, user_id)
+    if user is None or user.disabled or issued_ms < user.password_changed_ms:
+        raise error("bad_ticket", "That sign-in took too long. Start again.", status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        login_guard.check(address, f"2fa:{user.username}")
+    except login_guard.TooManyAttempts:
+        raise error(
+            "too_many_attempts", "Too many wrong codes. Try again in a few minutes.",
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        ) from None
+
+    used_recovery = False
+    if body.recovery_code.strip():
+        used_recovery = two_factor.use_code(db, user, body.recovery_code)
+        ok = used_recovery
+    else:
+        ok = two_factor.check_code(db, user, body.code)
+    if not ok:
+        login_guard.failed(address, f"2fa:{user.username}")
+        logger.info("A wrong second factor for %s from %s.", user.username, address)
+        raise error("bad_code", "That code is not right.", status.HTTP_401_UNAUTHORIZED)
+
+    login_guard.succeeded(address, f"2fa:{user.username}")
+    open_session(db, user, request, response)
+    left = two_factor.codes_left(user)
+    logger.info("%s signed in from %s with %s.", user.username, address,
+                f"a recovery code, {left} left" if used_recovery else "a code")
     return user_public(user, request)
 
 
@@ -100,6 +173,7 @@ def logout(request: Request, response: Response, db: DbSession) -> None:
         if session is not None:
             session.revoked = True
             db.commit()
+            logger.info("A browser session was signed out.")
     clear_session_cookie(response)
 
 
@@ -171,6 +245,9 @@ def change_password(body: PasswordBody, user: CurrentUser, db: DbSession) -> Non
     user.password_hash = hash_password(body.new_password)
     user.password_changed_ms = now_ms()
     db.commit()
+    # Worth a line of its own: it ends every other session and every API token
+    # of the account, which is what somebody reads this log to find out.
+    logger.info("%s changed their password; every other session and token of the account ends here.", user.username)
 
 
 @router.get("/sessions", summary="List own browser sessions")
@@ -186,6 +263,7 @@ def revoke_session(session_id: int, user: CurrentUser, db: DbSession) -> None:
         raise error("not_found", "There is no such session.", status.HTTP_404_NOT_FOUND)
     session.revoked = True
     db.commit()
+    logger.info("%s signed another of their browser sessions out.", user.username)
 
 
 @router.get("/unread", summary="Count unread notices")
@@ -203,3 +281,118 @@ def providers(db: DbSession) -> list[dict]:
 
 def utc_now_iso() -> str:
     return utcnow().isoformat()
+
+
+# ---------------------------------------------------------------------------
+# The second factor, from the owner's side
+# ---------------------------------------------------------------------------
+
+
+@router.get("/two-factor", summary="Whether this account has a second factor")
+def two_factor_state(user: CurrentUser, db: DbSession) -> dict:
+    return {
+        "enabled": two_factor.enabled(user),
+        "recovery_codes_left": two_factor.codes_left(user),
+        "required_by_operator": two_factor.required(db),
+    }
+
+
+@router.post("/two-factor/start", summary="Begin setting up a second factor")
+def two_factor_start(user: CurrentUser, db: DbSession) -> dict:
+    """Hands out a fresh secret and the QR code that carries it.
+
+    ⚠️ Nothing is switched on here. The secret is stored unconfirmed, and only
+    a code that it produced turns it on, so a setup somebody abandoned halfway
+    cannot lock them out.
+    """
+    if two_factor.enabled(user):
+        raise error("already_on", "This account already has a second factor.", status.HTTP_409_CONFLICT)
+    secret = two_factor.new_secret()
+    two_factor.store_secret(user, secret)
+    db.commit()
+    url = two_factor.otpauth_url(user, secret)
+    logger.info("%s started setting up a second factor.", user.username)
+    return {"secret": secret, "otpauth_url": url, "qr_svg": two_factor.qr_svg(url)}
+
+
+@router.post("/two-factor/confirm", summary="Switch the second factor on with a code")
+def two_factor_confirm(body: TwoFactorConfirm, user: CurrentUser, db: DbSession) -> dict:
+    """The recovery codes come back here, in the clear, exactly once."""
+    if two_factor.enabled(user):
+        raise error("already_on", "This account already has a second factor.", status.HTTP_409_CONFLICT)
+    if not user.totp_secret:
+        raise error("not_started", "Start the setup first.", status.HTTP_409_CONFLICT)
+    if not two_factor.check_code(db, user, body.code):
+        raise error("bad_code", "That code is not right. Check the time on the phone as well.", status.HTTP_400_BAD_REQUEST)
+    user.totp_confirmed = True
+    db.commit()
+    codes = two_factor.new_codes(db, user)
+    logger.info("%s switched a second factor on.", user.username)
+    return {"enabled": True, "recovery_codes": codes}
+
+
+@router.post("/two-factor/recovery-codes", summary="Replace the recovery codes")
+def two_factor_recovery(body: TwoFactorOff, user: CurrentUser, db: DbSession) -> dict:
+    """Fresh codes, shown once. The old ones stop working immediately."""
+    if not two_factor.enabled(user):
+        raise error("not_on", "This account has no second factor.", status.HTTP_409_CONFLICT)
+    if has_usable_password(user.password_hash) and not verify_password(body.password, user.password_hash):
+        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    return {"recovery_codes": two_factor.new_codes(db, user)}
+
+
+@router.delete("/two-factor", status_code=status.HTTP_204_NO_CONTENT, summary="Switch the second factor off")
+def two_factor_disable(body: TwoFactorOff, user: CurrentUser, db: DbSession) -> None:
+    if has_usable_password(user.password_hash) and not verify_password(body.password, user.password_hash):
+        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    if two_factor.required(db):
+        raise error(
+            "required_by_operator",
+            "A second factor is required for every account on this installation.",
+            status.HTTP_409_CONFLICT,
+        )
+    two_factor.turn_off(db, user)
+
+
+# ---------------------------------------------------------------------------
+# Forgotten passwords
+# ---------------------------------------------------------------------------
+
+
+@router.post("/forgot", status_code=status.HTTP_202_ACCEPTED, summary="Ask for a link to set a new password")
+def forgot(body: ResetRequest, request: Request, db: DbSession) -> dict:
+    """Always the same answer.
+
+    ⚠️ Whether the name exists, whether the account carries an address,
+    whether the mail went out: identical. Anything else turns this into a list
+    of who has an account here.
+    """
+    address = request.client.host if request.client else "?"
+    try:
+        # Counted like a sign-in: this sends mail, and somebody who can send
+        # a hundred of them can fill an inbox.
+        login_guard.check(address, f"forgot:{body.username.lower()}")
+    except login_guard.TooManyAttempts:
+        raise error(
+            "too_many_attempts", "Too many attempts. Try again in a few minutes.",
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        ) from None
+    login_guard.failed(address, f"forgot:{body.username.lower()}")
+    password_reset.request(db, body.username)
+    return {"sent": True}
+
+
+@router.get("/reset/{token}", summary="Whether a reset link is still good")
+def reset_state(token: str, db: DbSession) -> dict:
+    user = password_reset.holder(db, token)
+    return {"valid": user is not None, "username": user.username if user else ""}
+
+
+@router.post("/reset", status_code=status.HTTP_204_NO_CONTENT, summary="Set a new password with a reset link")
+def reset(body: ResetBody, db: DbSession) -> None:
+    if not password_reset.redeem(db, body.token, body.new_password):
+        raise error(
+            "bad_token",
+            "That link is used up or too old. Ask for a new one.",
+            status.HTTP_400_BAD_REQUEST,
+        )

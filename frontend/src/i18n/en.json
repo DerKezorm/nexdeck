@@ -14,7 +14,9 @@
     "copy": "Copy",
     "edit": "Edit",
     "loading": "Loading…",
-    "toggleTheme": "Switch light and dark"
+    "toggleTheme": "Switch light and dark",
+    "refresh": "Refresh",
+    "download": "Download"
   },
   "errors": {
     "network": "The server could not be reached.",
@@ -57,7 +59,35 @@
     "confirmPassword": "Confirm password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "mismatch": "The two passwords differ."
+    "mismatch": "The two passwords differ.",
+    "forgot": {
+      "link": "Forgotten your password?",
+      "lead": "Enter your user name or your e-mail address. If there is an account with an address on file, a link goes out.",
+      "who": "User name or e-mail address",
+      "send": "Send the link",
+      "sent": "If there is an account with an address on file, a link is on its way. It is good for 30 minutes.",
+      "back": "Back to signing in"
+    },
+    "twoFactor": {
+      "askCode": "Enter the six-digit code from your authenticator app.",
+      "askRecovery": "Enter one of your recovery codes.",
+      "code": "Code",
+      "recoveryCode": "Recovery code",
+      "wrongCode": "That code is not right.",
+      "useRecovery": "Use a recovery code instead",
+      "useApp": "Use the app instead"
+    },
+    "reset": {
+      "lead": "A new password for {{name}}.",
+      "new": "New password",
+      "again": "New password again",
+      "rule": "At least {{count}} characters.",
+      "mismatch": "The two do not match.",
+      "save": "Set the password",
+      "done": "The password is set. Every browser and every API token of the account was signed out.",
+      "stale": "This link is used up or too old. Ask for a new one on the sign-in page.",
+      "toSignIn": "To the sign-in page"
+    }
   },
   "setup": {
     "step": {
@@ -99,7 +129,9 @@
       "oidc": "Sign-in providers",
       "about": "About",
       "search": "Search",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "journal": "Log",
+      "backups": "Backups"
     },
     "mail": {
       "title": "Mail server",
@@ -169,7 +201,10 @@
       "adminOnly": "Lock for users",
       "adminOnlyHelp": "Only administrators build cards on this connection. Users still see its cards on a board that was shared with them, and it stays out of their list.",
       "adminOnlyChip": "locked",
-      "enabled": "Enabled"
+      "enabled": "Enabled",
+      "search": "Search",
+      "searchPlaceholder": "plex, docker, wol, npm...",
+      "noMatch": "Nothing matches “{{query}}”."
     },
     "users": {
       "title": "Users",
@@ -264,6 +299,60 @@
         "sky": "Sky",
         "slate": "Slate"
       }
+    },
+    "journal": {
+      "title": "Log level",
+      "intro": "How much nexdeck writes down. A deeper level takes effect at once, without a restart, and switches itself off again.",
+      "level": "Level",
+      "fixedByEnv": "Set through NEXDECK_LOG_LEVEL and not changed here.",
+      "duration": "For how long",
+      "durationHelp": "A deep level writes a lot. This is when it goes back to normal.",
+      "untilRestart": "Until the next restart",
+      "minutes": "{{count}} minutes",
+      "endsAt": "Goes back to normal at {{time}}.",
+      "modes": {
+        "quiet": "Quiet: only problems",
+        "normal": "Normal",
+        "detailed": "Detailed",
+        "trace": "Trace: everything"
+      },
+      "lines": "The log",
+      "linesIntro": "The newest lines first. The short code in the fourth column is the request a line belongs to.",
+      "from": "From level",
+      "allLevels": "All",
+      "search": "Search",
+      "searchPlaceholder": "A word, a service, a card",
+      "empty": "Nothing to show. Nothing has been written at this level yet.",
+      "clear": "Empty the log",
+      "clearTitle": "Empty the log?",
+      "clearBody": "Every line kept, including the older files, is removed. This cannot be undone.",
+      "cleared": "The log is empty."
+    },
+    "twoFactor": {
+      "title": "Second factor",
+      "help": "A six-digit code from an app on your phone, on top of the password.",
+      "off": "This account signs in with the password alone.",
+      "on": "Switched on.",
+      "left": "{{count}} recovery codes left",
+      "left_one": "1 recovery code left",
+      "demanded": "This installation requires a second factor, so it cannot be switched off here.",
+      "demandedOff": "This installation requires a second factor. Set one up to carry on.",
+      "setUp": "Set up a second factor",
+      "scan": "Scan this with an authenticator app, then type the code it shows.",
+      "enterCode": "Code from the app",
+      "switchOn": "Switch on",
+      "switchOff": "Switch off",
+      "switchedOff": "The second factor is off.",
+      "newCodes": "New recovery codes",
+      "confirmWithPassword": "Your password",
+      "codesLead": "Write these down now. They are shown once and never again, and each one works a single time.",
+      "codesKept": "I have written them down"
+    },
+    "security": {
+      "title": "Security",
+      "help": "Rules that apply to every account on this installation.",
+      "requireTwoFactor": "Require a second factor from everybody",
+      "requireTwoFactorHelp": "Accounts without one are asked to set one up and cannot switch it off again. Kiosk links and API tokens are untouched: a wall display has nobody to type a code."
     }
   },
   "menu": {
@@ -632,5 +721,61 @@
     "shared": "shared",
     "pickServer": "Local addresses come first; pick another one if nexdeck cannot reach it.",
     "noServers": "This account has no Plex server of its own."
+  },
+  "gauge": {
+    "of": "of"
+  },
+  "backups": {
+    "title": "Backups",
+    "help": "A copy beside the database is a restore point. It becomes a backup when it leaves this machine.",
+    "make": "Write a backup",
+    "made": "The backup was written.",
+    "makeLead": "Writes a copy of the database and the loose files onto this machine. It takes a moment on a grown installation.",
+    "note": "Note",
+    "noteHelp": "What this state is, for the day you have to pick one. Optional.",
+    "listTitle": "On this machine",
+    "listHelp": "The last {{count}} automatic ones are kept. Backups you wrote yourself are never swept.",
+    "empty": "No backups yet",
+    "emptyBody": "Write one before anything risky, and download it afterwards.",
+    "dropTitle": "Delete this backup?",
+    "dropBody": "The copy and the files that belong to it go for good.",
+    "kind": {
+      "automatic": "Automatic",
+      "manual": "By hand"
+    },
+    "reason": {
+      "too_new": "From a newer nexdeck",
+      "ok": "ok"
+    },
+    "list": {
+      "created": "Written",
+      "version": "Version",
+      "note": "Note"
+    },
+    "download": {
+      "title": "Download the backup",
+      "lead": "The archive carries secret.key, so it hands over every service credential of this installation. Pick a password you would use for that.",
+      "password": "Archive password",
+      "again": "Password again",
+      "rule": "At least {{count}} characters.",
+      "lost": "Without this password the archive cannot be opened again, not by us either."
+    },
+    "restore": {
+      "open": "Put a backup back",
+      "title": "Put a backup back",
+      "lead": "Upload the archive and its password. Nothing is changed until you have seen what is in it.",
+      "file": "Archive",
+      "password": "Archive password",
+      "look": "Look inside",
+      "go": "Replace everything now",
+      "contains": "Contains",
+      "fileCount": "{{count}} files",
+      "fileCount_one": "1 file",
+      "warning": "This replaces the database, the key and the pictures. Everyone is signed out, you included. The current state is backed up first.",
+      "confirm": "Type {{name}} to confirm",
+      "keyOnlyFromEnv": "There is no key in this archive. This installation takes its key from NEXDECK_SECRET_KEY, so the credentials will be readable if the variable holds the same value as on the machine the backup came from.",
+      "noKeyAtAll": "There is no key in this archive and none in the environment here. nexdeck will make a new one, and no stored credential will be readable afterwards. Every connection would have to be entered again.",
+      "envKeyWins": "This archive brings a key, but NEXDECK_SECRET_KEY is set here and wins. The credentials stay unreadable unless the variable holds the same value."
+    }
   }
 }

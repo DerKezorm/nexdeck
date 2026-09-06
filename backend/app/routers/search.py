@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Request, status
 
 from ..deps import AdminUser, DbSession, OptionalUser, error, kiosk_from_request
@@ -9,6 +11,8 @@ from ..schemas import SearchBody
 from ..services import search
 
 router = APIRouter(prefix="/api/v1/settings/search", tags=["system"])
+
+logger = logging.getLogger("nexdeck.search")
 
 
 @router.get("", summary="Read the search targets of the bar")
@@ -29,7 +33,10 @@ def read(request: Request, user: OptionalUser, db: DbSession) -> dict:
 @router.put("", summary="Change the search targets of the bar")
 def write(body: SearchBody, admin: AdminUser, db: DbSession) -> dict:
     try:
-        return search.save(db, body.model_dump())
+        saved = search.save(db, body.model_dump())
+        logger.info("The search targets were changed by %s: %d target(s), %s.", admin.username,
+                    len(saved.get("targets") or []), "on" if saved.get("enabled") else "off")
+        return saved
     except search.SearchError as failure:
         raise error(failure.code, failure.message) from failure
 

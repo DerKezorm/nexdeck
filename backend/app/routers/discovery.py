@@ -7,6 +7,7 @@ are understood as well, so a migration keeps its tiles.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, status
@@ -26,6 +27,8 @@ from ..services.integrations import resolve_config
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1/discovery", tags=["discovery"])
+
+logger = logging.getLogger("nexdeck.discovery")
 
 
 def suggestion(entry: dict[str, Any], host_hint: str) -> dict[str, Any]:
@@ -110,6 +113,7 @@ async def apply_suggestions(body: ApplyBody, user: CurrentUser, db: DbSession) -
         db.refresh(widget)
         collector.schedule(widget.id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
+    logger.info("%d app tile(s) created on board %r from Docker by %s.", len(created), board.name, user.username)
     return {"created": [widget_view(db, w) for w in created], "layouts": page.layouts}
 
 

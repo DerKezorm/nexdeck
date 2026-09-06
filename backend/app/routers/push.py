@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Request, status
 from sqlalchemy import select
 
@@ -11,6 +13,8 @@ from ..schemas import PushSubscribeBody, PushUnsubscribeBody
 from ..services.channels import webpush
 
 router = APIRouter(prefix="/api/v1/push", tags=["push"])
+
+logger = logging.getLogger("nexdeck.push")
 
 
 @router.get("/key", summary="Read the public VAPID key")
@@ -33,9 +37,11 @@ def subscribe(body: PushSubscribeBody, request: Request, user: CurrentUser, db: 
         for event in ("outage", "recovery", "action_failed"):
             db.add(Subscription(channel_id=channel.id, event=event))
         db.commit()
+        logger.info("Web Push was switched on for %s.", user.username)
     return {"ok": True, "channel_id": channel.id}
 
 
 @router.delete("/subscribe", status_code=status.HTTP_204_NO_CONTENT, summary="Remove this browser's Web Push subscription")
 def unsubscribe(body: PushUnsubscribeBody, user: CurrentUser) -> None:
     webpush.remove_subscription(user.id, body.endpoint)
+    logger.info("A browser of %s stopped taking Web Push.", user.username)

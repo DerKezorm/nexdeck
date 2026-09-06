@@ -151,11 +151,20 @@ def send_through(client: TestClient, kind: str, config: dict) -> dict:
 
 
 def test_the_mail_channel_delivers_a_message(client: TestClient, smtp: SmtpCatcher) -> None:
+    """Through the installation's own mail server, not one per channel.
+
+    ⚠️ This test used to give the channel a host, a port and a sender of its
+    own. It stopped being possible on 06.09.2026: the same mail account typed
+    out again per channel, password included, is a place nobody remembers to
+    update. The server is set up once, here as anywhere.
+    """
     setup_admin(client)
-    result = send_through(client, "email", {
-        "host": "127.0.0.1", "port": smtp.port, "tls": "none",
-        "from_address": "deck@example.com", "to_address": "you@example.com",
-    })
+    stored = client.put("/api/v1/settings/mail", json={
+        "host": "127.0.0.1", "port": smtp.port, "security": "none",
+        "from_address": "deck@example.com", "from_name": "nexdeck",
+    }, headers=CSRF)
+    assert stored.status_code == 200, stored.text
+    result = send_through(client, "email", {"to_address": "you@example.com"})
     assert result["ok"] is True, result
     assert len(smtp.mails) == 1
     mail = smtp.mails[0]

@@ -62,6 +62,41 @@ class Field:
         }
 
 
+#: How small each drawing is still usable at, in grid cells.
+#:
+#: ⚠️ Set per renderer, not per widget. Until 06.09.2026 the grid used a
+#: card's *default* size as its floor, so ``min_size`` did nothing and nobody
+#: noticed that 56 value cards claimed to work at one cell by one and 88 lists
+#: at two by one. The moment the floor became real, the weather card drew its
+#: sun on top of its own temperature. A number needs room for its label and
+#: its chips; a list needs room for two rows; a cover needs to be a cover.
+RENDERER_MIN: dict[str, tuple[int, int]] = {
+    "app": (1, 1),
+    "wol": (1, 1),
+    "clock": (2, 1),
+    "text": (2, 1),
+    "search": (2, 1),
+    "value": (2, 2),
+    "gauge": (2, 2),
+    "list": (2, 2),
+    "bookmarks": (2, 2),
+    "camera": (2, 2),
+    "iframe": (2, 2),
+    "counters": (2, 2),
+    "stats": (3, 2),
+    "feed": (3, 2),
+    "calendar": (3, 2),
+    "nowplaying": (3, 2),
+    "weather": (3, 2),
+    "posters": (3, 2),
+    "chart": (3, 2),
+    "log": (3, 2),
+}
+#: For a renderer nobody listed. Two by two is the smallest that holds a title
+#: and a line under it without one sitting on the other.
+DEFAULT_MIN = (2, 2)
+
+
 @dataclass(frozen=True)
 class WidgetType:
     """One widget an adapter offers."""
@@ -80,6 +115,22 @@ class WidgetType:
     #: True for widgets that need no server refresh: clocks, notes, bookmarks,
     #: embedded pages and app tiles draw themselves from their options.
     client_only: bool = False
+
+    def __post_init__(self) -> None:
+        """Never smaller than the drawing can bear.
+
+        An adapter may ask for more than the floor when its own card needs it;
+        it cannot ask for less, because the floor is about the renderer and
+        the renderer is not the adapter's to know.
+        """
+        floor = RENDERER_MIN.get(self.renderer, DEFAULT_MIN)
+        raised = (max(self.min_size[0], floor[0]), max(self.min_size[1], floor[1]))
+        if raised != tuple(self.min_size):
+            object.__setattr__(self, "min_size", raised)
+        # A default below the floor would be a card that opens broken.
+        grown = (max(self.default_size[0], raised[0]), max(self.default_size[1], raised[1]))
+        if grown != tuple(self.default_size):
+            object.__setattr__(self, "default_size", grown)
 
     def to_dict(self, adapter_kind: str) -> dict[str, Any]:
         return {
@@ -120,6 +171,87 @@ class WidgetData(BaseModel):
     meta: dict[str, Any] = PydanticField(default_factory=dict)
     error: str | None = None
     updated_at: float = PydanticField(default_factory=time.time)
+
+
+class Detected(BaseModel):
+    """Something an adapter noticed between two fetches, worth telling about.
+
+    ⚠️ Only what the adapter *knows*, never what it guesses. "A download
+    finished" is true when an item that was almost done is gone; "a download
+    was removed" is what the same disappearance means at ten per cent, and
+    saying the first about the second is worse than saying nothing.
+    """
+
+    event: str
+    title: str
+    body: str = ""
+    level: Status = "ok"
+    #: Two of the same thing inside this many seconds count as one. A card
+    #: that refreshes every thirty seconds must not send the same line twice.
+    quiet_seconds: float = 900.0
+    #: What makes this one distinct from the next. Defaults to event + title.
+    key: str = ""
+
+    def dedupe_key(self) -> str:
+        return self.key or f"{self.event}:{self.title}"
+
+
+#: The two options a card needs to be able to draw itself as a dial.
+#:
+#: ⚠️ A dial without a maximum is a lie: it claims a share of something. A
+#: card that measures megabytes per second has no ceiling of its own, so the
+#: operator names one, and until they do the card stays a number.
+def gauge_fields(what: str, placeholder: str = "") -> tuple[Field, ...]:
+    return (
+        Field("view", "View", type="select", default="value",
+              options=(("value", "The number"), ("gauge", "A dial")),
+              help="A dial needs to know what counts as full."),
+        Field("gauge_max", "Full at", type="number", placeholder=placeholder,
+              help=f"{what} Leave empty and the card stays a number."),
+    )
+
+
+def gauge_view_field() -> Field:
+    """For a card whose number is already a share of something."""
+    return Field("view", "View", type="select", default="value",
+                 options=(("value", "The number"), ("gauge", "A dial")))
+
+
+def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = None) -> WidgetData:
+    """Turn a measured number into a share of something, if asked and possible.
+
+    Returns the card unchanged when the view was not asked for, or when there
+    is no ceiling to measure against. Silently drawing an empty dial would be
+    worse than drawing the number that was asked for.
+    """
+    if str(options.get("view") or "value") != "gauge":
+        return data
+    # Applied once, centrally, by the collector. An adapter that also calls it
+    # must not turn its own percentage into a percentage of a percentage.
+    if (data.meta or {}).get("renderer") == "gauge":
+        return data
+    value = (data.primary or {}).get("value")
+    ceiling = maximum
+    if ceiling is None and str((data.primary or {}).get("unit") or "") == "%":
+        # Already a share of something; the card said so with its unit.
+        ceiling = 100.0
+    if ceiling is None:
+        try:
+            ceiling = float(options.get("gauge_max") or 0) or None
+        except (TypeError, ValueError):
+            ceiling = None
+    if ceiling is None or ceiling <= 0 or not isinstance(value, (int, float)):
+        return data
+    share = max(0.0, min(100.0, float(value) / ceiling * 100))
+    # ⚠️ The number itself stays where it was. A dial that replaces
+    # "38 MB/s" with "42%" answers a question nobody asked: the share is how
+    # far round the needle goes, not what the card is for.
+    data.meta = {
+        **(data.meta or {}),
+        "renderer": "gauge",
+        "gauge": {"share": round(share, 1), "max": ceiling},
+    }
+    return data
 
 
 class AdapterError(Exception):
@@ -402,6 +534,17 @@ class Adapter:
         ctx: Context,
     ) -> str:
         raise AdapterError("This widget has no actions.", code="no_such_action")
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
+               options: dict[str, Any]) -> list[Detected]:
+        """What happened between the last fetch and this one.
+
+        The collector holds both and asks after every successful fetch. Most
+        adapters know of nothing; those that do put the knowledge here, where
+        the service is understood, rather than in a rule the collector guesses
+        at from the outside.
+        """
+        return []
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         raise NotImplementedError

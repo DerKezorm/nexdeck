@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -24,6 +24,7 @@ export function IntegrationsSettings() {
   const [editing, setEditing] = useState<Integration | null>(null)
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
+  const [adapterSearch, setAdapterSearch] = useState('')
 
   useEffect(() => {
     if (params.get('add')) {
@@ -33,13 +34,18 @@ export function IntegrationsSettings() {
   }, [params, setParams])
 
   const byCategory = useMemo(() => {
+    const needle = adapterSearch.trim().toLowerCase()
     const groups: Record<string, AdapterSpec[]> = {}
     for (const adapter of adapters.data ?? []) {
       if (!adapter.needs_integration) continue
+      // The technical name counts: somebody types "wol", "pbs" or "npm",
+      // which none of the written-out names contain.
+      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''}`.toLowerCase()
+      if (needle && !haystack.includes(needle)) continue
       ;(groups[adapter.category] ??= []).push(adapter)
     }
     return groups
-  }, [adapters.data])
+  }, [adapters.data, adapterSearch])
 
   return (
     <>
@@ -95,6 +101,21 @@ export function IntegrationsSettings() {
       </SettingsCard>
       {admin && (
         <SettingsCard title={t('settings.integrations.add')} description={t('settings.integrations.addHelp')}>
+          {/* Seventy-nine of them. Without this the list is a wall you scroll
+              past rather than something you pick from. */}
+          <div className="relative mb-4 max-w-sm">
+            <SearchIcon size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none" />
+            <input
+              className="input input-icon"
+              value={adapterSearch}
+              placeholder={t('settings.integrations.searchPlaceholder')}
+              aria-label={t('settings.integrations.search')}
+              onChange={(event) => setAdapterSearch(event.target.value)}
+            />
+          </div>
+          {Object.keys(byCategory).length === 0 && (
+            <p className="text-sm text-muted">{t('settings.integrations.noMatch', { query: adapterSearch.trim() })}</p>
+          )}
           {Object.entries(byCategory).map(([category, list]) => (
             <div key={category} className="mb-3">
               <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t(`library.category.${category}`, { defaultValue: category })}</h3>

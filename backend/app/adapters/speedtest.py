@@ -5,7 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 from . import demo as fake
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import (
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    as_gauge,
+    base_url,
+    gauge_fields,
+)
 
 
 def _mbps(value: Any) -> float:
@@ -30,7 +40,9 @@ class SpeedtestAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (
-        WidgetType(kind="latest", label="Latest result", description="Download, upload and ping of the newest test.", renderer="value", default_size=(2, 2), min_size=(1, 1), refresh_seconds=300, metrics=("download", "upload", "ping")),
+        WidgetType(kind="latest", label="Latest result", description="Download, upload and ping of the newest test.",
+                   renderer="value", default_size=(2, 2), refresh_seconds=300, metrics=("download", "upload", "ping"),
+                   options=gauge_fields("What your line is supposed to deliver, in Mbps.", "1000")),
     )
 
     def _headers(self, config: dict[str, Any]) -> dict[str, str]:
@@ -50,20 +62,22 @@ class SpeedtestAdapter(Adapter):
         upload = _mbps(data.get("upload_bits") or data.get("upload"))
         ping = round(float(data.get("ping") or 0), 1)
         ok = data.get("status", "completed") == "completed" and data.get("successful", True)
-        return WidgetData(
+        card = WidgetData(
             status="ok" if ok else "warn",
             primary={"label": "Download", "value": download, "unit": "Mbps"},
             secondary=[{"label": "Upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": str(data.get("created_at", ""))[:16].replace("T", " ")}],
             metrics={"download": download, "upload": upload, "ping": ping},
         )
+        return as_gauge(card, options)
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         download = fake.walk("st-down", tick, 880, 960, period=1200)
         upload = fake.walk("st-up", tick, 44, 51, period=1200)
         ping = fake.walk("st-ping", tick, 7, 12, period=600)
-        return WidgetData(primary={"label": "Download", "value": download, "unit": "Mbps"},
+        card = WidgetData(primary={"label": "Download", "value": download, "unit": "Mbps"},
                           secondary=[{"label": "Upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": "today 06:00"}],
                           metrics={"download": download, "upload": upload, "ping": ping})
+        return as_gauge(card, options)
 
 
 ADAPTER = SpeedtestAdapter()

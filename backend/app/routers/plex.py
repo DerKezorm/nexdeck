@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
 
@@ -9,6 +11,8 @@ from ..deps import MemberUser, error
 from ..services import plex_auth
 
 router = APIRouter(prefix="/api/v1/plex", tags=["plex"])
+
+logger = logging.getLogger("nexdeck.plex")
 
 
 class ServersBody(BaseModel):
@@ -36,6 +40,10 @@ async def poll_pin(pin_id: str, code: str, user: MemberUser) -> dict:
         username = await plex_auth.account_name(token) if token else None
     except plex_auth.PlexTvError as failure:
         raise _plex_failure(failure) from failure
+    if token:
+        # Somebody linked a Plex account to nexdeck. The token is never
+        # written down here; that it happened, and to whom, is.
+        logger.info("A Plex account (%s) was linked by %s.", username or "unknown", user.username)
     return {"token": token, "username": username}
 
 

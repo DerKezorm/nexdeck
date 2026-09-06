@@ -124,7 +124,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     <Sheet open={open} onClose={onClose} title={t('library.title')} wide>
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-        <input className="input pl-8" placeholder={t('library.search')} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+        <input className="input input-icon" placeholder={t('library.search')} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
       </div>
       {error && (
         <p className="text-sm text-bad mb-2" role="alert">

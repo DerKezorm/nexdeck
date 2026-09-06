@@ -4,12 +4,20 @@ import { ApiError, get, patch, post } from '../api/client'
 import type { SetupStatus, User } from '../api/types'
 import { setLanguage } from '../i18n'
 
+/**
+ * What the first half of a sign-in ends in. An account with a second factor
+ * gets a ticket instead of a session: the password was right, and that is all
+ * the ticket says.
+ */
+export type LoginOutcome = { done: true } | { done: false; ticket: string; recovery: boolean }
+
 interface AuthState {
   user: User | null
   status: SetupStatus | null
   loading: boolean
   refresh: () => Promise<void>
-  login: (username: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<LoginOutcome>
+  secondStep: (ticket: string, code: string, recoveryCode?: string) => Promise<void>
   logout: () => Promise<void>
   update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
   /** Take an account the server just handed back, after an upload for instance. */
@@ -42,7 +50,21 @@ export const useAuth = create<AuthState>((set, getState) => ({
     }
   },
   login: async (username, password) => {
-    const user = await post<User>('/auth/login', { username, password })
+    try {
+      const user = await post<User>('/auth/login', { username, password })
+      set({ user })
+      await setLanguage(user.locale)
+      applyTheme(user.theme)
+      return { done: true }
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.code === 'second_step') {
+        return { done: false, ticket: String(failure.detail.ticket ?? ''), recovery: Boolean(failure.detail.recovery) }
+      }
+      throw failure
+    }
+  },
+  secondStep: async (ticket, code, recoveryCode = '') => {
+    const user = await post<User>('/auth/login/second-step', { ticket, code, recovery_code: recoveryCode })
     set({ user })
     await setLanguage(user.locale)
     applyTheme(user.theme)

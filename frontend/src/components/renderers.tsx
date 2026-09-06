@@ -190,38 +190,81 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Gauge: a ring for percentages
+// Gauge: a dial, the way a rev counter looks
 // ---------------------------------------------------------------------------
 
+/** Where a point sits on an arc that opens downwards, 135° to 405°. */
+function dialPoint(share: number, radius: number): [number, number] {
+  const angle = ((135 + (share / 100) * 270) * Math.PI) / 180
+  return [50 + radius * Math.cos(angle), 50 + radius * Math.sin(angle)]
+}
+
+/** An SVG arc along the dial, from one share to another. */
+function dialArc(from: number, to: number, radius: number): string {
+  const [x1, y1] = dialPoint(from, radius)
+  const [x2, y2] = dialPoint(to, radius)
+  const large = (to - from) / 100 > 0.5 ? 1 : 0
+  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`
+}
+
 export function GaugeCard({ data }: RenderProps) {
-  const value = typeof data?.primary?.value === 'number' ? data.primary.value : 0
-  const radius = 26
-  const circumference = 2 * Math.PI * radius
+  const { t } = useTranslation()
+  const primary = data?.primary
+  const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number } | null
+  // ⚠️ Two kinds of card end up here. One was turned into a dial by the
+  // collector and carries its share in `meta`; the other measures a
+  // percentage to begin with, and then the number *is* the share.
+  const share = Math.max(
+    0,
+    Math.min(100, typeof dial?.share === 'number' ? dial.share : primary?.unit === '%' && typeof primary?.value === 'number' ? primary.value : 0),
+  )
   const colour = data?.status === 'bad' ? 'var(--nd-bad)' : data?.status === 'warn' ? 'var(--nd-warn)' : 'var(--nd-accent)'
+  const [tipX, tipY] = dialPoint(share, 30)
+  // Only where it adds something. A card that already measures a share
+  // would read "18% of 100%", which is a sentence about nothing.
+  const ceiling = typeof dial?.max === 'number' ? dial.max : null
+
   return (
-    <div className="flex-1 flex items-center gap-4 px-4 pb-3 min-h-0">
-      <svg viewBox="0 0 64 64" className="w-[72px] h-[72px] flex-none" aria-hidden="true">
-        <circle cx="32" cy="32" r={radius} fill="none" stroke="color-mix(in srgb, var(--nd-text) 10%, transparent)" strokeWidth="6" />
-        <circle
-          cx="32"
-          cy="32"
-          r={radius}
-          fill="none"
-          stroke={colour}
-          strokeWidth="6"
+    <div className="flex-1 flex items-center gap-3 px-4 pb-3 min-h-0">
+      <svg viewBox="0 0 100 82" className="w-[104px] h-[86px] flex-none" aria-hidden="true">
+        <path d={dialArc(0, 100, 38)} fill="none" stroke="color-mix(in srgb, var(--nd-text) 10%, transparent)" strokeWidth="9" strokeLinecap="round" />
+        {share > 0 && (
+          <path
+            d={dialArc(0, share, 38)}
+            fill="none"
+            stroke={colour}
+            strokeWidth="9"
+            strokeLinecap="round"
+            style={{ transition: 'd 600ms cubic-bezier(.2,.7,.2,1)' }}
+          />
+        )}
+        {/* The ticks are the quarters, so a glance says roughly where it sits. */}
+        {[0, 25, 50, 75, 100].map((at) => {
+          const [ix, iy] = dialPoint(at, 30)
+          const [ox, oy] = dialPoint(at, 25.5)
+          return <line key={at} x1={ix} y1={iy} x2={ox} y2={oy} stroke="color-mix(in srgb, var(--nd-text) 18%, transparent)" strokeWidth="1.5" strokeLinecap="round" />
+        })}
+        <line
+          x1="50"
+          y1="50"
+          x2={tipX}
+          y2={tipY}
+          stroke="var(--nd-text)"
+          strokeWidth="2.5"
           strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - Math.min(100, Math.max(0, value)) / 100)}
-          transform="rotate(-90 32 32)"
-          style={{ transition: 'stroke-dashoffset 600ms cubic-bezier(.2,.7,.2,1)' }}
+          style={{ transition: 'x2 600ms cubic-bezier(.2,.7,.2,1), y2 600ms cubic-bezier(.2,.7,.2,1)' }}
         />
-        <text x="32" y="36" textAnchor="middle" className="num" fill="var(--nd-text)" fontSize="14" fontWeight="600">
-          {Math.round(value)}%
-        </text>
+        <circle cx="50" cy="50" r="4" fill="var(--nd-bg-elev)" stroke="var(--nd-text)" strokeWidth="2.5" />
       </svg>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] text-muted uppercase tracking-wide">{tLabel(data?.primary?.label)}</div>
-        <div className="mt-2">
+        <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
+        <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate">{formatValue(primary?.value, primary?.unit)}</div>
+        {ceiling !== null && (
+          <div className="text-[10px] text-muted num">
+            {t('gauge.of')} {formatValue(ceiling, primary?.unit)}
+          </div>
+        )}
+        <div className="mt-1.5">
           <Chips items={data?.secondary} />
         </div>
       </div>

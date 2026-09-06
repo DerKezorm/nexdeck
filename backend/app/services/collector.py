@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context, WidgetData
+from ..adapters.base import AdapterError, Context, WidgetData, as_gauge
 from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
@@ -30,6 +30,7 @@ from ..models import ActionLog, Integration, Widget, utcnow
 from . import history
 from .integrations import resolve_config
 from .loop import run_on_loop, spawn
+from .notify import emit
 from .sse import board_topic, hub
 from .state import live
 
@@ -47,6 +48,11 @@ class Collector:
         self._caches: dict[int, dict[str, Any]] = {}
         self._client: httpx.AsyncClient | None = None
         self._failures: dict[int, int] = {}
+        #: What has already been told, so a card refreshing every thirty
+        #: seconds does not send the same line a hundred times an hour.
+        self._told: dict[str, float] = {}
+        #: Cards already reported as broken; one line per breakage, not per try.
+        self._broken: set[int] = set()
         self._tick_start = time.time()
         self.running = False
 
@@ -201,6 +207,7 @@ class Collector:
             board_id = widget.page.board_id
             integration = widget.integration
             kind = widget.kind
+            title = widget.title or widget.kind
             options = dict(widget.options or {})
             refresh_seconds = widget.refresh_seconds
             config = resolve_config(integration) if integration is not None else {}
@@ -217,6 +224,9 @@ class Collector:
             return None
         widget_type = adapter.widget(widget_kind)
         interval = max(MIN_INTERVAL, refresh_seconds or widget_type.refresh_seconds)
+        # Held before the fetch overwrites it: the adapter needs both to see
+        # what changed.
+        previous = live.get(widget_id)
 
         try:
             if demo:
@@ -234,6 +244,9 @@ class Collector:
                 )
                 data = await asyncio.wait_for(adapter.fetch(widget_kind, config, options, ctx), timeout=60)
             self._failures.pop(widget_id, None)
+            # A card that asks to be a ring becomes one here, once, rather
+            # than in each of the adapters that would have to remember.
+            data = as_gauge(data, options)
             if data.link is None and link:
                 data.link = link
             data.updated_at = time.time()
@@ -249,6 +262,7 @@ class Collector:
             data = self._failure(widget_id, f"Unexpected error: {error.__class__.__name__}.", code="crash")
             self._mark_integration(integration_id, ok=False, error=error.__class__.__name__)
 
+        self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options)
         live.set(widget_id, data)
         if data.metrics and not data.error:
             with db_session() as db:
@@ -358,6 +372,54 @@ class Collector:
         except Exception as error:  # noqa: BLE001 - a broken adapter must answer the preview, not crash it
             logger.exception("Preview of widget %s (%s) failed.", widget_id, kind)
             return WidgetData(status="unknown", error=f"Unexpected error: {error.__class__.__name__}.", meta={"code": "crash"})
+
+    def _tell_about(self, widget_id: int, title: str, adapter: Any, widget_kind: str,
+                    before: WidgetData | None, after: WidgetData, options: dict[str, Any]) -> None:
+        """Ask the adapter what happened, and pass it on once.
+
+        ⚠️ Once. A card refreshing every thirty seconds would otherwise send
+        the same line a hundred and twenty times an hour, and the second one
+        already costs more trust than the first one earns.
+        """
+        if after.error:
+            self._tell_about_failure(widget_id, title, after)
+            return
+        self._broken.discard(widget_id)
+        try:
+            found = adapter.detect(widget_kind, before, after, options)
+        except Exception:  # noqa: BLE001 - a bad detector must not stop the card
+            logger.exception("The detector of widget %s failed.", widget_id)
+            return
+        now = time.time()
+        for detected in found:
+            key = f"{widget_id}:{detected.dedupe_key()}"
+            if now - self._told.get(key, 0.0) < detected.quiet_seconds:
+                continue
+            self._told[key] = now
+            self._forget_old_keys(now)
+            logger.info("%s on %r: %s", detected.event, title, detected.title)
+            emit(detected.event, detected.title, detected.body,
+                 level="warn" if detected.level in ("warn", "bad") else "info")
+
+    def _tell_about_failure(self, widget_id: int, title: str, data: WidgetData) -> None:
+        """A card that stopped working, said once and not on every retry."""
+        if widget_id in self._broken:
+            return
+        self._broken.add(widget_id)
+        code = str((data.meta or {}).get("code") or "")
+        if code == "auth_failed":
+            emit("auth_rejected", f"{title}: the service rejected its credentials",
+                 data.error or "", level="warn")
+        else:
+            emit("widget_broken", f"{title} stopped working", data.error or "", level="warn")
+
+    def _forget_old_keys(self, now: float) -> None:
+        """⚠️ Without this the note of what was already told grows for the life
+        of the process, one entry per distinct thing ever seen."""
+        if len(self._told) <= 500:
+            return
+        for key in [k for k, when in self._told.items() if now - when > 86400]:
+            self._told.pop(key, None)
 
     async def refresh_now(self, widget_id: int) -> WidgetData | None:
         await self.refresh(widget_id)

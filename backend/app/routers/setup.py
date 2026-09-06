@@ -13,7 +13,7 @@ from ..deps import DbSession, error
 from ..models import Board, OidcProvider, Role, User
 from ..schemas import SetupBody, SetupStatus, UserPublic
 from ..security import hash_password
-from ..services import demo_board
+from ..services import demo_board, password_reset
 from ..services.collector import collector
 from .auth import open_session, user_public
 
@@ -29,7 +29,10 @@ def needs_setup(db: DbSession) -> bool:
 def setup_status(db: DbSession) -> SetupStatus:
     """Public: the app decides between the wizard and the sign-in page from this."""
     providers = [{"slug": p.slug, "label": p.label} for p in db.scalars(select(OidcProvider).where(OidcProvider.enabled.is_(True)))]
-    return SetupStatus(needs_setup=needs_setup(db), version=__version__, demo=get_settings().demo, providers=providers)
+    return SetupStatus(
+        needs_setup=needs_setup(db), version=__version__, demo=get_settings().demo,
+        providers=providers, can_reset_password=password_reset.available(db),
+    )
 
 
 @router.post("", response_model=UserPublic, status_code=status.HTTP_201_CREATED, summary="Create the first administrator")

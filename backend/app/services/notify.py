@@ -21,6 +21,13 @@ from .sse import hub, user_topic
 
 logger = logging.getLogger("nexdeck.notify")
 
+#: What somebody can be told about. Every one of these has to actually fire:
+#: a list that offers three things that never happen is worse than a short
+#: one, because somebody subscribes and then waits.
+#:
+#: ⚠️ Measured on 06.09.2026: of the seven that stood here, three had never
+#: been emitted from anywhere in the code. They are alive now, and the guard
+#: in test_guards.py keeps a dead one from creeping back in.
 EVENTS: dict[str, str] = {
     "outage": "A service stopped answering",
     "recovery": "A service is back",
@@ -28,6 +35,11 @@ EVENTS: dict[str, str] = {
     "action_done": "An action succeeded",
     "request_new": "A new media request",
     "download_done": "A download finished",
+    "widget_broken": "A card stopped working",
+    "auth_rejected": "A service rejected its credentials",
+    "cert_expiring": "A certificate is running out",
+    "disk_filling": "A disk is filling up",
+    "update_available": "A new nexdeck version",
     "test": "Test message",
 }
 

@@ -1,4 +1,4 @@
-import { Globe, Info, KeyRound, Mail, Palette, Plug, Search, Users } from 'lucide-react'
+import { Archive, Globe, Info, KeyRound, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -6,11 +6,13 @@ import { AppShell } from '../../components/AppShell'
 import { useAuth } from '../../stores/auth'
 import { AboutSettings } from './AboutSettings'
 import { AppearanceSettings } from './AppearanceSettings'
+import { BackupsSettings } from './BackupsSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
 import { MailSettings } from './MailSettings'
 import { OidcSettings } from './OidcSettings'
 import { SearchSettings } from './SearchSettings'
+import { JournalSettings } from './JournalSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
 import { UsersSettings } from './UsersSettings'
 
@@ -34,6 +36,8 @@ export function SystemPage() {
     { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
     { to: 'oidc', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
+    { to: 'journal', icon: ScrollText, label: t('settings.nav.journal'), show: admin },
+    { to: 'backups', icon: Archive, label: t('settings.nav.backups'), show: admin },
     { to: 'about', icon: Info, label: t('settings.nav.about') },
   ]
   /** Pages only an administrator may see; anyone else lands on the connections. */
@@ -54,6 +58,8 @@ export function SystemPage() {
             <Route path="search" element={forAdmin(<SearchSettings />)} />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="oidc" element={forAdmin(<OidcSettings />)} />
+            <Route path="journal" element={forAdmin(<JournalSettings />)} />
+            <Route path="backups" element={forAdmin(<BackupsSettings />)} />
             <Route path="about" element={<AboutSettings />} />
             <Route path="*" element={<Navigate to="/system" replace />} />
           </Routes>

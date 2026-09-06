@@ -29,6 +29,7 @@ from .models import (
     utcnow,
 )
 from .security import hash_token, read_kiosk_cookie, read_session_token
+from .services import journal
 
 COOKIE_NAME = "nexdeck_session"
 KIOSK_COOKIE = "nexdeck_kiosk"
@@ -112,6 +113,10 @@ def optional_user(request: Request, db: DbSession) -> User | None:
         if user is not None and request.method not in ("GET", "HEAD", "OPTIONS"):
             if request.headers.get(CSRF_HEADER) != "1":
                 raise error("csrf", "This request must come from the nexdeck app.", status.HTTP_403_FORBIDDEN)
+    # Every line written while serving this call now carries who is doing it.
+    # A log that says a connection was deleted and not by whom answers half a
+    # question, and it is the wrong half.
+    journal.set_actor(user.username if user is not None else "")
     return user
 
 

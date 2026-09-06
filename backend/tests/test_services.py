@@ -135,7 +135,11 @@ def test_channel_secrets_are_encrypted_and_test_message_formats(client: TestClie
 def test_channel_endpoints_round_trip(client: TestClient) -> None:
     setup_admin(client)
     kinds = client.get("/api/v1/channel-kinds").json()
-    assert {k["kind"] for k in kinds} >= {"telegram", "email", "webpush", "ntfy", "gotify", "discord", "slack", "apprise"}
+    # ⚠️ No "email": it is offered only once a mail server is set up, because
+    # it has nothing of its own to configure and would otherwise save happily
+    # and fail at the first outage. tests/test_email_channel.py covers it.
+    assert {k["kind"] for k in kinds} >= {"telegram", "webpush", "ntfy", "gotify", "discord", "slack", "apprise"}
+    assert "email" not in {k["kind"] for k in kinds}
     created = client.post("/api/v1/channels", json={"kind": "ntfy", "name": "Phone", "config": {"url": "https://ntfy.sh", "topic": "deck", "token": "tk"}, "events": ["outage"]}, headers=CSRF)
     assert created.status_code == 201, created.text
     body = created.json()

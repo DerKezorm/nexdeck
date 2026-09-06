@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from .routers import (
     assets,
     auth,
     avatars,
+    backups,
     boards,
     channels,
     discovery,
@@ -40,7 +42,8 @@ from .routers import (
     users,
     widgets,
 )
-from .services import history, provisioning
+from .routers import journal as journal_router
+from .services import history, journal, provisioning
 from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
@@ -51,12 +54,13 @@ logger = logging.getLogger("nexdeck")
 
 
 async def _housekeeping() -> None:
-    """Condense history and prune logs every few minutes."""
+    """Condense history, prune logs and end a deep log level every few minutes."""
     while True:
         await asyncio.sleep(300)
         try:
             with db_session() as db:
                 history.condense(db)
+                journal.enforce_expiry(db)
             log_tailer.prune()
         except Exception:  # noqa: BLE001
             logger.exception("Housekeeping failed.")
@@ -64,13 +68,16 @@ async def _housekeeping() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
-    logging.basicConfig(level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # ⚠️ Not ``basicConfig``. That wrote to standard output and nowhere else,
+    # so the question "what happened at four in the morning" had no answer on
+    # a machine whose container log had rotated away.
+    journal.setup()
     set_main_loop(asyncio.get_running_loop())
     get_engine()
     migrate()
     with db_session() as db:
         system.load_demo_flag(db)
+        journal.apply_stored(db)
     provisioning.load_all()
     await collector.start()
     await health_service.start()
@@ -104,8 +111,23 @@ _cors = [o.strip() for o in get_settings().cors_origins.split(",") if o.strip()]
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=_cors, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-for module in (system, setup, auth, users, avatars, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, mail, oidc, plex, search, appearance):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance):
     app.include_router(module.router)
+
+
+@app.middleware("http")
+async def request_number(request: Request, call_next):  # noqa: ANN001
+    """Give every call a short number, so its lines belong together.
+
+    ⚠️ A dozen background tasks write into the same file at the same time. A
+    line without this is a line nobody can place: you can see that something
+    failed and not what it was part of.
+    """
+    token = journal.bind_request(secrets.token_hex(3))
+    try:
+        return await call_next(request)
+    finally:
+        journal.unbind_request(token)
 
 
 @app.middleware("http")

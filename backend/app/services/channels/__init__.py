@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-import smtplib
 from dataclasses import dataclass
-from email.message import EmailMessage
 from typing import Any
 
 import httpx
@@ -42,15 +40,15 @@ KINDS: dict[str, ChannelKind] = {
          Field("chat_id", "Chat ID", required=True, placeholder="123456789")),
         "Create a bot with @BotFather, then write to it once and read the chat ID from getUpdates.",
     ),
+    # ⚠️ One field. It used to ask for the host, the port, the user name, the
+    # password, the sender and the recipient, which is the installation's own
+    # mail account typed out again per channel, password included. The server
+    # has those already; a channel only needs to know where to write.
     "email": ChannelKind(
         "email", "E-mail",
-        (Field("host", "SMTP server", required=True, placeholder="smtp.example.com"),
-         Field("port", "Port", type="number", default=587),
-         Field("username", "User name"),
-         Field("password", "Password", type="password", secret=True),
-         Field("from_address", "From address", required=True, placeholder="deck@example.com"),
-         Field("to_address", "To address", required=True, placeholder="you@example.com"),
-         Field("tls", "Encryption", type="select", default="starttls", options=(("starttls", "STARTTLS"), ("ssl", "SSL"), ("none", "None")))),
+        (Field("to_address", "To address", placeholder="you@example.com",
+               help="Empty means the address on your account."),),
+        "Sent through the mail server of this installation, set up under System, Mail server.",
     ),
     "webpush": ChannelKind(
         "webpush", "Web Push",
@@ -183,23 +181,24 @@ async def _telegram(config: dict[str, Any], message: Message) -> None:
 
 
 def _email(config: dict[str, Any], message: Message) -> None:
-    mail = EmailMessage()
-    mail["Subject"] = f"[nexdeck] {message.title}"
-    mail["From"] = config["from_address"]
-    mail["To"] = config["to_address"]
-    mail.set_content(plain_text(message))
-    port = int(config.get("port") or 587)
-    mode = config.get("tls") or "starttls"
-    if mode == "ssl":
-        server: smtplib.SMTP = smtplib.SMTP_SSL(config["host"], port, timeout=TIMEOUT)
-    else:
-        server = smtplib.SMTP(config["host"], port, timeout=TIMEOUT)
-    with server:
-        if mode == "starttls":
-            server.starttls()
-        if config.get("username"):
-            server.login(config["username"], config.get("password") or "")
-        server.send_message(mail)
+    """Through the installation's own mail server.
+
+    ⚠️ Nothing about the server is read from the channel any more. A channel
+    made before this still carries a host and a password in its settings;
+    those are ignored, and the one set up under System is used instead, which
+    is the one whose password somebody actually maintains.
+    """
+    from ...db import db_session
+    from .. import mail as mail_service
+
+    with db_session() as db:
+        settings = mail_service.stored(db)
+        if not settings.get("host"):
+            raise RuntimeError("No mail server is set up. Set one up under System, Mail server.")
+        to_address = str(config.get("to_address") or "").strip()
+        if not to_address:
+            raise RuntimeError("No address to write to, and none on the account either.")
+    mail_service.send(settings, to_address, f"[nexdeck] {message.title}", plain_text(message))
 
 
 async def _ntfy(config: dict[str, Any], message: Message) -> None:
@@ -244,8 +243,15 @@ def _apprise(config: dict[str, Any], message: Message) -> None:
         raise RuntimeError("Apprise reported that no service accepted the message.")
 
 
-def kinds_payload() -> list[dict[str, Any]]:
-    return [k.to_dict() for k in KINDS.values()]
+def kinds_payload(mail_ready: bool = True) -> list[dict[str, Any]]:
+    """The channel kinds somebody may add right now.
+
+    ⚠️ E-mail is left out when no mail server is set up. It has nothing of its
+    own to configure any more, so offering it would mean a channel that looks
+    finished, saves, and fails silently at the first outage. A kind that
+    cannot work should not be on the list.
+    """
+    return [k.to_dict() for k in KINDS.values() if mail_ready or k.kind != "email"]
 
 
 def dumps(value: Any) -> str:

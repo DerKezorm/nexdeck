@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import Adapter, AdapterError, Context, Detected, Field, WidgetData, WidgetType, base_url
 
 STATUS_LABELS = {1: "pending", 2: "approved", 3: "declined"}
 
@@ -101,6 +101,37 @@ class SeerrAdapter(Adapter):
                 ],
             })
         return WidgetData(status="warn" if pending else "ok", items=items, secondary=[{"label": "Pending", "value": pending}], metrics={"pending": float(pending)})
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
+               options: dict[str, Any]) -> list[Detected]:
+        """A request that was not in the list a minute ago is a new one.
+
+        ⚠️ By its number, not by the count. Somebody approving one while
+        somebody else asks for another leaves the count unchanged, and a card
+        that only watches the number would miss it entirely.
+
+        ⚠️ And only when the list was read both times: an empty "before" is a
+        card that was broken or is new, and announcing every pending request
+        as fresh is a burst of noise at exactly the wrong moment.
+        """
+        if widget_kind != "requests" or before is None or before.error:
+            return []
+        seen = {str(item.get("id")) for item in before.items if item.get("id") is not None}
+        if not seen:
+            return []
+        found = []
+        for item in after.items:
+            key = str(item.get("id"))
+            if key in seen or item.get("id") is None:
+                continue
+            who = str(item.get("subtitle") or "").split(" · ")[0]
+            found.append(Detected(
+                event="request_new",
+                title=f"{item.get('title') or 'Something'} was requested",
+                body=f"Asked for by {who}." if who and who != "?" else "",
+                key=f"request_new:{key}",
+            ))
+        return found[:5]
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         if action_id not in ("approve", "decline"):

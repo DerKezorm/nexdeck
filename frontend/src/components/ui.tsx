@@ -135,9 +135,9 @@ export function Field({ label, help, children, htmlFor, required }: { label: str
   )
 }
 
-export function Select({ value, onChange, options, id, className = '' }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; id?: string; className?: string }) {
+export function Select({ value, onChange, options, id, className = '', disabled }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; id?: string; className?: string; disabled?: boolean }) {
   return (
-    <select id={id} className={`input ${className}`} value={value} onChange={(event) => onChange(event.target.value)}>
+    <select id={id} className={`input ${className}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
