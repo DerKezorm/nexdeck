@@ -1,0 +1,31 @@
+# Second opinion next to the project's own scanner, which lives untracked in
+# .git/hooks because its patterns name real people and a real network.
+#
+# Everything here is an allowlist. Nothing is switched off: a rule that fires
+# on documentation twice on every push is a rule somebody stops reading, and
+# then the one real finding goes past unnoticed.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and test fixtures that are meant to be read."
+paths = [
+  '''package-lock\.json''',
+  '''\.svg$''',
+  '''\.png$''',
+  '''\.ico$''',
+  '''\.woff2$''',
+]
+regexes = [
+  # The placeholder in the API documentation: nd_ is nexdeck's own token
+  # prefix, and "your_token" is what a reader is meant to replace.
+  '''nd_your_token''',
+  # The reserved documentation domain, recommended by the own scanner's message.
+  '''example\.(com|org|net)''',
+  # Passwords the test suites use on themselves.
+  '''another-long-password''',
+  '''A-long-enough-password''',
+  '''correct-horse-battery''',
+  '''demo-password-123''',
+]
