@@ -27,7 +27,10 @@ logger = logging.getLogger("nexdeck.adapters")
 #: ``integrations`` is a list of connection numbers. Its ``options`` name the
 #: kinds that may be picked; the server checks both the kind and whether the
 #: person editing may build on that connection at all.
-FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations", "textarea", "timezone"]
+FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations",
+                    "textarea", "timezone", "items", "choices"]
+#: ``items`` picks among the rows a card is showing; ``choices`` picks among
+#: values the service itself hands out, through ``Adapter.choices``.
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
@@ -46,6 +49,14 @@ class Field:
     options: tuple[tuple[str, str], ...] = ()
     #: A frontend helper drawn under the field, such as ``plex-signin``.
     helper: str = ""
+    #: Show this field only while another option has a given value, as
+    #: ``(name, value)``.
+    #:
+    #: ⚠️ An option that does nothing must not be on screen. The volume card
+    #: in its dial view still offered "usage bar" and "percentage", which are
+    #: parts of a list row, and a dial has no rows: three switches that moved
+    #: and changed nothing.
+    only_when: tuple[str, str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -59,6 +70,7 @@ class Field:
             "placeholder": self.placeholder,
             "options": [{"value": v, "label": lab} for v, lab in self.options],
             "helper": self.helper,
+            "only_when": list(self.only_when) if self.only_when else None,
         }
 
 
@@ -115,6 +127,20 @@ class WidgetType:
     #: True for widgets that need no server refresh: clocks, notes, bookmarks,
     #: embedded pages and app tiles draw themselves from their options.
     client_only: bool = False
+    #: The pieces of itself this widget can be told to leave out, as
+    #: ``(key, label)``. One tick box per entry appears in the widget settings
+    #: by itself, so an adapter declares the list and nothing else.
+    #:
+    #: ⚠️ All of them start ticked. A card that arrives empty and has to be
+    #: filled in leaves people guessing what it could show; a card that shows
+    #: everything and lets you take pieces away does not.
+    #:
+    #: A key names either a row (a ``secondary`` entry tagged ``part``) or a
+    #: field inside a list item (``cpu``, ``subtitle``, ``value``). Both shapes
+    #: occur, and ``keep_parts`` handles both.
+    parts: tuple[tuple[str, str], ...] = ()
+    #: When the tick boxes made from ``parts`` are worth showing at all.
+    parts_only_when: tuple[str, str] | None = None
 
     def __post_init__(self) -> None:
         """Never smaller than the drawing can bear.
@@ -131,6 +157,22 @@ class WidgetType:
         grown = (max(self.default_size[0], raised[0]), max(self.default_size[1], raised[1]))
         if grown != tuple(self.default_size):
             object.__setattr__(self, "default_size", grown)
+        # The tick boxes are made from ``parts``, not written out by hand.
+        # Thirty adapters writing the same list is twenty-nine chances to
+        # write it differently and one to forget it.
+        # ⚠️ Every list card can be told which rows to show. One rule
+        # here rather than a field written into thirty adapters, twenty-nine
+        # of which would word it differently.
+        if self.renderer == "list" and not any(field.name == ITEM_PICKER for field in self.options):
+            object.__setattr__(self, "options", (*self.options, item_picker_field()))
+        if self.parts:
+            existing = {field.name for field in self.options}
+            made = tuple(
+                Field(part_option(key), label, type="bool", default=True, only_when=self.parts_only_when)
+                for key, label in self.parts
+                if part_option(key) not in existing
+            )
+            object.__setattr__(self, "options", tuple(self.options) + made)
 
     def to_dict(self, adapter_kind: str) -> dict[str, Any]:
         return {
@@ -196,6 +238,98 @@ class Detected(BaseModel):
         return self.key or f"{self.event}:{self.title}"
 
 
+# ---------------------------------------------------------------------------
+# Which pieces of a card are shown
+# ---------------------------------------------------------------------------
+
+
+def part_option(key: str) -> str:
+    """The option name behind a part. One place, so nobody spells it twice."""
+    return f"show_{key}"
+
+
+def part_on(options: dict[str, Any], key: str) -> bool:
+    """Is this piece switched on? Missing means yes."""
+    return options.get(part_option(key)) is not False
+
+
+def join_parts(options: dict[str, Any], *pieces: tuple[str, Any]) -> str:
+    """One line built from the pieces that are switched on.
+
+    For a card that writes several facts into one subtitle. Without this the
+    adapter would have to test each tick box by hand, and a line assembled by
+    hand is a line that ends up with a stray separator in it.
+    """
+    return " · ".join(str(value) for key, value in pieces if value and part_on(options, key))
+
+
+#: Every list card offers it, so an adapter does not have to think about it.
+ITEM_PICKER = "only_items"
+
+
+def item_picker_field() -> Field:
+    return Field(
+        ITEM_PICKER, "Entries", type="items",
+        help="Nothing picked means all of them, so a new entry appears by itself.",
+    )
+
+
+#: Where the settings sheet finds every row, including the hidden ones.
+ALL_ITEMS = "all_items"
+
+
+def keep_items(data: WidgetData, options: dict[str, Any], *, remember_all: bool = False) -> WidgetData:
+    """Keep only the rows that were picked.
+
+    ⚠️ An empty list means all of them. The rows come from the service, so
+    a new disk or a new container turns up on its own; a picker that stored
+    "these five" would quietly hide the sixth, which is the one worth seeing.
+
+    Matched by title, not by id. A container keeps its name and gets a new id
+    every time it is recreated, and the title is what the person ticked.
+    """
+    if remember_all:
+        # ⚠️ Written down before anything is dropped, and only for the
+        # settings sheet. The tick boxes are made from the rows the card
+        # shows, so switching one off took its own box away with it and there
+        # was no way back. The boards do not get this: it is a second copy of
+        # every title on every refresh, for a question only the sheet asks.
+        data.meta = {**(data.meta or {}), ALL_ITEMS: [str(item.get("title") or "") for item in data.items]}
+    wanted = options.get(ITEM_PICKER)
+    if not isinstance(wanted, list) or not wanted:
+        return data
+    keep = {str(one) for one in wanted}
+    data.items = [item for item in data.items if str(item.get("title") or "") in keep]
+    return data
+
+
+def keep_parts(data: WidgetData, parts: tuple[tuple[str, str], ...], options: dict[str, Any]) -> WidgetData:
+    """Take out the pieces this card was told to leave out.
+
+    Applied once by the collector, so an adapter declares its parts and stops
+    thinking about them.
+
+    ⚠️ The metrics are untouched. What a card draws and what it records
+    are different questions, and a graph with a hole in it because somebody
+    hid a row for a week is not what anybody meant by hiding a row.
+    """
+    off = {key for key, _label in parts if not part_on(options, key)}
+    if not off:
+        return data
+
+    data.secondary = [row for row in data.secondary if str(row.get("part") or "") not in off]
+    if data.primary and str(data.primary.get("part") or "") in off:
+        # ⚠️ A stats card whose first row is gone must not go blank: the
+        # next row moves up. Dropping the primary and leaving the rest would
+        # look like the service stopped answering.
+        data.primary = data.secondary.pop(0) if data.secondary else None
+
+    for item in data.items:
+        for key in off:
+            item.pop(key, None)
+    return data
+
+
 #: The two options a card needs to be able to draw itself as a dial.
 #:
 #: ⚠️ A dial without a maximum is a lie: it claims a share of something. A
@@ -217,6 +351,37 @@ def gauge_view_field() -> Field:
                  options=(("value", "The number"), ("gauge", "A dial")))
 
 
+def gauge_pick_field(parts: tuple[tuple[str, str], ...]) -> Field:
+    """Which of several rows the needle follows.
+
+    ⚠️ A dial shows one number and these cards carry four. Taking the
+    first row silently would mean the dial changes meaning the day somebody
+    hides a row, and nobody would connect the two.
+    """
+    return Field(
+        "gauge_part", "Dial shows", type="select", default=parts[0][0],
+        options=tuple(parts),
+        only_when=("view", "gauge"),
+    )
+
+
+def pick_gauge_row(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Move the chosen row to the front, so the dial draws that one."""
+    wanted = str(options.get("gauge_part") or "").strip()
+    if not wanted or str(options.get("view") or "value") != "gauge":
+        return data
+    if str((data.primary or {}).get("part") or "") == wanted:
+        return data
+    for index, row in enumerate(data.secondary):
+        if str(row.get("part") or "") == wanted:
+            data.secondary = [*data.secondary[:index], *data.secondary[index + 1:]]
+            if data.primary:
+                data.secondary.insert(0, data.primary)
+            data.primary = row
+            return data
+    return data
+
+
 def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = None) -> WidgetData:
     """Turn a measured number into a share of something, if asked and possible.
 
@@ -232,6 +397,10 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
         return data
     value = (data.primary or {}).get("value")
     ceiling = maximum
+    #: Whether anybody actually named a ceiling. A card that measures a
+    #: percentage has one by arithmetic, and "35% of 100%" is a sentence about
+    #: nothing, so that kind is not written down.
+    named = ceiling is not None
     if ceiling is None and str((data.primary or {}).get("unit") or "") == "%":
         # Already a share of something; the card said so with its unit.
         ceiling = 100.0
@@ -242,16 +411,36 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
             ceiling = None
     if ceiling is None or ceiling <= 0 or not isinstance(value, (int, float)):
         return data
+    named = named or bool(str(options.get("gauge_max") or "").strip())
     share = max(0.0, min(100.0, float(value) / ceiling * 100))
     # ⚠️ The number itself stays where it was. A dial that replaces
     # "38 MB/s" with "42%" answers a question nobody asked: the share is how
     # far round the needle goes, not what the card is for.
-    data.meta = {
-        **(data.meta or {}),
-        "renderer": "gauge",
-        "gauge": {"share": round(share, 1), "max": ceiling},
-    }
+    dial: dict[str, Any] = {"share": round(share, 1)}
+    if named:
+        dial["max"] = ceiling
+    data.meta = {**(data.meta or {}), "renderer": "gauge", "gauge": dial}
     return data
+
+
+def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, options: dict[str, Any],
+                      *, for_settings: bool = False) -> WidgetData:
+    """Everything that happens to a card between the service and the screen.
+
+    ⚠️ One function, because there are two ways to a card: the collector
+    that refreshes it and the preview the settings sheet asks for. The passes
+    hung on the collector alone, so switching a piece off changed nothing in
+    the sheet until the page was reloaded, and building a card meant guessing
+    and pressing F5.
+    """
+    try:
+        widget = adapter.widget(widget_kind)
+    except KeyError:
+        return data
+    data = keep_parts(data, widget.parts, options)
+    data = keep_items(data, options, remember_all=for_settings)
+    data = pick_gauge_row(data, options)
+    return as_gauge(data, options)
 
 
 class AdapterError(Exception):
@@ -534,6 +723,18 @@ class Adapter:
         ctx: Context,
     ) -> str:
         raise AdapterError("This widget has no actions.", code="no_such_action")
+
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """What to offer in a field whose answers come from the service.
+
+        ⚠️ Values, not guesses. A field like "which switch" cannot be written
+        into the spec, because the answer lives on the console. Typing a name
+        instead works until there are fourteen of them.
+
+        Returns ``(value, label)`` pairs. An adapter that has no such field
+        says so by returning nothing.
+        """
+        return []
 
     def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
                options: dict[str, Any]) -> list[Detected]:

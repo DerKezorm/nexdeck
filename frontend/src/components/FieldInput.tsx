@@ -15,6 +15,12 @@ interface Props {
   labelOverride?: string
   /** Lets a helper fill several fields at once, such as a token and the server address. */
   onFill?: (values: Record<string, unknown>) => void
+  /** The rows the card is showing right now, for a field that picks among them. */
+  items?: Record<string, unknown>[]
+  /** Every row the card has, so a switched-off one keeps its button. */
+  allTitles?: string[]
+  /** The connection a `choices` field asks for its answers. */
+  integrationId?: number
 }
 
 /** The browser's own list of IANA zones; empty in browsers that cannot say. */
@@ -59,8 +65,122 @@ function IntegrationPicker({ spec, value, onChange, label, help }: { spec: Field
   )
 }
 
+/**
+ * Which rows of a list card are shown.
+ *
+ * ⚠️ Nothing ticked means all of them, and that is not laziness: the rows come
+ * from the service, so a new disk or a new container appears on its own. A
+ * picker that stored "these five" would quietly hide the sixth, which is the
+ * one somebody would want to see.
+ */
+function ItemPicker({ value, onChange, label, help, items, allTitles }: {
+  value: unknown
+  onChange: (value: unknown) => void
+  label: string
+  help?: string
+  items?: Record<string, unknown>[]
+  /** Every row the card has, hidden ones included. */
+  allTitles?: string[]
+}) {
+  const { t } = useTranslation()
+  const chosen = (Array.isArray(value) ? value : []) as string[]
+  // ⚠️ The complete list, not the visible one. Built from what the card shows,
+  // switching a row off took its own button away with it and there was no way
+  // back short of clearing the whole option.
+  const rows = (allTitles ?? (items ?? []).map((item) => String(item.title ?? ''))).filter(Boolean)
+  const unique = [...new Set([...rows, ...chosen])]
+  return (
+    <Field label={label} help={help}>
+      {unique.length === 0 ? (
+        <p className="text-[12px] text-faint">{t('widget.rows.none')}</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {unique.map((title) => {
+            const on = chosen.length === 0 || chosen.includes(title)
+            return (
+              <button
+                key={title}
+                type="button"
+                className="btn btn-xs"
+                aria-pressed={on}
+                onClick={() => {
+                  // The first click on a card that shows everything means
+                  // "only not this one", so the list starts as everything.
+                  const base = chosen.length === 0 ? unique : chosen
+                  const next = base.includes(title) ? base.filter((one) => one !== title) : [...base, title]
+                  onChange(next.length === unique.length ? [] : next)
+                }}
+              >
+                {title}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      <p className="text-[11px] text-faint mt-1">
+        {chosen.length === 0 ? t('widget.rows.all') : t('widget.rows.some', { count: chosen.length })}
+      </p>
+    </Field>
+  )
+}
+
+/**
+ * A dropdown whose answers come from the service, not from the code.
+ *
+ * ⚠️ Some questions cannot be written into a spec. "Which switch" is answered
+ * by the console, and typing a name instead works until there are fourteen of
+ * them.
+ */
+function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
+  spec: FieldSpec
+  value: unknown
+  onChange: (value: unknown) => void
+  label: string
+  help?: string
+  integrationId?: number
+}) {
+  const { t } = useTranslation()
+  const offered = useQuery({
+    queryKey: ['choices', integrationId, spec.name],
+    queryFn: () => get<{ value: string; label: string }[]>(`/integrations/${integrationId}/choices/${spec.name}`),
+    enabled: Boolean(integrationId),
+    retry: false,
+  })
+  if (!integrationId) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-faint">{t('widget.choices.pickConnection')}</p>
+      </Field>
+    )
+  }
+  if (offered.isPending) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-faint">{t('common.loading')}</p>
+      </Field>
+    )
+  }
+  const rows = offered.data ?? []
+  if (offered.isError || rows.length === 0) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-warn">{t('widget.choices.none')}</p>
+      </Field>
+    )
+  }
+  return (
+    <Field label={label} help={help}>
+      <Select
+        value={String(value ?? '')}
+        onChange={onChange}
+        options={[{ value: '', label: t('widget.choices.unset') }, ...rows]}
+      />
+    </Field>
+  )
+}
+
 /** Draws one adapter field from its spec: text, password, number, bool, select, connections, textarea or time zone. */
-export function FieldInput({ spec, value, onChange, labelOverride, onFill }: Props) {
+export function FieldInput({ spec, value, onChange, labelOverride, onFill, items, allTitles, integrationId }: Props) {
   const { t } = useTranslation()
   const id = useId()
   // Adapters speak English; the field is shown in the user's language.
@@ -71,6 +191,12 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill }: Pro
   }
   if (spec.type === 'integrations') {
     return <IntegrationPicker spec={spec} value={value} onChange={onChange} label={label} help={help} />
+  }
+  if (spec.type === 'choices') {
+    return <RemoteChoice spec={spec} value={value} onChange={onChange} label={label} help={help} integrationId={integrationId} />
+  }
+  if (spec.type === 'items') {
+    return <ItemPicker value={value} onChange={onChange} label={label} help={help} items={items} allTitles={allTitles} />
   }
   if (spec.type === 'select') {
     const options = spec.options.map((option) => ({ value: option.value, label: tAdapter(option.label) }))

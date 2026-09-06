@@ -48,7 +48,7 @@ export interface FieldSpec {
   name: string
   label: string
   /** `integrations` is a list of connection numbers; `options` names the kinds that may be picked. */
-  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'integrations' | 'textarea' | 'timezone'
+  type: 'text' | 'password' | 'url' | 'number' | 'bool' | 'select' | 'integrations' | 'textarea' | 'timezone' | 'items' | 'choices'
   required: boolean
   secret: boolean
   default: unknown
@@ -56,6 +56,8 @@ export interface FieldSpec {
   placeholder: string
   options: { value: string; label: string }[]
   helper?: string
+  /** Shown only while another option holds this value: `[name, value]`. */
+  only_when?: [string, string] | null
 }
 
 export interface WidgetTypeSpec {

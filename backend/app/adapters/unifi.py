@@ -27,6 +27,7 @@ from .base import (
     WidgetType,
     base_url,
     duration_short,
+    join_parts,
 )
 
 #: Devices whose statistics are loaded for the list; more would mean a request per device.
@@ -56,6 +57,25 @@ SECURITY = {
 GATEWAY_MODELS = ("DREAM MACHINE", "DREAM ROUTER", "DREAM WALL", "CLOUD GATEWAY", "GATEWAY", "UDM", "UDR", "UDW", "UCG", "UXG", "EXPRESS")
 
 
+def _speed(speed: int, top: int) -> str:
+    """What the link is running at, and what it could."""
+    def read(mbps: int) -> str:
+        return f"{mbps / 1000:g} Gbit/s" if mbps >= 1000 else f"{mbps} Mbit/s"
+
+    if not speed:
+        return "connected"
+    return read(speed) if not top or speed >= top else f"{read(speed)} of {read(top)}"
+
+
+def _poe(poe: dict[str, Any]) -> str:
+    """What the port is giving out, in the words the console uses."""
+    standard = str(poe.get("standard") or "").strip()
+    live = str(poe.get("state") or "").upper() in ("UP", "ON", "POWER_ON")
+    if not live:
+        return "PoE ready"
+    return f"PoE {standard}" if standard else "PoE"
+
+
 class UnifiAdapter(Adapter):
     kind = "unifi"
     #: Confirmed against a live instance on 2026-09-05.
@@ -80,6 +100,16 @@ class UnifiAdapter(Adapter):
         WidgetType(kind="console", label="Console", description="The console at a glance: gateway, uptime, versions, firmware state, device and client counts, WAN throughput.", renderer="list", default_size=(3, 3), refresh_seconds=60, metrics=("wan_down", "wan_up")),
         WidgetType(kind="devices", label="Devices", description="Access points, switches and gateways with state and load.", renderer="list", default_size=(3, 3), refresh_seconds=60),
         WidgetType(kind="findings", label="Findings", description="Does the console run, and what is wrong: offline devices, odd device states, firmware updates, a strained gateway.", renderer="list", default_size=(3, 2), refresh_seconds=60),
+        WidgetType(
+            kind="switch", label="Switch", renderer="list", default_size=(3, 4), refresh_seconds=60,
+            description="Every port of one switch with its state, speed and power over ethernet.",
+            options=(
+                Field("device", "Switch", type="choices", required=True,
+                      help="Pick the connection first; the switches of that console appear here."),
+                Field("hide_empty", "Only ports with something on them", type="bool", default=False),
+            ),
+            parts=(("speed", "Speed"), ("poe", "Power over ethernet")),
+        ),
         WidgetType(kind="wifi", label="WLANs", description="Every wireless network with its VLAN, security, bands and the access points that carry it.", renderer="list", default_size=(3, 2), refresh_seconds=300),
     )
 
@@ -112,7 +142,7 @@ class UnifiAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if self._uses_api_key(config):
-            return await self._fetch_api(widget_kind, config, ctx)
+            return await self._fetch_api(widget_kind, config, options, ctx)
         self._require_account(config)
         return await self._fetch_legacy(widget_kind, config, ctx)
 
@@ -210,12 +240,93 @@ class UnifiAdapter(Adapter):
                 return label
         return "Device"
 
-    async def _fetch_api(self, widget_kind: str, config: dict[str, Any], ctx: Context) -> WidgetData:
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """The switches of this console, for the field that picks one.
+
+        Only over the Integration API: the old one identifies a device by its
+        MAC, and mixing the two would give a value that stops working the day
+        somebody swaps the key for an account.
+        """
+        if field != "device" or not self._uses_api_key(config):
+            return []
+        site = await self._site(config, ctx)
+        devices, _ = await self._pages(config, ctx, f"/sites/{site['id']}/devices")
+        switches = [d for d in devices if "switching" in (d.get("features") or [])]
+        switches.sort(key=lambda d: str(d.get("name") or d.get("model") or "").lower())
+        return [
+            (str(device["id"]), f"{device.get('name') or device.get('model', '?')} ({device.get('model', '?')})")
+            for device in switches if device.get("id")
+        ]
+
+    async def _switch_api(self, config: dict[str, Any], options: dict[str, Any], ctx: Context, site_id: str,
+                          devices: list[dict[str, Any]]) -> WidgetData:
+        """One switch, port by port.
+
+        ⚠️ What hangs on a port is not in here, and cannot be: the Integration
+        API tells a client which *device* it uplinks to, never which port. So
+        this card is about the ports themselves, and says so by what it shows.
+        """
+        wanted = str(options.get("device") or "").strip()
+        switches = [d for d in devices if "switching" in (d.get("features") or [])]
+        if not switches:
+            raise AdapterError("This console has no switch.", code="no_switch")
+        chosen = next((d for d in switches if str(d.get("id")) == wanted), None)
+        if chosen is None:
+            names = ", ".join(str(d.get("name") or d.get("model")) for d in switches[:8])
+            raise AdapterError(
+                "No switch is picked for this card." if not wanted else "That switch is not on this console any more.",
+                code="no_switch_picked",
+                hint=f"Open the card settings and pick one: {names}.",
+            )
+
+        detail = await self._api(config, ctx, f"/sites/{site_id}/devices/{chosen['id']}")
+        ports = (detail.get("interfaces") or {}).get("ports") or []
+        items: list[dict[str, Any]] = []
+        up = powered = 0
+        for port in sorted(ports, key=lambda p: int(p.get("idx") or 0)):
+            live = str(port.get("state") or "").upper() == "UP"
+            up += live
+            poe = port.get("poe") or {}
+            drawing = str(poe.get("state") or "").upper() in ("UP", "ON", "POWER_ON")
+            powered += drawing
+            speed = int(port.get("speedMbps") or 0)
+            top = int(port.get("maxSpeedMbps") or 0)
+            facts = [
+                ("speed", _speed(speed, top) if live else "not connected"),
+                ("poe", _poe(poe) if poe.get("enabled") else ""),
+            ]
+            items.append({
+                "id": f"port-{port.get('idx')}",
+                "title": f"Port {port.get('idx')}",
+                "subtitle": join_parts(options, *facts),
+                "status": "ok" if live else "unknown",
+                "value": str(port.get("connector") or ""),
+            })
+        if options.get("hide_empty"):
+            items = [item for item in items if item["status"] == "ok"]
+        return WidgetData(
+            status="ok",
+            items=items,
+            secondary=[
+                # ⚠️ Which switch, first and always. A console can hold a
+                # dozen of them, and a card titled "Switch" showing five ports
+                # is a card nobody can place.
+                {"label": "Switch", "value": str(chosen.get("name") or chosen.get("model") or "?")},
+                {"label": "Ports up", "value": f"{up} / {len(ports)}"},
+                {"label": "With power", "value": powered},
+            ],
+            metrics={"ports_up": float(up)},
+            meta={"empty": "No port is connected"},
+        )
+
+    async def _fetch_api(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         site = await self._site(config, ctx)
         site_id = str(site["id"])
         if widget_kind == "wifi":
             return await self._wifi_api(config, ctx, site_id)
         devices, _ = await self._pages(config, ctx, f"/sites/{site_id}/devices")
+        if widget_kind == "switch":
+            return await self._switch_api(config, options, ctx, site_id, devices)
         online = [d for d in devices if str(d.get("state", "")).upper() == "ONLINE"]
         offline = len(devices) - len(online)
         gateway_down = any(self._is_gateway(d) and str(d.get("state", "")).upper() != "ONLINE" for d in devices)
@@ -407,6 +518,14 @@ class UnifiAdapter(Adapter):
         return response.json().get("data") or []
 
     async def _fetch_legacy(self, widget_kind: str, config: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind == "switch":
+            # ⚠️ Said plainly rather than left empty. The old API identifies a
+            # device by its MAC and the new one by an id, so a switch picked
+            # under one is meaningless under the other.
+            raise AdapterError(
+                "The switch card needs the Integration API.", code="needs_api_key",
+                hint="Put an API key into this connection: Settings, Control Plane, Integrations.",
+            )
         if widget_kind == "wifi":
             return await self._wifi_legacy(config, ctx)
         devices = await self._get(config, ctx, "/stat/device")

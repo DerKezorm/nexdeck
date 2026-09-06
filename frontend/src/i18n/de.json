@@ -179,7 +179,9 @@
       "sessionsHelp": "Jeder Browser, der mit diesem Konto angemeldet ist.",
       "signOutSession": "Abmelden",
       "signOut": "Hier abmelden",
-      "confirmPassword": "Neues Passwort wiederholen"
+      "confirmPassword": "Neues Passwort wiederholen",
+      "saveProfile": "Name und Adresse speichern",
+      "unsaved": "Noch nicht gespeichert"
     },
     "integrations": {
       "title": "Anbindungen",
@@ -527,7 +529,9 @@
     "deletePageTitle": "Seite {{name}} löschen?",
     "deletePageEmpty": "Die Seite ist leer, es geht nichts verloren.",
     "deletePageBody": "Ihre {{count}} Karten gehen mit, samt Verlauf.",
-    "lastPage": "Ein Board behält mindestens eine Seite."
+    "lastPage": "Ein Board behält mindestens eine Seite.",
+    "moveUp": "{{name}} nach oben",
+    "moveDown": "{{name}} nach unten"
   },
   "widget": {
     "remove": {
@@ -577,9 +581,19 @@
     "iconCount": "{{count}} Logos",
     "iconMore": "{{count}} weitere anzeigen",
     "showFindings": "Befunde anzeigen",
-    "showFindingsHelp": "Aus: Die Karte zeigt weder Grund noch Warnfarbe. Sinnvoll, wenn eine Befunde-Karte daneben sagt, was los ist.",
+    "showFindingsHelp": "An: Die Karte zeigt Grund und Warnfarbe. Aus, und so fängt jede neue Karte an: weder noch, damit Farbe auf den Boards etwas heißt, wenn sie doch auftaucht.",
     "pageHelp": "Legt die Karte auf eine andere Seite dieses Boards. Leer lassen, dann bleibt sie hier.",
-    "noSources": "Es ist noch keine passende Anbindung eingerichtet."
+    "noSources": "Es ist noch keine passende Anbindung eingerichtet.",
+    "rows": {
+      "none": "Die Karte hat gerade keine Einträge zur Auswahl.",
+      "all": "Alle Einträge",
+      "some": "{{count}} davon"
+    },
+    "choices": {
+      "pickConnection": "Erst eine Anbindung wählen, dann füllt sich das hier.",
+      "none": "Diese Anbindung bietet hier nichts zur Auswahl.",
+      "unset": "Nicht gewählt"
+    }
   },
   "library": {
     "title": "Widget hinzufügen",

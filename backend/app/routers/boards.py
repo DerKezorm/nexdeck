@@ -28,6 +28,7 @@ from ..deps import (
 from ..models import Board, BoardShare, KioskToken, Page, Widget, utcnow
 from ..schemas import (
     BoardCreate,
+    BoardOrder,
     BoardPatch,
     ImportBody,
     KioskCreate,
@@ -174,6 +175,45 @@ def patch_board(slug: str, body: BoardPatch, user: CurrentUser, db: DbSession) -
     db.commit()
     _announce(board.id)
     return board_view(db, board, permission)
+
+
+@router.put("/boards/order", summary="Put the boards in the order the menu should show them")
+def order_boards(body: BoardOrder, user: CurrentUser, db: DbSession) -> list[dict]:
+    """The whole order in one call.
+
+    ⚠️ One call, not one PATCH per board. Two boards swapping places is two
+    writes, and a browser that sends them separately can land them in either
+    sequence; the loser of that race is a menu in an order nobody asked for.
+
+    ⚠️ Renumbered from zero over every board that was named, so an
+    installation whose boards all sit at position 0, which is every
+    installation made before this, comes out in a defined order rather than
+    falling back to the order they happen to have been created in.
+    """
+    wanted = [slug.strip() for slug in body.slugs if slug.strip()]
+    if len(set(wanted)) != len(wanted):
+        raise error("duplicate_board", "A board was named twice.")
+
+    boards = {board.slug: board for board in db.scalars(select(Board))}
+    unknown = [slug for slug in wanted if slug not in boards]
+    if unknown:
+        raise error("not_found", "There is no such board.", status.HTTP_404_NOT_FOUND)
+    for slug in wanted:
+        # Moving a board is editing it, and the same permission decides.
+        require_board(db, slug, user, "edit")
+
+    for index, slug in enumerate(wanted):
+        boards[slug].position = index
+    # Anything not named keeps its place behind the named ones, in the order
+    # it already had. A board somebody else owns must not jump to the front
+    # because a user who cannot see it never sent its name.
+    rest = sorted((board for slug, board in boards.items() if slug not in wanted),
+                  key=lambda board: (board.position, board.id))
+    for offset, board in enumerate(rest):
+        board.position = len(wanted) + offset
+    db.commit()
+    logger.info("%s put the boards in a new order.", user.username)
+    return list_boards(user, db)
 
 
 @router.delete("/boards/{slug}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a board")

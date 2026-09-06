@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { ApiError, del, get, patch, post } from '../../api/client'
+import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
 import { Confirm, Field, Toast } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
@@ -24,6 +24,19 @@ export function BoardsSettings() {
   const [error, setError] = useState('')
   const [removing, setRemoving] = useState<BoardSummary | null>(null)
   const [removingPage, setRemovingPage] = useState<{ board: BoardSummary; page: BoardSummary['pages'][number] } | null>(null)
+  const [reordering, setReordering] = useState(false)
+  /** Move one board by one place and send the whole order back. */
+  const move = (index: number, by: number) => {
+    const slugs = (boards.data ?? []).map((one) => one.slug)
+    const target = index + by
+    if (target < 0 || target >= slugs.length) return
+    ;[slugs[index], slugs[target]] = [slugs[target], slugs[index]]
+    setReordering(true)
+    void put('/boards/order', { slugs })
+      .then(() => boards.refetch())
+      .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+      .finally(() => setReordering(false))
+  }
   /** Which boards show their pages. Closed by default: the list is the answer
       to "which boards do I have", the pages are the second question. */
   const [expanded, setExpanded] = useState<number[]>([])
@@ -38,7 +51,7 @@ export function BoardsSettings() {
           </label>
         )}
         <ul className="space-y-1.5 mb-4">
-          {(boards.data ?? []).map((board) => {
+          {(boards.data ?? []).map((board, index) => {
             const open = expanded.includes(board.id)
             const mine = board.owner_id === me?.id
             const mayEdit = board.permission === 'owner' || board.permission === 'edit'
@@ -56,6 +69,32 @@ export function BoardsSettings() {
                   >
                     {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
+                  {/* ⚠️ Up and down, not drag and drop. The menu at the top
+                      is a short list, and two arrows work with a keyboard, on
+                      a phone and at a wall display, where dragging does not.
+                      The whole order goes back in one call: two boards
+                      swapping places sent as two writes can land either way
+                      round. */}
+                  <span className="flex flex-col -my-1">
+                    <button
+                      className="btn btn-icon h-4 w-6 border-0 bg-transparent disabled:opacity-25"
+                      disabled={index === 0 || reordering}
+                      onClick={() => move(index, -1)}
+                      aria-label={t('board.moveUp', { name: board.name })}
+                      title={t('board.moveUp', { name: board.name })}
+                    >
+                      <ChevronUp size={13} />
+                    </button>
+                    <button
+                      className="btn btn-icon h-4 w-6 border-0 bg-transparent disabled:opacity-25"
+                      disabled={index === (boards.data ?? []).length - 1 || reordering}
+                      onClick={() => move(index, 1)}
+                      aria-label={t('board.moveDown', { name: board.name })}
+                      title={t('board.moveDown', { name: board.name })}
+                    >
+                      <ChevronDown size={13} />
+                    </button>
+                  </span>
                   <Link to={`/b/${board.slug}`} className="flex-1 font-medium truncate hover:text-accent">
                     {board.name}
                     {/* Whose board this is. Left out when it is mine: a list in

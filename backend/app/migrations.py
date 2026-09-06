@@ -58,6 +58,35 @@ def _second_factor_columns(connection: Connection) -> None:
     _add_column(connection, "users", "totp_last_step", "INTEGER NOT NULL DEFAULT 0")
 
 
+def _findings_stay_on_for_existing_widgets(connection: Connection) -> None:
+    """Keep every card that exists showing its reason and its warning colour.
+
+    ⚠️ "Show findings" becomes something you switch on, not something you
+    switch off. A default is retroactive: cards carry no value of their own,
+    they inherit it, so flipping it would make every card on every board fall
+    silent at once. This writes the old answer down once, for the cards that
+    were made under it. New cards start quiet.
+    """
+    import json
+
+    rows = connection.execute(text("SELECT id, options FROM widgets")).fetchall()
+    changed = 0
+    for widget_id, raw in rows:
+        try:
+            options = json.loads(raw) if isinstance(raw, str) else (raw or {})
+        except (TypeError, ValueError):
+            options = {}
+        if not isinstance(options, dict) or "show_findings" in options:
+            continue
+        options["show_findings"] = True
+        connection.execute(
+            text("UPDATE widgets SET options = :o WHERE id = :i"),
+            {"o": json.dumps(options, ensure_ascii=False), "i": widget_id},
+        )
+        changed += 1
+    logger.info("Findings stay switched on for %d existing widget(s).", changed)
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -66,6 +95,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (5, "Boards can stay out of the menu, connections can be locked", _menu_and_lock_columns),
     (6, "API and kiosk tokens can expire and be withdrawn", _token_expiry_columns),
     (7, "Accounts can carry a second factor", _second_factor_columns),
+    (8, "Findings stay on for the cards that already exist", _findings_stay_on_for_existing_widgets),
 ]
 
 

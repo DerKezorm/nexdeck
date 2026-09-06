@@ -8,7 +8,7 @@ number underneath.
 from __future__ import annotations
 
 from app.adapters import all_adapters, get_adapter
-from app.adapters.base import WidgetData, as_gauge
+from app.adapters.base import RENDERER_MIN, WidgetData, as_gauge, gauge_view_field
 
 
 def _card(value: float, unit: str = "Mbps", label: str = "Download") -> WidgetData:
@@ -112,13 +112,59 @@ def test_no_card_offers_a_ceiling_without_the_view_to_use_it() -> None:
                 assert "view" in names, f"{adapter.kind}.{widget.kind}"
 
 
-def test_every_card_offering_the_view_draws_with_a_renderer_that_can() -> None:
-    """The ring is drawn by the gauge renderer; a list cannot become one."""
+def test_every_card_offering_the_view_is_big_enough_to_be_one() -> None:
+    """A card that can turn into a dial has to have room for one.
+
+    ⚠️ This used to demand that such a card be drawn by the value renderer,
+    on the reasoning that a list cannot become a dial. It can: the data names
+    the drawing (``meta.renderer``), which is how a stats card and a list card
+    both offer the view now. What actually has to hold is the size: a card
+    that shrinks to one cell and then turns into a dial is a clipped dial.
+    """
+    floor = RENDERER_MIN["gauge"]
     checked = 0
     for adapter in all_adapters():
         for widget in adapter.widgets:
             if not any(field.name == "view" and any(v == "gauge" for v, _ in field.options) for field in widget.options):
                 continue
             checked += 1
-            assert widget.renderer in ("value", "gauge"), f"{adapter.kind}.{widget.kind} draws as {widget.renderer}"
+            assert widget.min_size[0] >= floor[0] and widget.min_size[1] >= floor[1], (
+                f"{adapter.kind}.{widget.kind} may become a dial but shrinks to {widget.min_size}"
+            )
     assert checked >= 8, "no card offers it; this test would pass on anything"
+
+    # ⚠️ And the check above can actually fail. Sizes are raised to the
+    # floor of their own renderer, and most floors already clear the dial's,
+    # so a test that only walks the real widgets would pass whatever happened.
+    # A clock is the counter-example: two cells wide, one high.
+    from app.adapters.base import WidgetType
+
+    too_small = WidgetType(kind="x", label="X", description="", renderer="clock",
+                           options=(gauge_view_field(),))
+    assert too_small.min_size[1] < floor[1], "the rule has no teeth if nothing can break it"
+
+
+def test_a_card_that_already_measures_a_percentage_names_no_ceiling() -> None:
+    """⚠️ "35% of 100%" is a sentence about nothing.
+
+    The share is arithmetic when the unit is already a percentage, so no
+    ceiling was named and none is written down. The card said it anyway, and
+    the dial dutifully printed it under the number.
+    """
+    card = WidgetData(primary={"label": "volume_1", "value": 35, "unit": "%"})
+    dialled = as_gauge(card, {"view": "gauge"})
+    assert dialled.meta["gauge"]["share"] == 35.0
+    assert "max" not in dialled.meta["gauge"], "nobody named a ceiling"
+
+
+def test_a_ceiling_somebody_named_is_kept() -> None:
+    """The other half: 38 of 48 MB/s is worth saying."""
+    card = WidgetData(primary={"label": "Download", "value": 38, "unit": "MB/s"})
+    dialled = as_gauge(card, {"view": "gauge", "gauge_max": 48})
+    assert dialled.meta["gauge"]["max"] == 48.0
+
+
+def test_a_ceiling_the_adapter_named_is_kept() -> None:
+    card = WidgetData(primary={"label": "Queue", "value": 3, "unit": ""})
+    dialled = as_gauge(card, {"view": "gauge"}, maximum=10)
+    assert dialled.meta["gauge"] == {"share": 30.0, "max": 10}

@@ -23,9 +23,26 @@ from .base import (
     WidgetData,
     WidgetType,
     base_url,
+    gauge_pick_field,
+    gauge_view_field,
     human_bytes,
+    join_parts,
+    keep_items,
     percent,
     status_from_percent,
+)
+
+#: The rows of the system card, in the order they are drawn. Ticking them off
+#: is what the widget settings offer, and the dial follows one of them.
+SYSTEM_PARTS = (("cpu", "CPU"), ("memory", "Memory"), ("volume", "Volume"), ("temp", "Temperature"))
+
+#: What a container row can say about itself besides its name.
+CONTAINER_PARTS = (
+    ("image", "Image"),
+    ("uptime", "Running since"),
+    ("cpu", "CPU"),
+    ("memory_percent", "Memory bar"),
+    ("value", "Memory in use"),
 )
 
 ERRORS = {400: "wrong account or password", 401: "the account is disabled", 402: "permission denied", 403: "two-factor authentication is required", 404: "the two-factor code was wrong"}
@@ -58,6 +75,8 @@ class SynologyAdapter(Adapter):
             default_size=(4, 2),
             refresh_seconds=20,
             metrics=("cpu", "memory"),
+            parts=SYSTEM_PARTS,
+            options=(gauge_view_field(), gauge_pick_field(SYSTEM_PARTS)),  # the picker hides itself outside the dial
         ),
         WidgetType(
             kind="volumes",
@@ -66,6 +85,11 @@ class SynologyAdapter(Adapter):
             renderer="list",
             default_size=(3, 2),
             refresh_seconds=300,
+            # The three below describe a row of a list. In the dial view there
+            # are no rows, so they are not shown there.
+            parts=(("subtitle", "Size and health"), ("progress", "Usage bar"), ("value", "Percentage")),
+            parts_only_when=("view", "value"),
+            options=(gauge_view_field(),),
         ),
         WidgetType(
             kind="disks",
@@ -92,6 +116,7 @@ class SynologyAdapter(Adapter):
             default_size=(3, 3),
             refresh_seconds=30,
             metrics=("running",),
+            parts=CONTAINER_PARTS,
             options=(
                 Field("filter", "Name filter", help="Only containers whose name contains this."),
                 Field("show_stopped", "Show stopped containers", type="bool", default=True),
@@ -151,11 +176,14 @@ class SynologyAdapter(Adapter):
             temperature = info.get("temperature")
             return WidgetData(
                 status=status_from_percent(max(cpu, memory, fullest)),
-                primary={"label": "CPU", "value": round(cpu, 1), "unit": "%"},
+                # ⚠️ Every row carries its key. Without it the tick boxes and
+                # the dial would have to guess which row is which by its
+                # label, and a label is translated.
+                primary={"label": "CPU", "value": round(cpu, 1), "unit": "%", "part": "cpu"},
                 secondary=[
-                    {"label": "Memory", "value": round(memory, 1), "unit": "%", "metric": "memory"},
-                    {"label": "Volume", "value": fullest, "unit": "%"},
-                    {"label": "Temp", "value": temperature, "unit": "°C"},
+                    {"label": "Memory", "value": round(memory, 1), "unit": "%", "metric": "memory", "part": "memory"},
+                    {"label": "Volume", "value": fullest, "unit": "%", "part": "volume"},
+                    {"label": "Temp", "value": temperature, "unit": "°C", "part": "temp"},
                 ],
                 metrics={"cpu": round(cpu, 1), "memory": round(memory, 1)},
             )
@@ -171,6 +199,23 @@ class SynologyAdapter(Adapter):
                     "progress": used, "value": f"{used:.0f}%",
                     "status": "ok" if volume.get("status") == "normal" and used < 90 else "warn",
                 })
+            # The picker runs centrally, but by then this card has already
+            # traded its rows for a dial. So it is applied here first, or
+            # "only volume_2" would silently pick the fullest of all of them.
+            items = keep_items(WidgetData(items=items), options).items
+            if str(options.get("view") or "value") == "gauge" and items:
+                # ⚠️ A dial shows one number and a box can hold several
+                # volumes. The fullest is the one worth a needle, and the card
+                # says which one it is rather than leaving that to be guessed.
+                fullest_volume = max(items, key=lambda one: float(one["progress"]))
+                return WidgetData(
+                    status=fullest_volume["status"],
+                    primary={"label": fullest_volume["title"], "value": round(float(fullest_volume["progress"]), 1), "unit": "%"},
+                    secondary=[
+                        {"label": one["title"], "value": one["value"]}
+                        for one in items if one is not fullest_volume
+                    ],
+                )
             return WidgetData(items=items)
         items = []
         for disk in storage.get("disks") or []:
@@ -202,14 +247,19 @@ class SynologyAdapter(Adapter):
             unhealthy = "(unhealthy)" in up_status
             for marker in (" (healthy)", " (unhealthy)"):
                 up_status = up_status.replace(marker, "")
-            parts = [str(container.get("image") or ""), up_status]
-            if unhealthy:
-                parts.append("unhealthy")
+            # Two facts in one line, so the line is assembled from whichever
+            # of them is switched on rather than always both.
+            subtitle = join_parts(
+                options,
+                ("image", str(container.get("image") or "")),
+                ("uptime", up_status),
+                ("uptime", "unhealthy" if unhealthy else ""),
+            )
             usage = load.get(name) or {}
             item: dict[str, Any] = {
                 "id": container.get("id") or name,
                 "title": name,
-                "subtitle": " · ".join(part for part in parts if part),
+                "subtitle": subtitle,
                 "status": ("warn" if unhealthy else "ok") if is_running else "unknown",
                 # The card sends an action's params back; the container's name rides along in them.
                 "actions": [Action(id="stop", label="Stop", icon="square", confirm=True, params={"name": name}), Action(id="restart", label="Restart", icon="rotate-cw", confirm=True, params={"name": name})] if is_running else [Action(id="start", label="Start", icon="play", params={"name": name})],

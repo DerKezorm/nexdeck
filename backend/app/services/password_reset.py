@@ -47,15 +47,29 @@ If this was not you, nothing has happened and you can ignore this message.
 
 
 def available(db: DbSessionType) -> bool:
-    """Can a link be sent at all?"""
-    return mail_service.configured(db)
+    """Can a link be sent at all?
+
+    Two conditions, not one. A mail server to send through, and an address
+    this installation answers on: a mail whose link reads ``/reset/nr_...``
+    with no host in front of it is a mail nobody can use.
+    """
+    return mail_service.configured(db) and bool(_public_url(db))
 
 
 def _public_url(db: DbSessionType) -> str:
+    """Where browsers reach this installation.
+
+    ⚠️ The setting **or** the environment variable, the way the rest of the
+    app reads it. This looked only at the setting, so an installation
+    configured through ``NEXDECK_PUBLIC_URL`` in its compose file, which is
+    the ordinary case in Docker, sent out a link with no host in it.
+    """
+    from ..config import get_settings
     from ..models import Setting
 
     row = db.get(Setting, "general")
-    return str((row.value or {}).get("public_url") or "").rstrip("/") if row else ""
+    stored = str((row.value or {}).get("public_url") or "") if row else ""
+    return (stored or get_settings().public_url).rstrip("/")
 
 
 def request(db: DbSessionType, username_or_email: str) -> None:
@@ -78,6 +92,18 @@ def request(db: DbSessionType, username_or_email: str) -> None:
         logger.info("A password reset was asked for %r; nothing was sent.", wanted[:40])
         return
 
+    base = _public_url(db)
+    if not base:
+        # ⚠️ Refused rather than sent half. A link without a host is a line
+        # of text nobody can click, and the person who asked would wait for a
+        # mail that already arrived and was useless.
+        logger.warning(
+            "A password reset for %s was not sent: this installation has no public URL. "
+            "Set NEXDECK_PUBLIC_URL, or the address under System, Address.",
+            user.username,
+        )
+        return
+
     open_now = list(db.scalars(
         select(PasswordReset).where(
             PasswordReset.user_id == user.id,
@@ -96,8 +122,7 @@ def request(db: DbSessionType, username_or_email: str) -> None:
     ))
     db.commit()
 
-    base = _public_url(db)
-    link = f"{base}/reset/{token}" if base else f"/reset/{token}"
+    link = f"{base}/reset/{token}"
     try:
         mail_service.send(
             mail_service.stored(db), user.email, SUBJECT,

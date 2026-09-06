@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context, WidgetData, as_gauge
+from ..adapters.base import AdapterError, Context, WidgetData, shape_for_display
 from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
@@ -244,9 +244,9 @@ class Collector:
                 )
                 data = await asyncio.wait_for(adapter.fetch(widget_kind, config, options, ctx), timeout=60)
             self._failures.pop(widget_id, None)
-            # A card that asks to be a ring becomes one here, once, rather
-            # than in each of the adapters that would have to remember.
-            data = as_gauge(data, options)
+            # Everything between the service and the screen, in one place the
+            # preview uses too.
+            data = shape_for_display(data, adapter, widget_kind, options)
             if data.link is None and link:
                 data.link = link
             data.updated_at = time.time()
@@ -353,7 +353,7 @@ class Collector:
             return WidgetData(status="unknown", error=str(error))
         try:
             if demo:
-                return adapter.demo(widget_kind, options, self.tick)
+                return shape_for_display(adapter.demo(widget_kind, options, self.tick), adapter, widget_kind, options, for_settings=True)
             if adapter.needs_integration and integration is None:
                 raise AdapterError(
                     "This widget needs a connection to a service.", code="no_integration",
@@ -364,7 +364,8 @@ class Collector:
                 cache=self._caches.setdefault(integration_id or 0, {}),
                 resolve_integration=self.resolve_integration,
             )
-            return await asyncio.wait_for(adapter.fetch(widget_kind, config, options, ctx), timeout=20)
+            fetched = await asyncio.wait_for(adapter.fetch(widget_kind, config, options, ctx), timeout=20)
+            return shape_for_display(fetched, adapter, widget_kind, options, for_settings=True)
         except AdapterError as error:
             return WidgetData(status="unknown", error=error.message, meta={"code": error.code, "hint": error.hint})
         except TimeoutError:
