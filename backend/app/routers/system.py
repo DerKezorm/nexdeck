@@ -16,7 +16,9 @@ from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import Board, Integration, Setting, User, Widget
 from ..schemas import SettingsBody
 from ..services import collector as collector_module
+from ..services import two_factor
 from ..services.collector import collector, demo_flag, set_demo_flag
+from ..services.notify import emit
 from ..services.sse import hub
 
 router = APIRouter(tags=["system"])
@@ -28,6 +30,8 @@ REPO_URL = "https://github.com/DerKezorm/nexdeck"
 WEBSITE_URL = "https://nexdeck.nexapps.dev"
 LICENSE = "AGPL-3.0-or-later"
 RELEASES_URL = "https://api.github.com/repos/DerKezorm/nexdeck/releases/latest"
+#: The newest version already announced, so the timer does not repeat itself.
+_told_about: str | None = None
 _update_cache: dict[str, object] = {}
 
 
@@ -56,6 +60,7 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
         "public_url": general.get("public_url") or settings.public_url,
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),
+        "require_two_factor": two_factor.required(db),
         "repo_url": REPO_URL,
         "release_url": f"{REPO_URL}/releases",
         "issues_url": f"{REPO_URL}/issues",
@@ -89,6 +94,8 @@ async def latest_version(force: bool = False) -> str | None:
     except httpx.HTTPError:
         version = None
     _update_cache.update({"until": now + 6 * 3600, "version": version, "at": datetime.now(UTC).isoformat()})
+    if version:
+        _tell_about_update(version, __version__)
     return version
 
 
@@ -104,6 +111,21 @@ async def check_now(admin: AdminUser, db: DbSession) -> dict:
     return await about(admin, db)
 
 
+def _tell_about_update(latest: str, current: str) -> None:
+    """Say it once per version, not once per check.
+
+    ⚠️ The check runs on a timer. Without the note of what was already said,
+    every administrator would hear about the same release every few hours.
+    """
+    global _told_about
+    if not latest or latest == current or latest == _told_about:
+        return
+    _told_about = latest
+    logger.info("nexdeck %s is out; this installation runs %s.", latest, current)
+    emit("update_available", f"nexdeck {latest} is out",
+         f"This installation runs {current}.", link="https://github.com/DerKezorm/nexdeck/releases")
+
+
 @router.patch("/api/v1/settings", summary="Change installation settings")
 def patch_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict:
     general = get_setting(db, "general")
@@ -116,12 +138,22 @@ def patch_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict:
     if body.demo is not None:
         general["demo"] = body.demo
         set_demo_flag(body.demo)
+    if body.require_two_factor is not None:
+        # Its own key, not "general": this is the one setting where reading a
+        # stale copy would decide whether somebody gets in.
+        two_factor.set_required(db, body.require_two_factor)
     put_setting(db, "general", general)
     db.commit()
+    named = [name for name, value in (("public URL", body.public_url), ("update check", body.update_check),
+                                      ("default language", body.default_locale), ("demo mode", body.demo),
+                                      ("second factor for everybody", body.require_two_factor))
+             if value is not None]
+    if named:
+        logger.info("Installation settings changed by %s: %s.", user.username, ", ".join(named))
     if body.demo is not None:
         for widget_id in list(db.scalars(select(Widget.id))):
             collector.schedule(widget_id)
-    return general
+    return {**general, "require_two_factor": two_factor.required(db)}
 
 
 def load_demo_flag(db: DbSession) -> None:

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, post, upload } from '../../api/client'
 import type { BoardSummary, User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
+import { TwoFactorCard } from '../../components/TwoFactorCard'
 import { Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
@@ -138,6 +139,8 @@ export function ProfileSettings() {
           {t('settings.profile.changePassword')}
         </button>
       </SettingsCard>
+
+      <TwoFactorCard hasPassword={user.has_password} onDone={(text, level) => setToast({ text, level })} />
 
       <SettingsCard title={t('settings.profile.sessions')} description={t('settings.profile.sessionsHelp')}>
         <ul className="space-y-1 mb-3">

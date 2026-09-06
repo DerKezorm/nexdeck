@@ -10,6 +10,7 @@ import { applyAppearance, type Appearance } from './lib/appearance'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
+import { ResetPage } from './pages/ResetPage'
 import { SetupPage } from './pages/SetupPage'
 import { get } from './api/client'
 import { useAuth } from './stores/auth'
@@ -76,6 +77,7 @@ export function App() {
           <Routes>
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset/:token" element={<ResetPage />} />
             <Route path="/k/:token" element={<KioskPage />} />
             <Route path="/preview" element={<PreviewPage />} />
             <Route

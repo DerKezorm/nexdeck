@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 
 from fastapi import APIRouter, status
@@ -13,6 +14,8 @@ from ..schemas import TokenCreate
 from ..security import new_opaque_token
 
 router = APIRouter(prefix="/api/v1/tokens", tags=["tokens"])
+
+logger = logging.getLogger("nexdeck.tokens")
 
 
 def _public(token: ApiToken) -> dict:
@@ -37,6 +40,8 @@ def create_token(body: TokenCreate, user: MemberUser, db: DbSession) -> dict:
     row = ApiToken(user_id=user.id, name=body.name.strip(), token_hash=token_hash, prefix=prefix, expires_at=ends)
     db.add(row)
     db.commit()
+    logger.info("API token %r (%s) created for %s%s.", row.name, row.prefix, user.username,
+                f", ending {ends:%Y-%m-%d}" if ends else ", with no end")
     return {**_public(row), "token": token}
 
 
@@ -49,3 +54,4 @@ def delete_token(token_id: int, user: CurrentUser, db: DbSession) -> None:
     row.revoked = True
     row.revoked_at = utcnow()
     db.commit()
+    logger.info("API token %r (%s) of %s was withdrawn.", row.name, row.prefix, user.username)

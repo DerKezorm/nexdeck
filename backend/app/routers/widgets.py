@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any
 
@@ -34,6 +35,8 @@ from ..services.sse import board_topic, hub
 from ..services.state import live
 
 router = APIRouter(prefix="/api/v1", tags=["widgets"])
+
+logger = logging.getLogger("nexdeck.widgets")
 
 
 def _widget(db: DbSession, widget_id: int) -> tuple[Widget, Page]:
@@ -215,7 +218,16 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
         message = await collector.run_action(widget_id, action_id, body.params, actor=actor, user_id=user.id if user else None)
     except AdapterError as failure:
         emit("action_failed", f"{action_id} on {widget.title} failed", failure.message, level="warn", user_ids=[user.id] if user else None)
+        logger.warning("Action %r on %r failed for %s: %s", action_id, widget.title, actor, failure.message)
         raise error(failure.code, failure.message) from failure
+    # The one thing in here that reaches out and changes somebody else's
+    # service. It goes in the action log as a row; it belongs in the text log
+    # too, next to whatever happened around it.
+    logger.info("Action %r ran on %r by %s: %s", action_id, widget.title, actor, message)
+    # ⚠️ Was in the catalogue from the start and emitted from nowhere. Somebody
+    # could subscribe to "an action succeeded" and never hear a thing.
+    emit("action_done", f"{action_id} on {widget.title}", message,
+         user_ids=[user.id] if user else None)
     return {"ok": True, "message": message}
 
 

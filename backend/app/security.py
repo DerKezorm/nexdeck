@@ -122,6 +122,44 @@ def read_kiosk_cookie(raw: str) -> int | None:
         return None
 
 
+def _step_key() -> bytes:
+    secret = get_settings().resolved_secret_key().encode("utf-8")
+    return hashlib.sha256(b"nexdeck-second-step:" + secret).digest()
+
+
+def create_step_token(user_id: int) -> str:
+    """A ticket that says "the password was right", and nothing else.
+
+    ⚠️ Not a session. It opens no board and reads no data; the only thing it
+    can be exchanged for is a session, and only together with a code. Five
+    minutes is long enough to find a phone and short enough that a ticket left
+    on a shared machine is worth nothing.
+    """
+    now = datetime.now(UTC)
+    payload = {
+        "sub": str(user_id),
+        "use": "second-step",
+        "iat": int(now.timestamp()),
+        "ms": int(now.timestamp() * 1000),
+        "exp": int((now + timedelta(minutes=5)).timestamp()),
+    }
+    return jwt.encode(payload, _step_key(), algorithm=ALGORITHM)
+
+
+def read_step_token(token: str) -> tuple[int, int] | None:
+    """The account and when the ticket was issued, or None."""
+    try:
+        payload = jwt.decode(token, _step_key(), algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        return None
+    if payload.get("use") != "second-step":
+        return None
+    try:
+        return int(payload["sub"]), int(payload.get("ms", 0))
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Opaque tokens: API tokens and kiosk tokens
 # ---------------------------------------------------------------------------

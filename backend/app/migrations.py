@@ -52,6 +52,12 @@ def _token_expiry_columns(connection: Connection) -> None:
         _add_column(connection, table, "revoked_at", "DATETIME")
 
 
+def _second_factor_columns(connection: Connection) -> None:
+    _add_column(connection, "users", "totp_secret", "TEXT NOT NULL DEFAULT ''")
+    _add_column(connection, "users", "totp_confirmed", "BOOLEAN NOT NULL DEFAULT 0")
+    _add_column(connection, "users", "totp_last_step", "INTEGER NOT NULL DEFAULT 0")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -59,6 +65,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (4, "Users can have an e-mail address", _email_column),
     (5, "Boards can stay out of the menu, connections can be locked", _menu_and_lock_columns),
     (6, "API and kiosk tokens can expire and be withdrawn", _token_expiry_columns),
+    (7, "Accounts can carry a second factor", _second_factor_columns),
 ]
 
 

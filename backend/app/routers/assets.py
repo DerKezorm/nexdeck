@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from fastapi import APIRouter, UploadFile, status
@@ -13,6 +14,8 @@ from ..deps import CurrentUser, DbSession, MemberUser, error
 from ..models import Asset
 
 router = APIRouter(prefix="/api/v1/assets", tags=["assets"])
+
+logger = logging.getLogger("nexdeck.assets")
 
 MAX_BYTES = 12 * 1024 * 1024
 ALLOWED = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/svg+xml": "svg", "image/gif": "gif", "image/avif": "avif"}
@@ -80,6 +83,8 @@ async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = 
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{asset.id}.{ALLOWED[content_type]}").write_bytes(data)
     db.commit()
+    # Uploads are served without a session, so what lands there is worth a line.
+    logger.info("File %r (%s, %d bytes) uploaded by %s as asset %d.", asset.filename, content_type, asset.size, user.username, asset.id)
     return _public(asset)
 
 
@@ -119,5 +124,7 @@ def delete_asset(asset_id: int, user: MemberUser, db: DbSession) -> None:
     path = get_settings().uploads_dir / f"{asset.id}.{ALLOWED.get(asset.content_type, 'bin')}"
     if path.exists():
         path.unlink()
+    name = asset.filename
     db.delete(asset)
     db.commit()
+    logger.info("File %r (asset %d) deleted by %s.", name, asset_id, user.username)

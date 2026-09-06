@@ -20,7 +20,9 @@ class PortainerAdapter(Adapter):
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://portainer:9443"),
         Field("api_key", "Access token", type="password", secret=True, required=True, help="User menu > My account > Access tokens"),
-        Field("endpoint_id", "Environment ID", type="number", default=1, help="Environments list, the number in the URL."),
+        Field("endpoint_id", "Environment", type="text", default="",
+              placeholder="automatically",
+              help="Leave empty. Only needed when this Portainer manages several environments, and the test then names them."),
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
     )
     widgets = (
@@ -49,19 +51,80 @@ class PortainerAdapter(Adapter):
     def _headers(self, config: dict[str, Any]) -> dict[str, str]:
         return {"X-API-Key": str(config.get("api_key") or "")}
 
-    def _endpoint(self, config: dict[str, Any]) -> int:
+    def _wanted(self, config: dict[str, Any]) -> int | None:
+        """The environment somebody typed, or None for "work it out"."""
+        raw = str(config.get("endpoint_id") or "").strip()
+        if not raw:
+            return None
         try:
-            return int(float(config.get("endpoint_id") or 1))
+            return int(float(raw))
         except (TypeError, ValueError):
-            return 1
+            return None
+
+    async def _environments(self, config: dict[str, Any], ctx: Context, cache_seconds: int = 300) -> dict[int, str]:
+        rows = await ctx.get_json(
+            f"{base_url(config)}/api/endpoints", headers=self._headers(config),
+            verify=not config.get("insecure", True), cache_seconds=cache_seconds,
+        )
+        found: dict[int, str] = {}
+        for entry in rows if isinstance(rows, list) else []:
+            try:
+                found[int(entry.get("Id"))] = str(entry.get("Name") or "?")
+            except (TypeError, ValueError):
+                continue
+        return found
+
+    async def _endpoint(self, config: dict[str, Any], ctx: Context, cache_seconds: int = 300) -> int:
+        """Which environment to talk to.
+
+        ⚠️ This used to be a number field with a default of 1, and the
+        connection test never looked at it. A Portainer whose environment is
+        not number 1 tested green and every card went red a moment later,
+        which is the worst possible order to learn it in. Now the field is
+        empty by default and the adapter asks.
+        """
+        known = await self._environments(config, ctx, cache_seconds)
+        wanted = self._wanted(config)
+        if not known:
+            raise AdapterError(
+                "Portainer answers, but shows no environment.",
+                code="no_environments",
+                hint="Add an environment in Portainer, or check that the token may see it.",
+            )
+        if wanted is None:
+            if len(known) == 1:
+                return next(iter(known))
+            raise AdapterError(
+                "This Portainer manages several environments, so one has to be named.",
+                code="which_environment",
+                hint=f"Put one of these numbers in the environment field: {self._offer(known)}.",
+            )
+        if wanted not in known:
+            raise AdapterError(
+                f"Portainer has no environment {wanted}.",
+                code="no_such_endpoint",
+                hint=f"Available: {self._offer(known)}. Leave the field empty to let nexdeck pick when there is only one.",
+            )
+        return wanted
+
+    @staticmethod
+    def _offer(known: dict[int, str]) -> str:
+        return ", ".join(f"{number} ({name})" for number, name in sorted(known.items()))
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        endpoints = await ctx.get_json(f"{base_url(config)}/api/endpoints", headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=0)
-        names = ", ".join(f"{e.get('Id')}: {e.get('Name')}" for e in endpoints)
-        return f"Portainer answers. Environments: {names or 'none'}."
+        """Answers, and answers about the environment the cards will use.
+
+        The test has to fail wherever a card would fail. A green test followed
+        by a red card is worse than a red test.
+        """
+        known = await self._environments(config, ctx, cache_seconds=0)
+        chosen = await self._endpoint(config, ctx, cache_seconds=0)
+        if len(known) == 1:
+            return f"Portainer answers. Environment {chosen} ({known[chosen]})."
+        return f"Portainer answers. Using environment {chosen} ({known[chosen]}) of {self._offer(known)}."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
-        endpoint = self._endpoint(config)
+        endpoint = await self._endpoint(config, ctx)
         containers = await ctx.get_json(
             f"{base_url(config)}/api/endpoints/{endpoint}/docker/containers/json", params={"all": 1},
             headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=5,
@@ -99,7 +162,7 @@ class PortainerAdapter(Adapter):
         if not container_id:
             raise AdapterError("No container was named.", code="missing_param")
         response = await ctx.request(
-            "POST", f"{base_url(config)}/api/endpoints/{self._endpoint(config)}/docker/containers/{container_id}/{action_id}",
+            "POST", f"{base_url(config)}/api/endpoints/{await self._endpoint(config, ctx)}/docker/containers/{container_id}/{action_id}",
             headers=self._headers(config), verify=not config.get("insecure", True),
         )
         if response.status_code >= 400 and response.status_code != 304:

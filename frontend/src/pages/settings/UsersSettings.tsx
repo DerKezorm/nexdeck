@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post } from '../../api/client'
 import type { User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
-import { Confirm, Dialog, Field, PasswordInput, Select, Toast } from '../../components/ui'
+import { Confirm, Dialog, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
@@ -24,8 +24,26 @@ export function UsersSettings() {
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const roles = [{ value: 'admin', label: t('users.role.admin') }, { value: 'user', label: t('users.role.user') }, { value: 'guest', label: t('users.role.guest') }]
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+  const about = useQuery({ queryKey: ['about'], queryFn: () => get<{ require_two_factor: boolean }>('/about') })
+  const demandTwoFactor = (wanted: boolean) => {
+    void patch('/settings', { require_two_factor: wanted })
+      .then(() => {
+        setToast({ text: t('common.saved'), level: 'ok' })
+        return about.refetch()
+      })
+      .catch(fail)
+  }
   return (
     <>
+      <SettingsCard title={t('settings.security.title')} description={t('settings.security.help')}>
+        <Switch
+          checked={about.data?.require_two_factor ?? false}
+          onChange={demandTwoFactor}
+          label={t('settings.security.requireTwoFactor')}
+          description={t('settings.security.requireTwoFactorHelp')}
+        />
+      </SettingsCard>
+
       <SettingsCard title={t('settings.users.title')} description={t('settings.users.help')}>
         <ul className="space-y-1.5">
           {(users.data ?? []).map((user) => (

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 
 from fastapi import APIRouter, Request, Response, status
@@ -43,6 +44,8 @@ from ..services.collector import collector
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1", tags=["boards"])
+
+logger = logging.getLogger("nexdeck.boards")
 
 
 def _announce(board_id: int) -> None:
@@ -179,8 +182,10 @@ def delete_board(slug: str, user: CurrentUser, db: DbSession) -> None:
     if permission != "owner":
         raise error("forbidden", "Only the owner or an administrator may delete a board.", status.HTTP_403_FORBIDDEN)
     widget_ids = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
+    name = board.name
     db.delete(board)
     db.commit()
+    logger.info("Board %r deleted by %s, with %d card(s) on it.", name, user.username, len(widget_ids))
     for widget_id in widget_ids:
         collector.unschedule(widget_id)
 
@@ -277,6 +282,13 @@ def put_shares(slug: str, body: SharesBody, user: CurrentUser, db: DbSession) ->
         db.add(BoardShare(board_id=board.id, user_id=entry.user_id, role=entry.role, level=entry.level))
     db.commit()
     db.refresh(board)
+    # Who may see somebody else's board is the kind of change nobody remembers
+    # making and everybody wants to look up afterwards.
+    if board.shares:
+        who = ", ".join(f"{'role ' + s.role if s.role else 'user ' + str(s.user_id)} may {s.level}" for s in board.shares)
+    else:
+        who = "nobody but the owner"
+    logger.info("Board %r is now shared with %s, set by %s.", board.name, who, user.username)
     return [{"id": s.id, "user_id": s.user_id, "role": s.role, "level": s.level} for s in board.shares]
 
 
@@ -303,8 +315,10 @@ async def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dic
     except ImportError_ as failure:
         raise error("bad_import", str(failure)) from failure
     db.commit()
-    for widget_id in db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)):
+    cards = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
+    for widget_id in cards:
         collector.schedule(widget_id)
+    logger.info("Board %r imported by %s with %d card(s).", board.name, user.username, len(cards))
     return board_view(db, board, "owner")
 
 
@@ -332,6 +346,11 @@ def create_kiosk_token(slug: str, body: KioskCreate, user: CurrentUser, db: DbSe
                      cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to, expires_at=ends)
     db.add(row)
     db.commit()
+    # A kiosk link is a way in that needs no password. Its making belongs in
+    # the log, and so does what it is allowed to do.
+    logger.info("Kiosk link %r (%s) for board %r created by %s: may %s, %s.", row.name, row.prefix, board.name,
+                user.username, "act" if row.allow_actions else "look only",
+                f"ending {ends:%Y-%m-%d}" if ends else "with no end")
     return {**_kiosk_public(row), "token": token, "url": f"/k/{token}"}
 
 
@@ -348,6 +367,7 @@ def delete_kiosk_token(token_id: int, user: CurrentUser, db: DbSession) -> None:
     row.revoked = True
     row.revoked_at = utcnow()
     db.commit()
+    logger.info("Kiosk link %r (%s) was withdrawn by %s.", row.name, row.prefix, user.username)
 
 
 def _kiosk_public(token: KioskToken) -> dict:

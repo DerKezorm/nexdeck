@@ -16,10 +16,13 @@ from .base import (
     Adapter,
     AdapterError,
     Context,
+    Detected,
     Field,
     WidgetData,
     WidgetType,
+    as_gauge,
     duration_short,
+    gauge_fields,
     human_bytes,
     human_rate,
 )
@@ -66,9 +69,9 @@ class DownloadAdapter(Adapter):
             description="Current download speed, queue size and remaining data.",
             renderer="value",
             default_size=(2, 2),
-            min_size=(1, 1),
             refresh_seconds=10,
             metrics=("download",),
+            options=gauge_fields("What your line can take, in MB/s.", "12.5"),
         ),
     )
 
@@ -99,7 +102,7 @@ class DownloadAdapter(Adapter):
         if snapshot.upload_bps is not None:
             metrics["upload"] = round(snapshot.upload_bps / 1024 / 1024, 2)
         status = "warn" if snapshot.paused else "ok"
-        if widget_kind == "speed":
+        if widget_kind == "speed":  # noqa: RET505
             secondary = [{"label": "Queue", "value": snapshot.total}]
             if snapshot.remaining_bytes is not None:
                 secondary.append({"label": "Left", "value": human_bytes(snapshot.remaining_bytes)})
@@ -107,13 +110,14 @@ class DownloadAdapter(Adapter):
                 secondary.append({"label": "Up", "value": human_rate(snapshot.upload_bps)})
             if snapshot.free_bytes is not None:
                 secondary.append({"label": "Free", "value": human_bytes(snapshot.free_bytes)})
-            return WidgetData(
+            card = WidgetData(
                 status=status,
                 primary={"label": "Paused" if snapshot.paused else "Download", "value": round(snapshot.download_bps / 1024 / 1024, 1), "unit": "MB/s"},
                 secondary=secondary,
                 metrics=metrics,
                 actions=self._actions(snapshot.paused),
             )
+            return as_gauge(card, options)
         limit = int(options.get("limit") or 8)
         items = []
         for item in snapshot.items[:limit]:
@@ -139,6 +143,48 @@ class DownloadAdapter(Adapter):
             metrics=metrics,
             actions=self._actions(snapshot.paused),
         )
+
+    #: How far along an item has to have been for its disappearance to mean
+    #: "finished" rather than "removed".
+    NEARLY_DONE = 95.0
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
+               options: dict[str, Any]) -> list[Detected]:
+        """An item that was nearly done and is gone finished.
+
+        ⚠️ Only nearly done. The same disappearance at ten per cent means
+        somebody removed it, and reporting that as "finished" is worse than
+        reporting nothing: it is a claim about a file that is not there.
+
+        ⚠️ And only when the queue was read both times. A card that was broken
+        a minute ago has an empty "before", and calling every running download
+        finished on the first successful fetch would be a burst of lies.
+        """
+        if widget_kind != "queue" or before is None or before.error or not before.items:
+            return []
+        gone_but_done = []
+        still_here = {str(item.get("id") or item.get("title")) for item in after.items}
+        for item in before.items:
+            key = str(item.get("id") or item.get("title"))
+            if key in still_here:
+                continue
+            try:
+                progress = float(item.get("progress") or 0)
+            except (TypeError, ValueError):
+                continue
+            if progress >= self.NEARLY_DONE:
+                gone_but_done.append(str(item.get("title") or key))
+        return [
+            Detected(
+                event="download_done",
+                title=f"{name} finished",
+                body=f"{self.label} has nothing left to do on it.",
+                # The name is the key: two different files finishing a minute
+                # apart are two messages, the same one is not two.
+                key=f"download_done:{name}",
+            )
+            for name in gone_but_done[:5]
+        ]
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any],
                      options: dict[str, Any], ctx: Context) -> str:

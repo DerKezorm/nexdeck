@@ -17,6 +17,7 @@ from .base import (
     AdapterError,
     AuthFailed,
     Context,
+    Detected,
     Field,
     WidgetData,
     WidgetType,
@@ -201,6 +202,38 @@ class NpmAdapter(Adapter):
             ],
             metrics={"hosts": float(len(host_list)), **({"days_left": float(soonest)} if soonest is not None else {})},
         )
+
+    #: A certificate with fewer days than this is worth waking somebody for.
+    CERT_WARN_DAYS = 14
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
+               options: dict[str, Any]) -> list[Detected]:
+        """A certificate that is running out.
+
+        ⚠️ Said once a day per certificate, not once per refresh. This card
+        reads every few minutes, and a renewal that needs a human takes days.
+        """
+        if widget_kind != "certificates":
+            return []
+        found = []
+        for item in after.items:
+            days = item.get("days_left")
+            if days is None:
+                # The list carries the number in its value as "12 d".
+                raw = str(item.get("value") or "").split()
+                days = int(raw[0]) if raw and raw[0].lstrip("-").isdigit() else None
+            if days is None or days > self.CERT_WARN_DAYS:
+                continue
+            name = str(item.get("title") or "A certificate")
+            found.append(Detected(
+                event="cert_expiring",
+                title=f"{name} runs out in {days} days" if days > 0 else f"{name} has run out",
+                body="Renew it, or check that whatever renews it still can.",
+                level="warn",
+                key=f"cert_expiring:{name}",
+                quiet_seconds=86400,
+            ))
+        return found[:5]
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         soonest = int(fake.walk("npm-cert", tick, 4, 70, period=600))

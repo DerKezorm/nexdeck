@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from fastapi import APIRouter
 
@@ -11,6 +12,8 @@ from ..schemas import MailTestBody, SmtpBody
 from ..services import mail
 
 router = APIRouter(prefix="/api/v1/settings/mail", tags=["system"])
+
+logger = logging.getLogger("nexdeck.mail")
 
 
 @router.get("", summary="Read the mail server settings")
@@ -22,7 +25,10 @@ def read(admin: AdminUser, db: DbSession) -> dict:
 @router.put("", summary="Change the mail server settings")
 def write(body: SmtpBody, admin: AdminUser, db: DbSession) -> dict:
     try:
-        return mail.save(db, body.model_dump())
+        saved = mail.save(db, body.model_dump())
+        # No values: the settings hold the password of the mail account.
+        logger.info("The mail server settings were changed by %s.", admin.username)
+        return saved
     except mail.MailError as failure:
         raise error(failure.code, failure.message) from failure
 
@@ -39,4 +45,5 @@ async def test(body: MailTestBody, admin: AdminUser, db: DbSession) -> dict:
         await asyncio.to_thread(mail.send, config, to_address, "nexdeck test message", "This is the test message from your nexdeck installation. The mail server works.")
     except mail.MailError as failure:
         raise error(failure.code, failure.message) from failure
+    logger.info("A test message was sent to %s by %s.", to_address, admin.username)
     return {"sent": True, "to_address": to_address}

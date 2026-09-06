@@ -17,6 +17,7 @@ from .base import (
     WidgetData,
     WidgetType,
     base_url,
+    gauge_view_field,
     human_bytes,
     percent,
     status_from_percent,
@@ -46,6 +47,8 @@ class MikrotikAdapter(Adapter):
             min_size=(1, 1),
             refresh_seconds=60,
             metrics=("cpu", "memory"),
+            # The number is already a share of the machine; no ceiling needed.
+            options=(gauge_view_field(),),
         ),
         WidgetType(
             kind="interfaces",

@@ -19,6 +19,7 @@ from .base import (
     WidgetType,
     base_url,
     duration_short,
+    gauge_view_field,
     percent,
     status_from_percent,
 )
@@ -46,6 +47,8 @@ class PfsenseAdapter(Adapter):
             min_size=(1, 1),
             refresh_seconds=60,
             metrics=("cpu", "memory"),
+            # The number is already a share of the machine; no ceiling needed.
+            options=(gauge_view_field(),),
         ),
         WidgetType(
             kind="interfaces",

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
 
@@ -13,6 +15,8 @@ from ..services import avatars
 from .auth import user_public
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
+
+logger = logging.getLogger("nexdeck.users")
 
 
 @router.get("", summary="List users")
@@ -35,6 +39,7 @@ def create_user(body: UserCreate, admin: AdminUser, db: DbSession, request: Requ
     user = User(username=body.username, display_name=body.display_name.strip() or body.username, password_hash=hash_password(body.password), role=body.role, locale=body.locale)
     db.add(user)
     db.commit()
+    logger.info("Account %r created as %s by %s.", user.username, user.role, admin.username)
     return user_public(user)
 
 
@@ -47,11 +52,18 @@ def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -
         raise error("self_demotion", "You cannot take away your own administrator role.")
     if body.disabled and user.id == admin.id:
         raise error("self_disable", "You cannot disable your own account.")
+    # What changed, not that something did: a log that says "a user was
+    # changed" sends whoever reads it to the database to find out what.
+    changed: list[str] = []
     if body.role is not None:
+        if body.role != user.role:
+            changed.append(f"role {user.role} -> {body.role}")
         user.role = body.role
     if body.display_name is not None:
         user.display_name = body.display_name.strip()
     if body.disabled is not None:
+        if body.disabled != user.disabled:
+            changed.append("disabled" if body.disabled else "enabled")
         user.disabled = body.disabled
         if body.disabled:
             user.password_changed_ms = now_ms()
@@ -60,7 +72,10 @@ def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -
     if body.password:
         user.password_hash = hash_password(body.password)
         user.password_changed_ms = now_ms()
+        changed.append("password set by an administrator")
     db.commit()
+    if changed:
+        logger.info("Account %r: %s, by %s.", user.username, "; ".join(changed), admin.username)
     return user_public(user)
 
 
@@ -75,5 +90,7 @@ def delete_user(user_id: int, admin: AdminUser, db: DbSession) -> None:
     if user.role == Role.admin.value and admins <= 1:
         raise error("last_admin", "The last administrator cannot be deleted.")
     avatars.remove(user.avatar)
+    name = user.username
     db.delete(user)
     db.commit()
+    logger.info("Account %r deleted by %s.", name, admin.username)

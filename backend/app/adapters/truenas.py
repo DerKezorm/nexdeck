@@ -8,6 +8,7 @@ from . import demo as fake
 from .base import (
     Adapter,
     Context,
+    Detected,
     Field,
     WidgetData,
     WidgetType,
@@ -74,6 +75,40 @@ class TruenasAdapter(Adapter):
         items = [{"title": str(a.get("formatted") or a.get("text", "?"))[:120], "subtitle": str(a.get("datetime", {}).get("$date", ""))[:10] if isinstance(a.get("datetime"), dict) else "", "status": "bad" if a.get("level") in ("CRITICAL", "ERROR") else "warn"} for a in alerts]
         return WidgetData(status="bad" if any(i["status"] == "bad" for i in items) else ("warn" if items else "ok"), items=items or [], secondary=[{"label": "Open", "value": len(items)}])
 
+    #: Above this, a pool has stopped being somebody's problem for later.
+    FULL_PERCENT = 90.0
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
+               options: dict[str, Any]) -> list[Detected]:
+        """A pool that crossed into the last tenth of itself.
+
+        ⚠️ Only on the crossing. A pool that sits at 94 per cent for a month
+        is not news every five minutes; it became news once.
+        """
+        if widget_kind not in ("pools", "volumes"):
+            return []
+        was = {}
+        for item in (before.items if before and not before.error else []):
+            was[str(item.get("title"))] = _percent(item)
+        found = []
+        for item in after.items:
+            name = str(item.get("title") or "?")
+            now = _percent(item)
+            if now is None or now < self.FULL_PERCENT:
+                continue
+            earlier = was.get(name)
+            if earlier is not None and earlier >= self.FULL_PERCENT:
+                continue
+            found.append(Detected(
+                event="disk_filling",
+                title=f"{name} is {now:.0f}% full",
+                body=str(item.get("subtitle") or ""),
+                level="warn",
+                key=f"disk_filling:{name}",
+                quiet_seconds=86400,
+            ))
+        return found[:5]
+
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         load = fake.walk("truenas-load", tick, 5, 30)
         if widget_kind == "system":
@@ -84,3 +119,19 @@ class TruenasAdapter(Adapter):
 
 
 ADAPTER = TruenasAdapter()
+
+
+def _percent(item: dict[str, Any]) -> float | None:
+    """How full, from whichever field the card put it in."""
+    for key in ("progress", "percent", "used_percent"):
+        value = item.get(key)
+        if value is not None:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                continue
+    raw = str(item.get("value") or "").rstrip("%")
+    try:
+        return float(raw)
+    except ValueError:
+        return None

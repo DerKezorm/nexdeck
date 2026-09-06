@@ -93,6 +93,15 @@ class User(Base):
     #: Milliseconds; sessions issued before this moment are invalid.
     password_changed_ms: Mapped[int] = mapped_column(Integer, default=0)
     #: Which "what's new" version the user has already seen.
+    #: The second factor. The secret is encrypted; ``confirmed`` only turns
+    #: true once somebody has typed a code the secret produced, so a half-done
+    #: setup cannot lock anybody out.
+    totp_secret: Mapped[str] = mapped_column(Text, default="")
+    totp_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: ⚠️ The last accepted time step. A code that was good once is never good
+    #: again; without this an intercepted code works for another half minute,
+    #: which is longer than anybody needs to pass it on.
+    totp_last_step: Mapped[int] = mapped_column(Integer, default=0)
     seen_version: Mapped[str] = mapped_column(String(16), default="")
     #: File name of the profile picture in ``data/avatars``; empty means none.
     avatar: Mapped[str] = mapped_column(String(120), default="")
@@ -101,6 +110,7 @@ class User(Base):
 
     sessions: Mapped[list[Session]] = relationship(back_populates="user", cascade="all, delete-orphan")
     api_tokens: Mapped[list[ApiToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    recovery_codes: Mapped[list[RecoveryCode]] = relationship(back_populates="user", cascade="all, delete-orphan")
     oidc_links: Mapped[list[OidcLink]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
@@ -115,6 +125,39 @@ class Session(Base):
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class RecoveryCode(Base):
+    """One way back in when the phone with the codes on it is gone."""
+
+    __tablename__ = "recovery_codes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    #: ⚠️ Used means used, and the row stays. Deleting it would be tidier and
+    #: would throw away the answer to "how many do I have left".
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="recovery_codes")
+
+
+class PasswordReset(Base):
+    """A one-time way back in, sent by mail.
+
+    ⚠️ Only the hash is stored, like every other token here. A reset link out
+    of a database dump would be a way into every account at once.
+    """
+
+    __tablename__ = "password_resets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
 
 class ApiToken(Base):

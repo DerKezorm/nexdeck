@@ -336,6 +336,16 @@ body {
   box-shadow: 0 0 0 3px var(--nd-accent-soft);
 }
 
+/* A field with a symbol sitting in it.
+ *
+ * ⚠️ Not Tailwind's `pl-8`. Both are one class deep, so the order in the
+ * stylesheet decides, and `.input` comes later and wins: the padding stayed
+ * at 12px and the magnifier sat on top of the placeholder. This is the same
+ * rule spelled once, where it cannot lose. */
+.input-icon {
+  padding-left: 34px;
+}
+
 textarea.input {
   height: auto;
   min-height: 96px;

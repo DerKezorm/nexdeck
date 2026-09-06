@@ -14,7 +14,9 @@
     "copy": "Kopieren",
     "edit": "Bearbeiten",
     "loading": "Lädt…",
-    "toggleTheme": "Hell und Dunkel wechseln"
+    "toggleTheme": "Hell und Dunkel wechseln",
+    "refresh": "Neu laden",
+    "download": "Herunterladen"
   },
   "errors": {
     "network": "Der Server ist nicht erreichbar.",
@@ -57,7 +59,35 @@
     "confirmPassword": "Passwort bestätigen",
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen",
-    "mismatch": "Die beiden Passwörter sind verschieden."
+    "mismatch": "Die beiden Passwörter sind verschieden.",
+    "forgot": {
+      "link": "Passwort vergessen?",
+      "lead": "Benutzername oder E-Mail-Adresse eingeben. Wenn es dazu ein Konto mit hinterlegter Adresse gibt, geht ein Link raus.",
+      "who": "Benutzername oder E-Mail-Adresse",
+      "send": "Link schicken",
+      "sent": "Wenn es dazu ein Konto mit hinterlegter Adresse gibt, ist ein Link unterwegs. Er gilt 30 Minuten.",
+      "back": "Zurück zur Anmeldung"
+    },
+    "twoFactor": {
+      "askCode": "Den sechsstelligen Code aus der Authenticator-App eingeben.",
+      "askRecovery": "Einen der Notfallcodes eingeben.",
+      "code": "Code",
+      "recoveryCode": "Notfallcode",
+      "wrongCode": "Der Code stimmt nicht.",
+      "useRecovery": "Stattdessen einen Notfallcode benutzen",
+      "useApp": "Stattdessen die App benutzen"
+    },
+    "reset": {
+      "lead": "Ein neues Passwort für {{name}}.",
+      "new": "Neues Passwort",
+      "again": "Neues Passwort wiederholen",
+      "rule": "Mindestens {{count}} Zeichen.",
+      "mismatch": "Die beiden stimmen nicht überein.",
+      "save": "Passwort setzen",
+      "done": "Das Passwort steht. Alle Browser und alle API-Marken des Kontos wurden abgemeldet.",
+      "stale": "Dieser Link ist verbraucht oder zu alt. Auf der Anmeldeseite einen neuen anfordern.",
+      "toSignIn": "Zur Anmeldung"
+    }
   },
   "setup": {
     "step": {
@@ -99,7 +129,9 @@
       "oidc": "Anmeldeanbieter",
       "about": "Über",
       "search": "Suche",
-      "appearance": "Aussehen"
+      "appearance": "Aussehen",
+      "journal": "Protokoll",
+      "backups": "Sicherungen"
     },
     "mail": {
       "title": "Mailserver",
@@ -169,7 +201,10 @@
       "adminOnly": "Für Benutzer sperren",
       "adminOnlyHelp": "Nur Administratoren bauen Karten auf dieser Anbindung. Benutzer sehen ihre Karten weiterhin auf einem Board, das mit ihnen geteilt ist, und in ihrer Liste taucht sie nicht auf.",
       "adminOnlyChip": "gesperrt",
-      "enabled": "Aktiv"
+      "enabled": "Aktiv",
+      "search": "Suchen",
+      "searchPlaceholder": "plex, docker, wol, npm...",
+      "noMatch": "Nichts passt zu „{{query}}“."
     },
     "users": {
       "title": "Benutzer",
@@ -264,6 +299,60 @@
         "sky": "Himmel",
         "slate": "Schiefer"
       }
+    },
+    "journal": {
+      "title": "Protokollstufe",
+      "intro": "Wie viel nexdeck mitschreibt. Eine tiefere Stufe wirkt sofort, ohne Neustart, und schaltet sich von selbst wieder ab.",
+      "level": "Stufe",
+      "fixedByEnv": "Über NEXDECK_LOG_LEVEL gesetzt und hier nicht änderbar.",
+      "duration": "Wie lange",
+      "durationHelp": "Eine tiefe Stufe schreibt viel. Dann geht es zurück auf normal.",
+      "untilRestart": "Bis zum nächsten Neustart",
+      "minutes": "{{count}} Minuten",
+      "endsAt": "Geht um {{time}} zurück auf normal.",
+      "modes": {
+        "quiet": "Still: nur Probleme",
+        "normal": "Normal",
+        "detailed": "Ausführlich",
+        "trace": "Alles"
+      },
+      "lines": "Das Protokoll",
+      "linesIntro": "Die neuesten Zeilen zuerst. Das Kürzel in der vierten Spalte ist der Vorgang, zu dem eine Zeile gehört.",
+      "from": "Ab Stufe",
+      "allLevels": "Alle",
+      "search": "Suchen",
+      "searchPlaceholder": "Ein Wort, ein Dienst, eine Karte",
+      "empty": "Nichts zu zeigen. Auf dieser Stufe wurde noch nichts geschrieben.",
+      "clear": "Protokoll leeren",
+      "clearTitle": "Protokoll leeren?",
+      "clearBody": "Alle aufbewahrten Zeilen werden entfernt, auch die älteren Dateien. Das lässt sich nicht rückgängig machen.",
+      "cleared": "Das Protokoll ist leer."
+    },
+    "twoFactor": {
+      "title": "Zweiter Faktor",
+      "help": "Ein sechsstelliger Code aus einer App auf dem Telefon, zusätzlich zum Passwort.",
+      "off": "Dieses Konto meldet sich allein mit dem Passwort an.",
+      "on": "Eingeschaltet.",
+      "left": "{{count}} Notfallcodes übrig",
+      "left_one": "1 Notfallcode übrig",
+      "demanded": "Diese Installation verlangt einen zweiten Faktor, deshalb lässt er sich hier nicht abschalten.",
+      "demandedOff": "Diese Installation verlangt einen zweiten Faktor. Zum Weitermachen einen einrichten.",
+      "setUp": "Zweiten Faktor einrichten",
+      "scan": "Das hier mit einer Authenticator-App abscannen, dann den angezeigten Code eintippen.",
+      "enterCode": "Code aus der App",
+      "switchOn": "Einschalten",
+      "switchOff": "Abschalten",
+      "switchedOff": "Der zweite Faktor ist aus.",
+      "newCodes": "Neue Notfallcodes",
+      "confirmWithPassword": "Dein Passwort",
+      "codesLead": "Jetzt aufschreiben. Sie werden einmal gezeigt und nie wieder, und jeder gilt genau einmal.",
+      "codesKept": "Habe ich aufgeschrieben"
+    },
+    "security": {
+      "title": "Sicherheit",
+      "help": "Regeln, die für jedes Konto dieser Installation gelten.",
+      "requireTwoFactor": "Zweiten Faktor von allen verlangen",
+      "requireTwoFactorHelp": "Konten ohne einen werden aufgefordert, einen einzurichten, und können ihn nicht wieder abschalten. Kiosk-Links und API-Marken bleiben unberührt: An einer Wandanzeige steht niemand, der einen Code eintippt."
     }
   },
   "menu": {
@@ -632,5 +721,61 @@
     "shared": "geteilt",
     "pickServer": "Lokale Adressen stehen zuerst; wähle eine andere, wenn nexdeck sie nicht erreicht.",
     "noServers": "Dieses Konto hat keinen eigenen Plex-Server."
+  },
+  "gauge": {
+    "of": "von"
+  },
+  "backups": {
+    "title": "Sicherungen",
+    "help": "Eine Kopie neben der Datenbank ist ein Rücksetzpunkt. Eine Sicherung wird daraus, wenn sie diesen Rechner verlässt.",
+    "make": "Sicherung schreiben",
+    "made": "Die Sicherung steht.",
+    "makeLead": "Schreibt eine Kopie der Datenbank und der losen Dateien auf diesen Rechner. Auf einer gewachsenen Installation dauert das einen Moment.",
+    "note": "Notiz",
+    "noteHelp": "Was dieser Stand ist, für den Tag, an dem du einen aussuchen musst. Freiwillig.",
+    "listTitle": "Auf diesem Rechner",
+    "listHelp": "Die letzten {{count}} automatischen bleiben liegen. Selbst geschriebene werden nie weggeräumt.",
+    "empty": "Noch keine Sicherungen",
+    "emptyBody": "Vor jedem riskanten Schritt eine schreiben, danach herunterladen.",
+    "dropTitle": "Diese Sicherung löschen?",
+    "dropBody": "Die Kopie und die Dateien, die dazugehören, sind dann weg.",
+    "kind": {
+      "automatic": "Automatisch",
+      "manual": "Von Hand"
+    },
+    "reason": {
+      "too_new": "Aus einem neueren nexdeck",
+      "ok": "ok"
+    },
+    "list": {
+      "created": "Geschrieben",
+      "version": "Fassung",
+      "note": "Notiz"
+    },
+    "download": {
+      "title": "Sicherung herunterladen",
+      "lead": "Im Archiv liegt secret.key. Damit gibt die Datei jeden Dienst-Zugang dieser Installation her. Nimm ein Kennwort, das dazu passt.",
+      "password": "Kennwort fürs Archiv",
+      "again": "Kennwort wiederholen",
+      "rule": "Mindestens {{count}} Zeichen.",
+      "lost": "Ohne dieses Kennwort geht das Archiv nie wieder auf, auch bei uns nicht."
+    },
+    "restore": {
+      "open": "Sicherung einspielen",
+      "title": "Sicherung einspielen",
+      "lead": "Archiv und Kennwort hochladen. Es wird nichts geändert, bevor du gesehen hast, was drin ist.",
+      "file": "Archiv",
+      "password": "Kennwort fürs Archiv",
+      "look": "Reingucken",
+      "go": "Jetzt alles ersetzen",
+      "contains": "Enthält",
+      "fileCount": "{{count}} Dateien",
+      "fileCount_one": "1 Datei",
+      "warning": "Das ersetzt Datenbank, Schlüssel und Bilder. Alle werden abgemeldet, du eingeschlossen. Der jetzige Stand wird vorher gesichert.",
+      "confirm": "Zum Bestätigen {{name}} eintippen",
+      "keyOnlyFromEnv": "In diesem Archiv liegt kein Schlüssel. Diese Installation nimmt ihren aus NEXDECK_SECRET_KEY. Die Zugänge sind danach lesbar, wenn dort derselbe Wert steht wie auf dem Rechner, von dem die Sicherung stammt.",
+      "noKeyAtAll": "In diesem Archiv liegt kein Schlüssel, und hier steht auch keiner in der Umgebung. nexdeck erzeugt dann einen neuen, und danach ist kein gespeicherter Zugang mehr lesbar. Jede Anbindung müsste neu eingetragen werden.",
+      "envKeyWins": "Dieses Archiv bringt einen Schlüssel mit, aber hier ist NEXDECK_SECRET_KEY gesetzt und gewinnt. Die Zugänge bleiben unlesbar, wenn dort nicht derselbe Wert steht."
+    }
   }
 }

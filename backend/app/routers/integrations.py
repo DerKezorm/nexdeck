@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, status
 from sqlalchemy import func, select
 
@@ -15,6 +17,8 @@ from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
 
 router = APIRouter(prefix="/api/v1", tags=["integrations"])
+
+logger = logging.getLogger("nexdeck.integrations")
 
 
 @router.get("/adapters", summary="List every adapter and its widgets")
@@ -62,6 +66,9 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
                               admin_only=body.admin_only, created_by=user.id)
     db.add(integration)
     db.commit()
+    logger.info("Connection %r (%s) added by %s%s%s.", integration.name, integration.kind, user.username,
+                ", in demo mode" if integration.demo else "",
+                ", reserved for administrators" if integration.admin_only else "")
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
     return _public(db, integration)
@@ -72,18 +79,31 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
     integration = db.get(Integration, integration_id)
     if integration is None:
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
+    # ⚠️ What changed, never what it changed to: the config holds API keys.
+    changed: list[str] = []
     if body.name is not None:
+        if body.name.strip() != integration.name:
+            changed.append(f"renamed from {integration.name!r}")
         integration.name = body.name.strip()
     if body.config is not None:
         integration.config = store_config(integration.kind, body.config, integration.config)
+        changed.append("settings")
     if body.enabled is not None:
+        if body.enabled != integration.enabled:
+            changed.append("enabled" if body.enabled else "disabled")
         integration.enabled = body.enabled
     if body.demo is not None:
+        if body.demo != integration.demo:
+            changed.append("demo mode on" if body.demo else "demo mode off")
         integration.demo = body.demo
     if body.admin_only is not None:
+        if body.admin_only != integration.admin_only:
+            changed.append("reserved for administrators" if body.admin_only else "open to everyone")
         integration.admin_only = body.admin_only
     integration.last_error = ""
     db.commit()
+    if changed:
+        logger.info("Connection %r (%s): %s, by %s.", integration.name, integration.kind, "; ".join(changed), user.username)
     collector.reschedule_integration(integration.id)
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
@@ -97,8 +117,10 @@ def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> N
     if integration is None:
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
     widget_ids = list(db.scalars(select(Widget.id).where(Widget.integration_id == integration.id)))
+    name, kind = integration.name, integration.kind
     db.delete(integration)
     db.commit()
+    logger.info("Connection %r (%s) deleted by %s; %d card(s) lose their service.", name, kind, user.username, len(widget_ids))
     hass_listener.unwatch(integration_id)
     for widget_id in widget_ids:
         collector.schedule(widget_id)

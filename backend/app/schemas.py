@@ -77,6 +77,9 @@ class SetupStatus(BaseModel):
     version: str
     demo: bool
     providers: list[dict[str, str]] = Field(default_factory=list)
+    #: Whether a forgotten password can be sent anywhere. Offering the link
+    #: without a mail server would be a door that opens onto a wall.
+    can_reset_password: bool = False
 
 
 # -- boards ------------------------------------------------------------------
@@ -128,6 +131,34 @@ class ShareBody(BaseModel):
     user_id: int | None = None
     role: Literal["admin", "user", "guest"] | None = None
     level: Literal["view", "edit", "act"] = "view"
+
+
+class SecondStepBody(BaseModel):
+    """The second half of a sign-in: the ticket, and a code from somewhere."""
+
+    ticket: str = Field(max_length=800)
+    code: str = Field(default="", max_length=40)
+    recovery_code: str = Field(default="", max_length=40)
+
+
+class TwoFactorConfirm(BaseModel):
+    code: str = Field(max_length=12)
+
+
+class TwoFactorOff(BaseModel):
+    """Turning it off needs the password again, like any other undoing."""
+
+    password: str = Field(max_length=200)
+
+
+class ResetRequest(BaseModel):
+    #: A user name or an address; the answer is the same either way.
+    username: str = Field(max_length=200)
+
+
+class ResetBody(BaseModel):
+    token: str = Field(max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
 
 
 class SharesBody(BaseModel):
@@ -277,6 +308,8 @@ class SettingsBody(BaseModel):
     update_check: bool | None = None
     demo: bool | None = None
     default_locale: str | None = Field(default=None, max_length=8)
+    #: Whether everybody has to set up a second factor before doing anything.
+    require_two_factor: bool | None = None
 
 
 class SmtpBody(BaseModel):

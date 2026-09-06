@@ -23,6 +23,8 @@ export interface SetupStatus {
   version: string
   demo: boolean
   providers: { slug: string; label: string }[]
+  /** Whether a forgotten password can be sent anywhere at all. */
+  can_reset_password: boolean
 }
 
 export interface BoardSummary {

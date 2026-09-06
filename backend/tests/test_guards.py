@@ -28,6 +28,10 @@ PUBLIC: dict[str, str] = {
     "POST /api/v1/setup": "creates the first administrator; refuses once one exists",
     "GET /api/v1/setup/boards-exist": "a count, no content",
     "POST /api/v1/auth/login": "the sign-in itself",
+    "POST /api/v1/auth/login/second-step": "its other half; the ticket from the first step is the credential",
+    "POST /api/v1/auth/forgot": "somebody who forgot their password has nothing to sign in with",
+    "GET /api/v1/auth/reset/{token}": "the link is the credential, and it says nothing about who holds it",
+    "POST /api/v1/auth/reset": "the same link, redeemed",
     "POST /api/v1/auth/logout": "clears the cookie of the caller",
     "GET /api/v1/auth/providers": "the sign-in buttons",
     "GET /api/v1/auth/oidc/{slug}/login": "starts a sign-in",
@@ -300,3 +304,112 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
     assert confirmed == {"adguard", "audiobookshelf", "authentik", "beszel", "deluge", "docker", "emby", "evcc", "glances", "gotify", "grafana", "headscale", "homeassistant", "ical", "jellyfin", "jsonapi", "kavita", "komga", "lidarr", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget", "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "syncthing", "synology", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic"}
+
+
+#: Routers whose changing addresses deliberately write nothing, with the reason.
+QUIET_ROUTERS: dict[str, str] = {
+    "notices": "marking one's own notices read or deleting them is housekeeping, not history",
+    "journal": "clearing the log writes its own line from the service; the rest only reads",
+}
+
+
+def test_every_router_that_changes_something_writes_it_down() -> None:
+    """A log window over a server that logs nothing shows an empty list.
+
+    ⚠️ Measured on 06.09.2026: twenty-one of twenty-three routers wrote not one
+    line. A hundred and nine addresses, and five of them left a trace. The
+    window was the easy half; this is the half that keeps it worth opening.
+
+    Coarse on purpose. It cannot tell whether the *right* thing is written, only
+    that a router which changes state is not silent as a whole, which is
+    exactly how it went wrong.
+    """
+    routers = Path(deps.__file__).parent / "routers"
+    silent: list[str] = []
+    checked = 0
+    for path in sorted(routers.glob("*.py")):
+        if path.stem.startswith("_"):
+            continue
+        source = path.read_text(encoding="utf-8")
+        changing = len(re.findall(r"@router\.(?:post|put|patch|delete)", source))
+        if changing == 0:
+            continue
+        checked += 1
+        if path.stem in QUIET_ROUTERS:
+            continue
+        if "logger." not in source:
+            silent.append(f"{path.stem} ({changing} changing addresses)")
+    assert checked >= 15, "the routers moved; is this looking at the right folder?"
+    assert silent == [], (
+        "routers that change something and write nothing (add a line, or list it in "
+        "QUIET_ROUTERS with a reason):\n  " + "\n  ".join(silent)
+    )
+
+
+def test_the_quiet_list_has_no_dead_entries() -> None:
+    routers = Path(deps.__file__).parent / "routers"
+    existing = {path.stem for path in routers.glob("*.py")}
+    dead = [name for name in QUIET_ROUTERS if name not in existing]
+    assert dead == [], f"QUIET_ROUTERS names routers that no longer exist: {dead}"
+
+
+def test_no_event_in_the_catalogue_is_dead() -> None:
+    """Every event somebody can subscribe to has to be emitted from somewhere.
+
+    ⚠️ Measured on 06.09.2026: three of the seven in the list had never been
+    emitted from anywhere in the code. Subscribing to one of those was a
+    promise nobody was keeping, and nothing said so.
+    """
+    from app.services.notify import EVENTS
+
+    app_dir = Path(deps.__file__).parent
+    sources = {
+        path: path.read_text(encoding="utf-8")
+        for path in app_dir.rglob("*.py")
+        if "__pycache__" not in path.parts and path.name != "notify.py"
+    }
+    assert len(sources) >= 40, "the source tree moved; is this looking at the right folder?"
+
+    dead: list[str] = []
+    for event in EVENTS:
+        if event == "test":
+            continue  # sent by the button next to a channel, from the router
+        if any(f'"{event}"' in text or f"'{event}'" in text for text in sources.values()):
+            continue
+        dead.append(event)
+    assert dead == [], (
+        "events somebody can subscribe to that nothing ever emits (emit them, "
+        f"or take them out of EVENTS): {dead}"
+    )
+
+
+def test_every_renderer_has_a_floor_and_no_card_goes_below_it() -> None:
+    """A card must not be draggable to a size its drawing cannot bear.
+
+    ⚠️ Until 06.09.2026 the grid used a card's *default* size as its floor, so
+    ``min_size`` did nothing and nobody noticed that 56 value cards claimed to
+    work at one cell by one. The moment the floor became real, the weather
+    card drew its sun on top of its own temperature.
+    """
+    from app.adapters.base import DEFAULT_MIN, RENDERER_MIN
+
+    used: set[str] = set()
+    too_small: list[str] = []
+    checked = 0
+    for adapter in all_adapters():
+        for widget in adapter.widgets:
+            checked += 1
+            used.add(widget.renderer)
+            floor = RENDERER_MIN.get(widget.renderer, DEFAULT_MIN)
+            if widget.min_size[0] < floor[0] or widget.min_size[1] < floor[1]:
+                too_small.append(f"{adapter.kind}.{widget.kind} ({widget.renderer}): {tuple(widget.min_size)} < {floor}")
+            if widget.default_size[0] < widget.min_size[0] or widget.default_size[1] < widget.min_size[1]:
+                too_small.append(f"{adapter.kind}.{widget.kind}: opens smaller than it may be dragged")
+    assert checked >= 150, "the widget list shrank; is this looking at the right place?"
+    assert too_small == [], "cards that may be dragged smaller than they can draw:\n  " + "\n  ".join(too_small)
+
+    missing = sorted(used - set(RENDERER_MIN))
+    assert missing == [], (
+        "renderers with no floor of their own; they fall back to the default, "
+        f"which is a guess: {missing}"
+    )

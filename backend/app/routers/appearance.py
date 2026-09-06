@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter
 
 from ..deps import AdminUser, CurrentUser, DbSession, error
@@ -9,6 +11,8 @@ from ..schemas import AppearanceBody
 from ..services import appearance
 
 router = APIRouter(prefix="/api/v1/settings/appearance", tags=["system"])
+
+logger = logging.getLogger("nexdeck.appearance")
 
 
 @router.get("", summary="Read the look of the installation")
@@ -22,6 +26,7 @@ def read(user: CurrentUser, db: DbSession) -> dict:
 def write(body: AppearanceBody, admin: AdminUser, db: DbSession) -> dict:
     try:
         config = appearance.save(db, body.model_dump())
+        logger.info("The look of the installation was changed by %s.", admin.username)
     except appearance.AppearanceError as failure:
         raise error(failure.code, failure.message) from failure
     return {**config, "colour": appearance.colour_of(config)}
