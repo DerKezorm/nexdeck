@@ -114,6 +114,19 @@ app = FastAPI(
 )
 
 _cors = [o.strip() for o in get_settings().cors_origins.split(",") if o.strip()]
+if "*" in _cors:
+    # ⚠️ Refusing to start is the friendly answer here. Starlette does not
+    # send a literal "*" when credentials are allowed: it echoes back whatever
+    # Origin asked, and sets Access-Control-Allow-Credentials with it. The
+    # preflight then also waves through X-Nexdeck-Request, which is the header
+    # that stops another site from acting as the signed-in user. So the one
+    # value that looks like "let anyone read the public parts" is in fact
+    # "let any site the operator visits do anything as them". Measured on
+    # 07.09.2026 against a running instance.
+    raise RuntimeError(
+        "NEXDECK_CORS_ORIGINS='*' cannot be combined with signing in, because it would let any "
+        "site act as the signed-in user. Name the origins instead, comma separated.",
+    )
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=_cors, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
@@ -142,7 +155,20 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
     # Never let a browser guess the type of anything this server sends. It is
     # the one header that matters as much for an uploaded file as for a page.
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    if not request.url.path.startswith("/api/"):
+    if request.url.path.startswith("/api/"):
+        # ⚠️ The API used to get no policy at all, on the grounds that JSON
+        # needs none. Two addresses under it do not answer with JSON: the icon
+        # proxy hands out SVG it fetched from a public collection, and the
+        # image proxy passes through whatever content type the service sent.
+        # SVG is a document that can run script, and it would have run in
+        # nexdeck's own origin. A route that needs something looser sets its
+        # own header; this is only the floor.
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+        )
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+    else:
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         # The app talks only to its own origin; icons and uploads are proxied.

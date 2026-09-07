@@ -290,6 +290,11 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     except httpx.HTTPError as failure:
         raise error("unreachable", f"The service did not deliver the image: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
     content_type = response.headers.get("content-type", "") or source.media_type
+    # ⚠️ "image/" is not enough. image/svg+xml passes that test and is not a
+    # picture but a document that runs script, handed out from nexdeck's own
+    # address. No service sends a poster as SVG.
+    if content_type.split(";")[0].strip().lower() == "image/svg+xml":
+        raise error("no_image", "The service answered with SVG, which is not served as an image.", status.HTTP_404_NOT_FOUND)
     if response.status_code >= 400 or not content_type.startswith("image/") or len(response.content) > IMAGE_MAX_BYTES:
         raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND)
     if source.cache_seconds <= 0:

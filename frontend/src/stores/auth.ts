@@ -24,6 +24,17 @@ interface AuthState {
   setUser: (user: User) => void
 }
 
+/** Empty everything this browser holds about the person who just left.
+ *
+ * A full load, not a route change. The zustand stores, the react-query cache
+ * and every open live connection live in this page; nothing short of loading
+ * it again clears all three, and half-clearing them is how the next person to
+ * sign in gets a glimpse of the last one's boards.
+ */
+function forgetEverything(): void {
+  window.location.assign('/login')
+}
+
 export const useAuth = create<AuthState>((set, getState) => ({
   user: null,
   status: null,
@@ -72,6 +83,12 @@ export const useAuth = create<AuthState>((set, getState) => ({
   logout: async () => {
     await post('/auth/logout')
     set({ user: null })
+    // ⚠️ Setting the user to null is not signing out. The boards, the notices
+    // and everything react-query holds stay in memory, and the next person to
+    // sign in at the same browser sees them for as long as it takes the new
+    // data to arrive. Nothing here survives a full page load, so the cheapest
+    // honest answer is to do one.
+    forgetEverything()
   },
   update: async (fields) => {
     const user = await patch<User>('/auth/me', fields)

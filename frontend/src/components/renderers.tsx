@@ -563,10 +563,25 @@ export function BookmarksCard({ data }: RenderProps) {
 // Iframe
 // ---------------------------------------------------------------------------
 
+/** Does this address point back at nexdeck itself? */
+function framesOurselves(url: string): boolean {
+  try {
+    return new URL(url, window.location.href).origin === window.location.origin
+  } catch {
+    return true
+  }
+}
+
 export function IframeCard({ data, editing }: RenderProps) {
   const { t } = useTranslation()
   const url = String(data?.meta?.url ?? '')
   if (!url) return <Empty>{t('card.noUrl')}</Empty>
+  // The sandbox keeps a foreign page at arm's length, but it cannot keep out a
+  // page from our own address: with allow-scripts and allow-same-origin
+  // together a same-origin frame reaches the app around it and can take its
+  // own sandbox off. allow-same-origin has to stay, or half the services out
+  // there stop working inside a frame, so the address is what gets refused.
+  if (framesOurselves(url)) return <Empty>{t('card.noSelfFrame')}</Empty>
   return (
     <div className="flex-1 min-h-0 relative">
       <iframe src={url} title={t('card.embedded')} className="absolute inset-0 w-full h-full border-0 rounded-b-[var(--nd-radius)] bg-white" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy" />

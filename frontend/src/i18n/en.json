@@ -688,6 +688,7 @@
     "nothingUpcoming": "Nothing coming up",
     "noLinks": "No links yet",
     "noUrl": "No URL set",
+    "noSelfFrame": "This card cannot show nexdeck itself",
     "noEntries": "No entries",
     "waitingLog": "Waiting for log lines…",
     "collecting": "Collecting…",
