@@ -4,6 +4,9 @@
  * An entry without them is dropped silently by the dialog, which then shows
  * the previous version's text. Nothing looks broken, it is only wrong.
  */
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import de from '../i18n/whatsnew.de.json'
 import en from '../i18n/whatsnew.en.json'
 import { isEntry, latestVersion } from '../lib/whatsnew'
@@ -27,8 +30,14 @@ describe("what's new entries", () => {
     expect(Object.keys(de.entries).sort()).toEqual(Object.keys(en.entries).sort())
   })
 
-  it('the newest version is the one the dialog shows', () => {
-    expect(latestVersion()).toBe('0.1.0')
+  it('the version being shipped has an entry', () => {
+    // ⚠️ Against the version in package.json, not against a number written
+    // out here. Written out, this line has to be edited on every release,
+    // and the release it is forgotten on is the one that ships with the
+    // previous version's text in the dialog.
+    const shipping = JSON.parse(readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8')).version
+    expect(shipping, 'package.json has no version, so this test proves nothing').toBeTruthy()
+    expect(latestVersion()).toBe(shipping)
   })
 
   it('sections carry title and body', () => {

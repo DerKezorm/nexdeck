@@ -626,3 +626,29 @@ def test_every_document_is_reachable_from_the_readme() -> None:
     assert len(documents) >= 5, f"only {len(documents)} documents were found, so this guard proves nothing"
     unlinked = [name for name in documents if f"docs/{name}" not in readme]
     assert unlinked == [], "documents the README never links to: " + ", ".join(unlinked)
+
+
+def test_the_version_is_the_same_in_every_place_it_is_written() -> None:
+    """⚠️ Four places say which version this is, and CI compares exactly one of
+    them against the tag. A release where they disagree ships an About page,
+    a package and a changelog that name different versions, and nothing on the
+    way there says so.
+    """
+    import json
+
+    from app import __version__ as in_code
+
+    pyproject = (ROOT / "backend" / "pyproject.toml").read_text(encoding="utf-8")
+    in_pyproject = re.search(r'^version = "([^"]+)"', pyproject, re.M)
+    in_package = json.loads((ROOT / "frontend" / "package.json").read_text(encoding="utf-8")).get("version")
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    newest_written_down = re.search(r"^## (\d+\.\d+\.\d+)", changelog, re.M)
+
+    assert in_pyproject and newest_written_down, "the version could not be read out of every file, so this guard proves nothing"
+    said = {
+        "app/__init__.py": in_code,
+        "pyproject.toml": in_pyproject.group(1),
+        "package.json": in_package,
+        "CHANGELOG.md": newest_written_down.group(1),
+    }
+    assert len(set(said.values())) == 1, f"the version is not the same everywhere: {said}"

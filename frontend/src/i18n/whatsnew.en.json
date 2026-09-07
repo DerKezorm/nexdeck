@@ -3,13 +3,64 @@
     "0.1.0": {
       "lead": "nexdeck is here: a live dashboard for your homelab with thirty integrations, boards for desktop, phone and wall displays, and actions right on the cards.",
       "sections": [
-        { "title": "Live boards", "body": "Values change in front of you. The server collects every service once and pushes changes to every open browser.", "path": "Edit mode (pencil) > Add widget" },
-        { "title": "Integrations", "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, the *arr family, Home Assistant, Uptime Kuma and more.", "path": "Settings > Integrations" },
-        { "title": "Wall displays", "body": "A kiosk link shows a board without sign-in, cycles pages and dims at night.", "path": "Board menu > Kiosk" },
-        { "title": "Notifications", "body": "Outages and failed actions reach you via Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.", "path": "Settings > Channels" }
+        {
+          "title": "Live boards",
+          "body": "Values change in front of you. The server collects every service once and pushes changes to every open browser.",
+          "path": "Edit mode (pencil) > Add widget"
+        },
+        {
+          "title": "Integrations",
+          "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, the *arr family, Home Assistant, Uptime Kuma and more.",
+          "path": "Settings > Integrations"
+        },
+        {
+          "title": "Wall displays",
+          "body": "A kiosk link shows a board without sign-in, cycles pages and dims at night.",
+          "path": "Board menu > Kiosk"
+        },
+        {
+          "title": "Notifications",
+          "body": "Outages and failed actions reach you via Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.",
+          "path": "Settings > Channels"
+        }
       ],
       "smallTitle": "Also new",
-      "small": ["Boards export and import as YAML, and files in data/boards provision them.", "Docker labels nexdeck.* and homepage.* create tiles automatically.", "Personal API tokens for scripts and automations."]
+      "small": [
+        "Boards export and import as YAML, and files in data/boards provision them.",
+        "Docker labels nexdeck.* and homepage.* create tiles automatically.",
+        "Personal API tokens for scripts and automations."
+      ]
+    },
+    "0.2.0": {
+      "lead": "A deep read of the whole codebase, and then the repairs it found: 146 points in fourteen blocks. Nine of them were holes somebody could have walked through.",
+      "sections": [
+        {
+          "title": "Nine holes closed",
+          "body": "A board named after a number reached other people's boards. An action on a card could be anything the caller made up. A member could import a board that read the server's secret key. Uploads could run in nexdeck's own origin, and the Synology password travelled in the address.",
+          "path": "Settings > About"
+        },
+        {
+          "title": "A way back in",
+          "body": "If the last administrator is locked out and there is no mail server, starting the container once with NEXDECK_RESCUE=1 prints a one-time sign-in link, good for fifteen minutes. It goes to the terminal, never to the log.",
+          "path": "docs/operating.md"
+        },
+        {
+          "title": "Arrange a board without a mouse",
+          "body": "Arrow keys move the focused card, Shift resizes it. All three form factors follow. And while editing, the whole card is the handle: a card whose face is a link used to have nothing to take hold of but its rim.",
+          "path": "Edit mode (pencil) > Tab to a card"
+        },
+        {
+          "title": "A card that does not know a number says so",
+          "body": "Missing values were drawn as zero, which reads as measured and fine. Fifty-four places that compute a percentage now say they do not know instead."
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Running nexdeck is written down: backups, restoring, updating and the Docker socket.",
+        "Seventeen settings that were documented nowhere are in the README, with a guard that keeps the table in step.",
+        "A card can no longer fall silent for good: any unexpected failure puts a message on it and tries again.",
+        "Old records are cleaned up on a schedule, and every limit has a number behind it."
+      ]
     }
   }
 }

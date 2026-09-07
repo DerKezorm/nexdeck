@@ -3,7 +3,60 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## 0.1.0 (unreleased)
+## 0.2.0 (2026-09-07)
+
+A deep read of the whole codebase, and then the repairs it found: 146 points,
+worked through in fourteen blocks. Nine of them were holes somebody could have
+walked through. Every fix was held against a mutation, and the ones that could
+be measured against real hardware were.
+
+### Security
+
+- **A board named after a number reached another board.** A board's slug may be digits, and the lookup tried the slug before the number, so whoever called their board "7" was told they owned board 7: they could read the live data of every private board there, run its actions, move its cards onto their own and delete them.
+- **An action on a card could be anything.** The server took the action name and its parameters as given, so a member with the "act" level on one board could send a container name that was never on any card and stop it. An action must now have stood in the card's last delivered data, with exactly those parameters.
+- **The board import read the server's environment.** `${VAR}` is meant for the operator's own files under `data/boards/`. The same code served the import that every member may call, so a member could import a board whose connection carried `${NEXDECK_SECRET_KEY}` and read it straight back out of the connection list. An import over HTTP now expands nothing and creates no connections.
+- **The machine's own metadata service was in reach.** A widget option is enough to name an address, and `169.254.169.254` hands out the credentials of the host. Every outbound client is now built by one factory with one rule about where not to go, and the rule hangs on the client, not on the call.
+- **Uploads could run in nexdeck's own origin.** An SVG walked past a check that named three strings. Every uploaded file is now served with a sandbox of its own, and the policy covers the addresses under `/api/` as well: the icon proxy hands out SVG it fetched from a public collection, and that is a document that can run script.
+- **Secrets stayed out of the log, the export and the archive** in the places they were still getting through.
+- **The second factor counts on every way in.** The OIDC return path opened a session past a configured factor; a downgraded guest could still edit; an empty `sub` counted as an identity.
+- **Password guessing was capped per address, and the address is not ours.** Behind a reverse proxy the client address is whatever a header says. Attempts are now counted per account as well.
+- **The DSM password stopped travelling in the address.** Synology's login sent it in the query part, where it lands in DSM's own access log and in the log of every proxy in between. It goes in the body now. Measured against DSM 7.4.1.
+
+### New
+
+- **A way back in when the last administrator is locked out.** `NEXDECK_RESCUE=1` prints a one-time sign-in link, good for fifteen minutes, and does not start the server. To the terminal only, never to the log: a sign-in link in a log file is a sign-in link in every backup of that log file.
+- **Running nexdeck, written down.** [docs/operating.md](docs/operating.md) covers the data volume, why the key file and the database belong together, backups, restoring, updating and the Docker socket. Seventeen settings that were documented nowhere are in the README, and a guard keeps that table in step with the code.
+- **A board can be arranged without a mouse.** Arrow keys move the focused card, Shift resizes it, all three form factors follow, and the same save path runs as after a drag. Until now a board could be arranged with a mouse and by no other means.
+- **While editing, the whole card is the handle.** A card whose face is a link or a strip of bars had nothing to take hold of but the padding at its rim.
+- **A card is measured as what it is drawn as.** A card switched to a dial was still held to the floor of the view it declares, so two cards showing the same dial had different minimum sizes.
+- **Old records are cleaned up on a schedule**, uploads nobody references are swept, and every limit has a number behind it that can be set.
+
+### Fixed
+
+- **A card could fall silent for good.** An unreadable secret, an adapter this build no longer has, or any unexpected failure ended the widget's refresh task, and the dead task was still held, so the error was never even printed: a blank card and an empty log.
+- **A card that does not know a number says so.** Missing values were drawn as zero, which reads as "measured and fine". A card with nothing to divide by now says it does not know, and 54 places that computed a percentage got the same rule.
+- **A board never belongs to nobody.** Deleting a user left their boards ownerless; the delete now asks what should become of them and either hands them over or removes them.
+- **An import reads before it deletes.** Replacing a board used to throw the pages away and then look at the file.
+- **A connection's number no longer haunts the cards that named it.** SQLite hands out deleted row numbers again, so a new connection inherited the cards of the old one.
+- **A stale board layout is refused rather than silently overwritten** when two browsers arrange the same board.
+- **A `/api/` address that does not exist answers JSON**, not the whole dashboard page with HTTP 200.
+- **The interface can be read without guessing.** Six colour tokens were below the contrast the text on them needs, in both the dark and the light mode; dialogs held the focus for the first time; the phone reaches a board's pages, and the edit bar fits on it.
+
+### Faster
+
+- **The response cache forgets again**, has a ceiling, and three adapters stopped writing keys that could never be hit. A board with a Plex history card grew by a few hundred megabytes a day.
+- **Home Assistant costs one query, not one per event.**
+- **A board's sparklines are a sparkline again**: the history call handed out every point of twenty-four hours, of which the browser keeps eight percent.
+- **A widget tick no longer repaints the whole board.**
+- **Less goes over the wire**: answers are compressed, the service worker no longer precaches 1.45 MB of alphabets and a video library nobody has asked for yet.
+
+### The test bench
+
+- **Playwright measures the built frontend behind FastAPI**, which is what the image ships. The dev server sets no Content-Security-Policy, so everything the real policy blocks passes in front of it and fails behind it, silently.
+- **Coverage is measured** on the run that happens anyway: 82.1% backend, 33.1% frontend, both with a floor that CI holds.
+- **Three guards had no floor** and would have passed on an empty scan. One of them was looking for a pattern that no longer existed.
+
+## 0.1.0 (2026-09-06)
 
 ### New
 
