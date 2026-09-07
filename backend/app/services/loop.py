@@ -57,3 +57,26 @@ def spawn(factory: Callable[[], Coroutine[Any, Any, Any]], name: str = "") -> No
         loop.create_task(factory(), name=name or None)
 
     run_on_loop(_start)
+
+
+def run_and_wait(factory: Callable[[], Coroutine[Any, Any, Any]], timeout: float = 30.0) -> bool:
+    """Run a coroutine on the main loop from a worker thread and wait for it.
+
+    ⚠️ Only from a worker thread. Called on the loop itself this would wait for
+    something that cannot start until the waiting stops, so it refuses that
+    case rather than hanging. Restoring a backup needs it: it runs in a worker
+    thread and has to bring the collector and the reachability loop to a stop
+    before it replaces the database under them.
+
+    Returns whether it actually ran. Without a loop there is nothing to stop,
+    which is the ordinary case in a plain unit test.
+    """
+    target = _main
+    if target is None or target.is_closed() or _running() is target:
+        return False
+    try:
+        asyncio.run_coroutine_threadsafe(factory(), target).result(timeout)
+    except Exception:  # noqa: BLE001 - a service that will not stop must not stop the rescue
+        logger.exception("A background service did not come to a stop in time.")
+        return False
+    return True

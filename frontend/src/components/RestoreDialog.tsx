@@ -53,6 +53,7 @@ export function RestoreDialog({ open, onClose, username, onDone }: {
   const [password, setPassword] = useState('')
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [confirm, setConfirm] = useState('')
+  const [anyway, setAnyway] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -95,7 +96,7 @@ export function RestoreDialog({ open, onClose, username, onDone }: {
     setBusy(true)
     setError('')
     try {
-      await api('/backups/restore', { method: 'POST', body: body({ confirm }) })
+      await api('/backups/restore', { method: 'POST', body: body({ confirm, without_safety_copy: anyway ? 'true' : 'false' }) })
       onDone()
     } catch (failure) {
       setError(failure instanceof ApiError ? failure.message : t('errors.network'))
@@ -187,6 +188,14 @@ export function RestoreDialog({ open, onClose, username, onDone }: {
           <Field label={t('backups.restore.confirm', { name: username })} htmlFor="restore-confirm">
             <input id="restore-confirm" className="input" autoComplete="off" value={confirm} onChange={(event) => setConfirm(event.target.value)} />
           </Field>
+          {/* The way through for the case the copy is what is broken: since
+              07.09.2026 a restore stops when the safety copy of the current
+              state cannot be written, and the reason for restoring may well be
+              that the current database is past saving. */}
+          <label className="flex items-start gap-2 text-xs text-muted mt-2">
+            <input type="checkbox" className="mt-0.5" checked={anyway} onChange={(event) => setAnyway(event.target.checked)} />
+            <span>{t('backups.restore.withoutSafetyCopy')}</span>
+          </label>
         </>
       )}
 
