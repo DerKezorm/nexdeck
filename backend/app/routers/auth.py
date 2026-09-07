@@ -33,6 +33,7 @@ from ..security import (
     verify_password,
 )
 from ..services import avatars, login_guard, mail, password_reset, two_factor
+from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 logger = logging.getLogger("nexdeck.auth")
@@ -233,7 +234,7 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
 @router.post("/me/avatar", response_model=UserPublic, summary="Upload own profile picture")
 async def upload_avatar(file: UploadFile, user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
     """Replaces the picture that was there; the old file is deleted."""
-    data = await file.read()
+    data = await read_at_most(file, avatars.MAX_BYTES, "picture")
     try:
         user.avatar = avatars.save(data, user.avatar)
     except avatars.AvatarError as failure:

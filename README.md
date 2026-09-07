@@ -67,6 +67,10 @@ Mount `/var/run/docker.sock` (already in the compose file) to see this host's co
 | `NEXDECK_DEMO` | `0` | Start every widget with invented data. |
 | `NEXDECK_LOG_LEVEL` | `INFO` | `DEBUG` logs every adapter request. |
 | `NEXDECK_ALLOW_LOOPBACK_TARGETS` | `0` | Let notification channels, Web Push, RSS cards and reachability checks call `127.0.0.1`. Connections an administrator made are never affected. |
+| `NEXDECK_UPLOAD_QUOTA_MB` | `200` | What one account may leave lying in `/data/uploads`. `0` means no ceiling. |
+| `NEXDECK_KEEP_ACTION_LOG_DAYS` | `90` | How long the record of who pressed what is kept. `0` keeps it forever. |
+| `NEXDECK_KEEP_NOTICES_DAYS` | `90` | How long messages in the notice centre are kept. |
+| `NEXDECK_KEEP_OUTAGES_DAYS` | `365` | How long finished outages are kept. A running one is never swept. |
 | `PUID`, `PGID` | `1000` | Owner of the files in the data volume. |
 | `DOCKER_GID` | detected | Group of the mounted Docker socket, when detection fails. |
 

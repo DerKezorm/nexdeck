@@ -80,6 +80,26 @@ class Settings(BaseSettings):
     #: snapshot that ever happened by itself was the one before a restore. A
     #: sweeper without a writer is a promise with nothing behind it.
     backup_every_hours: int = 24
+    #: How long the rows nobody reads again are kept. ``0`` switches a sweep
+    #: off and lets that table grow, which is what all three did until now.
+    #:
+    #: ⚠️ Three numbers, not one, because they are three different promises.
+    #: The action log is the record of who pressed what and belongs to the
+    #: operator. The notice centre is an inbox: a message nobody opened in
+    #: three months is not going to be opened. An outage is a fact about a
+    #: service, worth keeping for a year, and one that has not ended yet is
+    #: never swept whatever its age, because it is the reason a card is red.
+    keep_action_log_days: int = 90
+    keep_notices_days: int = 90
+    keep_outages_days: int = 365
+    #: What one account may have lying in the uploads directory, in megabytes.
+    #: ``0`` means no ceiling.
+    #:
+    #: ⚠️ There was none. Every member could write next to the database until
+    #: the disk was full, and nothing swept a file that no board pointed at any
+    #: more. 200 MB is roughly seventeen backgrounds at the largest size the
+    #: upload allows.
+    upload_quota_mb: int = 200
     #: Let outbound calls reach 127.0.0.1 and the link-local range.
     #:
     #: ⚠️ Off, and it should stay off. The server sits inside the network and

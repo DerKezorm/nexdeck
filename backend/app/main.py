@@ -45,7 +45,7 @@ from .routers import (
 )
 from .routers import journal as journal_router
 from .security import prune_sessions
-from .services import backup, history, journal, provisioning
+from .services import backup, history, journal, provisioning, retention
 from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
@@ -59,6 +59,7 @@ def _housekeeping_once() -> None:
     with db_session() as db:
         history.condense(db)
         journal.enforce_expiry(db)
+        retention.prune_old_records(db)
         sessions_gone = prune_sessions(db)
     if sessions_gone:
         logger.info("Swept %d session(s) that had run out.", sessions_gone)
@@ -147,6 +148,45 @@ if _cors:
 
 for module in (system, setup, auth, users, avatars, backups, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance):
     app.include_router(module.router)
+
+
+#: What an ordinary request body may weigh. Comfortably above the largest
+#: upload the interface offers (a 12 MB background) and far below anything
+#: that hurts.
+MAX_BODY = 16 * 1024 * 1024
+#: The one address that legitimately receives a large file, and its ceiling.
+BIG_BODY_PATH = "/api/v1/backups/restore"
+MAX_BIG_BODY = 512 * 1024 * 1024
+
+
+def body_limit(path: str) -> int:
+    return MAX_BIG_BODY if path.rstrip("/").endswith(BIG_BODY_PATH) else MAX_BODY
+
+
+@app.middleware("http")
+async def refuse_a_body_nobody_asked_for(request: Request, call_next):  # noqa: ANN001
+    """Weigh the body before anything reads it.
+
+    ⚠️ FastAPI reads the form before it resolves the dependencies, so the
+    ceiling inside a handler is checked after the file has already been
+    written. A 30 GB multipart part sent to ``POST /auth/me/avatar`` landed in
+    the temp directory in full, and only then came the 401: no account needed,
+    no limit anywhere, the disk beside the database. The comment on the limit
+    in ``backups.py`` claimed the opposite in so many words.
+
+    This is the cheap half, and it covers the ordinary case: a browser and
+    every HTTP client sends ``Content-Length``. A body without one is refused
+    by the handlers instead, which read in blocks and count as they go.
+    """
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit():
+        allowed = body_limit(request.url.path)
+        if int(declared) > allowed:
+            return JSONResponse(
+                {"detail": {"code": "too_large", "message": f"The body is larger than {allowed // (1024 * 1024)} MB."}},
+                status_code=413,
+            )
+    return await call_next(request)
 
 
 @app.middleware("http")

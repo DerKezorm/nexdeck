@@ -73,7 +73,10 @@ def test_only_pictures_are_accepted(client: TestClient) -> None:
 def test_a_large_picture_is_refused(client: TestClient) -> None:
     setup_admin(client)
     too_big = upload(client, PNG + b"\x00" * (2 * 1024 * 1024 + 1))
-    assert too_big["status"] == 400
+    # 413, not 400: one status for "too large" on all three upload paths. The
+    # picture used to be weighed after the whole body had been read, and the
+    # refusal came out of the avatar reader with the generic 400.
+    assert too_big["status"] == 413
     assert too_big["body"]["detail"]["code"] == "too_large"
 
 

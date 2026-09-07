@@ -53,6 +53,25 @@ def failed(address: str, username: str = "") -> None:
     _failures.setdefault(f"a:{address}", []).append(now)
     if username:
         _failures.setdefault(f"u:{username.lower()}", []).append(now)
+    _sweep(now)
+
+
+#: Above this many buckets, every stale one is thrown out at once.
+#:
+#: ⚠️ ``_recent`` drops a bucket that has aged out, but only when that exact
+#: key is looked at again. A guesser sends a different address and a different
+#: name every time and never asks about any of them twice, so every attempt
+#: left two buckets behind for good. The list grew with the attempts, and it is
+#: reachable without an account.
+SWEEP_ABOVE = 5000
+
+
+def _sweep(now: float) -> None:
+    if len(_failures) <= SWEEP_ABOVE:
+        return
+    for key, stamps in list(_failures.items()):
+        if not any(now - stamp < WINDOW_SECONDS for stamp in stamps):
+            _failures.pop(key, None)
 
 
 def succeeded(address: str, username: str = "") -> None:

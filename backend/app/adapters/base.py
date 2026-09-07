@@ -619,6 +619,26 @@ MAX_CACHED_RESPONSES = 64
 CACHE_PREFIX = "resp:"
 
 
+#: The largest answer a service may give a card.
+#:
+#: ⚠️ There was no ceiling. The whole body is read into memory and parsed, so a
+#: service that answers with a hundred megabytes of JSON, or an address that
+#: turns out to be a file server, took the process with it. Nothing a card
+#: reads is anywhere near this: the largest measured answer in this codebase is
+#: a Jellyfin library listing at a few megabytes.
+MAX_ANSWER_BYTES = 32 * 1024 * 1024
+
+
+def _refuse_a_giant_answer(url: str, response: httpx.Response) -> None:
+    size = len(response.content)
+    if size > MAX_ANSWER_BYTES:
+        raise AdapterError(
+            f"The service answered with {size // (1024 * 1024)} MB, which is more than a card reads.",
+            code="answer_too_large",
+            hint="Check that the address points at the service's API and not at a file.",
+        )
+
+
 class Context:
     """What an adapter gets besides its configuration.
 
@@ -694,6 +714,7 @@ class Context:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
         if auth_errors and response.status_code in (401, 403):
             raise AuthFailed()
+        _refuse_a_giant_answer(url, response)
         if key:
             self._remember(key, time.monotonic() + cache_seconds, response)
         return response

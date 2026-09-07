@@ -67,8 +67,29 @@ async def fetch_icon(name: str, ext: str) -> tuple[bytes, str] | None:
             if response.status_code == 200 and response.content:
                 cached.write_bytes(response.content)
                 return response.content, _content_type(ext)
-    _negative[key] = time.monotonic() + NEGATIVE_SECONDS
+    _remember_miss(key)
     return None
+
+
+#: How many names the "we looked and there is none" list may hold.
+#:
+#: ⚠️ It had no ceiling and no sweep, and it can be filled without signing in:
+#: the icon proxy answers before any session is required. Every made-up name
+#: left an entry behind for an hour, and nothing ever walked the list.
+NEGATIVE_LIMIT = 2000
+
+
+def _remember_miss(key: str) -> None:
+    now = time.monotonic()
+    _negative[key] = now + NEGATIVE_SECONDS
+    if len(_negative) <= NEGATIVE_LIMIT:
+        return
+    for name in [name for name, until in _negative.items() if until <= now]:
+        _negative.pop(name, None)
+    # Still too many: drop the ones that expire first, so what stays is what
+    # was asked for most recently.
+    while len(_negative) > NEGATIVE_LIMIT:
+        _negative.pop(min(_negative, key=lambda name: _negative[name]), None)
 
 
 def _content_type(ext: str) -> str:
