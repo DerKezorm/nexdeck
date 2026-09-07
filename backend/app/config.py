@@ -36,6 +36,21 @@ class Settings(BaseSettings):
     #: Days a browser session stays valid without activity.
     session_days: int = 30
     bcrypt_rounds: int = 12
+    #: How many database connections the pool holds, and how many more it may
+    #: open under load. Both used to be SQLAlchemy's defaults, 5 and 10, and
+    #: nothing anywhere said so: not the settings, not the README, not a
+    #: comment. A ceiling that decides when the server stops answering should
+    #: be a decision, not a default nobody knows about.
+    #:
+    #: ⚠️ ``request_threads`` must stay below ``db_pool_size + db_max_overflow``.
+    #: Most routes are synchronous, so each one occupies a worker thread and a
+    #: connection at the same time; more threads than connections only moves the
+    #: queue from one place to the other, and the background services need a few
+    #: connections of their own on top.
+    db_pool_size: int = 20
+    db_max_overflow: int = 20
+    #: Worker threads for synchronous routes (anyio's default is 40).
+    request_threads: int = 24
     #: Start with every integration in demo mode: fake, moving data.
     demo: bool = False
     log_level: str = "INFO"

@@ -43,27 +43,82 @@ def unique_slug(db: Session, wanted: str, ignore_id: int | None = None) -> str:
         counter += 1
 
 
-def place_widget(page: Page, widget_id: int, size: tuple[int, int], min_size: tuple[int, int]) -> None:
-    """Give a new widget a spot at the bottom of every breakpoint."""
-    layouts = dict(page.layouts or {})
-    for key, cols in COLUMNS.items():
-        items = list(layouts.get(key) or [])
-        w = min(cols, max(1, size[0] if key == "lg" else max(1, round(size[0] * cols / 12)) or 1))
-        h = size[1]
-        if key == "sm":
-            w = min(cols, max(2, w))
+class Placer:
+    """Bottom-left placement for one page, measured once instead of per card.
+
+    ⚠️ This used to be a single function that copied the whole layout
+    dictionary, scanned every card of every breakpoint twice and reassigned
+    ``page.layouts`` for each card placed. Reassigning marks the JSON column
+    dirty, so the next flush rewrote the page's whole layout again. The work
+    grew with the square of the number of cards: measured on 07.09.2026, an
+    import of 12 kB of YAML held the only worker for 55 seconds, and 2 MB were
+    allowed. The placement itself is unchanged, down to the last edge case;
+    only the bookkeeping moved out of the loop.
+    """
+
+    def __init__(self, page: Page) -> None:
+        self.page = page
+        self.layouts: dict[str, list[dict]] = {key: list(value or []) for key, value in (page.layouts or {}).items()}
+        self._edge: dict[str, tuple[int, int, int]] = {}
+        for key in COLUMNS:
+            self.layouts.setdefault(key, [])
+            self._edge[key] = self._measure(self.layouts[key])
+
+    @staticmethod
+    def _measure(items: list[dict]) -> tuple[int, int, int]:
+        """How far down the page reaches, and where its lowest row ends."""
         bottom = max((item["y"] + item["h"] for item in items), default=0)
-        x = 0
-        # Try to fill the last row before opening a new one.
-        row_items = [item for item in items if item["y"] + item["h"] == bottom]
-        if row_items:
-            right = max(item["x"] + item["w"] for item in row_items)
-            top = min(item["y"] for item in row_items)
-            if right + w <= cols:
-                x, bottom = right, top
-        items.append({"i": str(widget_id), "x": x, "y": bottom, "w": w, "h": h, "minW": min_size[0], "minH": min_size[1]})
-        layouts[key] = items
-    page.layouts = layouts
+        row = [item for item in items if item["y"] + item["h"] == bottom]
+        if not row:
+            return bottom, 0, 0
+        return bottom, max(item["x"] + item["w"] for item in row), min(item["y"] for item in row)
+
+    @staticmethod
+    def _grown(edge: tuple[int, int, int], x: int, y: int, w: int, h: int) -> tuple[int, int, int]:
+        """The same three numbers after one card was added, without re-measuring.
+
+        A card that ends above the current bottom belongs to no lowest row and
+        changes nothing, which is exactly what ``_measure`` would say.
+        """
+        bottom, right, top = edge
+        if y + h > bottom:
+            return y + h, x + w, y
+        if y + h == bottom:
+            return bottom, max(right, x + w), min(top, y)
+        return bottom, right, top
+
+    def add(self, widget_id: int, size: tuple[int, int], min_size: tuple[int, int]) -> None:
+        """Give a card a spot at the bottom of every breakpoint."""
+        for key, cols in COLUMNS.items():
+            items = self.layouts[key]
+            w = min(cols, max(1, size[0] if key == "lg" else max(1, round(size[0] * cols / 12)) or 1))
+            h = size[1]
+            if key == "sm":
+                w = min(cols, max(2, w))
+            bottom, right, top = self._edge[key]
+            x, y = 0, bottom
+            # Fill the last row before opening a new one.
+            if items and right + w <= cols:
+                x, y = right, top
+            items.append({"i": str(widget_id), "x": x, "y": y, "w": w, "h": h, "minW": min_size[0], "minH": min_size[1]})
+            self._edge[key] = self._grown(self._edge[key], x, y, w, h)
+
+    def add_at(self, widget_id: int, spots: dict[str, dict]) -> None:
+        """Put a card where the file says, and keep the edge up to date."""
+        for key, spot in spots.items():
+            self.layouts[key].append({"i": str(widget_id), **spot})
+            self._edge[key] = self._grown(self._edge[key], spot["x"], spot["y"], spot["w"], spot["h"])
+
+    def finish(self) -> None:
+        """Write the page's layout once, at the end."""
+        self.page.layouts = self.layouts
+
+
+def place_widget(page: Page, widget_id: int, size: tuple[int, int], min_size: tuple[int, int]) -> None:
+    """Give a single new widget a spot at the bottom of every breakpoint."""
+    placer = Placer(page)
+    placer.add(widget_id, size, min_size)
+    placer.finish()
 
 
 def remove_from_layouts(page: Page, widget_id: int) -> None:
@@ -214,6 +269,27 @@ class ImportError_(ValueError):
     pass
 
 
+#: What one import may bring in. A board nobody can read is not a board, and
+#: without a ceiling the only limit was the 2 MB request body.
+#:
+#: ⚠️ YAML anchors make the input tiny and the result enormous: a few hundred
+#: bytes can name the same card a thousand times over. The count has to happen
+#: on the parsed document, not on the length of the text.
+MAX_PAGES = 50
+MAX_WIDGETS = 300
+
+
+def _refuse_if_oversized(document: dict) -> None:
+    pages = document.get("pages")
+    if not isinstance(pages, list):
+        return
+    if len(pages) > MAX_PAGES:
+        raise ImportError_(f"This file has {len(pages)} pages; at most {MAX_PAGES} are imported at once.")
+    cards = sum(len(page.get("widgets") or []) for page in pages if isinstance(page, dict) and isinstance(page.get("widgets"), list))
+    if cards > MAX_WIDGETS:
+        raise ImportError_(f"This file has {cards} cards; at most {MAX_WIDGETS} are imported at once.")
+
+
 def import_board(
     db: Session,
     text: str,
@@ -250,6 +326,7 @@ def import_board(
         raise ImportError_(f"The file is not valid YAML: {error}") from error
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
+    _refuse_if_oversized(document)
     meta = document.get("board") or {}
     name = str(meta.get("name") or "Imported board")
     # Integrations: matched by name, created when missing.
@@ -304,6 +381,7 @@ def import_board(
         page = Page(board_id=board.id, name=str(page_doc.get("name") or f"Page {position + 1}"), slug=slugify(str(page_doc.get("slug") or page_doc.get("name") or f"page-{position + 1}")), icon=str(page_doc.get("icon") or ""), position=position, layouts={key: [] for key in COLUMNS})
         db.add(page)
         db.flush()
+        placer = Placer(page)
         for widget_doc in page_doc.get("widgets") or []:
             kind = str(widget_doc.get("kind") or "")
             try:
@@ -319,16 +397,15 @@ def import_board(
             db.flush()
             layout = widget_doc.get("layout") or {}
             if layout:
-                layouts = dict(page.layouts or {})
+                spots = {}
                 for key in COLUMNS:
                     item = layout.get(key) or layout.get("lg") or {}
-                    entries = list(layouts.get(key) or [])
-                    entries.append({"i": str(widget.id), "x": int(item.get("x", 0)), "y": int(item.get("y", 0)), "w": min(COLUMNS[key], int(item.get("w", widget_type.default_size[0]))), "h": int(item.get("h", widget_type.default_size[1]))})
-                    layouts[key] = entries
-                page.layouts = layouts
+                    spots[key] = {"x": int(item.get("x", 0)), "y": int(item.get("y", 0)), "w": min(COLUMNS[key], int(item.get("w", widget_type.default_size[0]))), "h": int(item.get("h", widget_type.default_size[1]))}
+                placer.add_at(widget.id, spots)
             else:
-                place_widget(page, widget.id, widget_type.default_size, widget_type.min_size)
+                placer.add(widget.id, widget_type.default_size, widget_type.min_size)
             health_service.ensure_check_for_widget(db, widget)
+        placer.finish()
     if not document.get("pages"):
         db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))
     db.flush()

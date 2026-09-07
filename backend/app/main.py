@@ -8,6 +8,7 @@ import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import anyio.to_thread
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -73,6 +74,11 @@ async def lifespan(app: FastAPI):
     # a machine whose container log had rotated away.
     journal.setup()
     set_main_loop(asyncio.get_running_loop())
+    # Synchronous routes run here, and each one holds a database connection
+    # while it does. Keeping the number below the pool means a request waits
+    # for a thread, where waiting is normal, instead of waiting for a
+    # connection, where it ends in a 500 after thirty seconds.
+    anyio.to_thread.current_default_thread_limiter().total_tokens = get_settings().request_threads
     get_engine()
     migrate()
     with db_session() as db:
