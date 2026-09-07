@@ -547,7 +547,8 @@
     "deletePageBody": "Its {{count}} cards go with it, including their history.",
     "lastPage": "A board keeps at least one page.",
     "moveUp": "Move {{name}} up",
-    "moveDown": "Move {{name}} down"
+    "moveDown": "Move {{name}} down",
+    "moveWith": "Move {{name}} with the arrow keys, resize with Shift and an arrow"
   },
   "widget": {
     "remove": {
@@ -649,7 +650,8 @@
     "waiting": "type what to search for"
   },
   "kiosk": {
-    "invalid": "This kiosk link is not valid any more."
+    "invalid": "This kiosk link is not valid any more.",
+    "pages": "Pages"
   },
   "whatsnew": {
     "title": "What's new",
@@ -809,5 +811,12 @@
       "noKeyAtAll": "There is no key in this archive and none in the environment here. nexdeck will make a new one, and no stored credential will be readable afterwards. Every connection would have to be entered again.",
       "envKeyWins": "This archive brings a key, but NEXDECK_SECRET_KEY is set here and wins. The credentials stay unreadable unless the variable holds the same value."
     }
+  },
+  "nav": {
+    "boards": "Boards",
+    "pages": "Pages",
+    "search": "Search",
+    "notices": "Notices",
+    "more": "More"
   }
 }

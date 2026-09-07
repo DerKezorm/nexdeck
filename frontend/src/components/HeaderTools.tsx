@@ -19,7 +19,7 @@ interface Props {
 
 const PILL = 'flex items-center rounded-full border border-line bg-bg/40 p-0.5'
 const SEGMENT = 'rounded-full transition-colors'
-const ACTIVE = 'bg-accent text-[#041016]'
+const ACTIVE = 'bg-accent text-on-accent'
 const IDLE = 'text-muted hover:text-ink'
 
 /** Unread notices. The number sits on the bell, so it is seen without opening anything. */
@@ -35,7 +35,7 @@ function NoticeButton({ unread, onClick }: { unread: number; onClick: () => void
     >
       <Bell size={15} />
       {unread > 0 && (
-        <span className="num absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-[#041016]">
+        <span className="num absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-on-accent">
           {unread > 9 ? '9+' : unread}
         </span>
       )}

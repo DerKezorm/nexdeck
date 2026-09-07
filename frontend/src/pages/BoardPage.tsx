@@ -332,16 +332,21 @@ export function BoardPage() {
         />
       </main>
 
+      {/* ⚠️ Four buttons with their words in a row that cannot wrap: on a
+          phone the bar was wider than the screen, so the Done button sat off
+          the edge and there was no way out of edit mode. Below `sm` the words
+          step aside and the icons carry the meaning, with the name on the
+          button for anything that reads it out. */}
       {editing && (
-        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
-          <button className="btn border-0 bg-transparent" onClick={() => setLibrary(true)}>
-            <Plus size={15} /> {t('board.addWidget')}
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
+          <button className="btn border-0 bg-transparent" onClick={() => setLibrary(true)} aria-label={t('board.addWidget')}>
+            <Plus size={15} /> <span className="hidden sm:inline">{t('board.addWidget')}</span>
           </button>
-          <button className="btn border-0 bg-transparent" onClick={() => setNewPage(true)}>
-            <Plus size={15} /> {t('board.addPage')}
+          <button className="btn border-0 bg-transparent" onClick={() => setNewPage(true)} aria-label={t('board.addPage')}>
+            <Plus size={15} /> <span className="hidden sm:inline">{t('board.addPage')}</span>
           </button>
-          <button className="btn border-0 bg-transparent" onClick={() => setBoardSettings(true)}>
-            <Settings2 size={15} /> {t('board.settings')}
+          <button className="btn border-0 bg-transparent" onClick={() => setBoardSettings(true)} aria-label={t('board.settings')}>
+            <Settings2 size={15} /> <span className="hidden sm:inline">{t('board.settings')}</span>
           </button>
           <button className="btn btn-accent rounded-full" onClick={() => setEditing(false)}>
             <Check size={15} /> {t('common.done')}
@@ -360,6 +365,9 @@ export function BoardPage() {
         onNotices={() => openNotices(true)}
         onMenu={() => navigate('/settings')}
         unread={unread}
+        pages={pages.map((page) => ({ id: page.id, name: page.name, slug: page.slug }))}
+        activePage={activePage.slug}
+        onPage={(slug) => navigate(`/b/${data.slug}/${slug}`)}
       />
 
       <WidgetLibrary

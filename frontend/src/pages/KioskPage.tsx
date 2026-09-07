@@ -119,12 +119,27 @@ export function KioskPage() {
   return (
     <div className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
       <BackgroundLayer background={data.background} />
+      {/* ⚠️ Not aria-hidden. These are the only way to change page on a
+          display with a touchscreen, and hiding a container that holds
+          focusable buttons is explicitly not allowed: a screen reader
+          announces nothing and the keyboard still lands on them. They were
+          also 8 px across and nameless. */}
       {data.pages.length > 1 && (
-        <div className="fixed top-3 right-4 z-40 flex gap-1.5" aria-hidden="true">
+        <nav className="fixed top-3 right-4 z-40 flex gap-1.5" aria-label={t('kiosk.pages')}>
           {data.pages.map((p, i) => (
-            <button key={p.id} className={`w-2 h-2 rounded-full ${i === pageIndex % data.pages.length ? 'bg-accent' : 'bg-faint/50'}`} onClick={() => setPageIndex(i)} />
+            <button
+              key={p.id}
+              // The dot stays 8 px; the target around it is 32, which is what
+              // a finger needs and what a focus ring can be seen on.
+              className="grid place-items-center w-8 h-8 rounded-full focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => setPageIndex(i)}
+              aria-label={p.name}
+              aria-current={i === pageIndex % data.pages.length ? 'page' : undefined}
+            >
+              <span className={`block w-2 h-2 rounded-full ${i === pageIndex % data.pages.length ? 'bg-accent' : 'bg-faint/50'}`} />
+            </button>
           ))}
-        </div>
+        </nav>
       )}
       <main className="max-w-[1800px] mx-auto px-4 pt-4 pb-6">
         <BoardGrid

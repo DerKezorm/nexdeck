@@ -1,4 +1,5 @@
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, type KeyboardEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -31,8 +32,25 @@ interface Props {
 }
 
 /** The board: a responsive grid with one layout per form factor. */
+/** One press of an arrow key: one cell, or one cell of size with Shift. */
+function moved(item: LayoutItem, key: string, resize: boolean, cols: number, floor: [number, number]): LayoutItem | null {
+  const step: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
+  const move = step[key]
+  if (!move) return null
+  const [dx, dy] = move
+  if (resize) {
+    const w = Math.min(cols, Math.max(floor[0], item.w + dx))
+    const h = Math.max(floor[1], item.h + dy)
+    return w === item.w && h === item.h ? null : { ...item, w, h }
+  }
+  const x = Math.max(0, Math.min(cols - item.w, item.x + dx))
+  const y = Math.max(0, item.y + dy)
+  return x === item.x && y === item.y ? null : { ...item, x, y }
+}
+
 export function BoardGrid(props: Props) {
   const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact } = props
+  const { t } = useTranslation()
   // ⚠️ Three full layouts, rebuilt from scratch. Without the memo this ran on
   // every widget tick, once or twice a second on a board of thirty, and handed
   // react-grid-layout a new object identity each time.
@@ -44,6 +62,31 @@ export function BoardGrid(props: Props) {
     }),
     [layouts, widgets],
   )
+  /**
+   * Move or resize the focused card with the arrow keys.
+   *
+   * Every breakpoint is changed at once, the way a drag does, so a card does
+   * not walk out of step between the phone and the desktop layouts.
+   */
+  const nudge = (event: KeyboardEvent<HTMLDivElement>, widget: WidgetView) => {
+    if (!onLayoutChange || event.altKey || event.ctrlKey || event.metaKey) return
+    if (!event.key.startsWith('Arrow')) return
+    // Only when the card itself has the focus, not something inside it.
+    if (event.target !== event.currentTarget) return
+    event.preventDefault()
+    for (const [key, cols] of Object.entries(COLUMNS) as [Breakpoint, number][]) {
+      const current = gridLayouts[key] ?? []
+      const item = current.find((one) => one.i === String(widget.id))
+      if (!item) continue
+      const next = moved(item as LayoutItem, event.key, event.shiftKey, cols, floorOf(widget, cols))
+      if (!next) continue
+      onLayoutChange(
+        key,
+        current.map((one) => (one.i === next.i ? next : ({ i: one.i, x: one.x, y: one.y, w: one.w, h: one.h } as LayoutItem))),
+      )
+    }
+  }
+
   return (
     <ResponsiveGrid
       className={`board ${editing ? 'board-editing' : ''}`}
@@ -73,7 +116,19 @@ export function BoardGrid(props: Props) {
       }}
     >
       {widgets.map((widget) => (
-        <div key={String(widget.id)}>
+        <div
+          key={String(widget.id)}
+          // ⚠️ The keyboard way round the grid. react-grid-layout 1.5.2 listens
+          // to pointer and touch events and nothing else, so a board could be
+          // arranged with a mouse and by no other means: not by keyboard, not
+          // by a switch, not by voice control that drives the keyboard. The
+          // grid itself never learns about this; the layout is ours to change,
+          // and the same save path runs as after a drag.
+          tabIndex={editing ? 0 : undefined}
+          role={editing ? 'application' : undefined}
+          aria-label={editing ? t('board.moveWith', { name: widget.title || widget.kind }) : undefined}
+          onKeyDown={editing ? (event) => nudge(event, widget) : undefined}
+        >
           <GridCard
             widget={widget}
             data={data[widget.id]}

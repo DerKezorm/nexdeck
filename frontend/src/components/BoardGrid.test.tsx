@@ -3,7 +3,7 @@
  * still usable at. Saved layouts below that floor are lifted, and the floor
  * never exceeds the columns of the form factor.
  */
-import type { WidgetView } from '../lib/types'
+import type { LayoutItem, WidgetView } from '../lib/types'
 import { layoutFor } from './BoardGrid'
 
 function widget(id: number, size: [number, number], min?: [number, number]): WidgetView {
@@ -59,6 +59,7 @@ describe('layoutFor', () => {
  * made closures on every render, which defeats a memo. So this test counts.
  */
 import { render } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 
 import type { WidgetData } from '../lib/types'
@@ -92,5 +93,90 @@ describe('a board that redraws', () => {
     // reference it was, which is what a live update looks like.
     view.rerender(<BoardGrid {...props} data={{ ...data, 7: { status: 'ok' } as WidgetData }} />)
     expect(drawn.mock.calls.map(([id]) => id)).toEqual([7])
+  })
+})
+
+/**
+ * A board can be arranged without a mouse.
+ *
+ * ⚠️ react-grid-layout 1.5.2 listens to pointer and touch events and nothing
+ * else, so until now a board could be arranged with a mouse and by no other
+ * means: not by keyboard, not by a switch, not by voice control that drives
+ * the keyboard. The grid never learns about this; the layout is ours.
+ */
+describe('arranging with the keyboard', () => {
+  function board(saved: (bp: string, layout: LayoutItem[]) => void) {
+    const widgets = [widget(1, [2, 2]), widget(2, [2, 2])]
+    const layouts = {
+      lg: [{ i: '1', x: 3, y: 1, w: 2, h: 2 }, { i: '2', x: 6, y: 1, w: 2, h: 2 }],
+      md: [{ i: '1', x: 3, y: 1, w: 2, h: 2 }, { i: '2', x: 6, y: 1, w: 2, h: 2 }],
+      sm: [{ i: '1', x: 0, y: 1, w: 2, h: 2 }, { i: '2', x: 2, y: 1, w: 2, h: 2 }],
+    }
+    return render(
+      <BoardGrid
+        {...({ widgets, layouts, data: {}, editing: true, canAct: true, autoCompact: false, onLayoutChange: saved } as unknown as Parameters<typeof BoardGrid>[0])}
+      />,
+    )
+  }
+
+  it('moves the focused card one cell per arrow press', async () => {
+    const saved = vi.fn()
+    const view = board(saved)
+    const card = view.container.querySelectorAll('[tabindex="0"]')[0] as HTMLElement
+    expect(card, 'no card can take the focus, so this test proves nothing').toBeTruthy()
+
+    card.focus()
+    await userEvent.keyboard('{ArrowRight}')
+
+    const lg = saved.mock.calls.find(([bp]) => bp === 'lg')
+    expect(lg, 'nothing was saved').toBeTruthy()
+    expect((lg![1] as LayoutItem[]).find((item) => item.i === '1')?.x).toBe(4)
+    // Every breakpoint moves, the way a drag moves them.
+    expect(saved.mock.calls.map(([bp]) => bp).sort()).toEqual(['lg', 'md', 'sm'])
+  })
+
+  it('resizes with Shift and stops at the card floor', async () => {
+    const saved = vi.fn()
+    const view = board(saved)
+    const card = view.container.querySelectorAll('[tabindex="0"]')[0] as HTMLElement
+    card.focus()
+    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}')
+    const lg = saved.mock.calls.find(([bp]) => bp === 'lg')
+    expect((lg![1] as LayoutItem[]).find((item) => item.i === '1')?.h).toBe(3)
+
+    saved.mockClear()
+    // Left at the edge of the board: nothing to save, so nothing is sent.
+    card.focus()
+    await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}{Shift>}{ArrowLeft}{/Shift}{Shift>}{ArrowLeft}{/Shift}')
+    const shrunk = saved.mock.calls.filter(([bp]) => bp === 'lg')
+    expect(shrunk.length).toBeLessThan(3)
+  })
+
+  it('leaves a modified arrow to the browser', async () => {
+    // Ctrl and Alt with an arrow belong to the browser and the window manager:
+    // word-wise movement, workspace switching. Taking those would cost more
+    // than arranging a card is worth.
+    const saved = vi.fn()
+    const view = board(saved)
+    const card = view.container.querySelectorAll('[tabindex="0"]')[0] as HTMLElement
+    card.focus()
+    await userEvent.keyboard('{Control>}{ArrowRight}{/Control}')
+    await userEvent.keyboard('{Alt>}{ArrowRight}{/Alt}')
+    expect(saved).not.toHaveBeenCalled()
+  })
+
+  it('leaves the keyboard alone when the board is not being edited', async () => {
+    const saved = vi.fn()
+    render(
+      <BoardGrid
+        {...({
+          widgets: [widget(1, [2, 2])],
+          layouts: { lg: [{ i: '1', x: 3, y: 1, w: 2, h: 2 }], md: [], sm: [] },
+          data: {}, editing: false, canAct: true, autoCompact: false, onLayoutChange: saved,
+        } as unknown as Parameters<typeof BoardGrid>[0])}
+      />,
+    )
+    await userEvent.keyboard('{ArrowRight}')
+    expect(saved).not.toHaveBeenCalled()
   })
 })

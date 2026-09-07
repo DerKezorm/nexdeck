@@ -547,7 +547,8 @@
     "deletePageBody": "Ihre {{count}} Karten gehen mit, samt Verlauf.",
     "lastPage": "Ein Board behält mindestens eine Seite.",
     "moveUp": "{{name}} nach oben",
-    "moveDown": "{{name}} nach unten"
+    "moveDown": "{{name}} nach unten",
+    "moveWith": "{{name}} mit den Pfeiltasten verschieben, mit Umschalt und Pfeil in der Größe ändern"
   },
   "widget": {
     "remove": {
@@ -649,7 +650,8 @@
     "waiting": "Suchbegriff eingeben"
   },
   "kiosk": {
-    "invalid": "Dieser Kiosk-Link gilt nicht mehr."
+    "invalid": "Dieser Kiosk-Link gilt nicht mehr.",
+    "pages": "Seiten"
   },
   "whatsnew": {
     "title": "Was ist neu",
@@ -809,5 +811,12 @@
       "noKeyAtAll": "In diesem Archiv liegt kein Schlüssel, und hier steht auch keiner in der Umgebung. nexdeck erzeugt dann einen neuen, und danach ist kein gespeicherter Zugang mehr lesbar. Jede Anbindung müsste neu eingetragen werden.",
       "envKeyWins": "Dieses Archiv bringt einen Schlüssel mit, aber hier ist NEXDECK_SECRET_KEY gesetzt und gewinnt. Die Zugänge bleiben unlesbar, wenn dort nicht derselbe Wert steht."
     }
+  },
+  "nav": {
+    "boards": "Boards",
+    "pages": "Seiten",
+    "search": "Suche",
+    "notices": "Hinweise",
+    "more": "Mehr"
   }
 }
