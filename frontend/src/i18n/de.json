@@ -377,10 +377,21 @@
     "enable": "Freigeben",
     "disable": "Sperren",
     "remove": "{{name}} löschen?",
-    "removeBody": "Die Boards bleiben und verlieren ihren Besitzer.",
+    "removeBody": "Das Konto ist danach weg und kommt nicht zurück.",
     "setPassword": "Passwort",
     "setPasswordFor": "Neues Passwort für {{name}}",
-    "setPasswordHelp": "Wird ohne das alte gesetzt. Danach ist jede Sitzung dieses Kontos abgemeldet, sag ihm also das neue Passwort."
+    "setPasswordHelp": "Wird ohne das alte gesetzt. Danach ist jede Sitzung dieses Kontos abgemeldet, sag ihm also das neue Passwort.",
+    "removeOwns_one": "{{count}} Board gehört diesem Konto ({{boards}}). Entscheide, was damit passiert.",
+    "removeOwns_other": "{{count}} Boards gehören diesem Konto ({{boards}}). Entscheide, was damit passiert.",
+    "removeHandOver": "Mir überschreiben",
+    "removeBoardsToo": "Mitlöschen",
+    "removeAlso": "Am Konto hängt außerdem: {{what}}. Das geht mit.",
+    "removeKiosk_one": "{{count}} Kiosk-Link",
+    "removeKiosk_other": "{{count}} Kiosk-Links",
+    "removeTokens_one": "{{count}} API-Token",
+    "removeTokens_other": "{{count}} API-Token",
+    "removeChannels_one": "{{count}} Benachrichtigungskanal",
+    "removeChannels_other": "{{count}} Benachrichtigungskanäle"
   },
   "channels": {
     "push": "Web Push auf diesem Gerät",

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
 import type { User } from '../../api/types'
+
+type Belongings = { boards: { slug: string; name: string }[]; kiosk_tokens: number; api_tokens: number; channels: number }
 import { Avatar } from '../../components/Avatar'
 import { Confirm, Dialog, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
@@ -16,6 +18,15 @@ export function UsersSettings() {
   const users = useQuery({ queryKey: ['users-admin'], queryFn: () => get<User[]>('/users') })
   const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user' })
   const [removing, setRemoving] = useState<User | null>(null)
+  // ⚠️ What hangs off the account, asked for before the question is put, so
+  // the question can name it. A board whose owner is gone kept running and
+  // showed up in nobody's list, which is a thing you only notice by the load.
+  const [whatBecomesOfTheBoards, setWhatBecomesOfTheBoards] = useState('hand_over')
+  const belongings = useQuery({
+    queryKey: ['belongings', removing?.id],
+    queryFn: () => get<Belongings>(`/users/${removing?.id}/belongings`),
+    enabled: removing !== null,
+  })
   // Setting someone else's password: no old password needed, the
   // administrator is the way back in when a user has locked himself out.
   const [passwordFor, setPasswordFor] = useState<User | null>(null)
@@ -33,6 +44,12 @@ export function UsersSettings() {
       })
       .catch(fail)
   }
+  const owned = belongings.data?.boards ?? []
+  const alsoOnIt = [
+    belongings.data?.kiosk_tokens ? t('users.removeKiosk', { count: belongings.data.kiosk_tokens }) : '',
+    belongings.data?.api_tokens ? t('users.removeTokens', { count: belongings.data.api_tokens }) : '',
+    belongings.data?.channels ? t('users.removeChannels', { count: belongings.data.channels }) : '',
+  ].filter(Boolean)
   return (
     <>
       <SettingsCard title={t('settings.security.title')} description={t('settings.security.help')}>
@@ -72,7 +89,7 @@ export function UsersSettings() {
                   <button className="btn h-8 text-xs" onClick={() => void patch(`/users/${user.id}`, { disabled: !user.disabled }).then(() => users.refetch()).catch(fail)}>
                     {user.disabled ? t('users.enable') : t('users.disable')}
                   </button>
-                  <button className="btn btn-icon h-8 w-8 btn-danger" onClick={() => setRemoving(user)} aria-label={t('common.delete')}>
+                  <button className="btn btn-icon h-8 w-8 btn-danger" onClick={() => { setWhatBecomesOfTheBoards('hand_over'); setRemoving(user) }} aria-label={t('common.delete')}>
                     <Trash2 size={14} />
                   </button>
                 </>
@@ -158,10 +175,26 @@ export function UsersSettings() {
         onCancel={() => setRemoving(null)}
         onConfirm={() => {
           const target = removing
+          const decision = owned.length > 0 ? `?boards=${whatBecomesOfTheBoards}` : ''
           setRemoving(null)
-          if (target) void del(`/users/${target.id}`).then(() => users.refetch()).catch(fail)
+          if (target) void del(`/users/${target.id}${decision}`).then(() => users.refetch()).catch(fail)
         }}
-      />
+      >
+        {owned.length > 0 && (
+          <div className="mt-3 grid gap-2">
+            <p className="text-sm">{t('users.removeOwns', { count: owned.length, boards: owned.map((b) => b.name).join(', ') })}</p>
+            <Select
+              value={whatBecomesOfTheBoards}
+              onChange={setWhatBecomesOfTheBoards}
+              options={[
+                { value: 'hand_over', label: t('users.removeHandOver') },
+                { value: 'delete', label: t('users.removeBoardsToo') },
+              ]}
+            />
+          </div>
+        )}
+        {alsoOnIt.length > 0 && <p className="text-[11px] text-faint mt-2">{t('users.removeAlso', { what: alsoOnIt.join(', ') })}</p>}
+      </Confirm>
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>
           {toast.text}

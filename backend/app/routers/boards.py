@@ -24,7 +24,7 @@ from ..deps import (
     require_board_id,
     usable_token,
 )
-from ..models import Board, BoardShare, KioskToken, Page, Role, Widget, utcnow
+from ..models import Board, BoardShare, KioskToken, Page, Role, User, Widget, utcnow
 from ..schemas import (
     BoardCreate,
     BoardOrder,
@@ -39,6 +39,7 @@ from ..schemas import (
 )
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
+from ..services import history
 from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
@@ -176,7 +177,16 @@ def patch_board(slug: str, body: BoardPatch, user: CurrentUser, db: DbSession) -
     if body.in_menu is not None:
         board.in_menu = body.in_menu
     if body.owner_id is not None and permission == "owner":
-        board.owner_id = body.owner_id
+        # ⚠️ Checked, because BoardPatch.owner_id is a bare int. A board could
+        # be pushed onto an account that does not exist, is switched off, or is
+        # a guest, and a guest may not own one: it would show up in a list
+        # nobody can act on and belong to nobody who can fix it.
+        new_owner = db.get(User, body.owner_id)
+        if new_owner is None or new_owner.disabled:
+            raise error("no_such_owner", "There is no such account to give the board to.", status.HTTP_404_NOT_FOUND)
+        if new_owner.role == Role.guest.value:
+            raise error("guest_owner", "A guest may only look, so a board cannot belong to one.")
+        board.owner_id = new_owner.id
     db.commit()
     _announce(board.id)
     return board_view(db, board, permission)
@@ -209,10 +219,14 @@ def order_boards(body: BoardOrder, user: CurrentUser, db: DbSession) -> list[dic
 
     for index, slug in enumerate(wanted):
         boards[slug].position = index
-    # Anything not named keeps its place behind the named ones, in the order
-    # it already had. A board somebody else owns must not jump to the front
-    # because a user who cannot see it never sent its name.
-    rest = sorted((board for slug, board in boards.items() if slug not in wanted),
+    # ⚠️ Only boards this person can see. "Anything not named" used to mean
+    # every board of the installation, so one member tidying their own menu
+    # renumbered everybody else's, and the check above only covered the slugs
+    # they had sent. Positions are a sort key, not an identity; where two land
+    # on the same number the id decides, which is what happened before anybody
+    # ever pressed this.
+    rest = sorted((board for slug, board in boards.items()
+                   if slug not in wanted and board_permission(db, board, user) is not None),
                   key=lambda board: (board.position, board.id))
     for offset, board in enumerate(rest):
         board.position = len(wanted) + offset
@@ -228,6 +242,12 @@ def delete_board(slug: str, user: CurrentUser, db: DbSession) -> None:
         raise error("forbidden", "Only the owner or an administrator may delete a board.", status.HTTP_403_FORBIDDEN)
     widget_ids = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
     name = board.name
+    # ⚠️ The history goes with them. Deleting a single card has always called
+    # this; deleting the board around it never did, and SQLite hands out the
+    # numbers of deleted rows again, so the next card created inherited a
+    # stranger's measurements and drew a sparkline out of them.
+    for widget_id in widget_ids:
+        history.forget_widget(db, widget_id)
     db.delete(board)
     db.commit()
     logger.info("Board %r deleted by %s, with %d card(s) on it.", name, user.username, len(widget_ids))

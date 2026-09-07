@@ -38,6 +38,22 @@ def load_all() -> None:
     _remove_orphans()
 
 
+def _give_up_on(path: Path, reason: str) -> None:
+    """Say it once and remember, instead of once every ten seconds.
+
+    ⚠️ The modification time was only remembered after a successful import, so
+    a file that could not be loaded was tried again on every pass of the watch
+    and wrote another line each time. A log that repeats the same failure
+    hundreds of times a day is a log nobody reads.
+    """
+    if _seen.get(path.name) != path.stat().st_mtime:
+        logger.warning("Board file %s was not loaded: %s", path.name, reason)
+    try:
+        _seen[path.name] = path.stat().st_mtime
+    except OSError:
+        pass
+
+
 def _load(path: Path) -> None:
     from .collector import collector
 
@@ -54,7 +70,18 @@ def _load(path: Path) -> None:
                                  # environment and set up the connections it names.
                                  trusted=True, allow_locked=True)
         except ImportError_ as error:
-            logger.warning("Board file %s was not loaded: %s", path.name, error)
+            _give_up_on(path, str(error))
+            return
+        except Exception:
+            # ⚠️ Anything at all, and the reason is the start-up path. ``_load``
+            # runs from ``load_all()`` inside the lifespan, so an AttributeError
+            # from a file whose 'board' section is a string took uvicorn down
+            # with it. The container then restarts and falls over again, the
+            # interface never answers, and nobody can sign in to remove the
+            # file: only access to the host helps. One bad file is one board
+            # missing, and nothing else.
+            logger.exception("Board file %s could not be loaded.", path.name)
+            _give_up_on(path, "see the log for the reason")
             return
         board.provisioned = True
         board.source_file = path.name

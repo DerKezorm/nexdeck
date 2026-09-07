@@ -73,7 +73,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   )
 }
 
-export function Confirm({ open, title, body, danger, onCancel, onConfirm, confirmLabel }: { open: boolean; title: string; body?: string; danger?: boolean; onCancel: () => void; onConfirm: () => void; confirmLabel?: string }) {
+export function Confirm({ open, title, body, danger, onCancel, onConfirm, confirmLabel, children }: { open: boolean; title: string; body?: string; danger?: boolean; onCancel: () => void; onConfirm: () => void; confirmLabel?: string; children?: ReactNode }) {
   const { t } = useTranslation()
   return (
     <Dialog
@@ -93,6 +93,7 @@ export function Confirm({ open, title, body, danger, onCancel, onConfirm, confir
       }
     >
       {body && <p className="text-sm text-muted">{body}</p>}
+      {children}
     </Dialog>
   )
 }

@@ -22,13 +22,12 @@ from ..deps import (
     error,
     kiosk_from_request,
     require_board_id,
-    require_integration,
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
 from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
 from ..services import health as health_service
 from ..services import history
-from ..services.boards import place_widget, remove_from_layouts, widget_view
+from ..services.boards import _validate_options, place_widget, remove_from_layouts, widget_view
 from ..services.collector import collector
 from ..services.hass_ws import hass_listener
 from ..services.notify import emit
@@ -65,31 +64,6 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None, user: U
         # An app tile may follow any service; every other widget needs its own kind.
         if integration.kind != adapter.kind and kind != "core.app":
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
-
-
-def _validate_options(db: DbSession, kind: str, options: dict | None, user: User | None) -> None:
-    """Check every option that names a connection.
-
-    ⚠️ ``integration_id`` was checked from the start and the options were not.
-    The merged calendar keeps its sources in one, so a member could write the
-    number of a connection reserved for administrators into it and read its
-    release calendar. The same check now covers both.
-    """
-    if not options:
-        return
-    adapter, widget_kind = split_widget_kind(kind)
-    for field in adapter.widget(widget_kind).options:
-        if field.type != "integrations":
-            continue
-        allowed = {value for value, _label in field.options}
-        for entry in options.get(field.name) or []:
-            try:
-                integration_id = int(entry)
-            except (TypeError, ValueError):
-                raise error("bad_source", f"{entry!r} is not a connection.") from None
-            integration = require_integration(db, integration_id, user)
-            if allowed and integration.kind not in allowed:
-                raise error("bad_source", f"A {integration.kind} connection cannot be a source here.")
 
 
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")

@@ -6,10 +6,12 @@ import re
 from typing import Any
 
 import yaml
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..adapters import get_adapter, split_widget_kind
+from ..deps import error, require_integration
 from ..models import Board, Integration, Page, User, Widget
 from . import health as health_service
 from .integrations import export_config, store_config
@@ -276,6 +278,36 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
     return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
 
 
+def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
+    """Check every option that names a connection.
+
+    ⚠️ ``integration_id`` was checked from the start and the options were not.
+    The merged calendar keeps its sources in one, so a member could write the
+    number of a connection reserved for administrators into it and read its
+    release calendar. The same check now covers both.
+    """
+    if not options:
+        return
+    adapter, widget_kind = split_widget_kind(kind)
+    for field in adapter.widget(widget_kind).options:
+        if field.type != "integrations":
+            continue
+        allowed = {value for value, _label in field.options}
+        for entry in options.get(field.name) or []:
+            try:
+                integration_id = int(entry)
+            except (TypeError, ValueError):
+                raise error("bad_source", f"{entry!r} is not a connection.") from None
+            integration = require_integration(db, integration_id, user)
+            if allowed and integration.kind not in allowed:
+                raise error("bad_source", f"A {integration.kind} connection cannot be a source here.")
+
+
+def _user_of(db: Session, owner_id: int | None) -> User | None:
+    """Whose rights the import runs with. A file on the server has none."""
+    return db.get(User, owner_id) if owner_id else None
+
+
 class ImportError_(ValueError):
     pass
 
@@ -288,6 +320,58 @@ class ImportError_(ValueError):
 #: on the parsed document, not on the length of the text.
 MAX_PAGES = 50
 MAX_WIDGETS = 300
+
+
+def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, allow_locked: bool) -> None:
+    """Every objection raised before anything is touched.
+
+    ⚠️ The order used to be the other way round. Replacing a board deleted all
+    its pages and only then looked at the widget kinds, so a file with one
+    unknown kind emptied the board and wrote that down. Under provisioning it
+    did so every ten seconds.
+
+    ⚠️ And it is where the checks the API has always made finally reach the
+    import. Naming a connection reserved for administrators is refused when a
+    card is created, changed or previewed, and three tests say so, but
+    ``import_board`` never called any of it: the same options went through as
+    YAML. An interval was taken as it came, so a card could arrive with the
+    text "abc" in a column SQLite is happy to keep and no way to fix it in the
+    interface.
+    """
+    meta = document.get("board")
+    if meta is not None and not isinstance(meta, dict):
+        raise ImportError_("The 'board' section has to be a mapping of name, icon and settings.")
+    pages = document.get("pages")
+    if pages is not None and not isinstance(pages, list):
+        raise ImportError_("'pages' has to be a list.")
+    for position, page_doc in enumerate(pages or [], start=1):
+        if not isinstance(page_doc, dict):
+            raise ImportError_(f"Page {position} has to be a mapping.")
+        widgets = page_doc.get("widgets")
+        if widgets is not None and not isinstance(widgets, list):
+            raise ImportError_(f"The widgets of page {position} have to be a list.")
+        for number, widget_doc in enumerate(widgets or [], start=1):
+            where = f"card {number} on page {position}"
+            if not isinstance(widget_doc, dict):
+                raise ImportError_(f"{where.capitalize()} has to be a mapping.")
+            kind = str(widget_doc.get("kind") or "")
+            try:
+                adapter, widget_kind = split_widget_kind(kind)
+                adapter.widget(widget_kind)
+            except KeyError as unknown:
+                raise ImportError_(f"Unknown widget kind {kind!r} in {where}.") from unknown
+            options = widget_doc.get("options")
+            if options is not None and not isinstance(options, dict):
+                raise ImportError_(f"The options of {where} have to be a mapping.")
+            every = widget_doc.get("refresh_seconds")
+            if every is not None and (not isinstance(every, int) or isinstance(every, bool) or not 5 <= every <= 86400):
+                raise ImportError_(f"The refresh interval of {where} has to be a whole number of seconds between 5 and 86400.")
+            if not allow_locked:
+                try:
+                    _validate_options(db, kind, options, user)
+                except HTTPException as refused:
+                    detail = refused.detail if isinstance(refused.detail, dict) else {}
+                    raise ImportError_(f"{where.capitalize()}: {detail.get('message', 'this option is not allowed')}") from refused
 
 
 def _refuse_if_oversized(document: dict) -> None:
@@ -338,6 +422,7 @@ def import_board(
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
     _refuse_if_oversized(document)
+    _read_the_whole_thing_first(db, document, _user_of(db, owner_id), allow_locked)
     meta = document.get("board") or {}
     name = str(meta.get("name") or "Imported board")
     # Integrations: matched by name, created when missing.

@@ -8,10 +8,11 @@ from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
 
 from ..deps import AdminUser, CurrentUser, DbSession, error
-from ..models import Role, User
+from ..models import ApiToken, Board, KioskToken, NotificationChannel, Page, Role, User, Widget
 from ..schemas import UserCreate, UserPatch, UserPublic
 from ..security import hash_password, now_ms
-from ..services import avatars
+from ..services import avatars, history
+from ..services.collector import collector
 from .auth import user_public
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
@@ -79,8 +80,23 @@ def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -
     return user_public(user)
 
 
+@router.get("/{user_id}/belongings", summary="What hangs off an account")
+def belongings(user_id: int, admin: AdminUser, db: DbSession) -> dict:
+    """So the question before deleting can name what is at stake."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise error("not_found", "There is no such user.", status.HTTP_404_NOT_FOUND)
+    owned = list(db.scalars(select(Board).where(Board.owner_id == user.id)))
+    return {
+        "boards": [{"slug": board.slug, "name": board.name} for board in owned],
+        "kiosk_tokens": int(db.scalar(select(func.count(KioskToken.id)).join(Board, KioskToken.board_id == Board.id).where(Board.owner_id == user.id)) or 0),
+        "api_tokens": int(db.scalar(select(func.count(ApiToken.id)).where(ApiToken.user_id == user.id, ApiToken.revoked.is_(False))) or 0),
+        "channels": int(db.scalar(select(func.count(NotificationChannel.id)).where(NotificationChannel.user_id == user.id)) or 0),
+    }
+
+
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a user")
-def delete_user(user_id: int, admin: AdminUser, db: DbSession) -> None:
+def delete_user(user_id: int, admin: AdminUser, db: DbSession, boards: str = "") -> None:
     user = db.get(User, user_id)
     if user is None:
         raise error("not_found", "There is no such user.", status.HTTP_404_NOT_FOUND)
@@ -89,8 +105,37 @@ def delete_user(user_id: int, admin: AdminUser, db: DbSession) -> None:
     admins = db.scalar(select(func.count(User.id)).where(User.role == Role.admin.value, User.disabled.is_(False))) or 0
     if user.role == Role.admin.value and admins <= 1:
         raise error("last_admin", "The last administrator cannot be deleted.")
+    # ⚠️ The boards have to be decided about, not left behind. The foreign key
+    # sets owner_id to NULL and the board itself stays, so it kept running:
+    # every card kept asking its service, every kiosk link kept working, and it
+    # showed up in nobody's list, because "mine" was false for everyone and
+    # "shared" only true where a share existed. Nobody could find it to stop
+    # it. Decided on 07.09.2026: ask, rather than pick one silently.
+    theirs = list(db.scalars(select(Board).where(Board.owner_id == user.id)))
+    if theirs and boards not in ("delete", "hand_over"):
+        raise error(
+            "boards_undecided",
+            f"{user.username} still owns {len(theirs)} board(s). Say whether to delete them or hand them over.",
+            status.HTTP_409_CONFLICT,
+        )
+    orphaned: list[int] = []
+    for board in theirs:
+        if boards == "hand_over":
+            board.owner_id = admin.id
+            continue
+        widget_ids = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
+        for widget_id in widget_ids:
+            history.forget_widget(db, widget_id)
+        orphaned.extend(widget_ids)
+        db.delete(board)
+
     avatars.remove(user.avatar)
     name = user.username
     db.delete(user)
     db.commit()
-    logger.info("Account %r deleted by %s.", name, admin.username)
+    for widget_id in orphaned:
+        collector.unschedule(widget_id)
+    if boards == "hand_over":
+        logger.info("Account %r deleted by %s; %d board(s) handed over.", name, admin.username, len(theirs))
+    else:
+        logger.info("Account %r deleted by %s, with %d board(s).", name, admin.username, len(theirs))
