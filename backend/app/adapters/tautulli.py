@@ -24,6 +24,8 @@ from .base import (
 
 class TautulliAdapter(Adapter):
     kind = "tautulli"
+    #: Confirmed against a live instance on 2026-09-07.
+    beta = False
     label = "Tautulli"
     category = "media"
     description = "Streams with who is watching, library counts and the most watched titles."

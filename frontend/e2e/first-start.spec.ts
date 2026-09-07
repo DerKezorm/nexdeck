@@ -101,28 +101,50 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   // This one cannot be proved anywhere else: jsdom has no layout, so the
   // handler that asks where the rows are gets zeroes from every one of them
   // and the drag looks like it worked no matter what.
-  const second = await page.request.post('/api/v1/boards', { data: { name: 'Second board' }, headers: { 'X-Nexdeck-Request': '1' } })
-  expect(second.ok()).toBeTruthy()
+  for (const name of ['Second board', 'Third board']) {
+    const made = await page.request.post('/api/v1/boards', { data: { name }, headers: { 'X-Nexdeck-Request': '1' } })
+    expect(made.ok()).toBeTruthy()
+  }
   await page.goto('/settings/boards')
   const names = () => page.locator('ul > li a[href^="/b/"]').allTextContents()
-  await expect.poll(names).toHaveLength(2)
-  const wasOrdered = await names()
-
+  await expect.poll(names).toHaveLength(3)
   const handles = page.getByRole('button', { name: /Drag to move/ })
-  const lower = (await handles.nth(1).boundingBox())!
-  const upper = (await handles.nth(0).boundingBox())!
-  await page.mouse.move(lower.x + lower.width / 2, lower.y + lower.height / 2)
-  await page.mouse.down()
-  // In steps, because one jump can land outside every row and move nothing.
-  for (let step = 1; step <= 6; step += 1) {
-    await page.mouse.move(lower.x + lower.width / 2, lower.y + ((upper.y - lower.y) * step) / 6)
-  }
-  await page.mouse.up()
 
-  await expect.poll(names).toEqual([wasOrdered[1], wasOrdered[0]])
+  /** Drag the handle at `from` onto the row at `to`, in steps: one jump can
+      land between two rows and move nothing.
+
+      A few pixels past the target, in the direction of travel, because a
+      row's own middle is the boundary the drop decides on and stopping
+      exactly on it is a coin toss. That is where a hand lands too. */
+  const drag = async (from: number, to: number) => {
+    const grip = (await handles.nth(from).boundingBox())!
+    const onto = (await handles.nth(to).boundingBox())!
+    const middle = grip.y + grip.height / 2
+    const overshoot = to < from ? -10 : 10
+    const travel = onto.y - grip.y + overshoot
+    await page.mouse.move(grip.x + grip.width / 2, middle)
+    await page.mouse.down()
+    for (let step = 1; step <= 8; step += 1) {
+      await page.mouse.move(grip.x + grip.width / 2, middle + (travel * step) / 8)
+    }
+    await page.mouse.up()
+  }
+
+  const start = await names()
+  // Upwards: the last one to the top.
+  await drag(2, 0)
+  await expect.poll(names).toEqual([start[2], start[0], start[1]])
+
+  // ⚠️ And downwards, all the way past the last row. Reported by hand: this
+  // moved one place and then stopped. The pointer ends up below every row,
+  // no row contains it any more, and the drag went deaf from there.
+  const middleState = await names()
+  await drag(0, 2)
+  await expect.poll(names).toEqual([middleState[1], middleState[2], middleState[0]])
+
   // And it survives a reload, so it really went to the server.
   await page.reload()
-  await expect.poll(names).toEqual([wasOrdered[1], wasOrdered[0]])
+  await expect.poll(names).toEqual([middleState[1], middleState[2], middleState[0]])
 
   // A kiosk link opens the board in a browser without any session.
   const created = await page.request.post('/api/v1/boards/home/kiosk-tokens', { data: { name: 'e2e wall' }, headers: { 'X-Nexdeck-Request': '1' } })
