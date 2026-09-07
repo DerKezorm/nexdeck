@@ -168,10 +168,20 @@ export function BoardPage() {
       setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
     }
   }
-  const onAction = (widgetId: number, action: Action) => {
+  // ⚠️ Stable, all four of them. A new function on every render makes every
+  // card's props new, and then no amount of memoising below helps: one card's
+  // data arriving redrew all thirty.
+  const runActionRef = useRef(runAction)
+  useEffect(() => {
+    runActionRef.current = runAction
+  })
+  const onAction = useCallback((widgetId: number, action: Action) => {
     if (action.confirm) setPending({ widgetId, action })
-    else void runAction(widgetId, action)
-  }
+    else void runActionRef.current(widgetId, action)
+  }, [])
+  const onRefresh = useCallback((id: number) => void post(`/widgets/${id}/refresh`), [])
+  const onSettings = useCallback((id: number) => setSettingsFor(id), [])
+  const onRemove = useCallback((id: number) => setRemoving(id), [])
 
   const allActions = useMemo(() => {
     const list: { widget: WidgetView; action: Action }[] = []
@@ -271,9 +281,9 @@ export function BoardPage() {
           autoCompact={Boolean(settings.compact)}
           onLayoutChange={onLayoutChange}
           onAction={onAction}
-          onRefresh={(id) => void post(`/widgets/${id}/refresh`)}
-          onSettings={(id) => setSettingsFor(id)}
-          onRemove={(id) => setRemoving(id)}
+          onRefresh={onRefresh}
+          onSettings={onSettings}
+          onRemove={onRemove}
         />
       </main>
 

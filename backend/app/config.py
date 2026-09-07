@@ -110,6 +110,8 @@ class Settings(BaseSettings):
     #: on every cloud. Set this only when a service really does live on
     #: localhost next to nexdeck.
     allow_loopback_targets: bool = False
+    #: Filled on the first read of the generated key file; not a setting.
+    _remembered_key: str = ""
 
     @property
     def database_path(self) -> Path:
@@ -129,13 +131,22 @@ class Settings(BaseSettings):
         return self.data_dir / "boards"
 
     def resolved_secret_key(self) -> str:
-        """The configured secret, or the generated one from the data directory."""
+        """The configured secret, or the generated one from the data directory.
+
+        ⚠️ Remembered after the first read. Every signed cookie, every session
+        check and every stored secret goes through here, so this ran on every
+        single request: a ``mkdir`` and a read from disk, for a value that
+        cannot change while the process is alive.
+        """
         if self.secret_key:
             return self.secret_key
+        if self._remembered_key:
+            return self._remembered_key
         self.data_dir.mkdir(parents=True, exist_ok=True)
         key_file = self.data_dir / "secret.key"
         if key_file.exists():
-            return key_file.read_text(encoding="utf-8").strip()
+            self._remembered_key = key_file.read_text(encoding="utf-8").strip()
+            return self._remembered_key
         generated = secrets.token_urlsafe(48)
         key_file.write_text(generated, encoding="utf-8")
         # ⚠️ This one file makes every stored API key readable. It used to be
@@ -146,6 +157,7 @@ class Settings(BaseSettings):
             key_file.chmod(0o600)
         except OSError:
             pass
+        self._remembered_key = generated
         return generated
 
 

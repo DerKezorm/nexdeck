@@ -410,6 +410,40 @@ def parse(raw: str) -> Line | None:
     )
 
 
+#: How much of the end of a file one block reads.
+TAIL_BLOCK = 64 * 1024
+
+
+def _tail(path: Path, wanted: int) -> list[str]:
+    """The last ``wanted`` lines of a file, newest first, read from the end.
+
+    ⚠️ This used to be ``path.read_text()``: the whole file into memory, even
+    for the two hundred lines the log view asks for. At trace level a log file
+    grows to hundreds of megabytes, and the answer to "show me the last page"
+    was the server reading all of it. It reads more lines than asked for on
+    purpose, because a level or a search term throws most of them away.
+    """
+    size = path.stat().st_size
+    with path.open("rb") as handle:
+        blocks: list[bytes] = []
+        read_so_far = 0
+        while read_so_far < size:
+            step = min(TAIL_BLOCK, size - read_so_far)
+            read_so_far += step
+            handle.seek(size - read_so_far)
+            blocks.insert(0, handle.read(step))
+            # A partial first line is dropped below; count the safe ones.
+            if b"".join(blocks).count(b"\n") > wanted:
+                break
+    text = b"".join(blocks).decode("utf-8", errors="replace")
+    lines = text.splitlines()
+    # The first line may have started before the block; drop it unless the
+    # block began at the start of the file.
+    if read_so_far < size and lines:
+        lines = lines[1:]
+    return list(reversed(lines[-wanted:]))
+
+
 def read(limit: int = 200, level: str | None = None, search: str | None = None) -> list[Line]:
     """The newest lines first. ``level`` means "this one and above".
 
@@ -424,10 +458,10 @@ def read(limit: int = 200, level: str | None = None, search: str | None = None) 
         if not path.exists():
             continue
         try:
-            raw = path.read_text(encoding="utf-8", errors="replace")
+            lines = _tail(path, limit * 8)
         except OSError:
             continue
-        for text in reversed(raw.splitlines()):
+        for text in lines:
             line = parse(text)
             if line is None:
                 continue

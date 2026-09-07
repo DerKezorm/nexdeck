@@ -92,6 +92,34 @@ def _provider_second_factor_column(connection: Connection) -> None:
     _add_column(connection, "oidc_providers", "trusts_second_factor", "BOOLEAN NOT NULL DEFAULT 0")
 
 
+def _unique_email_index(connection: Connection) -> None:
+    """Make the database keep the promise the code already relies on.
+
+    ⚠️ Two places assume an address belongs to one account: the profile route
+    refuses a second one, and the password reset looks an account up by it. The
+    check in the route is a read followed by a write, so two requests can both
+    pass it, and then a reset link is ambiguous.
+
+    Empty is not an address and stays free, so the index skips those. And an
+    installation that already has a duplicate must not fail to start over this:
+    it gets the plain index, a line in the log, and the operator can sort the
+    two accounts out.
+    """
+    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_users_email ON users (email)"))
+    duplicates = connection.execute(text(
+        "SELECT lower(email) FROM users WHERE email <> '' GROUP BY lower(email) HAVING COUNT(*) > 1"
+    )).scalars().all()
+    if duplicates:
+        logger.error(
+            "%d e-mail address(es) belong to more than one account, so they cannot be made unique. "
+            "Change one of each pair in the user settings.", len(duplicates),
+        )
+        return
+    connection.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email ON users (lower(email)) WHERE email <> ''"
+    ))
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -102,6 +130,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (7, "Accounts can carry a second factor", _second_factor_columns),
     (8, "Findings stay on for the cards that already exist", _findings_stay_on_for_existing_widgets),
     (9, "An identity provider can say it checks a second factor itself", _provider_second_factor_column),
+    (10, "An e-mail address belongs to one account", _unique_email_index),
 ]
 
 

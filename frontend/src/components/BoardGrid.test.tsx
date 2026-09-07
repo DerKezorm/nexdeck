@@ -49,3 +49,48 @@ describe('layoutFor', () => {
     expect([item.minW, item.minH]).toEqual([3, 2])
   })
 })
+
+/**
+ * One card's data arriving must not redraw the board.
+ *
+ * ⚠️ Measured before this: thirty cards, the data of one of them changing,
+ * thirty renders. Two things caused it together, and fixing either alone
+ * changes nothing: the card was not memoised, and it was handed four freshly
+ * made closures on every render, which defeats a memo. So this test counts.
+ */
+import { render } from '@testing-library/react'
+import { vi } from 'vitest'
+
+import type { WidgetData } from '../lib/types'
+import { BoardGrid } from './BoardGrid'
+
+const drawn = vi.fn()
+
+vi.mock('./WidgetCard', () => ({
+  WidgetCard: ({ widget }: { widget: WidgetView }) => {
+    drawn(widget.id)
+    return <div data-testid={`card-${widget.id}`} />
+  },
+}))
+
+describe('a board that redraws', () => {
+  it('draws only the card whose data changed', () => {
+    const widgets = Array.from({ length: 30 }, (_, index) => widget(index + 1, [2, 2]))
+    const layouts = { lg: [], md: [], sm: [] }
+    const data: Record<number, WidgetData | undefined> = {}
+    const noop = () => {}
+    const props = {
+      widgets, layouts, editing: false, canAct: true, autoCompact: false,
+      onAction: noop, onRefresh: noop, onSettings: noop, onRemove: noop,
+    } as unknown as Parameters<typeof BoardGrid>[0]
+
+    const view = render(<BoardGrid {...props} data={data} />)
+    expect(drawn).toHaveBeenCalledTimes(30)
+
+    drawn.mockClear()
+    // One card's data arrives. The object for every other card is the same
+    // reference it was, which is what a live update looks like.
+    view.rerender(<BoardGrid {...props} data={{ ...data, 7: { status: 'ok' } as WidgetData }} />)
+    expect(drawn.mock.calls.map(([id]) => id)).toEqual([7])
+  })
+})

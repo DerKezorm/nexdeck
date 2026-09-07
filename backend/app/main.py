@@ -11,10 +11,12 @@ from pathlib import Path
 import anyio.to_thread
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.staticfiles import StaticFiles
 
 from . import __version__
+from .adapters.base import close_relaxed_client
 from .config import get_settings
 from .db import db_session, get_engine
 from .migrations import migrate
@@ -116,6 +118,7 @@ async def lifespan(app: FastAPI):
         await health_service.stop()
         await log_tailer.stop()
         await collector.stop()
+        await close_relaxed_client()
         set_main_loop(None)
 
 
@@ -145,6 +148,12 @@ if "*" in _cors:
     )
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=_cors, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# ⚠️ The compose file this project ships puts uvicorn straight in front of the
+# browser, with no proxy to compress anything. So the first load was 713 kB
+# where it is 222 kB compressed, over whatever line the operator has. 700 is
+# past the point where compressing costs more than it saves for a small answer.
+app.add_middleware(GZipMiddleware, minimum_size=700)
 
 for module in (system, setup, auth, users, avatars, backups, boards, widgets, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance):
     app.include_router(module.router)
