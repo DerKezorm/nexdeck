@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import containers as containers_one
 from .base import (
     Adapter,
     AdapterError,
@@ -12,9 +13,10 @@ from .base import (
     WidgetData,
     WidgetType,
     base_url,
+    human_bytes,
     path_segment,
 )
-from .docker import CONTAINER_ACTIONS, DockerAdapter, container_name
+from .docker import CONTAINER_ACTIONS, DockerAdapter, container_name, cpu_percent, memory_used
 
 
 class PortainerAdapter(Adapter):
@@ -35,6 +37,8 @@ class PortainerAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
     )
     widgets = (
+        containers_one.one_of("container", "One container",
+                              "Everything one container reports through Portainer: CPU, memory, network, disk and its state."),
         WidgetType(
             kind="containers",
             label="Containers",
@@ -139,6 +143,8 @@ class PortainerAdapter(Adapter):
             headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=5,
         )
         running = [c for c in containers if c.get("State") == "running"]
+        if widget_kind == "container":
+            return await self._one(config, options, ctx, containers, endpoint)
         if widget_kind == "summary":
             return WidgetData(
                 status="warn" if len(running) < len(containers) else "ok",
@@ -164,6 +170,65 @@ class PortainerAdapter(Adapter):
                           secondary=[{"label": "Running", "value": len(running)}, {"label": "Stopped", "value": len(containers) - len(running)}],
                           metrics={"running": float(len(running))})
 
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """The containers of the chosen environment, for the field that picks one."""
+        if field != "which":
+            return []
+        endpoint = await self._endpoint(config, ctx)
+        found = await ctx.get_json(
+            f"{base_url(config)}/api/endpoints/{endpoint}/docker/containers/json", params={"all": 1},
+            headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=5,
+        )
+        return [(container_name(one), container_name(one)) for one in sorted(found, key=container_name)]
+
+    async def _one(self, config: dict[str, Any], options: dict[str, Any], ctx: Context,
+                   found: list[dict[str, Any]], endpoint: str) -> WidgetData:
+        """One container, through Portainer's Docker proxy.
+
+        ⚠️ Portainer reaches the same engine, so the same numbers are there;
+        the container cards simply never asked for them. Held by name, because
+        an id changes every time a container is rebuilt.
+        """
+        wanted = str(options.get("which") or "").strip()
+        if not wanted:
+            raise AdapterError("No container picked yet.", code="nothing_picked",
+                               hint="Pick one in the widget settings.")
+        entry = next((one for one in found if container_name(one) == wanted), None)
+        if entry is None:
+            raise AdapterError(f"There is no container called {wanted!r} in this environment any more.",
+                               code="gone", hint="It may have been renamed or removed.")
+        state = str(entry.get("State", "unknown"))
+        cpu = used = limit = None
+        extra: list[dict[str, Any]] = []
+        if state == "running":
+            try:
+                stats = await ctx.get_json(
+                    f"{base_url(config)}/api/endpoints/{endpoint}/docker/containers/{entry['Id']}/stats",
+                    params={"stream": "false"}, headers=self._headers(config),
+                    verify=not config.get("insecure", True), cache_seconds=5,
+                )
+            except AdapterError:
+                stats = {}
+            cpu = cpu_percent(stats)
+            used, limit = memory_used(stats)
+            networks = (stats.get("networks") or {}).values()
+            if networks:
+                extra.append({"label": "Network in", "value": human_bytes(sum(float(one.get("rx_bytes") or 0) for one in networks))})
+                extra.append({"label": "Network out", "value": human_bytes(sum(float(one.get("tx_bytes") or 0) for one in networks))})
+            pids = (stats.get("pids_stats") or {}).get("current")
+            if pids is not None:
+                extra.append({"label": "Processes", "value": int(pids)})
+        if entry.get("Status"):
+            extra.append({"label": "Running since", "value": str(entry["Status"])})
+        if entry.get("Image"):
+            extra.append({"label": "Image", "value": str(entry["Image"])})
+        return containers_one.card(
+            title=wanted, state=state, ok_states=("running",),
+            cpu=cpu, memory_used=used, memory_limit=limit, extra=extra,
+            history=bool(options.get("history", True)),
+            actions=DockerAdapter._actions_for(state, entry.get("Id", "")),
+        )
+
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         if action_id not in CONTAINER_ACTIONS:
             raise AdapterError("Unknown container action.", code="no_such_action")
@@ -177,6 +242,8 @@ class PortainerAdapter(Adapter):
         return f"Container {action_id} sent."
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "container":
+            return containers_one.demo_card(str(options.get("which") or "nexview"), tick, disk=False)
         data = DockerAdapter().demo("summary" if widget_kind == "summary" else "containers", options, tick)
         for item in data.items:
             item.pop("cpu", None)

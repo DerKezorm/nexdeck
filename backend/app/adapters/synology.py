@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import containers as containers_one
 from . import demo as fake
 from .base import (
     ALL_ITEMS,
@@ -70,6 +71,10 @@ class SynologyAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
     )
     widgets = (
+        containers_one.one_of("container", "One container",
+                              "One container of the Container Manager: CPU, memory and its state."),
+        containers_one.one_of("vm", "One virtual machine",
+                              "One guest of the Virtual Machine Manager: CPU, memory and its state."),
         WidgetType(
             kind="system",
             label="System",
@@ -177,6 +182,10 @@ class SynologyAdapter(Adapter):
         return f"{info.get('model', 'DSM')} with DSM {info.get('firmware_ver', '?')} answers."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind == "container":
+            return await self._one_container(config, options, ctx)
+        if widget_kind == "vm":
+            return await self._one_vm(config, options, ctx)
         if widget_kind == "containers":
             return await self._containers(config, options, ctx)
         if widget_kind == "vms":
@@ -262,6 +271,108 @@ class SynologyAdapter(Adapter):
                 "status": "ok" if disk.get("status") == "normal" else "bad",
             })
         return WidgetData(items=items)
+
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """The containers and the guests, for the field that picks one.
+
+        Both in one list: the two cards ask the same field, and a DSM without
+        the Virtual Machine Manager simply contributes nothing.
+        """
+        if field != "which":
+            return []
+        found: list[tuple[str, str]] = []
+        try:
+            listing = await self._api(config, ctx, "SYNO.Docker.Container", "list",
+                                      extra={"limit": "-1", "offset": "0", "type": "all"}, cache=10)
+            found += [(str(one.get("name") or ""), str(one.get("name") or ""))
+                      for one in (listing or {}).get("containers") or []]
+        except AdapterError:
+            pass
+        try:
+            guests = await self._api(config, ctx, "SYNO.Virtualization.Guest", "list", version="2", cache=10)
+            found += [(str(one.get("name") or ""), str(one.get("name") or ""))
+                      for one in (guests or {}).get("guests") or []]
+        except AdapterError:
+            pass
+        return sorted({one for one in found if one[0]})
+
+    async def _one_container(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        """One container of the Container Manager.
+
+        DSM gives CPU, memory and the state, and nothing else: no network
+        counters, no block IO. Those rows are absent rather than drawn as
+        zero, which would read as "measured, and quiet".
+        """
+        wanted = str(options.get("which") or "").strip()
+        if not wanted:
+            raise AdapterError("No container picked yet.", code="nothing_picked",
+                               hint="Pick one in the widget settings.")
+        listing = await self._api(config, ctx, "SYNO.Docker.Container", "list",
+                                  extra={"limit": "-1", "offset": "0", "type": "all"}, cache=10)
+        entry = next((one for one in (listing or {}).get("containers") or []
+                      if str(one.get("name") or "") == wanted), None)
+        if entry is None:
+            raise AdapterError(f"There is no container called {wanted!r} on this DSM any more.", code="gone")
+        resources = await self._api(config, ctx, "SYNO.Docker.Container.Resource", "get", cache=10)
+        usage = next((row for row in (resources or {}).get("resources") or [] if row.get("name") == wanted), {})
+        state = str(entry.get("status") or "unknown")
+        running = state == "running"
+        cpu = round(float(usage["cpu"]), 1) if running and isinstance(usage.get("cpu"), int | float) else None
+        used = float(usage["memory"]) if running and isinstance(usage.get("memory"), int | float) else None
+        share = round(float(usage["memoryPercent"]), 1) if running and isinstance(usage.get("memoryPercent"), int | float) else None
+        # The limit is not reported; it follows from the two that are.
+        limit = (used / share * 100) if used is not None and share else None
+        extra: list[dict[str, Any]] = []
+        if entry.get("up_status"):
+            extra.append({"label": "Running since", "value": str(entry["up_status"])})
+        if entry.get("image"):
+            extra.append({"label": "Image", "value": str(entry["image"])})
+        acting = ([Action(id="stop", label="Stop", icon="square", confirm=True, params={"name": wanted}),
+                   Action(id="restart", label="Restart", icon="rotate-cw", confirm=True, params={"name": wanted})]
+                  if running else [Action(id="start", label="Start", icon="play", params={"name": wanted})])
+        return containers_one.card(
+            title=wanted, state=state, ok_states=("running",),
+            cpu=cpu, memory_used=used, memory_limit=limit, extra=extra,
+            history=bool(options.get("history", True)), actions=acting,
+        )
+
+    async def _one_vm(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        """One guest of the Virtual Machine Manager.
+
+        No CPU: the guest list carries the number of processors, not their
+        load, and the detail call does not add one. The row is left out.
+        """
+        wanted = str(options.get("which") or "").strip()
+        if not wanted:
+            raise AdapterError("No machine picked yet.", code="nothing_picked",
+                               hint="Pick one in the widget settings.")
+        listing = await self._api(config, ctx, "SYNO.Virtualization.Guest", "list", version="2", cache=10)
+        guest = next((one for one in (listing or {}).get("guests") or []
+                      if str(one.get("name") or one.get("guest_name") or "") == wanted), None)
+        if guest is None:
+            raise AdapterError(f"There is no machine called {wanted!r} on this DSM any more.", code="gone")
+        state = str(guest.get("status") or "unknown")
+        detail: dict[str, Any] = {}
+        if state == "running" and guest.get("guest_id"):
+            try:
+                detail = await self._api(config, ctx, "SYNO.Virtualization.Guest", "get", version="2",
+                                         extra={"guest_id": str(guest["guest_id"])}, cache=10) or {}
+            except AdapterError:
+                detail = {}
+        total = float(guest.get("vram_size") or 0) * KB or None
+        used = float(detail["ram_used"]) * KB if isinstance(detail.get("ram_used"), int | float) else None
+        extra: list[dict[str, Any]] = []
+        if guest.get("vcpu_num"):
+            extra.append({"label": "Processors", "value": int(guest["vcpu_num"])})
+        if guest.get("host_name"):
+            extra.append({"label": "Host", "value": str(guest["host_name"])})
+        if guest.get("ip"):
+            extra.append({"label": "Address", "value": str(guest["ip"])})
+        return containers_one.card(
+            title=wanted, state=state, ok_states=("running",),
+            cpu=None, memory_used=used, memory_limit=total, extra=extra,
+            history=bool(options.get("history", True)),
+        )
 
     async def _containers(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         listing = await self._api(config, ctx, "SYNO.Docker.Container", "list", extra={"limit": "-1", "offset": "0", "type": "all"}, cache=10)
@@ -416,6 +527,11 @@ class SynologyAdapter(Adapter):
         return found[:5]
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "container":
+            return containers_one.demo_card(str(options.get("which") or "nexview"), tick, network=False, disk=False)
+        if widget_kind == "vm":
+            return containers_one.demo_card(str(options.get("which") or "homeassistant"), tick,
+                                            network=False, disk=False, cpu=False)
         if widget_kind == "vms":
             rows = [("Home Assistant", "storage-nas · 2 vCPU · 4.0 GB RAM · 192.168.1.40", "ok", 12.0, 61.3, "2.5 GB"), ("Windows 11", "storage-nas · 4 vCPU · 16.0 GB RAM", "ok", 38.0, 72.9, "11.7 GB"), ("Lab", "storage-nas · 1 vCPU · 2.0 GB RAM · shutdown", "unknown", None, None, "")]
             items = []

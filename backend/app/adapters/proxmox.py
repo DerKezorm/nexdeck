@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import containers as containers_one
 from . import demo as fake
 from .base import (
     Action,
@@ -38,6 +39,8 @@ class ProxmoxAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=True, help="Most installations use a self-signed certificate."),
     )
     widgets = (
+        containers_one.one_of("guest", "One guest",
+                              "One virtual machine or container: CPU, memory, disk, network and its state."),
         WidgetType(
             kind="node",
             label="Node",
@@ -85,6 +88,54 @@ class ProxmoxAdapter(Adapter):
         nodes = await self._get(config, ctx, "/nodes", cache=0)
         return f"Proxmox VE {version.get('version', '?')} with {len(nodes or [])} node(s)."
 
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """Every guest of the cluster, for the field that picks one."""
+        if field != "which":
+            return []
+        found = await self._get(config, ctx, "/cluster/resources?type=vm") or []
+        return sorted(
+            (str(one.get("name") or one.get("vmid") or ""), f"{one.get('name') or one.get('vmid')} ({one.get('node', '?')})")
+            for one in found if one.get("name") or one.get("vmid")
+        )
+
+    def _one_guest(self, options: dict[str, Any], guests: list[dict[str, Any]]) -> WidgetData:
+        """One guest, with everything the cluster resource list already holds.
+
+        No extra call: ``/cluster/resources`` carries CPU, memory, disk and the
+        two network counters for every guest at once, so the card that shows
+        one of them costs nothing the list did not already pay for.
+        """
+        wanted = str(options.get("which") or "").strip()
+        if not wanted:
+            raise AdapterError("No guest picked yet.", code="nothing_picked",
+                               hint="Pick one in the widget settings.")
+        guest = next((one for one in guests
+                      if str(one.get("name") or "") == wanted or str(one.get("vmid") or "") == wanted), None)
+        if guest is None:
+            raise AdapterError(f"There is no guest called {wanted!r} in this cluster any more.", code="gone")
+        state = str(guest.get("status") or "unknown")
+        running = state == "running"
+        cpu = round(float(guest.get("cpu") or 0) * 100, 1) if running and guest.get("cpu") is not None else None
+        used = float(guest["mem"]) if running and guest.get("mem") is not None else None
+        total = float(guest["maxmem"]) if guest.get("maxmem") else None
+        extra: list[dict[str, Any]] = []
+        disk = percent(guest.get("disk"), guest.get("maxdisk"))
+        if disk is not None:
+            extra.append({"label": "Storage", "value": disk, "unit": "%"})
+        if guest.get("netin") is not None:
+            extra.append({"label": "Network in", "value": human_bytes(float(guest["netin"]))})
+        if guest.get("netout") is not None:
+            extra.append({"label": "Network out", "value": human_bytes(float(guest["netout"]))})
+        if guest.get("uptime"):
+            extra.append({"label": "Uptime", "value": duration_short(guest.get("uptime"))})
+        if guest.get("node"):
+            extra.append({"label": "Node", "value": str(guest["node"])})
+        return containers_one.card(
+            title=wanted, state=state, ok_states=("running",),
+            cpu=cpu, memory_used=used, memory_limit=total, extra=extra,
+            history=bool(options.get("history", True)),
+        )
+
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         nodes = await self._get(config, ctx, "/nodes") or []
         if widget_kind == "node":
@@ -107,6 +158,8 @@ class ProxmoxAdapter(Adapter):
                 meta={"node": node.get("node")},
             )
         guests = await self._get(config, ctx, "/cluster/resources?type=vm") or []
+        if widget_kind == "guest":
+            return self._one_guest(options, guests)
         running = [g for g in guests if g.get("status") == "running"]
         if widget_kind == "summary":
             return WidgetData(
@@ -159,6 +212,8 @@ class ProxmoxAdapter(Adapter):
         return f"{action_id.capitalize()} sent to {vmid}."
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "guest":
+            return containers_one.demo_card(str(options.get("which") or "pve-101"), tick, disk=False)
         cpu = fake.walk("pve-cpu", tick, 8, 41)
         memory = fake.walk("pve-mem", tick, 55, 68, period=600)
         if widget_kind == "node":

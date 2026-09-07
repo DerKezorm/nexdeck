@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from . import containers as containers_one
 from . import demo as fake
 from .base import (
     Action,
@@ -156,6 +157,8 @@ class DockerAdapter(Adapter):
                 Field("stats", "Load CPU and memory", type="bool", default=True, help="Costs one request per running container."),
             ),
         ),
+        containers_one.one_of("container", "One container",
+                              "Everything one container reports: CPU, memory, network, disk and its state."),
         WidgetType(
             kind="summary",
             label="Container summary",
@@ -201,6 +204,8 @@ class DockerAdapter(Adapter):
         if widget_kind == "logs":
             return WidgetData(meta={"container": options.get("container") or "", "lines": int(options.get("lines") or 200)})
         containers = await self.list_containers(config, ctx)
+        if widget_kind == "container":
+            return await self._one(config, options, ctx, containers)
         running = [c for c in containers if c.get("State") == "running"]
         if widget_kind == "summary":
             stopped = len(containers) - len(running)
@@ -258,6 +263,69 @@ class DockerAdapter(Adapter):
             metrics={"running": float(len(running))},
         )
 
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        """The containers on this engine, for the field that picks one."""
+        if field != "which":
+            return []
+        found = await self.list_containers(config, ctx)
+        return [(container_name(entry), container_name(entry)) for entry in sorted(found, key=container_name)]
+
+    async def _one(self, config: dict[str, Any], options: dict[str, Any], ctx: Context,
+                   found: list[dict[str, Any]]) -> WidgetData:
+        """One container, with everything the engine says about it.
+
+        ⚠️ Held by name, not by id. A container keeps its name and gets a new
+        id every time it is rebuilt, so a card pinned to an id would go blank
+        the first time somebody pulled a new image.
+        """
+        wanted = str(options.get("which") or "").strip()
+        if not wanted:
+            raise AdapterError("No container picked yet.", code="nothing_picked",
+                               hint="Pick one in the widget settings.")
+        entry = next((one for one in found if container_name(one) == wanted), None)
+        if entry is None:
+            raise AdapterError(f"There is no container called {wanted!r} on this engine any more.",
+                               code="gone", hint="It may have been renamed or removed.")
+        state = str(entry.get("State", "unknown"))
+        history = bool(options.get("history", True))
+        cpu = used = limit = None
+        extra: list[dict[str, Any]] = []
+        if state == "running":
+            try:
+                stats = await engine_get(config, ctx, f"/containers/{entry['Id']}/stats", params={"stream": "false"})
+            except AdapterError:
+                stats = {}
+            cpu = cpu_percent(stats)
+            used, limit = memory_used(stats)
+            # ⚠️ These four are in every answer the engine gives and were
+            # thrown away by every card until now. They are the numbers people
+            # open a container's page for.
+            networks = (stats.get("networks") or {}).values()
+            got_in = sum(float(one.get("rx_bytes") or 0) for one in networks)
+            got_out = sum(float(one.get("tx_bytes") or 0) for one in networks)
+            if networks:
+                extra.append({"label": "Network in", "value": human_bytes(got_in)})
+                extra.append({"label": "Network out", "value": human_bytes(got_out)})
+            blocks = ((stats.get("blkio_stats") or {}).get("io_service_bytes_recursive") or [])
+            read = sum(float(one.get("value") or 0) for one in blocks if str(one.get("op", "")).lower() == "read")
+            wrote = sum(float(one.get("value") or 0) for one in blocks if str(one.get("op", "")).lower() == "write")
+            if blocks:
+                extra.append({"label": "Disk read", "value": human_bytes(read)})
+                extra.append({"label": "Disk written", "value": human_bytes(wrote)})
+            pids = (stats.get("pids_stats") or {}).get("current")
+            if pids is not None:
+                extra.append({"label": "Processes", "value": int(pids)})
+        if entry.get("Status"):
+            extra.append({"label": "Running since", "value": str(entry["Status"])})
+        if entry.get("Image"):
+            extra.append({"label": "Image", "value": str(entry["Image"])})
+        return containers_one.card(
+            title=wanted, state=state, ok_states=("running",),
+            cpu=cpu, memory_used=used, memory_limit=limit,
+            extra=extra, history=history,
+            actions=self._actions_for(state, entry.get("Id", "")),
+        )
+
     async def _stats(self, config: dict[str, Any], ctx: Context, running: list[dict[str, Any]]) -> dict[str, tuple[float | None, float | None, float | None]]:
         semaphore = asyncio.Semaphore(STATS_PARALLEL)
 
@@ -300,6 +368,8 @@ class DockerAdapter(Adapter):
         return f"Container {action_id} sent."
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "container":
+            return containers_one.demo_card(str(options.get("which") or "nexview"), tick)
         names = ["radarr", "sonarr", "jellyfin", "nexview", "sabnzbd", "pihole", "traefik", "postgres", "uptime-kuma", "nexmail"]
         if widget_kind == "logs":
             return WidgetData(meta={"container": options.get("container") or "radarr", "lines": 200})
