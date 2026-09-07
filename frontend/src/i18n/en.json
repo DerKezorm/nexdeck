@@ -546,9 +546,8 @@
     "deletePageEmpty": "The page is empty; nothing is lost.",
     "deletePageBody": "Its {{count}} cards go with it, including their history.",
     "lastPage": "A board keeps at least one page.",
-    "moveUp": "Move {{name}} up",
-    "moveDown": "Move {{name}} down",
-    "moveWith": "Move {{name}} with the arrow keys, resize with Shift and an arrow"
+    "moveWith": "Move {{name}} with the arrow keys, resize with Shift and an arrow",
+    "moveWithHandle": "Drag to move {{name}}"
   },
   "widget": {
     "remove": {

@@ -1,12 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, ChevronUp, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+// Three lines, the handle every list on a phone is dragged by. Lucide calls
+// it Menu; here it is a grip and nothing else.
+import { ChevronDown, ChevronRight, Menu, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
 import { Confirm, Field, Toast } from '../../components/ui'
+import { moved } from '../../lib/reorder'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
@@ -25,17 +28,52 @@ export function BoardsSettings() {
   const [removing, setRemoving] = useState<BoardSummary | null>(null)
   const [removingPage, setRemovingPage] = useState<{ board: BoardSummary; page: BoardSummary['pages'][number] } | null>(null)
   const [reordering, setReordering] = useState(false)
-  /** Move one board by one place and send the whole order back. */
-  const move = (index: number, by: number) => {
-    const slugs = (boards.data ?? []).map((one) => one.slug)
-    const target = index + by
-    if (target < 0 || target >= slugs.length) return
-    ;[slugs[index], slugs[target]] = [slugs[target], slugs[index]]
+  /** The order while a finger is still on the list. Null when nothing is
+      being dragged, and the answer from the server is what is shown again. */
+  const [dragged, setDragged] = useState<BoardSummary[] | null>(null)
+  const [holding, setHolding] = useState<number | null>(null)
+  //: One entry per row, so a drag can ask where the rows actually are.
+  const rowRefs = useRef(new Map<number, HTMLLIElement>())
+  const rows = dragged ?? boards.data ?? []
+
+  /** Send the whole order back.
+
+      ⚠️ One call, not one per board. Two boards swapping places sent as two
+      writes can land either way round, and the loser of that race is a menu
+      in an order nobody asked for. */
+  const save = (order: BoardSummary[]) => {
     setReordering(true)
-    void put('/boards/order', { slugs })
+    void put('/boards/order', { slugs: order.map((one) => one.slug) })
       .then(() => boards.refetch())
       .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
-      .finally(() => setReordering(false))
+      .finally(() => {
+        setReordering(false)
+        setDragged(null)
+      })
+  }
+
+  /** Which row the pointer is over, by where the rows really are. */
+  const rowUnder = (y: number, exceptId: number): number => {
+    for (const [index, board] of rows.entries()) {
+      if (board.id === exceptId) continue
+      const box = rowRefs.current.get(board.id)?.getBoundingClientRect()
+      if (box && y >= box.top && y <= box.bottom) return index
+    }
+    return -1
+  }
+
+  /** The same move, from the keyboard.
+
+      ⚠️ Not a nicety. Dragging is the only way a pointer can reorder this
+      list, and until the two arrow buttons were replaced by this handle they
+      were the only way anything else could. A list that can be sorted by mouse
+      alone is a list a switch, a voice control or a keyboard cannot sort. */
+  const nudge = (index: number, by: number) => {
+    const target = index + by
+    if (reordering || target < 0 || target >= rows.length) return
+    const order = moved(rows, index, target)
+    setDragged(order)
+    save(order)
   }
   /** Which boards show their pages. Closed by default: the list is the answer
       to "which boards do I have", the pages are the second question. */
@@ -51,12 +89,19 @@ export function BoardsSettings() {
           </label>
         )}
         <ul className="space-y-1.5 mb-4">
-          {(boards.data ?? []).map((board, index) => {
+          {rows.map((board, index) => {
             const open = expanded.includes(board.id)
             const mine = board.owner_id === me?.id
             const mayEdit = board.permission === 'owner' || board.permission === 'edit'
             return (
-              <li key={board.id} className="rounded-xl border border-line text-sm">
+              <li
+                key={board.id}
+                ref={(element) => {
+                  if (element) rowRefs.current.set(board.id, element)
+                  else rowRefs.current.delete(board.id)
+                }}
+                className={`rounded-xl border text-sm ${holding === board.id ? 'border-accent bg-surface-hover' : 'border-line'}`}
+              >
                 <div className="flex items-center gap-2 p-2.5">
                   {/* The arrow opens the pages; the name still leads to the
                       board. Two jobs, two targets. */}
@@ -69,32 +114,54 @@ export function BoardsSettings() {
                   >
                     {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
-                  {/* ⚠️ Up and down, not drag and drop. The menu at the top
-                      is a short list, and two arrows work with a keyboard, on
-                      a phone and at a wall display, where dragging does not.
-                      The whole order goes back in one call: two boards
-                      swapping places sent as two writes can land either way
-                      round. */}
-                  <span className="flex flex-col -my-1">
-                    <button
-                      className="btn btn-icon h-4 w-6 border-0 bg-transparent disabled:opacity-25"
-                      disabled={index === 0 || reordering}
-                      onClick={() => move(index, -1)}
-                      aria-label={t('board.moveUp', { name: board.name })}
-                      title={t('board.moveUp', { name: board.name })}
-                    >
-                      <ChevronUp size={13} />
-                    </button>
-                    <button
-                      className="btn btn-icon h-4 w-6 border-0 bg-transparent disabled:opacity-25"
-                      disabled={index === (boards.data ?? []).length - 1 || reordering}
-                      onClick={() => move(index, 1)}
-                      aria-label={t('board.moveDown', { name: board.name })}
-                      title={t('board.moveDown', { name: board.name })}
-                    >
-                      <ChevronDown size={13} />
-                    </button>
-                  </span>
+                  {/* The handle. ⚠️ `touch-action: none` is what makes it work
+                      with a finger at all: without it the browser reads the
+                      first millimetre of the drag as a page scroll and takes
+                      the gesture away, and the row stays where it is. */}
+                  <button
+                    className="btn btn-icon h-7 w-7 border-0 bg-transparent cursor-grab touch-none active:cursor-grabbing disabled:opacity-25"
+                    disabled={reordering}
+                    aria-label={t('board.moveWithHandle', { name: board.name })}
+                    title={t('board.moveWithHandle', { name: board.name })}
+                    onPointerDown={(event) => {
+                      event.preventDefault()
+                      event.currentTarget.setPointerCapture(event.pointerId)
+                      setDragged(rows)
+                      setHolding(board.id)
+                    }}
+                    onPointerMove={(event) => {
+                      if (holding !== board.id) return
+                      const over = rowUnder(event.clientY, board.id)
+                      const at = rows.findIndex((one) => one.id === board.id)
+                      if (over < 0 || over === at) return
+                      setDragged(moved(rows, at, over))
+                    }}
+                    onPointerUp={() => {
+                      if (holding !== board.id) return
+                      setHolding(null)
+                      const order = dragged ?? rows
+                      // Nothing moved, nothing to write.
+                      if (order.every((one, place) => one.id === (boards.data ?? [])[place]?.id)) setDragged(null)
+                      else save(order)
+                    }}
+                    onPointerCancel={() => {
+                      setHolding(null)
+                      setDragged(null)
+                    }}
+                    onKeyDown={(event) => {
+                      // Ctrl, Alt and Meta with an arrow belong to the browser
+                      // and the window manager: word-wise movement, workspace
+                      // switching. Taking those would cost more than sorting a
+                      // list is worth.
+                      if (event.ctrlKey || event.altKey || event.metaKey) return
+                      if (event.key === 'ArrowUp') nudge(index, -1)
+                      else if (event.key === 'ArrowDown') nudge(index, 1)
+                      else return
+                      event.preventDefault()
+                    }}
+                  >
+                    <Menu size={15} />
+                  </button>
                   <Link to={`/b/${board.slug}`} className="flex-1 font-medium truncate hover:text-accent">
                     {board.name}
                     {/* Whose board this is. Left out when it is mine: a list in
