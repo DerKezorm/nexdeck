@@ -24,6 +24,22 @@ from fastapi.testclient import TestClient
 from .conftest import CSRF, setup_admin
 
 
+@pytest.fixture(autouse=True)
+def catchers_are_reachable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The catchers below listen on 127.0.0.1, and that is barred by default.
+
+    ⚠️ Since 07.09.2026 nexdeck refuses to call loopback and the link-local
+    range, because a notification channel takes an address from any member and
+    reports the answer back, which made that field a way of asking what else
+    listens beside the server. The catchers here are exactly the case the
+    setting exists for, so the tests turn it on and thereby prove it works.
+    """
+    monkeypatch.setenv("NEXDECK_ALLOW_LOOPBACK_TARGETS", "1")
+    from app import config
+
+    config.reset_settings_cache()
+
+
 def _free_port() -> int:
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))

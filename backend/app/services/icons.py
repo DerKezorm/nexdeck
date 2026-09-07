@@ -14,6 +14,7 @@ from pathlib import Path
 
 import httpx
 
+from ..adapters.base import outbound_client
 from ..config import get_settings
 
 logger = logging.getLogger("nexdeck.icons")
@@ -56,7 +57,7 @@ async def fetch_icon(name: str, ext: str) -> tuple[bytes, str] | None:
         return cached.read_bytes(), _content_type(ext)
     if _negative.get(key, 0) > time.monotonic():
         return None
-    async with httpx.AsyncClient(timeout=10, follow_redirects=True, headers={"User-Agent": "nexdeck"}) as client:
+    async with outbound_client(timeout=10, follow_redirects=True, headers={"User-Agent": "nexdeck"}) as client:
         for _source, pattern, _tree in SOURCES:
             url = pattern.format(ext=ext, name=name)
             try:
@@ -85,7 +86,7 @@ async def _names(source: str, tree_url: str) -> list[str]:
         return names
     names: list[str] = []
     try:
-        async with httpx.AsyncClient(timeout=20, headers={"User-Agent": "nexdeck", "Accept": "application/vnd.github+json"}) as client:
+        async with outbound_client(timeout=20, headers={"User-Agent": "nexdeck", "Accept": "application/vnd.github+json"}) as client:
             response = await client.get(tree_url)
         if response.status_code == 200:
             for entry in response.json().get("tree", []):

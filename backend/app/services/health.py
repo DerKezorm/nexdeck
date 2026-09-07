@@ -18,6 +18,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from ..adapters.base import AdapterError, guard_member_target, outbound_client
 from ..config import get_settings
 from ..db import db_session
 from ..models import HealthCheck, Outage, Page, Widget, utcnow
@@ -42,12 +43,16 @@ def http_client(insecure: bool) -> httpx.AsyncClient:
     """
     client = _clients.get(insecure)
     if client is None or client.is_closed:
-        client = httpx.AsyncClient(verify=not insecure, follow_redirects=True, headers={"User-Agent": "nexdeck-check"})
+        client = outbound_client(verify=not insecure, follow_redirects=True, headers={"User-Agent": "nexdeck-check"})
         _clients[insecure] = client
     return client
 
 
 async def check_http(target: str, timeout: float, expect_status: int, insecure: bool) -> tuple[bool, int, str]:
+    try:
+        guard_member_target(target)
+    except AdapterError as barred:
+        return False, 0, barred.message
     started = time.perf_counter()
     try:
         response = await http_client(insecure).get(target, timeout=timeout)
@@ -65,6 +70,12 @@ async def check_tcp(target: str, timeout: float) -> tuple[bool, int, str]:
     host, _, port = target.rpartition(":")
     if not host or not port.isdigit():
         return False, 0, "Expected host:port"
+    # ⚠️ These two do not go through httpx, so the client hook never sees them.
+    # The address of a check is set by anyone who may edit the board.
+    try:
+        guard_member_target(f"http://{host.strip()}")
+    except AdapterError as barred:
+        return False, 0, barred.message
     started = time.perf_counter()
     try:
         _, writer = await asyncio.wait_for(asyncio.open_connection(host.strip("[]"), int(port)), timeout)
@@ -75,6 +86,10 @@ async def check_tcp(target: str, timeout: float) -> tuple[bool, int, str]:
 
 
 async def check_ping(target: str, timeout: float) -> tuple[bool, int, str]:
+    try:
+        guard_member_target(f"http://{target.strip()}")
+    except AdapterError as barred:
+        return False, 0, barred.message
     count_flag = "-n" if platform.system() == "Windows" else "-c"
     wait_flag = "-w" if platform.system() == "Windows" else "-W"
     wait_value = str(int(timeout * 1000)) if platform.system() == "Windows" else str(int(timeout))
@@ -166,6 +181,16 @@ class HealthService:
             due = [c for c in checks if force or self._next_due.get(c.id, 0) <= now]
             # A check without a target follows its widget's integration, read afresh every time.
             snapshot = [(c.id, c.kind, c.target or service_target(c.kind, c.widget), c.timeout_seconds, c.expect_status, c.insecure, c.interval_seconds) for c in due]
+        # ⚠️ A check whose address cannot be worked out yet is not a service
+        # that is down. It used to run against the empty string, which fails
+        # the way an unreachable host fails, so an outage was opened and every
+        # administrator was told. The usual way in: an app tile on a
+        # Wake-on-LAN connection, which has no address field at all.
+        without_address = [row for row in snapshot if not str(row[2] or "").strip()]
+        snapshot = [row for row in snapshot if str(row[2] or "").strip()]
+        for row in without_address:
+            self._next_due[row[0]] = time.monotonic() + max(5, row[6] or get_settings().health_interval_seconds)
+            self._announce(await asyncio.to_thread(self._no_address, row[0]))
         if not snapshot:
             return
         semaphore = asyncio.Semaphore(PARALLEL)
@@ -181,11 +206,46 @@ class HealthService:
                     logger.warning("Check %s (%s %s) failed: %s", check_id, kind, target, error.__class__.__name__)
                     ok, latency, detail = False, 0, f"Check failed: {error.__class__.__name__}"
             self._next_due[check_id] = time.monotonic() + max(5, interval or get_settings().health_interval_seconds)
-            self._record(check_id, ok, latency, detail)
+            # ⚠️ The writing goes into a thread, the telling stays here. Writing
+            # a result also reads a day of history to redraw the tile's bars,
+            # and that ran on the event loop once per check per interval. The
+            # telling cannot follow it: ``hub.publish`` fills asyncio queues,
+            # which is only safe on the loop they belong to.
+            self._announce(await asyncio.to_thread(self._write, check_id, ok, latency, detail))
 
         await asyncio.gather(*(one(row) for row in snapshot))
 
+    def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str] | None]:
+        """Unknown, not down: no result, no outage, no message."""
+        with db_session() as db:
+            check = db.scalar(select(HealthCheck).options(selectinload(HealthCheck.widget)).where(HealthCheck.id == check_id))
+            if check is None or check.widget is None:
+                return None, {}, None
+            check.last_ok = None
+            check.last_error = "No address to check yet."
+            check.down_since = None
+            page = db.get(Page, check.widget.page_id)
+            board_id = page.board_id if page else None
+            payload = {
+                "check_id": check.id, "widget_id": check.widget_id, "ok": None, "latency_ms": 0,
+                "detail": check.last_error, "down_since": None, "changed": False, "bars": None,
+            }
+        return board_id, payload, None
+
     def _record(self, check_id: int, ok: bool, latency: int, detail: str) -> None:
+        """Write the result and tell whoever is listening, in one call."""
+        self._announce(self._write(check_id, ok, latency, detail))
+
+    def _announce(self, outcome: tuple[int | None, dict, tuple[str, str, str, str] | None]) -> None:
+        board_id, payload, announce = outcome
+        if board_id is not None:
+            hub.publish(board_topic(board_id), "health", payload)
+        if announce is not None:
+            event, title, body, level = announce
+            notify.emit(event, title, body, level=level)
+
+    def _write(self, check_id: int, ok: bool, latency: int, detail: str) -> tuple[int | None, dict, tuple[str, str, str, str] | None]:
+        """The database half: everything that must not run on the event loop."""
         settings = get_settings()
         now = utcnow()
         with db_session() as db:

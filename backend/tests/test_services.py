@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from datetime import UTC, date, datetime, timedelta
 
@@ -392,3 +393,34 @@ async def test_the_collector_says_goodbye_to_its_sessions(client: TestClient, mo
     monkeypatch.setattr(type(get_adapter("reolink")), "close", remember)
     await collector.stop()
     assert goodbyes == [(integration["id"], ("T1", 9e12))]
+
+
+def test_a_check_without_an_address_says_unknown_and_opens_no_outage(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ It used to run against the empty string, which fails the way an
+    unreachable host fails: an outage was opened and every administrator was
+    told that a service was down that nobody had ever named. The usual way in
+    is an app tile on a Wake-on-LAN connection, which has no address field.
+    """
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "H"}, headers=CSRF).json()
+    widget = client.post(
+        f"/api/v1/pages/{board['pages'][0]['id']}/widgets",
+        json={"kind": "core.app", "title": "Nameless", "link": "http://svc.invalid", "options": {"check": True}}, headers=CSRF,
+    ).json()["widget"]
+    emitted: list[tuple[str, str]] = []
+    monkeypatch.setattr(notify, "emit", lambda event, title, body="", **kw: emitted.append((event, title)))
+    with db_session() as db:
+        check = db.scalar(select(HealthCheck).where(HealthCheck.widget_id == widget["id"]))
+        check.target = ""
+        check.last_ok = True
+        check_id = check.id
+
+    asyncio.run(health_service.HealthService().run_due(force=True))
+
+    with db_session() as db:
+        after = db.get(HealthCheck, check_id)
+        assert after.last_ok is None, "an address nobody could work out is unknown, not down"
+        assert after.down_since is None
+        assert "No address" in (after.last_error or "")
+        assert db.scalar(select(Outage)) is None, "no outage for a check that never ran"
+    assert emitted == [], f"nobody should have been told anything: {emitted}"

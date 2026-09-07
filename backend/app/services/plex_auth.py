@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 
 import httpx
 
+from ..adapters.base import outbound_client
 from ..config import get_settings
 
 BASE_URL = "https://plex.tv/api/v2"
@@ -55,7 +56,7 @@ def _headers(token: str | None = None) -> dict[str, str]:
 def _http() -> httpx.AsyncClient:
     global _client
     if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(timeout=15, follow_redirects=True)
+        _client = outbound_client(timeout=15, follow_redirects=True)
     return _client
 
 

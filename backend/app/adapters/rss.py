@@ -8,7 +8,7 @@ from typing import Any
 
 import feedparser
 
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType
+from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, guard_member_target
 
 
 class RssAdapter(Adapter):
@@ -47,6 +47,10 @@ class RssAdapter(Adapter):
         entries: list[dict[str, Any]] = []
         failures: list[str] = []
         for url in urls:
+            # ⚠️ The one adapter whose address lives in the widget options
+            # instead of in a connection an administrator made, so the person
+            # who may edit a board decides where the server goes.
+            guard_member_target(url)
             try:
                 response = await ctx.request("GET", url, cache_seconds=600, timeout=20)
                 parsed = await asyncio.to_thread(feedparser.parse, response.content)

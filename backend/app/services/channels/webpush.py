@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from py_vapid import Vapid02
 from sqlalchemy import select
 
+from ...adapters.base import guard_member_target, outbound_client
 from ...config import get_settings
 from ...crypto import decrypt, encrypt
 from ...db import db_session
@@ -84,6 +85,8 @@ def payload(message: Message) -> bytes:
 
 
 async def send_one(endpoint: str, p256dh: str, auth: str, message: Message) -> bool:
+    # The endpoint arrives in the body of a subscription, from any account.
+    guard_member_target(endpoint)
     """Send to one subscription. Returns False when the subscription is gone."""
     private_pem, _ = ensure_keys()
     endpoint_url = httpx.URL(endpoint)
@@ -101,7 +104,7 @@ async def send_one(endpoint: str, p256dh: str, auth: str, message: Message) -> b
     })
     ephemeral = ec.generate_private_key(ec.SECP256R1())
     body = http_ece.encrypt(payload(message), private_key=ephemeral, dh=_raw(p256dh), auth_secret=_raw(auth), version="aes128gcm")
-    async with httpx.AsyncClient(timeout=15) as client:
+    async with outbound_client(timeout=15) as client:
         response = await client.post(endpoint, content=body, headers=headers)
     if response.status_code in (404, 410):
         return False

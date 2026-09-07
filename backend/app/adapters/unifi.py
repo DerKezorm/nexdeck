@@ -28,6 +28,7 @@ from .base import (
     base_url,
     duration_short,
     join_parts,
+    outbound_client,
 )
 
 #: Devices whose statistics are loaded for the list; more would mean a request per device.
@@ -120,7 +121,7 @@ class UnifiAdapter(Adapter):
         if client is None or client.is_closed:
             # UniFi OS answers plain http with a redirect to https; following it
             # makes an http:// address work instead of failing on the redirect page.
-            client = httpx.AsyncClient(base_url=base_url(config), verify=not config.get("insecure", True), timeout=15, follow_redirects=True)
+            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure", True), timeout=15, follow_redirects=True)
             ctx.cache["unifi_client"] = client
         return client
 

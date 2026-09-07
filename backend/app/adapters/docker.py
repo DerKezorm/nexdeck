@@ -46,11 +46,14 @@ def docker_client(config: dict[str, Any]) -> httpx.AsyncClient:
     host = str(config.get("host") or DEFAULT_HOST).strip()
     if host.startswith("unix://"):
         transport = httpx.AsyncHTTPTransport(uds=host[len("unix://"):])
-        return httpx.AsyncClient(transport=transport, base_url="http://docker", timeout=20)
+        # ⚠️ The one client that does not go anywhere by name: the socket is a
+        # file, and "docker" in the address is a placeholder httpx needs, not a
+        # host anybody resolves. The outbound guard would refuse it for that.
+        return outbound_client(guard=False, transport=transport, base_url="http://docker", timeout=20)
     if host.startswith("tcp://"):
         host = "http://" + host[len("tcp://"):]
     verify = not bool(config.get("insecure"))
-    return httpx.AsyncClient(base_url=host.rstrip("/"), timeout=20, verify=verify)
+    return outbound_client(base_url=host.rstrip("/"), timeout=20, verify=verify)
 
 
 def _client(config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
