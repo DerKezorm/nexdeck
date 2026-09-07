@@ -791,6 +791,7 @@
       "fileCount": "{{count}} files",
       "fileCount_one": "1 file",
       "warning": "This replaces the database, the key and the pictures. Everyone is signed out, you included. The current state is backed up first.",
+      "withoutSafetyCopy": "Restore even if the safety copy of the current state cannot be written. Only when that copy is the thing that is broken.",
       "confirm": "Type {{name}} to confirm",
       "keyOnlyFromEnv": "There is no key in this archive. This installation takes its key from NEXDECK_SECRET_KEY, so the credentials will be readable if the variable holds the same value as on the machine the backup came from.",
       "noKeyAtAll": "There is no key in this archive and none in the environment here. nexdeck will make a new one, and no stored credential will be readable afterwards. Every connection would have to be entered again.",

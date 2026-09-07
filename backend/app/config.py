@@ -71,6 +71,15 @@ class Settings(BaseSettings):
     #: Allowed origins for API calls from other origins. Empty means only the
     #: dashboard itself may call the API from a browser.
     cors_origins: str = ""
+    #: How often a snapshot is written by itself, in hours. ``0`` switches it
+    #: off.
+    #:
+    #: ⚠️ Until 07.09.2026 there was no such thing. The code knew the kind
+    #: "automatic", swept the old ones and the interface said "the last five
+    #: automatic ones are kept", and not one was ever written: the only
+    #: snapshot that ever happened by itself was the one before a restore. A
+    #: sweeper without a writer is a promise with nothing behind it.
+    backup_every_hours: int = 24
     #: Let outbound calls reach 127.0.0.1 and the link-local range.
     #:
     #: ⚠️ Off, and it should stay off. The server sits inside the network and

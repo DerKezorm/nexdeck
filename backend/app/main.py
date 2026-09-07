@@ -45,7 +45,7 @@ from .routers import (
 )
 from .routers import journal as journal_router
 from .security import prune_sessions
-from .services import history, journal, provisioning
+from .services import backup, history, journal, provisioning
 from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
@@ -63,6 +63,10 @@ def _housekeeping_once() -> None:
     if sessions_gone:
         logger.info("Swept %d session(s) that had run out.", sessions_gone)
     log_tailer.prune()
+    try:
+        backup.write_one_if_due()
+    except Exception:  # noqa: BLE001 - a snapshot that fails must not stop the housekeeping
+        logger.exception("The scheduled snapshot could not be written.")
 
 
 async def _housekeeping() -> None:

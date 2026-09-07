@@ -140,12 +140,18 @@ async def restore_archive(
     file: UploadFile,
     password: Annotated[str, Form()],
     confirm: Annotated[str, Form()] = "",
+    without_safety_copy: Annotated[bool, Form()] = False,
 ) -> dict:
     """Replaces the database, the key and the loose files.
 
     ⚠️ The administrator types their own user name to get here. Not a
     checkbox: a checkbox is one careless click, and this is the one action in
     nexdeck that cannot be undone from inside nexdeck.
+
+    ⚠️ ``without_safety_copy`` goes ahead even when the copy of the current
+    state cannot be written. It exists because the reason for restoring may be
+    that the current database is past saving, and then the copy is the thing
+    that fails. Off unless somebody says otherwise.
 
     ⚠️ Everybody, including whoever pressed the button, is signed out
     afterwards. The accounts in the backup are not the accounts of a moment
@@ -168,7 +174,7 @@ async def restore_archive(
     # a writer attached to a file that no longer exists, which is worse.
     db.close()
     try:
-        verdict = await asyncio.to_thread(backup.restore, data, password)
+        verdict = await asyncio.to_thread(backup.restore, data, password, without_safety_copy=without_safety_copy)
     except backup.BackupError as failure:
         logger.warning("The restore by %s did not happen: %s", admin.username, failure.message)
         raise error(failure.code, failure.message) from failure

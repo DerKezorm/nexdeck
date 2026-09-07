@@ -115,6 +115,19 @@ def migrate() -> None:
         if current == 0:
             connection.execute(text("INSERT INTO schema_version (version) VALUES (1)"))
             current = 1
+        newest = max((number for number, _name, _step in MIGRATIONS), default=0)
+        if current > newest:
+            # ⚠️ Said out loud, because nothing else will say it. There is no
+            # migration that runs backwards, so a database written by a newer
+            # nexdeck keeps columns and tables this build does not know, and
+            # the symptoms turn up later as odd errors nobody connects to a
+            # downgrade. Refusing to start would be worse: the operator would
+            # have no way in to fix it.
+            logger.error(
+                "This database was written by a newer nexdeck (schema %d, this build knows %d). "
+                "Downgrading is not supported; expect trouble until you go back to the newer version.",
+                current, newest,
+            )
         for version, description, function in MIGRATIONS:
             if version <= current:
                 continue

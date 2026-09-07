@@ -37,6 +37,7 @@ import pyzipper
 
 from .. import __version__
 from ..config import get_settings
+from ..db import paused_for_swap
 
 logger = logging.getLogger("nexdeck.backup")
 
@@ -269,7 +270,12 @@ def listing() -> list[Entry]:
     if not root.is_dir():
         return []
     entries: list[Entry] = []
-    for path in sorted(root.glob("*.db"), reverse=True):
+    # ⚠️ By time, not by name. In the file name the kind and the version come
+    # before the stamp, so sorting the text backwards put every "manual" above
+    # every "automatic" and 0.9.0 above 0.10.0, while the docstring above
+    # promised newest first. The modification time is the one thing in this
+    # that always means what it says.
+    for path in sorted(root.glob("*.db"), key=lambda one: one.stat().st_mtime, reverse=True):
         profile = _read_profile(path)
         ok, reason = compatible(profile)
         entries.append(Entry(
@@ -321,6 +327,27 @@ def remove(name: str) -> None:
     shutil.rmtree(_extras_path(path), ignore_errors=True)
     path.unlink()
     logger.info("Backup deleted: %s.", name)
+
+
+def write_one_if_due() -> Path | None:
+    """A snapshot by itself, if the last one is old enough.
+
+    Called from the housekeeping tick, so the interval is kept to within five
+    minutes, which is close enough for something measured in hours.
+    """
+    hours = get_settings().backup_every_hours
+    if hours <= 0:
+        return None
+    newest = max(
+        (path.stat().st_mtime for path in folder().glob("*.db")
+         if _read_profile(path).kind == AUTOMATIC),
+        default=0.0,
+    )
+    if newest and time.time() - newest < hours * 3600:
+        return None
+    written = create(kind=AUTOMATIC, note="scheduled")
+    logger.info("Wrote the scheduled snapshot %s.", written.name)
+    return written
 
 
 def sweep(keep: int = KEEP_AUTOMATIC) -> int:
@@ -469,16 +496,26 @@ def _open(data: bytes, password: str) -> tuple[Profile, bytes, str | None, dict[
 
 
 def _schema_from_bytes(raw: bytes) -> int:
-    """The migration number of a database that is still only bytes."""
-    import tempfile
+    """The migration number of a database that is still only bytes.
 
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as handle:
-        handle.write(raw)
-        path = Path(handle.name)
+    ⚠️ Without touching the disk. This used to write the whole foreign database
+    into the system temp directory to ask it one question. ``tempfile`` creates
+    with mode 0600, so it was never readable by anyone else, but the copy still
+    landed on whatever volume TMPDIR points at, outside the data directory the
+    operator chose and outside anything they back up or wipe. ``deserialize``
+    keeps it in this process and nowhere else.
+    """
+    connection = sqlite3.connect(":memory:")
     try:
-        return _schema_version(path)
+        connection.deserialize(raw)
+        row = connection.execute("SELECT MAX(version) FROM schema_version").fetchone()
+        return int(row[0] or 0) if row else 0
+    except (sqlite3.DatabaseError, AttributeError):
+        # AttributeError: an interpreter without deserialize. Not one we ship,
+        # and a schema of 0 only means "ask the profile instead".
+        return 0
     finally:
-        path.unlink(missing_ok=True)
+        connection.close()
 
 
 def inspect(data: bytes, password: str) -> Verdict:
@@ -510,7 +547,46 @@ def _stubbornly_delete(path: Path, tries: int = 20) -> None:
             time.sleep(0.1)
 
 
-def restore(data: bytes, password: str) -> Verdict:
+def _hold_everything() -> None:
+    """Bring the background services to a stop before the file is replaced.
+
+    Each of them writes on its own schedule, and none of them would notice the
+    database changing underneath. Without a running loop there is nothing to
+    stop, which is the ordinary case in a plain unit test.
+    """
+    from .collector import collector
+    from .hass_ws import hass_listener
+    from .health import health
+    from .logs import log_tailer
+    from .loop import run_and_wait
+
+    async def stop_them() -> None:
+        await hass_listener.stop()
+        await health.stop()
+        await log_tailer.stop()
+        await collector.stop()
+
+    if run_and_wait(stop_them, timeout=20.0):
+        logger.info("Background services stopped for the restore.")
+
+
+def _let_everything_go() -> None:
+    """And start them again, whatever happened in between."""
+    from .collector import collector
+    from .hass_ws import hass_listener
+    from .health import health
+    from .loop import run_and_wait
+
+    async def start_them() -> None:
+        await collector.start()
+        await health.start()
+        await hass_listener.start()
+
+    if run_and_wait(start_them, timeout=20.0):
+        logger.info("Background services running again.")
+
+
+def restore(data: bytes, password: str, *, without_safety_copy: bool = False) -> Verdict:
     """Put a database and its key back.
 
     ⚠️ **The current state is backed up first.** Even when there is nothing
@@ -543,19 +619,41 @@ def restore(data: bytes, password: str) -> Verdict:
 
     try:
         create(kind=AUTOMATIC, note="before restore")
-    except Exception as failure:  # noqa: BLE001 - a missing safety net must not stop the rescue
-        logger.warning("Could not back up before restoring: %s", failure)
+    except Exception as failure:  # noqa: BLE001
+        # ⚠️ This used to be a warning and the restore went on regardless,
+        # while the docstring of this very function calls the copy the only way
+        # back if the archive turns out to be the broken one. A promise that
+        # holds except when it matters is not one. It is still possible to go
+        # ahead, because the reason for restoring may well be that the current
+        # database is past saving, but somebody has to say so.
+        logger.error("Could not back up before restoring: %s", failure)
+        if not without_safety_copy:
+            raise BackupError(
+                "no_safety_copy",
+                f"The safety copy of the current state failed ({failure}). Nothing was replaced. "
+                "Make room, or repeat with 'restore anyway' if the current database is the problem.",
+            ) from failure
 
-    # Close everything, or SQLite keeps the files.
-    get_engine().dispose()
+    # ⚠️ Everything else has to let go of the file first. Stopping the services
+    # and closing the latch are two different things and both are needed: the
+    # latch holds back sessions that have not started, stopping holds back the
+    # ones that are in the middle of something.
+    _hold_everything()
+    try:
+        with paused_for_swap():
+            # Close everything, or SQLite keeps the files.
+            get_engine().dispose()
 
-    # ⚠️ The companion files have to go too, and this is where it hangs. Leave
-    # a ``-wal`` of the old database behind and SQLite replays its changes
-    # into the new one, where they come from a completely different database.
-    for suffix in ("-wal", "-shm"):
-        _stubbornly_delete(target.with_name(target.name + suffix))
+            # ⚠️ The companion files have to go too, and this is where it
+            # hangs. Leave a ``-wal`` of the old database behind and SQLite
+            # replays its changes into the new one, where they come from a
+            # completely different database.
+            for suffix in ("-wal", "-shm"):
+                _stubbornly_delete(target.with_name(target.name + suffix))
 
-    target.write_bytes(raw_db)
+            target.write_bytes(raw_db)
+    finally:
+        _let_everything_go()
 
     if key:
         if settings.secret_key:

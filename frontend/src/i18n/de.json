@@ -791,6 +791,7 @@
       "fileCount": "{{count}} Dateien",
       "fileCount_one": "1 Datei",
       "warning": "Das ersetzt Datenbank, Schlüssel und Bilder. Alle werden abgemeldet, du eingeschlossen. Der jetzige Stand wird vorher gesichert.",
+      "withoutSafetyCopy": "Auch wiederherstellen, wenn die Sicherheitskopie des jetzigen Standes nicht geschrieben werden kann. Nur, wenn genau diese Kopie das Kaputte ist.",
       "confirm": "Zum Bestätigen {{name}} eintippen",
       "keyOnlyFromEnv": "In diesem Archiv liegt kein Schlüssel. Diese Installation nimmt ihren aus NEXDECK_SECRET_KEY. Die Zugänge sind danach lesbar, wenn dort derselbe Wert steht wie auf dem Rechner, von dem die Sicherung stammt.",
       "noKeyAtAll": "In diesem Archiv liegt kein Schlüssel, und hier steht auch keiner in der Umgebung. nexdeck erzeugt dann einen neuen, und danach ist kein gespeicherter Zugang mehr lesbar. Jede Anbindung müsste neu eingetragen werden.",
