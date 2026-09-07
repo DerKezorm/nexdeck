@@ -36,6 +36,20 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        // The careful split into lazy chunks was collected back up here: the
+        // service worker precached everything on the first visit, 1.45 MB of
+        // it. mpegts.js is 277 kB and only a camera card needs it, and nine of
+        // the twelve font files are alphabets this interface has no words in.
+        // They still load when something asks for them; they are just not
+        // fetched before anybody has.
+        globIgnores: [
+          '**/mpegts-*.js',
+          '**/*-cyrillic-*.woff2',
+          '**/*-cyrillic-ext-*.woff2',
+          '**/*-greek-*.woff2',
+          '**/*-greek-ext-*.woff2',
+          '**/*-vietnamese-*.woff2',
+        ],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
       devOptions: { enabled: false },
@@ -48,6 +62,11 @@ export default defineConfig({
         manualChunks(id) {
           // The video demuxer loads only when a live camera card is on the board; it must not ride in the vendor chunk.
           if (id.includes('mpegts.js')) return undefined
+          // ⚠️ Same for the markdown pair. They are needed by exactly one of
+          // the 196 cards, and the rule below would have swept them into the
+          // vendor chunk however carefully the import was written: a dynamic
+          // import only splits a chunk if nothing else pulls the module in.
+          if (id.includes('node_modules/marked') || id.includes('node_modules/dompurify')) return undefined
           if (id.includes('node_modules')) return 'vendor'
           return undefined
         },

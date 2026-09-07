@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -74,22 +74,64 @@ export function BoardGrid(props: Props) {
     >
       {widgets.map((widget) => (
         <div key={String(widget.id)}>
-          <WidgetCard
+          <GridCard
             widget={widget}
             data={data[widget.id]}
             series={series?.[widget.id]}
             editing={editing}
             canAct={canAct}
-            onAction={onAction ? (action) => onAction(widget.id, action) : undefined}
-            onRefresh={onRefresh && !editing && !widget.client_only ? () => onRefresh(widget.id) : undefined}
-            onSettings={onSettings ? () => onSettings(widget.id) : undefined}
-            onRemove={onRemove ? () => onRemove(widget.id) : undefined}
+            onAction={onAction}
+            onRefresh={onRefresh}
+            onSettings={onSettings}
+            onRemove={onRemove}
           />
         </div>
       ))}
     </ResponsiveGrid>
   )
 }
+
+interface CardProps {
+  widget: WidgetView
+  data: WidgetData | undefined
+  series: Record<string, number[]> | undefined
+  editing?: boolean
+  canAct?: boolean
+  onAction?: (widgetId: number, action: Action) => void
+  onRefresh?: (widgetId: number) => void
+  onSettings?: (widgetId: number) => void
+  onRemove?: (widgetId: number) => void
+}
+
+/**
+ * One card in the grid, drawn again only when its own data changed.
+ *
+ * ⚠️ Measured before this: thirty cards on a board, the data of **one** of
+ * them arriving, thirty renders. The cause was two things at once, and fixing
+ * either alone changes nothing. The card was not memoised, and every card was
+ * handed four freshly made closures on every render, which would have defeated
+ * the memo anyway. So the closures are made here, from props that are stable
+ * for as long as the card is, and the wrapper is what the grid renders.
+ */
+const GridCard = memo(function GridCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove }: CardProps) {
+  const act = useCallback((action: Action) => onAction?.(widget.id, action), [onAction, widget.id])
+  const refresh = useCallback(() => onRefresh?.(widget.id), [onRefresh, widget.id])
+  const settings = useCallback(() => onSettings?.(widget.id), [onSettings, widget.id])
+  const remove = useCallback(() => onRemove?.(widget.id), [onRemove, widget.id])
+  return (
+    <WidgetCard
+      widget={widget}
+      data={data}
+      series={series}
+      editing={editing}
+      canAct={canAct}
+      onAction={onAction ? act : undefined}
+      onRefresh={onRefresh && !editing && !widget.client_only ? refresh : undefined}
+      onSettings={onSettings ? settings : undefined}
+      onRemove={onRemove ? remove : undefined}
+    />
+  )
+})
 
 /**
  * The layout the grid draws: saved positions, a spot at the bottom for widgets

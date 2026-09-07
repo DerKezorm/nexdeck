@@ -145,6 +145,12 @@ def test_every_migration_runs_against_a_database_that_predates_it(data_dir: Path
     }
     removed = 0
     with engine.begin() as connection:
+        # An index on a column blocks dropping it, and dropping a column is
+        # something only this test ever does. The migrations put them back.
+        for index in connection.execute(text(
+            "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'"
+        )).scalars().all():
+            connection.execute(text(f"DROP INDEX IF EXISTS {index}"))
         for table, columns in undone.items():
             present = {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}
             for column in columns:
@@ -162,6 +168,10 @@ def test_every_migration_runs_against_a_database_that_predates_it(data_dir: Path
             present = {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}
             missing = [column for column in columns if column not in present]
             assert missing == [], f"{table} came back without {missing}"
+        indexes = set(connection.execute(text(
+            "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'"
+        )).scalars().all())
+        assert "ux_users_email" in indexes, "the unique index over the addresses did not come back"
         version = connection.execute(text("SELECT MAX(version) FROM schema_version")).scalar()
     assert int(version or 0) == max(number for number, _n, _s in MIGRATIONS)
 

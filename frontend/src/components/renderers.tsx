@@ -6,7 +6,6 @@
  * Labels arrive from the adapters in English and are translated by wording
  * (``tLabel``); the renderers' own words are translation keys.
  */
-import DOMPurify from 'dompurify'
 import {
   Cloud,
   CloudDrizzle,
@@ -25,7 +24,6 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react'
-import { marked } from 'marked'
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -523,11 +521,44 @@ function dayLabel(date: string, t: TFunction): string {
 // Text: markdown
 // ---------------------------------------------------------------------------
 
+/**
+ * ⚠️ marked and DOMPurify are fetched when a note card is first drawn, not
+ * with the app. Together they are a sizeable part of the first load, and they
+ * are needed by exactly one of the 196 cards. Until then the card shows its
+ * source as plain text, which is readable markdown anyway.
+ *
+ * The sanitiser is not optional and never becomes optional: the note is
+ * written by a member and drawn as HTML in the operator's own origin. If the
+ * import fails, the card falls back to text, never to unsanitised HTML.
+ */
+let render: ((source: string) => string) | null = null
+let loading: Promise<void> | null = null
+
+function loadMarkdown(): Promise<void> {
+  loading ??= Promise.all([import('marked'), import('dompurify')]).then(([{ marked }, purify]) => {
+    const clean = purify.default
+    render = (source: string) => clean.sanitize(marked.parse(source, { async: false }) as string, { ADD_ATTR: ['target'] })
+  })
+  return loading
+}
+
 export function TextCard({ data }: RenderProps) {
-  const html = useMemo(() => {
-    const source = String(data?.meta?.markdown ?? '')
-    return DOMPurify.sanitize(marked.parse(source, { async: false }) as string, { ADD_ATTR: ['target'] })
-  }, [data?.meta?.markdown])
+  const source = String(data?.meta?.markdown ?? '')
+  const [ready, setReady] = useState(render !== null)
+  useEffect(() => {
+    if (render !== null) return
+    let alive = true
+    void loadMarkdown().then(() => {
+      if (alive) setReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+  const html = useMemo(() => (ready && render ? render(source) : ''), [source, ready])
+  if (!ready || !render) {
+    return <div className="flex-1 min-h-0 scroll px-3 pb-3 text-[13px] whitespace-pre-wrap">{source}</div>
+  }
   return <div className="prose-card flex-1 min-h-0 scroll px-3 pb-3 text-[13px]" dangerouslySetInnerHTML={{ __html: html }} />
 }
 

@@ -147,7 +147,7 @@ def service_link(widget: Widget) -> str:
         return ""
 
 
-def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
+def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = None) -> dict[str, Any]:
     try:
         adapter, kind = split_widget_kind(widget.kind)
         widget_type = adapter.widget(kind)
@@ -163,7 +163,8 @@ def widget_view(db: Session, widget: Widget) -> dict[str, Any]:
     health = None
     if widget.health_check is not None:
         health = health_service.check_payload(widget.health_check)
-        health["bars"] = health_service.uptime_bars(db, widget.id, health_service.bars_window(widget.options))
+        health["bars"] = (bars if bars is not None
+                          else health_service.uptime_bars(db, widget.id, health_service.bars_window(widget.options)))
     return {
         "id": widget.id,
         "kind": widget.kind,
@@ -191,8 +192,14 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
     ).all()
     page_views = []
     widget_ids: list[int] = []
+    # ⚠️ The bars of every checked card in one go. Drawn per card this was two
+    # queries each, so a board with thirty of them made sixty round trips
+    # before the first byte went out.
+    checked = {w.id: health_service.bars_window(w.options)
+               for page in pages for w in page.widgets if w.health_check is not None}
+    all_bars = health_service.bars_for(db, checked)
     for page in pages:
-        widgets = [widget_view(db, w) for w in page.widgets]
+        widgets = [widget_view(db, w, all_bars.get(w.id)) for w in page.widgets]
         widget_ids.extend(w.id for w in page.widgets)
         page_views.append({
             "id": page.id, "name": page.name, "slug": page.slug, "icon": page.icon, "position": page.position,

@@ -361,12 +361,33 @@ def uptime_bars(db, widget_id: int, window: str = "24h") -> list[float | None]: 
     a few hours and then folded into minute averages, so an old "check" in
     the live row is really a minute.
     """
+    hours = 24 if window == "live" else BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])[0]
+    return bars_from(history.series(db, widget_id, "up", hours=hours), window)
+
+
+def bars_for(db, wanted: dict[int, str]) -> dict[int, list[float | None]]:  # noqa: ANN001
+    """The bars of many cards at once, ``{widget id: window}`` in.
+
+    ⚠️ One pair of queries per window instead of one pair per card. A board
+    with thirty checked cards used to make sixty.
+    """
+    out: dict[int, list[float | None]] = {}
+    by_window: dict[str, list[int]] = {}
+    for widget_id, window in wanted.items():
+        by_window.setdefault(window, []).append(widget_id)
+    for window, widget_ids in by_window.items():
+        hours = 24 if window == "live" else BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])[0]
+        for widget_id, points in history.series_for(db, widget_ids, "up", hours=hours).items():
+            out[widget_id] = bars_from(points, window)
+    return out
+
+
+def bars_from(points: list[tuple[int, float]], window: str) -> list[float | None]:
+    """The shape of the row, once the numbers are in hand."""
     if window == "live":
-        points = history.series(db, widget_id, "up", hours=24)[-LIVE_BARS:]
-        values: list[float | None] = [round(value, 2) for _ts, value in points]
+        values: list[float | None] = [round(value, 2) for _ts, value in points[-LIVE_BARS:]]
         return [None] * (LIVE_BARS - len(values)) + values
     hours, bars = BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])
-    points = history.series(db, widget_id, "up", hours=hours)
     if not points:
         return [None] * bars
     now = int(time.time())

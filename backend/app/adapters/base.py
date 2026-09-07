@@ -619,6 +619,31 @@ MAX_CACHED_RESPONSES = 64
 CACHE_PREFIX = "resp:"
 
 
+_relaxed: httpx.AsyncClient | None = None
+
+
+def _relaxed_client() -> httpx.AsyncClient:
+    """One client for every call that was told to ignore TLS errors.
+
+    ⚠️ This used to be ``async with outbound_client(verify=False)`` per call,
+    so a service with a self-signed certificate paid a fresh TCP connection and
+    a fresh handshake for every single request a card made. The verifying path
+    has had a shared client from the start; this is the same thing for the
+    other half.
+    """
+    global _relaxed
+    if _relaxed is None or _relaxed.is_closed:
+        _relaxed = outbound_client(verify=False, follow_redirects=True)
+    return _relaxed
+
+
+async def close_relaxed_client() -> None:
+    global _relaxed
+    if _relaxed is not None and not _relaxed.is_closed:
+        await _relaxed.aclose()
+    _relaxed = None
+
+
 #: The largest answer a service may give a card.
 #:
 #: ⚠️ There was no ceiling. The whole body is read into memory and parsed, so a
@@ -703,11 +728,10 @@ class Context:
                     data=data, content=content, timeout=timeout, auth=auth,
                 )
             else:
-                async with outbound_client(verify=False, follow_redirects=True) as insecure:
-                    response = await insecure.request(
-                        method, url, headers=headers, params=params, json=json_body,
-                        data=data, content=content, timeout=timeout, auth=auth,
-                    )
+                response = await _relaxed_client().request(
+                    method, url, headers=headers, params=params, json=json_body,
+                    data=data, content=content, timeout=timeout, auth=auth,
+                )
         except httpx.TimeoutException as error:
             raise Unreachable("The service did not answer in time.") from error
         except httpx.HTTPError as error:

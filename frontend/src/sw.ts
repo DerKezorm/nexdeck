@@ -7,7 +7,24 @@
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: { url: string; revision: string | null }[] }
 
 const MANIFEST = self.__WB_MANIFEST || []
-const CACHE = 'nexdeck-shell-v1'
+/**
+ * ⚠️ The name carries the build, so the sweep in `activate` has something to
+ * sweep. It used to be the literal 'nexdeck-shell-v1' for every build ever
+ * made: the sweep kept every cache whose name differed from the current one,
+ * and no name ever differed, so the files of every past version stayed in the
+ * browser's storage until somebody cleared the site by hand.
+ *
+ * The build stamp comes from the manifest itself, which changes whenever any
+ * precached file does, so nothing has to be kept in step by hand.
+ */
+const STAMP = MANIFEST.map((entry) => entry.revision ?? entry.url).join('|')
+const CACHE = `nexdeck-shell-${hash(STAMP)}`
+
+function hash(text: string): string {
+  let value = 5381
+  for (let index = 0; index < text.length; index += 1) value = ((value * 33) ^ text.charCodeAt(index)) >>> 0
+  return value.toString(36)
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
