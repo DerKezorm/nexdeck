@@ -18,12 +18,15 @@ from urllib.parse import urlencode
 import httpx
 import jwt
 
+from ..adapters.base import outbound_client
 from ..config import get_settings
 from ..security import ALGORITHM, _signing_key
 
 COOKIE_NAME = "nexdeck_oidc"
 ATTEMPT_MINUTES = 10
 _discovery: dict[str, tuple[float, dict[str, Any]]] = {}
+#: One key client per address, kept for the life of the process.
+_jwks_clients: dict[str, jwt.PyJWKClient] = {}
 
 
 class OidcError(Exception):
@@ -39,7 +42,7 @@ async def discovery(issuer_url: str) -> dict[str, Any]:
     if hit and hit[0] > time.monotonic():
         return hit[1]
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with outbound_client(timeout=10) as client:
             response = await client.get(f"{issuer}/.well-known/openid-configuration")
     except httpx.HTTPError as error:
         raise OidcError("oidc_unreachable", "The identity provider could not be reached.") from error
@@ -87,7 +90,7 @@ async def exchange(document: dict[str, Any], client_id: str, client_secret: str,
     if not client_secret:
         data["client_id"] = client_id
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with outbound_client(timeout=15) as client:
             response = await client.post(document["token_endpoint"], data=data, auth=auth, headers={"Accept": "application/json"})
     except httpx.HTTPError as error:
         raise OidcError("oidc_unreachable", "The identity provider could not be reached for the token.") from error
@@ -117,7 +120,7 @@ async def userinfo(document: dict[str, Any], access_token: str) -> dict[str, Any
     if not endpoint or not access_token:
         return {}
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with outbound_client(timeout=10) as client:
             response = await client.get(endpoint, headers={"Authorization": f"Bearer {access_token}"})
         return response.json() if response.status_code == 200 else {}
     except (httpx.HTTPError, ValueError):

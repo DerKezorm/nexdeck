@@ -11,6 +11,7 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from .. import __version__
+from ..adapters.base import outbound_client
 from ..config import get_settings
 from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import Board, Integration, Setting, User, Widget
@@ -87,7 +88,7 @@ async def latest_version(force: bool = False) -> str | None:
         return _update_cache.get("version")  # type: ignore[return-value]
     version: str | None = None
     try:
-        async with httpx.AsyncClient(timeout=8, headers={"User-Agent": "nexdeck"}) as client:
+        async with outbound_client(timeout=8, headers={"User-Agent": "nexdeck"}) as client:
             response = await client.get(RELEASES_URL)
         if response.status_code == 200:
             version = str(response.json().get("tag_name", "")).lstrip("v") or None

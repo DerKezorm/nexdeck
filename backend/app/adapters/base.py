@@ -501,15 +501,116 @@ FORBIDDEN_HOSTS = frozenset({
 })
 
 
+def _address(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    try:
+        return ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        return None
+
+
+def _is_link_local(host: str) -> bool:
+    """169.254.0.0/16 and fe80::/10: never a service, on any installation."""
+    parsed = _address(host)
+    return parsed is not None and parsed.is_link_local
+
+
+def _is_loopback(host: str) -> bool:
+    parsed = _address(host)
+    return parsed is not None and parsed.is_loopback
+
+
+def _barred_message(what: str) -> AdapterError:
+    return AdapterError(
+        f"{what} is not an address nexdeck calls.",
+        code="forbidden_host",
+        hint="Loopback and the link-local range are barred: the first is nexdeck itself and whatever else "
+             "listens beside it, the second hands out the host's credentials on every cloud. "
+             "NEXDECK_ALLOW_LOOPBACK_TARGETS=1 lifts it.",
+    )
+
+
 def guard_outbound(url: str) -> None:
-    """Refuse the one address family that is never a service of the house."""
-    host = urlsplit(url if "://" in url else f"http://{url}").hostname or ""
-    if host.lower().strip("[]") in {entry.strip("[]") for entry in FORBIDDEN_HOSTS}:
+    """Refuse an address that is never a service of the house.
+
+    ⚠️ This used to compare the host against five spellings of the metadata
+    address and nothing else, so ``127.0.0.1`` walked straight through. A
+    notification channel takes an address from any member and reports the
+    answer back, which made that field a way of asking what else listens next
+    to the server.
+
+    ⚠️ What this does **not** do is look up what a name points at.
+    ``localtest.me`` resolves to 127.0.0.1 and gets through. Checking would
+    mean a second name lookup in front of every single request, on top of the
+    one the connection makes anyway. Measured on 07.09.2026: a name with a dot
+    that does not exist costs about 50 ms, a bare name like ``radarr`` costs
+    **2.7 s**, because Windows falls back to LLMNR and NetBIOS. A guard that
+    puts seconds in front of every card is worse than the hole it closes, and
+    the hole needs an attacker who already controls a DNS record.
+    """
+
+    split = urlsplit(url if "://" in url else f"http://{url}")
+    if split.scheme not in ("http", "https"):
         raise AdapterError(
-            "That address is the machine's own metadata service, and nexdeck does not fetch it.",
-            code="forbidden_host",
-            hint="It hands out the credentials of the host it runs on.",
+            f"nexdeck speaks http and https, not {split.scheme or 'that'}.",
+            code="bad_scheme",
+            hint="A service address starts with http:// or https://.",
         )
+    host = (split.hostname or "").lower()
+    if not host:
+        raise AdapterError("That address names no host.", code="bad_url")
+    if host.strip("[]") in {entry.strip("[]") for entry in FORBIDDEN_HOSTS}:
+        raise _barred_message("That address")
+    if _is_link_local(host):
+        raise _barred_message(f"{host} ")
+
+
+def guard_member_target(url: str) -> None:
+    """The same, plus loopback, for an address a member typed in.
+
+    ⚠️ Loopback is barred here and nowhere else, and the difference is who put
+    the address there. An administrator pointing a connection at
+    ``http://127.0.0.1:7878`` is an ordinary Radarr on a host-network install,
+    and a test has said so since before this guard existed. A member typing
+    the same thing into a notification channel is asking the server what else
+    is listening beside it, and getting the answer back as an HTTP status.
+
+    ``NEXDECK_ALLOW_LOOPBACK_TARGETS=1`` lifts it for the operator who really
+    does run a notification service next to nexdeck.
+    """
+    from ..config import get_settings
+
+    guard_outbound(url)
+    if get_settings().allow_loopback_targets:
+        return
+    host = (urlsplit(url if "://" in url else f"http://{url}").hostname or "").lower()
+    if _is_loopback(host):
+        raise _barred_message(f"{host} ")
+
+
+async def _guard_hook(request: Any) -> None:
+    """Every request a shared client makes, redirects included."""
+    guard_outbound(str(request.url))
+
+
+def outbound_client(*, guard: bool = True, **kwargs: Any) -> httpx.AsyncClient:
+    """The only place an outbound client is built.
+
+    ⚠️ The guard hangs on the client, not on the call, because httpx runs a
+    request hook for every hop of a redirect as well. Checking only the address
+    somebody typed leaves the second one open, and a service that answers 302
+    decides where the third request goes. Measured with the pinned httpx: the
+    hook sees both hops and an error inside it ends the request.
+
+    ``guard=False`` is for a client that does not speak to the network by name,
+    which today is the Docker socket and nothing else.
+    """
+    if guard:
+        hooks = dict(kwargs.pop("event_hooks", None) or {})
+        hooks["request"] = [*hooks.get("request", []), _guard_hook]
+        kwargs["event_hooks"] = hooks
+    # The only place in the code that may build one of these directly, which is
+    # what the guard test in test_guards.py holds everyone else to.
+    return httpx.AsyncClient(**kwargs)
 
 
 #: How many responses one integration may keep. Ten widgets on one service
@@ -582,7 +683,7 @@ class Context:
                     data=data, content=content, timeout=timeout, auth=auth,
                 )
             else:
-                async with httpx.AsyncClient(verify=False, follow_redirects=True) as insecure:
+                async with outbound_client(verify=False, follow_redirects=True) as insecure:
                     response = await insecure.request(
                         method, url, headers=headers, params=params, json=json_body,
                         data=data, content=content, timeout=timeout, auth=auth,

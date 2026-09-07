@@ -12,8 +12,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context
+from ..adapters.base import AdapterError, Context, outbound_client
 from ..deps import (
+    AdminUser,
     CurrentUser,
     DbSession,
     OptionalUser,
@@ -245,7 +246,7 @@ def _image_client(insecure: bool) -> httpx.AsyncClient:
     if not insecure:
         return collector.client
     if _insecure_client is None or _insecure_client.is_closed:
-        _insecure_client = httpx.AsyncClient(verify=False, follow_redirects=True, timeout=15.0, headers={"User-Agent": "nexdeck"})
+        _insecure_client = outbound_client(verify=False, follow_redirects=True, timeout=15.0, headers={"User-Agent": "nexdeck"})
     return _insecure_client
 
 

@@ -92,6 +92,152 @@ def test_every_address_decides_who_may_call_it() -> None:
     assert unguarded == [], "addresses without an auth decision (add a dependency, or list them in PUBLIC with a reason):\n  " + "\n  ".join(unguarded)
 
 
+#: Addresses that change something and that a guest may still call, each with
+#: the reason. Everything else that changes something must be closed to guests.
+GUESTS_MAY_CHANGE: dict[str, str] = {
+    "POST /api/v1/setup": "creates the first administrator; there is nobody yet",
+    "POST /api/v1/auth/login": "signing in",
+    "POST /api/v1/auth/login/second-step": "its other half",
+    "POST /api/v1/auth/logout": "leaving",
+    "POST /api/v1/auth/forgot": "somebody who forgot their password",
+    "POST /api/v1/auth/reset": "the same link, redeemed",
+    "POST /api/v1/kiosk/session": "a wall display at the door",
+    "PATCH /api/v1/auth/me": "own display name, language and theme",
+    "POST /api/v1/auth/password": "own password",
+    "POST /api/v1/auth/me/avatar": "own picture",
+    "DELETE /api/v1/auth/me/avatar": "own picture",
+    "DELETE /api/v1/auth/sessions/{session_id}": "own sessions",
+    "POST /api/v1/auth/two-factor/start": "own second factor",
+    "POST /api/v1/auth/two-factor/confirm": "own second factor",
+    "POST /api/v1/auth/two-factor/recovery-codes": "own second factor",
+    "DELETE /api/v1/auth/two-factor": "own second factor",
+    "POST /api/v1/notices/read": "marking one's own notices as read",
+    "DELETE /api/v1/notices/{notice_id}": "one of one's own notices",
+    "DELETE /api/v1/notices": "all of one's own read notices",
+    "DELETE /api/v1/tokens/{token_id}": "one's own API token; the handler checks it belongs to the caller",
+    "POST /api/v1/push/subscribe": "own browser notifications",
+    "DELETE /api/v1/push/subscribe": "own browser notifications",
+    "POST /api/v1/channels/{channel_id}/test": "own notification channel",
+}
+
+
+#: Asking a board for more than "view". A guest never gets more.
+ABOVE_VIEW = re.compile(r'(require_board(_id)?|board_for_viewer(_id)?)\([^)]*"(edit|act)"|permission not in \("(edit|act)"')
+
+
+def _handler_and_helpers(function) -> str:  # noqa: ANN001
+    """A handler's source together with the helpers it names from its module.
+
+    One level deep on purpose: several routes leave the permission check to a
+    small helper next to them, and a guard that only read the handler would
+    call those unguarded.
+    """
+    source = inspect.getsource(function)
+    module = inspect.getmodule(function)
+    for name, value in vars(module or object).items():
+        if name in source and inspect.isfunction(value) and value is not function:
+            source += inspect.getsource(value)
+    return source
+
+
+def test_a_guest_cannot_reach_anything_that_changes_something() -> None:
+    """"Guests may only look" has to be true of every address, not most of them.
+
+    ⚠️ The older guard asked whether a route carried *any* of the four auth
+    dependencies, which a route open to every signed-in account does too. So it
+    would have passed on a route that let a guest delete a board. This one asks
+    which dependency, for everything that is not a read.
+    """
+    open_to_guests: list[str] = []
+    checked = 0
+    for route in api_routes():
+        for method in sorted(route.methods - {"HEAD", "OPTIONS", "GET"}):
+            key = f"{method} {route.path}"
+            if key in PUBLIC or key in GUESTS_MAY_CHANGE:
+                continue
+            checked += 1
+            if _dependencies(route.dependant) & {deps.admin_user, deps.not_guest}:
+                continue
+            # Or it asks for a level on a board, which a guest cannot have:
+            # ``board_permission`` hands a guest "view" and nothing above it,
+            # ownership included, since 07.09.2026.
+            if ABOVE_VIEW.search(_handler_and_helpers(route.endpoint)):
+                continue
+            open_to_guests.append(key)
+    assert checked >= 40, "hardly anything was checked, so this guard proves nothing"
+    assert open_to_guests == [], (
+        "addresses that change something and are open to guests (add AdminUser or MemberUser, "
+        "or list them in GUESTS_MAY_CHANGE with a reason):\n  " + "\n  ".join(open_to_guests)
+    )
+
+
+def test_the_guest_exception_list_has_no_dead_entries() -> None:
+    existing = {f"{m} {r.path}" for r in api_routes() for m in r.methods}
+    dead = [key for key in GUESTS_MAY_CHANGE if key not in existing]
+    assert dead == [], f"GUESTS_MAY_CHANGE lists addresses that no longer exist: {dead}"
+
+
+def test_every_outbound_client_comes_from_the_one_factory() -> None:
+    """Nobody builds an httpx client of their own.
+
+    ⚠️ The guard against calling loopback and the link-local range hangs on the
+    client, not on the call, because that is the only way it also sees the
+    second hop of a redirect. A client built anywhere else carries no guard,
+    and there were eighteen such places before 07.09.2026. Use
+    ``outbound_client()`` from ``adapters.base``; it takes ``guard=False`` for
+    the Docker socket, which reaches no host by name.
+    """
+    offenders: list[str] = []
+    scanned = 0
+    for path in BACKEND.rglob("*.py"):
+        scanned += 1
+        if path.name == "base.py" and path.parent.name == "adapters":
+            continue  # the factory itself
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if "httpx.AsyncClient(" in line:
+                offenders.append(f"{path.relative_to(ROOT)}:{number}")
+    assert scanned >= 60, "nothing was scanned, so this guard proves nothing"
+    assert offenders == [], "clients built past the outbound guard:\n  " + "\n  ".join(offenders)
+
+
+#: Word stems that mean a field is asking for a credential.
+CREDENTIAL_STEMS = ("key", "token", "secret", "password", "passwd", "auth", "header", "credential")
+#: Fields whose wording matches a stem while holding no credential, each with
+#: the reason. Every entry here is a decision somebody has to defend.
+NOT_A_CREDENTIAL: dict[tuple[str, str], str] = {
+    ("proxmox", "token_id"): "names which token is used, like a user name; the secret is token_secret",
+    ("pbs", "token_id"): "the same, next to its own token_secret",
+}
+
+
+def test_every_field_that_asks_for_a_credential_is_marked_secret() -> None:
+    """``secret=True`` decides two things at once.
+
+    ⚠️ It says whether the value is encrypted in the database, and whether it
+    is masked before a connection is handed to a member. The JSON API adapter
+    had one field that asks for credentials in so many words, placeholder
+    ``X-Api-Key: abc``, and it carried neither. Every account down to a guest
+    could read it in the clear from ``GET /api/v1/integrations``.
+    """
+    bare: list[str] = []
+    checked = 0
+    for adapter in all_adapters():
+        for field in adapter.fields:
+            checked += 1
+            if field.secret or (adapter.kind, field.name) in NOT_A_CREDENTIAL:
+                continue
+            # Name and label only. A placeholder is an example address as often
+            # as it is a credential, and "https://auth.example.com" is not one.
+            wording = f"{field.name} {field.label}".lower()
+            if any(stem in wording for stem in CREDENTIAL_STEMS):
+                bare.append(f"{adapter.kind}.{field.name} ({field.label!r}, placeholder {field.placeholder!r})")
+    assert checked >= 100, "no fields were scanned, so this guard proves nothing"
+    assert bare == [], (
+        "fields asking for a credential without secret=True (stored unencrypted, "
+        "and readable by every member):\n  " + "\n  ".join(bare)
+    )
+
+
 def test_public_list_has_no_dead_entries() -> None:
     existing = {f"{m} {r.path}" for r in api_routes() for m in r.methods}
     dead = [key for key in PUBLIC if key not in existing]

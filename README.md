@@ -66,6 +66,7 @@ Mount `/var/run/docker.sock` (already in the compose file) to see this host's co
 | `NEXDECK_URL_BASE` | empty | Sub path when nexdeck runs below one, e.g. `/deck`. |
 | `NEXDECK_DEMO` | `0` | Start every widget with invented data. |
 | `NEXDECK_LOG_LEVEL` | `INFO` | `DEBUG` logs every adapter request. |
+| `NEXDECK_ALLOW_LOOPBACK_TARGETS` | `0` | Let notification channels, Web Push, RSS cards and reachability checks call `127.0.0.1`. Connections an administrator made are never affected. |
 | `PUID`, `PGID` | `1000` | Owner of the files in the data volume. |
 | `DOCKER_GID` | detected | Group of the mounted Docker socket, when detection fails. |
 

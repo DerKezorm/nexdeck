@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context, WidgetData, shape_for_display
+from ..adapters.base import AdapterError, Context, WidgetData, outbound_client, shape_for_display
 from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
@@ -61,7 +61,7 @@ class Collector:
     @property
     def client(self) -> httpx.AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(
+            self._client = outbound_client(
                 follow_redirects=True,
                 headers={"User-Agent": "nexdeck"},
                 timeout=15.0,

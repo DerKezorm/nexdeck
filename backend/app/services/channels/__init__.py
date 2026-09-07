@@ -13,7 +13,7 @@ from typing import Any
 
 import httpx
 
-from ...adapters.base import Field
+from ...adapters.base import Field, guard_member_target, outbound_client
 from ...crypto import decrypt, encrypt
 from ...db import db_session
 from ...models import NotificationChannel
@@ -146,7 +146,7 @@ async def send(kind: str, config: dict[str, Any], message: Message, *, user_id: 
     if kind == "telegram":
         await _telegram(config, message)
     elif kind == "email":
-        await asyncio.to_thread(_email, config, message)
+        await asyncio.to_thread(_email, config, message, user_id)
     elif kind == "webpush":
         from . import webpush
 
@@ -166,7 +166,12 @@ async def send(kind: str, config: dict[str, Any], message: Message, *, user_id: 
 
 
 async def _post(url: str, **kwargs: Any) -> httpx.Response:
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    # ⚠️ Every address that reaches here was typed into a channel by whoever
+    # set it up, and every member may set one up. The answer comes back to
+    # them as an HTTP status, so without this the field is a way of asking
+    # what is listening beside the server.
+    guard_member_target(url)
+    async with outbound_client(timeout=TIMEOUT) as client:
         response = await client.post(url, **kwargs)
     if response.status_code >= 400:
         raise RuntimeError(f"The service answered with HTTP {response.status_code}.")
@@ -180,7 +185,7 @@ async def _telegram(config: dict[str, Any], message: Message) -> None:
     )
 
 
-def _email(config: dict[str, Any], message: Message) -> None:
+def _email(config: dict[str, Any], message: Message, user_id: int | None = None) -> None:
     """Through the installation's own mail server.
 
     ⚠️ Nothing about the server is read from the channel any more. A channel
@@ -196,6 +201,14 @@ def _email(config: dict[str, Any], message: Message) -> None:
         if not settings.get("host"):
             raise RuntimeError("No mail server is set up. Set one up under System, Mail server.")
         to_address = str(config.get("to_address") or "").strip()
+        if not to_address and user_id is not None:
+            # ⚠️ The field says "Empty means the address on your account", and
+            # until 07.09.2026 nothing here ever looked at the account. The
+            # help text was a promise the code did not keep.
+            from ...models import User
+
+            owner = db.get(User, user_id)
+            to_address = str(getattr(owner, "email", "") or "").strip()
         if not to_address:
             raise RuntimeError("No address to write to, and none on the account either.")
     mail_service.send(settings, to_address, f"[nexdeck] {message.title}", plain_text(message))

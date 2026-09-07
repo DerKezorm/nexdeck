@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from .base import AdapterError, AuthFailed, Context, Field, Unreachable, base_url
+from .base import AdapterError, AuthFailed, Context, Field, Unreachable, base_url, outbound_client
 from .downloads_base import DownloadAdapter, QueueItem, Snapshot
 
 TORRENT_FIELDS = ["name", "progress", "download_payload_rate", "eta", "state", "total_size", "total_remaining"]
@@ -30,7 +30,7 @@ class DelugeAdapter(DownloadAdapter):
     def _client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
         client = ctx.cache.get("deluge_client")
         if client is None or client.is_closed:
-            client = httpx.AsyncClient(base_url=base_url(config), verify=not config.get("insecure"), timeout=15)
+            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure"), timeout=15)
             ctx.cache["deluge_client"] = client
         return client
 

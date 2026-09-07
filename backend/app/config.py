@@ -71,6 +71,16 @@ class Settings(BaseSettings):
     #: Allowed origins for API calls from other origins. Empty means only the
     #: dashboard itself may call the API from a browser.
     cors_origins: str = ""
+    #: Let outbound calls reach 127.0.0.1 and the link-local range.
+    #:
+    #: ⚠️ Off, and it should stay off. The server sits inside the network and
+    #: reaches what a member's browser cannot: nexdeck's own API, the router,
+    #: the hypervisor. A notification channel takes an address and reports back
+    #: what the answer was, which turns that field into a way of asking what
+    #: else is listening. ``169.254.169.254`` hands out the host's credentials
+    #: on every cloud. Set this only when a service really does live on
+    #: localhost next to nexdeck.
+    allow_loopback_targets: bool = False
 
     @property
     def database_path(self) -> Path:
