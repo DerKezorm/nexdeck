@@ -29,6 +29,11 @@ COLOUR = re.compile(r"^#[0-9a-fA-F]{6}$")
 FORBIDDEN = (
     (re.compile(r"</\s*style", re.I), "It must not close the style tag."),
     (re.compile(r"@import", re.I), "@import fetches a file from somewhere else; put the style sheet in here instead."),
+    # ⚠️ The same door, one line further down. @import was barred and url()
+    # was not, and url() fetches just as well: a background image on a foreign
+    # address tells that address the IP and the user agent of everyone who
+    # opens a board. data: stays allowed, it fetches nothing.
+    (re.compile(r"url\s*\(\s*(?!['\"]?data:)", re.I), "url() fetches from somewhere else; only data: is allowed here."),
     (re.compile(r"javascript\s*:", re.I), "javascript: does not belong in a style sheet."),
     (re.compile(r"expression\s*\(", re.I), "expression() does not belong in a style sheet."),
     (re.compile(r"<\s*script", re.I), "A script does not belong in a style sheet."),
