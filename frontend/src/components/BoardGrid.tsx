@@ -100,7 +100,14 @@ export function BoardGrid(props: Props) {
       isResizable={Boolean(editing)}
       // A press on a button or link must not start a drag: the drag machinery
       // swallows the click, and the settings button on a card did nothing.
-      draggableCancel="button, a, input, select, textarea, [role='button'], .no-drag"
+      //
+      // ⚠️ While editing, only the card's own two buttons are left out. A card
+      // whose body is a link or a row of buttons had almost no surface to take
+      // hold of: on a monitor card the strip of bars filled it, and what was
+      // left to drag was the two millimetres of padding at the edge. Nothing
+      // in the body does anything in edit mode anyway; the stylesheet takes
+      // its pointer events away, which is what makes this safe.
+      draggableCancel={editing ? '.card-controls' : "button, a, input, select, textarea, [role='button'], .no-drag"}
       compactType={autoCompact ? 'vertical' : null}
       // Without compaction, other cards must never move on their own: a card
       // dragged across the board used to push everything aside, and nothing
