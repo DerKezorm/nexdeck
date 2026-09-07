@@ -16,6 +16,13 @@ vi.mock('../api/client', () => ({
   post: vi.fn(async (path: string, body?: unknown) => {
     calls.push(`POST ${path}`)
     if (path === '/plex/pin') return { id: '7', code: 'QWER', url: 'https://app.plex.tv/auth#?code=QWER' }
+    // The code claims the PIN and goes in the body, never in the address:
+    // the browser polls this every two seconds, and a query parameter would
+    // stand in nexdeck's log and in every line of the proxy in front of it.
+    if (path.startsWith('/plex/pin/')) {
+      expect(body).toEqual({ code: 'QWER' })
+      return pollAnswers.shift() ?? { token: null, username: null }
+    }
     if (path === '/plex/servers') {
       expect(body).toEqual({ token: 'tok-1' })
       return [
@@ -58,7 +65,7 @@ describe('PlexSignIn', () => {
       await vi.advanceTimersByTimeAsync(2100)
     })
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Signed in as plex-user'))
-    expect(calls.filter((c) => c.startsWith('GET /plex/pin/7?code=QWER'))).toHaveLength(2)
+    expect(calls.filter((c) => c.startsWith('POST /plex/pin/7'))).toHaveLength(2)
     expect(filled).toEqual([{ token: 'tok-1' }, { url: 'http://192.168.1.10:32400', token: 'tok-1' }])
     const select = screen.getByLabelText('Server') as HTMLSelectElement
     expect(select.value).toBe('http://192.168.1.10:32400')

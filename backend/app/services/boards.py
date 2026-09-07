@@ -235,7 +235,16 @@ def board_summary(db: Session, board: Board, permission: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def export_board(db: Session, board: Board) -> str:
+def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> str:
+    """The board as YAML.
+
+    ⚠️ ``reveal_locked`` is not a nicety. Exporting needs only "view", and a
+    board is shared at that level all the time, while ``export_config`` masks
+    the fields marked secret and writes out everything else: addresses, user
+    names, ports, paths. For a connection the administrator reserved for
+    himself that is exactly the part he reserved. A viewer gets the name and
+    the kind, which is all an import needs to match it up again.
+    """
     pages = db.scalars(select(Page).options(selectinload(Page.widgets).selectinload(Widget.integration)).where(Page.board_id == board.id).order_by(Page.position)).all()
     integrations: dict[int, Integration] = {}
     document: dict[str, Any] = {
@@ -260,7 +269,9 @@ def export_board(db: Session, board: Board) -> str:
             })
         document["pages"].append(page_doc)
     document["integrations"] = [
-        {"name": i.name, "kind": i.kind, "config": export_config(i), "demo": i.demo} for i in integrations.values()
+        {"name": i.name, "kind": i.kind, "demo": i.demo,
+         "config": export_config(i) if (reveal_locked or not i.admin_only) else {}}
+        for i in integrations.values()
     ]
     return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
 

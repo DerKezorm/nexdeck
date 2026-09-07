@@ -43,6 +43,7 @@ from ..services import boards as board_service
 from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
+from .auth import cookie_secure
 
 router = APIRouter(prefix="/api/v1", tags=["boards"])
 
@@ -339,12 +340,17 @@ def put_shares(slug: str, body: SharesBody, user: CurrentUser, db: DbSession) ->
 def export_board(slug: str, user: CurrentUser, db: DbSession) -> Response:
     """Secrets are replaced by environment references, never written out."""
     board, _ = require_board(db, slug, user, "view")
-    text = board_service.export_board(db, board)
+    text = board_service.export_board(db, board, reveal_locked=user.role == Role.admin.value)
     return Response(content=text, media_type="application/yaml", headers={"Content-Disposition": f'attachment; filename="{board.slug}.yaml"'})
 
 
 @router.post("/boards/import", status_code=status.HTTP_201_CREATED, summary="Import a board from YAML")
-async def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
+def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
+    # ⚠️ Synchronous on purpose, so FastAPI runs it in a worker thread. It used
+    # to be ``async def`` while calling nothing but blocking code, which put
+    # the parsing, the placement and every insert on the event loop: the whole
+    # server stood still for the length of the import. ``collector.schedule``
+    # is safe from a thread, it hands its work to the loop itself.
     try:
         board = board_service.import_board(
             db, body.yaml_text, owner_id=user.id, slug=body.slug,

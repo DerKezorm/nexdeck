@@ -109,6 +109,14 @@ class Settings(BaseSettings):
             return key_file.read_text(encoding="utf-8").strip()
         generated = secrets.token_urlsafe(48)
         key_file.write_text(generated, encoding="utf-8")
+        # ⚠️ This one file makes every stored API key readable. It used to be
+        # written with whatever the umask allowed, which under Docker is 0644:
+        # readable by every account on the host that can see the data volume.
+        # Windows has no mode bits, so a failure here is not one.
+        try:
+            key_file.chmod(0o600)
+        except OSError:
+            pass
         return generated
 
 

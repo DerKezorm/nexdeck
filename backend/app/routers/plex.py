@@ -23,18 +23,37 @@ def _plex_failure(failure: plex_auth.PlexTvError):
     return error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY)
 
 
+class PlexPinBody(BaseModel):
+    """The code that claims a PIN, in the body so it stays out of every log."""
+
+    code: str = Field(min_length=1, max_length=64)
+
+
 @router.post("/pin", summary="Start a sign-in with Plex")
-async def start_pin(user: MemberUser) -> dict:
-    """Returns the PIN and the plex.tv address the browser opens; poll the PIN afterwards."""
+async def start_pin(user: AdminUser) -> dict:
+    """Returns the PIN and the plex.tv address the browser opens; poll the PIN afterwards.
+
+    ⚠️ Administrators only. These three routes exist to fill in a Plex
+    connection, and only an administrator may create one; leaving them open to
+    every member let anybody start sign-ins at plex.tv from this server and
+    read back which servers an account can reach.
+    """
     try:
         return await plex_auth.begin_login()
     except plex_auth.PlexTvError as failure:
         raise _plex_failure(failure) from failure
 
 
-@router.get("/pin/{pin_id}", summary="Check whether the Plex sign-in is complete")
-async def poll_pin(pin_id: str, code: str, user: MemberUser) -> dict:
-    """``token`` stays null until the person has agreed at plex.tv."""
+@router.post("/pin/{pin_id}", summary="Check whether the Plex sign-in is complete")
+async def poll_pin(pin_id: str, body: PlexPinBody, user: AdminUser) -> dict:
+    """``token`` stays null until the person has agreed at plex.tv.
+
+    ⚠️ POST with the code in the body, not GET with it in the address. The
+    code claims the PIN, and the browser polls this every two seconds: as a
+    query parameter it was written into nexdeck's own log and into every line
+    of the reverse proxy in front of it, where it stays long after the sign-in.
+    """
+    code = body.code
     try:
         token = await plex_auth.poll_login(pin_id, code)
         username = await plex_auth.account_name(token) if token else None
