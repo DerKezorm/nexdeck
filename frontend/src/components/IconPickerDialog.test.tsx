@@ -10,7 +10,14 @@ import type { ReactNode } from 'react'
 
 import { IconPickerDialog } from './IconPickerDialog'
 
+const calls = vi.hoisted(() => ({
+  uploaded: [] as { path: string; name: string; fields: Record<string, string> }[],
+  deleted: [] as string[],
+  own: [{ id: 7, filename: 'nas.png', url: '/api/v1/assets/7/nas.png' }],
+}))
+
 vi.mock('../api/client', () => ({
+  ApiError: class ApiError extends Error {},
   get: vi.fn(async (path: string) => {
     if (path === '/icons/names') {
       return [
@@ -20,7 +27,17 @@ vi.mock('../api/client', () => ({
         { name: 'sonarr', source: 'selfhst' },
       ]
     }
+    if (path === '/assets?kind=icon') return calls.own
     throw new Error(`unexpected request ${path}`)
+  }),
+  del: vi.fn(async (path: string) => {
+    calls.deleted.push(path)
+    calls.own = []
+    return {}
+  }),
+  upload: vi.fn(async (path: string, file: File, fields: Record<string, string>) => {
+    calls.uploaded.push({ path, name: file.name, fields })
+    return { id: 8, filename: file.name, url: `/api/v1/assets/8/${file.name}` }
   }),
 }))
 
@@ -47,6 +64,38 @@ describe('IconPickerDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'radarr-4k' }))
     expect(picked).toEqual(['radarr-4k'])
     expect(closed).toBe(1)
+  })
+
+  it('offers what this installation uploaded, before the collections', async () => {
+    const picked: string[] = []
+    render(wrap(<IconPickerDialog open value="" onPick={(name) => picked.push(name)} onClose={() => undefined} />))
+    const own = await screen.findByRole('button', { name: 'nas.png' })
+    await userEvent.click(own)
+    // ⚠️ The address, not the file name. An uploaded icon is reached by its
+    // own address; the name is only what it is called on disk.
+    expect(picked).toEqual(['/api/v1/assets/7/nas.png'])
+  })
+
+  it('uploads a file and takes it straight away', async () => {
+    const picked: string[] = []
+    render(wrap(<IconPickerDialog open value="" onPick={(name) => picked.push(name)} onClose={() => undefined} />))
+    await screen.findByRole('button', { name: 'radarr' })
+    await userEvent.upload(screen.getByLabelText('Upload'), new File(['x'], 'own-logo.png', { type: 'image/png' }))
+
+    await waitFor(() => expect(calls.uploaded).toHaveLength(1))
+    expect(calls.uploaded[0]).toMatchObject({ path: '/assets', name: 'own-logo.png', fields: { kind: 'icon' } })
+    await waitFor(() => expect(picked).toEqual(['/api/v1/assets/8/own-logo.png']))
+  })
+
+  it('asks before it deletes one', async () => {
+    render(wrap(<IconPickerDialog open value="" onPick={() => undefined} onClose={() => undefined} />))
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete nas.png' }))
+    // ⚠️ Nothing is gone yet. Other cards may be drawing this file, and a
+    // click on a five-pixel bin next to a tile is easy to make by accident.
+    expect(calls.deleted).toEqual([])
+
+    await userEvent.click(screen.getByRole('button', { name: /^Delete$/ }))
+    await waitFor(() => expect(calls.deleted).toEqual(['/assets/7']))
   })
 
   it('says so when nothing matches', async () => {

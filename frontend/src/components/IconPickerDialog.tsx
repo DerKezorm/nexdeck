@@ -1,14 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { get } from '../api/client'
+import { ApiError, del, get, upload } from '../api/client'
 import { ServiceIcon, SYMBOLS } from './ServiceIcon'
-import { Dialog } from './ui'
+import { Confirm, Dialog } from './ui'
 
 interface Named {
   name: string
   source: string
+}
+
+/** An uploaded file, as the assets list returns it. */
+interface Uploaded {
+  id: number
+  filename: string
+  url: string
 }
 
 /** Tiles per page: enough to browse, few enough to stay quick while filtering. */
@@ -30,6 +38,13 @@ export function IconPickerDialog({ open, value, onPick, onClose }: { open: boole
     }
   }, [open])
   const names = useQuery({ queryKey: ['icon-names'], queryFn: () => get<Named[]>('/icons/names'), enabled: open, staleTime: 86_400_000 })
+  //: What this installation uploaded. Kept apart from the collections: these
+  //: are the ones somebody chose to add, and they belong at the top.
+  const mine = useQuery({ queryKey: ['icon-uploads'], queryFn: () => get<Uploaded[]>('/assets?kind=icon'), enabled: open })
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState('')
+  const [removing, setRemoving] = useState<Uploaded | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const needle = query.trim().toLowerCase()
   const symbols = useMemo(() => Object.keys(SYMBOLS).filter((name) => name.includes(needle)), [needle])
   const logos = useMemo(() => {
@@ -44,9 +59,69 @@ export function IconPickerDialog({ open, value, onPick, onClose }: { open: boole
     onPick(name)
     onClose()
   }
+  const take = (file: File) => {
+    setFailed('')
+    setBusy(true)
+    upload('/assets', file, { kind: 'icon' })
+      .then((asset) => {
+        void mine.refetch()
+        pick((asset as Uploaded).url)
+      })
+      .catch((why) => setFailed(why instanceof ApiError ? why.message : t('errors.network')))
+      .finally(() => setBusy(false))
+  }
+
   return (
     <Dialog open={open} onClose={onClose} title={t('widget.iconDialogTitle')} size="lg">
       <input className="input mb-4" autoFocus placeholder={t('widget.iconDialogSearch')} value={query} onChange={(event) => setQuery(event.target.value)} autoComplete="off" spellCheck={false} />
+
+      <section className="mb-4">
+        <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('widget.iconOwn')}</h3>
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1">
+          {(mine.data ?? []).map((one) => (
+            <div key={one.id} className="relative">
+              <Tile icon={one.url} label={one.filename} active={value === one.url} onClick={() => pick(one.url)} />
+              <button
+                type="button"
+                className="btn btn-icon btn-danger absolute -top-1 -right-1 h-5 w-5"
+                aria-label={t('widget.iconRemove', { name: one.filename })}
+                title={t('widget.iconRemove', { name: one.filename })}
+                onClick={() => setRemoving(one)}
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
+          ))}
+          {/* ⚠️ A label, not a bare file input styled to look like a button.
+              The input itself has to stay reachable by keyboard, and hiding it
+              with display:none takes it out of the tab order. */}
+          <label className="h-14 rounded-lg border border-dashed border-line flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-surface-hover focus-within:border-accent">
+            <span className="text-lg leading-none text-muted" aria-hidden="true">+</span>
+            <span className="text-[9px] text-muted px-1 text-center">{busy ? t('common.loading') : t('widget.iconUpload')}</span>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              // Its own name: inside the label the accessible name would come
+              // out as "+ Upload", the plus included.
+              aria-label={t('widget.iconUpload')}
+              className="sr-only"
+              disabled={busy}
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                event.target.value = ''
+                if (file) take(file)
+              }}
+            />
+          </label>
+        </div>
+        <p className="text-[11px] text-faint mt-1">{t('widget.iconUploadHelp')}</p>
+        {failed && (
+          <p className="text-[12px] text-bad mt-1" role="alert">
+            {failed}
+          </p>
+        )}
+      </section>
       {symbols.length > 0 && (
         <section className="mb-4">
           <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('widget.iconSymbols')}</h3>
@@ -84,6 +159,22 @@ export function IconPickerDialog({ open, value, onPick, onClose }: { open: boole
           </button>
         )}
       </section>
+      <Confirm
+        open={removing !== null}
+        title={t('widget.iconRemove', { name: removing?.filename ?? '' })}
+        body={t('widget.iconRemoveHelp')}
+        confirmLabel={t('common.delete')}
+        danger
+        onCancel={() => setRemoving(null)}
+        onConfirm={() => {
+          const one = removing
+          setRemoving(null)
+          if (!one) return
+          void del(`/assets/${one.id}`)
+            .then(() => mine.refetch())
+            .catch((why) => setFailed(why instanceof ApiError ? why.message : t('errors.network')))
+        }}
+      />
     </Dialog>
   )
 }
