@@ -609,7 +609,14 @@
       "pickConnection": "Pick a connection first, then this fills.",
       "none": "This connection offers nothing to pick here.",
       "unset": "Not picked"
-    }
+    },
+    "iconOwn": "Your own",
+    "iconUpload": "Upload",
+    "iconUploadHelp": "PNG, JPEG, WebP, SVG, GIF or AVIF. The file stays on this server; nothing is fetched from outside for it.",
+    "iconRemove": "Delete {{name}}",
+    "iconRemoveHelp": "Cards still using this file will show a placeholder. It cannot be undone.",
+    "colourNone": "Board colour",
+    "colourClear": "Clear"
   },
   "library": {
     "title": "Add a widget",
@@ -740,7 +747,12 @@
       "awake": "Awake",
       "asleep": "Asleep",
       "unknown": "Unknown"
-    }
+    },
+    "noButtons": "No buttons yet. Add one in the widget settings.",
+    "buttons": "Buttons",
+    "buttonNowhere": "This button has no valid target.",
+    "noPictures": "No pictures yet. Add one in the widget settings.",
+    "pictureNext": "Next of {{count}} pictures"
   },
   "plex": {
     "signIn": "Sign in with Plex",

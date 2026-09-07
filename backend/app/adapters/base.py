@@ -30,7 +30,7 @@ logger = logging.getLogger("nexdeck.adapters")
 #: kinds that may be picked; the server checks both the kind and whether the
 #: person editing may build on that connection at all.
 FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations",
-                    "textarea", "timezone", "items", "choices"]
+                    "textarea", "timezone", "items", "choices", "colour"]
 #: ``items`` picks among the rows a card is showing; ``choices`` picks among
 #: values the service itself hands out, through ``Adapter.choices``.
 Status = Literal["ok", "warn", "bad", "unknown"]
@@ -86,6 +86,8 @@ class Field:
 #: its chips; a list needs room for two rows; a cover needs to be a cover.
 RENDERER_MIN: dict[str, tuple[int, int]] = {
     "app": (1, 1),
+    "button": (1, 1),
+    "image": (1, 1),
     "wol": (1, 1),
     "clock": (2, 1),
     "text": (2, 1),

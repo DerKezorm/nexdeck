@@ -45,7 +45,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
   // Clocks and app tiles draw themselves without a header.
-  const bare = widget.renderer === 'app' || widget.renderer === 'clock'
+  const bare = ['app', 'clock', 'button', 'image'].includes(widget.renderer)
   // With a link, the whole card is the link; app tiles are anchors already.
   const clickable = Boolean(link) && !editing && widget.renderer !== 'app'
   // The dot says what it means: the state in words, and the reason when the

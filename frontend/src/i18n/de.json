@@ -609,7 +609,14 @@
       "pickConnection": "Erst eine Anbindung wählen, dann füllt sich das hier.",
       "none": "Diese Anbindung bietet hier nichts zur Auswahl.",
       "unset": "Nicht gewählt"
-    }
+    },
+    "iconOwn": "Eigene",
+    "iconUpload": "Hochladen",
+    "iconUploadHelp": "PNG, JPEG, WebP, SVG, GIF oder AVIF. Die Datei bleibt auf diesem Server; es wird nichts von außen geholt.",
+    "iconRemove": "{{name}} löschen",
+    "iconRemoveHelp": "Karten, die diese Datei noch verwenden, zeigen danach einen Platzhalter. Rückgängig geht das nicht.",
+    "colourNone": "Brettfarbe",
+    "colourClear": "Zurücksetzen"
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -740,7 +747,12 @@
       "awake": "Wach",
       "asleep": "Schläft",
       "unknown": "Unbekannt"
-    }
+    },
+    "noButtons": "Noch keine Knöpfe. In den Widget-Einstellungen anlegen.",
+    "buttons": "Knöpfe",
+    "buttonNowhere": "Dieser Knopf hat kein gültiges Ziel.",
+    "noPictures": "Noch keine Bilder. In den Widget-Einstellungen anlegen.",
+    "pictureNext": "Nächstes von {{count}} Bildern"
   },
   "plex": {
     "signIn": "Mit Plex anmelden",
