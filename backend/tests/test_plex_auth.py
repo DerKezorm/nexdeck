@@ -66,7 +66,11 @@ def test_plex_routes_need_a_member_and_pass_plex_answers_through(client: TestCli
     setup_admin(client)
     started = client.post("/api/v1/plex/pin", headers=CSRF)
     assert started.status_code == 200 and started.json()["code"] == "ZZ"
-    polled = client.get("/api/v1/plex/pin/1?code=ZZ")
+    # ⚠️ POST with the code in the body, not GET with it in the address. The
+    # browser polls this every two seconds while somebody agrees at plex.tv, so
+    # as a query parameter the code stood in nexdeck's own log and in every
+    # line of the reverse proxy in front of it.
+    polled = client.post("/api/v1/plex/pin/1", json={"code": "ZZ"}, headers=CSRF)
     assert polled.json() == {"token": "tok-9", "username": "plex-user"}
     assert client.post("/api/v1/plex/servers", json={"token": "tok-9"}, headers=CSRF).json() == []
     create_user(client, "visitor", role="guest")

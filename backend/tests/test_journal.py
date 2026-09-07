@@ -313,3 +313,30 @@ def test_nobody_setting_the_level_leaves_the_switch_alive(monkeypatch: pytest.Mo
         assert journal.fixed_by_env() is False
     finally:
         config.reset_settings_cache()
+
+
+def test_a_key_in_a_query_never_reaches_the_file() -> None:
+    """⚠️ httpx logs the full address of every request at INFO, and the deep
+    log levels turn httpx up to exactly that. Several services take their key
+    in the query string: Kavita wants ``apiKey``, Technitium wants ``token``,
+    Synology's ``auth.cgi`` takes the DSM password that way. The line then sat
+    in ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level
+    exists precisely so somebody can download that file and attach it to an
+    issue.
+    """
+    journal.apply_mode("detailed")
+    logging.getLogger("httpx").info(
+        'HTTP Request: GET %s "HTTP/1.1 200 OK"',
+        "http://kavita.example.com:5000/api/Series?apiKey=THE-REAL-KEY&libraryId=1",
+    )
+    logging.getLogger("nexdeck").info(
+        "GET https://dsm.example.com:5001/webapi/auth.cgi?account=admin&passwd=THE-REAL-PASSWORD&format=sid",
+    )
+    for handler in logging.getLogger().handlers:
+        handler.flush()
+    written = journal.log_file().read_text(encoding="utf-8", errors="replace")
+
+    assert "THE-REAL-KEY" not in written, "an API key from a query string was written to the log"
+    assert "THE-REAL-PASSWORD" not in written, "a password from a query string was written to the log"
+    assert "apiKey=***" in written and "passwd=***" in written, "the lines were not written at all, so this proves nothing"
+    assert "libraryId=1" in written, "the rest of the address should survive; only the secret goes"

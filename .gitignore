@@ -5,6 +5,9 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 backend/data*/
+# The compose file in the README mounts ./data, so a checkout that is also
+# a running installation puts secret.key and the database right here.
+/data/
 backend/.e2e-data/
 
 # Node

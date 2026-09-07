@@ -99,10 +99,25 @@ async def exchange(document: dict[str, Any], client_id: str, client_secret: str,
     return response.json()
 
 
+def _jwks_client(uri: str) -> jwt.PyJWKClient:
+    """The key client for one provider, built once and kept."""
+    client = _jwks_clients.get(uri)
+    if client is None:
+        client = jwt.PyJWKClient(uri, cache_keys=True)
+        _jwks_clients[uri] = client
+    return client
+
+
 async def claims(document: dict[str, Any], client_id: str, id_token: str, nonce: str, issuer_url: str) -> dict[str, Any]:
     try:
-        jwks = jwt.PyJWKClient(document["jwks_uri"], cache_keys=True)
-        key = jwks.get_signing_key_from_jwt(id_token)
+        # ⚠️ Two things here, and both were wrong. PyJWKClient fetches with
+        # urllib, which blocks: in an async function that holds the whole
+        # server for as long as the provider needs, and an unreachable
+        # provider holds it for the socket timeout. And the client was built
+        # fresh on every sign-in, so ``cache_keys=True`` cached into an object
+        # that was thrown away immediately; the key set was fetched every
+        # single time.
+        key = await asyncio.to_thread(_jwks_client(document["jwks_uri"]).get_signing_key_from_jwt, id_token)
         payload = jwt.decode(id_token, key.key, algorithms=["RS256", "ES256", "RS384", "RS512", "ES384", "ES512", "PS256"], audience=client_id, options={"verify_iss": False})
     except jwt.PyJWTError as error:
         raise OidcError("oidc_bad_token", f"The ID token could not be verified: {error.__class__.__name__}.") from error

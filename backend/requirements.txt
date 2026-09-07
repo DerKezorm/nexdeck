@@ -34,4 +34,4 @@ segno==1.6.6
 # Backups. An AES-encrypted ZIP and not a format of our own: the archive
 # carries secret.key, so it needs a password, and it has to open with 7-Zip
 # on a day when nexdeck itself is what stopped working.
-pyzipper==0.3.6
+pyzipper==0.4.0

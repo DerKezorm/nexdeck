@@ -118,13 +118,41 @@ def current_request_id() -> str:
     return _request_id.get()
 
 
+#: Query parameters that carry a credential. Matched without case, and the
+#: value is replaced before the line is ever written.
+SECRET_PARAMS = ("apikey", "api_key", "apitoken", "token", "access_token", "key", "passwd", "password", "auth", "secret", "sig", "signature")
+_SECRET_IN_QUERY = re.compile(
+    r"([?&](?:" + "|".join(SECRET_PARAMS) + r")=)([^&\s\"']+)",
+    re.IGNORECASE,
+)
+
+
+def redact(text: str) -> str:
+    """Take the credentials out of a line before it is written anywhere.
+
+    ⚠️ httpx logs the full address of every request at INFO, and the deep log
+    levels turn httpx up to exactly that. Several services take their key in
+    the query string, so it is not the adapter doing anything wrong: Kavita
+    wants ``apiKey``, Technitium wants ``token``, Synology's ``auth.cgi``
+    takes the DSM password that way. The line then sits in
+    ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level exists
+    precisely so somebody can download that file and attach it to an issue.
+    """
+    return _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text)
+
+
 class _Context(logging.Filter):
-    """Puts the request number on every line, including the library's own."""
+    """Puts the request number on every line, and takes the secrets out."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         number = _request_id.get()
         who = _actor.get()
         record.request_id = f"{number} {who}".strip() if who else number
+        if record.args:
+            record.msg = record.getMessage()
+            record.args = ()
+        if isinstance(record.msg, str) and "=" in record.msg:
+            record.msg = redact(record.msg)
         return True
 
 

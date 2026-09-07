@@ -47,7 +47,7 @@ class JsonApiAdapter(Adapter):
     fields = (
         Field("url", "Base URL", type="url", required=True, placeholder="https://service.example.com/api"),
         Field("token", "Bearer token", type="password", secret=True, help="Sent as Authorization: Bearer. Leave empty if not needed."),
-        Field("headers", "Extra headers", type="textarea", help="One per line, Name: Value. A header value is stored as entered.", placeholder="X-Api-Key: abc"),
+        Field("headers", "Extra headers", secret=True, type="textarea", help="One per line, Name: Value. A header value is stored as entered.", placeholder="X-Api-Key: abc"),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (

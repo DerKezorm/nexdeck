@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, get, post } from '../api/client'
+import { ApiError, post } from '../api/client'
 import { Select } from './ui'
 
 interface Pin {
@@ -62,7 +62,7 @@ export function PlexSignIn({ onFill }: { onFill: (values: Record<string, unknown
   const poll = (pin: Pin, startedAt: number) => {
     timer.current = window.setTimeout(async () => {
       try {
-        const answer = await get<{ token: string | null; username: string | null }>(`/plex/pin/${pin.id}?code=${encodeURIComponent(pin.code)}`)
+        const answer = await post<{ token: string | null; username: string | null }>(`/plex/pin/${pin.id}`, { code: pin.code })
         if (answer.token) {
           await finish(answer.token, answer.username ?? '')
           return

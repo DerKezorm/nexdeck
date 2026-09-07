@@ -48,6 +48,18 @@ jobs:
         working-directory: backend
         run: python -m pytest -q
 
+      # Every pinned dependency against OSV, Python and npm in one run. No
+      # account and no key.
+      #
+      # ⚠️ This can go red without anybody changing a line, because an advisory
+      # is published elsewhere. That is the point: on 07.09.2026 pyzipper had
+      # carried a known encryption bypass since May, the tool that finds it was
+      # already in the repository, and nothing ever ran it. A build that turns
+      # red the morning an advisory lands is the cheapest way to hear about it.
+      - name: Dependencies against OSV
+        working-directory: backend
+        run: python tools/audit_deps.py
+
       # On a release the version in the code must match the tag, or the
       # about page and the update check would disagree with reality.
       - name: Version matches tag
