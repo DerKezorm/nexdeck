@@ -16,6 +16,7 @@ from .base import (
     duration_short,
     human_bytes,
     percent,
+    percent_text,
     status_from_percent,
 )
 
@@ -68,7 +69,9 @@ class TruenasAdapter(Adapter):
                 used = percent(pool.get("allocated"), pool.get("size"))
                 items.append({
                     "title": pool.get("name", "?"), "subtitle": f"{human_bytes(pool.get('allocated'))} of {human_bytes(pool.get('size'))} · {pool.get('status', '?')}",
-                    "progress": used, "value": f"{used:.0f}%", "status": "ok" if pool.get("healthy") and used < 90 else "warn",
+                    "progress": used, "value": percent_text(used),
+                    # A pool whose size did not come is not a healthy pool.
+                    "status": "unknown" if used is None else ("ok" if pool.get("healthy") and used < 90 else "warn"),
                 })
             return WidgetData(items=items)
         alerts = [a for a in await self._get(config, ctx, "/alert/list", cache=60) if not a.get("dismissed")]

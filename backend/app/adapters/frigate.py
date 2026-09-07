@@ -20,6 +20,9 @@ from .base import (
     WidgetType,
     base_url,
     human_bytes,
+    measured,
+    percent,
+    percent_text,
     status_from_percent,
 )
 
@@ -127,16 +130,18 @@ class FrigateAdapter(Adapter):
         recordings = storage.get("/media/frigate/recordings") or {}
         used = float(recordings.get("used") or 0) * 1024 * 1024
         total = float(recordings.get("total") or 0) * 1024 * 1024
-        share = round(100.0 * used / total, 1) if total else 0.0
+        # ⚠️ This used to fall back to 0.0, which colours the card green for a
+        # recordings folder whose size Frigate did not report.
+        share = percent(used, total)
         return WidgetData(
             status=status_from_percent(share),
             primary={"label": "Cameras", "value": len(cameras)},
             secondary=[
                 {"label": "Detections per second", "value": round(float((stats or {}).get("detection_fps") or 0), 1)},
                 {"label": "Recordings", "value": human_bytes(used)},
-                {"label": "Used", "value": f"{share} %"},
+                {"label": "Used", "value": percent_text(share, 1)},
             ],
-            metrics={"cameras": float(len(cameras)), "storage_percent": share},
+            metrics=measured({"cameras": float(len(cameras)), "storage_percent": share}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -175,7 +180,7 @@ class FrigateAdapter(Adapter):
             secondary=[
                 {"label": "Detections per second", "value": round(fake.walk("frigate-fps", tick, 1.2, 9.4), 1)},
                 {"label": "Recordings", "value": human_bytes(share / 100 * 2.0e12)},
-                {"label": "Used", "value": f"{share} %"},
+                {"label": "Used", "value": percent_text(share, 1)},
             ],
             metrics={"cameras": float(len(cameras)), "storage_percent": share},
         )

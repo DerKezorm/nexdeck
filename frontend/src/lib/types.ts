@@ -73,6 +73,13 @@ export interface HealthView {
   id: number
   kind: string
   target: string
+  /** ⚠️ These four were left out of the type, so the settings sheet could not
+   * read them back and wrote factory values over them on every save. */
+  interval_seconds: number
+  timeout_seconds: number
+  expect_status: number
+  insecure: boolean
+  enabled: boolean
   last_ok: boolean | null
   last_latency_ms: number | null
   down_since: string | null

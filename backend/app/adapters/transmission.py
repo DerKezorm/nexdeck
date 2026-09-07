@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
-
-from .base import AdapterError, AuthFailed, Context, Field, Unreachable, base_url
+from .base import AdapterError, AuthFailed, Context, Field, base_url
 from .downloads_base import DownloadAdapter, QueueItem, Snapshot
 
 FIELDS = ["id", "name", "percentDone", "rateDownload", "eta", "status", "totalSize", "leftUntilDone"]
@@ -36,14 +34,20 @@ class TransmissionAdapter(DownloadAdapter):
         auth = None
         if config.get("username"):
             auth = (str(config["username"]), str(config.get("password") or ""))
-        try:
-            response = await ctx.client.post(
-                f"{base_url(config)}/transmission/rpc",
-                json={"method": method, "arguments": arguments or {}},
-                headers=headers, auth=auth, timeout=15,
-            )
-        except httpx.HTTPError as error:
-            raise Unreachable(f"Transmission could not be reached: {error.__class__.__name__}.") from error
+        # ⚠️ Through ``ctx.request``, not the shared client. Posting straight
+        # to the client walked past everything the context does around a call,
+        # and the "Ignore TLS errors" box was one of those things: the field
+        # was offered, saved and shown, and never read. A Transmission behind
+        # a self-signed certificate was simply unreachable, with no hint that
+        # the box the operator had ticked did nothing.
+        response = await ctx.request(
+            "POST",
+            f"{base_url(config)}/transmission/rpc",
+            json_body={"method": method, "arguments": arguments or {}},
+            headers=headers, auth=auth, timeout=15,
+            verify=not config.get("insecure"),
+            auth_errors=False,
+        )
         if response.status_code == 409 and retry:
             ctx.cache["transmission_session"] = response.headers.get("X-Transmission-Session-Id", "")
             return await self._rpc(config, ctx, method, arguments, retry=False)

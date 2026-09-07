@@ -19,6 +19,8 @@ from .base import (
     WidgetType,
     base_url,
     duration_short,
+    percent_primary,
+    percent_text,
 )
 
 #: What the NUT status flags mean. Everything unknown counts as a warning.
@@ -144,10 +146,14 @@ class PeanutAdapter(Adapter):
 
         return WidgetData(
             status=level if level != "ok" else ("warn" if charge is not None and charge < 50 else "ok"),
-            primary={"label": "Charge", "value": round(charge, 0) if charge is not None else 0, "unit": "%"},
+            # ⚠️ A UPS that does not report ``battery.charge`` had this card
+            # showing a charge of 0 percent, which reads as an empty battery
+            # rather than as a UPS that keeps that number to itself. Small
+            # models genuinely do not send it.
+            primary=percent_primary("Charge", round(charge, 0) if charge is not None else None),
             secondary=[
                 {"label": "State", "value": text},
-                {"label": "Load", "value": f"{load:.0f} %" if load is not None else "?"},
+                {"label": "Load", "value": percent_text(load)},
                 {"label": "Runtime", "value": duration_short(runtime) if runtime is not None else "?"},
             ],
             metrics={

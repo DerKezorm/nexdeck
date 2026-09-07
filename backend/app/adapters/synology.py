@@ -29,7 +29,9 @@ from .base import (
     join_parts,
     keep_items,
     percent,
+    percent_text,
     status_from_percent,
+    worst,
 )
 
 #: The rows of the system card, in the order they are drawn. Ticking them off
@@ -172,10 +174,10 @@ class SynologyAdapter(Adapter):
             cpu = float(cpu_block.get("user_load", 0)) + float(cpu_block.get("system_load", 0)) + float(cpu_block.get("other_load", 0))
             memory = float((util.get("memory") or {}).get("real_usage", 0))
             volumes = storage.get("volumes") or []
-            fullest = max((percent((v.get("size") or {}).get("used"), (v.get("size") or {}).get("total")) for v in volumes), default=0.0)
+            fullest = worst(*(percent((v.get("size") or {}).get("used"), (v.get("size") or {}).get("total")) for v in volumes))
             temperature = info.get("temperature")
             return WidgetData(
-                status=status_from_percent(max(cpu, memory, fullest)),
+                status=status_from_percent(worst(cpu, memory, fullest)),
                 # ⚠️ Every row carries its key. Without it the tick boxes and
                 # the dial would have to guess which row is which by its
                 # label, and a label is translated.
@@ -193,11 +195,14 @@ class SynologyAdapter(Adapter):
             for volume in storage.get("volumes") or []:
                 size = volume.get("size") or {}
                 used = percent(size.get("used"), size.get("total"))
+                healthy = volume.get("status") == "normal"
                 items.append({
                     "title": volume.get("display_name") or volume.get("id", "?"),
                     "subtitle": f"{human_bytes(float(size.get('used') or 0))} of {human_bytes(float(size.get('total') or 0))} · {volume.get('status', '?')}",
-                    "progress": used, "value": f"{used:.0f}%",
-                    "status": "ok" if volume.get("status") == "normal" and used < 90 else "warn",
+                    "progress": used, "value": percent_text(used),
+                    # A volume whose size did not come is not a healthy volume,
+                    # it is one nobody measured.
+                    "status": "unknown" if used is None else ("ok" if healthy and used < 90 else "warn"),
                 })
             # The picker runs centrally, but by then this card has already
             # traded its rows for a dial. So it is applied here first, or
@@ -207,7 +212,12 @@ class SynologyAdapter(Adapter):
                 # ⚠️ A dial shows one number and a box can hold several
                 # volumes. The fullest is the one worth a needle, and the card
                 # says which one it is rather than leaving that to be guessed.
-                fullest_volume = max(items, key=lambda one: float(one["progress"]))
+                # A volume without a measured share cannot be the needle, and
+                # if none of them has one there is no needle to draw.
+                measurable = [one for one in items if one["progress"] is not None]
+                if not measurable:
+                    return WidgetData(items=items, status="unknown")
+                fullest_volume = max(measurable, key=lambda one: float(one["progress"]))
                 return WidgetData(
                     status=fullest_volume["status"],
                     primary={"label": fullest_volume["title"], "value": round(float(fullest_volume["progress"]), 1), "unit": "%"},

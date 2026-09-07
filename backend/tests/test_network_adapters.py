@@ -251,7 +251,8 @@ async def test_mikrotik_turns_free_memory_into_used_memory(ctx: Context) -> None
     data = await get_adapter("mikrotik").fetch("system", config, {}, ctx)
     assert data.primary == {"label": "CPU", "value": 7.0, "unit": "%"}
     values = {entry["label"]: entry["value"] for entry in data.secondary}
-    assert values["Memory"] == "25.0 %" and values["Uptime"] == "6w2d4h"
+    # One spelling for a share across every card: "25.0%", not "25.0 %".
+    assert values["Memory"] == "25.0%" and values["Uptime"] == "6w2d4h"
     assert respx.calls.last.request.headers["Authorization"].startswith("Basic ")
 
 

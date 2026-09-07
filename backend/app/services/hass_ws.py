@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import ssl
 import time
 from typing import Any
 
@@ -27,6 +28,23 @@ logger = logging.getLogger("nexdeck.hass")
 RECONNECT_SECONDS = 15
 #: The floor between two refreshes of one card, whatever the house does.
 TOUCH_INTERVAL = 1.0
+
+
+def ssl_options(url: str, config: dict[str, Any]) -> dict[str, Any]:
+    """What to hand ``websockets.connect`` about certificates.
+
+    ⚠️ The "Ignore TLS errors" box counts here too. Everything the adapter
+    fetches over HTTP honoured it and this connection did not, so a Home
+    Assistant behind a self-signed certificate showed its cards and never
+    received a state change: the socket failed to open every twenty seconds,
+    which reads as "reconnecting", not as "the certificate".
+    """
+    if not url.startswith("wss://") or not config.get("insecure"):
+        return {}
+    relaxed = ssl.create_default_context()
+    relaxed.check_hostname = False
+    relaxed.verify_mode = ssl.CERT_NONE
+    return {"ssl": relaxed}
 
 
 class HassListener:
@@ -86,7 +104,8 @@ class HassListener:
             cache = collector._caches.setdefault(integration_id, {})
             url = base_url(config).replace("http://", "ws://", 1).replace("https://", "wss://", 1) + "/api/websocket"
             try:
-                async with websockets.connect(url, max_size=16 * 1024 * 1024, open_timeout=15) as socket:
+                async with websockets.connect(url, max_size=16 * 1024 * 1024, open_timeout=15,
+                                              **ssl_options(url, config)) as socket:
                     await socket.recv()  # auth_required
                     await socket.send(json.dumps({"type": "auth", "access_token": config.get("token", "")}))
                     reply = json.loads(await socket.recv())

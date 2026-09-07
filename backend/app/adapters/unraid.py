@@ -15,6 +15,7 @@ from .base import (
     base_url,
     percent,
     status_from_percent,
+    worst,
 )
 
 QUERY = """
@@ -83,7 +84,7 @@ class UnraidAdapter(Adapter):
             used = percent(float(kb.get("used") or 0), float(kb.get("total") or 0))
             uptime = ((data.get("info") or {}).get("os") or {}).get("uptime") or ""
             return WidgetData(
-                status="bad" if array.get("state") not in ("STARTED", "started", None) else status_from_percent(max(cpu, memory, used)),
+                status="bad" if array.get("state") not in ("STARTED", "started", None) else status_from_percent(worst(cpu, memory, used)),
                 primary={"label": "CPU", "value": cpu, "unit": "%"},
                 secondary=[{"label": "Memory", "value": memory, "unit": "%", "metric": "memory"}, {"label": "Array", "value": used, "unit": "%"}, {"label": "Since", "value": str(uptime)[:10]}],
                 metrics={"cpu": cpu, "memory": memory},

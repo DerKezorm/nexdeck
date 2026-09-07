@@ -42,7 +42,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const [refresh, setRefresh] = useState('')
   const [pageId, setPageId] = useState('')
   const [options, setOptions] = useState<Record<string, unknown>>({})
-  const [health, setHealth] = useState({ kind: 'http', interval_seconds: 30, enabled: true, insecure: false })
+  const [health, setHealth] = useState({ kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, enabled: true, insecure: false })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -66,7 +66,23 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     setPageId('')
     setOptions({ ...widget.options })
     setError('')
-    if (widget.health) setHealth({ kind: widget.health.kind, interval_seconds: (widget.health as { interval_seconds?: number }).interval_seconds ?? 30, enabled: true, insecure: false })
+    // ⚠️ Everything, not two of them. The sheet used to read the kind and the
+    // interval and hard-code the rest, while the server assigns every field
+    // without condition: renaming an app card put the TLS box back to off, the
+    // timeout back to five seconds and the expected status back to any, and
+    // two minutes later every administrator got an outage notice about a
+    // service that had been fine all along.
+    if (widget.health) {
+      const check = widget.health
+      setHealth({
+        kind: check.kind,
+        interval_seconds: check.interval_seconds ?? 30,
+        timeout_seconds: check.timeout_seconds ?? 5,
+        expect_status: check.expect_status ?? 0,
+        enabled: check.enabled ?? true,
+        insecure: check.insecure ?? false,
+      })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget?.id])
   useEffect(() => {
@@ -135,7 +151,15 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       })
       if (isApp && (link || integrationId) && options.check !== false) {
         // An empty target follows the integration's address on the server, at every check.
-        await put(`/widgets/${widget.id}/health`, { kind: health.kind, target: health.kind === 'http' ? link : (options.check_target as string) || link, interval_seconds: health.interval_seconds, enabled: true, insecure: health.insecure })
+        await put(`/widgets/${widget.id}/health`, {
+          kind: health.kind,
+          target: health.kind === 'http' ? link : (options.check_target as string) || link,
+          interval_seconds: health.interval_seconds,
+          timeout_seconds: health.timeout_seconds,
+          expect_status: health.expect_status,
+          enabled: health.enabled,
+          insecure: health.insecure,
+        })
       }
       onSaved()
       onClose()

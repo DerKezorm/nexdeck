@@ -23,7 +23,7 @@ import socket
 import time
 from typing import Any
 
-from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType
+from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType, measured
 
 MAC = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$")
 #: How long a machine counts as just woken, so the card can say something.
@@ -40,6 +40,11 @@ def mac_bytes(text: str) -> bytes:
             hint="Six pairs of hex digits, separated by colons: 00:1A:2B:3C:4D:5E.",
         )
     return bytes(int(part, 16) for part in re.split(r"[:-]", cleaned))
+
+
+def _woken_key(mac: str) -> str:
+    """One entry per machine. The cache is shared by every card without a connection."""
+    return f"wol_sent:{str(mac or '').strip().upper()}"
 
 
 def magic_packet(mac: bytes) -> bytes:
@@ -153,7 +158,11 @@ class WolAdapter(Adapter):
                 hint="Open the card's settings and enter the address of the machine's network card.",
             )
         host, port = self._target(config)
-        woken = float(ctx.cache.get("wol_sent") or 0)
+        # ⚠️ Keyed by the machine, not by the house. Cards without a connection
+        # all share one cache, so a single "wol_sent" meant that waking one
+        # machine put "Woken 3 s" on every Wake-on-LAN card there is, and told
+        # each of them that the machine had not answered yet.
+        woken = float(ctx.cache.get(_woken_key(mac)) or 0)
         recently = bool(woken and time.time() - woken < JUST_WOKEN)
 
         awake: bool | None = None
@@ -174,7 +183,9 @@ class WolAdapter(Adapter):
             primary={"label": "Awake" if awake else ("Asleep" if awake is False else "Unknown"), "value": host or mac.upper()},
             secondary=secondary,
             actions=[Action(id="wake", label="Wake", icon="power")],
-            metrics={"awake": 1.0 if awake else 0.0},
+            # A card with no address to knock on knows nothing about the
+            # machine, and a zero there is a machine reported as asleep.
+            metrics=measured({"awake": None if awake is None else (1.0 if awake else 0.0)}),
             meta={"status_reason": reason, "view": options.get("view") or "detail", "awake": awake},
         )
 
@@ -194,7 +205,7 @@ class WolAdapter(Adapter):
                 code="send_failed",
                 hint="Check the broadcast address; from a container it has to be the one of the machine's subnet.",
             ) from error
-        ctx.cache["wol_sent"] = time.time()
+        ctx.cache[_woken_key(str(config.get("mac") or ""))] = time.time()
         return f"Magic packet sent to {broadcast}:{port}."
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
