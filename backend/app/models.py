@@ -274,6 +274,9 @@ class Page(Base):
     position: Mapped[int] = mapped_column(Integer, default=0)
     #: ``{"lg": [{"i": "<widget id>", "x", "y", "w", "h"}], "md": [...], "sm": [...]}``
     layouts: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    #: Counts up on every saved layout, so a second browser can be told it is
+    #: working from a stand that has moved on. See ``put_layouts``.
+    layout_version: Mapped[int] = mapped_column(Integer, default=0)
     #: Optional named sections: ``[{"id", "title", "y"}]``
     sections: Mapped[list[Any]] = mapped_column(JSON, default=list)
 

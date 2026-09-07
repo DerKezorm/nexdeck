@@ -109,7 +109,9 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
         widget.options = body.options
-    if body.refresh_seconds is not None:
+    if body.clear_refresh:
+        widget.refresh_seconds = None
+    elif body.refresh_seconds is not None:
         widget.refresh_seconds = body.refresh_seconds
     if body.page_id is not None and body.page_id != page.id:
         target = db.get(Page, body.page_id)

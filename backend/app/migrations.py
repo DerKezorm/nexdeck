@@ -120,6 +120,10 @@ def _unique_email_index(connection: Connection) -> None:
     ))
 
 
+def _layout_version_column(connection: Connection) -> None:
+    _add_column(connection, "pages", "layout_version", "INTEGER NOT NULL DEFAULT 0")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -131,6 +135,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (8, "Findings stay on for the cards that already exist", _findings_stay_on_for_existing_widgets),
     (9, "An identity provider can say it checks a second factor itself", _provider_second_factor_column),
     (10, "An e-mail address belongs to one account", _unique_email_index),
+    (11, "A page counts its saved layouts", _layout_version_column),
 ]
 
 

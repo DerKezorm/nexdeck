@@ -16,7 +16,8 @@
     "loading": "Lädt…",
     "toggleTheme": "Hell und Dunkel wechseln",
     "refresh": "Neu laden",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "close": "Schließen"
   },
   "errors": {
     "network": "Der Server ist nicht erreichbar.",

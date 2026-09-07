@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 
-import { streamUrl } from '../api/client'
+import { ApiError, get, streamUrl } from '../api/client'
 import type { WidgetData } from '../lib/types'
+import { forgetEverything } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 
@@ -62,6 +63,19 @@ export function useStream({ board, onBoardChanged, onLayout, onConnected, enable
       })
       source.onerror = () => {
         source?.close()
+        if (closed) return
+        // ⚠️ An EventSource does not hand over the status code, so a session
+        // that has run out looks exactly like a server that is restarting: the
+        // browser reconnected for ever, every attempt was refused, and the
+        // person in front of it saw a board that quietly stopped moving. One
+        // ordinary request settles which of the two it is, and a 401 there
+        // signs the session out through the usual path.
+        void get('/auth/me').catch((failure) => {
+          if (failure instanceof ApiError && failure.status === 401) {
+            closed = true
+            forgetEverything()
+          }
+        })
         if (closed) return
         window.setTimeout(connect, retry)
         retry = Math.min(30000, retry * 2)

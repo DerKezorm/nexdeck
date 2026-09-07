@@ -200,9 +200,20 @@ export function Toast({ children, onClose, level = 'info' }: { children: ReactNo
     timer.current = window.setTimeout(onClose, 5000)
     return () => window.clearTimeout(timer.current)
   }, [onClose])
+  const { t } = useTranslation()
   return (
-    <div className={`fixed bottom-20 md:bottom-6 right-4 z-50 glass-strong rounded-xl px-4 py-3 text-sm max-w-sm border ${colour} shadow-2xl rise`} role="status">
+    <div className={`fixed bottom-20 md:bottom-6 right-4 z-50 glass-strong rounded-xl pl-4 pr-10 py-3 text-sm max-w-sm border ${colour} shadow-2xl rise`} role="status">
       {children}
+      {/* ⚠️ Every window gets one visible way out. This one had exactly one
+          exit, the timer, so a message that mattered could not be dismissed
+          and a message that did not could not be got rid of. */}
+      <button
+        className="absolute top-2 right-2 h-6 w-6 rounded-md grid place-items-center text-muted hover:text-fg hover:bg-white/10"
+        onClick={onClose}
+        aria-label={t('common.close')}
+      >
+        <X size={14} />
+      </button>
     </div>
   )
 }

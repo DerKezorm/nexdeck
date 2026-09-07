@@ -147,6 +147,9 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         clear_integration: !integrationId && (adapter?.needs_integration || isApp) ? true : undefined,
         options,
         refresh_seconds: refresh ? Number(refresh) : undefined,
+        // An emptied field means "back to the card's own interval", and that
+        // needs saying: leaving it out means "unchanged".
+        clear_refresh: refresh ? undefined : true,
         page_id: pageId ? Number(pageId) : undefined,
       })
       if (isApp && (link || integrationId) && options.check !== false) {

@@ -291,7 +291,16 @@ if _static is not None and (_static / "assets").is_dir():
 
 @app.get("/{path:path}", include_in_schema=False)
 async def spa(path: str) -> Response:
-    """Every non-API address is the single-page app."""
+    """Every non-API address is the single-page app.
+
+    ⚠️ Except an API address. This route matches everything, so a mistyped or
+    withdrawn ``/api/`` address answered 200 with the whole dashboard page: a
+    client asking for JSON got HTML and a success, and the 404 handler never
+    saw it. POST already answered 405, so the two methods disagreed about
+    whether the address exists.
+    """
+    if path.startswith("api/"):
+        return JSONResponse({"code": "not_found", "message": "There is no such address."}, status_code=404)
     directory = _static_dir()
     if directory is not None and path and not path.startswith("api/"):
         candidate = (directory / path).resolve()

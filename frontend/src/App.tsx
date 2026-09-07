@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { BackgroundLayer } from './components/BackgroundLayer'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
@@ -72,6 +73,11 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Look />
+      {/* ⚠️ Around everything and outside Suspense, so it also catches a lazy
+          chunk that is no longer on the server after a deploy: without it that
+          unmounts the whole tree and leaves a white page with nothing on it,
+          no message and no button, on a wall display nobody is standing at. */}
+      <ErrorBoundary>
       <BrowserRouter>
         <Suspense fallback={<Loading />}>
           <Routes>
@@ -125,6 +131,7 @@ export function App() {
         </Suspense>
         <NoticeToast />
       </BrowserRouter>
+      </ErrorBoundary>
     </QueryClientProvider>
   )
 }

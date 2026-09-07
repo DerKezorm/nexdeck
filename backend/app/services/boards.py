@@ -205,6 +205,8 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
             "id": page.id, "name": page.name, "slug": page.slug, "icon": page.icon, "position": page.position,
             "layouts": {key: page.layouts.get(key, []) for key in COLUMNS} if page.layouts else {key: [] for key in COLUMNS},
             "sections": page.sections or [], "widgets": widgets,
+            # What the browser has to send back when it saves an arrangement.
+            "layout_version": page.layout_version or 0,
         })
     view = {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
