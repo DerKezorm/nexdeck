@@ -334,3 +334,40 @@ def test_an_untrusted_import_never_looks_at_the_environment(monkeypatch) -> None
     monkeypatch.setattr(os.environ, "get", forbidden)
     with db_session() as db, pytest.raises(ImportError_):
         import_board(db, ENV_YAML, owner_id=None, trusted=False, allow_locked=False)
+
+
+def test_being_made_a_guest_takes_the_boards_you_own_down_to_looking(client: TestClient) -> None:
+    """⚠️ The role has to beat ownership, or the downgrade is only a label.
+
+    ``board_permission`` answered "owner" for the owner before it ever looked
+    at the role, while the very same function already pushed a guest down from
+    "edit" and "act" on every *share*. So somebody moved to guest kept full
+    rights on every board that was already theirs, actions included, and the
+    person doing the moving had no way of knowing. Decided on 07.09.2026: the
+    role wins.
+    """
+    setup_admin(client)
+    create_user(client, "kim", role="user")
+    kim = TestClient(client.app)
+    login(kim, "kim", "another-long-password")
+    board = kim.post("/api/v1/boards", json={"name": "Kim's own"}, headers=CSRF).json()
+    page = board["pages"][0]["id"]
+    made = kim.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.markdown"}, headers=CSRF)
+    assert made.status_code == 201, made.text
+    widget = made.json()["widget"]
+
+    kim_id = kim.get("/api/v1/auth/me").json()["id"]
+    assert client.patch(f"/api/v1/users/{kim_id}", json={"role": "guest"}, headers=CSRF).status_code == 200
+
+    # Still theirs to look at.
+    opened = kim.get(f"/api/v1/boards/{board['slug']}")
+    assert opened.status_code == 200
+    assert opened.json()["permission"] == "view", "a guest never gets more than view, not even on their own board"
+
+    # And nothing beyond that.
+    assert kim.patch(f"/api/v1/boards/{board['slug']}", json={"name": "Renamed"}, headers=CSRF).status_code == 403
+    assert kim.patch(f"/api/v1/widgets/{widget['id']}", json={"title": "New"}, headers=CSRF).status_code == 403
+    assert kim.delete(f"/api/v1/widgets/{widget['id']}", headers=CSRF).status_code == 403
+    assert kim.post(f"/api/v1/widgets/{widget['id']}/actions/anything", json={"params": {}}, headers=CSRF).status_code == 403
+    assert kim.post(f"/api/v1/widgets/{widget['id']}/refresh", headers=CSRF).status_code == 403
+    assert kim.delete(f"/api/v1/boards/{board['slug']}", headers=CSRF).status_code == 403

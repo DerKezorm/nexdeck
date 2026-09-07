@@ -6,6 +6,7 @@ never pass by accident.
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from pathlib import Path

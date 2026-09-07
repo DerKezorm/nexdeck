@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 from sqlalchemy import select
 
 from ..deps import CurrentUser, DbSession, MemberUser, error
@@ -30,11 +30,22 @@ def list_tokens(user: CurrentUser, db: DbSession) -> list[dict]:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Create an API token")
-def create_token(body: TokenCreate, user: MemberUser, db: DbSession) -> dict:
+def create_token(body: TokenCreate, body_request: Request, user: MemberUser, db: DbSession) -> dict:
     """The token is shown once. It carries the same rights as the account.
 
     It also ends when the password changes, like every session does.
+
+    ⚠️ Not from a token. One that was handed out for a script could mint more,
+    and revoking the first left the second alive, so taking a token back did
+    not take the access back. A token is issued to a browser session, where
+    somebody proved who they are a moment ago.
     """
+    if getattr(body_request.state, "auth_kind", "") == "token":
+        raise error(
+            "session_required",
+            "An API token cannot create another one. Sign in and make it there.",
+            status.HTTP_403_FORBIDDEN,
+        )
     token, token_hash, prefix = new_opaque_token("nd")
     ends = utcnow() + timedelta(days=body.expires_days) if body.expires_days else None
     row = ApiToken(user_id=user.id, name=body.name.strip(), token_hash=token_hash, prefix=prefix, expires_at=ends)

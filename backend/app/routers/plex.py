@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
 
-from ..deps import MemberUser, error
+from ..deps import AdminUser, error
 from ..services import plex_auth
 
 router = APIRouter(prefix="/api/v1/plex", tags=["plex"])
@@ -67,7 +67,7 @@ async def poll_pin(pin_id: str, body: PlexPinBody, user: AdminUser) -> dict:
 
 
 @router.post("/servers", summary="List the Plex servers an account may use")
-async def list_servers(body: ServersBody, user: MemberUser) -> list[dict]:
+async def list_servers(body: ServersBody, user: AdminUser) -> list[dict]:
     """The token travels in the body, never in the address, so it stays out of logs."""
     try:
         return await plex_auth.servers(body.token)

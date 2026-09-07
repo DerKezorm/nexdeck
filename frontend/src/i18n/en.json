@@ -175,6 +175,8 @@
       "currentPassword": "Current password",
       "newPassword": "New password",
       "changePassword": "Change password",
+      "passwordChangedSignIn": "Password changed. Every session of this account has ended; signing you in again.",
+      "factorRequiredHere": "This installation asks every account for a second factor. Set one up below to carry on.",
       "sessions": "Sessions",
       "sessionsHelp": "Every browser that is signed in with this account.",
       "signOutSession": "Sign out",
@@ -255,6 +257,8 @@
       "oidcRole": "Role for new accounts",
       "oidcAutoCreate": "Create accounts on first sign-in",
       "oidcAutoCreateHelp": "Off means only linked accounts may sign in.",
+      "oidcTrustsSecondFactor": "This provider checks a second factor itself",
+      "oidcTrustsSecondFactorHelp": "Off means nexdeck asks for its own code after this provider signs somebody in, if that account has one set up. Turn it on where authentik, Authelia or Keycloak already ask.",
       "oidcRedirect": "Redirect URI to register at the provider: {{url}}",
       "oidcAdd": "Add provider"
     },

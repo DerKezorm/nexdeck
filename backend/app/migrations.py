@@ -87,6 +87,11 @@ def _findings_stay_on_for_existing_widgets(connection: Connection) -> None:
     logger.info("Findings stay switched on for %d existing widget(s).", changed)
 
 
+def _provider_second_factor_column(connection: Connection) -> None:
+    """Existing providers do not check a factor until somebody says they do."""
+    _add_column(connection, "oidc_providers", "trusts_second_factor", "BOOLEAN NOT NULL DEFAULT 0")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -96,6 +101,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (6, "API and kiosk tokens can expire and be withdrawn", _token_expiry_columns),
     (7, "Accounts can carry a second factor", _second_factor_columns),
     (8, "Findings stay on for the cards that already exist", _findings_stay_on_for_existing_widgets),
+    (9, "An identity provider can say it checks a second factor itself", _provider_second_factor_column),
 ]
 
 

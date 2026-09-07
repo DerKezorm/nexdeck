@@ -194,6 +194,14 @@ class OidcProvider(Base):
     #: Create an account on first sign-in, with this role.
     auto_create: Mapped[bool] = mapped_column(Boolean, default=True)
     default_role: Mapped[str] = mapped_column(String(16), default=Role.user.value)
+    #: This provider asks for a second factor itself, so nexdeck does not.
+    #:
+    #: ⚠️ Off by default, which is the safe way round: until 07.09.2026 the
+    #: OIDC return path opened a session outright, so an account with a
+    #: confirmed authenticator app was let in without a code as long as it came
+    #: through a provider. Whoever runs authentik or Authelia with MFA in front
+    #: ticks this and is not asked twice. nexdeck cannot find it out by itself.
+    trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class OidcLink(Base):

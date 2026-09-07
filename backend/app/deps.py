@@ -15,6 +15,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSessionType
 
+from .config import get_settings
 from .db import get_db
 from .models import (
     ApiToken,
@@ -106,6 +107,33 @@ def usable_token(row: ApiToken | KioskToken) -> bool:
     return row.expires_at > datetime.now(UTC)
 
 
+#: What an account may still reach while it owes the installation a second
+#: factor: look at itself, set the factor up, and leave.
+PENDING_FACTOR_PATHS = (
+    "/api/v1/auth/me",
+    "/api/v1/auth/logout",
+    "/api/v1/auth/two-factor",
+    "/api/v1/setup/status",
+    "/api/health",
+)
+
+
+def _kept_at_the_door(request: Request, db: DbSessionType, user: User) -> bool:
+    """Does the operator want a factor from this account before anything else?
+
+    ⚠️ The setting existed and did nothing. ``login`` worked out
+    ``must_set_up``, wrote it into a log line and threw it away, and the
+    session it had already opened was a full one. Whoever ticked "require a
+    second factor from everybody" got a switch that moved and changed nothing.
+    """
+    from .services import two_factor
+
+    if any(request.url.path.startswith(f"{get_settings().url_base}{allowed}") or request.url.path.startswith(allowed)
+           for allowed in PENDING_FACTOR_PATHS):
+        return False
+    return two_factor.must_set_up(db, user)
+
+
 def optional_user(request: Request, db: DbSession) -> User | None:
     user = _user_from_bearer(request, db)
     if user is None:
@@ -113,6 +141,13 @@ def optional_user(request: Request, db: DbSession) -> User | None:
         if user is not None and request.method not in ("GET", "HEAD", "OPTIONS"):
             if request.headers.get(CSRF_HEADER) != "1":
                 raise error("csrf", "This request must come from the nexdeck app.", status.HTTP_403_FORBIDDEN)
+    if user is not None and _kept_at_the_door(request, db, user):
+        journal.set_actor(user.username)
+        raise error(
+            "two_factor_setup_required",
+            "This installation asks every account for a second factor. Set one up to carry on.",
+            status.HTTP_403_FORBIDDEN,
+        )
     # Every line written while serving this call now carries who is doing it.
     # A log that says a connection was deleted and not by whom answers half a
     # question, and it is the wrong half.
@@ -185,8 +220,15 @@ def board_permission(db: DbSessionType, board: Board, user: User | None) -> str 
     """``owner``, ``act``, ``edit``, ``view`` or None."""
     if user is None:
         return None
-    if user.role == Role.admin.value or board.owner_id == user.id:
+    if user.role == Role.admin.value:
         return "owner"
+    if board.owner_id == user.id:
+        # ⚠️ The role beats ownership. A member downgraded to guest used to
+        # keep everything on the boards that were already theirs, actions
+        # included, while the same downgrade did take "edit" and "act" away
+        # from every share. "Guests may only look" has to mean that, or the
+        # downgrade is a label. Decided on 07.09.2026.
+        return "view" if user.role == Role.guest.value else "owner"
     best: str | None = None
     for share in db.scalars(select(BoardShare).where(BoardShare.board_id == board.id)):
         applies = (share.user_id is not None and share.user_id == user.id) or (share.role is not None and share.role == user.role)

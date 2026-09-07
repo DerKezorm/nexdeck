@@ -14,9 +14,9 @@ from ..crypto import decrypt, encrypt
 from ..deps import AdminUser, DbSession, error
 from ..models import OidcLink, OidcProvider, Role, User
 from ..schemas import OidcProviderBody
-from ..security import UNUSABLE_PASSWORD
-from ..services import login_guard, oidc
-from .auth import cookie_secure, open_session
+from ..security import UNUSABLE_PASSWORD, create_step_token, has_usable_password
+from ..services import login_guard, oidc, two_factor
+from .auth import STEP_COOKIE, STEP_MINUTES, cookie_secure, open_session
 from .system import get_setting
 
 router = APIRouter(prefix="/api/v1", tags=["oidc"])
@@ -91,6 +91,12 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
         login_guard.failed(address)
         return refuse(failure.code, failure.message)
     subject = str(payload.get("sub") or "")
+    if not subject:
+        # ⚠️ Without this, the empty string became the key of the identity, and
+        # the second person whose provider omits ``sub`` would have been let
+        # into the account of the first. jwt.decode does not require the claim.
+        login_guard.failed(address)
+        return refuse("oidc_bad_token", "the ID token has no subject")
     email = str(payload.get("email") or info.get("email") or "")
     preferred = str(payload.get("preferred_username") or info.get("preferred_username") or email.split("@")[0] or f"user-{subject[:8]}")
     display = str(payload.get("name") or info.get("name") or preferred)
@@ -101,8 +107,18 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
         if not provider.auto_create:
             return refuse("oidc_no_account", "no linked account and auto-create is off")
         username = re.sub(r"[^a-zA-Z0-9._-]", "-", preferred)[:64] or f"user-{subject[:8]}"
+        # ⚠️ Two goes are not enough. Adding the subject once was the whole
+        # collision handling, so a second person with the same preferred name
+        # and a subject starting with the same six characters walked into a
+        # unique constraint, and the callback answered 500 with a stack trace.
         if db.scalar(select(User).where(func.lower(User.username) == username.lower())):
             username = f"{username}-{subject[:6]}"
+        attempt_number = 2
+        while db.scalar(select(User).where(func.lower(User.username) == username.lower())):
+            username = f"{username[:58]}-{attempt_number}"
+            attempt_number += 1
+            if attempt_number > 50:
+                return refuse("oidc_name_taken", "no free user name could be made from the provider's claims")
         user = User(username=username, display_name=display[:120], password_hash=UNUSABLE_PASSWORD, role=provider.default_role)
         db.add(user)
         db.flush()
@@ -112,6 +128,21 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
     if user is None or user.disabled:
         return refuse("oidc_disabled", "the linked account is disabled or gone")
     login_guard.succeeded(address)
+    if two_factor.enabled(user) and not provider.trusts_second_factor:
+        # ⚠️ The provider proved who this is; it did not prove the second
+        # factor. Until 07.09.2026 this path opened a session outright, so an
+        # account with a confirmed authenticator app was let in without a code
+        # as long as it came through OIDC. The ticket travels in a short-lived
+        # cookie rather than in the address: this is a redirect, and anything
+        # in the address stands in the proxy log.
+        logger.info("%s came in through %r and now needs a code.", user.username, slug)
+        response = _to_app("/login", second_step="1")
+        response.delete_cookie(oidc.COOKIE_NAME, path=f"{get_settings().url_base}/api/v1/auth/oidc")
+        response.set_cookie(
+            STEP_COOKIE, create_step_token(user.id), max_age=STEP_MINUTES * 60, httponly=True,
+            samesite="lax", secure=cookie_secure(request), path=f"{get_settings().url_base}/api/v1/auth",
+        )
+        return response
     response = _to_app("/")
     response.delete_cookie(oidc.COOKIE_NAME, path=f"{get_settings().url_base}/api/v1/auth/oidc")
     open_session(db, user, request, response)
@@ -123,7 +154,8 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
 
 def _provider_public(provider: OidcProvider) -> dict:
     return {"id": provider.id, "slug": provider.slug, "label": provider.label, "issuer_url": provider.issuer_url, "client_id": provider.client_id,
-            "has_secret": bool(provider.client_secret), "scopes": provider.scopes, "enabled": provider.enabled, "auto_create": provider.auto_create, "default_role": provider.default_role}
+            "has_secret": bool(provider.client_secret), "scopes": provider.scopes, "enabled": provider.enabled, "auto_create": provider.auto_create, "default_role": provider.default_role,
+            "trusts_second_factor": provider.trusts_second_factor}
 
 
 @router.get("/oidc/providers", summary="List identity providers")
@@ -137,7 +169,7 @@ def create_provider(body: OidcProviderBody, admin: AdminUser, db: DbSession) -> 
         raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
     provider = OidcProvider(slug=body.slug, label=body.label, issuer_url=body.issuer_url.rstrip("/"), client_id=body.client_id,
                             client_secret=encrypt(body.client_secret) if body.client_secret else "", scopes=body.scopes, enabled=body.enabled,
-                            auto_create=body.auto_create, default_role=body.default_role)
+                            auto_create=body.auto_create, default_role=body.default_role, trusts_second_factor=body.trusts_second_factor)
     db.add(provider)
     db.commit()
     return _provider_public(provider)
@@ -148,6 +180,11 @@ def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, d
     provider = db.get(OidcProvider, provider_id)
     if provider is None:
         raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
+    # ⚠️ The same check POST has. Without it the unique constraint answered,
+    # and a unique constraint answers with 500 and a stack trace.
+    clash = db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug, OidcProvider.id != provider_id))
+    if clash is not None:
+        raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
     provider.slug = body.slug
     provider.label = body.label
     provider.issuer_url = body.issuer_url.rstrip("/")
@@ -158,15 +195,38 @@ def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, d
     provider.enabled = body.enabled
     provider.auto_create = body.auto_create
     provider.default_role = body.default_role
+    provider.trusts_second_factor = body.trusts_second_factor
     db.commit()
     return _provider_public(provider)
 
 
 @router.delete("/oidc/providers/{provider_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove an identity provider")
-def delete_provider(provider_id: int, admin: AdminUser, db: DbSession) -> None:
+def delete_provider(provider_id: int, admin: AdminUser, db: DbSession, force: bool = False) -> None:
+    """⚠️ Removing a provider takes its links with it (``ondelete="CASCADE"``).
+
+    An account created through that provider has ``UNUSABLE_PASSWORD`` and no
+    other way in, so deleting the provider locks it out for good, silently and
+    with no undo. Counting them first and saying the number is the difference
+    between a decision and an accident. ``force=true`` goes ahead anyway.
+    """
     provider = db.get(OidcProvider, provider_id)
     if provider is None:
         raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
+    if not force:
+        stranded = [
+            user.username
+            for link in db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id))
+            if (user := db.get(User, link.user_id)) is not None
+            and not has_usable_password(user.password_hash)
+            and db.scalar(select(func.count()).select_from(OidcLink).where(OidcLink.user_id == link.user_id)) == 1
+        ]
+        if stranded:
+            raise error(
+                "would_lock_out",
+                f"{len(stranded)} account(s) have no password and no other provider: {', '.join(sorted(stranded)[:5])}. "
+                "Give them a password first, or repeat with force=true.",
+                status.HTTP_409_CONFLICT,
+            )
     db.delete(provider)
     db.commit()
 
