@@ -211,6 +211,20 @@ class Collector:
                 meta={"code": "secret_unreadable", "hint": "The key changed. Enter the credentials of this connection again."},
             ))
             return RECOVERY_INTERVAL
+        except Exception:  # noqa: BLE001
+            # ⚠️ Anything at all. The two branches above cover what an adapter
+            # is expected to raise; anything else came out of here and ended
+            # the card's task, so the card froze on its last data and came back
+            # only after a restart. And the text says nothing about the inside
+            # of the server: it reaches every viewer of the board, guests
+            # included. The reason goes to the log, where it belongs.
+            logger.exception("Widget %s could not be refreshed.", widget_id)
+            live.set(widget_id, WidgetData(
+                status="bad",
+                error="This card could not be read. The server log says why.",
+                meta={"code": "unexpected"},
+            ))
+            return RECOVERY_INTERVAL
 
     async def _refresh(self, widget_id: int) -> float | None:
         with db_session() as db:

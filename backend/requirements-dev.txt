@@ -8,3 +8,5 @@ respx==0.22.0
 # Pinned exactly on purpose: ruff adds rules to its defaults with every minor
 # release, and an unpinned build would turn red one day without any change.
 ruff==0.16.5
+# Measures what the tests actually touch. The floor is in pyproject.toml.
+coverage[toml]==7.13.0

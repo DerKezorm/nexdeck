@@ -28,3 +28,26 @@ ignore = [
 asyncio_mode = "auto"
 testpaths = ["tests"]
 filterwarnings = ["error::DeprecationWarning:app.*"]
+
+# What the tests actually touch. Measured on the run that happens anyway:
+# `coverage run -m pytest` in CI, then `coverage report` against the floor.
+[tool.coverage.run]
+source = ["app"]
+branch = true
+# Nothing is left out. A file omitted to make the number look better is the
+# same mistake as counting only the files some test happened to import.
+
+[tool.coverage.report]
+precision = 1
+show_missing = false
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+# The floor, not a target. It goes up when coverage does; it goes down only
+# with a reason in the commit message.
+# Backend measured 82.1% on 07.09.2026; the frontend floor lives in
+# vite.config.ts next to the same reasoning.
+fail_under = 80

@@ -79,6 +79,27 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     exclude: ['node_modules/**', 'e2e/**', 'dist/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      // ⚠️ `include` on purpose, and wide. Without it only the files some
+      // test imported are counted, so a file nobody tests at all raises the
+      // number by not appearing. That is the opposite of a measurement.
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test/**',
+        'src/main.tsx',
+        // The service worker runs in a worker, not in jsdom; the built
+        // project tests it in a real browser instead.
+        'src/sw.ts',
+        'src/vite-env.d.ts',
+      ],
+      // The floor, not a target. When it trips the tests come up; the
+      // number here goes down only with a reason in the commit message.
+      thresholds: { statements: 32, branches: 35, functions: 21, lines: 34 },
+    },
   },
   server: {
     port: 5176,

@@ -44,9 +44,14 @@ jobs:
         working-directory: backend
         run: python -m ruff check app tests
 
+      # Under coverage, so the number is measured on the run that was going
+      # to happen anyway. The floor is in pyproject.toml; it goes up when
+      # coverage does and down only with a reason.
       - name: Backend tests
         working-directory: backend
-        run: python -m pytest -q
+        run: |
+          python -m coverage run -m pytest -q
+          python -m coverage report
 
       # Every pinned dependency against OSV, Python and npm in one run. No
       # account and no key.
@@ -99,7 +104,7 @@ jobs:
 
       - name: Frontend tests
         working-directory: frontend
-        run: npm test
+        run: npm run coverage
 
       - name: Browser for the end-to-end test
         working-directory: frontend

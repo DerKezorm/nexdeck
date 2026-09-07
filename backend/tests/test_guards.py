@@ -247,11 +247,16 @@ def test_public_list_has_no_dead_entries() -> None:
 
 def test_every_operation_has_a_readable_summary() -> None:
     short: list[str] = []
+    checked = 0
     for route in api_routes():
         if not route.include_in_schema:
             continue
+        checked += 1
         if len((route.summary or "").split()) < 2:
             short.append(f"{sorted(route.methods)} {route.path}: {route.summary!r}")
+    # ⚠️ The floor. Without it this guard passes on an empty route table, which
+    # is exactly what it would look like if the app failed to wire itself up.
+    assert checked >= 100, f"only {checked} operations were looked at, so this guard proves nothing"
     assert short == [], "operations whose summary says too little on /api/docs:\n  " + "\n  ".join(short)
 
 
@@ -296,26 +301,38 @@ def test_no_personal_data_in_the_repository() -> None:
 
 def test_no_em_dashes_in_texts() -> None:
     offenders: list[str] = []
+    scanned = 0
     for folder, patterns in ((BACKEND, ("*.py",)), (FRONTEND, ("*.ts", "*.tsx", "*.json"))):
         for pattern in patterns:
             for path in folder.rglob(pattern):
                 if ".test." in path.name or path.name == "format.ts":
                     continue
+                scanned += 1
                 if "—" in path.read_text(encoding="utf-8", errors="replace"):
                     offenders.append(str(path.relative_to(ROOT)))
+    assert scanned >= 100, f"only {scanned} files were read, so this guard proves nothing"
     assert offenders == [], "em dashes in:\n  " + "\n  ".join(offenders)
 
 
 def test_error_details_carry_code_and_message() -> None:
     """Every HTTPException in the routers goes through ``error()`` or spells out both fields."""
     offenders: list[str] = []
+    raw = 0
+    through_error = 0
     for path in (BACKEND / "routers").glob("*.py"):
         text = path.read_text(encoding="utf-8")
+        through_error += len(re.findall(r"\braise error\(", text))
         for match in re.finditer(r"HTTPException\((.*?)\)", text, re.DOTALL):
             body = match.group(1)
+            raw += 1
             if '"code"' not in body or '"message"' not in body:
                 offenders.append(f"{path.name}: {body[:60]!r}")
-    assert offenders == []
+    # ⚠️ The floor belongs on the calls that exist, not on the exception. The
+    # routers raise through ``error()`` almost everywhere: this guard found
+    # exactly one raw HTTPException in the whole folder, so counting those was
+    # counting nothing, and it would have passed on a folder it never opened.
+    assert through_error >= 100, f"only {through_error} error() calls were found, so this guard proves nothing"
+    assert offenders == [], f"raw HTTPException without a code and a message ({raw} looked at): {offenders}"
 
 
 # -- texts the frontend translates by their English wording --------------------
@@ -560,3 +577,52 @@ def test_every_renderer_has_a_floor_and_no_card_goes_below_it() -> None:
         "renderers with no floor of their own; they fall back to the default, "
         f"which is a guess: {missing}"
     )
+
+
+def test_every_setting_is_written_down() -> None:
+    """⚠️ Thirteen of eighteen settings were in no document at all, and the
+    README said in so many words that ``.env.example`` listed them.
+
+    A setting nobody can find is a setting nobody uses, and the ones missing
+    here included the two that decide whether another site can act as the
+    signed-in user and whether the session cookie carries Secure.
+    """
+    from app.config import Settings
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    names = [name for name in Settings.model_fields if not name.startswith("_")]
+    assert len(names) >= 15, f"only {len(names)} settings were found, so this guard proves nothing"
+    missing = [f"NEXDECK_{name.upper()}" for name in names if f"NEXDECK_{name.upper()}" not in readme]
+    assert missing == [], "settings the README does not mention: " + ", ".join(missing)
+
+
+def test_the_compose_file_passes_on_what_the_example_offers() -> None:
+    """⚠️ Three variables stood in ``.env.example`` and never reached the
+    container, so setting them did nothing and nothing said so.
+    """
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    example = (ROOT / ".env.example").read_text(encoding="utf-8")
+    offered = set(re.findall(r"^#?\s*(NEXDECK_[A-Z_]+|DOCKER_GID|PUID|PGID|TZ)=", example, re.M))
+    assert len(offered) >= 8, f"only {len(offered)} variables were read out of the example, so this guard proves nothing"
+    # A variable the example offers has to be either passed through or
+    # deliberately left out, which is what this list is for.
+    not_for_compose = {
+        "NEXDECK_ALLOW_LOOPBACK_TARGETS", "NEXDECK_UPLOAD_QUOTA_MB",
+        "NEXDECK_KEEP_ACTION_LOG_DAYS", "NEXDECK_KEEP_NOTICES_DAYS", "NEXDECK_KEEP_OUTAGES_DAYS",
+    }
+    lost = sorted(name for name in offered - not_for_compose if name not in compose)
+    assert lost == [], "variables the example offers that never reach the container: " + ", ".join(lost)
+
+
+def test_every_document_is_reachable_from_the_readme() -> None:
+    """A document nobody links to is a document nobody reads.
+
+    ⚠️ Not a style rule. `docs/operating.md` says what happens to an
+    installation whose key file and database are restored apart, and that is
+    the one page somebody needs before they need it, not after.
+    """
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    documents = sorted(path.name for path in (ROOT / "docs").glob("*.md"))
+    assert len(documents) >= 5, f"only {len(documents)} documents were found, so this guard proves nothing"
+    unlinked = [name for name in documents if f"docs/{name}" not in readme]
+    assert unlinked == [], "documents the README never links to: " + ", ".join(unlinked)

@@ -93,7 +93,13 @@ def test_somebody_who_may_not_edit_a_board_may_not_move_it(client: TestClient) -
     kim = TestClient(client.app)
     login(kim, "kim", "another-long-password")
     refused = kim.put("/api/v1/boards/order", json={"slugs": [mine["slug"]]}, headers=CSRF)
-    assert refused.status_code in (403, 404)
+    # ⚠️ 403, not "either of these". The board exists and Kim can name it, so
+    # what is refused is the permission; 404 would mean the server could not
+    # find it at all, which would be a different answer to a different
+    # question. Accepting both let a lookup that silently stopped working pass
+    # as a permission check that was doing its job.
+    assert refused.status_code == 403, refused.text
+    assert refused.json()["detail"]["code"] == "forbidden"
 
 
 def test_nothing_moves_when_one_name_is_wrong(client: TestClient) -> None:
