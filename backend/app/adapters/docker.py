@@ -23,6 +23,8 @@ from .base import (
     WidgetData,
     WidgetType,
     human_bytes,
+    outbound_client,
+    path_segment,
     percent,
     status_from_percent,
 )
@@ -290,6 +292,7 @@ class DockerAdapter(Adapter):
         container_id = str(params.get("id") or "")
         if not container_id:
             raise AdapterError("No container was named.", code="missing_param")
+        container_id = path_segment(container_id, "The container")
         await engine_post(config, ctx, f"/containers/{container_id}/{action_id}")
         return f"Container {action_id} sent."
 

@@ -426,6 +426,49 @@ class Collector:
         await self.refresh(widget_id)
         return live.get(widget_id)
 
+    # -- what a card may be asked to do --------------------------------------
+
+    @staticmethod
+    def _offered(data: WidgetData | None) -> list[tuple[str, dict[str, Any]]]:
+        """Every action the card last put in front of whoever is looking.
+
+        Two places: the card's own buttons, and the buttons on each row of a
+        list, which is where the container, the machine or the entity is named.
+        """
+        if data is None:
+            return []
+        offered = [(action.id, dict(action.params)) for action in data.actions]
+        for item in data.items:
+            for entry in (item.get("actions") or []) if isinstance(item, dict) else []:
+                if isinstance(entry, dict) and entry.get("id"):
+                    offered.append((str(entry["id"]), dict(entry.get("params") or {})))
+        return offered
+
+    def _refuse_unless_offered(self, widget_id: int, action_id: str, params: dict[str, Any]) -> None:
+        """A card may only be asked to do what it last offered to do.
+
+        ⚠️ Until 07.09.2026 the name and the parameters of an action went
+        through to the adapter as they arrived. ``action_id`` was checked
+        against the adapter's own list, the parameters against nothing at all,
+        and several adapters put a parameter straight into a path. Measured
+        with the pinned httpx: a container id of ``../volumes/prune?x=`` turns
+        ``POST /containers/{id}/start`` into ``POST /volumes/prune``, and the
+        Docker socket is mounted by the compose file the README hands out.
+        Home Assistant was worse: ``lock.unlock`` was never offered by any
+        card and ran all the same, with a token that may do anything.
+
+        The list of offered actions is the one the viewer just had in front of
+        them, so this costs no query and refuses everything that was never on
+        screen. A kiosk token counts as a viewer too, which is the point: it
+        is the least trusted way in and the one that reaches this code.
+        """
+        offered = self._offered(live.get(widget_id))
+        if not offered:
+            raise AdapterError("This card is not offering any action right now.", code="no_such_action")
+        if (action_id, dict(params or {})) not in offered:
+            logger.warning("Widget %s was asked for the action %r, which it did not offer.", widget_id, action_id)
+            raise AdapterError("This card is not offering that action.", code="no_such_action")
+
     async def run_action(
         self, widget_id: int, action_id: str, params: dict[str, Any], *, actor: str, user_id: int | None
     ) -> str:
@@ -442,6 +485,7 @@ class Collector:
             integration_id = integration.id if integration else None
             demo = self._demo_active(integration)
 
+        self._refuse_unless_offered(widget_id, action_id, params)
         adapter, widget_kind = split_widget_kind(kind)
         ok = True
         try:

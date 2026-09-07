@@ -417,8 +417,18 @@ def widget_history(widget_id: int, request: Request, user: OptionalUser, db: DbS
     return {name: history.series(db, widget_id, name, hours=hours) for name in names}
 
 
-@router.get("/history/prune", include_in_schema=False)
-def prune_history(db: DbSession, user: CurrentUser) -> dict:
+@router.post("/history/prune", summary="Condense the metric history now")
+def prune_history(db: DbSession, user: AdminUser) -> dict:
+    """⚠️ POST and administrators only, and both matter.
+
+    This rewrites the whole history: it folds raw samples into minutes and
+    drops what is past its retention. As a GET behind ``CurrentUser`` it was
+    open to every account down to a guest, and a GET carries no
+    ``X-Nexdeck-Request`` header, so the one thing that stops another site from
+    making a browser call this did not apply to it either. Nothing calls it;
+    it exists so an operator can run the housekeeping without waiting for the
+    five minute tick.
+    """
     history.condense(db)
     db.commit()
     return {"ok": True}
