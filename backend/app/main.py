@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import anyio.to_thread
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.staticfiles import StaticFiles
@@ -203,6 +203,14 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
 @app.exception_handler(404)
 async def not_found(request: Request, exc: Exception) -> Response:
     if request.url.path.startswith("/api/"):
+        # ⚠️ A route that answers 404 says why: there is no such user, no such
+        # board, no such account to give the board to. All of it was thrown
+        # away here and replaced by "There is no such address.", so the browser
+        # showed the same sentence for a missing board and for a mistyped URL,
+        # and the reason existed only in the source. Only the 404 that Starlette
+        # raises for a path nothing matched has no detail of its own.
+        if isinstance(exc, HTTPException) and isinstance(exc.detail, dict):
+            return JSONResponse({"detail": exc.detail}, status_code=404)
         return JSONResponse({"code": "not_found", "message": "There is no such address."}, status_code=404)
     return _index()
 

@@ -117,3 +117,36 @@ def test_a_board_named_by_its_number_is_refused(client: TestClient) -> None:
     with_number = client.put("/api/v1/boards/order", json={"slugs": [str(board["id"])]}, headers=CSRF)
     assert with_number.status_code == 404, with_number.text
     assert _order(client) == before
+
+
+def test_tidying_your_own_menu_leaves_other_peoples_boards_where_they_were(client: TestClient) -> None:
+    """⚠️ "Anything not named" used to mean every board of the installation.
+
+    A member pressing save on their own two boards renumbered the boards of
+    everyone else, and the permission check above only covered the slugs they
+    had actually sent.
+    """
+    setup_admin(client)
+    from sqlalchemy import select
+
+    from app.db import db_session
+    from app.models import Board
+
+    hidden = [_board(client, name) for name in ("Admin one", "Admin two")]
+    create_user(client, "kim")
+    kim = TestClient(client.app)
+    login(kim, "kim", "another-long-password")
+    mine = [_board(kim, name) for name in ("Kim one", "Kim two")]
+
+    def positions() -> dict[str, int]:
+        with db_session() as db:
+            return {board.slug: board.position for board in db.scalars(select(Board))}
+
+    before = positions()
+    moved = kim.put("/api/v1/boards/order", json={"slugs": [mine[1]["slug"], mine[0]["slug"]]}, headers=CSRF)
+    assert moved.status_code == 200, moved.text
+    after = positions()
+
+    assert after[mine[1]["slug"]] < after[mine[0]["slug"]], "the person's own boards did not move"
+    for board in hidden:
+        assert after[board["slug"]] == before[board["slug"]], f"{board['slug']} was renumbered by somebody who cannot see it"

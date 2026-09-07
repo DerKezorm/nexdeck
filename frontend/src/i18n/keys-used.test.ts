@@ -18,8 +18,20 @@ function files(directory: string): string[] {
   })
 }
 
+function at(key: string): unknown {
+  return key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], en)
+}
+
+/**
+ * ⚠️ A counted string is not stored under the name it is asked for. i18next
+ * takes ``t('users.removeKiosk', { count })`` and looks up ``…_one`` or
+ * ``…_other``; the bare name is not in the file at all. Without this the guard
+ * calls every plural key missing, which is the kind of false alarm that gets a
+ * guard switched off.
+ */
 function exists(key: string): boolean {
-  return key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], en) !== undefined
+  if (at(key) !== undefined) return true
+  return ['_one', '_other'].every((suffix) => at(key + suffix) !== undefined)
 }
 
 describe('translation keys used in the source', () => {

@@ -377,10 +377,21 @@
     "enable": "Enable",
     "disable": "Disable",
     "remove": "Delete {{name}}?",
-    "removeBody": "Their boards stay and lose their owner.",
+    "removeBody": "The account goes, and it cannot be brought back.",
     "setPassword": "Password",
     "setPasswordFor": "New password for {{name}}",
-    "setPasswordHelp": "Set without the old one. Every session of that account is signed out afterwards, so tell them the new password."
+    "setPasswordHelp": "Set without the old one. Every session of that account is signed out afterwards, so tell them the new password.",
+    "removeOwns_one": "{{count}} board belongs to this account ({{boards}}). Decide what happens to it.",
+    "removeOwns_other": "{{count}} boards belong to this account ({{boards}}). Decide what happens to them.",
+    "removeHandOver": "Hand them over to me",
+    "removeBoardsToo": "Delete them as well",
+    "removeAlso": "Also on the account: {{what}}. That goes with it.",
+    "removeKiosk_one": "{{count}} kiosk link",
+    "removeKiosk_other": "{{count}} kiosk links",
+    "removeTokens_one": "{{count}} API token",
+    "removeTokens_other": "{{count}} API tokens",
+    "removeChannels_one": "{{count}} notification channel",
+    "removeChannels_other": "{{count}} notification channels"
   },
   "channels": {
     "push": "Web Push on this device",
