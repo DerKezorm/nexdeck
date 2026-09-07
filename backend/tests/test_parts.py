@@ -208,7 +208,7 @@ def _dsm() -> None:
     import httpx
     import respx
 
-    respx.get(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
+    respx.post(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
 
     def route(request: httpx.Request) -> httpx.Response:
         params = request.url.params
@@ -474,7 +474,7 @@ async def _volumes(options: dict) -> object:
     import respx
 
     with respx.mock:
-        respx.get(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
+        respx.post(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
 
         def route(request: httpx.Request) -> httpx.Response:
             params = request.url.params

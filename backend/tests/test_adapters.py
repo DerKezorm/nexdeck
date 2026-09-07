@@ -528,7 +528,7 @@ NAS = "https://nas.example.com:5001"
 
 def _dsm(handler):
     """One DSM entry point, many APIs: the handler picks by api and method."""
-    respx.get(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
+    respx.post(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
 
     def route(request: httpx.Request) -> httpx.Response:
         params = request.url.params
@@ -1230,3 +1230,70 @@ async def test_fileflows_says_it_has_not_been_set_up(ctx: Context) -> None:
         await get_adapter("fileflows").fetch("running", config, {}, ctx)
     assert refused.value.code == "not_ready"
     assert "set up" in refused.value.message
+
+
+@respx.mock
+async def test_the_dsm_password_never_travels_in_the_address(ctx: Context) -> None:
+    """The password goes in the body of the login, not in the query part.
+
+    ⚠️ A URL is written down at both ends: DSM's own access log, the log of
+    every reverse proxy in between, and the browser history of anybody who
+    copied the address out of a report. TLS does not change that, because the
+    URL is exactly what those write down. The log redaction added earlier
+    covers nexdeck's own log and nothing beyond it.
+
+    Measured against DSM 7.4.1 on 07.09.2026: the login takes a form body on
+    API version 6 and answers with the same sid.
+    """
+    login = respx.post(f"{NAS}/webapi/auth.cgi").mock(
+        return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}),
+    )
+    respx.get(f"{NAS}/webapi/entry.cgi").mock(
+        return_value=httpx.Response(200, json={"success": True, "data": {"model": "DS1825+", "firmware_ver": "7.4.1"}}),
+    )
+    must_not_appear = "chosen-so-it-can-be-searched-for"
+    await get_adapter("synology").test({"url": NAS, "username": "nexdeck", "password": must_not_appear, "insecure": True}, ctx)
+
+    assert login.called, "the login was never sent, so this test proves nothing"
+    request = login.calls[0].request
+    address = str(request.url)
+    assert must_not_appear not in address, f"the password is in the address: {address}"
+    assert "passwd" not in address, f"the address still carries the password field: {address}"
+    from urllib.parse import parse_qs
+
+    body = parse_qs(request.content.decode())
+    assert body.get("passwd") == [must_not_appear], "the password did not go in the body either"
+    assert body.get("account") == ["nexdeck"]
+
+
+@respx.mock
+async def test_a_login_dsm_refuses_says_which_refusal_it_was(ctx: Context) -> None:
+    """DSM answers HTTP 200 with ``success: false`` and a number. The number
+    is the whole message, and 403 there means "two-factor is required", not
+    "forbidden"."""
+    config = {"url": NAS, "username": "nexdeck", "password": "wrong", "insecure": True}
+    for code, expected in ((400, "wrong account or password"), (403, "two-factor authentication is required")):
+        respx.post(f"{NAS}/webapi/auth.cgi").mock(
+            return_value=httpx.Response(200, json={"success": False, "error": {"code": code}}),
+        )
+        with pytest.raises(AuthFailed) as refused:
+            await get_adapter("synology").test(config, Context(ctx.client, integration_id=1, widget_id=1, cache={}))
+        assert expected in str(refused.value), str(refused.value)
+
+
+@respx.mock
+async def test_a_login_that_answers_with_a_page_is_not_a_crash(ctx: Context) -> None:
+    """⚠️ Both of these come from the same place in practice: a reverse proxy
+    in front of DSM that is unhappy, or a sign-in page where the API should
+    be. Neither is JSON, and neither should reach the card as a traceback."""
+    config = {"url": NAS, "username": "nexdeck", "password": "secret", "insecure": True}
+
+    respx.post(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(502, text="<html>Bad Gateway</html>"))
+    with pytest.raises(AdapterError) as broken:
+        await get_adapter("synology").test(config, Context(ctx.client, integration_id=1, widget_id=1, cache={}))
+    assert "502" in str(broken.value)
+
+    respx.post(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, text="<html>Sign in</html>"))
+    with pytest.raises(AdapterError) as garbled:
+        await get_adapter("synology").test(config, Context(ctx.client, integration_id=1, widget_id=1, cache={}))
+    assert "not JSON" in str(garbled.value)
