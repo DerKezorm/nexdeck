@@ -909,18 +909,64 @@ def human_rate(bytes_per_second: float | None) -> str:
     return human_bytes(bytes_per_second) + "/s"
 
 
-def percent(part: float | None, whole: float | None) -> float:
+def percent(part: float | None, whole: float | None) -> float | None:
+    """A share of a whole, or ``None`` when there is nothing to divide by.
+
+    ⚠️ This used to answer 0.0 to "I do not know", and it is the common root of
+    a handful of cards that reported a healthy nothing: Nextcloud stood at 0
+    percent used because the disk size was missing, the UPS card showed a
+    charge of 0 percent because the UPS does not report one, and the UniFi
+    statistics went into the history as a measured zero whenever the query
+    failed. Zero is a number a service can genuinely report, so "unknown" has
+    to be something else, and a card that does not know says so.
+    """
     if not whole or part is None:
-        return 0.0
+        return None
     return round(100.0 * float(part) / float(whole), 1)
 
 
-def status_from_percent(value: float, warn: float = 80, bad: float = 95) -> Status:
+def status_from_percent(value: float | None, warn: float = 80, bad: float = 95) -> Status:
+    """A colour for a share. Nothing measured is nothing to colour green."""
+    if value is None:
+        return "unknown"
     if value >= bad:
         return "bad"
     if value >= warn:
         return "warn"
     return "ok"
+
+
+def worst(*values: float | None) -> float | None:
+    """The highest of the shares that are actually known.
+
+    For the cards that colour themselves by whichever of CPU, memory and disk
+    is worst. A missing one must not pull the answer down to zero, and all of
+    them missing is not a zero either.
+    """
+    known = [value for value in values if value is not None]
+    return max(known) if known else None
+
+
+def percent_text(value: float | None, digits: int = 0) -> str:
+    """A share for the eye: ``"73%"``, or ``"?"`` when nothing was measured."""
+    return "?" if value is None else f"{value:.{digits}f}%"
+
+
+def percent_primary(label: str, value: float | None) -> dict[str, Any]:
+    """The big number of a card. Without a unit when there is no number: the
+    frontend draws a dash for ``None`` and would otherwise put a "%" after it.
+    """
+    return {"label": label, "value": value, "unit": "%" if value is not None else ""}
+
+
+def measured(values: dict[str, float | None]) -> dict[str, float]:
+    """Only what was actually measured goes into the history.
+
+    ⚠️ A failed query used to be written down as a zero, and a zero in the
+    history is indistinguishable from a real one: the sparkline dips, the
+    average drops, and nothing says the number was never taken.
+    """
+    return {name: value for name, value in values.items() if value is not None}
 
 
 def duration_short(seconds: float | None) -> str:

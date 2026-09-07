@@ -5,7 +5,19 @@ from __future__ import annotations
 from typing import Any
 
 from . import demo as fake
-from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import (
+    Action,
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    base_url,
+    measured,
+    percent,
+    percent_primary,
+)
 
 
 class AdguardAdapter(Adapter):
@@ -50,13 +62,15 @@ class AdguardAdapter(Adapter):
         status = await self._get(config, ctx, "/status", cache=5)
         total = float(stats.get("num_dns_queries") or 0)
         blocked = float(stats.get("num_blocked_filtering") or 0)
-        share = round(100 * blocked / total, 1) if total else 0.0
+        # A resolver that has answered nothing has no share to show; 0 percent
+        # blocked reads as "everything got through".
+        share = percent(blocked, total)
         enabled = bool(status.get("protection_enabled", True))
         return WidgetData(
             status="ok" if enabled else "warn",
-            primary={"label": "Blocked" if enabled else "Protection paused", "value": share, "unit": "%"},
+            primary=percent_primary("Blocked" if enabled else "Protection paused", share),
             secondary=[{"label": "Queries", "value": int(total)}, {"label": "Blocked", "value": int(blocked)}, {"label": "Avg", "value": round(float(stats.get("avg_processing_time") or 0) * 1000), "unit": "ms"}],
-            metrics={"blocked_percent": share, "queries": total},
+            metrics=measured({"blocked_percent": share, "queries": total}),
             actions=[Action(id="enable", label="Enable", icon="play")] if not enabled else [Action(id="disable", label="Pause 5 min", icon="pause", params={"duration": 300000})],
         )
 

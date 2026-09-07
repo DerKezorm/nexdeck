@@ -22,6 +22,7 @@ from .base import (
     base_url,
     human_bytes,
     percent,
+    percent_text,
 )
 
 
@@ -107,7 +108,9 @@ class ArrAdapter(Adapter):
     def queue_item(self, entry: dict[str, Any]) -> dict[str, Any]:
         size = entry.get("size") or 0
         left = entry.get("sizeleft") or 0
-        done = percent(size - left, size) if size else 0
+        # An entry whose size the service does not know has no progress; a
+        # zero there looked like a download that has not started.
+        done = percent(size - left, size)
         state = entry.get("status", "")
         status = "ok" if state in ("downloading", "completed") else ("bad" if state in ("failed", "warning") else "warn")
         return {
@@ -115,7 +118,7 @@ class ArrAdapter(Adapter):
             "title": self.queue_title(entry),
             "subtitle": entry.get("timeleft") or entry.get("trackedDownloadState") or state,
             "progress": done,
-            "value": f"{done:.0f}%",
+            "value": percent_text(done),
             "status": status,
             "size": human_bytes(size),
         }
@@ -130,13 +133,19 @@ class ArrAdapter(Adapter):
         if widget_kind == "queue":
             queue = await self.api(config, ctx, "queue", params={"pageSize": 100, "includeUnknownMovieItems": "true"})
             records = queue.get("records", []) if isinstance(queue, dict) else queue
+            # ⚠️ "In queue" counts the queue, not the page. One request asks
+            # for a hundred entries, and the count used to be the length of
+            # what came back: a queue of 340 read as 100 and stopped moving,
+            # and the history along with it. The service says how many there
+            # are; the rows shown are still only the first few.
+            queued = int(queue.get("totalRecords") or len(records)) if isinstance(queue, dict) else len(records)
             limit = int(options.get("limit") or 8)
             items = [self.queue_item(e) for e in records[:limit]]
             return WidgetData(
                 status="ok",
                 items=items,
-                secondary=[{"label": "In queue", "value": len(records)}],
-                metrics={"queued": float(len(records))},
+                secondary=[{"label": "In queue", "value": queued}],
+                metrics={"queued": float(queued)},
                 actions=[Action(id="search_missing", label="Search missing", icon="search", confirm=True)],
             )
         if widget_kind == "status":

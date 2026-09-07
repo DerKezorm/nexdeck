@@ -15,16 +15,35 @@ from .base import (
     as_gauge,
     base_url,
     gauge_fields,
+    measured,
 )
 
 
-def _mbps(value: Any) -> float:
-    """Speedtest Tracker reports bytes per second in ``download``; some versions Mbps in ``download_bits``."""
-    try:
-        number = float(value or 0)
-    except (TypeError, ValueError):
-        return 0.0
-    return round(number / 125000, 1) if number > 100000 else round(number, 1)
+def _mbps(data: dict[str, Any], what: str) -> float | None:
+    """Megabits per second, read from whichever field the instance sends.
+
+    ⚠️ This used to take one number and guess its unit by its size: above
+    100000 it was divided by 125000, below it was passed through. A line that
+    genuinely measures under 0.8 Mbit/s therefore came out as "90000 Mbps",
+    and the same number meant two different things depending on where the
+    needle happened to be.
+
+    The unit follows the field instead. ``download_bits`` is bits per second
+    and ``download`` is the bytes per second Ookla itself reports; the API
+    documentation names no units, but the field names do, and the response
+    carries ``download_bits_human`` beside them. Read the wrong way round a
+    number is now wrong everywhere, which is something somebody notices, not
+    wrong only at one end of the scale.
+    """
+    for field, per_mbit in ((f"{what}_bits", 1e6), (what, 125_000.0)):
+        value = data.get(field)
+        if value is None:
+            continue
+        try:
+            return round(float(value) / per_mbit, 1)
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
 class SpeedtestAdapter(Adapter):
@@ -58,15 +77,15 @@ class SpeedtestAdapter(Adapter):
         data = payload.get("data") or payload
         if not isinstance(data, dict):
             raise AdapterError("Speedtest Tracker returned no result yet.", code="no_result")
-        download = _mbps(data.get("download_bits") or data.get("download"))
-        upload = _mbps(data.get("upload_bits") or data.get("upload"))
-        ping = round(float(data.get("ping") or 0), 1)
+        download = _mbps(data, "download")
+        upload = _mbps(data, "upload")
+        ping = round(float(data["ping"]), 1) if data.get("ping") is not None else None
         ok = data.get("status", "completed") == "completed" and data.get("successful", True)
         card = WidgetData(
             status="ok" if ok else "warn",
             primary={"label": "Download", "value": download, "unit": "Mbps"},
             secondary=[{"label": "Upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": str(data.get("created_at", ""))[:16].replace("T", " ")}],
-            metrics={"download": download, "upload": upload, "ping": ping},
+            metrics=measured({"download": download, "upload": upload, "ping": ping}),
         )
         return as_gauge(card, options)
 

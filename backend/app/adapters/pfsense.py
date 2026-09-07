@@ -20,8 +20,11 @@ from .base import (
     base_url,
     duration_short,
     gauge_view_field,
+    measured,
     percent,
+    percent_text,
     status_from_percent,
+    worst,
 )
 
 
@@ -104,18 +107,19 @@ class PfsenseAdapter(Adapter):
             )
 
         system = await self._get(config, ctx, "/status/system", cache=30)
-        memory_share = float(system.get("mem_usage") or percent(system.get("mem_used"), system.get("mem_total")))
+        reported = system.get("mem_usage")
+        memory_share = float(reported) if reported is not None else percent(system.get("mem_used"), system.get("mem_total"))
         cpu = float(system.get("cpu_usage") or 0)
         uptime = system.get("uptime")
         return WidgetData(
-            status=status_from_percent(max(memory_share, cpu)),
+            status=status_from_percent(worst(memory_share, cpu)),
             primary={"label": "CPU", "value": round(cpu, 1), "unit": "%"},
             secondary=[
-                {"label": "Memory", "value": f"{round(memory_share, 1)} %"},
+                {"label": "Memory", "value": percent_text(memory_share, 1)},
                 {"label": "Uptime", "value": duration_short(float(uptime)) if isinstance(uptime, int | float) else str(uptime or "?")},
                 {"label": "Temperature", "value": f"{system.get('temp')} °C" if system.get("temp") else "?"},
             ],
-            metrics={"cpu": round(cpu, 1), "memory": round(memory_share, 1)},
+            metrics=measured({"cpu": round(cpu, 1), "memory": round(memory_share, 1) if memory_share is not None else None}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -145,10 +149,10 @@ class PfsenseAdapter(Adapter):
         cpu = fake.walk("pfsense-cpu", tick, 3, 34)
         memory_share = fake.walk("pfsense-mem", tick, 22, 48)
         return WidgetData(
-            status=status_from_percent(max(cpu, memory_share)),
+            status=status_from_percent(worst(cpu, memory_share)),
             primary={"label": "CPU", "value": cpu, "unit": "%"},
             secondary=[
-                {"label": "Memory", "value": f"{memory_share} %"},
+                {"label": "Memory", "value": percent_text(memory_share, 1)},
                 {"label": "Uptime", "value": duration_short(2_400_000 + tick * 30)},
                 {"label": "Temperature", "value": "41 °C"},
             ],

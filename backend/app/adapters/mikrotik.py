@@ -19,8 +19,11 @@ from .base import (
     base_url,
     gauge_view_field,
     human_bytes,
+    measured,
     percent,
+    percent_text,
     status_from_percent,
+    worst,
 )
 
 
@@ -112,15 +115,15 @@ class MikrotikAdapter(Adapter):
         memory_share = percent(total - free, total)
         cpu = float(resource.get("cpu-load") or 0)
         return WidgetData(
-            status=status_from_percent(max(cpu, memory_share)),
+            status=status_from_percent(worst(cpu, memory_share)),
             primary={"label": "CPU", "value": cpu, "unit": "%"},
             secondary=[
-                {"label": "Memory", "value": f"{memory_share} %"},
+                {"label": "Memory", "value": percent_text(memory_share, 1)},
                 # RouterOS says "1w2d3h4m5s"; that reads better than any number.
                 {"label": "Uptime", "value": str(resource.get("uptime") or "?")},
                 {"label": "Version", "value": str(resource.get("version") or "?")},
             ],
-            metrics={"cpu": cpu, "memory": memory_share},
+            metrics=measured({"cpu": cpu, "memory": memory_share}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -156,7 +159,7 @@ class MikrotikAdapter(Adapter):
             status=status_from_percent(max(cpu, memory_share)),
             primary={"label": "CPU", "value": cpu, "unit": "%"},
             secondary=[
-                {"label": "Memory", "value": f"{memory_share} %"},
+                {"label": "Memory", "value": percent_text(memory_share, 1)},
                 {"label": "Uptime", "value": "6w2d4h"},
                 {"label": "Version", "value": "7.16.2"},
             ],

@@ -19,7 +19,9 @@ from .base import (
     base_url,
     duration_short,
     gauge_view_field,
+    measured,
     percent,
+    percent_primary,
     status_from_percent,
 )
 
@@ -112,14 +114,14 @@ class OpnsenseAdapter(Adapter):
         updates = int(firmware.get("updates") or 0)
         uptime = resources.get("uptime") or (resources.get("system") or {}).get("uptime")
         return WidgetData(
-            status="warn" if updates or memory_share >= 80 else status_from_percent(memory_share),
-            primary={"label": "Memory", "value": memory_share, "unit": "%"},
+            status="warn" if updates else status_from_percent(memory_share),
+            primary=percent_primary("Memory", memory_share),
             secondary=[
                 {"label": "Load", "value": round(load_one, 2)},
                 {"label": "Uptime", "value": duration_short(float(uptime)) if isinstance(uptime, int | float) else str(uptime or "?")},
                 {"label": "Updates", "value": updates},
             ],
-            metrics={"cpu": round(load_one, 2), "memory": memory_share},
+            metrics=measured({"cpu": round(load_one, 2), "memory": memory_share}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:

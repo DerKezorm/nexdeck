@@ -18,7 +18,9 @@ from .base import (
     WidgetType,
     base_url,
     human_bytes,
+    measured,
     percent,
+    percent_primary,
     status_from_percent,
 )
 
@@ -86,16 +88,17 @@ class ImmichAdapter(Adapter):
             storage = await self._get(config, ctx, "/server/storage", cache=300)
             total = float(storage.get("diskSizeRaw") or 0)
             used = float(storage.get("diskUseRaw") or 0)
-            share = float(storage.get("diskUsagePercentage") or percent(used, total))
+            reported = storage.get("diskUsagePercentage")
+            share = float(reported) if reported is not None else percent(used, total)
             return WidgetData(
                 status=status_from_percent(share),
-                primary={"label": "Used", "value": round(share, 1), "unit": "%"},
+                primary=percent_primary("Used", round(share, 1) if share is not None else None),
                 secondary=[
                     {"label": "Used", "value": human_bytes(used)},
                     {"label": "Free", "value": human_bytes(max(0.0, total - used))},
                     {"label": "Total", "value": human_bytes(total)},
                 ],
-                metrics={"used_percent": round(share, 1)},
+                metrics=measured({"used_percent": round(share, 1) if share is not None else None}),
             )
 
         statistics = await self._get(config, ctx, "/server/statistics", cache=300)

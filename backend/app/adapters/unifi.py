@@ -28,6 +28,7 @@ from .base import (
     base_url,
     duration_short,
     join_parts,
+    measured,
     outbound_client,
 )
 
@@ -38,8 +39,10 @@ CACHE_SECONDS = 20
 KINDS = (("gateway", "Gateway"), ("accessPoint", "Access point"), ("switching", "Switch"))
 
 
-def human_bits(bits_per_second: float) -> str:
+def human_bits(bits_per_second: float | None) -> str:
     """Network throughput the way UniFi shows it: bits per second, not bytes."""
+    if bits_per_second is None:
+        return "?"
     value = float(bits_per_second)
     for unit in ("bit/s", "kbit/s", "Mbit/s", "Gbit/s"):
         if value < 1000 or unit == "Gbit/s":
@@ -215,6 +218,13 @@ class UnifiAdapter(Adapter):
                            hint="Use the internal site name, usually default.")
 
     async def _stats(self, config: dict[str, Any], ctx: Context, site_id: str, device_id: str) -> dict[str, Any]:
+        """The latest statistics of one device, or an empty answer.
+
+        ⚠️ Empty means "not measured" here, and the callers have to keep that
+        apart from "measured as zero". A console whose statistics query failed
+        used to write 0 Mbit/s into the history on every pass, and a WAN that
+        reads flat zero for an hour is a thing somebody acts on.
+        """
         try:
             return await self._api(config, ctx, f"/sites/{site_id}/devices/{device_id}/statistics/latest")
         except AdapterError:
@@ -340,10 +350,17 @@ class UnifiAdapter(Adapter):
             return self._findings(devices, clients, gateway, gateway_stats, status, offline)
         if widget_kind == "devices":
             ordered = sorted(devices, key=lambda d: (0 if self._is_gateway(d) else 1, 0 if str(d.get("state", "")).upper() != "ONLINE" else 1, self._rank(d), d.get("name") or ""))
-            stats = await asyncio.gather(*(self._stats(config, ctx, site_id, str(d["id"])) for d in ordered[:STATS_LIMIT] if d.get("id")))
+            # ⚠️ Paired by name, not by position. The list of answers left out
+            # every device without an id and stopped at STATS_LIMIT, while the
+            # loop below indexed it by the position in the full list: one
+            # device without an id, and from there on every device showed the
+            # load of the next one down.
+            asked = [device for device in ordered[:STATS_LIMIT] if device.get("id")]
+            answers = await asyncio.gather(*(self._stats(config, ctx, site_id, str(d["id"])) for d in asked))
+            stats = {str(device["id"]): answer for device, answer in zip(asked, answers, strict=True)}
             items = []
-            for index, device in enumerate(ordered):
-                stat = stats[index] if index < len(stats) else {}
+            for device in ordered:
+                stat = stats.get(str(device.get("id") or ""), {})
                 cpu = stat.get("cpuUtilizationPct")
                 subtitle = f"{self._kind(device)} · {device.get('model', '')}"
                 if device.get("ipAddress"):
@@ -360,8 +377,8 @@ class UnifiAdapter(Adapter):
         gateway = next((d for d in devices if self._is_gateway(d)), None)
         uplink = (await self._stats(config, ctx, site_id, str(gateway["id"]))).get("uplink") or {} if gateway and gateway.get("id") else {}
         # The Integration API reports the uplink in bits per second, and so does UniFi's own interface.
-        down = float(uplink.get("rxRateBps") or 0)
-        up = float(uplink.get("txRateBps") or 0)
+        down = float(uplink["rxRateBps"]) if uplink.get("rxRateBps") is not None else None
+        up = float(uplink["txRateBps"]) if uplink.get("txRateBps") is not None else None
         if widget_kind == "console":
             info = await self._api(config, ctx, "/info")
             return self._console(devices, clients, total, gateway, await self._stats(config, ctx, site_id, str(gateway["id"])) if gateway and gateway.get("id") else {}, str(info.get("applicationVersion") or "?"), down, up, status, offline)
@@ -374,11 +391,12 @@ class UnifiAdapter(Adapter):
                 {"label": "WAN up", "value": human_bits(up), "metric": "wan_up"},
                 {"label": "Devices", "value": f"{len(online)} / {len(devices)}"},
             ],
-            metrics={"clients": float(total), "wan_down": round(down / 1e6, 2), "wan_up": round(up / 1e6, 2)},
+            metrics=measured({"clients": float(total), "wan_down": round(down / 1e6, 2) if down is not None else None,
+                              "wan_up": round(up / 1e6, 2) if up is not None else None}),
             meta=self._offline_meta(offline),
         )
 
-    def _console(self, devices: list[dict[str, Any]], clients: list[dict[str, Any]], total: int, gateway: dict[str, Any] | None, gateway_stats: dict[str, Any], version: str, down: float, up: float, status: str, offline: int) -> WidgetData:
+    def _console(self, devices: list[dict[str, Any]], clients: list[dict[str, Any]], total: int, gateway: dict[str, Any] | None, gateway_stats: dict[str, Any], version: str, down: float | None, up: float | None, status: str, offline: int) -> WidgetData:
         """The console's own overview card, as far as the Network API tells: no ISP, WAN address or latencies."""
         gateways = sum(1 for d in devices if self._is_gateway(d))
         access_points = sum(1 for d in devices if not self._is_gateway(d) and "accessPoint" in (d.get("features") or []))
@@ -409,7 +427,8 @@ class UnifiAdapter(Adapter):
             status=status,
             items=items,
             secondary=[{"label": "WAN down", "value": human_bits(down), "metric": "wan_down"}, {"label": "WAN up", "value": human_bits(up), "metric": "wan_up"}],
-            metrics={"wan_down": round(down / 1e6, 2), "wan_up": round(up / 1e6, 2)},
+            metrics=measured({"wan_down": round(down / 1e6, 2) if down is not None else None,
+                              "wan_up": round(up / 1e6, 2) if up is not None else None}),
             meta=self._offline_meta(offline),
         )
 
@@ -650,7 +669,8 @@ class UnifiAdapter(Adapter):
                 {"title": "Clients", "subtitle": f"{clients - 9} wireless · 9 wired", "status": "ok", "value": str(clients)},
                 {"title": "WAN", "subtitle": f"↓ {human_bits(down)} · ↑ {human_bits(up)}", "status": "ok", "value": ""},
             ], secondary=[{"label": "WAN down", "value": human_bits(down), "metric": "wan_down"}, {"label": "WAN up", "value": human_bits(up), "metric": "wan_up"}],
-                metrics={"wan_down": round(down / 1e6, 2), "wan_up": round(up / 1e6, 2)}, meta={"status_reason": "1 device(s) offline"})
+                metrics=measured({"wan_down": round(down / 1e6, 2) if down is not None else None,
+                              "wan_up": round(up / 1e6, 2) if up is not None else None}), meta={"status_reason": "1 device(s) offline"})
         return WidgetData(primary={"label": "Clients", "value": clients},
                           secondary=[{"label": "Wi-Fi", "value": clients - 9}, {"label": "WAN down", "value": human_bits(down), "metric": "wan_down"}, {"label": "WAN up", "value": human_bits(up), "metric": "wan_up"}, {"label": "Devices", "value": "4 / 5"}],
                           metrics={"clients": float(clients), "wan_down": round(down / 1e6, 2), "wan_up": round(up / 1e6, 2)}, status="warn")

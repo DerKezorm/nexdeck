@@ -24,8 +24,11 @@ from .base import (
     base_url,
     duration_short,
     human_bytes,
+    measured,
     percent,
+    percent_text,
     status_from_percent,
+    worst,
 )
 
 
@@ -100,14 +103,14 @@ class PbsAdapter(Adapter):
             memory_share = percent(memory.get("used"), memory.get("total"))
             root_share = percent(root.get("used"), root.get("total"))
             return WidgetData(
-                status=status_from_percent(max(cpu, memory_share, root_share)),
+                status=status_from_percent(worst(cpu, memory_share, root_share)),
                 primary={"label": "CPU", "value": cpu, "unit": "%"},
                 secondary=[
                     {"label": "Memory", "value": memory_share, "unit": "%"},
                     {"label": "Root", "value": root_share, "unit": "%"},
                     {"label": "Uptime", "value": duration_short(float(status.get("uptime") or 0))},
                 ],
-                metrics={"cpu": cpu, "memory": memory_share},
+                metrics=measured({"cpu": cpu, "memory": memory_share}),
             )
 
         if widget_kind == "tasks":
@@ -141,29 +144,29 @@ class PbsAdapter(Adapter):
 
         stores = await self._get(config, ctx, "/status/datastore-usage", cache=300) or []
         items = []
-        fullest = 0.0
+        fullest: float | None = None
         for store in stores if isinstance(stores, list) else []:
             total = store.get("total")
             used = store.get("used")
-            if total is None or used is None:
+            share = percent(used, total)
+            if share is None:
                 # No Datastore.Audit on this store: the name comes, the numbers do not.
                 items.append({"title": str(store.get("store") or "?"), "subtitle": str(store.get("error") or ""), "status": "unknown"})
                 continue
-            share = percent(used, total)
-            fullest = max(fullest, share)
+            fullest = worst(fullest, share)
             items.append({
                 "title": str(store.get("store") or "?"),
                 "subtitle": f"{human_bytes(used)} / {human_bytes(total)}",
                 "progress": share,
-                "value": f"{share} %",
+                "value": percent_text(share, 1),
                 "status": status_from_percent(share),
             })
         items.sort(key=lambda item: -float(item.get("progress") or 0))
         return WidgetData(
             status=status_from_percent(fullest),
             items=items,
-            secondary=[{"label": "Datastores", "value": len(items)}, {"label": "Fullest", "value": f"{fullest} %"}],
-            metrics={"fullest": fullest, "datastores": float(len(items))},
+            secondary=[{"label": "Datastores", "value": len(items)}, {"label": "Fullest", "value": percent_text(fullest, 1)}],
+            metrics=measured({"fullest": fullest, "datastores": float(len(items))}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -171,7 +174,7 @@ class PbsAdapter(Adapter):
             cpu = fake.walk("pbs-cpu", tick, 2, 34)
             memory_share = fake.walk("pbs-mem", tick, 28, 61)
             return WidgetData(
-                status=status_from_percent(max(cpu, memory_share)),
+                status=status_from_percent(worst(cpu, memory_share)),
                 primary={"label": "CPU", "value": cpu, "unit": "%"},
                 secondary=[
                     {"label": "Memory", "value": memory_share, "unit": "%"},
@@ -214,23 +217,23 @@ class PbsAdapter(Adapter):
             ("offsite", 6_100_000_000_000, 12_000_000_000_000),
         ]
         items = []
-        fullest = 0.0
+        fullest: float | None = None
         for name, used, total in stores:
             share = percent(used + fake.counter(name, tick, 0, 2e8), total)
-            fullest = max(fullest, share)
+            fullest = worst(fullest, share)
             items.append({
                 "title": name,
                 "subtitle": f"{human_bytes(used)} / {human_bytes(total)}",
                 "progress": share,
-                "value": f"{share} %",
+                "value": percent_text(share, 1),
                 "status": status_from_percent(share),
             })
         items.sort(key=lambda item: -float(item.get("progress") or 0))
         return WidgetData(
             status=status_from_percent(fullest),
             items=items,
-            secondary=[{"label": "Datastores", "value": len(items)}, {"label": "Fullest", "value": f"{fullest} %"}],
-            metrics={"fullest": fullest, "datastores": float(len(items))},
+            secondary=[{"label": "Datastores", "value": len(items)}, {"label": "Fullest", "value": percent_text(fullest, 1)}],
+            metrics=measured({"fullest": fullest, "datastores": float(len(items))}),
         )
 
 

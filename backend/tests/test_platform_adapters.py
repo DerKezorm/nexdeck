@@ -197,8 +197,8 @@ async def test_pbs_keeps_a_datastore_it_may_not_measure(ctx: Context) -> None:
     ]}))
     data = await get_adapter("pbs").fetch("datastores", config, {}, ctx)
     assert [item["title"] for item in data.items] == ["archive", "main", "offsite"]
-    assert data.items[0]["value"] == "97.0 %" and data.items[0]["status"] == "bad"
-    assert data.items[1]["value"] == "75.0 %" and data.items[1]["status"] == "ok"
+    assert data.items[0]["value"] == "97.0%" and data.items[0]["status"] == "bad"
+    assert data.items[1]["value"] == "75.0%" and data.items[1]["status"] == "ok"
     # The store without numbers keeps its name and gets no bar.
     assert "progress" not in data.items[2]
     assert data.metrics["fullest"] == 97.0 and data.status == "bad"

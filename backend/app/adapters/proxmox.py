@@ -16,9 +16,11 @@ from .base import (
     base_url,
     duration_short,
     human_bytes,
+    measured,
     path_segment,
     percent,
     status_from_percent,
+    worst,
 )
 
 
@@ -94,14 +96,14 @@ class ProxmoxAdapter(Adapter):
             memory = percent(node.get("mem"), node.get("maxmem"))
             disk = percent(node.get("disk"), node.get("maxdisk"))
             return WidgetData(
-                status="bad" if node.get("status") != "online" else status_from_percent(max(cpu, memory)),
+                status="bad" if node.get("status") != "online" else status_from_percent(worst(cpu, memory)),
                 primary={"label": "CPU", "value": cpu, "unit": "%"},
                 secondary=[
                     {"label": "Memory", "value": memory, "unit": "%", "metric": "memory"},
                     {"label": "Storage", "value": disk, "unit": "%"},
                     {"label": "Uptime", "value": duration_short(node.get("uptime"))},
                 ],
-                metrics={"cpu": cpu, "memory": memory},
+                metrics=measured({"cpu": cpu, "memory": memory}),
                 meta={"node": node.get("node")},
             )
         guests = await self._get(config, ctx, "/cluster/resources?type=vm") or []

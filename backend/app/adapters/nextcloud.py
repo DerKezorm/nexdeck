@@ -19,7 +19,9 @@ from .base import (
     WidgetType,
     base_url,
     human_bytes,
+    measured,
     percent,
+    percent_primary,
     status_from_percent,
 )
 
@@ -121,16 +123,21 @@ class NextcloudAdapter(Adapter):
         if widget_kind == "storage":
             # Nextcloud reports the free bytes; the total comes from the disk
             # behind it, which serverinfo only knows through the memory block.
-            total = float(system.get("disk_total") or 0) or free + float(storage.get("num_files") or 0) * 0
+            # ⚠️ The fallback here used to be ``free + num_files * 0``, which
+            # by the rules of precedence is exactly ``free``. Without
+            # ``disk_total`` the total became the free space, the used space
+            # zero, and the card sat at 0 percent in green while the disk ran
+            # from 60 to 98. It is better to say the size is unknown.
+            total = float(system.get("disk_total") or 0)
             if not total:
                 raise AdapterError("Nextcloud does not report the size of the disk.", code="no_total", hint="Use the free space on the overview card instead.")
             used = max(0.0, total - free)
             share = percent(used, total)
             return WidgetData(
                 status=status_from_percent(share),
-                primary={"label": "Used", "value": share, "unit": "%"},
+                primary=percent_primary("Used", share),
                 secondary=[{"label": "Free", "value": human_bytes(free)}, {"label": "Total", "value": human_bytes(total)}],
-                metrics={"used_percent": share},
+                metrics=measured({"used_percent": share}),
             )
 
         users = int(storage.get("num_users") or 0)
@@ -142,7 +149,11 @@ class NextcloudAdapter(Adapter):
                 {"label": "Free", "value": human_bytes(free)},
                 {"label": "Version", "value": system.get("version", "?")},
             ],
-            metrics={"users": float(users), "free_percent": 0.0},
+            # ⚠️ ``free_percent`` was written as a flat 0.0 on every pass. This
+            # card knows the free bytes and not the size of the disk, so the
+            # share is not something it can work out; the history was a
+            # straight line at zero that looked like a measurement.
+            metrics=measured({"users": float(users), "free_percent": None}),
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
