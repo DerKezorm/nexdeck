@@ -546,9 +546,8 @@
     "deletePageEmpty": "Die Seite ist leer, es geht nichts verloren.",
     "deletePageBody": "Ihre {{count}} Karten gehen mit, samt Verlauf.",
     "lastPage": "Ein Board behält mindestens eine Seite.",
-    "moveUp": "{{name}} nach oben",
-    "moveDown": "{{name}} nach unten",
-    "moveWith": "{{name}} mit den Pfeiltasten verschieben, mit Umschalt und Pfeil in der Größe ändern"
+    "moveWith": "{{name}} mit den Pfeiltasten verschieben, mit Umschalt und Pfeil in der Größe ändern",
+    "moveWithHandle": "{{name}} mit dem Griff verschieben"
   },
   "widget": {
     "remove": {

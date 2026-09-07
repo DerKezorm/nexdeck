@@ -97,6 +97,33 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   // A cold reload on a busy machine can take longer than the default five seconds.
   await expect(page.locator('section[aria-label="Containers"]')).toBeVisible({ timeout: 15_000 })
 
+  // ⚠️ Sorting the board list by dragging its handle, in a real browser.
+  // This one cannot be proved anywhere else: jsdom has no layout, so the
+  // handler that asks where the rows are gets zeroes from every one of them
+  // and the drag looks like it worked no matter what.
+  const second = await page.request.post('/api/v1/boards', { data: { name: 'Second board' }, headers: { 'X-Nexdeck-Request': '1' } })
+  expect(second.ok()).toBeTruthy()
+  await page.goto('/settings/boards')
+  const names = () => page.locator('ul > li a[href^="/b/"]').allTextContents()
+  await expect.poll(names).toHaveLength(2)
+  const wasOrdered = await names()
+
+  const handles = page.getByRole('button', { name: /Drag to move/ })
+  const lower = (await handles.nth(1).boundingBox())!
+  const upper = (await handles.nth(0).boundingBox())!
+  await page.mouse.move(lower.x + lower.width / 2, lower.y + lower.height / 2)
+  await page.mouse.down()
+  // In steps, because one jump can land outside every row and move nothing.
+  for (let step = 1; step <= 6; step += 1) {
+    await page.mouse.move(lower.x + lower.width / 2, lower.y + ((upper.y - lower.y) * step) / 6)
+  }
+  await page.mouse.up()
+
+  await expect.poll(names).toEqual([wasOrdered[1], wasOrdered[0]])
+  // And it survives a reload, so it really went to the server.
+  await page.reload()
+  await expect.poll(names).toEqual([wasOrdered[1], wasOrdered[0]])
+
   // A kiosk link opens the board in a browser without any session.
   const created = await page.request.post('/api/v1/boards/home/kiosk-tokens', { data: { name: 'e2e wall' }, headers: { 'X-Nexdeck-Request': '1' } })
   expect(created.ok()).toBeTruthy()
