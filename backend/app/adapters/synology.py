@@ -13,6 +13,7 @@ from typing import Any
 
 from . import demo as fake
 from .base import (
+    ALL_ITEMS,
     Action,
     Adapter,
     AdapterError,
@@ -204,6 +205,16 @@ class SynologyAdapter(Adapter):
                     # it is one nobody measured.
                     "status": "unknown" if used is None else ("ok" if healthy and used < 90 else "warn"),
                 })
+            # ⚠️ Written down before anything is dropped. The tick boxes in
+            # the settings sheet are built from what the card sends back, and
+            # this card filters twice: here, and centrally afterwards. So the
+            # central pass recorded the volumes that were left, a switched-off
+            # volume lost its own box, and in the dial view there were no rows
+            # at all and the sheet said the card had nothing to pick from.
+            #
+            # This one goes to the boards as well, unlike the central pass. A
+            # NAS has a handful of volumes, not a screenful of containers.
+            every_volume = [str(one["title"]) for one in items]
             # The picker runs centrally, but by then this card has already
             # traded its rows for a dial. So it is applied here first, or
             # "only volume_2" would silently pick the fullest of all of them.
@@ -216,7 +227,7 @@ class SynologyAdapter(Adapter):
                 # if none of them has one there is no needle to draw.
                 measurable = [one for one in items if one["progress"] is not None]
                 if not measurable:
-                    return WidgetData(items=items, status="unknown")
+                    return WidgetData(items=items, status="unknown", meta={ALL_ITEMS: every_volume})
                 fullest_volume = max(measurable, key=lambda one: float(one["progress"]))
                 return WidgetData(
                     status=fullest_volume["status"],
@@ -225,8 +236,9 @@ class SynologyAdapter(Adapter):
                         {"label": one["title"], "value": one["value"]}
                         for one in items if one is not fullest_volume
                     ],
+                    meta={ALL_ITEMS: every_volume},
                 )
-            return WidgetData(items=items)
+            return WidgetData(items=items, meta={ALL_ITEMS: every_volume})
         items = []
         for disk in storage.get("disks") or []:
             items.append({

@@ -7,8 +7,12 @@ number underneath.
 
 from __future__ import annotations
 
+from fastapi.testclient import TestClient
+
 from app.adapters import all_adapters, get_adapter
 from app.adapters.base import RENDERER_MIN, WidgetData, as_gauge, gauge_view_field
+
+from .conftest import CSRF, setup_admin
 
 
 def _card(value: float, unit: str = "Mbps", label: str = "Download") -> WidgetData:
@@ -168,3 +172,37 @@ def test_a_ceiling_the_adapter_named_is_kept() -> None:
     card = WidgetData(primary={"label": "Queue", "value": 3, "unit": ""})
     dialled = as_gauge(card, {"view": "gauge"}, maximum=10)
     assert dialled.meta["gauge"] == {"share": 30.0, "max": 10}
+
+
+def test_a_card_shown_as_a_dial_may_be_made_as_small_as_a_dial(client: TestClient) -> None:
+    """⚠️ The floor followed the renderer the adapter declares, not the one
+    that draws the card. Two Synology cards side by side, both showing the
+    same dial: the volumes card went down to two columns and the system card
+    stopped at three, because "stats" needs room for a row of statistics that
+    a dial does not have. Nothing on screen said why.
+    """
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Wall"}, headers=CSRF).json()
+    page = board["pages"][0]["id"]
+
+    made = client.post(f"/api/v1/pages/{page}/widgets", json={
+        "kind": "synology.system", "title": "Synology",
+    }, headers=CSRF)
+    assert made.status_code == 201, made.text
+    widget_id = made.json()["widget"]["id"]
+
+    def floor_of(widget_id: int) -> list[int]:
+        seen = client.get(f"/api/v1/boards/{board['slug']}").json()
+        card = next(w for w in seen["pages"][0]["widgets"] if w["id"] == widget_id)
+        return card["min_size"]
+
+    # As statistics: three columns, because that is what the rows need.
+    assert floor_of(widget_id) == [3, 2]
+
+    switched = client.patch(f"/api/v1/widgets/{widget_id}", json={"options": {"view": "gauge"}}, headers=CSRF)
+    assert switched.status_code == 200, switched.text
+    assert floor_of(widget_id) == [2, 2], "a dial is still held to the width of a table"
+
+    # And back again.
+    client.patch(f"/api/v1/widgets/{widget_id}", json={"options": {"view": "value"}}, headers=CSRF)
+    assert floor_of(widget_id)[0] >= 2
