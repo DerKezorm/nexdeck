@@ -74,7 +74,29 @@ Mount `/var/run/docker.sock` (already in the compose file) to see this host's co
 | `PUID`, `PGID` | `1000` | Owner of the files in the data volume. |
 | `DOCKER_GID` | detected | Group of the mounted Docker socket, when detection fails. |
 
-All variables are listed in [`.env.example`](.env.example).
+Rarely needed, but real:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `NEXDECK_DATA_DIR` | `/data` | Where the database, the key file, uploads and caches live. |
+| `NEXDECK_STATIC_DIR` | set in the image | The built frontend. Empty means the API only. |
+| `NEXDECK_COOKIE_SECURE` | `auto` | `auto` sets the Secure flag when the request came over HTTPS; `always` and `never` force it. |
+| `NEXDECK_SESSION_DAYS` | `30` | Days a browser stays signed in without activity. |
+| `NEXDECK_BCRYPT_ROUNDS` | `12` | Cost of a password hash. Lower is faster and weaker. |
+| `NEXDECK_DB_POOL_SIZE` | `20` | Database connections held open. |
+| `NEXDECK_DB_MAX_OVERFLOW` | `20` | How many more may be opened under load. |
+| `NEXDECK_REQUEST_THREADS` | `24` | Worker threads for synchronous routes. Keep it below the two above added together. |
+| `NEXDECK_HISTORY_RAW_HOURS` | `1` | How long raw samples are kept before they become minute averages. |
+| `NEXDECK_HISTORY_MINUTE_HOURS` | `24` | How long those minute averages are kept. |
+| `NEXDECK_LOG_HISTORY_HOURS` | `6` | How long container log lines are kept. |
+| `NEXDECK_HEALTH_INTERVAL_SECONDS` | `30` | Default interval for reachability checks. |
+| `NEXDECK_OUTAGE_THRESHOLD_SECONDS` | `120` | How long a service must be down before an outage is announced. |
+| `NEXDECK_ICON_CACHE_DAYS` | `30` | How long a fetched logo is kept. |
+| `NEXDECK_UPDATE_CHECK` | `0` | Ask GitHub whether a newer nexdeck exists. Off by default: it is an outbound call. |
+| `NEXDECK_CORS_ORIGINS` | empty | Origins allowed to call the API from a browser. `*` is refused at start-up, because with credentials it would let any site act as the signed-in user. |
+| `NEXDECK_BACKUP_EVERY_HOURS` | `24` | How often a snapshot is written by itself. `0` switches it off. |
+
+A guard test keeps this table in step with the settings in the code.
 
 ### Reverse proxy
 
@@ -96,6 +118,7 @@ Adapters that have not been confirmed against a live instance yet carry a *beta*
 
 ## Documentation
 
+- [Running nexdeck: backups, restoring, updating](docs/operating.md)
 - [Integrations and widgets](docs/adapters.md)
 - [Docker labels](docs/labels.md)
 - [Boards as files and provisioning](docs/provisioning.md)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -83,6 +84,42 @@ async def _housekeeping() -> None:
             await asyncio.to_thread(_housekeeping_once)
         except Exception:  # noqa: BLE001
             logger.exception("Housekeeping failed.")
+
+
+def _rescue_and_exit() -> None:
+    """Print a one-time sign-in link and stop, without starting the server.
+
+    ⚠️ The only way back into an installation used to be a mail, and without a
+    mail server the sign-in page did not even offer the link: an installation
+    whose last administrator lost their password was finished. Reachable only
+    by whoever can start the container, which is the same person who could edit
+    the database by hand, so it hands out nothing that was not already theirs.
+    """
+    journal.setup()
+    get_engine()
+    migrate()
+    from .services import password_reset
+
+    try:
+        link = password_reset.rescue_link(get_settings().public_url or "http://localhost:8000")
+    except RuntimeError as why:
+        # ⚠️ Not a traceback. Whoever runs this is already locked out of
+        # something, and a stack of import frames is not an answer.
+        print("", flush=True)
+        print(f"No rescue link: {why}", flush=True)
+        print("", flush=True)
+        raise SystemExit(1) from None
+    # ⚠️ Written to standard output, not to the log. A sign-in link in a log
+    # file is a sign-in link in every backup of that log file.
+    print("", flush=True)
+    print(f"Sign in once with this link, good for {password_reset.RESCUE_MINUTES} minutes:", flush=True)
+    print(f"    {link}", flush=True)
+    print("", flush=True)
+    raise SystemExit(0)
+
+
+if os.environ.get("NEXDECK_RESCUE", "") not in ("", "0", "false"):
+    _rescue_and_exit()
 
 
 @asynccontextmanager

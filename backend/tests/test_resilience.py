@@ -10,7 +10,6 @@ import asyncio
 
 import pytest
 
-from app.adapters.base import WidgetData
 from app.crypto import SecretUnreadable
 from app.services import collector as collector_module
 from app.services.state import live
@@ -66,8 +65,27 @@ async def test_a_widget_whose_kind_is_gone_does_not_end_the_loop(monkeypatch: py
     assert data is not None and data.status == "bad" and data.error
 
 
-def test_a_card_that_cannot_be_read_still_carries_an_error_for_the_browser() -> None:
-    """WidgetData with an error is what the card renders; an empty one is a
-    spinner that never stops."""
-    data = WidgetData(status="bad", error="This card could not be read. The server log says why.")
-    assert data.error and data.status == "bad"
+async def test_what_the_browser_is_told_gives_nothing_away(monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ This test used to build a ``WidgetData`` and assert that the two
+    fields it had just set were set. It could only fail if pydantic itself was
+    broken, and it stood in for a check nobody had written.
+
+    What matters is the other half: a card that broke says so, and says it
+    without handing the browser the inside of the server. The error text
+    reaches every viewer of the board, guests included.
+    """
+    service = collector_module.Collector()
+
+    async def explode(widget_id: int) -> float | None:
+        raise RuntimeError("/srv/nexdeck/app/adapters/secret_path.py line 42: password=hunter2")
+
+    monkeypatch.setattr(service, "_refresh", explode)
+    live.clear()
+    await service.refresh(1)
+
+    data = live.get(1)
+    assert data is not None and data.status == "bad"
+    said = (data.error or "") + " " + str(data.meta)
+    assert said.strip(), "the card broke and said nothing, which is a spinner that never stops"
+    for leak in ("/srv/", "hunter2", "adapters/", "line 42", "Traceback"):
+        assert leak not in said, f"the browser is told {leak!r}: {said!r}"

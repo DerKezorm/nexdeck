@@ -15,6 +15,7 @@ node_modules/
 frontend/dist/
 frontend/dist-dev/
 frontend/.e2e-data/
+frontend/.e2e-built-data/
 frontend/playwright-report/
 frontend/test-results/
 
@@ -33,3 +34,8 @@ frontend/*.tsbuildinfo
 
 # Local preview helper, not part of the product.
 .claude/
+
+# Coverage reports
+frontend/coverage/
+backend/.coverage
+backend/htmlcov/

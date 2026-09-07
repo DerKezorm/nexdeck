@@ -20,7 +20,8 @@ from datetime import timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DbSessionType
 
-from ..models import PasswordReset, Session, User, utcnow
+from ..db import db_session
+from ..models import PasswordReset, Role, Session, User, utcnow
 from ..security import hash_token, new_opaque_token, now_ms
 from . import mail as mail_service
 
@@ -183,3 +184,39 @@ def prune(db: DbSessionType) -> int:
     if rows:
         db.commit()
     return len(rows)
+
+
+#: How long the rescue link is good for. Short: it is printed on a terminal
+#: somebody is standing at.
+RESCUE_MINUTES = 15
+
+
+def rescue_link(base: str = "") -> str:
+    """A one-time sign-in link for an administrator who is locked out.
+
+    ⚠️ The only way back into nexdeck used to be a mail, and without a mail
+    server the sign-in page did not even offer the link. An installation whose
+    last administrator lost their password was finished: no switch, no rescue,
+    nothing short of editing the database by hand.
+
+    This is reachable only by whoever can start the container, which is the
+    same person who could edit the database anyway, so it hands out nothing
+    that was not already theirs. It prints and returns the link; the caller
+    decides where that goes, and the log is not the place.
+    """
+    with db_session() as db:
+        admin = db.scalar(
+            select(User)
+            .where(User.role == Role.admin.value, User.disabled.is_(False))
+            .order_by(User.id)
+        )
+        if admin is None:
+            raise RuntimeError("There is no administrator account to let in.")
+        token, token_hash, _prefix = new_opaque_token("nr")
+        db.add(PasswordReset(
+            user_id=admin.id, token_hash=token_hash,
+            expires_at=utcnow() + timedelta(minutes=RESCUE_MINUTES),
+        ))
+        db.commit()
+        logger.warning("A rescue link was made for %r. It was not written to this log.", admin.username)
+        return f"{base.rstrip('/')}/reset/{token}"

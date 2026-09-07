@@ -16,14 +16,30 @@ services:
       - TZ=${TZ:-Etc/UTC}
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
+      # The Docker socket's group on the host, when detection fails:
+      #   stat -c %g /var/run/docker.sock
+      - DOCKER_GID=${DOCKER_GID:-}
       # Set once and keep: it encrypts the stored API keys and signs sessions.
       # Leave empty to let nexdeck generate one into the data volume.
       - NEXDECK_SECRET_KEY=${NEXDECK_SECRET_KEY:-}
       # As browsers reach nexdeck, e.g. https://deck.example.com. Needed for
       # identity providers and Web Push.
       - NEXDECK_PUBLIC_URL=${NEXDECK_PUBLIC_URL:-}
-      - NEXDECK_LOG_LEVEL=${NEXDECK_LOG_LEVEL:-INFO}
+      # ⚠️ Only when it is set in .env. Setting it here unconditionally fixes
+      # the level and puts the switch in the interface out of action: an
+      # operator could pick "debug for an hour" and nothing would happen.
+      - NEXDECK_LOG_LEVEL=${NEXDECK_LOG_LEVEL:-}
+      # Where browsers reach nexdeck when it lives below a sub path, e.g. /deck.
+      - NEXDECK_URL_BASE=${NEXDECK_URL_BASE:-}
+      # Start every card with invented data, for a look around.
+      - NEXDECK_DEMO=${NEXDECK_DEMO:-}
     volumes:
       - ./data:/data
-      # Optional: containers, actions and logs of this host.
+      # ⚠️ Optional, and worth a thought before you mount it. The Docker socket
+      # is root on this host in all but name: whoever can reach it can start a
+      # container that mounts the whole filesystem. ":ro" does not help, it
+      # only stops writes to the socket file, not the commands sent through it.
+      # nexdeck asks it for containers, actions and logs, and every one of
+      # those is an administrator's decision inside nexdeck. Leave the line out
+      # if you do not want the Docker cards.
       - /var/run/docker.sock:/var/run/docker.sock:ro
