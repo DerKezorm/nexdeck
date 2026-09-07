@@ -88,10 +88,21 @@ function worthDrawing(points: number[] | undefined): points is number[] {
   return Boolean(points && points.length >= 5 && new Set(points).size > 1)
 }
 
+/**
+ * The row of small facts under a card's number.
+ *
+ * ⚠️ It used to wrap. On a narrow card that turned one line into three, the
+ * card had no room left for its own number, and `min-h-0` let the content run
+ * out of the top instead of being cut: on an iPhone the speedtest card had its
+ * number, title and chips printed over each other, and Pi-hole read
+ * "Queries 38," with the value sliced through. It scrolls sideways now, so a
+ * card that is too narrow loses the last chip off the edge rather than its
+ * own headline.
+ */
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
   if (!items?.length) return null
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex gap-1.5 overflow-x-auto scrollbar-none min-w-0 [&>*]:shrink-0">
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
           {tLabel(item.label)}

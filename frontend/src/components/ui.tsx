@@ -5,11 +5,56 @@
  * ``aria-labelledby``.
  */
 import { Eye, EyeOff, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
+/**
+ * Hold the focus inside an open dialog, and give it back on the way out.
+ *
+ * ⚠️ Both Sheet and Dialog said ``aria-modal="true"``, which promises exactly
+ * this, and neither did it. Tab walked straight out of the dialog into the
+ * page behind it, where a screen reader then read a form the person could not
+ * see; and closing dropped the focus onto the document, so the next Tab
+ * started again from the top of the page instead of at the button that had
+ * opened the thing.
+ */
+function useFocusTrap(open: boolean, container: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    if (!open) return
+    const cameFrom = document.activeElement as HTMLElement | null
+    const inside = (): HTMLElement[] => {
+      const found = container.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      return [...(found ?? [])].filter((element) => element.offsetParent !== null || element === document.activeElement)
+    }
+    // The first thing inside, so the keyboard starts where the eye does.
+    const first = inside()[0]
+    first?.focus()
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const stops = inside()
+      if (!stops.length) return
+      const edge = event.shiftKey ? stops[0] : stops[stops.length - 1]
+      if (document.activeElement === edge || !container.current?.contains(document.activeElement)) {
+        event.preventDefault()
+        ;(event.shiftKey ? stops[stops.length - 1] : stops[0]).focus()
+      }
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => {
+      document.removeEventListener('keydown', onKey, true)
+      // Back to whatever opened it, if that is still on the page.
+      if (cameFrom?.isConnected) cameFrom.focus()
+    }
+  }, [open, container])
+}
+
 export function Sheet({ open, onClose, title, children, wide, footer }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
+  const { t } = useTranslation()
+  const panel = useRef<HTMLElement>(null)
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -18,14 +63,15 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+  useFocusTrap(open, panel)
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
-      <aside className={`relative glass-strong h-full ${wide ? 'w-full max-w-[640px]' : 'w-full max-w-[420px]'} flex flex-col shadow-2xl rounded-none border-y-0 border-r-0`}>
+      <aside ref={panel} className={`relative glass-strong h-full ${wide ? 'w-full max-w-[640px]' : 'w-full max-w-[420px]'} flex flex-col shadow-2xl rounded-none border-y-0 border-r-0`}>
         <header className="flex items-center gap-2 px-4 h-12 border-b border-line">
           <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
-          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label="Close">
+          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label={t('common.close')}>
             <X size={16} />
           </button>
         </header>
@@ -37,6 +83,8 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
 }
 
 export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
+  const { t } = useTranslation()
+  const panel = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
     // A dialog may sit on top of a sheet. Escape closes the dialog alone: the
@@ -50,6 +98,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
   }, [open, onClose])
+  useFocusTrap(open, panel)
   if (!open) return null
   const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' }[size]
   // Rendered at the body: a glass surface with backdrop-filter would otherwise
@@ -58,10 +107,10 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
+      <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
           <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
-          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label="Close">
+          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label={t('common.close')}>
             <X size={16} />
           </button>
         </header>
@@ -124,14 +173,32 @@ export function Switch({ checked, onChange, label, description, disabled }: { ch
 }
 
 export function Field({ label, help, children, htmlFor, required }: { label: string; help?: string; children: ReactNode; htmlFor?: string; required?: boolean }) {
+  const fallback = useId()
+  const forId = htmlFor ?? fallback
+  const helpId = `${forId}-help`
   return (
     <div className="mb-3">
-      <label htmlFor={htmlFor} className="block text-xs font-medium text-muted mb-1">
+      <label htmlFor={forId} className="block text-xs font-medium text-muted mb-1">
         {label}
         {required && <span className="text-bad ml-0.5">*</span>}
       </label>
-      {children}
-      {help && <p className="text-[11px] text-faint mt-1">{help}</p>}
+      {/* ⚠️ The help text is a sibling of the control, so nothing tied the two
+          together: a screen reader read the label and stopped, and the sentence
+          explaining what the field wants was never spoken. A child that carries
+          no id of its own gets one here, along with the field's own label, so
+          a bare `<input>` inside a Field is named without every caller having
+          to remember. */}
+      {isValidElement(children) && !(children.props as { id?: string }).id
+        ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+            id: forId,
+            'aria-describedby': help ? helpId : undefined,
+          })
+        : children}
+      {help && (
+        <p id={helpId} className="text-[11px] text-faint mt-1">
+          {help}
+        </p>
+      )}
     </div>
   )
 }

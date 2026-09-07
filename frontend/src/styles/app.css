@@ -18,15 +18,18 @@
   --nd-border-strong: rgba(255, 255, 255, 0.16);
   --nd-text: #e7eaf0;
   --nd-text-muted: #94a0b3;
-  --nd-text-faint: #5d6a7d;
+  --nd-text-faint: #8590a2;
   --nd-accent: #22d3ee;
+  /* The text that sits on an accent ground. Dark here, white in the light
+     theme, because the accent swaps from a bright cyan to a deep teal. */
+  --nd-on-accent: #041016;
   --nd-accent-strong: #06b6d4;
   --nd-accent-soft: rgba(34, 211, 238, 0.14);
   --nd-accent-glow: rgba(34, 211, 238, 0.35);
   --nd-ok: #34d399;
   --nd-warn: #fbbf24;
   --nd-bad: #fb7185;
-  --nd-unknown: #64748b;
+  --nd-unknown: #7f8b9e;
   --nd-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   --nd-radius: 16px;
   --nd-radius-sm: 10px;
@@ -46,15 +49,23 @@
   --nd-border-strong: rgba(15, 23, 42, 0.16);
   --nd-text: #0f172a;
   --nd-text-muted: #55627a;
-  --nd-text-faint: #8a95a8;
-  --nd-accent: #0891b2;
-  --nd-accent-strong: #0e7490;
-  --nd-accent-soft: rgba(8, 145, 178, 0.12);
-  --nd-accent-glow: rgba(8, 145, 178, 0.25);
-  --nd-ok: #059669;
-  --nd-warn: #d97706;
-  --nd-bad: #e11d48;
-  --nd-unknown: #94a3b8;
+  /* ⚠️ Six of these were below 4.5:1 as text in the light theme, measured
+     against the page ground #eef1f5, which is the worse of the two surfaces
+     they appear on. text-faint sat at 2.67 and unknown at 2.26, which is
+     roughly the contrast of a watermark. They are darkened just far enough to
+     clear 4.5 as text, and each one still carries white text on top of it at
+     4.5 or better, because several of them are also badge grounds. Measured,
+     not eyeballed; the guard test recomputes both directions. */
+  --nd-text-faint: #556072;
+  --nd-accent: #0e7490;
+  --nd-on-accent: #ffffff;
+  --nd-accent-strong: #0c6b85;
+  --nd-accent-soft: rgba(14, 116, 144, 0.12);
+  --nd-accent-glow: rgba(14, 116, 144, 0.25);
+  --nd-ok: #047857;
+  --nd-warn: #a4560a;
+  --nd-bad: #be123c;
+  --nd-unknown: #556070;
   --nd-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
   --nd-aurora-1: rgba(8, 145, 178, 0.14);
   --nd-aurora-2: rgba(99, 102, 241, 0.1);
@@ -76,6 +87,7 @@
   --color-muted: var(--nd-text-muted);
   --color-faint: var(--nd-text-faint);
   --color-accent: var(--nd-accent);
+  --color-on-accent: var(--nd-on-accent);
   --color-accent-strong: var(--nd-accent-strong);
   --color-accent-soft: var(--nd-accent-soft);
   --color-ok: var(--nd-ok);
@@ -231,6 +243,14 @@ body {
   overflow: hidden;
 }
 
+/* A row that scrolls sideways without a bar across the bottom of a card. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .bar > i {
   position: absolute;
   inset: 0 auto 0 0;
@@ -300,7 +320,9 @@ body {
 .btn-accent {
   background: var(--nd-accent);
   border-color: transparent;
-  color: #041016;
+  /* ⚠️ This was the literal #041016, which is right on the dark theme's bright
+     cyan and wrong on the light theme's deep teal: 3.59:1, under the line. */
+  color: var(--nd-on-accent);
 }
 
 .btn-accent:hover {

@@ -39,7 +39,7 @@ export function Avatar({ url, name, size = 28, className = '' }: Props) {
     <span
       aria-hidden="true"
       style={{ ...box, fontSize: Math.max(10, Math.round(size * 0.38)) }}
-      className={`shrink-0 rounded-full bg-gradient-to-br from-accent to-indigo-500 text-[#041016] font-semibold inline-flex items-center justify-center ${className}`}
+      className={`shrink-0 rounded-full bg-gradient-to-br from-accent to-indigo-500 text-on-accent font-semibold inline-flex items-center justify-center ${className}`}
     >
       {initials(name)}
     </span>
