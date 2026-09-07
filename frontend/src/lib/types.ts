@@ -94,6 +94,8 @@ export interface PageView {
   icon: string
   position: number
   layouts: Record<Breakpoint, LayoutItem[]>
+  /** What the server counted up to. Sent back when an arrangement is saved. */
+  layout_version?: number
   widgets: WidgetView[]
 }
 

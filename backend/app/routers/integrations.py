@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import AdapterError, Context
+from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
@@ -176,9 +177,21 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
     except KeyError as failure:
         raise error("unknown_kind", f"There is no adapter {body.kind!r}.") from failure
     existing = db.get(Integration, body.integration_id) if body.integration_id else None
-    stored = store_config(body.kind, body.config, existing.config if existing and existing.kind == body.kind else None)
-    probe = Integration(kind=body.kind, name="probe", config=stored)
-    config = resolve_config(probe)
+    # ⚠️ Reading a stored connection can fail, and it used to fail as a 500
+    # with a stack trace. After a restore into an installation with a
+    # different NEXDECK_SECRET_KEY every stored key is unreadable, and the
+    # first thing anybody does then is press Test.
+    try:
+        stored = store_config(body.kind, body.config, existing.config if existing and existing.kind == body.kind else None)
+        probe = Integration(kind=body.kind, name="probe", config=stored)
+        config = resolve_config(probe)
+    except SecretUnreadable:
+        return {
+            "ok": False,
+            "message": "The stored keys of this connection cannot be read.",
+            "hint": "They were encrypted with a different NEXDECK_SECRET_KEY. Enter them again and save.",
+            "code": "secret_unreadable",
+        }
     missing = validate_required(body.kind, config)
     if missing:
         raise error("missing_fields", f"Required fields are missing: {', '.join(missing)}.")

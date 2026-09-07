@@ -131,6 +131,9 @@ class LayoutsBody(BaseModel):
     lg: list[LayoutItem] | None = None
     md: list[LayoutItem] | None = None
     sm: list[LayoutItem] | None = None
+    #: The version the browser was looking at. Left out means "do not check",
+    #: which is what an older browser sends.
+    version: int | None = None
 
 
 class ShareBody(BaseModel):
@@ -221,6 +224,10 @@ class WidgetPatch(BaseModel):
     clear_integration: bool = False
     options: dict[str, Any] | None = None
     refresh_seconds: int | None = Field(default=None, ge=5, le=86400)
+    #: ⚠️ Its own flag, because ``None`` already means "not sent". Without it
+    #: an interval could be set and never taken off again: the field emptied
+    #: in the browser sent nothing, and the card kept the number for good.
+    clear_refresh: bool = False
     page_id: int | None = None
 
 

@@ -86,12 +86,26 @@ export function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data])
 
+  // What the server last told us each page stands at. Sent with every save,
+  // so a browser that was arranging an older version is refused instead of
+  // quietly putting the other person's work back.
+  const versions = useRef<Record<number, number>>({})
+  useEffect(() => {
+    for (const page of pages) {
+      if (typeof page.layout_version === 'number') versions.current[page.id] = page.layout_version
+    }
+  }, [pages])
+
   useStream({
     board: slug,
     enabled: Boolean(data),
     onBoardChanged: () => void board.refetch(),
     onConnected: () => void board.refetch(),
     onLayout: (payload) => {
+      // Somebody else saved this page. Take their version along, so the next
+      // save from this browser starts from where the page really is.
+      const moved = payload as { page_id: number; layouts: unknown; version?: number }
+      if (typeof moved.version === 'number') versions.current[moved.page_id] = moved.version
       queryClient.setQueryData<BoardWithLive>(['board', slug], (old) =>
         old ? { ...old, pages: old.pages.map((p) => (p.id === payload.page_id ? { ...p, layouts: payload.layouts as typeof p.layouts } : p)) } : old,
       )
@@ -99,21 +113,52 @@ export function BoardPage() {
   })
 
   // Layout saving, debounced per page.
-  const saveTimer = useRef<number>(0)
+  //
+  // ⚠️ One timer for all pages meant that moving a card and then switching
+  // page inside 700 ms cancelled the save and never made another: the change
+  // was on screen, gone after a reload, and nothing said so. A timer per page
+  // is the fix, and switching away flushes what is pending rather than
+  // dropping it.
+  const timers = useRef<Record<number, number>>({})
   const draft = useRef<Record<number, Partial<Record<Breakpoint, LayoutItem[]>>>>({})
+  const save = useCallback(
+    (pageId: number) => {
+      const body = draft.current[pageId]
+      if (!body) return
+      delete draft.current[pageId]
+      void put<{ version?: number }>(`/pages/${pageId}/layouts`, { ...body, version: versions.current[pageId] })
+        .then((answer) => {
+          if (typeof answer?.version === 'number') versions.current[pageId] = answer.version
+        })
+        .catch((failure) => {
+          if (failure instanceof ApiError && failure.code === 'layout_moved_on') {
+            setToast({ text: failure.message, level: 'info' })
+            return
+          }
+          setToast({ text: t('board.saveFailed'), level: 'error' })
+        })
+    },
+    [t],
+  )
   const onLayoutChange = useCallback(
     (breakpoint: Breakpoint, layout: LayoutItem[]) => {
       if (!activePage) return
-      draft.current[activePage.id] = { ...(draft.current[activePage.id] ?? {}), [breakpoint]: layout }
-      window.clearTimeout(saveTimer.current)
-      saveTimer.current = window.setTimeout(() => {
-        const body = draft.current[activePage.id]
-        if (!body) return
-        void put(`/pages/${activePage.id}/layouts`, body).catch(() => setToast({ text: t('board.saveFailed'), level: 'error' }))
-      }, 700)
+      const pageId = activePage.id
+      draft.current[pageId] = { ...(draft.current[pageId] ?? {}), [breakpoint]: layout }
+      window.clearTimeout(timers.current[pageId])
+      timers.current[pageId] = window.setTimeout(() => save(pageId), 700)
     },
-    [activePage, t],
+    [activePage, save],
   )
+  // Leaving a page, or the board, writes what is still waiting.
+  const flush = useCallback(() => {
+    for (const [pageId, timer] of Object.entries(timers.current)) {
+      window.clearTimeout(timer)
+      save(Number(pageId))
+    }
+    timers.current = {}
+  }, [save])
+  useEffect(() => flush, [flush, activePage?.id])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

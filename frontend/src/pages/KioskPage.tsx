@@ -7,6 +7,7 @@ import { get, openKioskSession, post } from '../api/client'
 import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
+import { tLabel } from '../i18n/texts'
 import { Confirm, Spinner } from '../components/ui'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
@@ -23,6 +24,9 @@ function withinWindow(from: string, to: string, now: Date): boolean {
 }
 
 /** The wall display: no bar, bigger cards, page cycling, night dimming. */
+/** Well inside the day the cookie is good for, and cheap: one call. */
+const RENEW_EVERY_MS = 6 * 60 * 60 * 1000
+
 export function KioskPage() {
   const { t } = useTranslation()
   const { token = '' } = useParams()
@@ -42,14 +46,26 @@ export function KioskPage() {
   }, [])
   useEffect(() => {
     // The token is handed in once and never appears in an address again.
+    //
+    // ⚠️ And handed in again every few hours. The cookie is good for a day,
+    // the comment on the server says "renewed on the next load", and a wall
+    // display does not load again: after twenty-four hours every fetch became
+    // a 401 and nobody was standing in front of it to press F5. The token
+    // itself does not change, so this is the same call on a timer.
     let current = true
     setAdmitted(false)
     if (!token) return
-    openKioskSession(token).then(
-      () => { if (current) setAdmitted(true) },
-      () => { if (current) setAdmitted(false) },
-    )
-    return () => { current = false }
+    const open = () =>
+      openKioskSession(token).then(
+        () => { if (current) setAdmitted(true) },
+        () => { if (current) setAdmitted(false) },
+      )
+    void open()
+    const timer = window.setInterval(() => void open(), RENEW_EVERY_MS)
+    return () => {
+      current = false
+      window.clearInterval(timer)
+    }
   }, [token])
 
   const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: admitted, refetchInterval: 5 * 60_000 })
@@ -124,7 +140,9 @@ export function KioskPage() {
       </main>
       <Confirm
         open={pending !== null}
-        title={pending ? `${pending.action.label}?` : ''}
+        // ⚠️ Translated, the way the board does it. The same button read
+        // "Restart?" here and "Neu starten?" one screen away.
+        title={pending ? `${tLabel(pending.action.label)}?` : ''}
         danger={pending?.action.danger}
         onCancel={() => setPending(null)}
         onConfirm={() => {

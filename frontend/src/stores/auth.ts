@@ -31,7 +31,7 @@ interface AuthState {
  * it again clears all three, and half-clearing them is how the next person to
  * sign in gets a glimpse of the last one's boards.
  */
-function forgetEverything(): void {
+export function forgetEverything(): void {
   window.location.assign('/login')
 }
 

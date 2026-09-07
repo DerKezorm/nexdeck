@@ -310,8 +310,24 @@ def delete_page(page_id: int, user: CurrentUser, db: DbSession) -> dict:
 
 @router.put("/pages/{page_id}/layouts", summary="Save the widget positions of a page")
 def put_layouts(page_id: int, body: LayoutsBody, user: CurrentUser, db: DbSession) -> dict:
-    """One layout per screen size; sizes the page does not send stay as they are."""
+    """One layout per screen size; sizes the page does not send stay as they are.
+
+    ⚠️ A save that started from an older version is refused. Two browsers in
+    edit mode used to overwrite each other without a word: the second save put
+    the first person's arrangement back, on screen it looked saved, and after
+    a reload the work was gone. Decided on 07.09.2026: refuse and say so,
+    rather than lose an arrangement quietly.
+
+    A browser that sends no version is not checked. That is an older tab, and
+    holding its save hostage would be worse than the race it might lose.
+    """
     page, board, _ = _page_for_edit(db, page_id, user)
+    if body.version is not None and body.version != page.layout_version:
+        raise error(
+            "layout_moved_on",
+            "Somebody else changed this page while you were arranging it. Reload to see their version.",
+            status.HTTP_409_CONFLICT,
+        )
     known = {str(w.id) for w in page.widgets}
     layouts = dict(page.layouts or {})
     for key in COLUMNS:
@@ -320,9 +336,10 @@ def put_layouts(page_id: int, body: LayoutsBody, user: CurrentUser, db: DbSessio
             continue
         layouts[key] = [item.model_dump() for item in items if item.i in known]
     page.layouts = layouts
+    page.layout_version = (page.layout_version or 0) + 1
     db.commit()
-    hub.publish(board_topic(board.id), "layout", {"page_id": page.id, "layouts": layouts})
-    return {"layouts": layouts}
+    hub.publish(board_topic(board.id), "layout", {"page_id": page.id, "layouts": layouts, "version": page.layout_version})
+    return {"layouts": layouts, "version": page.layout_version}
 
 
 # -- shares ------------------------------------------------------------------

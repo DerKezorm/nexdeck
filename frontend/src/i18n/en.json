@@ -16,7 +16,8 @@
     "loading": "Loading…",
     "toggleTheme": "Switch light and dark",
     "refresh": "Refresh",
-    "download": "Download"
+    "download": "Download",
+    "close": "Close"
   },
   "errors": {
     "network": "The server could not be reached.",

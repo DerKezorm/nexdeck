@@ -48,7 +48,10 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
   const entries = useMemo<Entry[]>(() => {
     const list: Entry[] = []
     for (const widget of widgets) {
-      if (widget.link) {
+      // ⚠️ ``safeUrl`` throws away an address with a scheme nexdeck will not
+      // open, and the entry was offered anyway: pressing it opened a blank
+      // window. Asked here, so an entry that cannot be opened is not offered.
+      if (safeUrl(widget.link)) {
         list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
       }
     }

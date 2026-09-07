@@ -75,22 +75,16 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
     data = null
   }
   if (!response.ok) {
-    const detail = (data as { detail?: { code?: string; message?: string; hint?: string } } | null)?.detail
-    const flat = data as { code?: string; message?: string } | null
+    const { code, message, hint, detail } = readFailure(data, response.status)
+    const flat = { code, message }
     // ⚠️ The one error the app cannot usefully show on the page it is on. The
     // installation wants a second factor from every account and this one has
     // none, so every other address answers 403 until it does. Without this the
     // app just breaks quietly, which is what the setting did for months.
-    if ((detail?.code ?? flat?.code) === 'two_factor_setup_required' && !window.location.pathname.startsWith('/settings')) {
+    if (flat.code === 'two_factor_setup_required' && !window.location.pathname.startsWith('/settings')) {
       window.location.assign('/settings?factor=required')
     }
-    throw new ApiError(
-      response.status,
-      detail?.code ?? flat?.code ?? 'error',
-      detail?.message ?? flat?.message ?? `HTTP ${response.status}`,
-      detail?.hint,
-      (detail ?? {}) as Record<string, unknown>,
-    )
+    throw new ApiError(response.status, code, message, hint, detail)
   }
   return data as T
 }
@@ -102,6 +96,61 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
  * travels in the body: in a query string it would sit in every reverse proxy
  * log between here and the server.
  */
+/**
+ * One reading of a failed answer, whatever shape it arrives in.
+ *
+ * ⚠️ There were four of them, and none knew what FastAPI sends for a body it
+ * rejects: a 422 carries ``detail`` as a **list** of field errors, so every
+ * one of the four fell through to "HTTP 422" and the person saw a number
+ * instead of which field was wrong. The shapes in the wild are three:
+ * nexdeck's own ``{detail: {code, message}}``, the flat ``{code, message}``
+ * the 404 handler sends for an address that does not exist, and FastAPI's
+ * validation list.
+ */
+export function readFailure(
+  data: unknown,
+  status: number,
+): { code: string; message: string; hint?: string; detail: Record<string, unknown> } {
+  const body = (data ?? {}) as { detail?: unknown; code?: string; message?: string }
+  const detail = body.detail
+
+  if (detail && typeof detail === 'object' && !Array.isArray(detail)) {
+    const own = detail as { code?: string; message?: string; hint?: string }
+    return {
+      code: own.code ?? 'error',
+      message: own.message ?? `HTTP ${status}`,
+      hint: own.hint,
+      detail: own as Record<string, unknown>,
+    }
+  }
+
+  if (Array.isArray(detail)) {
+    // FastAPI: [{loc: ['body', 'name'], msg: '...', type: '...'}]
+    const said = detail
+      .map((entry) => {
+        const one = entry as { loc?: unknown[]; msg?: string }
+        const field = Array.isArray(one.loc) ? one.loc.filter((part) => part !== 'body').join('.') : ''
+        return field ? `${field}: ${one.msg ?? ''}`.trim() : (one.msg ?? '')
+      })
+      .filter(Boolean)
+    return {
+      code: 'invalid',
+      message: said.length ? said.join('; ') : `HTTP ${status}`,
+      detail: { fields: detail },
+    }
+  }
+
+  if (typeof detail === 'string' && detail) {
+    return { code: 'error', message: detail, detail: {} }
+  }
+
+  return {
+    code: body.code ?? 'error',
+    message: body.message ?? `HTTP ${status}`,
+    detail: {},
+  }
+}
+
 export async function downloadPost(path: string, filename: string, json: unknown): Promise<void> {
   const response = await api<Response>(path, { method: 'POST', json, raw: true })
   if (!response.ok) {
@@ -112,7 +161,8 @@ export async function downloadPost(path: string, filename: string, json: unknown
     } catch {
       data = null
     }
-    throw new ApiError(response.status, data?.detail?.code ?? 'error', data?.detail?.message ?? `HTTP ${response.status}`)
+    const failure = readFailure(data, response.status)
+    throw new ApiError(response.status, failure.code, failure.message, failure.hint, failure.detail)
   }
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)

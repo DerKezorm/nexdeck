@@ -26,7 +26,7 @@ import pyotp
 import segno
 from sqlalchemy.orm import Session as DbSessionType
 
-from ..crypto import decrypt, encrypt
+from ..crypto import SecretUnreadable, decrypt, encrypt
 from ..models import RecoveryCode, Setting, User, utcnow
 
 logger = logging.getLogger("nexdeck.two_factor")
@@ -55,11 +55,27 @@ def store_secret(user: User, secret: str) -> None:
 
 
 def read_secret(user: User) -> str:
-    return decrypt(user.totp_secret) if user.totp_secret else ""
+    """The stored secret, or nothing when the key that wrote it is gone.
+
+    ⚠️ ``SecretUnreadable`` used to travel out of here and come back as a 500
+    at the sign-in. That happens after a restore into an installation with a
+    different ``NEXDECK_SECRET_KEY``, which is the moment somebody most needs
+    to get in. An unreadable secret is treated as no second factor at all: the
+    account signs in with its password, sees that the factor is gone and can
+    set a new one. Better than an account nobody can reach and a stack trace.
+    """
+    if not user.totp_secret:
+        return ""
+    try:
+        return decrypt(user.totp_secret)
+    except SecretUnreadable:
+        logger.warning("The second factor of %r cannot be read; treating the account as having none.", user.username)
+        return ""
 
 
 def enabled(user: User) -> bool:
-    return bool(user.totp_confirmed and user.totp_secret)
+    """Whether a code is asked for. An unreadable secret is not a factor."""
+    return bool(user.totp_confirmed and user.totp_secret and read_secret(user))
 
 
 def otpauth_url(user: User, secret: str, issuer: str = "nexdeck") -> str:
