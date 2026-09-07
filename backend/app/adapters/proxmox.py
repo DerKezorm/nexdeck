@@ -16,6 +16,7 @@ from .base import (
     base_url,
     duration_short,
     human_bytes,
+    path_segment,
     percent,
     status_from_percent,
 )
@@ -149,6 +150,7 @@ class ProxmoxAdapter(Adapter):
         node, kind, vmid = params.get("node"), params.get("type"), params.get("vmid")
         if not (node and kind and vmid):
             raise AdapterError("The guest was not named completely.", code="missing_param")
+        node, kind, vmid = path_segment(node, "The node"), path_segment(kind, "The guest type"), path_segment(vmid, "The guest number")
         response = await ctx.request("POST", f"{base_url(config)}/api2/json/nodes/{node}/{kind}/{vmid}/status/{action_id}", headers=self._headers(config), verify=not config.get("insecure", True))
         if response.status_code >= 400:
             raise AdapterError(f"Proxmox answered with HTTP {response.status_code}.", code="http_error", hint="The token may lack the VM.PowerMgmt privilege.")

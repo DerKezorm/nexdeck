@@ -11,8 +11,10 @@ maintainable by one person.
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import json
 import logging
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -241,6 +243,29 @@ class Detected(BaseModel):
 # ---------------------------------------------------------------------------
 # Which pieces of a card are shown
 # ---------------------------------------------------------------------------
+
+
+#: What may stand in a single segment of a path we build ourselves.
+_PATH_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
+
+
+def path_segment(value: Any, what: str) -> str:
+    """A value on its way into an address, or an error.
+
+    ⚠️ httpx normalises a path before it sends it, and a question mark ends it.
+    Measured with the pinned 0.28.1: ``/containers/../volumes/prune?x=/start``
+    goes out as ``/volumes/prune``. Anything that reaches an engine, a
+    hypervisor or a management API through a path we assemble has to be a
+    single segment and nothing else.
+
+    The name of a container comes from the foreign service, not from us, so
+    this is not only about what a caller sends: a container called ``..`` would
+    be offered by the card like any other.
+    """
+    text = str(value or "")
+    if not _PATH_SEGMENT.match(text):
+        raise AdapterError(f"{what} is not a name this can be used with.", code="bad_param")
+    return text
 
 
 def part_option(key: str) -> str:

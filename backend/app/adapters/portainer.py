@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import (
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    base_url,
+    path_segment,
+)
 from .docker import CONTAINER_ACTIONS, DockerAdapter, container_name
 
 
@@ -158,9 +167,7 @@ class PortainerAdapter(Adapter):
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         if action_id not in CONTAINER_ACTIONS:
             raise AdapterError("Unknown container action.", code="no_such_action")
-        container_id = str(params.get("id") or "")
-        if not container_id:
-            raise AdapterError("No container was named.", code="missing_param")
+        container_id = path_segment(params.get("id"), "The container")
         response = await ctx.request(
             "POST", f"{base_url(config)}/api/endpoints/{await self._endpoint(config, ctx)}/docker/containers/{container_id}/{action_id}",
             headers=self._headers(config), verify=not config.get("insecure", True),
