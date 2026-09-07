@@ -313,12 +313,17 @@ def keep_items(data: WidgetData, options: dict[str, Any], *, remember_all: bool 
     Matched by title, not by id. A container keeps its name and gets a new id
     every time it is recreated, and the title is what the person ticked.
     """
-    if remember_all:
+    if remember_all and ALL_ITEMS not in (data.meta or {}):
         # ⚠️ Written down before anything is dropped, and only for the
         # settings sheet. The tick boxes are made from the rows the card
         # shows, so switching one off took its own box away with it and there
         # was no way back. The boards do not get this: it is a second copy of
         # every title on every refresh, for a question only the sheet asks.
+        #
+        # ⚠️ And never over one that is already there. An adapter that filters
+        # its own rows before this runs, because it needs them narrowed before
+        # it can draw, has already written down what it saw first, and by here
+        # that is more than is left.
         data.meta = {**(data.meta or {}), ALL_ITEMS: [str(item.get("title") or "") for item in data.items]}
     wanted = options.get(ITEM_PICKER)
     if not isinstance(wanted, list) or not wanted:

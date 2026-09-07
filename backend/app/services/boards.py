@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..adapters import get_adapter, split_widget_kind
+from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
 from ..deps import error, require_integration
 from ..models import Board, Integration, Page, User, Widget
 from . import health as health_service
@@ -147,6 +148,17 @@ def service_link(widget: Widget) -> str:
         return ""
 
 
+def _drawn_as(widget: Widget, declared: str) -> str:
+    """Which renderer really draws this card, once its options are read.
+
+    A card that offers the "view" option is drawn by whatever that says. Only
+    the ones the frontend actually swaps for are listed; anything else is the
+    declared renderer.
+    """
+    view = str((widget.options or {}).get("view") or "")
+    return view if view in ("gauge", "value") else declared
+
+
 def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = None) -> dict[str, Any]:
     try:
         adapter, kind = split_widget_kind(widget.kind)
@@ -155,6 +167,17 @@ def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = N
         beta = adapter.beta
         client_only = widget_type.client_only
         default_size, min_size = list(widget_type.default_size), list(widget_type.min_size)
+        # ⚠️ The floor follows what is drawn, not what the adapter declares.
+        # Several cards can be switched to a dial, and a dial has no rows: a
+        # Synology system card set to "a dial" was still held to the three
+        # columns a row of statistics needs, while the volumes card beside it,
+        # showing the same dial, went down to two. Same picture, different
+        # floor, and nothing on screen said why.
+        shown = _drawn_as(widget, renderer)
+        if shown != renderer:
+            floor = RENDERER_MIN.get(shown, DEFAULT_MIN)
+            min_size = [min(min_size[0], floor[0]), min(min_size[1], floor[1])]
+            default_size = [max(default_size[0], min_size[0]), max(default_size[1], min_size[1])]
     except KeyError:
         renderer = "value"
         beta = False

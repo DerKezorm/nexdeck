@@ -455,3 +455,74 @@ async def test_the_preview_carries_the_full_list_and_the_refresh_does_not() -> N
     for_board = shape_for_display(_disks(), adapter, "disks", options)
     assert ALL_ITEMS in for_sheet.meta and ALL_ITEMS not in (for_board.meta or {})
     assert [item["title"] for item in for_board.items] == ["Drive 2"]
+
+
+# ---------------------------------------------------------------------------
+# The volume card filters twice, and the sheet has to survive both
+# ---------------------------------------------------------------------------
+
+TWO_VOLUMES = {
+    ("SYNO.Storage.CGI.Storage", "load_info"): {"volumes": [
+        {"id": "volume_1", "display_name": "volume_1", "status": "normal", "size": {"used": "43500000000000", "total": "125700000000000"}},
+        {"id": "volume_2", "display_name": "volume_2", "status": "normal", "size": {"used": "900000000000", "total": "1000000000000"}},
+    ]},
+}
+
+
+async def _volumes(options: dict) -> object:
+    import httpx
+    import respx
+
+    with respx.mock:
+        respx.get(f"{NAS}/webapi/auth.cgi").mock(return_value=httpx.Response(200, json={"success": True, "data": {"sid": "sid-1"}}))
+
+        def route(request: httpx.Request) -> httpx.Response:
+            params = request.url.params
+            data = TWO_VOLUMES.get((params.get("api"), params.get("method")))
+            if data is None:
+                return httpx.Response(200, json={"success": False, "error": {"code": 101}})
+            return httpx.Response(200, json={"success": True, "data": data})
+
+        respx.get(f"{NAS}/webapi/entry.cgi").mock(side_effect=route)
+        ctx = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+        return await get_adapter("synology").fetch("volumes", CONFIG, options, ctx)
+
+
+async def test_the_dial_view_of_the_volume_card_still_offers_its_volumes() -> None:
+    """The card the operator asked about.
+
+    In the dial view this card trades its rows for one needle, and the tick
+    boxes are built from the rows a card sends back. So the settings sheet
+    said the card had nothing to pick from, while the same card in the list
+    view offered every volume. The choice matters in both: it decides which
+    volumes the fullest is picked from.
+    """
+    from app.adapters.base import ALL_ITEMS
+
+    data = await _volumes({"view": "gauge"})
+    assert data.items == [], "the dial view is supposed to have traded its rows"
+    assert data.meta[ALL_ITEMS] == ["volume_1", "volume_2"]
+
+
+async def test_a_volume_switched_off_keeps_its_own_box() -> None:
+    """⚠️ This card applies the picker itself and is then filtered again
+    centrally, so the full list was written down after the first pass. A
+    volume switched off lost the box that would switch it back on.
+    """
+    from app.adapters.base import ALL_ITEMS, shape_for_display
+
+    picked = {"only_items": ["volume_1"]}
+    for view in ("value", "gauge"):
+        data = await _volumes({**picked, "view": view})
+        for_sheet = shape_for_display(data, get_adapter("synology"), "volumes", {**picked, "view": view}, for_settings=True)
+        assert for_sheet.meta[ALL_ITEMS] == ["volume_1", "volume_2"], f"in the {view} view"
+
+
+async def test_the_needle_follows_the_volumes_that_were_picked() -> None:
+    """volume_2 is the fuller one; asking for volume_1 alone must not hand the
+    needle to volume_2 anyway."""
+    everything = await _volumes({"view": "gauge"})
+    assert everything.primary["label"] == "volume_2"
+
+    only_one = await _volumes({"view": "gauge", "only_items": ["volume_1"]})
+    assert only_one.primary["label"] == "volume_1"
