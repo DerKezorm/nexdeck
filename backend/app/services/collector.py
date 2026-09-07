@@ -134,8 +134,25 @@ class Collector:
         if task is not None:
             task.cancel()
 
+    def _drop_cache(self, integration_id: int) -> None:
+        """Throw away a connection's cache, and close what it was holding open.
+
+        ⚠️ Four adapters keep an httpx client in there, because a Deluge or
+        UniFi session is worth reusing between calls. Popping the cache left
+        those clients with their connections open and nothing pointing at
+        them: they were closed by the next restart and by nothing else.
+        """
+        cache = self._caches.pop(integration_id, None)
+        for value in (cache or {}).values():
+            if isinstance(value, httpx.AsyncClient) and not value.is_closed:
+                spawn(value.aclose, name=f"close-client-{integration_id}")
+
+    def forget_integration(self, integration_id: int) -> None:
+        """The connection is gone. Nothing of it stays behind."""
+        self._drop_cache(integration_id)
+
     def reschedule_integration(self, integration_id: int) -> None:
-        self._caches.pop(integration_id, None)
+        self._drop_cache(integration_id)
         with db_session() as db:
             ids = list(db.scalars(select(Widget.id).where(Widget.integration_id == integration_id)))
         for widget_id in ids:

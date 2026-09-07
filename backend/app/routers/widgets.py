@@ -220,8 +220,31 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
 IMAGE_TTL = 3600
 IMAGE_LIMIT = 300
 IMAGE_MAX_BYTES = 5 * 1024 * 1024
+#: What the whole cache may weigh.
+#:
+#: ⚠️ It was bounded by the number of entries and nothing else, and one entry
+#: may be five megabytes: three hundred posters is a gigabyte and a half held
+#: in the process, on a machine that is often a Raspberry Pi. The count stays
+#: as a second ceiling; whichever is reached first evicts.
+IMAGE_MAX_TOTAL = 64 * 1024 * 1024
 _images: dict[tuple[int, str], tuple[float, bytes, str]] = {}
 _insecure_client: httpx.AsyncClient | None = None
+
+
+def _cached_bytes() -> int:
+    return sum(len(entry[1]) for entry in _images.values())
+
+
+def _make_room() -> None:
+    """Evict the entries that expire first until the cache fits again."""
+    expired = [key for key, entry in _images.items() if entry[0] <= time.monotonic()]
+    for key in expired:
+        _images.pop(key, None)
+    total = _cached_bytes()
+    while _images and (len(_images) > IMAGE_LIMIT or total > IMAGE_MAX_TOTAL):
+        oldest = min(_images, key=lambda key: _images[key][0])
+        total -= len(_images[oldest][1])
+        _images.pop(oldest, None)
 
 
 def _image_client(insecure: bool) -> httpx.AsyncClient:
@@ -282,10 +305,8 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
         raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND)
     if source.cache_seconds <= 0:
         return Response(content=response.content, media_type=content_type, headers={"Cache-Control": "no-store"})
-    if len(_images) >= IMAGE_LIMIT:
-        oldest = min(_images, key=lambda key: _images[key][0])
-        _images.pop(oldest, None)
     _images[(widget_id, path)] = (time.monotonic() + min(IMAGE_TTL, source.cache_seconds), response.content, content_type)
+    _make_room()
     return Response(content=response.content, media_type=content_type, headers={"Cache-Control": "private, max-age=3600"})
 
 

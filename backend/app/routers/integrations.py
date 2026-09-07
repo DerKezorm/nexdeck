@@ -6,6 +6,7 @@ import logging
 
 from fastapi import APIRouter, status
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import AdapterError, Context
@@ -110,7 +111,42 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
     return _public(db, integration)
 
 
-@router.delete("/integrations/{integration_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove an integration")
+def _forget_in_options(db: Session, integration_id: int) -> int:
+    """Take the deleted connection out of every option that names it.
+
+    ⚠️ Connection numbers sit as bare integers inside ``Widget.options``, and
+    SQLite hands out the number of a deleted row again. So the merged calendar
+    of somebody who had picked connection 7 kept the 7, and the next connection
+    an administrator created became connection 7: the card silently started
+    reading a different service, one its owner may not even be allowed to see.
+    Nothing pointed at it, because from the outside the card had not changed.
+    """
+    cleared = 0
+    for widget in db.scalars(select(Widget)):
+        options = dict(widget.options or {})
+        touched = False
+        for name, value in list(options.items()):
+            if not isinstance(value, list):
+                continue
+            kept = [entry for entry in value if _not_this_connection(entry, integration_id)]
+            if len(kept) != len(value):
+                options[name] = kept
+                touched = True
+        if touched:
+            widget.options = options
+            cleared += 1
+    return cleared
+
+
+def _not_this_connection(entry: object, integration_id: int) -> bool:
+    """Options carry the number as an int or as the text of one."""
+    try:
+        return int(entry) != integration_id  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return True
+
+
+@router.delete("/integrations/{integration_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a connection")
 def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> None:
     """Widgets that used it stay and show that they need a connection."""
     integration = db.get(Integration, integration_id)
@@ -118,9 +154,15 @@ def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> N
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
     widget_ids = list(db.scalars(select(Widget.id).where(Widget.integration_id == integration.id)))
     name, kind = integration.name, integration.kind
+    forgotten = _forget_in_options(db, integration.id)
     db.delete(integration)
     db.commit()
-    logger.info("Connection %r (%s) deleted by %s; %d card(s) lose their service.", name, kind, user.username, len(widget_ids))
+    # ⚠️ The cache and the client of a connection that no longer exists used
+    # to sit in memory until the next restart, holding open sockets to a
+    # service nobody asked about any more.
+    collector.forget_integration(integration_id)
+    logger.info("Connection %r (%s) deleted by %s; %d card(s) lose their service, %d option(s) cleared.",
+                name, kind, user.username, len(widget_ids), forgotten)
     hass_listener.unwatch(integration_id)
     for widget_id in widget_ids:
         collector.schedule(widget_id)

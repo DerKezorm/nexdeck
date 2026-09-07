@@ -7,11 +7,12 @@ import re
 
 from fastapi import APIRouter, UploadFile, status
 from fastapi.responses import FileResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from ..config import get_settings
 from ..deps import CurrentUser, DbSession, MemberUser, error
-from ..models import Asset
+from ..models import Asset, User
+from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/assets", tags=["assets"])
 
@@ -59,6 +60,31 @@ def unsafe_svg(data: bytes) -> str:
     return ""
 
 
+def used_by(db: DbSession, user_id: int) -> int:
+    return int(db.scalar(select(func.coalesce(func.sum(Asset.size), 0)).where(Asset.uploaded_by == user_id)) or 0)
+
+
+def _refuse_if_over_quota(db: DbSession, user: User, incoming: int) -> None:
+    """What one account may leave lying in the uploads directory.
+
+    ⚠️ There was no ceiling at all. Every member could write next to the
+    database until the disk was full, which stops the database as well: SQLite
+    needs room for its write-ahead log, and a full disk is the one failure a
+    dashboard cannot report, because reporting it is also a write.
+    """
+    quota = get_settings().upload_quota_mb * 1024 * 1024
+    if quota <= 0:
+        return
+    already = used_by(db, user.id)
+    if already + incoming > quota:
+        raise error(
+            "quota_full",
+            f"That would put {(already + incoming) // (1024 * 1024)} MB on the account, and the limit is "
+            f"{quota // (1024 * 1024)} MB. Delete a file you no longer need.",
+            status.HTTP_413_CONTENT_TOO_LARGE,
+        )
+
+
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Upload a background or icon")
 async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = "background") -> dict:
     if kind not in ("background", "icon"):
@@ -66,9 +92,8 @@ async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = 
     content_type = file.content_type or ""
     if content_type not in ALLOWED:
         raise error("bad_type", "Only PNG, JPEG, WebP, SVG, GIF and AVIF images are accepted.")
-    data = await file.read()
-    if len(data) > MAX_BYTES:
-        raise error("too_large", "The file is larger than 12 MB.")
+    data = await read_at_most(file, MAX_BYTES, "file")
+    _refuse_if_over_quota(db, user, len(data))
     if content_type == "image/svg+xml":
         refused = unsafe_svg(data)
         if refused:

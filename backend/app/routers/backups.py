@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from ..config import get_settings
 from ..deps import AdminUser, DbSession, error
 from ..services import backup
+from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/backups", tags=["admin"])
 
@@ -114,10 +115,7 @@ def _verdict(verdict: backup.Verdict) -> dict:
 
 
 async def _read(file: UploadFile) -> bytes:
-    data = await file.read()
-    if len(data) > MAX_UPLOAD:
-        raise error("too_large", "That file is larger than half a gigabyte.", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-    return data
+    return await read_at_most(file, MAX_UPLOAD, "archive")
 
 
 @router.post("/inspect", summary="Look inside an uploaded archive without changing anything")
