@@ -193,7 +193,7 @@ class HealthService:
                 select(HealthCheck).options(selectinload(HealthCheck.widget)).where(HealthCheck.id == check_id)
             )
             if check is None:
-                return
+                return None, {}, None
             was_ok = check.last_ok
             check.last_ok = ok
             check.last_latency_ms = latency
@@ -238,11 +238,7 @@ class HealthService:
                 # moved when the whole board was loaded again.
                 "bars": uptime_bars(db, check.widget.id, bars_window(check.widget.options)) if check.widget is not None else None,
             }
-        if board_id is not None:
-            hub.publish(board_topic(board_id), "health", payload)
-        if announce is not None:
-            event, title, body, level = announce
-            notify.emit(event, title, body, level=level)
+        return board_id, payload, announce
 
 
 health = HealthService()

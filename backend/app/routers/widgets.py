@@ -322,17 +322,23 @@ async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db
         raise error(getattr(failure, "code", "") or "no_stream", str(failure), status.HTTP_404_NOT_FOUND) from failure
     if _streams_open >= STREAM_LIMIT:
         raise error("too_many_streams", f"The server relays at most {STREAM_LIMIT} live streams at once.", status.HTTP_503_SERVICE_UNAVAILABLE)
+    # ⚠️ Take the slot here, before the first await, and give it back on every
+    # way out. Between the check above and the counting there used to be a
+    # network round trip to the camera, so a dozen browsers opening in the same
+    # second all passed a limit of twelve and the server relayed every one.
+    _streams_open += 1
     client = _image_client(bool(config.get("insecure")))
     upstream = client.build_request("GET", source.url, headers=source.headers, params=source.params or None, timeout=httpx.Timeout(15.0, read=60.0))
     try:
         response = await client.send(upstream, stream=True)
     except httpx.HTTPError as failure:
+        _streams_open -= 1
         raise error("unreachable", f"The service did not deliver the stream: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
     if response.status_code >= 400:
+        _streams_open -= 1
         await response.aclose()
         raise error("no_stream", f"The service answered the stream request with HTTP {response.status_code}.", status.HTTP_502_BAD_GATEWAY)
     media_type = source.media_type or response.headers.get("content-type", "video/x-flv")
-    _streams_open += 1
 
     async def relay():
         # Every chunk goes out as it arrives. Collecting 64 kB first would hold

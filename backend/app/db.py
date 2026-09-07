@@ -36,10 +36,17 @@ def get_engine() -> Engine:
     if _engine is None:
         settings = get_settings()
         settings.data_dir.mkdir(parents=True, exist_ok=True)
+        # ⚠️ Spelled out on purpose. Left to SQLAlchemy the pool is 5 plus 10,
+        # and that number appeared nowhere. Synchronous routes hold a
+        # connection for the length of the request, so this ceiling decides
+        # when the sixteenth caller starts waiting, and after thirty seconds
+        # gets a 500 with nothing in it that says why.
         _engine = create_engine(
             f"sqlite:///{settings.database_path}",
             connect_args={"check_same_thread": False},
             pool_pre_ping=True,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
         )
         _configure(_engine)
         _session_factory = sessionmaker(bind=_engine, expire_on_commit=False)
