@@ -18,10 +18,11 @@ interface Provider {
   scopes: string
   enabled: boolean
   auto_create: boolean
+  trusts_second_factor: boolean
   default_role: string
 }
 
-const EMPTY = { slug: '', label: '', issuer_url: '', client_id: '', client_secret: '', scopes: 'openid profile email', enabled: true, auto_create: true, default_role: 'user' }
+const EMPTY = { slug: '', label: '', issuer_url: '', client_id: '', client_secret: '', scopes: 'openid profile email', enabled: true, auto_create: true, trusts_second_factor: false, default_role: 'user' }
 
 /** Sign-in through authentik, Keycloak, Authelia, Pocket ID and the rest. */
 export function OidcSettings() {
@@ -78,6 +79,7 @@ export function OidcSettings() {
           </Field>
         </div>
         <Switch checked={form.auto_create} onChange={(auto_create) => setForm((f) => ({ ...f, auto_create }))} label={t('settings.system.oidcAutoCreate')} description={t('settings.system.oidcAutoCreateHelp')} />
+        <Switch checked={form.trusts_second_factor} onChange={(trusts_second_factor) => setForm((f) => ({ ...f, trusts_second_factor }))} label={t('settings.system.oidcTrustsSecondFactor')} description={t('settings.system.oidcTrustsSecondFactorHelp')} />
         <p className="text-[11px] text-faint mb-2">{t('settings.system.oidcRedirect', { url: `${base}/api/v1/auth/oidc/${form.slug || 'slug'}/callback` })}</p>
         <button
           className="btn btn-accent"

@@ -143,7 +143,13 @@ export function ProfileSettings() {
                 setCurrent('')
                 setNext('')
                 setConfirm('')
-                setToast({ text: t('common.saved'), level: 'ok' })
+                // ⚠️ A password change ends every session of the account, this
+                // one included; the server does that on purpose and a test
+                // says so. What was missing is saying it: the app used to
+                // announce "saved" and then quietly break, because every
+                // request after this one came back 401.
+                setToast({ text: t('settings.profile.passwordChangedSignIn'), level: 'ok' })
+                window.setTimeout(() => window.location.assign('/login'), 1500)
               })
               .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
           }
@@ -152,6 +158,11 @@ export function ProfileSettings() {
         </button>
       </SettingsCard>
 
+      {new URLSearchParams(window.location.search).get('factor') === 'required' && (
+        <p className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm mb-3" role="alert">
+          {t('settings.profile.factorRequiredHere')}
+        </p>
+      )}
       <TwoFactorCard hasPassword={user.has_password} onDone={(text, level) => setToast({ text, level })} />
 
       <SettingsCard title={t('settings.profile.sessions')} description={t('settings.profile.sessionsHelp')}>

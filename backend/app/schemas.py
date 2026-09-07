@@ -142,7 +142,10 @@ class ShareBody(BaseModel):
 class SecondStepBody(BaseModel):
     """The second half of a sign-in: the ticket, and a code from somewhere."""
 
-    ticket: str = Field(max_length=800)
+    #: Empty when the sign-in came through OpenID Connect; the ticket is in a
+    #: cookie then, because that path is a redirect and an address ends up in
+    #: every proxy log.
+    ticket: str = Field(default="", max_length=800)
     code: str = Field(default="", max_length=40)
     recovery_code: str = Field(default="", max_length=40)
 
@@ -152,9 +155,14 @@ class TwoFactorConfirm(BaseModel):
 
 
 class TwoFactorOff(BaseModel):
-    """Turning it off needs the password again, like any other undoing."""
+    """Turning it off needs the password again, like any other undoing.
 
-    password: str = Field(max_length=200)
+    An account signed in through OpenID Connect has no password, so for those
+    a current code from the authenticator app takes its place.
+    """
+
+    password: str = Field(default="", max_length=200)
+    code: str = Field(default="", max_length=16)
 
 
 class ResetRequest(BaseModel):
@@ -307,6 +315,8 @@ class OidcProviderBody(BaseModel):
     enabled: bool = True
     auto_create: bool = True
     default_role: Literal["admin", "user", "guest"] = "user"
+    #: The provider asks for a second factor itself, so nexdeck does not.
+    trusts_second_factor: bool = False
 
 
 class SettingsBody(BaseModel):

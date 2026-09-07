@@ -23,6 +23,7 @@ from ..schemas import (
     UserPublic,
 )
 from ..security import (
+    burn_a_password_check,
     create_session_token,
     create_step_token,
     has_usable_password,
@@ -92,7 +93,12 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
             status.HTTP_429_TOO_MANY_REQUESTS,
         ) from None
     user = db.scalar(select(User).where(func.lower(User.username) == body.username.lower()))
-    if user is None or user.disabled or not verify_password(body.password, user.password_hash):
+    # ⚠️ Hash something either way. Checking a password costs about 300 ms at
+    # twelve rounds and a missing account cost nothing, so the answer time
+    # said whether a name exists on this installation. The throttle counts
+    # attempts, it does not hide that difference.
+    right = verify_password(body.password, user.password_hash) if user is not None else burn_a_password_check(body.password)
+    if user is None or user.disabled or not right:
         login_guard.failed(address, body.username)
         logger.info("Sign-in refused for %r from %s.", body.username, address)
         raise error("bad_credentials", "User name or password is wrong.", status.HTTP_401_UNAUTHORIZED)
@@ -119,6 +125,11 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
     return user_public(user, request)
 
 
+#: Where the OIDC return path leaves its half-finished sign-in.
+STEP_COOKIE = "nexdeck_step"
+STEP_MINUTES = 10
+
+
 @router.post("/login/second-step", response_model=UserPublic, summary="Finish a sign-in with the second factor")
 def second_step(body: SecondStepBody, request: Request, response: Response, db: DbSession) -> UserPublic:
     """The other half: the ticket from the first step, plus a code.
@@ -127,7 +138,9 @@ def second_step(body: SecondStepBody, request: Request, response: Response, db: 
     says which account it is: without that, six digits are guessable.
     """
     address = request.client.host if request.client else "?"
-    claims = read_step_token(body.ticket)
+    # The password path puts the ticket in the body; the OIDC path cannot,
+    # because it arrives as a redirect, so it leaves it in a cookie.
+    claims = read_step_token(body.ticket or request.cookies.get(STEP_COOKIE, ""))
     if claims is None:
         raise error("bad_ticket", "That sign-in took too long. Start again.", status.HTTP_401_UNAUTHORIZED)
     user_id, issued_ms = claims
@@ -239,7 +252,14 @@ def delete_avatar(user: CurrentUser, request: Request, db: DbSession) -> UserPub
 
 @router.post("/password", status_code=status.HTTP_204_NO_CONTENT, summary="Change own password")
 def change_password(body: PasswordBody, user: CurrentUser, db: DbSession) -> None:
-    """Every other session of the account is signed out afterwards."""
+    """Every session of the account is signed out afterwards, this one included.
+
+    ⚠️ Deliberate, and a test says so. What was missing is that the interface
+    never noticed: the cookie was issued before ``password_changed_ms`` and
+    the next request simply came back 401, so the person who had just changed
+    their password watched the app go blank. The saying-so happens in the
+    frontend, not here.
+    """
     if has_usable_password(user.password_hash) and not verify_password(body.current_password, user.password_hash):
         raise error("bad_credentials", "The current password is wrong.", status.HTTP_403_FORBIDDEN)
     user.password_hash = hash_password(body.new_password)
@@ -336,15 +356,39 @@ def two_factor_recovery(body: TwoFactorOff, user: CurrentUser, db: DbSession) ->
     """Fresh codes, shown once. The old ones stop working immediately."""
     if not two_factor.enabled(user):
         raise error("not_on", "This account has no second factor.", status.HTTP_409_CONFLICT)
-    if has_usable_password(user.password_hash) and not verify_password(body.password, user.password_hash):
-        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    _prove_it_is_you(db, user, body.password, body.code)
     return {"recovery_codes": two_factor.new_codes(db, user)}
+
+
+def _prove_it_is_you(db: DbSession, user: User, password: str, code: str) -> None:
+    """The password, or a current code where there is no password.
+
+    ⚠️ Both undoings of a second factor used to ask for the password only when
+    the account had one. An account created through OpenID Connect never does.
+    """
+    if has_usable_password(user.password_hash):
+        if not verify_password(password, user.password_hash):
+            raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+        return
+    if not two_factor.check_code(db, user, code):
+        raise error(
+            "bad_code",
+            "This account has no password, so it takes a current code from the authenticator app.",
+            status.HTTP_403_FORBIDDEN,
+        )
 
 
 @router.delete("/two-factor", status_code=status.HTTP_204_NO_CONTENT, summary="Switch the second factor off")
 def two_factor_disable(body: TwoFactorOff, user: CurrentUser, db: DbSession) -> None:
-    if has_usable_password(user.password_hash) and not verify_password(body.password, user.password_hash):
-        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    """⚠️ An account without a password proves itself with a code instead.
+
+    The check used to sit behind ``has_usable_password``, and an account that
+    signed in through OpenID Connect has never had one. For those the whole
+    condition fell away, so anybody holding an open session could switch the
+    second factor off without proving anything at all, which is the opposite
+    of what a second factor is for.
+    """
+    _prove_it_is_you(db, user, body.password, body.code)
     if two_factor.required(db):
         raise error(
             "required_by_operator",

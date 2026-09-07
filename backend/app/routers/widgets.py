@@ -192,8 +192,17 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
 
 @router.post("/widgets/{widget_id}/refresh", summary="Fetch a widget's data right now")
 async def refresh_widget(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """⚠️ Above "view", because this reaches out to the foreign service.
+
+    It used to take the same level as looking at the board, and the answer was
+    thrown away: a guest, or anybody holding a view-only share, could ask the
+    server to call Radarr as fast as it would answer. Found on 07.09.2026 by
+    the guard that asks which right an address really wants.
+    """
     widget, page = _widget(db, widget_id)
-    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    _board, permission = board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    if permission not in ("edit", "act", "owner"):
+        raise error("forbidden", "You may not refresh cards on this board.", status.HTTP_403_FORBIDDEN)
     data = await collector.refresh_now(widget_id)
     return data.model_dump() if data else {}
 

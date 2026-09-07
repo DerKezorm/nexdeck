@@ -44,6 +44,7 @@ from .routers import (
     widgets,
 )
 from .routers import journal as journal_router
+from .security import prune_sessions
 from .services import history, journal, provisioning
 from .services.collector import collector
 from .services.hass_ws import hass_listener
@@ -54,15 +55,25 @@ from .services.loop import set_main_loop
 logger = logging.getLogger("nexdeck")
 
 
+def _housekeeping_once() -> None:
+    with db_session() as db:
+        history.condense(db)
+        journal.enforce_expiry(db)
+        sessions_gone = prune_sessions(db)
+    if sessions_gone:
+        logger.info("Swept %d session(s) that had run out.", sessions_gone)
+    log_tailer.prune()
+
+
 async def _housekeeping() -> None:
     """Condense history, prune logs and end a deep log level every few minutes."""
     while True:
         await asyncio.sleep(300)
         try:
-            with db_session() as db:
-                history.condense(db)
-                journal.enforce_expiry(db)
-            log_tailer.prune()
+            # ⚠️ In a thread, not here. Condensing walks three tables and used
+            # to do it on the event loop, so every five minutes the server went
+            # quiet for as long as it took.
+            await asyncio.to_thread(_housekeeping_once)
         except Exception:  # noqa: BLE001
             logger.exception("Housekeeping failed.")
 

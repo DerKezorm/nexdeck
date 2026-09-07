@@ -29,6 +29,13 @@ export function LoginPage() {
   const [forgetting, setForgetting] = useState(false)
   const [sent, setSent] = useState(false)
   const oidcError = new URLSearchParams(location.search).get('oidc_error')
+  // The provider proved who this is; it did not prove the second factor. The
+  // ticket for that is in a short-lived cookie, not in the address, so an
+  // empty ticket here is not a mistake.
+  const fromProvider = new URLSearchParams(location.search).get('second_step') === '1'
+  useEffect(() => {
+    if (fromProvider) setStep({ ticket: '', recovery: true })
+  }, [fromProvider])
 
   useEffect(() => {
     if (user) navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true })

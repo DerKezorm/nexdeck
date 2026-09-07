@@ -39,6 +39,46 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(_password_bytes(password), bcrypt.gensalt(rounds)).decode("utf-8")
 
 
+#: A real hash of a value nobody signs in with, so a sign-in for a name that
+#: does not exist costs the same as one that does.
+_DECOY = bcrypt.hashpw(b"nexdeck-decoy", bcrypt.gensalt(4)).decode("utf-8")
+
+
+def prune_sessions(db) -> int:  # noqa: ANN001
+    """Drop sessions nobody can use any more.
+
+    ⚠️ The table only ever grew: a row per sign-in, and nothing removed one.
+    Worse than the size was the list under "My sessions", which read the rows
+    and so offered to sign out sessions that had run out months ago as though
+    they were live.
+
+    Gone: anything withdrawn, and anything not seen for longer than a session
+    lasts. The cookie of such a row is refused by ``deps`` either way, so this
+    removes nothing that still works.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import delete, or_
+
+    from .config import get_settings
+    from .models import Session
+
+    stale = datetime.now(UTC) - timedelta(days=get_settings().session_days)
+    done = db.execute(delete(Session).where(or_(Session.revoked.is_(True), Session.last_seen_at < stale)))
+    return int(done.rowcount or 0)
+
+
+def burn_a_password_check(password: str) -> bool:
+    """Spend the time a real check would, and always say no.
+
+    ⚠️ Cheap rounds on purpose: this only has to take a while, not protect
+    anything, and making it as expensive as the real thing would hand anyone
+    an amplifier for the cost of one request.
+    """
+    bcrypt.checkpw(_password_bytes(password), _DECOY.encode("utf-8"))
+    return False
+
+
 def verify_password(password: str, password_hash: str) -> bool:
     try:
         return bcrypt.checkpw(_password_bytes(password), password_hash.encode("utf-8"))

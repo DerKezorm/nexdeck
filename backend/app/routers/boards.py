@@ -9,7 +9,6 @@ from fastapi import APIRouter, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from ..config import get_settings
 from ..deps import (
     KIOSK_COOKIE,
     CurrentUser,
@@ -25,7 +24,7 @@ from ..deps import (
     require_board_id,
     usable_token,
 )
-from ..models import Board, BoardShare, KioskToken, Page, Widget, utcnow
+from ..models import Board, BoardShare, KioskToken, Page, Role, Widget, utcnow
 from ..schemas import (
     BoardCreate,
     BoardOrder,
@@ -99,7 +98,7 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
 
 
 @router.post("/kiosk/session", summary="Exchange a kiosk token for a session cookie")
-def kiosk_session(body: KioskSession, response: Response, db: DbSession) -> dict:
+def kiosk_session(body: KioskSession, request: Request, response: Response, db: DbSession) -> dict:
     """The door of a wall display: the token goes in here and nowhere else.
 
     ⚠️ It used to be appended to every image, video and event address, because
@@ -112,8 +111,13 @@ def kiosk_session(body: KioskSession, response: Response, db: DbSession) -> dict
     if row is None or not usable_token(row):
         raise error("unauthenticated", "This kiosk link is not valid.", status.HTTP_401_UNAUTHORIZED)
     cookie, seconds = create_kiosk_cookie(row.id, row.expires_at)
+    # ⚠️ Same source as the session cookie, not a second reading of the world.
+    # This used to look at NEXDECK_PUBLIC_URL, which says how browsers reach
+    # nexdeck and nothing about this request: an installation that had not set
+    # it handed a wall display a cookie without Secure even over HTTPS, and
+    # NEXDECK_COOKIE_SECURE=always did not apply to it at all.
     response.set_cookie(KIOSK_COOKIE, cookie, max_age=seconds, httponly=True, samesite="lax",
-                        secure=get_settings().public_url.startswith("https://"), path="/")
+                        secure=cookie_secure(request), path="/")
     return {"board_id": row.board_id, "expires_in": seconds}
 
 

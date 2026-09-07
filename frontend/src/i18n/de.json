@@ -175,6 +175,8 @@
       "currentPassword": "Aktuelles Passwort",
       "newPassword": "Neues Passwort",
       "changePassword": "Passwort ändern",
+      "passwordChangedSignIn": "Kennwort geändert. Alle Sitzungen dieses Kontos sind beendet; du meldest dich gleich neu an.",
+      "factorRequiredHere": "Diese Installation verlangt von jedem Konto einen zweiten Faktor. Richte ihn unten ein, um weiterzukommen.",
       "sessions": "Sitzungen",
       "sessionsHelp": "Jeder Browser, der mit diesem Konto angemeldet ist.",
       "signOutSession": "Abmelden",
@@ -255,6 +257,8 @@
       "oidcRole": "Rolle für neue Konten",
       "oidcAutoCreate": "Konten bei der ersten Anmeldung anlegen",
       "oidcAutoCreateHelp": "Aus heißt: Nur verknüpfte Konten dürfen sich anmelden.",
+      "oidcTrustsSecondFactor": "Dieser Anbieter prüft selbst einen zweiten Faktor",
+      "oidcTrustsSecondFactorHelp": "Aus heißt: nexdeck fragt nach der Anmeldung über diesen Anbieter den eigenen Code ab, sofern das Konto einen eingerichtet hat. Einschalten, wo authentik, Authelia oder Keycloak schon fragen.",
       "oidcRedirect": "Beim Anbieter einzutragende Rücksprungadresse: {{url}}",
       "oidcAdd": "Anbieter hinzufügen"
     },

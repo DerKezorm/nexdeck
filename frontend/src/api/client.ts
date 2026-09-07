@@ -77,6 +77,13 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   if (!response.ok) {
     const detail = (data as { detail?: { code?: string; message?: string; hint?: string } } | null)?.detail
     const flat = data as { code?: string; message?: string } | null
+    // ⚠️ The one error the app cannot usefully show on the page it is on. The
+    // installation wants a second factor from every account and this one has
+    // none, so every other address answers 403 until it does. Without this the
+    // app just breaks quietly, which is what the setting did for months.
+    if ((detail?.code ?? flat?.code) === 'two_factor_setup_required' && !window.location.pathname.startsWith('/settings')) {
+      window.location.assign('/settings?factor=required')
+    }
     throw new ApiError(
       response.status,
       detail?.code ?? flat?.code ?? 'error',
