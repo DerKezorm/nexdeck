@@ -131,12 +131,26 @@ class SynologyAdapter(Adapter):
         sid = ctx.cache.get("syno_sid")
         if sid and not force:
             return sid
-        payload = await ctx.get_json(
-            f"{base_url(config)}/webapi/auth.cgi",
-            params={"api": "SYNO.API.Auth", "version": "6", "method": "login", "account": config.get("username", ""),
-                    "passwd": config.get("password", ""), "session": "nexdeck", "format": "sid"},
-            verify=not config.get("insecure", True), cache_seconds=0,
+        # ⚠️ In the body, not in the query part. The password used to travel in
+        # the URL, where it lands in the DSM's own access log, in the log of
+        # every reverse proxy in between, and in the browser history of anybody
+        # who copied the address out of a report. TLS does not help: the URL is
+        # what gets written down at both ends.
+        #
+        # Measured against DSM 7 on 07.09.2026: the login accepts a form body
+        # on API versions 6 and 7 and answers with the same sid.
+        response = await ctx.request(
+            "POST", f"{base_url(config)}/webapi/auth.cgi",
+            data={"api": "SYNO.API.Auth", "version": "6", "method": "login", "account": config.get("username", ""),
+                  "passwd": config.get("password", ""), "session": "nexdeck", "format": "sid"},
+            verify=not config.get("insecure", True),
         )
+        if response.status_code >= 400:
+            raise AdapterError(f"DSM answered the login with HTTP {response.status_code}.", code="http_error")
+        try:
+            payload = response.json()
+        except ValueError as why:
+            raise AdapterError("DSM answered the login with something that is not JSON.", code="bad_json") from why
         if not payload.get("success"):
             code = int((payload.get("error") or {}).get("code", 0))
             raise AuthFailed(f"DSM refused the login: {ERRORS.get(code, f'error {code}')}.")

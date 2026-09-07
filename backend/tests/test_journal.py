@@ -318,11 +318,14 @@ def test_nobody_setting_the_level_leaves_the_switch_alive(monkeypatch: pytest.Mo
 def test_a_key_in_a_query_never_reaches_the_file() -> None:
     """⚠️ httpx logs the full address of every request at INFO, and the deep
     log levels turn httpx up to exactly that. Several services take their key
-    in the query string: Kavita wants ``apiKey``, Technitium wants ``token``,
-    Synology's ``auth.cgi`` takes the DSM password that way. The line then sat
-    in ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level
-    exists precisely so somebody can download that file and attach it to an
-    issue.
+    in the query string: Kavita wants ``apiKey``, Technitium wants ``token``.
+    The line then sat in ``data/logs/nexdeck.log`` and in ``docker logs``, and
+    the deep level exists precisely so somebody can download that file and
+    attach it to an issue.
+
+    ``passwd`` is still redacted although nexdeck no longer sends the DSM
+    password that way: the pattern guards every service that does, and a
+    redaction rule that only covers what is sent today is a rule that ages.
     """
     journal.apply_mode("detailed")
     logging.getLogger("httpx").info(
