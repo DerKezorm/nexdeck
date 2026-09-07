@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 // Three lines, the handle every list on a phone is dragged by. Lucide calls
 // it Menu; here it is a grip and nothing else.
 import { ChevronDown, ChevronRight, Menu, Trash2 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -12,6 +12,30 @@ import { Confirm, Field, Toast } from '../../components/ui'
 import { moved } from '../../lib/reorder'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
+
+/** The order a list would have if the held row were let go at `y`.
+
+    ⚠️ By how many of the other rows the pointer is past, not by "which row
+    contains the pointer". Containment leaves dead ground: the gaps between
+    rows, and everything below the last one. A drag that runs off the end of
+    the list lands nowhere instead of at the end, and that is what a drag
+    downwards does the moment it passes the bottom row.
+
+    Counting is also the part that does not care about order. The boxes come
+    from the DOM, which can be one frame behind the order this is measuring;
+    how many midpoints sit above `y` is the same number either way, and only
+    the slicing needs the true order.
+*/
+function orderIfDroppedAt(rows: BoardSummary[], y: number, heldId: number, boxes: Map<number, HTMLLIElement>): BoardSummary[] {
+  const held = rows.find((one) => one.id === heldId)
+  if (!held) return rows
+  const others = rows.filter((one) => one.id !== heldId)
+  const place = others.filter((one) => {
+    const box = boxes.get(one.id)?.getBoundingClientRect()
+    return box ? y >= box.top + box.height / 2 : false
+  }).length
+  return [...others.slice(0, place), held, ...others.slice(place)]
+}
 
 export function BoardsSettings() {
   const { t } = useTranslation()
@@ -28,6 +52,7 @@ export function BoardsSettings() {
   const [removing, setRemoving] = useState<BoardSummary | null>(null)
   const [removingPage, setRemovingPage] = useState<{ board: BoardSummary; page: BoardSummary['pages'][number] } | null>(null)
   const [reordering, setReordering] = useState(false)
+  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   /** The order while a finger is still on the list. Null when nothing is
       being dragged, and the answer from the server is what is shown again. */
   const [dragged, setDragged] = useState<BoardSummary[] | null>(null)
@@ -52,15 +77,51 @@ export function BoardsSettings() {
       })
   }
 
-  /** Which row the pointer is over, by where the rows really are. */
-  const rowUnder = (y: number, exceptId: number): number => {
-    for (const [index, board] of rows.entries()) {
-      if (board.id === exceptId) continue
-      const box = rowRefs.current.get(board.id)?.getBoundingClientRect()
-      if (box && y >= box.top && y <= box.bottom) return index
+
+  /** While a row is held, the window has the drag, not the handle.
+
+      ⚠️ The handle used to capture the pointer, which is the usual way. It
+      does not survive this list: reordering moves the handle's own node in the
+      DOM, and a moved node loses the capture. From the second step on the
+      events went to whatever sat under the cursor, so the row followed only
+      when the pointer happened to cross its own handle again. That looked
+      exactly like "downwards it moves one place and then stops". */
+  useEffect(() => {
+    if (holding === null) return
+    const id = holding
+    const follow = (event: PointerEvent) => {
+      const y = event.clientY
+      // The updater form, so every move sees the order the last one left,
+      // whether or not React has re-rendered in between. Returning the same
+      // array when nothing moved keeps this from redrawing on every pixel.
+      setDragged((current) => {
+        if (!current) return current
+        const order = orderIfDroppedAt(current, y, id, rowRefs.current)
+        return order.every((one, place) => one.id === current[place].id) ? current : order
+      })
     }
-    return -1
-  }
+    const letGo = () => setHolding(null)
+    window.addEventListener('pointermove', follow)
+    window.addEventListener('pointerup', letGo)
+    window.addEventListener('pointercancel', letGo)
+    return () => {
+      window.removeEventListener('pointermove', follow)
+      window.removeEventListener('pointerup', letGo)
+      window.removeEventListener('pointercancel', letGo)
+    }
+  }, [holding])
+
+  /** Let go: write the new order, or forget it when nothing actually moved.
+
+      One place for both ways in, the drag and the arrow keys, so a row that
+      ends up where it started never costs a write. */
+  useEffect(() => {
+    if (holding !== null || dragged === null || reordering) return
+    const saved = boards.data ?? []
+    if (dragged.every((one, place) => one.id === saved[place]?.id)) setDragged(null)
+    else save(dragged)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holding, dragged, reordering])
 
   /** The same move, from the keyboard.
 
@@ -71,14 +132,11 @@ export function BoardsSettings() {
   const nudge = (index: number, by: number) => {
     const target = index + by
     if (reordering || target < 0 || target >= rows.length) return
-    const order = moved(rows, index, target)
-    setDragged(order)
-    save(order)
+    setDragged(moved(rows, index, target))
   }
   /** Which boards show their pages. Closed by default: the list is the answer
       to "which boards do I have", the pages are the second question. */
   const [expanded, setExpanded] = useState<number[]>([])
-  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   return (
     <>
       <SettingsCard title={t('settings.boards.title')} description={t('settings.boards.help')}>
@@ -124,29 +182,14 @@ export function BoardsSettings() {
                     aria-label={t('board.moveWithHandle', { name: board.name })}
                     title={t('board.moveWithHandle', { name: board.name })}
                     onPointerDown={(event) => {
+                      // ⚠️ No setPointerCapture. React moves this very node
+                      // while the list reorders, and a moved node loses the
+                      // capture: after the first step the drag went deaf, and
+                      // only answered again when the pointer happened to pass
+                      // over the handle. The window listens instead.
                       event.preventDefault()
-                      event.currentTarget.setPointerCapture(event.pointerId)
                       setDragged(rows)
                       setHolding(board.id)
-                    }}
-                    onPointerMove={(event) => {
-                      if (holding !== board.id) return
-                      const over = rowUnder(event.clientY, board.id)
-                      const at = rows.findIndex((one) => one.id === board.id)
-                      if (over < 0 || over === at) return
-                      setDragged(moved(rows, at, over))
-                    }}
-                    onPointerUp={() => {
-                      if (holding !== board.id) return
-                      setHolding(null)
-                      const order = dragged ?? rows
-                      // Nothing moved, nothing to write.
-                      if (order.every((one, place) => one.id === (boards.data ?? [])[place]?.id)) setDragged(null)
-                      else save(order)
-                    }}
-                    onPointerCancel={() => {
-                      setHolding(null)
-                      setDragged(null)
                     }}
                     onKeyDown={(event) => {
                       // Ctrl, Alt and Meta with an arrow belong to the browser
