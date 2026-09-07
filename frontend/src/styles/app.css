@@ -496,6 +496,24 @@ textarea.input {
   opacity: 1;
 }
 
+/* ⚠️ While editing, the whole card is the handle. Everything in it is inert
+   anyway (a link does not open, an action button does not act), but the
+   elements were still there, and the drag machinery leaves buttons and links
+   alone so that a press on one is a press and not a drag. On a card whose
+   body is one strip of bars that left the padding at the edge as the only
+   place to take hold of. The card's own two buttons keep their events. */
+.card.is-editing > *:not(.card-controls) {
+  pointer-events: none;
+}
+
+.card.is-editing {
+  cursor: grab;
+}
+
+.card.is-editing:active {
+  cursor: grabbing;
+}
+
 .card.has-link {
   cursor: pointer;
 }

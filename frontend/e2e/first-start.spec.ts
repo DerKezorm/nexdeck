@@ -58,6 +58,23 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   await expect(page.getByRole('dialog').getByLabel('Title')).toHaveValue('Containers')
   await page.keyboard.press('Escape')
 
+  // ⚠️ The middle of a card, not its edge. The drag machinery leaves buttons
+  // and links alone so that a press on one is a press, and a card whose body
+  // is a link or a strip of bars had nothing to take hold of but the couple of
+  // millimetres of padding at its rim. This test grabbed the bottom edge for
+  // exactly that reason, which is how the fault got past it.
+  // An app tile: its whole face is one anchor, so there is nothing else to
+  // aim at. This is the card the fault was reported on.
+  const grabbing = page.locator('section[aria-label="Radarr"]').first()
+  await expect(grabbing).toBeVisible()
+  const grabbed = (await grabbing.boundingBox())!
+  await page.mouse.move(grabbed.x + grabbed.width / 2, grabbed.y + grabbed.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(grabbed.x + grabbed.width / 2 + 40, grabbed.y + grabbed.height / 2 + 20)
+  await expect(page.locator('.react-grid-item.react-draggable-dragging')).toHaveCount(1)
+  await page.mouse.move(grabbed.x + grabbed.width / 2, grabbed.y + grabbed.height / 2)
+  await page.mouse.up()
+
   // Free placement: dragging a card across the others moves nothing but that
   // card, and a drop on an occupied spot snaps back to where it came from.
   const clock = page.locator('section[aria-label="Clock"]').first()
@@ -65,10 +82,10 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   const before = await positions()
   const from = (await clock.boundingBox())!
   const to = (await containers.boundingBox())!
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height - 12)
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
   await page.mouse.down()
   for (let step = 1; step <= 12; step += 1) {
-    await page.mouse.move(from.x + ((to.x - from.x) * step) / 12 + from.width / 2, from.y + ((to.y - from.y) * step) / 12 + from.height - 12)
+    await page.mouse.move(from.x + ((to.x - from.x) * step) / 12 + from.width / 2, from.y + ((to.y - from.y) * step) / 12 + from.height / 2)
   }
   await page.mouse.up()
   await page.waitForTimeout(500)
