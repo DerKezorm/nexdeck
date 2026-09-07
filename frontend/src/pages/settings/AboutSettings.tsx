@@ -241,31 +241,34 @@ export function AboutSettings() {
             }
             label={t('about.updateCheckLabel')}
           />
-          {data.update_check && (
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button
-                className="btn"
-                onClick={() =>
-                  void post<About>('/about/check')
-                    .then(() => about.refetch())
-                    .then(() => setToast({ text: t('about.checked'), level: 'ok' }))
-                    .catch(fail)
-                }
-              >
-                {t('about.checkNow')}
-              </button>
-              <span className="text-xs text-muted">
-                {newer
-                  ? t('about.updateAvailable', { version: data.latest_version })
-                  : data.latest_version
-                    ? t('about.upToDate')
-                    : data.checked_at
-                      ? t('about.askFailed')
-                      : t('about.neverChecked')}
-              </span>
-              {data.checked_at && <span className="text-xs text-faint">{t('about.lastChecked', { when: new Date(data.checked_at).toLocaleString(i18n.language) })}</span>}
-            </div>
-          )}
+          {/* ⚠️ Always, not only while the daily check is on. It used to hang
+              off that switch, so the one person who most wants to look now and
+              then, the one who deliberately keeps the daily outbound call off,
+              was the one with no button. The switch decides whether nexdeck
+              asks by itself; this asks once, because somebody pressed it. */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              className="btn"
+              onClick={() =>
+                void post<About>('/about/check')
+                  .then(() => about.refetch())
+                  .then(() => setToast({ text: t('about.checked'), level: 'ok' }))
+                  .catch(fail)
+              }
+            >
+              {t('about.checkNow')}
+            </button>
+            <span className="text-xs text-muted">
+              {newer
+                ? t('about.updateAvailable', { version: data.latest_version })
+                : data.latest_version
+                  ? t('about.upToDate')
+                  : data.checked_at
+                    ? t('about.askFailed')
+                    : t('about.neverChecked')}
+            </span>
+            {data.checked_at && <span className="text-xs text-faint">{t('about.lastChecked', { when: new Date(data.checked_at).toLocaleString(i18n.language) })}</span>}
+          </div>
         </SettingsCard>
       )}
 

@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from .. import __version__
 from ..adapters.base import outbound_client
 from ..config import get_settings
-from ..deps import AdminUser, CurrentUser, DbSession, error
+from ..deps import AdminUser, CurrentUser, DbSession
 from ..models import Board, Integration, Setting, User, Widget
 from ..schemas import SettingsBody
 from ..services import collector as collector_module
@@ -77,8 +77,13 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
         "connections": hub.connections,
         "latest_version": None,
     }
-    if payload["update_check"] and user.role == "admin":
-        payload["latest_version"] = await latest_version()
+    if user.role == "admin":
+        # ⚠️ The switch decides whether nexdeck *asks*, not whether an answer
+        # it already has may be shown. With the switch off this returned None
+        # even right after somebody had pressed "check now", so the press
+        # looked like it had failed. Nothing goes out on this path unless the
+        # switch is on.
+        payload["latest_version"] = await latest_version() if payload["update_check"] else _update_cache.get("version")
     return payload
 
 
@@ -102,12 +107,19 @@ async def latest_version(force: bool = False) -> str | None:
 
 @router.post("/api/v1/about/check", summary="Ask GitHub for the newest version now")
 async def check_now(admin: AdminUser, db: DbSession) -> dict:
-    """The daily question, asked by hand. Off by default like the daily one:
-    it is the one call nexdeck makes to the outside, and only an administrator
-    who has switched it on gets it."""
-    general = get_setting(db, "general")
-    if not bool(general.get("update_check", get_settings().update_check)):
-        raise error("update_check_off", "The update check is switched off.")
+    """The daily question, asked by hand.
+
+    ⚠️ This used to be refused while the daily check was off, on the grounds
+    that it is the one call nexdeck makes to the outside. That reasoning
+    covers the *standing* call, which an operator has to agree to, and not
+    this one: an administrator pressing a button is the consent. The effect
+    was that the one person most likely to want to look now and then, the one
+    who deliberately keeps a daily outbound call switched off, was the only
+    one who could not.
+
+    The switch still decides whether nexdeck asks by itself. Nothing goes out
+    here unless somebody presses.
+    """
     await latest_version(force=True)
     return await about(admin, db)
 
