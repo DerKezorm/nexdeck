@@ -3,13 +3,64 @@
     "0.1.0": {
       "lead": "nexdeck ist da: ein lebendiges Dashboard für dein Homelab mit dreißig Anbindungen, Boards für Desktop, Handy und Wandtablet, und Aktionen direkt auf den Karten.",
       "sections": [
-        { "title": "Lebendige Boards", "body": "Werte ändern sich vor deinen Augen. Der Server fragt jeden Dienst einmal ab und schiebt Änderungen an jeden offenen Browser.", "path": "Bearbeiten (Stift) > Widget hinzufügen" },
-        { "title": "Anbindungen", "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, die arr-Familie, Home Assistant, Uptime Kuma und mehr.", "path": "Einstellungen > Anbindungen" },
-        { "title": "Wandtablets", "body": "Ein Kiosk-Link zeigt ein Board ohne Anmeldung, wechselt Seiten und dunkelt nachts ab.", "path": "Board-Menü > Kiosk" },
-        { "title": "Meldungen", "body": "Ausfälle und fehlgeschlagene Aktionen erreichen dich über Telegram, E-Mail, Web Push, ntfy, Gotify, Discord, Slack oder Apprise.", "path": "Einstellungen > Kanäle" }
+        {
+          "title": "Lebendige Boards",
+          "body": "Werte ändern sich vor deinen Augen. Der Server fragt jeden Dienst einmal ab und schiebt Änderungen an jeden offenen Browser.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen"
+        },
+        {
+          "title": "Anbindungen",
+          "body": "Docker, Proxmox, Synology, Unraid, TrueNAS, Pi-hole, AdGuard, UniFi, Plex, Jellyfin, die arr-Familie, Home Assistant, Uptime Kuma und mehr.",
+          "path": "Einstellungen > Anbindungen"
+        },
+        {
+          "title": "Wandtablets",
+          "body": "Ein Kiosk-Link zeigt ein Board ohne Anmeldung, wechselt Seiten und dunkelt nachts ab.",
+          "path": "Board-Menü > Kiosk"
+        },
+        {
+          "title": "Meldungen",
+          "body": "Ausfälle und fehlgeschlagene Aktionen erreichen dich über Telegram, E-Mail, Web Push, ntfy, Gotify, Discord, Slack oder Apprise.",
+          "path": "Einstellungen > Kanäle"
+        }
       ],
       "smallTitle": "Außerdem neu",
-      "small": ["Boards lassen sich als YAML exportieren und importieren, Dateien in data/boards provisionieren sie.", "Docker-Labels nexdeck.* und homepage.* erzeugen Kacheln von selbst.", "Persönliche API-Token für Skripte und Automationen."]
+      "small": [
+        "Boards lassen sich als YAML exportieren und importieren, Dateien in data/boards provisionieren sie.",
+        "Docker-Labels nexdeck.* und homepage.* erzeugen Kacheln von selbst.",
+        "Persönliche API-Token für Skripte und Automationen."
+      ]
+    },
+    "0.2.0": {
+      "lead": "Einmal den ganzen Code gelesen und danach repariert, was dabei herauskam: 146 Punkte in vierzehn Blöcken. Neun davon waren Löcher, durch die jemand hätte gehen können.",
+      "sections": [
+        {
+          "title": "Neun Löcher zu",
+          "body": "Ein Brett, das nach einer Zahl heißt, kam an fremde Bretter. Eine Aktion auf einer Karte konnte alles sein, was der Aufrufer sich ausdachte. Ein Mitglied konnte ein Brett einlesen, das den Schlüssel des Servers mitlas. Hochgeladene Dateien konnten im eigenen Ursprung laufen, und das Synology-Kennwort stand in der Adresse.",
+          "path": "Einstellungen > Über"
+        },
+        {
+          "title": "Ein Weg zurück",
+          "body": "Wenn der letzte Administrator ausgesperrt ist und kein Mailserver eingerichtet ist, druckt ein Start mit NEXDECK_RESCUE=1 einen einmaligen Anmeldelink, fünfzehn Minuten gültig. Er geht auf die Konsole, nie ins Protokoll.",
+          "path": "docs/operating.md"
+        },
+        {
+          "title": "Ein Brett ohne Maus anordnen",
+          "body": "Pfeiltasten verschieben die gewählte Karte, mit Umschalt ändert sich ihre Größe. Alle drei Formfaktoren wandern mit. Und im Bearbeitungsmodus ist die ganze Karte der Griff: bei einer Karte, deren Fläche ein Link ist, blieb vorher nur der Rand.",
+          "path": "Bearbeiten (Stift) > mit Tab auf eine Karte"
+        },
+        {
+          "title": "Eine Karte, die eine Zahl nicht kennt, sagt das",
+          "body": "Fehlende Werte wurden als Null gezeichnet, und Null liest sich wie gemessen und in Ordnung. Vierundfünfzig Stellen, die einen Prozentwert ausrechnen, sagen jetzt stattdessen, dass sie es nicht wissen."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Wie man nexdeck betreibt, steht jetzt geschrieben: Sicherung, Wiederherstellung, Aktualisieren und der Docker-Socket.",
+        "Siebzehn Einstellungen, die nirgends dokumentiert waren, stehen in der README, mit einem Wächter, der die Tabelle aktuell hält.",
+        "Eine Karte kann nicht mehr endgültig verstummen: jeder unerwartete Fehler wird zur Meldung, und danach wird es wieder versucht.",
+        "Alte Aufzeichnungen werden nach Plan aufgeräumt, und hinter jeder Grenze steht eine Zahl."
+      ]
     }
   }
 }
