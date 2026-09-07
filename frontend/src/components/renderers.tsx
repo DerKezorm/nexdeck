@@ -33,7 +33,9 @@ import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import { ButtonCard } from './ButtonCard'
 import { CameraCard } from './CameraCard'
+import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
 import { WolCard } from './WolCard'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
@@ -65,6 +67,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   log: LogCard,
   chart: ChartCard,
   app: AppTile,
+  button: ButtonCard,
+  image: ImageCard,
   posters: PostersCard,
   counters: CountersCard,
   camera: CameraCard,
@@ -636,6 +640,65 @@ export function IframeCard({ data, editing }: RenderProps) {
 // Clock
 // ---------------------------------------------------------------------------
 
+/** Hours, minutes and seconds in the clock's own zone, as fractions of a turn.
+ *
+ *  ⚠️ Read out of the formatted parts, not off the Date. A Date carries the
+ *  browser's zone, and a clock set to another zone would draw one time and
+ *  print another underneath it. */
+export function handsFor(now: Date, timeZone?: string): { hour: number; minute: number; second: number } {
+  let parts: Intl.DateTimeFormatPart[]
+  try {
+    parts = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone }).formatToParts(now)
+  } catch {
+    parts = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(now)
+  }
+  const read = (what: string) => Number(parts.find((part) => part.type === what)?.value ?? 0)
+  // 24 becomes 0: en-GB with hour12 false writes midnight as 24.
+  const hour = read('hour') % 12
+  const minute = read('minute')
+  const second = read('second')
+  return {
+    hour: ((hour + minute / 60) / 12) * 360,
+    minute: ((minute + second / 60) / 60) * 360,
+    second: (second / 60) * 360,
+  }
+}
+
+/** The face with hands. Drawn, not fetched: one SVG, no library. */
+function Dial({ now, timeZone, seconds, colour }: { now: Date; timeZone?: string; seconds: boolean; colour?: string }) {
+  const turn = handsFor(now, timeZone)
+  const ink = colour || 'var(--nd-text)'
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full max-h-full" role="img" aria-label={new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', timeZone }).format(now)}>
+      <circle cx="50" cy="50" r="47" fill="none" stroke="var(--nd-border-strong)" strokeWidth="1.5" />
+      {/* Twelve marks, the quarters longer. A dial without marks is a circle. */}
+      {Array.from({ length: 12 }, (_, index) => {
+        const long = index % 3 === 0
+        return (
+          <line
+            key={index}
+            x1="50"
+            y1={long ? 8 : 10}
+            x2="50"
+            y2={long ? 16 : 13}
+            stroke={long ? ink : 'var(--nd-text-muted)'}
+            strokeWidth={long ? 2.4 : 1.2}
+            strokeLinecap="round"
+            transform={`rotate(${index * 30} 50 50)`}
+            opacity={long ? 0.9 : 0.45}
+          />
+        )
+      })}
+      <line x1="50" y1="50" x2="50" y2="27" stroke={ink} strokeWidth="4.4" strokeLinecap="round" transform={`rotate(${turn.hour} 50 50)`} />
+      <line x1="50" y1="50" x2="50" y2="16" stroke={ink} strokeWidth="2.8" strokeLinecap="round" transform={`rotate(${turn.minute} 50 50)`} />
+      {seconds && (
+        <line x1="50" y1="57" x2="50" y2="13" stroke="var(--nd-accent)" strokeWidth="1.2" strokeLinecap="round" transform={`rotate(${turn.second} 50 50)`} />
+      )}
+      <circle cx="50" cy="50" r="2.6" fill={ink} />
+    </svg>
+  )
+}
+
 export function ClockCard({ data }: RenderProps) {
   const [now, setNow] = useState(() => new Date())
   const seconds = Boolean(data?.meta?.seconds)
@@ -645,6 +708,8 @@ export function ClockCard({ data }: RenderProps) {
   }, [seconds])
   const timeZone = (data?.meta?.timezone as string) || undefined
   const hour12 = data?.meta?.format === '12h'
+  const hands = data?.meta?.face === 'hands'
+  const colour = typeof data?.meta?.colour === 'string' && data.meta.colour ? data.meta.colour : undefined
   let time: string
   let date = ''
   try {
@@ -653,11 +718,28 @@ export function ClockCard({ data }: RenderProps) {
   } catch {
     time = now.toLocaleTimeString()
   }
-  return (
-    <div className="flex-1 flex flex-col justify-center px-4 py-3 min-h-0">
-      <div className="num text-[40px] leading-none font-semibold tracking-tight">{time}</div>
+  const under = (
+    <>
       {data?.meta?.date !== false && <div className="text-xs text-muted mt-2">{date}</div>}
       {data?.meta?.label ? <div className="text-[11px] text-faint mt-0.5 uppercase tracking-wide">{String(data.meta.label)}</div> : null}
+    </>
+  )
+  if (hands) {
+    return (
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-1 px-3 py-2">
+        <div className="min-h-0 flex-1 aspect-square grid place-items-center">
+          <Dial now={now} timeZone={timeZone} seconds={seconds} colour={colour} />
+        </div>
+        <div className="text-center leading-tight">{under}</div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex-1 flex flex-col justify-center px-4 py-3 min-h-0">
+      <div className="num text-[40px] leading-none font-semibold tracking-tight" style={colour ? { color: colour } : undefined}>
+        {time}
+      </div>
+      {under}
     </div>
   )
 }

@@ -180,6 +180,36 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
 }
 
 /** Draws one adapter field from its spec: text, password, number, bool, select, connections, textarea or time zone. */
+/**
+ * A colour, or none at all.
+ *
+ * ⚠️ "None" has to be its own control. A colour input cannot be empty: it
+ * shows black when it has no value, and picking black to mean "leave it
+ * alone" is not a thing anybody guesses. So the swatch sets a colour and the
+ * button next to it takes it away again.
+ */
+function ColourPicker({ value, onChange, label, help }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
+  const { t } = useTranslation()
+  const chosen = typeof value === 'string' ? value : ''
+  return (
+    <Field label={label} help={help}>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          className="h-8 w-12 rounded-lg border border-line bg-transparent p-0.5"
+          value={chosen || '#22d3ee'}
+          aria-label={label}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <span className="num text-[12px] text-muted w-20">{chosen || t('widget.colourNone')}</span>
+        <button type="button" className="btn btn-xs" disabled={!chosen} onClick={() => onChange('')}>
+          {t('widget.colourClear')}
+        </button>
+      </div>
+    </Field>
+  )
+}
+
 export function FieldInput({ spec, value, onChange, labelOverride, onFill, items, allTitles, integrationId }: Props) {
   const { t } = useTranslation()
   const id = useId()
@@ -194,6 +224,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
   }
   if (spec.type === 'choices') {
     return <RemoteChoice spec={spec} value={value} onChange={onChange} label={label} help={help} integrationId={integrationId} />
+  }
+  if (spec.type === 'colour') {
+    return <ColourPicker value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'items') {
     return <ItemPicker value={value} onChange={onChange} label={label} help={help} items={items} allTitles={allTitles} />
