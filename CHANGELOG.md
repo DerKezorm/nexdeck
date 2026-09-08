@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.4.0 (2026-09-08)
 
 ### New
 
@@ -21,6 +21,11 @@ project uses semantic versioning.
 - **A saved change jumped back to the old one.** Pick a look in a card's settings, save, and the card showed the new look for a moment and then the old one until the page was reloaded. `onSaved` sets a hold on the preview so the card keeps the new options until the server has fetched with them; a tick later the sheet refetches the widget, finds its draft options equal to the saved ones, and reports "nothing to preview any more", which cleared the hold. The card then fell back to the collector's last answer, which still had the old options. It had been that way for as long as the sheet has had a preview.
 - **The connection picker on a button offered all twenty-eight connections**, though its own help text says "only connections that offer something a button may trigger" and twenty-five of them offer nothing. It names the three that declare an action now, built from the registry rather than written out, so it cannot go stale the day a fourth one does.
 - **A demo connection said it had nothing to offer.** Its address is `demo.invalid`, so asking it for a list asked nothing, and the sheet drew the honest conclusion from an answer that was not one. Demo connections answer from their own invented data now, which is where the card's rows come from anyway.
+- **Synology's virtual machines were measured against the wrong thing.** The memory of a guest was divided by what it was assigned instead of by the host's, so a healthy machine reported itself 102% full; a cap at 100 and a comment calling the overshoot "overhead" kept it looking deliberate. The processor load came out ten times too high on the list card and was left out of the single card entirely, on a docstring saying the API reports none. Both figures now match what the Virtual Machine Manager shows for the same guest, held against a live DSM.
+- **The machine picker offered Docker containers.** Both Synology cards asked a field called `which` and got one merged list, so picking a container on the machine card answered "there is no machine called immich_postgres". Two questions, two lists; a card saved before the split keeps its choice.
+- **A button's look waited for the server.** How a card is drawn is nothing a service knows, but `look` and `colour` came back from a fetch, so choosing "symbol only" changed nothing until the page was reloaded. The card reads its own options now, which is also what makes the choice visible while it is being made.
+- **Proxmox answered with no node and looked healthy.** With Privilege Separation on, a token inherits nothing from its user, and `/nodes` is then HTTP 200 with an empty list: the summary read "0 / 0 guests, 0 nodes". It says what happened now, and names the permissions. The single-guest card no longer asks for the node list it never used.
+- **A fresh Speedtest Tracker failed its connection test.** It asked `results/latest`, which an installation that has not measured yet does not have, and blamed the address for a 404. It asks the list and reads the status code, so an empty tracker tests green.
 - **UniFi's switch card had no demo of its own.** It fell through to the console summary, so in demo mode a switch showed the network's numbers and an empty port list. Nothing threw, so nothing said so, and the demo board is where the screenshots on the project page come from.
 - **The chart drew one line of however many it had.** It took the first metric and threw the rest away. UniFi's console measures WAN in and WAN out, the server has stored both since the day it was written, and the card drew one; putting two cards side by side to compare them gave each its own scale, so the comparison was wrong as well as awkward. Every line is drawn now, on one scale, with a legend that names them the way the card does.
 

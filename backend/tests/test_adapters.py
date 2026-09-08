@@ -592,13 +592,17 @@ async def test_synology_virtual_machines_with_usage_and_actions(ctx: Context) ->
         if api == "SYNO.Virtualization.Guest" and method == "list":
             assert params.get("version") == "2"
             return {"success": True, "data": {"guests": [
-                {"guest_id": "g1", "name": "Home Assistant", "status": "running", "status_type": "healthy", "host_name": "storage-nas", "vcpu_num": 2, "vram_size": 4194304, "ip": "192.168.1.40"},
-                {"guest_id": "g2", "name": "Lab", "status": "shutdown", "status_type": "", "host_name": "storage-nas", "vcpu_num": 1, "vram_size": 2097152, "ip": ""},
-                {"guest_id": "g3", "name": "Small", "status": "running", "status_type": "healthy", "host_name": "storage-nas", "vcpu_num": 1, "vram_size": 1048576, "ip": ""},
+                {"guest_id": "g1", "name": "Home Assistant", "status": "running", "status_type": "healthy", "host_name": "nas-1", "vcpu_num": 2, "host_ram_size": 16777216, "vram_size": 4194304, "ip": "192.168.1.40"},
+                {"guest_id": "g2", "name": "Lab", "status": "shutdown", "status_type": "", "host_name": "nas-1", "vcpu_num": 1, "host_ram_size": 16777216, "vram_size": 2097152, "ip": ""},
+                {"guest_id": "g3", "name": "Small", "status": "running", "status_type": "healthy", "host_name": "nas-1", "vcpu_num": 1, "host_ram_size": 16777216, "vram_size": 1048576, "ip": ""},
             ]}}
         if api == "SYNO.Virtualization.Guest" and method == "get":
             if params.get("guest_id") == "g3":
-                # The hypervisor reports more than the configured size: overhead, shown as full.
+                # ⚠️ More than this guest was assigned, and that is not an
+                # error: ram_used is its share of the host's memory. The card
+                # used to divide by the assignment, cap the result at 100% and
+                # call the overshoot "overhead", which is how a healthy machine
+                # came to report itself full.
                 return {"success": True, "data": {"guest_id": "g3", "vcpu_usage": 2, "ram_used": 1177600}}
             return {"success": True, "data": {"guest_id": params.get("guest_id"), "vcpu_usage": 12, "ram_used": 2621440}}
         if api == "SYNO.Virtualization.API.Guest.Action":
@@ -611,12 +615,14 @@ async def test_synology_virtual_machines_with_usage_and_actions(ctx: Context) ->
     data = await adapter.fetch("vms", config, {}, ctx)
     assert data.status == "ok"
     assert [item["title"] for item in data.items] == ["Home Assistant", "Small", "Lab"], "running first, then by name"
-    assert data.items[1]["memory_percent"] == 100.0 and data.items[1]["value"] == "1.1 GB"
+    # 1177600 of a host with 16777216: seven percent, not "full".
+    assert data.items[1]["memory_percent"] == 7.0 and data.items[1]["value"] == "1.1 GB"
     first = data.items[0]
-    assert first["subtitle"] == "storage-nas · 2 vCPU · 4.0 GB RAM · 192.168.1.40"
-    assert first["cpu"] == 12.0 and first["memory_percent"] == 62.5 and first["value"] == "2.5 GB"
+    assert first["subtitle"] == "nas-1 · 2 vCPU · 4.0 GB RAM · 192.168.1.40"
+    # vcpu_usage is per mille, and the share is of the host's memory.
+    assert first["cpu"] == 1.2 and first["memory_percent"] == 15.6 and first["value"] == "2.5 GB"
     assert [a.id for a in first["actions"]] == ["shutdown", "reboot"] and first["actions"][0].params == {"guest_id": "g1"}
-    assert data.items[2]["subtitle"] == "storage-nas · 1 vCPU · 2.0 GB RAM · shutdown" and data.items[2]["status"] == "unknown"
+    assert data.items[2]["subtitle"] == "nas-1 · 1 vCPU · 2.0 GB RAM · shutdown" and data.items[2]["status"] == "unknown"
     assert [a.id for a in data.items[2]["actions"]] == ["poweron"] and "cpu" not in data.items[2]
     assert ("SYNO.Virtualization.Guest", "get", "g2") not in seen, "no detail call for a guest that is off"
     assert {chip["label"]: chip["value"] for chip in data.secondary} == {"Running": 2, "Stopped": 1}

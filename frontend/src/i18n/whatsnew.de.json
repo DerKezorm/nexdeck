@@ -94,6 +94,50 @@
         "Nach Updates suchen geht auch ohne eingeschalteten Tagesabruf.",
         "Das Synology-Kennwort steht nicht mehr in der Adresse."
       ]
+    },
+    "0.4.0": {
+      "lead": "Karten lassen sich als Balken, Ring oder Diagramm zeichnen, Mediatheken nach neuen Dateien durchsuchen, und ein Knopf kann das auslösen.",
+      "sections": [
+        {
+          "title": "Eine Karte kann anders gezeichnet werden",
+          "body": "Balken für eine Liste, ein Ring für Teile eines Ganzen, ein Diagramm für eine Karte, die zwei Dinge misst. Die Auswahl steht in den Karteneinstellungen unter Ansicht, neben dem Tacho. 91 Listenkarten und 63 Karten mit zwei Zahlen haben sie.",
+          "path": "Bearbeiten > Zahnrad > Ansicht"
+        },
+        {
+          "title": "Diagramme zeichnen jede Linie",
+          "body": "Eine Karte, die WAN rein und WAN raus misst, zeichnete eine davon und warf die andere weg. Jetzt beide, auf einer Skala, mit Legende.",
+          "path": "Bearbeiten > Zahnrad > Ansicht > Ein Diagramm"
+        },
+        {
+          "title": "Nach neuen Dateien sehen",
+          "body": "Plex, Jellyfin und Emby haben eine Bibliotheks-Karte mit einem Knopf, der den Server einlesen lässt. Bei Plex je Bibliothek; bei Jellyfin und Emby nur alle, weil dort nur das wirkt.",
+          "path": "Bearbeiten > Kachel hinzufügen > Plex, Jellyfin oder Emby > Bibliotheken"
+        },
+        {
+          "title": "Ein Knopf, der etwas auslöst",
+          "body": "Die Button-Karte hat eine dritte Art: eine Aktion auslösen. Anbindung, Aktion und Ziel kommen als Liste. Getippt wird nichts.",
+          "path": "Bearbeiten > Kachel hinzufügen > Grundlagen > Button-Karte"
+        },
+        {
+          "title": "Plex' Server-Last als Tacho",
+          "body": "Vier Prozentwerte, und ein Tacho zeigt einen, also fragen die Einstellungen welchen: Plex' Prozessor oder Speicher, oder den des Wirts.",
+          "path": "Bearbeiten > Zahnrad > Ansicht > Ein Tacho"
+        },
+        {
+          "title": "Synology-Maschinen, richtig gemessen",
+          "body": "Der Speicher eines Gastes wurde durch seine Zuteilung geteilt statt durch den Speicher des Wirts, weshalb eine gesunde Maschine 102 Prozent belegt meldete; die Prozessorlast stand zehnfach zu hoch. Beides deckt sich jetzt mit dem Virtual Machine Manager.",
+          "path": "Bearbeiten > Kachel hinzufügen > Synology DSM"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Eine als Ring gezeichnete Karte behält ihre eigene Überschrift in der Mitte, und jede Scheibe ist beschriftet: eine Farbe ist keine Beschriftung.",
+        "Die Synology-Maschinenauswahl bot Docker-Container an, und wer einen nahm, bekam „die Maschine gibt es nicht“. Zwei Karten, zwei Listen.",
+        "Proxmox mit einem Token, das keinen Knoten sieht, sagt das jetzt, statt null Gäste auf null Knoten zu melden.",
+        "Ein Speedtest Tracker ohne Messung besteht den Verbindungstest: vorher fragte er ein Ergebnis ab, das eine frische Installation nicht hat, und gab der Adresse die Schuld.",
+        "UniFis Switch-Karte hatte keine eigenen Demo-Daten und zeigte stillschweigend die Konsolen-Zusammenfassung.",
+        "Eine in den Karteneinstellungen gespeicherte Änderung springt nicht mehr zurück, bis die Seite neu geladen wird."
+      ]
     }
   }
 }

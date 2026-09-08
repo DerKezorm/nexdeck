@@ -8,6 +8,7 @@
  * of thing only the browser test can hold, and it does.
  */
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 
 import type { WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
@@ -186,5 +187,38 @@ describe('the chart', () => {
   it('says it is still collecting when no series has enough points', () => {
     draw(TWO, { wan_down: [1] }, 'chart')
     expect(screen.getByText(/Collecting/)).toBeInTheDocument()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The button's look, which is nobody's business but the card's
+// ---------------------------------------------------------------------------
+
+describe('the button card', () => {
+  const VIEW_BUTTON: WidgetView = {
+    ...VIEW, kind: 'core.button', title: 'Scan', renderer: 'button', client_only: true,
+  }
+  const SAID: WidgetData = { status: 'ok', meta: { kind: 'board', where: 'home', look: 'label' } }
+  // A button to a board is a router link, so it needs a router around it.
+  const drawButton = (widget: WidgetView, data: WidgetData) =>
+    render(<MemoryRouter>{renderWidget({ widget, data })}</MemoryRouter>)
+
+  it('takes its look from its own options, not from the last answer', () => {
+    // ⚠️ How a button looks is nothing the service knows. Routing it through
+    // a fetch meant "symbol only" waited for a preview to come back, and the
+    // card kept its name until the page was reloaded.
+    drawButton({ ...VIEW_BUTTON, options: { look: 'icon' } }, SAID)
+    expect(screen.queryByText('Scan')).toBeNull()
+    expect(screen.getByLabelText('Scan')).toBeInTheDocument()
+  })
+
+  it('falls back to the answer when the card has no say of its own', () => {
+    drawButton({ ...VIEW_BUTTON, options: {} }, { ...SAID, meta: { ...SAID.meta, look: 'icon' } })
+    expect(screen.queryByText('Scan')).toBeNull()
+  })
+
+  it('shows symbol and name when nobody said otherwise', () => {
+    drawButton({ ...VIEW_BUTTON, options: {} }, SAID)
+    expect(screen.getByText('Scan')).toBeInTheDocument()
   })
 })

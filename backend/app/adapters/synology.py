@@ -74,7 +74,8 @@ class SynologyAdapter(Adapter):
         containers_one.one_of("container", "One container",
                               "One container of the Container Manager: CPU, memory and its state."),
         containers_one.one_of("vm", "One virtual machine",
-                              "One guest of the Virtual Machine Manager: CPU, memory and its state."),
+                              "One guest of the Virtual Machine Manager: CPU, memory and its state.",
+                              field="which_guest"),
         WidgetType(
             kind="system",
             label="System",
@@ -273,28 +274,25 @@ class SynologyAdapter(Adapter):
         return WidgetData(items=items)
 
     async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
-        """The containers and the guests, for the field that picks one.
+        """One list per card, not one list for both.
 
-        Both in one list: the two cards ask the same field, and a DSM without
-        the Virtual Machine Manager simply contributes nothing.
+        ⚠️ These were merged until 08.09.2026, on the reasoning that both
+        cards ask the same field. They do not ask the same question: the
+        machine card offered every Docker container, and picking one answered
+        "there is no machine called immich_postgres". A DSM without the
+        Virtual Machine Manager contributes an empty list, which is the honest
+        answer for that card rather than a reason to show the other one's.
         """
-        if field != "which":
-            return []
-        found: list[tuple[str, str]] = []
-        try:
+        if field == "which":
             listing = await self._api(config, ctx, "SYNO.Docker.Container", "list",
                                       extra={"limit": "-1", "offset": "0", "type": "all"}, cache=10)
-            found += [(str(one.get("name") or ""), str(one.get("name") or ""))
-                      for one in (listing or {}).get("containers") or []]
-        except AdapterError:
-            pass
-        try:
+            found = [str(one.get("name") or "") for one in (listing or {}).get("containers") or []]
+        elif field == "which_guest":
             guests = await self._api(config, ctx, "SYNO.Virtualization.Guest", "list", version="2", cache=10)
-            found += [(str(one.get("name") or ""), str(one.get("name") or ""))
-                      for one in (guests or {}).get("guests") or []]
-        except AdapterError:
-            pass
-        return sorted({one for one in found if one[0]})
+            found = [str(one.get("name") or "") for one in (guests or {}).get("guests") or []]
+        else:
+            return await super().choices(field, config, ctx)
+        return sorted({(name, name) for name in found if name})
 
     async def _one_container(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         """One container of the Container Manager.
@@ -339,10 +337,22 @@ class SynologyAdapter(Adapter):
     async def _one_vm(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         """One guest of the Virtual Machine Manager.
 
-        No CPU: the guest list carries the number of processors, not their
-        load, and the detail call does not add one. The row is left out.
+        ⚠️ ``ram_used`` is the share of the **host's** memory this guest holds,
+        not of the memory assigned to it. Measured on 08.09.2026 against a live
+        DSM: 25658492 of a ``host_ram_size`` of 67108864 is 38.2%, which is
+        exactly what the Virtual Machine Manager shows beside that guest. The
+        card divided it by ``vram_size``, the assigned memory, and reported
+        102% full for a machine the DSM calls healthy. The assigned size is
+        kept as a row of its own, because it is worth knowing and is not a
+        ceiling for this number.
+
+        ⚠️ ``vcpu_usage`` is per mille, held against both guests of a live DSM
+        at once: the card then read 15.4% and 0.1% where the manager showed
+        15.5% and 0.2%. The docstring here used to say the list carries no load
+        at all, which is simply not true, and the row was left out because of
+        it.
         """
-        wanted = str(options.get("which") or "").strip()
+        wanted = str(options.get("which_guest") or options.get("which") or "").strip()
         if not wanted:
             raise AdapterError("No machine picked yet.", code="nothing_picked",
                                hint="Pick one in the widget settings.")
@@ -359,9 +369,16 @@ class SynologyAdapter(Adapter):
                                          extra={"guest_id": str(guest["guest_id"])}, cache=10) or {}
             except AdapterError:
                 detail = {}
-        total = float(guest.get("vram_size") or 0) * KB or None
-        used = float(detail["ram_used"]) * KB if isinstance(detail.get("ram_used"), int | float) else None
+        # The list already carries both numbers; the detail call is the newer
+        # of the two, so it wins where it answered.
+        source = {**guest, **detail}
+        host_ram = float(source.get("host_ram_size") or 0) * KB or None
+        used = float(source["ram_used"]) * KB if isinstance(source.get("ram_used"), int | float) else None
+        assigned = float(source.get("vram_size") or 0) * KB or None
+        cpu = round(float(source["vcpu_usage"]) / 10, 1) if isinstance(source.get("vcpu_usage"), int | float) else None
         extra: list[dict[str, Any]] = []
+        if assigned:
+            extra.append({"label": "Assigned", "value": human_bytes(assigned)})
         if guest.get("vcpu_num"):
             extra.append({"label": "Processors", "value": int(guest["vcpu_num"])})
         if guest.get("host_name"):
@@ -370,7 +387,7 @@ class SynologyAdapter(Adapter):
             extra.append({"label": "Address", "value": str(guest["ip"])})
         return containers_one.card(
             title=wanted, state=state, ok_states=("running",),
-            cpu=None, memory_used=used, memory_limit=total, extra=extra,
+            cpu=cpu, memory_used=used, memory_limit=host_ram, extra=extra,
             history=bool(options.get("history", True)),
         )
 
@@ -443,9 +460,15 @@ class SynologyAdapter(Adapter):
                     detail = await self._api(config, ctx, "SYNO.Virtualization.Guest", "get", version="2", extra={"guest_id": guest_id}, cache=10) or {}
                 except AdapterError:
                     detail = {}
-            ram_total = float(guest.get("vram_size") or 0) * KB
-            ram_used = float(detail.get("ram_used") or 0) * KB
-            parts = [str(guest.get("host_name") or ""), f"{guest.get('vcpu_num', '?')} vCPU", f"{human_bytes(ram_total)} RAM"]
+            # ⚠️ ``ram_used`` is the share of the host's memory, not of the
+            # memory assigned to this guest. See ``_one_vm``; the same mistake
+            # lived here, capped at 100% with a comment that explained the
+            # overshoot away instead of the denominator being wrong.
+            source = {**guest, **detail}
+            ram_assigned = float(source.get("vram_size") or 0) * KB
+            host_ram = float(source.get("host_ram_size") or 0) * KB
+            ram_used = float(source.get("ram_used") or 0) * KB
+            parts = [str(guest.get("host_name") or ""), f"{guest.get('vcpu_num', '?')} vCPU", f"{human_bytes(ram_assigned)} RAM"]
             if guest.get("ip"):
                 parts.append(str(guest["ip"]))
             if not is_running:
@@ -458,12 +481,12 @@ class SynologyAdapter(Adapter):
                 "status": ("ok" if healthy else "warn") if is_running else "unknown",
                 "actions": [Action(id="shutdown", label="Shut down", icon="square", confirm=True, params={"guest_id": guest_id}), Action(id="reboot", label="Restart", icon="rotate-cw", confirm=True, params={"guest_id": guest_id})] if is_running else [Action(id="poweron", label="Start", icon="play", params={"guest_id": guest_id})],
             }
-            usage = detail.get("vcpu_usage")
+            usage = source.get("vcpu_usage")
             if is_running and isinstance(usage, (int, float)):
-                item["cpu"] = round(float(usage), 1)
-            if is_running and ram_total > 0 and ram_used > 0:
-                # The hypervisor's figure includes its own overhead and can exceed the configured size.
-                item["memory_percent"] = min(100.0, round(100 * ram_used / ram_total, 1))
+                # Per mille, like everywhere else DSM reports it.
+                item["cpu"] = round(float(usage) / 10, 1)
+            if is_running and host_ram > 0 and ram_used > 0:
+                item["memory_percent"] = round(100 * ram_used / host_ram, 1)
                 item["value"] = human_bytes(ram_used)
             items.append(item)
         return WidgetData(
@@ -533,7 +556,7 @@ class SynologyAdapter(Adapter):
             return containers_one.demo_card(str(options.get("which") or "homeassistant"), tick,
                                             network=False, disk=False, cpu=False)
         if widget_kind == "vms":
-            rows = [("Home Assistant", "storage-nas · 2 vCPU · 4.0 GB RAM · 192.168.1.40", "ok", 12.0, 61.3, "2.5 GB"), ("Windows 11", "storage-nas · 4 vCPU · 16.0 GB RAM", "ok", 38.0, 72.9, "11.7 GB"), ("Lab", "storage-nas · 1 vCPU · 2.0 GB RAM · shutdown", "unknown", None, None, "")]
+            rows = [("Home Assistant", "nas-1 · 2 vCPU · 4.0 GB RAM · 192.168.1.40", "ok", 12.0, 61.3, "2.5 GB"), ("Windows 11", "nas-1 · 4 vCPU · 16.0 GB RAM", "ok", 38.0, 72.9, "11.7 GB"), ("Lab", "nas-1 · 1 vCPU · 2.0 GB RAM · shutdown", "unknown", None, None, "")]
             items = []
             for name, subtitle, status, cpu, memory, size in rows:
                 item: dict[str, Any] = {"id": name, "title": name, "subtitle": subtitle, "status": status, "value": size,

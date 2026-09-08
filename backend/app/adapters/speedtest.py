@@ -68,9 +68,26 @@ class SpeedtestAdapter(Adapter):
         return {"Authorization": f"Bearer {config.get('api_key', '')}", "Accept": "application/json"}
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        payload = await ctx.get_json(f"{base_url(config)}/api/v1/results/latest", headers=self._headers(config), verify=not config.get("insecure"), cache_seconds=0)
-        data = payload.get("data") or payload
-        return f"Speedtest Tracker answers, latest test from {str(data.get('created_at', '?'))[:16]}."
+        """Is the address right and the token good?
+
+        ⚠️ Asked of the list, not of ``results/latest``. A Speedtest Tracker
+        that has not measured yet has no latest result and answers 404, and
+        nexdeck said "check the URL; the address may point at the wrong
+        service" about an address that was right. That is the state of every
+        fresh installation, and it sends people looking for a mistake they did
+        not make.
+
+        The status code alone answers the question, so the body does not
+        matter: 200 means reachable and allowed, 401 means the token, 404
+        means the address. An empty list is a fine 200.
+        """
+        response = await ctx.request(
+            "GET", f"{base_url(config)}/api/v1/results", headers=self._headers(config),
+            verify=not config.get("insecure"), cache_seconds=0,
+        )
+        if response.status_code >= 400:
+            raise AdapterError(f"Speedtest Tracker answered with HTTP {response.status_code}.", code="http_error")
+        return "Speedtest Tracker answers."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         payload = await ctx.get_json(f"{base_url(config)}/api/v1/results/latest", headers=self._headers(config), verify=not config.get("insecure"), cache_seconds=60)
@@ -80,6 +97,10 @@ class SpeedtestAdapter(Adapter):
         download = _mbps(data, "download")
         upload = _mbps(data, "upload")
         ping = round(float(data["ping"]), 1) if data.get("ping") is not None else None
+        # ⚠️ "successful" is not in the answer at all, so the default carries
+        # this line. The field that is there is "healthy", and it is null.
+        # Rewriting this to "healthy" without telling "key missing" from "key
+        # is null" turns a working card into a permanently yellow one.
         ok = data.get("status", "completed") == "completed" and data.get("successful", True)
         card = WidgetData(
             status="ok" if ok else "warn",
