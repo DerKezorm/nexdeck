@@ -652,3 +652,39 @@ def test_the_version_is_the_same_in_every_place_it_is_written() -> None:
         "CHANGELOG.md": newest_written_down.group(1),
     }
     assert len(set(said.values())) == 1, f"the version is not the same everywhere: {said}"
+
+
+#: Adapters that are not a service anybody connects to: the built-in cards,
+#: the generic JSON reader and the calendar that merges other people's.
+NOT_A_SERVICE = {"core", "jsonapi", "calendar"}
+
+
+def test_the_readme_counts_the_services_it_has() -> None:
+    """⚠️ The badge at the top said 79 when there were 78, and in a browser
+    that is invisible. It is the first number anybody reads about this project
+    and the one nobody thinks to check.
+
+    The same arithmetic the project site uses, so the two cannot drift apart
+    while both look right on their own.
+    """
+    from app.adapters import all_adapters
+
+    services = [one for one in all_adapters() if one.kind not in NOT_A_SERVICE]
+    assert len(services) >= 50, f"only {len(services)} adapters were found, so this guard proves nothing"
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    badge = re.search(r"integrations-(\d+)-", readme)
+    assert badge, "the integrations badge is gone from the README"
+    assert int(badge.group(1)) == len(services), (
+        f"the badge says {badge.group(1)} and there are {len(services)}")
+
+
+def test_every_service_stands_in_the_adapter_document() -> None:
+    """A service nobody wrote down is one nobody finds. The table in
+    docs/adapters.md is where somebody looks before installing anything."""
+    from app.adapters import all_adapters
+
+    written = (ROOT / "docs" / "adapters.md").read_text(encoding="utf-8")
+    missing = [one.label for one in all_adapters()
+               if one.kind not in NOT_A_SERVICE and one.label not in written]
+    assert missing == [], "services the adapter document does not name: " + ", ".join(missing)

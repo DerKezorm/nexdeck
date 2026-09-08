@@ -65,6 +65,7 @@ that one of fifteen renderers draws.
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
 | Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
+| n8n | workflows, last runs, summary | publish, unpublish | API key from Settings > n8n API |
 | Beszel | hosts, host | | user and password |
 | Glances | system, file systems, sensors | | optional password |
 | Scrutiny | disks, disk health | | none |
@@ -74,10 +75,10 @@ that one of fifteen renderers draws.
 | Prometheus | query value, query list | | optional basic auth |
 | Grafana | alerts, status | | service account token; needs unified alerting, so Grafana 9.0 or newer |
 | JSON API | value, list | | optional bearer token |
-| iCal | events | | feed address |
+| iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
 | evcc | energy, charging | | none; the state is readable without a password |
-| Weather (Open-Meteo), RSS, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
+| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 | Hacker News | stories | | none |
 | YouTube | videos | | none; the channel feeds need no account |
 | GitHub releases | releases | | none; sixty requests an hour per address |
