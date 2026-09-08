@@ -3,7 +3,7 @@ import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { get } from '../api/client'
-import type { FieldSpec, Integration } from '../api/types'
+import type { BoardSummary, FieldSpec, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
 import { PlexSignIn } from './PlexSignIn'
 import { Field, Select, Switch } from './ui'
@@ -181,6 +181,56 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
 
 /** Draws one adapter field from its spec: text, password, number, bool, select, connections, textarea or time zone. */
 /**
+ * One of this installation's own boards, or one page of it.
+ *
+ * ⚠️ Its own field type rather than the one that asks a service. The list of
+ * boards is nexdeck's, not any integration's, and the field that asks a
+ * service needs a connection to ask; a card that belongs to no service has
+ * none.
+ *
+ * The value is what an address is made of later: "home", or "home/media".
+ */
+function BoardPicker({ value, onChange, label, help }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
+  const { t } = useTranslation()
+  const boards = useQuery({ queryKey: ['boards', false], queryFn: () => get<BoardSummary[]>('/boards') })
+  const chosen = typeof value === 'string' ? value : ''
+  const rows = boards.data ?? []
+  if (boards.isPending) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-faint">{t('common.loading')}</p>
+      </Field>
+    )
+  }
+  if (boards.isError || rows.length === 0) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-warn">{t('widget.boardsNone')}</p>
+      </Field>
+    )
+  }
+  return (
+    <Field label={label} help={help}>
+      <Select
+        value={chosen}
+        onChange={onChange}
+        options={[
+          { value: '', label: t('widget.boardPick') },
+          ...rows.flatMap((board) => [
+            { value: board.slug, label: board.name },
+            // A board with one page is that page; offering it twice would be
+            // two entries that do the same thing.
+            ...(board.pages.length > 1
+              ? board.pages.map((page) => ({ value: `${board.slug}/${page.slug}`, label: `${board.name} \u203a ${page.name}` }))
+              : []),
+          ]),
+        ]}
+      />
+    </Field>
+  )
+}
+
+/**
  * A colour, or none at all.
  *
  * ⚠️ "None" has to be its own control. A colour input cannot be empty: it
@@ -224,6 +274,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
   }
   if (spec.type === 'choices') {
     return <RemoteChoice spec={spec} value={value} onChange={onChange} label={label} help={help} integrationId={integrationId} />
+  }
+  if (spec.type === 'board') {
+    return <BoardPicker value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'colour') {
     return <ColourPicker value={value} onChange={onChange} label={label} help={help} />

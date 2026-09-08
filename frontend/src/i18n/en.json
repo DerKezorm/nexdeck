@@ -616,7 +616,9 @@
     "iconRemove": "Delete {{name}}",
     "iconRemoveHelp": "Cards still using this file will show a placeholder. It cannot be undone.",
     "colourNone": "Board colour",
-    "colourClear": "Clear"
+    "colourClear": "Clear",
+    "boardsNone": "There are no boards yet.",
+    "boardPick": "Pick a board…"
   },
   "library": {
     "title": "Add a widget",

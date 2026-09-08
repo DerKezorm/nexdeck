@@ -616,7 +616,9 @@
     "iconRemove": "{{name}} löschen",
     "iconRemoveHelp": "Karten, die diese Datei noch verwenden, zeigen danach einen Platzhalter. Rückgängig geht das nicht.",
     "colourNone": "Brettfarbe",
-    "colourClear": "Zurücksetzen"
+    "colourClear": "Zurücksetzen",
+    "boardsNone": "Es gibt noch keine Bretter.",
+    "boardPick": "Brett auswählen…"
   },
   "library": {
     "title": "Widget hinzufügen",

@@ -107,31 +107,25 @@ class CoreAdapter(Adapter):
         ),
         WidgetType(
             kind="button",
-            label="Buttons",
-            description="Big buttons that lead to a board, a page or an address.",
+            label="Button card",
+            description="One button that leads to a board or an address. Its name and symbol are the card's own.",
             renderer="button",
             default_size=(2, 1),
             min_size=(1, 1),
             refresh_seconds=3600,
             client_only=True,
             options=(
-                Field(
-                    "buttons",
-                    "Buttons",
-                    type="textarea",
-                    help=(
-                        "One per line: Title | where it leads | icon (optional). "
-                        "Where it leads is a board (home), a page of one (home/media), "
-                        "or a full address (https://…)."
-                    ),
-                    default="Network | network | lucide:network\nMedia | media | lucide:play",
-                ),
-                Field("columns", "Columns", type="select", default="auto",
-                      help="Auto fits as many as the card is wide.",
-                      options=(("auto", "Fit the card"), ("1", "One"), ("2", "Two"), ("3", "Three"), ("4", "Four"))),
-                Field("labels", "Show the titles", type="bool", default=True,
-                      help="Off leaves the symbols alone, for a narrow card or a wall display."),
-                Field("accent", "Highlight the first one", type="bool", default=False),
+                Field("kind", "What it does", type="select", default="board",
+                      options=(("board", "Open a board"), ("link", "Open an address"))),
+                Field("board", "Which board", type="board", only_when=("kind", "board"),
+                      help="A board, or one page of it."),
+                Field("url", "Address", type="url", only_when=("kind", "link"),
+                      placeholder="https://nas.example.com"),
+                Field("new_tab", "Open in a new tab", type="bool", default=True, only_when=("kind", "link")),
+                Field("look", "Look", type="select", default="label",
+                      options=(("label", "Symbol and name"), ("icon", "Symbol only, large"), ("text", "Name only"))),
+                Field("colour", "Colour", type="colour", default="",
+                      help="Empty keeps the look of every other card."),
             ),
         ),
         WidgetType(
@@ -273,13 +267,14 @@ class CoreAdapter(Adapter):
                 "captions": options.get("captions", True),
             })
         if widget_kind == "button":
-            written = options.get("buttons")
-            if written is None:
-                written = next((f.default for f in self.widget("button").options if f.name == "buttons"), "")
-            return WidgetData(items=parse_links(str(written)), meta={
-                "columns": str(options.get("columns") or "auto"),
-                "labels": options.get("labels", True),
-                "accent": bool(options.get("accent")),
+            kind = "link" if options.get("kind") == "link" else "board"
+            where = str((options.get("url") if kind == "link" else options.get("board")) or "").strip()
+            return WidgetData(meta={
+                "kind": kind,
+                "where": where,
+                "new_tab": options.get("new_tab", True),
+                "look": str(options.get("look") or "label"),
+                "colour": str(options.get("colour") or ""),
             })
         if widget_kind == "bookmarks":
             return WidgetData(items=parse_links(options.get("links") or ""), meta={"layout": options.get("layout") or "list"})
