@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { get } from '../api/client'
 import type { BoardSummary, FieldSpec, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { PicturePicker } from './PicturePicker'
 import { PlexSignIn } from './PlexSignIn'
 import { Field, Select, Switch } from './ui'
 
@@ -274,6 +275,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
   }
   if (spec.type === 'choices') {
     return <RemoteChoice spec={spec} value={value} onChange={onChange} label={label} help={help} integrationId={integrationId} />
+  }
+  if (spec.type === 'pictures') {
+    return <PicturePicker value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'board') {
     return <BoardPicker value={value} onChange={onChange} label={label} help={help} />

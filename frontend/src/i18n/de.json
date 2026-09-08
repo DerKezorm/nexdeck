@@ -618,7 +618,15 @@
     "colourNone": "Brettfarbe",
     "colourClear": "Zurücksetzen",
     "boardsNone": "Es gibt noch keine Bretter.",
-    "boardPick": "Brett auswählen…"
+    "boardPick": "Brett auswählen…",
+    "pictureUpload": "Bild hochladen",
+    "pictureAdd": "Hinzufügen",
+    "pictureAddress": "Adresse eines Bildes",
+    "pictureCaption": "Beschriftung (optional)",
+    "pictureCaptionOf": "Beschriftung von Bild {{at}}",
+    "pictureRemove": "Bild {{at}} entfernen",
+    "pictureMove": "Bild {{at}} verschieben",
+    "pictureBadAddress": "Aus dieser Adresse lässt sich kein Bild laden."
   },
   "library": {
     "title": "Widget hinzufügen",
