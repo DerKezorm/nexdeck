@@ -467,7 +467,8 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
-    assert confirmed == {"adguard", "audiobookshelf", "authentik", "beszel", "deluge", "docker", "emby", "evcc", "glances", "gotify", "grafana", "headscale", "homeassistant", "ical", "jellyfin", "jsonapi", "kavita", "komga", "lidarr", "n8n", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget", "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic"}
+    assert confirmed == {"adguard", "audiobookshelf", "authentik", "beszel", "deluge", "docker", "emby", "evcc", "glances", "gotify", "grafana", "headscale", "homeassistant", "ical", "jellyfin", "jsonapi", "kavita", "komga", "lidarr", "n8n", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget", "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "proxmox", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "sonarr",
+        "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

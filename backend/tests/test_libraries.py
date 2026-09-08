@@ -544,3 +544,127 @@ async def test_the_machine_list_measures_the_same_way_as_the_single_card(monkeyp
     assert row["memory_percent"] == 38.2
     # The assigned size still stands in the line under the name.
     assert "24.0 GB RAM" in row["subtitle"]
+
+
+# ---------------------------------------------------------------------------
+# A card that brings its own history
+# ---------------------------------------------------------------------------
+
+TRACKER = "http://speedtest.example.com"
+
+
+def _results(count: int, *, page: int, last: int, start: float) -> dict:
+    """Pages of measurements, six hours apart, oldest first like the real API."""
+    import datetime as dt
+
+    rows = []
+    for i in range(count):
+        when = dt.datetime.fromtimestamp(start + i * 21600, dt.UTC).strftime("%Y-%m-%d %H:%M:%S")
+        rows.append({"created_at": when, "download_bits": 900_000_000 + i, "upload_bits": 45_000_000 + i,
+                     "ping": 8, "status": "completed"})
+    return {"data": rows, "meta": {"total": count * last, "per_page": 25, "current_page": page, "last_page": last}}
+
+
+def _pager(now: float, *, pages: int, newest_first: bool):
+    """One page of 25, six hours apart. ``newest_first`` decides which end
+    page 1 is, because the tracker does not say and could not be measured."""
+    def answer(request):
+        page = int(request.url.params.get("page", 1))
+        age = page - 1 if newest_first else pages - page
+        start = now - (age + 1) * 25 * 21600
+        return httpx.Response(200, json=_results(25, page=page, last=pages, start=start))
+    return answer
+
+
+@respx.mock
+async def test_the_history_card_walks_the_pages(ctx: Context) -> None:
+    """⚠️ Measured against a live tracker: ``per_page`` is ignored, 5 and 500
+    both answer with 25. A card that asked once would show the last 25
+    measurements and label them 90 days."""
+    import time as clock
+
+    now = clock.time()
+    respx.get(f"{TRACKER}/api/v1/results").mock(side_effect=_pager(now, pages=5, newest_first=True))
+    data = await get_adapter("speedtest").fetch(
+        "history", {"url": TRACKER, "api_key": "k"}, {"days": "30", "show": "both"}, ctx)
+
+    assert len(respx.calls) > 1, "one page is not a history"
+    assert [line["key"] for line in data.meta["lines"]] == ["download", "upload"]
+    assert data.meta["unit"] == "Mbps" and data.meta["shape"] == "line"
+
+
+@respx.mock
+async def test_the_history_card_finds_the_newest_end_whichever_it_is(ctx: Context) -> None:
+    """⚠️ Which end page 1 is on is undocumented, and the tracker this was
+    written against holds two results on one page, so it could not be
+    measured. Walking the wrong way would draw the oldest measurements and
+    label them "the last 7 days"."""
+    import time as clock
+
+    now = clock.time()
+    for newest_first in (True, False):
+        respx.calls.reset()
+        respx.get(f"{TRACKER}/api/v1/results").mock(side_effect=_pager(now, pages=4, newest_first=newest_first))
+        data = await get_adapter("speedtest").fetch(
+            "history", {"url": TRACKER, "api_key": "k"}, {"days": "7"}, ctx)
+        points = data.meta["lines"][0]["points"]
+        assert points, f"nothing drawn with newest_first={newest_first}"
+        assert max(point[0] for point in points) > now - 2 * 86400, (
+            f"the newest measurement was not found with newest_first={newest_first}")
+
+
+@respx.mock
+async def test_the_history_card_keeps_only_the_period_that_was_asked_for(ctx: Context) -> None:
+    import time as clock
+
+    now = clock.time()
+    # Twenty five points over six days, all inside a seven day window.
+    respx.get(f"{TRACKER}/api/v1/results").mock(
+        return_value=httpx.Response(200, json=_results(25, page=1, last=1, start=now - 25 * 21600)))
+    data = await get_adapter("speedtest").fetch(
+        "history", {"url": TRACKER, "api_key": "k"}, {"days": "1"}, ctx)
+    points = data.meta["lines"][0]["points"]
+    assert 0 < len(points) <= 5, f"a day at six hours apart is four or five points, not {len(points)}"
+    assert all(point[0] >= now - 86400 - 1 for point in points)
+
+
+@respx.mock
+async def test_a_period_with_nothing_in_it_says_so(ctx: Context) -> None:
+    import time as clock
+
+    respx.get(f"{TRACKER}/api/v1/results").mock(
+        return_value=httpx.Response(200, json=_results(3, page=1, last=1, start=clock.time() - 400 * 86400)))
+    data = await get_adapter("speedtest").fetch("history", {"url": TRACKER, "api_key": "k"}, {"days": "7"}, ctx)
+    assert not data.meta.get("lines")
+    assert data.meta["empty"] == "No measurement in this period"
+
+
+@respx.mock
+async def test_only_what_was_asked_to_be_shown_is_drawn(ctx: Context) -> None:
+    import time as clock
+
+    respx.get(f"{TRACKER}/api/v1/results").mock(
+        return_value=httpx.Response(200, json=_results(4, page=1, last=1, start=clock.time() - 4 * 21600)))
+    config = {"url": TRACKER, "api_key": "k"}
+    only = await get_adapter("speedtest").fetch("history", config, {"days": "7", "show": "upload"}, ctx)
+    assert [line["key"] for line in only.meta["lines"]] == ["upload"]
+    both = await get_adapter("speedtest").fetch("history", config, {"days": "7", "shape": "bars"}, ctx)
+    assert both.meta["shape"] == "bars"
+
+
+def test_a_failed_measurement_is_a_gap_and_not_a_nought() -> None:
+    """⚠️ A line dipping to the floor over a failed run would draw an outage
+    that never happened. The demo has gaps for the same reason."""
+    from app.adapters.base import timeline
+
+    made = timeline(("download", "Download", [(1.0, 900.0), (2.0, None), (3.0, 890.0)]), unit="Mbps")
+    assert [point[1] for point in made["lines"][0]["points"]] == [900.0, None, 890.0]
+
+    drawn = get_adapter("speedtest").demo("history", {"days": "7"}, tick=3)
+    assert any(point[1] is None for point in drawn.meta["lines"][0]["points"])
+
+
+def test_a_shape_nobody_offers_falls_back_to_a_line() -> None:
+    from app.adapters.base import timeline
+
+    assert timeline(("a", "A", [(1.0, 2.0)]), shape="pie")["shape"] == "line"

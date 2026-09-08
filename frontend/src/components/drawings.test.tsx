@@ -222,3 +222,69 @@ describe('the button card', () => {
     expect(screen.getByText('Scan')).toBeInTheDocument()
   })
 })
+
+// ---------------------------------------------------------------------------
+// The timeline: a history the card brought with it
+// ---------------------------------------------------------------------------
+
+describe('the timeline', () => {
+  const now = 1_760_000_000
+  const points = (offset: number): [number, number | null][] => [
+    [now - 3 * 21600, 900 + offset],
+    [now - 2 * 21600, null],
+    [now - 21600, 880 + offset],
+    [now, 910 + offset],
+  ]
+  const DATA: WidgetData = {
+    status: 'ok',
+    primary: { label: 'Download', value: 910, unit: 'Mbps' },
+    meta: {
+      shape: 'line',
+      unit: 'Mbps',
+      lines: [
+        { key: 'download', label: 'Download', points: points(0) },
+        { key: 'upload', label: 'Upload', points: points(-860) },
+      ],
+    },
+  }
+
+  it('breaks the line at a gap instead of drawing across it', () => {
+    // ⚠️ One polyline through a missing point draws a straight line over the
+    // outage, which is the one thing the reader must not be told.
+    const { container } = draw(DATA, undefined, 'timeline')
+    const lines = [...container.querySelectorAll('polyline')]
+    expect(lines).toHaveLength(2)
+    for (const line of lines) {
+      expect((line.getAttribute('points') ?? '').split(' ')).toHaveLength(2)
+    }
+  })
+
+  it('draws bars when bars were asked for, and none for a gap', () => {
+    const { container } = draw({ ...DATA, meta: { ...DATA.meta, shape: 'bars' } }, undefined, 'timeline')
+    expect(container.querySelectorAll('polyline')).toHaveLength(0)
+    // Four points each, one of them a gap: three bars per line.
+    expect(container.querySelectorAll('rect')).toHaveLength(6)
+  })
+
+  it('measures from nought, so a small dip stays a small dip', () => {
+    // ⚠️ A scale that starts at the lowest reading turns a 3% wobble into a
+    // cliff, and this card answers "is my line holding up".
+    const { container } = draw(DATA, undefined, 'timeline')
+    const first = (container.querySelector('polyline')?.getAttribute('points') ?? '').split(' ')
+    const heights = first.map((pair) => Number(pair.split(',')[1]))
+    // 880 and 910 of a 910 maximum sit close together near the top, not at
+    // opposite ends of the box.
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(10)
+  })
+
+  it('names both lines', () => {
+    draw(DATA, undefined, 'timeline')
+    expect(screen.getByText('Download')).toBeInTheDocument()
+    expect(screen.getByText('Upload')).toBeInTheDocument()
+  })
+
+  it('says so when the period holds nothing', () => {
+    draw({ status: 'unknown', meta: { empty: 'No measurement in this period' } }, undefined, 'timeline')
+    expect(screen.getByText('No measurement in this period')).toBeInTheDocument()
+  })
+})
