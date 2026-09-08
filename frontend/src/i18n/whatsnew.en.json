@@ -61,6 +61,39 @@
         "A card can no longer fall silent for good: any unexpected failure puts a message on it and tries again.",
         "Old records are cleaned up on a schedule, and every limit has a number behind it."
       ]
+    },
+    "0.3.0": {
+      "lead": "Four new cards, a place to look after the files you upload, and n8n. Nothing in the new cards is typed out in a syntax: what you can pick, you pick.",
+      "sections": [
+        {
+          "title": "Button card",
+          "body": "One card, one button. It opens a board, one page of it, or an address, chosen from a list. Three looks, and a colour if you want one; the name on that colour is black or white by measurement, not by guess.",
+          "path": "Edit mode > Add widget > Basics"
+        },
+        {
+          "title": "Pictures, uploaded or linked",
+          "body": "One picture or a slideshow, with an interval, a crop and captions. Upload a file, name an address, or take one out of the media you already have. Drag the handle to change the order.",
+          "path": "Edit mode > Add widget > Basics"
+        },
+        {
+          "title": "One container, all of it",
+          "body": "Pick a single container or virtual machine and see everything the service reports. Docker, Portainer, Synology's Container Manager and VM Manager, and Proxmox. What a service does not measure is left out rather than drawn as zero.",
+          "path": "Edit mode > Add widget"
+        },
+        {
+          "title": "Media",
+          "body": "Every file you have uploaded, with its size and what still shows it. Deleting one names the cards and boards that would show a placeholder afterwards. The same file uploaded twice is one file now.",
+          "path": "My settings > Media"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "n8n: workflows with a publish button, the last runs, and how many of them failed.",
+        "The clock has a face with hands, and a colour for the digits or the hands.",
+        "Boards are sorted by a handle, the way a list on a phone is. The same handle answers the arrow keys.",
+        "Looking for an update no longer needs the daily check to be switched on.",
+        "The Synology password stopped travelling in the address."
+      ]
     }
   }
 }
