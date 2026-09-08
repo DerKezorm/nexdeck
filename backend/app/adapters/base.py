@@ -107,6 +107,7 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "camera": (2, 2),
     "iframe": (2, 2),
     "counters": (2, 2),
+    "ask": (2, 2),
     "ring": (2, 2),
     "stats": (3, 2),
     "feed": (3, 2),
@@ -231,6 +232,56 @@ class WidgetType:
         }
 
 
+class Ask(BaseModel):
+    """A blank in an action, filled in by whoever presses the button.
+
+    ⚠️ The third case, and the one the guard of 0.2.0 was written against. An
+    action reaches the adapter only because the card put it in its last answer
+    with exactly those parameters; free text has no fixed value to compare, so
+    without a declaration it would be the hole that guard closes. The card
+    therefore says here which single parameter is blank and what may go in it,
+    and the collector fills it in: everything else about the action still has
+    to match what was offered, and a value that does not fit this declaration
+    never reaches the adapter.
+
+    One blank per action, deliberately. Two would be a form, and a form on a
+    card is a settings sheet with worse manners.
+    """
+
+    #: The parameter the typed value is passed as.
+    name: str
+    label: str
+    #: ``url`` is checked the way a member-supplied address is checked
+    #: everywhere else in nexdeck: http or https, a host, and nothing that
+    #: only answers to the server itself.
+    kind: Literal["text", "url"] = "text"
+    placeholder: str = ""
+    max_length: int = 400
+
+
+def fill_in(ask: Ask, value: Any) -> str:
+    """What the typed value must look like before an adapter sees it.
+
+    Refuses rather than trims, apart from surrounding blanks: a silently
+    shortened address is a download of something else.
+    """
+    if not isinstance(value, str):
+        raise AdapterError("This action needs a value typed in.", code="bad_value")
+    text = value.strip()
+    if not text:
+        raise AdapterError("This action needs a value typed in.", code="bad_value")
+    if len(text) > ask.max_length:
+        raise AdapterError(
+            f"That is longer than the {ask.max_length} characters this field takes.", code="bad_value")
+    if any(ord(char) < 32 or ord(char) == 127 for char in text):
+        raise AdapterError("That contains characters a field like this never has.", code="bad_value")
+    if ask.kind == "url":
+        if "://" not in text:
+            raise AdapterError("That is not an address: it starts with http:// or https://.", code="bad_value")
+        guard_member_target(text)
+    return text
+
+
 class Action(BaseModel):
     id: str
     label: str
@@ -238,6 +289,8 @@ class Action(BaseModel):
     confirm: bool = False
     danger: bool = False
     params: dict[str, Any] = PydanticField(default_factory=dict)
+    #: The one parameter whoever presses this button types in themselves.
+    ask: Ask | None = None
 
 
 @dataclass(frozen=True)

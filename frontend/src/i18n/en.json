@@ -786,7 +786,11 @@
     "noPictures": "No pictures yet. Add one in the widget settings.",
     "pictureNext": "Next of {{count}} pictures",
     "buttonSure": "Sure?",
-    "buttonWhileEditing": "This button leads nowhere while you are arranging the board."
+    "buttonWhileEditing": "This button leads nowhere while you are arranging the board.",
+    "ask": {
+      "noField": "This card has nothing to fill in.",
+      "notAllowed": "You may not start anything from this board."
+    }
   },
   "plex": {
     "signIn": "Sign in with Plex",

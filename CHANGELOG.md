@@ -9,9 +9,13 @@ project uses semantic versioning.
 
 - **A card can bring its own history.** Every chart so far drew what nexdeck collected, which stops after 24 hours because that is how long the minute rows are kept. A card can now hand over a history of its own, with real timestamps, and have it drawn as a line or as bars. Speedtest Tracker is the first: **History**, over 24 hours, 7, 30 or 90 days, download, upload or both. The door this opens is the point: Prometheus, Proxmox's own statistics and Tautulli all keep more than a day.
 - **A failed measurement is a gap.** The line breaks where a run failed instead of dipping to the floor, which would draw an outage that never happened. The scale starts at nought for the same reason: from the lowest reading, a three percent wobble looks like a cliff.
-- **Proxmox VE and Speedtest Tracker leave beta**, both confirmed against live instances.
+- **Proxmox VE, Speedtest Tracker and Immich leave beta**, all three confirmed against live instances.
+- **MeTube, with a field you type an address into.** A card with a text field and a button: paste a video address, press, and MeTube fetches the file. Two more cards beside it, **Downloads** and **Download count**, with a button per row to remove an entry or try a failed one again. MeTube has no login of its own, so the connection asks for an address and nothing else.
+- **A card may leave one blank for whoever is standing in front of it.** Every action in nexdeck is reachable only because the card put it in its last answer with exactly those parameters, and free text has no fixed value to compare. So the adapter declares the blank: which single parameter it is, and what may go in it. Everything else about the action still has to match what was offered, and the typed value is checked before any adapter sees it. An address gets the rule a member-supplied address gets everywhere else in nexdeck: http or https, a host, nothing that only answers to the server itself.
 
 ### Fixed
+
+- **The scan button was a grey box.** `refresh-cw`, the symbol on the "look for new files" button shipped in 0.4.0, was not in the set the frontend bundles, and the fallback for an unknown symbol is a grey square that looks like an icon which failed to load. A guard now walks every symbol an adapter puts on a button, not only the logo beside a card's title.
 
 - **The history card pages, because the tracker ignores `per_page`.** Measured: 5 and 500 both answer with 25. Asking once would have shown the last 25 measurements and labelled them 90 days.
 - **Which end of the list is the newest is asked, not assumed.** It is undocumented, and the tracker this was written against holds two results on one page, so it could not be measured. The card reads the first and the last page and compares the timestamps; walking the wrong way would draw the oldest measurements under the words "the last 7 days".

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post, put } from '../api/client'
@@ -48,6 +48,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const [confirmDelete, setConfirmDelete] = useState(false)
   /** The last answer from the server, kept so a row picker knows the rows. */
   const [preview, setPreview] = useState<WidgetData | null>(null)
+  /** Which preview question is the newest; older answers are dropped. */
+  const asked = useRef(0)
 
   const adapterKind = widget?.kind.split('.')[0] ?? ''
   const adapter = adapters.data?.find((a) => a.kind === adapterKind)
@@ -103,6 +105,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       onPreviewData?.(widget.id, null)
       return
     }
+    // ⚠️ Numbered, because clearing the timeout does not call back a request
+    // that is already out. Two changes in quick succession put two questions
+    // on the wire, and the older answer could land last and paint the card
+    // with the options before the one just made: the change appeared not to
+    // arrive at all, which is how it was reported.
+    const mine = (asked.current += 1)
     const id = window.setTimeout(() => {
       void post<WidgetData>(`/widgets/${widget.id}/preview`, {
         options,
@@ -110,10 +118,16 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         clear_integration: !integrationId && adapter?.needs_integration ? true : undefined,
       })
         .then((data) => {
+          if (mine !== asked.current) return
           setPreview(data)
           // A fetch made only to fill the picker must not repaint the card.
           if (changed) onPreviewData?.(widget.id, data)
         })
+        // ⚠️ A failed preview leaves the card on what it had. It is not
+        // silence out of laziness: the alternative is dropping the card back
+        // to the collector's answer mid-edit, which is the flicker this whole
+        // area is about. The failure is not invented away either, because the
+        // save that follows would fail just as loudly.
         .catch(() => undefined)
     }, changed ? 400 : 0)
     return () => window.clearTimeout(id)

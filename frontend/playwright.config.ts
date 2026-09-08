@@ -35,6 +35,16 @@ if (process.env.TEST_WORKER_INDEX === undefined) {
   rmSync(BUILT_DATA, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 })
 }
 
+/**
+ * ⚠️ One data directory for the whole run, one worker, and Playwright walks
+ * the spec files in alphabetical order. So the first file to run is the only
+ * one that sees an empty installation, and `first-start.spec.ts` is that file
+ * because it tests the setup wizard. A new spec whose name sorts before it
+ * takes the wizard away and leaves `first-start` looking at a sign-in page:
+ * measured on 08.09.2026 with a spec called `einstellungen.spec.ts`, which is
+ * why it is now called `settings-live.spec.ts`. Every other spec signs in
+ * instead of assuming which of the two pages it lands on.
+ */
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
