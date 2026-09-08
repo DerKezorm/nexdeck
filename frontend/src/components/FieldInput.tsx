@@ -46,7 +46,13 @@ function IntegrationPicker({ spec, value, onChange, label, help }: { spec: Field
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
   const kinds = spec.options.map((option) => option.value)
   const choices = (integrations.data ?? []).filter((one) => kinds.length === 0 || kinds.includes(one.kind))
+  // ⚠️ One or several, decided by the field's own default, the way the select
+  // field already decides it. The calendar merges sources and wants a list; a
+  // button acts on one connection, and a list there would be a card that does
+  // the same thing twice with no way to say so.
+  const many = Array.isArray(spec.default)
   const selected = (Array.isArray(value) ? value : []).map(String)
+  const one_selected = String(value ?? '')
   if (integrations.isLoading) return <Field label={label} help={help}><p className="text-sm text-muted">{t('common.loading')}</p></Field>
   if (choices.length === 0) return <Field label={label} help={help}><p className="text-sm text-muted">{t('widget.noSources')}</p></Field>
   return (
@@ -54,9 +60,18 @@ function IntegrationPicker({ spec, value, onChange, label, help }: { spec: Field
       <div className="flex flex-wrap gap-2">
         {choices.map((one) => {
           const id = String(one.id)
-          const on = selected.includes(id)
+          const on = many ? selected.includes(id) : one_selected === id
           return (
-            <button key={one.id} type="button" className="btn" aria-pressed={on} onClick={() => onChange(on ? selected.filter((v) => v !== id) : [...selected, id])}>
+            <button
+              key={one.id}
+              type="button"
+              className="btn"
+              aria-pressed={on}
+              onClick={() => {
+                if (!many) return onChange(on ? '' : id)
+                return onChange(on ? selected.filter((v) => v !== id) : [...selected, id])
+              }}
+            >
               {one.name}
             </button>
           )
@@ -169,12 +184,19 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
       </Field>
     )
   }
+  // ⚠️ Through the adapter dictionary, like every other adapter text. Most of
+  // these labels are names from the service ("4K Mediathek", "sabnzbd") and
+  // come back unchanged, because the dictionary translates by exact wording
+  // and knows nothing about them. The few that are the adapter's own words,
+  // such as the list of what a connection offers a button, were English on
+  // screen until this line existed.
+  const named = rows.map((row) => ({ value: row.value, label: tAdapter(row.label) }))
   return (
     <Field label={label} help={help}>
       <Select
         value={String(value ?? '')}
         onChange={onChange}
-        options={[{ value: '', label: t('widget.choices.unset') }, ...rows]}
+        options={[{ value: '', label: t('widget.choices.unset') }, ...named]}
       />
     </Field>
   )

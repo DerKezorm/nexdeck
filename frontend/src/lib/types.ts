@@ -15,6 +15,25 @@ export interface Primary {
   value?: number | string | null
   unit?: string
   format?: string
+  /**
+   * Which recorded metric this number is, when the card knows.
+   *
+   * ⚠️ The server has sent this for as long as `Secondary` has had it (n8n's
+   * summary, Docker's load, Beszel's host), and this type simply never said
+   * so. The chart's legend needs it to call a line "WAN in" rather than
+   * "wan_down".
+   */
+  metric?: string
+  /**
+   * Which of the card's declared pieces this row is.
+   *
+   * ⚠️ Also sent since the dial learned to follow a chosen row, and also
+   * never written down here. Both holes surfaced the same way: the demo board
+   * is the only place that type-checks against literal card data, so a field
+   * the server sends and no card in the preview happens to carry stays
+   * invisible until somebody writes one out by hand.
+   */
+  part?: string
 }
 
 export interface Secondary {
@@ -22,6 +41,8 @@ export interface Secondary {
   value?: number | string | null
   unit?: string
   metric?: string
+  /** Which of the card's declared pieces this row is; see {@link Primary.part}. */
+  part?: string
 }
 
 export interface WidgetData {

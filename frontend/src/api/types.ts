@@ -57,6 +57,8 @@ export interface FieldSpec {
   options: { value: string; label: string }[]
   helper?: string
   /** Shown only while another option holds this value: `[name, value]`. */
+  /** For a choices field: which other option names the connection its list comes from. */
+  from_field?: string
   only_when?: [string, string] | null
 }
 

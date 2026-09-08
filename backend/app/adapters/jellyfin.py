@@ -7,8 +7,16 @@ from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
-from .base import AdapterError, Context, Field, WidgetData, WidgetType, base_url, human_bytes
-from .media_base import MediaAdapter, Stream
+from .base import (
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    base_url,
+    human_bytes,
+)
+from .media_base import Library, MediaAdapter, Stream
 
 TICKS_PER_SECOND = 10_000_000
 #: Which item types a "recently added" widget draws from, per choice.
@@ -250,6 +258,66 @@ class JellyfinAdapter(MediaAdapter):
             if not page or start >= int((payload or {}).get("TotalRecordCount") or 0) or start >= LOG_LIMIT:
                 break
         return rows
+
+    # -- the libraries, and looking for new files ------------------------------
+
+    async def library_list(self, config: dict[str, Any], ctx: Context) -> list[Library]:
+        """⚠️ One call, and it already says whether a scan is running.
+
+        ``/Library/VirtualFolders`` carries ``RefreshStatus`` and
+        ``RefreshProgress`` per library, which is more than Plex hands out
+        anywhere but its activity list. The findings card has read the same
+        two fields since it was written.
+        """
+        folders = await self._get(config, ctx, "/Library/VirtualFolders", cache=60) or []
+        rows: list[Library] = []
+        for folder in folders:
+            item_id = str(folder.get("ItemId") or "")
+            if not item_id:
+                continue
+            state = str(folder.get("RefreshStatus") or "").lower()
+            progress = folder.get("RefreshProgress")
+            rows.append(Library(
+                id=item_id,
+                name=str(folder.get("Name") or "Library"),
+                kind=str(folder.get("CollectionType") or ""),
+                scanning=bool(state) and state not in ("idle", "completed", "cancelled", "failed"),
+                progress=float(progress) if isinstance(progress, (int, float)) else None,
+            ))
+        return rows
+
+    #: ⚠️ Measured on 08.09.2026 against live Jellyfin and Emby instances:
+    #: ``POST /Items/{id}/Refresh`` on a library folder answers 204 and then
+    #: does nothing. The "Scan media library" task does not run, the folder's
+    #: ``RefreshStatus`` never moves, and ``metadataRefreshMode=ValidationOnly``
+    #: changes neither. Only ``/Library/Refresh`` runs, and it reads
+    #: everything. The specification says none of this; it took three calls
+    #: against a real server, and the first version of this adapter shipped a
+    #: per-library button that quietly did nothing.
+    #:
+    #: If per library is ever wanted here, ``POST /Library/Media/Updated`` is
+    #: the next thing to measure: it is how Sonarr and Radarr tell Jellyfin
+    #: that one path changed. It needs the library's path, which
+    #: ``/Library/VirtualFolders`` carries in ``Locations``.
+    can_scan_one = False
+
+    async def rescan(self, config: dict[str, Any], target: str, ctx: Context) -> str:
+        """Look for new files. Everything, because one library does not work.
+
+        ⚠️ Deliberately with no parameters at all. ``replaceAllMetadata`` and
+        ``replaceAllImages`` default to false, and naming them here even as
+        false would put a rewrite of the whole library one typo away.
+        """
+        await self._post(config, ctx, "/Library/Refresh")
+        return f"{self.label} is looking for new files in every library."
+
+    async def _post(self, config: dict[str, Any], ctx: Context, path: str) -> None:
+        response = await ctx.request(
+            "POST", f"{base_url(config)}{path}", headers=self._headers(config),
+            verify=not config.get("insecure"), timeout=20.0,
+        )
+        if response.status_code >= 400:
+            raise AdapterError(f"{self.label} answered with HTTP {response.status_code}.", code="action_failed")
 
     async def _findings(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         """What an operator would want to know about the server itself, one row per finding."""

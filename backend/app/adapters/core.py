@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import Adapter, Context, Field, WidgetData, WidgetType
+from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType
 
 
 class CoreAdapter(Adapter):
@@ -116,12 +116,26 @@ class CoreAdapter(Adapter):
             client_only=True,
             options=(
                 Field("kind", "What it does", type="select", default="board",
-                      options=(("board", "Open a board"), ("link", "Open an address"))),
+                      options=(("board", "Open a board"), ("link", "Open an address"),
+                               ("action", "Trigger an action"))),
                 Field("board", "Which board", type="board", only_when=("kind", "board"),
                       help="A board, or one page of it."),
                 Field("url", "Address", type="url", only_when=("kind", "link"),
                       placeholder="https://nas.example.com"),
                 Field("new_tab", "Open in a new tab", type="bool", default=True, only_when=("kind", "link")),
+                # ⚠️ Three lists, nothing typed. A library is "section 7" on
+                # one server and an item id on the next, and a name written by
+                # hand points at nothing the day it is renamed.
+                Field("service", "Connection", type="integrations", default="",
+                      only_when=("kind", "action"),
+                      help="Only connections that offer something a button may trigger."),
+                Field("deed", "Action", type="choices", from_field="service",
+                      only_when=("kind", "action"),
+                      help="Pick the connection first; what it offers appears here."),
+                Field("target", "What it acts on", type="choices", from_field="service",
+                      only_when=("kind", "action")),
+                Field("confirm", "Ask before it runs", type="bool", default=False,
+                      only_when=("kind", "action")),
                 Field("look", "Look", type="select", default="label",
                       options=(("label", "Symbol and name"), ("icon", "Symbol only, large"), ("text", "Name only"))),
                 Field("colour", "Colour", type="colour", default="",
@@ -188,6 +202,49 @@ class CoreAdapter(Adapter):
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         return "Nothing to test."
+
+    async def action(self, widget_kind: str, action_id: str, params: dict[str, Any],
+                     config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
+        """A button, pressed.
+
+        ⚠️ Everything a card offers is checked against its last answer before
+        this is reached, and for every other card that is enough: the answer
+        came from the service. A button's answer comes from its own options,
+        and those are written by whoever may edit the board. So the deed and
+        its target are checked again here, against the target adapter's own
+        declaration and its own list, which nobody editing a board can write.
+        """
+        if widget_kind != "button":
+            return await super().action(widget_kind, action_id, params, config, options, ctx)
+        if str(options.get("kind") or "") != "action":
+            raise AdapterError("This button does not trigger anything.", code="no_such_action")
+        if ctx.resolve_integration is None:
+            raise AdapterError("The connection cannot be resolved here.", code="no_resolver")
+        try:
+            service = int(str(options.get("service") or "").strip())
+        except ValueError:
+            raise AdapterError(
+                "This button has no connection picked.", code="no_integration",
+                hint="Open the button settings and pick one.") from None
+
+        adapter, service_config, service_ctx = await ctx.resolve_integration(service)
+        deed = adapter.deed(action_id)
+        if deed is None:
+            raise AdapterError(f"{adapter.label} does not offer that.", code="no_such_action")
+
+        call: dict[str, Any] = {}
+        if deed.target_field:
+            target = str(params.get("target") or options.get("target") or "")
+            offered = {value for value, _label in await adapter.choices(deed.target_field, service_config, service_ctx)}
+            # ⚠️ Against the service's own list, not against a pattern. A
+            # target that is not on it either never existed or is gone, and
+            # both are a reason to stop rather than to send it anyway.
+            if target not in offered:
+                raise AdapterError(
+                    "That is not one of the things this connection offers.", code="no_such_target",
+                    hint="Open the button settings and pick it again.")
+            call[deed.target_field] = target
+        return await adapter.action(deed.widget_kind, deed.id, call, service_config, {}, service_ctx)
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "problems":
@@ -259,15 +316,33 @@ class CoreAdapter(Adapter):
                 "captions": options.get("captions", True),
             })
         if widget_kind == "button":
-            kind = "link" if options.get("kind") == "link" else "board"
+            asked = str(options.get("kind") or "board")
+            kind = asked if asked in ("link", "action") else "board"
             where = str((options.get("url") if kind == "link" else options.get("board")) or "").strip()
-            return WidgetData(meta={
+            data = WidgetData(meta={
                 "kind": kind,
                 "where": where,
                 "new_tab": options.get("new_tab", True),
                 "look": str(options.get("look") or "label"),
                 "colour": str(options.get("colour") or ""),
             })
+            if kind == "action":
+                # ⚠️ The action goes into the card's own answer, which is what
+                # the guard in the collector checks a press against. A button
+                # that only knew its action from its options would be the one
+                # card in nexdeck that can be asked for anything.
+                deed_id = str(options.get("deed") or "")
+                target = str(options.get("target") or "")
+                if deed_id:
+                    params = {"target": target} if target else {}
+                    data.actions = [Action(id=deed_id, label=deed_id, icon="zap",
+                                           confirm=bool(options.get("confirm")), params=params)]
+                else:
+                    data.status = "warn"
+                    data.error = "This button has no action picked yet."
+                data.meta["deed"] = deed_id
+                data.meta["target"] = target
+            return data
         if widget_kind == "bookmarks":
             return WidgetData(items=parse_links(options.get("links") or ""), meta={"layout": options.get("layout") or "list"})
         if widget_kind == "search":

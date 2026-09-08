@@ -657,6 +657,29 @@ class UnifiAdapter(Adapter):
         if widget_kind == "devices":
             devices = [("Living room AP", "Access point · U6-Pro · 14 clients", "ok"), ("Office AP", "Access point · U6-Lite · 6 clients", "ok"), ("Core switch", "Switch · USW-24-PoE", "ok"), ("Garden AP", "Access point · U6-Mesh · 2 clients", "bad"), ("Gateway", "Console · UDM-Pro", "ok")]
             return WidgetData(status="bad", items=[{"title": n, "subtitle": s, "status": st, "value": f"{int(fake.walk(n, tick, 5, 40))}% cpu"} for n, s, st in devices])
+        if widget_kind == "switch":
+            # ⚠️ This branch was missing, and the card fell through to the
+            # summary below: in demo mode a switch showed the console's numbers
+            # and an empty port list. Nothing threw, so nothing said so.
+            ports = [
+                ("Port 1", "1 Gbit/s · 6.4 W", "ok", "RJ45"), ("Port 2", "1 Gbit/s", "ok", "RJ45"),
+                ("Port 3", "not connected", "unknown", "RJ45"), ("Port 4", "100 Mbit/s · 3.1 W", "ok", "RJ45"),
+                ("Port 5", "1 Gbit/s · 8.9 W", "ok", "RJ45"), ("Port 6", "not connected", "unknown", "RJ45"),
+                ("Port 25", "10 Gbit/s", "ok", "SFP+"),
+            ]
+            if options.get("hide_empty"):
+                ports = [port for port in ports if port[2] == "ok"]
+            live = sum(1 for port in ports if port[2] == "ok")
+            return WidgetData(status="ok", items=[
+                {"id": f"port-{index}", "title": name, "subtitle": join_parts(options, ("speed", speed.split(" · ")[0]),
+                                                                              ("poe", speed.split(" · ")[1] if " · " in speed else "")),
+                 "status": state, "value": connector}
+                for index, (name, speed, state, connector) in enumerate(ports, start=1)
+            ], secondary=[
+                {"label": "Switch", "value": "Core switch"},
+                {"label": "Ports", "value": f"{live} / {len(ports)}"},
+                {"label": "PoE", "value": f"{sum(1 for p in ports if ' W' in p[1])} drawing"},
+            ], meta={"empty": "This switch reports no ports"})
         down = fake.walk("wan-down", tick, 20, 900) * 1e6
         up = fake.walk("wan-up", tick, 2, 40) * 1e6
         clients = fake.counter("clients", tick, 38, 0.001) % 60

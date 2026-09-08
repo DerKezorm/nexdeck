@@ -30,6 +30,7 @@ from .base import (
     base_url,
     path_segment,
     percent,
+    ring_of,
 )
 
 #: How many runs to read for the failure count. The API caps a page at 250.
@@ -124,6 +125,7 @@ class N8nAdapter(Adapter):
             default_size=(3, 2),
             min_size=(2, 2),
             refresh_seconds=60,
+            ring=True,
             metrics=("active", "failed"),
         ),
     )
@@ -252,6 +254,11 @@ class N8nAdapter(Adapter):
                 {"label": "Of the last", "value": len(runs)},
                 *([{"label": "Failure rate", "value": share, "unit": "%"}] if share is not None else []),
             ],
+            # Published and the rest are together every workflow that is not
+            # archived. An archived one is in neither: it was put away, and
+            # counting it would make the ring bigger than the card's own "/ 2".
+            meta={"ring": ring_of(("Published", len(published)),
+                                  ("Not published", len(alive) - len(published)))},
             metrics={"active": float(len(published)), "failed": float(len(failed))},
         )
 
@@ -303,6 +310,8 @@ class N8nAdapter(Adapter):
                 secondary=[{"label": "Failed runs", "value": len(failed), "metric": "failed"},
                            {"label": "Of the last", "value": len(runs)},
                            *([{"label": "Failure rate", "value": share, "unit": "%"}] if share is not None else [])],
+                meta={"ring": ring_of(("Published", len(published)),
+                                      ("Not published", len(flows) - len(published)))},
                 metrics={"active": float(len(published)), "failed": float(len(failed))},
             )
         if widget_kind == "runs":

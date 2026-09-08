@@ -58,13 +58,27 @@ describe('translation keys used in the source', () => {
     // them that pointed at a section which does not exist.
     const sections = new Set(Object.keys(en))
     const loose = new Set<string>()
+    let ignoredKinds = 0
     for (const file of source) {
-      const text = readFileSync(file, 'utf8')
+      // ⚠️ A widget kind is shaped exactly like a key and is not one:
+      // `kind: 'plex.load'` names an adapter and its widget, and `plex`
+      // happens to be a section in en.json because signing in to Plex has its
+      // own words. Removing only the value of a `kind:` property keeps the
+      // guard's reach everywhere else; a section-wide exception would have
+      // blinded it to every loose `plex.*` string there is.
+      const text = readFileSync(file, 'utf8').replace(/\bkind:\s*'[^']*'/g, () => {
+        ignoredKinds += 1
+        return "kind: ''"
+      })
       for (const match of text.matchAll(/'([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+){1,4})'/g)) {
         if (sections.has(match[1].split('.')[0])) loose.add(match[1])
       }
     }
     expect(loose.size, 'the scan found nothing at all').toBeGreaterThan(0)
+    // A floor under the exception too: the day `kind:` stops being written
+    // this way, the line above quietly stops excluding anything, and nobody
+    // would notice because the guard would simply keep passing.
+    expect(ignoredKinds, 'no widget kind was skipped, so that exception is dead code').toBeGreaterThan(20)
     const missing = [...loose].filter((key) => !exists(key)).sort()
     expect(missing, 'strings shaped like a translation key that point nowhere').toEqual([])
   })

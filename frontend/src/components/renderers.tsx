@@ -66,6 +66,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   feed: FeedCard,
   log: LogCard,
   chart: ChartCard,
+  bars: BarsCard,
+  ring: RingCard,
   app: AppTile,
   button: ButtonCard,
   image: ImageCard,
@@ -857,26 +859,217 @@ export function LogCard({ data }: RenderProps) {
 // Chart: a larger series with min, max and current
 // ---------------------------------------------------------------------------
 
+/**
+ * ⚠️ Every metric the card records, not the first one.
+ *
+ * This took `Object.keys(data.metrics)[0]` and threw the rest away. UniFi's
+ * console card measures `wan_down` and `wan_up`, the server stores both, and
+ * the card drew one: to compare them you put two cards side by side, and then
+ * they had different scales, so the comparison was wrong as well as awkward.
+ * All the lines share one scale here, which is the whole point of drawing
+ * them together.
+ */
 export function ChartCard({ data, series }: RenderProps) {
   const { t } = useTranslation()
-  const metric = Object.keys(data?.metrics ?? {})[0]
-  const points = (metric && series?.[metric]) || []
+  const lines = Object.keys(data?.metrics ?? {})
+    .map((metric) => ({ metric, points: series?.[metric] ?? [] }))
+    .filter((line) => line.points.length > 1)
+  const all = lines.flatMap((line) => line.points)
+  const low = all.length ? Math.min(...all) : 0
+  const high = all.length ? Math.max(...all) : 0
   const current = data?.primary?.value
   const unit = data?.primary?.unit ?? ''
+  //: A label for each line. The metric name is the fallback, not the choice:
+  //: "wan_down" is a column name, "WAN in" is what the card already calls it.
+  const labelFor = (metric: string): string => {
+    if (data?.primary?.metric === metric) return tLabel(data.primary.label)
+    const row = data?.secondary?.find((one) => one.metric === metric)
+    return row ? tLabel(row.label) : metric
+  }
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-3">
       <div className="flex items-baseline gap-2">
         <span className="num text-2xl font-semibold">{formatValue(current, unit)}</span>
-        <span className="text-[11px] text-muted">{tLabel(data?.primary?.label)}</span>
-        {points.length > 1 && (
-          <span className="ml-auto num text-[10px] text-faint">
-            {t('card.min')} {formatValue(Math.min(...points))} · {t('card.max')} {formatValue(Math.max(...points))}
+        <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>
+        {all.length > 1 && (
+          <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
+            {t('card.min')} {formatValue(low)} · {t('card.max')} {formatValue(high)}
           </span>
         )}
       </div>
-      <div className="flex-1 min-h-0 mt-1" title={t('card.history')}>
-        {points.length > 1 ? <Sparkline values={points} height={64} /> : <Empty>{t('card.collecting')}</Empty>}
+      <div className="relative flex-1 min-h-[36px] mt-1" title={t('card.history')}>
+        {lines.length ? (
+          lines.map((line, index) => (
+            <span key={line.metric} className={index ? 'absolute inset-0' : 'block'}>
+              <Sparkline
+                values={line.points}
+                height={64}
+                min={low}
+                max={high}
+                fill={lines.length === 1}
+                color={SLICE_COLOURS[index % SLICE_COLOURS.length]}
+              />
+            </span>
+          ))
+        ) : (
+          <Empty>{t('card.collecting')}</Empty>
+        )}
       </div>
+      {lines.length > 1 && (
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+          {lines.map((line, index) => (
+            <span key={line.metric} className="flex items-center gap-1.5 text-[10px] text-muted">
+              <span
+                className="rounded-full"
+                style={{ width: 7, height: 7, background: SLICE_COLOURS[index % SLICE_COLOURS.length] }}
+              />
+              {labelFor(line.metric)}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Bars: the same rows a list draws, measured against the largest of them
+// ---------------------------------------------------------------------------
+
+/**
+ * ⚠️ The scale is the biggest row, not the sum. These rows are a ranking
+ * ("this indexer grabbed 40, that one 3"), not the parts of a whole, and
+ * dividing by the sum would make every bar shrink as soon as a row is added.
+ * The server has already refused this drawing for a card whose rows carry no
+ * numbers, so a row without one here is a gap in a list that otherwise has
+ * them: it keeps its place and shows no bar.
+ */
+export function BarsCard({ data, onAction, canAct, series }: RenderProps) {
+  const { t } = useTranslation()
+  const items = data?.items ?? []
+  if (!items.length && !data?.error) return <Empty>{t('card.nothing')}</Empty>
+  const numbers = items
+    .map((item) => (typeof item.value === 'number' ? item.value : null))
+    .filter((value): value is number => value !== null)
+  const top = numbers.length ? Math.max(...numbers) : 0
+  return (
+    <div className="flex-1 min-h-0 flex flex-col">
+      <ul className="flex-1 min-h-0 scroll px-3 pb-1 pt-0.5 flex flex-col gap-1.5">
+        {items.map((item, index) => {
+          const value = typeof item.value === 'number' ? item.value : null
+          const status = statusOf(item.status)
+          return (
+            <li key={String(item.id ?? index)} className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-0.5">
+              <span className="text-[12px] truncate" title={String(item.title ?? '')}>
+                {String(item.title ?? '')}
+              </span>
+              <span className="num text-[11px] text-muted whitespace-nowrap tabular-nums">
+                {value === null ? '' : formatValue(value, String(item.unit ?? ''))}
+              </span>
+              <span className="col-span-2 bar" data-status={status}>
+                <i style={{ width: value !== null && top > 0 ? `${Math.max(1.5, (value / top) * 100)}%` : 0 }} />
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {data?.secondary?.length || data?.actions?.length ? (
+        <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
+          <Chips items={data?.secondary} series={series} />
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Ring: the slices the fetch worked out, as parts of one whole
+// ---------------------------------------------------------------------------
+
+/** Six colours, in the order the slices arrive. Beyond that the ring is a
+ *  guessing game, and the server keeps the slice count small. */
+const SLICE_COLOURS = [
+  'var(--nd-accent)',
+  'var(--nd-unknown)',
+  'var(--nd-warn)',
+  'var(--nd-ok)',
+  'var(--nd-bad)',
+  'color-mix(in srgb, var(--nd-accent) 45%, transparent)',
+]
+
+export function RingCard({ data }: RenderProps) {
+  const { t } = useTranslation()
+  const slices = (Array.isArray(data?.meta?.ring) ? data.meta.ring : []) as { label: string; value: number }[]
+  const whole = slices.reduce((sum, one) => sum + one.value, 0)
+  if (!slices.length || whole <= 0) return <Empty>{t('card.nothing')}</Empty>
+  // The circumference the dashes are cut from. r=42 in a 100-wide box leaves
+  // room for the stroke, which is centred on the path and would otherwise be
+  // clipped at the edges.
+  const round = 2 * Math.PI * 42
+  // Where each slice starts, worked out before anything is drawn: a running
+  // total kept inside the map would be a write during render.
+  const starts = slices.reduce<number[]>(
+    (sofar, one) => [...sofar, sofar[sofar.length - 1] + (one.value / whole) * round],
+    [0],
+  )
+  return (
+    <div className="flex-1 min-h-0 flex items-center gap-3 px-3 pb-3 pt-1">
+      <div className="shrink-0 flex flex-col items-center gap-1 max-w-[7rem]">
+      <div className="relative" style={{ width: 92, height: 92 }}>
+        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" aria-hidden="true">
+          {slices.map((one, index) => {
+            const length = (one.value / whole) * round
+            const offset = -starts[index]
+            return (
+              <circle
+                key={index}
+                cx="50"
+                cy="50"
+                r="42"
+                fill="none"
+                stroke={SLICE_COLOURS[index % SLICE_COLOURS.length]}
+                strokeWidth="14"
+                strokeDasharray={`${length.toFixed(2)} ${(round - length).toFixed(2)}`}
+                strokeDashoffset={offset.toFixed(2)}
+              />
+            )
+          })}
+        </svg>
+        {/* The card's own headline, kept. Pi-hole's ring would otherwise lose
+            the "18% blocked" it exists to say. Without one, the whole, which
+            is the one number the legend does not carry: repeating the first
+            slice there would print it twice on one card. */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="num text-lg font-semibold leading-none">
+            {data?.primary?.value !== undefined && data?.primary?.value !== null
+              ? formatValue(data.primary.value, data.primary.unit ?? '')
+              : formatValue(whole)}
+          </span>
+        </div>
+      </div>
+      {/* ⚠️ Under the ring, not inside it. The hole of a 92px ring with a
+          14px stroke is 64px across, and "Heute geblockt" printed over the
+          stroke and out the sides. */}
+      <span className="text-[9px] text-faint truncate max-w-full text-center">
+        {data?.primary?.label ? tLabel(data.primary.label) : t('card.total')}
+      </span>
+      </div>
+      {/* The legend is not decoration: six colours nobody can name are six
+          unlabelled slices, and the contrast work in 0.2.0 was for nothing if
+          the only way to read a slice is its hue. */}
+      <ul className="min-w-0 flex-1 flex flex-col gap-1 scroll">
+        {slices.map((one, index) => (
+          <li key={index} className="flex items-center gap-2 min-w-0">
+            <span
+              className="shrink-0 rounded-[3px]"
+              style={{ width: 9, height: 9, background: SLICE_COLOURS[index % SLICE_COLOURS.length] }}
+            />
+            <span className="text-[11px] text-muted truncate flex-1">{tLabel(one.label)}</span>
+            <span className="num text-[11px] whitespace-nowrap tabular-nums">{formatValue(one.value)}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -27,6 +27,7 @@ from .base import (
     outbound_client,
     path_segment,
     percent,
+    ring_of,
     status_from_percent,
 )
 
@@ -167,6 +168,7 @@ class DockerAdapter(Adapter):
             default_size=(2, 1),
             min_size=(1, 1),
             refresh_seconds=20,
+            ring=True,
             metrics=("running",),
         ),
         WidgetType(
@@ -213,6 +215,7 @@ class DockerAdapter(Adapter):
                 status="warn" if stopped else "ok",
                 primary={"label": "Running", "value": len(running), "unit": f"/ {len(containers)}"},
                 secondary=[{"label": "Stopped", "value": stopped}],
+                meta={"ring": ring_of(("Running", len(running)), ("Stopped", stopped))},
                 metrics={"running": float(len(running))},
             )
         stats = await self._stats(config, ctx, running) if (widget_kind == "load" or options.get("stats", True)) else {}
@@ -395,6 +398,7 @@ class DockerAdapter(Adapter):
                 status="warn" if running < len(names) else "ok",
                 primary={"label": "Running", "value": running, "unit": f"/ {len(names)}"},
                 secondary=[{"label": "Stopped", "value": len(names) - running}],
+                meta={"ring": ring_of(("Running", running), ("Stopped", len(names) - running))},
                 metrics={"running": float(running)},
             )
         if widget_kind == "load":

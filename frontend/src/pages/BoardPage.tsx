@@ -19,7 +19,8 @@ import { WidgetLibrary } from '../components/WidgetLibrary'
 import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
 import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
-import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
+import { nextPreview, type HeldPreview } from '../lib/previewHold'
+import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
@@ -66,7 +67,7 @@ export function BoardPage() {
   const [draftWidget, setDraftWidget] = useState<WidgetDraft | null>(null)
   // holdUntilChange: after a save the preview stays until the server has fetched with the new options,
   // so the card does not flash its old numbers in between.
-  const [previewData, setPreviewData] = useState<{ id: number; data: WidgetData; holdUntilChange?: number } | null>(null)
+  const [previewData, setPreviewData] = useState<HeldPreview | null>(null)
 
   const data = board.data
   const pages = useMemo(() => data?.pages ?? [], [data])
@@ -384,7 +385,7 @@ export function BoardPage() {
         widget={activePage.widgets.find((w) => w.id === settingsFor) ?? null}
         pages={pages.map((p) => ({ id: p.id, name: p.name }))}
         onPreview={setDraftWidget}
-        onPreviewData={(id, preview) => setPreviewData(preview ? { id, data: preview } : null)}
+        onPreviewData={(id, preview) => setPreviewData((current) => nextPreview(current, id, preview))}
         onClose={closeWidgetSettings}
         onSaved={() => {
           setDraftWidget(null)

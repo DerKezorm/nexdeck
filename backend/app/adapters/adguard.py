@@ -17,6 +17,7 @@ from .base import (
     measured,
     percent,
     percent_primary,
+    ring_of,
 )
 
 
@@ -36,7 +37,7 @@ class AdguardAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (
-        WidgetType(kind="summary", label="Protection", description="Blocked share, queries and a pause button.", renderer="gauge", default_size=(2, 2), refresh_seconds=30, metrics=("blocked_percent", "queries")),
+        WidgetType(kind="summary", label="Protection", description="Blocked share, queries and a pause button.", renderer="gauge", default_size=(2, 2), refresh_seconds=30, ring=True, metrics=("blocked_percent", "queries")),
         WidgetType(kind="top", label="Top blocked", description="The domains blocked most often.", renderer="list", default_size=(3, 3), refresh_seconds=120, options=(Field("limit", "Entries", type="number", default=8),)),
     )
 
@@ -70,6 +71,7 @@ class AdguardAdapter(Adapter):
             status="ok" if enabled else "warn",
             primary=percent_primary("Blocked" if enabled else "Protection paused", share),
             secondary=[{"label": "Queries", "value": int(total)}, {"label": "Blocked", "value": int(blocked)}, {"label": "Avg", "value": round(float(stats.get("avg_processing_time") or 0) * 1000), "unit": "ms"}],
+            meta={"ring": ring_of(("Blocked", blocked), ("Allowed", total - blocked))},
             metrics=measured({"blocked_percent": share, "queries": total}),
             actions=[Action(id="enable", label="Enable", icon="play")] if not enabled else [Action(id="disable", label="Pause 5 min", icon="pause", params={"duration": 300000})],
         )
@@ -93,6 +95,8 @@ class AdguardAdapter(Adapter):
         share = fake.walk("adguard-share", tick, 9, 16, period=800)
         return WidgetData(primary={"label": "Blocked", "value": share, "unit": "%"},
                           secondary=[{"label": "Queries", "value": total}, {"label": "Blocked", "value": int(total * share / 100)}, {"label": "Avg", "value": 3, "unit": "ms"}],
+                          meta={"ring": ring_of(("Blocked", int(total * share / 100)),
+                                                ("Allowed", total - int(total * share / 100)))},
                           metrics={"blocked_percent": share, "queries": float(total)},
                           actions=[Action(id="disable", label="Pause 5 min", icon="pause", params={"duration": 300000})])
 

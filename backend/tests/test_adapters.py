@@ -728,7 +728,10 @@ async def test_plex_findings_calm_and_with_problems(ctx: Context) -> None:
 async def test_plex_server_load_takes_the_latest_sample(ctx: Context) -> None:
     _plex_server_routes(host_cpu=20.6, process_cpu=0.05)
     data = await get_adapter("plex").fetch("load", {"url": PLEX, "token": "tok"}, {}, ctx)
-    assert data.primary == {"label": "Plex CPU", "value": 0.1, "unit": "%"}, "the newest sample, not the first"
+    # The whole row, not just the value: it names the metric it records and
+    # the part it is, and the dial follows the part.
+    assert data.primary == {"label": "Plex CPU", "value": 0.1, "unit": "%",
+                            "metric": "plex_cpu", "part": "plex_cpu"}, "the newest sample, not the first"
     assert {chip["label"]: chip["value"] for chip in data.secondary} == {"Plex RAM": 0.3, "Host CPU": 20.6, "Host RAM": 61.2}
     assert data.metrics == {"plex_cpu": 0.1, "plex_memory": 0.3, "host_cpu": 20.6, "host_memory": 61.2}
     assert data.status == "ok"

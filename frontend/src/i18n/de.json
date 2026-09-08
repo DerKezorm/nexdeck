@@ -738,6 +738,7 @@
   },
   "card": {
     "nothing": "Nichts anzuzeigen",
+    "total": "Gesamt",
     "nothingPlaying": "Es läuft nichts",
     "nothingUpcoming": "Nichts steht an",
     "noLinks": "Noch keine Links",
@@ -780,9 +781,11 @@
     },
     "noButtons": "Noch keine Knöpfe. In den Widget-Einstellungen anlegen.",
     "buttons": "Knöpfe",
+    "buttonNotAllowed": "Auf diesem Brett darfst du zusehen, nicht handeln.",
     "buttonNowhere": "Dieser Knopf hat kein gültiges Ziel.",
     "noPictures": "Noch keine Bilder. In den Widget-Einstellungen anlegen.",
     "pictureNext": "Nächstes von {{count}} Bildern",
+    "buttonSure": "Sicher?",
     "buttonWhileEditing": "Dieser Button führt erst wieder irgendwohin, wenn du mit dem Anordnen fertig bist."
   },
   "plex": {
