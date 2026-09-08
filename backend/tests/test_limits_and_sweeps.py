@@ -33,10 +33,16 @@ from app.services import retention
 from .conftest import CSRF, create_user, login, setup_admin
 
 
-def _picture() -> bytes:
-    """A one-pixel PNG, so the avatar reader sees a real signature."""
+def _picture(tail: bytes = b"") -> bytes:
+    """A one-pixel PNG, so the avatar reader sees a real signature.
+
+    ⚠️ ``tail`` makes it a different file. Uploading the same bytes twice is
+    now answered with the file that is already there, so a test about the
+    quota has to upload two files that really differ, or it measures the
+    de-duplication instead.
+    """
     return (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00"
-            b"\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82")
+            b"\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82") + tail
 
 
 # -- the body is weighed before it is read -------------------------------------
@@ -101,7 +107,7 @@ def test_an_account_cannot_fill_the_disk(client: TestClient, monkeypatch) -> Non
         assert asset is not None
         asset.size = 1024 * 1024  # It has now used its megabyte.
 
-    refused = client.post("/api/v1/assets", files={"file": ("b.png", _picture(), "image/png")}, headers=CSRF)
+    refused = client.post("/api/v1/assets", files={"file": ("b.png", _picture(b"second"), "image/png")}, headers=CSRF)
     assert refused.status_code == 413, refused.text
     assert refused.json()["detail"]["code"] == "quota_full"
 

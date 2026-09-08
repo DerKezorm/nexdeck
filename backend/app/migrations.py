@@ -124,6 +124,11 @@ def _layout_version_column(connection: Connection) -> None:
     _add_column(connection, "pages", "layout_version", "INTEGER NOT NULL DEFAULT 0")
 
 
+def _asset_digest_column(connection: Connection) -> None:
+    _add_column(connection, "assets", "digest", "TEXT NOT NULL DEFAULT ''")
+    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_assets_digest ON assets (digest)"))
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -136,6 +141,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (9, "An identity provider can say it checks a second factor itself", _provider_second_factor_column),
     (10, "An e-mail address belongs to one account", _unique_email_index),
     (11, "A page counts its saved layouts", _layout_version_column),
+    (12, "An upload knows its own fingerprint", _asset_digest_column),
 ]
 
 

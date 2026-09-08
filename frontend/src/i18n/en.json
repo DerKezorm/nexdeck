@@ -132,7 +132,8 @@
       "search": "Search",
       "appearance": "Appearance",
       "journal": "Log",
-      "backups": "Backups"
+      "backups": "Backups",
+      "media": "Media"
     },
     "mail": {
       "title": "Mail server",
@@ -360,6 +361,23 @@
       "help": "Rules that apply to every account on this installation.",
       "requireTwoFactor": "Require a second factor from everybody",
       "requireTwoFactorHelp": "Accounts without one are asked to set one up and cannot switch it off again. Kiosk links and API tokens are untouched: a wall display has nobody to type a code."
+    },
+    "media": {
+      "title": "Media",
+      "help": "Every picture, icon and background you have uploaded, and what still shows it.",
+      "upload": "Upload a file",
+      "none": "Nothing uploaded yet.",
+      "unused": "Not used",
+      "usedBy": "Used by {{names}}",
+      "remove": "Delete {{name}}",
+      "removeHelp": "Nothing shows this file. Deleting it cannot be undone.",
+      "stillUsed": "This file is still shown by: {{names}}. They will show a placeholder afterwards, and this cannot be undone.",
+      "total": "{{count}} file(s), {{size}} in all",
+      "kind": {
+        "picture": "Picture",
+        "icon": "Icon",
+        "background": "Background"
+      }
     }
   },
   "menu": {
@@ -626,7 +644,9 @@
     "pictureCaptionOf": "Caption of picture {{at}}",
     "pictureRemove": "Remove picture {{at}}",
     "pictureMove": "Move picture {{at}}",
-    "pictureBadAddress": "That is not an address a picture can be loaded from."
+    "pictureBadAddress": "That is not an address a picture can be loaded from.",
+    "pictureLibrary": "From the media",
+    "pictureLibraryEmpty": "Nothing uploaded yet. Upload a file first."
   },
   "library": {
     "title": "Add a widget",

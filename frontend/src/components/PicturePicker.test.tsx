@@ -6,15 +6,23 @@
  * on their disk. Both go in the same list now, and a card filled in under the
  * old field keeps its pictures.
  */
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PicturePicker, asPictures } from './PicturePicker'
 
-const calls = vi.hoisted(() => ({ uploaded: [] as { path: string; name: string; fields: Record<string, string> }[] }))
+const calls = vi.hoisted(() => ({
+  uploaded: [] as { path: string; name: string; fields: Record<string, string> }[],
+  library: [{ id: 9, filename: 'terrace.jpg', url: '/api/v1/assets/9/terrace.jpg' }] as unknown[],
+}))
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
+  get: vi.fn(async (path: string) => {
+    if (path === '/assets') return calls.library
+    throw new Error(`unexpected request ${path}`)
+  }),
   upload: vi.fn(async (path: string, file: File, fields: Record<string, string>) => {
     calls.uploaded.push({ path, name: file.name, fields })
     return { id: 4, filename: file.name, url: `/api/v1/assets/4/${file.name}` }
@@ -23,7 +31,12 @@ vi.mock('../api/client', () => ({
 
 function show(value: unknown) {
   const written: unknown[] = []
-  render(<PicturePicker value={value} onChange={(next) => written.push(next)} label="Pictures" />)
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PicturePicker value={value} onChange={(next) => written.push(next)} label="Pictures" />
+    </QueryClientProvider>,
+  )
   return written
 }
 
@@ -103,5 +116,37 @@ describe('PicturePicker', () => {
     handle.focus()
     await userEvent.keyboard('{ArrowDown}')
     await waitFor(() => expect(written.at(-1)).toEqual([{ url: '/a/2.png', caption: '' }, { url: '/a/1.png', caption: '' }]))
+  })
+})
+
+
+describe('choosing from what is already there', () => {
+  it('offers the uploaded files and takes one without uploading it again', async () => {
+    // ⚠️ Uploading is not the only way to get a picture onto a card. The same
+    // file often belongs on two of them, and uploading it twice made a second
+    // copy that counted against the quota twice.
+    const written = show([])
+    await userEvent.click(screen.getByRole('button', { name: 'From the media' }))
+    const one = await screen.findByRole('button', { name: /terrace\.jpg/ })
+    await userEvent.click(one)
+    expect(written.at(-1)).toEqual([{ url: '/api/v1/assets/9/terrace.jpg', caption: '' }])
+    expect(calls.uploaded).toHaveLength(0)
+  })
+
+  it('says so when there is nothing to choose from', async () => {
+    calls.library = []
+    show([])
+    await userEvent.click(screen.getByRole('button', { name: 'From the media' }))
+    expect(await screen.findByText(/Nothing uploaded yet/)).toBeInTheDocument()
+    calls.library = [{ id: 9, filename: 'terrace.jpg', url: '/api/v1/assets/9/terrace.jpg' }]
+  })
+
+  it('does not add the same picture twice', async () => {
+    const written = show([{ url: '/api/v1/assets/9/terrace.jpg' }])
+    await userEvent.click(screen.getByRole('button', { name: 'From the media' }))
+    const one = await screen.findByRole('button', { name: /terrace\.jpg/ })
+    expect(one).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(one)
+    expect(written).toEqual([])
   })
 })
