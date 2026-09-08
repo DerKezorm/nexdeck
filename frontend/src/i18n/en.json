@@ -618,7 +618,15 @@
     "colourNone": "Board colour",
     "colourClear": "Clear",
     "boardsNone": "There are no boards yet.",
-    "boardPick": "Pick a board…"
+    "boardPick": "Pick a board…",
+    "pictureUpload": "Upload a picture",
+    "pictureAdd": "Add",
+    "pictureAddress": "Address of a picture",
+    "pictureCaption": "Caption (optional)",
+    "pictureCaptionOf": "Caption of picture {{at}}",
+    "pictureRemove": "Remove picture {{at}}",
+    "pictureMove": "Move picture {{at}}",
+    "pictureBadAddress": "That is not an address a picture can be loaded from."
   },
   "library": {
     "title": "Add a widget",

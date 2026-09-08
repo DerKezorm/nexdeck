@@ -85,10 +85,10 @@ def _refuse_if_over_quota(db: DbSession, user: User, incoming: int) -> None:
         )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, summary="Upload a background or icon")
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Upload a background, an icon or a picture")
 async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = "background") -> dict:
-    if kind not in ("background", "icon"):
-        raise error("bad_kind", "kind must be background or icon.")
+    if kind not in ("background", "icon", "picture"):
+        raise error("bad_kind", "kind must be background, icon or picture.")
     content_type = file.content_type or ""
     if content_type not in ALLOWED:
         raise error("bad_type", "Only PNG, JPEG, WebP, SVG, GIF and AVIF images are accepted.")

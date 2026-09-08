@@ -138,16 +138,8 @@ class CoreAdapter(Adapter):
             refresh_seconds=3600,
             client_only=True,
             options=(
-                Field(
-                    "pictures",
-                    "Pictures",
-                    type="textarea",
-                    help=(
-                        "One per line: an address, or an uploaded file. "
-                        "Add a caption after a | if you want one."
-                    ),
-                    placeholder="/api/v1/assets/3/rack.png | Server rack",
-                ),
+                Field("pictures", "Pictures", type="pictures",
+                      help="Upload files, or name an address. Both go in the same list."),
                 Field("every", "Move on every (seconds)", type="number", default=8,
                       help="0 keeps the first picture. On a wall display, slower is better."),
                 Field("fit", "Crop", type="select", default="cover",
@@ -261,7 +253,7 @@ class CoreAdapter(Adapter):
         if widget_kind == "markdown":
             return WidgetData(meta={"markdown": options.get("content") or ""})
         if widget_kind == "image":
-            return WidgetData(items=parse_pictures(options.get("pictures") or ""), meta={
+            return WidgetData(items=parse_pictures(options.get("pictures")), meta={
                 "every": max(0, int(options.get("every") or 0)),
                 "fit": "contain" if options.get("fit") == "contain" else "cover",
                 "captions": options.get("captions", True),
@@ -307,15 +299,24 @@ class CoreAdapter(Adapter):
         raise KeyError(widget_kind)
 
 
-def parse_pictures(text: str) -> list[dict[str, str]]:
-    """One picture per line, address first, caption after a pipe.
+def parse_pictures(written: Any) -> list[dict[str, str]]:
+    """The pictures of a card, however they were written down.
 
-    ⚠️ The other way round from the links above, where the title comes first.
-    A picture has an address and may have no caption at all, and asking for a
-    leading pipe on every line to say "no caption" is a rule nobody remembers.
+    The list the picker builds is ``[{"url": …, "caption": …}]``. ⚠️ The old
+    shape, one line per picture with the caption after a pipe, is still read:
+    a card made before the picker existed must not lose its pictures because
+    the field it was filled in with was replaced.
     """
     pictures: list[dict[str, str]] = []
-    for line in text.splitlines():
+    if isinstance(written, list):
+        for one in written:
+            if not isinstance(one, dict):
+                continue
+            url = str(one.get("url") or "").strip()
+            if url:
+                pictures.append({"url": url, "title": str(one.get("caption") or one.get("title") or "").strip()})
+        return pictures
+    for line in str(written or "").splitlines():
         line = line.strip()
         if not line:
             continue

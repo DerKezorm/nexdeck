@@ -18,7 +18,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BoardsSettings } from './BoardsSettings'
-import { moved } from '../../lib/reorder'
+import { moved } from '../../lib/useHandleReorder'
 import { useAuth } from '../../stores/auth'
 
 const BOARDS = [

@@ -30,11 +30,12 @@ logger = logging.getLogger("nexdeck.adapters")
 #: kinds that may be picked; the server checks both the kind and whether the
 #: person editing may build on that connection at all.
 FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations",
-                    "textarea", "timezone", "items", "choices", "colour", "board"]
+                    "textarea", "timezone", "items", "choices", "colour", "board", "pictures"]
 #: ``items`` picks among the rows a card is showing; ``choices`` picks among
 #: values the service itself hands out, through ``Adapter.choices``;
 #: ``board`` picks one of this installation's own boards, which no service
-#: knows about.
+#: knows about; ``pictures`` is a list somebody builds by uploading files
+#: or naming addresses, not a text field with a syntax.
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
