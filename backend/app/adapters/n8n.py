@@ -73,6 +73,12 @@ def _took(run: dict[str, Any]) -> str:
 
 class N8nAdapter(Adapter):
     kind = "n8n"
+    #: Run against a live instance on 2026-09-08: the address, the key and both
+    #: endpoints answered. ⚠️ That instance held no workflows, so the field
+    #: names, the durations and the two names of the publish action rest on
+    #: n8n's own OpenAPI spec rather than on something seen. If a card here
+    #: ever comes out wrong, that is the first place to look.
+    beta = False
     label = "n8n"
     category = "monitoring"
     description = "Workflows with their state, the last runs and how many of them failed."
