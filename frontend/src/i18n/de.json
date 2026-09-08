@@ -754,7 +754,8 @@
     "buttons": "Knöpfe",
     "buttonNowhere": "Dieser Knopf hat kein gültiges Ziel.",
     "noPictures": "Noch keine Bilder. In den Widget-Einstellungen anlegen.",
-    "pictureNext": "Nächstes von {{count}} Bildern"
+    "pictureNext": "Nächstes von {{count}} Bildern",
+    "buttonWhileEditing": "Dieser Button führt erst wieder irgendwohin, wenn du mit dem Anordnen fertig bist."
   },
   "plex": {
     "signIn": "Mit Plex anmelden",

@@ -146,6 +146,38 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   await page.reload()
   await expect.poll(names).toEqual([middleState[1], middleState[2], middleState[0]])
 
+  // ⚠️ A button card, pressed on a board that is not being edited. Reported
+  // by hand as "nothing happens", and every jsdom test of it passed, so the
+  // thing to prove is the press itself in a real browser.
+  const pages = await page.request.get('/api/v1/boards/home')
+  const homePages = (await pages.json()) as { pages: { id: number; slug: string }[] }
+  const overview = homePages.pages[0]
+  const made = await page.request.post(`/api/v1/pages/${overview.id}/widgets`, {
+    data: { kind: 'core.button', title: 'To the second board', icon: 'lucide:network',
+            options: { kind: 'board', board: 'second-board', look: 'label' } },
+    headers: { 'X-Nexdeck-Request': '1' },
+  })
+  expect(made.ok(), await made.text()).toBeTruthy()
+
+  await page.goto('/b/home')
+  const jump = page.getByRole('link', { name: 'To the second board' })
+  await expect(jump).toBeVisible({ timeout: 15_000 })
+  await jump.click()
+  await expect(page).toHaveURL(/\/b\/second-board/)
+  await page.goto('/b/home')
+
+  // ⚠️ And in edit mode it deliberately leads nowhere: while the board is
+  // being arranged the whole card is the drag handle, so a press that
+  // navigated would fire on every attempt to move the card by its face. This
+  // is what "nothing happens" was: the card had just been configured, which
+  // happens in edit mode, and nothing on it said why it was quiet.
+  await page.getByRole('button', { name: 'Edit board' }).click()
+  await expect(page.getByRole('link', { name: 'To the second board' })).toHaveCount(0)
+  const quiet = page.locator('section[aria-label="To the second board"] span[title]').first()
+  await expect(quiet).toHaveAttribute('title', /while you are arranging/)
+  await page.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('link', { name: 'To the second board' })).toBeVisible()
+
   // A kiosk link opens the board in a browser without any session.
   const created = await page.request.post('/api/v1/boards/home/kiosk-tokens', { data: { name: 'e2e wall' }, headers: { 'X-Nexdeck-Request': '1' } })
   expect(created.ok()).toBeTruthy()

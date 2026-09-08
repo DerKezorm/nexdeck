@@ -73,12 +73,17 @@ export function ButtonCard({ widget, data, editing }: Props) {
     'transition-colors',
   ].join(' ')
 
+  // ⚠️ Inert while the board is being arranged, and it has to say so. In edit
+  // mode the whole card is the drag handle, so a live button would fire on
+  // every attempt to move the card by its face. Reported as "nothing happens":
+  // the card had just been configured, which happens in edit mode, and nothing
+  // on it explained the silence.
   if (editing || !target) {
     return (
       <span
         className={`${shape} opacity-90`}
         style={painted}
-        title={target ? name : t('card.buttonNowhere')}
+        title={target ? t('card.buttonWhileEditing') : t('card.buttonNowhere')}
         aria-label={look === 'icon' ? name : undefined}
       >
         {inside}
