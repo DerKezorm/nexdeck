@@ -132,7 +132,8 @@
       "search": "Suche",
       "appearance": "Aussehen",
       "journal": "Protokoll",
-      "backups": "Sicherungen"
+      "backups": "Sicherungen",
+      "media": "Medien"
     },
     "mail": {
       "title": "Mailserver",
@@ -360,6 +361,23 @@
       "help": "Regeln, die für jedes Konto dieser Installation gelten.",
       "requireTwoFactor": "Zweiten Faktor von allen verlangen",
       "requireTwoFactorHelp": "Konten ohne einen werden aufgefordert, einen einzurichten, und können ihn nicht wieder abschalten. Kiosk-Links und API-Marken bleiben unberührt: An einer Wandanzeige steht niemand, der einen Code eintippt."
+    },
+    "media": {
+      "title": "Medien",
+      "help": "Alle Bilder, Symbole und Hintergründe, die du hochgeladen hast, und was sie noch zeigt.",
+      "upload": "Datei hochladen",
+      "none": "Noch nichts hochgeladen.",
+      "unused": "Nicht verwendet",
+      "usedBy": "Verwendet von {{names}}",
+      "remove": "{{name}} löschen",
+      "removeHelp": "Diese Datei zeigt niemand. Löschen lässt sich nicht rückgängig machen.",
+      "stillUsed": "Diese Datei wird noch gezeigt von: {{names}}. Dort steht danach ein Platzhalter, und rückgängig geht das nicht.",
+      "total": "{{count}} Datei(en), zusammen {{size}}",
+      "kind": {
+        "picture": "Bild",
+        "icon": "Symbol",
+        "background": "Hintergrund"
+      }
     }
   },
   "menu": {
@@ -626,7 +644,9 @@
     "pictureCaptionOf": "Beschriftung von Bild {{at}}",
     "pictureRemove": "Bild {{at}} entfernen",
     "pictureMove": "Bild {{at}} verschieben",
-    "pictureBadAddress": "Aus dieser Adresse lässt sich kein Bild laden."
+    "pictureBadAddress": "Aus dieser Adresse lässt sich kein Bild laden.",
+    "pictureLibrary": "Aus den Medien",
+    "pictureLibraryEmpty": "Noch nichts hochgeladen. Lade zuerst eine Datei hoch."
   },
   "library": {
     "title": "Widget hinzufügen",

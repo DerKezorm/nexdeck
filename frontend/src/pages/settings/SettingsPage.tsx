@@ -1,10 +1,11 @@
-import { Bell, KeyRound, LayoutDashboard, User } from 'lucide-react'
+import { Bell, Images, KeyRound, LayoutDashboard, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AppShell } from '../../components/AppShell'
 import { useAuth } from '../../stores/auth'
 import { BoardsSettings } from './BoardsSettings'
+import { MediaSettings } from './MediaSettings'
 import { ChannelsSettings } from './ChannelsSettings'
 import { ProfileSettings } from './ProfileSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
@@ -35,6 +36,7 @@ export function SettingsPage() {
   const entries: NavEntry[] = [
     { to: '', icon: User, label: t('settings.nav.profile') },
     { to: 'boards', icon: LayoutDashboard, label: t('settings.nav.boards'), show: member },
+    { to: 'media', icon: Images, label: t('settings.nav.media'), show: member },
     { to: 'channels', icon: Bell, label: t('settings.nav.channels'), show: member },
     { to: 'tokens', icon: KeyRound, label: t('settings.nav.tokens'), show: member },
   ]
@@ -46,6 +48,7 @@ export function SettingsPage() {
           <Routes>
             <Route index element={<ProfileSettings />} />
             <Route path="boards" element={<BoardsSettings />} />
+            <Route path="media" element={<MediaSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
             <Route path="tokens" element={<TokensSettings />} />
             {/* The three that moved to /system; old links and bookmarks keep working. */}

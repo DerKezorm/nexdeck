@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 
@@ -12,6 +13,7 @@ from sqlalchemy import func, select
 from ..config import get_settings
 from ..deps import CurrentUser, DbSession, MemberUser, error
 from ..models import Asset, User
+from ..services import uploads_in_use
 from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/assets", tags=["assets"])
@@ -27,12 +29,17 @@ def _public(asset: Asset) -> dict:
             "url": f"/api/v1/assets/{asset.id}/{asset.filename}", "created_at": asset.created_at}
 
 
-@router.get("", summary="List uploaded files")
+@router.get("", summary="List uploaded files and where they are used")
 def list_assets(user: CurrentUser, db: DbSession, kind: str = "") -> list[dict]:
+    """⚠️ With the places that draw each file. Deleting one is only safe when
+    you can see what would go blank, and the media list is the one screen where
+    that question is actually asked. Worked out in one pass over the widgets
+    and one over the boards, not one query per file."""
     query = select(Asset).order_by(Asset.created_at.desc())
     if kind:
         query = query.where(Asset.kind == kind)
-    return [_public(a) for a in db.scalars(query)]
+    where = uploads_in_use.usage(db)
+    return [{**_public(one), "used_by": where.get(one.id, [])} for one in db.scalars(query)]
 
 
 #: What must not be in an SVG that nexdeck serves.
@@ -93,12 +100,20 @@ async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = 
     if content_type not in ALLOWED:
         raise error("bad_type", "Only PNG, JPEG, WebP, SVG, GIF and AVIF images are accepted.")
     data = await read_at_most(file, MAX_BYTES, "file")
+    # ⚠️ The same picture twice made two files, both counting against the
+    # quota, and nobody notices until the quota bites. The one that is already
+    # there is handed back instead.
+    digest = hashlib.sha256(data).hexdigest()
+    already = uploads_in_use.same_file(db, digest, user.id)
+    if already is not None and (get_settings().uploads_dir / f"{already.id}.{ALLOWED.get(already.content_type, 'bin')}").exists():
+        logger.info("Upload %r by %s is asset %d again, byte for byte.", file.filename, user.username, already.id)
+        return _public(already)
     _refuse_if_over_quota(db, user, len(data))
     if content_type == "image/svg+xml":
         refused = unsafe_svg(data)
         if refused:
             raise error("bad_svg", f"The SVG was refused: {refused}")
-    asset = Asset(kind=kind, filename="pending", content_type=content_type, size=len(data), uploaded_by=user.id)
+    asset = Asset(kind=kind, filename="pending", content_type=content_type, size=len(data), digest=digest, uploaded_by=user.id)
     db.add(asset)
     db.flush()
     safe = re.sub(r"[^a-zA-Z0-9._-]", "-", (file.filename or "upload").rsplit("/", 1)[-1])[:80]
@@ -140,12 +155,21 @@ def serve(asset_id: int, filename: str, db: DbSession) -> FileResponse:
 
 
 @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete an uploaded file")
-def delete_asset(asset_id: int, user: MemberUser, db: DbSession) -> None:
+def delete_asset(asset_id: int, user: MemberUser, db: DbSession, anyway: bool = False) -> None:
+    """⚠️ Refused while something still draws it, unless the caller says to do
+    it anyway. A file deleted out from under a wall display leaves a hole
+    nobody is standing next to, and the answer says exactly which cards and
+    boards would get it, so the confirmation is a decision rather than a
+    shrug."""
     asset = db.get(Asset, asset_id)
     if asset is None:
         raise error("not_found", "There is no such file.", status.HTTP_404_NOT_FOUND)
     if asset.uploaded_by != user.id and user.role != "admin":
         raise error("forbidden", "Only the uploader or an administrator may delete this file.", status.HTTP_403_FORBIDDEN)
+    drawn_by = uploads_in_use.used_by(db, asset_id)
+    if drawn_by and not anyway:
+        where = ", ".join(one["name"] for one in drawn_by)
+        raise error("still_in_use", f"This file is still shown on: {where}.", status.HTTP_409_CONFLICT)
     path = get_settings().uploads_dir / f"{asset.id}.{ALLOWED.get(asset.content_type, 'bin')}"
     if path.exists():
         path.unlink()

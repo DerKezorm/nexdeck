@@ -11,10 +11,12 @@ import { Menu, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, upload } from '../api/client'
+import { useQuery } from '@tanstack/react-query'
+
+import { ApiError, get, upload } from '../api/client'
 import { safeUrl } from '../lib/safeUrl'
 import { useHandleReorder } from '../lib/useHandleReorder'
-import { Field } from './ui'
+import { Dialog, Field } from './ui'
 
 export interface Picture {
   url: string
@@ -53,7 +55,16 @@ export function PicturePicker({ value, onChange, label, help }: {
   const [address, setAddress] = useState('')
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState('')
+  const [browsing, setBrowsing] = useState(false)
   const file = useRef<HTMLInputElement>(null)
+  //: What is already on this server. ⚠️ Only asked for once the library is
+  //: opened: on a board being edited it would otherwise be a request per
+  //: settings sheet for a list most people never look at.
+  const library = useQuery({
+    queryKey: ['uploads'],
+    queryFn: () => get<{ id: number; filename: string; url: string }[]>('/assets'),
+    enabled: browsing,
+  })
 
   const put = (next: Picture[]) => onChange(next)
   const order = useHandleReorder(pictures, (one) => one.url, put)
@@ -153,12 +164,46 @@ export function PicturePicker({ value, onChange, label, help }: {
         <button type="button" className="btn" disabled={!address.trim()} onClick={addAddress}>
           {t('widget.pictureAdd')}
         </button>
+        <button type="button" className="btn" onClick={() => setBrowsing(true)}>
+          {t('widget.pictureLibrary')}
+        </button>
       </div>
       {failed && (
         <p className="text-[12px] text-bad mt-1" role="alert">
           {failed}
         </p>
       )}
+
+      {/* ⚠️ Uploading is not the only way to get a picture onto a card. The
+          same file often belongs on two of them, and uploading it again made
+          a second copy that counted against the quota twice. */}
+      <Dialog open={browsing} onClose={() => setBrowsing(false)} title={t('widget.pictureLibrary')}>
+        {library.isPending && <p className="text-sm text-muted">{t('common.loading')}</p>}
+        {library.isSuccess && (library.data ?? []).length === 0 && (
+          <p className="text-sm text-muted">{t('widget.pictureLibraryEmpty')}</p>
+        )}
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {(library.data ?? []).map((one) => {
+            const already = pictures.some((other) => other.url === one.url)
+            return (
+              <button
+                key={one.id}
+                type="button"
+                className={`rounded-lg border p-1 text-left ${already ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-hover'}`}
+                aria-pressed={already}
+                title={one.filename}
+                onClick={() => {
+                  if (!already) put([...pictures, { url: one.url, caption: '' }])
+                  setBrowsing(false)
+                }}
+              >
+                <img src={one.url} alt="" className="h-16 w-full rounded object-cover bg-elev" />
+                <span className="block truncate text-[10px] text-muted mt-1">{one.filename}</span>
+              </button>
+            )
+          })}
+        </div>
+      </Dialog>
     </Field>
   )
 }

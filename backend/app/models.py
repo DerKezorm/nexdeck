@@ -517,6 +517,9 @@ class Asset(Base):
     filename: Mapped[str] = mapped_column(String(200))
     content_type: Mapped[str] = mapped_column(String(80))
     size: Mapped[int] = mapped_column(Integer)
+    #: The file's own fingerprint, so uploading the same picture twice does not
+    #: make two files that both count against the quota.
+    digest: Mapped[str] = mapped_column(String(64), default="", index=True)
     uploaded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
