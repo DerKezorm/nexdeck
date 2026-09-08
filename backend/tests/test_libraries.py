@@ -411,3 +411,136 @@ def test_the_word_for_all_libraries_is_translated() -> None:
     root = Path(__file__).resolve().parents[2]
     german = json.loads((root / "frontend" / "src" / "i18n" / "texts.de.json").read_text(encoding="utf-8"))
     assert "All libraries" in german["adapter"]
+
+
+# ---------------------------------------------------------------------------
+# Synology: one virtual machine
+# ---------------------------------------------------------------------------
+
+
+GUEST = {
+    "name": "Home Assistant", "guest_id": "g-1", "status": "running",
+    # Measured on a live DSM: ram_used is a share of the host's memory, and
+    # vram_size is what the guest was assigned. The first is the larger one.
+    "ram_used": 25658492, "host_ram_size": 67108864, "vram_size": 25165824,
+    "vcpu_usage": 138, "vcpu_num": 4, "host_name": "nas-1",
+}
+
+
+def _dsm_rows(data) -> dict[str, object]:
+    return {str(row.get("label")): row.get("value") for row in [data.primary, *data.secondary] if row}
+
+
+async def test_a_virtual_machine_is_measured_against_the_host_not_its_own_share(monkeypatch) -> None:
+    """⚠️ The card reported 102% full for a machine the DSM calls healthy.
+    ``ram_used`` is the share of the host's memory, not of the memory the guest
+    was assigned; dividing by the assignment gave more than the whole."""
+    adapter = get_adapter("synology")
+
+    async def answer(self, config, ctx, api, method, **kw):  # noqa: ANN001
+        return {"guests": [GUEST]} if api.endswith("Guest") and method == "list" else {}
+
+    monkeypatch.setattr(type(adapter), "_api", answer)
+    rows = _dsm_rows(await adapter.fetch("vm", {}, {"which_guest": "Home Assistant"}, None))
+    assert rows["Memory used"] == 38.2, "the manager shows 38.26 for exactly this guest"
+    # The assignment is worth knowing and is not the ceiling for that share.
+    assert rows["Assigned"] == "24.0 GB"
+
+
+async def test_a_virtual_machine_reports_its_processor_load(monkeypatch) -> None:
+    """``vcpu_usage`` is per mille. The card used to leave the row out, on a
+    docstring that said the list carries no load at all."""
+    adapter = get_adapter("synology")
+
+    async def answer(self, config, ctx, api, method, **kw):  # noqa: ANN001
+        return {"guests": [GUEST]} if api.endswith("Guest") and method == "list" else {}
+
+    monkeypatch.setattr(type(adapter), "_api", answer)
+    rows = _dsm_rows(await adapter.fetch("vm", {}, {"which_guest": "Home Assistant"}, None))
+    assert rows["CPU"] == 13.8
+
+
+async def test_the_machine_card_and_the_container_card_have_lists_of_their_own(monkeypatch) -> None:
+    """⚠️ Both asked a field called ``which`` and got one merged list, so the
+    machine card offered every Docker container and picking one answered
+    "there is no machine called immich_postgres"."""
+    adapter = get_adapter("synology")
+
+    async def answer(self, config, ctx, api, method, **kw):  # noqa: ANN001
+        if api.endswith("Docker.Container"):
+            return {"containers": [{"name": "immich_postgres"}, {"name": "jellyfin"}]}
+        return {"guests": [GUEST]}
+
+    monkeypatch.setattr(type(adapter), "_api", answer)
+    assert await adapter.choices("which", {}, None) == [("immich_postgres", "immich_postgres"), ("jellyfin", "jellyfin")]
+    assert await adapter.choices("which_guest", {}, None) == [("Home Assistant", "Home Assistant")]
+
+
+async def test_a_machine_card_saved_before_the_split_still_finds_its_guest(monkeypatch) -> None:
+    """The old cards stored the name under ``which``; renaming the field must
+    not empty a card that somebody had already set up."""
+    adapter = get_adapter("synology")
+
+    async def answer(self, config, ctx, api, method, **kw):  # noqa: ANN001
+        return {"guests": [GUEST]} if api.endswith("Guest") else {}
+
+    monkeypatch.setattr(type(adapter), "_api", answer)
+    rows = _dsm_rows(await adapter.fetch("vm", {}, {"which": "Home Assistant"}, None))
+    assert rows["State"] == "running"
+
+
+# ---------------------------------------------------------------------------
+# Two connection tests that used to blame the wrong thing
+# ---------------------------------------------------------------------------
+
+
+@respx.mock
+async def test_a_speedtest_tracker_without_a_measurement_still_tests_green(ctx: Context) -> None:
+    """⚠️ The test asked ``results/latest``, which a fresh installation does
+    not have: 404, and nexdeck said the address may point at the wrong
+    service. That is the state of every new install."""
+    tracker = "http://speedtest.example.com"
+    respx.get(f"{tracker}/api/v1/results").mock(return_value=httpx.Response(200, json={"data": []}))
+    said = await get_adapter("speedtest").test({"url": tracker, "api_key": "k"}, ctx)
+    assert "answers" in said.lower()
+
+
+@respx.mock
+async def test_a_speedtest_tracker_still_says_when_the_token_is_wrong(ctx: Context) -> None:
+    tracker = "http://speedtest.example.com"
+    respx.get(f"{tracker}/api/v1/results").mock(return_value=httpx.Response(401, json={}))
+    with pytest.raises(AdapterError):
+        await get_adapter("speedtest").test({"url": tracker, "api_key": "k"}, ctx)
+
+
+@respx.mock
+async def test_proxmox_says_when_it_answers_with_no_node_at_all(ctx: Context) -> None:
+    """⚠️ A token with Privilege Separation on and no rights of its own gets
+    HTTP 200 and an empty list. The summary card read "0 / 0 guests, 0 nodes"
+    and looked healthy."""
+    pve = "https://proxmox.example.com:8006"
+    respx.get(f"{pve}/api2/json/nodes").mock(return_value=httpx.Response(200, json={"data": []}))
+    respx.get(f"{pve}/api2/json/cluster/resources").mock(return_value=httpx.Response(200, json={"data": []}))
+    config = {"url": pve, "token_id": "n@pve!x", "token_secret": "s"}
+    with pytest.raises(AdapterError) as empty:
+        await get_adapter("proxmox").fetch("summary", config, {}, ctx)
+    assert empty.value.code == "no_nodes"
+    assert "Privilege Separation" in empty.value.hint
+
+
+async def test_the_machine_list_measures_the_same_way_as_the_single_card(monkeypatch) -> None:
+    """⚠️ The list card had the same wrong denominator and the raw per-mille
+    figure: it showed 162% CPU and capped memory at 100 with a comment that
+    explained the overshoot away instead of the division being wrong."""
+    adapter = get_adapter("synology")
+
+    async def answer(self, config, ctx, api, method, **kw):  # noqa: ANN001
+        return {"guests": [GUEST]} if method == "list" else dict(GUEST)
+
+    monkeypatch.setattr(type(adapter), "_api", answer)
+    data = await adapter.fetch("vms", {}, {}, None)
+    row = data.items[0]
+    assert row["cpu"] == 13.8
+    assert row["memory_percent"] == 38.2
+    # The assigned size still stands in the line under the name.
+    assert "24.0 GB RAM" in row["subtitle"]

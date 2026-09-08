@@ -50,8 +50,20 @@ export function ButtonCard({ widget, data, editing, canAct, onAction }: Props) {
   // including every other card's refresh.
   const [asking, setAsking] = useState(false)
   const kind = String(data?.meta?.kind ?? 'board')
-  const look = String(data?.meta?.look ?? 'label')
-  const colour = typeof data?.meta?.colour === 'string' && data.meta.colour ? data.meta.colour : undefined
+  // ⚠️ Straight from the card's own options, not from the server's answer.
+  // How a button looks is nothing the service knows, and routing it through a
+  // fetch meant the change waited for a preview to come back: pick "symbol
+  // only" and the card kept its name until the page was reloaded. The draft
+  // options reach the card while the sheet is open, so this is also what makes
+  // the choice visible as it is made.
+  const option = (name: string, fallback: string) => {
+    const own = widget.options?.[name]
+    if (typeof own === 'string' && own) return own
+    const said = data?.meta?.[name]
+    return typeof said === 'string' && said ? said : fallback
+  }
+  const look = option('look', 'label')
+  const colour = option('colour', '') || undefined
   const newTab = data?.meta?.new_tab !== false
   const target = targetOf(kind, String(data?.meta?.where ?? ''))
   const name = widget.title || ''

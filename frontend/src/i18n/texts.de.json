@@ -790,7 +790,8 @@
     "All libraries": "Alle Bibliotheken",
     "Plex": "Plex",
     "Jellyfin": "Jellyfin",
-    "Emby": "Emby"
+    "Emby": "Emby",
+    "Datacenter > Permissions > API Tokens. PVEAuditor is enough for the cards; the start and shutdown buttons also need VM.PowerMgmt. With Privilege Separation on, a token inherits nothing from its user and needs those rights of its own.": "Rechenzentrum > Berechtigungen > API-Token. PVEAuditor reicht für die Karten; die Knöpfe zum Starten und Herunterfahren brauchen zusätzlich VM.PowerMgmt. Mit eingeschalteter Privilegientrennung erbt ein Token nichts von seinem Benutzer und braucht diese Rechte selbst."
   },
   "labels": {
     "A download failed": "Ein Download ist fehlgeschlagen",
@@ -1134,6 +1135,7 @@
     "Scan all": "Alle einlesen",
     "No libraries": "Keine Bibliotheken",
     "Ports": "Anschlüsse",
-    "PoE": "PoE"
+    "PoE": "PoE",
+    "Assigned": "Zugeteilt"
   }
 }

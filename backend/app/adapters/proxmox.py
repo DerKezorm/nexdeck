@@ -34,7 +34,7 @@ class ProxmoxAdapter(Adapter):
     docs_url = "https://pve.proxmox.com/wiki/Proxmox_VE_API"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://pve.example.com:8006"),
-        Field("token_id", "API token ID", required=True, placeholder="nexdeck@pve!dashboard", help="Datacenter > Permissions > API Tokens. PVEAuditor is enough for reading."),
+        Field("token_id", "API token ID", required=True, placeholder="nexdeck@pve!dashboard", help="Datacenter > Permissions > API Tokens. PVEAuditor is enough for the cards; the start and shutdown buttons also need VM.PowerMgmt. With Privilege Separation on, a token inherits nothing from its user and needs those rights of its own."),
         Field("token_secret", "API token secret", type="password", secret=True, required=True),
         Field("insecure", "Ignore TLS errors", type="bool", default=True, help="Most installations use a self-signed certificate."),
     )
@@ -137,7 +137,24 @@ class ProxmoxAdapter(Adapter):
         )
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        # ⚠️ Before the node list. One guest is looked up in the cluster
+        # resources and needs no node at all, so asking for one would be a
+        # request thrown away and, on a token that sees no node, a refusal
+        # about something this card does not use.
+        if widget_kind == "guest":
+            return self._one_guest(options, await self._get(config, ctx, "/cluster/resources?type=vm") or [])
         nodes = await self._get(config, ctx, "/nodes") or []
+        # ⚠️ Answered, and empty. A Proxmox token with Privilege Separation on
+        # inherits nothing from its user, so without ACL entries of its own
+        # /nodes is HTTP 200 with nothing in it. The summary card then read
+        # "0 / 0 guests, 0 nodes" and looked perfectly healthy, which is the
+        # same mistake as drawing an unknown value as nought.
+        if not nodes:
+            raise AdapterError(
+                "Proxmox answers, but this token sees no node.", code="no_nodes",
+                hint="With Privilege Separation on, the token needs its own permission: "
+                     "Sys.Audit on /nodes, and VM.Audit on /vms for the guests.",
+            )
         if widget_kind == "node":
             wanted = str(options.get("node") or "").strip()
             node = next((n for n in nodes if not wanted or n.get("node") == wanted), None)
@@ -158,8 +175,6 @@ class ProxmoxAdapter(Adapter):
                 meta={"node": node.get("node")},
             )
         guests = await self._get(config, ctx, "/cluster/resources?type=vm") or []
-        if widget_kind == "guest":
-            return self._one_guest(options, guests)
         running = [g for g in guests if g.get("status") == "running"]
         if widget_kind == "summary":
             return WidgetData(

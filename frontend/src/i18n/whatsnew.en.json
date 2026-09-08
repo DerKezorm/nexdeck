@@ -94,6 +94,50 @@
         "Looking for an update no longer needs the daily check to be switched on.",
         "The Synology password stopped travelling in the address."
       ]
+    },
+    "0.4.0": {
+      "lead": "Cards can be drawn as bars, a ring or a chart, media libraries can be told to look for new files, and a button can trigger it.",
+      "sections": [
+        {
+          "title": "A card can be drawn differently",
+          "body": "Bars for a list, a ring for parts of a whole, a chart for a card that measures two things. The choice sits under View in the card's settings, next to the dial. 91 list cards and 63 cards with two numbers have it.",
+          "path": "Edit mode > gear > View"
+        },
+        {
+          "title": "Charts draw every line",
+          "body": "A card that records WAN in and WAN out drew one of them and threw the other away. Both are drawn now, on one scale, with a legend.",
+          "path": "Edit mode > gear > View > A chart"
+        },
+        {
+          "title": "Look for new files",
+          "body": "Plex, Jellyfin and Emby have a Libraries card with a button that asks the server to scan. Per library on Plex; on Jellyfin and Emby only all of them, because that is the only thing that works there.",
+          "path": "Edit mode > Add widget > Plex, Jellyfin or Emby > Libraries"
+        },
+        {
+          "title": "A button that does something",
+          "body": "The button card has a third kind: trigger an action. Pick the connection, what it offers and what it acts on, all three from lists. Nothing is typed.",
+          "path": "Edit mode > Add widget > Basics > Button card"
+        },
+        {
+          "title": "Plex server load as a dial",
+          "body": "Four percentages, and a dial shows one, so the settings ask which: Plex's processor or memory, or the host's.",
+          "path": "Edit mode > gear > View > A dial"
+        },
+        {
+          "title": "Synology virtual machines, measured right",
+          "body": "The memory of a guest was divided by what it was assigned instead of by the host's, so a healthy machine reported 102% full, and the processor load was shown ten times too high. Both now match what the Virtual Machine Manager says.",
+          "path": "Edit mode > Add widget > Synology DSM"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A card that is drawn as a ring keeps its own headline in the middle, and every slice is named: a colour is not a label.",
+        "The Synology machine picker offered Docker containers, and picking one answered that there was no such machine. Two cards, two lists.",
+        "Proxmox with a token that sees no node said so instead of reporting nought guests on nought nodes.",
+        "A Speedtest Tracker that has not measured yet tests green: the old test asked for a result that a fresh install does not have and blamed the address.",
+        "UniFi's switch card had no demo data of its own and quietly showed the console summary instead.",
+        "A change saved in a card's settings stopped jumping back to the old one until the page was reloaded."
+      ]
     }
   }
 }

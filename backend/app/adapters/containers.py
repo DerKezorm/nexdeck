@@ -19,8 +19,8 @@ from .base import Field, WidgetData, WidgetType, human_bytes, percent, status_fr
 
 
 #: The field that picks which one. Its answers come from the service.
-def which_field(label: str, help_text: str) -> Field:
-    return Field("which", label, type="choices", required=True, help=help_text)
+def which_field(label: str, help_text: str, name: str = "which") -> Field:
+    return Field(name, label, type="choices", required=True, help=help_text)
 
 
 def size_field() -> Field:
@@ -28,8 +28,16 @@ def size_field() -> Field:
                  help="Draws the last day under CPU and memory. Off saves a little room in the database.")
 
 
-def one_of(kind: str, label: str, description: str, refresh: int = 20) -> WidgetType:
-    """The widget declaration, identical for every service that offers it."""
+def one_of(kind: str, label: str, description: str, refresh: int = 20, *, field: str = "which") -> WidgetType:
+    """The widget declaration, identical for every service that offers it.
+
+    ⚠️ ``field`` exists because one service offers this card twice. Synology
+    has containers and virtual machines, both cards asked a field called
+    ``which``, and the list behind that name held both: the machine card
+    offered every container, and picking one answered "there is no machine
+    called immich_postgres". A list is answered by field name, so two lists
+    need two names.
+    """
     return WidgetType(
         kind=kind,
         label=label,
@@ -39,7 +47,7 @@ def one_of(kind: str, label: str, description: str, refresh: int = 20) -> Widget
         min_size=(2, 2),
         refresh_seconds=refresh,
         metrics=("cpu", "memory"),
-        options=(which_field("Which one", "The list comes from the service."), size_field()),
+        options=(which_field("Which one", "The list comes from the service.", field), size_field()),
     )
 
 
