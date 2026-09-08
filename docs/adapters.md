@@ -8,7 +8,7 @@ and caches identical requests for a few seconds.
 Every adapter lives in one file under `backend/app/adapters/`. It declares
 its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
-that one of twenty renderers draws.
+that one of twenty-one renderers draws.
 
 ## Adapters in 0.4.0
 
@@ -27,7 +27,7 @@ that one of twenty renderers draws.
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
-| Speedtest Tracker | latest | | API token |
+| Speedtest Tracker | latest, history | | API token |
 | Traefik | overview, routers | | none, or basic authentication |
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
 | OPNsense | system, gateways | | API key and secret |
@@ -118,7 +118,7 @@ a tight spot.
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
-`counters`, `camera`, `bars`, `ring`. A fetch may pick another renderer for its data through
+`counters`, `camera`, `bars`, `ring`, `timeline`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
 
 Images such as posters are never linked with a token in the browser: an adapter

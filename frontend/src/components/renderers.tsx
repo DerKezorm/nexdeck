@@ -67,6 +67,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   log: LogCard,
   chart: ChartCard,
   bars: BarsCard,
+  timeline: TimelineCard,
   ring: RingCard,
   app: AppTile,
   button: ButtonCard,
@@ -928,6 +929,116 @@ export function ChartCard({ data, series }: RenderProps) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Timeline: a history the card brought with it
+// ---------------------------------------------------------------------------
+
+interface Line {
+  key: string
+  label: string
+  /** [seconds since the epoch, value]; a null value is a gap. */
+  points: [number, number | null][]
+}
+
+/**
+ * A history over real time, drawn as a line or as bars.
+ *
+ * ⚠️ Not the same thing as ChartCard. That one draws what nexdeck collected,
+ * which stops after 24 hours because that is how long the minute rows are
+ * kept. This draws what the service handed over, which can be months, and the
+ * points carry their own timestamps rather than being evenly spaced.
+ */
+export function TimelineCard({ data }: RenderProps) {
+  const { t, i18n } = useTranslation()
+  const meta = (data?.meta ?? {}) as { shape?: string; unit?: string; lines?: Line[] }
+  const lines = (meta.lines ?? []).filter((line) => line.points?.length)
+  const values = lines.flatMap((line) => line.points.map(([, v]) => v)).filter((v): v is number => v !== null)
+  if (!lines.length || !values.length) {
+    return <Empty>{tLabel(String(data?.meta?.empty ?? '')) || t('card.nothing')}</Empty>
+  }
+  const times = lines.flatMap((line) => line.points.map(([at]) => at))
+  const first = Math.min(...times)
+  const last = Math.max(...times)
+  const span = last - first || 1
+  // ⚠️ From nought, not from the lowest reading. A line that starts at its own
+  // minimum turns a 5% dip into a cliff, and this card exists to answer "is my
+  // connection holding up", which is a question about the distance to zero.
+  const top = Math.max(...values) * 1.08 || 1
+  const W = 100
+  const H = 46
+  const at = (time: number) => ((time - first) / span) * W
+  const up = (value: number) => H - (value / top) * H
+  const bars = meta.shape === 'bars'
+  const width = bars ? Math.max(0.6, (W / Math.max(1, lines[0].points.length)) * (lines.length > 1 ? 0.38 : 0.8)) : 0
+  const when = (seconds: number) =>
+    new Date(seconds * 1000).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 px-3 pb-2.5">
+      <div className="flex items-baseline gap-2">
+        <span className="num text-2xl font-semibold">{formatValue(data?.primary?.value, data?.primary?.unit ?? '')}</span>
+        {/* Named once. With several lines the legend below carries the names,
+            and repeating the first one up here made the card say "Download"
+            twice with nothing to tell the two apart. */}
+        {lines.length === 1 && <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>}
+        <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
+          {t('card.min')} {formatValue(Math.min(...values))} · {t('card.max')} {formatValue(Math.max(...values))}
+        </span>
+      </div>
+      <div className="flex-1 min-h-[40px] mt-1">
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full" role="img"
+             aria-label={lines.map((line) => tLabel(line.label)).join(', ')}>
+          {lines.map((line, index) => {
+            const colour = SLICE_COLOURS[index % SLICE_COLOURS.length]
+            if (bars) {
+              return line.points.map(([time, value], point) =>
+                value === null ? null : (
+                  <rect
+                    key={`${line.key}-${point}`}
+                    x={Math.max(0, at(time) - width / 2 + (lines.length > 1 ? (index - 0.5) * width : 0))}
+                    y={up(value)}
+                    width={width}
+                    height={Math.max(0.5, H - up(value))}
+                    fill={colour}
+                    opacity={0.85}
+                  />
+                ),
+              )
+            }
+            // ⚠️ Broken into runs at every gap. One polyline through a missing
+            // point would draw a straight line across the outage, which is the
+            // one thing the reader must not be told.
+            const runs: string[] = []
+            let run: string[] = []
+            for (const [time, value] of line.points) {
+              if (value === null) {
+                if (run.length > 1) runs.push(run.join(' '))
+                run = []
+                continue
+              }
+              run.push(`${at(time).toFixed(2)},${up(value).toFixed(2)}`)
+            }
+            if (run.length > 1) runs.push(run.join(' '))
+            return runs.map((points, piece) => (
+              <polyline key={`${line.key}-${piece}`} points={points} fill="none" stroke={colour}
+                        strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+            ))
+          })}
+        </svg>
+      </div>
+      <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap mt-0.5">
+        {lines.map((line, index) => (
+          <span key={line.key} className="flex items-center gap-1.5 text-[10px] text-muted">
+            <span className="rounded-full" style={{ width: 7, height: 7, background: SLICE_COLOURS[index % SLICE_COLOURS.length] }} />
+            {tLabel(line.label)}
+          </span>
+        ))}
+        <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">{when(first)} – {when(last)}</span>
+      </div>
     </div>
   )
 }

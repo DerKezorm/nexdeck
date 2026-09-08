@@ -116,6 +116,7 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "posters": (3, 2),
     "chart": (3, 2),
     "log": (3, 2),
+    "timeline": (3, 2),
     "bars": (3, 2),
 }
 #: For a renderer nobody listed. Two by two is the smallest that holds a title
@@ -538,6 +539,35 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
         dial["max"] = ceiling
     data.meta = {**(data.meta or {}), "renderer": "gauge", "gauge": dial}
     return data
+
+
+def timeline(
+    *lines: tuple[str, str, list[tuple[float, float | None]]],
+    unit: str = "",
+    shape: str = "line",
+) -> dict[str, Any]:
+    """A history the card brings with it, rather than one nexdeck collected.
+
+    ⚠️ The renderer's own series stop after 24 hours, because that is how long
+    ``history.py`` keeps minute rows. A service that has kept months of its own
+    can hand them over instead, and this is the shape it hands them in: one
+    entry per line, each a list of ``(seconds since the epoch, value)``.
+
+    A point whose value is ``None`` is a gap and is drawn as one. That is the
+    same rule as everywhere else: a measurement that did not happen is not a
+    zero, and a line that dips to the floor over a failed run would be a
+    picture of an outage that never was.
+    """
+    return {
+        "shape": shape if shape in ("line", "bars") else "line",
+        "unit": unit,
+        "lines": [
+            {"key": key, "label": label,
+             "points": [[float(at), None if value is None else float(value)] for at, value in points]}
+            for key, label, points in lines
+            if points
+        ],
+    }
 
 
 def ring_of(*slices: tuple[str, Any]) -> list[dict[str, Any]]:

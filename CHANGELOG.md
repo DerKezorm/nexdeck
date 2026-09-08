@@ -3,6 +3,19 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **A card can bring its own history.** Every chart so far drew what nexdeck collected, which stops after 24 hours because that is how long the minute rows are kept. A card can now hand over a history of its own, with real timestamps, and have it drawn as a line or as bars. Speedtest Tracker is the first: **History**, over 24 hours, 7, 30 or 90 days, download, upload or both. The door this opens is the point: Prometheus, Proxmox's own statistics and Tautulli all keep more than a day.
+- **A failed measurement is a gap.** The line breaks where a run failed instead of dipping to the floor, which would draw an outage that never happened. The scale starts at nought for the same reason: from the lowest reading, a three percent wobble looks like a cliff.
+- **Proxmox VE and Speedtest Tracker leave beta**, both confirmed against live instances.
+
+### Fixed
+
+- **The history card pages, because the tracker ignores `per_page`.** Measured: 5 and 500 both answer with 25. Asking once would have shown the last 25 measurements and labelled them 90 days.
+- **Which end of the list is the newest is asked, not assumed.** It is undocumented, and the tracker this was written against holds two results on one page, so it could not be measured. The card reads the first and the last page and compares the timestamps; walking the wrong way would draw the oldest measurements under the words "the last 7 days".
+
 ## 0.4.0 (2026-09-08)
 
 ### New

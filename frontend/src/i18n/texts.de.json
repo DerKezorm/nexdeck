@@ -791,7 +791,16 @@
     "Plex": "Plex",
     "Jellyfin": "Jellyfin",
     "Emby": "Emby",
-    "Datacenter > Permissions > API Tokens. PVEAuditor is enough for the cards; the start and shutdown buttons also need VM.PowerMgmt. With Privilege Separation on, a token inherits nothing from its user and needs those rights of its own.": "Rechenzentrum > Berechtigungen > API-Token. PVEAuditor reicht für die Karten; die Knöpfe zum Starten und Herunterfahren brauchen zusätzlich VM.PowerMgmt. Mit eingeschalteter Privilegientrennung erbt ein Token nichts von seinem Benutzer und braucht diese Rechte selbst."
+    "Datacenter > Permissions > API Tokens. PVEAuditor is enough for the cards; the start and shutdown buttons also need VM.PowerMgmt. With Privilege Separation on, a token inherits nothing from its user and needs those rights of its own.": "Rechenzentrum > Berechtigungen > API-Token. PVEAuditor reicht für die Karten; die Knöpfe zum Starten und Herunterfahren brauchen zusätzlich VM.PowerMgmt. Mit eingeschalteter Privilegientrennung erbt ein Token nichts von seinem Benutzer und braucht diese Rechte selbst.",
+    "History": "Verlauf",
+    "Download and upload over a period, as a line or as bars.": "Download und Upload über einen Zeitraum, als Linie oder als Balken.",
+    "24 hours": "24 Stunden",
+    "90 days": "90 Tage",
+    "Shape": "Form",
+    "A line": "Eine Linie",
+    "Download and upload": "Download und Upload",
+    "Download only": "Nur Download",
+    "Upload only": "Nur Upload"
   },
   "labels": {
     "A download failed": "Ein Download ist fehlgeschlagen",
@@ -1136,6 +1145,8 @@
     "No libraries": "Keine Bibliotheken",
     "Ports": "Anschlüsse",
     "PoE": "PoE",
-    "Assigned": "Zugeteilt"
+    "Assigned": "Zugeteilt",
+    "Measurements": "Messungen",
+    "No measurement in this period": "In diesem Zeitraum wurde nichts gemessen"
   }
 }

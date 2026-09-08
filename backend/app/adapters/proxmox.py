@@ -27,6 +27,10 @@ from .base import (
 
 class ProxmoxAdapter(Adapter):
     kind = "proxmox"
+    #: Confirmed against a live Proxmox VE on 2026-09-08: the node, guest
+    #: and summary cards, and one guest on its own. The token was made with
+    #: Privilege Separation on, which is what turned up the empty node list.
+    beta = False
     label = "Proxmox VE"
     category = "hosts"
     description = "Node load, VMs and containers, start and stop."
