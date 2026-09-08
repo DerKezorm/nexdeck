@@ -237,7 +237,14 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
             value={options[option.name]}
             items={preview?.items as Record<string, unknown>[] | undefined}
             allTitles={preview?.meta?.all_items as string[] | undefined}
-            integrationId={integrationId ? Number(integrationId) : undefined}
+            /* ⚠️ A choices field usually asks the card's own connection. The
+               button card asks a connection named in a sibling option, so the
+               sheet hands both down and the field picks. */
+            integrationId={
+              option.from_field
+                ? Number(options[option.from_field] ?? 0) || undefined
+                : integrationId ? Number(integrationId) : undefined
+            }
             onChange={(value) => setOptions((o) => ({ ...o, [option.name]: value }))}
           />
         ))}

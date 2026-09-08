@@ -16,7 +16,7 @@ import json
 import logging
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
@@ -54,6 +54,10 @@ class Field:
     options: tuple[tuple[str, str], ...] = ()
     #: A frontend helper drawn under the field, such as ``plex-signin``.
     helper: str = ""
+    #: For a ``choices`` field: which other option names the integration whose
+    #: list this is. Empty means the widget's own integration, which is what
+    #: every such field meant until a card could point at somebody else's.
+    from_field: str = ""
     #: Show this field only while another option has a given value, as
     #: ``(name, value)``.
     #:
@@ -75,6 +79,7 @@ class Field:
             "placeholder": self.placeholder,
             "options": [{"value": v, "label": lab} for v, lab in self.options],
             "helper": self.helper,
+            "from_field": self.from_field,
             "only_when": list(self.only_when) if self.only_when else None,
         }
 
@@ -102,6 +107,7 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "camera": (2, 2),
     "iframe": (2, 2),
     "counters": (2, 2),
+    "ring": (2, 2),
     "stats": (3, 2),
     "feed": (3, 2),
     "calendar": (3, 2),
@@ -110,6 +116,7 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "posters": (3, 2),
     "chart": (3, 2),
     "log": (3, 2),
+    "bars": (3, 2),
 }
 #: For a renderer nobody listed. Two by two is the smallest that holds a title
 #: and a line under it without one sitting on the other.
@@ -148,6 +155,15 @@ class WidgetType:
     parts: tuple[tuple[str, str], ...] = ()
     #: When the tick boxes made from ``parts`` are worth showing at all.
     parts_only_when: tuple[str, str] | None = None
+    #: True when this card's fetch can hand out slices that form a whole.
+    #:
+    #: ⚠️ Declared, never guessed. A ring says "these are the parts of one
+    #: thing", and most cards carry numbers that are not that: Pi-hole's card
+    #: shows queries, blocked and clients, and a ring of those three draws a
+    #: whole nobody has. So the arithmetic stays in the fetch, which is the
+    #: only place that knows what the whole is, and this flag only decides
+    #: whether the choice appears at all.
+    ring: bool = False
 
     def __post_init__(self) -> None:
         """Never smaller than the drawing can bear.
@@ -172,6 +188,24 @@ class WidgetType:
         # of which would word it differently.
         if self.renderer == "list" and not any(field.name == ITEM_PICKER for field in self.options):
             object.__setattr__(self, "options", (*self.options, item_picker_field()))
+        # The same argument as the tick boxes above, for the drawing itself:
+        # a list can be drawn as bars, and a card that says what its slices
+        # are can be drawn as a ring. Written here once rather than into the
+        # eighty list cards, which is eighty chances to word it differently.
+        extra: tuple[tuple[str, str], ...] = ()
+        if self.renderer == "list":
+            extra += (("bars", "Bars"),)
+        if self.ring:
+            extra += (("ring", "A ring"),)
+        # ⚠️ Two metrics or more, because that is the whole argument for the
+        # drawing: a card that records `wan_down` and `wan_up` stores both and
+        # could only ever show one of them, and the two put side by side on
+        # separate cards had separate scales. One metric already has its
+        # sparkline inside the card it belongs to.
+        if len(self.metrics) >= 2 and self.renderer != "chart" and not self.client_only:
+            extra += (("chart", "A chart"),)
+        if extra:
+            object.__setattr__(self, "options", offer_views(self.options, self.renderer, extra))
         if self.parts:
             existing = {field.name for field in self.options}
             made = tuple(
@@ -203,6 +237,29 @@ class Action(BaseModel):
     confirm: bool = False
     danger: bool = False
     params: dict[str, Any] = PydanticField(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class Deed:
+    """One action a card of its own may be pointed at.
+
+    ⚠️ An allowlist, and deliberately short. Every other action in nexdeck is
+    reachable only because the card that offers it put it in its last answer,
+    which is the guard from 0.2.0; a button carries no such answer, so what a
+    button may reach is written down here instead. An adapter that declares
+    nothing can be looked at from a button and not touched.
+    """
+
+    #: The widget kind whose ``action`` handles it.
+    widget_kind: str
+    id: str
+    label: str
+    #: The field whose ``choices`` name what it acts on, and the parameter it
+    #: is passed as. Empty when the action needs no target.
+    target_field: str = ""
+    #: What to call that target on screen, in the adapter's own word.
+    target_label: str = "Target"
+    icon: str = "zap"
 
 
 class WidgetData(BaseModel):
@@ -386,6 +443,31 @@ def gauge_view_field() -> Field:
                  options=(("value", "The number"), ("gauge", "A dial")))
 
 
+def offer_views(options: tuple[Field, ...], renderer: str,
+                extra: tuple[tuple[str, str], ...]) -> tuple[Field, ...]:
+    """Add drawings to a card's View field, making the field if it has none.
+
+    ⚠️ One option name for every drawing, because ``as_gauge`` has read
+    ``view`` since the dial existed. A second name would mean two cards on the
+    same board answering the same question differently, and the settings sheet
+    showing both.
+    """
+    # What the card already is, named as the operator sees it. "The number"
+    # under a card that draws a dial would be a third thing on a list of two.
+    own = ("value", {"list": "Rows", "gauge": "A dial", "stats": "The rows"}.get(renderer, "The number"))
+    for index, one in enumerate(options):
+        if one.name != "view":
+            continue
+        known = {value for value, _ in one.options}
+        added = tuple(pair for pair in extra if pair[0] not in known)
+        if not added:
+            return options
+        grown = replace(one, options=(*one.options, *added))
+        return (*options[:index], grown, *options[index + 1:])
+    return (*options, Field("view", "View", type="select", default="value",
+                            options=(own, *extra)))
+
+
 def gauge_pick_field(parts: tuple[tuple[str, str], ...]) -> Field:
     """Which of several rows the needle follows.
 
@@ -458,6 +540,84 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
     return data
 
 
+def ring_of(*slices: tuple[str, Any]) -> list[dict[str, Any]]:
+    """The pieces of one whole, in the order they should be drawn.
+
+    ⚠️ A piece whose number is unknown is left out, not counted as nought.
+    ``percent`` and ``measured`` were taught that in 0.2.0 and a ring is the
+    same argument twice over: a missing slice makes every other slice bigger,
+    so the drawing would be wrong rather than incomplete.
+    """
+    return [
+        {"label": label, "value": float(value)}
+        for label, value in slices
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and float(value) >= 0
+    ]
+
+
+def as_bars(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw a list's rows as bars, when the rows carry numbers to compare.
+
+    ⚠️ Refuses rather than draws nothing. Half the list cards carry a text
+    where the number would be ("2.5 s", "3 days ago"), and a bar chart of
+    those is a column of empty tracks that looks like the service stopped
+    answering. Such a card stays a list, and the operator sees why: the rows
+    are still there.
+    """
+    if str(options.get("view") or "value") != "bars":
+        return data
+    numbers = [
+        float(row["value"]) for row in data.items
+        if isinstance(row.get("value"), (int, float)) and not isinstance(row.get("value"), bool)
+    ]
+    # Two, because one bar is always full and says nothing about anything.
+    if len(numbers) < 2 or max(numbers) <= 0:
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "bars"}
+    return data
+
+
+def as_chart(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw the card's own history instead of its number, when asked.
+
+    ⚠️ Refuses while the card is measuring fewer than two things right now.
+    The choice is offered because the widget *declares* two metrics, but an
+    adapter reports what it found: a Docker host with nothing running reports
+    one, and a chart of one line is the sparkline the card already had, minus
+    the number it sat under.
+    """
+    if str(options.get("view") or "value") != "chart":
+        return data
+    if len(data.metrics) < 2:
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "chart"}
+    return data
+
+
+def as_ring(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw the slices the fetch worked out, when the card is asked to be one.
+
+    ⚠️ The slices are never taken from ``secondary``. Those rows are whatever
+    the card had room for, and adding them up gives a whole that does not
+    exist: Pi-hole's are queries, blocked and clients, and blocked is already
+    inside queries. Only the fetch knows the arithmetic, so only the fetch
+    writes ``meta["ring"]``; a card that has not written one stays what it is.
+    """
+    if str(options.get("view") or "value") != "ring":
+        return data
+    slices = [
+        piece for piece in ((data.meta or {}).get("ring") or [])
+        if isinstance(piece, dict)
+        and isinstance(piece.get("value"), (int, float))
+        and not isinstance(piece.get("value"), bool)
+        and float(piece["value"]) >= 0
+    ]
+    if len(slices) < 2 or sum(float(piece["value"]) for piece in slices) <= 0:
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "ring", "ring": slices}
+    return data
+
+
 def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, options: dict[str, Any],
                       *, for_settings: bool = False) -> WidgetData:
     """Everything that happens to a card between the service and the screen.
@@ -475,6 +635,9 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
     data = keep_parts(data, widget.parts, options)
     data = keep_items(data, options, remember_all=for_settings)
     data = pick_gauge_row(data, options)
+    data = as_bars(data, options)
+    data = as_ring(data, options)
+    data = as_chart(data, options)
     return as_gauge(data, options)
 
 
@@ -905,6 +1068,10 @@ class Adapter:
     ) -> str:
         raise AdapterError("This widget has no actions.", code="no_such_action")
 
+    #: What a button card may ask this adapter to do. Empty for almost every
+    #: adapter, and that is the point: see :class:`Deed`.
+    deeds: tuple[Deed, ...] = ()
+
     async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
         """What to offer in a field whose answers come from the service.
 
@@ -914,8 +1081,44 @@ class Adapter:
 
         Returns ``(value, label)`` pairs. An adapter that has no such field
         says so by returning nothing.
+
+        ``deed`` is answered here for every adapter: it is the allowlist of
+        actions a button may be pointed at, and it comes from the class rather
+        than from the service.
+        """
+        if field == "deed":
+            return [(one.id, one.label) for one in self.deeds]
+        if field == "target":
+            # What the one declared action acts on. ⚠️ Refuses rather than
+            # guesses when there is more than one: the caller asked for "the
+            # target" and two deeds have two different ones, so the day a
+            # second deed appears this has to be told which, not left to pick.
+            with_target = [one for one in self.deeds if one.target_field]
+            if len(with_target) != 1:
+                return []
+            return await self.choices(with_target[0].target_field, config, ctx)
+        return []
+
+    def demo_choices(self, field: str) -> list[tuple[str, str]]:
+        """The same list, for a connection that points nowhere.
+
+        ⚠️ A demo connection has an address like ``demo.invalid``, so asking
+        the service is asking nothing: the dropdown came back empty and said
+        "this connection offers nothing", which is exactly what a demo Plex
+        looks like from the outside and exactly not what it is. The demo data
+        already contains the answer; this hands it over.
         """
         return []
+
+    def deed(self, deed_id: str) -> Deed | None:
+        """The declared action with this id, or nothing.
+
+        ⚠️ The only way a button reaches an action. An id that is not in
+        ``deeds`` is refused, whatever a card's saved options say, because the
+        options are written by whoever may edit the board and the declaration
+        is written here.
+        """
+        return next((one for one in self.deeds if one.id == deed_id), None)
 
     def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData,
                options: dict[str, Any]) -> list[Detected]:

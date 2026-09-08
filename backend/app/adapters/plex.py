@@ -6,11 +6,32 @@ import time
 from collections import Counter, defaultdict
 from typing import Any
 
-from .base import Context, Field, WidgetData, WidgetType, base_url, status_from_percent
-from .media_base import MediaAdapter, Stream
+from .base import (
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    base_url,
+    gauge_pick_field,
+    gauge_view_field,
+    path_segment,
+    status_from_percent,
+)
+from .media_base import EVERYTHING, Library, MediaAdapter, Stream
 
 #: Which Plex library types a "recently added" widget draws from.
 KINDS = {"all": ("movie", "show", "artist"), "movies": ("movie",), "series": ("show",), "music": ("artist",)}
+#: The four values of the load card. Written once, because the metrics, the
+#: tick boxes and the dial's list have to be the same four: three hand-written
+#: lists would be three chances to let them drift, and it would show first as
+#: a dial pointing at the wrong row.
+LOAD_PARTS = (
+    ("plex_cpu", "Plex CPU"),
+    ("plex_memory", "Plex RAM"),
+    ("host_cpu", "Host CPU"),
+    ("host_memory", "Host RAM"),
+)
+
 HISTORY_PAGE = 500
 #: The window the history question is rounded to, so the cache can hit.
 HISTORY_BUCKET = 300
@@ -69,7 +90,10 @@ class PlexAdapter(MediaAdapter):
             renderer="stats",
             default_size=(3, 2),
             refresh_seconds=15,
-            metrics=("plex_cpu", "plex_memory", "host_cpu", "host_memory"),
+            metrics=tuple(key for key, _label in LOAD_PARTS),
+            parts=LOAD_PARTS,
+            # The picker hides itself outside the dial view.
+            options=(gauge_view_field(), gauge_pick_field(LOAD_PARTS)),
         ),
         WidgetType(
             kind="users",
@@ -268,6 +292,45 @@ class PlexAdapter(MediaAdapter):
 
     # -- server load -----------------------------------------------------------------
 
+    # -- the libraries, and looking for new files ------------------------------
+
+    async def library_list(self, config: dict[str, Any], ctx: Context) -> list[Library]:
+        """⚠️ No counts here. Plex hands out the size of a section only in a
+        separate call per section, which is what the counts card pays for. A
+        list of five libraries would be six requests for a number nobody asked
+        this card for, so the rows say nothing rather than nought.
+
+        Plex also does not report whether a scan is running in this answer,
+        unlike Jellyfin and Emby. ``/activities`` knows, and the findings card
+        already reads it; putting it here would cost every board with this
+        card a second request every two minutes.
+        """
+        payload = await self._get(config, ctx, "/library/sections", cache=120)
+        return [
+            Library(id=str(section["key"]), name=str(section.get("title") or "Library"),
+                    kind=str(section.get("type") or ""))
+            for section in (payload.get("MediaContainer") or {}).get("Directory") or []
+            if section.get("key")
+        ]
+
+    async def rescan(self, config: dict[str, Any], target: str, ctx: Context) -> str:
+        """⚠️ Not measured against a live server yet. The address and the verb
+        come from Plex's own web interface, which asks for
+        ``GET /library/sections/{key}/refresh``; Plex publishes no
+        specification, so there is nothing to hold this against but a real
+        instance. Triggering a scan is not something a test can do for free, so
+        this is the first place to look if it ever comes out wrong.
+
+        Deliberately without ``force=1``. That is Plex's deep refresh, which
+        rewrites metadata; this button is for "there are new files".
+        """
+        where = "all" if target == EVERYTHING else path_segment(target, "The library")
+        await ctx.request(
+            "GET", f"{base_url(config)}/library/sections/{where}/refresh",
+            headers=self._headers(config), verify=not config.get("insecure", True), timeout=20.0,
+        )
+        return "Plex is looking for new files." if target == EVERYTHING else "Plex is reading that library."
+
     async def _load(self, config: dict[str, Any], ctx: Context) -> WidgetData:
         sample = await self._resources(config, ctx)
         plex_cpu = round(float(sample.get("processCpuUtilization") or 0), 1)
@@ -276,11 +339,15 @@ class PlexAdapter(MediaAdapter):
         host_memory = round(float(sample.get("hostMemoryUtilization") or 0), 1)
         return WidgetData(
             status=status_from_percent(max(host_cpu, host_memory)),
-            primary={"label": "Plex CPU", "value": plex_cpu, "unit": "%"},
+            primary={"label": "Plex CPU", "value": plex_cpu, "unit": "%",
+                     "metric": "plex_cpu", "part": "plex_cpu"},
             secondary=[
-                {"label": "Plex RAM", "value": plex_memory, "unit": "%", "metric": "plex_memory"},
-                {"label": "Host CPU", "value": host_cpu, "unit": "%", "metric": "host_cpu"},
-                {"label": "Host RAM", "value": host_memory, "unit": "%", "metric": "host_memory"},
+                {"label": "Plex RAM", "value": plex_memory, "unit": "%",
+                 "metric": "plex_memory", "part": "plex_memory"},
+                {"label": "Host CPU", "value": host_cpu, "unit": "%",
+                 "metric": "host_cpu", "part": "host_cpu"},
+                {"label": "Host RAM", "value": host_memory, "unit": "%",
+                 "metric": "host_memory", "part": "host_memory"},
             ],
             metrics={"plex_cpu": plex_cpu, "plex_memory": plex_memory, "host_cpu": host_cpu, "host_memory": host_memory},
         )
@@ -395,8 +462,16 @@ class PlexAdapter(MediaAdapter):
             host_cpu = fake.walk("plex-host-cpu", tick, 10, 60)
             return WidgetData(
                 status="ok",
-                primary={"label": "Plex CPU", "value": plex_cpu, "unit": "%"},
-                secondary=[{"label": "Plex RAM", "value": 4.2, "unit": "%", "metric": "plex_memory"}, {"label": "Host CPU", "value": host_cpu, "unit": "%", "metric": "host_cpu"}, {"label": "Host RAM", "value": 61.3, "unit": "%", "metric": "host_memory"}],
+                primary={"label": "Plex CPU", "value": plex_cpu, "unit": "%",
+                         "metric": "plex_cpu", "part": "plex_cpu"},
+                secondary=[
+                    {"label": "Plex RAM", "value": 4.2, "unit": "%",
+                     "metric": "plex_memory", "part": "plex_memory"},
+                    {"label": "Host CPU", "value": host_cpu, "unit": "%",
+                     "metric": "host_cpu", "part": "host_cpu"},
+                    {"label": "Host RAM", "value": 61.3, "unit": "%",
+                     "metric": "host_memory", "part": "host_memory"},
+                ],
                 metrics={"plex_cpu": plex_cpu, "plex_memory": 4.2, "host_cpu": host_cpu, "host_memory": 61.3},
             )
         if widget_kind == "users":

@@ -164,8 +164,13 @@ def test_the_synology_system_card_offers_a_box_per_row_and_a_dial() -> None:
 
 
 def test_the_synology_container_card_offers_a_box_per_detail() -> None:
+    """⚠️ The whole list, in order, so a field that appears out of nowhere is
+    noticed. ``view`` sits between the row picker and the detail boxes: it
+    decides how the card is drawn, and the boxes decide what each row carries,
+    so the wider question comes first.
+    """
     names = [field.name for field in get_adapter("synology").widget("containers").options]
-    assert names == ["filter", "show_stopped", "only_items", "show_image", "show_uptime",
+    assert names == ["filter", "show_stopped", "only_items", "view", "show_image", "show_uptime",
                      "show_cpu", "show_memory_percent", "show_value"]
 
 

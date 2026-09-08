@@ -526,6 +526,9 @@ class Collector:
                 ctx = Context(
                     self.client, integration_id=integration_id, widget_id=widget_id,
                     cache=self._caches.setdefault(integration_id or 0, {}),
+                    # ⚠️ A button card belongs to no service and acts on one.
+                    # Without this it could be pressed and had nothing to press.
+                    resolve_integration=self.resolve_integration,
                 )
                 message = await adapter.action(widget_kind, action_id, params, config, options, ctx)
         except AdapterError as error:

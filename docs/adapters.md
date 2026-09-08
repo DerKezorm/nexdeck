@@ -8,7 +8,7 @@ and caches identical requests for a few seconds.
 Every adapter lives in one file under `backend/app/adapters/`. It declares
 its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
-that one of fifteen renderers draws.
+that one of twenty renderers draws.
 
 ## Adapters in 0.3.0
 
@@ -42,8 +42,8 @@ that one of fifteen renderers draws.
 | authentik | status, failed sign-ins | | API token of a service account with read access |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
 | Frigate | cameras, detections, status | | none |
-| Plex | now playing, library, recently added (covers), findings, server load, users and devices, top of the week | | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
-| Jellyfin, Emby | now playing, library, recently added (covers), findings, users and devices, top of the week | | API key |
+| Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week | scan a library | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
+| Jellyfin, Emby | now playing, library, libraries, recently added (covers), findings, users and devices, top of the week | scan every library (one alone does nothing on these, measured) | API key |
 | Nexview | requests, library, instances | | API key |
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
@@ -118,7 +118,7 @@ a tight spot.
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
-`counters`, `camera`. A fetch may pick another renderer for its data through
+`counters`, `camera`, `bars`, `ring`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
 
 Images such as posters are never linked with a token in the browser: an adapter
@@ -171,6 +171,13 @@ Rules:
 
 - Secrets are fields with `secret=True`; they are encrypted at rest and never returned by the API.
 - Raise `AdapterError` (or `AuthFailed`, `Unreachable`) with an English message and a hint; the card shows both.
-- `metrics` are numbers recorded for sparklines; name them stably.
+- `metrics` are numbers recorded for sparklines; name them stably. Two or
+  more of them also give the card a **View** option that draws them all as one
+  chart, so name them for a legend, not for a column.
+- **A drawing is offered, not written into the adapter.** A `list` card gets
+  bars by itself. For a ring, set `ring=True` on the `WidgetType` **and** have
+  the fetch write `meta["ring"] = ring_of(("Blocked", 400), ("Allowed", 600))`:
+  only the fetch knows what the whole is, and slices taken from `secondary`
+  would add up to something that does not exist.
 - `demo()` must return believable, moving data for every widget kind; a test checks that.
 - Add a test with recorded answers under `backend/tests/`, using `respx`.

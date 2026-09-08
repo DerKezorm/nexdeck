@@ -23,6 +23,40 @@ def _load() -> None:
             if adapter.kind in REGISTRY:
                 raise RuntimeError(f"Two adapters claim the kind {adapter.kind!r}.")
             REGISTRY[adapter.kind] = adapter
+    _name_the_connections_a_button_can_act_on()
+
+
+def _name_the_connections_a_button_can_act_on() -> None:
+    """Fill the button card's connection picker with the kinds that declare a
+    deed, and only those.
+
+    ⚠️ Here rather than in ``core.py``: the answer is "every adapter that
+    declares one", and core cannot ask that at import time without importing
+    the whole registry it is part of. Written out by hand it would be a list
+    that quietly goes stale the day an adapter declares its first deed, and the
+    field's own help text already promises "only connections that offer
+    something a button may trigger". A promise a field does not keep is worse
+    than no promise: the picker offered all twenty-eight, and picking one of
+    the twenty-five that can do nothing led to an empty Action list with no
+    word about why.
+    """
+    from dataclasses import replace
+
+    able = tuple(sorted((kind, one.label) for kind, one in REGISTRY.items() if one.deeds))
+    core = REGISTRY.get("core")
+    if core is None:
+        return
+    widgets = []
+    for widget in core.widgets:
+        if widget.kind != "button":
+            widgets.append(widget)
+            continue
+        options = tuple(
+            replace(field, options=able) if field.name == "service" else field
+            for field in widget.options
+        )
+        widgets.append(replace(widget, options=options))
+    core.widgets = tuple(widgets)
 
 
 def all_adapters() -> list[Adapter]:

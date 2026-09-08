@@ -266,6 +266,75 @@ export const DEMO_WIDGETS: DemoWidget[] = [
     series: { temperature: wave(40, 21.5, 0.8, 41) },
     layout: { lg: [10, 9, 2, 2], md: [4, 16, 4, 2], sm: [0, 37, 4, 2] },
   },
+
+  // --- The three drawings a card can be asked for -------------------------
+  {
+    view: { id: 28, kind: 'prowlarr.indexers', title: 'Indexers', icon: 'prowlarr', link: '', renderer: 'list', options: { view: 'bars' }, integration_id: 11, refresh_seconds: 300 },
+    data: {
+      status: 'ok',
+      items: [
+        { title: 'NZBgeek', value: 412 },
+        { title: 'DrunkenSlug', value: 268 },
+        { title: 'NZBFinder', value: 121 },
+        { title: 'Tabula Rasa', value: 47 },
+        { title: 'Newznab', value: 9 },
+      ],
+      secondary: [{ label: 'Grabs', value: 857 }],
+      meta: { renderer: 'bars' },
+    },
+    layout: { lg: [0, 11, 4, 3], md: [0, 18, 4, 3], sm: [0, 39, 4, 3] },
+  },
+  {
+    view: { id: 29, kind: 'pihole.summary', title: 'Pi-hole', icon: 'pi-hole', link: '', renderer: 'gauge', options: { view: 'ring' }, integration_id: 12, refresh_seconds: 30 },
+    data: {
+      status: 'ok',
+      primary: { label: 'Blocked today', value: 18.4, unit: '%' },
+      secondary: [
+        { label: 'Queries', value: 38412 },
+        { label: 'Clients', value: 23 },
+      ],
+      metrics: { blocked_percent: 18.4, queries: 38412 },
+      meta: {
+        renderer: 'ring',
+        // Blocked is already inside the total, so the second slice is the
+        // difference and not the total itself.
+        ring: [
+          { label: 'Blocked', value: 7068 },
+          { label: 'Allowed', value: 31344 },
+        ],
+      },
+    },
+    layout: { lg: [4, 11, 3, 3], md: [4, 18, 4, 3], sm: [0, 42, 4, 3] },
+  },
+  {
+    view: { id: 30, kind: 'unifi.console', title: 'WAN', icon: 'unifi', link: '', renderer: 'list', options: { view: 'chart' }, integration_id: 13, refresh_seconds: 30 },
+    data: {
+      status: 'ok',
+      primary: { label: 'WAN in', value: 42.6, unit: 'MB/s', metric: 'wan_down' },
+      secondary: [{ label: 'WAN out', value: 8.1, unit: 'MB/s', metric: 'wan_up' }],
+      metrics: { wan_down: 42.6, wan_up: 8.1 },
+      meta: { renderer: 'chart' },
+    },
+    series: { wan_down: wave(40, 40, 14, 7), wan_up: wave(40, 8, 3.5, 19) },
+    layout: { lg: [7, 11, 5, 3], md: [0, 21, 8, 3], sm: [0, 45, 4, 3] },
+  },
+  {
+    // The same card as `plex.load` on the Media board, asked for a dial and
+    // told which of its four rows the needle follows.
+    view: { id: 31, kind: 'plex.load', title: 'Server load', icon: 'plex', link: '', renderer: 'stats', options: { view: 'gauge', gauge_part: 'host_memory' }, integration_id: 14, refresh_seconds: 15 },
+    data: {
+      status: 'ok',
+      primary: { label: 'Host RAM', value: 62, unit: '%', metric: 'host_memory', part: 'host_memory' },
+      secondary: [
+        { label: 'Plex CPU', value: 0, unit: '%', metric: 'plex_cpu' },
+        { label: 'Plex RAM', value: 0.5, unit: '%', metric: 'plex_memory' },
+        { label: 'Host CPU', value: 16, unit: '%', metric: 'host_cpu' },
+      ],
+      metrics: { host_memory: 62, plex_cpu: 0, plex_memory: 0.5, host_cpu: 16 },
+      meta: { renderer: 'gauge', gauge: { share: 62 } },
+    },
+    layout: { lg: [0, 14, 3, 3], md: [0, 24, 4, 3], sm: [0, 48, 4, 3] },
+  },
 ]
 
 export const DEMO_LAYOUTS: Record<Breakpoint, LayoutItem[]> = {

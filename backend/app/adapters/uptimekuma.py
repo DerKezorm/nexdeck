@@ -20,6 +20,7 @@ from .base import (
     WidgetData,
     WidgetType,
     base_url,
+    ring_of,
 )
 
 LINE = re.compile(r'^(?P<name>[a-zA-Z_:][a-zA-Z0-9_:]*)\{(?P<labels>[^}]*)\}\s+(?P<value>[-+0-9.eEnaN]+)')
@@ -57,7 +58,7 @@ class UptimeKumaAdapter(Adapter):
     )
     widgets = (
         WidgetType(kind="monitors", label="Monitors", description="All monitors, down ones first.", renderer="list", default_size=(3, 3), refresh_seconds=30, metrics=("down",), options=(Field("limit", "Entries", type="number", default=12), Field("filter", "Name filter"))),
-        WidgetType(kind="summary", label="Up and down", description="How many monitors are up and down.", renderer="value", default_size=(2, 1), min_size=(1, 1), refresh_seconds=30, metrics=("down",)),
+        WidgetType(kind="summary", label="Up and down", description="How many monitors are up and down.", renderer="value", default_size=(2, 1), min_size=(1, 1), refresh_seconds=30, ring=True, metrics=("down",)),
     )
 
     async def _metrics(self, config: dict[str, Any], ctx: Context, cache: float = 10) -> list[tuple[str, dict[str, str], float]]:
@@ -86,7 +87,9 @@ class UptimeKumaAdapter(Adapter):
         down = [m for m in monitors.values() if m["status"] == 0]
         if widget_kind == "summary":
             return WidgetData(status="bad" if down else "ok", primary={"label": "Monitors up", "value": len(monitors) - len(down), "unit": f"/ {len(monitors)}"},
-                              secondary=[{"label": "Down", "value": len(down)}], metrics={"down": float(len(down))})
+                              secondary=[{"label": "Down", "value": len(down)}],
+                              meta={"ring": ring_of(("Up", len(monitors) - len(down)), ("Down", len(down)))},
+                              metrics={"down": float(len(down))})
         needle = str(options.get("filter") or "").lower()
         ordered = sorted(monitors.values(), key=lambda m: (m["status"] != 0, m["status"] != 2, m["name"].lower()))
         items = []
@@ -103,7 +106,9 @@ class UptimeKumaAdapter(Adapter):
         names = ["Reverse proxy", "Nexview", "Jellyfin", "SABnzbd", "Home Assistant", "NAS", "Pi-hole", "Proxmox"]
         down = {"SABnzbd"} if fake.flicker("uk-sab", tick, 0.7) else set()
         if widget_kind == "summary":
-            return WidgetData(status="bad" if down else "ok", primary={"label": "Monitors up", "value": len(names) - len(down), "unit": f"/ {len(names)}"}, secondary=[{"label": "Down", "value": len(down)}], metrics={"down": float(len(down))})
+            return WidgetData(status="bad" if down else "ok", primary={"label": "Monitors up", "value": len(names) - len(down), "unit": f"/ {len(names)}"}, secondary=[{"label": "Down", "value": len(down)}],
+                              meta={"ring": ring_of(("Up", len(names) - len(down)), ("Down", len(down)))},
+                              metrics={"down": float(len(down))})
         items = [{"title": n, "subtitle": "http", "status": "bad" if n in down else "ok", "value": "down" if n in down else f"{int(fake.walk(n, tick, 4, 90))} ms"} for n in names]
         items.sort(key=lambda i: i["status"] != "bad")
         return WidgetData(status="bad" if down else "ok", items=items, secondary=[{"label": "Up", "value": len(names) - len(down)}, {"label": "Down", "value": len(down)}], metrics={"down": float(len(down))})

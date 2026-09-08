@@ -11,17 +11,20 @@
  * A second name in the widget's options would be a second place to change and
  * one of them would end up stale.
  */
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { safeUrl } from '../lib/safeUrl'
-import type { WidgetData, WidgetView } from '../lib/types'
+import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { ServiceIcon } from './ServiceIcon'
 
 interface Props {
   widget: WidgetView
   data?: WidgetData
   editing?: boolean
+  canAct?: boolean
+  onAction?: (action: Action) => void
 }
 
 /** Where the button leads, or nothing when it leads nowhere valid. */
@@ -40,8 +43,12 @@ export function targetOf(kind: string, where: string): { inside: string } | { ou
   return { inside: `/b/${parts.join('/')}` }
 }
 
-export function ButtonCard({ widget, data, editing }: Props) {
+export function ButtonCard({ widget, data, editing, canAct, onAction }: Props) {
   const { t } = useTranslation()
+  // ⚠️ Held in the card, not in a browser dialog. A wall display has no
+  // keyboard to dismiss one with, and window.confirm freezes the whole app
+  // including every other card's refresh.
+  const [asking, setAsking] = useState(false)
   const kind = String(data?.meta?.kind ?? 'board')
   const look = String(data?.meta?.look ?? 'label')
   const colour = typeof data?.meta?.colour === 'string' && data.meta.colour ? data.meta.colour : undefined
@@ -78,6 +85,46 @@ export function ButtonCard({ widget, data, editing }: Props) {
   // every attempt to move the card by its face. Reported as "nothing happens":
   // the card had just been configured, which happens in edit mode, and nothing
   // on it explained the silence.
+  // --- the third kind: press it and something happens elsewhere ---------
+  if (kind === 'action') {
+    const deed = (data?.actions ?? [])[0] as Action | undefined
+    // Inert for the same reasons as below, plus two of its own: nothing is
+    // picked yet, or this viewer may look but not act.
+    const why = editing ? 'card.buttonWhileEditing'
+      : !deed ? 'card.buttonNowhere'
+      : !canAct || !onAction ? 'card.buttonNotAllowed'
+      : ''
+    if (why) {
+      return (
+        <span className={`${shape} opacity-90`} style={painted} title={t(why)} aria-label={look === 'icon' ? name : undefined}>
+          {inside}
+        </span>
+      )
+    }
+    // Narrowed by the guard above; TypeScript cannot see through the chain.
+    const press = deed as Action
+    const fire = onAction as (action: Action) => void
+    return (
+      <button
+        type="button"
+        className={shape}
+        style={painted}
+        title={asking ? t('card.buttonSure') : name}
+        aria-label={look === 'icon' ? name : undefined}
+        onClick={() => {
+          if (press.confirm && !asking) return setAsking(true)
+          setAsking(false)
+          fire(press)
+        }}
+        onBlur={() => setAsking(false)}
+      >
+        {asking
+          ? <span className="truncate">{t('card.buttonSure')}</span>
+          : inside}
+      </button>
+    )
+  }
+
   if (editing || !target) {
     return (
       <span

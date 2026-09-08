@@ -10,11 +10,12 @@ from sqlalchemy.orm import Session
 
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import AdapterError, Context
+from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
-from ..services.collector import collector
+from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
 
@@ -219,6 +220,14 @@ async def field_choices(integration_id: int, field: str, user: CurrentUser, db: 
         adapter = get_adapter(integration.kind)
     except KeyError as failure:
         raise error("unknown_kind", f"There is no adapter {integration.kind!r}.") from failure
+    # ⚠️ A demo connection points at demo.invalid, so asking it is asking
+    # nothing: the list came back empty and the sheet said "this connection
+    # offers nothing", which is what a demo Plex looks like from outside and
+    # exactly not what it is.
+    if get_settings().demo or integration.demo or demo_flag():
+        offered = adapter.demo_choices(field)
+        return [{"value": value, "label": label} for value, label in offered]
+
     ctx = Context(collector.client, integration_id=integration.id, cache={})
     try:
         offered = await adapter.choices(field, resolve_config(integration), ctx)
