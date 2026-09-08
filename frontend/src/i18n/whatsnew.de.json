@@ -61,6 +61,39 @@
         "Eine Karte kann nicht mehr endgültig verstummen: jeder unerwartete Fehler wird zur Meldung, und danach wird es wieder versucht.",
         "Alte Aufzeichnungen werden nach Plan aufgeräumt, und hinter jeder Grenze steht eine Zahl."
       ]
+    },
+    "0.3.0": {
+      "lead": "Vier neue Karten, eine Stelle für die hochgeladenen Dateien, und n8n. In den neuen Karten wird nichts mehr in einer Syntax getippt: was man auswählen kann, wählt man aus.",
+      "sections": [
+        {
+          "title": "Button-Karte",
+          "body": "Eine Kachel, ein Button. Er öffnet ein Brett, eine Seite davon oder eine Adresse, ausgewählt aus einer Liste. Drei Aussehen, dazu eine Farbe; die Schrift darauf wird schwarz oder weiß, gemessen statt geraten.",
+          "path": "Bearbeiten > Widget hinzufügen > Basics"
+        },
+        {
+          "title": "Bilder, hochgeladen oder verlinkt",
+          "body": "Ein Bild oder eine Diashow, mit Intervall, Zuschnitt und Beschriftungen. Datei hochladen, Adresse angeben, oder eines aus den vorhandenen Medien nehmen. Die Reihenfolge änderst du am Griff.",
+          "path": "Bearbeiten > Widget hinzufügen > Basics"
+        },
+        {
+          "title": "Ein Container, alles dazu",
+          "body": "Einen einzelnen Container oder eine VM auswählen und sehen, was der Dienst hergibt. Docker, Portainer, Synologys Container Manager und VM Manager, und Proxmox. Was ein Dienst nicht misst, fehlt in der Karte, statt als Null dazustehen.",
+          "path": "Bearbeiten > Widget hinzufügen"
+        },
+        {
+          "title": "Medien",
+          "body": "Alle hochgeladenen Dateien mit Größe und dem Hinweis, was sie noch zeigt. Beim Löschen stehen die Karten und Bretter dabei, die danach einen Platzhalter zeigen. Dieselbe Datei zweimal hochgeladen ist jetzt eine.",
+          "path": "Meine Einstellungen > Medien"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "n8n: Workflows mit Veröffentlichen-Knopf, die letzten Läufe und wie viele davon fehlgeschlagen sind.",
+        "Die Uhr hat ein Zifferblatt mit Zeigern, dazu eine Farbe für Ziffern oder Zeiger.",
+        "Bretter werden am Griff sortiert, wie eine Liste auf dem Telefon. Derselbe Griff hört auf die Pfeiltasten.",
+        "Nach Updates suchen geht auch ohne eingeschalteten Tagesabruf.",
+        "Das Synology-Kennwort steht nicht mehr in der Adresse."
+      ]
     }
   }
 }

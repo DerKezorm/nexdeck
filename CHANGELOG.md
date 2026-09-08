@@ -3,6 +3,35 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.3.0 (2026-09-08)
+
+Four new cards, a place to look after the files you upload, and n8n.
+
+### New
+
+- **Button card.** One card, one button, and nothing typed by hand: it opens a board, a page of one, or an address, picked from a list rather than spelled out in a syntax. Three looks (symbol and name, symbol alone at twice the size, name alone) and a colour if you want one. The name on that colour is black or white by luminance rather than by guess, because on half the colours somebody might pick the other choice cannot be read.
+- **Picture card.** One picture, or a list of them as a slideshow with an interval, a crop and captions. Upload a file or name an address; both go in the same list, and a picture already on the server can be taken out of the media rather than uploaded again.
+- **The clock has a face with hands**, drawn as one SVG with no library, and a colour for the digits or the hands. The hands are read out of the formatted time rather than off the Date: a clock set to another zone would otherwise draw one time and print another underneath it.
+- **One container, one guest.** Pick a single container or virtual machine and see everything the service reports about it. Docker, Portainer, Synology's Container Manager and its Virtual Machine Manager, and Proxmox all answer. Docker's network counters, block IO and process count come along, which the container lists have been throwing away since the start.
+- **n8n.** Workflows with their state and a button to publish or take one back, the most recent runs with how long each took, and a summary with the failure rate of the window it read.
+- **Media.** My settings > Media lists every file you have uploaded with its size, its date and what still shows it. Deleting one names the cards and boards that would show a placeholder afterwards, and the server refuses the delete without that word rather than trusting the screen to have asked. Uploading the same file twice is one file now.
+- **Icons of your own.** The icon picker takes an upload, keeps them above the two collections, and can delete one again.
+- **Boards are sorted by a handle**, the way a list on a phone is, rather than by two arrow buttons. The same handle answers the arrow keys, so the list can still be sorted without a mouse.
+
+### Fixed
+
+- **A dragged row lost its drag.** Sorting the board list moved one place and then went dead, downwards. Not a direction: reordering moves the handle's own node in the DOM, and a moved node loses the pointer capture, so from the second step on the events went to whatever sat under the cursor.
+- **Looking for an update needed the daily check to be on.** The button was hidden behind the switch, and the address behind it refused while the switch was off, so the one person most likely to want to look now and then, the administrator who deliberately keeps a daily outbound call off, was the only one who could not. The switch still decides whether nexdeck asks by itself; the button asks once, because somebody pressed it. Opening the About page with the switch off still reaches nobody, and there is a test holding that now.
+- **The DSM password stopped travelling in the address.** Synology's login sent it in the query part, where it lands in DSM's own access log and in the log of every reverse proxy in between. It goes in the body now, measured against DSM 7.4.1.
+- **A card drawn as a dial is measured as one.** Two cards showing the same dial had different floors under them, and nothing on screen said why.
+- **The Synology volume card offers its volumes in the dial view.** It filters its rows twice, and the list the settings sheet builds its boxes from was written down after the first pass, so in the dial view the sheet said the card had nothing to pick from.
+- **Tautulli leaves beta**, confirmed against a live instance.
+
+### The test bench
+
+- **Two guards on the numbers in the README**: the badge at the top has to count the services that exist, and every service has to stand in the adapter document. That badge said 79 when there were 78 once already, and in a browser that is invisible.
+- **The end-to-end test presses a button card**, drags a board row both ways and past the end of the list, and checks what a card does while the board is being arranged. All of it in a real browser, because jsdom has no layout and every one of those tests passes there whatever the code does.
+
 ## 0.2.0 (2026-09-07)
 
 A deep read of the whole codebase, and then the repairs it found: 146 points,
