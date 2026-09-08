@@ -241,7 +241,12 @@ export function BoardPage() {
   const closeWidgetSettings = () => {
     setSettingsFor(null)
     setDraftWidget(null)
-    setPreviewData(null)
+    // ⚠️ A held preview outlives the sheet. Saving closes the sheet, and this
+    // ran a tick after `onSaved` had set the hold and wiped it again: the card
+    // dropped straight back to the collector's last answer, which still had
+    // the old options. On screen that is "I change something, it shows, it
+    // jumps back, and only F5 gives me the result."
+    setPreviewData((current) => nextPreview(current, current?.id ?? 0, null))
   }
 
   if (board.isLoading) {

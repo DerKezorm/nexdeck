@@ -335,6 +335,23 @@ export const DEMO_WIDGETS: DemoWidget[] = [
     },
     layout: { lg: [0, 14, 3, 3], md: [0, 24, 4, 3], sm: [0, 48, 4, 3] },
   },
+  {
+    // The one card with a field. The blank the button leaves is part of the
+    // action, so the preview carries it exactly as a fetch would.
+    view: { id: 32, kind: 'metube.fetch', title: 'Fetch a video', icon: 'metube', link: '', renderer: 'ask', options: {}, integration_id: 15, refresh_seconds: 15 },
+    data: {
+      status: 'warn',
+      actions: [{
+        id: 'add', label: 'Fetch', icon: 'download',
+        params: { download_type: 'video', quality: 'best', format: 'any' },
+        ask: { name: 'url', label: 'Video address', kind: 'url', placeholder: 'https://...', max_length: 2048 },
+      }],
+      items: [{ title: 'How a cylinder lock works', subtitle: '42% · 2.3 MB/s · 40s left', status: 'warn' }],
+      secondary: [{ label: 'Running', value: 1 }],
+      metrics: { running: 1 },
+    },
+    layout: { lg: [3, 14, 3, 2], md: [4, 24, 4, 2], sm: [0, 51, 4, 2] },
+  },
 ]
 
 export const DEMO_LAYOUTS: Record<Breakpoint, LayoutItem[]> = {

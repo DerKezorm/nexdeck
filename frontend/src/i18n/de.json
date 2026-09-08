@@ -786,7 +786,11 @@
     "noPictures": "Noch keine Bilder. In den Widget-Einstellungen anlegen.",
     "pictureNext": "Nächstes von {{count}} Bildern",
     "buttonSure": "Sicher?",
-    "buttonWhileEditing": "Dieser Button führt erst wieder irgendwohin, wenn du mit dem Anordnen fertig bist."
+    "buttonWhileEditing": "Dieser Button führt erst wieder irgendwohin, wenn du mit dem Anordnen fertig bist.",
+    "ask": {
+      "noField": "Diese Kachel hat nichts zum Ausfüllen.",
+      "notAllowed": "Von diesem Brett aus darfst du nichts starten."
+    }
   },
   "plex": {
     "signIn": "Mit Plex anmelden",

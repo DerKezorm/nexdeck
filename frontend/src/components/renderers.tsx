@@ -33,6 +33,7 @@ import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
@@ -76,6 +77,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   counters: CountersCard,
   camera: CameraCard,
   search: SearchCard,
+  ask: AskCard,
   wol: WolCard,
 }
 

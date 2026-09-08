@@ -1,6 +1,15 @@
 /** Mirrors ``WidgetData`` on the server. */
 export type Status = 'ok' | 'warn' | 'bad' | 'unknown'
 
+/** The one parameter of an action that whoever presses it types in. */
+export interface Ask {
+  name: string
+  label: string
+  kind?: 'text' | 'url'
+  placeholder?: string
+  max_length?: number
+}
+
 export interface Action {
   id: string
   label: string
@@ -8,6 +17,7 @@ export interface Action {
   confirm?: boolean
   danger?: boolean
   params?: Record<string, unknown>
+  ask?: Ask | null
 }
 
 export interface Primary {

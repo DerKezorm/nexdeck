@@ -800,7 +800,29 @@
     "A line": "Eine Linie",
     "Download and upload": "Download und Upload",
     "Download only": "Nur Download",
-    "Upload only": "Nur Upload"
+    "Upload only": "Nur Upload",
+    "Hand MeTube a video address and watch the file come down.": "MeTube eine Videoadresse geben und zusehen, wie die Datei ankommt.",
+    "MeTube has no login of its own: whoever reaches this address may queue downloads and delete them.": "MeTube hat keine eigene Anmeldung: Wer diese Adresse erreicht, darf Downloads anstoßen und löschen.",
+    "Fetch a video": "Ein Video holen",
+    "A field for an address and a button that starts the download.": "Ein Feld für eine Adresse und ein Knopf, der den Download startet.",
+    "Fetch": "Holen",
+    "Video": "Video",
+    "Audio only": "Nur Ton",
+    "Best available": "So gut wie möglich",
+    "1080p at most": "Höchstens 1080p",
+    "720p at most": "Höchstens 720p",
+    "480p at most": "Höchstens 480p",
+    "Whatever the site offers": "Was die Seite anbietet",
+    "mp4": "mp4",
+    "mp3": "mp3",
+    "m4a": "m4a",
+    "Show what is running": "Zeigen, was gerade läuft",
+    "Downloads": "Downloads",
+    "What is running, what is waiting and what is over, newest first.": "Was läuft, was wartet und was vorbei ist, das Neueste zuerst.",
+    "Only what is running": "Nur was läuft",
+    "Only what is over": "Nur was vorbei ist",
+    "Download count": "Anzahl der Downloads",
+    "How much is running, done and failed.": "Wie viel läuft, fertig ist und fehlgeschlagen ist."
   },
   "labels": {
     "A download failed": "Ein Download ist fehlgeschlagen",
@@ -1147,6 +1169,10 @@
     "PoE": "PoE",
     "Assigned": "Zugeteilt",
     "Measurements": "Messungen",
-    "No measurement in this period": "In diesem Zeitraum wurde nichts gemessen"
+    "No measurement in this period": "In diesem Zeitraum wurde nichts gemessen",
+    "Remove": "Entfernen",
+    "Try again": "Noch einmal versuchen",
+    "Done": "Fertig",
+    "Video address": "Videoadresse"
   }
 }
