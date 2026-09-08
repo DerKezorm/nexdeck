@@ -4,6 +4,7 @@
  * what its colour means.
  */
 import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 
 import { DEMO_DATA, DEMO_VIEWS } from '../demo/board'
 import { WidgetCard } from './WidgetCard'
@@ -81,5 +82,30 @@ describe('WidgetCard', () => {
     // A failed fetch still shows: that is the card's own problem, not a finding of the service.
     render(<WidgetCard widget={{ ...view, id: view.id + 1000 }} data={{ status: 'unknown', error: 'The service could not be reached.', meta: { code: 'unreachable' } }} />)
     expect(screen.getByTestId('card-error')).toBeInTheDocument()
+  })
+})
+
+/**
+ * ⚠️ Reported by hand: a button card set to open a board did nothing when it
+ * was clicked. The renderer's own test passed, so the fault had to be between
+ * the card frame and the renderer, which is the piece neither test covered.
+ */
+describe('a button card inside the card frame', () => {
+  function buttonView(over: Record<string, unknown> = {}) {
+    return {
+      id: 999, kind: 'core.button', title: 'Server', icon: '', link: '', renderer: 'button',
+      options: {}, integration_id: null, refresh_seconds: null,
+      default_size: [2, 1], min_size: [1, 1], ...over,
+    } as unknown as Parameters<typeof WidgetCard>[0]['widget']
+  }
+  const data = { meta: { kind: 'board', where: 'server', new_tab: true, look: 'icon', colour: '' } } as never
+
+  it('is a link to the board, and the frame does not swallow it', () => {
+    render(
+      <MemoryRouter>
+        <WidgetCard widget={buttonView()} data={data} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: 'Server' })).toHaveAttribute('href', '/b/server')
   })
 })

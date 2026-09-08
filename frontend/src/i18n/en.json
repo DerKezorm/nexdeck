@@ -754,7 +754,8 @@
     "buttons": "Buttons",
     "buttonNowhere": "This button has no valid target.",
     "noPictures": "No pictures yet. Add one in the widget settings.",
-    "pictureNext": "Next of {{count}} pictures"
+    "pictureNext": "Next of {{count}} pictures",
+    "buttonWhileEditing": "This button leads nowhere while you are arranging the board."
   },
   "plex": {
     "signIn": "Sign in with Plex",
