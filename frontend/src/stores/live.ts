@@ -4,6 +4,28 @@ import type { HealthView, WidgetData } from '../lib/types'
 
 const SERIES_LIMIT = 120
 
+/**
+ * Is this answer older than the one already on screen?
+ *
+ * ⚠️ Two roads carry the same card: the stream pushes each answer as it is
+ * made, and every board request brings a snapshot of the whole board along.
+ * They arrive in whatever order the network feels like. Measured on
+ * 09.09.2026: saving a card sent the new answer over the stream 120 ms later,
+ * and a board request that had started 40 ms **before** the save answered
+ * 20 ms after that with the state from before it. The older snapshot won,
+ * and the card sat there with the settings from before the save until
+ * something refreshed it. On a clock, whose next fetch is an hour away, that
+ * means until F5, which is exactly how this was reported.
+ *
+ * An answer with no time of its own is treated as newer, because it is: an
+ * error card carries no fetch time and must be able to replace a good one.
+ */
+function older(current: WidgetData | undefined, incoming: WidgetData): boolean {
+  const before = current?.updated_at
+  const now = incoming.updated_at
+  return typeof before === 'number' && typeof now === 'number' && now < before
+}
+
 interface LiveState {
   data: Record<number, WidgetData>
   series: Record<number, Record<string, number[]>>
@@ -30,16 +52,20 @@ export const useLive = create<LiveState>((set) => ({
       const series = { ...state.series }
       for (const [key, value] of Object.entries(snapshot)) {
         const id = Number(key)
+        if (older(data[id], value)) continue
         data[id] = value
         if (value.metrics) series[id] = appendMetrics(series[id], value.metrics)
       }
       return { data, series }
     }),
   applyWidget: (id, value) =>
-    set((state) => ({
-      data: { ...state.data, [id]: value },
-      series: value.metrics && !value.error ? { ...state.series, [id]: appendMetrics(state.series[id], value.metrics) } : state.series,
-    })),
+    set((state) => {
+      if (older(state.data[id], value)) return state
+      return {
+        data: { ...state.data, [id]: value },
+        series: value.metrics && !value.error ? { ...state.series, [id]: appendMetrics(state.series[id], value.metrics) } : state.series,
+      }
+    }),
   setSeries: (id, incoming) =>
     set((state) => {
       const current: Record<string, number[]> = {}
