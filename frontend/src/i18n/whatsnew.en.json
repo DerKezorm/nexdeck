@@ -175,6 +175,21 @@
         "A failed speedtest is drawn as a gap in the line rather than as a dip to nought, which would be an outage that never happened.",
         "A button says what it did in the language the board is in."
       ]
+    },
+    "0.5.1": {
+      "lead": "One fix, and it took three tries to find: a change made in a card could still jump back to what it was.",
+      "sections": [
+        {
+          "title": "A setting stays put",
+          "body": "Two roads carry the same card to your browser, and they do not arrive in order. Saving sent the new answer straight away, and a board request that had gone out just before the save came back afterwards with the state from before it, overwriting the fresh one. On a card that is read every few seconds you would never notice; on a clock, whose next reading is an hour away, the old setting stayed until you reloaded. An answer older than the one on screen is now turned away.",
+          "path": "Edit mode > gear > any setting"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A card's own answer can no longer be overtaken by one that was already being fetched when you saved.",
+        "A saved card keeps what you saved until the board really carries it, rather than until any request comes back."
+      ]
     }
   }
 }

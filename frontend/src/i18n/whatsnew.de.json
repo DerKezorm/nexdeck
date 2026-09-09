@@ -175,6 +175,21 @@
         "Eine fehlgeschlagene Messung wird als Lücke in der Linie gezeichnet statt als Absturz auf null, der einen Ausfall zeigen würde, den es nie gab.",
         "Ein Knopf sagt in der Sprache des Bretts, was er getan hat."
       ]
+    },
+    "0.5.1": {
+      "lead": "Eine Reparatur, und sie hat drei Anläufe gebraucht: Eine Änderung an einer Kachel konnte auf den alten Stand zurückspringen.",
+      "sections": [
+        {
+          "title": "Eine Einstellung bleibt stehen",
+          "body": "Dieselbe Kachel kommt auf zwei Wegen in den Browser, und die kommen nicht der Reihe nach an. Beim Speichern ging die neue Antwort sofort raus, und eine Brett-Anfrage, die kurz vor dem Speichern losgeschickt worden war, antwortete danach mit dem Stand von vorher und überschrieb die frische. Bei einer Kachel, die alle paar Sekunden gelesen wird, fällt das nicht auf; bei einer Uhr, deren nächster Abruf eine Stunde weg ist, blieb der alte Stand bis zum Neuladen. Eine Antwort, die älter ist als die auf dem Schirm, wird jetzt abgewiesen.",
+          "path": "Bearbeiten > Zahnrad > beliebige Einstellung"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Die eigene Antwort einer Kachel wird nicht mehr von einer überholt, die beim Speichern schon unterwegs war.",
+        "Eine gespeicherte Kachel behält das Gespeicherte, bis das Brett es wirklich trägt, statt bis irgendeine Anfrage zurückkommt."
+      ]
     }
   }
 }
