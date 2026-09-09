@@ -76,6 +76,18 @@ async def test_the_list_shows_progress_waiting_and_what_went_wrong(ctx: Context)
 
 
 @respx.mock
+async def test_a_row_with_nothing_to_show_yet_is_named_in_our_own_words(ctx: Context) -> None:
+    """⚠️ Not MeTube's word with a capital letter on it. Cards translate what an
+    adapter writes by looking the English up, so a word taken straight from the
+    service is a word no translation file has: "Preparing" stood in English on
+    a German board while every row around it was translated."""
+    _history(pending=[{"id": "mNo", "title": "Later", "status": "pending"},
+                      {"id": "pQr", "title": "Odd", "status": "something-new"}])
+    data = await get_adapter("metube").fetch("downloads", CONFIG, {"limit": 8, "show": "busy"}, ctx)
+    assert [row["subtitle"] for row in data.items] == ["Waiting", "Waiting"]
+
+
+@respx.mock
 async def test_only_a_failed_row_offers_to_try_again(ctx: Context) -> None:
     _history(queue=[DOWNLOADING], done=[FAILED, FINISHED])
     data = await get_adapter("metube").fetch("downloads", CONFIG, {"limit": 8, "show": "all"}, ctx)
