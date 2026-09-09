@@ -14,6 +14,7 @@ import {
   CloudRain,
   CloudSnow,
   CloudSun,
+  Download,
   ExternalLink,
   Moon,
   Pause,
@@ -28,11 +29,11 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
-import { mediaUrl } from '../api/client'
+import { fileUrl, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
-import type { Action, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { CameraCard } from './CameraCard'
@@ -166,6 +167,31 @@ function ActionButtons({
         )
       })}
     </div>
+  )
+}
+
+/**
+ * The save link that sits beside a row's buttons.
+ *
+ * ⚠️ An anchor, not a button, and pointing at nexdeck rather than at the
+ * service. Both matter: `download` is ignored across origins, so a link
+ * straight to the service opens the video in a tab instead of saving it, and
+ * on a homelab the browser usually cannot reach the service at all.
+ */
+function SaveLink({ widgetId, file }: { widgetId: number; file: Saveable }) {
+  const { t } = useTranslation()
+  const label = t('card.saveFile', { name: file.name })
+  return (
+    <a
+      className="btn btn-icon h-6 w-6 border-0 bg-transparent"
+      href={fileUrl(widgetId, file.path)}
+      download={file.name}
+      aria-label={label}
+      title={label}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Download size={13} />
+    </a>
   )
 }
 
@@ -344,7 +370,7 @@ export function StatsCard({ data, series }: RenderProps) {
 // List: rows with status, value, optional progress and actions
 // ---------------------------------------------------------------------------
 
-export function ListCard({ data, onAction, canAct, series }: RenderProps) {
+export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
   const items = data?.items ?? []
   if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
@@ -381,8 +407,11 @@ export function ListCard({ data, onAction, canAct, series }: RenderProps) {
                   </div>
                 )}
               </div>
-              {item.actions && canAct ? (
-                <span className="opacity-0 group-hover/row:opacity-100 transition-opacity">
+              {(item.file || (item.actions && canAct)) ? (
+                <span className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                  {/* Saving is not acting on the service, so it stays for a
+                      viewer who may only look. */}
+                  {item.file ? <SaveLink widgetId={widget.id} file={item.file as Saveable} /> : null}
                   <ActionButtons actions={item.actions as Action[]} onAction={onAction} canAct={canAct} compact />
                 </span>
               ) : null}

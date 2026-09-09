@@ -209,7 +209,13 @@ export function BoardPage() {
   const runAction = async (widgetId: number, action: Action) => {
     try {
       const result = await post<{ message: string }>(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
-      setToast({ text: result.message, level: 'ok' })
+      // ⚠️ Adapters answer in English, the way they write every label, and the
+      // card translates those by wording. The one sentence a button produces
+      // was the exception: "Removed." stood in English on a German board, in
+      // the one place the eye goes right after a press. A sentence the service
+      // itself wrote back has no entry and stays as it came, which is right:
+      // it is MeTube speaking, not nexdeck.
+      setToast({ text: tLabel(result.message), level: 'ok' })
     } catch (failure) {
       setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
     }

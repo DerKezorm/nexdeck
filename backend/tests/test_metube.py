@@ -34,12 +34,24 @@ def _history(**lists: object) -> None:
     }))
 
 
-DOWNLOADING = {"id": "aBc", "title": "How a lock works", "status": "downloading",
+#: ⚠️ Every row carries an ``id`` **and** a differing ``url``, because that is
+#: what a real MeTube hands over, and the difference is the whole point of
+#: ``_key``: its lists are kept under the address while ``id`` is the video's
+#: own identifier. These fixtures used to carry only the ``id``, so the
+#: adapter's fallback made every test here pass while the buttons pressed
+#: nothing at all on a live instance.
+DOWNLOADING = {"id": "aBc", "url": "https://videos.example.com/watch?v=aBc",
+               "title": "How a lock works", "status": "downloading",
                "percent": 42.0, "speed": 2_400_000, "eta": 40}
 #: ⚠️ Measured: an entry sits here with no percentage at all before it starts.
-PREPARING = {"id": "dEf", "title": "A workbench", "status": "preparing"}
-FINISHED = {"id": "gHi", "title": "Soldering", "status": "finished", "size": 184_000_000, "timestamp": NEWER}
-FAILED = {"id": "jKl", "title": "Not a video", "status": "error", "timestamp": OLDER,
+PREPARING = {"id": "dEf", "url": "https://videos.example.com/watch?v=dEf",
+             "title": "A workbench", "status": "preparing"}
+FINISHED = {"id": "gHi", "url": "https://videos.example.com/watch?v=gHi",
+            "title": "Soldering", "status": "finished", "filename": "Soldering.webm",
+            "size": 184_000_000, "timestamp": NEWER}
+FAILED = {"id": "jKl", "url": "https://videos.example.com/watch?v=jKl",
+          "title": "Not a video", "status": "error", "timestamp": OLDER,
+          "filename": "Not a video.webm",
           "msg": "ERROR: [generic] not-a-video: Unable to download webpage: HTTP Error 404\nsecond line"}
 
 
@@ -97,7 +109,28 @@ async def test_only_a_failed_row_offers_to_try_again(ctx: Context) -> None:
         "Soldering": ["remove"],
         "Not a video": ["retry", "remove"],
     }
-    assert [one["params"] for one in data.items[0]["actions"]] == [{"where": "queue", "id": "aBc"}]
+    assert [one["params"] for one in data.items[0]["actions"]] == [
+        {"where": "queue", "id": "https://videos.example.com/watch?v=aBc"}]
+
+
+@respx.mock
+async def test_a_button_names_the_row_the_way_metube_files_it(ctx: Context) -> None:
+    """⚠️ The address, not the ``id`` MeTube prints beside it.
+
+    Measured on 09.09.2026 against a live instance: ``POST /delete`` with the
+    ``id`` answers ``{"status": "ok"}`` and removes nothing. The card reported
+    a removal on every press and the row stayed. It survived the first round of
+    these tests because the fixtures carried no ``url`` at all, so the
+    adapter's fallback quietly made the wrong thing look right.
+    """
+    _history(queue=[DOWNLOADING], done=[FAILED])
+    data = await get_adapter("metube").fetch("downloads", CONFIG, {"limit": 8, "show": "all"}, ctx)
+    named = [(row["title"], one["id"], one["params"]["id"]) for row in data.items for one in row["actions"]]
+    assert named == [
+        ("How a lock works", "remove", "https://videos.example.com/watch?v=aBc"),
+        ("Not a video", "retry", "https://videos.example.com/watch?v=jKl"),
+        ("Not a video", "remove", "https://videos.example.com/watch?v=jKl"),
+    ]
 
 
 @respx.mock

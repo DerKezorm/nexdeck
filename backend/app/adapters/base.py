@@ -232,6 +232,19 @@ class WidgetType:
         }
 
 
+def saveable(path: str, name: str, size: float | None = None) -> dict[str, Any]:
+    """A file a row offers to save, put on the row as ``file``.
+
+    ⚠️ The path is an allowlist entry, not a parameter. Whoever may look at
+    the board may ask the server for a file the card named, and for nothing
+    else: the download address checks the path against the rows the card last
+    delivered, the way an action is checked against what it last offered. Left
+    open, it would be "fetch any path from this service with the server's
+    credentials", handed to every kiosk display in the house.
+    """
+    return {"path": path, "name": name, **({"size": float(size)} if size else {})}
+
+
 class Ask(BaseModel):
     """A blank in an action, filled in by whoever presses the button.
 
@@ -1114,6 +1127,17 @@ class Adapter:
     async def stream_source(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> MediaSource:
         """Where a widget's live video comes from; only camera adapters have one."""
         raise AdapterError("This widget has no live stream.", code="no_stream")
+
+    async def file_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
+        """Where a file a row offers to save really comes from.
+
+        Same shape as :meth:`image_source`, and the same reason: the server
+        fetches with the service's credentials, so the browser never sees them
+        and never has to reach the service at all. On a homelab where nexdeck
+        is the only thing published, that is the difference between a link that
+        works from outside and one that does not.
+        """
+        return MediaSource(url=f"{base_url(config)}{path}", headers=self.image_headers(config))
 
     def to_dict(self) -> dict[str, Any]:
         return {

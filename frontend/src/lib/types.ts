@@ -1,6 +1,13 @@
 /** Mirrors ``WidgetData`` on the server. */
 export type Status = 'ok' | 'warn' | 'bad' | 'unknown'
 
+/** A file a row offers to save; the server fetches it and hands it over. */
+export interface Saveable {
+  path: string
+  name: string
+  size?: number
+}
+
 /** The one parameter of an action that whoever presses it types in. */
 export interface Ask {
   name: string

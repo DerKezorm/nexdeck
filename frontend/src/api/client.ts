@@ -50,6 +50,16 @@ export function mediaUrl(widgetId: number, art: string | null | undefined): stri
   return `${BASE}/widgets/${widgetId}/image?${params.toString()}`
 }
 
+/**
+ * A file a row offers to save, fetched by the server and handed over as a
+ * download. Same origin as the app, which is what makes `download` on the link
+ * work at all: across origins the browser ignores it and plays the video.
+ */
+export function fileUrl(widgetId: number, path: string): string {
+  const params = new URLSearchParams({ path })
+  return `${BASE}/widgets/${widgetId}/file?${params.toString()}`
+}
+
 /** The relayed live video of a camera widget. The kiosk cookie rides along by itself. */
 export function videoUrl(widgetId: number): string {
   return `${BASE}/widgets/${widgetId}/stream`
