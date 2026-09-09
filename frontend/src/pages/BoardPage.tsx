@@ -244,9 +244,24 @@ export function BoardPage() {
     return list
   }, [widgets, liveData, canAct])
 
+  /**
+   * True between a save and the moment the board really carries the new
+   * options.
+   *
+   * ⚠️ The draft is what the card shows while the sheet is open, and closing
+   * the sheet dropped it at once. For a card the server refreshes, the held
+   * preview covered the gap; for one that draws itself from its own options,
+   * a clock or a note, there is no preview to hold, so the card fell back to
+   * the copy the board query still had, which is the one from before the
+   * save. It looked exactly like the fault this was meant to fix, only
+   * narrower: it needed the refetch to be slow, so it turned up in about one
+   * run in five.
+   */
+  const saving = useRef(false)
+
   const closeWidgetSettings = () => {
     setSettingsFor(null)
-    setDraftWidget(null)
+    if (!saving.current) setDraftWidget(null)
     // ⚠️ A held preview outlives the sheet. Saving closes the sheet, and this
     // ran a tick after `onSaved` had set the hold and wiped it again: the card
     // dropped straight back to the collector's last answer, which still had
@@ -399,9 +414,12 @@ export function BoardPage() {
         onPreviewData={(id, preview) => setPreviewData((current) => nextPreview(current, id, preview))}
         onClose={closeWidgetSettings}
         onSaved={() => {
-          setDraftWidget(null)
+          saving.current = true
           setPreviewData((current) => (current ? { ...current, holdUntilChange: liveData[current.id]?.updated_at ?? 0 } : null))
-          void board.refetch()
+          void board.refetch().finally(() => {
+            saving.current = false
+            setDraftWidget(null)
+          })
         }}
         onDeleted={() => {
           closeWidgetSettings()

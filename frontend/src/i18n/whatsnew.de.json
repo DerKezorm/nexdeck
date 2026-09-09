@@ -138,6 +138,43 @@
         "UniFis Switch-Karte hatte keine eigenen Demo-Daten und zeigte stillschweigend die Konsolen-Zusammenfassung.",
         "Eine in den Karteneinstellungen gespeicherte Änderung springt nicht mehr zurück, bis die Seite neu geladen wird."
       ]
+    },
+    "0.5.0": {
+      "lead": "Eine Kachel kann ein Eingabefeld haben, MeTube ist die erste, die eins nutzt, und ein fertiger Download lässt sich auf den Rechner holen, an dem du sitzt.",
+      "sections": [
+        {
+          "title": "Ein Video über seine Adresse holen",
+          "body": "Eine Kachel mit Textfeld und Knopf. Adresse einfügen, drücken, MeTube holt die Datei. Video oder nur Ton, und die Qualität suchst du aus.",
+          "path": "Bearbeiten > Kachel hinzufügen > MeTube > Ein Video holen"
+        },
+        {
+          "title": "Eine Kachel darf eine Lücke für dich lassen",
+          "body": "Alles, was nexdeck auslöst, kommt aus einer Liste, die ein Dienst selbst geliefert hat, und genau das hält eine Kachel davon ab, ein Einfallstor zu sein. Ein Textfeld ist die Ausnahme, also muss der Adapter sie anmelden: welcher eine Wert leer bleibt und was hineindarf. Eine Adresse wird so geprüft wie jede Adresse, die du in nexdeck eingibst.",
+          "path": "Bearbeiten > Kachel hinzufügen > MeTube > Ein Video holen"
+        },
+        {
+          "title": "Einen Download auf den eigenen Rechner holen",
+          "body": "MeTube lädt auf den Server, dort liegt die Datei dann auch. Eine fertige Zeile hat jetzt einen Speichern-Knopf neben dem Papierkorb, und die Datei kommt über nexdeck: das klappt auch von unterwegs und speichert wirklich, statt im Tab abzuspielen.",
+          "path": "Bearbeiten > Kachel hinzufügen > MeTube > Downloads"
+        },
+        {
+          "title": "Ein Diagramm aus dem, was eine Kachel selbst aufhebt",
+          "body": "Speedtest Tracker hebt Monate an Messungen auf, nexdeck zeichnete immer nur seinen eigenen Tag. Die Verlaufskachel fragt jetzt den Tracker: 24 Stunden, 7, 30 oder 90 Tage, Download, Upload oder beides, als Linie oder als Balken.",
+          "path": "Bearbeiten > Kachel hinzufügen > Speedtest Tracker > Verlauf"
+        },
+        {
+          "title": "Drei Dienste verlassen die Beta",
+          "body": "Proxmox VE, Speedtest Tracker und Immich, alle drei an laufenden Instanzen bestätigt.",
+          "path": "Einstellungen > Verbindungen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Eine Einstellung an einer Kachel springt nicht mehr auf den alten Stand zurück und braucht kein F5 mehr.",
+        "Der Knopf zum Suchen neuer Dateien war ein graues Kästchen: Sein Symbol fehlte im Satz, den die App mitliefert. Jetzt wird jedes Symbol auf jedem Knopf geprüft.",
+        "Eine fehlgeschlagene Messung wird als Lücke in der Linie gezeichnet statt als Absturz auf null, der einen Ausfall zeigen würde, den es nie gab.",
+        "Ein Knopf sagt in der Sprache des Bretts, was er getan hat."
+      ]
     }
   }
 }
