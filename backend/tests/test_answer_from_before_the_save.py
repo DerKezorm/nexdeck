@@ -122,3 +122,22 @@ def one_widget(client) -> int:
     live.forget(widget_id)
     yield widget_id
     live.forget(widget_id)
+
+
+async def test_a_card_whose_settings_changed_keeps_refreshing(held: _HeldAdapter, one_widget: int) -> None:
+    """⚠️ The dropped answer must not read as "this widget is gone".
+
+    The loop ends when a refresh returns nothing, which is how a deleted
+    widget stops its task. A dropped answer returning the same thing would
+    have stopped the card for good: it would sit there until the next restart,
+    and the only clue would be a card that never changes again.
+    """
+    slow = asyncio.ensure_future(collector.refresh(one_widget))
+    await asyncio.wait_for(held.reached.wait(), timeout=5)
+    _save_options(one_widget, {"seconds": "on"})
+    collector.schedule(one_widget)
+    await asyncio.sleep(0.05)
+    held.may_finish.set()
+
+    assert await asyncio.wait_for(slow, timeout=5) is not None, (
+        "the loop was told this widget no longer exists and would have stopped refreshing it")

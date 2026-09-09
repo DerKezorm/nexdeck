@@ -326,8 +326,13 @@ class Collector:
             # The settings changed while this was being fetched. The task that
             # replaced this one is already fetching with the new ones, so this
             # answer is thrown away rather than put on the board.
+            #
+            # ⚠️ The interval, not ``None``. ``None`` means "this widget is
+            # gone" to the loop, which then ends for good: a card whose
+            # settings changed at the wrong moment would have stopped
+            # refreshing until the next restart.
             logger.debug("Widget %s changed while it was being read; the older answer is dropped.", widget_id)
-            return None
+            return interval
 
         self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options)
         live.set(widget_id, data)

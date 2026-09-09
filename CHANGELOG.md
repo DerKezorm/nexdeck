@@ -3,12 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.5.1 (2026-09-09)
 
 ### Fixed
 
 - **A setting made in a card no longer jumps back, and this time the cause was measured rather than guessed.** Two roads carry the same card into the browser: the stream pushes each answer as the server makes it, and every board request brings a snapshot of the whole board along. They arrive in whatever order the network feels like. Recorded in a real browser: saving a card sent the new answer over the stream 120 ms later, and a board request that had started 40 ms *before* the save answered 20 ms after that, carrying the state from before it. The older snapshot won. On a card the server reads every fifteen seconds nobody notices; on a clock, whose next fetch is an hour away, the old settings stay until the page is reloaded. An answer older than the one already on screen is now turned away, whichever road it came by.
 - **A card's own answer cannot be overtaken by one already in flight.** Changing a widget's settings cancels its running fetch, but a cancel only takes effect at the next await, and between the adapter answering and the answer being published there is none. So a fetch made with the settings from before the save could still be put on the board. The collector now counts a widget's settings changes and throws away an answer that belongs to an older count.
+- **A card whose settings changed at the wrong moment kept refreshing.** The check above answered the widget loop with "this widget is gone", which is how a deleted card stops its task, so the card would have sat unchanged until the next restart with nothing saying why. Found while testing the check itself.
 - **A saved card keeps what was saved until the board really carries it.** It used to be released as soon as a board request came back, and a request already in flight comes back with what the server had before the save.
 
 ## 0.5.0 (2026-09-09)
