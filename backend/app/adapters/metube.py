@@ -22,14 +22,19 @@ Measured against MeTube 2026.08.28 with yt-dlp 2026.08.19:
 * A queued entry passes through ``preparing`` with no percentage at all before
   it starts counting, so a card must survive a row with nothing to show.
 * ``timestamp`` counts **nanoseconds** since the epoch.
-* ``POST /delete`` takes ``{"where", "ids"}`` and answers ok for an id that was
-  never there; ``POST /retry`` takes a single ``{"id"}``.
+* ``POST /delete`` takes ``{"where", "ids"}`` and answers ok for a key that was
+  never there; ``POST /retry`` takes a single ``{"id"}``. **The key is the
+  address, not the ``id`` MeTube publishes on the row.** With the id both
+  answer ok and do nothing.
+* Finished files are served under ``/download/<filename>``, and ``folder`` is a
+  directory under that when one was chosen.
 """
 
 from __future__ import annotations
 
 import time
 from typing import Any
+from urllib.parse import quote
 
 from . import demo as fake
 from .base import (
@@ -45,6 +50,7 @@ from .base import (
     duration_short,
     human_bytes,
     human_rate,
+    saveable,
 )
 
 #: What MeTube calls its three lists, in the order a card shows them: what is
@@ -92,6 +98,40 @@ def _subtitle(entry: dict[str, Any], where: str) -> str:
         return " · ".join(parts)
     size = entry.get("size")
     return human_bytes(float(size)) if size else str(entry.get("format") or "")
+
+
+def _key(entry: dict[str, Any]) -> str:
+    """What MeTube wants back when it is told to remove or retry a row.
+
+    ⚠️ The address, not the ``id`` it publishes beside it. Measured on
+    09.09.2026: its lists are kept under the address, while ``id`` is the
+    video's own identifier, and ``POST /delete`` with the ``id`` answers
+    ``{"status": "ok"}`` and removes nothing at all. The button reported
+    success on every press and the row stayed where it was. It went unnoticed
+    while testing because a page that is not a video has no video id, so there
+    ``id`` and address are the same string and the call worked.
+    """
+    return str(entry.get("url") or entry.get("id") or "")
+
+
+def _file_of(entry: dict[str, Any], where: str) -> dict[str, Any] | None:
+    """The finished file behind a row, so it can be saved from the board.
+
+    ⚠️ Only a row that really finished. A failed entry sits in ``done`` too,
+    with a ``filename`` MeTube worked out before it tried, and offering that
+    would be a button that fetches a file which was never written.
+
+    Measured: MeTube serves what it has under ``/download/<filename>``, and
+    ``folder`` is a directory under it when one was chosen.
+    """
+    if where != "done" or str(entry.get("status") or "").lower() != "finished":
+        return None
+    name = str(entry.get("filename") or "").strip()
+    if not name or "/" in name or "\\" in name:
+        return None
+    folder = str(entry.get("folder") or "").strip("/")
+    path = "/download/" + (f"{quote(folder)}/" if folder else "") + quote(name)
+    return saveable(path, name, entry.get("size"))
 
 
 class MetubeAdapter(Adapter):
@@ -240,7 +280,7 @@ class MetubeAdapter(Adapter):
                 # Nanoseconds, newest first; an entry without one goes last.
                 entries = sorted(entries, key=lambda one: float(one.get("timestamp") or 0), reverse=True)
             for entry in entries:
-                identifier = str(entry.get("id") or "")
+                identifier = _key(entry)
                 failed = str(entry.get("status") or "").lower() == "error"
                 actions: list[dict[str, Any]] = [
                     {"id": "remove", "label": "Remove", "icon": "trash-2",
@@ -249,13 +289,17 @@ class MetubeAdapter(Adapter):
                 if failed:
                     actions.insert(0, {"id": "retry", "label": "Try again", "icon": "rotate-cw",
                                        "params": {"id": identifier}})
-                rows.append({
+                row = {
                     "title": str(entry.get("title") or identifier or "?"),
                     "subtitle": _subtitle(entry, where),
                     "status": _status(entry),
                     "progress": float(entry.get("percent") or 0) if where != "done" else None,
                     "actions": actions if identifier else [],
-                })
+                }
+                saved = _file_of(entry, where)
+                if saved:
+                    row["file"] = saved
+                rows.append(row)
         return rows[:limit]
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
@@ -328,6 +372,7 @@ class MetubeAdapter(Adapter):
             "pending": [{"id": "dEf456", "title": "Building a workbench in a weekend", "status": "pending"}],
             "done": [
                 {"id": "gHi789", "title": "Soldering for the impatient", "status": "finished",
+                 "filename": "Soldering for the impatient.webm",
                  "size": 184_000_000, "timestamp": (now - 600) * 1e9},
                 {"id": "jKl012", "title": "A page that turned out not to be a video", "status": "error",
                  "msg": "ERROR: Unable to download webpage: HTTP Error 404", "timestamp": (now - 3600) * 1e9},

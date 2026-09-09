@@ -63,7 +63,7 @@ that one of twenty-one renderers draws.
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
-| MeTube | fetch a video, downloads, download count | fetch an address you type in, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
+| MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
 | n8n | workflows, last runs, summary | publish, unpublish | API key from Settings > n8n API |

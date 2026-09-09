@@ -5,7 +5,7 @@
 import { render, screen } from '@testing-library/react'
 
 import { DEMO_DATA, DEMO_SERIES, DEMO_VIEWS } from '../demo/board'
-import type { Action } from '../lib/types'
+import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { WidgetCard } from './WidgetCard'
 
@@ -35,6 +35,22 @@ describe('renderers', () => {
     unmount()
     render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} canAct={false} />)
     expect(screen.queryByRole('button', { name: 'Restart' })).toBeNull()
+  })
+
+  it('offers a row file as a real download, pointed at nexdeck', () => {
+    // ⚠️ Both halves matter. `download` is ignored across origins, so a link
+    // straight to the service would play the video in a tab instead of saving
+    // it, and on a homelab the browser usually cannot reach the service at all.
+    const view = { ...DEMO_VIEWS[0], id: 7, renderer: 'list' } as WidgetView
+    const data = {
+      status: 'ok',
+      items: [{ title: 'Me at the zoo', file: { path: '/download/Me%20at%20the%20zoo.webm', name: 'Me at the zoo.webm' } }],
+    } as unknown as WidgetData
+    render(<>{renderWidget({ widget: view, data, canAct: false })}</>)
+    const link = screen.getByRole('link', { name: /Me at the zoo\.webm/ })
+    expect(link).toHaveAttribute('download', 'Me at the zoo.webm')
+    expect(link.getAttribute('href')).toContain('/widgets/7/file?path=')
+    expect(link.getAttribute('href')).toContain(encodeURIComponent('/download/Me%20at%20the%20zoo.webm'))
   })
 
   it('marks a failed widget with its error', () => {

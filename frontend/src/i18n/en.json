@@ -790,7 +790,8 @@
     "ask": {
       "noField": "This card has nothing to fill in.",
       "notAllowed": "You may not start anything from this board."
-    }
+    },
+    "saveFile": "Save {{name}}"
   },
   "plex": {
     "signIn": "Sign in with Plex",

@@ -790,7 +790,8 @@
     "ask": {
       "noField": "Diese Kachel hat nichts zum Ausfüllen.",
       "notAllowed": "Von diesem Brett aus darfst du nichts starten."
-    }
+    },
+    "saveFile": "{{name}} speichern"
   },
   "plex": {
     "signIn": "Mit Plex anmelden",

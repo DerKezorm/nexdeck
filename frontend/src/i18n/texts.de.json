@@ -1175,6 +1175,9 @@
     "Done": "Fertig",
     "Video address": "Videoadresse",
     "Preparing": "Wird vorbereitet",
-    "Downloading": "Wird geladen"
+    "Downloading": "Wird geladen",
+    "MeTube is fetching it.": "MeTube holt es.",
+    "Removed.": "Entfernt.",
+    "Trying again.": "Wird noch einmal versucht."
   }
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter, Request, Response, status
@@ -364,6 +365,86 @@ async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db
             await response.aclose()
 
     return StreamingResponse(relay(), media_type=media_type, headers={"Cache-Control": "no-store"})
+
+
+# -- a file a row offers to save ---------------------------------------------
+
+
+def _offered_file(widget_id: int, path: str) -> dict[str, Any] | None:
+    """The file with this path among the rows the card last delivered.
+
+    ⚠️ The same guard the actions have, for the same reason. Without it the
+    address below reads "fetch any path from this widget's service with the
+    server's credentials", and everybody who may look at the board may ask,
+    kiosk displays included. With it, a card can only hand out what it put in
+    front of somebody, and the name comes from there too rather than from the
+    request, so nothing a caller writes reaches a response header.
+    """
+    data = live.get(widget_id)
+    for item in getattr(data, "items", []) or []:
+        entry = item.get("file") if isinstance(item, dict) else None
+        if isinstance(entry, dict) and entry.get("path") == path:
+            return entry
+    return None
+
+
+@router.get("/widgets/{widget_id}/file", summary="Save a file a widget's row offers, through the server")
+async def widget_file(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> StreamingResponse:
+    """The bytes flow through the server and arrive as a download, not as a page.
+
+    Two things the browser cannot do by itself with a link to the service: it
+    would have to reach the service, which on a homelab it usually cannot, and
+    a video would play in a tab instead of being saved, because ``download`` on
+    a link is ignored across origins.
+    """
+    widget, page = _widget(db, widget_id)
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    offered = _offered_file(widget_id, path)
+    if offered is None:
+        raise error("no_such_file", "This card is not offering that file.", status.HTTP_404_NOT_FOUND)
+    adapter, config, ctx = await _service_of(widget)
+    try:
+        source = await adapter.file_source(config, path, ctx)
+    except AdapterError as failure:
+        raise error(getattr(failure, "code", "") or "no_such_file", str(failure), status.HTTP_404_NOT_FOUND) from failure
+
+    client = _image_client(bool(config.get("insecure")))
+    upstream = client.build_request(
+        "GET", source.url, headers=source.headers, params=source.params or None,
+        timeout=httpx.Timeout(15.0, read=120.0),
+    )
+    try:
+        response = await client.send(upstream, stream=True)
+    except httpx.HTTPError as failure:
+        raise error("unreachable", f"The service did not deliver the file: {failure.__class__.__name__}.",
+                    status.HTTP_502_BAD_GATEWAY) from failure
+    if response.status_code >= 400:
+        await response.aclose()
+        raise error("no_such_file", f"The service answered the file request with HTTP {response.status_code}.",
+                    status.HTTP_502_BAD_GATEWAY)
+
+    async def relay():
+        try:
+            async for chunk in response.aiter_raw():
+                yield chunk
+        finally:
+            await response.aclose()
+
+    name = str(offered.get("name") or "download")
+    headers = {
+        # ⚠️ Both spellings. The plain one is what old browsers read and it may
+        # hold nothing but ASCII, so anything else is stripped rather than
+        # written into a header; the starred one carries the real name.
+        "Content-Disposition":
+            f'attachment; filename="{quote(name, safe="")}"; filename*=UTF-8\'\'{quote(name, safe="")}',
+        "Cache-Control": "no-store",
+    }
+    length = response.headers.get("content-length")
+    if length:
+        headers["Content-Length"] = length
+    return StreamingResponse(
+        relay(), media_type=response.headers.get("content-type") or "application/octet-stream", headers=headers,
+    )
 
 
 # -- reachability checks -----------------------------------------------------
