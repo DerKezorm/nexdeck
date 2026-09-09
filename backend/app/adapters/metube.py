@@ -51,6 +51,18 @@ from .base import (
 #: running first, what is waiting next, what is over last.
 LISTS = ("queue", "pending", "done")
 
+#: MeTube's own words for a row that has no progress yet, in ours.
+#:
+#: ⚠️ Not the service's word with a capital letter on it. The card translates
+#: what an adapter writes by looking the English up, and "Preparing" straight
+#: from the service is a word no translation file has: it stood there in
+#: English on a German board while everything around it was translated.
+WAITING = {
+    "preparing": "Preparing",
+    "pending": "Waiting",
+    "downloading": "Downloading",
+}
+
 
 def _status(entry: dict[str, Any]) -> str:
     state = str(entry.get("status") or "").lower()
@@ -71,7 +83,7 @@ def _subtitle(entry: dict[str, Any], where: str) -> str:
         speed = entry.get("speed")
         eta = entry.get("eta")
         if percent is None:
-            return str(entry.get("status") or "waiting").capitalize()
+            return WAITING.get(str(entry.get("status") or "").lower(), "Waiting")
         parts = [f"{float(percent):.0f}%"]
         if speed:
             parts.append(human_rate(float(speed)))
