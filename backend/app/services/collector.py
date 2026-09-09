@@ -56,6 +56,20 @@ class Collector:
         self._caches: dict[int, dict[str, Any]] = {}
         self._client: httpx.AsyncClient | None = None
         self._failures: dict[int, int] = {}
+        #: Counted up every time a widget's settings change, so an answer that
+        #: was already being fetched when they changed can be recognised.
+        #:
+        #: ⚠️ ``schedule`` cancels the running task, but cancelling only takes
+        #: effect at the next await, and between the adapter returning and the
+        #: answer being published there is none: telling, storing and sending
+        #: all run to the end. So a fetch made with the **old** options could
+        #: still overwrite the fresh one, and the board showed the settings
+        #: from before the save until something else refreshed it. On screen
+        #: that is "I change something, it shows, it jumps back, and only F5
+        #: gives me the result", which is what this page was reported for
+        #: three times. It needs a fetch to be in flight at the moment Save is
+        #: pressed, so it happened perhaps once in five tries.
+        self._generation: dict[int, int] = {}
         #: What has already been told, so a card refreshing every thirty
         #: seconds does not send the same line a hundred times an hour.
         self._told: dict[str, float] = {}
@@ -126,6 +140,9 @@ class Collector:
 
         def _start() -> None:
             self._cancel(widget_id)
+            # Anything still in the air was fetched with the settings from
+            # before this call and must not be published.
+            self._generation[widget_id] = self._generation.get(widget_id, 0) + 1
             if not self.running:
                 return
             self._failures.pop(widget_id, None)
@@ -135,6 +152,7 @@ class Collector:
 
     def unschedule(self, widget_id: int) -> None:
         live.forget(widget_id)
+        self._generation[widget_id] = self._generation.get(widget_id, 0) + 1
         run_on_loop(lambda: self._cancel(widget_id))
 
     def _cancel(self, widget_id: int) -> None:
@@ -263,6 +281,9 @@ class Collector:
             return None
         widget_type = adapter.widget(widget_kind)
         interval = max(MIN_INTERVAL, refresh_seconds or widget_type.refresh_seconds)
+        # Which settings this answer belongs to. Read after the options, so a
+        # change between the two counts as "changed" rather than being missed.
+        mine = self._generation.get(widget_id, 0)
         # Held before the fetch overwrites it: the adapter needs both to see
         # what changed.
         previous = live.get(widget_id)
@@ -300,6 +321,13 @@ class Collector:
             logger.exception("Widget %s (%s) failed.", widget_id, kind)
             data = self._failure(widget_id, f"Unexpected error: {error.__class__.__name__}.", code="crash")
             self._mark_integration(integration_id, ok=False, error=error.__class__.__name__)
+
+        if self._generation.get(widget_id, 0) != mine:
+            # The settings changed while this was being fetched. The task that
+            # replaced this one is already fetching with the new ones, so this
+            # answer is thrown away rather than put on the board.
+            logger.debug("Widget %s changed while it was being read; the older answer is dropped.", widget_id)
+            return None
 
         self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options)
         live.set(widget_id, data)

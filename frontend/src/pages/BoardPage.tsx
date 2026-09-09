@@ -20,6 +20,7 @@ import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSetti
 import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
+import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
@@ -193,6 +194,50 @@ export function BoardPage() {
       }),
     [activePage, liveHealth, draftWidget],
   )
+  /**
+   * True between a save and the moment the board really carries the new
+   * options.
+   *
+   * ⚠️ The draft is what the card shows while the sheet is open, and closing
+   * the sheet dropped it at once. For a card the server refreshes, the held
+   * preview covered the gap; for one that draws itself from its own options,
+   * a clock or a note, there is no preview to hold, so the card fell back to
+   * the copy the board query still had, which is the one from before the
+   * save. That is the fault this page keeps being reported for, and this is
+   * the last corner of it.
+   *
+   * ⚠️ Released by comparing, not by waiting for a refetch to resolve. A
+   * board fetch already in flight when Save is pressed answers with what the
+   * server had **before** the save, and `refetch()` hands that in-flight
+   * promise back rather than starting a new request. Waiting on it therefore
+   * cleared the draft against stale data, which is exactly the moment the
+   * card blinked back to its old self. The stream makes it likely: saving a
+   * widget makes the server send a board event, so two fetches are in the air
+   * at once anyway.
+   */
+  const [awaitingSave, setAwaitingSave] = useState(false)
+
+  // The draft a save left on the card goes when the board really carries it,
+  // and after twenty seconds whatever happened, so a card cannot be left
+  // showing something the server never took.
+  useEffect(() => {
+    if (!awaitingSave || !draftWidget) return
+    // ⚠️ Against what the server sent, not against `widgets`: that list has
+    // the draft merged into it already, so comparing there is comparing the
+    // draft with itself and always says yes.
+    const carried = (activePage?.widgets ?? []).find((one) => one.id === draftWidget.id)
+    if (carried && sameSettings(carried, draftWidget)) {
+      setAwaitingSave(false)
+      setDraftWidget(null)
+      return
+    }
+    const id = window.setTimeout(() => {
+      setAwaitingSave(false)
+      setDraftWidget(null)
+    }, 20_000)
+    return () => window.clearTimeout(id)
+  }, [activePage, draftWidget, awaitingSave])
+
   // Data fetched with draft options replaces the live data of that one card.
   const gridData = useMemo(() => (previewData ? { ...liveData, [previewData.id]: previewData.data } : liveData), [liveData, previewData])
   useEffect(() => {
@@ -244,24 +289,10 @@ export function BoardPage() {
     return list
   }, [widgets, liveData, canAct])
 
-  /**
-   * True between a save and the moment the board really carries the new
-   * options.
-   *
-   * ⚠️ The draft is what the card shows while the sheet is open, and closing
-   * the sheet dropped it at once. For a card the server refreshes, the held
-   * preview covered the gap; for one that draws itself from its own options,
-   * a clock or a note, there is no preview to hold, so the card fell back to
-   * the copy the board query still had, which is the one from before the
-   * save. It looked exactly like the fault this was meant to fix, only
-   * narrower: it needed the refetch to be slow, so it turned up in about one
-   * run in five.
-   */
-  const saving = useRef(false)
 
   const closeWidgetSettings = () => {
     setSettingsFor(null)
-    if (!saving.current) setDraftWidget(null)
+    if (!awaitingSave) setDraftWidget(null)
     // ⚠️ A held preview outlives the sheet. Saving closes the sheet, and this
     // ran a tick after `onSaved` had set the hold and wiped it again: the card
     // dropped straight back to the collector's last answer, which still had
@@ -414,12 +445,9 @@ export function BoardPage() {
         onPreviewData={(id, preview) => setPreviewData((current) => nextPreview(current, id, preview))}
         onClose={closeWidgetSettings}
         onSaved={() => {
-          saving.current = true
+          setAwaitingSave(true)
           setPreviewData((current) => (current ? { ...current, holdUntilChange: liveData[current.id]?.updated_at ?? 0 } : null))
-          void board.refetch().finally(() => {
-            saving.current = false
-            setDraftWidget(null)
-          })
+          void board.refetch()
         }}
         onDeleted={() => {
           closeWidgetSettings()
