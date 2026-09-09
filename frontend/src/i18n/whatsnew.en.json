@@ -138,6 +138,43 @@
         "UniFi's switch card had no demo data of its own and quietly showed the console summary instead.",
         "A change saved in a card's settings stopped jumping back to the old one until the page was reloaded."
       ]
+    },
+    "0.5.0": {
+      "lead": "A card can have a field you type into, MeTube is the first to use one, and a finished download can be saved to the machine you are sitting at.",
+      "sections": [
+        {
+          "title": "Fetch a video by pasting its address",
+          "body": "A card with a text field and a button. Paste a video address, press, and MeTube fetches the file. Video or audio only, and the quality is yours to pick.",
+          "path": "Edit mode > Add widget > MeTube > Fetch a video"
+        },
+        {
+          "title": "A card may leave one blank for you to fill in",
+          "body": "Everything nexdeck runs is picked from a list a service handed over, and that is what keeps a card from being a way in. A field is the exception, so the adapter has to declare it: which single parameter is blank, and what may go in it. An address is checked the way every address you type into nexdeck is checked.",
+          "path": "Edit mode > Add widget > MeTube > Fetch a video"
+        },
+        {
+          "title": "Save a download to your own machine",
+          "body": "MeTube fetches to the server, which is where the file then sits. A finished row now has a save button beside its bin, and the file comes through nexdeck, so it works from outside the house and really saves instead of playing in a tab.",
+          "path": "Edit mode > Add widget > MeTube > Downloads"
+        },
+        {
+          "title": "A chart of what a card kept itself",
+          "body": "Speedtest Tracker keeps months of measurements, and nexdeck only ever drew its own day. Its History card asks the tracker instead: 24 hours, 7, 30 or 90 days, download, upload or both, as a line or as bars.",
+          "path": "Edit mode > Add widget > Speedtest Tracker > History"
+        },
+        {
+          "title": "Three services leave beta",
+          "body": "Proxmox VE, Speedtest Tracker and Immich, all three confirmed against live instances.",
+          "path": "Settings > Connections"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A setting made in a card no longer shows, jumps back to the old one, and needs a reload to stick.",
+        "The button for looking for new files was a grey box: its symbol was never in the set the app bundles. Every symbol on every button is now checked.",
+        "A failed speedtest is drawn as a gap in the line rather than as a dip to nought, which would be an outage that never happened.",
+        "A button says what it did in the language the board is in."
+      ]
     }
   }
 }
