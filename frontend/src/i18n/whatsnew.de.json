@@ -190,6 +190,26 @@
         "Die eigene Antwort einer Kachel wird nicht mehr von einer überholt, die beim Speichern schon unterwegs war.",
         "Eine gespeicherte Kachel behält das Gespeicherte, bis das Brett es wirklich trägt, statt bis irgendeine Anfrage zurückkommt."
       ]
+    },
+    "0.5.2": {
+      "lead": "Drei Reparaturen, und zwei davon sind derselbe Fehler in anderen Kleidern: Der Server erledigte eine langsame Arbeit ausgerechnet dort, wo solange nichts anderes laufen kann.",
+      "sections": [
+        {
+          "title": "Ein neues Brett füllt sich in Sekunden statt in einer Viertelminute",
+          "body": "Jedes Dienstsymbol auf einer Karte holt der Server und legt es auf der Platte ab. Eine frische Installation hat noch nichts abgelegt, also fragt das erste Brett ein Dutzend auf einmal an. Für jedes davon baute der Server eine Verbindung von Grund auf neu, und das kostet rund eine Sekunde reine Arbeit, erledigt an der Stelle, an der sonst nichts drankommt. Im Browser gemessen: Die Brett-Antwort, die die ersten Daten aller Karten trägt, kam früher nach vierzehn Sekunden. Jetzt nach fünf. Zu sehen war davor ein Brett voller Karten, die eine Weile leer blieben, und eine Knopfkarte, die ins Nichts führte, bis sie sich gefüllt hatte.",
+          "path": "Jedes Brett, direkt nach der Installation"
+        },
+        {
+          "title": "Speichern geht nicht mehr daneben",
+          "body": "Eine Meldung erscheint unten rechts und bleibt fünf Sekunden stehen, und genau dort hat ein Einstellungsblatt seinen Speichern-Knopf. Ein Druck, der Speichern galt, landete auf der Meldung, also passierte nichts, und noch einmal drücken half auch nicht. Meldungen lassen den Druck jetzt durch; nur ihr eigener Schließen-Knopf nimmt sich einen.",
+          "path": "Bearbeiten > Zahnrad > Speichern"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Eine Benachrichtigung, ein Web Push, eine Anmeldung über den eigenen Anbieter und die Suche nach einer neueren Fassung halten den ganzen Server nicht mehr je rund eine Sekunde an.",
+        "Wer Telefon, Tablet und zwei Browser angemeldet hat, zahlte diese Sekunde für eine einzige Benachrichtigung viermal."
+      ]
     }
   }
 }

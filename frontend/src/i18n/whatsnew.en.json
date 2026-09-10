@@ -190,6 +190,26 @@
         "A card's own answer can no longer be overtaken by one that was already being fetched when you saved.",
         "A saved card keeps what you saved until the board really carries it, rather than until any request comes back."
       ]
+    },
+    "0.5.2": {
+      "lead": "Three fixes, and two of them are the same fault wearing different clothes: the server was doing a slow piece of work in the one place where nothing else can happen while it runs.",
+      "sections": [
+        {
+          "title": "A new board fills in seconds, not in a quarter of a minute",
+          "body": "Every service logo on a card is fetched by the server and kept on disk, and a brand new installation has nothing kept yet, so the first board asks for a dozen at once. For each of them the server built a fresh connection from scratch, which costs about a second of pure work, and it did that work where nothing else could get a turn. Measured in a browser: the board answer that carries the first data of every card used to come back after fourteen seconds. It comes back after five now. What you saw before was a board of cards that stayed empty for a while, and a button card that led nowhere until it filled in.",
+          "path": "Any board, right after installing"
+        },
+        {
+          "title": "Save no longer misses",
+          "body": "A message appears in the bottom right corner and stays for five seconds, and that is exactly where a settings sheet keeps its Save button. A press meant for Save landed on the message instead, so nothing happened and pressing again did not help either. Messages let presses through now; only their own close button still takes one.",
+          "path": "Edit mode > gear > Save"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A notification, a web push, a sign-in through your identity provider and the look for a newer version no longer hold the whole server up for about a second each.",
+        "Someone with a phone, a tablet and two browsers used to pay that second four times over for a single notification."
+      ]
     }
   }
 }
