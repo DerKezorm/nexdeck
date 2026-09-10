@@ -235,6 +235,20 @@
         "Die Knöpfe der Freigabe-Kachel sind ohne Überfahren sichtbar und damit auch am Touchscreen erreichbar.",
         "Brett und Wandanzeige stellen vor einer Aktion dieselbe Frage."
       ]
+    },
+    "0.6.1": {
+      "lead": "Eine Reparatur: Die Cover auf der nexview-Freigabekachel sind wieder da.",
+      "sections": [
+        {
+          "title": "Cover wieder sichtbar",
+          "body": "Das Poster einer wartenden Anfrage lud nicht, sobald der Offline-Helfer der App die Seite betreute. Er überlässt Bilder von anderen Adressen jetzt dem Browser, und das Cover erscheint.",
+          "path": "Nexview > Anfragen zur Freigabe"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Ein Test lädt jetzt ein Bild von einer anderen Adresse auf einer Seite, die der Offline-Helfer betreut, damit das nicht unbemerkt zurückkommt."
+      ]
     }
   }
 }

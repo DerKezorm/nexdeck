@@ -235,6 +235,20 @@
         "The buttons of the approval card show without hovering, so they can be reached on a touchscreen.",
         "The board and the wall display ask the same question before an action runs."
       ]
+    },
+    "0.6.1": {
+      "lead": "One fix: covers on the Nexview approval card show again.",
+      "sections": [
+        {
+          "title": "Covers are back",
+          "body": "The poster of a waiting request did not load on a board the app's offline helper was looking after. That helper now leaves pictures from other addresses to the browser, and the cover appears.",
+          "path": "Nexview > Requests to approve"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A test now loads a picture from another address on a page the offline helper looks after, so this cannot come back unnoticed."
+      ]
     }
   }
 }

@@ -45,6 +45,13 @@ self.addEventListener('fetch', (event) => {
   const request = event.request
   if (request.method !== 'GET') return
   const url = new URL(request.url)
+  // ⚠️ Only nexdeck's own addresses. The worker used to answer every request
+  // that was not /api/ by fetching it itself, pictures from other addresses
+  // included, and that fetch failed where the page's own <img> was allowed:
+  // Nexview's covers come from TMDB and broke on every board the worker
+  // controlled. Nothing from elsewhere is cached anyway, so there is nothing
+  // to gain by standing in the way.
+  if (url.origin !== self.location.origin) return
   if (url.pathname.startsWith('/api/')) return
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/index.html').then((r) => r ?? Response.error())))

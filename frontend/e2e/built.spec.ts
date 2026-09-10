@@ -13,6 +13,10 @@
  */
 import { expect, test } from '@playwright/test'
 
+// Only the port. The config clears the data directories when it loads, but
+// only in the main process, and a spec runs in a worker.
+import { FRONTEND_PORT } from '../playwright.config'
+
 const ACCOUNT = { username: 'built-admin', password: 'A-long-enough-password-1' }
 
 type Violation = { directive: string; blocked: string }
@@ -93,6 +97,41 @@ test('the service worker is allowed to install, which is what 0.31.0 was not', a
   expect(worker.status()).toBe(200)
   expect(worker.headers()['content-type']).toContain('javascript')
   expect(worker.headers()['x-content-type-options']).toBe('nosniff')
+})
+
+test('a picture from another address still loads once the service worker is in charge', async ({ page }) => {
+  // ⚠️ Nexview's covers broke in 0.6.0, and only on a page the worker
+  // controls. Measured against the built image: the same TMDB poster loaded
+  // with the worker blocked (500 px) and failed with it active (0 px). The
+  // worker answered every request that was not /api/ by fetching it itself,
+  // foreign pictures included, and that fetch failed where the page's own
+  // <img> would have been allowed. It went unnoticed because Nexview was the
+  // first adapter to hand the browser a picture from somewhere else; every
+  // other one goes through nexdeck's own image proxy.
+  //
+  // The foreign address here is the dev server of this very run: another
+  // port is another origin, it serves /icon-192.png from public/, and it
+  // keeps the test off the internet.
+  await page.goto('/')
+  await page.evaluate(async () => {
+    await Promise.race([navigator.serviceWorker.ready, new Promise((resolve) => setTimeout(resolve, 20_000))])
+  })
+  // A worker takes over the pages opened after it became active.
+  await page.reload()
+  const controlled = await page.evaluate(() => Boolean(navigator.serviceWorker.controller))
+  expect(controlled, 'the service worker never took charge of the page, so this test proves nothing').toBe(true)
+
+  const width = await page.evaluate(async (source) => {
+    const picture = new Image()
+    await new Promise((resolve) => {
+      picture.onload = resolve
+      picture.onerror = resolve
+      setTimeout(resolve, 10_000)
+      picture.src = `${source}?at=${Date.now()}`
+    })
+    return picture.naturalWidth
+  }, `http://127.0.0.1:${FRONTEND_PORT}/icon-192.png`)
+  expect(width, 'a picture from another address did not load on a page the service worker controls').toBeGreaterThan(0)
 })
 
 test('the manifest and its icons are served, so the app can be installed', async ({ page }) => {

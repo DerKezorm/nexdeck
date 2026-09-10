@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.6.1 (2026-09-10)
+
+### Fixed
+
+- **Nexview covers show again on the approval card.** nexdeck's service worker answered every request that was not for its own API by fetching it itself, pictures from other addresses included, and that fetch failed where the page's own image would have been allowed. Measured against the built image: the same poster loaded with the worker blocked and failed with it active. Nexview is the first adapter to hand the browser a picture from somewhere else, every other one goes through nexdeck's own image proxy, which is why it had not shown before. The worker now leaves anything from another address to the browser. A test in the built arrangement loads a picture from a second origin on a page the worker controls, and it failed before the fix.
+
 ## 0.6.0 (2026-09-10)
 
 ### New
