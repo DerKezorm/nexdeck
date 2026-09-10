@@ -249,6 +249,22 @@
       "small": [
         "A test now loads a picture from another address on a page the offline helper looks after, so this cannot come back unnoticed."
       ]
+    },
+    "0.6.2": {
+      "lead": "Your phone now shows the board in the order you arranged it.",
+      "sections": [
+        {
+          "title": "One arrangement for every screen",
+          "body": "Arrange a board once on a wide screen. A tablet or a wall display shows exactly that arrangement, and a phone stacks the cards in the same order: row by row, left to right, lists at the full width and small tiles in pairs.",
+          "path": "Edit mode (pencil) on a wide screen"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "In edit mode on a phone the cards stay put, and a note says that they are arranged on a wider screen.",
+        "Arrangements made for the phone or the tablet before this version are no longer used.",
+        "A new demo board comes with its arrangement again, instead of every card at the same size in the order it was made."
+      ]
     }
   }
 }

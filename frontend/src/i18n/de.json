@@ -567,7 +567,8 @@
     "moveWith": "{{name}} mit den Pfeiltasten verschieben, mit Umschalt und Pfeil in der Größe ändern",
     "moveWithHandle": "{{name}} mit dem Griff verschieben",
     "chooseBeforeAction": "Dafür muss vorher etwas ausgewählt werden.",
-    "pickOne": "Bitte auswählen"
+    "pickOne": "Bitte auswählen",
+    "stackedHint": "Auf einem schmalen Bildschirm folgen die Karten der Reihenfolge des breiten Boards. Verschieben geht auf einem breiteren Bildschirm."
   },
   "widget": {
     "remove": {
