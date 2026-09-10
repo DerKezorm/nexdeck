@@ -168,7 +168,9 @@ class NexviewAdapter(Adapter):
 
         items = [self._approval_row(row, targets, may_decide) for row in shown]
         items = [item for item in items if item is not None]
-        meta: dict[str, Any] = {"empty": "Nothing is waiting for approval."}
+        # The rows exist to be pressed, so their buttons show without a
+        # hover: a wall display with a touchscreen has none.
+        meta: dict[str, Any] = {"empty": "Nothing is waiting for approval.", "actions_visible": True}
         if not may_decide:
             meta["notice"] = "This key may only read. Approving needs an approver's key that may write."
         return WidgetData(
@@ -311,7 +313,7 @@ class NexviewAdapter(Adapter):
                 items=[self._approval_row(row, demo_targets, True) for row in rows][: int(options.get("limit") or 8)],
                 secondary=[{"label": "Waiting", "value": waiting}],
                 metrics={"waiting": float(waiting)},
-                meta={"empty": "Nothing is waiting for approval."},
+                meta={"empty": "Nothing is waiting for approval.", "actions_visible": True},
             )
         waiting = 3 + (tick // 120) % 5
         meta = {"urgent": ["Storage is running low"], "status_reason": "0 error finding(s), 1 warning(s)"}

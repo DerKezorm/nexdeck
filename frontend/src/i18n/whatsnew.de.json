@@ -210,6 +210,31 @@
         "Eine Benachrichtigung, ein Web Push, eine Anmeldung über den eigenen Anbieter und die Suche nach einer neueren Fassung halten den ganzen Server nicht mehr je rund eine Sekunde an.",
         "Wer Telefon, Tablet und zwei Browser angemeldet hat, zahlte diese Sekunde für eine einzige Benachrichtigung viermal."
       ]
+    },
+    "0.6.0": {
+      "lead": "Nexview-Anfragen lassen sich direkt vom Brett freigeben, mit Auswahl von Ordner und Profil, wo sie nötig ist.",
+      "sections": [
+        {
+          "title": "Nexview-Anfragen vom Brett freigeben",
+          "body": "Eine neue Nexview-Kachel zeigt, was auf eine Freigabe wartet, mit Cover und wer angefragt hat. Ein Druck gibt frei oder lehnt ab.",
+          "path": "Bearbeiten > Kachel hinzufügen > Nexview > Anfragen zur Freigabe"
+        },
+        {
+          "title": "Eine Auswahl, wo sie nötig ist",
+          "body": "Fehlt einer Anfrage noch Zielordner oder Qualitätsprofil, öffnet „Freigeben“ ein kurzes Blatt mit den Ordnern und Profilen genau ihres Radarr oder Sonarr. Eine Liste mit mehreren Einträgen startet nie auf dem ersten, damit nichts in einem Ordner landet, den niemand gewählt hat.",
+          "path": "Anfragen zur Freigabe > Freigeben"
+        },
+        {
+          "title": "Nur mit einem Schlüssel, der freigeben darf",
+          "body": "Die Knöpfe erscheinen nur, wenn der Nexview-Schlüssel entscheiden darf. Mit einem Nur-Lese-Schlüssel stehen die Anfragen ohne Knöpfe da, und die Kachel sagt warum; der Verbindungstest sagt es schon beim Einrichten.",
+          "path": "Einstellungen > Verbindungen > Nexview"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Die Knöpfe der Freigabe-Kachel sind ohne Überfahren sichtbar und damit auch am Touchscreen erreichbar.",
+        "Brett und Wandanzeige stellen vor einer Aktion dieselbe Frage."
+      ]
     }
   }
 }

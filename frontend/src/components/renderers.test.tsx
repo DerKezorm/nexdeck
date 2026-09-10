@@ -53,6 +53,22 @@ describe('renderers', () => {
     expect(link.getAttribute('href')).toContain(encodeURIComponent('/download/Me%20at%20the%20zoo.webm'))
   })
 
+  it('shows row buttons without a hover only when the card asks for it', () => {
+    // ⚠️ A touchscreen has no hover. A card whose rows exist to be pressed
+    // says so; every other list keeps its buttons out of the way.
+    const view = { ...DEMO_VIEWS[0], id: 8, renderer: 'list' } as WidgetView
+    const rows = [{ title: 'Copper Sky', actions: [{ id: 'approve', label: 'Approve' }] }]
+    const draw = (meta: Record<string, unknown>) =>
+      render(<>{renderWidget({ widget: view, data: { status: 'ok', items: rows, meta } as unknown as WidgetData, canAct: true, onAction: () => undefined })}</>)
+
+    const quiet = draw({})
+    expect(quiet.getByRole('button', { name: /Approve|Freigeben/ }).closest('span')?.className).toContain('opacity-0')
+    quiet.unmount()
+
+    draw({ actions_visible: true })
+    expect(screen.getByRole('button', { name: /Approve|Freigeben/ }).closest('span')?.className).not.toContain('opacity-0')
+  })
+
   it('marks a failed widget with its error', () => {
     const view = DEMO_VIEWS[3]
     render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'The service could not be reached.' }} />)

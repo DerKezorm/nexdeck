@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.6.0 (2026-09-10)
 
 ### New
 
@@ -11,6 +11,7 @@ project uses semantic versioning.
 - **The card follows what the key may do, not the account's role.** It asks Nexview's `/api/v1/me` first. An administrator with a read-only key carries `role: admin` and still cannot approve anything, and a card built on the role builds a button that always fails. With a key that may only read, the requests are listed without buttons and the card says why; the connection test says it at setup as well.
 - **A card can ask for a choice before an action runs.** An action used to carry either fixed values from the card or one free-text field. Approving needs two picks at once, from lists that differ from row to row. An action may now carry several blanks, and a blank may be a pick list the card hands over with its answer, so the guard checks the pressed value against exactly the list that was on screen, the same way it checks every fixed parameter. A list of several never starts on its first entry: "nobody chose" must not turn into a folder a title then lands in.
 - **The wall display asks the same question as the board.** Both now share one confirmation sheet. They carried the same one twice, and a press on the wall on an action with blanks would have gone out half empty and come back refused.
+- **The approval card's buttons show without a hover.** Most lists keep their row buttons hidden until the pointer is over the row, so a restart button on every container does not clutter the card. A wall display with a touchscreen has no pointer, and on a card whose rows exist to be pressed the buttons would never have been seen. A card now says whether its row buttons should always show.
 
 ### Changed
 
