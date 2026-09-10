@@ -89,8 +89,17 @@ def _integration(db: Session, cache: dict[str, Integration], kind: str, owner_id
 
 
 def _layout_all(page: Page, widget_id: int, lg: tuple[int, int, int, int]) -> None:
+    """Give one card of the demo its place.
+
+    ⚠️ The lists are copied, not appended to. They were the very lists the
+    session keeps as the stored value, so the new value compared equal to the
+    old one and nothing was written: every demo board came up with no
+    arrangement at all, each card three columns by two in the order it was
+    made. Found on 10.09.2026 in the database of a fresh setup, where the
+    Media page had eleven cards and not one saved position.
+    """
     x, y, w, h = lg
-    layouts = dict(page.layouts or {})
+    layouts = {key: list(value) for key, value in (page.layouts or {}).items()}
     layouts.setdefault("lg", []).append({"i": str(widget_id), "x": x, "y": y, "w": w, "h": h})
     # Medium and small screens reflow below one another; the grid packs them.
     layouts.setdefault("md", []).append({"i": str(widget_id), "x": (x * 8 // 12) % 8, "y": y, "w": max(2, min(8, round(w * 8 / 12))), "h": h})

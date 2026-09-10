@@ -567,7 +567,8 @@
     "moveWith": "Move {{name}} with the arrow keys, resize with Shift and an arrow",
     "moveWithHandle": "Drag to move {{name}}",
     "chooseBeforeAction": "This needs a choice before it runs.",
-    "pickOne": "Pick one"
+    "pickOne": "Pick one",
+    "stackedHint": "On a narrow screen the cards follow the order of the wide board. To move them, open the board on a wider screen."
   },
   "widget": {
     "remove": {

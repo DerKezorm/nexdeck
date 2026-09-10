@@ -249,6 +249,22 @@
       "small": [
         "Ein Test lädt jetzt ein Bild von einer anderen Adresse auf einer Seite, die der Offline-Helfer betreut, damit das nicht unbemerkt zurückkommt."
       ]
+    },
+    "0.6.2": {
+      "lead": "Dein Handy zeigt das Board jetzt in der Reihenfolge, in der du es angeordnet hast.",
+      "sections": [
+        {
+          "title": "Eine Anordnung für jeden Bildschirm",
+          "body": "Du ordnest ein Board einmal auf einem breiten Bildschirm an. Tablet und Wandanzeige zeigen genau diese Anordnung, und das Handy stapelt die Karten in derselben Reihenfolge: Zeile für Zeile, von links nach rechts, Listen in voller Breite und kleine Kacheln paarweise.",
+          "path": "Bearbeiten (Stift) auf einem breiten Bildschirm"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Im Bearbeitungsmodus auf dem Handy bleiben die Karten stehen, und ein Hinweis sagt, dass sie auf einem breiteren Bildschirm angeordnet werden.",
+        "Anordnungen, die vor dieser Fassung eigens für Handy oder Tablet gemacht wurden, werden nicht mehr verwendet.",
+        "Ein neues Demo-Board kommt wieder mit seiner Anordnung, statt jede Karte gleich groß in der Reihenfolge ihres Anlegens zu zeigen."
+      ]
     }
   }
 }

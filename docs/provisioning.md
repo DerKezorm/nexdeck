@@ -24,8 +24,6 @@ pages:
         options: { limit: 8 }
         layout:
           lg: { x: 0, y: 0, w: 4, h: 3 }
-          md: { x: 0, y: 0, w: 4, h: 3 }
-          sm: { x: 0, y: 0, w: 4, h: 3 }
       - kind: core.app
         title: Radarr
         icon: radarr
@@ -42,7 +40,12 @@ integrations:
 Widgets reference integrations by **name**. On import, an integration with
 that name and kind is reused; otherwise it is created from the `config`
 block, with `${VARIABLE}` values taken from the environment. A widget
-without `layout` is placed at the bottom of every screen size.
+without `layout` is placed at the bottom of the board.
+
+`lg` is the arrangement, on a twelve-column grid. A tablet shows it as it
+is, and a phone stacks the cards in its reading order, row by row and left
+to right. Files from before 0.6.2 also carry `md` and `sm`; they are still
+read and kept, and the interface no longer uses them.
 
 ## Provisioning
 

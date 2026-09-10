@@ -3,6 +3,18 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.6.2 (2026-09-10)
+
+### Changed
+
+- **A phone shows the board in the order it was arranged.** The phone and the tablet each kept a layout of their own, written once when a card was added and never again, so arranging a board on a monitor left both as they were. Measured on a board of 25 cards: 6 stood in the same place on the phone as on the monitor, one was 15 places off, and 19 were half the width of the screen, lists included. There is now one arrangement. From 700 pixels up the board is drawn as arranged, only narrower or wider, so a wall tablet shows what was set up at the desk. Below that the cards are stacked in reading order, row by row and left to right, at the full width; two cards that are small on the wide board and equally tall share a row.
+- **On a phone, edit mode leaves the order alone.** A card cannot be dragged or resized there any more, and a note says that cards are arranged on a wider screen. Settings and removing work as before, and the arrow keys still move a card in the wide arrangement.
+- **Layouts saved for the tablet and the phone are no longer used.** They stay in the database and in exported files, so an older version reading the same data still finds them, and nothing saves them any more.
+
+### Fixed
+
+- **The demo board comes with its arrangement again.** Setting up with the demo placed every card three columns by two, in the order it was made, instead of the arrangement the demo describes. The demo appended each place to the very lists the database session keeps as the stored value, so the new value compared equal to the old one and was never written: in the database of a fresh setup, the Media page had eleven cards and not one saved position. Boards set up with the demo before keep the arrangement they show now.
+
 ## 0.6.1 (2026-09-10)
 
 ### Fixed

@@ -131,8 +131,8 @@ describe('arranging with the keyboard', () => {
     const lg = saved.mock.calls.find(([bp]) => bp === 'lg')
     expect(lg, 'nothing was saved').toBeTruthy()
     expect((lg![1] as LayoutItem[]).find((item) => item.i === '1')?.x).toBe(4)
-    // Every breakpoint moves, the way a drag moves them.
-    expect(saved.mock.calls.map(([bp]) => bp).sort()).toEqual(['lg', 'md', 'sm'])
+    // Only the wide arrangement is kept; the phone's stack is worked out from it.
+    expect(saved.mock.calls.map(([bp]) => bp)).toEqual(['lg'])
   })
 
   it('resizes with Shift and stops at the card floor', async () => {
