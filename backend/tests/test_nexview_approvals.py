@@ -239,3 +239,31 @@ async def test_the_connection_test_says_whether_the_key_may_approve(ctx: Context
     assert "may approve" in await nexview.test(CONFIG, ctx)
     route.mock(return_value=httpx.Response(200, json={"konto": {"role": "admin"}, "darf": ["lesen", "verwalten"]}))
     assert "without buttons" in await nexview.test(CONFIG, Context(httpx.AsyncClient(), integration_id=2, cache={}))
+
+
+@respx.mock
+async def test_a_refused_list_gives_nexviews_reason_rather_than_blaming_the_credentials(ctx: Context) -> None:
+    """⚠️ The same protection the buttons have, for the list itself. Nexview
+    answers 403 for an account that may not decide, and "the service rejected
+    the credentials" would send somebody hunting for a typo in a key that is
+    perfectly valid."""
+    _me(["lesen", "entscheiden"], role="approver")
+    respx.get(f"{NEXVIEW}/api/admin/requests").mock(return_value=httpx.Response(403, json={
+        "detail": {"code": "approvers_only", "message": "Diese Aktion ist Administratoren und Entscheidern vorbehalten."}}))
+    with pytest.raises(AdapterError) as refused:
+        await _fetch(ctx)
+    assert (refused.value.code, refused.value.message) == (
+        "http_error", "This key belongs to an account that approves nothing.")
+
+
+@respx.mock
+async def test_a_profile_that_is_not_a_number_goes_nowhere(ctx: Context) -> None:
+    """The guard already refuses a value the row did not offer; this is the
+    second lock, for the day a card offers something odd."""
+    anything = respx.route(host="nexview.example.com").mock(return_value=httpx.Response(200, json={}))
+    with pytest.raises(AdapterError) as refused:
+        await get_adapter("nexview").action(
+            "approvals", "approve", {"id": 13, "root_folder_path": "/media/films-4k", "quality_profile_id": "Ultra-HD"},
+            CONFIG, {}, ctx)
+    assert refused.value.code == "bad_param"
+    assert not anything.called
