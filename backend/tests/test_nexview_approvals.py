@@ -69,6 +69,8 @@ async def test_a_key_that_may_decide_gets_both_buttons(ctx: Context) -> None:
     # It carries its own target, so approving asks nothing.
     assert "asks" not in row["actions"][0]
     assert data.metrics == {"waiting": 1.0}
+    # A wall with a touchscreen has no hover; these buttons have to be seen.
+    assert data.meta.get("actions_visible") is True
 
 
 @respx.mock

@@ -422,7 +422,12 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 )}
               </div>
               {(item.file || (item.actions && canAct)) ? (
-                <span className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                // ⚠️ Hidden until hovered, on most lists: a restart button on
+                // every container row would be noise. A card whose rows exist
+                // to be pressed says so with `actions_visible`, because on a
+                // wall with a touchscreen there is no hovering and the buttons
+                // would never be seen at all.
+                <span className={`flex items-center gap-1 ${data?.meta?.actions_visible ? '' : 'opacity-0 group-hover/row:opacity-100 transition-opacity'}`}>
                   {/* Saving is not acting on the service, so it stays for a
                       viewer who may only look. */}
                   {item.file ? <SaveLink widgetId={widget.id} file={item.file as Saveable} /> : null}

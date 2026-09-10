@@ -210,6 +210,31 @@
         "A notification, a web push, a sign-in through your identity provider and the look for a newer version no longer hold the whole server up for about a second each.",
         "Someone with a phone, a tablet and two browsers used to pay that second four times over for a single notification."
       ]
+    },
+    "0.6.0": {
+      "lead": "Nexview requests can be approved right from the board, with a choice of folder and profile where one is needed.",
+      "sections": [
+        {
+          "title": "Approve Nexview requests from the board",
+          "body": "A new Nexview card lists what waits for approval, with its cover and who asked for it. One press approves or turns it down.",
+          "path": "Edit mode > Add widget > Nexview > Requests to approve"
+        },
+        {
+          "title": "A choice where one is needed",
+          "body": "When a request still needs a target folder or a quality profile, Approve opens a short sheet with the folders and profiles of that request's own Radarr or Sonarr. A list of several never starts on its first entry, so nothing lands in a folder nobody picked.",
+          "path": "Requests to approve > Approve"
+        },
+        {
+          "title": "Only with a key that may approve",
+          "body": "The buttons appear only when the Nexview key may decide. With a read-only key the requests are listed without them and the card says why; the connection test says so when you set it up.",
+          "path": "Settings > Connections > Nexview"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The buttons of the approval card show without hovering, so they can be reached on a touchscreen.",
+        "The board and the wall display ask the same question before an action runs."
+      ]
     }
   }
 }

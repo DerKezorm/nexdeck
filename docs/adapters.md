@@ -10,7 +10,7 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.5.1
+## Adapters in 0.6.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
