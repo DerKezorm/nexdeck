@@ -32,6 +32,32 @@ logger = logging.getLogger("nexdeck.webpush")
 SETTING_KEY = "vapid"
 TTL_SECONDS = 24 * 3600
 BODY_LIMIT = 3000
+TIMEOUT = 15.0
+
+#: One client for every push, kept for the life of the process.
+#:
+#: ⚠️ A fresh :class:`httpx.AsyncClient` builds a TLS context and loads the CA
+#: bundle, and it does that on the event loop: measured on Windows on
+#: 09.09.2026, 1.0 s for one and 11.35 s for eleven in a row. This built one
+#: per subscription, so somebody with a phone, a tablet and two browsers paid
+#: four seconds of a stopped server for one notification. Same shape as
+#: ``health.http_client`` and ``icons.http_client``.
+_client: httpx.AsyncClient | None = None
+
+
+def http_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = outbound_client(timeout=TIMEOUT)
+    return _client
+
+
+async def close_client() -> None:
+    """Shutdown: let go of the connections the push service holds open."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
 
 
 def _b64url(raw: bytes) -> str:
@@ -104,8 +130,7 @@ async def send_one(endpoint: str, p256dh: str, auth: str, message: Message) -> b
     })
     ephemeral = ec.generate_private_key(ec.SECP256R1())
     body = http_ece.encrypt(payload(message), private_key=ephemeral, dh=_raw(p256dh), auth_secret=_raw(auth), version="aes128gcm")
-    async with outbound_client(timeout=15) as client:
-        response = await client.post(endpoint, content=body, headers=headers)
+    response = await http_client().post(endpoint, content=body, headers=headers, timeout=TIMEOUT)
     if response.status_code in (404, 410):
         return False
     if response.status_code >= 400:

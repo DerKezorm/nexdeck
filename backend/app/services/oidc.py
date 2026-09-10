@@ -28,6 +28,33 @@ _discovery: dict[str, tuple[float, dict[str, Any]]] = {}
 #: One key client per address, kept for the life of the process.
 _jwks_clients: dict[str, jwt.PyJWKClient] = {}
 
+#: One HTTP client for all three legs, kept for the life of the process.
+#:
+#: ⚠️ A fresh :class:`httpx.AsyncClient` builds a TLS context and loads the CA
+#: bundle, and it does that on the event loop: measured on Windows on
+#: 09.09.2026, 1.0 s for one and 11.35 s for eleven in a row. A sign-in walks
+#: discovery, the code exchange and userinfo, so it built three, and the
+#: server stood still for all three of them while somebody was waiting on a
+#: redirect. The three legs differ in timeout and headers, and httpx takes
+#: both per request, so nothing about them is lost by sharing the client.
+#: Same shape as ``health.http_client`` and ``icons.http_client``.
+_client: httpx.AsyncClient | None = None
+
+
+def http_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = outbound_client(timeout=10)
+    return _client
+
+
+async def close_client() -> None:
+    """Shutdown: let go of the connections the provider legs hold open."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
+
 
 class OidcError(Exception):
     def __init__(self, code: str, message: str) -> None:
@@ -42,8 +69,7 @@ async def discovery(issuer_url: str) -> dict[str, Any]:
     if hit and hit[0] > time.monotonic():
         return hit[1]
     try:
-        async with outbound_client(timeout=10) as client:
-            response = await client.get(f"{issuer}/.well-known/openid-configuration")
+        response = await http_client().get(f"{issuer}/.well-known/openid-configuration", timeout=10)
     except httpx.HTTPError as error:
         raise OidcError("oidc_unreachable", "The identity provider could not be reached.") from error
     if response.status_code != 200:
@@ -90,8 +116,7 @@ async def exchange(document: dict[str, Any], client_id: str, client_secret: str,
     if not client_secret:
         data["client_id"] = client_id
     try:
-        async with outbound_client(timeout=15) as client:
-            response = await client.post(document["token_endpoint"], data=data, auth=auth, headers={"Accept": "application/json"})
+        response = await http_client().post(document["token_endpoint"], data=data, auth=auth, headers={"Accept": "application/json"}, timeout=15)
     except httpx.HTTPError as error:
         raise OidcError("oidc_unreachable", "The identity provider could not be reached for the token.") from error
     if response.status_code != 200:
@@ -135,8 +160,7 @@ async def userinfo(document: dict[str, Any], access_token: str) -> dict[str, Any
     if not endpoint or not access_token:
         return {}
     try:
-        async with outbound_client(timeout=10) as client:
-            response = await client.get(endpoint, headers={"Authorization": f"Bearer {access_token}"})
+        response = await http_client().get(endpoint, headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
         return response.json() if response.status_code == 200 else {}
     except (httpx.HTTPError, ValueError):
         return {}
