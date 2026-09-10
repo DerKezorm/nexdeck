@@ -268,14 +268,21 @@ export function Toast({ children, onClose, level = 'info' }: { children: ReactNo
     return () => window.clearTimeout(timer.current)
   }, [onClose])
   const { t } = useTranslation()
+  // ⚠️ The bubble lets clicks through. It sits in the bottom right corner
+  // for five seconds, and that is where a sheet keeps its Save button: a press
+  // meant for Save landed on the message instead, and the person pressed again
+  // and wondered. Nothing in here is clickable but the close button, which
+  // takes its pointer events back. Measured on 10.09.2026, where one run of
+  // the end-to-end suite spent a full minute retrying a single click against a
+  // message that kept renewing itself.
   return (
-    <div className={`fixed bottom-20 md:bottom-6 right-4 z-50 glass-strong rounded-xl pl-4 pr-10 py-3 text-sm max-w-sm border ${colour} shadow-2xl rise`} role="status">
+    <div className={`fixed bottom-20 md:bottom-6 right-4 z-50 pointer-events-none glass-strong rounded-xl pl-4 pr-10 py-3 text-sm max-w-sm border ${colour} shadow-2xl rise`} role="status">
       {children}
       {/* ⚠️ Every window gets one visible way out. This one had exactly one
           exit, the timer, so a message that mattered could not be dismissed
           and a message that did not could not be got rid of. */}
       <button
-        className="absolute top-2 right-2 h-6 w-6 rounded-md grid place-items-center text-muted hover:text-fg hover:bg-white/10"
+        className="absolute top-2 right-2 h-6 w-6 rounded-md grid place-items-center text-muted hover:text-fg hover:bg-white/10 pointer-events-auto"
         onClick={onClose}
         aria-label={t('common.close')}
       >

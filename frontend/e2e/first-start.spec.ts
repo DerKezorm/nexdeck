@@ -40,6 +40,25 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
 
   // Edit mode: the toolbar appears, the library opens and lists adapters.
   await page.getByRole('button', { name: 'Edit board' }).click()
+
+  // ⚠️ The message edit mode raises sits in the bottom right corner for five
+  // seconds, and that is where a sheet keeps its Save button. It used to
+  // swallow the press meant for what is underneath it, which cost a run of
+  // this suite a full minute of retries on 10.09.2026. Asked of the page
+  // itself, not of a class name: what is really under the middle of the
+  // bubble?
+  const hint = page.getByRole('status')
+  await expect(hint).toBeVisible()
+  const bubble = (await hint.boundingBox())!
+  const swallowed = await page.evaluate(
+    ([x, y]: [number, number]) => document.elementFromPoint(x, y)?.closest('[role="status"]') !== null,
+    [bubble.x + bubble.width / 2, bubble.y + bubble.height / 2] as [number, number],
+  )
+  expect(swallowed, 'the message swallows the press meant for what is under it').toBe(false)
+  // Its own close button keeps its press, or the message could not be got rid of.
+  await hint.getByRole('button').click()
+  await expect(hint).toBeHidden()
+
   await page.getByRole('button', { name: 'Add widget' }).first().click()
   await expect(page.getByRole('dialog').getByText('Basics')).toBeVisible()
   await expect(page.getByRole('dialog').getByText('Hosts and containers')).toBeVisible()
