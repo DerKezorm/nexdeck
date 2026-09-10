@@ -43,7 +43,7 @@ def _offer(client: TestClient, widget_id: int) -> dict:
     refreshed = client.post(f"/api/v1/widgets/{widget_id}/refresh", headers=CSRF)
     assert refreshed.status_code == 200, refreshed.text
     for action in refreshed.json().get("actions") or []:
-        if action.get("ask"):
+        if action.get("asks"):
             return action
     raise AssertionError("the card offered no action with a field, so this test proves nothing")
 
@@ -60,10 +60,10 @@ def test_the_card_tells_the_browser_what_it_may_fill_in(client: TestClient) -> N
     setup_admin(client)
     widget = _fetch_card(client)
     action = _offer(client, widget["id"])
-    assert action["ask"] == {
-        "name": "url", "label": "Video address", "kind": "url",
+    assert action["asks"] == [{
+        "name": "url", "label": "Video address", "kind": "url", "options": [],
         "placeholder": "https://...", "max_length": 2048,
-    }
+    }]
     assert "url" not in (action.get("params") or {}), "the blank must not arrive already filled in"
 
 

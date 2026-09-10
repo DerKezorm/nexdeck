@@ -20,7 +20,7 @@ const ASK = { name: 'url', label: 'Video address', kind: 'url' as const, placeho
 function data(extra: Partial<WidgetData> = {}): WidgetData {
   return {
     status: 'ok',
-    actions: [{ id: 'add', label: 'Fetch', icon: 'download', params: { quality: 'best' }, ask: ASK }],
+    actions: [{ id: 'add', label: 'Fetch', icon: 'download', params: { quality: 'best' }, asks: [ASK] }],
     items: [],
     ...extra,
   } as unknown as WidgetData

@@ -6,6 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, get, post, put } from '../api/client'
 import type { BoardSummary, BoardWithLive } from '../api/types'
+import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { BoardSettingsSheet } from '../components/BoardSettingsSheet'
@@ -20,6 +21,7 @@ import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSetti
 import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
+import { startingValue, unanswered } from '../lib/unanswered'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
@@ -57,7 +59,9 @@ export function BoardPage() {
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   const [boardSettings, setBoardSettings] = useState(false)
   const [palette, setPalette] = useState(false)
-  const [pending, setPending] = useState<{ widgetId: number; action: Action } | null>(null)
+  // `values` holds what the sheet has had picked or typed for the blanks the
+  // action left; the action itself stays as the card offered it.
+  const [pending, setPending] = useState<PendingAction | null>(null)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' | 'info' } | null>(null)
   const [removing, setRemoving] = useState<number | null>(null)
   const [newPage, setNewPage] = useState(false)
@@ -273,8 +277,13 @@ export function BoardPage() {
     runActionRef.current = runAction
   })
   const onAction = useCallback((widgetId: number, action: Action) => {
-    if (action.confirm) setPending({ widgetId, action })
-    else void runActionRef.current(widgetId, action)
+    // ⚠️ A blank nobody filled in opens the sheet, whether or not the action
+    // asked for a confirmation. Sent as it is, the server refuses it, and the
+    // toast would be the first anybody heard that there was a choice to make.
+    const open = unanswered(action)
+    if (action.confirm || open.length) {
+      setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
+    } else void runActionRef.current(widgetId, action)
   }, [])
   const onRefresh = useCallback((id: number) => void post(`/widgets/${id}/refresh`), [])
   const onSettings = useCallback((id: number) => setSettingsFor(id), [])
@@ -474,14 +483,12 @@ export function BoardPage() {
       <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} />
       <WhatsNewDialog />
 
-      <Confirm
-        open={pending !== null}
-        title={pending ? `${tLabel(pending.action.label)}?` : ''}
-        body={t('board.confirmAction')}
-        danger={pending?.action.danger}
+      <ActionSheet
+        pending={pending}
+        onChange={setPending}
         onCancel={() => setPending(null)}
-        onConfirm={() => {
-          if (pending) void runAction(pending.widgetId, pending.action)
+        onRun={(widgetId, action) => {
+          void runAction(widgetId, action)
           setPending(null)
         }}
       />

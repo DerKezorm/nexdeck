@@ -44,7 +44,7 @@ that one of twenty-one renderers draws.
 | Frigate | cameras, detections, status | | none |
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week | scan a library | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library, libraries, recently added (covers), findings, users and devices, top of the week | scan every library (one alone does nothing on these, measured) | API key |
-| Nexview | requests, library, instances | | API key |
+| Nexview | requests, library, instances, requests to approve | approve with target folder and profile, turn down | API key; approving needs an approver's key that may write |
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
 | Tautulli | now playing, streams, most watched | | API key |

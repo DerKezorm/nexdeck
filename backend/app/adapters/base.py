@@ -245,44 +245,70 @@ def saveable(path: str, name: str, size: float | None = None) -> dict[str, Any]:
     return {"path": path, "name": name, **({"size": float(size)} if size else {})}
 
 
+class Choice(BaseModel):
+    """One entry of a pick list a card offers with an action."""
+
+    value: str
+    label: str
+
+
 class Ask(BaseModel):
     """A blank in an action, filled in by whoever presses the button.
 
     ⚠️ The third case, and the one the guard of 0.2.0 was written against. An
     action reaches the adapter only because the card put it in its last answer
-    with exactly those parameters; free text has no fixed value to compare, so
-    without a declaration it would be the hole that guard closes. The card
-    therefore says here which single parameter is blank and what may go in it,
-    and the collector fills it in: everything else about the action still has
-    to match what was offered, and a value that does not fit this declaration
-    never reaches the adapter.
+    with exactly those parameters, and a blank has no fixed value to compare.
+    The card therefore says here which parameter is blank and what may go in
+    it: everything else about the action still has to match what was offered,
+    and a value that does not fit this declaration never reaches the adapter.
 
-    One blank per action, deliberately. Two would be a form, and a form on a
-    card is a settings sheet with worse manners.
+    ⚠️ **A pick list is the ordinary case, free text the exception.** It was
+    the other way round for one release, and that was wrong: with ``choice``
+    the card hands the permitted values over in its own answer, so the guard
+    can check the pressed value against them exactly as it checks a fixed
+    parameter. ``text`` and ``url`` are what is left when nobody can say in
+    advance what the value will be, and only then is a rule needed instead of
+    a list.
+
+    That is also why an action may carry several. The first version allowed
+    one, on the grounds that two blanks would be a form; that reasoning holds
+    for free text and not for lists. Approving a request in Nexview needs two
+    at once, a target folder and a quality profile, and one without the other
+    is not a smaller question but an unanswerable one.
     """
 
-    #: The parameter the typed value is passed as.
+    #: The parameter the chosen or typed value is passed as.
     name: str
     label: str
-    #: ``url`` is checked the way a member-supplied address is checked
-    #: everywhere else in nexdeck: http or https, a host, and nothing that
-    #: only answers to the server itself.
-    kind: Literal["text", "url"] = "text"
+    #: ``choice`` picks from ``options``; ``url`` is checked the way a
+    #: member-supplied address is checked everywhere else in nexdeck: http or
+    #: https, a host, and nothing that only answers to the server itself.
+    kind: Literal["text", "url", "choice"] = "text"
+    #: For ``choice``: what may be picked. Delivered with the card's answer,
+    #: which is what lets the guard check the pressed value against it.
+    options: list[Choice] = PydanticField(default_factory=list)
     placeholder: str = ""
     max_length: int = 400
 
 
 def fill_in(ask: Ask, value: Any) -> str:
-    """What the typed value must look like before an adapter sees it.
+    """What the filled-in value must look like before an adapter sees it.
 
     Refuses rather than trims, apart from surrounding blanks: a silently
     shortened address is a download of something else.
     """
     if not isinstance(value, str):
-        raise AdapterError("This action needs a value typed in.", code="bad_value")
+        raise AdapterError("This action needs a value.", code="bad_value")
     text = value.strip()
     if not text:
-        raise AdapterError("This action needs a value typed in.", code="bad_value")
+        raise AdapterError("This action needs a value.", code="bad_value")
+    if ask.kind == "choice":
+        # ⚠️ Against the list the card handed over with the action, not
+        # against a list fetched now. What was on screen is what may be
+        # pressed, which is the same rule the fixed parameters follow.
+        if text not in {one.value for one in ask.options}:
+            raise AdapterError("That is not one of the values this card offered.", code="bad_value")
+        return text
     if len(text) > ask.max_length:
         raise AdapterError(
             f"That is longer than the {ask.max_length} characters this field takes.", code="bad_value")
@@ -302,8 +328,8 @@ class Action(BaseModel):
     confirm: bool = False
     danger: bool = False
     params: dict[str, Any] = PydanticField(default_factory=dict)
-    #: The one parameter whoever presses this button types in themselves.
-    ask: Ask | None = None
+    #: The parameters whoever presses this button fills in themselves.
+    asks: list[Ask] = PydanticField(default_factory=list)
 
 
 @dataclass(frozen=True)

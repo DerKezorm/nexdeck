@@ -151,7 +151,7 @@ async def test_the_field_card_offers_the_button_and_what_it_started(ctx: Context
     assert [one.id for one in data.actions] == ["add"]
     action = data.actions[0]
     assert action.params == {"download_type": "video", "quality": "720", "format": "mp4"}
-    assert action.ask is not None and action.ask.name == "url" and action.ask.kind == "url"
+    assert [(one.name, one.kind) for one in action.asks] == [("url", "url")]
     # Only what is running: the history belongs on the other card.
     assert [row["title"] for row in data.items] == ["How a lock works"]
 

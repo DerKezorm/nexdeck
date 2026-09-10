@@ -382,6 +382,12 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
   }
   return (
     <div className="flex-1 min-h-0 flex flex-col">
+      {data?.meta?.notice ? (
+        // One sentence about the card as a whole, above its rows: why a list
+        // has no buttons, for instance. Without it the buttons are simply
+        // missing and nobody can tell whether that is a fault.
+        <div className="mx-3 mb-1.5 text-[11px] text-muted border-l-2 border-[var(--nd-warn,theme(colors.amber.400))] pl-2">{tLabel(String(data.meta.notice))}</div>
+      ) : null}
       <ul className="flex-1 min-h-0 scroll px-1.5 pb-1">
         {items.map((item, index) => {
           const status = statusOf(item.status)
@@ -389,7 +395,15 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
           const memory = typeof item.memory_percent === 'number' ? item.memory_percent : null
           return (
             <li key={String(item.id ?? index)} className="group/row flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-surface-hover">
-              {item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={status} />}
+              {item.art ? (
+                // A cover beside the row, for lists of titles: requests,
+                // recently added. Small, and the dot moves onto its corner so
+                // the row still says how it stands.
+                <span className="relative shrink-0 w-8 aspect-[2/3] rounded overflow-hidden bg-surface-hover">
+                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                  <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
+                </span>
+              ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={status} />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-medium truncate">{String(item.title ?? '')}</span>

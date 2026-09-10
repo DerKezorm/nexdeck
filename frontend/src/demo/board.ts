@@ -344,7 +344,7 @@ export const DEMO_WIDGETS: DemoWidget[] = [
       actions: [{
         id: 'add', label: 'Fetch', icon: 'download',
         params: { download_type: 'video', quality: 'best', format: 'any' },
-        ask: { name: 'url', label: 'Video address', kind: 'url', placeholder: 'https://...', max_length: 2048 },
+        asks: [{ name: 'url', label: 'Video address', kind: 'url', placeholder: 'https://...', max_length: 2048 }],
       }],
       items: [{ title: 'How a cylinder lock works', subtitle: '42% · 2.3 MB/s · 40s left', status: 'warn' }],
       secondary: [{ label: 'Running', value: 1 }],
