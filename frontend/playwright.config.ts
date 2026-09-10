@@ -22,8 +22,16 @@ export const FRONTEND_PORT = 5799
  * green.
  */
 export const BUILT_PORT = 8798
-const DATA = path.join(here, '.e2e-data')
-const BUILT_DATA = path.join(here, '.e2e-built-data')
+/**
+ * ⚠️ Outside the frontend on purpose. The Vite dev server watches its own
+ * root and ignores only .git, node_modules, test-results, its cache and the
+ * build output, so a database in there is a file storm aimed at the watcher of
+ * the very server this run is testing through: SQLite rewrites its
+ * write-ahead log hundreds of times in one run, and the log and the cache
+ * directory sit beside it.
+ */
+const DATA = path.join(root, '.e2e-data')
+const BUILT_DATA = path.join(root, '.e2e-built-data')
 
 /** In CI Python is on the path; here it sits in the backend's venv. */
 const PYTHON = process.env.NEXDECK_E2E_PYTHON || (process.platform === 'win32' ? path.join(root, 'backend', '.venv', 'Scripts', 'python.exe') : 'python')
@@ -81,12 +89,21 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
-      command: `npm run dev -- --host 127.0.0.1 --port ${FRONTEND_PORT} --strictPort`,
+      // ⚠️ Through the supervisor, not straight: this server aborts about one
+      // run in five on this platform and takes the whole run with it. See
+      // tools/dev-server.mjs for what was measured and why it is not ours.
+      command: `node tools/dev-server.mjs --host 127.0.0.1 --port ${FRONTEND_PORT} --strictPort`,
       cwd: here,
       env: { NEXDECK_API: `http://127.0.0.1:${BACKEND_PORT}` },
       url: `http://127.0.0.1:${FRONTEND_PORT}`,
       reuseExistingServer: false,
       timeout: 120_000,
+      // ⚠️ Both backends piped their output from the start and this one did
+      // not, and that is the half of the wire a flaky run happens on: measured
+      // on 09.09.2026, this server dies about one run in five, and the only
+      // trace of it was that every later test could no longer reach the port.
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       // FastAPI serving dist/, the way the container does. Needs a build.

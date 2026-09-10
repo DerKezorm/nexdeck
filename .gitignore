@@ -14,8 +14,8 @@ backend/.e2e-data/
 node_modules/
 frontend/dist/
 frontend/dist-dev/
-frontend/.e2e-data/
-frontend/.e2e-built-data/
+/.e2e-data/
+/.e2e-built-data/
 frontend/playwright-report/
 frontend/test-results/
 
