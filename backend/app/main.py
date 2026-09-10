@@ -49,6 +49,10 @@ from .routers import (
 from .routers import journal as journal_router
 from .security import prune_sessions
 from .services import backup, history, journal, provisioning, retention
+from .services import channels as channel_service
+from .services import icons as icon_service
+from .services import oidc as oidc_service
+from .services.channels import webpush as webpush_service
 from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
@@ -156,6 +160,11 @@ async def lifespan(app: FastAPI):
         await log_tailer.stop()
         await collector.stop()
         await close_relaxed_client()
+        await icon_service.close_client()
+        await channel_service.close_client()
+        await webpush_service.close_client()
+        await oidc_service.close_client()
+        await system.close_client()
         set_main_loop(None)
 
 

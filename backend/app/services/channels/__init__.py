@@ -165,14 +165,40 @@ async def send(kind: str, config: dict[str, Any], message: Message, *, user_id: 
         raise ValueError(f"Unknown channel kind {kind!r}.")
 
 
+#: One client for every channel that speaks HTTP, kept for the life of the
+#: process.
+#:
+#: ⚠️ A fresh :class:`httpx.AsyncClient` builds a TLS context and loads the CA
+#: bundle, and it does that on the event loop: measured on Windows on
+#: 09.09.2026, 1.0 s for one and 11.35 s for eleven in a row. This built one
+#: per notification, so an outage that reaches four channels held the whole
+#: server for four seconds, at the moment it has the most to say. Same shape
+#: as ``health.http_client`` and ``icons.http_client``.
+_client: httpx.AsyncClient | None = None
+
+
+def http_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = outbound_client(timeout=TIMEOUT)
+    return _client
+
+
+async def close_client() -> None:
+    """Shutdown: let go of the connections the channels hold open."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
+
+
 async def _post(url: str, **kwargs: Any) -> httpx.Response:
     # ⚠️ Every address that reaches here was typed into a channel by whoever
     # set it up, and every member may set one up. The answer comes back to
     # them as an HTTP status, so without this the field is a way of asking
     # what is listening beside the server.
     guard_member_target(url)
-    async with outbound_client(timeout=TIMEOUT) as client:
-        response = await client.post(url, **kwargs)
+    response = await http_client().post(url, timeout=TIMEOUT, **kwargs)
     if response.status_code >= 400:
         raise RuntimeError(f"The service answered with HTTP {response.status_code}.")
     return response

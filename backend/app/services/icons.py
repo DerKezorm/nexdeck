@@ -33,6 +33,37 @@ _negative: dict[str, float] = {}
 _index: dict[str, tuple[float, list[str]]] = {}
 
 
+#: One client for the whole process.
+#:
+#: ⚠️ A fresh :class:`httpx.AsyncClient` builds a TLS context and loads the
+#: CA bundle, and it does that on the event loop. Measured on Windows on
+#: 09.09.2026: 1.0 s for one, 11.35 s for eleven in a row. This proxy built
+#: one per icon, and on the first load of a fresh installation nothing is
+#: cached and the demo board asks for eleven logos at once, so the server had
+#: no turn for anything else for about eleven seconds. What waited behind it
+#: was everything: the live stream took 5.4 s to open, and the board answer
+#: that carries the cards' first data came back after 14.3 s, against an
+#: end to end test that waits 15 s for a card to fill in. The reachability
+#: checks learned this first, in ``health.http_client``; this was the last
+#: place still paying it.
+_client: httpx.AsyncClient | None = None
+
+
+def http_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = outbound_client(timeout=10, follow_redirects=True, headers={"User-Agent": "nexdeck"})
+    return _client
+
+
+async def close_client() -> None:
+    """Shutdown: let go of the connections the proxy holds open."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
+
+
 def _cache_dir() -> Path:
     directory = get_settings().cache_dir / "icons"
     directory.mkdir(parents=True, exist_ok=True)
@@ -57,16 +88,16 @@ async def fetch_icon(name: str, ext: str) -> tuple[bytes, str] | None:
         return cached.read_bytes(), _content_type(ext)
     if _negative.get(key, 0) > time.monotonic():
         return None
-    async with outbound_client(timeout=10, follow_redirects=True, headers={"User-Agent": "nexdeck"}) as client:
-        for _source, pattern, _tree in SOURCES:
-            url = pattern.format(ext=ext, name=name)
-            try:
-                response = await client.get(url)
-            except httpx.HTTPError:
-                continue
-            if response.status_code == 200 and response.content:
-                cached.write_bytes(response.content)
-                return response.content, _content_type(ext)
+    client = http_client()
+    for _source, pattern, _tree in SOURCES:
+        url = pattern.format(ext=ext, name=name)
+        try:
+            response = await client.get(url)
+        except httpx.HTTPError:
+            continue
+        if response.status_code == 200 and response.content:
+            cached.write_bytes(response.content)
+            return response.content, _content_type(ext)
     _remember_miss(key)
     return None
 
@@ -107,8 +138,7 @@ async def _names(source: str, tree_url: str) -> list[str]:
         return names
     names: list[str] = []
     try:
-        async with outbound_client(timeout=20, headers={"User-Agent": "nexdeck", "Accept": "application/vnd.github+json"}) as client:
-            response = await client.get(tree_url)
+        response = await http_client().get(tree_url, timeout=20, headers={"Accept": "application/vnd.github+json"})
         if response.status_code == 200:
             for entry in response.json().get("tree", []):
                 path = entry.get("path", "")

@@ -35,6 +35,32 @@ RELEASES_URL = "https://api.github.com/repos/DerKezorm/nexdeck/releases/latest"
 _told_about: str | None = None
 _update_cache: dict[str, object] = {}
 
+#: One client for the update check, kept for the life of the process.
+#:
+#: ⚠️ A fresh :class:`httpx.AsyncClient` builds a TLS context and loads the CA
+#: bundle, and it does that on the event loop: measured on Windows on
+#: 09.09.2026, 1.0 s for one and 11.35 s for eleven in a row. The answer is
+#: cached for six hours, so this is the cheapest of the four places that paid
+#: it, but it is also the one an administrator triggers by hand and then
+#: watches: the second the button costs was a second of nothing else moving.
+#: Same shape as ``health.http_client`` and ``icons.http_client``.
+_client: httpx.AsyncClient | None = None
+
+
+def http_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = outbound_client(timeout=8, headers={"User-Agent": "nexdeck"})
+    return _client
+
+
+async def close_client() -> None:
+    """Shutdown: let go of the connection the update check holds open."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
+
 
 @router.get("/api/health", summary="Is the server alive")
 def health() -> dict:
@@ -93,8 +119,7 @@ async def latest_version(force: bool = False) -> str | None:
         return _update_cache.get("version")  # type: ignore[return-value]
     version: str | None = None
     try:
-        async with outbound_client(timeout=8, headers={"User-Agent": "nexdeck"}) as client:
-            response = await client.get(RELEASES_URL)
+        response = await http_client().get(RELEASES_URL, timeout=8)
         if response.status_code == 200:
             version = str(response.json().get("tag_name", "")).lstrip("v") or None
     except httpx.HTTPError:
