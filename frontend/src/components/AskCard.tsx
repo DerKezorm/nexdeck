@@ -3,10 +3,12 @@
  * standing in front of the board rather than from a list the service handed
  * over.
  *
- * The adapter declares the blank as part of the action (`action.ask`), and the
- * server checks the typed value against that declaration before any adapter
- * sees it. This component only fills the blank in and hands the action back
- * the same way every other card does.
+ * The adapter declares the blank as part of the action (`action.asks`), and
+ * the server checks the typed value against that declaration before any
+ * adapter sees it. This component only fills the blank in and hands the action
+ * back the same way every other card does. It draws the first text blank as a
+ * field on the card; an action with pick lists goes through the sheet that
+ * every other card opens instead.
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,8 +22,8 @@ export function AskCard({ data, canAct, onAction, editing }: RenderProps) {
   const { t } = useTranslation()
   const [text, setText] = useState('')
 
-  const action = (data?.actions as Action[] | undefined)?.find((one) => one.ask)
-  const ask = action?.ask
+  const action = (data?.actions as Action[] | undefined)?.find((one) => one.asks?.some((blank) => blank.kind !== 'choice'))
+  const ask = action?.asks?.find((blank) => blank.kind !== 'choice')
   const items = data?.items ?? []
   // In edit mode the card is being dragged, not used.
   const usable = Boolean(action && ask && canAct && onAction && !editing)

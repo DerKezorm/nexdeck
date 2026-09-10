@@ -822,7 +822,10 @@
     "Only what is running": "Nur was läuft",
     "Only what is over": "Nur was vorbei ist",
     "Download count": "Anzahl der Downloads",
-    "How much is running, done and failed.": "Wie viel läuft, fertig ist und fehlgeschlagen ist."
+    "How much is running, done and failed.": "Wie viel läuft, fertig ist und fehlgeschlagen ist.",
+    "A key from Profile > API keys. Read-only is enough for the numbers; approving requests needs the key of an approver that may write.": "Ein Schlüssel aus Profil > API-Schlüssel. Für die Zahlen reicht einer, der nur lesen darf; zum Freigeben braucht es den Schlüssel eines Entscheiders mit Schreibrecht.",
+    "Requests to approve": "Anfragen zur Freigabe",
+    "What waits for approval, with its cover, to approve or turn down from the board.": "Was auf eine Freigabe wartet, mit Cover, direkt vom Brett aus freigeben oder ablehnen."
   },
   "labels": {
     "A download failed": "Ein Download ist fehlgeschlagen",
@@ -1178,6 +1181,16 @@
     "Downloading": "Wird geladen",
     "MeTube is fetching it.": "MeTube holt es.",
     "Removed.": "Entfernt.",
-    "Trying again.": "Wird noch einmal versucht."
+    "Trying again.": "Wird noch einmal versucht.",
+    "Turn down": "Ablehnen",
+    "Target folder": "Zielordner",
+    "Quality profile": "Qualitätsprofil",
+    "This key belongs to an account that approves nothing, so there is nothing to list.": "Dieser Schlüssel gehört zu einem Konto, das nichts freigibt, also gibt es nichts aufzulisten.",
+    "This key may only read. Approving needs an approver's key that may write.": "Dieser Schlüssel darf nur lesen. Zum Freigeben braucht es den Schlüssel eines Entscheiders mit Schreibrecht.",
+    "Nothing to show": "Nichts anzuzeigen",
+    "Nothing is waiting for approval.": "Nichts wartet auf eine Freigabe.",
+    "Approved.": "Freigegeben.",
+    "Turned down.": "Abgelehnt.",
+    "Nexview handed over no target folder or profile to approve into": "Nexview hat keinen Zielordner und kein Profil zum Freigeben geliefert"
   }
 }

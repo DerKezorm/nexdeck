@@ -8,11 +8,23 @@ export interface Saveable {
   size?: number
 }
 
-/** The one parameter of an action that whoever presses it types in. */
+/** One entry of a pick list a card offers with an action. */
+export interface Choice {
+  value: string
+  label: string
+}
+
+/**
+ * A parameter of an action that whoever presses it fills in.
+ *
+ * `choice` picks from `options`, which the card delivered with its answer; the
+ * server checks the pressed value against exactly that list.
+ */
 export interface Ask {
   name: string
   label: string
-  kind?: 'text' | 'url'
+  kind?: 'text' | 'url' | 'choice'
+  options?: Choice[]
   placeholder?: string
   max_length?: number
 }
@@ -24,7 +36,7 @@ export interface Action {
   confirm?: boolean
   danger?: boolean
   params?: Record<string, unknown>
-  ask?: Ask | null
+  asks?: Ask[]
 }
 
 export interface Primary {

@@ -565,7 +565,9 @@
     "deletePageBody": "Ihre {{count}} Karten gehen mit, samt Verlauf.",
     "lastPage": "Ein Board behält mindestens eine Seite.",
     "moveWith": "{{name}} mit den Pfeiltasten verschieben, mit Umschalt und Pfeil in der Größe ändern",
-    "moveWithHandle": "{{name}} mit dem Griff verschieben"
+    "moveWithHandle": "{{name}} mit dem Griff verschieben",
+    "chooseBeforeAction": "Dafür muss vorher etwas ausgewählt werden.",
+    "pickOne": "Bitte auswählen"
   },
   "widget": {
     "remove": {

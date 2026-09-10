@@ -268,7 +268,7 @@ class MetubeAdapter(Adapter):
                 "quality": "best" if audio else str(options.get("quality") or "best"),
                 "format": str(options.get("format") or "any"),
             },
-            ask=Ask(name="url", label="Video address", kind="url", placeholder="https://...", max_length=2048),
+            asks=[Ask(name="url", label="Video address", kind="url", placeholder="https://...", max_length=2048)],
         )
 
     def _rows(self, lists: dict[str, list[dict[str, Any]]], show: str, limit: int) -> list[dict[str, Any]]:

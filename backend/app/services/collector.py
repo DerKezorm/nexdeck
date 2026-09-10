@@ -501,26 +501,26 @@ class Collector:
     # -- what a card may be asked to do --------------------------------------
 
     @staticmethod
-    def _offered(data: WidgetData | None) -> list[tuple[str, dict[str, Any], Ask | None]]:
+    def _offered(data: WidgetData | None) -> list[tuple[str, dict[str, Any], list[Ask]]]:
         """Every action the card last put in front of whoever is looking.
 
         Two places: the card's own buttons, and the buttons on each row of a
         list, which is where the container, the machine or the entity is named.
 
-        The third part of each entry is the blank the card left for whoever
-        presses it, or nothing, which is what almost every action is.
+        The third part of each entry is the blanks the card left for whoever
+        presses it, empty for almost every action.
         """
         if data is None:
             return []
-        offered = [(action.id, dict(action.params), action.ask) for action in data.actions]
+        offered = [(action.id, dict(action.params), list(action.asks)) for action in data.actions]
         for item in data.items:
             for entry in (item.get("actions") or []) if isinstance(item, dict) else []:
                 if isinstance(entry, dict) and entry.get("id"):
-                    ask = entry.get("ask")
                     offered.append((
                         str(entry["id"]),
                         dict(entry.get("params") or {}),
-                        Ask.model_validate(ask) if isinstance(ask, dict) else ask if isinstance(ask, Ask) else None,
+                        [one if isinstance(one, Ask) else Ask.model_validate(one)
+                         for one in (entry.get("asks") or []) if isinstance(one, (dict, Ask))],
                     ))
         return offered
 
@@ -542,31 +542,32 @@ class Collector:
         screen. A kiosk token counts as a viewer too, which is the point: it
         is the least trusted way in and the one that reaches this code.
 
-        One action in three hundred leaves a blank for whoever presses it: a
-        video address to fetch. That is the only parameter that may differ
-        from what was offered, the adapter had to declare it as an
-        :class:`Ask`, and it goes through :func:`fill_in` first. Returns the
-        parameters the adapter is to be given, which is not always the ones
-        that arrived.
+        A few actions leave blanks for whoever presses them: an address to
+        fetch, a target folder to approve into. Those are the only parameters
+        that may differ from what was offered, the adapter had to declare each
+        one as an :class:`Ask`, and each goes through :func:`fill_in` first.
+        Returns the parameters the adapter is to be given, which is not always
+        the ones that arrived.
         """
         offered = self._offered(live.get(widget_id))
         if not offered:
             raise AdapterError("This card is not offering any action right now.", code="no_such_action")
         given = dict(params or {})
-        for offered_id, fixed, ask in offered:
+        for offered_id, fixed, asks in offered:
             if offered_id != action_id:
                 continue
-            if ask is None:
+            if not asks:
                 if given == fixed:
                     return given
                 continue
-            # The one blank the card declared is the only parameter that may
-            # differ, and it has to survive its own declaration before the
+            # The blanks the card declared are the only parameters that may
+            # differ, and each has to survive its own declaration before the
             # adapter is handed it. Everything else still has to match.
-            rest = {name: value for name, value in given.items() if name != ask.name}
-            if rest != {name: value for name, value in fixed.items() if name != ask.name}:
+            blanks = {one.name for one in asks}
+            rest = {name: value for name, value in given.items() if name not in blanks}
+            if rest != {name: value for name, value in fixed.items() if name not in blanks}:
                 continue
-            return {**rest, ask.name: fill_in(ask, given.get(ask.name))}
+            return {**rest, **{one.name: fill_in(one, given.get(one.name)) for one in asks}}
         logger.warning("Widget %s was asked for the action %r, which it did not offer.", widget_id, action_id)
         raise AdapterError("This card is not offering that action.", code="no_such_action")
 

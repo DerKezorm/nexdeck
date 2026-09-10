@@ -3,6 +3,19 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **Approve Nexview requests from the board.** A new Nexview card, **Requests to approve**, lists what is waiting with its cover and who asked for it, and approves or turns it down with one press. When a request still needs a target folder or a quality profile, pressing Approve opens a sheet with the folders and profiles of that request's own instance: a film in 4K goes to a different Radarr than the same film in 1080p, so one list for all of them would be wrong for three of the four. Where Nexview cannot say which folders there are, the row has no Approve button rather than a button with an empty list.
+- **The card follows what the key may do, not the account's role.** It asks Nexview's `/api/v1/me` first. An administrator with a read-only key carries `role: admin` and still cannot approve anything, and a card built on the role builds a button that always fails. With a key that may only read, the requests are listed without buttons and the card says why; the connection test says it at setup as well.
+- **A card can ask for a choice before an action runs.** An action used to carry either fixed values from the card or one free-text field. Approving needs two picks at once, from lists that differ from row to row. An action may now carry several blanks, and a blank may be a pick list the card hands over with its answer, so the guard checks the pressed value against exactly the list that was on screen, the same way it checks every fixed parameter. A list of several never starts on its first entry: "nobody chose" must not turn into a folder a title then lands in.
+- **The wall display asks the same question as the board.** Both now share one confirmation sheet. They carried the same one twice, and a press on the wall on an action with blanks would have gone out half empty and come back refused.
+
+### Changed
+
+- **`Action.ask` is `Action.asks` now, a list.** One adapter used the single blank, MeTube, and it has been moved over.
+
 ## 0.5.2 (2026-09-10)
 
 ### Fixed

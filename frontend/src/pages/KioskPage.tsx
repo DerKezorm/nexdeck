@@ -7,8 +7,9 @@ import { get, openKioskSession, post } from '../api/client'
 import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
-import { tLabel } from '../i18n/texts'
-import { Confirm, Spinner } from '../components/ui'
+import { ActionSheet, type PendingAction } from '../components/ActionSheet'
+import { Spinner } from '../components/ui'
+import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
 import { useLive } from '../stores/live'
@@ -39,7 +40,7 @@ export function KioskPage() {
   const setSeriesFor = useLive((state) => state.setSeries)
   const [pageIndex, setPageIndex] = useState(0)
   const [dimmed, setDimmed] = useState(false)
-  const [pending, setPending] = useState<{ widgetId: number; action: Action } | null>(null)
+  const [pending, setPending] = useState<PendingAction | null>(null)
   const [admitted, setAdmitted] = useState(false)
   useEffect(() => {
     document.documentElement.dataset.theme = 'dark'
@@ -150,18 +151,25 @@ export function KioskPage() {
           series={liveSeries}
           autoCompact={Boolean(data.settings?.compact)}
           canAct={canAct}
-          onAction={(widgetId, action) => (action.confirm ? setPending({ widgetId, action }) : run(widgetId, action))}
+          onAction={(widgetId, action) => {
+            // The same rule as on the board: a blank nobody filled in opens
+            // the sheet, or the wall display sends the press out half empty.
+            const open = unanswered(action)
+            if (action.confirm || open.length) {
+              setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
+            } else run(widgetId, action)
+          }}
         />
       </main>
-      <Confirm
-        open={pending !== null}
-        // ⚠️ Translated, the way the board does it. The same button read
-        // "Restart?" here and "Neu starten?" one screen away.
-        title={pending ? `${tLabel(pending.action.label)}?` : ''}
-        danger={pending?.action.danger}
+      {/* ⚠️ The board's own sheet, not a copy of it. The title is translated
+          there, which it once was not here: the same button read "Restart?"
+          on the wall and "Neu starten?" one screen away. */}
+      <ActionSheet
+        pending={pending}
+        onChange={setPending}
         onCancel={() => setPending(null)}
-        onConfirm={() => {
-          if (pending) run(pending.widgetId, pending.action)
+        onRun={(widgetId, action) => {
+          run(widgetId, action)
           setPending(null)
         }}
       />

@@ -565,7 +565,9 @@
     "deletePageBody": "Its {{count}} cards go with it, including their history.",
     "lastPage": "A board keeps at least one page.",
     "moveWith": "Move {{name}} with the arrow keys, resize with Shift and an arrow",
-    "moveWithHandle": "Drag to move {{name}}"
+    "moveWithHandle": "Drag to move {{name}}",
+    "chooseBeforeAction": "This needs a choice before it runs.",
+    "pickOne": "Pick one"
   },
   "widget": {
     "remove": {
