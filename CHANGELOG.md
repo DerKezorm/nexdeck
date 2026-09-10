@@ -3,6 +3,14 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.5.2 (2026-09-10)
+
+### Fixed
+
+- **The board of a fresh installation comes alive after five seconds where it used to take fourteen, and the cause was one client too many.** Every service logo a card shows is fetched by the server and kept on disk, and on a new installation nothing is kept yet: the demo board asks for eleven of them at once. The proxy built a fresh HTTP client for each, and building one costs about a second, because it builds a TLS context and reads the certificate bundle. That second is not spent waiting for the network. It is spent on the event loop, so nothing else in the server moves while it passes, and eleven of them in a row cost 11.35 seconds. Recorded in a real browser: the loop stood still for 15.6 of 20 seconds, the live stream needed 5.4 s before it was open, and the board answer that carries the first data of every card came back after 14.3 s. It comes back after 5.6 s now. What this looked like from a chair: a board full of cards that stayed empty, and a button card that led nowhere, because a card shows nothing until its first answer arrives and a button card carries where it leads in that answer.
+- **A message no longer swallows the press meant for the button underneath it.** The message bubble sits in the bottom right corner for five seconds, and that is exactly where a settings sheet keeps its Save button. A press meant for Save landed on the message. On screen that is "I press Save and nothing happens", and the natural response is to press again, which does not help either. Nothing inside a message is there to be clicked except its own close button, so the bubble lets presses through now and the close button keeps its own.
+- **A notification, a web push, a sign-in and the look for a newer version no longer stop the server for a second each.** The same client-per-call as above, in four quieter places. Somebody with a phone, a tablet and two browsers paid four seconds of a stopped server for one notification; the update check is the one an administrator presses by hand and then watches. All five places now keep one client for the life of the process, the way the reachability checks have since 07.09.2026, and a test counts the clients so it cannot come back.
+
 ## 0.5.1 (2026-09-09)
 
 ### Fixed
