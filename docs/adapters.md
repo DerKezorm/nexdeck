@@ -10,7 +10,7 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.7.0
+## Adapters in 0.8.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
@@ -19,11 +19,15 @@ that one of twenty-one renderers draws.
 | Portainer | containers, summary | container actions | access token |
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
+| Gitea, Forgejo | open issues or pull requests, Actions jobs, repositories | | access token with read access to repositories, issues and the user |
+| Semaphore UI | last runs, automation | | API token of a user; the cards see the projects that user sees |
 | Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
 | Nextcloud | overview, active users, free space | | serverinfo token, or an administrator account |
 | TrueNAS | system, pools, alerts | | API key |
 | Proxmox Backup Server | datastores, host, tasks | | API token; DatastoreAudit on /datastore and Sys.Audit on /system |
+| Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
+| Duplicati | backup jobs, backups | | the password of the web interface; Duplicati 2.1 or newer |
 | Syncthing | folders, status | | API key |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
@@ -41,6 +45,7 @@ that one of twenty-one renderers draws.
 | Technitium DNS | blocking, top blocked | | API token |
 | NextDNS | blocking, top blocked | | API key and the profile ID |
 | authentik | status, failed sign-ins | | API token of a service account with read access |
+| CrowdSec | blocked addresses, blocked | | bouncer key from `cscli bouncers add`; it may read decisions and nothing else |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
 | Frigate | cameras, detections, status | | none |
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week | scan a library | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
@@ -82,11 +87,13 @@ that one of twenty-one renderers draws.
 | JSON API | value, list | | optional bearer token |
 | iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
+| Mealie | meal plan, shopping list, kitchen | | API token from Profile > Manage your API tokens |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
+| Karakeep | recent bookmarks, reading list | | API key from Settings > API Keys |
 | YouTube | videos | | none; the channel feeds need no account |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |

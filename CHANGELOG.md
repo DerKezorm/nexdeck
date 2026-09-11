@@ -3,6 +3,31 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.8.0 (2026-09-11)
+
+### New
+
+- **Eight new integrations, each measured against a running instance before it was written.** Like the six of 0.7.0, all of them start out of beta: every card was run against the service in throwaway containers, and the tests carry the answers that came back.
+- **Gitea and Forgejo:** open issues or pull requests across your repositories, the latest Actions jobs with the red ones marked, from one repository or the ones that changed last, and a summary with the number of repositories.
+- **CrowdSec:** the addresses and ranges this installation blocks, with the scenario and the time left, read with a bouncer key that may read decisions and nothing else.
+- **Semaphore UI:** how every template last ended, red ones first, and how many are running.
+- **Karakeep:** the latest saved links and notes, and a reading list of what is not archived yet.
+- **Mealie:** the meal plan from today on, what is still on the shopping list, and a kitchen summary.
+- **Kopia:** every snapshot source with its last good snapshot, a failed one first with the reason.
+- **Duplicati:** every backup job with its last good backup, a failed one first with the reason, and which job is running or waiting.
+
+### Changed
+
+- **"Failed" reads "Fehlgeschlagen" in German.** It said "Fehlversuche", which fit failed sign-ins but not a failed backup or job.
+
+### Found while measuring
+
+- **Kopia does not show a failed snapshot where the sources are listed.** The source stays idle with its older good snapshot; only the task list says it failed, and the call that started the snapshot answered with success. The task list is kept in memory, so a restart of the server forgets the failure.
+- **Duplicati keeps an old error after a good run.** A job that failed and then ran fine still carries the error next to its new backup, so a job counts as failed only while its error is newer. The server's error flag stays on for the same reason until the notification is dismissed.
+- **Gitea and Forgejo no longer agree on their list of workflow runs.** The field names, the states and even the order differ. The list of jobs answered the same on both, so the cards read that. Forgejo also names itself with the Gitea version it forked from, which the connection test leaves out.
+- **CrowdSec answers no decision at all with `null`** instead of an empty list, and without a filter its list includes the whole community blocklist. The cards ask for this installation's own decisions unless told otherwise.
+- **Mealie lists a meal plan in the order it was entered,** not by date.
+
 ## 0.7.0 (2026-09-11)
 
 ### New
