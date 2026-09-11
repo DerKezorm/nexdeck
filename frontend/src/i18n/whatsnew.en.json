@@ -367,6 +367,32 @@
         "All five were measured against running instances and start without the beta badge.",
         "ArchiveBox stays on the list: its stable release has no API yet."
       ]
+    },
+    "0.11.0": {
+      "lead": "Your music in nexdeck: a player card plays the library of Plex, Jellyfin or Emby in the browser.",
+      "sections": [
+        {
+          "title": "Play the music library",
+          "body": "The card shows the newest albums, albums, artists, playlists, a search and the queue, with the cover filling the card. The music keeps playing when you switch boards, and nothing is reported to the server.",
+          "path": "Edit mode > Add widget > Plex, Jellyfin or Emby > Music player"
+        },
+        {
+          "title": "A bar, a round button or the top bar",
+          "body": "When the card is out of sight a floating bar takes over. Drag it into a corner, fold it into a round button, or put the player into the top bar.",
+          "path": "My settings > Music player"
+        },
+        {
+          "title": "Edit playlists",
+          "body": "Make a playlist from a track, an album or the whole queue, add and take out tracks, rename and delete. Smart playlists on Plex stay as they are.",
+          "path": "Music player > Library > Playlists"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Sound quality per browser: the original, 320 or 128 kbit/s, lowered by itself when a track keeps stalling.",
+        "Somebody who may only look sees the card without buttons; a kiosk plays only when its link allows actions.",
+        "0.9.0 and 0.10.0 were not published on their own. Their eleven integrations arrive with this version, from Vikunja to wg-easy."
+      ]
     }
   }
 }

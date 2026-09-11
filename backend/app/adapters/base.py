@@ -114,6 +114,9 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "feed": (3, 2),
     "calendar": (3, 2),
     "nowplaying": (3, 2),
+    # Two by two holds a cover with its play button on it; the rest of the
+    # player grows in as the card does.
+    "player": (2, 2),
     "weather": (3, 2),
     "posters": (3, 2),
     "chart": (3, 2),
@@ -1038,6 +1041,15 @@ class Context:
         if key:
             self._remember(key, time.monotonic() + cache_seconds, response)
         return response
+
+    def forget_answers(self) -> None:
+        """Drop every remembered answer of this connection, after something changed at the service.
+
+        ⚠️ For writes a card makes itself. A playlist renamed a second ago must
+        not come back under its old name for the two minutes its list is kept.
+        """
+        for name in [key for key in self.cache if key.startswith(CACHE_PREFIX)]:
+            self.cache.pop(name, None)
 
     def _remember(self, key: str, until: float, response: httpx.Response) -> None:
         """Keep a response, and keep the cache from becoming the leak.

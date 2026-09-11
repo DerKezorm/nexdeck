@@ -133,7 +133,8 @@
       "appearance": "Aussehen",
       "journal": "Protokoll",
       "backups": "Sicherungen",
-      "media": "Medien"
+      "media": "Medien",
+      "player": "Musik-Player"
     },
     "mail": {
       "title": "Mailserver",
@@ -378,6 +379,27 @@
         "icon": "Symbol",
         "background": "Hintergrund"
       }
+    },
+    "player": {
+      "showTitle": "Wo die Wiedergabe erscheint",
+      "showHelp": "Solange die Player-Karte nicht zu sehen ist. Wird in diesem Browser gespeichert, damit Handy und Rechner jeweils ihre eigene Einstellung haben.",
+      "style": {
+        "floating": "Als schwebende Leiste",
+        "header": "In der Kopfleiste"
+      },
+      "headerHint": "Auf dem Handy und im Kiosk ist in der Kopfleiste kein Platz, dort erscheint die schwebende Leiste.",
+      "corner": "Ecke der schwebenden Leiste",
+      "cornerHelp": "Die Leiste lässt sich auch in eine Ecke ziehen.",
+      "corners": {
+        "topLeft": "Oben links",
+        "topRight": "Oben rechts",
+        "bottomLeft": "Unten links",
+        "bottomRight": "Unten rechts"
+      },
+      "collapsed": "Zur Kugel eingeklappt",
+      "collapsedHelp": "Verdeckt am wenigsten, ein Klick klappt sie wieder auf.",
+      "qualityTitle": "Tonqualität auf diesem Gerät",
+      "qualityHelp": "Weniger als das Original spart unterwegs Daten. Stockt die Leitung immer wieder, schaltet der Player selbst herunter."
     }
   },
   "menu": {
@@ -795,6 +817,105 @@
       "notAllowed": "Von diesem Brett aus darfst du nichts starten."
     },
     "saveFile": "{{name}} speichern"
+  },
+  "player": {
+    "title": "Musik",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "stop": "Stoppen und Warteschlange leeren",
+    "previous": "Vorheriger Titel",
+    "next": "Nächster Titel",
+    "shuffle": "Zufall",
+    "shuffleAll": "Zufallswiedergabe",
+    "mix": "Mix",
+    "repeat": {
+      "off": "Wiederholen ist aus",
+      "all": "Warteschlange wiederholen",
+      "one": "Diesen Titel wiederholen"
+    },
+    "position": "Stelle im Titel",
+    "positionText": "{{at}} von {{of}}",
+    "volume": "Lautstärke",
+    "mute": "Stumm",
+    "unmute": "Ton an",
+    "library": "Mediathek",
+    "tabs": {
+      "new": "Neu",
+      "albums": "Alben",
+      "artists": "Künstler",
+      "playlists": "Playlists",
+      "search": "Suche",
+      "queue": "Warteschlange"
+    },
+    "sort": {
+      "name": "A bis Z",
+      "newest": "Neueste",
+      "random": "Zufällig"
+    },
+    "kind": {
+      "album": "Album",
+      "artist": "Künstler",
+      "playlist": "Playlist"
+    },
+    "tracks": "Titel",
+    "trackCount_one": "{{count}} Titel",
+    "trackCount_other": "{{count}} Titel",
+    "playAlbum": "{{name}} abspielen",
+    "playNext": "{{name}} als Nächstes spielen",
+    "playNextShort": "Als Nächstes",
+    "enqueue": "{{name}} an die Warteschlange hängen",
+    "enqueueShort": "An die Warteschlange",
+    "remove": "{{name}} aus der Warteschlange nehmen",
+    "removeShort": "Herausnehmen",
+    "clearQueue": "Leeren",
+    "back": "Zurück",
+    "searchPlaceholder": "Künstler, Album oder Titel",
+    "clearSearch": "Suche leeren",
+    "noHits": "Nichts gefunden für „{{words}}“.",
+    "nothingHere": "Hier ist noch nichts.",
+    "failed": "Das ließ sich nicht abspielen. Der Medienserver hat nicht geliefert.",
+    "retry": "Nochmal versuchen",
+    "lookOnly": "Abspielen braucht das Recht, auf diesem Brett zu handeln.",
+    "quality": {
+      "label": "Qualität auf diesem Gerät",
+      "original": "Original",
+      "high": "320 kbit/s",
+      "low": "128 kbit/s"
+    },
+    "reduced": "Die Leitung war zu langsam, deshalb vorerst 320 kbit/s.",
+    "bar": "Läuft gerade von {{name}}",
+    "openLibrary": "Mediathek öffnen",
+    "pickSomething": "Such dir etwas zum Abspielen aus.",
+    "openAlbum": "{{name}} öffnen",
+    "lists": {
+      "addTitle_one": "{{count}} Titel zu einer Playlist hinzufügen",
+      "addTitle_other": "{{count}} Titel zu einer Playlist hinzufügen",
+      "addShort": "Zur Playlist",
+      "addTrack": "{{name}} zu einer Playlist hinzufügen",
+      "addAll": "Alle diese Titel zu einer Playlist hinzufügen",
+      "saveQueue": "Als Playlist speichern",
+      "newPlaylist": "Neue Playlist",
+      "namePlaceholder": "Name einer neuen Playlist",
+      "create": "Anlegen",
+      "added": "Zu „{{name}}“ hinzugefügt.",
+      "created": "„{{name}}“ angelegt.",
+      "removed": "Aus der Playlist genommen.",
+      "removeTrack": "{{name}} aus der Playlist nehmen",
+      "removeShort": "Aus der Playlist nehmen",
+      "rename": "Playlist umbenennen",
+      "renamed": "Playlist umbenannt.",
+      "delete": "Playlist löschen",
+      "deleteTitle": "„{{name}}“ löschen?",
+      "deleteBody": "Die Playlist verschwindet auch auf dem Medienserver. Ihre Titel bleiben in der Bibliothek.",
+      "deleted": "Playlist gelöscht.",
+      "smart": "Smart",
+      "smartHint": "Diese Playlist füllt der Medienserver selbst, hier lässt sie sich nicht ändern.",
+      "noEditable": "Noch keine Playlist zum Hinzufügen. Gib oben einer neuen einen Namen.",
+      "failed": "Der Medienserver hat die Änderung nicht angenommen."
+    },
+    "collapse": "Player zur Kugel einklappen",
+    "expand": "Player aufklappen",
+    "dragHint": "In eine andere Ecke ziehen"
   },
   "plex": {
     "signIn": "Mit Plex anmelden",

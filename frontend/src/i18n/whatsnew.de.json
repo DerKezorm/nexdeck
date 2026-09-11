@@ -367,6 +367,32 @@
         "Alle fünf wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
         "ArchiveBox bleibt auf der Liste: Die stabile Version hat noch keine Schnittstelle."
       ]
+    },
+    "0.11.0": {
+      "lead": "Deine Musik in nexdeck: Eine Player-Karte spielt die Bibliothek von Plex, Jellyfin oder Emby im Browser.",
+      "sections": [
+        {
+          "title": "Die Musikbibliothek abspielen",
+          "body": "Die Karte zeigt die neuesten Alben, Alben, Künstler, Playlists, eine Suche und die Warteschlange, das Cover füllt die Karte. Die Musik läuft weiter, wenn du das Board wechselst, und an den Server wird nichts gemeldet.",
+          "path": "Bearbeiten > Widget hinzufügen > Plex, Jellyfin oder Emby > Musik-Player"
+        },
+        {
+          "title": "Leiste, runder Knopf oder Kopfleiste",
+          "body": "Ist die Karte nicht zu sehen, übernimmt eine schwebende Leiste. Zieh sie in eine Ecke, klapp sie zu einem runden Knopf zusammen oder setz den Player in die Kopfleiste.",
+          "path": "Meine Einstellungen > Musik-Player"
+        },
+        {
+          "title": "Playlists bearbeiten",
+          "body": "Leg eine Playlist aus einem Titel, einem Album oder der ganzen Warteschlange an, füge Titel hinzu oder nimm sie heraus, benenne um und lösche. Smart-Playlists auf Plex bleiben, wie sie sind.",
+          "path": "Musik-Player > Mediathek > Playlists"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Klangqualität je Browser: das Original, 320 oder 128 kbit/s, von selbst niedriger, wenn ein Titel immer wieder hängt.",
+        "Wer nur schauen darf, sieht die Karte ohne Knöpfe; ein Kiosk spielt nur, wenn sein Link Aktionen erlaubt.",
+        "0.9.0 und 0.10.0 sind nicht einzeln erschienen. Ihre elf Anbindungen kommen mit dieser Fassung, von Vikunja bis wg-easy."
+      ]
     }
   }
 }

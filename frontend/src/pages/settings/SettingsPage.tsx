@@ -1,4 +1,4 @@
-import { Bell, Images, KeyRound, LayoutDashboard, User } from 'lucide-react'
+import { Bell, Disc3, Images, KeyRound, LayoutDashboard, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
@@ -7,6 +7,7 @@ import { useAuth } from '../../stores/auth'
 import { BoardsSettings } from './BoardsSettings'
 import { MediaSettings } from './MediaSettings'
 import { ChannelsSettings } from './ChannelsSettings'
+import { PlayerSettings } from './PlayerSettings'
 import { ProfileSettings } from './ProfileSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
 import { TokensSettings } from './TokensSettings'
@@ -38,6 +39,7 @@ export function SettingsPage() {
     { to: 'boards', icon: LayoutDashboard, label: t('settings.nav.boards'), show: member },
     { to: 'media', icon: Images, label: t('settings.nav.media'), show: member },
     { to: 'channels', icon: Bell, label: t('settings.nav.channels'), show: member },
+    { to: 'player', icon: Disc3, label: t('settings.nav.player'), show: member },
     { to: 'tokens', icon: KeyRound, label: t('settings.nav.tokens'), show: member },
   ]
   return (
@@ -50,6 +52,7 @@ export function SettingsPage() {
             <Route path="boards" element={<BoardsSettings />} />
             <Route path="media" element={<MediaSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
+            <Route path="player" element={<PlayerSettings />} />
             <Route path="tokens" element={<TokensSettings />} />
             {/* The three that moved to /system; old links and bookmarks keep working. */}
             <Route path="integrations" element={<Moved to="/system/integrations" />} />

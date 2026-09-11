@@ -44,10 +44,12 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
   // ⚠️ data?.link comes from the service, not from the operator. A
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
-  // Clocks and app tiles draw themselves without a header.
-  const bare = ['app', 'clock', 'button', 'image'].includes(widget.renderer)
+  // Clocks and app tiles draw themselves without a header; the player's cover runs to the edge.
+  const bare = ['app', 'clock', 'button', 'image', 'player'].includes(widget.renderer)
   // With a link, the whole card is the link; app tiles are anchors already.
-  const clickable = Boolean(link) && !editing && widget.renderer !== 'app'
+  // ⚠️ Not the player: every gap between its buttons would open the media
+  // server in a new tab, which is not what a miss next to "pause" should do.
+  const clickable = Boolean(link) && !editing && widget.renderer !== 'app' && widget.renderer !== 'player'
   // The dot says what it means: the state in words, and the reason when the
   // service gives one (Nexview names its findings, for example).
   const urgent = Array.isArray(data?.meta?.urgent) ? (data?.meta?.urgent as unknown[]).map(String) : []

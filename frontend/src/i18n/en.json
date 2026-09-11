@@ -133,7 +133,8 @@
       "appearance": "Appearance",
       "journal": "Log",
       "backups": "Backups",
-      "media": "Media"
+      "media": "Media",
+      "player": "Music player"
     },
     "mail": {
       "title": "Mail server",
@@ -378,6 +379,27 @@
         "icon": "Icon",
         "background": "Background"
       }
+    },
+    "player": {
+      "showTitle": "Where what plays is shown",
+      "showHelp": "While a player card is out of sight. Kept in this browser, so a phone and a desktop can each have their own.",
+      "style": {
+        "floating": "As a floating bar",
+        "header": "In the top bar"
+      },
+      "headerHint": "On a phone and on a wall display there is no room in the top bar; the floating bar stands in there.",
+      "corner": "Corner of the floating bar",
+      "cornerHelp": "The bar can also be dragged into a corner.",
+      "corners": {
+        "topLeft": "Top left",
+        "topRight": "Top right",
+        "bottomLeft": "Bottom left",
+        "bottomRight": "Bottom right"
+      },
+      "collapsed": "Folded into a round button",
+      "collapsedHelp": "Covers least; a click opens it again.",
+      "qualityTitle": "Sound quality on this device",
+      "qualityHelp": "Less than the original saves data on the way. When the line keeps stalling, the player turns it down by itself."
     }
   },
   "menu": {
@@ -795,6 +817,105 @@
       "notAllowed": "You may not start anything from this board."
     },
     "saveFile": "Save {{name}}"
+  },
+  "player": {
+    "title": "Music",
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop and clear the queue",
+    "previous": "Previous track",
+    "next": "Next track",
+    "shuffle": "Shuffle",
+    "shuffleAll": "Shuffle all",
+    "mix": "Mix",
+    "repeat": {
+      "off": "Repeat is off",
+      "all": "Repeat the queue",
+      "one": "Repeat this track"
+    },
+    "position": "Position in the track",
+    "positionText": "{{at}} of {{of}}",
+    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Sound on",
+    "library": "Music library",
+    "tabs": {
+      "new": "New",
+      "albums": "Albums",
+      "artists": "Artists",
+      "playlists": "Playlists",
+      "search": "Search",
+      "queue": "Queue"
+    },
+    "sort": {
+      "name": "A to Z",
+      "newest": "Newest",
+      "random": "Random"
+    },
+    "kind": {
+      "album": "Album",
+      "artist": "Artist",
+      "playlist": "Playlist"
+    },
+    "tracks": "Tracks",
+    "trackCount_one": "{{count}} track",
+    "trackCount_other": "{{count}} tracks",
+    "playAlbum": "Play {{name}}",
+    "playNext": "Play {{name}} next",
+    "playNextShort": "Play next",
+    "enqueue": "Add {{name}} to the queue",
+    "enqueueShort": "Add to the queue",
+    "remove": "Take {{name}} out of the queue",
+    "removeShort": "Take out",
+    "clearQueue": "Clear",
+    "back": "Back",
+    "searchPlaceholder": "Artist, album or track",
+    "clearSearch": "Clear the search",
+    "noHits": "Nothing found for “{{words}}”.",
+    "nothingHere": "Nothing here yet.",
+    "failed": "That did not play. The media server did not deliver.",
+    "retry": "Try again",
+    "lookOnly": "Playing needs the right to act on this board.",
+    "quality": {
+      "label": "Quality on this device",
+      "original": "Original",
+      "high": "320 kbit/s",
+      "low": "128 kbit/s"
+    },
+    "reduced": "The line was too slow; playing at 320 kbit/s for now.",
+    "bar": "Now playing from {{name}}",
+    "openLibrary": "Open the library",
+    "pickSomething": "Pick something to play.",
+    "openAlbum": "Open {{name}}",
+    "lists": {
+      "addTitle_one": "Add {{count}} track to a playlist",
+      "addTitle_other": "Add {{count}} tracks to a playlist",
+      "addShort": "To a playlist",
+      "addTrack": "Add {{name}} to a playlist",
+      "addAll": "Add all of these to a playlist",
+      "saveQueue": "Save as playlist",
+      "newPlaylist": "New playlist",
+      "namePlaceholder": "Name of a new playlist",
+      "create": "Create",
+      "added": "Added to “{{name}}”.",
+      "created": "“{{name}}” created.",
+      "removed": "Taken out of the playlist.",
+      "removeTrack": "Take {{name}} out of the playlist",
+      "removeShort": "Take out of the playlist",
+      "rename": "Rename playlist",
+      "renamed": "Playlist renamed.",
+      "delete": "Delete playlist",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteBody": "The playlist disappears from the media server too. Its tracks stay in the library.",
+      "deleted": "Playlist deleted.",
+      "smart": "Smart",
+      "smartHint": "The media server fills this playlist by itself; it cannot be changed here.",
+      "noEditable": "No playlist to add to yet. Give a new one a name above.",
+      "failed": "The media server did not take the change."
+    },
+    "collapse": "Fold the player into a round button",
+    "expand": "Open the player",
+    "dragHint": "Drag it into another corner"
   },
   "plex": {
     "signIn": "Sign in with Plex",
