@@ -1377,13 +1377,16 @@ def duration_short(seconds: float | None) -> str:
     return f"{days}d {hours}h" if hours else f"{days}d"
 
 
-def ago(moment: Any) -> str:
+def ago(moment: Any, now: float | None = None) -> str:
     """How long ago something happened: ``"12 min"``, ``"3 h"`` or ``"2 d"``.
 
     Takes an ISO time with ``Z`` or an offset, or seconds since the epoch, and
     answers ``""`` for anything it cannot read. A card then shows nothing
     rather than an age that is wrong. The words are units, not sentences, so
     they read the same in both languages.
+
+    ``now`` in seconds since the epoch, for a card that works out other things
+    against the same moment; a test that fixes it does not turn red the next day.
     """
     if moment is None or moment == "" or isinstance(moment, bool):
         return ""
@@ -1396,7 +1399,8 @@ def ago(moment: Any) -> str:
                 when = when.replace(tzinfo=UTC)
     except (ValueError, OverflowError, OSError):
         return ""
-    seconds = max(0.0, (datetime.now(UTC) - when).total_seconds())
+    reference = datetime.fromtimestamp(now, UTC) if now is not None else datetime.now(UTC)
+    seconds = max(0.0, (reference - when).total_seconds())
     if seconds < 3600:
         return f"{int(seconds // 60)} min"
     if seconds < 86400:

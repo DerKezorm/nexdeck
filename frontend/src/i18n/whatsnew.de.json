@@ -342,6 +342,31 @@
         "Bei Vikunja richtet sich „heute“ nach der Zeitzone der Anbindung, weil ein API-Token die Zeitzone des Benutzers nicht lesen darf.",
         "Die Knöpfe in den Zeilen der n8n- und Synology-Karten wurden beim Drücken abgewiesen; sie funktionieren wieder."
       ]
+    },
+    "0.10.0": {
+      "lead": "Fünf neue Anbindungen: RomM, NetBox, Dawarich, wger und wg-easy.",
+      "sections": [
+        {
+          "title": "Das eigene Netz mit NetBox und wg-easy",
+          "body": "NetBox zeigt die Geräte, die nicht aktiv sind, und wie voll jedes Präfix ist. wg-easy zeigt, welche WireGuard-Clients verbunden sind und wie viel durchging.",
+          "path": "Einstellungen > Anbindungen > NetBox oder wg-easy"
+        },
+        {
+          "title": "Strecke und Gewicht mit Dawarich und wger",
+          "body": "Dawarich zeigt die Kilometer dieses Monats und dieses Jahres und warnt, wenn das Telefon keine Punkte mehr schickt. wger zeigt dein Gewicht und wie es sich über 30 Tage verändert hat.",
+          "path": "Einstellungen > Anbindungen > Dawarich oder wger"
+        },
+        {
+          "title": "Die Spielesammlung mit RomM",
+          "body": "Jede Plattform mit ihrer Zahl an Spielen, und die zuletzt hinzugefügten Spiele.",
+          "path": "Einstellungen > Anbindungen > RomM"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Alle fünf wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
+        "ArchiveBox bleibt auf der Liste: Die stabile Version hat noch keine Schnittstelle."
+      ]
     }
   }
 }

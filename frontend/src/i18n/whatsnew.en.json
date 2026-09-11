@@ -342,6 +342,31 @@
         "For Vikunja, what counts as today follows the time zone set on the integration, because an API token cannot read the user's own.",
         "Buttons on the rows of the n8n and Synology cards were refused when pressed; they work again."
       ]
+    },
+    "0.10.0": {
+      "lead": "Five new integrations: RomM, NetBox, Dawarich, wger and wg-easy.",
+      "sections": [
+        {
+          "title": "Your network with NetBox and wg-easy",
+          "body": "NetBox shows the devices that are not active and how full each prefix is. wg-easy shows which WireGuard clients are connected and how much went through.",
+          "path": "Settings > Integrations > NetBox or wg-easy"
+        },
+        {
+          "title": "Distance and weight with Dawarich and wger",
+          "body": "Dawarich shows the kilometres of this month and this year and warns when your phone stopped sending points. wger shows your weight and how it changed over 30 days.",
+          "path": "Settings > Integrations > Dawarich or wger"
+        },
+        {
+          "title": "The game library with RomM",
+          "body": "Every platform with its number of games, and the games added last.",
+          "path": "Settings > Integrations > RomM"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "All five were measured against running instances and start without the beta badge.",
+        "ArchiveBox stays on the list: its stable release has no API yet."
+      ]
     }
   }
 }

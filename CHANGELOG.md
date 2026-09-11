@@ -3,6 +3,26 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.10.0 (2026-09-11)
+
+### New
+
+- **Five new integrations, each measured against a running instance before it was written.** All five start out of beta: every card was run against the service in throwaway containers, wg-easy with a real WireGuard client connected to it.
+- **RomM:** every platform with its number of games and its size, the games added last, and a library summary.
+- **NetBox:** the devices that are not active, failed ones first, how full each prefix is by the IP addresses documented in it, and an inventory of devices, sites and addresses.
+- **Dawarich:** the kilometres of this month and this year, when the last point came in, and the distance of every month so far. The card warns when no point has arrived for a day, which is where a phone that stopped sending shows up.
+- **wger:** your weight with the change over the last 30 days, and the latest weigh-ins with the change from the one before.
+- **wg-easy:** which WireGuard clients are connected, with their traffic or when they were last seen, and how many are connected at all.
+
+### Found while measuring
+
+- **ArchiveBox was left out.** Its stable release 0.7.4 has no REST API; only the pre-releases do, and their number changes almost daily.
+- **RomM answers a token it does not know with 500, not 401,** and its statistics need no token at all. A library scan cannot be started over the REST API.
+- **NetBox answers the secret half of a v2 token with "Invalid v1 token".** A v2 token only works whole, starting with `nbt_`. A prefix carries no utilisation, so the card counts the addresses inside it.
+- **Dawarich's distances lag behind its points.** After an import the points were counted at once and the distance stayed at 0 km; the job that calculates it runs every hour.
+- **wger answers its API key sent as a bearer token with 500.** It has to be sent as `Token`.
+- **wg-easy 15 dropped the addresses of version 14,** and only its client list carries the handshakes and the traffic.
+
 ## 0.9.0 (2026-09-11)
 
 ### New
