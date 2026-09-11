@@ -1,12 +1,16 @@
 import { Bell, ChevronDown, LogOut, Moon, Server, Sun, UserRound } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import type { User } from '../api/types'
 import { LANGUAGES, setLanguage } from '../i18n'
 import { applyTheme, currentTheme, useAuth } from '../stores/auth'
+import { usePlayer } from '../stores/player'
 import { Avatar } from './Avatar'
+
+/** Loaded only once something plays and the viewer put the player in the top bar. */
+const HeaderPill = lazy(() => import('./player/HeaderPill').then((module) => ({ default: module.HeaderPill })))
 
 /** What the tools need to know about the account; the preview page invents one. */
 export type HeaderUser = Pick<User, 'display_name' | 'username' | 'role' | 'avatar_url'>
@@ -200,8 +204,14 @@ function UserMenu({ user }: { user: HeaderUser }) {
  */
 export function HeaderTools({ user, unread, onNotices }: Props) {
   const signedIn = useAuth((s) => s.user !== null)
+  const playing = usePlayer((s) => s.queue.length > 0 && s.barStyle === 'header')
   return (
     <div className="flex items-center gap-1.5">
+      {playing && (
+        <Suspense fallback={null}>
+          <HeaderPill />
+        </Suspense>
+      )}
       <NoticeButton unread={unread} onClick={onNotices} />
       <span className="hidden sm:flex items-center gap-1.5">
         <ThemePill signedIn={signedIn} />

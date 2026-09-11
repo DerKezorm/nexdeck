@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { BackgroundLayer } from './components/BackgroundLayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
+import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
 import { applyAppearance, type Appearance } from './lib/appearance'
@@ -130,6 +131,8 @@ export function App() {
           </Routes>
         </Suspense>
         <NoticeToast />
+        {/* Beside the routes, not inside a page: music carries on when the board changes. */}
+        <PlayerHost />
       </BrowserRouter>
       </ErrorBoundary>
     </QueryClientProvider>

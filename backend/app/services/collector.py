@@ -367,6 +367,10 @@ class Collector:
             return True
         return demo_flag()
 
+    def is_demo(self, integration: Integration | None) -> bool:
+        """For the routes that reach a service outside a refresh, such as a player's sound."""
+        return self._demo_active(integration)
+
     @staticmethod
     def _safe_link(kind: str, config: dict[str, Any]) -> str:
         try:

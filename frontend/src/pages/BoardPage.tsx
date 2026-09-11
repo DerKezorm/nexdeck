@@ -27,6 +27,7 @@ import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
+import { usePlayer } from '../stores/player'
 
 const EDIT_HINT_SEEN = 'nexdeck.editHintSeen'
 
@@ -176,6 +177,12 @@ export function BoardPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // The player's bar sits where the edit bar does; it steps aside while editing.
+  useEffect(() => {
+    usePlayer.getState().setBarHidden(editing)
+    return () => usePlayer.getState().setBarHidden(false)
+  }, [editing])
 
   // The first time edit mode opens, say how moving and resizing work.
   useEffect(() => {

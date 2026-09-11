@@ -243,6 +243,26 @@ class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+class PlaylistCreate(BaseModel):
+    """A new playlist starts with the tracks it was made for: neither server was measured making an empty one."""
+
+    name: str = Field(min_length=1, max_length=200)
+    track_ids: list[str] = Field(min_length=1, max_length=500)
+
+
+class PlaylistTracks(BaseModel):
+    track_ids: list[str] = Field(min_length=1, max_length=500)
+
+
+class PlaylistEntries(BaseModel):
+    #: The places in the playlist, not the tracks: the same track may stand in it twice.
+    entries: list[str] = Field(min_length=1, max_length=500)
+
+
+class PlaylistRename(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+
+
 class HealthBody(BaseModel):
     kind: Literal["http", "tcp", "ping"] = "http"
     #: Empty follows the address of the widget's integration.

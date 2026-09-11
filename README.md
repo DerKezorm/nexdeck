@@ -29,7 +29,7 @@ Every card is a widget of one integration, dropped on a free grid and sized by h
 
 ### Media
 
-What is playing, what the library holds, what is on its way in, and the covers of what arrived last.
+What is playing, what the library holds, what is on its way in, and the covers of what arrived last. And your own music: a player card plays the library of Plex, Jellyfin or Emby in the browser, keeps playing from board to board, and edits playlists on the server.
 
 ![A media board: what is playing on Plex, the size of the library, open requests, a row of recently added covers, and the queues of Radarr, Sonarr and SABnzbd](docs/screenshot-media.png)
 

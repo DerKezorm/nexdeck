@@ -3,6 +3,26 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.11.0 (2026-09-11)
+
+### New
+
+- **A music player card for Plex, Jellyfin and Emby.** It plays the music library of the server in the browser: the newest albums, albums, artists, playlists, a search and the queue, with the cover filling the card and lending it its colour. Plays are not reported to the server, so nothing turns up in its history.
+- **The music keeps playing from board to board.** When the card is out of sight, a floating bar takes over. Drag it into any corner or fold it into a round button with a progress ring, or put the player into the top bar instead. My settings > Music player.
+- **Small cards open the library beside the board.** One button opens it as a sheet with the search inside. While nothing plays the card shows four covers or one, the newest albums or some picked at random; a cover opens its album, and the round button on it plays the album.
+- **Playlists are edited on the server.** Make one from a track, an album or the whole queue, add and take out tracks, rename and delete. Smart playlists on Plex stay read-only.
+- **Sound quality and volume per browser.** The original file, or converted to 320 or 128 kbit/s. When a track stalls again and again, the player steps down by itself and says so. Jellyfin and Emby also make instant mixes. There is no volume slider on an iPhone or iPad, where the buttons on the side decide.
+- **Who may play is who may act.** Somebody who may only look sees the card without buttons, and a kiosk plays only when its link allows actions.
+- **0.9.0 and 0.10.0 were never published on their own.** Everything listed under them arrives with this release.
+
+### Found while measuring
+
+- **Plex lists a device for every client identifier it sees,** even when nothing is reported, and that entry cannot be deleted through its API. nexdeck always sends the same identifier.
+- **Converted sound comes without a length and without Range,** from Jellyfin and from Plex alike. Skipping into such a track starts the conversion again at that second.
+- **Plex refuses HLS for music** on every platform it was asked with. Jellyfin hands it out, and Safari gets converted sound from Jellyfin that way.
+- **Jellyfin renames a playlist only through the item itself;** its playlist route answers 400 to an API key. Adding a track that is already in a playlist adds it a second time, so nexdeck leaves those out.
+- **Emby runs untested.** It shares Jellyfin's API, and the server it was measured against held no music.
+
 ## 0.10.0 (2026-09-11)
 
 ### New

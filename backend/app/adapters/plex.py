@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
+import secrets
 import time
 from collections import Counter, defaultdict
 from typing import Any
+from urllib.parse import quote
 
 from .base import (
+    AdapterError,
     Context,
     Field,
+    MediaSource,
     WidgetData,
     WidgetType,
     base_url,
@@ -18,6 +23,32 @@ from .base import (
     status_from_percent,
 )
 from .media_base import EVERYTHING, Library, MediaAdapter, Stream
+from .music import (
+    ALBUM_PAGE,
+    ARTIST_PAGE,
+    PICKS,
+    PLAYER_ALBUMS,
+    PLAYLIST_LIMIT,
+    QUALITY_KBPS,
+    SHUFFLE_SIZE,
+    Album,
+    Artist,
+    MusicLibrary,
+    Playlist,
+    Shelf,
+    ShelfQuery,
+    Sound,
+    SoundRequest,
+    Track,
+    batches,
+    demo_player,
+    next_offset,
+    player_data,
+    player_widget,
+    seconds,
+    wants_random_picks,
+    whole,
+)
 
 #: Which Plex library types a "recently added" widget draws from.
 KINDS = {"all": ("movie", "show", "artist"), "movies": ("movie",), "series": ("show",), "music": ("artist",)}
@@ -37,6 +68,13 @@ HISTORY_PAGE = 500
 HISTORY_BUCKET = 300
 HISTORY_LIMIT = 5000
 
+#: What a browser calls the codec Plex names. Plex writes the container of an
+#: m4a file as ``mp4`` and says what is inside it only in ``audioCodec``, so
+#: the codec decides.
+PLEX_FORMATS = {"flac": "flac", "mp3": "mp3", "aac": "aac", "alac": "alac", "opus": "opus", "vorbis": "vorbis", "pcm": "wav"}
+#: Plex's item types, by the number its library filter takes.
+ALBUM_TYPE, ARTIST_TYPE, TRACK_TYPE = 9, 8, 10
+
 
 def device_names(ids: set[int], devices: dict[int, str]) -> str:
     """Two Apple TVs are two devices: the same name once, with how many there are."""
@@ -44,7 +82,7 @@ def device_names(ids: set[int], devices: dict[int, str]) -> str:
     return ", ".join(f"{name} ×{count}" if count > 1 else name for name, count in sorted(names.items()))
 
 
-class PlexAdapter(MediaAdapter):
+class PlexAdapter(MediaAdapter, MusicLibrary):
     kind = "plex"
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
@@ -117,7 +155,14 @@ class PlexAdapter(MediaAdapter):
                 Field("limit", "Items", type="number", default=6),
             ),
         ),
+        player_widget((
+            Field("music_library", "Music library", type="choices", help="Empty means the first music library."),
+        )),
     )
+    #: Neither mix nor HLS. Measured on 1.43.3: the sonically similar tracks
+    #: came back empty on a library that had never been analysed, and HLS for
+    #: music was refused for every client Plex was told about.
+    music_features: tuple[str, ...] = ()
 
     # -- plumbing ----------------------------------------------------------------
 
@@ -149,6 +194,8 @@ class PlexAdapter(MediaAdapter):
             return await self._users(config, options, ctx)
         if widget_kind == "top":
             return await self._top(config, options, ctx)
+        if widget_kind == "player":
+            return await self._player(config, options, ctx)
         return await super().fetch(widget_kind, config, options, ctx)
 
     # -- streams and library (the shared media shape) ----------------------------
@@ -441,6 +488,273 @@ class PlexAdapter(MediaAdapter):
             items.append({**posters[title], "subtitle": f"{count} play(s)"})
         return WidgetData(items=items, meta={"empty": "Nothing watched"})
 
+    # -- music: the player card ----------------------------------------------------
+
+    def _sound_headers(self, config: dict[str, Any]) -> dict[str, str]:
+        """Always the same client identifier: Plex keeps one device entry for every identifier it sees."""
+        return {"X-Plex-Token": str(config.get("token") or ""), "X-Plex-Client-Identifier": "nexdeck",
+                "X-Plex-Product": "nexdeck", "X-Plex-Platform": "Chrome"}
+
+    async def _music_section(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
+        sections = ((await self._get(config, ctx, "/library/sections", cache=600)).get("MediaContainer") or {}).get("Directory") or []
+        music = [section for section in sections if section.get("type") == "artist" and section.get("key")]
+        wanted = str(options.get("music_library") or "")
+        if wanted:
+            if any(str(section["key"]) == wanted for section in music):
+                return path_segment(wanted, "The music library")
+            raise AdapterError("The music library this card plays from is no longer on the server.", code="no_such_library",
+                               hint="Pick another library in the card's settings.")
+        if not music:
+            raise AdapterError("This Plex server has no music library.", code="no_music")
+        return path_segment(str(music[0]["key"]), "The music library")
+
+    async def _page(self, config: dict[str, Any], ctx: Context, path: str, start: int, size: int, cache: float = 60,
+                    **params: Any) -> dict[str, Any]:
+        paging = {"X-Plex-Container-Start": start, "X-Plex-Container-Size": size}
+        payload = await self._get(config, ctx, path, cache=cache, params={**params, **paging},
+                                  headers={name: str(value) for name, value in paging.items()})
+        return payload.get("MediaContainer") or {}
+
+    @staticmethod
+    def _cover(thumb: Any) -> tuple[str, str]:
+        """Covers through Plex's own scaler: a thumb as it is can be several megabytes."""
+        if not thumb:
+            return "", ""
+        source = quote(str(thumb), safe="")
+        return (f"proxy:/photo/:/transcode?width=800&height=800&minSize=1&upscale=1&url={source}",
+                f"proxy:/photo/:/transcode?width=240&height=240&minSize=1&upscale=1&url={source}")
+
+    def _album(self, entry: dict[str, Any]) -> Album:
+        art, thumb = self._cover(entry.get("thumb"))
+        return Album(id=str(entry.get("ratingKey") or ""), title=str(entry.get("title") or "?"), artist=str(entry.get("parentTitle") or ""),
+                     artist_id=str(entry.get("parentRatingKey") or ""), year=whole(entry.get("year")),
+                     tracks=whole(entry.get("leafCount")), art=art, thumb=thumb)
+
+    def _track(self, entry: dict[str, Any]) -> Track:
+        media = (entry.get("Media") or [{}])[0]
+        art, thumb = self._cover(entry.get("parentThumb") or entry.get("thumb") or entry.get("grandparentThumb"))
+        return Track(
+            id=str(entry.get("ratingKey") or ""), title=str(entry.get("title") or "?"),
+            # The performer of a track on a compilation is in originalTitle; the album's artist is the grandparent.
+            artist=str(entry.get("originalTitle") or entry.get("grandparentTitle") or ""),
+            album=str(entry.get("parentTitle") or ""), album_id=str(entry.get("parentRatingKey") or ""),
+            artist_id=str(entry.get("grandparentRatingKey") or ""), duration=seconds(entry.get("duration"), 1000),
+            number=whole(entry.get("index")), disc=whole(entry.get("parentIndex")), art=art, thumb=thumb,
+            codec=str(media.get("audioCodec") or "").lower(), bitrate=whole(media.get("bitrate")),
+        )
+
+    def _artist(self, entry: dict[str, Any]) -> Artist:
+        art, thumb = self._cover(entry.get("thumb"))
+        return Artist(id=str(entry.get("ratingKey") or ""), name=str(entry.get("title") or "?"), art=art, thumb=thumb)
+
+    async def _player(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        section = await self._music_section(config, options, ctx)
+        path = f"/library/sections/{section}/all"
+        newest = await self._page(config, ctx, path, 0, PLAYER_ALBUMS, cache=300, type=ALBUM_TYPE, sort="addedAt:desc")
+        artists = await self._page(config, ctx, path, 0, 0, cache=600, type=ARTIST_TYPE)
+        tracks = await self._page(config, ctx, path, 0, 0, cache=600, type=TRACK_TYPE)
+        picks = None
+        if wants_random_picks(options):
+            chosen = await self._page(config, ctx, path, 0, PICKS, cache=0, type=ALBUM_TYPE, sort="random")
+            picks = [self._album(entry) for entry in chosen.get("Metadata") or []]
+        return player_data(
+            [self._album(entry) for entry in newest.get("Metadata") or []],
+            {"Albums": whole(newest.get("totalSize")), "Artists": whole(artists.get("totalSize")), "Tracks": whole(tracks.get("totalSize"))},
+            self.music_features,
+            picks,
+        )
+
+    async def music_shelf(self, config: dict[str, Any], options: dict[str, Any], view: str, query: ShelfQuery, ctx: Context) -> Shelf:
+        section = await self._music_section(config, options, ctx)
+        library = f"/library/sections/{section}/all"
+        if view == "albums":
+            order = {"newest": "addedAt:desc", "name": "titleSort", "random": "random"}
+            page = await self._page(config, ctx, library, query.offset, ALBUM_PAGE, cache=0 if query.sort == "random" else 120,
+                                    type=ALBUM_TYPE, sort=order.get(query.sort, order["newest"]))
+            albums = [self._album(entry) for entry in page.get("Metadata") or []]
+            total = whole(page.get("totalSize"))
+            return Shelf(albums=albums, total=total, next=next_offset(query.offset, len(albums), total))
+        if view == "artists":
+            page = await self._page(config, ctx, library, query.offset, ARTIST_PAGE, cache=300, type=ARTIST_TYPE, sort="titleSort")
+            artists = [self._artist(entry) for entry in page.get("Metadata") or []]
+            total = whole(page.get("totalSize"))
+            return Shelf(artists=artists, total=total, next=next_offset(query.offset, len(artists), total))
+        if view in ("artist", "album"):
+            item_id = path_segment(query.id, "The artist" if view == "artist" else "The album")
+            about = ((await self._get(config, ctx, f"/library/metadata/{item_id}", cache=300)).get("MediaContainer") or {}).get("Metadata") or [{}]
+            children = ((await self._get(config, ctx, f"/library/metadata/{item_id}/children", cache=120)).get("MediaContainer") or {}).get("Metadata") or []
+            entry = about[0]
+            if view == "artist":
+                albums = sorted((self._album(one) for one in children if one.get("type") == "album"), key=lambda one: one.year or 0, reverse=True)
+                return Shelf(title=str(entry.get("title") or ""), art=self._cover(entry.get("thumb"))[0], albums=albums, total=len(albums))
+            album = self._album(entry)
+            tracks = [self._track(one) for one in children if one.get("type") == "track"]
+            subtitle = " · ".join(part for part in (album.artist, str(album.year or "")) if part)
+            return Shelf(title=album.title, subtitle=subtitle, art=album.art, tracks=tracks, total=len(tracks))
+        if view == "playlists":
+            payload = ((await self._get(config, ctx, "/playlists", cache=120, params={"playlistType": "audio"})).get("MediaContainer") or {}).get("Metadata") or []
+            playlists = []
+            for entry in payload:
+                art, thumb = self._cover(entry.get("composite"))
+                playlists.append(Playlist(id=str(entry.get("ratingKey") or ""), title=str(entry.get("title") or "?"),
+                                          tracks=whole(entry.get("leafCount")), duration=seconds(entry.get("duration"), 1000), art=art, thumb=thumb,
+                                          editable=not entry.get("smart")))
+            return Shelf(playlists=playlists, total=len(playlists))
+        if view == "playlist":
+            playlist_id = path_segment(query.id, "The playlist")
+            page = await self._page(config, ctx, f"/playlists/{playlist_id}/items", 0, PLAYLIST_LIMIT, cache=60)
+            tracks = []
+            for entry in page.get("Metadata") or []:
+                if entry.get("type") != "track":
+                    continue
+                track = self._track(entry)
+                track.entry = str(entry.get("playlistItemID") or "")
+                tracks.append(track)
+            return Shelf(title=str(page.get("title") or ""), tracks=tracks, total=whole(page.get("totalSize")) or len(tracks),
+                         editable=not page.get("smart"))
+        if view == "search":
+            words = query.q.strip()
+            if not words:
+                return Shelf()
+            # ⚠️ The library's own title filter, not ``/hubs/search``. Measured:
+            # the hub search took 4.3 s and answered with films and episodes as
+            # well, sectionId or not; the filter took 0.3 to 0.4 s per type.
+            found = await asyncio.gather(
+                self._page(config, ctx, library, 0, 20, cache=30, type=ALBUM_TYPE, title=words),
+                self._page(config, ctx, library, 0, 12, cache=30, type=ARTIST_TYPE, title=words),
+                self._page(config, ctx, library, 0, 30, cache=30, type=TRACK_TYPE, title=words),
+            )
+            albums = [self._album(entry) for entry in found[0].get("Metadata") or []]
+            artists = [self._artist(entry) for entry in found[1].get("Metadata") or []]
+            tracks = [self._track(entry) for entry in found[2].get("Metadata") or []]
+            return Shelf(albums=albums, artists=artists, tracks=tracks, total=len(albums) + len(artists) + len(tracks))
+        if view == "shuffle":
+            page = await self._page(config, ctx, library, 0, SHUFFLE_SIZE, cache=0, type=TRACK_TYPE, sort="random")
+            tracks = [self._track(entry) for entry in page.get("Metadata") or []]
+            return Shelf(tracks=tracks, total=len(tracks))
+        raise AdapterError("The card asked for something the player does not show.", code="no_such_view")
+
+    async def music_source(self, config: dict[str, Any], options: dict[str, Any], sound: SoundRequest, ctx: Context) -> Sound:
+        """The file itself when the browser plays it and it fits the quality, converted otherwise.
+
+        Measured on 1.43.3: the file answers Range with 206. Converted sound
+        comes from ``start.mp3`` without any client profile, as a chunked
+        stream without Range; with ``X-Plex-Client-Profile-Extra`` added the
+        same address answered 400.
+        """
+        track = path_segment(sound.track_id, "The track")
+        about = ((await self._get(config, ctx, f"/library/metadata/{track}", cache=600)).get("MediaContainer") or {}).get("Metadata") or [{}]
+        entry = about[0]
+        if entry.get("type") != "track":
+            raise AdapterError("That is not a track.", code="not_a_track")
+        media = (entry.get("Media") or [{}])[0]
+        part = str(((media.get("Part") or [{}])[0]).get("key") or "")
+        limit = QUALITY_KBPS.get(sound.quality)
+        bitrate = whole(media.get("bitrate"))
+        playable = PLEX_FORMATS.get(str(media.get("audioCodec") or "").lower()) in sound.formats
+        fits = limit is None or (bitrate is not None and bitrate <= limit)
+        # ⚠️ Only an address of the part itself. The key comes from the server,
+        # and the relay fetches it with the owner's token.
+        if playable and fits and part.startswith("/library/parts/"):
+            return Sound(source=MediaSource(url=f"{base_url(config)}{part}", headers=self._sound_headers(config), cache_seconds=0))
+        session = secrets.token_hex(12)
+        kbps = limit or 320
+        params: dict[str, Any] = {
+            "path": f"/library/metadata/{track}", "mediaIndex": 0, "partIndex": 0, "protocol": "http",
+            "directPlay": 0, "directStream": 0, "musicBitrate": kbps, "maxAudioBitrate": kbps,
+            "session": session, "X-Plex-Session-Identifier": session, "location": "lan", "hasMDE": 1,
+        }
+        if sound.start > 0:
+            params["offset"] = int(sound.start)
+        return Sound(
+            source=MediaSource(url=f"{base_url(config)}/music/:/transcode/universal/start.mp3", headers=self._sound_headers(config),
+                               params=params, cache_seconds=0),
+            converted=True, session=session,
+        )
+
+    async def music_stop(self, config: dict[str, Any], sound: Sound, ctx: Context) -> None:
+        await ctx.request(
+            "GET", f"{base_url(config)}/music/:/transcode/universal/stop", headers=self._sound_headers(config),
+            params={"session": sound.session}, verify=not config.get("insecure"), timeout=5.0,
+        )
+
+    # -- music: playlists ----------------------------------------------------------
+
+    async def _machine(self, config: dict[str, Any], ctx: Context) -> str:
+        """The server's own name for itself, which every playlist address has to carry."""
+        identity = ((await self._get(config, ctx, "/identity", cache=3600)).get("MediaContainer") or {})
+        machine = str(identity.get("machineIdentifier") or "")
+        if not machine:
+            raise AdapterError("Plex did not say which server it is.", code="playlist_refused")
+        return machine
+
+    def _items_uri(self, machine: str, keys: list[str]) -> str:
+        return f"server://{machine}/com.plexapp.plugins.library/library/metadata/{','.join(keys)}"
+
+    async def _write(self, config: dict[str, Any], ctx: Context, method: str, path: str, params: dict[str, Any] | None = None) -> Any:
+        response = await ctx.request(method, f"{base_url(config)}{path}", headers=self._headers(config), params=params,
+                                     verify=not config.get("insecure"), timeout=20.0)
+        if response.status_code >= 400:
+            raise AdapterError(f"Plex refused the change to the playlist with HTTP {response.status_code}.", code="playlist_refused")
+        return response.json() if response.content and "json" in response.headers.get("content-type", "") else None
+
+    async def _own_playlist(self, config: dict[str, Any], ctx: Context, playlist_id: str) -> str:
+        """⚠️ Asked before every change: a smart playlist is Plex's to fill, and it is refused here rather than by Plex half way."""
+        playlist = path_segment(playlist_id, "The playlist")
+        about = ((await self._get(config, ctx, f"/playlists/{playlist}", cache=0)).get("MediaContainer") or {}).get("Metadata") or [{}]
+        if about[0].get("playlistType") not in (None, "audio"):
+            raise AdapterError("That is not a music playlist.", code="not_a_playlist")
+        if about[0].get("smart"):
+            raise AdapterError("Plex fills this playlist by itself; it cannot be changed by hand.", code="smart_playlist")
+        return playlist
+
+    async def music_playlist_create(self, config: dict[str, Any], options: dict[str, Any], name: str,
+                                    track_ids: list[str], ctx: Context) -> Playlist:
+        machine = await self._machine(config, ctx)
+        first, *rest = batches([path_segment(one, "The track") for one in track_ids]) or [[]]
+        made = await self._write(config, ctx, "POST", "/playlists", params={"type": "audio", "title": name, "smart": 0, "uri": self._items_uri(machine, first)})
+        playlist_id = str((((made or {}).get("MediaContainer") or {}).get("Metadata") or [{}])[0].get("ratingKey") or "")
+        if not playlist_id:
+            raise AdapterError("Plex did not say which playlist it made.", code="playlist_refused")
+        for batch in rest:
+            await self._write(config, ctx, "PUT", f"/playlists/{playlist_id}/items", params={"uri": self._items_uri(machine, batch)})
+        return Playlist(id=playlist_id, title=name, tracks=len(track_ids))
+
+    async def music_playlist_add(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                 track_ids: list[str], ctx: Context) -> None:
+        """Plex leaves out a track that is already there by itself (measured on 1.43.3)."""
+        playlist = await self._own_playlist(config, ctx, playlist_id)
+        machine = await self._machine(config, ctx)
+        for batch in batches([path_segment(one, "The track") for one in track_ids]):
+            await self._write(config, ctx, "PUT", f"/playlists/{playlist}/items", params={"uri": self._items_uri(machine, batch)})
+
+    async def music_playlist_remove(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    entries: list[str], ctx: Context) -> None:
+        playlist = await self._own_playlist(config, ctx, playlist_id)
+        for entry in entries:
+            await self._write(config, ctx, "DELETE", f"/playlists/{playlist}/items/{path_segment(entry, 'The entry')}")
+
+    async def music_playlist_rename(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    name: str, ctx: Context) -> None:
+        playlist = await self._own_playlist(config, ctx, playlist_id)
+        await self._write(config, ctx, "PUT", f"/playlists/{playlist}", params={"title": name})
+
+    async def music_playlist_delete(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    ctx: Context) -> None:
+        playlist = await self._own_playlist(config, ctx, playlist_id)
+        await self._write(config, ctx, "DELETE", f"/playlists/{playlist}")
+
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        if field == "music_library":
+            sections = ((await self._get(config, ctx, "/library/sections", cache=60)).get("MediaContainer") or {}).get("Directory") or []
+            return [(str(section["key"]), str(section.get("title") or "?")) for section in sections if section.get("type") == "artist" and section.get("key")]
+        return await super().choices(field, config, ctx)
+
+    def demo_choices(self, field: str) -> list[tuple[str, str]]:
+        if field == "music_library":
+            return [("demo-music", "Music")]
+        return super().demo_choices(field)
+
     # -- demo --------------------------------------------------------------------------
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -483,6 +797,8 @@ class PlexAdapter(MediaAdapter):
         if widget_kind == "top":
             rows = [("Harbour Lights", 14, "episode"), ("The Quiet Harbour", 5, "movie"), ("Northern Sky", 4, "track"), ("Orbital", 2, "movie")]
             return WidgetData(items=[{"title": title, "subtitle": f"{count} play(s)", "art": "", "kind": kind} for title, count, kind in rows[: int(options.get("limit") or 6)]], meta={"empty": "Nothing watched"})
+        if widget_kind == "player":
+            return demo_player(self.music_features, options, tick)
         return super().demo(widget_kind, options, tick)
 
 

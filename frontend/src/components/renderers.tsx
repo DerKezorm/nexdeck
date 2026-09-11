@@ -25,7 +25,7 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
@@ -51,6 +51,17 @@ export interface RenderProps {
   onAction?: (action: Action) => void
   link?: string
   editing?: boolean
+}
+
+/** The music player loads only when a player card is on the board: it is the biggest card there is. */
+const LazyPlayerCard = lazy(() => import('./player/PlayerCard'))
+
+function PlayerCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyPlayerCard {...props} />
+    </Suspense>
+  )
 }
 
 const RENDERERS: Record<string, ComponentType<RenderProps>> = {
@@ -80,6 +91,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   search: SearchCard,
   ask: AskCard,
   wol: WolCard,
+  player: PlayerCard,
 }
 
 export function renderWidget(props: RenderProps) {

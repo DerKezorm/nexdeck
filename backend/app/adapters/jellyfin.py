@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import secrets
 import time
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
@@ -11,12 +13,40 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    MediaSource,
     WidgetData,
     WidgetType,
     base_url,
     human_bytes,
+    path_segment,
 )
 from .media_base import Library, MediaAdapter, Stream
+from .music import (
+    ALBUM_PAGE,
+    ARTIST_PAGE,
+    PICKS,
+    PLAYER_ALBUMS,
+    PLAYLIST_LIMIT,
+    QUALITY_KBPS,
+    SHUFFLE_SIZE,
+    Album,
+    Artist,
+    MusicLibrary,
+    Playlist,
+    Shelf,
+    ShelfQuery,
+    Sound,
+    SoundRequest,
+    Track,
+    batches,
+    demo_player,
+    next_offset,
+    player_data,
+    player_widget,
+    seconds,
+    wants_random_picks,
+    whole,
+)
 
 TICKS_PER_SECOND = 10_000_000
 #: Which item types a "recently added" widget draws from, per choice.
@@ -33,6 +63,25 @@ LOG_PAGE = 500
 #: The window the activity question is rounded to.
 LOG_BUCKET = 300
 LOG_LIMIT = 5000
+#: The DeviceId every request carries, so the server keeps one entry for nexdeck.
+DEVICE_ID = "nexdeck"
+#: What each codec a browser names is called in Jellyfin's container list.
+#: ``m4a|aac`` is a container and the codec inside it, the way jellyfin-web
+#: writes it; an ALAC file comes in the same m4a box and must not pass as AAC.
+CONTAINERS = {
+    "flac": ("flac",),
+    "mp3": ("mp3",),
+    "aac": ("aac", "m4a|aac", "m4b|aac"),
+    "alac": ("m4a|alac",),
+    "opus": ("opus", "ogg|opus", "webm|opus"),
+    "vorbis": ("ogg|vorbis", "webma|vorbis"),
+    "wav": ("wav",),
+}
+
+
+def containers_for(formats: tuple[str, ...]) -> str:
+    """The container list of ``/Audio/{id}/universal`` for what a browser plays."""
+    return ",".join(entry for name in formats for entry in CONTAINERS.get(name, ()))
 
 
 def parse_time(value: Any) -> float:
@@ -62,7 +111,7 @@ def device_names(names: Counter[str]) -> str:
     return ", ".join(f"{name} ×{count}" if count > 1 else name for name, count in sorted(names.items()))
 
 
-class JellyfinAdapter(MediaAdapter):
+class JellyfinAdapter(MediaAdapter, MusicLibrary):
     kind = "jellyfin"
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
@@ -123,7 +172,16 @@ class JellyfinAdapter(MediaAdapter):
                 Field("limit", "Items", type="number", default=6),
             ),
         ),
+        player_widget((
+            Field("account", "Account", type="choices",
+                  help="Whose view of the library and whose playlists the card uses. Nothing is reported back: plays do not count on the server."),
+            Field("music_library", "Music library", type="choices", help="Empty means every music library."),
+        )),
     )
+    #: Both measured on Jellyfin 10.11.11: ``/Items/{id}/InstantMix`` and HLS
+    #: from ``/Audio/{id}/universal``. Emby inherits them unmeasured, because the
+    #: Emby server at hand had no music on it.
+    music_features = ("mix", "hls")
 
     # -- plumbing ----------------------------------------------------------------
 
@@ -159,6 +217,8 @@ class JellyfinAdapter(MediaAdapter):
             return await self._users(config, options, ctx)
         if widget_kind == "top":
             return await self._top(config, options, ctx)
+        if widget_kind == "player":
+            return await self._player(config, options, ctx)
         return await super().fetch(widget_kind, config, options, ctx)
 
     @staticmethod
@@ -477,6 +537,327 @@ class JellyfinAdapter(MediaAdapter):
         items = [{**posters[key], "subtitle": f"{count} play(s)"} for key, count in plays.most_common(limit)]
         return WidgetData(items=items, meta={"empty": "Nothing watched"})
 
+    # -- music: the player card ----------------------------------------------------
+
+    async def _listener(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
+        """The account the card browses the library as.
+
+        ⚠️ A key belongs to no account (measured: ``/Users/Me`` answers a key
+        with 400), and the item routes want one. The card names an account, or
+        the first administrator stands in. One that was named and is gone is an
+        error rather than a quiet switch to somebody else's playlists.
+        """
+        users = await self._get(config, ctx, "/Users", cache=600) or []
+        wanted = str(options.get("account") or "")
+        if wanted:
+            if any(str(user.get("Id")) == wanted for user in users):
+                return wanted
+            raise AdapterError("The account this card plays as is no longer on the server.", code="no_such_account",
+                               hint="Pick another account in the card's settings.")
+        chosen = next((user for user in users if (user.get("Policy") or {}).get("IsAdministrator")), None) or (users[0] if users else None)
+        if not chosen:
+            raise AdapterError("The server has no account to play as.", code="no_account")
+        return str(chosen.get("Id"))
+
+    async def _items(self, config: dict[str, Any], ctx: Context, account: str, cache: float = 60, **params: Any) -> dict[str, Any]:
+        return await self._get(config, ctx, f"/Users/{account}/Items", params={"Recursive": "true", **params}, cache=cache) or {}
+
+    @staticmethod
+    def _scope(options: dict[str, Any]) -> dict[str, str]:
+        library = str(options.get("music_library") or "")
+        return {"ParentId": path_segment(library, "The music library")} if library else {}
+
+    @staticmethod
+    def _cover(item_id: Any) -> tuple[str, str]:
+        """A large cover for the player and a small one for rows, both through the image route."""
+        if not item_id:
+            return "", ""
+        return (f"proxy:/Items/{item_id}/Images/Primary?maxWidth=800&maxHeight=800&quality=90",
+                f"proxy:/Items/{item_id}/Images/Primary?maxWidth=240&maxHeight=240&quality=85")
+
+    def _album(self, entry: dict[str, Any]) -> Album:
+        # ⚠️ Only when the item says it has one. Measured: an album without a
+        # cover answers the image address with 404, and a grid of those is a
+        # grid of broken pictures instead of placeholders.
+        art, thumb = self._cover(entry.get("Id") if (entry.get("ImageTags") or {}).get("Primary") else None)
+        artists = entry.get("AlbumArtists") or []
+        return Album(
+            id=str(entry.get("Id") or ""), title=str(entry.get("Name") or "?"),
+            artist=str(entry.get("AlbumArtist") or ", ".join(str(one) for one in entry.get("Artists") or [])),
+            artist_id=str((artists[0] or {}).get("Id") or "") if artists else "",
+            year=whole(entry.get("ProductionYear")), tracks=whole(entry.get("ChildCount")), art=art, thumb=thumb,
+        )
+
+    def _track(self, entry: dict[str, Any]) -> Track:
+        source = (entry.get("MediaSources") or [{}])[0]
+        audio = next((one for one in source.get("MediaStreams") or [] if one.get("Type") == "Audio"), {})
+        album_id = str(entry.get("AlbumId") or "")
+        if album_id and entry.get("AlbumPrimaryImageTag"):
+            art, thumb = self._cover(album_id)
+        else:
+            art, thumb = self._cover(entry.get("Id") if (entry.get("ImageTags") or {}).get("Primary") else None)
+        performers = entry.get("ArtistItems") or []
+        bitrate = whole(audio.get("BitRate") or source.get("Bitrate"))
+        return Track(
+            id=str(entry.get("Id") or ""), title=str(entry.get("Name") or "?"),
+            artist=", ".join(str(one) for one in entry.get("Artists") or []) or str(entry.get("AlbumArtist") or ""),
+            album=str(entry.get("Album") or ""), album_id=album_id,
+            artist_id=str((performers[0] or {}).get("Id") or "") if performers else "",
+            duration=seconds(entry.get("RunTimeTicks"), TICKS_PER_SECOND), number=whole(entry.get("IndexNumber")),
+            disc=whole(entry.get("ParentIndexNumber")), art=art, thumb=thumb,
+            codec=str(audio.get("Codec") or source.get("Container") or entry.get("Container") or "").lower(),
+            bit_depth=whole(audio.get("BitDepth")), sample_rate=whole(audio.get("SampleRate")),
+            bitrate=round(bitrate / 1000) if bitrate else None,
+        )
+
+    def _playlist(self, entry: dict[str, Any]) -> Playlist:
+        art, thumb = self._cover(entry.get("Id") if (entry.get("ImageTags") or {}).get("Primary") else None)
+        return Playlist(id=str(entry.get("Id") or ""), title=str(entry.get("Name") or "?"), tracks=whole(entry.get("ChildCount")),
+                        duration=seconds(entry.get("RunTimeTicks"), TICKS_PER_SECOND), art=art, thumb=thumb)
+
+    async def _player(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        account = await self._listener(config, options, ctx)
+        scope = self._scope(options)
+        newest = await self._items(config, ctx, account, cache=300, IncludeItemTypes="MusicAlbum", SortBy="DateCreated,SortName",
+                                   SortOrder="Descending", Limit=PLAYER_ALBUMS, Fields="ChildCount,ProductionYear", **scope)
+        artists = await self._items(config, ctx, account, cache=600, IncludeItemTypes="MusicArtist", Limit=0, **scope)
+        tracks = await self._items(config, ctx, account, cache=600, IncludeItemTypes="Audio", Limit=0, **scope)
+        picks = None
+        if wants_random_picks(options):
+            # ⚠️ Only albums with a cover. Measured on 10.11.11: many albums of
+            # the library have none, and a random pick of discs is no picture.
+            chosen = await self._items(config, ctx, account, cache=0, IncludeItemTypes="MusicAlbum", SortBy="Random", ImageTypes="Primary",
+                                       Limit=PICKS, Fields="ChildCount,ProductionYear", EnableTotalRecordCount="false", **scope)
+            picks = [self._album(entry) for entry in chosen.get("Items") or []]
+        return player_data(
+            [self._album(entry) for entry in newest.get("Items") or []],
+            {"Albums": whole(newest.get("TotalRecordCount")), "Artists": whole(artists.get("TotalRecordCount")),
+             "Tracks": whole(tracks.get("TotalRecordCount"))},
+            self.music_features,
+            picks,
+        )
+
+    async def music_shelf(self, config: dict[str, Any], options: dict[str, Any], view: str, query: ShelfQuery, ctx: Context) -> Shelf:
+        account = await self._listener(config, options, ctx)
+        scope = self._scope(options)
+        if view == "albums":
+            order = {"newest": ("DateCreated,SortName", "Descending"), "name": ("SortName", "Ascending"), "random": ("Random", "Ascending")}
+            sort_by, direction = order.get(query.sort, order["newest"])
+            payload = await self._items(config, ctx, account, cache=0 if query.sort == "random" else 120, IncludeItemTypes="MusicAlbum",
+                                        SortBy=sort_by, SortOrder=direction, StartIndex=query.offset, Limit=ALBUM_PAGE,
+                                        Fields="ChildCount,ProductionYear", **scope)
+            albums = [self._album(entry) for entry in payload.get("Items") or []]
+            total = whole(payload.get("TotalRecordCount"))
+            return Shelf(albums=albums, total=total, next=next_offset(query.offset, len(albums), total))
+        if view == "artists":
+            # ⚠️ Artists as items, not ``/Artists/AlbumArtists``. Measured on
+            # 10.11.11: sixty album artists took 4.5 s, sixty artist items 0.75 s.
+            payload = await self._items(config, ctx, account, cache=300, IncludeItemTypes="MusicArtist", SortBy="SortName",
+                                        StartIndex=query.offset, Limit=ARTIST_PAGE, **scope)
+            artists = []
+            for entry in payload.get("Items") or []:
+                art, thumb = self._cover(entry.get("Id") if (entry.get("ImageTags") or {}).get("Primary") else None)
+                artists.append(Artist(id=str(entry.get("Id") or ""), name=str(entry.get("Name") or "?"), art=art, thumb=thumb))
+            total = whole(payload.get("TotalRecordCount"))
+            return Shelf(artists=artists, total=total, next=next_offset(query.offset, len(artists), total))
+        if view == "artist":
+            artist_id = path_segment(query.id, "The artist")
+            about = await self._get(config, ctx, f"/Users/{account}/Items/{artist_id}", cache=300) or {}
+            payload = await self._items(config, ctx, account, cache=120, IncludeItemTypes="MusicAlbum", AlbumArtistIds=artist_id,
+                                        SortBy="ProductionYear,SortName", SortOrder="Descending", Fields="ChildCount,ProductionYear")
+            albums = [self._album(entry) for entry in payload.get("Items") or []]
+            art, _thumb = self._cover(artist_id if (about.get("ImageTags") or {}).get("Primary") else None)
+            return Shelf(title=str(about.get("Name") or ""), art=art, albums=albums, total=len(albums))
+        if view == "album":
+            album_id = path_segment(query.id, "The album")
+            about = self._album(await self._get(config, ctx, f"/Users/{account}/Items/{album_id}", cache=300) or {"Id": album_id})
+            payload = await self._items(config, ctx, account, cache=120, ParentId=album_id, IncludeItemTypes="Audio",
+                                        SortBy="ParentIndexNumber,IndexNumber,SortName", Fields="MediaSources")
+            tracks = [self._track(entry) for entry in payload.get("Items") or []]
+            subtitle = " · ".join(part for part in (about.artist, str(about.year or "")) if part)
+            return Shelf(title=about.title, subtitle=subtitle, art=about.art, tracks=tracks, total=len(tracks))
+        if view == "playlists":
+            payload = await self._items(config, ctx, account, cache=120, IncludeItemTypes="Playlist", MediaTypes="Audio",
+                                        SortBy="SortName", Fields="ChildCount")
+            playlists = [self._playlist(entry) for entry in payload.get("Items") or []]
+            return Shelf(playlists=playlists, total=len(playlists))
+        if view == "playlist":
+            playlist_id = path_segment(query.id, "The playlist")
+            about = self._playlist(await self._get(config, ctx, f"/Users/{account}/Items/{playlist_id}", cache=300) or {"Id": playlist_id})
+            # ⚠️ The playlist route, not ``ParentId``: only this one keeps the order somebody put the tracks in.
+            payload = await self._get(config, ctx, f"/Playlists/{playlist_id}/Items", cache=60,
+                                      params={"UserId": account, "Limit": PLAYLIST_LIMIT}) or {}
+            tracks = []
+            for entry in payload.get("Items") or []:
+                track = self._track(entry)
+                track.entry = str(entry.get("PlaylistItemId") or "")
+                tracks.append(track)
+            return Shelf(title=about.title, art=about.art, tracks=tracks, total=whole(payload.get("TotalRecordCount")) or len(tracks), editable=True)
+        if view == "search":
+            words = query.q.strip()
+            if not words:
+                return Shelf()
+            # Three small questions at once rather than one mixed one: measured,
+            # the mixed search for "the" came back as 58 tracks and 2 albums.
+            found = await asyncio.gather(
+                self._items(config, ctx, account, cache=30, SearchTerm=words, IncludeItemTypes="MusicAlbum", Limit=20, Fields="ChildCount,ProductionYear", **scope),
+                self._items(config, ctx, account, cache=30, SearchTerm=words, IncludeItemTypes="MusicArtist", Limit=12, **scope),
+                self._items(config, ctx, account, cache=30, SearchTerm=words, IncludeItemTypes="Audio", Limit=30, **scope),
+            )
+            albums = [self._album(entry) for entry in found[0].get("Items") or []]
+            artists = []
+            for entry in found[1].get("Items") or []:
+                art, thumb = self._cover(entry.get("Id") if (entry.get("ImageTags") or {}).get("Primary") else None)
+                artists.append(Artist(id=str(entry.get("Id") or ""), name=str(entry.get("Name") or "?"), art=art, thumb=thumb))
+            tracks = [self._track(entry) for entry in found[2].get("Items") or []]
+            return Shelf(albums=albums, artists=artists, tracks=tracks, total=len(albums) + len(artists) + len(tracks))
+        if view == "shuffle":
+            payload = await self._items(config, ctx, account, cache=0, IncludeItemTypes="Audio", SortBy="Random", Limit=SHUFFLE_SIZE,
+                                        EnableTotalRecordCount="false", **scope)
+            tracks = [self._track(entry) for entry in payload.get("Items") or []]
+            return Shelf(tracks=tracks, total=len(tracks))
+        if view == "mix":
+            item_id = path_segment(query.id, "The item")
+            payload = await self._get(config, ctx, f"/Items/{item_id}/InstantMix", cache=0,
+                                      params={"UserId": account, "Limit": SHUFFLE_SIZE}) or {}
+            tracks = [self._track(entry) for entry in payload.get("Items") or []]
+            return Shelf(tracks=tracks, total=len(tracks))
+        raise AdapterError("The card asked for something the player does not show.", code="no_such_view")
+
+    async def music_source(self, config: dict[str, Any], options: dict[str, Any], sound: SoundRequest, ctx: Context) -> Sound:
+        """``/Audio/{id}/universal`` decides by itself: the file as it is when the
+        browser plays its container and the bitrate fits, converted otherwise.
+
+        Measured on 10.11.11: the file comes with Content-Length and answers
+        Range with 206 through this route too; converted sound is chunked MP3
+        without Range, or an HLS playlist when HLS is asked for.
+        """
+        account = await self._listener(config, options, ctx)
+        track = path_segment(sound.track_id, "The track")
+        limit = QUALITY_KBPS.get(sound.quality)
+        session = secrets.token_hex(8)
+        params: dict[str, Any] = {
+            "UserId": account, "DeviceId": DEVICE_ID, "PlaySessionId": session,
+            "Container": containers_for(sound.formats),
+            "MaxStreamingBitrate": limit * 1000 if limit else 140_000_000,
+            "AudioBitRate": (limit or 320) * 1000,
+        }
+        if sound.hls:
+            params.update({"TranscodingContainer": "ts", "TranscodingProtocol": "hls", "AudioCodec": "aac"})
+        else:
+            params.update({"TranscodingContainer": "mp3", "TranscodingProtocol": "http", "AudioCodec": "mp3"})
+            if sound.start > 0:
+                params["StartTimeTicks"] = int(sound.start * TICKS_PER_SECOND)
+        return Sound(
+            source=MediaSource(url=f"{base_url(config)}/Audio/{track}/universal", headers=self._headers(config),
+                               params=params, cache_seconds=0),
+            converted=limit is not None, session=session,
+        )
+
+    async def music_hls_part(self, config: dict[str, Any], options: dict[str, Any], track_id: str, part: str,
+                             query: dict[str, str], ctx: Context) -> MediaSource:
+        """A playlist or segment the HLS playlist names, relative to the track.
+
+        ⚠️ The addresses in Jellyfin's playlists are relative and carry no key
+        (measured: a segment asked for without one answers 401), so the
+        browser can follow them through nexdeck unchanged. The router has
+        already held ``part`` to the three shapes Jellyfin writes.
+        """
+        track = path_segment(track_id, "The track")
+        kept = {name: value for name, value in query.items() if name.lower() not in ("api_key", "apikey")}
+        return MediaSource(url=f"{base_url(config)}/Audio/{track}/{part}", headers=self._headers(config), params=kept, cache_seconds=0)
+
+    async def music_stop(self, config: dict[str, Any], sound: Sound, ctx: Context) -> None:
+        await ctx.request(
+            "DELETE", f"{base_url(config)}/Videos/ActiveEncodings", headers=self._headers(config),
+            params={"DeviceId": DEVICE_ID, "PlaySessionId": sound.session}, verify=not config.get("insecure"), timeout=5.0,
+        )
+
+    # -- music: playlists ----------------------------------------------------------
+
+    async def _write(self, config: dict[str, Any], ctx: Context, method: str, path: str,
+                     params: dict[str, Any] | None = None, body: Any = None) -> Any:
+        response = await ctx.request(method, f"{base_url(config)}{path}", headers=self._headers(config), params=params,
+                                     json_body=body, verify=not config.get("insecure"), timeout=20.0)
+        if response.status_code >= 400:
+            raise AdapterError(f"{self.label} refused the change to the playlist with HTTP {response.status_code}.", code="playlist_refused")
+        return response.json() if response.content and "json" in response.headers.get("content-type", "") else None
+
+    async def _entries(self, config: dict[str, Any], ctx: Context, account: str, playlist_id: str) -> list[dict[str, Any]]:
+        payload = await self._get(config, ctx, f"/Playlists/{playlist_id}/Items", cache=0, params={"UserId": account, "Limit": PLAYLIST_LIMIT}) or {}
+        return payload.get("Items") or []
+
+    async def music_playlist_create(self, config: dict[str, Any], options: dict[str, Any], name: str,
+                                    track_ids: list[str], ctx: Context) -> Playlist:
+        """Query parameters rather than a JSON body: the form Emby knows too, and measured to work on Jellyfin 10.11.11."""
+        account = await self._listener(config, options, ctx)
+        first, *rest = batches([path_segment(one, "The track") for one in track_ids]) or [[]]
+        made = await self._write(config, ctx, "POST", "/Playlists", params={"Name": name, "Ids": ",".join(first), "UserId": account, "MediaType": "Audio"})
+        playlist_id = str((made or {}).get("Id") or "")
+        if not playlist_id:
+            raise AdapterError(f"{self.label} did not say which playlist it made.", code="playlist_refused")
+        for batch in rest:
+            await self._write(config, ctx, "POST", f"/Playlists/{playlist_id}/Items", params={"Ids": ",".join(batch), "UserId": account})
+        return Playlist(id=playlist_id, title=name, tracks=len(track_ids))
+
+    async def music_playlist_add(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                 track_ids: list[str], ctx: Context) -> None:
+        """⚠️ Leaves out what is already there. Measured on 10.11.11: Jellyfin
+        adds a track a second time when asked, Plex does not, and a button that
+        does two different things on two servers is a button nobody trusts."""
+        account = await self._listener(config, options, ctx)
+        playlist = path_segment(playlist_id, "The playlist")
+        present = {str(entry.get("Id")) for entry in await self._entries(config, ctx, account, playlist)}
+        wanted = list(dict.fromkeys(path_segment(one, "The track") for one in track_ids if one not in present))
+        for batch in batches(wanted):
+            await self._write(config, ctx, "POST", f"/Playlists/{playlist}/Items", params={"Ids": ",".join(batch), "UserId": account})
+
+    async def music_playlist_remove(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    entries: list[str], ctx: Context) -> None:
+        playlist = path_segment(playlist_id, "The playlist")
+        for batch in batches([path_segment(one, "The entry") for one in entries]):
+            await self._write(config, ctx, "DELETE", f"/Playlists/{playlist}/Items", params={"EntryIds": ",".join(batch)})
+
+    async def music_playlist_rename(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    name: str, ctx: Context) -> None:
+        """⚠️ Through the item, not ``POST /Playlists/{id}``. Measured on 10.11.11:
+        the playlist route answers an API key with 400 "Error processing
+        request.", whatever the body; the item route takes the whole item back
+        with the new name."""
+        account = await self._listener(config, options, ctx)
+        playlist = path_segment(playlist_id, "The playlist")
+        item = await self._get(config, ctx, f"/Users/{account}/Items/{playlist}", cache=0) or {}
+        if item.get("Type") != "Playlist":
+            raise AdapterError("That is not a playlist.", code="not_a_playlist")
+        await self._write(config, ctx, "POST", f"/Items/{playlist}", body={**item, "Name": name})
+
+    async def music_playlist_delete(self, config: dict[str, Any], options: dict[str, Any], playlist_id: str,
+                                    ctx: Context) -> None:
+        account = await self._listener(config, options, ctx)
+        playlist = path_segment(playlist_id, "The playlist")
+        # ⚠️ Asked first: the same address deletes any item, an album or a film included.
+        item = await self._get(config, ctx, f"/Users/{account}/Items/{playlist}", cache=0) or {}
+        if item.get("Type") != "Playlist":
+            raise AdapterError("That is not a playlist.", code="not_a_playlist")
+        await self._write(config, ctx, "DELETE", f"/Items/{playlist}")
+
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        if field == "account":
+            users = await self._get(config, ctx, "/Users", cache=60) or []
+            return [(str(user.get("Id")), str(user.get("Name") or "?")) for user in users if not (user.get("Policy") or {}).get("IsDisabled")]
+        if field == "music_library":
+            account = await self._listener(config, {}, ctx)
+            views = (await self._get(config, ctx, f"/Users/{account}/Views", cache=60) or {}).get("Items") or []
+            return [(str(view.get("Id")), str(view.get("Name") or "?")) for view in views if view.get("CollectionType") == "music"]
+        return await super().choices(field, config, ctx)
+
+    def demo_choices(self, field: str) -> list[tuple[str, str]]:
+        if field == "account":
+            return [("demo-alex", "Alex"), ("demo-sam", "Sam")]
+        if field == "music_library":
+            return [("demo-music", "Music")]
+        return super().demo_choices(field)
+
     # -- demo --------------------------------------------------------------------------
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
@@ -501,6 +882,8 @@ class JellyfinAdapter(MediaAdapter):
         if widget_kind == "top":
             rows = [("Harbour Lights", 14, "episode"), ("The Quiet Harbour", 5, "movie"), ("Northern Sky", 4, "track"), ("Orbital", 2, "movie")]
             return WidgetData(items=[{"title": title, "subtitle": f"{count} play(s)", "art": "", "kind": kind} for title, count, kind in rows[: int(options.get("limit") or 6)]], meta={"empty": "Nothing watched"})
+        if widget_kind == "player":
+            return demo_player(self.music_features, options, tick)
         return super().demo(widget_kind, options, tick)
 
 
