@@ -93,7 +93,8 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
     kiosk = kiosk_from_request(request, db)
     board, permission = board_for_viewer(db, slug, user, kiosk)
     view = board_view(db, board, permission)
-    if kiosk is not None:
+    # Only on the display's own board; a cookie left over from another says nothing about this one.
+    if kiosk is not None and kiosk.board_id == board.id:
         view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name}
     return view
 

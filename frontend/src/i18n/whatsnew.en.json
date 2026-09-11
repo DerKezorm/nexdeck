@@ -393,6 +393,25 @@
         "Somebody who may only look sees the card without buttons; a kiosk plays only when its link allows actions.",
         "0.9.0 and 0.10.0 were not published on their own. Their eleven integrations arrive with this version, from Vikunja to wg-easy."
       ]
+    },
+    "0.11.1": {
+      "lead": "Two fixes: a wall display's link no longer locks you out, and Reolink devices stop running out of sessions.",
+      "sections": [
+        {
+          "title": "Kiosk links in your own browser",
+          "body": "Opening a wall display's link in your own browser left a cookie that shut you out of every other board. Your account and the display now each count for what they allow.",
+          "path": "Board menu > Kiosk"
+        },
+        {
+          "title": "Reolink keeps letting nexdeck in",
+          "body": "Cards starting together, the Test button and saving a connection each opened a session at the device and never closed it, until the device refused with too many users. Every session is handed back now.",
+          "path": "Settings > Integrations > Reolink"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A Reolink device that refuses logins right now lets nexdeck in again once its old sessions expire, at most an hour after updating."
+      ]
     }
   }
 }

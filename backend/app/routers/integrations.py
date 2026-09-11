@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..adapters import all_adapters, get_adapter
-from ..adapters.base import AdapterError, Context
+from ..adapters.base import Adapter, AdapterError, Context, hand_back
 from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
@@ -77,11 +78,21 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
     return _public(db, integration)
 
 
+def _farewell(integration: Integration) -> tuple[Adapter, dict[str, Any]] | None:
+    """The adapter and the settings a connection's cards logged in with, read before they change."""
+    try:
+        return get_adapter(integration.kind), resolve_config(integration)
+    except (KeyError, SecretUnreadable):
+        return None
+
+
 @router.patch("/integrations/{integration_id}", summary="Change an integration")
 def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUser, db: DbSession) -> dict:
     integration = db.get(Integration, integration_id)
     if integration is None:
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
+    # Before the change: the session the cards hold was opened with the old settings.
+    farewell = _farewell(integration)
     # ⚠️ What changed, never what it changed to: the config holds API keys.
     changed: list[str] = []
     if body.name is not None:
@@ -107,7 +118,7 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
     db.commit()
     if changed:
         logger.info("Connection %r (%s): %s, by %s.", integration.name, integration.kind, "; ".join(changed), user.username)
-    collector.reschedule_integration(integration.id)
+    collector.reschedule_integration(integration.id, farewell)
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
     return _public(db, integration)
@@ -156,13 +167,14 @@ def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> N
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
     widget_ids = list(db.scalars(select(Widget.id).where(Widget.integration_id == integration.id)))
     name, kind = integration.name, integration.kind
+    farewell = _farewell(integration)
     forgotten = _forget_in_options(db, integration.id)
     db.delete(integration)
     db.commit()
     # ⚠️ The cache and the client of a connection that no longer exists used
     # to sit in memory until the next restart, holding open sockets to a
     # service nobody asked about any more.
-    collector.forget_integration(integration_id)
+    collector.forget_integration(integration_id, farewell)
     logger.info("Connection %r (%s) deleted by %s; %d card(s) lose their service, %d option(s) cleared.",
                 name, kind, user.username, len(widget_ids), forgotten)
     hass_listener.unwatch(integration_id)
@@ -203,6 +215,8 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
         return {"ok": False, "message": failure.message, "hint": failure.hint, "code": failure.code}
     except Exception as failure:  # noqa: BLE001
         return {"ok": False, "message": f"Unexpected error: {failure.__class__.__name__}.", "hint": "", "code": "crash"}
+    finally:
+        await hand_back(adapter, config, ctx)
     return {"ok": True, "message": message}
 
 
@@ -229,13 +243,16 @@ async def field_choices(integration_id: int, field: str, user: CurrentUser, db: 
         return [{"value": value, "label": label} for value, label in offered]
 
     ctx = Context(collector.client, integration_id=integration.id, cache={})
+    config = resolve_config(integration)
     try:
-        offered = await adapter.choices(field, resolve_config(integration), ctx)
+        offered = await adapter.choices(field, config, ctx)
     except AdapterError as failure:
         raise error(failure.code, failure.message) from failure
     except Exception as failure:  # noqa: BLE001 - a dropdown must not take the sheet down
         logger.warning("Choices for %s.%s failed: %s", integration.kind, field, failure)
         raise error("choices_failed", "The service did not answer with a list.") from failure
+    finally:
+        await hand_back(adapter, config, ctx)
     return [{"value": value, "label": label} for value, label in offered]
 
 
@@ -248,12 +265,15 @@ async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dic
         return {"ok": True, "message": "Demo mode: nothing is contacted."}
     adapter = get_adapter(integration.kind)
     ctx = Context(collector.client, integration_id=integration.id, cache={})
+    config = resolve_config(integration)
     try:
-        message = await adapter.test(resolve_config(integration), ctx)
+        message = await adapter.test(config, ctx)
     except AdapterError as failure:
         integration.last_error = failure.message
         db.commit()
         return {"ok": False, "message": failure.message, "hint": failure.hint, "code": failure.code}
+    finally:
+        await hand_back(adapter, config, ctx)
     integration.last_error = ""
     db.commit()
     return {"ok": True, "message": message}

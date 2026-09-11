@@ -10,6 +10,7 @@ maintainable by one person.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import ipaddress
 import json
@@ -1289,6 +1290,20 @@ class Adapter:
 
     def secret_field_names(self) -> set[str]:
         return {f.name for f in self.fields if f.secret}
+
+
+async def hand_back(adapter: Adapter, config: dict[str, Any], ctx: Context) -> None:
+    """Let an adapter log out of whatever ``ctx`` holds, briefly, and never fail what it follows.
+
+    ⚠️ Everything that opens a context and lets it go has to come past here: the
+    Test button, a dropdown asked of the service, a connection saved or deleted,
+    the server stopping. On 11.09.2026 three of those simply dropped the
+    context, and every press of Test cost a seat at a Reolink hub for an hour.
+    """
+    try:
+        await asyncio.wait_for(adapter.close(config, ctx), timeout=3)
+    except Exception:  # noqa: BLE001 - a goodbye that fails must not fail the answer it follows
+        logger.debug("%s could not hand back its session.", adapter.kind)
 
 
 # ---------------------------------------------------------------------------

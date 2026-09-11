@@ -393,6 +393,25 @@
         "Wer nur schauen darf, sieht die Karte ohne Knöpfe; ein Kiosk spielt nur, wenn sein Link Aktionen erlaubt.",
         "0.9.0 und 0.10.0 sind nicht einzeln erschienen. Ihre elf Anbindungen kommen mit dieser Fassung, von Vikunja bis wg-easy."
       ]
+    },
+    "0.11.1": {
+      "lead": "Zwei Reparaturen: Ein Kiosk-Link sperrt dich nicht mehr aus, und Reolink-Geräten gehen die Sitzungen nicht mehr aus.",
+      "sections": [
+        {
+          "title": "Kiosk-Links im eigenen Browser",
+          "body": "Wer den Link einer Wandanzeige im eigenen Browser öffnete, bekam ein Cookie, das ihn von allen anderen Boards aussperrte. Jetzt zählen dein Konto und die Anzeige jeweils für das, was sie dürfen.",
+          "path": "Board-Menü > Kiosk"
+        },
+        {
+          "title": "Reolink lässt nexdeck wieder herein",
+          "body": "Gleichzeitig startende Karten, der Test-Knopf und das Speichern einer Anbindung öffneten je eine Sitzung am Gerät und schlossen sie nie, bis das Gerät wegen zu vieler Benutzer ablehnte. Jetzt wird jede Sitzung zurückgegeben.",
+          "path": "Einstellungen > Anbindungen > Reolink"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Lehnt ein Reolink-Gerät gerade Anmeldungen ab, lässt es nexdeck wieder herein, sobald die alten Sitzungen ablaufen, spätestens eine Stunde nach dem Update."
+      ]
     }
   }
 }

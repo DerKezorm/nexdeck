@@ -8,6 +8,7 @@ token allows actions). Cookie sessions on unsafe methods must carry the
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -328,23 +329,54 @@ def _kiosk_from_header(request: Request, db: DbSessionType) -> KioskToken | None
     return db.scalar(select(KioskToken).where(KioskToken.token_hash == hash_token(token)))
 
 
+def _kiosk_grant(kiosk: KioskToken) -> str:
+    return "act" if kiosk.allow_actions else "view"
+
+
+def _the_better_of(from_kiosk: tuple[Board, str] | None, as_user: Callable[[], tuple[Board, str]]) -> tuple[Board, str]:
+    """A signed-in user who also carries a display's cookie gets the higher of the two rights.
+
+    Neither takes anything away: the user's own right stands where the display
+    has none, and the display's stands where the user may not look.
+    """
+    if from_kiosk is None:
+        return as_user()
+    try:
+        board, permission = as_user()
+    except HTTPException:
+        return from_kiosk
+    return (board, permission) if LEVELS[permission] >= LEVELS[from_kiosk[1]] else from_kiosk
+
+
 def board_for_viewer(db: DbSessionType, slug_or_id: str, user: User | None, kiosk: KioskToken | None) -> tuple[Board, str]:
-    """A board for someone who may be a user or a kiosk display."""
+    """A board for a signed-in user, a kiosk display, or both in one browser.
+
+    ⚠️ Both at once is ordinary: whoever sets up a wall display tries its link
+    in their own browser, and the kiosk cookie stays there. The kiosk used to
+    win outright, so from then on every other board answered 403 "This kiosk
+    token belongs to another board" to its signed-in owner, and the app said
+    only that the board could not be loaded. Found on 11.09.2026. A display
+    without a sign-in still sees its own board and nothing else.
+    """
+    from_kiosk = None
     if kiosk is not None:
         board = db.get(Board, kiosk.board_id)
-        if board is None or (board.slug != slug_or_id and str(board.id) != slug_or_id):
+        if board is not None and (board.slug == slug_or_id or str(board.id) == slug_or_id):
+            from_kiosk = (board, _kiosk_grant(kiosk))
+        elif user is None:
             raise error("forbidden", "This kiosk token belongs to another board.", status.HTTP_403_FORBIDDEN)
-        return board, "act" if kiosk.allow_actions else "view"
-    return require_board(db, slug_or_id, user, "view")
+    return _the_better_of(from_kiosk, lambda: require_board(db, slug_or_id, user, "view"))
 
 
 def board_for_viewer_id(db: DbSessionType, board_id: int, user: User | None, kiosk: KioskToken | None) -> tuple[Board, str]:
     """The same, for the code that already holds the board's number."""
+    from_kiosk = None
     if kiosk is not None:
-        if int(kiosk.board_id) != int(board_id):
+        if int(kiosk.board_id) == int(board_id):
+            board = db.get(Board, int(board_id))
+            if board is None:
+                raise error("not_found", "There is no such board.", status.HTTP_404_NOT_FOUND)
+            from_kiosk = (board, _kiosk_grant(kiosk))
+        elif user is None:
             raise error("forbidden", "This kiosk token belongs to another board.", status.HTTP_403_FORBIDDEN)
-        board = db.get(Board, int(board_id))
-        if board is None:
-            raise error("not_found", "There is no such board.", status.HTTP_404_NOT_FOUND)
-        return board, "act" if kiosk.allow_actions else "view"
-    return require_board_id(db, board_id, user, "view")
+    return _the_better_of(from_kiosk, lambda: require_board_id(db, board_id, user, "view"))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from datetime import UTC
@@ -1006,12 +1007,16 @@ class _Reolink:
         }
         self.answers.update(answers)
         self.logins = 0
+        self.logouts: list[tuple[str, str]] = []
         self.bodies: list[list[dict[str, Any]]] = []
         self.limit = False
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content or b"[]")
         self.bodies.append(body)
+        if body and body[0].get("cmd") == "Logout":
+            self.logouts.append((request.url.host, str(request.url.params.get("token"))))
+            return httpx.Response(200, json=[{"cmd": "Logout", "code": 0, "value": {"rspCode": 200}}])
         if body and body[0].get("cmd") == "Login":
             self.logins += 1
             if self.limit:
@@ -1067,6 +1072,43 @@ async def test_reolink_logs_in_again_when_the_session_expired(ctx: Context) -> N
     assert device.logins == 1, "a stale token costs one new login, not an error"
     with pytest.raises(AuthFailed):
         await get_adapter("reolink").test({**CONFIG, "password": "wrong"}, Context(httpx.AsyncClient(), cache={}))
+
+
+@respx.mock
+async def test_reolink_cards_that_start_together_share_one_login(ctx: Context) -> None:
+    """Measured 11.09.2026 as "too many users are signed in" on a Home Hub.
+
+    Every card of a connection starts within a second and a half of a restart.
+    Each one found no token yet and logged in on its own; the context kept the
+    last token and nobody ever logged out of the others, so every start left
+    seats taken at the hub for an hour.
+    """
+    device = _Reolink()
+
+    async def slow(request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(0.02)
+        return device(request)
+
+    respx.post(f"{REO}/api.cgi").mock(side_effect=slow)
+    reolink = get_adapter("reolink")
+    await asyncio.gather(*(reolink.test(CONFIG, ctx) for _ in range(4)))
+    assert device.logins == 1, "one login for four cards"
+
+
+@respx.mock
+async def test_reolink_hands_back_a_token_before_taking_a_new_one_and_logs_out_where_it_logged_in(ctx: Context) -> None:
+    device = _Reolink()
+    respx.post(f"{REO}/api.cgi").mock(side_effect=device)
+    respx.post("http://old-cam/api.cgi").mock(side_effect=device)
+    reolink = get_adapter("reolink")
+    ctx.cache["reolink_token"] = ("T0", time.monotonic() - 1, "http://old-cam", True)
+    await reolink.test(CONFIG, ctx)
+    assert device.logouts == [("old-cam", "T0")], "a token at the end of its lease still holds its seat until it is handed back"
+    assert device.logins == 1
+
+    await reolink.close({**CONFIG, "url": "http://moved-cam"}, ctx)
+    assert device.logouts[-1] == ("cam", "T1"), "the logout goes where the token came from, even when the address was changed since"
+    assert "reolink_token" not in ctx.cache
 
 
 @respx.mock

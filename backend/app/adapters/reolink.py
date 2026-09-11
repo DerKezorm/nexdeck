@@ -16,6 +16,7 @@ instead of the account, so no password ever enters a URL.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import secrets
 import time
@@ -117,28 +118,60 @@ class ReolinkAdapter(Adapter):
     def _verify(config: dict[str, Any]) -> bool:
         return not config.get("insecure", True)
 
-    async def _token(self, config: dict[str, Any], ctx: Context, force: bool = False) -> str:
-        """The session token, fetched once and kept until shortly before its lease ends."""
+    async def _token(self, config: dict[str, Any], ctx: Context, replacing: str | None = None) -> str:
+        """The session token, fetched once and kept until shortly before its lease ends.
+
+        ``replacing`` is a token the device just turned down; another caller
+        may have replaced it already while this one was waiting.
+
+        ⚠️ One login at a time per connection. Every card of a connection
+        starts within a second and a half of a restart, and each used to find
+        no token and log in on its own: the context kept the last token, and
+        the others held their seats at the hub for an hour. After an afternoon
+        of restarts on 11.09.2026 the hub said "too many users are signed in".
+        """
         cached = ctx.cache.get("reolink_token")
-        if cached and not force and cached[1] > time.monotonic():
+        if cached and cached[0] != replacing and cached[1] > time.monotonic():
             return str(cached[0])
-        if float(ctx.cache.get("reolink_login_blocked_until") or 0) > time.monotonic():
-            raise AuthFailed("The device refused the login: the device has reached its session limit. Waiting a minute before asking again.")
-        body = [{"cmd": "Login", "param": {"User": {"Version": "0", "userName": str(config.get("username") or ""), "password": str(config.get("password") or "")}}}]
-        response = await ctx.request("POST", f"{base_url(config)}/api.cgi", params={"cmd": "Login"}, json_body=body, verify=self._verify(config))
+        lock = ctx.cache.setdefault("reolink_login_lock", asyncio.Lock())
+        async with lock:
+            cached = ctx.cache.get("reolink_token")
+            if cached and cached[0] != replacing and cached[1] > time.monotonic():
+                return str(cached[0])
+            if float(ctx.cache.get("reolink_login_blocked_until") or 0) > time.monotonic():
+                raise AuthFailed("The device refused the login: the device has reached its session limit. Waiting a minute before asking again.")
+            if cached:
+                # Renewed a minute before the lease ends, so the old one still holds its seat.
+                ctx.cache.pop("reolink_token", None)
+                await self._hand_back(config, ctx, cached)
+            body = [{"cmd": "Login", "param": {"User": {"Version": "0", "userName": str(config.get("username") or ""), "password": str(config.get("password") or "")}}}]
+            response = await ctx.request("POST", f"{base_url(config)}/api.cgi", params={"cmd": "Login"}, json_body=body, verify=self._verify(config))
+            try:
+                answer = self._answers(response, ["Login"])[0]
+            except DeviceError as failure:
+                if failure.rsp_code in (-5, -12):
+                    # Asking every 15 seconds would only keep the device busy; the sessions expire on their own.
+                    ctx.cache["reolink_login_blocked_until"] = time.monotonic() + LOGIN_COOLDOWN
+                raise AuthFailed(f"The device refused the login: {ERRORS.get(failure.rsp_code, failure.rsp_code)}.") from failure
+            token = (answer.get("value") or {}).get("Token") or {}
+            if not token.get("name"):
+                raise AuthFailed("The device did not hand out a session token.")
+            lease = float(token.get("leaseTime") or 3600)
+            # Where it was handed out comes along, so the logout finds the device after the address was changed.
+            ctx.cache["reolink_token"] = (str(token["name"]), time.monotonic() + max(60.0, lease - 60.0), base_url(config), self._verify(config))
+            return str(token["name"])
+
+    async def _hand_back(self, config: dict[str, Any], ctx: Context, cached: tuple[Any, ...]) -> None:
+        """Log one token out, at the device it came from. A device that already forgot it is fine."""
+        url = str(cached[2]) if len(cached) > 2 else base_url(config)
+        verify = bool(cached[3]) if len(cached) > 3 else self._verify(config)
         try:
-            answer = self._answers(response, ["Login"])[0]
-        except DeviceError as failure:
-            if failure.rsp_code in (-5, -12):
-                # Asking every 15 seconds would only keep the device busy; the sessions expire on their own.
-                ctx.cache["reolink_login_blocked_until"] = time.monotonic() + LOGIN_COOLDOWN
-            raise AuthFailed(f"The device refused the login: {ERRORS.get(failure.rsp_code, failure.rsp_code)}.") from failure
-        token = (answer.get("value") or {}).get("Token") or {}
-        if not token.get("name"):
-            raise AuthFailed("The device did not hand out a session token.")
-        lease = float(token.get("leaseTime") or 3600)
-        ctx.cache["reolink_token"] = (str(token["name"]), time.monotonic() + max(60.0, lease - 60.0))
-        return str(token["name"])
+            await ctx.request(
+                "POST", f"{url}/api.cgi", params={"cmd": "Logout", "token": str(cached[0])},
+                json_body=[{"cmd": "Logout", "param": {}}], verify=verify, timeout=3.0,
+            )
+        except AdapterError:
+            return
 
     @staticmethod
     def _answers(response: Any, commands: list[str]) -> list[dict[str, Any]]:
@@ -184,7 +217,7 @@ class ReolinkAdapter(Adapter):
             detail = answer.get("error") or {}
             rsp_code = int(detail.get("rspCode") or 0)
             if rsp_code == -6 and retry:
-                await self._token(config, ctx, force=True)
+                await self._token(config, ctx, replacing=token)
                 return await self._batch(config, ctx, commands, retry=False)
             if rsp_code in UNSUPPORTED:
                 results.append(None)
@@ -206,15 +239,8 @@ class ReolinkAdapter(Adapter):
     async def close(self, config: dict[str, Any], ctx: Context) -> None:
         """Log out: a Reolink device allows only a handful of sessions, and a token lives an hour."""
         cached = ctx.cache.pop("reolink_token", None)
-        if not cached:
-            return
-        try:
-            await ctx.request(
-                "POST", f"{base_url(config)}/api.cgi", params={"cmd": "Logout", "token": str(cached[0])},
-                json_body=[{"cmd": "Logout", "param": {}}], verify=self._verify(config), timeout=3.0,
-            )
-        except AdapterError:
-            return
+        if cached:
+            await self._hand_back(config, ctx, cached)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         info = (await self._call(config, ctx, "GetDevInfo", cache=0)) or {}
