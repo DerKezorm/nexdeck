@@ -17,6 +17,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
@@ -1374,6 +1375,33 @@ def duration_short(seconds: float | None) -> str:
         return f"{hours}h {minutes}m" if minutes else f"{hours}h"
     days, hours = divmod(hours, 24)
     return f"{days}d {hours}h" if hours else f"{days}d"
+
+
+def ago(moment: Any) -> str:
+    """How long ago something happened: ``"12 min"``, ``"3 h"`` or ``"2 d"``.
+
+    Takes an ISO time with ``Z`` or an offset, or seconds since the epoch, and
+    answers ``""`` for anything it cannot read. A card then shows nothing
+    rather than an age that is wrong. The words are units, not sentences, so
+    they read the same in both languages.
+    """
+    if moment is None or moment == "" or isinstance(moment, bool):
+        return ""
+    try:
+        if isinstance(moment, int | float):
+            when = datetime.fromtimestamp(float(moment), UTC)
+        else:
+            when = datetime.fromisoformat(str(moment).replace("Z", "+00:00"))
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=UTC)
+    except (ValueError, OverflowError, OSError):
+        return ""
+    seconds = max(0.0, (datetime.now(UTC) - when).total_seconds())
+    if seconds < 3600:
+        return f"{int(seconds // 60)} min"
+    if seconds < 86400:
+        return f"{int(seconds // 3600)} h"
+    return f"{int(seconds // 86400)} d"
 
 
 @dataclass

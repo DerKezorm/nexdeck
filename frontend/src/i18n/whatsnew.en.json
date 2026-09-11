@@ -265,6 +265,31 @@
         "Arrangements made for the phone or the tablet before this version are no longer used.",
         "A new demo board comes with its arrangement again, instead of every card at the same size in the order it was made."
       ]
+    },
+    "0.7.0": {
+      "lead": "Six new integrations: Cup, Healthchecks, ChangeDetection.io, Miniflux, autobrr and Firefly III.",
+      "sections": [
+        {
+          "title": "Container updates with Cup",
+          "body": "See which images have a newer version waiting, the biggest step first, and make Cup check again with one press.",
+          "path": "Settings > Integrations > Cup"
+        },
+        {
+          "title": "Cron jobs with Healthchecks",
+          "body": "Down and late checks come first, from your own instance or from healthchecks.io.",
+          "path": "Settings > Integrations > Healthchecks"
+        },
+        {
+          "title": "Web pages, feeds, releases and money",
+          "body": "ChangeDetection.io shows what changed, Miniflux what is unread, autobrr what was grabbed, and Firefly III your net worth, subscriptions and budgets.",
+          "path": "Settings > Integrations"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "All six were measured against running instances and start without the beta badge.",
+        "Healthchecks closes its connections after every answer; nexdeck asks for exactly that, so no card loses a request."
+      ]
     }
   }
 }

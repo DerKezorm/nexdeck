@@ -265,6 +265,31 @@
         "Anordnungen, die vor dieser Fassung eigens für Handy oder Tablet gemacht wurden, werden nicht mehr verwendet.",
         "Ein neues Demo-Board kommt wieder mit seiner Anordnung, statt jede Karte gleich groß in der Reihenfolge ihres Anlegens zu zeigen."
       ]
+    },
+    "0.7.0": {
+      "lead": "Sechs neue Anbindungen: Cup, Healthchecks, ChangeDetection.io, Miniflux, autobrr und Firefly III.",
+      "sections": [
+        {
+          "title": "Container-Updates mit Cup",
+          "body": "Welche Images eine neuere Version haben, die größten Sprünge zuerst, und ein Knopf, mit dem Cup neu prüft.",
+          "path": "Einstellungen > Anbindungen > Cup"
+        },
+        {
+          "title": "Cronjobs mit Healthchecks",
+          "body": "Ausgefallene und überfällige Prüfungen stehen oben, von der eigenen Instanz oder von healthchecks.io.",
+          "path": "Einstellungen > Anbindungen > Healthchecks"
+        },
+        {
+          "title": "Webseiten, Feeds, Releases und Geld",
+          "body": "ChangeDetection.io zeigt, was sich geändert hat, Miniflux, was ungelesen ist, autobrr, was gegriffen wurde, und Firefly III Vermögen, Abos und Budgets.",
+          "path": "Einstellungen > Anbindungen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Alle sechs wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
+        "Healthchecks schließt seine Verbindungen nach jeder Antwort; nexdeck bittet ausdrücklich darum, damit keine Karte eine Anfrage verliert."
+      ]
     }
   }
 }

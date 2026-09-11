@@ -10,13 +10,14 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.6.2
+## Adapters in 0.7.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
 | Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
+| Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
 | Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
@@ -62,10 +63,13 @@ that one of twenty-one renderers draws.
 | Jellystat | libraries, most watched | | API key |
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |
+| autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
+| Healthchecks | checks, checks up | | API key from the project settings; the read-only one is enough, and healthchecks.io works too |
+| ChangeDetection.io | recent changes, watches | check all now | API key from Settings > API |
 | n8n | workflows, last runs, summary | publish, unpublish | API key from Settings > n8n API |
 | Beszel | hosts, host | | user and password |
 | Glances | system, file systems, sensors | | optional password |
@@ -78,9 +82,11 @@ that one of twenty-one renderers draws.
 | JSON API | value, list | | optional bearer token |
 | iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
+| Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 | Hacker News | stories | | none |
+| Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | YouTube | videos | | none; the channel feeds need no account |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |
