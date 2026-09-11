@@ -10,7 +10,7 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.9.0
+## Adapters in 0.10.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
@@ -42,6 +42,8 @@ that one of twenty-one renderers draws.
 | FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
 | Tailscale | devices, status | | API access token from the admin console |
 | Headscale | nodes, status | | API key from `headscale apikeys create` |
+| wg-easy | WireGuard clients, VPN | | user and password; wg-easy 15 or newer |
+| NetBox | devices, prefixes, inventory | | API token, read-only is enough; a v2 token is pasted whole, starting with nbt_ |
 | Gluetun | tunnel | | none, or the API key if the control server has roles |
 | Technitium DNS | blocking, top blocked | | API token |
 | NextDNS | blocking, top blocked | | API key and the profile ID |
@@ -56,6 +58,7 @@ that one of twenty-one renderers draws.
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
 | Tautulli | now playing, streams, most watched | | API key |
+| RomM | platforms, recently added games, game library | | client API token with roms.read and platforms.read |
 | Immich | archive, storage, users | | API key of an administrator |
 | Bazarr | status, missing subtitles, recently fetched | | API key |
 | Audiobookshelf | library, listening now | | API key |
@@ -93,6 +96,8 @@ that one of twenty-one renderers draws.
 | Grocy | stock to watch, pantry | | API key from Manage API keys |
 | Vikunja | due tasks, tasks | | API token with read_all for tasks and projects; the time zone for "today" is a field, because a token cannot read the user's own |
 | Kimai | time entries, booked time | stop a running timer | API token from Profile > API access |
+| Dawarich | distance, distance by month | | API key of the account; distances follow Dawarich's hourly calculation |
+| wger | weight, weigh-ins | | API key from the profile, sent as Token |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
