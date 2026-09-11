@@ -49,6 +49,7 @@ const PATTERNS: Record<string, [RegExp, string][]> = {
     [/^Channel (\d+)$/, 'Kanal $1'],
     [/^(\d+) failed sign-ins in 24 h$/, '$1 gescheiterte Anmeldungen in 24 h'],
     [/^(\d+) error\(s\) in 24 h$/, '$1 Fehler in 24 h'],
+    [/^(\d+) errors$/, '$1 Fehler'],
     [/^([\d.,]+ [KMGTP]?i?B) free$/, '$1 frei'],
     [/^Account (\d+)$/, 'Konto $1'],
     [/^Device (\d+)$/, 'Gerät $1'],

@@ -51,6 +51,8 @@ describe('server texts', () => {
     expect(translateText('labels', 'Jellyfin answers · 10.11.0 · 2 libraries')).toBe('Jellyfin antwortet · 10.11.0 · 2 Bibliotheken')
     expect(translateText('labels', '6 failed sign-ins in 24 h')).toBe('6 gescheiterte Anmeldungen in 24 h')
     expect(translateText('labels', '1 error(s) in 24 h · Scan media library failed')).toBe('1 Fehler in 24 h · Scan media library failed')
+    expect(translateText('labels', '3 errors · root@nas')).toBe('3 Fehler · root@nas')
+    expect(translateText('labels', 'Failed · The operation was canceled.')).toBe('Fehlgeschlagen · The operation was canceled.')
     expect(translateText('labels', 'The last run failed · Access denied')).toBe('Der letzte Lauf ist fehlgeschlagen · Access denied')
     expect(translateText('labels', '2.0 GB free')).toBe('2.0 GB frei')
     expect(translateText('labels', 'online · battery 84% · Person')).toBe('online · Akku 84 % · Person')

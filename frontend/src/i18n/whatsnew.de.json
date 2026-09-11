@@ -290,6 +290,32 @@
         "Alle sechs wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
         "Healthchecks schließt seine Verbindungen nach jeder Antwort; nexdeck bittet ausdrücklich darum, damit keine Karte eine Anfrage verliert."
       ]
+    },
+    "0.8.0": {
+      "lead": "Acht neue Anbindungen: Gitea, Forgejo, CrowdSec, Semaphore UI, Karakeep, Mealie, Kopia und Duplicati.",
+      "sections": [
+        {
+          "title": "Sicherungen mit Kopia und Duplicati",
+          "body": "Jede Snapshot-Quelle und jeder Sicherungsauftrag mit dem letzten gelungenen Lauf, ein gescheiterter oben mit dem Grund. Duplicati zeigt außerdem, welcher Auftrag gerade läuft.",
+          "path": "Einstellungen > Anbindungen > Kopia oder Duplicati"
+        },
+        {
+          "title": "Der eigene Git-Server",
+          "body": "Gitea und Forgejo zeigen offene Issues oder Pull Requests und die neuesten Actions-Jobs, rote markiert. Semaphore UI zeigt, wie jede Vorlage zuletzt geendet hat.",
+          "path": "Einstellungen > Anbindungen > Gitea, Forgejo oder Semaphore UI"
+        },
+        {
+          "title": "Gesperrte Adressen, Lesezeichen und die Küche",
+          "body": "CrowdSec zeigt, was gerade gesperrt ist, Karakeep, was noch gelesen werden will, und Mealie den Essensplan und die Einkaufsliste.",
+          "path": "Einstellungen > Anbindungen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Alle acht wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
+        "Ein Duplicati-Auftrag, der einmal scheiterte und seitdem sauber lief, gilt nicht mehr als gescheitert, auch wenn Duplicati den alten Fehler behält.",
+        "„Failed“ heißt auf Deutsch jetzt „Fehlgeschlagen“ statt „Fehlversuche“."
+      ]
     }
   }
 }

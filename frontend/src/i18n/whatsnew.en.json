@@ -290,6 +290,32 @@
         "All six were measured against running instances and start without the beta badge.",
         "Healthchecks closes its connections after every answer; nexdeck asks for exactly that, so no card loses a request."
       ]
+    },
+    "0.8.0": {
+      "lead": "Eight new integrations: Gitea, Forgejo, CrowdSec, Semaphore UI, Karakeep, Mealie, Kopia and Duplicati.",
+      "sections": [
+        {
+          "title": "Backups with Kopia and Duplicati",
+          "body": "Every snapshot source or backup job with its last good run, and a failed one on top with the reason. Duplicati also shows which job is running.",
+          "path": "Settings > Integrations > Kopia or Duplicati"
+        },
+        {
+          "title": "Your Git server",
+          "body": "Gitea and Forgejo show open issues or pull requests and the latest Actions jobs, red ones marked. Semaphore UI shows how every template last ended.",
+          "path": "Settings > Integrations > Gitea, Forgejo or Semaphore UI"
+        },
+        {
+          "title": "Blocked addresses, bookmarks and the kitchen",
+          "body": "CrowdSec shows what it blocks right now, Karakeep what is still waiting to be read, and Mealie the meal plan and the shopping list.",
+          "path": "Settings > Integrations"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "All eight were measured against running instances and start without the beta badge.",
+        "A Duplicati job that failed once and ran fine since no longer counts as failed, although Duplicati still keeps the old error.",
+        "\"Failed\" reads \"Fehlgeschlagen\" in German now."
+      ]
     }
   }
 }

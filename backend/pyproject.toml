@@ -1,6 +1,6 @@
 [project]
 name = "nexdeck-backend"
-version = "0.7.0"
+version = "0.8.0"
 description = "nexdeck backend: the live homelab dashboard of the nexapps family."
 requires-python = ">=3.13"
 license = "AGPL-3.0-or-later"
