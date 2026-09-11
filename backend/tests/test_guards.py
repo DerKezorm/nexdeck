@@ -491,15 +491,16 @@ def test_client_only_widgets_are_exactly_the_basics() -> None:
 def test_only_confirmed_adapters_are_out_of_beta() -> None:
     """Beta means "not yet seen against a live instance". The list below is what was
     confirmed, every widget of every adapter against a real service (2026-09-05, Tautulli 2026-09-07, MeTube 2026-09-08, Cup, Healthchecks, ChangeDetection.io, Miniflux, autobrr and Firefly III 2026-09-11; Gitea, Forgejo, CrowdSec, Semaphore UI,
-    Karakeep, Mealie, Kopia and Duplicati the same day);
+    Karakeep, Mealie, Kopia and Duplicati the same day; Vikunja, Shlink, Grocy, Meilisearch, Linkwarden and Kimai
+    the same day too);
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
     assert confirmed == {"adguard", "audiobookshelf", "authentik", "autobrr", "beszel", "changedetection", "crowdsec", "cup", "deluge", "docker", "duplicati", "emby",
-        "evcc", "firefly", "forgejo", "gitea", "glances", "gotify", "grafana", "headscale", "healthchecks", "homeassistant", "ical", "immich", "jellyfin", "jsonapi",
-        "karakeep", "kavita", "komga", "kopia", "lidarr", "mealie", "metube", "miniflux", "n8n", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget",
+        "evcc", "firefly", "forgejo", "gitea", "glances", "gotify", "grafana", "grocy", "headscale", "healthchecks", "homeassistant", "ical", "immich", "jellyfin", "jsonapi",
+        "karakeep", "kavita", "kimai", "komga", "kopia", "lidarr", "linkwarden", "mealie", "meilisearch", "metube", "miniflux", "n8n", "navidrome", "nextcloud", "nexview", "npm", "ntfy", "nzbget",
         "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "proxmox", "qbittorrent", "radarr", "reolink", "sabnzbd", "seerr", "semaphore",
-        "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic"}
+        "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

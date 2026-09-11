@@ -10,7 +10,7 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.8.0
+## Adapters in 0.9.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
@@ -21,6 +21,7 @@ that one of twenty-one renderers draws.
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
 | Gitea, Forgejo | open issues or pull requests, Actions jobs, repositories | | access token with read access to repositories, issues and the user |
 | Semaphore UI | last runs, automation | | API token of a user; the cards see the projects that user sees |
+| Meilisearch | indexes, search | | a key of its own with stats.get, indexes.get, tasks.get and version |
 | Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
 | Nextcloud | overview, active users, free space | | serverinfo token, or an administrator account |
@@ -46,6 +47,7 @@ that one of twenty-one renderers draws.
 | NextDNS | blocking, top blocked | | API key and the profile ID |
 | authentik | status, failed sign-ins | | API token of a service account with read access |
 | CrowdSec | blocked addresses, blocked | | bouncer key from `cscli bouncers add`; it may read decisions and nothing else |
+| Shlink | short URLs, visits | | API key from `shlink api-key:generate` |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
 | Frigate | cameras, detections, status | | none |
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week | scan a library | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
@@ -88,12 +90,16 @@ that one of twenty-one renderers draws.
 | iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
 | Mealie | meal plan, shopping list, kitchen | | API token from Profile > Manage your API tokens |
+| Grocy | stock to watch, pantry | | API key from Manage API keys |
+| Vikunja | due tasks, tasks | | API token with read_all for tasks and projects; the time zone for "today" is a field, because a token cannot read the user's own |
+| Kimai | time entries, booked time | stop a running timer | API token from Profile > API access |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | Karakeep | recent bookmarks, reading list | | API key from Settings > API Keys |
+| Linkwarden | recent links, links | | access token from Settings > Access Tokens |
 | YouTube | videos | | none; the channel feeds need no account |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |

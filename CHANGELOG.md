@@ -3,6 +3,30 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.9.0 (2026-09-11)
+
+### New
+
+- **Six new integrations, each measured against a running instance before it was written.** All six start out of beta: every card was run against the service in throwaway containers, and the tests carry the answers that came back.
+- **Vikunja:** open tasks that are overdue, due today or due in the next days across every project, with the time they are due, and a summary of overdue, due today and open. What counts as today follows a time zone field on the integration.
+- **Kimai:** the running timer first with the time it has run, then this week's entries, and a summary of the hours booked this week and today. A running timer can be stopped from the card.
+- **Grocy:** products that expired, are overdue or due soon, and what fell below its minimum stock, with a pantry summary.
+- **Shlink:** short URLs with their visits, most visited or newest first, and which of them no longer redirect because their validity ended or their visits are used up. The summary counts visits, bots and visits that led nowhere.
+- **Meilisearch:** every index with its documents, an index whose last indexing failed first with the reason, and a summary with the documents and the size of the database.
+- **Linkwarden:** the links saved last with their collection and tags, pinned ones only if wanted, and how many links, collections, pinned links and tags there are.
+
+### Fixed
+
+- **The buttons on the rows of the n8n and Synology cards work again.** Publishing a workflow, or starting and stopping a container or a virtual machine on a Synology, was refused with "This card is not offering any action right now." The check that a card only runs what it offered recognised a row's buttons in one of the two shapes adapters hand them over in. Found while pressing the new Kimai stop button in a browser.
+
+### Found while measuring
+
+- **Vikunja 2 has no `/tasks/all` any more.** An API token asking there is told its token is invalid, although it is fine. The list of tasks is `/tasks`. A token also cannot read the user's own time zone, which is why the integration asks for one.
+- **Grocy lists an expired product twice,** as expired and as overdue. The list card shows it once.
+- **Shlink keeps a short URL that no longer redirects in its list** without saying so, and counts the visit that met the 404 as an orphan visit instead.
+- **Meilisearch answers a key that lacks a right exactly like a wrong key,** and its default read-only admin key can read every other key. The field asks for a key of its own. A failed task stays in the task list after the index has recovered, so the cards judge an index by its latest task.
+- **Kimai reads the times of its filters in the user's own time zone** and refuses a time with an offset, so the card takes the zone and the first day of the week from the user.
+
 ## 0.8.0 (2026-09-11)
 
 ### New

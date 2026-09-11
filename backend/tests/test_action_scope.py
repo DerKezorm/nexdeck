@@ -61,6 +61,30 @@ def test_an_action_the_card_offered_still_runs(client: TestClient) -> None:
     assert answer.status_code == 200, answer.text
 
 
+def test_a_row_button_given_as_an_action_object_runs_too(client: TestClient) -> None:
+    """⚠️ Found 11.09.2026 while pressing Kimai's new stop button in a browser.
+
+    The check above looked for row buttons as dictionaries, and Docker hands
+    them over like that. n8n and Synology put ``Action`` objects on
+    their rows instead: drawn on the card like any other button, and refused
+    with "This card is not offering any action right now." when pressed.
+    """
+    setup_admin(client)
+    integration = client.post(
+        "/api/v1/integrations", json={"kind": "n8n", "name": "Flows", "config": {}, "demo": True}, headers=CSRF,
+    ).json()
+    board = _board(client, "Automation")
+    widget = client.post(
+        f"/api/v1/pages/{board['pages'][0]['id']}/widgets",
+        json={"kind": "n8n.workflows", "integration_id": integration["id"]}, headers=CSRF,
+    ).json()["widget"]
+    action_id, params = _offered_action(client, widget["id"])
+    answer = client.post(f"/api/v1/widgets/{widget['id']}/actions/{action_id}", json={"params": params}, headers=CSRF)
+    assert answer.status_code == 200, answer.text
+    other = client.post(f"/api/v1/widgets/{widget['id']}/actions/{action_id}", json={"params": {"id": "a workflow never shown"}}, headers=CSRF)
+    assert other.status_code == 400 and other.json()["detail"]["code"] == "no_such_action"
+
+
 def test_a_container_id_cannot_walk_out_of_its_path(client: TestClient) -> None:
     setup_admin(client)
     widget = _docker_card(client)
