@@ -3,6 +3,26 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.7.0 (2026-09-11)
+
+### New
+
+- **Six new integrations, each measured against a running instance before it was written.** All six start out of beta: every card was run against the service itself in throwaway containers, and the tests carry the answers that came back, not the documentation's.
+- **Cup:** which container images have a newer version waiting, the biggest step first, with a button that makes Cup look again. Cup checks only at start unless it has a refresh interval, so the summary says when it last looked once that is more than a day ago.
+- **Healthchecks:** cron jobs and background work, down and late ones first, and a summary of how many are up, late and down. The hosted healthchecks.io works as well, and the read-only key is enough.
+- **ChangeDetection.io:** watched pages with the latest change and the ones that fail, changes nobody has looked at yet, and a button that checks every watch now.
+- **Miniflux:** the newest unread entries, the feeds that fail to fetch with the reason, and a summary of unread and failing.
+- **autobrr:** recent releases with the filter and what the download client said, and a summary of pushed releases and the filters switched on.
+- **Firefly III:** net worth, balance, spent and earned for the month or the year, which subscriptions are paid and which are due, and how full each budget is.
+
+### Found while measuring
+
+- **Healthchecks closes the connection after every answer without saying so.** Over a kept-alive connection, four of twenty requests sent back to back failed with "server disconnected". The adapter asks for the connection to be closed, and then none did.
+- **ChangeDetection.io's watch list lacks what its documentation promises.** Neither `paused` nor `notification_muted` is in the list of 0.60.4, so a paused watch reads as not checked yet.
+- **Firefly III answers a missing token with its sign-in page** unless the request asks for JSON, and a subscription made through its API counts as neither paid nor unpaid until it is switched on.
+- **Cup exits at start when a single registry answers 429.** Nothing nexdeck can change; the card then says Cup cannot be reached.
+- **autobrr's statistics count since its first start.** The summary does not stay red over an error from weeks ago; it warns only when no filter is switched on.
+
 ## 0.6.2 (2026-09-10)
 
 ### Changed
