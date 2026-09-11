@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.11.1 (2026-09-11)
+
+### Fixed
+
+- **Opening a wall display's link no longer locks you out of every other board.** The link leaves a kiosk cookie in the browser, and that cookie used to win over the signed-in account: every other board, its cards and its live updates answered "This kiosk token belongs to another board", and the app said only that the board could not be loaded. Now the account and the display each count for what they grant, and the higher of the two applies. A display without a sign-in still sees its own board and nothing else.
+- **nexdeck no longer fills a Reolink device's sessions.** A Reolink hub lets only a few accounts in at once and keeps a session for an hour; after a few restarts it answered "too many users are signed in". Four ways of opening a session without closing it are gone: cards that started together each logged in on their own, the Test button and the dropdowns asked of the device never logged out, saving or deleting a connection dropped its session, and a renewed session kept the old one in place for its last minute.
+
 ## 0.11.0 (2026-09-11)
 
 ### New

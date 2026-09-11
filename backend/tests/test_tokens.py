@@ -231,3 +231,74 @@ def test_withdrawing_a_link_asks_the_right_board(client: TestClient) -> None:
     login(other, "kim", "another-long-password")
     assert other.delete(f"/api/v1/kiosk-tokens/{made['id']}", headers=CSRF).status_code == 403
     assert client.get(f"/api/v1/boards/{board['slug']}/kiosk-tokens").json(), "the link is still there"
+
+
+# ---------------------------------------------------------------------------
+# Signed in, with a display's cookie in the same browser
+# ---------------------------------------------------------------------------
+
+
+def _open_display_here(client: TestClient, token: str) -> None:
+    """What happens when the owner tries the link they just made: the kiosk cookie lands next to the session."""
+    door = client.post("/api/v1/kiosk/session", json={"token": token}, headers=CSRF)
+    assert door.status_code == 200, door.text
+    assert "nexdeck_kiosk" in client.cookies
+
+
+def test_a_display_link_opened_once_does_not_lock_its_owner_out_of_every_other_board(client: TestClient) -> None:
+    """Found 11.09.2026: the kiosk cookie won over the signed-in session.
+
+    From the moment the owner had looked at a wall display's link in their own
+    browser, every other board, its cards and its sparklines answered 403
+    "This kiosk token belongs to another board", and the app showed "The board
+    could not be loaded" with no way to tell why.
+    """
+    setup_admin(client)
+    wall = _board(client, "Wall")
+    desk = _board(client, "Desk")
+    clock = client.post(f"/api/v1/pages/{desk['pages'][0]['id']}/widgets", json={"kind": "core.clock"}, headers=CSRF)
+    assert clock.status_code == 201, clock.text
+    _open_display_here(client, _kiosk(client, wall["slug"])["token"])
+
+    opened = client.get(f"/api/v1/boards/{desk['slug']}")
+    assert opened.status_code == 200, opened.text
+    assert opened.json()["permission"] == "owner"
+    assert "kiosk" not in opened.json(), "the display's settings belong to its own board"
+    assert client.get(f"/api/v1/boards/{desk['slug']}/history").status_code == 200
+    assert client.get(f"/api/v1/widgets/{clock.json()['widget']['id']}/data").status_code == 200
+    assert client.get(f"/api/v1/boards/{wall['slug']}").json()["permission"] == "owner"
+
+
+def test_a_display_without_a_sign_in_still_sees_its_own_board_and_no_other(client: TestClient) -> None:
+    setup_admin(client)
+    wall = _board(client, "Wall")
+    desk = _board(client, "Desk")
+    made = _kiosk(client, wall["slug"])
+
+    display = TestClient(client.app)
+    _open_display_here(display, made["token"])
+    assert display.get(f"/api/v1/boards/{wall['slug']}").json()["permission"] == "view"
+    refused = display.get(f"/api/v1/boards/{desk['slug']}")
+    assert refused.status_code == 403, refused.text
+    assert display.get(f"/api/v1/boards/{desk['slug']}/history").status_code == 403
+
+
+def test_with_both_the_higher_right_counts_and_neither_takes_one_away(client: TestClient) -> None:
+    """Each alone grants what it grants; together they grant nothing more than the better of the two."""
+    setup_admin(client)
+    wall = _board(client, "Wall")
+    hidden = _board(client, "Hidden")
+    kim = create_user(client, "kim")
+    shared = client.put(f"/api/v1/boards/{wall['slug']}/shares", json={"shares": [{"user_id": kim["id"], "level": "view"}]}, headers=CSRF)
+    assert shared.status_code == 200, shared.text
+    acting = _kiosk(client, wall["slug"], allow_actions=True)
+    looking = _kiosk(client, hidden["slug"])
+
+    other = TestClient(client.app)
+    login(other, "kim", "another-long-password")
+    _open_display_here(other, acting["token"])
+    assert other.get(f"/api/v1/boards/{wall['slug']}").json()["permission"] == "act", "the display may act, so kim may here"
+
+    _open_display_here(other, looking["token"])
+    assert other.get(f"/api/v1/boards/{hidden['slug']}").json()["permission"] == "view", "a board kim cannot see, opened by its display"
+    assert other.get(f"/api/v1/boards/{wall['slug']}").json()["permission"] == "view", "kim's own share still counts"

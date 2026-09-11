@@ -24,11 +24,13 @@ from sqlalchemy.orm import selectinload
 from ..adapters import split_widget_kind
 from ..adapters.base import (
     Action,
+    Adapter,
     AdapterError,
     Ask,
     Context,
     WidgetData,
     fill_in,
+    hand_back,
     outbound_client,
     shape_for_display,
 )
@@ -129,7 +131,7 @@ class Collector:
                     adapter = get_adapter(integration.kind)
                     config = resolve_config(integration)
                 ctx = Context(self.client, integration_id=integration_id, cache=cache)
-                await asyncio.wait_for(adapter.close(config, ctx), timeout=3)
+                await hand_back(adapter, config, ctx)
             except Exception:  # noqa: BLE001 - a goodbye that fails must not hold up the shutdown
                 logger.debug("Integration %s could not say goodbye.", integration_id)
 
@@ -161,25 +163,42 @@ class Collector:
         if task is not None:
             task.cancel()
 
-    def _drop_cache(self, integration_id: int) -> None:
+    def _drop_cache(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
         """Throw away a connection's cache, and close what it was holding open.
 
         ⚠️ Four adapters keep an httpx client in there, because a Deluge or
         UniFi session is worth reusing between calls. Popping the cache left
         those clients with their connections open and nothing pointing at
         them: they were closed by the next restart and by nothing else.
+
+        ⚠️ A session at the service sits in there as well. A Reolink token went
+        out with the cache on every save of its connection and held a seat at
+        the hub for an hour (11.09.2026). ``farewell`` is the adapter and the
+        settings the session was opened with; the logout goes first.
         """
         cache = self._caches.pop(integration_id, None)
-        for value in (cache or {}).values():
-            if isinstance(value, httpx.AsyncClient) and not value.is_closed:
-                spawn(value.aclose, name=f"close-client-{integration_id}")
+        if not cache:
+            return
 
-    def forget_integration(self, integration_id: int) -> None:
-        """The connection is gone. Nothing of it stays behind."""
-        self._drop_cache(integration_id)
+        async def let_go() -> None:
+            if farewell is not None:
+                adapter, config = farewell
+                await hand_back(adapter, config, Context(self.client, integration_id=integration_id, cache=cache))
+            for value in list(cache.values()):
+                if isinstance(value, httpx.AsyncClient) and not value.is_closed:
+                    try:
+                        await value.aclose()
+                    except Exception:  # noqa: BLE001 - one broken client must not keep the others open
+                        logger.debug("A client of integration %s did not close.", integration_id)
 
-    def reschedule_integration(self, integration_id: int) -> None:
-        self._drop_cache(integration_id)
+        spawn(let_go, name=f"let-go-{integration_id}")
+
+    def forget_integration(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
+        """The connection is gone. Nothing of it stays behind, not even a session at the service."""
+        self._drop_cache(integration_id, farewell)
+
+    def reschedule_integration(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
+        self._drop_cache(integration_id, farewell)
         with db_session() as db:
             ids = list(db.scalars(select(Widget.id).where(Widget.integration_id == integration_id)))
         for widget_id in ids:
