@@ -316,6 +316,32 @@
         "Ein Duplicati-Auftrag, der einmal scheiterte und seitdem sauber lief, gilt nicht mehr als gescheitert, auch wenn Duplicati den alten Fehler behält.",
         "„Failed“ heißt auf Deutsch jetzt „Fehlgeschlagen“ statt „Fehlversuche“."
       ]
+    },
+    "0.9.0": {
+      "lead": "Sechs neue Anbindungen: Vikunja, Kimai, Grocy, Shlink, Meilisearch und Linkwarden.",
+      "sections": [
+        {
+          "title": "Aufgaben und Zeiten mit Vikunja und Kimai",
+          "body": "Vikunja zeigt, was über alle Projekte überfällig und heute fällig ist. Kimai zeigt den laufenden Timer und die Stunden dieser Woche, und der Timer lässt sich auf der Karte stoppen.",
+          "path": "Einstellungen > Anbindungen > Vikunja oder Kimai"
+        },
+        {
+          "title": "Der Vorrat mit Grocy",
+          "body": "Was abgelaufen, überfällig oder bald fällig ist, und was unter den Mindestbestand gefallen ist.",
+          "path": "Einstellungen > Anbindungen > Grocy"
+        },
+        {
+          "title": "Kurz-URLs, Suche und Links",
+          "body": "Shlink zeigt Aufrufe und welche Kurz-URLs nicht mehr weiterleiten, Meilisearch die Dokumente je Index und gescheiterte Indizierungen, Linkwarden die zuletzt gespeicherten Links.",
+          "path": "Einstellungen > Anbindungen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Alle sechs wurden an laufenden Instanzen gemessen und starten ohne Beta-Hinweis.",
+        "Bei Vikunja richtet sich „heute“ nach der Zeitzone der Anbindung, weil ein API-Token die Zeitzone des Benutzers nicht lesen darf.",
+        "Die Knöpfe in den Zeilen der n8n- und Synology-Karten wurden beim Drücken abgewiesen; sie funktionieren wieder."
+      ]
     }
   }
 }

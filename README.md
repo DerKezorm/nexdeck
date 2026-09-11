@@ -7,7 +7,7 @@ nexdeck is the fourth member of the nexapps family, next to [Nexview](https://ne
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-95-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-101-3fb6d4)](#the-services-it-speaks-to)
 [![Website](https://img.shields.io/badge/nexdeck.nexapps.dev-3fb6d4?logo=readthedocs&logoColor=white)](https://nexdeck.nexapps.dev)
 
 ![A nexdeck board: clock, search, weather, Docker load, Pi-hole, what is playing on Plex, monitors, app tiles and feeds](docs/screenshot-overview.png)
@@ -15,7 +15,7 @@ nexdeck is the fourth member of the nexapps family, next to [Nexview](https://ne
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **Ninety-five integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **A hundred and one integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, and kiosk links for wall tablets that cycle pages and dim at night.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
@@ -104,15 +104,15 @@ nexdeck speaks plain HTTP on port 8000 and trusts `X-Forwarded-Proto` for its co
 
 ## The services it speaks to
 
-**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Kopia, Duplicati, Portainer, Cup, Coolify, Gitea, Forgejo, Semaphore UI, Synology DSM, Unraid, TrueNAS, Glances, Beszel, Prometheus, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN.
+**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Kopia, Duplicati, Portainer, Cup, Coolify, Gitea, Forgejo, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, Glances, Beszel, Prometheus, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN.
 
-**Network.** UniFi, MikroTik, FRITZ!Box, OPNsense, pfSense, Traefik, Nginx Proxy Manager, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, Gluetun, authentik, CrowdSec, Speedtest Tracker, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n.
+**Network.** UniFi, MikroTik, FRITZ!Box, OPNsense, pfSense, Traefik, Nginx Proxy Manager, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n.
 
 **Media.** Plex, Jellyfin, Emby, Tautulli, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, Bazarr, SABnzbd, NZBGet, qBittorrent, Transmission, Deluge, Seerr, Overseerr, Jellyseerr, Nexview, Maintainerr, Tdarr, Unmanic, FileFlows.
 
-**Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, Syncthing, Paperless-ngx, Firefly III, Mealie, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web.
+**Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, Syncthing, Paperless-ngx, Firefly III, Mealie, Grocy, Vikunja, Kimai, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web.
 
-**Feeds, weather and messages.** Hacker News, YouTube, GitHub releases, share prices, Twitch, RSS, Miniflux, Karakeep, iCal, Weather, ntfy, Gotify.
+**Feeds, weather and messages.** Hacker News, YouTube, GitHub releases, share prices, Twitch, RSS, Miniflux, Karakeep, Linkwarden, iCal, Weather, ntfy, Gotify.
 
 Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
 

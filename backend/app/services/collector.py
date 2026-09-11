@@ -23,6 +23,7 @@ from sqlalchemy.orm import selectinload
 
 from ..adapters import split_widget_kind
 from ..adapters.base import (
+    Action,
     AdapterError,
     Ask,
     Context,
@@ -515,6 +516,12 @@ class Collector:
         offered = [(action.id, dict(action.params), list(action.asks)) for action in data.actions]
         for item in data.items:
             for entry in (item.get("actions") or []) if isinstance(item, dict) else []:
+                # ⚠️ Both shapes occur on rows: Docker and MeTube hand over
+                # dictionaries, n8n, Synology and Kimai ``Action`` objects. Until
+                # 11.09.2026 only the first counted, and the others' buttons
+                # were drawn and then refused.
+                if isinstance(entry, Action):
+                    entry = entry.model_dump()
                 if isinstance(entry, dict) and entry.get("id"):
                     offered.append((
                         str(entry["id"]),

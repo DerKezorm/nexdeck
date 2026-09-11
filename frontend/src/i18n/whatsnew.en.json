@@ -316,6 +316,32 @@
         "A Duplicati job that failed once and ran fine since no longer counts as failed, although Duplicati still keeps the old error.",
         "\"Failed\" reads \"Fehlgeschlagen\" in German now."
       ]
+    },
+    "0.9.0": {
+      "lead": "Six new integrations: Vikunja, Kimai, Grocy, Shlink, Meilisearch and Linkwarden.",
+      "sections": [
+        {
+          "title": "Tasks and time with Vikunja and Kimai",
+          "body": "Vikunja shows what is overdue and due today across every project. Kimai shows the running timer and the hours booked this week, and the timer can be stopped from the card.",
+          "path": "Settings > Integrations > Vikunja or Kimai"
+        },
+        {
+          "title": "The pantry with Grocy",
+          "body": "What expired, is overdue or due soon, and what fell below its minimum stock.",
+          "path": "Settings > Integrations > Grocy"
+        },
+        {
+          "title": "Short URLs, search and links",
+          "body": "Shlink shows visits and which short URLs no longer redirect, Meilisearch the documents of each index and failed indexing, Linkwarden the links saved last.",
+          "path": "Settings > Integrations"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "All six were measured against running instances and start without the beta badge.",
+        "For Vikunja, what counts as today follows the time zone set on the integration, because an API token cannot read the user's own.",
+        "Buttons on the rows of the n8n and Synology cards were refused when pressed; they work again."
+      ]
     }
   }
 }
