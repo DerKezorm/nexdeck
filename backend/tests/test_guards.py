@@ -492,7 +492,8 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     """Beta means "not yet seen against a live instance". The list below is what was
     confirmed, every widget of every adapter against a real service (2026-09-05, Tautulli 2026-09-07, MeTube 2026-09-08, Cup, Healthchecks, ChangeDetection.io, Miniflux, autobrr and Firefly III 2026-09-11; Gitea, Forgejo, CrowdSec, Semaphore UI,
     Karakeep, Mealie, Kopia and Duplicati the same day; Vikunja, Shlink, Grocy, Meilisearch, Linkwarden and Kimai
-    the same day too, and RomM, NetBox, Dawarich, wger and wg-easy after them);
+    the same day too, and RomM, NetBox, Dawarich, wger and wg-easy after them;
+    the ones of 0.12.0 from 2026-09-11 to 2026-09-12: Backrest, Blocky, BookOrbit, Gatus, Ghostfolio, Homebox, Komodo, NetAlertX, Netdata, Ollama, Open WebUI, PhotoPrism, Pocket ID, Sportarr, Tandoor Recipes, Tube Archivist, Wallos, Watchtower, What's Up Docker, Zabbix);
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
@@ -500,7 +501,8 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "evcc", "firefly", "forgejo", "gitea", "glances", "gotify", "grafana", "grocy", "headscale", "healthchecks", "homeassistant", "ical", "immich", "jellyfin", "jsonapi",
         "karakeep", "kavita", "kimai", "komga", "kopia", "lidarr", "linkwarden", "mealie", "meilisearch", "metube", "miniflux", "n8n", "navidrome", "netbox", "nextcloud", "nexview", "npm", "ntfy", "nzbget",
         "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "proxmox", "qbittorrent", "radarr", "reolink", "romm", "sabnzbd", "seerr", "semaphore",
-        "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger"}
+        "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
+        "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

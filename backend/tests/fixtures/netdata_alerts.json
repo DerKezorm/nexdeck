@@ -1,0 +1,73 @@
+{
+ "api": 2,
+ "nodes": [
+  {
+   "mg": "00000000-0000-4000-8000-00000000000a",
+   "nm": "parent",
+   "ni": 0
+  },
+  {
+   "mg": "00000000-0000-4000-8000-00000000000b",
+   "nm": "child",
+   "ni": 1
+  }
+ ],
+ "alert_instances": [
+  {
+   "ni": 0,
+   "nm": "nexdeck_test_cpu",
+   "ctx": "system.cpu",
+   "ch": "system.cpu",
+   "st": "CRITICAL",
+   "fami": "cpu",
+   "info": "A test alert that is always critical",
+   "units": "%",
+   "tr_v": 3.1899446,
+   "tr_t": 1789158443,
+   "v": 3.9998304,
+   "t": 1789158503
+  },
+  {
+   "ni": 0,
+   "nm": "nexdeck_test_load",
+   "ctx": "system.load",
+   "ch": "system.load",
+   "st": "WARNING",
+   "fami": "load",
+   "info": "A test alert that always warns",
+   "units": "load",
+   "tr_v": 0.31,
+   "tr_t": 1789158443,
+   "v": 0.28,
+   "t": 1789158503
+  },
+  {
+   "ni": 1,
+   "nm": "nexdeck_test_cpu",
+   "ctx": "system.cpu",
+   "ch": "system.cpu",
+   "st": "CRITICAL",
+   "fami": "cpu",
+   "info": "A test alert that is always critical",
+   "units": "%",
+   "tr_v": 3.9980829,
+   "tr_t": 1789158503,
+   "v": 3.9980829,
+   "t": 1789158503
+  },
+  {
+   "ni": 1,
+   "nm": "nexdeck_test_load",
+   "ctx": "system.load",
+   "ch": "system.load",
+   "st": "WARNING",
+   "fami": "load",
+   "info": "A test alert that always warns",
+   "units": "load",
+   "tr_v": 0.28,
+   "tr_t": 1789158503,
+   "v": 0.28,
+   "t": 1789158503
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "autoEnableInSec": 299,
+ "disabledGroups": [
+  "ads",
+  "default",
+  "social"
+ ],
+ "enabled": false
+}

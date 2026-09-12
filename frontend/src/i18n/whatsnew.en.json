@@ -412,6 +412,35 @@
       "small": [
         "A Reolink device that refuses logins right now lets nexdeck in again once its old sessions expire, at most an hour after updating."
       ]
+    },
+    "0.12.0": {
+      "lead": "20 new integrations, from Backrest to Zabbix.",
+      "sections": [
+        {
+          "title": "Hosts and containers",
+          "body": "What's Up Docker and Watchtower show which containers wait for an update and start it from the card. Komodo shows your stacks, Backrest your backup plans, Netdata and Zabbix alerts and open problems, Ollama and Open WebUI the loaded models and who uses them.",
+          "path": "Settings > Integrations > Backrest, Komodo, Netdata, Ollama, Open WebUI, Watchtower, What's Up Docker or Zabbix"
+        },
+        {
+          "title": "Network and monitoring",
+          "body": "Gatus shows which endpoints are down, Blocky how much it blocks with a five-minute pause, NetAlertX new devices on the network, and Pocket ID who signed in lately.",
+          "path": "Settings > Integrations > Blocky, Gatus, NetAlertX or Pocket ID"
+        },
+        {
+          "title": "Media",
+          "body": "Sportarr shows the sports events of the next days and the ones still missing, Tube Archivist its download queue and archive.",
+          "path": "Settings > Integrations > Sportarr or Tube Archivist"
+        },
+        {
+          "title": "Home and files",
+          "body": "Tandoor Recipes brings the meal plan and the shopping list, Homebox the inventory and its warranties, Wallos the next payments, Ghostfolio the portfolio, PhotoPrism and BookOrbit your photos and books.",
+          "path": "Settings > Integrations > BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes or Wallos"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Every one of them was measured against a running instance before it was written, so none carries the beta badge."
+      ]
     }
   }
 }

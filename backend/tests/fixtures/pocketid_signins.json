@@ -1,0 +1,36 @@
+{
+ "data": [
+  {
+   "id": "00000000-0000-4000-8000-000000000004",
+   "createdAt": "2026-09-11T21:46:34Z",
+   "event": "TOKEN_SIGN_IN",
+   "ipAddress": "192.0.2.10",
+   "country": "Internal Network",
+   "city": "LAN",
+   "device": "python-httpx on  ",
+   "userID": "00000000-0000-4000-8000-000000000001",
+   "username": "alice",
+   "actorUsername": "",
+   "data": {}
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000005",
+   "createdAt": "2026-09-11T21:46:34Z",
+   "event": "TOKEN_SIGN_IN",
+   "ipAddress": "192.0.2.10",
+   "country": "Internal Network",
+   "city": "LAN",
+   "device": "python-httpx on  ",
+   "userID": "00000000-0000-4000-8000-000000000002",
+   "username": "bob",
+   "actorUsername": "",
+   "data": {}
+  }
+ ],
+ "pagination": {
+  "totalPages": 1,
+  "totalItems": 2,
+  "currentPage": 1,
+  "itemsPerPage": 50
+ }
+}

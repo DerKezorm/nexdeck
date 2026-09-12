@@ -1,0 +1,49 @@
+{
+ "api": 2,
+ "nodes": [
+  {
+   "mg": "00000000-0000-4000-8000-00000000000a",
+   "nm": "parent",
+   "ni": 0,
+   "v": "v2.11.0",
+   "state": "reachable",
+   "health": {
+    "status": "online",
+    "alerts": {
+     "critical": 1,
+     "warning": 1,
+     "clear": 44,
+     "undefined": 5,
+     "uninitialized": 19
+    }
+   },
+   "hw": {
+    "architecture": "x86_64",
+    "cpus": "4",
+    "container": "docker"
+   }
+  },
+  {
+   "mg": "00000000-0000-4000-8000-00000000000b",
+   "nm": "child",
+   "ni": 1,
+   "v": "v2.11.0",
+   "state": "reachable",
+   "health": {
+    "status": "online",
+    "alerts": {
+     "critical": 1,
+     "warning": 1,
+     "clear": 44,
+     "undefined": 5,
+     "uninitialized": 16
+    }
+   },
+   "hw": {
+    "architecture": "x86_64",
+    "cpus": "4",
+    "container": "docker"
+   }
+  }
+ ]
+}

@@ -412,6 +412,35 @@
       "small": [
         "Lehnt ein Reolink-Gerät gerade Anmeldungen ab, lässt es nexdeck wieder herein, sobald die alten Sitzungen ablaufen, spätestens eine Stunde nach dem Update."
       ]
+    },
+    "0.12.0": {
+      "lead": "20 neue Anbindungen, von Backrest bis Zabbix.",
+      "sections": [
+        {
+          "title": "Hosts und Container",
+          "body": "What's Up Docker und Watchtower zeigen, welche Container auf ein Update warten, und starten es von der Karte aus. Komodo zeigt deine Stacks, Backrest die Sicherungspläne, Netdata und Zabbix Alarme und offene Probleme, Ollama und Open WebUI die geladenen Modelle und wer sie nutzt.",
+          "path": "Einstellungen > Anbindungen > Backrest, Komodo, Netdata, Ollama, Open WebUI, Watchtower, What's Up Docker oder Zabbix"
+        },
+        {
+          "title": "Netz und Überwachung",
+          "body": "Gatus zeigt ausgefallene Endpunkte, Blocky die Blockquote mit einer Pause von fünf Minuten, NetAlertX neue Geräte im Netz und Pocket ID die letzten Anmeldungen.",
+          "path": "Einstellungen > Anbindungen > Blocky, Gatus, NetAlertX oder Pocket ID"
+        },
+        {
+          "title": "Medien",
+          "body": "Sportarr zeigt die Sportereignisse der nächsten Tage und was noch fehlt, Tube Archivist die Download-Warteschlange und das Archiv.",
+          "path": "Einstellungen > Anbindungen > Sportarr oder Tube Archivist"
+        },
+        {
+          "title": "Zuhause und Dateien",
+          "body": "Tandoor Recipes bringt Essensplan und Einkaufsliste, Homebox den Bestand mit seinen Garantien, Wallos die nächsten Abbuchungen, Ghostfolio das Depot, PhotoPrism und BookOrbit deine Fotos und Bücher.",
+          "path": "Einstellungen > Anbindungen > BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes oder Wallos"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Jede davon wurde vor dem Bau an einer laufenden Instanz gemessen, deshalb trägt keine das Beta-Zeichen."
+      ]
     }
   }
 }

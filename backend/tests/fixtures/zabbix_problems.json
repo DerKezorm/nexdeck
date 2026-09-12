@@ -1,0 +1,34 @@
+{
+ "jsonrpc": "2.0",
+ "result": [
+  {
+   "eventid": "26",
+   "clock": "1789159586",
+   "name": "Linux: Zabbix agent is not available (for 3m)",
+   "severity": "3",
+   "acknowledged": "0"
+  },
+  {
+   "eventid": "8",
+   "clock": "1789159415",
+   "name": "Test value is a disaster",
+   "severity": "5",
+   "acknowledged": "0"
+  },
+  {
+   "eventid": "7",
+   "clock": "1789159415",
+   "name": "Test value is high",
+   "severity": "4",
+   "acknowledged": "1"
+  },
+  {
+   "eventid": "6",
+   "clock": "1789159415",
+   "name": "Test value is above one",
+   "severity": "2",
+   "acknowledged": "1"
+  }
+ ],
+ "id": 1
+}
