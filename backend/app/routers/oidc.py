@@ -9,15 +9,14 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 
-from ..config import get_settings
 from ..crypto import decrypt, encrypt
 from ..deps import AdminUser, DbSession, error
 from ..models import OidcLink, OidcProvider, Role, User
 from ..schemas import OidcProviderBody
 from ..security import UNUSABLE_PASSWORD, create_step_token, has_usable_password
 from ..services import login_guard, oidc, two_factor
+from ..services.public_url import public_url
 from .auth import STEP_COOKIE, STEP_MINUTES, cookie_secure, open_session
-from .system import get_setting
 
 router = APIRouter(prefix="/api/v1", tags=["oidc"])
 logger = logging.getLogger("nexdeck.oidc")
@@ -36,7 +35,7 @@ def _to_app(path: str, **params: str) -> RedirectResponse:
 
 
 def _public_url(db: DbSession) -> str:
-    return str(get_setting(db, "general").get("public_url") or get_settings().public_url)
+    return public_url(db)
 
 
 @router.get("/auth/oidc/{slug}/login", summary="Start a sign-in at an identity provider")

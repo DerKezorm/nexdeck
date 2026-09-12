@@ -53,6 +53,13 @@ MIN_INTERVAL = 5
 RECOVERY_INTERVAL = 60.0
 
 
+#: How long one "refresh now" stands for a card. Presses inside it share the
+#: fetch of the first one and its answer. Longer than a double click or an
+#: impatient second press, shorter than anybody waits before pressing again
+#: on purpose.
+REFRESH_NOW_GAP = 5.0
+
+
 class Collector:
     def __init__(self) -> None:
         self._tasks: dict[int, asyncio.Task[None]] = {}
@@ -78,6 +85,8 @@ class Collector:
         self._told: dict[str, float] = {}
         #: Cards already reported as broken; one line per breakage, not per try.
         self._broken: set[int] = set()
+        #: The last "refresh now" of each card: when, for which settings, and the fetch it started.
+        self._pressed: dict[int, tuple[float, int, asyncio.Future[float | None]]] = {}
         self._tick_start = time.time()
         self.running = False
 
@@ -111,6 +120,7 @@ class Collector:
             except (asyncio.CancelledError, Exception):
                 pass
         self._tasks.clear()
+        self._pressed.clear()
         await self._say_goodbye()
         if self._client is not None:
             await self._client.aclose()
@@ -156,6 +166,7 @@ class Collector:
     def unschedule(self, widget_id: int) -> None:
         live.forget(widget_id)
         self._generation[widget_id] = self._generation.get(widget_id, 0) + 1
+        self._pressed.pop(widget_id, None)
         run_on_loop(lambda: self._cancel(widget_id))
 
     def _cancel(self, widget_id: int) -> None:
@@ -519,7 +530,26 @@ class Collector:
             self._told.pop(key, None)
 
     async def refresh_now(self, widget_id: int) -> WidgetData | None:
-        await self.refresh(widget_id)
+        """Fetch right away, but at most once per ``REFRESH_NOW_GAP`` for each card.
+
+        ⚠️ Every press used to be a fetch, so whoever may act on a board could
+        hold the button, or call the address in a loop, and send the server at
+        the service behind the card as fast as it answers. Presses inside the
+        gap get the answer of the first one, still running or already done. A
+        save in between starts a new fetch: the gap holds for the same
+        settings only.
+
+        Shielded, so a browser that gives up does not cancel a fetch that other
+        presses are waiting for.
+        """
+        generation = self._generation.get(widget_id, 0)
+        pressed = self._pressed.get(widget_id)
+        if pressed is not None and pressed[1] == generation and time.monotonic() - pressed[0] < REFRESH_NOW_GAP:
+            fetch = pressed[2]
+        else:
+            fetch = asyncio.ensure_future(self.refresh(widget_id))
+            self._pressed[widget_id] = (time.monotonic(), generation, fetch)
+        await asyncio.shield(fetch)
         return live.get(widget_id)
 
     # -- what a card may be asked to do --------------------------------------

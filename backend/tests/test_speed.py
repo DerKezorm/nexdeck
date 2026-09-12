@@ -305,9 +305,13 @@ def test_web_push_builds_one_client_and_not_one_per_subscription(
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ec
 
+    from app.migrations import migrate
     from app.services.channels import webpush
     from app.services.notify import Message
 
+    # The signature names the public address, and that is read from the
+    # settings table the way every running installation has it.
+    migrate()
     vapid = ec.generate_private_key(ec.SECP256R1())
     pem = vapid.private_bytes(
         serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()

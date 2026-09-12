@@ -77,7 +77,9 @@ def _player(db: DbSession, widget_id: int, request: Request, user: OptionalUser)
     if widget is None:
         raise error("not_found", "There is no such widget.", status.HTTP_404_NOT_FOUND)
     page = db.get(Page, widget.page_id)
-    assert page is not None
+    if page is None:
+        # ⚠️ Not an ``assert``; see ``widgets._widget``.
+        raise error("not_found", "There is no such widget.", status.HTTP_404_NOT_FOUND)
     _board, permission = board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     if permission not in ("act", "owner"):
         raise error("forbidden", "You may look at this board, but not play music on it.", status.HTTP_403_FORBIDDEN)

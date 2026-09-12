@@ -140,8 +140,11 @@ class ChangeDetectionAdapter(Adapter):
         )
 
     @classmethod
-    def _changes(cls, watches: dict[str, dict[str, Any]], options: dict[str, Any], base: str) -> WidgetData:
+    def _changes(cls, watches: dict[str, dict[str, Any]], options: dict[str, Any], base: str,
+                 now: float | None = None) -> WidgetData:
         changed_only = bool(options.get("changed_only"))
+        # One moment for every row, which a test can fix; see ``ago``.
+        moment = time.time() if now is None else now
         rows: list[tuple[int, float, str, dict[str, Any]]] = []
         for uuid, watch in watches.items():
             changed = float(watch.get("last_changed") or 0)
@@ -161,7 +164,7 @@ class ChangeDetectionAdapter(Adapter):
                 "title": title,
                 "subtitle": " · ".join(part for part in (word, _host(watch.get("url"))) if part),
                 "status": "bad" if failed else "unknown" if not watch.get("last_checked") else "ok",
-                "value": ago(changed) if changed else "",
+                "value": ago(changed, moment) if changed else "",
                 # The change itself where there is one, the page as last seen otherwise.
                 "url": f"{base}/diff/{uuid}" if changed else f"{base}/preview/{uuid}",
             }

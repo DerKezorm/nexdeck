@@ -58,19 +58,16 @@ def available(db: DbSessionType) -> bool:
 
 
 def _public_url(db: DbSessionType) -> str:
-    """Where browsers reach this installation.
+    """Where browsers reach this installation, read by ``services.public_url``.
 
-    ⚠️ The setting **or** the environment variable, the way the rest of the
-    app reads it. This looked only at the setting, so an installation
-    configured through ``NEXDECK_PUBLIC_URL`` in its compose file, which is
-    the ordinary case in Docker, sent out a link with no host in it.
+    ⚠️ The setting **or** the environment variable. This looked only at the
+    setting, so an installation configured through ``NEXDECK_PUBLIC_URL`` in
+    its compose file, which is the ordinary case in Docker, sent out a link
+    with no host in it.
     """
-    from ..config import get_settings
-    from ..models import Setting
+    from .public_url import public_url
 
-    row = db.get(Setting, "general")
-    stored = str((row.value or {}).get("public_url") or "") if row else ""
-    return (stored or get_settings().public_url).rstrip("/")
+    return public_url(db)
 
 
 def request(db: DbSessionType, username_or_email: str) -> None:

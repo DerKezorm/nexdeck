@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Connection
 
 from .db import get_engine
@@ -147,15 +147,24 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
 
 def migrate() -> None:
     engine = get_engine()
+    # Asked before ``create_all``, which would answer it the same for every database.
+    fresh = not set(Base.metadata.tables) & set(inspect(engine).get_table_names())
     Base.metadata.create_all(engine)
+    newest = max((number for number, _name, _step in MIGRATIONS), default=0)
     with engine.begin() as connection:
         connection.execute(text("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)"))
         row = connection.execute(text("SELECT MAX(version) FROM schema_version")).scalar()
         current = int(row or 0)
         if current == 0:
-            connection.execute(text("INSERT INTO schema_version (version) VALUES (1)"))
-            current = 1
-        newest = max((number for number, _name, _step in MIGRATIONS), default=0)
+            # ⚠️ A database with none of the tables was built a moment ago by
+            # ``create_all``, already in its newest shape, and every step ran
+            # over it anyway. Harmless while each step asks whether its column
+            # is there; the first step that moves data would do to a new
+            # installation what was meant for an old one. Tables without a
+            # version are an installation from before the version table, and
+            # for that one every step still applies.
+            current = max(1, newest) if fresh else 1
+            connection.execute(text("INSERT INTO schema_version (version) VALUES (:v)"), {"v": current})
         if current > newest:
             # ⚠️ Said out loud, because nothing else will say it. There is no
             # migration that runs backwards, so a database written by a newer
