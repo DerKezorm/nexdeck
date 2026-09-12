@@ -441,6 +441,25 @@
       "small": [
         "Jede davon wurde vor dem Bau an einer laufenden Instanz gemessen, deshalb trägt keine das Beta-Zeichen."
       ]
+    },
+    "0.12.1": {
+      "lead": "Knöpfe und Felder sehen wieder so aus, wie sie gezeichnet sind.",
+      "sections": [
+        {
+          "title": "Flache Knöpfe auf den Karten",
+          "body": "Aktualisieren, Link, Einstellungen und Entfernen saßen auf jeder Karte in einem Rahmen und waren ein Drittel größer als gezeichnet. Jetzt sind es wieder kleine flache Symbole, genau wie die Schließen-Knöpfe in Dialogen und die Knöpfe bei den Hinweisen.",
+          "path": "Board > jede Karte"
+        },
+        {
+          "title": "Passwortfelder",
+          "body": "Ein langes Passwort lief unter den Knopf, der es anzeigt. Jetzt endet der Text vor dem Knopf.",
+          "path": "Anmeldeseite"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Größen, Rahmen und Farben an einzelnen Elementen greifen wieder, 90 insgesamt: darunter die Anmeldeknöpfe, der runde Wecken-Knopf, die Tab-Leiste am Handy und die Warnung bei den Sicherungen."
+      ]
     }
   }
 }

@@ -3,6 +3,14 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.12.1 (2026-09-12)
+
+### Fixed
+
+- **The buttons on every card are flat again.** Refresh, link, settings and remove sat in a frame at 32 pixels instead of as flat 24 pixel icons. The same held for the close buttons of dialogs, the buttons in the notices and the board's toolbar in edit mode.
+- **A password no longer runs under the button that shows it.** The field kept no room for the button, so a long password disappeared behind it.
+- **Sizes, borders and colors written on single elements apply again, 90 elements in all.** Among them the sign-in buttons, the round wake button, the top bar and the phone's tab bar, which had borders at their edges, and the warning chip on the backups page, which was grey. nexdeck's own styles stood outside Tailwind's cascade layers, where a rule beats every utility on the same element; they now sit in a layer, and a test fails when a rule leaves it.
+
 ## 0.12.0 (2026-09-12)
 
 ### New

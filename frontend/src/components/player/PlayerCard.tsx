@@ -235,7 +235,7 @@ export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
                 cropped whenever the column was wider than it was tall; measuring
                 the room as a container and taking the smaller side keeps it square. */}
             <div className="flex-1 min-h-0 flex items-center justify-center [container-type:size]">
-              {artwork('player-hero-cover aspect-square w-[min(100cqw,100cqh)] shadow-2xl', 56)}
+              {artwork('player-hero-cover aspect-square w-[min(100cqw,100cqh)]', 56)}
             </div>
             <div className="flex-none min-w-0">
               <div className="flex items-center gap-2 min-w-0">

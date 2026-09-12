@@ -101,7 +101,7 @@ export function PicturePicker({ value, onChange, label, help }: {
             >
               <button
                 type="button"
-                className="btn btn-icon h-7 w-7 border-0 bg-transparent cursor-grab touch-none active:cursor-grabbing"
+                className="btn btn-icon h-7 w-7 btn-flat cursor-grab touch-none active:cursor-grabbing"
                 aria-label={t('widget.pictureMove', { at: index + 1 })}
                 title={t('widget.pictureMove', { at: index + 1 })}
                 {...order.handleProps(one.url)}

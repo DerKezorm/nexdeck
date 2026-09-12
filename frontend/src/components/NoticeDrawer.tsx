@@ -34,12 +34,12 @@ export function NoticeList({ notices, onRead, onRemove }: { notices: Notice[]; o
               </div>
             </div>
             {!notice.read_at && onRead && (
-              <button className="btn btn-icon h-7 w-7 border-0 bg-transparent" onClick={() => onRead(notice.id)} aria-label={t('notices.markRead')}>
+              <button className="btn btn-icon h-7 w-7 btn-flat" onClick={() => onRead(notice.id)} aria-label={t('notices.markRead')}>
                 <Check size={14} />
               </button>
             )}
             {onRemove && (
-              <button className="btn btn-icon h-7 w-7 border-0 bg-transparent btn-danger" onClick={() => onRemove(notice.id)} aria-label={t('common.delete')}>
+              <button className="btn btn-icon h-7 w-7 btn-flat btn-danger" onClick={() => onRemove(notice.id)} aria-label={t('common.delete')}>
                 <Trash2 size={14} />
               </button>
             )}

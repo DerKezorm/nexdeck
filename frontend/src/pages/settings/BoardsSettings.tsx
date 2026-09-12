@@ -75,7 +75,7 @@ export function BoardsSettings() {
                   {/* The arrow opens the pages; the name still leads to the
                       board. Two jobs, two targets. */}
                   <button
-                    className="btn btn-icon h-7 w-7 border-0 bg-transparent"
+                    className="btn btn-icon h-7 w-7 btn-flat"
                     onClick={() => setExpanded((current) => (open ? current.filter((id) => id !== board.id) : [...current, board.id]))}
                     aria-expanded={open}
                     aria-label={t(open ? 'board.hidePages' : 'board.showPages', { name: board.name })}
@@ -88,7 +88,7 @@ export function BoardsSettings() {
                       first millimetre of the drag as a page scroll and takes
                       the gesture away, and the row stays where it is. */}
                   <button
-                    className="btn btn-icon h-7 w-7 border-0 bg-transparent cursor-grab touch-none active:cursor-grabbing disabled:opacity-25"
+                    className="btn btn-icon h-7 w-7 btn-flat cursor-grab touch-none active:cursor-grabbing disabled:opacity-25"
                     disabled={reordering}
                     aria-label={t('board.moveWithHandle', { name: board.name })}
                     title={t('board.moveWithHandle', { name: board.name })}

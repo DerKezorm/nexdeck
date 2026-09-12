@@ -413,13 +413,13 @@ export function BoardPage() {
           button for anything that reads it out. */}
       {editing && (
         <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
-          <button className="btn border-0 bg-transparent" onClick={() => setLibrary(true)} aria-label={t('board.addWidget')}>
+          <button className="btn btn-flat" onClick={() => setLibrary(true)} aria-label={t('board.addWidget')}>
             <Plus size={15} /> <span className="hidden sm:inline">{t('board.addWidget')}</span>
           </button>
-          <button className="btn border-0 bg-transparent" onClick={() => setNewPage(true)} aria-label={t('board.addPage')}>
+          <button className="btn btn-flat" onClick={() => setNewPage(true)} aria-label={t('board.addPage')}>
             <Plus size={15} /> <span className="hidden sm:inline">{t('board.addPage')}</span>
           </button>
-          <button className="btn border-0 bg-transparent" onClick={() => setBoardSettings(true)} aria-label={t('board.settings')}>
+          <button className="btn btn-flat" onClick={() => setBoardSettings(true)} aria-label={t('board.settings')}>
             <Settings2 size={15} /> <span className="hidden sm:inline">{t('board.settings')}</span>
           </button>
           <button className="btn btn-accent rounded-full" onClick={() => setEditing(false)}>
