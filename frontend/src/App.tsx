@@ -85,7 +85,9 @@ export function App() {
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/reset/:token" element={<ResetPage />} />
-            <Route path="/k/:token" element={<KioskPage />} />
+            {/* ⚠️ The token is optional: the page takes it out of the address,
+                and a reloaded display comes back in on /k alone. */}
+            <Route path="/k/:token?" element={<KioskPage />} />
             <Route path="/preview" element={<PreviewPage />} />
             <Route
               path="/"

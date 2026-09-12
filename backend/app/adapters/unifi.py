@@ -124,7 +124,8 @@ class UnifiAdapter(Adapter):
         if client is None or client.is_closed:
             # UniFi OS answers plain http with a redirect to https; following it
             # makes an http:// address work instead of failing on the redirect page.
-            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure", True), timeout=15, follow_redirects=True)
+            # One client per connection; the fallback sign-in with a local account lives on its cookie.
+            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure", True), timeout=15, follow_redirects=True, keep_cookies=True)
             ctx.cache["unifi_client"] = client
         return client
 

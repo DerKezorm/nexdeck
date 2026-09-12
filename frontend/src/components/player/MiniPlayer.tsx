@@ -56,7 +56,8 @@ export function MiniPlayer() {
   const duration = usePlayer((state) => state.duration ?? currentTrack(state)?.duration ?? 0)
   const palette = useCoverColour(source && track ? mediaUrl(source.widgetId, track.thumb) : '')
   const wide = useWideScreen()
-  const kiosk = location.pathname.startsWith('/k/')
+  // /k alone as well: a display takes the token out of its address once it is in.
+  const kiosk = location.pathname === '/k' || location.pathname.startsWith('/k/')
   // In the top bar on a wide screen with a top bar; everywhere else the bar stands in.
   const inHeader = style === 'header' && wide && !kiosk
   const shown = Boolean(source && track && !hidden && !inHeader)

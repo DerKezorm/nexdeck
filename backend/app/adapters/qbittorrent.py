@@ -31,7 +31,8 @@ class QbittorrentAdapter(DownloadAdapter):
     def _client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
         client = ctx.cache.get("qb_client")
         if client is None or client.is_closed:
-            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure"), timeout=15)
+            # One client per connection, and it keeps the SID cookie the sign-in sets.
+            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure"), timeout=15, keep_cookies=True)
             ctx.cache["qb_client"] = client
         return client
 
