@@ -4,7 +4,9 @@ A kiosk link shows one board without a sign-in: for a wall tablet, a
 television or a monitor in the rack room.
 
 Board menu > Kiosk > Create kiosk link. The full link is shown once; open it
-on the display. It looks like `https://deck.example.com/k/nk_…`.
+on the display. It looks like `https://deck.example.com/k/nk_…`. Once the
+display is in, its address shows `/k` alone: the token waits on the display
+itself, not in its browser history.
 
 | Setting | Effect |
 |---|---|

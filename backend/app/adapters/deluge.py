@@ -30,7 +30,8 @@ class DelugeAdapter(DownloadAdapter):
     def _client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
         client = ctx.cache.get("deluge_client")
         if client is None or client.is_closed:
-            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure"), timeout=15)
+            # One client per connection, and it keeps the session cookie the sign-in sets.
+            client = outbound_client(base_url=base_url(config), verify=not config.get("insecure"), timeout=15, keep_cookies=True)
             ctx.cache["deluge_client"] = client
         return client
 

@@ -68,7 +68,11 @@ class CalibreWebAdapter(Adapter):
             data={"username": str(config.get("username") or ""), "password": str(config.get("password") or ""), "submit": ""},
             verify=not config.get("insecure"),
         )
-        cookie = response.cookies.get("session") or ""
+        # ⚠️ From the sign-in itself. Calibre-Web answers with a redirect, the
+        # session cookie stands in that redirect, and the last answer in the
+        # chain is the page after it. Reading only that worked while the shared
+        # client kept cookies and carried the session there. Found on 12.09.2026.
+        cookie = next((answer.cookies.get("session") for answer in (*response.history, response) if answer.cookies.get("session")), "")
         if not cookie:
             raise AuthFailed("Calibre-Web did not open a session; check the account.")
         ctx.cache["calibreweb_cookie"] = f"session={cookie}"

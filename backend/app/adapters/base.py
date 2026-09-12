@@ -907,7 +907,7 @@ async def _member_guard_hook(request: Any) -> None:
     guard_member_target(str(request.url))
 
 
-def outbound_client(*, guard: bool = True, member: bool = False, **kwargs: Any) -> httpx.AsyncClient:
+def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: bool = False, **kwargs: Any) -> httpx.AsyncClient:
     """The only place an outbound client is built.
 
     ⚠️ The guard hangs on the client, not on the call, because httpx runs a
@@ -928,6 +928,16 @@ def outbound_client(*, guard: bool = True, member: bool = False, **kwargs: Any) 
         hooks = dict(kwargs.pop("event_hooks", None) or {})
         hooks["request"] = [*hooks.get("request", []), _member_guard_hook if member else _guard_hook]
         kwargs["event_hooks"] = hooks
+    if not keep_cookies:
+        # ⚠️ No cookie jar unless a client asks for one. httpx keeps every
+        # Set-Cookie, and the collector shares one client across every
+        # connection, so a session cookie one connection's answer set went along
+        # with the next request to the same host, whatever credentials that one
+        # carried: on What's Up Docker a wrong password got in. A client built
+        # for one connection that signs in with a cookie passes keep_cookies.
+        from http.cookiejar import CookieJar, DefaultCookiePolicy
+
+        kwargs.setdefault("cookies", CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])))
     # The only place in the code that may build one of these directly, which is
     # what the guard test in test_guards.py holds everyone else to.
     return httpx.AsyncClient(**kwargs)

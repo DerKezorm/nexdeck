@@ -280,7 +280,13 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
         )
         response.headers.setdefault("Referrer-Policy", "same-origin")
     else:
-        response.headers.setdefault("Referrer-Policy", "same-origin")
+        # ⚠️ The page a kiosk link opens carries the token in its address, and
+        # with same-origin every script, style and picture of that first load
+        # went out with the whole address as its Referer, into the access log
+        # of every proxy in front of nexdeck. The page takes the token out of
+        # the address once it is in; until then nothing passes it on.
+        referrer = "no-referrer" if request.url.path.startswith("/k/") else "same-origin"
+        response.headers.setdefault("Referrer-Policy", referrer)
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         # The app talks only to its own origin; icons and uploads are proxied.
         # Images may come from anywhere (media art from Plex or Jellyfin on

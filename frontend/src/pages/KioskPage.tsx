@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { get, openKioskSession, post } from '../api/client'
 import type { BoardWithLive } from '../api/types'
@@ -28,9 +28,30 @@ function withinWindow(from: string, to: string, now: Date): boolean {
 /** Well inside the day the cookie is good for, and cheap: one call. */
 const RENEW_EVERY_MS = 6 * 60 * 60 * 1000
 
+/** Where a display keeps its token once it is out of the address. */
+const KEPT_TOKEN = 'nexdeck.kiosk.token'
+
+function keptToken(): string {
+  try {
+    return localStorage.getItem(KEPT_TOKEN) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function keepToken(token: string): void {
+  try {
+    localStorage.setItem(KEPT_TOKEN, token)
+  } catch {
+    // A browser that keeps nothing still has the cookie for a day.
+  }
+}
+
 export function KioskPage() {
   const { t } = useTranslation()
-  const { token = '' } = useParams()
+  const navigate = useNavigate()
+  const { token: fromAddress = '' } = useParams()
+  const [token, setToken] = useState(() => fromAddress || keptToken())
   // The same reason as on the board page: a wall display runs for weeks, and
   // one subscription to the whole store repaints everything on every tick.
   const liveData = useLive((state) => state.data)
@@ -46,13 +67,22 @@ export function KioskPage() {
     document.documentElement.dataset.theme = 'dark'
   }, [])
   useEffect(() => {
-    // The token is handed in once and never appears in an address again.
-    //
-    // ⚠️ And handed in again every few hours. The cookie is good for a day,
-    // the comment on the server says "renewed on the next load", and a wall
-    // display does not load again: after twenty-four hours every fetch became
-    // a 401 and nobody was standing in front of it to press F5. The token
-    // itself does not change, so this is the same call on a timer.
+    // ⚠️ Out of the address as soon as it is here. The token stood in /k/nk_...
+    // for as long as the display ran: in its browser history, and handed in
+    // again from the address every few hours, while this comment claimed it
+    // never appeared in an address again. It waits on the display itself now,
+    // and a reload of /k comes back in with it. Found on 12.09.2026.
+    if (!fromAddress) return
+    keepToken(fromAddress)
+    setToken(fromAddress)
+    navigate('/k', { replace: true })
+  }, [fromAddress, navigate])
+  useEffect(() => {
+    // ⚠️ Handed in again every few hours. The cookie is good for a day, the
+    // comment on the server says "renewed on the next load", and a wall display
+    // does not load again: after twenty-four hours every fetch became a 401 and
+    // nobody was standing in front of it to press F5. The token itself does not
+    // change, so this is the same call on a timer.
     let current = true
     setAdmitted(false)
     if (!token) return
@@ -69,7 +99,8 @@ export function KioskPage() {
     }
   }, [token])
 
-  const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: admitted, refetchInterval: 5 * 60_000 })
+  // Without any token kept, a cookie from the last day may still let the display in.
+  const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: admitted || !token, refetchInterval: 5 * 60_000 })
   const history = useQuery({ queryKey: ['kiosk-history', token, board.data?.slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${board.data?.slug}/history`), enabled: Boolean(board.data) })
   const data = board.data
   useEffect(() => {
