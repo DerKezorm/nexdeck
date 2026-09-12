@@ -460,6 +460,40 @@
       "small": [
         "Sizes, borders and colors given to single elements apply again, 90 in all: among them the sign-in buttons, the round wake button, the tab bar on a phone and the warning on the backups page."
       ]
+    },
+    "0.13.0": {
+      "lead": "This version closes gaps and fixes faults, and a few things work differently than before.",
+      "sections": [
+        {
+          "title": "Apprise only for administrators",
+          "body": "Members no longer see Apprise among the notification channels, and an Apprise channel a member set up earlier stops sending. Apprise follows redirects in its own library, where nexdeck's address check does not reach.",
+          "path": "Settings > Notifications"
+        },
+        {
+          "title": "Wall displays keep their token",
+          "body": "After the first load the address of a kiosk display shows only /k, and a reload comes back in by itself. Displays already on the wall move over at their next load. A revoked kiosk link cuts off an open display's live data within 25 seconds.",
+          "path": "Board menu > Create kiosk link"
+        },
+        {
+          "title": "Refresh now",
+          "body": "A second press within five seconds shows the answer of the first instead of asking the service again.",
+          "path": "Board > any card"
+        },
+        {
+          "title": "Public URL",
+          "body": "The address set here now counts for Web Push and the rescue link as well. NEXDECK_URL_BASE is gone: the interface never ran below a sub path, so an installation that set it runs under / again.",
+          "path": "Settings > Address"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Uploaded pictures load only for signed-in accounts and kiosk displays.",
+        "Connections no longer pass cookies on to each other.",
+        "Messages on a live board close by themselves again, and this window closes at once.",
+        "The problems card names tiles whose reachability check fails.",
+        "A backup leaves the chart history out.",
+        "The test button of a notification channel takes five presses in ten minutes."
+      ]
     }
   }
 }

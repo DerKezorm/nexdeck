@@ -460,6 +460,40 @@
       "small": [
         "Größen, Rahmen und Farben an einzelnen Elementen greifen wieder, 90 insgesamt: darunter die Anmeldeknöpfe, der runde Wecken-Knopf, die Tab-Leiste am Handy und die Warnung bei den Sicherungen."
       ]
+    },
+    "0.13.0": {
+      "lead": "Diese Fassung schließt Lücken und behebt Fehler, und einiges verhält sich anders als bisher.",
+      "sections": [
+        {
+          "title": "Apprise nur für Administratoren",
+          "body": "Mitglieder sehen Apprise nicht mehr unter den Benachrichtigungswegen, und ein Apprise-Kanal, den ein Mitglied früher angelegt hat, sendet nicht mehr. Apprise folgt Weiterleitungen in seiner eigenen Bibliothek, wo die Adressprüfung von nexdeck nicht hinreicht.",
+          "path": "Einstellungen > Benachrichtigungen"
+        },
+        {
+          "title": "Wandanzeigen behalten ihr Token",
+          "body": "Nach dem ersten Laden zeigt die Adresse einer Kiosk-Anzeige nur noch /k, und nach einem Neuladen kommt sie von selbst wieder hinein. Anzeigen, die schon an der Wand hängen, stellen beim nächsten Laden um. Ein zurückgezogener Kiosk-Link kappt die Live-Daten einer offenen Anzeige binnen 25 Sekunden.",
+          "path": "Board-Menü > Kiosk-Link erzeugen"
+        },
+        {
+          "title": "Jetzt aktualisieren",
+          "body": "Ein zweiter Druck innerhalb von fünf Sekunden zeigt die Antwort des ersten, statt den Dienst noch einmal zu fragen.",
+          "path": "Board > jede Karte"
+        },
+        {
+          "title": "Öffentliche Adresse",
+          "body": "Die hier eingetragene Adresse gilt jetzt auch für Web Push und den Rettungslink. NEXDECK_URL_BASE gibt es nicht mehr: Die Oberfläche lief nie unter einem Unterpfad, also läuft eine Installation, die ihn gesetzt hat, wieder unter /.",
+          "path": "Einstellungen > Adresse"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Hochgeladene Bilder laden nur noch für angemeldete Konten und Kiosk-Anzeigen.",
+        "Anbindungen reichen sich keine Cookies mehr weiter.",
+        "Meldungen auf einem laufenden Board schließen wieder von selbst, und dieses Fenster schließt sofort.",
+        "Die Probleme-Karte nennt Kacheln, deren Erreichbarkeitsprüfung scheitert.",
+        "Eine Sicherung lässt den Diagrammverlauf draußen.",
+        "Der Testknopf eines Benachrichtigungswegs nimmt fünf Drücke in zehn Minuten."
+      ]
     }
   }
 }
