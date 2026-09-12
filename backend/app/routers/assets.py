@@ -6,12 +6,12 @@ import hashlib
 import logging
 import re
 
-from fastapi import APIRouter, UploadFile, status
+from fastapi import APIRouter, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 
 from ..config import get_settings
-from ..deps import CurrentUser, DbSession, MemberUser, error
+from ..deps import CurrentUser, DbSession, MemberUser, OptionalUser, error, kiosk_from_request
 from ..models import Asset, User
 from ..services import uploads_in_use
 from ..uploads import read_at_most
@@ -123,14 +123,23 @@ async def upload(file: UploadFile, user: MemberUser, db: DbSession, kind: str = 
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{asset.id}.{ALLOWED[content_type]}").write_bytes(data)
     db.commit()
-    # Uploads are served without a session, so what lands there is worth a line.
+    # Every account and every wall display can load an upload, so what lands there is worth a line.
     logger.info("File %r (%s, %d bytes) uploaded by %s as asset %d.", asset.filename, content_type, asset.size, user.username, asset.id)
     return _public(asset)
 
 
 @router.get("/{asset_id}/{filename}", summary="Serve an uploaded file")
-def serve(asset_id: int, filename: str, db: DbSession) -> FileResponse:
-    """Public: boards on kiosk displays need their backgrounds without a session."""
+def serve(asset_id: int, filename: str, request: Request, user: OptionalUser, db: DbSession) -> FileResponse:
+    """For somebody signed in, or a wall display by its cookie.
+
+    ⚠️ This was public, with the running number of the upload in the address
+    and a file name nobody compared, so counting through the numbers handed
+    out every background, icon and photo of every account. It was public for
+    kiosk displays, and those carry a cookie of their own now, which an
+    ``<img>`` sends like any other request. Found on 12.09.2026.
+    """
+    if user is None and kiosk_from_request(request, db) is None:
+        raise error("unauthenticated", "Sign in first.", status.HTTP_401_UNAUTHORIZED)
     asset = db.get(Asset, asset_id)
     if asset is None:
         raise error("not_found", "There is no such file.", status.HTTP_404_NOT_FOUND)
@@ -141,7 +150,9 @@ def serve(asset_id: int, filename: str, db: DbSession) -> FileResponse:
         path,
         media_type=asset.content_type,
         headers={
-            "Cache-Control": "public, max-age=86400",
+            # Only for whoever asked: a shared cache in front of nexdeck must
+            # not hand it to the next person.
+            "Cache-Control": "private, max-age=86400",
             # ⚠️ An uploaded file is somebody's bytes served from nexdeck's own
             # address. "sandbox" puts it in an origin of its own, so even an
             # SVG that got past the check above cannot read the session, add

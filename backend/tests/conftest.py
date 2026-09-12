@@ -31,6 +31,9 @@ def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     crypto.forget_key()
     collector_module.set_demo_flag(False)
     login_guard.reset()
+    from app.routers import channels as channels_router
+
+    channels_router.reset_test_presses()
     return directory
 
 

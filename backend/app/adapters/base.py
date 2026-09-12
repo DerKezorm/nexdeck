@@ -815,6 +815,16 @@ def _is_link_local(host: str) -> bool:
 
 
 def _is_loopback(host: str) -> bool:
+    """127.0.0.0/8, ::1, and the names that mean loopback by definition.
+
+    ⚠️ Only literal addresses were read, so ``http://localhost:8000`` walked
+    through the member rule until 12.09.2026. ``localhost`` and every name
+    under it are loopback by RFC 6761 without asking any DNS, which keeps this
+    free of the lookup ``guard_outbound`` explains it cannot afford.
+    """
+    name = host.strip("[]").rstrip(".").lower()
+    if name == "localhost" or name.endswith(".localhost"):
+        return True
     parsed = _address(host)
     return parsed is not None and parsed.is_loopback
 
@@ -892,7 +902,12 @@ async def _guard_hook(request: Any) -> None:
     guard_outbound(str(request.url))
 
 
-def outbound_client(*, guard: bool = True, **kwargs: Any) -> httpx.AsyncClient:
+async def _member_guard_hook(request: Any) -> None:
+    """The same, with the member rule, for a client that follows an address a member typed."""
+    guard_member_target(str(request.url))
+
+
+def outbound_client(*, guard: bool = True, member: bool = False, **kwargs: Any) -> httpx.AsyncClient:
     """The only place an outbound client is built.
 
     ⚠️ The guard hangs on the client, not on the call, because httpx runs a
@@ -901,16 +916,33 @@ def outbound_client(*, guard: bool = True, **kwargs: Any) -> httpx.AsyncClient:
     decides where the third request goes. Measured with the pinned httpx: the
     hook sees both hops and an error inside it ends the request.
 
+    ``member=True`` puts the member rule on every hop, loopback included. Where
+    a member typed the first address, a redirect from a server of their own
+    led on to 127.0.0.1: the address they typed was checked, the one it pointed
+    at was not. Found on 12.09.2026.
+
     ``guard=False`` is for a client that does not speak to the network by name,
     which today is the Docker socket and nothing else.
     """
     if guard:
         hooks = dict(kwargs.pop("event_hooks", None) or {})
-        hooks["request"] = [*hooks.get("request", []), _guard_hook]
+        hooks["request"] = [*hooks.get("request", []), _member_guard_hook if member else _guard_hook]
         kwargs["event_hooks"] = hooks
     # The only place in the code that may build one of these directly, which is
     # what the guard test in test_guards.py holds everyone else to.
     return httpx.AsyncClient(**kwargs)
+
+
+_member_clients: dict[bool, httpx.AsyncClient] = {}
+
+
+def member_client(verify: bool = True) -> httpx.AsyncClient:
+    """One client per TLS mode for addresses a member typed, kept for the life of the process."""
+    client = _member_clients.get(verify)
+    if client is None or client.is_closed:
+        client = outbound_client(member=True, verify=verify, follow_redirects=True)
+        _member_clients[verify] = client
+    return client
 
 
 #: How many responses one integration may keep. Ten widgets on one service
@@ -1004,6 +1036,7 @@ class Context:
         auth: tuple[str, str] | None = None,
         cache_seconds: float = 0,
         auth_errors: bool = True,
+        member: bool = False,
     ) -> httpx.Response:
         """Fetch, with 401 and 403 turned into a readable refusal.
 
@@ -1011,8 +1044,15 @@ class Context:
         services use 403 for something else entirely: GitHub uses it for the
         hourly limit, and "the service rejected the credentials" is wrong and
         unhelpful for a card that has no credentials at all.
+
+        ``member=True`` is for an address a member typed into a card. It goes
+        through a client with the member rule on every hop of a redirect, not
+        through the shared one that serves the administrator's connections.
         """
-        guard_outbound(url)
+        if member:
+            guard_member_target(url)
+        else:
+            guard_outbound(url)
         key = ""
         if method.upper() == "GET" and cache_seconds > 0:
             key = CACHE_PREFIX + hashlib.sha1(
@@ -1022,7 +1062,12 @@ class Context:
             if hit and hit[0] > time.monotonic():
                 return hit[1]
         try:
-            if verify:
+            if member:
+                response = await member_client(verify).request(
+                    method, url, headers=headers, params=params, json=json_body,
+                    data=data, content=content, timeout=timeout, auth=auth,
+                )
+            elif verify:
                 response = await self.client.request(
                     method, url, headers=headers, params=params, json=json_body,
                     data=data, content=content, timeout=timeout, auth=auth,

@@ -160,6 +160,20 @@ async def send(kind: str, config: dict[str, Any], message: Message, *, user_id: 
     elif kind == "slack":
         await _slack(config, message)
     elif kind == "apprise":
+        # ⚠️ An administrator's only. Apprise sends through its own HTTP library
+        # and follows redirects there, where no address check of nexdeck
+        # reaches, so a member's channel was a way of asking what listens
+        # beside the server. Decided on 12.09.2026.
+        def by_an_administrator() -> bool:
+            from ...db import db_session
+            from ...models import User
+
+            with db_session() as db:
+                owner = db.get(User, user_id) if user_id is not None else None
+                return owner is not None and owner.role == "admin" and not owner.disabled
+
+        if not await asyncio.to_thread(by_an_administrator):
+            raise RuntimeError("Apprise channels work for administrators only. An administrator has to set this one up.")
         await asyncio.to_thread(_apprise, config, message)
     else:
         raise ValueError(f"Unknown channel kind {kind!r}.")
@@ -282,15 +296,17 @@ def _apprise(config: dict[str, Any], message: Message) -> None:
         raise RuntimeError("Apprise reported that no service accepted the message.")
 
 
-def kinds_payload(mail_ready: bool = True) -> list[dict[str, Any]]:
+def kinds_payload(mail_ready: bool = True, admin: bool = True) -> list[dict[str, Any]]:
     """The channel kinds somebody may add right now.
 
     ⚠️ E-mail is left out when no mail server is set up. It has nothing of its
     own to configure any more, so offering it would mean a channel that looks
     finished, saves, and fails silently at the first outage. A kind that
     cannot work should not be on the list.
+
+    Apprise is left out for everybody but an administrator; ``send`` says why.
     """
-    return [k.to_dict() for k in KINDS.values() if mail_ready or k.kind != "email"]
+    return [k.to_dict() for k in KINDS.values() if (mail_ready or k.kind != "email") and (admin or k.kind != "apprise")]
 
 
 def dumps(value: Any) -> str:

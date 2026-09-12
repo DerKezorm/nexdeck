@@ -145,6 +145,15 @@ class Settings(BaseSettings):
         self.data_dir.mkdir(parents=True, exist_ok=True)
         key_file = self.data_dir / "secret.key"
         if key_file.exists():
+            # ⚠️ A file from before 07.09.2026 was written with whatever the
+            # umask allowed and has only been read since, so it kept 0644.
+            # Narrowed here on the first read; a volume that refuses is no
+            # reason not to start.
+            if key_file.stat().st_mode & 0o077:
+                try:
+                    key_file.chmod(0o600)
+                except OSError:
+                    pass
             self._remembered_key = key_file.read_text(encoding="utf-8").strip()
             return self._remembered_key
         generated = secrets.token_urlsafe(48)

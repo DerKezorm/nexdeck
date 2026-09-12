@@ -48,6 +48,11 @@ BARRED_FOR_MEMBERS = [
     "http://127.0.0.1:8000/api/v1/boards",
     "http://127.0.0.1/",
     "http://[::1]:9000/",
+    # ⚠️ Names that mean loopback by definition, without asking any DNS.
+    # They walked through until 12.09.2026, because only addresses were read.
+    "http://localhost:8000/api/v1/boards",
+    "http://LOCALHOST/",
+    "http://api.localhost:9000/",
 ]
 
 ALLOWED = [

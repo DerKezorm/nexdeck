@@ -23,7 +23,17 @@ import socket
 import time
 from typing import Any
 
-from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType, measured
+from .base import (
+    Action,
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    guard_member_target,
+    measured,
+)
 
 MAC = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$")
 #: How long a machine counts as just woken, so the card can say something.
@@ -137,7 +147,13 @@ class WolAdapter(Adapter):
         return merged
 
     def _target(self, config: dict[str, Any]) -> tuple[str, int]:
-        return str(config.get("host") or "").strip(), int(config.get("check_port") or 0)
+        host = str(config.get("host") or "").strip()
+        if host:
+            # ⚠️ The card's options come from whoever may edit the board, and
+            # the answer shows as awake or asleep: without this it knocked on
+            # any port of the server itself.
+            guard_member_target(f"http://[{host}]" if ":" in host and not host.startswith("[") else f"http://{host}")
+        return host, int(config.get("check_port") or 0)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         mac_bytes(str(config.get("mac") or ""))
@@ -196,6 +212,10 @@ class WolAdapter(Adapter):
         config = self.settings(config, options)
         packet = magic_packet(mac_bytes(str(config.get("mac") or "")))
         broadcast = str(config.get("broadcast") or "255.255.255.255").strip() or "255.255.255.255"
+        # ⚠️ The packet goes wherever the card's options say, and those come
+        # from whoever may edit the board, loopback and the metadata range
+        # included, until 12.09.2026.
+        guard_member_target(f"http://[{broadcast}]" if ":" in broadcast and not broadcast.startswith("[") else f"http://{broadcast}")
         port = int(config.get("port") or 9)
         try:
             await asyncio.to_thread(_send, packet, broadcast, port)

@@ -70,9 +70,14 @@ def _load(path: Path) -> None:
                                  # environment and set up the connections it names.
                                  trusted=True, allow_locked=True)
         except ImportError_ as error:
+            # ⚠️ Back to what was there. This session commits when the block
+            # ends, so a file that failed after the old cards were deleted left
+            # the board half replaced. Reproduced on 12.09.2026.
+            db.rollback()
             _give_up_on(path, str(error))
             return
         except Exception:
+            db.rollback()
             # ⚠️ Anything at all, and the reason is the start-up path. ``_load``
             # runs from ``load_all()`` inside the lifespan, so an AttributeError
             # from a file whose 'board' section is a string took uvicorn down

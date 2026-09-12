@@ -176,10 +176,17 @@ def store_subscription(user_id: int, data: dict[str, Any], user_agent: str) -> N
         if existing is None:
             db.add(PushSubscription(user_id=user_id, endpoint=endpoint, p256dh=keys["p256dh"],
                                     auth=encrypt(keys["auth"]), user_agent=user_agent[:300]))
-        else:
-            existing.user_id = user_id
-            existing.p256dh = keys["p256dh"]
-            existing.auth = encrypt(keys["auth"])
+            return
+        if existing.user_id != user_id and (existing.p256dh != keys["p256dh"] or decrypt(existing.auth) != keys["auth"]):
+            # ⚠️ The endpoint used to be taken over by whoever sent it. The
+            # same browser signing in as somebody else sends the same keys,
+            # because they belong to its subscription; different keys mean
+            # somebody who only knows the address, and the owner would simply
+            # stop getting anything.
+            raise ValueError("This browser is registered for Web Push on another account.")
+        existing.user_id = user_id
+        existing.p256dh = keys["p256dh"]
+        existing.auth = encrypt(keys["auth"])
 
 
 def remove_subscription(user_id: int, endpoint: str) -> None:

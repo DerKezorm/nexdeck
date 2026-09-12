@@ -38,7 +38,6 @@ PUBLIC: dict[str, str] = {
     "GET /api/v1/auth/oidc/{slug}/login": "starts a sign-in",
     "GET /api/v1/auth/oidc/{slug}/callback": "the provider returns here",
     "GET /api/v1/icons/{name}.{ext}": "logos, like any image; kiosk displays have no session",
-    "GET /api/v1/assets/{asset_id}/{filename}": "board backgrounds for kiosk displays",
     "GET /api/v1/kiosk": "checks the kiosk token itself",
     "POST /api/v1/kiosk/session": "the door of a wall display: the token in the body is the credential",
     "GET /{path:path}": "the single-page app",
