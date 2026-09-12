@@ -63,6 +63,11 @@ describe('CameraCard', () => {
     expect(await screen.findByTestId('snapshot', {}, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.getByText('Live video stopped; showing snapshots and retrying.')).toBeInTheDocument()
     expect(player.sources.at(-1)).toMatchObject({ type: 'flv', isLive: true, hasAudio: false, url: '/api/v1/widgets/9/stream' })
+    // ⚠️ The snapshot is on screen before React has run the effects of that render, and one of them arms
+    // the retry. Measured 12.09.2026: run on its own, not one timer was armed when the clock moved, so the
+    // retry landed past the 30 seconds and the test failed every time; in the full run it failed under load.
+    // An empty act runs those effects first.
+    await act(async () => {})
     act(() => {
       vi.advanceTimersByTime(30_000)
     })
