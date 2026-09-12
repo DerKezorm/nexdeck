@@ -3,6 +3,43 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.13.0 (2026-09-12)
+
+### Security
+
+- **Apprise channels are for administrators only.** Apprise follows redirects in its own HTTP library, where no address check reaches, so a member's channel could ask what listens beside the server. Members no longer see the kind and cannot add or change one, and an Apprise channel a member set up earlier refuses to send. `localhost` and the names under it now count as loopback for members.
+- **Uploads are served to a session or a kiosk display only.** The running number in their address made every picture of every account countable without signing in. They are cached privately now.
+- **Addresses a member typed are checked on every redirect.** RSS cards and HTTP reachability checks follow redirects through the member rule, and the Wake-on-LAN card checks its host and its broadcast address.
+- **Connections no longer share cookies.** The collector used one client for every connection, so a session one service had set went along with the next request to the same host: on What's Up Docker a wrong password got in. Only the connections that sign in with a cookie keep one, each for itself.
+- **A kiosk token leaves the address after the first load.** The display keeps it itself, a reload of `/k` comes back in, and the page a kiosk link opens is sent with `Referrer-Policy: no-referrer`, so the token no longer lands in proxy logs. Displays that are already on the wall move over at their next load.
+- **A revoked kiosk link or permission reaches open streams.** The board stream, the log stream and the video relay ask again at least every 25 seconds whether the viewer may still be there.
+- **Refresh now asks a service at most once per five seconds for each card.** Presses inside that gap get the answer of the first one; before, whoever could act on a board could send the server at a service as fast as it answered.
+- **The test button of a channel takes five presses per account in ten minutes.**
+- **A restore refuses archive names like `avatars/..` before anything is replaced**, a Web Push subscription moves to another account only with the same keys, and a `secret.key` from before 07.09.2026 is narrowed to 0600 when it is read.
+
+### Changed
+
+- **`NEXDECK_URL_BASE` is gone.** It only ever moved the cookie paths; the interface never knew a sub path, so setting it left a page that did not load. An installation that set it runs under `/` again.
+- **The public address is read in one place:** the address under Settings > Address, else `NEXDECK_PUBLIC_URL`. Web Push and the rescue link read only the environment variable, so an address set in the interface signed push messages as `mailto:admin@localhost`.
+- **A fresh database starts at the newest schema** instead of running every migration over the tables it has just built.
+
+### Fixed
+
+- **A message on a live board closes by itself again.** Every card answer started its five seconds over.
+- **The "what is new" window closes at once**, also with the server gone or the session expired.
+- **A board file or an import with an unreadable layout is refused before the old cards are deleted**, and provisioning rolls back when a file fails halfway.
+- **The problems card names a tile whose reachability check fails**, instead of a red tile next to "Everything is fine".
+- **A backup leaves the chart history out**, as it always meant to; it named a table that does not exist.
+- **The command bar keeps the keyboard inside while it is open**, and six fields that only a placeholder named carry a label for screen readers.
+- **Testing a saved connection answers an unreadable key or a crash with a message**, not with a bare 500.
+- **The Web Push key pair is made once**, also when two browsers switch Web Push on at the same moment.
+- **Two routes answer 404 instead of 500 when a card's page is gone.**
+- **A refused address reads as one sentence**, without a double space.
+
+### The test bench
+
+- **`backend/tools/ci_local.py` runs the CI set on your own machine**, read from the workflow itself: installs only with `--install`, the version check with `--tag`, and a condition it does not know stops it.
+
 ## 0.12.1 (2026-09-12)
 
 ### Fixed
