@@ -171,4 +171,4 @@ def redirect_uri(public_url: str, slug: str) -> str:
     base = (public_url or settings.public_url).rstrip("/")
     if not base:
         raise OidcError("oidc_no_public_url", "The public URL is not set. Set it under Settings first.")
-    return f"{base}{settings.url_base}/api/v1/auth/oidc/{slug}/callback"
+    return f"{base}/api/v1/auth/oidc/{slug}/callback"

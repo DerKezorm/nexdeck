@@ -176,7 +176,7 @@ export function BoardsSettings() {
         </Field>
       </SettingsCard>
       <SettingsCard title={t('board.import')} description={t('board.importHelp')}>
-        <textarea className="input mb-2" rows={8} value={yamlText} onChange={(e) => setYamlText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />
+        <textarea className="input mb-2" rows={8} aria-label={t('board.import')} value={yamlText} onChange={(e) => setYamlText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />
         {error && (
           <p className="text-sm text-bad mb-2" role="alert">
             {error}

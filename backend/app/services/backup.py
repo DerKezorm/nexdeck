@@ -61,7 +61,12 @@ KEEP_AUTOMATIC = 5
 EXTRAS = ("avatars", "uploads")
 
 #: Thrown out of the copy. Hours of work to refill, nothing to lose.
-CACHE_TABLES = ("widget_history",)
+#:
+#: ⚠️ This named ``widget_history``, a table that does not exist, so every
+#: backup carried the whole chart history, the largest part of the database,
+#: while its profile said nothing was emptied. The two tables hold a day at
+#: most and fill again by themselves. Found on 07.09.2026.
+CACHE_TABLES = ("history_samples", "history_minutes")
 
 WITHOUT_KEY = """This archive has no secret.key.
 

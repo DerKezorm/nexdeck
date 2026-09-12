@@ -29,8 +29,6 @@ services:
       # the level and puts the switch in the interface out of action: an
       # operator could pick "debug for an hour" and nothing would happen.
       - NEXDECK_LOG_LEVEL=${NEXDECK_LOG_LEVEL:-}
-      # Where browsers reach nexdeck when it lives below a sub path, e.g. /deck.
-      - NEXDECK_URL_BASE=${NEXDECK_URL_BASE:-}
       # Start every card with invented data, for a look around.
       - NEXDECK_DEMO=${NEXDECK_DEMO:-}
     volumes:

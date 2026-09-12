@@ -148,4 +148,12 @@ describe('the board list', () => {
     await userEvent.keyboard('{Control>}{ArrowDown}{/Control}')
     expect(calls.put).toHaveLength(0)
   })
+
+  it('names the import field, not only by its example', async () => {
+    // ⚠️ The field had a YAML example as its placeholder and nothing else, so a
+    // screen reader announced "edit text". Found on 06.09.2026.
+    show()
+    await screen.findByText('ARR')
+    expect(screen.getByLabelText('Import a board')).toBeInTheDocument()
+  })
 })

@@ -265,13 +265,27 @@ async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dic
         return {"ok": True, "message": "Demo mode: nothing is contacted."}
     adapter = get_adapter(integration.kind)
     ctx = Context(collector.client, integration_id=integration.id, cache={})
-    config = resolve_config(integration)
+    # ⚠️ The same answers as the test on the settings page. This route read the
+    # stored config outside any ``try`` and caught adapter errors only, so an
+    # unreadable key after a restore, or anything unplanned, came back to a
+    # script as a bare 500. Found on 07.09.2026.
+    try:
+        config = resolve_config(integration)
+    except SecretUnreadable:
+        return {
+            "ok": False,
+            "message": "The stored keys of this connection cannot be read.",
+            "hint": "They were encrypted with a different NEXDECK_SECRET_KEY. Enter them again and save.",
+            "code": "secret_unreadable",
+        }
     try:
         message = await adapter.test(config, ctx)
     except AdapterError as failure:
         integration.last_error = failure.message
         db.commit()
         return {"ok": False, "message": failure.message, "hint": failure.hint, "code": failure.code}
+    except Exception as failure:  # noqa: BLE001
+        return {"ok": False, "message": f"Unexpected error: {failure.__class__.__name__}.", "hint": "", "code": "crash"}
     finally:
         await hand_back(adapter, config, ctx)
     integration.last_error = ""

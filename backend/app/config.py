@@ -28,8 +28,6 @@ class Settings(BaseSettings):
     #: Public URL as seen by browsers, e.g. ``https://deck.example.com``.
     #: Needed for OIDC return addresses and Web Push.
     public_url: str = ""
-    #: Path prefix when nexdeck runs below a sub path of a domain.
-    url_base: str = ""
     #: ``auto`` sets the Secure cookie flag when the request came over HTTPS
     #: (directly or via ``X-Forwarded-Proto``); ``always``/``never`` force it.
     cookie_secure: Literal["auto", "always", "never"] = "auto"

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../stores/auth'
@@ -12,11 +13,20 @@ import { entriesFor, latestVersion } from '../lib/whatsnew'
 export function WhatsNewDialog() {
   const { t, i18n } = useTranslation()
   const { user, update } = useAuth()
+  const [closed, setClosed] = useState(false)
   const version = latestVersion()
-  if (!user || !version || user.seen_version === version) return null
+  if (closed || !user || !version || user.seen_version === version) return null
   const entry = entriesFor(i18n.language)[version]
   if (!entry) return null
-  const close = () => void update({ seen_version: version })
+  // ⚠️ Gone at once, and the note to the server follows. Every way out used to
+  // wait for PATCH /auth/me, so with the server gone or the session expired the
+  // X, Escape, the backdrop and the button did nothing and the board stayed out
+  // of reach until the page was loaded again. A note that fails only means the
+  // window comes back on the next visit.
+  const close = () => {
+    setClosed(true)
+    update({ seen_version: version }).catch(() => undefined)
+  }
   return (
     <Dialog
       open

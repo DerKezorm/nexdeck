@@ -9,6 +9,7 @@ import type { BoardSummary } from '../api/types'
 import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
 import type { Action, WidgetView } from '../lib/types'
+import { useFocusTrap } from '../lib/useFocusTrap'
 import { ServiceIcon } from './ServiceIcon'
 
 interface Entry {
@@ -36,6 +37,11 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
   const [query, setQuery] = useState('')
   const [index, setIndex] = useState(0)
   const input = useRef<HTMLInputElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
+  // ⚠️ The bar says aria-modal, and Tab walked out of it into the board behind
+  // all the same. Sheet and Dialog had the trap since 07.09.2026; the bar has
+  // markup of its own and was left out until 12.09.2026.
+  useFocusTrap(open, panel)
 
   useEffect(() => {
     if (open) {
@@ -129,7 +135,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4" role="dialog" aria-modal="true" aria-label={t('palette.title')}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="relative glass-strong rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div ref={panel} className="relative glass-strong rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
         <input
           ref={input}
           className="w-full h-12 px-4 bg-transparent outline-none text-[15px]"

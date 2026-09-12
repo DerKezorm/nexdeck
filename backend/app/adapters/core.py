@@ -261,7 +261,7 @@ class CoreAdapter(Adapter):
         from sqlalchemy import select
 
         from ..db import db_session
-        from ..models import Page, Widget
+        from ..models import HealthCheck, Page, Widget
         from ..services.state import live
 
         fine = WidgetData(status="ok", items=[], meta={"empty": "Everything is fine"})
@@ -280,14 +280,28 @@ class CoreAdapter(Adapter):
                 if widget.id != me.id
             ]
             several_pages = len(pages) > 1
+            # ⚠️ The checks of the cards on this board count as well. An app tile
+            # draws itself in the browser and has no live state, so a failing
+            # check turned it red and this card beside it said everything was
+            # fine. Found on 07.09.2026.
+            failing = {
+                check.widget_id: check.last_error
+                for check in db.scalars(select(HealthCheck).where(
+                    HealthCheck.widget_id.in_([widget_id for _page, widget_id, _title in rows]),
+                    HealthCheck.enabled.is_(True),
+                    HealthCheck.last_ok.is_(False),
+                ))
+            }
         items: list[dict[str, Any]] = []
         for page_name, widget_id, title in rows:
             data = live.get(widget_id)
-            if data is None:
-                continue
             where = page_name if several_pages else ""
-            if data.error:
+            if data is not None and data.error:
                 items.append({"title": title, "subtitle": data.error, "error_code": str(data.meta.get("code") or ""), "status": "bad", "value": where})
+            elif widget_id in failing:
+                items.append({"title": title, "subtitle": failing[widget_id] or "Error", "status": "bad", "value": where})
+            elif data is None:
+                continue
             elif data.status in ("warn", "bad"):
                 reasons = [str(data.meta.get("status_reason") or ""), *(str(u) for u in (data.meta.get("urgent") or []))]
                 subtitle = " · ".join(r for r in reasons if r) or ("Error" if data.status == "bad" else "Warning")

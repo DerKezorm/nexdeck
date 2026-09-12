@@ -37,10 +37,13 @@ integrations:
       api_key: ${NEXDECK_RADARR_1_API_KEY}
 ```
 
-Widgets reference integrations by **name**. On import, an integration with
-that name and kind is reused; otherwise it is created from the `config`
-block, with `${VARIABLE}` values taken from the environment. A widget
-without `layout` is placed at the bottom of the board.
+Widgets reference integrations by **name**. An integration with that name
+and kind is reused. Only a file under `data/boards` (see Provisioning below)
+may create a missing one from its `config` block, with `${VARIABLE}` values
+taken from the environment. Importing through the interface or the API does
+neither: an administrator sets the connection up first, under the same name,
+and an import that names one that does not exist is refused. A widget without
+`layout` is placed at the bottom of the board.
 
 `lg` is the arrangement, on a twelve-column grid. A tablet shows it as it
 is, and a phone stacks the cards in its reading order, row by row and left
