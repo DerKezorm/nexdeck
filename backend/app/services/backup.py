@@ -480,6 +480,15 @@ def _open(data: bytes, password: str) -> tuple[Profile, bytes, str | None, dict[
                 for name in sorted(names)
                 if name.split("/", 1)[0] in EXTRAS and not name.endswith("/")
             }
+            for name in extras:
+                # ⚠️ A nexdeck archive holds these folders flat. ``avatars/..``
+                # starts with ``avatars`` all the same, and the check before
+                # writing let it through after the database had already been
+                # swapped, so the restore stopped halfway. Refused here, before
+                # anything is touched. Found on 12.09.2026.
+                filename = name.partition("/")[2]
+                if filename in (".", "..") or any(mark in filename for mark in ("/", "\\", "\x00")):
+                    raise BackupError("not_a_backup", "This file is not a nexdeck backup.")
     except BackupError:
         raise
     except (RuntimeError, ValueError, json.JSONDecodeError) as failure:

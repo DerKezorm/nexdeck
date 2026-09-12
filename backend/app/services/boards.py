@@ -398,6 +398,24 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
             every = widget_doc.get("refresh_seconds")
             if every is not None and (not isinstance(every, int) or isinstance(every, bool) or not 5 <= every <= 86400):
                 raise ImportError_(f"The refresh interval of {where} has to be a whole number of seconds between 5 and 86400.")
+            # ⚠️ The layout is read after the old cards of a replaced board are
+            # gone, and it was not looked at here until 12.09.2026: a card with
+            # ``layout: nope`` got past every other check and came apart in the
+            # middle of writing.
+            layout = widget_doc.get("layout")
+            if layout not in (None, {}):
+                spots = [layout.get(key) for key in (*COLUMNS, "lg")] if isinstance(layout, dict) else None
+                if spots is None or any(
+                    spot not in (None, {}) and (
+                        not isinstance(spot, dict)
+                        or any(
+                            isinstance(spot.get(side, 0), bool) or not isinstance(spot.get(side, 0), int) or spot.get(side, 0) < 0
+                            for side in ("x", "y", "w", "h")
+                        )
+                    )
+                    for spot in spots
+                ):
+                    raise ImportError_(f"The layout of {where} has to give lg an x, y, w and h as whole numbers.")
             if not allow_locked:
                 try:
                     _validate_options(db, kind, options, user)

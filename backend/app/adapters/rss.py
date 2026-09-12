@@ -52,7 +52,8 @@ class RssAdapter(Adapter):
             # who may edit a board decides where the server goes.
             guard_member_target(url)
             try:
-                response = await ctx.request("GET", url, cache_seconds=600, timeout=20)
+                # ``member`` puts the same rule on every hop of a redirect.
+                response = await ctx.request("GET", url, cache_seconds=600, timeout=20, member=True)
                 parsed = await asyncio.to_thread(feedparser.parse, response.content)
             except AdapterError as error:
                 failures.append(f"{url}: {error.message}")

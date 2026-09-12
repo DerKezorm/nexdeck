@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 from fastapi import APIRouter, status
 from sqlalchemy import select
@@ -24,6 +25,50 @@ router = APIRouter(prefix="/api/v1", tags=["channels"])
 
 logger = logging.getLogger("nexdeck.channels")
 
+#: Kinds only an administrator may set up.
+#:
+#: ⚠️ Apprise sends through its own HTTP library and follows redirects there,
+#: where no address check of nexdeck reaches, so for a member it was a way of
+#: asking what listens beside the server. Decided on 12.09.2026.
+ADMIN_ONLY_KINDS = frozenset({"apprise"})
+
+#: How often one account may press "Send a test" within the window.
+#:
+#: ⚠️ Every member may add an e-mail channel with any address, and each press
+#: went out through the installation's own mail server, on its good name with
+#: the mail provider. Found on 12.09.2026.
+TESTS_PER_WINDOW = 5
+TEST_WINDOW_SECONDS = 10 * 60
+_presses: dict[int, list[float]] = {}
+
+
+def _now() -> float:
+    return time.monotonic()
+
+
+def reset_test_presses() -> None:
+    """Every test starts with nobody having pressed anything."""
+    _presses.clear()
+
+
+def _count_a_press(user_id: int) -> None:
+    now = _now()
+    recent = [moment for moment in _presses.get(user_id, []) if now - moment < TEST_WINDOW_SECONDS]
+    if len(recent) >= TESTS_PER_WINDOW:
+        _presses[user_id] = recent
+        raise error(
+            "too_many_tests",
+            f"That was {TESTS_PER_WINDOW} tests in {TEST_WINDOW_SECONDS // 60} minutes. Wait a few minutes before the next one.",
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+    recent.append(now)
+    _presses[user_id] = recent
+
+
+def _refuse_unless_allowed(kind: str, user: CurrentUser) -> None:
+    if kind in ADMIN_ONLY_KINDS and user.role != "admin":
+        raise error("admin_only_channel", "Only an administrator may set up this kind of channel.", status.HTTP_403_FORBIDDEN)
+
 
 def _public(channel: NotificationChannel) -> dict:
     return {"id": channel.id, "kind": channel.kind, "name": channel.name, "config": public_channel_config(channel), "enabled": channel.enabled,
@@ -34,7 +79,7 @@ def _public(channel: NotificationChannel) -> dict:
 def channel_kinds(user: CurrentUser, db: DbSession) -> list[dict]:
     from ..services import mail
 
-    return kinds_payload(mail_ready=mail.configured(db))
+    return kinds_payload(mail_ready=mail.configured(db), admin=user.role == "admin")
 
 
 @router.get("/events", summary="List the events a channel can subscribe to")
@@ -69,6 +114,7 @@ def _set_events(db: DbSession, channel: NotificationChannel, events: list[str]) 
 def create_channel(body: ChannelCreate, user: MemberUser, db: DbSession) -> dict:
     if body.kind not in KINDS:
         raise error("unknown_kind", f"There is no channel kind {body.kind!r}.")
+    _refuse_unless_allowed(body.kind, user)
     if body.kind == "email":
         from ..services import mail
 
@@ -90,6 +136,8 @@ def create_channel(body: ChannelCreate, user: MemberUser, db: DbSession) -> dict
 @router.patch("/channels/{channel_id}", summary="Change a notification channel")
 def patch_channel(channel_id: int, body: ChannelPatch, user: MemberUser, db: DbSession) -> dict:
     channel = _own(db, channel_id, user)
+    # A member's Apprise channel from before the rule may be deleted, not pointed somewhere new.
+    _refuse_unless_allowed(channel.kind, user)
     if body.name is not None:
         channel.name = body.name.strip()
     if body.config is not None:
@@ -117,6 +165,7 @@ def delete_channel(channel_id: int, user: MemberUser, db: DbSession) -> None:
 @router.post("/channels/{channel_id}/test", summary="Send a test message through a channel")
 async def test_channel(channel_id: int, user: MemberUser, db: DbSession) -> dict:
     channel = _own(db, channel_id, user)
+    _count_a_press(user.id)
     message = Message(event="test", title="nexdeck test message", body="If you can read this, the channel works.", level="info")
     try:
         await send(channel.kind, resolve_channel_config(channel), message, user_id=user.id)

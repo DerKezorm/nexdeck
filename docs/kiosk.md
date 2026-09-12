@@ -12,8 +12,8 @@ on the display. It looks like `https://deck.example.com/k/nk_…`.
 | Dim from / until | Darkens the display during that window, e.g. 23:00 to 06:30. |
 | Allow actions | Buttons on the cards work on the display. Off by default: anyone at the display could restart containers otherwise. |
 
-The token carries no session. It can read the board, its live stream and its
-icons, and nothing else. Revoke it in the same menu; the display then shows
+The token carries no session. It can read the board, its live stream, its
+icons and uploaded pictures, and nothing else. Revoke it in the same menu; the display then shows
 that the link is no longer valid.
 
 Tablets: add the link to the home screen; Fully Kiosk Browser and similar apps

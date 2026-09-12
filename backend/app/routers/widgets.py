@@ -8,12 +8,13 @@ from typing import Any
 from urllib.parse import quote
 
 import httpx
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from ..adapters import split_widget_kind
 from ..adapters.base import AdapterError, Context, outbound_client
+from ..db import db_session
 from ..deps import (
     AdminUser,
     CurrentUser,
@@ -22,6 +23,7 @@ from ..deps import (
     board_for_viewer_id,
     error,
     kiosk_from_request,
+    optional_user,
     require_board_id,
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
@@ -32,7 +34,7 @@ from ..services.boards import _validate_options, place_widget, remove_from_layou
 from ..services.collector import collector
 from ..services.hass_ws import hass_listener
 from ..services.notify import emit
-from ..services.sse import board_topic, hub
+from ..services.sse import Recheck, board_topic, hub
 from ..services.state import live
 
 router = APIRouter(prefix="/api/v1", tags=["widgets"])
@@ -353,12 +355,29 @@ async def widget_stream(widget_id: int, request: Request, user: OptionalUser, db
         raise error("no_stream", f"The service answered the stream request with HTTP {response.status_code}.", status.HTTP_502_BAD_GATEWAY)
     media_type = source.media_type or response.headers.get("content-type", "video/x-flv")
 
+    board_id = page.board_id
+
+    def _still_allowed() -> bool:
+        # ⚠️ A camera keeps sending for as long as somebody watches, and a wall
+        # display watches for weeks. The right to see the board used to be
+        # looked at once, when the relay opened.
+        try:
+            with db_session() as db_again:
+                board_for_viewer_id(db_again, board_id, optional_user(request, db_again), kiosk_from_request(request, db_again))
+        except HTTPException:
+            return False
+        return True
+
+    recheck = Recheck(_still_allowed, every=25)
+
     async def relay():
         # Every chunk goes out as it arrives. Collecting 64 kB first would hold
         # up to a second of a small stream back and the player would stutter.
         global _streams_open
         try:
             async for chunk in response.aiter_raw():
+                if await recheck.denied():
+                    break
                 yield chunk
         finally:
             _streams_open -= 1

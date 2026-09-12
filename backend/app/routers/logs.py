@@ -6,22 +6,26 @@ import asyncio
 import json
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 
+from ..db import db_session
 from ..deps import (
     DbSession,
     OptionalUser,
     board_for_viewer_id,
     error,
     kiosk_from_request,
+    optional_user,
     require_integration,
 )
 from ..models import Page, Widget
 from ..services.logs import log_tailer, recent_lines
-from ..services.sse import board_topic, hub
+from ..services.sse import Recheck, board_topic, hub
 
 router = APIRouter(prefix="/api/v1/widgets", tags=["logs"])
+
+HEARTBEAT_SECONDS = 25
 
 
 def _log_widget(db: DbSession, widget_id: int, request: Request, user: OptionalUser) -> tuple[Widget, int, str]:
@@ -57,6 +61,18 @@ async def log_stream(widget_id: int, request: Request, user: OptionalUser, db: D
     log_tailer.ensure(widget.id)
     subscriber = hub.subscribe({board_topic(board_id)})
 
+    def _still_allowed() -> bool:
+        # ⚠️ The right to read a log can be taken away while the stream runs,
+        # and it used to be looked at once, when the stream opened.
+        try:
+            with db_session() as db_again:
+                _log_widget(db_again, widget_id, request, optional_user(request, db_again))
+        except HTTPException:
+            return False
+        return True
+
+    recheck = Recheck(_still_allowed, every=HEARTBEAT_SECONDS)
+
     async def events() -> AsyncIterator[str]:
         try:
             for entry in recent_lines(source, 200):
@@ -65,11 +81,12 @@ async def log_stream(widget_id: int, request: Request, user: OptionalUser, db: D
                 if await request.is_disconnected():
                     break
                 try:
-                    message = await asyncio.wait_for(subscriber.queue.get(), timeout=25)
+                    message = await asyncio.wait_for(subscriber.queue.get(), timeout=HEARTBEAT_SECONDS)
                 except TimeoutError:
-                    yield ": ping\n\n"
-                    continue
-                if message.startswith("event: log") and f'"widget_id": {widget.id},' in message:
+                    message = ": ping\n\n"
+                if await recheck.denied():
+                    break
+                if message.startswith(":") or (message.startswith("event: log") and f'"widget_id": {widget.id},' in message):
                     yield message
         finally:
             hub.unsubscribe(subscriber)

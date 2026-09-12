@@ -43,7 +43,10 @@ def http_client(insecure: bool) -> httpx.AsyncClient:
     """
     client = _clients.get(insecure)
     if client is None or client.is_closed:
-        client = outbound_client(verify=not insecure, follow_redirects=True, headers={"User-Agent": "nexdeck-check"})
+        # ⚠️ With the member rule on every hop. Whoever may edit a board sets
+        # the address of a check, and a redirect from a server of their own
+        # led on to 127.0.0.1 past the check on the first address.
+        client = outbound_client(member=True, verify=not insecure, follow_redirects=True, headers={"User-Agent": "nexdeck-check"})
         _clients[insecure] = client
     return client
 
@@ -56,6 +59,8 @@ async def check_http(target: str, timeout: float, expect_status: int, insecure: 
     started = time.perf_counter()
     try:
         response = await http_client(insecure).get(target, timeout=timeout)
+    except AdapterError as barred:
+        return False, int((time.perf_counter() - started) * 1000), barred.message
     except httpx.HTTPError as error:
         return False, int((time.perf_counter() - started) * 1000), error.__class__.__name__
     latency = int((time.perf_counter() - started) * 1000)

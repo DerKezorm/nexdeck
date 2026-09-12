@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 
 from ..db import db_session
 from ..deps import DbSession, OptionalUser, board_for_viewer, kiosk_from_request, optional_user
-from ..services.sse import board_topic, hub, user_topic
+from ..services.sse import Recheck, board_topic, hub, user_topic
 
 router = APIRouter(prefix="/api/v1", tags=["stream"])
 
@@ -40,8 +40,9 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
         withdrawn kiosk token, a revoked session, a disabled account or a share
         taken away changed nothing for a stream that was already running: it
         kept sending until the browser closed it, and a wall display never
-        closes anything. Asked again on every heartbeat, in a session of its
-        own that lives for the length of one question.
+        closes anything. Asked again at least once a heartbeat, busy or quiet
+        (see ``Recheck``), in a session of its own that lives for the length of
+        one question.
         """
         try:
             with db_session() as db_again:
@@ -55,6 +56,8 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
             return False
         return True
 
+    recheck = Recheck(_still_allowed, every=HEARTBEAT_SECONDS)
+
     async def events() -> AsyncIterator[str]:
         try:
             yield "event: hello\ndata: {}\n\n"
@@ -64,10 +67,9 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
                 try:
                     message = await asyncio.wait_for(subscriber.queue.get(), timeout=HEARTBEAT_SECONDS)
                 except TimeoutError:
-                    if not await asyncio.to_thread(_still_allowed):
-                        break
-                    yield ": ping\n\n"
-                    continue
+                    message = ": ping\n\n"
+                if await recheck.denied():
+                    break
                 yield message
         finally:
             hub.unsubscribe(subscriber)
