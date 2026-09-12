@@ -58,7 +58,7 @@ export function TopBar(props: Props) {
       </Link>
       <span className="w-px h-5 bg-line-strong hidden lg:block" />
       <div className="relative" ref={menuRef}>
-        <button className="btn border-0 bg-transparent px-2 gap-1 font-semibold" onClick={() => setMenu((v) => !v)} aria-haspopup="menu" aria-expanded={menu}>
+        <button className="btn btn-flat px-2 gap-1 font-semibold" onClick={() => setMenu((v) => !v)} aria-haspopup="menu" aria-expanded={menu}>
           {boardName}
           <ChevronDown size={14} className="text-muted" />
         </button>

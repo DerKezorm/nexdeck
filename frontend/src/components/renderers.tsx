@@ -165,7 +165,7 @@ function ActionButtons({
         return (
           <button
             key={action.id}
-            className={`btn ${compact ? 'btn-icon h-6 w-6 border-0 bg-transparent' : 'h-7 px-2 text-xs'} ${action.danger ? 'btn-danger' : ''}`}
+            className={`btn ${compact ? 'btn-icon h-6 w-6 btn-flat' : 'h-7 px-2 text-xs'} ${action.danger ? 'btn-danger' : ''}`}
             onClick={(event) => {
               event.stopPropagation()
               onAction(action)
@@ -195,7 +195,7 @@ function SaveLink({ widgetId, file }: { widgetId: number; file: Saveable }) {
   const label = t('card.saveFile', { name: file.name })
   return (
     <a
-      className="btn btn-icon h-6 w-6 border-0 bg-transparent"
+      className="btn btn-icon h-6 w-6 btn-flat"
       href={fileUrl(widgetId, file.path)}
       download={file.name}
       aria-label={label}

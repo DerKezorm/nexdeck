@@ -71,7 +71,7 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
       <aside ref={panel} className={`relative glass-strong h-full ${wide ? 'w-full max-w-[640px]' : 'w-full max-w-[420px]'} flex flex-col shadow-2xl rounded-none border-y-0 border-r-0`}>
         <header className="flex items-center gap-2 px-4 h-12 border-b border-line">
           <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
-          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label={t('common.close')}>
+          <button className="btn btn-icon btn-flat" onClick={onClose} aria-label={t('common.close')}>
             <X size={16} />
           </button>
         </header>
@@ -110,7 +110,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
       <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
           <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
-          <button className="btn btn-icon border-0 bg-transparent" onClick={onClose} aria-label={t('common.close')}>
+          <button className="btn btn-icon btn-flat" onClick={onClose} aria-label={t('common.close')}>
             <X size={16} />
           </button>
         </header>
@@ -249,7 +249,7 @@ export function PasswordInput({
       />
       <button
         type="button"
-        className="btn btn-icon absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 border-0 bg-transparent text-muted"
+        className="btn btn-icon absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 btn-flat text-muted"
         onClick={() => setShown((current) => !current)}
         aria-label={shown ? t('auth.hidePassword') : t('auth.showPassword')}
         title={shown ? t('auth.hidePassword') : t('auth.showPassword')}

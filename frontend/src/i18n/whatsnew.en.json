@@ -441,6 +441,25 @@
       "small": [
         "Every one of them was measured against a running instance before it was written, so none carries the beta badge."
       ]
+    },
+    "0.12.1": {
+      "lead": "Buttons and fields look the way they were drawn again.",
+      "sections": [
+        {
+          "title": "Flat buttons on the cards",
+          "body": "Refresh, link, settings and remove sat in a frame on every card and were a third larger than drawn. They are small flat icons again, and so are the close buttons in dialogs and the buttons in the notices.",
+          "path": "Board > any card"
+        },
+        {
+          "title": "Password fields",
+          "body": "A long password ran under the button that shows it. The text now stops before the button.",
+          "path": "Sign-in page"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Sizes, borders and colors given to single elements apply again, 90 in all: among them the sign-in buttons, the round wake button, the tab bar on a phone and the warning on the backups page."
+      ]
     }
   }
 }

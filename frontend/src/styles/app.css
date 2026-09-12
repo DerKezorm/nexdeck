@@ -2,12 +2,22 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
+/* ⚠️ Our own classes sit in `components`, so a utility written on the same element wins.
+   Outside a layer they beat every utility, however specific: measured on 12.09.2026,
+   ninety elements ignored a size, a border or a colour written on them, among them the
+   buttons on every card, the password field and the phone's tab bar. `overrides` comes
+   after the utilities and holds the two rules that must win over them; the grid
+   library's own sheet has no layer, so what corrects it stays outside one as well.
+   The guard is src/styles/layers.test.ts. */
+@layer theme, base, components, utilities, overrides;
+
 /* ------------------------------------------------------------------------
  * Design tokens. Dark is the default; light redefines the same names.
  * Cinematic: a deep, cool anthracite with a blue tint, glass surfaces over
  * a soft aurora, one electric cyan accent. Green, amber and rose are reserved
  * for states and never used as decoration.
  * ---------------------------------------------------------------------- */
+@layer base {
 :root {
   --nd-bg: #0a0d12;
   --nd-bg-elev: #0f131a;
@@ -72,6 +82,7 @@
   --nd-aurora-3: rgba(14, 165, 233, 0.1);
   color-scheme: light;
 }
+}
 
 @theme inline {
   --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
@@ -98,6 +109,7 @@
   --radius-sm: var(--nd-radius-sm);
 }
 
+@layer base {
 html,
 body,
 #root {
@@ -119,7 +131,9 @@ body {
 ::selection {
   background: var(--nd-accent-soft);
 }
+}
 
+@layer components {
 /* Numbers everywhere align as tables. */
 .num {
   font-family: var(--font-mono);
@@ -339,6 +353,24 @@ body {
   color: var(--nd-accent);
 }
 
+/* A button without its frame: no border and no ground until the pointer is on it.
+   `border-0 bg-transparent` stood here as utilities and never won against .btn; now that
+   they would, they would also take the hover away, so the look is a class of its own. */
+.btn-flat {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-flat:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+}
+
+.btn-flat:disabled:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
 /* Inputs. */
 .input {
   width: 100%;
@@ -381,27 +413,6 @@ textarea.input {
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--nd-text) 18%, transparent) transparent;
-}
-
-/* Grid library overrides. */
-.react-grid-item.react-grid-placeholder {
-  background: var(--nd-accent-soft) !important;
-  border: 1px dashed var(--nd-accent);
-  border-radius: var(--nd-radius);
-  opacity: 1 !important;
-}
-
-.react-grid-item > .react-resizable-handle {
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
-
-.react-grid-item:hover > .react-resizable-handle {
-  opacity: 0.6;
-}
-
-.react-grid-item > .react-resizable-handle::after {
-  border-color: var(--nd-accent) !important;
 }
 
 /* Text card content. */
@@ -496,16 +507,6 @@ textarea.input {
   opacity: 1;
 }
 
-/* ⚠️ While editing, the whole card is the handle. Everything in it is inert
-   anyway (a link does not open, an action button does not act), but the
-   elements were still there, and the drag machinery leaves buttons and links
-   alone so that a press on one is a press and not a drag. On a card whose
-   body is one strip of bars that left the padding at the edge as the only
-   place to take hold of. The card's own two buttons keep their events. */
-.card.is-editing > *:not(.card-controls) {
-  pointer-events: none;
-}
-
 .card.is-editing {
   cursor: grab;
 }
@@ -516,22 +517,6 @@ textarea.input {
 
 .card.has-link {
   cursor: pointer;
-}
-
-/* While editing, the resize corner is always visible. */
-.board-editing .react-grid-item > .react-resizable-handle {
-  opacity: 0.9;
-  width: 22px;
-  height: 22px;
-}
-
-.board-editing .react-grid-item > .react-resizable-handle::after {
-  width: 9px;
-  height: 9px;
-  right: 5px;
-  bottom: 5px;
-  border-right-width: 2px;
-  border-bottom-width: 2px;
 }
 
 /* A failed fetch: a red veil over the card body with the reason on it. */
@@ -1253,10 +1238,6 @@ textarea.input {
   background: color-mix(in srgb, var(--nd-text) 10%, transparent);
 }
 
-body.has-player-bar main {
-  padding-bottom: 88px;
-}
-
 /* The volume behind a button, opened over the page next to it. The width is
    the one `VolumeButton` places it by. */
 .player-volume-pop {
@@ -1277,4 +1258,68 @@ body.has-player-bar main {
     opacity: 0;
     transform: scale(0.96);
   }
+}
+}
+
+/* ------------------------------------------------------------------------
+ * After the utilities. Only what has to win over a utility on purpose.
+ * ---------------------------------------------------------------------- */
+@layer overrides {
+/* ⚠️ While editing, the whole card is the handle. Everything in it is inert
+   anyway (a link does not open, an action button does not act), but the
+   elements were still there, and the drag machinery leaves buttons and links
+   alone so that a press on one is a press and not a drag. On a card whose
+   body is one strip of bars that left the padding at the edge as the only
+   place to take hold of. The card's own two buttons keep their events. */
+.card.is-editing > *:not(.card-controls) {
+  pointer-events: none;
+}
+
+/* Room under the last row of cards while the floating player sits at the bottom.
+   The kiosk's own `pb-6` on <main> must not take it back. */
+body.has-player-bar main {
+  padding-bottom: 88px;
+}
+}
+
+/* ------------------------------------------------------------------------
+ * Outside any layer on purpose: corrections to react-grid-layout and
+ * react-resizable, whose sheets are imported without a layer in BoardGrid.tsx.
+ * Inside a layer they would lose to the very rules they correct.
+ * ---------------------------------------------------------------------- */
+/* Grid library overrides. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--nd-accent-soft) !important;
+  border: 1px dashed var(--nd-accent);
+  border-radius: var(--nd-radius);
+  opacity: 1 !important;
+}
+
+.react-grid-item > .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 0.6;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--nd-accent) !important;
+}
+
+/* While editing, the resize corner is always visible. */
+.board-editing .react-grid-item > .react-resizable-handle {
+  opacity: 0.9;
+  width: 22px;
+  height: 22px;
+}
+
+.board-editing .react-grid-item > .react-resizable-handle::after {
+  width: 9px;
+  height: 9px;
+  right: 5px;
+  bottom: 5px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
 }

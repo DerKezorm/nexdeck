@@ -67,22 +67,22 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
   const controls = (
     <>
       {onRefresh && !editing && (
-        <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onRefresh} aria-label={t('widget.refreshNow')} title={t('widget.refreshNow')}>
+        <button className="btn btn-icon h-6 w-6 btn-flat" onClick={onRefresh} aria-label={t('widget.refreshNow')} title={t('widget.refreshNow')}>
           <RefreshCw size={13} />
         </button>
       )}
       {link && !editing && (
-        <a className="btn btn-icon h-6 w-6 border-0 bg-transparent" href={link} target="_blank" rel="noopener noreferrer" aria-label={t('widget.openLink')} title={t('widget.openLink')}>
+        <a className="btn btn-icon h-6 w-6 btn-flat" href={link} target="_blank" rel="noopener noreferrer" aria-label={t('widget.openLink')} title={t('widget.openLink')}>
           <ExternalLink size={13} />
         </a>
       )}
       {editing && onSettings && (
-        <button className="btn btn-icon h-6 w-6 border-0 bg-transparent" onClick={onSettings} aria-label={t('widget.settings')} title={t('widget.settings')}>
+        <button className="btn btn-icon h-6 w-6 btn-flat" onClick={onSettings} aria-label={t('widget.settings')} title={t('widget.settings')}>
           <Settings2 size={13} />
         </button>
       )}
       {editing && onRemove && (
-        <button className="btn btn-icon h-6 w-6 border-0 bg-transparent btn-danger" onClick={onRemove} aria-label={t('widget.remove.title')} title={t('widget.remove.title')}>
+        <button className="btn btn-icon h-6 w-6 btn-flat btn-danger" onClick={onRemove} aria-label={t('widget.remove.title')} title={t('widget.remove.title')}>
           <Trash2 size={13} />
         </button>
       )}
