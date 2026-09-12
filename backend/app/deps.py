@@ -16,7 +16,6 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSessionType
 
-from .config import get_settings
 from .db import get_db
 from .models import (
     ApiToken,
@@ -129,8 +128,7 @@ def _kept_at_the_door(request: Request, db: DbSessionType, user: User) -> bool:
     """
     from .services import two_factor
 
-    if any(request.url.path.startswith(f"{get_settings().url_base}{allowed}") or request.url.path.startswith(allowed)
-           for allowed in PENDING_FACTOR_PATHS):
+    if any(request.url.path.startswith(allowed) for allowed in PENDING_FACTOR_PATHS):
         return False
     return two_factor.must_set_up(db, user)
 

@@ -31,9 +31,8 @@ def _provider(db: DbSession, slug: str) -> OidcProvider:
 
 
 def _to_app(path: str, **params: str) -> RedirectResponse:
-    base = get_settings().url_base
     query = "&".join(f"{k}={v}" for k, v in params.items())
-    return RedirectResponse(f"{base}{path}{'?' + query if query else ''}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(f"{path}{'?' + query if query else ''}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _public_url(db: DbSession) -> str:
@@ -51,7 +50,7 @@ async def oidc_login(slug: str, request: Request, db: DbSession) -> RedirectResp
         return _to_app("/login", oidc_error=failure.code)
     attempt = oidc.new_attempt()
     response = RedirectResponse(oidc.authorization_url(document, provider.client_id, redirect, provider.scopes, attempt), status_code=status.HTTP_302_FOUND)
-    response.set_cookie(oidc.COOKIE_NAME, oidc.pack_state(slug, attempt), max_age=oidc.ATTEMPT_MINUTES * 60, path=f"{get_settings().url_base}/api/v1/auth/oidc",
+    response.set_cookie(oidc.COOKIE_NAME, oidc.pack_state(slug, attempt), max_age=oidc.ATTEMPT_MINUTES * 60, path="/api/v1/auth/oidc",
                         httponly=True, samesite="lax", secure=cookie_secure(request))
     return response
 
@@ -66,7 +65,7 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
     def refuse(code_: str, reason: str) -> RedirectResponse:
         logger.warning("OIDC callback refused for %r: %s", slug, reason)
         response = _to_app("/login", oidc_error=code_)
-        response.delete_cookie(oidc.COOKIE_NAME, path=f"{get_settings().url_base}/api/v1/auth/oidc")
+        response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
         return response
 
     if request.query_params.get("error"):
@@ -137,14 +136,14 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
         # in the address stands in the proxy log.
         logger.info("%s came in through %r and now needs a code.", user.username, slug)
         response = _to_app("/login", second_step="1")
-        response.delete_cookie(oidc.COOKIE_NAME, path=f"{get_settings().url_base}/api/v1/auth/oidc")
+        response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
         response.set_cookie(
             STEP_COOKIE, create_step_token(user.id), max_age=STEP_MINUTES * 60, httponly=True,
-            samesite="lax", secure=cookie_secure(request), path=f"{get_settings().url_base}/api/v1/auth",
+            samesite="lax", secure=cookie_secure(request), path="/api/v1/auth",
         )
         return response
     response = _to_app("/")
-    response.delete_cookie(oidc.COOKIE_NAME, path=f"{get_settings().url_base}/api/v1/auth/oidc")
+    response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
     open_session(db, user, request, response)
     return response
 

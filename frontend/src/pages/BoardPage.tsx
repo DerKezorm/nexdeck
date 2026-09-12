@@ -556,7 +556,7 @@ export function BoardPage() {
           </button>
         }
       >
-        <input className="input" autoFocus value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
+        <input className="input" autoFocus aria-label={t('board.pageName')} value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
       </Dialog>
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>

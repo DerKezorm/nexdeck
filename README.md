@@ -63,7 +63,6 @@ Mount `/var/run/docker.sock` (already in the compose file) to see this host's co
 |---|---|---|
 | `NEXDECK_SECRET_KEY` | generated into `/data/secret.key` | Encrypts stored API keys and signs sessions. Set it once and keep it. |
 | `NEXDECK_PUBLIC_URL` | empty | How browsers reach nexdeck. Needed for OpenID Connect and Web Push. |
-| `NEXDECK_URL_BASE` | empty | Sub path when nexdeck runs below one, e.g. `/deck`. |
 | `NEXDECK_DEMO` | `0` | Start every widget with invented data. |
 | `NEXDECK_LOG_LEVEL` | `INFO` | `DEBUG` logs every adapter request. |
 | `NEXDECK_ALLOW_LOOPBACK_TARGETS` | `0` | Let notification channels, Web Push, RSS cards and reachability checks call `127.0.0.1`. Connections an administrator made are never affected. |

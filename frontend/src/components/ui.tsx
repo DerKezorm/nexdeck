@@ -5,52 +5,11 @@
  * ``aria-labelledby``.
  */
 import { Eye, EyeOff, X } from 'lucide-react'
-import { cloneElement, isValidElement, useEffect, useId, useRef, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
-/**
- * Hold the focus inside an open dialog, and give it back on the way out.
- *
- * ⚠️ Both Sheet and Dialog said ``aria-modal="true"``, which promises exactly
- * this, and neither did it. Tab walked straight out of the dialog into the
- * page behind it, where a screen reader then read a form the person could not
- * see; and closing dropped the focus onto the document, so the next Tab
- * started again from the top of the page instead of at the button that had
- * opened the thing.
- */
-function useFocusTrap(open: boolean, container: RefObject<HTMLElement | null>): void {
-  useEffect(() => {
-    if (!open) return
-    const cameFrom = document.activeElement as HTMLElement | null
-    const inside = (): HTMLElement[] => {
-      const found = container.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )
-      return [...(found ?? [])].filter((element) => element.offsetParent !== null || element === document.activeElement)
-    }
-    // The first thing inside, so the keyboard starts where the eye does.
-    const first = inside()[0]
-    first?.focus()
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return
-      const stops = inside()
-      if (!stops.length) return
-      const edge = event.shiftKey ? stops[0] : stops[stops.length - 1]
-      if (document.activeElement === edge || !container.current?.contains(document.activeElement)) {
-        event.preventDefault()
-        ;(event.shiftKey ? stops[stops.length - 1] : stops[0]).focus()
-      }
-    }
-    document.addEventListener('keydown', onKey, true)
-    return () => {
-      document.removeEventListener('keydown', onKey, true)
-      // Back to whatever opened it, if that is still on the page.
-      if (cameFrom?.isConnected) cameFrom.focus()
-    }
-  }, [open, container])
-}
+import { useFocusTrap } from '../lib/useFocusTrap'
 
 export function Sheet({ open, onClose, title, children, wide, footer }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
   const { t } = useTranslation()
@@ -262,11 +221,18 @@ export function PasswordInput({
 
 export function Toast({ children, onClose, level = 'info' }: { children: ReactNode; onClose: () => void; level?: 'info' | 'warn' | 'error' | 'ok' }) {
   const colour = { info: 'border-accent/50', warn: 'border-warn/60', error: 'border-bad/60', ok: 'border-ok/60' }[level]
-  const timer = useRef<number>(0)
+  // ⚠️ The latest handler, read when the time is up. The timer used to hang on
+  // the handler itself, and a page passes a new one on every render: on a board
+  // every card answer started the five seconds again, and the message never
+  // went away by itself. A new message starts them again; a new render does not.
+  const close = useRef(onClose)
   useEffect(() => {
-    timer.current = window.setTimeout(onClose, 5000)
-    return () => window.clearTimeout(timer.current)
-  }, [onClose])
+    close.current = onClose
+  })
+  useEffect(() => {
+    const timer = window.setTimeout(() => close.current(), 5000)
+    return () => window.clearTimeout(timer)
+  }, [children, level])
   const { t } = useTranslation()
   // ⚠️ The bubble lets clicks through. It sits in the bottom right corner
   // for five seconds, and that is where a sheet keeps its Save button: a press

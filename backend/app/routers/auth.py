@@ -52,13 +52,13 @@ def cookie_secure(request: Request) -> bool:
 def set_session_cookie(response: Response, request: Request, token: str) -> None:
     settings = get_settings()
     response.set_cookie(
-        COOKIE_NAME, token, max_age=settings.session_days * 86400, path=settings.url_base or "/",
+        COOKIE_NAME, token, max_age=settings.session_days * 86400, path="/",
         httponly=True, samesite="lax", secure=cookie_secure(request),
     )
 
 
 def clear_session_cookie(response: Response) -> None:
-    response.delete_cookie(COOKIE_NAME, path=get_settings().url_base or "/", httponly=True)
+    response.delete_cookie(COOKIE_NAME, path="/", httponly=True)
 
 
 def user_public(user: User, request: Request | None = None) -> UserPublic:

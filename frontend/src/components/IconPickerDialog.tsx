@@ -73,7 +73,7 @@ export function IconPickerDialog({ open, value, onPick, onClose }: { open: boole
 
   return (
     <Dialog open={open} onClose={onClose} title={t('widget.iconDialogTitle')} size="lg">
-      <input className="input mb-4" autoFocus placeholder={t('widget.iconDialogSearch')} value={query} onChange={(event) => setQuery(event.target.value)} autoComplete="off" spellCheck={false} />
+      <input className="input mb-4" autoFocus aria-label={t('widget.iconDialogSearch')} placeholder={t('widget.iconDialogSearch')} value={query} onChange={(event) => setQuery(event.target.value)} autoComplete="off" spellCheck={false} />
 
       <section className="mb-4">
         <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('widget.iconOwn')}</h3>

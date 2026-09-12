@@ -103,7 +103,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
             ))}
           </ul>
           <div className="flex gap-2">
-            <input className="input" placeholder={t('board.newName')} value={newBoard} onChange={(e) => setNewBoard(e.target.value)} />
+            <input className="input" aria-label={t('board.newName')} placeholder={t('board.newName')} value={newBoard} onChange={(e) => setNewBoard(e.target.value)} />
             <button
               className="btn btn-accent flex-none"
               disabled={!newBoard.trim()}
@@ -185,6 +185,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
             <li key={page.id} className="flex items-center gap-2">
               <input
                 className="input"
+                aria-label={t('board.pageName')}
                 defaultValue={page.name}
                 onBlur={(e) => {
                   if (e.target.value.trim() && e.target.value !== page.name) void patch(`/pages/${page.id}`, { name: e.target.value.trim() }).then(onChanged)

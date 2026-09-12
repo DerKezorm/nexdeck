@@ -101,7 +101,8 @@ describe('IconPickerDialog', () => {
   it('says so when nothing matches', async () => {
     render(wrap(<IconPickerDialog open value="" onPick={() => undefined} onClose={() => undefined} />))
     await screen.findByRole('button', { name: 'radarr' })
-    await userEvent.type(screen.getByPlaceholderText('Filter by name…'), 'zzqq')
+    // By its name, not by its example: a placeholder is not a name, and some screen readers skip it.
+    await userEvent.type(screen.getByLabelText('Filter by name…'), 'zzqq')
     expect(screen.getByRole('status')).toHaveTextContent('No logo matches "zzqq".')
   })
 })
