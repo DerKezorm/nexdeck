@@ -20,6 +20,7 @@ from ..services import collector as collector_module
 from ..services import two_factor
 from ..services.collector import collector, demo_flag, set_demo_flag
 from ..services.notify import emit
+from ..services.public_url import public_url
 from ..services.sse import hub
 
 router = APIRouter(tags=["system"])
@@ -84,7 +85,7 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
     payload = {
         "version": __version__,
         "demo": settings.demo or demo_flag(),
-        "public_url": general.get("public_url") or settings.public_url,
+        "public_url": public_url(db),
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),
         "require_two_factor": two_factor.required(db),

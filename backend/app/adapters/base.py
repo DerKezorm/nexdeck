@@ -871,7 +871,7 @@ def guard_outbound(url: str) -> None:
     if host.strip("[]") in {entry.strip("[]") for entry in FORBIDDEN_HOSTS}:
         raise _barred_message("That address")
     if _is_link_local(host):
-        raise _barred_message(f"{host} ")
+        raise _barred_message(host)
 
 
 def guard_member_target(url: str) -> None:
@@ -894,7 +894,7 @@ def guard_member_target(url: str) -> None:
         return
     host = (urlsplit(url if "://" in url else f"http://{url}").hostname or "").lower()
     if _is_loopback(host):
-        raise _barred_message(f"{host} ")
+        raise _barred_message(host)
 
 
 async def _guard_hook(request: Any) -> None:

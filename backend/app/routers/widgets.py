@@ -47,7 +47,10 @@ def _widget(db: DbSession, widget_id: int) -> tuple[Widget, Page]:
     if widget is None:
         raise error("not_found", "There is no such widget.", status.HTTP_404_NOT_FOUND)
     page = db.get(Page, widget.page_id)
-    assert page is not None
+    if page is None:
+        # ⚠️ Not an ``assert``: under ``python -O`` that is not there, and
+        # without it a card deleted a moment ago ended in a 500.
+        raise error("not_found", "There is no such widget.", status.HTTP_404_NOT_FOUND)
     return widget, page
 
 

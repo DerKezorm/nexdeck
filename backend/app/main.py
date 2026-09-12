@@ -104,9 +104,10 @@ def _rescue_and_exit() -> None:
     get_engine()
     migrate()
     from .services import password_reset
+    from .services.public_url import public_url
 
     try:
-        link = password_reset.rescue_link(get_settings().public_url or "http://localhost:8000")
+        link = password_reset.rescue_link(public_url() or "http://localhost:8000")
     except RuntimeError as why:
         # ⚠️ Not a traceback. Whoever runs this is already locked out of
         # something, and a stack of import frames is not an answer.

@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import threading
 import time
 from typing import Any
 
@@ -21,11 +22,11 @@ from py_vapid import Vapid02
 from sqlalchemy import select
 
 from ...adapters.base import guard_member_target, outbound_client
-from ...config import get_settings
 from ...crypto import decrypt, encrypt
 from ...db import db_session
 from ...models import PushSubscription, Setting
 from ..notify import Message
+from ..public_url import public_url
 
 logger = logging.getLogger("nexdeck.webpush")
 
@@ -68,13 +69,35 @@ def _raw(b64url: str) -> bytes:
     return base64.urlsafe_b64decode(b64url + "=" * (-len(b64url) % 4))
 
 
-def ensure_keys() -> tuple[str, str]:
-    """Return ``(private_pem, public_key_b64url)``, generating them once."""
+#: Held while the key pair is made, so it is made once.
+_keys_lock = threading.Lock()
+
+
+def _stored_keys() -> tuple[str, str] | None:
     with db_session() as db:
         setting = db.get(Setting, SETTING_KEY)
         if setting is not None and setting.value.get("private"):
-            private_pem = decrypt(setting.value["private"])
-            return private_pem, setting.value["public"]
+            return decrypt(setting.value["private"]), setting.value["public"]
+    return None
+
+
+def ensure_keys() -> tuple[str, str]:
+    """Return ``(private_pem, public_key_b64url)``, generating them once.
+
+    ⚠️ Once, also when two calls arrive together. This read, generated and
+    wrote without holding anything: two browsers switching Web Push on at the
+    same moment both found no key and both made one, and the second write
+    either failed on the unique key or replaced the first pair, so a browser
+    subscribed with the first public key never got a message.
+    """
+    stored = _stored_keys()
+    if stored is not None:
+        return stored
+    with _keys_lock:
+        # Read again: the call that held the lock before this one made them.
+        stored = _stored_keys()
+        if stored is not None:
+            return stored
         key = ec.generate_private_key(ec.SECP256R1())
         private_pem = key.private_bytes(
             serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
@@ -83,7 +106,8 @@ def ensure_keys() -> tuple[str, str]:
             serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
         )
         public = _b64url(public_raw)
-        db.merge(Setting(key=SETTING_KEY, value={"private": encrypt(private_pem), "public": public}))
+        with db_session() as db:
+            db.merge(Setting(key=SETTING_KEY, value={"private": encrypt(private_pem), "public": public}))
         return private_pem, public
 
 
@@ -92,10 +116,9 @@ def public_key() -> str:
 
 
 def subject() -> str:
-    public_url = get_settings().public_url
-    if public_url.startswith("https://"):
-        url = httpx.URL(public_url)
-        return f"https://{url.netloc.decode()}"
+    address = public_url()
+    if address.startswith("https://"):
+        return f"https://{httpx.URL(address).netloc.decode()}"
     return "mailto:admin@localhost"
 
 

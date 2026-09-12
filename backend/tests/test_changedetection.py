@@ -113,3 +113,12 @@ async def test_check_all_now_reports_how_many_were_queued(ctx: Context) -> None:
     assert route.called and message == "ChangeDetection.io is checking 5 watches again."
     with pytest.raises(AdapterError):
         await get_adapter("changedetection").action("summary", "delete", {}, CONFIG, {}, ctx)
+
+
+def test_the_ages_count_from_one_moment_a_test_can_fix() -> None:
+    """⚠️ Every row asked the clock for itself, so the ages could not be pinned to a
+    moment: the same kind of test that turned the Vikunja card red on its own."""
+    moment = 1_700_000_000
+    watches = {"eb7a": watch("https://news.example.com/", title="News", last_changed=moment - 7200)}
+    data = get_adapter("changedetection")._changes(watches, {"limit": 10}, CD, now=moment)
+    assert data.items[0]["value"] == "2 h"

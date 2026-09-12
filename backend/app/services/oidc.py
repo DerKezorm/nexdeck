@@ -19,7 +19,6 @@ import httpx
 import jwt
 
 from ..adapters.base import outbound_client
-from ..config import get_settings
 from ..security import ALGORITHM, _signing_key
 
 COOKIE_NAME = "nexdeck_oidc"
@@ -167,8 +166,8 @@ async def userinfo(document: dict[str, Any], access_token: str) -> dict[str, Any
 
 
 def redirect_uri(public_url: str, slug: str) -> str:
-    settings = get_settings()
-    base = (public_url or settings.public_url).rstrip("/")
+    """``public_url`` as ``services.public_url`` reads it: the setting, else the environment."""
+    base = public_url.rstrip("/")
     if not base:
         raise OidcError("oidc_no_public_url", "The public URL is not set. Set it under Settings first.")
     return f"{base}/api/v1/auth/oidc/{slug}/callback"
