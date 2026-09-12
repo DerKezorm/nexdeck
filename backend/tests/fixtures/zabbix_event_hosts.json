@@ -1,0 +1,42 @@
+{
+ "jsonrpc": "2.0",
+ "result": [
+  {
+   "eventid": "6",
+   "hosts": [
+    {
+     "hostid": "10780",
+     "name": "app-server"
+    }
+   ]
+  },
+  {
+   "eventid": "7",
+   "hosts": [
+    {
+     "hostid": "10780",
+     "name": "app-server"
+    }
+   ]
+  },
+  {
+   "eventid": "8",
+   "hosts": [
+    {
+     "hostid": "10780",
+     "name": "app-server"
+    }
+   ]
+  },
+  {
+   "eventid": "26",
+   "hosts": [
+    {
+     "hostid": "10084",
+     "name": "Zabbix server"
+    }
+   ]
+  }
+ ],
+ "id": 1
+}

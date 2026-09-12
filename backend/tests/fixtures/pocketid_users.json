@@ -1,0 +1,70 @@
+{
+ "data": [
+  {
+   "id": "00000000-0000-0000-0000-000000000000",
+   "username": "static-api-user-AbC123",
+   "email": null,
+   "emailVerified": false,
+   "firstName": "Static API User",
+   "lastName": "",
+   "displayName": "Static API User",
+   "isAdmin": true,
+   "locale": null,
+   "customClaims": [],
+   "userGroups": [],
+   "ldapId": null,
+   "disabled": false
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000001",
+   "username": "alice",
+   "email": "alice@example.com",
+   "emailVerified": false,
+   "firstName": "Alice",
+   "lastName": "Example",
+   "displayName": "Alice Example",
+   "isAdmin": false,
+   "locale": null,
+   "customClaims": [],
+   "userGroups": [],
+   "ldapId": null,
+   "disabled": false
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000002",
+   "username": "bob",
+   "email": "bob@example.com",
+   "emailVerified": false,
+   "firstName": "Bob",
+   "lastName": "Example",
+   "displayName": "Bob Example",
+   "isAdmin": true,
+   "locale": null,
+   "customClaims": [],
+   "userGroups": [],
+   "ldapId": null,
+   "disabled": false
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000003",
+   "username": "carol",
+   "email": "carol@example.com",
+   "emailVerified": false,
+   "firstName": "Carol",
+   "lastName": "Example",
+   "displayName": "Carol Example",
+   "isAdmin": false,
+   "locale": null,
+   "customClaims": [],
+   "userGroups": [],
+   "ldapId": null,
+   "disabled": true
+  }
+ ],
+ "pagination": {
+  "totalPages": 1,
+  "totalItems": 4,
+  "currentPage": 1,
+  "itemsPerPage": 100
+ }
+}

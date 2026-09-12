@@ -10,7 +10,7 @@ its connection fields, its widgets, and how to fetch, act and fake data.
 The frontend never knows a service: every widget returns a `WidgetData`
 that one of twenty-one renderers draws.
 
-## Adapters in 0.10.0
+## Adapters in 0.12.0
 
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
@@ -30,6 +30,14 @@ that one of twenty-one renderers draws.
 | Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
 | Duplicati | backup jobs, backups | | the password of the web interface; Duplicati 2.1 or newer |
 | Syncthing | folders, status | | API key |
+| Backrest | backup plans, backups | back up a plan now | user and password of Backrest's own sign-in, or nothing when it is switched off |
+| Komodo | stacks, deployments, overview | restart a stack | API key and secret of a user, best a service user, with Read on stacks, deployments and servers and Execute on a stack to restart it; Komodo 2 |
+| Netdata | raised alerts, load per node, alerts | | none; the agent's API is open, and a parent answers for every node that streams to it |
+| Ollama | loaded models, installed models, models | unload a model | none; Ollama has no sign-in, so its port stays inside the network |
+| Open WebUI | users, models, accounts | | API key of an administrator from Settings > Account > API keys; API keys have to be switched on in the admin settings, they are off by default |
+| Watchtower | last update run | run now | API token (WATCHTOWER_HTTP_API_TOKEN), with metrics and update switched on in WATCHTOWER_HTTP_API_ENDPOINTS; the maintained fork nickfedor/watchtower |
+| What's Up Docker | container updates, updates waiting | update a container WUD has a Docker trigger for, check now | API token from My Profile, WUD 9 or newer; read for the cards, write for the buttons |
+| Zabbix | problems, open problems | acknowledge | API token of a user with read access to the host groups; the plain User role may acknowledge |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
@@ -50,6 +58,10 @@ that one of twenty-one renderers draws.
 | authentik | status, failed sign-ins | | API token of a service account with read access |
 | CrowdSec | blocked addresses, blocked | | bouncer key from `cscli bouncers add`; it may read decisions and nothing else |
 | Shlink | short URLs, visits | | API key from `shlink api-key:generate` |
+| Blocky | blocking, top blocked | pause 5 min, enable | none; Blocky's API has no sign-in, so its HTTP port stays inside the network, and statistics.enable has to be on (Blocky 0.35 or newer) |
+| Gatus | endpoints, endpoint health | | user and password of security.basic, or nothing when Gatus has no security section |
+| NetAlertX | new devices, offline devices, devices | mark as known | API token from Settings > General, sent to the API port (20212); save the settings once so the token stays the same |
+| Pocket ID | recent sign-ins, users | | an administrator's API key from Settings > API keys, or STATIC_API_KEY; without a browser, a login code from `pocket-id one-time-access-token` opens the session that makes a key |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
 | Frigate | cameras, detections, status | | none |
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week, music player | scan a library; play music in the browser, make and change playlists (smart ones stay read-only) | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
@@ -76,6 +88,8 @@ that one of twenty-one renderers draws.
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
+| Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
+| Tube Archivist | download queue, latest videos, video archive | start downloads | API token from Settings > Application, sent as Token |
 | Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
 | Healthchecks | checks, checks up | | API key from the project settings; the read-only one is enough, and healthchecks.io works too |
@@ -100,6 +114,12 @@ that one of twenty-one renderers draws.
 | wger | weight, weigh-ins | | API key from the profile, sent as Token |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
+| BookOrbit | reading now, recently added, library | | user and password; BookOrbit has no API keys and allows five sign-ins a minute, so the token is kept |
+| Ghostfolio | portfolio, holdings | | security token of the account from Settings > Access; it is exchanged for a JWT that lasts 180 days |
+| Homebox | inventory, warranties | | API key from Profile > API Keys; Homebox shows it only once |
+| PhotoPrism | photo library, recently added | start indexing | app password from Settings > Account > Apps and Devices; a client access token cannot list photos |
+| Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
+| Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile | | none |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |

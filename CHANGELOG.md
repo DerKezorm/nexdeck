@@ -3,6 +3,87 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.12.0 (2026-09-12)
+
+### New
+
+- **20 new integrations, each measured against a running instance before it was written.** All of them start out of beta: every card and every action was run against the service in throwaway containers, and the tests carry the answers that came back.
+- **Backrest:** every backup plan with its last backup, how much it holds and why it failed, failed ones first, and how many plans are fine and when the last good backup ran. A backup can be started from the card.
+- **Blocky:** whether blocking is on, the queries of the last 24 hours and the share blocked, with a button to pause blocking for five minutes, and the domains blocked most often.
+- **BookOrbit:** the books being read with how far along they are, what came into the library last, and the number of books and authors.
+- **Gatus:** every endpoint with its last response time and why its last check failed, down ones first and then those that failed within the last 20 checks, and how many endpoints are up and down.
+- **Ghostfolio:** what the portfolio is worth with today's change and the change since the start, and every holding with how it moved today.
+- **Homebox:** how many things the inventory holds and what they are worth, and the warranties that end soon or just ended.
+- **Komodo:** every stack and deployment with its state and server, troubled ones first, and an overview of how many stacks and deployments run and how many servers answer. A stack can be restarted from the card, and the card waits for Komodo's own result.
+- **NetAlertX:** new devices on the network with a button to mark each as known, the devices that went offline, and an overview of online, new and offline devices.
+- **Netdata:** raised alerts on every node with the critical ones first, the load of each node with its state and worst alert, and an overview of raised and critical alerts.
+- **Ollama:** the models loaded right now with the memory each one takes, the installed models with their size on disk, and a button that unloads a model.
+- **Open WebUI:** who has an account and who waits for approval, how many were active in the last three minutes, and the models it offers with their connection.
+- **PhotoPrism:** how many photos and videos the library holds and how many are in review, the latest additions, and a button that indexes the originals.
+- **Pocket ID:** who signed in lately, how and from where, and an overview of users, administrators and disabled accounts.
+- **Sportarr:** the monitored sports events of the next days, the ones that took place without a file, and how many leagues there are.
+- **Tandoor Recipes:** the meal plan for today and the next days with the time of each meal, and the shopping list with a button to tick an entry off.
+- **Tube Archivist:** the videos waiting in the download queue with a button that starts them, how far a running download is, the videos downloaded last, and how many videos and channels the archive holds.
+- **Wallos:** the next payments of the active subscriptions with their price, and what falls due this month and next.
+- **Watchtower:** how many containers the last update run updated and how many failed, and when it ran, with a button that starts the next run. Built for the maintained fork nickfedor/watchtower.
+- **What's Up Docker:** which containers run an image with a newer version, the biggest step first and the containers WUD could not check after them, and how many updates are waiting. A container WUD has a Docker trigger for can be updated from the card, and WUD can be told to check again.
+- **Zabbix:** open problems with the most severe first, their hosts and a button to acknowledge each, and an overview of open, high or worse and unacknowledged problems.
+
+### Found while measuring
+
+- **A fresh Backrest answers everyone.** Its configuration came back without any credentials until a user was added, and once a repository is added that configuration carries the repository password in plain text. A wrong password is answered with the same words as no password at all.
+- **Backrest's dashboard knows that a backup failed, but not why.** The reason stands only in the backup's operation, so nexdeck asks for it for failed plans alone. A backup whose request nobody waits for any more still runs to its end.
+- **Blocky's numbers exist only with statistics switched on.** `/api/stats` keeps a rolling 24 hours in memory and answers 503 "statistics are disabled" unless `statistics.enable: true` is set; a restart starts it from nothing.
+- **Pausing Blocky answers with an empty 200.** `GET /api/blocking/disable?duration=5m` says nothing in its body, and POST gets 405, so the card asks for the blocking status afterwards to know it happened.
+- **Blocky's API has no sign-in at all.** A made-up token gets the same answer as none, so whoever reaches Blocky's HTTP port may pause blocking.
+- **BookOrbit has no API keys and allows five sign-ins a minute.** The sixth sign-in inside a minute got 429 Too Many Requests. The token lasts fifteen minutes, so the card keeps it and signs in again only when it runs out or is refused.
+- **BookOrbit's own dashboard widgets lag behind.** Progress saved a second ago was on the continue-reading shelf at once and in the "currently reading" widget only two minutes later; the library overview and the yearly count are kept for five. The cards read the shelves.
+- **Gatus hands out uptime without a password.** With basic authentication switched on, the list of statuses asked for it, while the raw uptimes, the raw response times and the configuration address answered anyone.
+- **Gatus gives durations in nanoseconds and leaves an endpoint out until its first check.** A check can fail with status 200 when its response time condition does not hold, and after a restart an endpoint whose host did not resolve was missing from the list for more than ten seconds.
+- **Ghostfolio's day change is wrong for a short while after an import.** Twenty seconds after three purchases were imported, yesterday's point still stood at the amount invested and "today" read +40.6%; thirty seconds later it read +1.25%. The card shows "?" while yesterday equals the investment, and a portfolio without a chart is not recorded as a zero.
+- **Ghostfolio's percentages are a return on the amount invested.** A change of -0.21 on a portfolio worth 654.87 read -0.07%, because 300 had been invested. The card shows Ghostfolio's figure as it comes.
+- **Ghostfolio has no API keys.** The security token of an account is exchanged for a JWT that lasts 180 days; a wrong token gets 403, a wrong JWT 401, and the admin endpoints answer 403 to an ordinary account.
+- **Homebox's item list has no warranty field.** Items are entities in this version, and their summary leaves the warranty out; the CSV export has it for every item in one request, so the warranty card reads the export.
+- **Homebox counts the total value two ways.** The statistics multiply by the quantity (four batteries at 5.00 counted 20.00); the totalPrice of the entity list covers only its page and ignores the quantity. The card takes the statistics.
+- **Homebox 0.26.2 documents /v1/currency and answers 404.** The currency is on /v1/groups.
+- **Komodo reports success before it has done anything.** A restart answered 200 with success at once, also for a user without permission on the stack; only the finished update a moment later said it had failed. nexdeck follows the update to its end and shows what it says.
+- **Five wrong Komodo keys lock the address they came from.** The sixth request got 429 for 15 seconds, and so did the right key from the same address. A key without permissions sees empty lists rather than a refusal, and with the agent of a server gone every stack on it reads unknown rather than down.
+- **Without an API_TOKEN line in app.conf, NetAlertX's token changes at every start.** NetAlertX draws one when it starts and writes it nowhere, so a card set up with it stops working after the next restart. Saving the settings once keeps it.
+- **A NetAlertX device that goes offline while it is new still says New.** Its devStatus stays New, and only devPresentLastScan 0 tells that it was missing in the last scan, so the cards read that field.
+- **NetAlertX gives its times without a time zone.** devFirstConnection and devLastConnection are in NetAlertX's own TIMEZONE setting, which the cards ask /settings/TIMEZONE for.
+- **A container that restarts on a Docker network comes back to NetAlertX as a new device.** It gets a new MAC address, and its old entry stays behind as offline.
+- **A Netdata child that stops streaming takes its alerts with it.** Within seconds the parent marks it stale, its health reads disabled and its raised alerts leave the list, so the node card shows it as Stale without a load and the overview counts only the nodes that report.
+- **Netdata's `/api/v1/alarms` only sees the node it is asked on.** On a parent that is the parent alone; the cards use `/api/v3/alerts`, which answers for every node streaming to it.
+- **Ollama has no unload call of its own.** A generate request without a prompt and with `keep_alive: 0` unloads the model; it answers `done_reason: "unload"` with 200 even for a model that was not loaded, and 404 only for one Ollama does not know.
+- **A model loaded in Ollama takes more memory than its file.** `/api/ps` reports the memory in use: a model of 258 MB on disk took 364 MB loaded with a context of 4096.
+- **Ollama has no sign-in at all.** A made-up bearer token gets 200 like none, so its port belongs inside the network.
+- **Every request with an Open WebUI key marks its owner as active.** A card polling with an administrator's key would keep that administrator active for good, so the key's own user is left out of the active count and its row shows no time.
+- **Open WebUI gives a made-up key and a user's key on an administrator's address the same 401.** Only the detail text tells them apart. API keys are off by default, and while they are off a key gets 403.
+- **Open WebUI merges models of the same id across connections.** An OpenAI-compatible connection to the same Ollama added nothing to the model list until it was given a prefix.
+- **PhotoPrism answers a wrong password with an empty library.** `/api/v1/config` gives 200 in public mode with every count at 0, so the adapter insists on user mode and calls anything else a refused password.
+- **A PhotoPrism client access token cannot list photos.** It reads the counts and may index, but every photo search answers 400 "Unable to do that"; an app password of an account works.
+- **PhotoPrism answers the index call only when indexing is over.** A second start meanwhile gets 500 "Already running", and no REST answer tells that an index runs.
+- **Failed sign-ins leave no trace in Pocket ID's audit log.** A wrong login code, one of the wrong length and one used twice all get 401, and the log gains nothing; version 2.14 has no event for a failed attempt, so the card shows sign-ins only.
+- **No Pocket ID API key can make another one.** Creating a key with an API key gets 403 api_key_auth_not_allowed. Without a browser, a login code from `pocket-id one-time-access-token <user>` exchanged at `/api/one-time-access-token/<code>` gives the session that makes a key. STATIC_API_KEY is the other way, and it adds an administrator called Static API User to the user list, which the card leaves out.
+- **A Pocket ID key of a user who is not an administrator sees neither the users nor the audit log.** Both answer 403, so the cards need an administrator's key.
+- **Sportarr's `wanted` counts the coming events too.** `/api/stats` said 56 where `/api/wanted/missing` listed 40: it counts every monitored event without a file, including those still to come, so the cards take the list's total instead.
+- **A made-up Sportarr key gets the same 401 as none.** `/api/health` answers without any key and cannot tell a working key from a wrong one, so the connection test asks `/api/system/status`.
+- **Tandoor's shopping list hands back what was already bought.** Entries ticked off within the user's recent days (at most 14) come back with checked: true, so the card leaves them out itself.
+- **A Tandoor token with the scope read is refused when it ticks something off.** Reading works with read; ticking off answered 403 until the token had read write. A missing or made-up token gets 403 as well, not 401.
+- **Starting Tube Archivist's downloads answers 200 even with nothing to download.** The task runs and does nothing, so the card offers the button only while something waits and no download runs.
+- **A Bearer token counts as no token at Tube Archivist.** It wants `Authorization: Token`; `Bearer` gets the same 403 as none, a wrong token 403 "Invalid token.".
+- **An empty Tube Archivist queue counts as null, not 0.** `/api/stats/download/` hands out `null` for every count until something waits.
+- **Wallos takes its API key only as a request parameter.** In an X-API-Key header it answered "Missing parameters". The card sends the key in the body of a POST, so it never stands in an address or an access log.
+- **Wallos answers a wrong API key with HTTP 200.** A missing and a made-up key both came back as 200 with success false; only the body tells.
+- **Without exchange rates Wallos adds other currencies as if they were the main one.** 15.49 USD went into the September total as 15.49 EUR, with a note about the missing Fixer key. The card then shows "Not converted" and keeps that sum out of its history.
+- **Watchtower forgets its last run when it restarts.** The status answered 204 without a body until the first run and again after every restart, and the history and the metrics started from zero. A check for updates does not count as a run.
+- **Watchtower counts an image no registry has neither as failed nor as skipped.** Its digest lookup got 404, and the run still reported nothing failed.
+- **What's Up Docker leaves a session cookie behind when an account signs in.** After one request with the administrator's user and password, the same client got in with no credentials, a made-up token and a wrong password, and a read-only token could start a check. nexdeck therefore takes only an API token, which sets no cookie.
+- **What's Up Docker crashes when an update runs on a container that has none.** The trigger answered 500 "Cannot read properties of undefined", so the card offers the button only where WUD found an update and lists a Docker trigger for that container. An updated container comes back under a new id, and the old one is gone.
+- **Zabbix answers a refused token with HTTP 200.** A missing or made-up token gets a JSON-RPC error "Not authorized." inside a 200, and `apiinfo.version` refuses any request that carries the token header.
+- **Zabbix's `problem.get` includes suppressed problems unless told `suppressed: false`.** The problem view of Zabbix leaves them out. Suppressing takes effect a few seconds after the call, and an unsuppress sent in between is skipped without a word.
+- **The plain Zabbix User role may acknowledge.** A user with read permission on a host group acknowledges its problems; closing one needs write permission, and an event the user may not see answers exactly like one that does not exist.
+
 ## 0.11.1 (2026-09-11)
 
 ### Fixed

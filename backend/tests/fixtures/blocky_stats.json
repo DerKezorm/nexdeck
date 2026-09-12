@@ -1,0 +1,99 @@
+{
+ "byQueryType": {
+  "A": 11
+ },
+ "byResponseCode": {
+  "NOERROR": 11
+ },
+ "byResponseType": {
+  "BLOCKED": 6,
+  "CACHED": 2,
+  "RESOLVED": 3
+ },
+ "cache": {
+  "entries": 3
+ },
+ "end": "2026-09-11T21:30:44.757276949Z",
+ "lists": {
+  "allowlist": {},
+  "denylist": {
+   "ads": 3,
+   "social": 1
+  }
+ },
+ "perHour": [
+  {
+   "blocked": 6,
+   "filtered": 0,
+   "hour": "2026-09-11T21:00:00Z",
+   "queries": 11
+  }
+ ],
+ "start": "2026-09-11T21:28:44.889989867Z",
+ "summary": {
+  "avgResponseMs": 9,
+  "blocked": 6,
+  "cacheHitRate": 0.4,
+  "cached": 2,
+  "dropped": 0,
+  "errors": 0,
+  "filtered": 0,
+  "forwarded": 3,
+  "local": 0,
+  "queries": 11
+ },
+ "topBlockedDomains": [
+  {
+   "count": 3,
+   "name": "ads.example.com"
+  },
+  {
+   "count": 1,
+   "name": "a.doubleclick.example"
+  },
+  {
+   "count": 1,
+   "name": "social.example.org"
+  },
+  {
+   "count": 1,
+   "name": "tracker.example.net"
+  }
+ ],
+ "topClients": [
+  {
+   "count": 11,
+   "name": "192.0.2.10"
+  }
+ ],
+ "topDomains": [
+  {
+   "count": 3,
+   "name": "ads.example.com"
+  },
+  {
+   "count": 2,
+   "name": "example.com"
+  },
+  {
+   "count": 2,
+   "name": "example.org"
+  },
+  {
+   "count": 1,
+   "name": "a.doubleclick.example"
+  },
+  {
+   "count": 1,
+   "name": "example.net"
+  },
+  {
+   "count": 1,
+   "name": "social.example.org"
+  },
+  {
+   "count": 1,
+   "name": "tracker.example.net"
+  }
+ ]
+}
