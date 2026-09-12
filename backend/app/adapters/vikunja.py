@@ -152,7 +152,10 @@ class VikunjaAdapter(Adapter):
             local = due.astimezone(zone)
             if due < now:
                 overdue += 1
-                state, when, value = "bad", "Overdue", ago(due.timestamp())
+                # ⚠️ Against the same moment as today and tomorrow. Against the
+                # real clock, the test with its fixed moment turned red by
+                # itself once a day had passed (12.09.2026, 09:00 UTC).
+                state, when, value = "bad", "Overdue", ago(due.timestamp(), now.timestamp())
             elif local.date() == today:
                 state, when, value = "warn", "Today", local.strftime("%H:%M")
             elif local.date() == today + timedelta(days=1):
