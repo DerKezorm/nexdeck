@@ -494,6 +494,32 @@
         "A backup leaves the chart history out.",
         "The test button of a notification channel takes five presses in ten minutes."
       ]
+    },
+    "0.14.0": {
+      "lead": "Two things asked for on GitHub: Nomad, and somewhere to put Frigate's credentials.",
+      "sections": [
+        {
+          "title": "Nomad",
+          "body": "HashiCorp's orchestrator now has three cards. Jobs lists every job of a namespace with its state and how many allocations run, the troubled ones first; Nodes shows the clients with their state and how much of each is allocated; Cluster is the same counts as one number. A job can be stopped from its row, and a service job's task group scaled up or down by one, which is what a job that should only run when it is needed asks for. A cluster without ACLs needs no credentials.",
+          "path": "Settings > Connections > Add"
+        },
+        {
+          "title": "Frigate takes a user and a password",
+          "body": "Frigate answers on two ports: 5000 is its internal API and needs no account, 8971 is the authenticated one and is what a reverse proxy in front of it uses. The card only had an address, so anything but port 5000 refused it with nowhere to put an account. It signs in now and carries the token Frigate hands out. A viewer account is enough.",
+          "path": "Settings > Connections > Frigate"
+        },
+        {
+          "title": "What a Nomad node shows is allocated, not used",
+          "body": "Nomad's server API carries no live load; that sits behind every client on its own. The card adds up what the allocations reserved instead, and where the token may read a single namespace it shows no share at all rather than that namespace's share of a node.",
+          "path": "Board > Nomad node card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Scaling a Nomad task group reads the count from the cluster at the moment the button is pressed, so a group whose allocation has died is not counted down from nothing.",
+        "The Frigate connection test counts cameras the way the cards do; it counted the detection rate as a camera.",
+        "A Frigate sign-in that was turned down is not tried again for a minute, because Frigate limits failed logins per address."
+      ]
     }
   }
 }

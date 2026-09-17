@@ -494,6 +494,32 @@
         "Eine Sicherung lässt den Diagrammverlauf draußen.",
         "Der Testknopf eines Benachrichtigungswegs nimmt fünf Drücke in zehn Minuten."
       ]
+    },
+    "0.14.0": {
+      "lead": "Zwei Wünsche von GitHub: Nomad, und ein Platz für Frigates Zugangsdaten.",
+      "sections": [
+        {
+          "title": "Nomad",
+          "body": "HashiCorps Orchestrator hat jetzt drei Karten. Jobs zeigt jeden Job eines Namensraums mit seinem Zustand und wie viele Allocations laufen, die auffälligen zuerst; Knoten zeigt die Clients mit ihrem Zustand und wie viel von jedem belegt ist; Cluster fasst dieselben Zahlen in eine. Ein Job lässt sich aus seiner Zeile stoppen, und die Task-Gruppe eines Service-Jobs um eins hoch oder runter skalieren, was ein Job braucht, der nur laufen soll, wenn er gebraucht wird. Ein Cluster ohne ACLs braucht keine Zugangsdaten.",
+          "path": "Einstellungen > Verbindungen > Hinzufügen"
+        },
+        {
+          "title": "Frigate nimmt Benutzer und Passwort",
+          "body": "Frigate antwortet auf zwei Ports: 5000 ist die interne API und braucht kein Konto, 8971 die authentifizierte, und die benutzt ein Reverse Proxy davor. Die Karte hatte nur eine Adresse, also wies alles außer Port 5000 sie ab, ohne dass irgendwo ein Konto hineinpasste. Sie meldet sich jetzt an und trägt den Token, den Frigate ausgibt. Ein Viewer-Konto genügt.",
+          "path": "Einstellungen > Verbindungen > Frigate"
+        },
+        {
+          "title": "Was ein Nomad-Knoten zeigt, ist belegt, nicht benutzt",
+          "body": "Nomads Server-API kennt keine laufende Last; die sitzt hinter jedem Client einzeln. Die Karte summiert stattdessen, was die Allocations reserviert haben, und darf das Token nur einen Namensraum lesen, zeigt sie gar keinen Anteil statt des Anteils dieses einen Namensraums an einem Knoten.",
+          "path": "Board > Nomad-Knotenkarte"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "Beim Skalieren einer Nomad-Task-Gruppe wird der Zählerstand im Moment des Drückens aus dem Cluster gelesen, damit eine Gruppe, deren Allocation gestorben ist, nicht von null heruntergezählt wird.",
+        "Der Frigate-Verbindungstest zählt Kameras so wie die Karten; er hielt die Erkennungsrate für eine Kamera.",
+        "Eine abgewiesene Frigate-Anmeldung wird eine Minute lang nicht wiederholt, weil Frigate fehlgeschlagene Logins je Adresse begrenzt."
+      ]
     }
   }
 }
