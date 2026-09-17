@@ -4,16 +4,31 @@ nexdeck has the deeper camera path with Reolink, but Frigate is the standard
 answer to video surveillance in a homelab. The pictures of a detection come
 through the server like every other service image, so no address of a camera
 ever reaches the browser.
+
+Frigate answers on two ports, and which one the address names decides whether
+an account is needed: 5000 is the internal API without a sign-in, 8971 the
+authenticated one, and that is the port a reverse proxy in front of Frigate
+uses. The sign-in is ``POST /api/login`` with a user and a password; the
+answer carries the JWT in a cookie, and Frigate takes that token in an
+``Authorization: Bearer`` header as well. Up to and including 0.13.0 this
+adapter had no field for either, so a card on the authenticated port said
+"the service rejected the credentials" and offered nowhere to put any.
 """
 
 from __future__ import annotations
 
+import asyncio
+import time
 from datetime import UTC, datetime
 from typing import Any
+
+import httpx
 
 from . import demo as fake
 from .base import (
     Adapter,
+    AdapterError,
+    AuthFailed,
     Context,
     Field,
     WidgetData,
@@ -26,6 +41,21 @@ from .base import (
     status_from_percent,
 )
 
+#: What Frigate calls its JWT cookie unless the installation renamed it
+#: (``auth.cookie_name``).
+JWT_COOKIE = "frigate_token"
+#: How long a token is used before signing in again. A Frigate session lasts a
+#: day by default, and an installation may set it shorter; an hour is well
+#: inside both, and a token the server refuses is replaced at once anyway.
+TOKEN_SECONDS = 3600
+#: How long a refused sign-in is remembered.
+#:
+#: ⚠️ Frigate rate-limits failed sign-ins, by default once a second and five
+#: times a minute, counted per address. A board with three Frigate cards and a
+#: wrong password would spend that budget on its first refresh and lock the
+#: operator out of Frigate's own login page with it.
+REFUSAL_SECONDS = 60
+
 
 class FrigateAdapter(Adapter):
     kind = "frigate"
@@ -35,7 +65,10 @@ class FrigateAdapter(Adapter):
     icon = "frigate"
     docs_url = "https://docs.frigate.video/integrations/api/"
     fields = (
-        Field("url", "URL", type="url", required=True, placeholder="http://frigate:5000"),
+        Field("url", "URL", type="url", required=True, placeholder="http://frigate:5000",
+              help="Port 5000 is Frigate's internal API and needs no account; port 8971 is the authenticated one, and so is a reverse proxy in front of it."),
+        Field("username", "User", help="A user from Frigate's Settings > Users. Leave it empty on port 5000, where nothing signs in. A viewer is enough; the cards only read."),
+        Field("password", "Password", type="password", secret=True),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (
@@ -69,18 +102,143 @@ class FrigateAdapter(Adapter):
         ),
     )
 
-    async def _get(self, config: dict[str, Any], ctx: Context, path: str, params: dict[str, Any] | None = None, cache: float = 15) -> Any:
-        return await ctx.get_json(
+    # -- signing in ----------------------------------------------------------
+
+    @staticmethod
+    def _signs_in(config: dict[str, Any]) -> bool:
+        return bool(str(config.get("username") or "").strip())
+
+    @staticmethod
+    def _token_in(response: httpx.Response) -> str:
+        """The JWT out of the sign-in's answer.
+
+        ⚠️ Only the cookie carries it: a sign-in Frigate accepts answers 200
+        with an empty body. The cookie's name is a Frigate setting, so the
+        usual name is read first and then any cookie whose value is shaped
+        like a JWT.
+        """
+        for answer in (*response.history, response):
+            token = answer.cookies.get(JWT_COOKIE)
+            if token:
+                return str(token)
+        for answer in (*response.history, response):
+            for raw in answer.headers.get_list("set-cookie"):
+                value = raw.split(";", 1)[0].partition("=")[2].strip()
+                pieces = value.split(".")
+                if len(pieces) == 3 and pieces[0] and pieces[1]:
+                    return value
+        return ""
+
+    async def _token(self, config: dict[str, Any], ctx: Context, force: bool = False) -> str:
+        """The bearer token, or an empty string where nothing signs in.
+
+        Empty means one of two things, and both go on to ask without a token:
+        no user is configured, or Frigate answered the sign-in with
+        "authentication is disabled", which is what the internal port and an
+        installation that leaves the sign-in to its proxy both do.
+
+        ⚠️ One sign-in at a time per connection. Every card of a connection
+        refreshes within the same second, and each finding no token and
+        signing in on its own is what the rate limit above is there to stop.
+        """
+        if not self._signs_in(config):
+            return ""
+        kept = ctx.cache.get("frigate_jwt")
+        if kept and not force and kept[0] > time.monotonic():
+            return str(kept[1])
+        lock = ctx.cache.setdefault("frigate_login_lock", asyncio.Lock())
+        async with lock:
+            kept = ctx.cache.get("frigate_jwt")
+            if kept and not force and kept[0] > time.monotonic():
+                return str(kept[1])
+            refused = ctx.cache.get("frigate_login_refused")
+            if refused and refused[0] > time.monotonic():
+                raise AuthFailed(str(refused[1]))
+            response = await ctx.request(
+                "POST",
+                f"{base_url(config)}/api/login",
+                json_body={"user": str(config.get("username") or "").strip(), "password": str(config.get("password") or "")},
+                verify=not config.get("insecure"),
+                auth_errors=False,
+            )
+            if response.status_code in (401, 403):
+                message = "Frigate turned the user or the password down."
+                ctx.cache["frigate_login_refused"] = (time.monotonic() + REFUSAL_SECONDS, message)
+                raise AuthFailed(message)
+            if response.status_code == 404:
+                # Frigate's own answer when authentication is switched off. The
+                # cards ask without a token from here on; if something in front
+                # of Frigate then refuses them, ``_refusal`` says so instead of
+                # blaming the password.
+                ctx.cache["frigate_signin"] = "off"
+                ctx.cache["frigate_jwt"] = (time.monotonic() + TOKEN_SECONDS, "")
+                return ""
+            if response.status_code >= 400:
+                raise AdapterError(f"Frigate answered the sign-in with HTTP {response.status_code}.", code="http_error",
+                                   hint="Check the URL; it is the address of Frigate itself, without /api.")
+            token = self._token_in(response)
+            if not token:
+                raise AdapterError("Frigate accepted the sign-in but handed out no token.", code="not_frigate",
+                                   hint="Check the URL; something in front of Frigate may be answering the sign-in.")
+            ctx.cache["frigate_signin"] = "on"
+            ctx.cache["frigate_jwt"] = (time.monotonic() + TOKEN_SECONDS, token)
+            return token
+
+    def _refusal(self, config: dict[str, Any], ctx: Context) -> str:
+        """Why a card was turned down, in the words of the case it is in."""
+        if not self._signs_in(config):
+            return ("Frigate wants an account for this address. Port 8971 is the authenticated API and needs a user and a password; "
+                    "port 5000 is the internal one and needs none.")
+        if ctx.cache.get("frigate_signin") == "off":
+            return ("Frigate's own authentication is switched off, so the user and the password have nowhere to go, "
+                    "and whatever stands in front of Frigate turned the card down.")
+        return "Frigate turned the account down for this address."
+
+    async def _get(self, config: dict[str, Any], ctx: Context, path: str, params: dict[str, Any] | None = None, cache: float = 15, retry: bool = True) -> Any:
+        token = await self._token(config, ctx)
+        response = await ctx.request(
+            "GET",
             f"{base_url(config)}/api{path}",
+            headers={"Authorization": f"Bearer {token}"} if token else None,
             params=params,
             verify=not config.get("insecure"),
             cache_seconds=cache,
+            auth_errors=False,
         )
+        if response.status_code in (401, 403) and retry and self._signs_in(config):
+            # A token signed with an older secret is turned down like a
+            # made-up one, and Frigate makes a new secret whenever it cannot
+            # keep the old one. Sign in once more before giving up.
+            ctx.forget_answers()
+            await self._token(config, ctx, force=True)
+            return await self._get(config, ctx, path, params, cache=0, retry=False)
+        if response.status_code in (401, 403):
+            raise AuthFailed(self._refusal(config, ctx))
+        if response.status_code >= 400:
+            raise AdapterError(f"Frigate answered with HTTP {response.status_code}.", code="http_error",
+                               hint="Check the URL; it is the address of Frigate itself, without /api.")
+        try:
+            return response.json()
+        except ValueError as error:
+            raise AdapterError("Frigate did not answer with data.", code="not_json",
+                               hint="The URL probably points at a login page or at something else than Frigate.") from error
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
+        """What answered, and whether the account was used to get there.
+
+        ⚠️ The count comes from ``_cameras``, the same reading the cards use.
+        Its own shorter list of names to skip counted ``detection_fps``, a
+        number, as a camera, so the test promised one camera more than the
+        cards then showed.
+        """
         stats = await self._get(config, ctx, "/stats", cache=0)
-        cameras = [name for name in (stats or {}) if name not in ("detectors", "service", "cpu_usages", "gpu_usages", "processes")]
-        return f"Frigate answers with {len(cameras)} cameras."
+        cameras = self._cameras(stats)
+        answer = f"Frigate answers with {len(cameras)} cameras."
+        if not self._signs_in(config):
+            return answer
+        if ctx.cache.get("frigate_signin") == "off":
+            return f"{answer} Its own authentication is switched off, so the user and the password are not used."
+        return f"{answer} Signed in as {str(config.get('username') or '').strip()}."
 
     @staticmethod
     def _cameras(stats: dict[str, Any]) -> dict[str, Any]:

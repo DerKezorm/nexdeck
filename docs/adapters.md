@@ -17,6 +17,7 @@ that one of twenty-one renderers draws.
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
 | Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
+| Nomad | jobs, nodes, cluster | stop a job, scale a task group up or down | none on a cluster without ACLs, else an ACL token with node:read and namespace:read-job; the buttons need namespace:scale-job or namespace:submit-job |
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
 | Gitea, Forgejo | open issues or pull requests, Actions jobs, repositories | | access token with read access to repositories, issues and the user |
@@ -63,7 +64,7 @@ that one of twenty-one renderers draws.
 | NetAlertX | new devices, offline devices, devices | mark as known | API token from Settings > General, sent to the API port (20212); save the settings once so the token stays the same |
 | Pocket ID | recent sign-ins, users | | an administrator's API key from Settings > API keys, or STATIC_API_KEY; without a browser, a login code from `pocket-id one-time-access-token` opens the session that makes a key |
 | Reolink | cameras, camera (snapshot or live video), findings | | user and password of a device account; HTTP or HTTPS switched on in the device's port settings |
-| Frigate | cameras, detections, status | | none |
+| Frigate | cameras, detections, status | | none on port 5000, the internal API; a user and a password on port 8971, the authenticated one, and behind a proxy in front of it. A viewer is enough. The token is fetched and kept |
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week, music player | scan a library; play music in the browser, make and change playlists (smart ones stay read-only) | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library, libraries, recently added (covers), findings, users and devices, top of the week, music player | scan every library (one alone does nothing on these, measured); play music in the browser, instant mixes, make and change playlists | API key |
 | Nexview | requests, library, instances, requests to approve | approve with target folder and profile, turn down | API key; approving needs an approver's key that may write |

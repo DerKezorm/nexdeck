@@ -6,6 +6,8 @@ shape a service answers with, because that is what breaks silently.
 
 from __future__ import annotations
 
+import json
+
 import httpx
 import pytest
 import respx
@@ -251,6 +253,138 @@ async def test_frigate_separates_cameras_from_the_rest_of_the_stats(ctx: Context
     status = await frigate.fetch("status", config, {}, ctx)
     assert status.primary == {"label": "Cameras", "value": 2}
     assert status.metrics["storage_percent"] == 50.0
+
+
+#: A sign-in's answer, the way Frigate sends it: 200, empty body, the token
+#: in a cookie whose name the installation may have changed.
+JWT = "head.body.signature"
+
+
+def _frigate_login(cookie: str = "frigate_token") -> httpx.Response:
+    return httpx.Response(200, text="", headers={"set-cookie": f"{cookie}={JWT}; Path=/; HttpOnly; Max-Age=86400"})
+
+
+@respx.mock
+async def test_frigate_signs_in_and_carries_the_token(ctx: Context) -> None:
+    """The authenticated port wants a bearer token, and the token only ever
+    stands in the sign-in's cookie."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "a-long-password"}
+    login = respx.post("http://frigate:8971/api/login").mock(return_value=_frigate_login())
+    stats = respx.get("http://frigate:8971/api/stats").mock(return_value=httpx.Response(200, json={
+        "driveway": {"camera_fps": 10.0, "detection_fps": 1.4, "process_fps": 10.0},
+        "garden": {"camera_fps": 10.0, "detection_fps": 0.2, "process_fps": 10.0},
+        "detection_fps": 1.6,
+        "service": {"storage": {"/media/frigate/recordings": {"used": 1_000_000, "total": 2_000_000}}},
+    }))
+    frigate = get_adapter("frigate")
+
+    message = await frigate.test(config, ctx)
+    assert message == "Frigate answers with 2 cameras. Signed in as deck.", "detection_fps is a number, not a camera"
+    assert login.call_count == 1
+    assert stats.calls.last.request.headers["Authorization"] == f"Bearer {JWT}"
+    assert json.loads(login.calls.last.request.content) == {"user": "deck", "password": "a-long-password"}
+
+    # A second card of the same connection uses the token that is already there.
+    await frigate.fetch("cameras", config, {}, ctx)
+    assert login.call_count == 1
+
+
+@respx.mock
+async def test_frigate_takes_the_token_from_a_renamed_cookie(ctx: Context) -> None:
+    """``auth.cookie_name`` is a Frigate setting, so the name is not the proof;
+    the shape of the value is."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "a-long-password"}
+    respx.post("http://frigate:8971/api/login").mock(return_value=_frigate_login("house_token"))
+    stats = respx.get("http://frigate:8971/api/stats").mock(return_value=httpx.Response(200, json={"driveway": {"camera_fps": 10.0}}))
+    await get_adapter("frigate").fetch("cameras", config, {}, ctx)
+    assert stats.calls.last.request.headers["Authorization"] == f"Bearer {JWT}"
+
+
+@respx.mock
+async def test_frigate_does_not_take_a_body_for_a_token(ctx: Context) -> None:
+    """A sign-in without a cookie handed out nothing, whatever it wrote in its
+    body. An answer like that is not Frigate's; something in front of it took
+    the sign-in, and a card carrying that body as a token would ask Frigate
+    with a made-up one and blame the password when it came back refused."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "a-long-password"}
+    respx.post("http://frigate:8971/api/login").mock(return_value=httpx.Response(200, text="signed in"))
+    stats = respx.get("http://frigate:8971/api/stats").mock(return_value=httpx.Response(200, json={"driveway": {"camera_fps": 10.0}}))
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("frigate").fetch("cameras", config, {}, ctx)
+    assert failure.value.code == "not_frigate"
+    assert stats.call_count == 0, "nothing was asked with a token that does not exist"
+
+
+@respx.mock
+async def test_frigate_signs_in_again_when_a_token_is_turned_down(ctx: Context) -> None:
+    """Frigate makes a new JWT secret whenever it cannot keep the old one, and
+    every token signed with the previous one is then refused like a made-up
+    one. One more sign-in, not an error on the card."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "a-long-password"}
+    login = respx.post("http://frigate:8971/api/login").mock(return_value=_frigate_login())
+    answers = [httpx.Response(401, json={"message": "Unauthorized"}),
+               httpx.Response(200, json={"driveway": {"camera_fps": 10.0, "process_fps": 10.0}})]
+    stats = respx.get("http://frigate:8971/api/stats").mock(side_effect=answers)
+    data = await get_adapter("frigate").fetch("cameras", config, {}, ctx)
+    assert [item["title"] for item in data.items] == ["driveway"]
+    assert login.call_count == 2, "signed in once more after the refusal"
+    assert stats.call_count == 2
+
+
+@respx.mock
+async def test_frigate_says_an_account_is_missing_rather_than_wrong(ctx: Context) -> None:
+    """The reason issue #1 exists: the card refused with "check the API key or
+    the password" for a service that had no field for either."""
+    config = {"url": "http://frigate:8971"}
+    respx.get("http://frigate:8971/api/stats").mock(return_value=httpx.Response(401, json={"message": "Unauthorized"}))
+    with pytest.raises(AuthFailed) as refusal:
+        await get_adapter("frigate").fetch("cameras", config, {}, ctx)
+    assert "8971" in refusal.value.message and "5000" in refusal.value.message
+
+
+@respx.mock
+async def test_frigate_asks_once_after_a_wrong_password(ctx: Context) -> None:
+    """⚠️ Frigate rate-limits failed sign-ins per address, five a minute by
+    default. Three cards on one board must not spend that budget and lock the
+    operator out of Frigate's own login page."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "wrong"}
+    login = respx.post("http://frigate:8971/api/login").mock(return_value=httpx.Response(401, json={"message": "Login failed"}))
+    frigate = get_adapter("frigate")
+    for _ in range(3):
+        with pytest.raises(AuthFailed):
+            await frigate.fetch("cameras", config, {}, ctx)
+    assert login.call_count == 1, "the refusal is remembered for a minute"
+
+
+@respx.mock
+async def test_frigate_without_authentication_needs_no_token(ctx: Context) -> None:
+    """An installation that leaves the sign-in to its proxy answers the sign-in
+    with 404. The cards carry on without a token, and a refusal after that
+    blames the proxy rather than the password."""
+    config = {"url": "http://frigate:8971", "username": "deck", "password": "a-long-password"}
+    respx.post("http://frigate:8971/api/login").mock(return_value=httpx.Response(404, json={"message": "Authentication is disabled"}))
+    stats = respx.get("http://frigate:8971/api/stats").mock(return_value=httpx.Response(200, json={"driveway": {"camera_fps": 10.0}}))
+    frigate = get_adapter("frigate")
+    message = await frigate.test(config, ctx)
+    assert "not used" in message
+    assert "Authorization" not in stats.calls.last.request.headers
+
+    stats.mock(return_value=httpx.Response(403, text="Forbidden"))
+    ctx.forget_answers()
+    with pytest.raises(AuthFailed) as refusal:
+        await frigate.fetch("cameras", config, {}, ctx)
+    assert "switched off" in refusal.value.message
+
+
+@respx.mock
+async def test_frigate_sends_no_token_where_no_account_is_configured(ctx: Context) -> None:
+    """Port 5000 signs nothing in, and nothing must go asking it to."""
+    config = {"url": "http://frigate:5000"}
+    login = respx.post("http://frigate:5000/api/login").mock(return_value=_frigate_login())
+    stats = respx.get("http://frigate:5000/api/stats").mock(return_value=httpx.Response(200, json={"driveway": {"camera_fps": 10.0}}))
+    await get_adapter("frigate").fetch("cameras", config, {}, ctx)
+    assert login.call_count == 0
+    assert "Authorization" not in stats.calls.last.request.headers
 
 
 @respx.mock
