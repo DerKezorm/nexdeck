@@ -1,5 +1,17 @@
 {
   "adapter": {
+    "Jobs": "Jobs",
+    "The jobs of a Nomad cluster, the nodes under them, and buttons to stop or scale a job.": "Die Jobs eines Nomad-Clusters, die Knoten darunter und Knöpfe, um einen Job zu stoppen oder zu skalieren.",
+    "The address of a Nomad server, port 4646 by default.": "Die Adresse eines Nomad-Servers, standardmäßig Port 4646.",
+    "ACL token": "ACL-Token",
+    "Sent as X-Nomad-Token. Leave it empty on a cluster without ACLs. Reading needs node:read and namespace:read-job; the buttons need namespace:scale-job for scaling and namespace:submit-job for stopping.": "Geht als X-Nomad-Token mit. Auf einem Cluster ohne ACLs leer lassen. Lesen braucht node:read und namespace:read-job; die Knöpfe brauchen namespace:scale-job zum Skalieren und namespace:submit-job zum Stoppen.",
+    "Namespace": "Namensraum",
+    "* for every namespace the token may see.": "* für jeden Namensraum, den das Token sehen darf.",
+    "Every job with its state and how many allocations run, the troubled ones first, with buttons to stop or scale it.": "Jeder Job mit seinem Zustand und wie viele Allocations laufen, die auffälligen zuerst, mit Knöpfen zum Stoppen und Skalieren.",
+    "Show stopped and finished jobs": "Gestoppte und fertige Jobs anzeigen",
+    "The clients of the cluster with their state and how much of them is allocated.": "Die Clients des Clusters mit ihrem Zustand und wie viel von ihnen belegt ist.",
+    "Cluster": "Cluster",
+    "How many jobs run, how many are in trouble, and how many clients are ready.": "Wie viele Jobs laufen, wie viele auffällig sind und wie viele Clients bereit sind.",
     "0 keeps the first picture. On a wall display, slower is better.": "0 lässt das erste Bild stehen. Auf einem Wanddisplay ist langsamer besser.",
     "0 means never.": "0 heißt nie.",
     "0 shows everything; 4 hides the chatter.": "0 zeigt alles; ab 4 bleibt das Geplauder draußen.",
@@ -120,6 +132,8 @@
     "Cameras of a Reolink Home Hub, NVR or a single camera: state, snapshots, live video and findings.": "Kameras eines Reolink Home Hub, NVR oder eine einzelne Kamera: Zustand, Standbilder, Livebild und Befunde.",
     "Cameras offline, batteries low, storage missing or not ready.": "Kameras offline, Akkus schwach, Speicher fehlt oder ist nicht bereit.",
     "Cameras with their frame rates, the latest detections and the load they cause.": "Kameras mit ihren Bildraten, die letzten Erkennungen und die Last, die sie machen.",
+    "Port 5000 is Frigate's internal API and needs no account; port 8971 is the authenticated one, and so is a reverse proxy in front of it.": "Port 5000 ist Frigates interne API und braucht kein Konto; Port 8971 ist die authentifizierte, und ein Reverse Proxy davor ebenso.",
+    "A user from Frigate's Settings > Users. Leave it empty on port 5000, where nothing signs in. A viewer is enough; the cards only read.": "Ein Benutzer aus Frigates Einstellungen > Benutzer. Auf Port 5000 leer lassen, dort meldet sich nichts an. Ein Viewer genügt, die Karten lesen nur.",
     "Cameras, detection load and what the recordings occupy.": "Kameras, Erkennungslast und was die Aufnahmen belegen.",
     "Cards with images": "Karten mit Bildern",
     "Celsius, km/h": "Celsius, km/h",
@@ -1151,6 +1165,11 @@
     "How many problems are open, how many are high or worse, and how many nobody acknowledged.": "Wie viele Probleme offen sind, wie viele davon hoch oder schlimmer und wie viele niemand bestätigt hat."
   },
   "labels": {
+    "Jobs": "Jobs",
+    "Allocations running": "Allocations laufen",
+    "Clients ready": "Clients bereit",
+    "Allocated": "Belegt",
+    "Task group": "Task-Gruppe",
     "A download failed": "Ein Download ist fehlgeschlagen",
     "A download is stuck": "Ein Download hängt",
     "A download needs a hand": "Ein Download braucht Hilfe",

@@ -3,6 +3,18 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **Nomad.** HashiCorp's orchestrator, the lighter answer to Kubernetes and the one homelab scheduler whose workloads nexdeck could not see: the Docker card looks at one engine, and Nomad hands its containers to whichever client has room. Three cards: **Jobs**, every job with its state and how many allocations run, the troubled ones first; **Nodes**, the clients with their state, whether one is draining, and how much of each is allocated; **Cluster**, the counts in one number. A job can be stopped from the card, and a service job's task group can be scaled up or down by one, which is what a GPU job that only runs when it is needed asks for. The count is read at the moment the button is pressed, not taken from the card, so scaling down from a group whose allocation has died does not ask Nomad for minus one. A cluster without ACLs needs no credentials; with them, an ACL token. Asked for as issue #2.
+- **A node's load is what is allocated, and the card says so.** Nomad's server API has no live CPU or memory reading; that sits behind every client's own address, one request per node. The nodes card adds up what the allocations reserved instead, and where the token may read only one namespace it shows no share at all rather than one namespace's share of a node, which would be a number that looks right and is a fraction of the truth.
+
+### Fixed
+
+- **Frigate takes a user and a password.** Frigate answers on two ports: 5000 is the internal API that needs no account, and 8971 is the authenticated one, which is the port a reverse proxy in front of Frigate uses. The card only ever had an address, so an installation on 8971 got "the service rejected the credentials, check the API key or the password" and no field to put either in. It signs in at `/api/login` now and carries the token Frigate hands out, asks again once when a token is turned down, and where Frigate's own authentication is switched off it says that instead of blaming the password. A refused sign-in is remembered for a minute, because Frigate rate-limits failed logins per address and a board with three Frigate cards would otherwise lock the operator out of Frigate's own login page. Reported as issue #1.
+- **The Frigate connection test counts what the cards count.** It had its own shorter list of names to skip and counted `detection_fps`, a number, as a camera, so it promised one camera more than the cards then showed.
+
 ## 0.13.0 (2026-09-12)
 
 ### Security
