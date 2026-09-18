@@ -35,7 +35,13 @@
       "too_many_streams": "The server relays only a limited number of live streams at once.",
       "no_channel": "There is no camera with this channel number.",
       "device_error": "The device answered with an error.",
-      "not_ready": "The service has not been set up yet."
+      "not_ready": "The service has not been set up yet.",
+      "nexmail_key_missing": "nexmail received no API key. Enter the key in this connection.",
+      "nexmail_key_invalid": "nexmail does not know this key, or it was revoked. Create a new key in nexmail under Settings → API keys and enter it in this connection.",
+      "nexmail_keys_off": "API keys are turned off on this nexmail installation. The operator of nexmail turns them on under Settings → API keys.",
+      "nexmail_counts_only": "This key may only read counts. Edit it in nexmail and choose “Count, sender and subject” to see the latest mail.",
+      "nexmail_mailbox_unknown": "A mailbox picked on this card is no longer shared with this key. Pick the mailboxes again in the card's settings, or share the mailbox on the key in nexmail.",
+      "nexmail_bad_limit": "nexmail refused the number of messages. Pick between 1 and 20."
     }
   },
   "auth": {

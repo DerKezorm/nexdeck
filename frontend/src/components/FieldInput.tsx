@@ -191,6 +191,45 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
   // such as the list of what a connection offers a button, were English on
   // screen until this line existed.
   const named = rows.map((row) => ({ value: row.value, label: tAdapter(row.label) }))
+  if (Array.isArray(spec.default)) {
+    // Several at once, for a field declared with a list as its default: the
+    // mailboxes of a nexmail card. ⚠️ Nothing picked means all of them, as in
+    // the row picker: a mailbox shared on the key later then turns up by
+    // itself instead of being quietly left out.
+    const chosen = (Array.isArray(value) ? value : []).map(String)
+    const all = named.map((one) => one.value)
+    return (
+      <Field label={label} help={help}>
+        <div className="flex flex-wrap gap-1.5">
+          {named.map((one) => {
+            const on = chosen.length === 0 || chosen.includes(one.value)
+            return (
+              <button
+                key={one.value}
+                type="button"
+                className="btn btn-xs"
+                aria-pressed={on}
+                onClick={() => {
+                  const base = chosen.length === 0 ? all : chosen.filter((picked) => all.includes(picked))
+                  const next = base.includes(one.value) ? base.filter((picked) => picked !== one.value) : [...base, one.value]
+                  // Everything ticked is stored as nothing, which means the same
+                  // and keeps following the service. Nothing ticked at all is
+                  // not offered: a card that shows no mailbox is no card.
+                  if (next.length === 0) return
+                  onChange(next.length === all.length ? [] : next)
+                }}
+              >
+                {one.label}
+              </button>
+            )
+          })}
+        </div>
+        <p className="text-[11px] text-faint mt-1">
+          {chosen.length === 0 ? t('widget.rows.all') : t('widget.rows.some', { count: chosen.length })}
+        </p>
+      </Field>
+    )
+  }
   return (
     <Field label={label} help={help}>
       <Select

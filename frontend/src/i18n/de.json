@@ -35,7 +35,13 @@
       "too_many_streams": "Der Server leitet nur eine begrenzte Zahl von Livebildern gleichzeitig weiter.",
       "no_channel": "Es gibt keine Kamera mit dieser Kanalnummer.",
       "device_error": "Das Gerät hat mit einem Fehler geantwortet.",
-      "not_ready": "Der Dienst ist noch nicht eingerichtet."
+      "not_ready": "Der Dienst ist noch nicht eingerichtet.",
+      "nexmail_key_missing": "nexmail hat keinen API-Schlüssel erhalten. Trage den Schlüssel in dieser Anbindung ein.",
+      "nexmail_key_invalid": "nexmail kennt diesen Schlüssel nicht, oder er wurde widerrufen. Lege in nexmail unter Einstellungen → API-Schlüssel einen neuen an und trage ihn in dieser Anbindung ein.",
+      "nexmail_keys_off": "API-Schlüssel sind in dieser nexmail-Installation abgeschaltet. Einschalten kann sie der Betreiber von nexmail unter Einstellungen → API-Schlüssel.",
+      "nexmail_counts_only": "Dieser Schlüssel darf nur Anzahlen lesen. Bearbeite ihn in nexmail und wähle „Zahl, Absender und Betreff“, um die neuesten Mails zu sehen.",
+      "nexmail_mailbox_unknown": "Ein auf dieser Karte gewähltes Postfach ist an diesem Schlüssel nicht mehr freigegeben. Wähle die Postfächer in den Karteneinstellungen neu oder gib das Postfach in nexmail am Schlüssel frei.",
+      "nexmail_bad_limit": "nexmail lehnt die Anzahl der Mails ab. Wähle zwischen 1 und 20."
     }
   },
   "auth": {

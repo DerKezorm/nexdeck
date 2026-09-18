@@ -1,0 +1,9 @@
+{
+  "user": {"username": "alex", "display_name": "Alex Example"},
+  "key": {"name": "nexdeck in the hallway", "scope": "headers"},
+  "mailboxes": [
+    {"id": "mb-home", "name": "Home", "address": "home@example.com"},
+    {"id": "mb-work", "name": "Work", "address": "work@example.com"},
+    {"id": "mb-club", "name": "Club", "address": "club@example.com"}
+  ]
+}

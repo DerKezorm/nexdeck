@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **nexmail.** The mail client of the nexapps family, read through the API keys nexmail 0.17.0 brings. Two cards: **Unread mail**, the total in the inbox and one row per mailbox under it, where a mailbox whose mail server rejects the stored password is marked red, because its number is from before; **Latest mail**, sender and subject of the newest messages, unread ones in bold, and each row opens the message in nexmail. Both pick their mailboxes from the ones shared on the key, all of them by default. A key that may only read counts gets no list card: the library says so instead of adding one that could only show a hint. Every refusal of nexmail, a missing or revoked key, API keys switched off by the operator, a mailbox taken off the key, reads as what to do about it. Only reads; the text of a message never reaches nexdeck.
+
 ## 0.14.2 (2026-09-18)
 
 ### Changed

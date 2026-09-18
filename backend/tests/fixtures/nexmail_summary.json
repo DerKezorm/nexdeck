@@ -1,0 +1,8 @@
+{
+  "unread": 17,
+  "mailboxes": [
+    {"id": "mb-home", "name": "Home", "address": "home@example.com", "unread": 4, "status": "ok"},
+    {"id": "mb-work", "name": "Work", "address": "work@example.com", "unread": 11, "status": "ok"},
+    {"id": "mb-club", "name": "Club", "address": "club@example.com", "unread": 2, "status": "sign_in_failed"}
+  ]
+}
