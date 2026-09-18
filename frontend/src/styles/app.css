@@ -220,6 +220,11 @@ body {
   animation: pulse 1.6s ease-in-out infinite;
 }
 
+.dot[data-status='accent'] {
+  background: var(--nd-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nd-accent) 22%, transparent);
+}
+
 @keyframes pulse {
   0%,
   100% {

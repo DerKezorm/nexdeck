@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 
 import { ApiError, get, post } from '../api/client'
 import type { AdapterSpec, Integration, WidgetTypeSpec } from '../api/types'
-import { tAdapter } from '../i18n/texts'
+import { tAdapter, tLabel } from '../i18n/texts'
 import { ServiceIcon } from './ServiceIcon'
 import { Select, Sheet } from './ui'
 
@@ -91,6 +91,16 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     setBusy(true)
     setError('')
     try {
+      if (adapter.bars_widgets && chosen !== null) {
+        // ⚠️ Asked before the card exists. A nexmail key that may only count
+        // would give a sender list that can only ever show its hint.
+        const shortKind = widget.kind.slice(adapter.kind.length + 1)
+        const { reason } = await get<{ reason: string }>(`/integrations/${chosen}/barred/${encodeURIComponent(shortKind)}`)
+        if (reason) {
+          setError(tLabel(reason))
+          return
+        }
+      }
       const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
         kind: widget.kind,
         title: defaultTitle(adapter, widget),

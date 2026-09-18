@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {"id": 901, "mailbox_id": "mb-work", "mailbox": "Work", "from_name": "Build server", "from_address": "ci@example.com",
+     "subject": "Nightly build passed", "date": "2026-09-18T07:55:00Z", "unread": true, "flagged": false},
+    {"id": 902, "mailbox_id": "mb-home", "mailbox": "Home", "from_name": "", "from_address": "parcel@example.com",
+     "subject": "Your parcel is on its way", "date": "2026-09-18T07:10:00", "unread": true, "flagged": false},
+    {"id": 903, "mailbox_id": "mb-work", "mailbox": "Work", "from_name": "Team calendar", "from_address": "calendar@example.com",
+     "subject": "", "date": "2026-09-17T16:40:00Z", "unread": false, "flagged": true}
+  ]
+}

@@ -256,6 +256,35 @@ async def field_choices(integration_id: int, field: str, user: CurrentUser, db: 
     return [{"value": value, "label": label} for value, label in offered]
 
 
+@router.get("/integrations/{integration_id}/barred/{widget}", summary="Whether this connection can carry a card, asked of the service")
+async def widget_barred(integration_id: int, widget: str, user: CurrentUser, db: DbSession) -> dict[str, str]:
+    """Why a card cannot be built on this connection, or an empty reason.
+
+    ⚠️ Only a refusal the service states counts. A service that cannot be
+    asked right now bars nothing: the card is added and says for itself what
+    is wrong, which is better than a library that refuses because of a
+    network hiccup.
+    """
+    integration = require_integration(db, integration_id, user)
+    try:
+        adapter = get_adapter(integration.kind)
+        adapter.widget(widget)
+    except KeyError as failure:
+        raise error("unknown_kind", f"There is no widget {widget!r} for this connection.") from failure
+    if not adapter.bars_widgets or get_settings().demo or integration.demo or demo_flag():
+        return {"reason": ""}
+    ctx = Context(collector.client, integration_id=integration.id, cache={})
+    config = resolve_config(integration)
+    try:
+        reason = await adapter.barred(widget, config, ctx)
+    except Exception as failure:  # noqa: BLE001 - see above: unknown is not barred
+        logger.info("Asking %s whether it bars %s failed: %s", integration.kind, widget, failure)
+        reason = ""
+    finally:
+        await hand_back(adapter, config, ctx)
+    return {"reason": reason}
+
+
 @router.post("/integrations/{integration_id}/test", summary="Test a saved integration")
 async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dict:
     integration = db.get(Integration, integration_id)

@@ -1192,6 +1192,9 @@ class Adapter:
     widgets: tuple[WidgetType, ...] = ()
     #: Adapters without a connection (clock, notes) set this to False.
     needs_integration: bool = True
+    #: True when :meth:`barred` may refuse a card for a given connection, so
+    #: the library knows to ask before it adds one.
+    bars_widgets: bool = False
 
     def widget(self, kind: str) -> WidgetType:
         for w in self.widgets:
@@ -1244,6 +1247,7 @@ class Adapter:
             "beta": self.beta,
             "docs_url": self.docs_url,
             "needs_integration": self.needs_integration,
+            "bars_widgets": self.bars_widgets,
             "fields": [f.to_dict() for f in self.fields],
             "widgets": [w.to_dict(self.kind) for w in self.widgets],
         }
@@ -1300,6 +1304,16 @@ class Adapter:
                 return []
             return await self.choices(with_target[0].target_field, config, ctx)
         return []
+
+    async def barred(self, widget_kind: str, config: dict[str, Any], ctx: Context) -> str:
+        """Why this connection cannot carry this card, or ``""`` when it can.
+
+        ⚠️ For a refusal the service itself states, such as a nexmail key that
+        may only read counts and a card that lists senders. A card like that
+        would only ever show its hint, so the library says it before the card
+        exists. Only asked when :attr:`bars_widgets` is set.
+        """
+        return ""
 
     def demo_choices(self, field: str) -> list[tuple[str, str]]:
         """The same list, for a connection that points nowhere.

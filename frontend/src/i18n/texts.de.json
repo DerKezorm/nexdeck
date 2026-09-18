@@ -1167,7 +1167,18 @@
     "Users > API tokens. A user with read access to the host groups is enough, acknowledging included; the cards show the problems that user may see.": "Benutzer > API-Token. Ein Benutzer mit Lesezugriff auf die Hostgruppen genügt, auch zum Bestätigen; die Karten zeigen die Probleme, die dieser Benutzer sehen darf.",
     "Open problems, the most severe and newest first, with a button to acknowledge each.": "Offene Probleme, die schwersten und neuesten zuerst, jedes mit einem Knopf zum Bestätigen.",
     "Open problems": "Offene Probleme",
-    "How many problems are open, how many are high or worse, and how many nobody acknowledged.": "Wie viele Probleme offen sind, wie viele davon hoch oder schlimmer und wie viele niemand bestätigt hat."
+    "How many problems are open, how many are high or worse, and how many nobody acknowledged.": "Wie viele Probleme offen sind, wie viele davon hoch oder schlimmer und wie viele niemand bestätigt hat.",
+    "Unread mail and the latest senders and subjects from nexmail, through a read-only API key.": "Ungelesene Mails und die neuesten Absender und Betreffs aus nexmail, über einen API-Schlüssel, der nur liest.",
+    "The address nexmail is reached at, with its sub-path if it has one.": "Die Adresse, unter der nexmail erreichbar ist, samt Unterpfad, falls es einen hat.",
+    "A key from nexmail under Settings → API keys. It shows only the mailboxes shared on it; sender and subject need a key that may read them, not only counts.": "Ein Schlüssel aus nexmail unter Einstellungen → API-Schlüssel. Er zeigt nur die Postfächer, die an ihm freigegeben sind; Absender und Betreff brauchen einen Schlüssel, der sie lesen darf, nicht nur Anzahlen.",
+    "Unread mail": "Ungelesene Mails",
+    "Unread mail in the inbox, in total and for each mailbox.": "Ungelesene Mails im Posteingang, insgesamt und je Postfach.",
+    "Latest mail": "Neueste Mails",
+    "Sender and subject of the newest mail in the inbox, unread ones highlighted.": "Absender und Betreff der neuesten Mails im Posteingang, ungelesene hervorgehoben.",
+    "Mailboxes": "Postfächer",
+    "Nothing picked means every mailbox shared on the key.": "Nichts ausgewählt heißt: alle Postfächer, die am Schlüssel freigegeben sind.",
+    "Between 1 and 20.": "Zwischen 1 und 20.",
+    "Only unread mail": "Nur ungelesene Mails"
   },
   "labels": {
     "Jobs": "Jobs",
@@ -1802,6 +1813,13 @@
     "Average": "Durchschnitt",
     "Information": "Information",
     "Not classified": "Nicht klassifiziert",
-    "No problem is open.": "Kein Problem offen."
+    "No problem is open.": "Kein Problem offen.",
+    "Sign-in failed": "Anmeldung fehlgeschlagen",
+    "(no subject)": "(kein Betreff)",
+    "No mailbox is shared on this key.": "An diesem Schlüssel ist kein Postfach freigegeben.",
+    "No unread mail.": "Keine ungelesenen Mails.",
+    "No mail in the inbox.": "Keine Mails im Posteingang.",
+    "This key may only read counts. Edit it in nexmail and choose “Count, sender and subject” to see the latest mail.": "Dieser Schlüssel darf nur Anzahlen lesen. Bearbeite ihn in nexmail und wähle „Zahl, Absender und Betreff“, um die neuesten Mails zu sehen.",
+    "The mail server rejects the password of a mailbox, so its number is old. Sign in again in nexmail.": "Der Mailserver weist das Passwort eines Postfachs ab, seine Zahl ist daher veraltet. Melde dich in nexmail neu an."
   }
 }

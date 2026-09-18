@@ -394,6 +394,14 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
   }
   return (
     <div className="flex-1 min-h-0 flex flex-col">
+      {data?.meta?.headline && data.primary ? (
+        // A total above its own rows, for a list whose rows add up to one
+        // number: unread mail in all mailboxes, then each mailbox.
+        <div className="px-3 pb-1.5 flex items-baseline gap-2" data-testid="list-headline">
+          <span className="num text-[26px] leading-none font-semibold tracking-tight">{formatValue(data.primary.value, data.primary.unit)}</span>
+          {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{tLabel(data.primary.label)}</span> : null}
+        </div>
+      ) : null}
       {data?.meta?.notice ? (
         // One sentence about the card as a whole, above its rows: why a list
         // has no buttons, for instance. Without it the buttons are simply
@@ -415,10 +423,12 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>
-              ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={status} />}
+              ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-medium truncate">{String(item.title ?? '')}</span>
+                  {/* `emphasis` marks a row that wants attention without being
+                      a fault: an unread mail is not a yellow one. */}
+                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{String(item.title ?? '')}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
                 {item.subtitle ? <div className="text-[11px] text-muted truncate">{subtitleOf(item)}</div> : null}

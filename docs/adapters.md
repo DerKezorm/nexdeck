@@ -68,6 +68,7 @@ that one of twenty-one renderers draws.
 | Plex | now playing, library, libraries, recently added (covers), findings, server load, users and devices, top of the week, music player | scan a library; play music in the browser, make and change playlists (smart ones stay read-only) | Sign in with Plex (PIN at plex.tv fills token and server address), or the owner's token |
 | Jellyfin, Emby | now playing, library, libraries, recently added (covers), findings, users and devices, top of the week, music player | scan every library (one alone does nothing on these, measured); play music in the browser, instant mixes, make and change playlists | API key |
 | Nexview | requests, library, instances, requests to approve | approve with target folder and profile, turn down | API key; approving needs an approver's key that may write |
+| nexmail | unread mail (total and per mailbox, a mailbox whose sign-in fails is marked), latest mail (sender and subject, unread ones highlighted, each row opens the message in nexmail) | | API key from nexmail 0.17.0 or newer under Settings > API keys, with the mailboxes shared on it; the latest mail card needs the scope "Count, sender and subject" and is not offered for a key that may only count. The operator of nexmail has to allow API keys first |
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
 | Tautulli | now playing, streams, most watched | | API key |

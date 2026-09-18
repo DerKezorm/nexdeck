@@ -84,6 +84,8 @@ export interface AdapterSpec {
   beta: boolean
   docs_url: string
   needs_integration: boolean
+  /** The connection may refuse some of its cards; ask `/integrations/{id}/barred/{widget}` before adding one. */
+  bars_widgets?: boolean
   fields: FieldSpec[]
   widgets: WidgetTypeSpec[]
 }
