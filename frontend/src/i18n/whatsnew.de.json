@@ -541,6 +541,20 @@
         "Die pfSense-Systemkarte zeigt die Temperatur statt eines Fragezeichens.",
         "TrueNAS-Alarme zeigen den Tag, an dem sie kamen, statt einer langen Zahl."
       ]
+    },
+    "0.14.2": {
+      "lead": "Unraid behält seine Karten, wenn ein Teil nicht lesbar ist, und TrueNAS verlässt die Beta.",
+      "sections": [
+        {
+          "title": "Unraid zeigt, was es kann",
+          "body": "Wenn Unraid einen Teil dessen verweigerte, was die Karten lesen, etwa bei abgeschaltetem VM-Dienst oder einem Schlüssel ohne Recht auf Docker, zeigte jede Unraid-Karte denselben Fehler. Jetzt wird jeder Teil für sich gelesen. Ein Teil, der scheitert, hinterlässt ein Fragezeichen an seiner Stelle, und der Verbindungstest nennt, was er nicht lesen konnte.",
+          "path": "Einstellungen > Verbindungen > Unraid"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "TrueNAS ist keine Beta mehr: Jede Karte lief gegen ein echtes TrueNAS 25.10."
+      ]
     }
   }
 }

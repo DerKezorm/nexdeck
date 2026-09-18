@@ -541,6 +541,20 @@
         "The pfSense system card shows the temperature instead of a question mark.",
         "TrueNAS alerts show the day they were raised instead of a long number."
       ]
+    },
+    "0.14.2": {
+      "lead": "Unraid keeps its cards when one part cannot be read, and TrueNAS leaves beta.",
+      "sections": [
+        {
+          "title": "Unraid shows what it can",
+          "body": "When Unraid refused one part of what the cards read, a switched-off VM service for instance, or a key without permission for Docker, every Unraid card showed the same error. Each part is now read on its own. A part that fails leaves a question mark where it belonged, and the connection test names what it could not read.",
+          "path": "Settings > Connections > Unraid"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "TrueNAS is out of beta: every card was run against a real TrueNAS 25.10."
+      ]
     }
   }
 }
