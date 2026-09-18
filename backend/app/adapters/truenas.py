@@ -77,6 +77,8 @@ class TruenasAdapter(Adapter):
     description = "Pools, alerts, load and uptime."
     icon = "truenas"
     docs_url = "https://www.truenas.com/docs/api/"
+    #: Every card against TrueNAS SCALE 25.10.7 with a read-only and a full key, 18.09.2026.
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://truenas.local",
               help="Use https://. Over http:// a read-only key is refused."),

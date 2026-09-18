@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **TrueNAS is out of beta.** Every card was run against a TrueNAS SCALE 25.10.7, with a read-only administrator's key and a full one, over https and http.
+
 ## 0.14.1 (2026-09-18)
 
 ### Fixed
