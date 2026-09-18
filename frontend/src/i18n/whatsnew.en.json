@@ -520,6 +520,27 @@
         "The Frigate connection test counts cameras the way the cards do; it counted the detection rate as a camera.",
         "A Frigate sign-in that was turned down is not tried again for a minute, because Frigate limits failed logins per address."
       ]
+    },
+    "0.14.1": {
+      "lead": "Three integrations that answered wrongly, all reported on GitHub.",
+      "sections": [
+        {
+          "title": "TrueNAS with a read-only key",
+          "body": "On TrueNAS 25.04 and later the old REST API turns a Read-Only Administrator's key away, so the cards needed a full administrator. With an https:// address nexdeck now uses TrueNAS' current API, where that key reads the system, the pools and the alerts. Over http:// the key stays on the old API, because TrueNAS revokes a key for good once it arrives over a plain connection; the message then says to switch to https.",
+          "path": "Settings > Connections > TrueNAS"
+        },
+        {
+          "title": "Jellystat's most watched titles",
+          "body": "The card came back with an error on current Jellystat versions, which want to know whether films, shows or music are meant. It has a choice for that now; by default it shows all three, each row marked with its kind.",
+          "path": "Board > Jellystat card > Settings"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The pfSense connection test no longer fails with a 404 while the cards work.",
+        "The pfSense system card shows the temperature instead of a question mark.",
+        "TrueNAS alerts show the day they were raised instead of a long number."
+      ]
     }
   }
 }
