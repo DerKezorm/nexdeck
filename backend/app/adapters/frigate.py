@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import Counter
 from datetime import UTC, datetime
 from typing import Any
 
@@ -31,11 +32,13 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    MediaSource,
     WidgetData,
     WidgetType,
     base_url,
     human_bytes,
     measured,
+    path_segment,
     percent,
     percent_text,
     status_from_percent,
@@ -55,6 +58,12 @@ TOKEN_SECONDS = 3600
 #: wrong password would spend that budget on its first refresh and lock the
 #: operator out of Frigate's own login page with it.
 REFUSAL_SECONDS = 60
+#: A detector slower than this per picture falls behind a camera at 10 fps.
+SLOW_DETECTOR_MS = 100
+#: Frames a second a camera may drop for want of detection before it is a finding.
+SKIPPED_FPS = 1.0
+#: The cameras of the demo cards.
+DEMO_CAMERAS = ("driveway", "front_door", "garden", "garage")
 
 
 class FrigateAdapter(Adapter):
@@ -84,11 +93,43 @@ class FrigateAdapter(Adapter):
         WidgetType(
             kind="events",
             label="Detections",
-            description="What was seen last, with camera and time.",
+            description="What was seen last, with its picture, camera and time.",
             renderer="list",
             default_size=(4, 3),
             refresh_seconds=30,
             options=(Field("limit", "Entries", type="number", default=8),),
+        ),
+        WidgetType(
+            kind="camera",
+            label="Camera",
+            description="One camera large: its latest picture, fetched again every few seconds.",
+            renderer="camera",
+            default_size=(4, 3),
+            min_size=(2, 2),
+            refresh_seconds=60,
+            options=(
+                Field("camera", "Camera", type="choices", required=True),
+                Field("interval", "Picture every (seconds)", type="number", default=10),
+            ),
+        ),
+        WidgetType(
+            kind="today",
+            label="Today",
+            description="What was detected since midnight, counted by kind.",
+            renderer="value",
+            default_size=(2, 2),
+            min_size=(1, 1),
+            refresh_seconds=120,
+            metrics=("detections_today",),
+            options=(Field("camera", "Camera", type="choices", help="Empty for every camera."),),
+        ),
+        WidgetType(
+            kind="health",
+            label="Health",
+            description="Quiet while everything runs: a camera without frames, dropped frames, a slow detector, storage running out.",
+            renderer="list",
+            default_size=(3, 2),
+            refresh_seconds=60,
         ),
         WidgetType(
             kind="status",
@@ -242,13 +283,28 @@ class FrigateAdapter(Adapter):
 
     @staticmethod
     def _cameras(stats: dict[str, Any]) -> dict[str, Any]:
-        skip = {"detectors", "service", "cpu_usages", "gpu_usages", "processes", "detection_fps", "bandwidth"}
-        return {name: values for name, values in (stats or {}).items() if name not in skip and isinstance(values, dict)}
+        """The cameras in ``/api/stats``, in either of its two layouts.
+
+        ⚠️ Newer Frigate keeps them under ``cameras``; older versions put each
+        camera beside ``detectors`` and ``service`` at the top. Only the old
+        layout was read, so on a current Frigate the card listed "cameras" and
+        "embeddings", two keys of the answer, as two cameras at 0 fps, and the
+        real one was missing. Issue #1, from a screenshot on 18.09.2026.
+        """
+        stats = stats or {}
+        nested = stats.get("cameras")
+        if isinstance(nested, dict):
+            return {name: values for name, values in nested.items() if isinstance(values, dict)}
+        skip = {"detectors", "service", "cpu_usages", "gpu_usages", "processes", "detection_fps", "bandwidth", "embeddings"}
+        return {name: values for name, values in stats.items() if name not in skip and isinstance(values, dict)}
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "events":
             limit = int(options.get("limit") or 8)
-            events = await self._get(config, ctx, "/events", params={"limit": limit}, cache=15)
+            # Without include_thumbnails=0 older versions put every thumbnail
+            # into the list as base64; the card fetches them one by one
+            # through the server instead.
+            events = await self._get(config, ctx, "/events", params={"limit": limit, "include_thumbnails": 0}, cache=15)
             items = []
             for event in events if isinstance(events, list) else []:
                 when = event.get("start_time")
@@ -256,13 +312,23 @@ class FrigateAdapter(Adapter):
                 items.append({
                     "title": str(event.get("label") or "?").capitalize(),
                     "subtitle": f"{event.get('camera', '?')} · {moment}",
-                    "value": f"{int(float(event.get('top_score') or event.get('score') or 0) * 100)}%",
+                    "value": self._score(event),
                     "status": "warn" if event.get("has_clip") else "ok",
+                    "art": self._thumbnail(event),
+                    "art_shape": "square",
                 })
             return WidgetData(items=items, secondary=[{"label": "Detections", "value": len(items)}])
 
+        if widget_kind == "today":
+            return await self._today(config, options, ctx)
+
         stats = await self._get(config, ctx, "/stats", cache=15)
         cameras = self._cameras(stats)
+
+        if widget_kind == "camera":
+            return self._camera(cameras, options)
+        if widget_kind == "health":
+            return self._health(stats, cameras)
 
         if widget_kind == "cameras":
             items = []
@@ -302,8 +368,157 @@ class FrigateAdapter(Adapter):
             metrics=measured({"cameras": float(len(cameras)), "storage_percent": share}),
         )
 
+    # -- pictures, today and health ------------------------------------------
+
+    @staticmethod
+    def _score(event: dict[str, Any]) -> str:
+        """How sure Frigate was, from wherever this version keeps it.
+
+        ⚠️ Newer Frigate leaves ``top_score`` at the top ``null`` and keeps the
+        number in ``data``: the reporter's car read 0% while ``data.top_score``
+        said 0.917 (issue #1, measured 18.09.2026). No number is no number,
+        not 0%.
+        """
+        data = event.get("data") if isinstance(event.get("data"), dict) else {}
+        for value in (data.get("top_score"), data.get("score"), event.get("top_score"), event.get("score")):
+            if isinstance(value, (int, float)) and value > 0:
+                return f"{round(float(value) * 100)}%"
+        return ""
+
+    @staticmethod
+    def _thumbnail(event: dict[str, Any]) -> str:
+        identifier = str(event.get("id") or "")
+        try:
+            return f"proxy:/thumb/{path_segment(identifier, 'The detection')}"
+        except AdapterError:
+            return ""
+
+    async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
+        """``/latest/<camera>`` and ``/thumb/<detection>``, fetched with the account's token.
+
+        ⚠️ Only these two. The default would fetch any path of Frigate's
+        address, and on port 5000 that is every endpoint without a sign-in.
+        The latest picture is never kept; a detection's thumbnail does not
+        change and is kept.
+        """
+        parts = path.strip("/").split("/")
+        if len(parts) != 2 or parts[0] not in ("latest", "thumb"):
+            raise AdapterError("Frigate pictures are /latest/<camera> or /thumb/<detection>.", code="bad_path")
+        name = path_segment(parts[1], "The camera" if parts[0] == "latest" else "The detection")
+        token = await self._token(config, ctx)
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        if parts[0] == "latest":
+            return MediaSource(url=f"{base_url(config)}/api/{name}/latest.jpg", headers=headers,
+                               params={"h": 720}, cache_seconds=0, media_type="image/jpeg")
+        return MediaSource(url=f"{base_url(config)}/api/events/{name}/thumbnail.jpg", headers=headers,
+                           media_type="image/jpeg")
+
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        if field != "camera":
+            return await super().choices(field, config, ctx)
+        cameras = self._cameras(await self._get(config, ctx, "/stats", cache=60))
+        return [(name, name.replace("_", " ")) for name in sorted(cameras)]
+
+    def demo_choices(self, field: str) -> list[tuple[str, str]]:
+        if field != "camera":
+            return []
+        return [(name, name.replace("_", " ")) for name in DEMO_CAMERAS]
+
+    @staticmethod
+    def _camera(cameras: dict[str, Any], options: dict[str, Any]) -> WidgetData:
+        wanted = str(options.get("camera") or "").strip()
+        if not wanted:
+            raise AdapterError("Pick a camera in the card's settings.", code="bad_param")
+        values = cameras.get(wanted)
+        if values is None:
+            raise AdapterError(f"Frigate has no camera {wanted}.", code="no_camera",
+                               hint=f"It has {', '.join(sorted(cameras)) or 'none'}.")
+        receiving = float(values.get("camera_fps") or 0) > 0
+        return WidgetData(
+            status="ok" if receiving else "bad",
+            items=[{
+                "title": wanted.replace("_", " "),
+                "subtitle": "" if receiving else "no frames",
+                "status": "ok" if receiving else "bad",
+                "art": f"proxy:/latest/{path_segment(wanted, 'The camera')}",
+            }],
+            meta={"mode": "snapshot", "live": False, "interval": max(5, int(options.get("interval") or 10)), "empty": "No cameras"},
+        )
+
+    async def _today(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        """Detections since midnight on nexdeck's clock, by label.
+
+        Counted from ``/api/events`` rather than ``/api/events/summary``: the
+        list is what the Detections card already reads.
+        """
+        midnight = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
+        params: dict[str, Any] = {"after": int(midnight.timestamp()), "limit": 1000, "include_thumbnails": 0}
+        camera = str(options.get("camera") or "").strip()
+        if camera:
+            params["cameras"] = path_segment(camera, "The camera")
+        events = await self._get(config, ctx, "/events", params=params, cache=60)
+        return self._count(events if isinstance(events, list) else [])
+
+    @staticmethod
+    def _count(events: list[dict[str, Any]]) -> WidgetData:
+        labels = Counter(str(event.get("label") or "?") for event in events if isinstance(event, dict))
+        total = sum(labels.values())
+        return WidgetData(
+            status="ok",
+            primary={"label": "Detections today", "value": total},
+            secondary=[{"label": label.capitalize(), "value": count} for label, count in labels.most_common(6)],
+            metrics={"detections_today": float(total)},
+        )
+
+    @staticmethod
+    def _health(stats: dict[str, Any], cameras: dict[str, Any]) -> WidgetData:
+        """Only what is wrong; an empty card is the good news.
+
+        ⚠️ The thresholds come from Frigate's documentation, not from a
+        measured installation: a camera at 0 fps delivers nothing, skipped
+        frames mean detection cannot keep up, and a detector slower than
+        about 100 ms a picture falls behind a camera at 10 fps.
+        """
+        items: list[dict[str, Any]] = []
+        for name, values in sorted(cameras.items()):
+            title = name.replace("_", " ")
+            if float(values.get("camera_fps") or 0) <= 0:
+                items.append({"title": title, "subtitle": "no frames from the camera", "status": "bad"})
+                continue
+            skipped = float(values.get("skipped_fps") or 0)
+            if skipped >= SKIPPED_FPS:
+                items.append({"title": title, "subtitle": f"skips {skipped:.1f} frames/s, detection cannot keep up", "status": "warn"})
+        for name, detector in sorted(((stats or {}).get("detectors") or {}).items()):
+            speed = float(detector.get("inference_speed") or 0) if isinstance(detector, dict) else 0.0
+            if speed > SLOW_DETECTOR_MS:
+                items.append({"title": f"Detector {name}", "subtitle": f"{speed:.0f} ms per picture", "status": "warn"})
+        recordings = (((stats or {}).get("service") or {}).get("storage") or {}).get("/media/frigate/recordings") or {}
+        share = percent(float(recordings.get("used") or 0), float(recordings.get("total") or 0))
+        if share is not None and share >= 90:
+            items.append({"title": "Recordings", "subtitle": f"{percent_text(share)} of the disk used",
+                          "status": "bad" if share >= 97 else "warn"})
+        order = {"bad": 0, "warn": 1}
+        items.sort(key=lambda item: order.get(str(item["status"]), 2))
+        bad = sum(1 for item in items if item["status"] == "bad")
+        warn = len(items) - bad
+        meta: dict[str, Any] = {"empty": f"Frigate answers · {len(cameras)} cameras, nothing to report"}
+        if items:
+            meta["status_reason"] = f"{bad} error finding(s), {warn} warning(s)"
+        return WidgetData(status="bad" if bad else ("warn" if warn else "ok"), items=items, meta=meta)
+
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
-        cameras = ["driveway", "front_door", "garden", "garage"]
+        cameras = list(DEMO_CAMERAS)
+        if widget_kind == "camera":
+            return WidgetData(
+                items=[{"title": "driveway", "subtitle": "", "status": "ok", "art": ""}],
+                meta={"mode": "snapshot", "live": False, "interval": 30, "empty": "No cameras"},
+            )
+        if widget_kind == "today":
+            return self._count([{"label": label} for label in ["person"] * 7 + ["car"] * 4 + ["cat"] * 2 + ["package"]])
+        if widget_kind == "health":
+            if fake.flicker("frigate-health", tick, 0.1):
+                return self._health({}, {"garden": {"camera_fps": 0}})
+            return self._health({}, {name: {"camera_fps": 10} for name in cameras})
         if widget_kind == "events":
             rows = [("Person", "front_door", 91), ("Car", "driveway", 88), ("Cat", "garden", 74), ("Person", "garage", 69)]
             return WidgetData(

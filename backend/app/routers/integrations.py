@@ -25,6 +25,22 @@ router = APIRouter(prefix="/api/v1", tags=["integrations"])
 logger = logging.getLogger("nexdeck.integrations")
 
 
+def _demo_note() -> dict[str, str]:
+    """What a passed test adds while the whole installation shows invented data.
+
+    ⚠️ The test asks the real service, the cards do not. Reported in issue #2:
+    the test found 24 jobs of a real Nomad and the cards kept showing the
+    three sample nodes, because the setup wizard had put everything in demo
+    mode. A green test with nothing said sent the reporter looking for a bug
+    in the adapter.
+    """
+    if not (get_settings().demo or demo_flag()):
+        return {}
+    if get_settings().demo:
+        return {"hint": "Demo mode is on for the whole installation through NEXDECK_DEMO, so the cards still show invented data. Remove the variable and restart."}
+    return {"hint": "Demo mode is on for the whole installation, so the cards still show invented data. Switch it off under System > Integrations."}
+
+
 @router.get("/adapters", summary="List every adapter and its widgets")
 def adapters(user: CurrentUser) -> list[dict]:
     return [a.to_dict() for a in all_adapters()]
@@ -217,7 +233,7 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
         return {"ok": False, "message": f"Unexpected error: {failure.__class__.__name__}.", "hint": "", "code": "crash"}
     finally:
         await hand_back(adapter, config, ctx)
-    return {"ok": True, "message": message}
+    return {"ok": True, "message": message, **_demo_note()}
 
 
 @router.get("/integrations/{integration_id}/choices/{field}", summary="What a widget field can be set to, asked of the service")
@@ -319,4 +335,4 @@ async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dic
         await hand_back(adapter, config, ctx)
     integration.last_error = ""
     db.commit()
-    return {"ok": True, "message": message}
+    return {"ok": True, "message": message, **_demo_note()}

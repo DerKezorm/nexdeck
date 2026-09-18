@@ -69,7 +69,24 @@ NODES = [
 ]
 
 
-def _jobs(answer: list[dict[str, Any]] | None = None) -> respx.Route:
+def failed(job_id: str, group: str, *, replaced: str = "", desired: str = "run", state: str = "failed") -> dict[str, Any]:
+    """An allocation as ``GET /v1/allocations`` lists it, without resources."""
+    return {
+        "ID": f"alloc-{job_id}-{group}-{state}-{replaced or 'last'}", "JobID": job_id, "TaskGroup": group,
+        "ClientStatus": state, "DesiredStatus": desired, "NextAllocation": replaced,
+    }
+
+
+#: The allocations behind JOBS: paperless has two failed workers nothing replaced.
+ALLOCATIONS = [
+    failed("paperless", "worker"),
+    failed("paperless", "worker", state="lost"),
+    {"ID": "alloc-jellyfin", "JobID": "jellyfin", "TaskGroup": "web", "ClientStatus": "running", "DesiredStatus": "run", "NextAllocation": ""},
+]
+
+
+def _jobs(answer: list[dict[str, Any]] | None = None, allocations: list[dict[str, Any]] | None = None) -> respx.Route:
+    respx.get(f"{NOMAD}/v1/allocations").mock(return_value=httpx.Response(200, json=ALLOCATIONS if allocations is None else allocations))
     return respx.get(f"{NOMAD}/v1/jobs").mock(return_value=httpx.Response(200, json=JOBS if answer is None else answer))
 
 
@@ -95,6 +112,37 @@ async def test_nomad_jobs_read_the_counts_from_the_task_groups(ctx: Context) -> 
     assert data.metrics == {"running": 6.0, "failed": 2.0}
     assert jobs.calls.last.request.headers["X-Nomad-Token"] == "made-up-token"
     assert "namespace=default" in str(jobs.calls.last.request.url)
+
+
+@respx.mock
+async def test_nomad_a_failed_tally_without_failed_allocations_is_healthy(ctx: Context) -> None:
+    """⚠️ Measured on the reporter's cluster (issue #2): the job summary of a
+    healthy OpenBao read Failed 3 beside Running 1, and every allocation left,
+    ``?all=true`` included, was the one running. The summary counts history."""
+    openbao = job("openbao", "service", "running", {"openbao": {"Complete": 44, "Failed": 3, "Running": 1}})
+    _jobs([openbao], allocations=[
+        {"ID": "c32a32f1", "JobID": "openbao", "TaskGroup": "openbao", "ClientStatus": "running",
+         "DesiredStatus": "run", "NextAllocation": "", "PreviousAllocation": None},
+    ])
+    _nodes()
+    nomad = get_adapter("nomad")
+    jobs = await nomad.fetch("jobs", CONFIG, {}, ctx)
+    assert (jobs.items[0]["status"], jobs.items[0]["subtitle"]) == ("ok", "service · 1 running")
+    assert jobs.metrics["failed"] == 0.0
+    summary = await nomad.fetch("summary", CONFIG, {}, ctx)
+    assert [row for row in summary.secondary if row["label"] == "Failed"][0]["value"] == 0
+
+
+@respx.mock
+async def test_nomad_a_replaced_or_unwanted_failure_is_history(ctx: Context) -> None:
+    _jobs([job("jellyfin", "service", "running", {"web": {"Running": 1, "Failed": 2}})], allocations=[
+        failed("jellyfin", "web", replaced="alloc-new"),
+        failed("jellyfin", "web", desired="stop"),
+        failed("other-namespace-job", "web"),
+    ])
+    data = await get_adapter("nomad").fetch("jobs", CONFIG, {}, ctx)
+    assert data.items[0]["status"] == "ok"
+    assert data.metrics["failed"] == 0.0
 
 
 @respx.mock

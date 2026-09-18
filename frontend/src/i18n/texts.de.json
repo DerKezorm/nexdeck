@@ -1178,7 +1178,15 @@
     "Mailboxes": "Postfächer",
     "Nothing picked means every mailbox shared on the key.": "Nichts ausgewählt heißt: alle Postfächer, die am Schlüssel freigegeben sind.",
     "Between 1 and 20.": "Zwischen 1 und 20.",
-    "Only unread mail": "Nur ungelesene Mails"
+    "Only unread mail": "Nur ungelesene Mails",
+    "Empty for every camera.": "Leer für alle Kameras.",
+    "Health": "Zustand",
+    "One camera large: its latest picture, fetched again every few seconds.": "Eine Kamera groß: ihr neuestes Bild, alle paar Sekunden neu geholt.",
+    "Picture every (seconds)": "Bild alle (Sekunden)",
+    "Quiet while everything runs: a camera without frames, dropped frames, a slow detector, storage running out.": "Still, solange alles läuft: eine Kamera ohne Bilder, verworfene Bilder, ein langsamer Detektor, knapper Speicher.",
+    "Today": "Heute",
+    "What was detected since midnight, counted by kind.": "Was seit Mitternacht erkannt wurde, nach Art gezählt.",
+    "What was seen last, with its picture, camera and time.": "Was zuletzt gesehen wurde, mit Bild, Kamera und Uhrzeit."
   },
   "labels": {
     "Jobs": "Jobs",
@@ -1820,6 +1828,10 @@
     "No unread mail.": "Keine ungelesenen Mails.",
     "No mail in the inbox.": "Keine Mails im Posteingang.",
     "This key may only read counts. Edit it in nexmail and choose “Count, sender and subject” to see the latest mail.": "Dieser Schlüssel darf nur Anzahlen lesen. Bearbeite ihn in nexmail und wähle „Zahl, Absender und Betreff“, um die neuesten Mails zu sehen.",
-    "The mail server rejects the password of a mailbox, so its number is old. Sign in again in nexmail.": "Der Mailserver weist das Passwort eines Postfachs ab, seine Zahl ist daher veraltet. Melde dich in nexmail neu an."
+    "The mail server rejects the password of a mailbox, so its number is old. Sign in again in nexmail.": "Der Mailserver weist das Passwort eines Postfachs ab, seine Zahl ist daher veraltet. Melde dich in nexmail neu an.",
+    "Detections today": "Erkennungen heute",
+    "no frames from the camera": "keine Bilder von der Kamera",
+    "In cinemas": "Im Kino",
+    "Physical release": "Veröffentlichung auf Datenträger"
   }
 }

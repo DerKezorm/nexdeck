@@ -110,7 +110,7 @@
     "passwordHelp": "At least eight characters.",
     "demo": {
       "label": "Start with a demo board",
-      "help": "Every integration runs in demo mode with fake data. Switch it off later under Settings > System."
+      "help": "Every integration runs in demo mode with fake data. Switch it off later under System > Integrations."
     },
     "docker": {
       "label": "Connect a Docker host",
@@ -254,6 +254,7 @@
       "publicUrlHelp": "As browsers see nexdeck. Needed for identity providers and Web Push.",
       "demo": "Demo mode for everything",
       "demoHelp": "Every widget shows fake data. Switch it off when you connect real services.",
+      "demoForced": "Set by NEXDECK_DEMO on the container. Remove the variable and restart to switch it off.",
       "updateCheck": "Check for updates",
       "updateCheckHelp": "Asks GitHub once a day whether a newer version exists. Off by default.",
       "oidc": "Identity providers",
@@ -501,6 +502,8 @@
     }
   },
   "board": {
+    "demo": "Demo mode: every card shows invented data, also for connections you added yourself.",
+    "demoOff": "Switch off",
     "none": {
       "title": "No board yet",
       "body": "Create one and it appears here.",

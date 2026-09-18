@@ -37,6 +37,14 @@ batch. The count itself is read at the moment the button is pressed, from
 ``/v1/job/:id/scale``, because the job list only carries how many allocations
 are running, and running is not desired: a group of one whose allocation has
 died reads as 0 running, and "scale down" from there would ask for -1.
+
+⚠️ "Failed" comes from the allocations that exist now, not from the job
+summary. The summary's Failed and Lost are a tally that never goes down: the
+reporter's OpenBao read Failed 3 beside Running 1 while ``/v1/job/openbao/
+allocations?all=true`` held one allocation, running, and the three failed
+ones were gone altogether. Measured on his cluster, issue #2, 18.09.2026.
+Counted as trouble is an allocation that failed or was lost, that Nomad still
+wants running, and that nothing has replaced.
 """
 
 from __future__ import annotations
@@ -82,6 +90,22 @@ def _counts(job: dict[str, Any]) -> dict[str, int]:
             for key in SUMMARY_KEYS:
                 totals[key] += int(group.get(key) or 0)
     return totals
+
+
+def _failures(allocations: list[dict[str, Any]]) -> dict[str, int]:
+    """Per job, the allocations that failed or were lost and still stand."""
+    found: dict[str, int] = {}
+    for allocation in allocations:
+        if not isinstance(allocation, dict):
+            continue
+        if str(allocation.get("ClientStatus") or "") not in ("failed", "lost"):
+            continue
+        # Replaced by a reschedule, or no longer wanted: history, not trouble.
+        if allocation.get("NextAllocation") or str(allocation.get("DesiredStatus") or "run") != "run":
+            continue
+        key = str(allocation.get("JobID") or "")
+        found[key] = found.get(key, 0) + 1
+    return found
 
 
 def _group_names(job: dict[str, Any]) -> list[str]:
@@ -244,6 +268,10 @@ class NomadAdapter(Adapter):
             return None
         return [one for one in answer if isinstance(one, dict) and one.get("ClientStatus") == "running"]
 
+    async def _failed(self, config: dict[str, Any], ctx: Context) -> dict[str, int]:
+        answer = await self._json("/allocations", config, ctx, params={"task_states": "false"}, cache=15)
+        return _failures(answer if isinstance(answer, list) else [])
+
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         jobs = await self._jobs(config, ctx)
         nodes = await self._nodes(config, ctx)
@@ -252,19 +280,19 @@ class NomadAdapter(Adapter):
 
     # -- the cards -----------------------------------------------------------
 
-    def _job_item(self, job: dict[str, Any]) -> dict[str, Any]:
+    def _job_item(self, job: dict[str, Any], failed: int) -> dict[str, Any]:
         totals = _counts(job)
         identifier = str(job.get("ID") or job.get("Name") or "")
         kind = str(job.get("Type") or "service")
         state = str(job.get("Status") or "")
         waiting = totals["Queued"] + totals["Starting"]
-        if totals["Failed"] or totals["Lost"]:
+        if failed:
             status = "bad"
-            word = f"{totals['Failed'] + totals['Lost']} failed"
+            word = f"{failed} failed"
         elif state == "dead":
             # A dead job was stopped by hand or, for a batch, has run out of
             # work. The first is worth a colour, the second is the normal end.
-            status = "ok" if kind == "batch" and not totals["Failed"] else "warn"
+            status = "ok" if kind == "batch" else "warn"
             word = "finished" if kind == "batch" else "stopped"
         elif waiting:
             status = "warn"
@@ -314,19 +342,15 @@ class NomadAdapter(Adapter):
                 actions.append(action.model_dump())
         return actions
 
-    def _jobs_card(self, jobs: list[dict[str, Any]], options: dict[str, Any]) -> WidgetData:
-        items = [self._job_item(job) for job in jobs]
+    def _jobs_card(self, jobs: list[dict[str, Any]], failures: dict[str, int], options: dict[str, Any]) -> WidgetData:
+        items = [self._job_item(job, failures.get(str(job.get("ID") or ""), 0)) for job in jobs]
         if not options.get("show_dead", True):
             items = [item for item in items if item["state"] != "dead"]
         order = {"bad": 0, "warn": 1, "unknown": 2, "ok": 3}
         items.sort(key=lambda item: (order.get(item["status"], 4), item["title"]))
         limit = max(1, int(options.get("limit") or 10))
-        running = 0
-        failed = 0
-        for job in jobs:
-            totals = _counts(job)
-            running += totals["Running"]
-            failed += totals["Failed"] + totals["Lost"]
+        running = sum(_counts(job)["Running"] for job in jobs)
+        failed = sum(failures.get(str(job.get("ID") or ""), 0) for job in jobs)
         return WidgetData(
             status="bad" if failed else ("warn" if any(item["status"] == "warn" for item in items) else "ok"),
             items=items[:limit],
@@ -405,15 +429,14 @@ class NomadAdapter(Adapter):
         )
 
     @staticmethod
-    def _summary_card(jobs: list[dict[str, Any]], nodes: list[dict[str, Any]]) -> WidgetData:
+    def _summary_card(jobs: list[dict[str, Any]], nodes: list[dict[str, Any]], failures: dict[str, int]) -> WidgetData:
         running = 0
-        failed = 0
         waiting = 0
         for job in jobs:
             totals = _counts(job)
             running += totals["Running"]
-            failed += totals["Failed"] + totals["Lost"]
             waiting += totals["Queued"] + totals["Starting"]
+        failed = sum(failures.get(str(job.get("ID") or ""), 0) for job in jobs)
         ready = sum(1 for node in nodes if node.get("Status") == "ready")
         down = [node for node in nodes if NODE_STATUS.get(str(node.get("Status") or ""), "unknown") == "bad"]
         return WidgetData(
@@ -429,11 +452,11 @@ class NomadAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "jobs":
-            return self._jobs_card(await self._jobs(config, ctx), options)
+            return self._jobs_card(await self._jobs(config, ctx), await self._failed(config, ctx), options)
         if widget_kind == "nodes":
             nodes = await self._nodes(config, ctx)
             return self._nodes_card(nodes, await self._allocations(config, ctx), options)
-        return self._summary_card(await self._jobs(config, ctx), await self._nodes(config, ctx))
+        return self._summary_card(await self._jobs(config, ctx), await self._nodes(config, ctx), await self._failed(config, ctx))
 
     # -- the buttons ---------------------------------------------------------
 
@@ -481,8 +504,10 @@ class NomadAdapter(Adapter):
             {"ID": "paperless", "Name": "paperless", "Type": "service", "Status": "running",
              "JobSummary": {"Summary": {"web": {"Running": 1}, "worker": {"Running": 2}}}},
         ]
+        failures: dict[str, int] = {}
         if fake.flicker("nomad-job", tick, 0.1):
             jobs[4]["JobSummary"] = {"Summary": {"web": {"Running": 1}, "worker": {"Running": 1, "Failed": 1}}}
+            failures["paperless"] = 1
         nodes = [
             {"ID": "aa11" + "0" * 28, "Name": "mac-mini", "Status": "ready", "Datacenter": "home",
              "SchedulingEligibility": "eligible", "NodeResources": {"Cpu": {"CpuShares": 24000}, "Memory": {"MemoryMB": 16384}}},
@@ -493,9 +518,9 @@ class NomadAdapter(Adapter):
              "NodeResources": {"Cpu": {"CpuShares": 6000}, "Memory": {"MemoryMB": 8192}}},
         ]
         if widget_kind == "summary":
-            return self._summary_card(jobs, nodes)
+            return self._summary_card(jobs, nodes, failures)
         if widget_kind == "jobs":
-            return self._jobs_card(jobs, options)
+            return self._jobs_card(jobs, failures, options)
         allocations = []
         for index, node in enumerate(nodes):
             capacity = float(node["NodeResources"]["Cpu"]["CpuShares"])

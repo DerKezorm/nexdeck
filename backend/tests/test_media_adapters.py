@@ -277,6 +277,28 @@ async def test_frigate_separates_cameras_from_the_rest_of_the_stats(ctx: Context
     assert status.metrics["storage_percent"] == 50.0
 
 
+@respx.mock
+async def test_frigate_reads_cameras_from_the_current_stats_layout(ctx: Context) -> None:
+    """Newer Frigate keeps the cameras under ``cameras``. Read the old way, the
+    card listed "cameras" and "embeddings" at 0 fps and not the real camera
+    (issue #1, one camera called front_gate)."""
+    config = {"url": "http://frigate:5000"}
+    respx.get("http://frigate:5000/api/stats").mock(return_value=httpx.Response(200, json={
+        "cameras": {"front_gate": {"camera_fps": 5.0, "detection_fps": 0.4, "process_fps": 5.0}},
+        "embeddings": {"image_embedding_speed": 12.0},
+        "detection_fps": 0.4,
+        "detectors": {"cpu": {"inference_speed": 40.0}},
+        "service": {"storage": {"/media/frigate/recordings": {"used": 750_000, "total": 1_000_000}}},
+    }))
+    frigate = get_adapter("frigate")
+    cameras = await frigate.fetch("cameras", config, {}, ctx)
+    assert [item["title"] for item in cameras.items] == ["front gate"]
+    assert cameras.status == "ok"
+    status = await frigate.fetch("status", config, {}, ctx)
+    assert status.primary == {"label": "Cameras", "value": 1}
+    assert await frigate.test(config, ctx) == "Frigate answers with 1 cameras."
+
+
 #: A sign-in's answer, the way Frigate sends it: 200, empty body, the token
 #: in a cookie whose name the installation may have changed.
 JWT = "head.body.signature"
