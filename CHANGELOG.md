@@ -9,6 +9,10 @@ project uses semantic versioning.
 
 - **TrueNAS is out of beta.** Every card was run against a TrueNAS SCALE 25.10.7, with a read-only administrator's key and a full one, over https and http.
 
+### Fixed
+
+- **One part of Unraid that cannot be read no longer empties every card.** The cards asked Unraid for the system, the metrics, the array, Docker and the VMs in one GraphQL query, and all five are non-null fields in Unraid's schema: an error in one of them, such as a switched-off VM service or a key without permission for Docker, nulls the whole answer, and every card of the connection showed the same error. Each part is now asked for on its own and each card reads only what it shows. A part that fails leaves a question mark where it belonged, and the connection test names what it could not read.
+
 ## 0.14.1 (2026-09-18)
 
 ### Fixed
