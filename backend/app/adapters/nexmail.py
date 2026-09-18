@@ -1,8 +1,9 @@
 """nexmail: the mail client of the nexapps family, read through its API keys.
 
-⚠️ Built against the contract nexmail's own session wrote down for 0.17.0,
-before that release existed, so ``beta`` until a card has read a real
-installation. Everything is a GET and nothing here can change a mailbox.
+Built against the contract nexmail's own session wrote down for 0.17.0,
+before that release existed; both cards were then run against a released
+nexmail 0.17.0 on 2026-09-18, which took the adapter out of beta. Everything
+is a GET and nothing here can change a mailbox.
 
 Three things the contract says that shape the cards:
 
@@ -142,6 +143,8 @@ class NexmailAdapter(Adapter):
     description = "Unread mail and the latest senders and subjects from nexmail, through a read-only API key."
     icon = "nexmail"
     docs_url = "https://nexmail.nexapps.dev"
+    # Both cards ran against nexmail 0.17.0 on 2026-09-18.
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://mail.example.com",
               help="The address nexmail is reached at, with its sub-path if it has one."),

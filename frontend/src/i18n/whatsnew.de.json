@@ -555,6 +555,26 @@
       "small": [
         "TrueNAS ist keine Beta mehr: Jede Karte lief gegen ein echtes TrueNAS 25.10."
       ]
+    },
+    "0.15.0": {
+      "lead": "nexmail kommt aufs Board: ungelesene Mails je Postfach und die neuesten Absender und Betreffs.",
+      "sections": [
+        {
+          "title": "Ungelesene Mails",
+          "body": "Die Gesamtzahl im Posteingang und darunter eine Zeile je Postfach. Ein Postfach, dessen Mailserver das gespeicherte Passwort abweist, wird rot, weil seine Zahl von vorher stammt.",
+          "path": "Einstellungen > Verbindungen > nexmail"
+        },
+        {
+          "title": "Neueste Mails",
+          "body": "Absender und Betreff der neuesten Nachrichten, ungelesene fett, und jede Zeile öffnet die Mail in nexmail. Sie braucht einen Schlüssel, der Absender und Betreff lesen darf; bei einem Schlüssel, der nur zählen darf, sagt die Bibliothek das, statt die Karte anzulegen.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexmail"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "Beide Karten wählen ihre Postfächer aus denen, die am Schlüssel freigegeben sind, ab Werk alle.",
+        "nexmail braucht Version 0.17.0 oder neuer, und der Betreiber muss API-Schlüssel erst erlauben."
+      ]
     }
   }
 }
