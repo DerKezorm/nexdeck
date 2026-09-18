@@ -14,16 +14,18 @@ import type { About } from '../api/types'
  * said so. The way out is offered to administrators only, and not at all when
  * NEXDECK_DEMO holds the mode: the switch could not undo that.
  *
- * ⚠️ A note, not a status. `status` is a live announcement, and the board has
- * one already, the edit-mode hint; with two, the first-start test found both
- * and stopped.
+ * ⚠️ A plain paragraph, without a role. `status` is a live announcement and
+ * the board has one already, the edit-mode hint; `note` is taken by the line
+ * that tells a phone to arrange cards on a wider screen. With either role the
+ * end-to-end tests found two and stopped, and the notice needs neither: it is
+ * read where it stands.
  */
 export function DemoNotice({ admin }: { admin: boolean }) {
   const { t } = useTranslation()
   const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about'), staleTime: 60_000 })
   if (!about.data?.demo) return null
   return (
-    <p className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm mb-3 flex flex-wrap items-center gap-x-3 gap-y-1" role="note">
+    <p className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
       <span>{t('board.demo')}</span>
       {admin && !about.data.demo_forced && (
         <Link to="/system/integrations" className="text-accent font-medium">
