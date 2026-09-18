@@ -1,7 +1,21 @@
-"""Unraid through its GraphQL API (Unraid 7 with the API plugin or built-in)."""
+"""Unraid through its GraphQL API (Unraid 7 with the API plugin or built-in).
+
+⚠️ **One part at a time.** The five parts the cards read, ``info``,
+``metrics``, ``array``, ``docker`` and ``vms``, are all declared non-null on
+Unraid's ``Query`` type. GraphQL answers an error in a non-null field by
+nulling its parent, and at the top that is the whole answer: ``data: null``.
+So when a single part failed, a switched-off VM service or a key that may not
+read Docker, every card of the connection showed the same error, including
+the ones that never needed that part (issue #3 is a candidate). Each part is
+now its own request, the cards ask only for what they show, and a part that
+fails leaves a question mark where it belonged instead of taking the rest
+along.
+"""
 
 from __future__ import annotations
 
+import asyncio
+import time
 from typing import Any
 
 from . import demo as fake
@@ -18,15 +32,21 @@ from .base import (
     worst,
 )
 
-QUERY = """
-{
-  info { os { uptime } cpu { brand } }
-  metrics { cpu { percentTotal } memory { percentTotal used total } }
-  array { state capacity { kilobytes { used total free } } parities { name status temp } disks { name status temp fsSize fsUsed } }
-  docker { containers { names state } }
-  vms { domain { name state } }
+#: One query per top-level part, so that one refusal cannot null the others.
+PARTS = {
+    "info": "{ info { os { uptime } cpu { brand } } }",
+    "metrics": "{ metrics { cpu { percentTotal } memory { percentTotal used total } } }",
+    "array": "{ array { state capacity { kilobytes { used total free } } parities { name status temp } disks { name status temp fsSize fsUsed } } }",
+    "docker": "{ docker { containers { names state } } }",
+    "vms": "{ vms { domain { name state } } }",
 }
-"""
+
+#: What each card reads; the first part is the one it cannot do without.
+NEEDS = {
+    "system": ("metrics", "array", "info"),
+    "array": ("array",),
+    "guests": ("docker", "vms"),
+}
 
 
 class UnraidAdapter(Adapter):
@@ -47,49 +67,85 @@ class UnraidAdapter(Adapter):
         WidgetType(kind="guests", label="Containers and VMs", description="Running and stopped containers and VMs.", renderer="value", default_size=(2, 2), min_size=(1, 1), refresh_seconds=30, metrics=("running",)),
     )
 
-    async def _query(self, config: dict[str, Any], ctx: Context, cache: float = 5) -> dict[str, Any]:
-        key = "unraid:last"
+    async def _part(self, config: dict[str, Any], ctx: Context, part: str, cache: float) -> Any:
+        """One part of the answer, or the AdapterError that explains why not."""
+        key = f"unraid:{part}"
         hit = ctx.cache.get(key)
-        import time
-
-        if hit and hit[0] > time.monotonic() and cache:
+        if cache and hit and hit[0] > time.monotonic():
             return hit[1]
         response = await ctx.request(
-            "POST", f"{base_url(config)}/graphql", json_body={"query": QUERY},
+            "POST", f"{base_url(config)}/graphql", json_body={"query": PARTS[part]},
             headers={"x-api-key": str(config.get("api_key") or ""), "Content-Type": "application/json"},
             verify=not config.get("insecure", True),
         )
         if response.status_code >= 400:
             raise AdapterError(f"Unraid answered with HTTP {response.status_code}.", code="http_error")
         payload = response.json()
-        if payload.get("errors"):
-            raise AdapterError(str(payload["errors"][0].get("message", "Unraid refused the query.")), code="graphql_error",
-                               hint="The API key may lack read permissions for some resources.")
-        data = payload.get("data") or {}
-        ctx.cache[key] = (time.monotonic() + cache, data)
-        return data
+        value = (payload.get("data") or {}).get(part)
+        if value is None:
+            errors = payload.get("errors") or [{}]
+            raise AdapterError(f"Unraid refused the {part} part: {errors[0].get('message') or 'no data'}", code="graphql_error",
+                               hint="The API key may lack read permission for it, or the service behind it is switched off.")
+        ctx.cache[key] = (time.monotonic() + cache, value)
+        return value
+
+    async def _parts(self, config: dict[str, Any], ctx: Context, parts: tuple[str, ...], cache: float = 5) -> dict[str, Any]:
+        """Each part asked for, as its value or as the error it failed with."""
+        answers = await asyncio.gather(*(self._part(config, ctx, part, cache) for part in parts), return_exceptions=True)
+        found: dict[str, Any] = {}
+        for part, answer in zip(parts, answers, strict=True):
+            # Anything but a readable refusal (a cancelled task, a bug) is not ours to hide.
+            if isinstance(answer, BaseException) and not isinstance(answer, AdapterError):
+                raise answer
+            found[part] = answer
+        return found
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        data = await self._query(config, ctx, cache=0)
-        return f"Unraid answers, array is {((data.get('array') or {}).get('state') or '?')}."
+        found = await self._parts(config, ctx, tuple(PARTS), cache=0)
+        failed = [part for part, value in found.items() if isinstance(value, AdapterError)]
+        if len(failed) == len(found):
+            raise found[failed[0]]
+        array = found["array"] if not isinstance(found["array"], AdapterError) else {}
+        text = f"Unraid answers, array is {array.get('state') or '?'}."
+        if failed:
+            text += " Not readable: " + "; ".join(found[part].message for part in failed)
+        return text
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
-        data = await self._query(config, ctx)
-        metrics = data.get("metrics") or {}
-        array = data.get("array") or {}
+        needs = NEEDS.get(widget_kind, NEEDS["guests"])
+        found = await self._parts(config, ctx, needs)
+        # Without its first part a card has nothing to show; the others may be missing.
+        if isinstance(found[needs[0]], AdapterError):
+            raise found[needs[0]]
+
+        def part(name: str) -> dict[str, Any] | None:
+            value = found.get(name)
+            return None if isinstance(value, AdapterError) else (value or {})
+
         if widget_kind == "system":
+            metrics = part("metrics") or {}
+            array = part("array")
+            info = part("info")
             cpu = round(float((metrics.get("cpu") or {}).get("percentTotal") or 0), 1)
             memory = round(float((metrics.get("memory") or {}).get("percentTotal") or 0), 1)
-            kb = (array.get("capacity") or {}).get("kilobytes") or {}
-            used = percent(float(kb.get("used") or 0), float(kb.get("total") or 0))
-            uptime = ((data.get("info") or {}).get("os") or {}).get("uptime") or ""
+            used = None
+            if array is not None:
+                kb = (array.get("capacity") or {}).get("kilobytes") or {}
+                used = percent(float(kb.get("used") or 0), float(kb.get("total") or 0))
+            uptime = ((info or {}).get("os") or {}).get("uptime") or ""
+            stopped = array is not None and array.get("state") not in ("STARTED", "started", None)
             return WidgetData(
-                status="bad" if array.get("state") not in ("STARTED", "started", None) else status_from_percent(worst(cpu, memory, used)),
+                status="bad" if stopped else status_from_percent(worst(cpu, memory, used)),
                 primary={"label": "CPU", "value": cpu, "unit": "%"},
-                secondary=[{"label": "Memory", "value": memory, "unit": "%", "metric": "memory"}, {"label": "Array", "value": used, "unit": "%"}, {"label": "Since", "value": str(uptime)[:10]}],
+                secondary=[
+                    {"label": "Memory", "value": memory, "unit": "%", "metric": "memory"},
+                    {"label": "Array", "value": used, "unit": "%"} if used is not None else {"label": "Array", "value": "?"},
+                    {"label": "Since", "value": str(uptime)[:10] if info is not None else "?"},
+                ],
                 metrics={"cpu": cpu, "memory": memory},
             )
         if widget_kind == "array":
+            array = part("array") or {}
             items = []
             for disk in list(array.get("parities") or []) + list(array.get("disks") or []):
                 used = percent(float(disk.get("fsUsed") or 0), float(disk.get("fsSize") or 0)) if disk.get("fsSize") else None
@@ -98,13 +154,18 @@ class UnraidAdapter(Adapter):
                     item["progress"] = used
                 items.append(item)
             return WidgetData(items=items)
-        containers = (data.get("docker") or {}).get("containers") or []
-        vms = ((data.get("vms") or {}).get("domain") or [])
+        containers = (part("docker") or {}).get("containers") or []
         running_c = sum(1 for c in containers if str(c.get("state", "")).upper() == "RUNNING")
-        running_v = sum(1 for v in vms if str(v.get("state", "")).upper() == "RUNNING")
+        vms = part("vms")
+        if vms is None:
+            # A switched-off VM service is an ordinary Unraid, not a broken card.
+            vm_text = "?"
+        else:
+            domains = vms.get("domain") or []
+            vm_text = f"{sum(1 for v in domains if str(v.get('state', '')).upper() == 'RUNNING')} / {len(domains)}"
         return WidgetData(
             primary={"label": "Containers running", "value": running_c, "unit": f"/ {len(containers)}"},
-            secondary=[{"label": "VMs", "value": f"{running_v} / {len(vms)}"}],
+            secondary=[{"label": "VMs", "value": vm_text}],
             metrics={"running": float(running_c)},
         )
 
