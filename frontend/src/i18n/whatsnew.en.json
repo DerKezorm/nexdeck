@@ -555,6 +555,26 @@
       "small": [
         "TrueNAS is out of beta: every card was run against a real TrueNAS 25.10."
       ]
+    },
+    "0.15.0": {
+      "lead": "nexmail joins the board: unread mail per mailbox, and the latest senders and subjects.",
+      "sections": [
+        {
+          "title": "Unread mail",
+          "body": "The total in the inbox and one row per mailbox under it. A mailbox whose mail server rejects the stored password turns red, because its number is from before.",
+          "path": "Settings > Connections > nexmail"
+        },
+        {
+          "title": "Latest mail",
+          "body": "Sender and subject of the newest messages, unread ones in bold, and each row opens the message in nexmail. It needs a key that may read sender and subject; for a key that may only count, the library says so instead of adding the card.",
+          "path": "Edit mode (pencil) > Add widget > nexmail"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Both cards pick their mailboxes from the ones shared on the key, all of them by default.",
+        "nexmail needs version 0.17.0 or newer, and its operator has to allow API keys first."
+      ]
     }
   }
 }
