@@ -575,6 +575,32 @@
         "Beide Karten wählen ihre Postfächer aus denen, die am Schlüssel freigegeben sind, ab Werk alle.",
         "nexmail braucht Version 0.17.0 oder neuer, und der Betreiber muss API-Schlüssel erst erlauben."
       ]
+    },
+    "0.15.1": {
+      "lead": "Korrekturen aus den GitHub-Meldungen der letzten Tage, neue Frigate-Karten und ein Board, das sagt, wenn es erfundene Daten zeigt.",
+      "sections": [
+        {
+          "title": "Frigate zeigt deine Kameras",
+          "body": "Bei aktuellen Frigate-Versionen führte die Kamerakarte zwei Einträge aus Frigates Statistik als Kameras mit 0 fps und übersah die echten, und jede Erkennung stand bei 0 %. Beides liest jetzt die aktuellen Antworten. Neu aus derselben Meldung: das neueste Bild einer Kamera, Erkennungen mit Vorschaubild, die Erkennungen des Tages nach Art und eine Zustandskarte, die leer bleibt, solange alles läuft.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Frigate"
+        },
+        {
+          "title": "Der Vorführmodus sagt es",
+          "body": "Mit dem Vorführ-Board aus dem ersten Start zeigt jede Anbindung erfundene Daten, auch die später angelegten. Das Board sagt das jetzt, solange der Vorführmodus an ist, und der Verbindungstest ergänzt, dass die Karten nicht zeigen, was er gerade gefunden hat.",
+          "path": "System > Anbindungen > Vorführmodus für alles"
+        },
+        {
+          "title": "Nomad zählt, was jetzt scheitert",
+          "body": "Nomad führt gescheiterte Allocations in seiner Job-Übersicht als Strichliste, die nie sinkt, darum standen gesunde Jobs auf Rot. Die Karten Jobs und Cluster zählen jetzt nur noch gescheiterte Allocations, die noch bestehen.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Nomad"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "Radarrs Karte der kommenden Filme zeigt den nächsten Termin eines Films mit seiner Art, nicht eine digitale Veröffentlichung, die schon vorbei ist.",
+        "Auf Karten ab drei Reihen Höhe bricht die Zeile mit den kleinen Werten in eine zweite Zeile um, statt seitwärts zu laufen.",
+        "Der Einrichtungsassistent nennt die richtige Stelle, um den Vorführmodus abzuschalten."
+      ]
     }
   }
 }
