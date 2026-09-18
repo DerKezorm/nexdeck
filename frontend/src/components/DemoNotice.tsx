@@ -13,13 +13,17 @@ import type { About } from '../api/types'
  * wizard had switched demo mode on for everything and nothing on the board
  * said so. The way out is offered to administrators only, and not at all when
  * NEXDECK_DEMO holds the mode: the switch could not undo that.
+ *
+ * ⚠️ A note, not a status. `status` is a live announcement, and the board has
+ * one already, the edit-mode hint; with two, the first-start test found both
+ * and stopped.
  */
 export function DemoNotice({ admin }: { admin: boolean }) {
   const { t } = useTranslation()
   const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about'), staleTime: 60_000 })
   if (!about.data?.demo) return null
   return (
-    <p className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm mb-3 flex flex-wrap items-center gap-x-3 gap-y-1" role="status">
+    <p className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm mb-3 flex flex-wrap items-center gap-x-3 gap-y-1" role="note">
       <span>{t('board.demo')}</span>
       {admin && !about.data.demo_forced && (
         <Link to="/system/integrations" className="text-accent font-medium">

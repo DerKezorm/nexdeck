@@ -39,6 +39,9 @@ describe('DemoNotice', () => {
     show(true)
     expect(await screen.findByText(/every card shows invented data/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Switch off' })).toHaveAttribute('href', '/system/integrations')
+    // A note, not a live status: the board's edit-mode hint is the status there.
+    expect(screen.getByRole('note')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('offers no way out to somebody who cannot take it', async () => {
