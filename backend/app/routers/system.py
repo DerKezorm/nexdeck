@@ -85,6 +85,9 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
     payload = {
         "version": __version__,
         "demo": settings.demo or demo_flag(),
+        # ⚠️ The switch in the settings cannot undo NEXDECK_DEMO: it clears the
+        # stored flag, and the variable keeps every card on invented data.
+        "demo_forced": settings.demo,
         "public_url": public_url(db),
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),

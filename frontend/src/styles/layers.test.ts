@@ -65,7 +65,8 @@ describe('the style sheet', () => {
 
   it('lets only the named rules win over utilities, and puts them after the utilities', () => {
     const overrides = all.filter((rule) => rule.layers.includes('overrides')).map((rule) => rule.selector)
-    expect(overrides).toEqual(['.card.is-editing > *:not(.card-controls)', 'body.has-player-bar main'])
+    // `.chips` wraps the chip row on a tall card, over `overflow-x-auto` on the element itself.
+    expect(overrides).toEqual(['.chips', '.card.is-editing > *:not(.card-controls)', 'body.has-player-bar main'])
     expect(css).toMatch(/@layer theme, base, components, utilities, overrides;/)
   })
 

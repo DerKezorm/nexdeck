@@ -11,6 +11,7 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { BoardSettingsSheet } from '../components/BoardSettingsSheet'
 import { CommandPalette } from '../components/CommandPalette'
+import { DemoNotice } from '../components/DemoNotice'
 import { MobileTabBar } from '../components/MobileTabBar'
 import { NoticeDrawer } from '../components/NoticeDrawer'
 import { TopBar } from '../components/TopBar'
@@ -363,6 +364,7 @@ export function BoardPage() {
         onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
       />
       <main className="max-w-[1480px] mx-auto px-3 sm:px-4 pt-4">
+        <DemoNotice admin={user?.role === 'admin'} />
         {widgets.length === 0 && (
           <div className="glass rounded-2xl p-8 text-center max-w-md mx-auto mt-10">
             <LayoutGrid className="mx-auto text-accent" size={28} />

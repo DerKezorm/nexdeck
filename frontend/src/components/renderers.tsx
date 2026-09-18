@@ -120,11 +120,15 @@ function worthDrawing(points: number[] | undefined): points is number[] {
  * "Queries 38," with the value sliced through. It scrolls sideways now, so a
  * card that is too narrow loses the last chip off the edge rather than its
  * own headline.
+ *
+ * On a card with room for a second line, three rows and up, it wraps after
+ * all: the `.chips` rule in app.css asks the card's height, so a small card
+ * keeps the sideways row and a large one shows every chip.
  */
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
   if (!items?.length) return null
   return (
-    <div className="flex gap-1.5 overflow-x-auto scrollbar-none min-w-0 [&>*]:shrink-0">
+    <div className="chips flex gap-1.5 overflow-x-auto scrollbar-none min-w-0 [&>*]:shrink-0">
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
           {tLabel(item.label)}
@@ -419,7 +423,9 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 // A cover beside the row, for lists of titles: requests,
                 // recently added. Small, and the dot moves onto its corner so
                 // the row still says how it stands.
-                <span className="relative shrink-0 w-8 aspect-[2/3] rounded overflow-hidden bg-surface-hover">
+                // `art_shape: square` for a picture that is not a cover, such
+                // as the crop of a camera detection.
+                <span className={`relative shrink-0 rounded overflow-hidden bg-surface-hover ${item.art_shape === 'square' ? 'w-10 aspect-square' : 'w-8 aspect-[2/3]'}`}>
                   <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>

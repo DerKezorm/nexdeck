@@ -110,7 +110,7 @@
     "passwordHelp": "Mindestens acht Zeichen.",
     "demo": {
       "label": "Mit einem Vorführ-Board starten",
-      "help": "Jede Anbindung läuft im Vorführmodus mit erfundenen Daten. Später unter Einstellungen > System abschalten."
+      "help": "Jede Anbindung läuft im Vorführmodus mit erfundenen Daten. Später unter System > Anbindungen abschalten."
     },
     "docker": {
       "label": "Einen Docker-Host anbinden",
@@ -254,6 +254,7 @@
       "publicUrlHelp": "So sehen Browser nexdeck. Nötig für Anmeldeanbieter und Web Push.",
       "demo": "Vorführmodus für alles",
       "demoHelp": "Jedes Widget zeigt erfundene Daten. Abschalten, wenn echte Dienste angebunden sind.",
+      "demoForced": "Gesetzt durch NEXDECK_DEMO am Container. Variable entfernen und neu starten, um ihn abzuschalten.",
       "updateCheck": "Nach Updates suchen",
       "updateCheckHelp": "Fragt einmal am Tag bei GitHub, ob es eine neuere Version gibt. Ab Werk aus.",
       "oidc": "Anmeldeanbieter",
@@ -501,6 +502,8 @@
     }
   },
   "board": {
+    "demo": "Vorführmodus: Jede Karte zeigt erfundene Daten, auch bei Anbindungen, die du selbst angelegt hast.",
+    "demoOff": "Abschalten",
     "none": {
       "title": "Noch kein Board",
       "body": "Leg eines an, dann erscheint es hier.",

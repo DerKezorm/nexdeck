@@ -168,6 +168,8 @@ export interface BoardWithLive extends BoardView {
 export interface About {
   version: string
   demo: boolean
+  /** Set by NEXDECK_DEMO: the switch in the settings cannot undo it. */
+  demo_forced?: boolean
   public_url: string
   update_check: boolean
   default_locale: string

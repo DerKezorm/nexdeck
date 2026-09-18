@@ -56,9 +56,10 @@ export function IntegrationsSettings() {
         <SettingsCard title={t('settings.system.demo')}>
           <Switch
             checked={about.data.demo}
+            disabled={about.data.demo_forced}
             onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())}
             label={t('settings.system.demo')}
-            description={t('settings.system.demoHelp')}
+            description={about.data.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')}
           />
         </SettingsCard>
       )}
@@ -242,8 +243,10 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} />)}
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (
-        <div className={`rounded-xl border p-3 text-sm mt-3 ${result.ok ? 'border-ok/50' : 'border-bad/50'}`} role="status">
-          <span className="dot mr-2" data-status={result.ok ? 'ok' : 'bad'} />
+        // ⚠️ Passed with a hint is yellow, not green: the hint says the cards
+        // will not show what the test just found (demo mode, issue #2).
+        <div className={`rounded-xl border p-3 text-sm mt-3 ${!result.ok ? 'border-bad/50' : result.hint ? 'border-warn/50' : 'border-ok/50'}`} role="status">
+          <span className="dot mr-2" data-status={!result.ok ? 'bad' : result.hint ? 'warn' : 'ok'} />
           {result.message}
           {result.hint && <div className="text-xs text-muted mt-1">{result.hint}</div>}
         </div>

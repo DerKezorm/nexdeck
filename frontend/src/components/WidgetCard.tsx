@@ -92,7 +92,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
 
   return (
     <section
-      className={`card glass @container ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''}`}
+      className={`card glass ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''}`}
       data-status={status}
       data-widget={widget.id}
       aria-label={widget.title || widget.kind}

@@ -162,6 +162,10 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* Its height as well as its width, for the chip row below. Safe because a
+     card only ever stands in a grid cell of a set height; a card sized by its
+     content would fold to nothing. */
+  container: card / size;
   border-radius: var(--nd-radius);
   box-shadow: var(--nd-shadow);
   overflow: hidden;
@@ -1270,6 +1274,18 @@ textarea.input {
  * After the utilities. Only what has to win over a utility on purpose.
  * ---------------------------------------------------------------------- */
 @layer overrides {
+/* The chip row wraps onto a second line on a card with room for it, three
+   rows and up, and scrolls sideways on a smaller one. Wrapping everywhere
+   printed the number, the title and the chips of a small card over each other
+   on an iPhone; scrolling everywhere hid values nobody knew were there
+   (issue #1, Frigate and PeaNUT). */
+@container card (height >= 200px) {
+  .chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
 /* ⚠️ While editing, the whole card is the handle. Everything in it is inert
    anyway (a link does not open, an action button does not act), but the
    elements were still there, and the drag machinery leaves buttons and links
