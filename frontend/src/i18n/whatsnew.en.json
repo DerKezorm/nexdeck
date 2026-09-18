@@ -575,6 +575,32 @@
         "Both cards pick their mailboxes from the ones shared on the key, all of them by default.",
         "nexmail needs version 0.17.0 or newer, and its operator has to allow API keys first."
       ]
+    },
+    "0.15.1": {
+      "lead": "Fixes from the GitHub issues of the last days, new Frigate cards, and a board that says when it shows invented data.",
+      "sections": [
+        {
+          "title": "Frigate shows your cameras",
+          "body": "On current Frigate versions the cameras card listed two entries of Frigate's statistics as cameras at 0 fps and missed the real ones, and every detection read 0%. Both read the current answers now. New from the same issue: a camera's latest picture, detections with their thumbnails, today's detections by kind, and a health card that stays empty while everything runs.",
+          "path": "Edit mode (pencil) > Add widget > Frigate"
+        },
+        {
+          "title": "Demo mode says so",
+          "body": "With the demo board from the first start, every connection shows invented data, also the ones you add later. The board now says so while demo mode is on, and the connection test adds that the cards will not show what it just found.",
+          "path": "System > Integrations > Demo mode for everything"
+        },
+        {
+          "title": "Nomad counts what fails now",
+          "body": "Nomad keeps failed allocations in its job summary as a tally that never goes down, so healthy jobs showed red. The jobs and cluster cards now count only failed allocations that still stand.",
+          "path": "Edit mode (pencil) > Add widget > Nomad"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Radarr's upcoming card shows the next of a film's release dates and names its kind, not a digital release that has passed.",
+        "On cards three rows tall and up, the row of small figures wraps onto a second line instead of scrolling sideways.",
+        "The setup wizard names the right place to switch demo mode off."
+      ]
     }
   }
 }
