@@ -78,8 +78,10 @@ class PfsenseAdapter(Adapter):
         return payload.get("data") if isinstance(payload, dict) and "data" in payload else payload
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        version = await self._get(config, ctx, "/status/system/version", cache=0)
-        current = (version or {}).get("current_version") or (version or {}).get("version") or "?"
+        # /status/system/version never existed in the package: the test failed
+        # with a 404 while every card worked (issue #5).
+        version = await self._get(config, ctx, "/system/version", cache=0)
+        current = (version or {}).get("version") or "?"
         return f"pfSense {current} answers."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
@@ -117,7 +119,7 @@ class PfsenseAdapter(Adapter):
             secondary=[
                 {"label": "Memory", "value": percent_text(memory_share, 1)},
                 {"label": "Uptime", "value": duration_short(float(uptime)) if isinstance(uptime, int | float) else str(uptime or "?")},
-                {"label": "Temperature", "value": f"{system.get('temp')} °C" if system.get("temp") else "?"},
+                {"label": "Temperature", "value": f"{system.get('temp_c')} °C" if system.get("temp_c") else "?"},
             ],
             metrics=measured({"cpu": round(cpu, 1), "memory": round(memory_share, 1) if memory_share is not None else None}),
         )

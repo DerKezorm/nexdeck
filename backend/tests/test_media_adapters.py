@@ -216,16 +216,38 @@ async def test_jellystat_libraries_and_most_watched(ctx: Context) -> None:
         {"Name": "Movies", "CollectionType": "movies", "Library_Count": 1284},
         {"Name": "Shows", "CollectionType": "tvshows", "Library_Count": 218},
     ]))
-    respx.post("http://jellystat:3000/stats/getMostViewedByType").mock(return_value=httpx.Response(200, json=[
-        {"Label": "Movies", "results": [{"Name": "The Quiet Harbour", "Plays": 14}, {"Name": "Copper Sky", "Plays": 5}]},
-        {"Label": "Shows", "results": [{"Name": "Harbour Lights", "Plays": 11}]},
-    ]))
+    # Jellystat 1.1.12 answers one kind per call, as flat rows, and refuses a
+    # call without ``type`` with a 503 (issue #7).
+    rows = {
+        "Movie": [{"Plays": 14, "Name": "The Quiet Harbour", "Id": "a"}, {"Plays": 5, "Name": "Copper Sky", "Id": "b"}],
+        "Series": [{"Plays": 11, "Name": "Harbour Lights", "Id": "c"}],
+        "Audio": [],
+    }
+    asked: list[dict] = []
+
+    def most_viewed(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        asked.append(body)
+        if body.get("type") not in rows:
+            return httpx.Response(503, text='Invalid Type Value.\nValid Types: ["Audio","Movie","Series"]')
+        return httpx.Response(200, json=rows[body["type"]])
+
+    respx.post("http://jellystat:3000/stats/getMostViewedByType").mock(side_effect=most_viewed)
     jellystat = get_adapter("jellystat")
     libraries = await jellystat.fetch("libraries", config, {}, ctx)
     assert [entry["value"] for entry in libraries.secondary if entry["label"] == "Items"] == [1502]
     assert respx.calls.last.request.headers["x-api-token"] == "key"
+
     watched = await jellystat.fetch("watched", config, {"days": 30, "limit": 6}, ctx)
     assert [item["title"] for item in watched.items] == ["The Quiet Harbour", "Harbour Lights", "Copper Sky"], "most plays first"
+    assert [item["subtitle"] for item in watched.items] == ["Movies", "Shows", "Movies"]
+    assert sorted(body["type"] for body in asked) == ["Audio", "Movie", "Series"]
+    assert all(body["days"] == 30 for body in asked)
+
+    asked.clear()
+    shows = await jellystat.fetch("watched", config, {"type": "Series", "days": 7}, ctx)
+    assert asked == [{"type": "Series", "days": 7}]
+    assert [(item["title"], item["subtitle"]) for item in shows.items] == [("Harbour Lights", "")]
 
 
 # -- frigate ---------------------------------------------------------------------------

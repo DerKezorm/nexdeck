@@ -350,9 +350,21 @@ async def test_opnsense_gateways_and_system(ctx: Context) -> None:
 async def test_pfsense_unwraps_the_package_envelope(ctx: Context) -> None:
     config = {"url": "https://pfsense.example.com", "api_key": "k"}
     respx.get("https://pfsense.example.com/api/v2/status/system").mock(return_value=httpx.Response(200, json={
-        "code": 200, "status": "ok", "data": {"cpu_usage": 7.5, "mem_usage": 31.2, "uptime": 2_400_000, "temp": 41},
+        "code": 200, "status": "ok", "data": {"cpu_usage": 7.5, "mem_usage": 31.2, "uptime": "27 Days 18 Hours 40 Minutes", "temp_c": 41},
     }))
     data = await get_adapter("pfsense").fetch("system", config, {}, ctx)
     assert data.primary == {"label": "CPU", "value": 7.5, "unit": "%"}
     assert data.metrics == {"cpu": 7.5, "memory": 31.2}
     assert respx.calls.last.request.headers["X-API-Key"] == "k"
+    assert [entry["value"] for entry in data.secondary if entry["label"] == "Temperature"] == ["41 °C"], "the package calls it temp_c"
+
+
+@respx.mock
+async def test_pfsense_connection_test_reads_the_version_where_it_lives(ctx: Context) -> None:
+    """Issue #5: the test asked for /status/system/version, which the package
+    never had, and failed with a 404 while the cards worked."""
+    config = {"url": "https://pfsense.example.com", "api_key": "k"}
+    respx.get("https://pfsense.example.com/api/v2/system/version").mock(return_value=httpx.Response(200, json={
+        "code": 200, "status": "ok", "data": {"version": "2.9.0-RELEASE", "base": "15.0", "patch": "0", "buildtime": "x"},
+    }))
+    assert await get_adapter("pfsense").test(config, ctx) == "pfSense 2.9.0-RELEASE answers."

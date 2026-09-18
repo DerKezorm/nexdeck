@@ -6,6 +6,7 @@ its addresses answer a POST, even the ones that only read.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from .base import (
@@ -17,6 +18,10 @@ from .base import (
     WidgetType,
     base_url,
 )
+
+#: What getMostViewedByType accepts as ``type``, and what a row calls it.
+#: Jellystat refuses the call without one: HTTP 503 and a sentence (issue #7).
+WATCHED_TYPES = (("Movie", "Movies"), ("Series", "Shows"), ("Audio", "Music"))
 
 
 class JellystatAdapter(Adapter):
@@ -48,7 +53,13 @@ class JellystatAdapter(Adapter):
             renderer="list",
             default_size=(3, 3),
             refresh_seconds=900,
-            options=(Field("days", "Days", type="number", default=30), Field("limit", "Entries", type="number", default=6)),
+            options=(
+                Field("type", "What", type="select", default="all",
+                      options=(("all", "Everything"), *WATCHED_TYPES),
+                      help="Jellystat hands out the top five of each."),
+                Field("days", "Days", type="number", default=30),
+                Field("limit", "Entries", type="number", default=6),
+            ),
         ),
     )
 
@@ -78,15 +89,20 @@ class JellystatAdapter(Adapter):
         if widget_kind == "watched":
             days = int(options.get("days") or 30)
             limit = int(options.get("limit") or 6)
-            payload = await self._call(config, ctx, "POST", "/stats/getMostViewedByType", {"days": days})
-            rows = payload if isinstance(payload, list) else []
+            chosen = str(options.get("type") or "all")
+            types = [pair for pair in WATCHED_TYPES if chosen in ("all", pair[0])] or list(WATCHED_TYPES)
+            answers = await asyncio.gather(*(
+                self._call(config, ctx, "POST", "/stats/getMostViewedByType", {"type": kind, "days": days})
+                for kind, _ in types
+            ))
             items = []
-            for group in rows:
-                for entry in (group.get("results") or [])[:limit]:
+            for (_, label), rows in zip(types, answers, strict=True):
+                for entry in rows if isinstance(rows, list) else []:
                     items.append({
-                        "title": entry.get("Name") or entry.get("Label") or "?",
-                        "subtitle": str(group.get("Label") or ""),
-                        "value": int(entry.get("Plays") or entry.get("Count") or 0),
+                        "title": entry.get("Name") or "?",
+                        # One kind needs no label on every row.
+                        "subtitle": label if len(types) > 1 else "",
+                        "value": int(entry.get("Plays") or 0),
                         "status": "ok",
                     })
             items.sort(key=lambda item: -int(item["value"] or 0))

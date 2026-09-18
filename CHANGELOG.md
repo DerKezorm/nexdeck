@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **TrueNAS works with a read-only administrator's key.** The cards read TrueNAS through its REST API, which is deprecated since 25.04, and on 25.10 it answers a Read-Only Administrator's key with 403 for everything, so the integration wanted a full administrator for three cards that only read. With an `https://` address nexdeck now speaks TrueNAS' current API, JSON-RPC over a WebSocket at `/api/current`, where that key reads the system, the pools and the alerts. Over `http://` it stays on the REST API, and when that refuses the key the message says to switch to https: TrueNAS revokes a key for good the moment it arrives over a plain WebSocket, so nexdeck never sends it there. A TrueNAS without the current API, before 25.04, is asked through the REST API as before. Tested against a TrueNAS 25.10.7. Reported as issue #4.
+- **TrueNAS alerts show their day.** The alert list cut the first ten digits off a millisecond timestamp and showed `1788181994` where the date belonged.
+- **Jellystat's most watched card shows titles again.** Jellystat 1.1.12 wants to know whether it is asked for films, shows or music and answered a call without that with HTTP 503. The card has a choice for it now; the default asks for all three and marks each row with its kind. Reported as issue #7.
+- **The pfSense connection test no longer fails while the cards work.** It asked the REST API package for `/status/system/version`, which the package never had; the version sits at `/system/version`. Reported as issue #5.
+- **The pfSense system card shows the temperature.** The package calls the field `temp_c`, and the card looked for `temp` and showed a question mark.
+
 ## 0.14.0 (2026-09-17)
 
 ### New
