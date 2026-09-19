@@ -235,7 +235,9 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
       <Select
         value={String(value ?? '')}
         onChange={onChange}
-        options={[{ value: '', label: t('widget.choices.unset') }, ...named]}
+        // A list that brings its own empty entry (an action that needs no
+        // target) does not get a second one on top.
+        options={named.some((one) => one.value === '') ? named : [{ value: '', label: t('widget.choices.unset') }, ...named]}
       />
     </Field>
   )

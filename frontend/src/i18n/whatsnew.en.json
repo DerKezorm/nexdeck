@@ -601,6 +601,31 @@
         "On cards three rows tall and up, the row of small figures wraps onto a second line instead of scrolling sideways.",
         "The setup wizard names the right place to switch demo mode off."
       ]
+    },
+    "0.16.0": {
+      "lead": "nexpulse joins the board: your speed tests, their history, latency under load, and a button to test now.",
+      "sections": [
+        {
+          "title": "Latest result and a button to test",
+          "body": "Download, upload, ping and jitter of the newest test, a running test live as it happens, and yellow when nexpulse finds the line below your plan. With a key that may start tests, a button runs one; a button card can do the same.",
+          "path": "Settings > Connections > nexpulse"
+        },
+        {
+          "title": "History, summary and recent tests",
+          "body": "Download and upload or the ping over up to 90 days, with a failed test drawn as a gap. The summary shows average, median, lowest or highest and how often a test failed or fell below the plan; the list shows the newest tests, failed ones red.",
+          "path": "Edit mode (pencil) > Add widget > nexpulse"
+        },
+        {
+          "title": "Latency under load",
+          "body": "How much the ping grows while the line is busy, graded A+ to F on the steps of the Waveform bufferbloat test.",
+          "path": "Edit mode (pencil) > Add widget > nexpulse"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "nexpulse 0.1.1 or newer tells nexdeck what a key may do. On 0.1.0 the button is always shown, and a key that may only read is told so when it presses it.",
+        "A button pointed at an action that needs no target says so, instead of a yellow \"offers nothing\"."
+      ]
     }
   }
 }

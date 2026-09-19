@@ -41,7 +41,13 @@
       "nexmail_keys_off": "API-Schlüssel sind in dieser nexmail-Installation abgeschaltet. Einschalten kann sie der Betreiber von nexmail unter Einstellungen → API-Schlüssel.",
       "nexmail_counts_only": "Dieser Schlüssel darf nur Anzahlen lesen. Bearbeite ihn in nexmail und wähle „Zahl, Absender und Betreff“, um die neuesten Mails zu sehen.",
       "nexmail_mailbox_unknown": "Ein auf dieser Karte gewähltes Postfach ist an diesem Schlüssel nicht mehr freigegeben. Wähle die Postfächer in den Karteneinstellungen neu oder gib das Postfach in nexmail am Schlüssel frei.",
-      "nexmail_bad_limit": "nexmail lehnt die Anzahl der Mails ab. Wähle zwischen 1 und 20."
+      "nexmail_bad_limit": "nexmail lehnt die Anzahl der Mails ab. Wähle zwischen 1 und 20.",
+      "nexpulse_key_invalid": "nexpulse kennt diesen API-Schlüssel nicht, oder er wurde widerrufen. Lege in nexpulse unter Einstellungen → API-Schlüssel einen an und trage ihn in dieser Anbindung ein.",
+      "nexpulse_read_only": "Dieser API-Schlüssel darf nur lesen. Lege in nexpulse einen Schlüssel mit „Lesen und Tests starten“ an, um aus nexdeck einen Test zu starten.",
+      "nexpulse_busy": "nexpulse misst gerade schon. Die Karte zeigt das Ergebnis, sobald der Test fertig ist.",
+      "nexpulse_source_off": "Diese Quelle ist in nexpulse abgeschaltet. Schalte sie dort ein oder wähle in den Karteneinstellungen eine andere Quelle.",
+      "nexpulse_source_unknown": "nexpulse kennt diese Quelle nicht. Wähle in den Karteneinstellungen eine andere.",
+      "nexpulse_bad_range": "nexpulse kennt diesen Zeitraum nicht. Wähle in den Karteneinstellungen einen anderen."
     }
   },
   "auth": {
@@ -762,7 +768,7 @@
     "notifyNote": "Wohin nexdeck schreibt, wenn etwas passiert. Apprise allein spricht mit hundert weiteren.",
     "builtWith": "Gebaut mit",
     "family": "Die nexapps-Familie",
-    "familyNote": "Nexview fragt Filme und Serien an, nexmail ist der Mail-Client, nexdeck sieht den Maschinen zu, auf denen beide laufen."
+    "familyNote": "Nexview fragt Filme und Serien an, nexmail ist der Mail-Client, nexpulse misst die Leitung, nexdeck sieht den Maschinen zu, auf denen sie laufen."
   },
   "status": {
     "ok": "Alles in Ordnung",
