@@ -601,6 +601,31 @@
         "Auf Karten ab drei Reihen Höhe bricht die Zeile mit den kleinen Werten in eine zweite Zeile um, statt seitwärts zu laufen.",
         "Der Einrichtungsassistent nennt die richtige Stelle, um den Vorführmodus abzuschalten."
       ]
+    },
+    "0.16.0": {
+      "lead": "nexpulse kommt aufs Board: deine Speedtests, ihr Verlauf, die Latenz unter Last und ein Knopf, der sofort misst.",
+      "sections": [
+        {
+          "title": "Neuestes Ergebnis und ein Knopf zum Messen",
+          "body": "Download, Upload, Ping und Jitter des neuesten Tests, ein laufender Test live, und gelb, wenn nexpulse die Leitung unter deinem Tarif sieht. Mit einem Schlüssel, der Tests starten darf, startet ein Knopf einen; eine Knopf-Karte kann das auch.",
+          "path": "Einstellungen > Verbindungen > nexpulse"
+        },
+        {
+          "title": "Verlauf, Überblick und letzte Tests",
+          "body": "Download und Upload oder der Ping über bis zu 90 Tage, ein fehlgeschlagener Test als Lücke. Der Überblick zeigt Durchschnitt, Median, niedrigsten oder höchsten Wert und wie oft ein Test fehlschlug oder unter dem Tarif lag; die Liste zeigt die neuesten Tests, fehlgeschlagene rot.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexpulse"
+        },
+        {
+          "title": "Latenz unter Last",
+          "body": "Wie stark der Ping wächst, während die Leitung ausgelastet ist, benotet von A+ bis F nach den Stufen des Waveform-Bufferbloat-Tests.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexpulse"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "nexpulse ab 0.1.1 sagt nexdeck, was ein Schlüssel darf. Bei 0.1.0 steht der Knopf immer da, und ein Schlüssel, der nur lesen darf, erfährt es beim Drücken.",
+        "Ein Knopf, der auf eine Aktion ohne Ziel zeigt, sagt das jetzt, statt gelb „bietet nichts an“ zu zeigen."
+      ]
     }
   }
 }

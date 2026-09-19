@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexpulse">
+  <defs>
+    <linearGradient id="nexpulse-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
+      <stop offset="0" stop-color="#ecfccb"/><stop offset=".5" stop-color="#a3e635"/><stop offset="1" stop-color="#4d7c0f"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0d110a"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexpulse-g)" stroke-width="2.5" stroke-opacity=".55"/>
+  <path d="M16.4 47A18 18 0 1 1 47.6 47" fill="none" stroke="#a3e635" stroke-opacity=".2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M16.4 47A18 18 0 0 1 44.7 25.3" fill="none" stroke="url(#nexpulse-g)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="44.7" cy="25.3" r="4" fill="#ecfccb"/>
+  <circle cx="32" cy="40" r="2.6" fill="#a3e635"/>
+</svg>

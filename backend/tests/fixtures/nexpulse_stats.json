@@ -1,0 +1,37 @@
+{
+  "range": "7d",
+  "tests": 20,
+  "ok": 18,
+  "failed": 2,
+  "below_plan": 1,
+  "download_mbps": {
+    "avg": 871.33,
+    "min": 402.7,
+    "max": 948.1,
+    "median": 905.2
+  },
+  "upload_mbps": {
+    "avg": 46.1,
+    "min": 31.9,
+    "max": 51.7,
+    "median": 47.0
+  },
+  "ping_ms": {
+    "avg": 12.4,
+    "min": 9.8,
+    "max": 19.6,
+    "median": 11.9
+  },
+  "jitter_ms": {
+    "avg": 2.7,
+    "min": 1.1,
+    "max": 6.3,
+    "median": 2.4
+  },
+  "packet_loss": {
+    "avg": null,
+    "min": null,
+    "max": null,
+    "median": null
+  }
+}

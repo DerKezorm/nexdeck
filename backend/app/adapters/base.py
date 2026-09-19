@@ -1176,6 +1176,11 @@ class MediaSource:
     media_type: str = ""
 
 
+#: What a button's target list says for an action that acts on the whole
+#: connection and needs nothing picked.
+WHOLE_CONNECTION = "Nothing to pick, it acts on the whole connection"
+
+
 class Adapter:
     """Base class. Subclasses set the class attributes and override the hooks."""
 
@@ -1300,6 +1305,11 @@ class Adapter:
             # target" and two deeds have two different ones, so the day a
             # second deed appears this has to be told which, not left to pick.
             with_target = [one for one in self.deeds if one.target_field]
+            if self.deeds and not with_target:
+                # ⚠️ Said, not left empty: an empty list reads "this connection
+                # offers nothing to pick" in yellow, about a speed test that
+                # needs nothing picked.
+                return [("", WHOLE_CONNECTION)]
             if len(with_target) != 1:
                 return []
             return await self.choices(with_target[0].target_field, config, ctx)

@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.16.0 (2026-09-19)
+
+### New
+
+- **nexpulse.** The speed test tracker of the nexapps family, read through its API keys. Five cards: **Latest result**, download, upload, ping and jitter of the newest test, a running test live as it happens, and yellow when nexpulse finds the line below the plan set there; **History**, download and upload or ping idle and under load over 24 hours to 90 days, as a line or as bars, a failed test drawn as a gap; **Period summary**, average, median, lowest or highest over a period with the tests that failed or fell below the plan; **Recent tests**, failed ones red, those below the plan yellow; **Latency under load**, how much the ping grows while the line is busy, graded A+ to F on the steps the Waveform bufferbloat test uses. When the newest test failed, the latest result says its numbers are from the test before. A key that may also start tests adds a button to test now, on the card and for a button card, and it always names the source it tests with. What a key may do comes from nexpulse's `/api/v1/me` (0.1.1); a key that may only read gets no button, and the connection test says which of the two it is. nexpulse 0.1.0 cannot say: there the button is shown, a key that may only read is told so when it presses it, and the connection test asks for the update. nexdeck never sends a request to find something out that could start a test. Every card and the button ran against nexpulse 0.1.0 and 0.1.1, so the integration starts without the beta badge.
+
+### Changed
+
+- **A button pointed at an action that needs no target says so.** Its target list read "This connection offers nothing to pick here" in yellow, which looked like a fault; it now reads "Nothing to pick, it acts on the whole connection".
+
 ## 0.15.1 (2026-09-18)
 
 ### New
