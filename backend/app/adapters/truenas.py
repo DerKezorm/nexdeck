@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import json
+import re
 import ssl
 import time
 from datetime import UTC, datetime
@@ -99,6 +100,29 @@ class TruenasAdapter(Adapter):
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, cache: float = 10) -> Any:
         return await ctx.get_json(f"{base_url(config)}/api/v2.0{path}", headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=cache)
+
+    async def _rest(self, config: dict[str, Any], ctx: Context, methods: list[str], cache: float) -> dict[str, Any]:
+        """The REST API, only on a TrueNAS that has nothing better.
+
+        ⚠️ A full administrator's key over http reached the REST API on 25.10
+        and it worked, quietly: from 25.10.1 every call raises a deprecation
+        alert on the NAS, and 26 removes the API. The version is read once an
+        hour and a TrueNAS of 25.04 or later is refused here with what to
+        change, rather than fed an API on its way out.
+        """
+        info = await self._get(config, ctx, READS["system.info"], cache=3600)
+        version = _version(str((info or {}).get("version") or ""))
+        if version >= (25, 4):
+            raise AdapterError(
+                f"This TrueNAS ({(info or {}).get('version')}) deprecates its REST API and raises an alert on every call.",
+                code="deprecated_api",
+                hint="Change the URL to https:// so nexdeck speaks the current JSON-RPC API; a user-linked key of a "
+                     "read-only administrator is enough there. TrueNAS 26 removes the REST API altogether.",
+            )
+        fresh = {}
+        for method in methods:
+            fresh[method] = info if method == "system.info" else await self._get(config, ctx, READS[method], cache=cache)
+        return fresh
 
     # -- the current API -------------------------------------------------------
 
@@ -184,7 +208,7 @@ class TruenasAdapter(Adapter):
                 if gone.status == 404:
                     ctx.cache["truenas:legacy"] = now + LEGACY_SECONDS
                 try:
-                    fresh = {method: await self._get(config, ctx, READS[method], cache=cache) for method in missing}
+                    fresh = await self._rest(config, ctx, missing, cache)
                 except AuthFailed as error:
                     raise AdapterError(
                         f"TrueNAS turned the WebSocket at /api/current down with HTTP {gone.status}, "
@@ -194,7 +218,7 @@ class TruenasAdapter(Adapter):
                     ) from error
         else:
             try:
-                fresh = {method: await self._get(config, ctx, READS[method], cache=cache) for method in missing}
+                fresh = await self._rest(config, ctx, missing, cache)
             except AuthFailed as error:
                 if base_url(config).startswith("http://"):
                     raise AdapterError("TrueNAS refused the API key on its REST API.", code="auth_failed",
@@ -290,6 +314,12 @@ class _NoCurrentApi(Exception):
     def __init__(self, status: int) -> None:
         super().__init__(status)
         self.status = status
+
+
+def _version(text: str) -> tuple[int, int]:
+    """``25.10.1`` or ``TrueNAS-SCALE-24.10.2`` as (major, minor); (0, 0) when unreadable."""
+    found = re.search(r"(\d+)\.(\d+)", text)
+    return (int(found.group(1)), int(found.group(2))) if found else (0, 0)
 
 
 def _day(value: Any) -> str:

@@ -169,12 +169,32 @@ async def test_http_never_opens_the_websocket_and_says_why_it_is_refused(ctx: Co
 
 @respx.mock
 async def test_http_with_a_full_key_keeps_working_over_rest(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """On a TrueNAS from before 25.04, where the REST API is the only one there is."""
     adapter = get_adapter("truenas")
     monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json={**INFO, "version": "TrueNAS-SCALE-24.10.2"}))
     respx.get("http://truenas.example.com/api/v2.0/pool").mock(return_value=httpx.Response(200, json=POOLS))
     pools = await adapter.fetch("pools", {"url": "http://truenas.example.com", "api_key": "2-full"}, {}, ctx)
     assert [item["title"] for item in pools.items] == ["tank"]
     assert respx.calls.last.request.headers["Authorization"] == "Bearer 2-full"
+
+
+@respx.mock
+async def test_the_rest_api_is_refused_on_a_truenas_that_deprecates_it(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ A full administrator's key over http reached the REST API on 25.10 and
+    it worked, quietly: every call raised a deprecation alert on the NAS from
+    25.10.1, and 26 removes the API altogether. The version is read once and
+    the card says what to change, rather than feeding an API that is on its
+    way out."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json={**INFO, "version": "25.10.1"}))
+    pools = respx.get("http://truenas.example.com/api/v2.0/pool").mock(return_value=httpx.Response(200, json=POOLS))
+    with pytest.raises(AdapterError) as refused:
+        await adapter.fetch("pools", {"url": "http://truenas.example.com", "api_key": "2-full"}, {}, ctx)
+    assert refused.value.code == "deprecated_api"
+    assert "https://" in refused.value.hint
+    assert not pools.called, "nothing but the version check goes to the deprecated API"
 
 
 async def test_the_websocket_path_refuses_http_on_its_own(truenas) -> None:
