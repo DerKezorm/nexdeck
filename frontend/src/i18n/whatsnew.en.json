@@ -626,6 +626,21 @@
         "nexpulse 0.1.1 or newer tells nexdeck what a key may do. On 0.1.0 the button is always shown, and a key that may only read is told so when it presses it.",
         "A button pointed at an action that needs no target says so, instead of a yellow \"offers nothing\"."
       ]
+    },
+    "0.16.1": {
+      "lead": "TrueNAS: nexdeck no longer uses the old REST API where TrueNAS has deprecated it, so the alert about it on the NAS goes away.",
+      "sections": [
+        {
+          "title": "No more \"Deprecated REST API usage\" on TrueNAS",
+          "body": "With an http:// address and a full administrator's key, or behind a reverse proxy that does not pass WebSockets on, nexdeck read TrueNAS through its old REST API. TrueNAS 25.10 counts every such call and shows an alert with the number of the last 24 hours, and TrueNAS 26 removes that API. nexdeck now checks without the key whether TrueNAS has the current API, and then sends nothing over the old one. The card says what to change: https:// in the address, or WebSockets in the proxy. A TrueNAS before 25.04 keeps its cards as they were.",
+          "path": "Settings > Connections > TrueNAS"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Measured on a real TrueNAS 25.10.7: eight reads by the cards showed up on the NAS as \"8 times\", and with this version the count stays where it is.",
+        "If something in front of TrueNAS answers 404 in its place, the version TrueNAS reports decides, asked once an hour."
+      ]
     }
   }
 }

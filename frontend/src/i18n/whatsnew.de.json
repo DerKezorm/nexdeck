@@ -626,6 +626,21 @@
         "nexpulse ab 0.1.1 sagt nexdeck, was ein Schlüssel darf. Bei 0.1.0 steht der Knopf immer da, und ein Schlüssel, der nur lesen darf, erfährt es beim Drücken.",
         "Ein Knopf, der auf eine Aktion ohne Ziel zeigt, sagt das jetzt, statt gelb „bietet nichts an“ zu zeigen."
       ]
+    },
+    "0.16.1": {
+      "lead": "TrueNAS: nexdeck benutzt die alte REST-API nicht mehr, wo TrueNAS sie abgekündigt hat. Damit verschwindet der Alarm dazu auf dem NAS.",
+      "sections": [
+        {
+          "title": "Kein „Deprecated REST API usage“ mehr auf TrueNAS",
+          "body": "Mit einer http://-Adresse und dem Schlüssel eines vollen Administrators, oder hinter einem Reverse Proxy, der WebSockets nicht durchreicht, las nexdeck TrueNAS über die alte REST-API. TrueNAS 25.10 zählt jeden solchen Aufruf und zeigt einen Alarm mit der Zahl der letzten 24 Stunden, und TrueNAS 26 entfernt diese API. nexdeck prüft jetzt ohne den Schlüssel, ob TrueNAS die aktuelle API hat, und schickt dann nichts mehr über die alte. Die Karte sagt, was zu ändern ist: https:// in der Adresse oder WebSockets im Proxy. Ein TrueNAS vor 25.04 behält seine Karten wie bisher.",
+          "path": "Einstellungen > Verbindungen > TrueNAS"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "Gemessen an einem echten TrueNAS 25.10.7: Acht Abrufe der Karten standen auf dem NAS als „8 times“, und mit dieser Fassung bleibt der Zähler stehen.",
+        "Antwortet etwas vor TrueNAS an seiner Stelle mit 404, entscheidet die Version, die TrueNAS nennt, einmal je Stunde gefragt."
+      ]
     }
   }
 }
