@@ -8,6 +8,7 @@ plain http is revoked by TrueNAS for good (issue #4).
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import httpx
@@ -19,6 +20,7 @@ from websockets.http11 import Response
 
 from app.adapters import get_adapter
 from app.adapters.base import AdapterError, Context
+from app.adapters.truenas import _version
 
 KEY = "1-readonlykey"
 INFO = {"version": "25.10.7", "hostname": "truenas", "uptime_seconds": 3600.5, "loadavg": [0.5, 0.3, 0.1], "physmem": 8_333_570_048, "cores": 4}
@@ -27,6 +29,10 @@ ALERTS = [
     {"level": "WARNING", "dismissed": False, "datetime": {"$date": 1_789_712_345_000}, "formatted": "Pool tank is 91% full."},
     {"level": "CRITICAL", "dismissed": True, "datetime": {"$date": 1_789_700_000_000}, "formatted": "Dismissed, not shown."},
 ]
+#: The same from before 25.04, where the REST API is the only one there is.
+OLD_INFO = {**INFO, "version": "TrueNAS-SCALE-24.10.2"}
+#: What a plain GET of /api/current, without a key, said on 25.10.7 on 21.09.2026.
+NEEDS_UPGRADE = 'No WebSocket UPGRADE hdr: None\n Can "Upgrade" only to "WebSocket".'
 ANSWERS = {"system.info": INFO, "pool.query": POOLS, "alert.list": ALERTS}
 
 
@@ -78,6 +84,11 @@ def turned_down(status: int):
         raise InvalidStatus(Response(status, "Not Found", Headers()))
 
     return open_socket
+
+
+def current_api(address: str, status: int) -> respx.Route:
+    """The keyless look at /api/current: 400 on a TrueNAS that has it, 404 on one that has not."""
+    return respx.get(f"{address}/api/current").mock(return_value=httpx.Response(status, text=NEEDS_UPGRADE if status == 400 else "404 page not found"))
 
 
 async def no_socket(url: str, config: dict[str, Any]) -> Any:
@@ -160,6 +171,7 @@ async def test_http_never_opens_the_websocket_and_says_why_it_is_refused(ctx: Co
     read-only key; the message has to say what to change."""
     adapter = get_adapter("truenas")
     monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    current_api("http://truenas.example.com", 404)
     respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(403))
     with pytest.raises(AdapterError) as refused:
         await adapter.test({"url": "http://truenas.example.com", "api_key": KEY}, ctx)
@@ -169,12 +181,136 @@ async def test_http_never_opens_the_websocket_and_says_why_it_is_refused(ctx: Co
 
 @respx.mock
 async def test_http_with_a_full_key_keeps_working_over_rest(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """On a TrueNAS from before 25.04, which has no other API."""
     adapter = get_adapter("truenas")
     monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    current_api("http://truenas.example.com", 404)
+    respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=OLD_INFO))
     respx.get("http://truenas.example.com/api/v2.0/pool").mock(return_value=httpx.Response(200, json=POOLS))
     pools = await adapter.fetch("pools", {"url": "http://truenas.example.com", "api_key": "2-full"}, {}, ctx)
     assert [item["title"] for item in pools.items] == ["tank"]
     assert respx.calls.last.request.headers["Authorization"] == "Bearer 2-full"
+
+
+@respx.mock
+async def test_rest_is_refused_where_truenas_has_deprecated_it(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ A full administrator's key over http reaches the REST API on 25.10 and
+    gets its answers. That it works is the trouble. Measured on 25.10.7: every
+    call that signs in is counted, and one alert on the NAS names the count of
+    the last 24 hours. It only goes away at no call at all, so not even the
+    version may be asked over REST. A plain GET of /api/current, without the
+    key, tells a TrueNAS that has the current API, once an hour."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    look = current_api("http://truenas.example.com", 400)
+    rest = respx.get(url__startswith="http://truenas.example.com/api/v2.0/").mock(return_value=httpx.Response(200, json=INFO))
+    config = {"url": "http://truenas.example.com", "api_key": "2-full"}
+    started = time.monotonic()
+    for minutes, kind in enumerate(("pools", "system", "alerts")):
+        # Five minutes apart: past every short cache, well inside the hour.
+        # Asked in the same second, the second call never leaves the request
+        # cache, and this passed with nothing remembered at all.
+        monkeypatch.setattr(time, "monotonic", lambda minutes=minutes: started + 300 * minutes)
+        with pytest.raises(AdapterError) as refused:
+            await adapter.fetch(kind, config, {}, ctx)
+        assert refused.value.code == "deprecated_api"
+        assert "Change the URL to https://" in refused.value.hint
+    assert not rest.called, "one call over REST is one too many: it keeps the alert alive"
+    assert look.call_count == 1, "asked once an hour, not once a card"
+    assert "authorization" not in look.calls.last.request.headers, "the key stays at home for this"
+
+
+@respx.mock
+async def test_a_proxy_that_says_404_is_caught_by_the_version(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The second line. Something in front says 404 for /api/current, so the
+    REST API is asked, and what it says its version is settles it: once an
+    hour, and nothing else goes there."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    current_api("http://truenas.example.com", 404)
+    info = respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json={**INFO, "version": "25.10.1"}))
+    pools = respx.get("http://truenas.example.com/api/v2.0/pool").mock(return_value=httpx.Response(200, json=POOLS))
+    alerts = respx.get("http://truenas.example.com/api/v2.0/alert/list").mock(return_value=httpx.Response(200, json=ALERTS))
+    config = {"url": "http://truenas.example.com", "api_key": "2-full"}
+    started = time.monotonic()
+    for minutes, kind in enumerate(("pools", "system", "alerts")):
+        monkeypatch.setattr(time, "monotonic", lambda minutes=minutes: started + 300 * minutes)
+        with pytest.raises(AdapterError) as refused:
+            await adapter.fetch(kind, config, {}, ctx)
+        assert refused.value.code == "deprecated_api"
+        assert "25.10.1" in refused.value.message
+    assert info.call_count == 1, "the version is asked once an hour, not once a card"
+    assert not pools.called and not alerts.called
+
+
+@respx.mock
+async def test_the_system_card_of_an_older_truenas_keeps_moving(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The version comes from ``system/info``, and so do load and uptime. A
+    first take kept that whole answer for the hour and handed it to the card:
+    two minutes later the load had quadrupled and the card still said 12.5 %,
+    on exactly the versions that were to notice nothing."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    current_api("http://truenas.example.com", 404)
+    respx.get("http://truenas.example.com/api/v2.0/alert/list").mock(return_value=httpx.Response(200, json=[]))
+    info = respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=OLD_INFO))
+    config = {"url": "http://truenas.example.com", "api_key": "2-full"}
+    assert (await adapter.fetch("system", config, {}, ctx)).primary["value"] == 12.5
+    started = time.monotonic()
+    monkeypatch.setattr(time, "monotonic", lambda: started + 120)
+    info.mock(return_value=httpx.Response(200, json={**OLD_INFO, "loadavg": [2.0, 1.0, 0.5]}))
+    assert (await adapter.fetch("system", config, {}, ctx)).primary["value"] == 50.0
+
+
+@respx.mock
+async def test_behind_a_proxy_the_refusal_names_the_proxy_not_the_address(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The address is https:// already. What has to change is the proxy that
+    does not pass the WebSocket on, and the handshake's status says so."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", turned_down(502))
+    current_api("https://truenas.example.com", 400)
+    rest = respx.get(url__startswith="https://truenas.example.com/api/v2.0/").mock(return_value=httpx.Response(200, json=INFO))
+    with pytest.raises(AdapterError) as refused:
+        await adapter.fetch("pools", {"url": "https://truenas.example.com", "api_key": "2-full"}, {}, ctx)
+    assert not rest.called, "the look without the key was enough; nothing went over REST"
+    assert refused.value.code == "deprecated_api"
+    assert "HTTP 502" in refused.value.message
+    assert "reverse proxy" in refused.value.hint
+    assert "https://" not in refused.value.hint
+
+
+@respx.mock
+async def test_a_404_in_front_of_a_current_truenas_is_not_remembered_as_an_old_one(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """404 stands for a TrueNAS without the current API, for an hour. A proxy
+    can say 404 as well; the version then shows it is no old TrueNAS, and the
+    WebSocket has to be tried again once the proxy is mended."""
+    adapter = get_adapter("truenas")
+    attempts: list[str] = []
+
+    async def gone(url: str, config: dict[str, Any]) -> Any:
+        attempts.append(url)
+        return await turned_down(404)(url, config)
+
+    monkeypatch.setattr(adapter, "_open_socket", gone)
+    respx.get("https://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=INFO))
+    config = {"url": "https://truenas.example.com", "api_key": "2-full"}
+    for _ in range(2):
+        with pytest.raises(AdapterError) as refused:
+            await adapter.fetch("pools", config, {}, ctx)
+        assert "reverse proxy" in refused.value.hint
+    assert len(attempts) == 2
+
+
+@pytest.mark.parametrize(("label", "expected"), [
+    ("25.10.1", (25, 10)),
+    ("25.04.0", (25, 4)),
+    ("TrueNAS-SCALE-24.10.2", (24, 10)),
+    ("TrueNAS-13.0-U6.1", (13, 0)),
+    ("", (0, 0)),
+    ("MASTER", (0, 0)),
+])
+def test_the_version_is_read_from_every_way_truenas_writes_it(label: str, expected: tuple[int, int]) -> None:
+    assert _version(label) == expected
 
 
 async def test_the_websocket_path_refuses_http_on_its_own(truenas) -> None:
@@ -206,6 +342,7 @@ async def test_an_older_truenas_without_the_current_api_falls_back_to_rest(ctx: 
 async def test_a_proxy_without_websockets_is_named_when_rest_refuses_too(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
     adapter = get_adapter("truenas")
     monkeypatch.setattr(adapter, "_open_socket", turned_down(400))
+    current_api("https://truenas.example.com", 404)
     respx.get("https://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(403))
     with pytest.raises(AdapterError) as refused:
         await adapter.test({"url": "https://truenas.example.com", "api_key": KEY}, ctx)

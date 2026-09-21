@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **TrueNAS: the old REST API is no longer used where TrueNAS has deprecated it.** Over `http://` with a full administrator's key, and behind a reverse proxy that does not pass WebSockets on, nexdeck fell back to the REST API, and on TrueNAS 25.04 and later that still answers. Measured on 25.10.7: TrueNAS counts every call that signs in over REST and raises the alert "Deprecated REST API usage" with the count of the last 24 hours and the addresses they came from; eight calls from the cards read "8 times". TrueNAS 26 removes the API. The alert only goes away at no call at all, so nexdeck now looks at `/api/current` without the key first, once an hour: TrueNAS answered 400 there and 404 for a path that does not exist, and neither moved the count. Where the current API exists, nothing goes over REST and the card says what to change: `https://` for an `http://` address, the proxy for an `https://` one. Should something in front say 404 on TrueNAS' behalf, the version the REST API reports is the second line. A TrueNAS before 25.04 keeps its cards as they were; that such a version says 404 for `/api/current` is expected, not measured. Pointed out in pull request #9.
+
 ## 0.16.0 (2026-09-19)
 
 ### New

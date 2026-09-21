@@ -18,6 +18,22 @@ speaks the current API.
 handshake down, the REST API is asked instead, which those versions accept
 from a read-only key. That an older TrueNAS says 404 there is expected, not
 measured; 25.10.7 said 404 for ``/api/v99``.
+
+⚠️ **The REST API is for those older versions only.** With a full
+administrator's key it still answers on 25.04 and later, and that is the
+trouble. Measured on 25.10.7 on 21.09.2026: TrueNAS counts every call that
+signs in over REST and raises one alert, "Deprecated REST API usage", with the
+count of the last 24 hours and the addresses they came from; eight calls from
+the cards read "8 times". TrueNAS 26 removes the API (its list of
+deprecations). The alert only goes away at no call at all, so reading the
+version over REST first would keep it alive, at 24 calls a day.
+
+So a TrueNAS with the current API is recognised without a key: a plain GET of
+``/api/current`` answered 400 ("Can Upgrade only to WebSocket"), a path that
+does not exist 404, over http and over https alike, and neither moved the
+count. Only a 404 there lets the REST API be asked, and what it says its
+version is remains the second line, for a proxy that says 404 on TrueNAS'
+behalf.
 """
 
 from __future__ import annotations
@@ -25,6 +41,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import json
+import re
 import ssl
 import time
 from datetime import UTC, datetime
@@ -63,6 +80,10 @@ READS = {
 #: How long a TrueNAS without ``/api/current`` is not asked again.
 LEGACY_SECONDS = 3600.0
 
+#: How long the version read over REST is kept, and from which one on REST is refused.
+VERSION_SECONDS = 3600.0
+REST_DEPRECATED_FROM = (25, 4)
+
 HTTP_REFUSED_HINT = (
     "Over http:// only the old REST API is safe, and TrueNAS 25.04 and later let only a full "
     "administrator's key use it. Change the URL to https:// and a read-only administrator's key "
@@ -81,7 +102,7 @@ class TruenasAdapter(Adapter):
     beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://truenas.local",
-              help="Use https://. Over http:// a read-only key is refused."),
+              help="Use https://. Over http:// only a TrueNAS before 25.04 is read, and only with a full administrator's key."),
         Field("api_key", "API key", type="password", secret=True, required=True,
               help="Top-right user menu > API Keys. A user with the Read-Only Administrator role is enough."),
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
@@ -99,6 +120,59 @@ class TruenasAdapter(Adapter):
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, cache: float = 10) -> Any:
         return await ctx.get_json(f"{base_url(config)}/api/v2.0{path}", headers=self._headers(config), verify=not config.get("insecure", True), cache_seconds=cache)
+
+    async def _has_current_api(self, config: dict[str, Any], ctx: Context, fresh: bool = False) -> bool:
+        """Whether this TrueNAS has ``/api/current``, asked without the key; see the top.
+
+        ⚠️ No ``Authorization`` header here, ever. It is what makes a call count
+        for TrueNAS' alert, and over http it would be the key in the clear on
+        its way to an API that revokes it for that.
+
+        Only 404 means no. A redirect to https, a proxy's 502 and the 400 of
+        TrueNAS itself all belong to somebody who should not get REST calls.
+        """
+        now = time.monotonic()
+        known = ctx.cache.get("truenas:current-api")
+        if not fresh and known and known[0] > now:
+            return known[1]
+        answer = await ctx.request("GET", f"{base_url(config)}/api/current", verify=not config.get("insecure", True), timeout=10, auth_errors=False)
+        there = answer.status_code != 404
+        ctx.cache["truenas:current-api"] = (now + VERSION_SECONDS, there)
+        return there
+
+    async def _rest(self, config: dict[str, Any], ctx: Context, methods: list[str], cache: float, turned_down: int | None = None) -> dict[str, Any]:
+        """The REST API, for a TrueNAS that has nothing newer; see the top.
+
+        ``turned_down`` is the status the WebSocket handshake was refused with,
+        when that is why REST is asked at all.
+
+        ⚠️ Only the version is kept for the hour, never the answer it came in.
+        The system card takes load and uptime from ``system/info`` too, and an
+        answer kept for an hour would freeze that card on exactly the older
+        versions this fallback is for.
+        """
+        now = time.monotonic()
+        # A handshake that said 404 has asked the question below already.
+        if turned_down != 404 and await self._has_current_api(config, ctx, fresh=not cache):
+            raise _rest_refused("", base_url(config), turned_down)
+        fresh: dict[str, Any] = {}
+        known = ctx.cache.get("truenas:version")
+        if cache and known and known[0] > now:
+            label = known[1]
+        else:
+            info = await self._get(config, ctx, READS["system.info"], cache=cache)
+            label = str((info or {}).get("version") or "")
+            ctx.cache["truenas:version"] = (now + VERSION_SECONDS, label)
+            fresh["system.info"] = info
+        if _version(label) >= REST_DEPRECATED_FROM:
+            # Not a TrueNAS without the current API after all, whatever the
+            # handshake said: the WebSocket is tried again next time.
+            ctx.cache.pop("truenas:legacy", None)
+            raise _rest_refused(label, base_url(config), turned_down)
+        for method in methods:
+            if method not in fresh:
+                fresh[method] = await self._get(config, ctx, READS[method], cache=cache)
+        return {method: fresh[method] for method in methods}
 
     # -- the current API -------------------------------------------------------
 
@@ -184,7 +258,7 @@ class TruenasAdapter(Adapter):
                 if gone.status == 404:
                     ctx.cache["truenas:legacy"] = now + LEGACY_SECONDS
                 try:
-                    fresh = {method: await self._get(config, ctx, READS[method], cache=cache) for method in missing}
+                    fresh = await self._rest(config, ctx, missing, cache, turned_down=gone.status)
                 except AuthFailed as error:
                     raise AdapterError(
                         f"TrueNAS turned the WebSocket at /api/current down with HTTP {gone.status}, "
@@ -193,8 +267,11 @@ class TruenasAdapter(Adapter):
                              "The old REST API accepts only a full administrator's key on TrueNAS 25.04 and later.",
                     ) from error
         else:
+            # Over https this branch is only reached within the hour after a
+            # handshake that said 404, and that answer still stands.
+            remembered = 404 if base_url(config).startswith("https://") else None
             try:
-                fresh = {method: await self._get(config, ctx, READS[method], cache=cache) for method in missing}
+                fresh = await self._rest(config, ctx, missing, cache, turned_down=remembered)
             except AuthFailed as error:
                 if base_url(config).startswith("http://"):
                     raise AdapterError("TrueNAS refused the API key on its REST API.", code="auth_failed",
@@ -290,6 +367,41 @@ class _NoCurrentApi(Exception):
     def __init__(self, status: int) -> None:
         super().__init__(status)
         self.status = status
+
+
+def _version(label: str) -> tuple[int, int]:
+    """``25.10.1`` and ``TrueNAS-SCALE-24.10.2`` as (25, 10) and (24, 10).
+
+    (0, 0) when there is no number in it. That reads as "older", so a TrueNAS
+    that names itself in some way nobody has seen yet keeps its cards.
+    """
+    found = re.search(r"(\d+)\.(\d+)", label)
+    return (int(found.group(1)), int(found.group(2))) if found else (0, 0)
+
+
+def _rest_refused(label: str, address: str, turned_down: int | None) -> AdapterError:
+    """Why the REST API is not used on this TrueNAS, and what to change.
+
+    ⚠️ The way out depends on the address. Over http:// it is https://. Over
+    https:// the address is right already and something in between does not
+    pass the WebSocket on; telling that reader to change to https:// would
+    send them looking in the wrong place.
+    """
+    which = f"TrueNAS {label}" if label else "This TrueNAS"
+    why = (f"{which} has the current API and has deprecated the old REST API: TrueNAS 25.10 counts every call to it "
+           "in an alert on the NAS, and TrueNAS 26 removes it. nexdeck does not use it there.")
+    if address.startswith("https://"):
+        status = f" with HTTP {turned_down}" if turned_down else ""
+        return AdapterError(
+            f"TrueNAS turned the WebSocket at /api/current down{status}. {why}", code="deprecated_api",
+            hint="A reverse proxy in front of TrueNAS has to pass WebSockets on, that is the Upgrade and "
+                 "Connection headers. Or point the URL straight at TrueNAS.",
+        )
+    return AdapterError(
+        why, code="deprecated_api",
+        hint="Change the URL to https://. nexdeck then uses the current API, and the key of a read-only "
+             "administrator is enough. Over plain http TrueNAS would revoke the key, so that is never tried.",
+    )
 
 
 def _day(value: Any) -> str:
