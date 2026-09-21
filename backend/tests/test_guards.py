@@ -663,6 +663,45 @@ def test_every_document_is_reachable_from_the_readme() -> None:
     assert unlinked == [], "documents the README never links to: " + ", ".join(unlinked)
 
 
+#: Adapters that hang on no service. They are building blocks, and neither the
+#: README nor the project page counts them.
+NO_SERVICE = ("core", "jsonapi", "calendar")
+
+#: Where the README names a service in other words than its label.
+README_NAMES = {"rss": "RSS", "ical": "iCal", "peanut": "UPS through PeaNUT", "technitium": "Technitium", "unifi": "UniFi"}
+
+
+def test_the_readme_counts_and_lists_the_integrations_there_are() -> None:
+    """⚠️ The number aged twice without anybody noticing. On 21.09.2026 the badge
+    said 129, the sentence two lines below it "a hundred and twenty-seven", the
+    repository's description on GitHub 79, and the list left MeTube out. The
+    code had 129. A number in prose is a number nobody updates, so it is
+    written in digits and compared here, and so is the list.
+
+    The description on GitHub is out of reach from here; it is part of the
+    release round.
+    """
+    services = [adapter for adapter in all_adapters() if adapter.kind not in NO_SERVICE]
+    assert len(services) >= 100, f"only {len(services)} integrations were found, so this guard proves nothing"
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    badge = re.search(r"badge/integrations-(\d+)-", readme)
+    sentence = re.search(r"\*\*(\d+) integrations,\*\*", readme)
+    assert badge and sentence, "the README lost its badge or its sentence with the number of integrations"
+    assert int(badge.group(1)) == len(services), f"the badge says {badge.group(1)}, the code has {len(services)}"
+    assert int(sentence.group(1)) == len(services), f"the sentence says {sentence.group(1)}, the code has {len(services)}"
+
+    section = readme[readme.index("## The services it speaks to"):]
+    section = section[: section.index("\n## ", 5)]
+    # Prose writes "share prices" where the label says "Share prices".
+    prose = section.casefold()
+    missing = sorted(adapter.label for adapter in services
+                     if README_NAMES.get(adapter.kind, adapter.label).casefold() not in prose)
+    assert missing == [], "integrations the README's list leaves out: " + ", ".join(missing)
+    listed = [name for line in re.findall(r"^\*\*[^*]+\.\*\* (.+)$", section, re.M) for name in line.rstrip(".").split(", ")]
+    assert len(listed) == len(services), f"the list names {len(listed)} services, the code has {len(services)}; one that is gone may still stand there"
+
+
 def test_the_version_is_the_same_in_every_place_it_is_written() -> None:
     """⚠️ Four places say which version this is, and CI compares exactly one of
     them against the tag. A release where they disagree ships an About page,
