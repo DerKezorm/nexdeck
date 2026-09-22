@@ -8,6 +8,7 @@ import { ApiError, del, get, patch, post } from '../../api/client'
 import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
+import { LeaveDemo } from '../../components/LeaveDemo'
 import { Confirm, Field, Select, Sheet, Switch } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { useAuth } from '../../stores/auth'
@@ -62,6 +63,13 @@ export function IntegrationsSettings() {
             label={t('settings.system.demo')}
             description={about.data.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')}
           />
+          {/* The switch alone leaves the demo's own connections inventing
+              data; this takes them away, after saying what goes. */}
+          {!about.data.demo_forced && (about.data.demo || about.data.demo_data) && (
+            <div className="mt-3">
+              <LeaveDemo />
+            </div>
+          )}
         </SettingsCard>
       )}
       <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>

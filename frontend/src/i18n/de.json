@@ -541,7 +541,7 @@
   },
   "board": {
     "demo": "Vorführmodus: Jede Karte zeigt erfundene Daten, auch bei Anbindungen, die du selbst angelegt hast.",
-    "demoOff": "Abschalten",
+    "demoOff": "Demo verlassen",
     "none": {
       "title": "Noch kein Board",
       "body": "Leg eines an, dann erscheint es hier.",
@@ -647,7 +647,8 @@
     "widthWide": "Breit (2200 px)",
     "widthFull": "Volle Breite",
     "fitHeight": "Höhe ans Fenster anpassen",
-    "fitHeightHelp": "Die Zeilen wachsen oder schrumpfen, bis die Seite ohne Scrollen ins Fenster passt. Eine Seite, die dafür zu lang ist, behält ihre Zeilen und scrollt. Nicht auf dem Handy."
+    "fitHeightHelp": "Die Zeilen wachsen oder schrumpfen, bis die Seite ohne Scrollen ins Fenster passt. Eine Seite, die dafür zu lang ist, behält ihre Zeilen und scrollt. Nicht auf dem Handy.",
+    "demoData": "Einige Verbindungen stehen noch im Demo-Modus und zeigen erfundene Daten."
   },
   "widget": {
     "remove": {
@@ -1124,5 +1125,21 @@
     "pairingDone": "Gekoppelt. Der Schlüssel steht im Feld; speichere die Anbindung.",
     "pairingDenied": "In nexcrate abgelehnt. Es wurde kein Schlüssel angelegt.",
     "pairingExpired": "Die Bitte ist abgelaufen, ohne dass ein Schlüssel ankam. Starte sie neu."
+  },
+  "demoLeave": {
+    "button": "Demo-Modus verlassen…",
+    "title": "Demo-Modus verlassen",
+    "intro": "Der Demo-Modus geht aus, und was die Demo erfunden hat, verschwindet mit ihm.",
+    "connections_one": "{{count}} erfundene Verbindung wird entfernt.",
+    "connections_other": "{{count}} erfundene Verbindungen werden entfernt.",
+    "cards_one": "{{count}} Kachel, die sie liest, wird entfernt.",
+    "cards_other": "{{count}} Kacheln, die sie lesen, werden entfernt.",
+    "boards": "Boards, die nur aus der Demo bestanden, gehen ganz: {{names}}.",
+    "pages_one": "{{count}} Seite, die leer bliebe, wird entfernt.",
+    "pages_other": "{{count}} Seiten, die leer blieben, werden entfernt.",
+    "switched": "Bleiben und zeigen wieder echte Daten: {{names}}.",
+    "kept": "Deine eigenen Boards, Kacheln und Verbindungen bleiben. Bleibt kein Board übrig, entsteht ein neues Startboard.",
+    "nothing": "Die Demo hat hier nichts erfunden; nur der Schalter geht aus.",
+    "confirm": "Demo-Modus verlassen"
   }
 }

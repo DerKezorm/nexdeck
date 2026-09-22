@@ -20,6 +20,7 @@ from typing import Any
 import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.exc import StaleDataError
 
 from ..adapters import split_widget_kind
 from ..adapters.base import (
@@ -420,15 +421,21 @@ class Collector:
         if last and last[0] == ok and last[1] > time.monotonic():
             return
         cache[key] = (ok, time.monotonic() + 60)
-        with db_session() as db:
-            integration = db.get(Integration, integration_id)
-            if integration is None:
-                return
-            if ok:
-                integration.last_ok_at = utcnow()
-                integration.last_error = ""
-            else:
-                integration.last_error = error[:500]
+        try:
+            with db_session() as db:
+                integration = db.get(Integration, integration_id)
+                if integration is None:
+                    return
+                if ok:
+                    integration.last_ok_at = utcnow()
+                    integration.last_error = ""
+                else:
+                    integration.last_error = error[:500]
+        except StaleDataError:
+            # Deleted between reading and writing: an administrator removed
+            # the connection, or leaving the demo did, while a card was being
+            # read. Nothing is left to mark, and the card's answer is fine.
+            logger.debug("Connection %s went while its cards were being read.", integration_id)
 
     async def resolve_integration(self, integration_id: int) -> tuple[Any, dict[str, Any], Context]:
         """For widgets that combine several integrations, such as the calendar."""

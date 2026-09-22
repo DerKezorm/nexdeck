@@ -88,6 +88,9 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
         # ⚠️ The switch in the settings cannot undo NEXDECK_DEMO: it clears the
         # stored flag, and the variable keeps every card on invented data.
         "demo_forced": settings.demo,
+        # Invented connections outlive the switch: a demo left before
+        # 0.17 switched only the flag off, and its board went on inventing.
+        "demo_data": db.scalar(select(Integration.id).where(Integration.demo.is_(True)).limit(1)) is not None,
         "public_url": public_url(db),
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),
@@ -196,6 +199,47 @@ def patch_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict:
         for widget_id in list(db.scalars(select(Widget.id))):
             collector.schedule(widget_id)
     return {**general, "require_two_factor": two_factor.required(db)}
+
+
+@router.get("/api/v1/demo/leave", summary="What leaving demo mode would remove")
+def demo_leave_plan(user: AdminUser, db: DbSession) -> dict:
+    from ..services import demo_exit
+
+    return {**demo_exit.plan(db).view(demo_flag()), "forced": get_settings().demo}
+
+
+@router.post("/api/v1/demo/leave", summary="Leave demo mode: the invented connections go, with their cards")
+def demo_leave(user: AdminUser, db: DbSession) -> dict:
+    """The flag goes off, and what the demo invented goes with it (``services/demo_exit.py``)."""
+    from ..deps import error
+    from ..services import demo_exit
+    from ..services.sse import board_topic
+    from .integrations import _forget_in_options
+
+    if get_settings().demo:
+        raise error("demo_forced", "NEXDECK_DEMO holds demo mode on; remove it from the container's settings first.", 409)
+    touched = {w.page.board_id for w in demo_exit.plan(db).cards}
+    what, removed, starter = demo_exit.leave(db, owner_id=user.id)
+    gone = [integration.id for integration in what.connections]
+    for integration_id in gone:
+        _forget_in_options(db, integration_id)
+    general = get_setting(db, "general")
+    general["demo"] = False
+    put_setting(db, "general", general)
+    db.commit()
+    set_demo_flag(False)
+    for widget_id in removed:
+        collector.unschedule(widget_id)
+    for integration_id in gone:
+        collector.forget_integration(integration_id)
+    # Every card goes back to real data: the flag held the ones without a connection too.
+    for widget_id in list(db.scalars(select(Widget.id))):
+        collector.schedule(widget_id)
+    for board_id in touched:
+        hub.publish(board_topic(board_id), "board", {"id": board_id, "changed": True})
+    logger.info("Demo mode left by %s: %d invented connection(s) and %d card(s) removed, %d board(s) with them, "
+                "%d connection(s) back to real data.", user.username, len(gone), len(removed), len(what.boards), len(what.switched))
+    return {**what.view(False), "starter": starter.slug if starter else None}
 
 
 def load_demo_flag(db: DbSession) -> None:

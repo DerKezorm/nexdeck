@@ -172,6 +172,8 @@ export interface About {
   demo: boolean
   /** Set by NEXDECK_DEMO: the switch in the settings cannot undo it. */
   demo_forced?: boolean
+  /** Connections still in demo mode, which invent data whatever the switch says. */
+  demo_data?: boolean
   public_url: string
   update_check: boolean
   default_locale: string

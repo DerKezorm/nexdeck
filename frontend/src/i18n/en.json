@@ -541,7 +541,7 @@
   },
   "board": {
     "demo": "Demo mode: every card shows invented data, also for connections you added yourself.",
-    "demoOff": "Switch off",
+    "demoOff": "Leave the demo",
     "none": {
       "title": "No board yet",
       "body": "Create one and it appears here.",
@@ -647,7 +647,8 @@
     "widthWide": "Wide (2200 px)",
     "widthFull": "Full width",
     "fitHeight": "Fit the height to the window",
-    "fitHeightHelp": "The rows grow or shrink until the page fits the window without scrolling. A page too long for that keeps its usual rows and scrolls. Not on phones."
+    "fitHeightHelp": "The rows grow or shrink until the page fits the window without scrolling. A page too long for that keeps its usual rows and scrolls. Not on phones.",
+    "demoData": "Some connections are still in demo mode and show invented data."
   },
   "widget": {
     "remove": {
@@ -1124,5 +1125,21 @@
     "pairingDone": "Paired. The key is in the field; save the connection.",
     "pairingDenied": "Declined in nexcrate. No key was made.",
     "pairingExpired": "The request ran out before a key arrived. Start it again."
+  },
+  "demoLeave": {
+    "button": "Leave demo mode…",
+    "title": "Leave demo mode",
+    "intro": "Demo mode goes off, and what the demo invented goes with it.",
+    "connections_one": "{{count}} invented connection goes.",
+    "connections_other": "{{count}} invented connections go.",
+    "cards_one": "{{count}} card that reads one goes.",
+    "cards_other": "{{count}} cards that read them go.",
+    "boards": "Boards that were nothing but the demo go as a whole: {{names}}.",
+    "pages_one": "{{count}} page left empty goes.",
+    "pages_other": "{{count}} pages left empty go.",
+    "switched": "Kept, and back to real data: {{names}}.",
+    "kept": "Your own boards, cards and connections stay. If no board is left, a new starting board is made.",
+    "nothing": "The demo invented nothing here; only the switch goes off.",
+    "confirm": "Leave demo mode"
   }
 }
