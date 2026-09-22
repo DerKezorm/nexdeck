@@ -1,4 +1,4 @@
-"""How the installation looks: the accent colour and a style sheet of its own.
+"""How the installation looks: a colour theme, the accent colour and a style sheet of its own.
 
 nexdeck ships one look in two brightnesses. That is enough for most, and not
 enough for the people who put a dashboard on a wall and want it to match the
@@ -20,6 +20,7 @@ from typing import Any
 from sqlalchemy.orm import Session as DbSessionType
 
 from ..models import Setting
+from . import themes
 
 KEY = "appearance"
 #: Long enough for a real style sheet, short enough not to be a payload.
@@ -49,7 +50,7 @@ PRESETS: dict[str, str] = {
     "sky": "#38bdf8",
     "slate": "#94a3b8",
 }
-DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": ""}
+DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None}
 
 
 class AppearanceError(Exception):
@@ -66,7 +67,11 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         "preset": str(value.get("preset") or "cyan"),
         "accent": str(value.get("accent") or ""),
         "css": str(value.get("css") or ""),
+        "theme": value.get("theme"),
         "presets": PRESETS,
+        "themes": themes.THEMES,
+        # What in the chosen theme is hard to read, so the page can say so.
+        "weak": themes.weak_spots(value["theme"]) if value.get("theme") else [],
     }
 
 
@@ -95,7 +100,11 @@ def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
     accent = str(incoming.get("accent") or "").strip()
     if accent and not COLOUR.match(accent):
         raise AppearanceError("A colour of your own has to read like #22d3ee.", "bad_colour")
-    value = {"preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or "")}
+    try:
+        theme = themes.check(incoming.get("theme"))
+    except themes.ThemeError as failure:
+        raise AppearanceError(str(failure), "bad_theme") from failure
+    value = {"preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme}
     row = db.get(Setting, KEY)
     if row is None:
         db.add(Setting(key=KEY, value=value))

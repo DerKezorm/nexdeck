@@ -7,12 +7,13 @@ import { ApiError, get, put } from '../../api/client'
 import { Field, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, type Appearance } from '../../lib/appearance'
 import { SettingsCard } from './SettingsCard'
+import { ThemeChooser } from './ThemeChooser'
 
 const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {} }
 
 /**
- * The look of the whole installation: one accent colour and, for whoever
- * wants it, a style sheet of their own.
+ * The look of the whole installation: a colour theme, one accent colour
+ * and, for whoever wants it, a style sheet of their own.
  *
  * What is typed here is painted on at once, before it is saved, because a
  * colour is nothing to judge from a form field. Leaving the page without
@@ -40,7 +41,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -53,11 +54,21 @@ export function AppearanceSettings() {
   const presets = Object.entries(form.presets ?? {})
   return (
     <>
+      <SettingsCard title={t('settings.appearance.themeTitle')} description={t('settings.appearance.themeHelp')}>
+        <ThemeChooser
+          value={form.theme ?? null}
+          themes={form.themes ?? {}}
+          onChange={(theme) => setForm((current) => ({ ...current, theme }))}
+        />
+        <button className="btn btn-accent mt-4" onClick={store}>
+          {t('common.save')}
+        </button>
+      </SettingsCard>
       <SettingsCard title={t('settings.appearance.title')} description={t('settings.appearance.help')}>
         <Field label={t('settings.appearance.accent')} help={t('settings.appearance.accentHelp')}>
           <div className="flex flex-wrap gap-2">
             {presets.map(([name, colour]) => {
-              const chosen = !form.accent.trim() && form.preset === name
+              const chosen = !form.accent.trim() && !form.theme && form.preset === name
               return (
                 <button
                   key={name}
@@ -65,6 +76,8 @@ export function AppearanceSettings() {
                   style={{ background: colour }}
                   aria-label={t(`settings.appearance.colours.${name}`, name)}
                   aria-pressed={chosen}
+                  // A theme brings an accent for dark and one for light; a preset would be one for both.
+                  disabled={Boolean(form.theme)}
                   onClick={() => setForm((current) => ({ ...current, preset: name, accent: '' }))}
                 >
                   {chosen && <Check size={16} className="text-black/70" />}
@@ -72,6 +85,7 @@ export function AppearanceSettings() {
               )
             })}
           </div>
+          {form.theme && <p className="text-xs text-muted mt-1.5">{t('settings.appearance.themeAccent')}</p>}
         </Field>
 
         <Field label={t('settings.appearance.own')} htmlFor="a-own" help={t('settings.appearance.ownHelp')}>
@@ -119,7 +133,7 @@ export function AppearanceSettings() {
           <button
             className="btn"
             onClick={() => {
-              setForm({ ...EMPTY, presets: form.presets })
+              setForm({ ...EMPTY, presets: form.presets, themes: form.themes })
             }}
           >
             {t('settings.appearance.reset')}
@@ -128,7 +142,7 @@ export function AppearanceSettings() {
       </SettingsCard>
 
       <SettingsCard title={t('settings.appearance.previewTitle')} description={t('settings.appearance.previewHelp')}>
-        <div className="flex flex-wrap items-center gap-3" style={accentVariables(preview) as React.CSSProperties}>
+        <div className="flex flex-wrap items-center gap-3" style={(form.theme && !form.accent.trim() ? undefined : accentVariables(preview)) as React.CSSProperties | undefined}>
           <button className="btn btn-accent">{t('common.save')}</button>
           <button className="btn">{t('common.cancel')}</button>
           <span className="chip">

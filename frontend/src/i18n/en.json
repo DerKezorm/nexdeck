@@ -320,7 +320,37 @@
         "rose": "Rose",
         "sky": "Sky",
         "slate": "Slate"
-      }
+      },
+      "themeTitle": "Colour theme",
+      "themeHelp": "The colours of the whole interface, for dark and for light. The brightness switch keeps working: a theme brings both.",
+      "themeOwn": "nexdeck",
+      "themeWeak": "Some colours of this theme are hard to read, below a contrast of 4.5:1:",
+      "brightness": {
+        "dark": "Dark",
+        "light": "Light"
+      },
+      "tokens": {
+        "text": "Text",
+        "text-muted": "Secondary text",
+        "text-faint": "Faint text",
+        "accent": "Accent",
+        "on-accent": "Text on the accent",
+        "ok": "Good",
+        "warn": "Warning",
+        "bad": "Fault",
+        "unknown": "Unknown"
+      },
+      "ratio": "({{ratio}}:1)",
+      "themeShare": "Paste a theme or take this one along",
+      "themeShareHelp": "A theme is a name and the colours for dark and light as #rrggbb, in JSON. Colours left out stay as nexdeck has them.",
+      "themePasteLabel": "Theme as JSON",
+      "themePaste": {
+        "json": "This is not JSON.",
+        "shape": "A theme needs a name and the colours for dark, for light, or both."
+      },
+      "themeTake": "Use this theme",
+      "themeExport": "Save as a file",
+      "themeAccent": "The theme brings its own accent for dark and for light. A colour of your own below still wins."
     },
     "journal": {
       "title": "Log level",

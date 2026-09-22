@@ -1259,7 +1259,14 @@
     "Releases, open issues and pull requests, and the latest workflow runs of the projects you follow.": "Releases, offene Issues und Pull Requests und die letzten Workflow-Läufe der Projekte, denen du folgst.",
     "The latest run of every workflow, red ones first.": "Der letzte Lauf jedes Workflows, rote zuerst.",
     "What is open in the projects you follow, the latest changed first. Pull requests say whether they are drafts or wait for a review.": "Was in den Projekten offen ist, denen du folgst, zuletzt Geändertes zuerst. Pull Requests sagen, ob sie Entwürfe sind oder auf ein Review warten.",
-    "Workflow runs": "Workflow-Läufe"
+    "Workflow runs": "Workflow-Läufe",
+    "Deep sea": "Tiefsee",
+    "Forest floor": "Waldboden",
+    "Ember": "Glut",
+    "Morning mist": "Morgennebel",
+    "Sandstone": "Sandstein",
+    "Graphite": "Graphit",
+    "Plum": "Pflaume"
   },
   "labels": {
     "Jobs": "Jobs",

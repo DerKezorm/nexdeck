@@ -320,7 +320,37 @@
         "rose": "Rosé",
         "sky": "Himmel",
         "slate": "Schiefer"
-      }
+      },
+      "themeTitle": "Farbthema",
+      "themeHelp": "Die Farben der ganzen Oberfläche, für Dunkel und für Hell. Der Umschalter für die Helligkeit funktioniert weiter: Ein Thema bringt beides mit.",
+      "themeOwn": "nexdeck",
+      "themeWeak": "Einige Farben dieses Themas sind schwer lesbar, ihr Kontrast liegt unter 4,5:1:",
+      "brightness": {
+        "dark": "Dunkel",
+        "light": "Hell"
+      },
+      "tokens": {
+        "text": "Text",
+        "text-muted": "Zweiter Text",
+        "text-faint": "Blasser Text",
+        "accent": "Akzent",
+        "on-accent": "Text auf dem Akzent",
+        "ok": "Gut",
+        "warn": "Warnung",
+        "bad": "Fehler",
+        "unknown": "Unbekannt"
+      },
+      "ratio": "({{ratio}}:1)",
+      "themeShare": "Thema einfügen oder dieses mitnehmen",
+      "themeShareHelp": "Ein Thema ist ein Name und die Farben für Dunkel und Hell als #rrggbb, in JSON. Farben, die fehlen, bleiben, wie nexdeck sie hat.",
+      "themePasteLabel": "Thema als JSON",
+      "themePaste": {
+        "json": "Das ist kein JSON.",
+        "shape": "Ein Thema braucht einen Namen und die Farben für Dunkel, für Hell oder beides."
+      },
+      "themeTake": "Dieses Thema nehmen",
+      "themeExport": "Als Datei speichern",
+      "themeAccent": "Das Thema bringt eigene Akzente für Dunkel und Hell mit. Eine eigene Farbe weiter unten gewinnt trotzdem."
     },
     "journal": {
       "title": "Protokollstufe",

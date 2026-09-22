@@ -411,3 +411,6 @@ class AppearanceBody(BaseModel):
     #: reaches the service and gets a sentence back instead of a 422.
     accent: str = Field(default="", max_length=32)
     css: str = Field(default="", max_length=20000)
+    #: A theme, ``{"name", "dark": {colour: "#rrggbb"}, "light": {...}}``, or null for nexdeck's own look.
+    #: Loosely typed so that a pasted theme gets a sentence back, not a 422.
+    theme: dict[str, Any] | None = None
