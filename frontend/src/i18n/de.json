@@ -1035,5 +1035,23 @@
     "redoTitle": "Wiederholen (Strg+Umschalt+Z)",
     "closeGaps": "Lücken schließen",
     "closeGapsTitle": "Lücken schließen: Jede Karte rückt so weit nach oben wie möglich, die Spalten bleiben, wie sie sind"
+  },
+  "templates": {
+    "title": "Mit einer Vorlage beginnen",
+    "help": "Ein fertiges Board für eine Ecke des Labs. Jeder Platzhalter nimmt jeden der Dienste, die er nennt; einer, den du weglässt, nimmt seine Karten mit, und nur ihre Lücken schließen sich.",
+    "cards_one": "{{count}} Karte",
+    "cards_other": "{{count}} Karten",
+    "name": "Name des neuen Boards",
+    "slots": "Welche Anbindung füllt welchen Platzhalter?",
+    "demo": "Demo",
+    "leaveOut_one": "Weglassen ({{count}} Karte)",
+    "leaveOut_other": "Weglassen ({{count}} Karten)",
+    "none": "Noch keine Anbindung für {{services}}.",
+    "addConnection": "Anlegen",
+    "preview": "So wird es aussehen",
+    "willHave_one": "{{count}} Karte auf {{columns}} Spalten.",
+    "willHave_other": "{{count}} Karten auf {{columns}} Spalten.",
+    "create": "Board anlegen",
+    "emptyStart": "Mit einer Vorlage beginnen"
   }
 }

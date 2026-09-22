@@ -1,0 +1,28 @@
+template:
+  id: media
+  name: Media
+  description: What is playing and what arrived, what was asked for, what airs next and what is still downloading.
+  icon: clapperboard
+  order: 2
+  settings: {columns: 24}
+  slots:
+    - {name: Media server, kinds: [jellyfin, plex, emby]}
+    - {name: Requests, kinds: [seerr, jellyseerr, overseerr]}
+    - {name: Series, kinds: [sonarr]}
+    - {name: Films, kinds: [radarr]}
+    - {name: Downloads, kinds: [sabnzbd, qbittorrent, nzbget, transmission, deluge]}
+pages:
+  - name: Overview
+    cards:
+      - {slot: Media server, widget: nowplaying, title: Now playing, at: [0, 0, 10, 3]}
+      - {slot: Media server, widget: recent, title: Recently added, at: [10, 0, 8, 3]}
+      - {slot: Media server, widget: library, title: Library, at: [18, 0, 6, 3]}
+      - {slot: Requests, widget: requests, title: Requests, at: [0, 3, 8, 4]}
+      - {slot: Series, widget: calendar, title: Series calendar, at: [8, 3, 8, 4]}
+      - {slot: Films, widget: calendar, title: Film calendar, at: [16, 3, 8, 4]}
+      - {slot: Downloads, widget: speed, title: Download speed, at: [0, 7, 6, 2]}
+      - {slot: Series, widget: queue, title: Series queue, at: [6, 7, 9, 3]}
+      - {slot: Films, widget: queue, title: Film queue, at: [15, 7, 9, 3]}
+      - {slot: Downloads, widget: queue, title: Downloading, at: [0, 9, 6, 4]}
+      - {slot: Media server, widget: top, title: Most watched, at: [6, 10, 12, 3]}
+      - {slot: Requests, widget: counts, title: Request counts, at: [18, 10, 6, 3]}

@@ -497,6 +497,10 @@ export function BoardPage() {
                 >
                   <Plus size={14} /> {t('board.addWidget')}
                 </button>
+                {/* An empty board is where a ready-made one helps most. */}
+                <button className="btn" onClick={() => navigate('/settings/boards#templates')}>
+                  {t('templates.emptyStart')}
+                </button>
                 {/* An empty page is where one wonders how to get rid of it; the last page stays. */}
                 {pages.length > 1 && (
                   <button className="btn" onClick={() => setDeletingPage(true)}>

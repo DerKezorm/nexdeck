@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 // Three lines, the handle every list on a phone is dragged by. Lucide calls
 // it Menu; here it is a grip and nothing else.
 import { ChevronDown, ChevronRight, Menu, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
+import { TemplatePicker } from '../../components/TemplatePicker'
 import { Confirm, Field, Toast } from '../../components/ui'
 import { useHandleReorder } from '../../lib/useHandleReorder'
 import { useAuth } from '../../stores/auth'
@@ -51,6 +52,11 @@ export function BoardsSettings() {
   /** Which boards show their pages. Closed by default: the list is the answer
       to "which boards do I have", the pages are the second question. */
   const [expanded, setExpanded] = useState<number[]>([])
+  // An empty board sends people here for a template; take them to it.
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash === '#templates') document.getElementById('templates')?.scrollIntoView({ block: 'start' })
+  }, [hash])
   return (
     <>
       <SettingsCard title={t('settings.boards.title')} description={t('settings.boards.help')}>
@@ -174,6 +180,11 @@ export function BoardsSettings() {
             </button>
           </div>
         </Field>
+      </SettingsCard>
+      <SettingsCard title={t('templates.title')} description={t('templates.help')}>
+        <div id="templates" className="scroll-mt-20">
+          <TemplatePicker />
+        </div>
       </SettingsCard>
       <SettingsCard title={t('board.import')} description={t('board.importHelp')}>
         <textarea className="input mb-2" rows={8} aria-label={t('board.import')} value={yamlText} onChange={(e) => setYamlText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />

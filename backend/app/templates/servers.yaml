@@ -1,0 +1,25 @@
+template:
+  id: servers
+  name: Server rack
+  description: The hypervisor and its guests, the storage, the disks and the UPS, the containers and whether last night's backup ran.
+  icon: server
+  order: 4
+  settings: {columns: 24}
+  slots:
+    - {name: Hypervisor, kinds: [proxmox]}
+    - {name: Storage, kinds: [truenas, unraid, synology]}
+    - {name: Disks, kinds: [scrutiny]}
+    - {name: UPS, kinds: [peanut]}
+    - {name: Backups, kinds: [backrest, kopia, duplicati]}
+    - {name: Containers, kinds: [docker, portainer]}
+pages:
+  - name: Overview
+    cards:
+      - {slot: Hypervisor, widget: node, title: Hypervisor, at: [0, 0, 8, 2]}
+      - {slot: Storage, widget: system, title: Storage, at: [8, 0, 8, 2]}
+      - {slot: UPS, widget: ups, title: UPS, at: [16, 0, 4, 2]}
+      - {slot: Disks, widget: summary, title: Disk health, at: [20, 0, 4, 2]}
+      - {slot: Hypervisor, widget: guests, title: Guests, at: [0, 2, 8, 5]}
+      - {slot: Containers, widget: containers, title: Containers, at: [8, 2, 8, 5]}
+      - {slot: Disks, widget: disks, title: Disks, at: [16, 2, 8, 3]}
+      - {slot: Backups, widget: summary, title: Backups, at: [16, 5, 8, 2]}

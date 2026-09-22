@@ -43,6 +43,7 @@ from .routers import (
     setup,
     stream,
     system,
+    templates,
     tokens,
     users,
     widgets,
@@ -203,7 +204,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates):
     app.include_router(module.router)
 
 

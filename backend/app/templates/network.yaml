@@ -1,0 +1,28 @@
+template:
+  id: network
+  name: Network
+  description: The edge of the lab. Devices and findings, the firewall, what DNS filters, the line over time, the mesh VPN and the certificates that run out.
+  icon: network
+  order: 3
+  settings: {columns: 24}
+  slots:
+    - {name: UniFi, kinds: [unifi]}
+    - {name: Firewall, kinds: [opnsense, pfsense]}
+    - {name: DNS filter, kinds: [pihole, adguard, technitium]}
+    - {name: Speed test, kinds: [nexpulse, speedtest]}
+    - {name: Mesh VPN, kinds: [tailscale, headscale]}
+    - {name: Reverse proxy, kinds: [npm]}
+pages:
+  - name: Overview
+    cards:
+      - {slot: UniFi, widget: summary, title: Network, at: [0, 0, 6, 3]}
+      - {slot: Firewall, widget: system, title: Firewall, at: [6, 0, 4, 3]}
+      - {slot: DNS filter, widget: summary, title: DNS filter, at: [10, 0, 4, 3]}
+      - {slot: Speed test, widget: latest, title: Line speed, at: [14, 0, 4, 3]}
+      - {slot: Mesh VPN, widget: status, title: Mesh VPN, at: [18, 0, 6, 3]}
+      - {slot: UniFi, widget: devices, title: Devices, at: [0, 3, 8, 4]}
+      - {slot: UniFi, widget: findings, title: Findings, at: [8, 3, 8, 2]}
+      - {slot: Reverse proxy, widget: certificates, title: Certificates, at: [8, 5, 8, 2]}
+      - {slot: DNS filter, widget: top, title: Most blocked, at: [16, 3, 8, 4]}
+      - {slot: Speed test, widget: history, title: Line speed over time, at: [0, 7, 12, 3]}
+      - {slot: Reverse proxy, widget: hosts, title: Proxy hosts, at: [12, 7, 12, 3]}

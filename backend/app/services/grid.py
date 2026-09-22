@@ -94,3 +94,15 @@ def settle(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _overlap(one: dict[str, Any], other: dict[str, Any]) -> bool:
     return (one["x"] < other["x"] + other["w"] and other["x"] < one["x"] + one["w"]
             and one["y"] < other["y"] + other["h"] and other["y"] < one["y"] + one["h"])
+
+
+def close_gaps(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Every card as far up as it goes without touching another, read from
+    the top, and never sideways: columns stay as they were laid out."""
+    placed: list[dict[str, Any]] = []
+    for item in sorted(items, key=lambda one: (one["y"], one["x"])):
+        spot = dict(item)
+        while spot["y"] > 0 and not any(_overlap({**spot, "y": spot["y"] - 1}, other) for other in placed):
+            spot["y"] -= 1
+        placed.append(spot)
+    return placed

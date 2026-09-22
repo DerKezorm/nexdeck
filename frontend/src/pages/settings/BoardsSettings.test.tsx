@@ -39,7 +39,8 @@ const BOARDS = [
 const calls = vi.hoisted(() => ({ put: [] as { path: string; body: unknown }[] }))
 vi.mock('../../api/client', () => ({
   ApiError: class ApiError extends Error {},
-  get: vi.fn(async () => BOARDS),
+  // The picker below the list asks for templates; none here.
+  get: vi.fn(async (path: string) => (path.startsWith('/templates') ? [] : BOARDS)),
   post: vi.fn(async () => ({})),
   patch: vi.fn(async () => ({})),
   del: vi.fn(async () => ({})),

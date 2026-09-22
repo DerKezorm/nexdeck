@@ -1,0 +1,27 @@
+template:
+  id: homelab
+  name: Homelab overview
+  description: What is down, what is running, what DNS keeps out and what the line does, with bookmarks and a card for notes.
+  icon: home
+  order: 1
+  settings: {columns: 24}
+  slots:
+    - {name: Containers, kinds: [docker, portainer]}
+    - {name: Uptime, kinds: [uptimekuma]}
+    - {name: DNS filter, kinds: [pihole, adguard, technitium]}
+    - {name: Speed test, kinds: [nexpulse, speedtest]}
+pages:
+  - name: Overview
+    cards:
+      - {kind: core.clock, title: Clock, at: [0, 0, 6, 2], options: {date: true}}
+      - {kind: core.problems, title: Problems, at: [6, 0, 6, 2]}
+      - {slot: Uptime, widget: summary, title: Uptime, at: [12, 0, 4, 2]}
+      - {slot: Containers, widget: summary, title: Containers, at: [16, 0, 4, 2]}
+      - {slot: DNS filter, widget: summary, title: DNS filter, at: [20, 0, 4, 2]}
+      - {slot: Uptime, widget: monitors, title: Monitors, at: [0, 2, 6, 4]}
+      - {slot: Containers, widget: containers, title: Running containers, at: [6, 2, 8, 4]}
+      - {slot: DNS filter, widget: top, title: Most blocked, at: [14, 2, 4, 4]}
+      - {slot: Speed test, widget: latest, title: Line speed, at: [18, 2, 6, 2]}
+      - {kind: core.bookmarks, title: Bookmarks, at: [18, 4, 6, 2]}
+      - {slot: Speed test, widget: history, title: Line speed over time, at: [0, 6, 12, 3]}
+      - {kind: core.markdown, title: Notes, at: [12, 6, 12, 3], options: {content: "Notes for this board. Edit the card to write here."}}

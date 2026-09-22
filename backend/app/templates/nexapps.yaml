@@ -1,0 +1,23 @@
+template:
+  id: nexapps
+  name: The nex family
+  description: Nexview's requests and what waits for approval, the unread mail in nexmail and how the line is doing in nexpulse.
+  icon: layout-dashboard
+  order: 5
+  settings: {columns: 24}
+  slots:
+    - {name: Nexview, kinds: [nexview]}
+    - {name: nexmail, kinds: [nexmail]}
+    - {name: nexpulse, kinds: [nexpulse]}
+pages:
+  - name: Overview
+    cards:
+      - {kind: core.clock, title: Clock, at: [0, 0, 6, 2], options: {date: true}}
+      - {slot: Nexview, widget: requests, title: Requests, at: [6, 0, 4, 2]}
+      - {slot: Nexview, widget: library, title: Library, at: [10, 0, 4, 2]}
+      - {slot: nexmail, widget: unread, title: Unread mail, at: [14, 0, 4, 2]}
+      - {slot: nexpulse, widget: latest, title: Line speed, at: [18, 0, 6, 2]}
+      - {slot: Nexview, widget: approvals, title: Waiting for approval, at: [0, 2, 10, 5]}
+      - {slot: nexmail, widget: latest, title: Latest mail, at: [10, 2, 6, 5]}
+      - {slot: nexpulse, widget: history, title: Line speed over time, at: [16, 2, 8, 3]}
+      - {slot: nexpulse, widget: bufferbloat, title: Bufferbloat, at: [16, 5, 8, 2]}

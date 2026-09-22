@@ -1,0 +1,18 @@
+template:
+  id: wall
+  name: Wall display
+  description: For a tablet on the wall. The time, the weather, today's appointments and what is playing, across the whole screen with no scrolling.
+  icon: monitor
+  order: 6
+  settings: {columns: 24, width: full, fit_height: true}
+  slots:
+    - {name: Calendar, kinds: [ical]}
+    - {name: Media server, kinds: [jellyfin, plex, emby]}
+pages:
+  - name: Overview
+    cards:
+      - {kind: core.clock, title: Clock, at: [0, 0, 8, 3], options: {date: true}}
+      - {kind: weather.current, title: Weather, at: [8, 0, 8, 3]}
+      - {kind: core.problems, title: Problems, at: [16, 0, 8, 3]}
+      - {slot: Calendar, widget: events, title: Appointments, at: [0, 3, 12, 5]}
+      - {slot: Media server, widget: nowplaying, title: Now playing, at: [12, 3, 12, 5]}

@@ -1035,5 +1035,23 @@
     "redoTitle": "Redo (Ctrl+Shift+Z)",
     "closeGaps": "Close gaps",
     "closeGapsTitle": "Close gaps: every card moves up as far as it can, columns stay as they are"
+  },
+  "templates": {
+    "title": "Start from a template",
+    "help": "A ready-made board for a corner of the lab. Each slot takes any of the services it names; one left out takes its cards along, and only the holes they leave close.",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards",
+    "name": "Name of the new board",
+    "slots": "Which connection fills each slot?",
+    "demo": "demo",
+    "leaveOut_one": "Leave out ({{count}} card)",
+    "leaveOut_other": "Leave out ({{count}} cards)",
+    "none": "No connection for {{services}} yet.",
+    "addConnection": "Add one",
+    "preview": "How it comes out",
+    "willHave_one": "{{count}} card on {{columns}} columns.",
+    "willHave_other": "{{count}} cards on {{columns}} columns.",
+    "create": "Create the board",
+    "emptyStart": "Start from a template"
   }
 }
