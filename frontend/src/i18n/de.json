@@ -1113,5 +1113,16 @@
     "cards_other": "{{count}} Karten",
     "notes": "Nicht übernommen",
     "make": "Board anlegen"
+  },
+  "nexcrate": {
+    "pair": "Mit nexcrate koppeln",
+    "pairAgain": "Neu koppeln",
+    "urlFirst": "Trag erst oben die Adresse von nexcrate ein.",
+    "pairingText": "Öffne nexcrate. Oben auf jeder Seite steht jetzt „nexdeck möchte sich verbinden“. Vergleiche den Code und bestätige.",
+    "pairingWaiting": "Warte auf Bestätigung, noch {{time}}",
+    "pairingWaitingPlain": "Warte auf Bestätigung",
+    "pairingDone": "Gekoppelt. Der Schlüssel steht im Feld; speichere die Anbindung.",
+    "pairingDenied": "In nexcrate abgelehnt. Es wurde kein Schlüssel angelegt.",
+    "pairingExpired": "Die Bitte ist abgelaufen, ohne dass ein Schlüssel ankam. Starte sie neu."
   }
 }

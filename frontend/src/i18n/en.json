@@ -1113,5 +1113,16 @@
     "cards_other": "{{count}} cards",
     "notes": "Not carried over",
     "make": "Make the board"
+  },
+  "nexcrate": {
+    "pair": "Pair with nexcrate",
+    "pairAgain": "Pair again",
+    "urlFirst": "Enter nexcrate's address above first.",
+    "pairingText": "Open nexcrate. At the top of every page it now says “nexdeck would like to connect”. Compare the code and confirm.",
+    "pairingWaiting": "Waiting for the confirmation, {{time}} left",
+    "pairingWaitingPlain": "Waiting for the confirmation",
+    "pairingDone": "Paired. The key is in the field; save the connection.",
+    "pairingDenied": "Declined in nexcrate. No key was made.",
+    "pairingExpired": "The request ran out before a key arrived. Start it again."
   }
 }

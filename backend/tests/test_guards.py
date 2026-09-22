@@ -497,7 +497,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
-    assert confirmed == {"adguard", "audiobookshelf", "authentik", "autobrr", "beszel", "changedetection", "crowdsec", "cup", "dawarich", "deluge", "docker", "duplicati", "emby", "frigate",
+    assert confirmed == {"adguard", "audiobookshelf", "authentik", "autobrr", "beszel", "changedetection", "crowdsec", "cup", "dawarich", "deluge", "docker", "duplicati", "emby", "frigate", "nexcrate",
         "evcc", "firefly", "forgejo", "gitea", "glances", "gotify", "grafana", "grocy", "headscale", "healthchecks", "homeassistant", "ical", "immich", "jellyfin", "jsonapi",
         "karakeep", "kavita", "kimai", "komga", "kopia", "lidarr", "linkwarden", "mealie", "meilisearch", "metube", "miniflux", "n8n", "navidrome", "netbox", "nextcloud", "nexview", "npm", "ntfy", "nzbget",
         "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "proxmox", "qbittorrent", "radarr", "reolink", "romm", "sabnzbd", "seerr", "semaphore",

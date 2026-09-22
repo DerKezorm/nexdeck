@@ -241,7 +241,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       {/* Locked: users neither build on it nor see it in their list. What
           the administrator has built with it keeps running for them. */}
       <Switch checked={adminOnly} onChange={setAdminOnly} label={t('settings.integrations.adminOnly')} description={t('settings.integrations.adminOnlyHelp')} />
-      {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} />)}
+      {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} values={config} />)}
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (
         // ⚠️ Passed with a hint is yellow, not green: the hint says the cards

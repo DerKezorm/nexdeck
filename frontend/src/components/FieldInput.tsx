@@ -6,6 +6,7 @@ import { get } from '../api/client'
 import type { BoardSummary, FieldSpec, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
 import { PicturePicker } from './PicturePicker'
+import { NexcratePairing } from './NexcratePairing'
 import { PlexSignIn } from './PlexSignIn'
 import { Field, Select, Switch } from './ui'
 
@@ -16,6 +17,8 @@ interface Props {
   labelOverride?: string
   /** Lets a helper fill several fields at once, such as a token and the server address. */
   onFill?: (values: Record<string, unknown>) => void
+  /** The whole form, for a helper that needs a neighbouring field (pairing reads the address). */
+  values?: Record<string, unknown>
   /** The rows the card is showing right now, for a field that picks among them. */
   items?: Record<string, unknown>[]
   /** Every row the card has, so a switched-off one keeps its button. */
@@ -324,7 +327,7 @@ function ColourPicker({ value, onChange, label, help }: { value: unknown; onChan
   )
 }
 
-export function FieldInput({ spec, value, onChange, labelOverride, onFill, items, allTitles, integrationId }: Props) {
+export function FieldInput({ spec, value, onChange, labelOverride, onFill, items, allTitles, integrationId, values }: Props) {
   const { t } = useTranslation()
   const id = useId()
   // Adapters speak English; the field is shown in the user's language.
@@ -413,6 +416,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
         onChange={(event) => onChange(spec.type === 'number' ? (event.target.value === '' ? '' : Number(event.target.value)) : event.target.value)}
       />
       {spec.helper === 'plex-signin' && <PlexSignIn onFill={(values) => (onFill ? onFill(values) : onChange(values[spec.name]))} />}
+      {spec.helper === 'nexcrate-pairing' && (
+        <NexcratePairing url={String(values?.url ?? '')} insecure={Boolean(values?.insecure)} onKey={(key) => onChange(key)} />
+      )}
     </Field>
   )
 }

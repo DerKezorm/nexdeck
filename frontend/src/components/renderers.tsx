@@ -434,7 +434,9 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 <div className="flex items-center gap-2">
                   {/* `emphasis` marks a row that wants attention without being
                       a fault: an unread mail is not a yellow one. */}
-                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{String(item.title ?? '')}</span>
+                  {/* A title is a name as it stands, unless the row says it is
+                      nexdeck's own wording: a finding, a kind of media. */}
+                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{item.worded ? tLabel(String(item.title ?? '')) : String(item.title ?? '')}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
                 {item.subtitle ? <div className="text-[11px] text-muted truncate">{subtitleOf(item)}</div> : null}
@@ -462,7 +464,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   <ActionButtons actions={item.actions as Action[]} onAction={onAction} canAct={canAct} compact />
                 </span>
               ) : null}
-              {item.value !== undefined && item.value !== '' && <span className="num text-xs text-muted whitespace-nowrap">{String(item.value)}</span>}
+              {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
+              {item.value !== undefined && item.value !== '' && (
+                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : tLabel(String(item.value))}</span>
+              )}
               {item.url ? (
                 <a href={safeUrl(item.url)} target="_blank" rel="noopener noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')}>
                   <ExternalLink size={12} />
