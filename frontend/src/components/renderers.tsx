@@ -32,6 +32,7 @@ import type { TFunction } from 'i18next'
 import { fileUrl, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
+import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
 import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
@@ -222,7 +223,8 @@ function statusOf(value: unknown): Status {
 export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
   const { t } = useTranslation()
   const primary = data?.primary
-  const metric = Object.keys(data?.metrics ?? {})[0]
+  // The first declared metric, or the number itself when none is declared.
+  const metric = Object.keys(recordedMetrics(data))[0]
   const points = metric ? series?.[metric] : undefined
   const hasFooter = Boolean(data?.secondary?.length || data?.actions?.length)
   return (

@@ -14,15 +14,40 @@ from collections import defaultdict
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from ..adapters.base import WidgetData
 from ..config import get_settings
 from ..models import HistoryMinute, HistorySample
 
 #: What a sparkline can draw. The browser keeps this many anyway.
 MAX_POINTS = 240
+#: The name a card's big number is kept under when its adapter declares no metric.
+HEADLINE = "headline"
 
 
 def key_for(widget_id: int, metric: str) -> str:
     return f"{widget_id}:{metric}"
+
+
+def recorded(data: WidgetData | None) -> dict[str, float]:
+    """What is written down for a card: the metrics its adapter declares, or else its big number.
+
+    A value card without a declared metric showed a bare number and never a
+    line under it, although the number moved all day. Its headline is kept
+    now, under ``headline``. Only a real number: a version string or a
+    yes/no would draw nothing worth seeing. An answer with an error keeps
+    nothing, or a failed fetch would draw a dip to zero.
+
+    ⚠️ The browser applies the same rule to the answers it is pushed,
+    ``recordedMetrics`` in ``frontend/src/lib/recorded.ts``.
+    """
+    if data is None or data.error:
+        return {}
+    if data.metrics:
+        return data.metrics
+    value = (data.primary or {}).get("value")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return {HEADLINE: float(value)}
+    return {}
 
 
 def record(db: Session, widget_id: int, metrics: dict[str, float], ts: int | None = None) -> None:

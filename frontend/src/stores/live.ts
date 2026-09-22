@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 
+import { recordedMetrics } from '../lib/recorded'
 import type { HealthView, WidgetData } from '../lib/types'
 
 const SERIES_LIMIT = 120
@@ -54,16 +55,18 @@ export const useLive = create<LiveState>((set) => ({
         const id = Number(key)
         if (older(data[id], value)) continue
         data[id] = value
-        if (value.metrics) series[id] = appendMetrics(series[id], value.metrics)
+        const kept = recordedMetrics(value)
+        if (Object.keys(kept).length) series[id] = appendMetrics(series[id], kept)
       }
       return { data, series }
     }),
   applyWidget: (id, value) =>
     set((state) => {
       if (older(state.data[id], value)) return state
+      const kept = recordedMetrics(value)
       return {
         data: { ...state.data, [id]: value },
-        series: value.metrics && !value.error ? { ...state.series, [id]: appendMetrics(state.series[id], value.metrics) } : state.series,
+        series: Object.keys(kept).length ? { ...state.series, [id]: appendMetrics(state.series[id], kept) } : state.series,
       }
     }),
   setSeries: (id, incoming) =>

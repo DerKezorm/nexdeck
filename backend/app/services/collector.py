@@ -367,9 +367,10 @@ class Collector:
 
         self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options)
         live.set(widget_id, data)
-        if data.metrics and not data.error:
+        kept = history.recorded(data)
+        if kept:
             with db_session() as db:
-                history.record(db, widget_id, data.metrics)
+                history.record(db, widget_id, kept)
         hub.publish(board_topic(board_id), "widget", {"id": widget_id, "data": data.model_dump()})
 
         failures = self._failures.get(widget_id, 0)
