@@ -112,7 +112,7 @@ async def test_issues_leave_the_pull_requests_out_and_pull_requests_say_their_st
     ]))
     issues = await GITHUB.fetch("issues", {}, {"repos": "o/n", "what": "issues"}, ctx)
     assert [item["title"] for item in issues.items] == ["A bug"]
-    assert issues.items[0]["subtitle"] == "n#7" and issues.metrics == {"open": 1.0}
+    assert issues.items[0]["subtitle"] == "n#7" and issues.secondary[0]["value"] == 1
 
     respx.get(f"{API}/repos/o/n/pulls").mock(return_value=httpx.Response(200, headers=_limit(49), json=[
         {"number": 9, "title": "Draft work", "draft": True, "updated_at": "2026-09-21T09:00:00Z"},
@@ -170,3 +170,15 @@ async def test_the_connection_test_says_what_the_connection_is_good_for(ctx: Con
     assert "without a token" in said and "57 of 60" in said and "nexdeck" not in said
     respx.get(f"{API}/user").mock(return_value=httpx.Response(200, json={"login": "someone"}))
     assert "someone" in await GITHUB.test({"token": "github-token-for-tests"}, Context(httpx.AsyncClient(), cache={}))
+
+
+@respx.mock
+async def test_a_full_page_counts_as_at_least_and_runs_of_pull_requests_stay_out(ctx: Context) -> None:
+    respx.get(f"{API}/repos/o/n/issues").mock(return_value=httpx.Response(200, headers=_limit(50), json=[
+        {"number": n, "title": f"Issue {n}", "updated_at": "2026-09-20T10:00:00Z"} for n in range(3)
+    ]))
+    data = await GITHUB.fetch("issues", {}, {"repos": "o/n", "limit": 3}, ctx)
+    assert data.secondary[0]["value"] == "3+", "a page as long as asked for may not be all there is"
+    runs = respx.get(f"{API}/repos/o/n/actions/runs").mock(return_value=httpx.Response(200, headers=_limit(49), json={"workflow_runs": []}))
+    await GITHUB.fetch("runs", {}, {"repos": "o/n"}, ctx)
+    assert runs.calls[0].request.url.params["exclude_pull_requests"] == "true"

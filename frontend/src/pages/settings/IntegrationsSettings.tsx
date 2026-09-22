@@ -9,6 +9,7 @@ import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, Field, Select, Sheet, Switch } from '../../components/ui'
+import { tAdapter } from '../../i18n/texts'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
@@ -40,7 +41,7 @@ export function IntegrationsSettings() {
       if (!adapter.needs_integration && !adapter.optional_integration) continue
       // The technical name counts: somebody types "wol", "pbs" or "npm",
       // which none of the written-out names contain.
-      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''}`.toLowerCase()
+      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''} ${tAdapter(adapter.description)}`.toLowerCase()
       if (needle && !haystack.includes(needle)) continue
       ;(groups[adapter.category] ??= []).push(adapter)
     }
@@ -224,7 +225,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       <div className="flex items-start gap-3 mb-4">
         <ServiceIcon icon={adapter.icon} size={28} />
         <div className="text-sm">
-          <p className="text-muted">{adapter.description}</p>
+          <p className="text-muted">{tAdapter(adapter.description)}</p>
           {adapter.beta && <p className="text-[11px] text-warn mt-1">{t('settings.integrations.betaHelp')}</p>}
           {adapter.docs_url && (
             <a className="text-[11px] text-accent" href={adapter.docs_url} target="_blank" rel="noreferrer">

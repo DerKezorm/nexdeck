@@ -7,7 +7,9 @@ work with or without one.
 
 Every answer is kept with its ETag and asked for again with If-None-Match.
 An unchanged answer comes back as 304 without a body, and with a token it
-does not count against the limit at all. What the limit says is read from
+does not count against the limit at all. Measured on 22.09.2026: without a
+token it does count, one request like any other, so there the ETag saves the
+download and not the request. What the limit says is read from
 every answer: when only a few requests are left, the cards show what they
 have and wait for the reset instead of spending the last ones, and when the
 limit is used up they say until when, with the last answer still on show.
@@ -73,11 +75,13 @@ class GithubAdapter(Adapter):
     description = "Releases, open issues and pull requests, and the latest workflow runs of the projects you follow."
     icon = "github"
     docs_url = "https://docs.github.com/en/rest"
+    #: Out of beta on 22.09.2026: every card run against the real API.
+    beta = False
     needs_integration = False
     optional_integration = True
     fields = (
         Field("token", "Personal access token", type="password", secret=True,
-              help="Optional. A fine-grained token with read access raises the limit from 60 to 5,000 requests an hour and reaches private repositories."),
+              help="This connection carries only the token; which projects are shown is set on each card. Optional: a fine-grained token with read access raises the limit from 60 to 5,000 requests an hour and reaches private repositories."),
     )
     widgets = (
         WidgetType(
@@ -103,7 +107,6 @@ class GithubAdapter(Adapter):
             default_size=(4, 3),
             min_size=(3, 2),
             refresh_seconds=600,
-            metrics=("open",),
             options=(
                 REPOS_FIELD,
                 Field("what", "Show", type="select", default="issues", options=(("issues", "Issues"), ("pulls", "Pull requests"))),
@@ -240,7 +243,10 @@ class GithubAdapter(Adapter):
                     answer, old = await self._get(config, ctx, f"/repos/{repo}/{'pulls' if pulls else 'issues'}",
                                                   {"state": "open", "sort": "updated", "direction": "desc", "per_page": limit})
                 elif widget_kind == "runs":
-                    answer, old = await self._get(config, ctx, f"/repos/{repo}/actions/runs", {"per_page": 20})
+                    # ⚠️ Without the runs of pull requests. Measured on jellyfin/jellyfin:
+                    # a failed test on somebody's pull request branch made the whole
+                    # card red, though the project itself was green.
+                    answer, old = await self._get(config, ctx, f"/repos/{repo}/actions/runs", {"per_page": 20, "exclude_pull_requests": "true"})
                 else:
                     prereleases = bool(options.get("prereleases"))
                     path = f"/repos/{repo}/releases" if prereleases else f"/repos/{repo}/releases/latest"
@@ -291,7 +297,10 @@ class GithubAdapter(Adapter):
     @staticmethod
     def _issues(found: list[tuple[str, Any]], pulls: bool, limit: int) -> WidgetData:
         rows = []
+        # A full page means there may be more; the count then says "at least".
+        more = False
         for repo, payload in found:
+            more = more or (isinstance(payload, list) and len(payload) >= limit)
             for issue in payload or []:
                 # The issues list carries pull requests too; the pulls list has its own.
                 if not isinstance(issue, dict) or (not pulls and "pull_request" in issue):
@@ -310,9 +319,11 @@ class GithubAdapter(Adapter):
         return WidgetData(
             status="ok",
             items=[row for _updated, row in rows[:limit]],
-            secondary=[{"label": "Pull requests" if pulls else "Open issues", "value": len(rows)}],
+            # ⚠️ Only what was fetched is counted. Measured on jellyfin/jellyfin:
+            # the card said "2 open issues" of several hundred, because it
+            # counted the one page it had asked for.
+            secondary=[{"label": "Pull requests" if pulls else "Open issues", "value": f"{len(rows)}+" if more else len(rows)}],
             meta={"empty": "No open pull requests." if pulls else "No open issues."},
-            metrics={"open": float(len(rows))},
         )
 
     @staticmethod
