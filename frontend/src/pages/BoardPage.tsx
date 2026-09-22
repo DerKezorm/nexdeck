@@ -23,6 +23,7 @@ import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { startingValue, unanswered } from '../lib/unanswered'
+import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
@@ -363,7 +364,7 @@ export function BoardPage() {
         boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
       />
-      <main className="max-w-[1480px] mx-auto px-3 sm:px-4 pt-4">
+      <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
         <DemoNotice admin={user?.role === 'admin'} />
         {widgets.length === 0 && (
           <div className="glass rounded-2xl p-8 text-center max-w-md mx-auto mt-10">
@@ -400,6 +401,10 @@ export function BoardPage() {
           editing={editing}
           canAct={canAct}
           autoCompact={Boolean(settings.compact)}
+          // The saved columns, never the draft: the pages are only carried over
+          // to new columns when the sheet is saved.
+          columns={gridColumns(data.settings)}
+          fitHeight={Boolean(settings.fit_height)}
           onLayoutChange={onLayoutChange}
           onAction={onAction}
           onRefresh={onRefresh}

@@ -605,7 +605,17 @@
     "moveWithHandle": "{{name}} mit dem Griff verschieben",
     "chooseBeforeAction": "Dafür muss vorher etwas ausgewählt werden.",
     "pickOne": "Bitte auswählen",
-    "stackedHint": "Auf einem schmalen Bildschirm folgen die Karten der Reihenfolge des breiten Boards. Verschieben geht auf einem breiteren Bildschirm."
+    "stackedHint": "Auf einem schmalen Bildschirm folgen die Karten der Reihenfolge des breiten Boards. Verschieben geht auf einem breiteren Bildschirm.",
+    "gridTitle": "Raster",
+    "columns": "Spalten",
+    "columnsHelp": "Mehr Spalten erlauben feinere Größen. Karten behalten auf dem neuen Raster Platz und Breite; wo weniger Spalten zwei Karten übereinanderlegen würden, rückt die untere nach unten.",
+    "columnsShrink": "Weniger Spalten runden die Breiten der Karten. Speichern übernimmt es.",
+    "width": "Breite",
+    "widthNormal": "Normal (1480 px)",
+    "widthWide": "Breit (2200 px)",
+    "widthFull": "Volle Breite",
+    "fitHeight": "Höhe ans Fenster anpassen",
+    "fitHeightHelp": "Die Zeilen wachsen oder schrumpfen, bis die Seite ohne Scrollen ins Fenster passt. Eine Seite, die dafür zu lang ist, behält ihre Zeilen und scrollt. Nicht auf dem Handy."
   },
   "widget": {
     "remove": {

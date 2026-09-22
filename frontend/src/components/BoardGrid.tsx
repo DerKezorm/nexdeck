@@ -1,9 +1,10 @@
-import { memo, useCallback, useMemo, useState, type KeyboardEvent } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
+import { fittingRow, perTwelfth } from '../lib/grid'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { WidgetCard } from './WidgetCard'
 
@@ -23,6 +24,9 @@ const ResponsiveGrid = WidthProvider(Responsive)
  * wider, and a wall tablet shows what was arranged at the desk. Below that the
  * same arrangement is stacked, see `stackedFor`. The `md` and `sm` layouts the
  * server still keeps are not read.
+ *
+ * The wide board has the columns its settings say, 12, 24 or 36, and every
+ * size the server hands over is already in those columns.
  */
 export const BREAKPOINTS = { lg: 700, sm: 0 }
 export const COLUMNS = { lg: 12, sm: 4 }
@@ -45,6 +49,12 @@ interface Props {
   compact?: boolean
   /** On, every card moves up to fill space. Off, cards stay where they are dropped and gaps are allowed. */
   autoCompact?: boolean
+  /** The columns of the wide board; twelve for a board that does not say. */
+  columns?: number
+  /** Stretch or shrink the rows so the page fits the window, as far as cards stay readable. */
+  fitHeight?: boolean
+  /** What the page leaves free under the board, in pixels, for fitting its height. */
+  bottomSpace?: number
 }
 
 /** One press of an arrow key: one cell, or one cell of size with Shift. */
@@ -70,7 +80,8 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact } = props
+  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40 } = props
+  const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
   // The grid draws at the width WidthProvider assumes before it has measured,
   // which is a wide one; a phone reports itself right after.
@@ -78,8 +89,12 @@ export function BoardGrid(props: Props) {
   // ⚠️ Rebuilt only when the arrangement or the cards change. Without the memo
   // this ran on every widget tick, once or twice a second on a board of
   // thirty, and handed react-grid-layout a new object identity each time.
-  const wide = useMemo(() => layoutFor(layouts.lg, widgets, COLUMNS.lg), [layouts.lg, widgets])
-  const gridLayouts: Layouts = useMemo(() => ({ lg: wide, sm: stackedFor(wide, COLUMNS.sm) }), [wide])
+  const wide = useMemo(() => layoutFor(layouts.lg, widgets, columns), [layouts.lg, widgets, columns])
+  const gridLayouts: Layouts = useMemo(() => ({ lg: wide, sm: stackedFor(wide, COLUMNS.sm, columns) }), [wide, columns])
+  const cols = useMemo(() => ({ lg: columns, sm: COLUMNS.sm }), [columns])
+  const host = useRef<HTMLDivElement>(null)
+  const rows = useMemo(() => Math.max(1, ...wide.map((item) => item.y + item.h)), [wide])
+  const rowHeight = useFittingRow(host, Boolean(fitHeight) && screen === 'lg', rows, bottomSpace) ?? (compact ? 60 : ROW_HEIGHT)
   /**
    * Move or resize the focused card with the arrow keys.
    *
@@ -94,7 +109,7 @@ export function BoardGrid(props: Props) {
     event.preventDefault()
     const item = wide.find((one) => one.i === String(widget.id))
     if (!item) return
-    const next = moved(item as LayoutItem, event.key, event.shiftKey, COLUMNS.lg, floorOf(widget, COLUMNS.lg))
+    const next = moved(item as LayoutItem, event.key, event.shiftKey, columns, floorOf(widget, columns))
     if (!next) return
     onLayoutChange('lg', wide.map((one) => plain(one.i === next.i ? next : one)))
   }
@@ -107,12 +122,19 @@ export function BoardGrid(props: Props) {
           {t('board.stackedHint')}
         </p>
       )}
+      <div ref={host}>
       <ResponsiveGrid
+        // ⚠️ A new grid when the columns change. The responsive wrapper takes
+        // the layouts from its props at once but its columns a render later,
+        // so for one render a 24-column arrangement would lie on 12 columns:
+        // the grid pulls every card past the edge back in, and edit mode
+        // saves that.
+        key={columns}
         className={`board ${editing ? 'board-editing' : ''}`}
         layouts={gridLayouts}
         breakpoints={BREAKPOINTS}
-        cols={COLUMNS}
-        rowHeight={compact ? 60 : ROW_HEIGHT}
+        cols={cols}
+        rowHeight={rowHeight}
         margin={[GAP, GAP]}
         containerPadding={[0, 0]}
         isDraggable={Boolean(editing)}
@@ -172,6 +194,7 @@ export function BoardGrid(props: Props) {
           </div>
         ))}
       </ResponsiveGrid>
+      </div>
     </>
   )
 }
@@ -242,7 +265,7 @@ export function layoutFor(layout: LayoutItem[] | undefined, widgets: WidgetView[
       result.push({ ...item, w: Math.max(item.w, minW), h: Math.max(item.h, minH), minW, minH })
       continue
     }
-    const w = Math.min(cols, Math.max(3, minW))
+    const w = Math.min(cols, Math.max(3 * perTwelfth(cols), minW))
     if (x + w > cols) {
       x = 0
       y += 2
@@ -267,11 +290,12 @@ export function layoutFor(layout: LayoutItem[] | undefined, widgets: WidgetView[
  * Nothing in the stack can be dragged or resized. Its order is the wide
  * board's, and a drag here would have had nowhere to be kept.
  */
-export function stackedFor(wide: Layout[], cols: number): Layout[] {
+export function stackedFor(wide: Layout[], cols: number, wideColumns: number = COLUMNS.lg): Layout[] {
   const half = Math.floor(cols / 2)
   const ordered = [...wide].sort((a, b) => a.y - b.y || a.x - b.x)
   const tall = (item: Layout) => Math.max(item.h, item.minH ?? 1)
-  const small = (item: Layout) => item.w <= 2
+  // Two twelfths of the wide board, in whatever columns it has.
+  const small = (item: Layout) => item.w <= 2 * perTwelfth(wideColumns)
   const stacked: Layout[] = []
   let y = 0
   for (let index = 0; index < ordered.length; index += 1) {
@@ -304,4 +328,44 @@ function sameArrangement(one: Layout[], other: Layout[]): boolean {
 function floorOf(widget: WidgetView, cols: number): [number, number] {
   const [w, h] = widget.min_size ?? widget.default_size ?? [1, 1]
   return [Math.max(1, Math.min(cols, w)), Math.max(1, h)]
+}
+
+/**
+ * The row height that makes the page fit the window, or null for the usual
+ * one: when fitting is off, on a phone, or when the page has more rows than
+ * the window can take at a readable height.
+ *
+ * Measured from where the grid starts on the page, not on the screen, so a
+ * page scrolled a little keeps its rows; measured again whenever the window
+ * or the space above the grid changes.
+ */
+function useFittingRow(host: RefObject<HTMLDivElement | null>, enabled: boolean, rows: number, bottomSpace: number): number | null {
+  const [height, setHeight] = useState<number | null>(null)
+  useEffect(() => {
+    if (!enabled) {
+      setHeight(null)
+      return
+    }
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const element = host.current
+      if (!element) return
+      const top = element.getBoundingClientRect().top + window.scrollY
+      setHeight(fittingRow(window.innerHeight - top - bottomSpace, rows, GAP))
+    }
+    const later = () => {
+      if (!frame) frame = window.requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener('resize', later)
+    const watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(later)
+    if (host.current?.parentElement) watcher?.observe(host.current.parentElement)
+    return () => {
+      window.removeEventListener('resize', later)
+      watcher?.disconnect()
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [host, enabled, rows, bottomSpace])
+  return height
 }

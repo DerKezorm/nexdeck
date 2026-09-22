@@ -29,6 +29,7 @@ from ..schemas import (
     BoardCreate,
     BoardOrder,
     BoardPatch,
+    GridBody,
     ImportBody,
     KioskCreate,
     KioskSession,
@@ -39,7 +40,7 @@ from ..schemas import (
 )
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
-from ..services import history
+from ..services import grid, history
 from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
@@ -79,7 +80,7 @@ def list_boards(user: CurrentUser, db: DbSession, all_boards: bool = False) -> l
 @router.post("/boards", status_code=status.HTTP_201_CREATED, summary="Create a board")
 def create_board(body: BoardCreate, user: MemberUser, db: DbSession) -> dict:
     board = Board(slug=unique_slug(db, body.slug or body.name), name=body.name.strip(), icon=body.icon, owner_id=user.id,
-                  background={"kind": "bundled", "value": "aurora"}, position=(db.scalar(select(Board.position).order_by(Board.position.desc())) or 0) + 1)
+                  background={"kind": "bundled", "value": "aurora"}, settings={"columns": grid.NEW_BOARD}, position=(db.scalar(select(Board.position).order_by(Board.position.desc())) or 0) + 1)
     db.add(board)
     db.flush()
     db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))
@@ -172,7 +173,8 @@ def patch_board(slug: str, body: BoardPatch, user: CurrentUser, db: DbSession) -
     if body.background is not None:
         board.background = body.background
     if body.settings is not None:
-        board.settings = body.settings
+        # The columns change only through ``put_grid``, which takes the cards along.
+        board.settings = grid.clean(body.settings, grid.columns(board.settings))
     if body.position is not None:
         board.position = body.position
     if body.in_menu is not None:
@@ -331,6 +333,12 @@ def put_layouts(page_id: int, body: LayoutsBody, user: CurrentUser, db: DbSessio
         )
     known = {str(w.id) for w in page.widgets}
     layouts = dict(page.layouts or {})
+    cols = grid.columns(board.settings)
+    # ⚠️ A browser that still draws the board on its old columns, after
+    # somebody else changed them, would save cards past the right edge. The
+    # version check catches that too, but not for a tab old enough to send none.
+    if body.lg and any(item.x + item.w > cols for item in body.lg):
+        raise error("layout_too_wide", f"This board has {cols} columns, and the arrangement is wider. Reload the board.", status.HTTP_409_CONFLICT)
     for key in COLUMNS:
         items = getattr(body, key)
         if items is None:
@@ -341,6 +349,37 @@ def put_layouts(page_id: int, body: LayoutsBody, user: CurrentUser, db: DbSessio
     db.commit()
     hub.publish(board_topic(board.id), "layout", {"page_id": page.id, "layouts": layouts, "version": page.layout_version})
     return {"layouts": layouts, "version": page.layout_version}
+
+
+@router.put("/boards/{slug}/grid", summary="Change the number of columns a board is arranged on")
+def put_grid(slug: str, body: GridBody, user: CurrentUser, db: DbSession) -> dict:
+    """Every page of the board is carried over to the new columns.
+
+    Edges are converted rather than positions and widths, so cards that stood
+    side by side still do; no card goes below what its adapter can draw at,
+    and where shrinking would put two cards on the same cell, the lower one
+    moves down. Each page's version counts up, so a browser still arranging
+    on the old columns is told to reload instead of saving over it.
+    """
+    board, permission = require_board(db, slug, user, "edit")
+    if board.provisioned:
+        raise error("provisioned", "This board comes from a file on the server; change the file instead.", status.HTTP_409_CONFLICT)
+    before = grid.columns(board.settings)
+    pages = db.scalars(select(Page).options(selectinload(Page.widgets)).where(Page.board_id == board.id)).all()
+    for page in pages:
+        floors = {str(widget.id): board_service.card_sizes(widget, body.columns)[1][0] for widget in page.widgets}
+        layouts = dict(page.layouts or {})
+        layouts["lg"] = grid.rescale(list(layouts.get("lg") or []), before, body.columns, floors)
+        page.layouts = layouts
+        page.layout_version = (page.layout_version or 0) + 1
+    board.settings = grid.clean(board.settings, body.columns)
+    db.commit()
+    logger.info("Board %r moved from %d to %d columns by %s.", board.slug, before, body.columns, user.username)
+    # ⚠️ One board event and no layout events: the browser has to get the new
+    # columns and the new arrangement together. A layout on its own, drawn on
+    # the old columns, would be pulled in at the edge and saved that way.
+    _announce(board.id)
+    return board_view(db, board, permission)
 
 
 # -- shares ------------------------------------------------------------------

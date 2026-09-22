@@ -9,6 +9,7 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
+import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
@@ -173,7 +174,7 @@ export function KioskPage() {
           ))}
         </nav>
       )}
-      <main className="max-w-[1800px] mx-auto px-4 pt-4 pb-6">
+      <main className={`${boardWidth(data.settings) === 'normal' ? 'max-w-[1800px]' : WIDTH_CLASS[boardWidth(data.settings)]} mx-auto px-4 pt-4 pb-6`}>
         <BoardGrid
           key={page.id}
           widgets={widgets}
@@ -181,6 +182,9 @@ export function KioskPage() {
           data={liveData}
           series={liveSeries}
           autoCompact={Boolean(data.settings?.compact)}
+          columns={gridColumns(data.settings)}
+          fitHeight={Boolean(data.settings?.fit_height)}
+          bottomSpace={24}
           canAct={canAct}
           onAction={(widgetId, action) => {
             // The same rule as on the board: a blank nobody filled in opens

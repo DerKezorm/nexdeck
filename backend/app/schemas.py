@@ -123,8 +123,14 @@ class LayoutItem(BaseModel):
     i: str
     x: int = Field(ge=0)
     y: int = Field(ge=0)
-    w: int = Field(ge=1, le=12)
+    w: int = Field(ge=1, le=36)
     h: int = Field(ge=1, le=40)
+
+
+class GridBody(BaseModel):
+    """The columns a board is arranged on; its pages are rescaled to them."""
+
+    columns: Literal[12, 24, 36]
 
 
 class LayoutsBody(BaseModel):

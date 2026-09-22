@@ -186,7 +186,8 @@ def test_widget_preview_shows_draft_options_without_saving(client: TestClient) -
     view = client.get(f"/api/v1/boards/{board['slug']}").json()
     assert view["pages"][0]["widgets"][0]["options"] == {"seconds": False}
     assert view["pages"][0]["widgets"][0]["client_only"] is True
-    assert view["pages"][0]["widgets"][0]["default_size"] == [3, 2]
+    # A new board has 24 columns; the clock declares three twelfths.
+    assert view["pages"][0]["widgets"][0]["default_size"] == [6, 2]
 
 
 def test_widget_preview_needs_edit_permission(client: TestClient) -> None:

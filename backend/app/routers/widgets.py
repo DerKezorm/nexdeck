@@ -28,8 +28,8 @@ from ..deps import (
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
 from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
+from ..services import grid, history
 from ..services import health as health_service
-from ..services import history
 from ..services.boards import _validate_options, place_widget, remove_from_layouts, widget_view
 from ..services.collector import collector
 from ..services.hass_ws import hass_listener
@@ -87,7 +87,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     db.add(widget)
     db.flush()
     size = (body.w or widget_type.default_size[0], body.h or widget_type.default_size[1])
-    place_widget(page, widget.id, size, widget_type.min_size)
+    place_widget(page, widget.id, size, widget_type.min_size, grid.columns(board.settings))
     health_service.ensure_check_for_widget(db, widget)
     db.commit()
     db.refresh(widget)
@@ -96,7 +96,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     # change costs no query; it has to hear that the map changed.
     hass_listener.forget_widgets(body.integration_id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
-    return {"widget": widget_view(db, widget), "layouts": page.layouts}
+    return {"widget": widget_view(db, widget, columns=grid.columns(board.settings)), "layouts": page.layouts}
 
 
 @router.patch("/widgets/{widget_id}", summary="Change a widget's settings")
@@ -126,7 +126,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         remove_from_layouts(page, widget.id)
         widget.page_id = target.id
         adapter, kind = split_widget_kind(widget.kind)
-        place_widget(target, widget.id, adapter.widget(kind).default_size, adapter.widget(kind).min_size)
+        place_widget(target, widget.id, adapter.widget(kind).default_size, adapter.widget(kind).min_size, grid.columns(board.settings))
     health_service.ensure_check_for_widget(db, widget)
     db.commit()
     db.refresh(widget)
@@ -135,7 +135,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     if widget.health_check is not None:
         health_service.health.reset(widget.health_check.id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
-    return widget_view(db, widget)
+    return widget_view(db, widget, columns=grid.columns(board.settings))
 
 
 @router.delete("/widgets/{widget_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove a widget")

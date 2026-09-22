@@ -605,7 +605,17 @@
     "moveWithHandle": "Drag to move {{name}}",
     "chooseBeforeAction": "This needs a choice before it runs.",
     "pickOne": "Pick one",
-    "stackedHint": "On a narrow screen the cards follow the order of the wide board. To move them, open the board on a wider screen."
+    "stackedHint": "On a narrow screen the cards follow the order of the wide board. To move them, open the board on a wider screen.",
+    "gridTitle": "Grid",
+    "columns": "Columns",
+    "columnsHelp": "More columns allow finer sizes. Cards keep their place and width on the new grid; where fewer columns would put two cards on top of each other, the lower one moves down.",
+    "columnsShrink": "Fewer columns round the widths of the cards. Save to apply.",
+    "width": "Width",
+    "widthNormal": "Normal (1480 px)",
+    "widthWide": "Wide (2200 px)",
+    "widthFull": "Full width",
+    "fitHeight": "Fit the height to the window",
+    "fitHeightHelp": "The rows grow or shrink until the page fits the window without scrolling. A page too long for that keeps its usual rows and scrolls. Not on phones."
   },
   "widget": {
     "remove": {

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
+import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { BUNDLED } from './BackgroundLayer'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
 
@@ -55,9 +56,14 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [background, settings, open])
 
+  const savedColumns = gridColumns(board.settings)
+  const draftColumns = gridColumns(settings)
   const saveLook = async () => {
     setError('')
     try {
+      // The columns first: they carry every page along, and the settings
+      // below leave them as the server has them.
+      if (draftColumns !== savedColumns) await put(`/boards/${board.slug}/grid`, { columns: draftColumns })
       await patch(`/boards/${board.slug}`, { name, background, settings })
       onChanged()
       onClose()
@@ -172,6 +178,27 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
             </div>
           )}
           <Switch checked={Boolean(settings.compact)} onChange={(compact) => setSettings((current) => ({ ...current, compact }))} label={t('board.autoCompact')} description={t('board.autoCompactHelp')} />
+          <h4 className="text-xs font-medium text-muted mt-4 mb-2">{t('board.gridTitle')}</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('board.columns')} htmlFor="b-columns">
+              <Select
+                id="b-columns"
+                value={String(draftColumns)}
+                onChange={(value) => setSettings((current) => ({ ...current, columns: Number(value) }))}
+                options={GRID_CHOICES.map((choice) => ({ value: String(choice), label: String(choice) }))}
+              />
+            </Field>
+            <Field label={t('board.width')} htmlFor="b-width">
+              <Select
+                id="b-width"
+                value={boardWidth(settings)}
+                onChange={(value) => setSettings((current) => ({ ...current, width: value }))}
+                options={WIDTHS.map((width) => ({ value: width, label: t(`board.width${width[0].toUpperCase()}${width.slice(1)}`) }))}
+              />
+            </Field>
+          </div>
+          <p className="text-[11px] text-muted -mt-1 mb-3">{draftColumns < savedColumns ? t('board.columnsShrink') : t('board.columnsHelp')}</p>
+          <Switch checked={Boolean(settings.fit_height)} onChange={(fit_height) => setSettings((current) => ({ ...current, fit_height }))} label={t('board.fitHeight')} description={t('board.fitHeightHelp')} />
           <p className="text-[11px] text-faint mb-3">{t('board.previewHint')}</p>
           <button className="btn btn-accent" onClick={() => void saveLook()}>
             {t('common.save')}

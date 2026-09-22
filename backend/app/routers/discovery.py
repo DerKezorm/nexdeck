@@ -19,6 +19,7 @@ from ..adapters.docker import ADAPTER as DOCKER
 from ..adapters.docker import container_name
 from ..deps import CurrentUser, DbSession, error, require_board_id, require_integration
 from ..models import Page, Widget
+from ..services import grid
 from ..services import health as health_service
 from ..services.boards import place_widget, widget_view
 from ..services.collector import collector
@@ -105,7 +106,7 @@ async def apply_suggestions(body: ApplyBody, user: CurrentUser, db: DbSession) -
                         options={"description": entry["description"], "check": bool(entry["url"])})
         db.add(widget)
         db.flush()
-        place_widget(page, widget.id, (2, 1), (1, 1))
+        place_widget(page, widget.id, (2, 1), (1, 1), grid.columns(board.settings))
         health_service.ensure_check_for_widget(db, widget)
         created.append(widget)
     db.commit()
@@ -114,7 +115,7 @@ async def apply_suggestions(body: ApplyBody, user: CurrentUser, db: DbSession) -
         collector.schedule(widget.id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
     logger.info("%d app tile(s) created on board %r from Docker by %s.", len(created), board.name, user.username)
-    return {"created": [widget_view(db, w) for w in created], "layouts": page.layouts}
+    return {"created": [widget_view(db, w, columns=grid.columns(board.settings)) for w in created], "layouts": page.layouts}
 
 
 def _host_from(engine_host: str) -> str:

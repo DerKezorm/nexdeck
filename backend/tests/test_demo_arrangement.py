@@ -30,7 +30,9 @@ def test_every_card_of_the_demo_has_its_place_saved(client: TestClient) -> None:
         for widget in page["widgets"]:
             item = saved.get(str(widget["id"]))
             assert item is not None, f"{name}: {widget['title']} has no saved place"
-            assert (item["x"], item["y"], item["w"], item["h"]) == described[(widget["kind"], widget["title"])]
+            x, y, w, h = described[(widget["kind"], widget["title"])]
+            # Described in twelfths, drawn on the demo board's 24 columns.
+            assert (item["x"], item["y"], item["w"], item["h"]) == (x * 2, y, w * 2, h)
             checked += 1
 
     # A demo without cards would pass the loop above without looking at anything.
