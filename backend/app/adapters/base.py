@@ -171,6 +171,10 @@ class WidgetType:
     #: only place that knows what the whole is, and this flag only decides
     #: whether the choice appears at all.
     ring: bool = False
+    #: Whether a list can be drawn as bars. Only where the values on the right
+    #: are numbers: a list of issues whose value is "1 h" offered the switch,
+    #: and it changed nothing (reported on 22.09.2026).
+    bars: bool = True
 
     def __post_init__(self) -> None:
         """Never smaller than the drawing can bear.
@@ -200,7 +204,7 @@ class WidgetType:
         # are can be drawn as a ring. Written here once rather than into the
         # eighty list cards, which is eighty chances to word it differently.
         extra: tuple[tuple[str, str], ...] = ()
-        if self.renderer == "list":
+        if self.renderer == "list" and self.bars:
             extra += (("bars", "Bars"),)
         if self.ring:
             extra += (("ring", "A ring"),)

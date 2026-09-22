@@ -47,6 +47,8 @@ PRESET_OPTIONS = (
 #: Where the answers and the limit are kept, in the connection's memory.
 ETAGS = "github:etags"
 LIMIT = "github:limit"
+#: The search has a limit of its own, ten a minute without a token and thirty with.
+SEARCH_LIMIT = "github:limit:search"
 #: How many answers are kept; enough for ten projects on every card.
 KEPT = 300
 #: Requests held back for when they matter: below this the cards live on
@@ -104,6 +106,7 @@ class GithubAdapter(Adapter):
             label="Issues and pull requests",
             description="What is open in the projects you follow, the latest changed first. Pull requests say whether they are drafts or wait for a review.",
             renderer="list",
+            bars=False,
             default_size=(4, 3),
             min_size=(3, 2),
             refresh_seconds=600,
@@ -118,6 +121,7 @@ class GithubAdapter(Adapter):
             label="Workflow runs",
             description="The latest run of every workflow, red ones first.",
             renderer="list",
+            bars=False,
             default_size=(4, 3),
             min_size=(3, 2),
             refresh_seconds=300,
@@ -145,8 +149,9 @@ class GithubAdapter(Adapter):
         answers: dict[str, tuple[str, Any, float]] = ctx.cache.setdefault(ETAGS, {})
         key = json.dumps([path, params], sort_keys=True)
         held = answers.get(key)
-        limit = ctx.cache.get(LIMIT)
-        if limit and limit["remaining"] <= RESERVE and time.time() < limit["reset"]:
+        where = SEARCH_LIMIT if path.startswith("/search/") else LIMIT
+        limit = ctx.cache.get(where)
+        if limit and limit["remaining"] <= (1 if where == SEARCH_LIMIT else RESERVE) and time.time() < limit["reset"]:
             if held:
                 return held[1], held[2]
             raise self._used_up(limit["reset"], bool(token))
@@ -158,7 +163,7 @@ class GithubAdapter(Adapter):
         response = await ctx.request("GET", f"{API}{path}", headers=headers, params=params, timeout=20, auth_errors=False)
         remaining, reset = response.headers.get("x-ratelimit-remaining"), response.headers.get("x-ratelimit-reset")
         if remaining is not None and remaining.isdigit() and reset is not None and reset.isdigit():
-            ctx.cache[LIMIT] = {"remaining": int(remaining), "reset": float(reset), "limit": int(response.headers.get("x-ratelimit-limit") or 0)}
+            ctx.cache[where] = {"remaining": int(remaining), "reset": float(reset), "limit": int(response.headers.get("x-ratelimit-limit") or 0)}
         if response.status_code == 304 and held:
             answers[key] = (held[0], held[1], time.time())
             return held[1], None
@@ -236,11 +241,32 @@ class GithubAdapter(Adapter):
         failures: list[str] = []
         stale: list[float] = []
         found: list[tuple[str, Any]] = []
-        for repo in repos:
+        pulls = options.get("what") == "pulls"
+        total: int | None = None
+        if widget_kind == "issues":
+            # ⚠️ Through the search, not the repository's issue list. That list
+            # carries the pull requests too, the last changed first: measured on
+            # seerr-team/seerr, the eight newest were all pull requests, so the
+            # card said "no open issues" of 250. The search asks for issues
+            # alone, for every project in one request, and says how many there are.
+            query = " ".join(f"repo:{repo}" for repo in repos) + (" is:pr" if pulls else " is:issue") + " is:open"
+            try:
+                answer, old = await self._get(config, ctx, "/search/issues", {"q": query, "sort": "updated", "order": "desc", "per_page": limit})
+                total = int((answer or {}).get("total_count") or 0)
+                if old:
+                    stale.append(old)
+                if not pulls:
+                    for item in (answer or {}).get("items") or []:
+                        if isinstance(item, dict):
+                            found.append((str(item.get("repository_url") or "").split("/repos/", 1)[-1], [item]))
+            except RateLimited:
+                if not pulls:
+                    raise
+        for repo in repos if widget_kind != "issues" or pulls else []:
             try:
                 if widget_kind == "issues":
-                    pulls = options.get("what") == "pulls"
-                    answer, old = await self._get(config, ctx, f"/repos/{repo}/{'pulls' if pulls else 'issues'}",
+                    # Pull requests from their own list, which says whether a review is asked for.
+                    answer, old = await self._get(config, ctx, f"/repos/{repo}/pulls",
                                                   {"state": "open", "sort": "updated", "direction": "desc", "per_page": limit})
                 elif widget_kind == "runs":
                     # ⚠️ Without the runs of pull requests. Measured on jellyfin/jellyfin:
@@ -261,7 +287,7 @@ class GithubAdapter(Adapter):
                 stale.append(old)
             found.append((repo, answer))
         if widget_kind == "issues":
-            data = self._issues(found, options.get("what") == "pulls", limit)
+            data = self._issues(found, pulls, limit, total)
         elif widget_kind == "runs":
             data = self._runs(found, limit)
         else:
@@ -295,14 +321,13 @@ class GithubAdapter(Adapter):
         return WidgetData(status="ok" if entries else "warn", items=entries[:limit], meta={"style": "list"})
 
     @staticmethod
-    def _issues(found: list[tuple[str, Any]], pulls: bool, limit: int) -> WidgetData:
+    def _issues(found: list[tuple[str, Any]], pulls: bool, limit: int, total: int | None = None) -> WidgetData:
         rows = []
-        # A full page means there may be more; the count then says "at least".
+        # Without a count from the search, a full page means there may be more.
         more = False
         for repo, payload in found:
             more = more or (isinstance(payload, list) and len(payload) >= limit)
             for issue in payload or []:
-                # The issues list carries pull requests too; the pulls list has its own.
                 if not isinstance(issue, dict) or (not pulls and "pull_request" in issue):
                     continue
                 place = f"{repo.rsplit('/', 1)[-1]}#{issue.get('number')}"
@@ -322,7 +347,8 @@ class GithubAdapter(Adapter):
             # ⚠️ Only what was fetched is counted. Measured on jellyfin/jellyfin:
             # the card said "2 open issues" of several hundred, because it
             # counted the one page it had asked for.
-            secondary=[{"label": "Pull requests" if pulls else "Open issues", "value": f"{len(rows)}+" if more else len(rows)}],
+            secondary=[{"label": "Pull requests" if pulls else "Open issues",
+                        "value": total if total is not None else (f"{len(rows)}+" if more else len(rows))}],
             meta={"empty": "No open pull requests." if pulls else "No open issues."},
         )
 

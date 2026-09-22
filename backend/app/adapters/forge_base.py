@@ -58,11 +58,11 @@ class ForgeAdapter(Adapter):
         )
         self.widgets = (
             WidgetType(kind="issues", label="Open issues", description="Open issues or pull requests across your repositories, the latest first.",
-                       renderer="list", default_size=(3, 3), refresh_seconds=300,
+                       renderer="list", bars=False, default_size=(3, 3), refresh_seconds=300,
                        options=(Field("what", "Show", type="select", default="issues", options=(("issues", "Issues"), ("pulls", "Pull requests"))),
                                 Field("limit", "Entries", type="number", default=8))),
             WidgetType(kind="actions", label="Actions", description="The latest jobs, red ones marked, from one repository or the most recently changed ones.",
-                       renderer="list", default_size=(3, 3), refresh_seconds=120, metrics=("failing",),
+                       renderer="list", bars=False, default_size=(3, 3), refresh_seconds=120, metrics=("failing",),
                        options=(Field("repository", "Repository", placeholder="owner/name",
                                       help=f"Empty looks at the {REPOSITORIES_TO_WATCH} repositories that changed last."),
                                 Field("limit", "Entries", type="number", default=8))),

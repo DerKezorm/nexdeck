@@ -105,14 +105,21 @@ async def test_a_token_is_sent_and_a_wrong_one_is_said_to_be_wrong(ctx: Context)
 
 
 @respx.mock
-async def test_issues_leave_the_pull_requests_out_and_pull_requests_say_their_state(ctx: Context) -> None:
-    respx.get(f"{API}/repos/o/n/issues").mock(return_value=httpx.Response(200, headers=_limit(50), json=[
-        {"number": 7, "title": "A bug", "updated_at": "2026-09-20T10:00:00Z", "html_url": "https://github.com/o/n/issues/7"},
-        {"number": 8, "title": "A pull request", "updated_at": "2026-09-21T10:00:00Z", "pull_request": {}},
-    ]))
-    issues = await GITHUB.fetch("issues", {}, {"repos": "o/n", "what": "issues"}, ctx)
+async def test_issues_come_from_the_search_with_their_count_and_pull_requests_say_their_state(ctx: Context) -> None:
+    """⚠️ The repository's issue list carries pull requests too. Measured on
+    seerr-team/seerr: its eight newest entries were all pull requests, and the
+    card said "no open issues" of 250."""
+    search = respx.get(f"{API}/search/issues").mock(side_effect=[
+        httpx.Response(200, headers=_limit(9), json={"total_count": 250, "items": [
+            {"number": 7, "title": "A bug", "updated_at": "2026-09-20T10:00:00Z", "html_url": "https://github.com/o/n/issues/7",
+             "repository_url": "https://api.github.com/repos/o/n"},
+        ]}),
+        httpx.Response(200, headers=_limit(8), json={"total_count": 3, "items": []}),
+    ])
+    issues = await GITHUB.fetch("issues", {}, {"repos": "o/n\no/m", "what": "issues"}, ctx)
+    assert search.calls[0].request.url.params["q"] == "repo:o/n repo:o/m is:issue is:open"
     assert [item["title"] for item in issues.items] == ["A bug"]
-    assert issues.items[0]["subtitle"] == "n#7" and issues.secondary[0]["value"] == 1
+    assert issues.items[0]["subtitle"] == "n#7" and issues.secondary[0]["value"] == 250
 
     respx.get(f"{API}/repos/o/n/pulls").mock(return_value=httpx.Response(200, headers=_limit(49), json=[
         {"number": 9, "title": "Draft work", "draft": True, "updated_at": "2026-09-21T09:00:00Z"},
@@ -120,9 +127,11 @@ async def test_issues_leave_the_pull_requests_out_and_pull_requests_say_their_st
         {"number": 11, "title": "Plain", "draft": False, "requested_reviewers": [], "updated_at": "2026-09-19T11:00:00Z"},
     ]))
     pulls = await GITHUB.fetch("issues", {}, {"repos": "o/n", "what": "pulls"}, ctx)
+    assert search.calls[1].request.url.params["q"] == "repo:o/n is:pr is:open"
     assert [(item["title"], item["subtitle"]) for item in pulls.items] == [
         ("Please look", "Review requested · n#10"), ("Draft work", "Draft · n#9"), ("Plain", "n#11"),
     ]
+    assert pulls.secondary[0]["value"] == 3
 
 
 @respx.mock
@@ -173,12 +182,14 @@ async def test_the_connection_test_says_what_the_connection_is_good_for(ctx: Con
 
 
 @respx.mock
-async def test_a_full_page_counts_as_at_least_and_runs_of_pull_requests_stay_out(ctx: Context) -> None:
-    respx.get(f"{API}/repos/o/n/issues").mock(return_value=httpx.Response(200, headers=_limit(50), json=[
-        {"number": n, "title": f"Issue {n}", "updated_at": "2026-09-20T10:00:00Z"} for n in range(3)
+async def test_without_the_search_a_full_page_counts_as_at_least_and_runs_of_pull_requests_stay_out(ctx: Context) -> None:
+    respx.get(f"{API}/search/issues").mock(return_value=httpx.Response(403, json={"message": "API rate limit exceeded"}, headers=_limit(0)))
+    respx.get(f"{API}/repos/o/n/pulls").mock(return_value=httpx.Response(200, headers=_limit(50), json=[
+        {"number": n, "title": f"Pull {n}", "updated_at": "2026-09-20T10:00:00Z"} for n in range(3)
     ]))
-    data = await GITHUB.fetch("issues", {}, {"repos": "o/n", "limit": 3}, ctx)
-    assert data.secondary[0]["value"] == "3+", "a page as long as asked for may not be all there is"
+    data = await GITHUB.fetch("issues", {}, {"repos": "o/n", "what": "pulls", "limit": 3}, ctx)
+    assert len(data.items) == 3 and data.secondary[0]["value"] == "3+", "a page as long as asked for may not be all there is"
     runs = respx.get(f"{API}/repos/o/n/actions/runs").mock(return_value=httpx.Response(200, headers=_limit(49), json={"workflow_runs": []}))
     await GITHUB.fetch("runs", {}, {"repos": "o/n"}, ctx)
     assert runs.calls[0].request.url.params["exclude_pull_requests"] == "true"
+    assert ctx.cache["github:limit"]["remaining"] == 49, "the search's limit is kept apart from the one the other cards spend"

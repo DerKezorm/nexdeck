@@ -350,7 +350,9 @@
       },
       "themeTake": "Use this theme",
       "themeExport": "Save as a file",
-      "themeAccent": "The theme brings its own accent for dark and for light. A colour of your own below still wins."
+      "themeAccent": "The theme brings its own accent for dark and for light. A colour of your own below still wins.",
+      "loadFailed": "The look could not be read from the server.",
+      "retry": "Try again"
     },
     "journal": {
       "title": "Log level",

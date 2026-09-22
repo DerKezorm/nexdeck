@@ -73,6 +73,8 @@ class FrigateAdapter(Adapter):
     description = "Cameras with their frame rates, the latest detections and the load they cause."
     icon = "frigate"
     docs_url = "https://docs.frigate.video/integrations/api/"
+    #: Out of beta on 22.09.2026: confirmed by the operator against a real Frigate.
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://frigate:5000",
               help="Port 5000 is Frigate's internal API and needs no account; port 8971 is the authenticated one, and so is a reverse proxy in front of it."),

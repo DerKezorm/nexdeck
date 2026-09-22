@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
-import { Field, Toast } from '../../components/ui'
+import { Field, Spinner, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, type Appearance } from '../../lib/appearance'
 import { SettingsCard } from './SettingsCard'
 import { ThemeChooser } from './ThemeChooser'
@@ -49,6 +49,25 @@ export function AppearanceSettings() {
     } catch (failure) {
       setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
     }
+  }
+
+  // ⚠️ Nothing to show until the stored look is here. The page used to draw
+  // its empty starting form while the request was out or had failed: no
+  // themes, no colours, "nexdeck" ticked, and a save from there would have
+  // put the look back to nothing. Reported on 22.09.2026 after the server had
+  // restarted under a page that was loading.
+  if (saved.isLoading) return <Spinner />
+  if (saved.isError || !saved.data) {
+    return (
+      <SettingsCard title={t('settings.appearance.title')}>
+        <p className="text-sm text-bad mb-3" role="alert">
+          {t('settings.appearance.loadFailed')}
+        </p>
+        <button className="btn" onClick={() => void saved.refetch()}>
+          {t('settings.appearance.retry')}
+        </button>
+      </SettingsCard>
+    )
   }
 
   const presets = Object.entries(form.presets ?? {})
