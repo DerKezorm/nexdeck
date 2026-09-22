@@ -11,6 +11,7 @@ import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
 import { Confirm, Field, Select, Sheet, Switch } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
+import { shownField } from '../../lib/fields'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
@@ -42,7 +43,9 @@ export function IntegrationsSettings() {
       if (!adapter.needs_integration && !adapter.optional_integration) continue
       // The technical name counts: somebody types "wol", "pbs" or "npm",
       // which none of the written-out names contain.
-      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''} ${tAdapter(adapter.description)}`.toLowerCase()
+      // The vendors count as well: nobody searches for "SNMP", they search
+      // for the name printed on their switch.
+      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''} ${tAdapter(adapter.description)} ${(adapter.keywords ?? []).join(' ')}`.toLowerCase()
       if (needle && !haystack.includes(needle)) continue
       ;(groups[adapter.category] ??= []).push(adapter)
     }
@@ -242,6 +245,18 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
           )}
         </div>
       </div>
+      {/* Open for a new connection, where it is needed; folded away once
+          the connection exists and somebody only comes back to change it. */}
+      {adapter.guide && adapter.guide.length > 0 && (
+        <details className="rounded-xl border border-line p-3 mb-4 text-sm" open={!integration}>
+          <summary className="cursor-pointer font-medium">{t('settings.integrations.guide')}</summary>
+          <ol className="list-decimal pl-5 mt-2 flex flex-col gap-1 text-muted">
+            {adapter.guide.map((step) => (
+              <li key={step}>{tAdapter(step)}</li>
+            ))}
+          </ol>
+        </details>
+      )}
       <Field label={t('settings.integrations.name')} htmlFor="i-name" required>
         <input id="i-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
@@ -249,7 +264,9 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       {/* Locked: users neither build on it nor see it in their list. What
           the administrator has built with it keeps running for them. */}
       <Switch checked={adminOnly} onChange={setAdminOnly} label={t('settings.integrations.adminOnly')} description={t('settings.integrations.adminOnlyHelp')} />
-      {!demo && adapter.fields.map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} values={config} />)}
+      {/* ⚠️ A field that belongs to the other choice is not on screen: a
+          community next to an SNMPv3 user reads as "fill in both". */}
+      {!demo && adapter.fields.filter((field) => shownField(field, adapter.fields, config)).map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} values={config} />)}
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (
         // ⚠️ Passed with a hint is yellow, not green: the hint says the cards

@@ -48,6 +48,7 @@ const BUILT_WITH = [
   { name: 'PyYAML', url: 'https://pyyaml.org', license: 'MIT' },
   { name: 'feedparser', url: 'https://feedparser.readthedocs.io', license: 'BSD' },
   { name: 'py-vapid', url: 'https://github.com/web-push-libs/vapid', license: 'MPL 2.0' },
+  { name: 'PySNMP', url: 'https://github.com/lextudio/pysnmp', license: 'BSD' },
   { name: 'React', url: 'https://react.dev', license: 'MIT' },
   { name: 'Vite', url: 'https://vite.dev', license: 'MIT' },
   { name: 'Tailwind CSS', url: 'https://tailwindcss.com', license: 'MIT' },

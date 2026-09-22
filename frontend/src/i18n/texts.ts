@@ -84,6 +84,13 @@ const PATTERNS: Record<string, [RegExp, string][]> = {
     [/^finished (.+)$/, 'fertig $1'],
     [/^last (.+)$/, 'zuletzt $1'],
     [/^renewed (\d+) days ago$/, 'vor $1 Tagen erneuert'],
+    [/^runs at ([\d.]+ [MG]bit\/s)$/, 'läuft mit $1'],
+    [/^(\d+) errors in the last hour$/, '$1 Fehler in der letzten Stunde'],
+    [/^(\d+) of (\d+) ports up$/, '$1 von $2 Ports verbunden'],
+    [/^(\d+) uplink\(s\) down$/, '$1 Uplink(s) ausgefallen'],
+    [/^class (\d)$/, 'Klasse $1'],
+    [/^The device answers$/, 'Das Gerät antwortet'],
+    [/^(.+) answers$/, '$1 antwortet'],
   ],
 }
 

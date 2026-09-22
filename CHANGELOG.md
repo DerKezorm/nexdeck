@@ -3,6 +3,14 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.18.0 (2026-09-22)
+
+### New
+
+- **SNMP: switches and network devices, whatever the vendor.** One connection per device, reading the standard MIBs only (IF-MIB with its 64-bit counters, SNMPv2-MIB, EtherLike, ENTITY, POWER-ETHERNET and LLDP), so a Cisco, an HP ProCurve, an Aruba CX, a Netgear, a TP-Link JetStream, a Zyxel, a D-Link, a MikroTik or a UniFi switch all answer the same cards. The vendor is recognised from sysObjectID and named, nothing vendor-specific is read. SNMPv3 with SHA and AES is the default and SNMPv2c is offered with the plain warning that its community and every answer travel unencrypted. **nexdeck never writes to a device: there is no SNMP SET anywhere in the adapter.** Five cards: the device with model, firmware and uptime; the ports with state, speed, duplex and their LLDP neighbours; the traffic of one port with its history, worked out from two counter readings; findings (uplink down, new errors on a port, links at 100 Mbit/s or in half duplex); and PoE with budget, consumption and the ports that deliver power. A device that reports no PoE says so instead of showing zero watts, and a port with only 32-bit counters says why it shows no rate rather than inventing one. The connection test names what is wrong: over SNMPv2c silence has three usual causes and all three are named, over SNMPv3 an unknown user and a wrong authentication password are said outright, and a device that only falls silent over a wrong encryption password is asked once more without encryption, so that can be said too. Searching the connections for Cisco, Netgear, TP-Link, Zyxel, HP or Aruba leads here. **Beta until somebody confirms it against a real switch:** it was built against recorded answers of eleven real devices from eight makers and a live Net-SNMP agent, which is not the same as a switch in a rack.
+- **A connection sheet can carry a setup guide,** the way the notification channels do, and it shows only the fields that belong to what was chosen: an SNMPv3 user or a v2c community, never both at once.
+- **Connections are found by the vendor behind a protocol.** An adapter may name the products it speaks to, and the search in Settings and in the widget library reads them.
+
 ## 0.17.0 (2026-09-22)
 
 ### Upgrading

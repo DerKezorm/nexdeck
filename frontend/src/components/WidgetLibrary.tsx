@@ -59,6 +59,7 @@ export function haystack(adapter: AdapterSpec, widget: WidgetTypeSpec): string {
     widget.description,
     tAdapter(widget.description),
     adapter.category,
+    ...(adapter.keywords ?? []),
   ]
     .join(' ')
     .toLowerCase()

@@ -210,6 +210,7 @@ CREDENTIAL_STEMS = ("key", "token", "secret", "password", "passwd", "auth", "hea
 NOT_A_CREDENTIAL: dict[tuple[str, str], str] = {
     ("proxmox", "token_id"): "names which token is used, like a user name; the secret is token_secret",
     ("pbs", "token_id"): "the same, next to its own token_secret",
+    ("snmp", "auth_protocol"): "picks SHA or MD5 from a list; the secret is auth_password",
 }
 
 
@@ -367,7 +368,8 @@ def test_every_adapter_text_has_a_german_translation() -> None:
     missing: set[str] = set()
     checked = 0
     for adapter in all_adapters():
-        texts = [adapter.description]
+        # The steps of a setup guide are adapter texts like any other.
+        texts = [adapter.description, *adapter.guide]
         for field in adapter.fields:
             texts += [field.label, field.help, *(label for _value, label in field.options)]
         for widget in adapter.widgets:

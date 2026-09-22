@@ -88,6 +88,10 @@ export interface AdapterSpec {
   optional_integration?: boolean
   /** The connection may refuse some of its cards; ask `/integrations/{id}/barred/{widget}` before adding one. */
   bars_widgets?: boolean
+  /** More words it is found by, such as the vendors behind a protocol. */
+  keywords?: string[]
+  /** Steps shown in the connection sheet, for a device that is set up on its own side first. */
+  guide?: string[]
   fields: FieldSpec[]
   widgets: WidgetTypeSpec[]
 }

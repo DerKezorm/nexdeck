@@ -49,6 +49,7 @@ that one of twenty-one renderers draws.
 | OPNsense | system, gateways | | API key and secret |
 | pfSense | system, interfaces | | API key of the package pfSense-pkg-RESTAPI |
 | MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
+| SNMP (switches and network devices) | device, ports, port traffic, findings, PoE | | SNMPv3 user with SHA and AES, read only; or an SNMPv2c community, which travels unencrypted. Any vendor, standard MIBs only (IF-MIB, EtherLike, ENTITY, POWER-ETHERNET, LLDP); never writes |
 | FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
 | Tailscale | devices, status | | API access token from the admin console |
 | Headscale | nodes, status | | API key from `headscale apikeys create` |

@@ -35,3 +35,11 @@ segno==1.6.6
 # carries secret.key, so it needs a password, and it has to open with 7-Zip
 # on a day when nexdeck itself is what stopped working.
 pyzipper==0.4.0
+
+# Switches and network devices. PySNMP (BSD-2-Clause, maintained by LeXtudio)
+# is pure Python and asyncio, and its only dependency is pyasn1 (BSD-2-Clause);
+# the C bindings of Net-SNMP would need the library in the image and block the
+# event loop. SNMPv3 encryption goes through cryptography, already above.
+# Both checked against OSV on 22.09.2026: no advisories.
+pysnmp==7.1.29
+pyasn1==0.6.4

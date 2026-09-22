@@ -219,6 +219,7 @@
       "test": "Verbindung testen",
       "betaHelp": "Dieser Adapter wurde noch nicht an einer echten Instanz bestätigt. Wenn etwas falsch aussieht, melde es bitte.",
       "docs": "API-Dokumentation",
+      "guide": "So richtest du es ein",
       "name": "Name",
       "demo": "Vorführmodus",
       "demoHelp": "Erfundene, lebendige Daten statt des echten Dienstes.",

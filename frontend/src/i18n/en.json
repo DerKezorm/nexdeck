@@ -219,6 +219,7 @@
       "test": "Test connection",
       "betaHelp": "This adapter has not been confirmed against a live instance yet. If something looks wrong, please report it.",
       "docs": "API documentation",
+      "guide": "How to set it up",
       "name": "Name",
       "demo": "Demo mode",
       "demoHelp": "Fake, moving data instead of the real service.",

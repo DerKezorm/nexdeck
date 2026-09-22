@@ -56,6 +56,14 @@ describe('haystack', () => {
     expect(text).toContain('hosts')
   })
 
+  it('finds a card by the vendor behind the protocol', () => {
+    // Nobody searches for "SNMP"; they search for the name printed on the
+    // switch, and one adapter speaks to all of them.
+    const snmp = { kind: 'snmp', label: 'SNMP (switches and network devices)', category: 'network', keywords: ['cisco', 'netgear'], widgets: [] } as unknown as AdapterSpec
+    const ports = { kind: 'snmp.ports', label: 'Ports', description: 'Every port with its state and speed.' } as unknown as WidgetTypeSpec
+    expect(haystack(snmp, ports)).toContain('cisco')
+  })
+
   it('covers the short names of the awkward services', () => {
     const cases: [string, string][] = [
       ['pbs', 'Proxmox Backup Server'],

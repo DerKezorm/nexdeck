@@ -39,6 +39,7 @@ EVENTS: dict[str, str] = {
     "auth_rejected": "A service rejected its credentials",
     "cert_expiring": "A certificate is running out",
     "disk_filling": "A disk is filling up",
+    "link_down": "A network uplink went down",
     "update_available": "A new nexdeck version",
     "test": "Test message",
 }

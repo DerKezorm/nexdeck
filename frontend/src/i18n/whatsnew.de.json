@@ -680,6 +680,31 @@
         "Frigate und GitHub sind aus der Beta.",
         "Das Image liest Weiterleitungs-Kopfzeilen jetzt selbst (--no-proxy-headers). Eine compose-Datei, die den Befehl überschreibt, sollte es genauso halten."
       ]
+    },
+    "0.18.0": {
+      "lead": "Jeder verwaltete Switch auf dem Board: Ports, Geschwindigkeiten, Verkehr und PoE aus den Standard-MIBs, egal welcher Name auf dem Gehäuse steht.",
+      "sections": [
+        {
+          "title": "Eine SNMP-Anbindung für alle Hersteller",
+          "body": "Cisco, HP, Aruba, Netgear, TP-Link, Zyxel, D-Link, MikroTik, Ubiquiti und die anderen beantworten dieselben Standard-MIBs; nexdeck liest genau die und nichts Herstellereigenes. Vorgabe ist SNMPv3 mit SHA und AES, SNMPv2c mit Community gibt es für Geräte, die nichts anderes können, mit dem klaren Hinweis, dass die Community unverschlüsselt durchs Netz geht. Nur lesend: nexdeck schreibt nie auf einen Switch.",
+          "path": "Einstellungen > Anbindungen > SNMP"
+        },
+        {
+          "title": "Fünf Karten, und Befunde, die den Port nennen",
+          "body": "Das Gerät mit Modell, Firmware und Laufzeit; jeder Port mit Zustand, Geschwindigkeit, Duplex und dem, was laut LLDP daran hängt; der Verkehr eines Ports mit Verlauf, gerechnet aus zwei Zählerständen; PoE mit Budget und Verbrauch; und Befunde: ausgefallener Uplink, Ports mit Fehlern, Verbindungen, die bei 100 Mbit/s oder im Halbduplex hängen.",
+          "path": "Bearbeiten > Widget hinzufügen > Netzwerk"
+        },
+        {
+          "title": "Ein Test, der sagt, was wirklich fehlt",
+          "body": "Schweigt ein Gerät bei SNMPv2c, nennt der Test alle drei Ursachen, denn eine falsche Community sieht genauso aus wie ein abgeschaltetes SNMP. Bei SNMPv3 wird es genau: unbekannter Benutzer, falsches Authentifizierungs-Passwort, und wenn das Gerät nur schweigt, dass Benutzer und Passwort stimmen und die Verschlüsselung nicht.",
+          "path": "Einstellungen > Anbindungen > SNMP > Testen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Fassung",
+      "small": [
+        "Ein Anbindungsblatt kann eine kurze Anleitung mitbringen und zeigt nur die Felder, die zur getroffenen Wahl gehören.",
+        "Die Suche nach einer Anbindung findet den Hersteller hinter dem Protokoll: Tippe Cisco oder Netgear, und die SNMP-Anbindung steht da."
+      ]
     }
   }
 }

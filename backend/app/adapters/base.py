@@ -1212,6 +1212,13 @@ class Adapter:
     #: True when :meth:`barred` may refuse a card for a given connection, so
     #: the library knows to ask before it adds one.
     bars_widgets: bool = False
+    #: More words the adapter is found by, such as the vendors behind a
+    #: protocol. Brand names, so they are not translated.
+    keywords: tuple[str, ...] = ()
+    #: Steps drawn in the connection sheet, for a service that has to be set
+    #: up on its own side before nexdeck can reach it. English, translated by
+    #: their wording like every other adapter text.
+    guide: tuple[str, ...] = ()
 
     def widget(self, kind: str) -> WidgetType:
         for w in self.widgets:
@@ -1266,6 +1273,8 @@ class Adapter:
             "needs_integration": self.needs_integration,
             "optional_integration": self.optional_integration,
             "bars_widgets": self.bars_widgets,
+            "keywords": list(self.keywords),
+            "guide": list(self.guide),
             "fields": [f.to_dict() for f in self.fields],
             "widgets": [w.to_dict(self.kind) for w in self.widgets],
         }

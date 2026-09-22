@@ -680,6 +680,31 @@
         "Frigate and GitHub are out of beta.",
         "The image now reads forwarding headers itself (--no-proxy-headers). A compose file that overrides the command should do the same."
       ]
+    },
+    "0.18.0": {
+      "lead": "Any managed switch on a board: ports, speeds, traffic and PoE, from the standard MIBs, whatever name is on the box.",
+      "sections": [
+        {
+          "title": "One SNMP connection for every vendor",
+          "body": "Cisco, HP, Aruba, Netgear, TP-Link, Zyxel, D-Link, MikroTik, Ubiquiti and the rest answer the same standard MIBs, so nexdeck reads those and nothing vendor-specific. SNMPv3 with SHA and AES is the default, SNMPv2c with a community is there for devices that have nothing else, and it says plainly that a community travels unencrypted. Read only: nexdeck never writes to a switch.",
+          "path": "Settings > Integrations > SNMP"
+        },
+        {
+          "title": "Five cards, and findings that name the port",
+          "body": "The device with its model, firmware and uptime; every port with state, speed, duplex and what LLDP says hangs on it; the traffic of one port with its history, worked out from two counter readings; PoE with its budget and what is drawn; and findings: an uplink that is down, ports collecting errors, links stuck at 100 Mbit/s or in half duplex.",
+          "path": "Edit mode > Add widget > Network"
+        },
+        {
+          "title": "A test that says what is actually wrong",
+          "body": "A device that stays silent over SNMPv2c gets all three causes named, because a wrong community looks exactly like a switched-off agent. Over SNMPv3 the answer is exact: this user is unknown, this authentication password is wrong, or, when the device only falls silent, that the user and password are right and the encryption is not.",
+          "path": "Settings > Integrations > SNMP > Test"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A connection sheet can carry a short setup guide, and shows only the fields that belong to what you chose.",
+        "The search for a connection finds the vendor behind a protocol: type Cisco or Netgear and the SNMP connection comes up."
+      ]
     }
   }
 }
