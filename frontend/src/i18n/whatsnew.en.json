@@ -641,6 +641,45 @@
         "Measured on a real TrueNAS 25.10.7: eight reads by the cards showed up on the NAS as \"8 times\", and with this version the count stays where it is.",
         "If something in front of TrueNAS answers 404 in its place, the version TrueNAS reports decides, asked once an hour."
       ]
+    },
+    "0.17.0": {
+      "lead": "Boards you can shape: templates, an import from Homepage or Homarr, finer grids, colour themes, and a wall tablet that signs itself in at home.",
+      "sections": [
+        {
+          "title": "Start from a template or bring your old dashboard",
+          "body": "Six ready-made boards, from a homelab overview to a wall display that fits the screen. Each asks which of your connections fills its slots and leaves out what you do not run. Or paste the files of Homepage or Homarr: you see a plan of pages, connections and cards first, and nothing is made before you confirm it.",
+          "path": "Settings > Boards"
+        },
+        {
+          "title": "Finer grids and arranging by the handful",
+          "body": "A board can have 12, 24 or 36 columns, be drawn wide or across the whole screen, and fit its rows to the window. In edit mode, Shift or Ctrl and a click select several cards to move together; Close gaps, undo and redo, four named sizes per card, and sending cards to another page or board.",
+          "path": "Board settings > Look"
+        },
+        {
+          "title": "Signed in on the home network",
+          "body": "For a wall tablet: name your home networks and one ordinary account, and a browser there is signed in without a password. Never an administrator, and the session opens nothing outside the home network. Behind a reverse proxy, name it in NEXDECK_TRUSTED_PROXIES first; the page shows what nexdeck makes of your own address.",
+          "path": "System > Home network"
+        },
+        {
+          "title": "Colour themes",
+          "body": "Seven themes of nexdeck's own, each for dark and light, or any other pasted in as JSON. A pasted theme is told which colours are too weak to read before it is saved.",
+          "path": "System > Appearance"
+        },
+        {
+          "title": "nexcrate and more GitHub",
+          "body": "nexcrate joins with eight cards, paired with a code shown in both apps. GitHub gains issues and pull requests, and workflow runs, and takes an optional token for private repositories and a higher limit.",
+          "path": "System > Integrations"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Notes are written right on the card, and a - [ ] list ticks with a touch.",
+        "TrueNAS shows CPU usage and the memory its services use, with the ZFS cache apart.",
+        "Leaving demo mode removes the invented connections, cards and boards, after asking.",
+        "Value cards draw a line under their number, and only list cards with numbers offer bars.",
+        "Frigate and GitHub are out of beta.",
+        "The image now reads forwarding headers itself (--no-proxy-headers). A compose file that overrides the command should do the same."
+      ]
     }
   }
 }

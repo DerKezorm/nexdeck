@@ -3,6 +3,39 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.17.0 (2026-09-22)
+
+### Upgrading
+
+- **The image starts uvicorn with `--no-proxy-headers` now, and there is a new variable, `NEXDECK_TRUSTED_PROXIES`.** Until 0.16.1 the image trusted `X-Forwarded-For` from anybody (`--forwarded-allow-ips "*"`). That was harmless for log lines, but the new sign-in on the home network must not rest on a header anyone can send. nexdeck now keeps the connection's own address first and reads the forwarding headers itself. Logs and the sign-in brake see the same addresses as before, and nothing has to change for an installation that does not use the home network sign-in. To use it behind a reverse proxy, name the proxy's address or network in `NEXDECK_TRUSTED_PROXIES`, comma separated; without it, a forwarded request is never signed in automatically. A compose file that overrides the image's command should drop `--proxy-headers` and `--forwarded-allow-ips` and use `--no-proxy-headers` as well.
+
+### New
+
+- **Signed in on the home network without a password.** For a wall tablet: an administrator names the home networks and one ordinary account, and a browser inside those networks is signed in on the sign-in page without typing anything. Only private ranges count, never loopback. The account cannot be an administrator, and the setting stays off while every account has to use a second factor. A session opened this way works only at home: carried outside it opens nothing, and from it no password, e-mail address, second factor, API token or kiosk link can be made. Signing out holds it off for twelve hours in that browser. The settings page shows what nexdeck makes of your own address and lists the latest sign-ins at home. System > Home network.
+- **Boards choose their grid.** 12, 24 or 36 columns, so a card can be a little wider or narrower on a large screen. New boards start on 24; every existing board keeps its twelve. Changing the columns carries every page along: cards that stood side by side still do, and where fewer columns would put two cards on one cell, the lower one moves down. A board can also be drawn wide (2200 px) or across the whole screen, and its rows can grow or shrink until the page fits the window. Board settings > Look.
+- **Arranging by the handful.** In edit mode, Shift, Ctrl or Cmd and a click take cards into a selection that moves together, by drag or arrow key. Close gaps moves every card up and never sideways. Undo and redo, from the edit bar or with Ctrl+Z and Ctrl+Shift+Z or Ctrl+Y. Each card has a menu with four sizes by name, and sends the card or the selection to another page of this board or of any board you may change.
+- **Board templates.** Six ready-made boards: homelab overview, media, network, server rack, the nex family, and a wall display that fits the screen. A template asks for its connections as slots, and each slot takes any service that can fill it, such as Jellyfin, Plex or Emby for the media server. A slot left empty takes its cards along. The picker draws a sketch of the board as it will come out. Settings > Boards, and on every empty board.
+- **Import from Homepage or Homarr.** Homepage's `services.yaml`, `bookmarks.yaml` and `widgets.yaml`, or Homarr's config JSON up to 0.15, pasted or picked as files. Groups and categories become pages, services with a widget nexdeck knows become a connection and a card, links become app tiles with their reachability check. You see a plan first, with every placeholder such as `{{HOMEPAGE_VAR_RADARR_KEY}}` asked for and everything without a counterpart named, and nothing is made before you confirm it. An address this installation already has a connection for is reused. Settings > Boards.
+- **Colour themes.** Seven of nexdeck's own (Deep sea, Forest floor, Ember, Morning mist, Sandstone, Graphite, Plum), each for dark and light, and any other pasted in as JSON. Every text colour of the shipped themes clears 4.5:1 contrast; a pasted theme is told which colours fall short before it is saved. The operator's own style sheet still has the last word. System > Appearance.
+- **nexcrate.** The library manager of the nexapps family, with eight cards: library, downloads, what is stuck (with nexcrate's own buttons), what comes next, what just arrived, why a wanted title is still missing, storage and findings. It is paired with a code, as nexbeat is: nexdeck asks nexcrate for a key, shows the code, and the key lands in the field once it is confirmed in nexcrate. Administrators only. Every card ran against a real nexcrate, so it starts without the beta badge.
+- **GitHub: issues, pull requests and workflow runs.** Two new cards next to releases. Issues and pull requests come from GitHub's search with the exact count; pull requests say whether they are drafts or wait for a review. Workflow runs shows the latest run of every workflow, red ones first, leaving out runs on pull request branches. A connection with a personal access token is possible now, raising the limit from 60 to 5,000 requests an hour and reaching private repositories. Answers are kept with their ETag, and when the limit runs low the cards show what they have until it resets. Out of beta, run against the real API.
+- **Notes are written on the card.** Whoever may change the board gets a pencil on a Notes card, or double-clicks it. The text is saved when the typing pauses, and a `- [ ]` list ticks with a touch, handy for a shopping list on the wall. Two tablets on one note do not overwrite each other: a save from an older starting point is refused and the card offers both texts.
+- **TrueNAS shows CPU usage and the memory its services use.** The system card reads TrueNAS' realtime reporting as its dashboard does, and shows the ZFS cache on a chip of its own instead of counting it as used. Where that is not available, and over REST, the load average stays as before.
+
+### Changed
+
+- **Leaving demo mode takes the invented data along.** It asks first what would go, then removes the demo's connections, the cards that read them, boards that were nothing but the demo, and pages left empty. A real connection that was only tried in demo mode stays and goes back to real data.
+- **Value cards draw a line under their number even without a metric,** from the number itself, never from a failed fetch.
+- **List cards offer bars only where their rows have numbers.** 14 of 157 list cards can draw bars; on the others the switch changed nothing and is gone.
+- **Frigate is out of beta,** confirmed against a real Frigate.
+- **The connection sheet shows an adapter's description in the interface's language,** and searching the adapters finds it too.
+
+### Fixed
+
+- **A save right after another one is no longer refused as somebody else's change.** The page took its version from a copy of the board that still carried the version from when it was fetched.
+- **The appearance page waits for the stored look** instead of drawing its empty starting form, from which a save would have cleared the look.
+- **A connection deleted while one of its cards is being read** no longer logs an error with a traceback.
+
 ## 0.16.1 (2026-09-21)
 
 ### Fixed

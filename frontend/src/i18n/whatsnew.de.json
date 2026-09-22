@@ -641,6 +641,45 @@
         "Gemessen an einem echten TrueNAS 25.10.7: Acht Abrufe der Karten standen auf dem NAS als „8 times“, und mit dieser Fassung bleibt der Zähler stehen.",
         "Antwortet etwas vor TrueNAS an seiner Stelle mit 404, entscheidet die Version, die TrueNAS nennt, einmal je Stunde gefragt."
       ]
+    },
+    "0.17.0": {
+      "lead": "Boards nach eigenem Maß: Vorlagen, Übernahme aus Homepage oder Homarr, feinere Raster, Farbthemen und ein Wandtablet, das sich zu Hause selbst anmeldet.",
+      "sections": [
+        {
+          "title": "Mit einer Vorlage beginnen oder das alte Dashboard mitnehmen",
+          "body": "Sechs fertige Boards, von der Homelab-Übersicht bis zur Wandanzeige, die den Bildschirm füllt. Jede fragt, welche deiner Anbindungen ihre Plätze füllt, und lässt weg, was du nicht betreibst. Oder füge die Dateien von Homepage oder Homarr ein: Du siehst zuerst einen Plan aus Seiten, Anbindungen und Karten, und nichts entsteht, bevor du zustimmst.",
+          "path": "Einstellungen > Boards"
+        },
+        {
+          "title": "Feinere Raster, mehrere Karten auf einmal",
+          "body": "Ein Board kann 12, 24 oder 36 Spalten haben, breit oder über den ganzen Bildschirm gezeichnet werden und seine Zeilen ans Fenster anpassen. Im Bearbeiten wählen Umschalt oder Strg mit einem Klick mehrere Karten, die sich zusammen bewegen; dazu Lücken schließen, Rückgängig und Wiederholen, vier benannte Größen je Karte und Karten auf eine andere Seite oder ein anderes Board schicken.",
+          "path": "Board-Einstellungen > Aussehen"
+        },
+        {
+          "title": "Angemeldet im Heimnetz",
+          "body": "Für ein Wandtablet: Nenne deine Heimnetze und ein gewöhnliches Konto, und ein Browser dort ist ohne Passwort angemeldet. Nie ein Administrator, und außerhalb des Heimnetzes öffnet die Sitzung nichts. Hinter einem Reverse Proxy muss er zuerst in NEXDECK_TRUSTED_PROXIES stehen; die Seite zeigt, was nexdeck aus deiner eigenen Adresse macht.",
+          "path": "System > Heimnetz"
+        },
+        {
+          "title": "Farbthemen",
+          "body": "Sieben eigene Themen, jedes für dunkel und hell, oder jedes andere als JSON eingefügt. Ein eingefügtes Thema erfährt vor dem Speichern, welche Farben zu schwach zum Lesen sind.",
+          "path": "System > Aussehen"
+        },
+        {
+          "title": "nexcrate und mehr GitHub",
+          "body": "nexcrate kommt mit acht Karten dazu, gekoppelt über einen Code, den beide Apps zeigen. GitHub bekommt Issues und Pull Requests sowie Workflow-Läufe und nimmt auf Wunsch einen Token für private Repositories und ein höheres Limit.",
+          "path": "System > Anbindungen"
+        }
+      ],
+      "smallTitle": "Ebenfalls in dieser Fassung",
+      "small": [
+        "Notizen schreibt man direkt in der Karte, und eine - [ ]-Liste hakt man mit einem Tippen ab.",
+        "TrueNAS zeigt die CPU-Last und den Speicher, den seine Dienste belegen, den ZFS-Cache getrennt.",
+        "Wer den Demomodus verlässt, wird gefragt und ist danach die erfundenen Anbindungen, Karten und Boards los.",
+        "Wertkarten ziehen eine Linie unter ihre Zahl, und Balken bieten nur Listenkarten mit Zahlen an.",
+        "Frigate und GitHub sind aus der Beta.",
+        "Das Image liest Weiterleitungs-Kopfzeilen jetzt selbst (--no-proxy-headers). Eine compose-Datei, die den Befehl überschreibt, sollte es genauso halten."
+      ]
     }
   }
 }
