@@ -1053,5 +1053,33 @@
     "willHave_other": "{{count}} Karten auf {{columns}} Spalten.",
     "create": "Board anlegen",
     "emptyStart": "Mit einer Vorlage beginnen"
+  },
+  "imports": {
+    "title": "Aus Homepage oder Homarr übernehmen",
+    "help": "Füge die Dateien des Dashboards ein, das du jetzt nutzt, oder wähl sie aus. Du siehst, was entstehen würde, bevor etwas entsteht.",
+    "source": "Woher",
+    "sources": {
+      "homepage": "Homepage",
+      "homarr": "Homarr"
+    },
+    "pick": "Dateien wählen…",
+    "servicesHelp": "Jede Gruppe wird eine Seite. Ein Dienst mit einem Widget, das nexdeck kennt, wird Anbindung und Karte, jeder andere eine Kachel.",
+    "homarrConfig": "Konfiguration (JSON)",
+    "homarrHelp": "Homarr bis 0.15 legt ein Board in data/configs ab. Homarr ab 1.0 hält Boards in einer Datenbank, die das hier nicht lesen kann.",
+    "look": "Zeigen, was entstehen würde",
+    "defaultName": {
+      "homepage": "Aus Homepage",
+      "homarr": "Aus Homarr"
+    },
+    "name": "Name des neuen Boards",
+    "connections": "Anbindungen",
+    "create": "Neu anlegen",
+    "useExisting": "{{name}} nutzen",
+    "leaveOut": "Weglassen, mit ihren Karten",
+    "stillMissing": "Trag ein, was fehlt, oder lass die Anbindung weg.",
+    "cards_one": "{{count}} Karte",
+    "cards_other": "{{count}} Karten",
+    "notes": "Nicht übernommen",
+    "make": "Board anlegen"
   }
 }

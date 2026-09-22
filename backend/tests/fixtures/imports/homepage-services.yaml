@@ -1,0 +1,73 @@
+# A services.yaml the way Homepage's documentation writes them: groups of
+# services, some with a widget, some only a link, one group inside a group.
+- Media:
+    - Sonarr:
+        icon: sonarr.png
+        href: https://sonarr.example.com
+        description: Series
+        widget:
+          type: sonarr
+          url: http://sonarr:8989
+          key: sonarr-key-for-tests
+    - Radarr:
+        icon: radarr.png
+        href: https://radarr.example.com
+        widget:
+          type: radarr
+          url: http://radarr:7878
+          key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
+    - Jellyfin:
+        icon: jellyfin.svg
+        href: https://jellyfin.example.com
+        widget:
+          type: jellyfin
+          url: http://jellyfin:8096
+          key: jellyfin-key-for-tests
+          enableBlocks: true
+    - Overseerr:
+        icon: overseerr.png
+        href: https://requests.example.com
+        widget:
+          type: overseerr
+          url: http://overseerr:5055
+          key: overseerr-key-for-tests
+
+- Infrastructure:
+    - Proxmox:
+        icon: proxmox.png
+        href: https://pve.example.com:8006
+        widget:
+          type: proxmox
+          url: https://pve.example.com:8006
+          username: api@pam!homepage
+          password: proxmox-secret-for-tests
+    - Router:
+        icon: mdi-router-network
+        href: https://router.example.com
+        siteMonitor: https://router.example.com
+        description: The gateway
+    - Something odd:
+        icon: https://example.com/odd.png
+        href: https://odd.example.com
+        widget:
+          type: moonraker
+          url: http://printer:7125
+    - Network:
+        - AdGuard:
+            icon: adguard-home.png
+            href: https://dns.example.com
+            widget:
+              type: adguard
+              url: http://adguard
+              username: admin
+              password: adguard-password-for-tests
+        - Temperature:
+            icon: mdi-thermometer
+            widget:
+              type: customapi
+              url: http://sensor.example.com/api
+              mappings:
+                - field:
+                    data: temperature
+                  label: Server room
+                  suffix: °C

@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
+import { DashboardImport } from '../../components/DashboardImport'
 import { TemplatePicker } from '../../components/TemplatePicker'
 import { Confirm, Field, Toast } from '../../components/ui'
 import { useHandleReorder } from '../../lib/useHandleReorder'
@@ -185,6 +186,9 @@ export function BoardsSettings() {
         <div id="templates" className="scroll-mt-20">
           <TemplatePicker />
         </div>
+      </SettingsCard>
+      <SettingsCard title={t('imports.title')} description={t('imports.help')}>
+        <DashboardImport />
       </SettingsCard>
       <SettingsCard title={t('board.import')} description={t('board.importHelp')}>
         <textarea className="input mb-2" rows={8} aria-label={t('board.import')} value={yamlText} onChange={(e) => setYamlText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />

@@ -1053,5 +1053,33 @@
     "willHave_other": "{{count}} cards on {{columns}} columns.",
     "create": "Create the board",
     "emptyStart": "Start from a template"
+  },
+  "imports": {
+    "title": "From Homepage or Homarr",
+    "help": "Paste or pick the files of the dashboard you use now. You see what would be made before anything is.",
+    "source": "Where from",
+    "sources": {
+      "homepage": "Homepage",
+      "homarr": "Homarr"
+    },
+    "pick": "Pick files…",
+    "servicesHelp": "Every group becomes a page. A service with a widget nexdeck knows becomes a connection and a card, any other a tile.",
+    "homarrConfig": "Configuration (JSON)",
+    "homarrHelp": "Homarr up to 0.15 keeps a board in data/configs. Homarr 1.0 and later keep boards in a database, which this cannot read.",
+    "look": "Show what would be made",
+    "defaultName": {
+      "homepage": "From Homepage",
+      "homarr": "From Homarr"
+    },
+    "name": "Name of the new board",
+    "connections": "Connections",
+    "create": "Create it",
+    "useExisting": "Use {{name}}",
+    "leaveOut": "Leave out, and its cards",
+    "stillMissing": "Fill in what is missing, or leave the connection out.",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards",
+    "notes": "Not carried over",
+    "make": "Make the board"
   }
 }

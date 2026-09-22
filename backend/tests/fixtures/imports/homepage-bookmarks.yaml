@@ -1,0 +1,14 @@
+- Developer:
+    - Github:
+        - abbr: GH
+          href: https://github.com/
+    - Docs:
+        - icon: mdi-book
+          href: https://docs.example.com/
+- Social:
+    - Forum:
+        - abbr: FO
+          href: https://forum.example.com/
+    - Broken:
+        - abbr: BR
+          href: javascript:alert(1)

@@ -1,0 +1,12 @@
+- resources:
+    cpu: true
+    memory: true
+- search:
+    provider: duckduckgo
+- datetime:
+    format:
+      timeStyle: short
+- openmeteo:
+    label: Hamburg
+    latitude: 53.55
+    longitude: 9.99

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 2,
+  "configProperties": { "name": "default" },
+  "categories": [
+    { "id": "cat-media", "name": "Media", "position": 1 },
+    { "id": "cat-network", "name": "Network", "position": 2 }
+  ],
+  "wrappers": [{ "id": "default", "position": 0 }],
+  "apps": [
+    {
+      "id": "a1",
+      "name": "Sonarr",
+      "url": "http://sonarr:8989",
+      "appearance": { "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png" },
+      "network": { "enabledStatusChecker": true, "statusCodes": ["200"] },
+      "behaviour": { "externalUrl": "https://sonarr.example.com", "isOpeningNewTab": true },
+      "area": { "type": "category", "properties": { "id": "cat-media" } },
+      "integration": { "type": "sonarr", "properties": [{ "field": "apiKey", "type": "private", "value": "sonarr-key-for-tests" }] }
+    },
+    {
+      "id": "a2",
+      "name": "Pi-hole",
+      "url": "http://pihole",
+      "appearance": { "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/pi-hole.svg" },
+      "network": { "enabledStatusChecker": false },
+      "behaviour": { "externalUrl": "https://pihole.example.com" },
+      "area": { "type": "category", "properties": { "id": "cat-network" } },
+      "integration": { "type": "pihole", "properties": [{ "field": "apiKey", "type": "private", "value": null }] }
+    },
+    {
+      "id": "a3",
+      "name": "Wiki",
+      "url": "https://wiki.example.com",
+      "appearance": { "iconUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png" },
+      "network": { "enabledStatusChecker": true },
+      "behaviour": { "externalUrl": "" },
+      "area": { "type": "wrapper", "properties": { "id": "default" } },
+      "integration": { "type": null, "properties": [] }
+    }
+  ],
+  "widgets": [
+    { "id": "w1", "type": "date", "properties": { "showDate": true }, "area": { "type": "wrapper", "properties": { "id": "default" } } },
+    { "id": "w2", "type": "weather", "properties": { "location": { "name": "Hamburg", "latitude": 53.55, "longitude": 9.99 } }, "area": { "type": "wrapper", "properties": { "id": "default" } } },
+    { "id": "w3", "type": "torrents-status", "properties": {}, "area": { "type": "category", "properties": { "id": "cat-media" } } },
+    { "id": "w4", "type": "notebook", "properties": { "content": "# Hello" }, "area": { "type": "wrapper", "properties": { "id": "default" } } }
+  ]
+}
