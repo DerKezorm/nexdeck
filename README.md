@@ -17,15 +17,16 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
 - **130 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
-- **Three screens.** A free grid you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, and kiosk links for wall tablets that cycle pages and dim at night.
+- **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
+- **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
 - **Sign in your way.** Local accounts, OpenID Connect (authentik, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
 
 ## A board is whatever you put on it
 
-Every card is a widget of one integration, dropped on a free grid and sized by hand. Nothing here is a fixed template.
+Every card is a widget of one integration, dropped on a free grid and sized by hand. A template is only where you begin.
 
 ### Media
 
