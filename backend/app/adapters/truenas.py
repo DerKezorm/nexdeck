@@ -34,6 +34,14 @@ does not exist 404, over http and over https alike, and neither moved the
 count. Only a 404 there lets the REST API be asked, and what it says its
 version is remains the second line, for a proxy that says 404 on TrueNAS'
 behalf.
+
+The system card reads CPU and memory from the realtime event
+``reporting.realtime`` on the same connection, as TrueNAS' own dashboard does.
+Measured on 25.10.7 on 22.09.2026 with a read-only administrator's key: the
+subscription is allowed, the first event arrives 0.01 s after it, and an idle
+NAS with 8 GB reported 3.3 GB free and 3.8 GB of ZFS cache. The services use
+what is left, 1.3 GB; counting the cache as taken would have said 61 per cent.
+Over REST there are no events, and the load average stands in as before.
 """
 
 from __future__ import annotations
@@ -77,6 +85,11 @@ READS = {
     "alert.list": "/alert/list",
 }
 
+#: Not a method but the realtime event, read once per fetch on the same connection.
+REALTIME = "reporting.realtime"
+#: How long the first realtime event may take. TrueNAS sends it at once.
+REALTIME_WAIT = 5.0
+
 #: How long a TrueNAS without ``/api/current`` is not asked again.
 LEGACY_SECONDS = 3600.0
 
@@ -108,7 +121,7 @@ class TruenasAdapter(Adapter):
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
     )
     widgets = (
-        WidgetType(kind="system", label="System", description="Load, memory, uptime and open alerts.", renderer="stats", default_size=(4, 2), refresh_seconds=30, metrics=("load",)),
+        WidgetType(kind="system", label="System", description="CPU, memory, uptime and open alerts.", renderer="stats", default_size=(4, 2), refresh_seconds=30, metrics=("cpu", "memory", "load")),
         WidgetType(kind="pools", label="Pools", description="Every pool with usage and health.", renderer="list", default_size=(3, 2), refresh_seconds=120),
         WidgetType(kind="alerts", label="Alerts", description="Open alerts by level.", renderer="list", default_size=(3, 2), refresh_seconds=60),
     )
@@ -170,7 +183,10 @@ class TruenasAdapter(Adapter):
             ctx.cache.pop("truenas:legacy", None)
             raise _rest_refused(label, base_url(config), turned_down)
         for method in methods:
-            if method not in fresh:
+            if method == REALTIME:
+                # The REST API has no realtime events: the load average stands in.
+                fresh[method] = None
+            elif method not in fresh:
                 fresh[method] = await self._get(config, ctx, READS[method], cache=cache)
         return {method: fresh[method] for method in methods}
 
@@ -213,6 +229,30 @@ class TruenasAdapter(Adapter):
                     raise AdapterError(f"TrueNAS answered {method} with an error: {reason}", code="rpc_error")
                 return message.get("result")
 
+        async def realtime(socket: Any) -> dict[str, Any] | None:
+            """One realtime event: CPU and memory as TrueNAS' own dashboard shows them.
+
+            A subscription, not a call: ``core.subscribe`` answers with an
+            id, then ``collection_update`` messages arrive, the first at once
+            (the event source sends before its first pause). One is enough;
+            the socket closes after it. Anything short of an event, a refusal
+            or silence, is None, and the card falls back to the load average.
+            """
+            number = next(ids)
+            await socket.send(json.dumps({"jsonrpc": "2.0", "id": number, "method": "core.subscribe", "params": [REALTIME]}))
+            try:
+                async with asyncio.timeout(REALTIME_WAIT):
+                    while True:
+                        message = json.loads(await socket.recv())
+                        if message.get("id") == number and "error" in message:
+                            return None
+                        params = message.get("params") if message.get("method") == "collection_update" else None
+                        if isinstance(params, dict) and str(params.get("collection") or "").startswith(REALTIME):
+                            fields = params.get("fields")
+                            return fields if isinstance(fields, dict) and fields else None
+            except TimeoutError:
+                return None
+
         try:
             async with asyncio.timeout(20):
                 socket = await self._open_socket(url, config)
@@ -222,7 +262,10 @@ class TruenasAdapter(Adapter):
                             "TrueNAS refused the API key.", code="auth_failed",
                             hint="Check the key. TrueNAS revokes a key for good once it was sent over plain http; then only a new one helps.",
                         )
-                    return {method: await call(socket, method) for method in methods}
+                    answers = {}
+                    for method in methods:
+                        answers[method] = await realtime(socket) if method == REALTIME else await call(socket, method)
+                    return answers
                 finally:
                     await socket.close()
         except InvalidStatus as error:
@@ -287,17 +330,33 @@ class TruenasAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "system":
-            read = await self._read(config, ctx, ["system.info", "alert.list"])
+            read = await self._read(config, ctx, ["system.info", "alert.list", REALTIME])
             info = read["system.info"] or {}
             alerts = [a for a in read["alert.list"] or [] if not a.get("dismissed")]
+            flagged = "bad" if any(a.get("level") in ("CRITICAL", "ERROR") for a in alerts) else ("warn" if alerts else "")
+            uptime = {"label": "Uptime", "value": duration_short(info.get("uptime_seconds"))}
+            counted = {"label": "Alerts", "value": len(alerts)}
+            live = _live(read.get(REALTIME))
+            if live is not None:
+                cpu, used, total, cache = live
+                chips = [{"label": "Memory", "value": f"{human_bytes(used)} of {human_bytes(total)}"}]
+                if cache:
+                    chips.append({"label": "ZFS cache", "value": human_bytes(cache)})
+                memory = round(100.0 * used / total, 1)
+                return WidgetData(
+                    status=flagged or status_from_percent(max(cpu, memory)),
+                    primary={"label": "CPU", "value": cpu, "unit": "%"},
+                    secondary=[*chips, uptime, counted],
+                    metrics={"cpu": cpu, "memory": memory},
+                )
             load = float((info.get("loadavg") or [0])[0])
             cores = int(info.get("cores") or 1)
             load_percent = round(100.0 * load / cores, 1)
             memory_total = float(info.get("physmem") or 0)
             return WidgetData(
-                status="bad" if any(a.get("level") in ("CRITICAL", "ERROR") for a in alerts) else ("warn" if alerts else status_from_percent(load_percent)),
+                status=flagged or status_from_percent(load_percent),
                 primary={"label": "Load", "value": load_percent, "unit": "%"},
-                secondary=[{"label": "Memory", "value": human_bytes(memory_total)}, {"label": "Uptime", "value": duration_short(info.get("uptime_seconds"))}, {"label": "Alerts", "value": len(alerts)}],
+                secondary=[{"label": "Memory", "value": human_bytes(memory_total)}, uptime, counted],
                 metrics={"load": load_percent},
             )
         if widget_kind == "pools":
@@ -352,7 +411,11 @@ class TruenasAdapter(Adapter):
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         load = fake.walk("truenas-load", tick, 5, 30)
         if widget_kind == "system":
-            return WidgetData(primary={"label": "Load", "value": load, "unit": "%"}, secondary=[{"label": "Memory", "value": "64.0 GB"}, {"label": "Uptime", "value": duration_short(12 * 86400 + tick)}, {"label": "Alerts", "value": 1}], metrics={"load": load}, status="warn")
+            memory = fake.walk("truenas-memory", tick, 18, 26)
+            return WidgetData(primary={"label": "CPU", "value": load, "unit": "%"},
+                              secondary=[{"label": "Memory", "value": f"{human_bytes(memory / 100 * 64 * 1024 ** 3)} of 64.0 GB"}, {"label": "ZFS cache", "value": "38.2 GB"},
+                                         {"label": "Uptime", "value": duration_short(12 * 86400 + tick)}, {"label": "Alerts", "value": 1}],
+                              metrics={"cpu": load, "memory": memory}, status="warn")
         if widget_kind == "pools":
             return WidgetData(items=[{"title": "tank", "subtitle": "41.2 TB of 58.0 TB · ONLINE", "progress": 71.0, "value": "71%", "status": "ok"}, {"title": "fast", "subtitle": "1.2 TB of 1.8 TB · ONLINE", "progress": 66.6, "value": "67%", "status": "ok"}])
         return WidgetData(status="warn", items=[{"title": "Scrub of pool tank finished with 0 errors", "subtitle": "2026-09-04", "status": "warn"}], secondary=[{"label": "Open", "value": 1}])
@@ -415,6 +478,28 @@ def _day(value: Any) -> str:
     if isinstance(value, int | float):
         return datetime.fromtimestamp(value / 1000, UTC).strftime("%Y-%m-%d")
     return str(value or "")[:10]
+
+
+def _live(fields: Any) -> tuple[float, float, float, float] | None:
+    """CPU in per cent, memory the services use, all memory, and the ZFS cache.
+
+    The shape of 25.04 and 25.10 (``cpu.cpu.usage``,
+    ``memory.physical_memory_*``, ``memory.arc_size``), read from the
+    middleware's source. What the services use is what TrueNAS' own dashboard
+    calls Services: all of it less what is free less the ZFS cache, which the
+    kernel counts as taken but hands back when asked. Without that the card
+    would read 90 per cent on every NAS that has been up for a day.
+    """
+    if not isinstance(fields, dict):
+        return None
+    cpu = ((fields.get("cpu") or {}).get("cpu") or {}).get("usage")
+    memory = fields.get("memory") or {}
+    total, free = memory.get("physical_memory_total"), memory.get("physical_memory_available")
+    if not all(isinstance(value, (int, float)) for value in (cpu, total, free)) or not total:
+        return None
+    cache = memory.get("arc_size") if isinstance(memory.get("arc_size"), (int, float)) else 0
+    used = max(0.0, float(total) - float(free) - float(cache))
+    return round(float(cpu), 1), used, float(total), float(cache)
 
 
 def _percent(item: dict[str, Any]) -> float | None:

@@ -7,6 +7,7 @@ plain http is revoked by TrueNAS for good (issue #4).
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from typing import Any
@@ -34,14 +35,25 @@ OLD_INFO = {**INFO, "version": "TrueNAS-SCALE-24.10.2"}
 #: What a plain GET of /api/current, without a key, said on 25.10.7 on 21.09.2026.
 NEEDS_UPGRADE = 'No WebSocket UPGRADE hdr: None\n Can "Upgrade" only to "WebSocket".'
 ANSWERS = {"system.info": INFO, "pool.query": POOLS, "alert.list": ALERTS}
+#: The first reporting.realtime event, as TrueNAS 25.10.7 sent it on 22.09.2026
+#: 0.01 s after core.subscribe, to a read-only administrator's key. Idle, 8 GB,
+#: no pool: 1.3 GB for the services, 3.8 GB of ZFS cache, 3.3 GB free.
+REALTIME = {
+    "cpu": {"cpu": {"usage": 3.0, "temp": None}, "cpu0": {"usage": 2.0}, "cpu1": {"usage": 5.0}},
+    "memory": {"arc_size": 3_763_465_808, "arc_free_memory": 3_100_352_512, "arc_available_memory": 2_752_291_328,
+               "physical_memory_total": 8_333_590_528, "physical_memory_available": 3_274_661_888},
+    "disks": {}, "interfaces": {}, "pools": {}, "zfs": {},
+}
 
 
 class FakeTruenas:
     """A WebSocket that speaks JSON-RPC like TrueNAS, one per connection."""
 
-    def __init__(self, key: str = KEY, refuse: dict[str, str] | None = None) -> None:
+    def __init__(self, key: str = KEY, refuse: dict[str, str] | None = None, realtime: dict[str, Any] | None = REALTIME) -> None:
         self.key = key
         self.refuse = refuse or {}
+        #: None: the subscription is taken and no event ever comes.
+        self.realtime = realtime
         self.sent: list[dict[str, Any]] = []
         self.opened: list[str] = []
         self.closed = 0
@@ -64,12 +76,22 @@ class FakeTruenas:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": self._authenticated}))
         elif not self._authenticated:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "error": {"code": -32001, "message": "Method call error", "data": {"errname": "ENOTAUTHENTICATED", "reason": "[ENOTAUTHENTICATED] Not authenticated"}}}))
+        elif method == "core.subscribe" and "core.subscribe" not in self.refuse:
+            self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": "e88dddb2-aea8-4e41-ba87-08323ffb8b29"}))
+            # Another collection first: only the one asked for counts.
+            self._pending.append(json.dumps({"jsonrpc": "2.0", "method": "collection_update", "params": {"msg": "changed", "collection": "alert.list", "fields": {}}}))
+            if self.realtime is not None:
+                self._pending.append(json.dumps({"jsonrpc": "2.0", "method": "collection_update",
+                                                 "params": {"msg": "added", "collection": message["params"][0], "fields": self.realtime}}))
         elif method in self.refuse:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "error": {"code": -32001, "message": "Method call error", "data": {"errname": self.refuse[method], "reason": "Not permitted"}}}))
         else:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": ANSWERS[method]}))
 
     async def recv(self) -> str:
+        if not self._pending:
+            # A subscription that never sends: wait like a quiet socket.
+            await asyncio.sleep(3600)
         return self._pending.pop(0)
 
     async def close(self) -> None:
@@ -119,8 +141,9 @@ async def test_https_reads_everything_through_the_current_api(ctx: Context, true
 
     fake.sent.clear()
     system = await adapter.fetch("system", config, {}, ctx)
-    assert fake.methods() == ["auth.login_with_api_key", "system.info", "alert.list"], "one connection for both"
-    assert system.primary == {"label": "Load", "value": 12.5, "unit": "%"}
+    assert fake.methods() == ["auth.login_with_api_key", "system.info", "alert.list", "core.subscribe"], "one connection for all"
+    assert fake.sent[-1]["params"] == ["reporting.realtime"]
+    assert system.primary == {"label": "CPU", "value": 3.0, "unit": "%"}
     assert [entry["value"] for entry in system.secondary if entry["label"] == "Alerts"] == [1]
     assert system.status == "warn"
 
@@ -348,3 +371,35 @@ async def test_a_proxy_without_websockets_is_named_when_rest_refuses_too(ctx: Co
         await adapter.test({"url": "https://truenas.example.com", "api_key": KEY}, ctx)
     assert "HTTP 400" in refused.value.message
     assert "reverse proxy" in refused.value.hint
+
+
+async def test_the_system_card_shows_what_the_services_use_not_the_zfs_cache(ctx: Context, truenas) -> None:
+    """Measured on 25.10.7: 8.3 GB, 3.3 GB free, 3.8 GB ZFS cache. Taken and
+    free alone would read 61 per cent on an idle NAS; the cache is handed back
+    when asked, so TrueNAS' own dashboard counts it apart, and so does the card."""
+    adapter, _fake = truenas
+    system = await adapter.fetch("system", {"url": "https://truenas.example.com", "api_key": KEY}, {}, ctx)
+    chips = {entry["label"]: entry["value"] for entry in system.secondary}
+    assert chips["Memory"] == "1.2 GB of 7.8 GB"
+    assert chips["ZFS cache"] == "3.5 GB"
+    assert system.metrics == {"cpu": 3.0, "memory": 15.5}
+
+
+async def test_without_a_realtime_event_the_load_average_stands_in(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A subscription refused, or one that stays silent, costs the card its
+    CPU figure and nothing else."""
+    import app.adapters.truenas as module
+
+    adapter = get_adapter("truenas")
+    config = {"url": "https://truenas.example.com", "api_key": KEY}
+    for fake, wait in ((FakeTruenas(refuse={"core.subscribe": "EACCES"}), module.REALTIME_WAIT), (FakeTruenas(realtime=None), 0.05)):
+        monkeypatch.setattr(module, "REALTIME_WAIT", wait)
+        monkeypatch.setattr(adapter, "_open_socket", fake.open)
+        quiet = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+        started = time.monotonic()
+        system = await adapter.fetch("system", config, {}, quiet)
+        # A refusal is an answer: no waiting out the full five seconds for an event.
+        assert time.monotonic() - started < 1.0
+        assert system.primary == {"label": "Load", "value": 12.5, "unit": "%"}
+        assert system.metrics == {"load": 12.5}
+        assert fake.closed == len(fake.opened)
