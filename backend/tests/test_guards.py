@@ -29,6 +29,8 @@ PUBLIC: dict[str, str] = {
     "POST /api/v1/setup": "creates the first administrator; refuses once one exists",
     "GET /api/v1/setup/boards-exist": "a count, no content",
     "POST /api/v1/auth/login": "the sign-in itself",
+    "GET /api/v1/auth/home": "whether this browser is on the home network; outside it says no and nothing more",
+    "POST /api/v1/auth/home": "the sign-in on the home network, decided by the connection's own address",
     "POST /api/v1/auth/login/second-step": "its other half; the ticket from the first step is the credential",
     "POST /api/v1/auth/forgot": "somebody who forgot their password has nothing to sign in with",
     "GET /api/v1/auth/reset/{token}": "the link is the credential, and it says nothing about who holds it",
@@ -97,6 +99,7 @@ def test_every_address_decides_who_may_call_it() -> None:
 GUESTS_MAY_CHANGE: dict[str, str] = {
     "POST /api/v1/setup": "creates the first administrator; there is nobody yet",
     "POST /api/v1/auth/login": "signing in",
+    "POST /api/v1/auth/home": "signing in on the home network",
     "POST /api/v1/auth/login/second-step": "its other half",
     "POST /api/v1/auth/logout": "leaving",
     "POST /api/v1/auth/forgot": "somebody who forgot their password",

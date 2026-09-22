@@ -1,9 +1,10 @@
 """A brake on password guessing, per address and per account, in memory.
 
 ⚠️ The address alone is not a brake. Behind a reverse proxy the client address
-is whatever ``X-Forwarded-For`` says, and the container is started with
-``--forwarded-allow-ips "*"`` so that a proxied deployment sees real
-addresses at all. A guesser sends a different value with every attempt and
+is whatever ``X-Forwarded-For`` says: the app reads the forwarding headers
+from anybody (``RecordPeer`` in ``services/home_network.py``, which replaced
+uvicorn's ``--forwarded-allow-ips "*"``) so that a proxied deployment sees
+real addresses at all. A guesser sends a different value with every attempt and
 never meets the limit. So the account is counted too, and that one nobody can
 spoof: guessing one account is capped however many addresses it comes from.
 

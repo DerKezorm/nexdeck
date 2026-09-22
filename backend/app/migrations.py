@@ -129,6 +129,11 @@ def _asset_digest_column(connection: Connection) -> None:
     connection.execute(text("CREATE INDEX IF NOT EXISTS ix_assets_digest ON assets (digest)"))
 
 
+def _session_kind_columns(connection: Connection) -> None:
+    _add_column(connection, "sessions", "kind", "VARCHAR(20) NOT NULL DEFAULT 'password'")
+    _add_column(connection, "sessions", "address", "VARCHAR(64) NOT NULL DEFAULT ''")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -142,6 +147,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (10, "An e-mail address belongs to one account", _unique_email_index),
     (11, "A page counts its saved layouts", _layout_version_column),
     (12, "An upload knows its own fingerprint", _asset_digest_column),
+    (13, "A session says how it was opened, and from where", _session_kind_columns),
 ]
 
 

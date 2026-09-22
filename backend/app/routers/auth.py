@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, sta
 from sqlalchemy import func, select
 
 from ..config import get_settings
-from ..deps import COOKIE_NAME, CurrentUser, DbSession, error
+from ..deps import COOKIE_NAME, CurrentUser, DbSession, PasswordUser, error, refuse_at_home
 from ..models import Notice, OidcProvider, Session, User, utcnow
 from ..schemas import (
     LoginBody,
@@ -72,8 +72,8 @@ def user_public(user: User, request: Request | None = None) -> UserPublic:
     )
 
 
-def open_session(db: DbSession, user: User, request: Request, response: Response) -> None:
-    session = Session(user_id=user.id, user_agent=request.headers.get("user-agent", "")[:300])
+def open_session(db: DbSession, user: User, request: Request, response: Response, kind: str = "password", address: str = "") -> None:
+    session = Session(user_id=user.id, user_agent=request.headers.get("user-agent", "")[:300], kind=kind, address=address[:64])
     db.add(session)
     db.commit()
     set_session_cookie(response, request, create_session_token(user.id, session.id))
@@ -188,6 +188,13 @@ def logout(request: Request, response: Response, db: DbSession) -> None:
             session.revoked = True
             db.commit()
             logger.info("A browser session was signed out.")
+            if session.kind == "home":
+                from ..services import home_network
+
+                # Signed out on purpose: the sign-in page must not sign
+                # straight back in. It offers the way back instead.
+                response.set_cookie(home_network.OFF_COOKIE, "1", max_age=home_network.OFF_SECONDS, path="/",
+                                    httponly=True, samesite="lax", secure=cookie_secure(request))
     clear_session_cookie(response)
 
 
@@ -218,6 +225,8 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
     if body.display_name is not None:
         user.display_name = body.display_name.strip()
     if body.email is not None:
+        # A reset link to an address of one's choosing is a password by post.
+        refuse_at_home(request)
         user.email = own_address(db, user, body.email)
     if body.locale is not None:
         user.locale = body.locale
@@ -252,7 +261,7 @@ def delete_avatar(user: CurrentUser, request: Request, db: DbSession) -> UserPub
 
 
 @router.post("/password", status_code=status.HTTP_204_NO_CONTENT, summary="Change own password")
-def change_password(body: PasswordBody, user: CurrentUser, db: DbSession) -> None:
+def change_password(body: PasswordBody, user: PasswordUser, db: DbSession) -> None:
     """Every session of the account is signed out afterwards, this one included.
 
     ⚠️ Deliberate, and a test says so. What was missing is that the interface
@@ -319,7 +328,7 @@ def two_factor_state(user: CurrentUser, db: DbSession) -> dict:
 
 
 @router.post("/two-factor/start", summary="Begin setting up a second factor")
-def two_factor_start(user: CurrentUser, db: DbSession) -> dict:
+def two_factor_start(user: PasswordUser, db: DbSession) -> dict:
     """Hands out a fresh secret and the QR code that carries it.
 
     ⚠️ Nothing is switched on here. The secret is stored unconfirmed, and only
@@ -337,7 +346,7 @@ def two_factor_start(user: CurrentUser, db: DbSession) -> dict:
 
 
 @router.post("/two-factor/confirm", summary="Switch the second factor on with a code")
-def two_factor_confirm(body: TwoFactorConfirm, user: CurrentUser, db: DbSession) -> dict:
+def two_factor_confirm(body: TwoFactorConfirm, user: PasswordUser, db: DbSession) -> dict:
     """The recovery codes come back here, in the clear, exactly once."""
     if two_factor.enabled(user):
         raise error("already_on", "This account already has a second factor.", status.HTTP_409_CONFLICT)
@@ -353,7 +362,7 @@ def two_factor_confirm(body: TwoFactorConfirm, user: CurrentUser, db: DbSession)
 
 
 @router.post("/two-factor/recovery-codes", summary="Replace the recovery codes")
-def two_factor_recovery(body: TwoFactorOff, user: CurrentUser, db: DbSession) -> dict:
+def two_factor_recovery(body: TwoFactorOff, user: PasswordUser, db: DbSession) -> dict:
     """Fresh codes, shown once. The old ones stop working immediately."""
     if not two_factor.enabled(user):
         raise error("not_on", "This account has no second factor.", status.HTTP_409_CONFLICT)
@@ -380,7 +389,7 @@ def _prove_it_is_you(db: DbSession, user: User, password: str, code: str) -> Non
 
 
 @router.delete("/two-factor", status_code=status.HTTP_204_NO_CONTENT, summary="Switch the second factor off")
-def two_factor_disable(body: TwoFactorOff, user: CurrentUser, db: DbSession) -> None:
+def two_factor_disable(body: TwoFactorOff, user: PasswordUser, db: DbSession) -> None:
     """⚠️ An account without a password proves itself with a code instead.
 
     The check used to sit behind ``has_usable_password``, and an account that

@@ -18,6 +18,8 @@ interface AuthState {
   refresh: () => Promise<void>
   login: (username: string, password: string) => Promise<LoginOutcome>
   secondStep: (ticket: string, code: string, recoveryCode?: string) => Promise<void>
+  /** Signed in on the home network without a password; `again` after signing out on purpose. */
+  homeSignIn: (again?: boolean) => Promise<void>
   logout: () => Promise<void>
   update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
   /** Take an account the server just handed back, after an upload for instance. */
@@ -76,6 +78,12 @@ export const useAuth = create<AuthState>((set, getState) => ({
   },
   secondStep: async (ticket, code, recoveryCode = '') => {
     const user = await post<User>('/auth/login/second-step', { ticket, code, recovery_code: recoveryCode })
+    set({ user })
+    await setLanguage(user.locale)
+    applyTheme(user.theme)
+  },
+  homeSignIn: async (again = false) => {
+    const user = await post<User>('/auth/home', { again })
     set({ user })
     await setLanguage(user.locale)
     applyTheme(user.theme)

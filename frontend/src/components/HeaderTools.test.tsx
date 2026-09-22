@@ -58,6 +58,13 @@ describe('HeaderTools', () => {
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
+  it('offers a password sign-in instead of signing out on the home network', async () => {
+    show({ display_name: 'Kitchen', username: 'kitchen', role: 'user', avatar_url: null, auth_kind: 'home' })
+    await userEvent.click(screen.getByRole('button', { name: 'Kitchen' }))
+    expect(screen.getByRole('menuitem', { name: 'Sign in with a password' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Sign out' })).toBeNull()
+  })
+
   it('leaves out the account menu where nobody is signed in', () => {
     show(null)
     expect(screen.queryByRole('button', { name: 'Ada Lovelace' })).toBeNull()

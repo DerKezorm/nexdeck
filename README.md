@@ -94,12 +94,15 @@ Rarely needed, but real:
 | `NEXDECK_UPDATE_CHECK` | `0` | Ask GitHub whether a newer nexdeck exists. Off by default: it is an outbound call. |
 | `NEXDECK_CORS_ORIGINS` | empty | Origins allowed to call the API from a browser. `*` is refused at start-up, because with credentials it would let any site act as the signed-in user. |
 | `NEXDECK_BACKUP_EVERY_HOURS` | `24` | How often a snapshot is written by itself. `0` switches it off. |
+| `NEXDECK_TRUSTED_PROXIES` | empty | Addresses or networks of the reverse proxies in front of nexdeck, comma separated. Their `X-Forwarded-For` is believed when nexdeck decides whether a browser is on the home network; without it, a forwarded request is never signed in automatically. |
 
 A guard test keeps this table in step with the settings in the code.
 
 ### Reverse proxy
 
 nexdeck speaks plain HTTP on port 8000 and trusts `X-Forwarded-Proto` for its cookies. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
+
+Signing in on the home network (System → Home network) needs the browser's real address. Behind a proxy, name the proxy in `NEXDECK_TRUSTED_PROXIES`; the page shows what nexdeck makes of your own address. The image starts uvicorn with `--no-proxy-headers` and reads the forwarding headers itself; a compose file that overrides the command should do the same.
 
 ## The services it speaks to
 

@@ -58,4 +58,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 ENTRYPOINT ["/entrypoint.sh"]
 # The graceful timeout matters: open live streams would otherwise keep a
 # stopping container waiting for clients that never disconnect.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*", "--timeout-graceful-shutdown", "5"]
+# No proxy headers here: the app reads them itself, after keeping the
+# connection's own address (backend/app/services/home_network.py). Every log
+# line sees the forwarded address as before.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--workers", "1", "--no-proxy-headers", "--timeout-graceful-shutdown", "5"]

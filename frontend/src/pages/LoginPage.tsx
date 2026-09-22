@@ -2,12 +2,16 @@
  * The door. Three things can happen here: the password is right and the
  * session opens, the password is right but the account wants a code, or
  * somebody has forgotten the password and needs a way back in.
+ *
+ * And a fourth, on the home network when the administrator allows it: the
+ * browser is signed in as the home account without anything typed. After
+ * signing out on purpose that waits for a press of the button instead.
  */
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
-import { ApiError, post } from '../api/client'
+import { ApiError, get, post } from '../api/client'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { Logo } from '../components/Logo'
 import { Field, PasswordInput } from '../components/ui'
@@ -15,7 +19,7 @@ import { useAuth } from '../stores/auth'
 
 export function LoginPage() {
   const { t } = useTranslation()
-  const { user, status, loading, login, secondStep } = useAuth()
+  const { user, status, loading, login, secondStep, homeSignIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [username, setUsername] = useState('')
@@ -28,6 +32,8 @@ export function LoginPage() {
   const [useRecovery, setUseRecovery] = useState(false)
   const [forgetting, setForgetting] = useState(false)
   const [sent, setSent] = useState(false)
+  // The home account's name, when this browser could come in without a password.
+  const [home, setHome] = useState<string | null>(null)
   const oidcError = new URLSearchParams(location.search).get('oidc_error')
   // The provider proved who this is; it did not prove the second factor. The
   // ticket for that is in a short-lived cookie, not in the address, so an
@@ -36,6 +42,21 @@ export function LoginPage() {
   useEffect(() => {
     if (fromProvider) setStep({ ticket: '', recovery: true })
   }, [fromProvider])
+
+  useEffect(() => {
+    if (loading || user || !status || status.needs_setup) return
+    let alive = true
+    get<{ available: boolean; held_off?: boolean; name?: string }>('/auth/home')
+      .then((answer) => {
+        if (!alive || !answer.available) return
+        if (answer.held_off) setHome(answer.name ?? '')
+        else void homeSignIn().catch(() => setHome(answer.name ?? ''))
+      })
+      .catch(() => undefined)
+    return () => {
+      alive = false
+    }
+  }, [loading, user, status, homeSignIn])
 
   useEffect(() => {
     if (user) navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true })
@@ -193,6 +214,22 @@ export function LoginPage() {
         <button className="mt-3 block mx-auto text-xs text-accent underline underline-offset-2" type="button" onClick={() => { setForgetting(true); setError('') }}>
           {t('auth.forgot.link')}
         </button>
+      )}
+      {home !== null && (
+        <div className="mt-4 pt-4 border-t border-line">
+          <button
+            className="btn w-full h-9"
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setError('')
+              homeSignIn(true).catch((failure) => setError(explain(failure)))
+            }}
+          >
+            {t('auth.home.again', { name: home })}
+          </button>
+          <p className="text-[11px] text-faint mt-1.5 text-center">{t('auth.home.why')}</p>
+        </div>
       )}
       {status?.providers?.length ? (
         <div className="mt-4 pt-4 border-t border-line space-y-2">

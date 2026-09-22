@@ -123,6 +123,12 @@ class Session(Base):
     last_seen_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     user_agent: Mapped[str] = mapped_column(String(300), default="")
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: "password" for every ordinary sign-in, "home" for one opened on the home
+    #: network without a password, which counts only there
+    #: (``services/home_network.py``).
+    kind: Mapped[str] = mapped_column(String(20), default="password")
+    #: Where it was opened from, for the list an administrator reads.
+    address: Mapped[str] = mapped_column(String(64), default="")
 
     user: Mapped[User] = relationship(back_populates="sessions")
 

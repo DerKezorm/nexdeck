@@ -1,4 +1,4 @@
-import { Archive, Globe, Info, KeyRound, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
+import { Archive, Globe, House, Info, KeyRound, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -9,6 +9,7 @@ import { AppearanceSettings } from './AppearanceSettings'
 import { BackupsSettings } from './BackupsSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
+import { HomeNetworkSettings } from './HomeNetworkSettings'
 import { MailSettings } from './MailSettings'
 import { OidcSettings } from './OidcSettings'
 import { SearchSettings } from './SearchSettings'
@@ -36,6 +37,7 @@ export function SystemPage() {
     { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
     { to: 'oidc', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
+    { to: 'home-network', icon: House, label: t('settings.nav.homeNetwork'), show: admin },
     { to: 'journal', icon: ScrollText, label: t('settings.nav.journal'), show: admin },
     { to: 'backups', icon: Archive, label: t('settings.nav.backups'), show: admin },
     { to: 'about', icon: Info, label: t('settings.nav.about') },
@@ -58,6 +60,7 @@ export function SystemPage() {
             <Route path="search" element={forAdmin(<SearchSettings />)} />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="oidc" element={forAdmin(<OidcSettings />)} />
+            <Route path="home-network" element={forAdmin(<HomeNetworkSettings />)} />
             <Route path="journal" element={forAdmin(<JournalSettings />)} />
             <Route path="backups" element={forAdmin(<BackupsSettings />)} />
             <Route path="about" element={<AboutSettings />} />

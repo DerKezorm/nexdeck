@@ -8,7 +8,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Request, status
 from sqlalchemy import select
 
-from ..deps import CurrentUser, DbSession, MemberUser, error
+from ..deps import CurrentUser, DbSession, MemberUser, error, refuse_at_home
 from ..models import ApiToken, utcnow
 from ..schemas import TokenCreate
 from ..security import new_opaque_token
@@ -40,6 +40,7 @@ def create_token(body: TokenCreate, body_request: Request, user: MemberUser, db:
     not take the access back. A token is issued to a browser session, where
     somebody proved who they are a moment ago.
     """
+    refuse_at_home(body_request)
     if getattr(body_request.state, "auth_kind", "") == "token":
         raise error(
             "session_required",

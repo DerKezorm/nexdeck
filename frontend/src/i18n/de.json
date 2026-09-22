@@ -100,6 +100,10 @@
       "done": "Das Passwort steht. Alle Browser und alle API-Marken des Kontos wurden abgemeldet.",
       "stale": "Dieser Link ist verbraucht oder zu alt. Auf der Anmeldeseite einen neuen anfordern.",
       "toSignIn": "Zur Anmeldung"
+    },
+    "home": {
+      "again": "Weiter als {{name}}",
+      "why": "Dieser Browser ist im Heimnetz."
     }
   },
   "setup": {
@@ -146,7 +150,8 @@
       "journal": "Protokoll",
       "backups": "Sicherungen",
       "media": "Medien",
-      "player": "Musik-Player"
+      "player": "Musik-Player",
+      "homeNetwork": "Heimnetz"
     },
     "mail": {
       "title": "Mailserver",
@@ -445,12 +450,44 @@
       "collapsedHelp": "Verdeckt am wenigsten, ein Klick klappt sie wieder auf.",
       "qualityTitle": "Tonqualität auf diesem Gerät",
       "qualityHelp": "Weniger als das Original spart unterwegs Daten. Stockt die Leitung immer wieder, schaltet der Player selbst herunter."
+    },
+    "home": {
+      "title": "Angemeldet im Heimnetz",
+      "help": "Ein Browser im Heimnetz wird ohne Passwort als ein gewöhnliches Konto angemeldet, gedacht für ein Wandtablet. Überall sonst bleibt die Anmeldeseite, und die so geöffnete Sitzung gilt nur zu Hause.",
+      "seenAt": "nexdeck sieht dich unter {{address}}.",
+      "seenNone": "nexdeck kann deine echte Adresse nicht erkennen, darum wird niemand automatisch angemeldet.",
+      "enabled": "Im Heimnetz ohne Passwort anmelden",
+      "enabledHelp": "Wer sich absichtlich abmeldet, wird in diesem Browser zwölf Stunden lang nicht automatisch angemeldet.",
+      "networks": "Heimnetze",
+      "networksHelp": "Eins pro Zeile, etwa 192.168.1.0/24. Nur private Bereiche.",
+      "account": "Konto",
+      "accountHelp": "Nie ein Administrator. Vom Tablet aus kann dieses Konto kein Passwort, keine E-Mail-Adresse, keinen zweiten Faktor, keine API-Schlüssel und keine Kiosk-Links anlegen.",
+      "noAccount": "Konto wählen",
+      "proxies": "Weiterleitungs-Header gelten von: {{list}}.",
+      "noProxies": "In NEXDECK_TRUSTED_PROXIES ist kein Reverse Proxy genannt. Hinter einem Proxy muss er dort stehen, sonst wird niemand automatisch angemeldet.",
+      "saved": "Gespeichert. Sitzungen, die unter der alten Einstellung im Heimnetz geöffnet wurden, sind beendet.",
+      "recent": "Zuletzt im Heimnetz angemeldet",
+      "ended": "beendet",
+      "how": {
+        "off": "Die Anmeldung im Heimnetz ist ausgeschaltet.",
+        "outside": "Diese Adresse liegt außerhalb der Heimnetze.",
+        "direct": "Direkt gesehen, ohne Proxy dazwischen.",
+        "via_proxy": "Gesehen über einen Proxy aus NEXDECK_TRUSTED_PROXIES.",
+        "forwarded_by_unknown": "Etwas vor nexdeck leitet diese Anfrage für jemand anderen weiter und steht nicht in NEXDECK_TRUSTED_PROXIES; die echte Adresse ist deshalb unbekannt.",
+        "proxy_without_forwarding": "Der Proxy vor nexdeck sagt nicht, für wen er weiterleitet.",
+        "unreadable_forwarding": "Der Weiterleitungs-Header des Proxys war nicht lesbar.",
+        "no_peer": "Die Verbindung trägt keine Adresse.",
+        "no_account": "Das gewählte Konto fehlt, ist gesperrt oder ein Administrator.",
+        "factor_required": "Auf dieser Installation braucht jedes Konto einen zweiten Faktor.",
+        "home": "Zu Hause."
+      }
     }
   },
   "menu": {
     "settings": "Meine Einstellungen",
     "system": "System",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "signInWithPassword": "Mit Passwort anmelden"
   },
   "users": {
     "role": {

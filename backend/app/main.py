@@ -30,6 +30,7 @@ from .routers import (
     boards,
     channels,
     discovery,
+    home_network,
     icons,
     imports,
     integrations,
@@ -60,6 +61,7 @@ from .services.channels import webpush as webpush_service
 from .services.collector import collector
 from .services.hass_ws import hass_listener
 from .services.health import health as health_service
+from .services.home_network import RecordPeer
 from .services.logs import log_tailer
 from .services.loop import set_main_loop
 
@@ -206,7 +208,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates, imports, nexcrate):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates, imports, nexcrate, home_network):
     app.include_router(module.router)
 
 
@@ -304,6 +306,11 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
             "frame-ancestors 'self'",
         )
     return response
+
+
+# Outermost, and last added for that reason: the connection's own address is
+# kept before the forwarding headers rewrite it. See services/home_network.py.
+app.add_middleware(RecordPeer)
 
 
 @app.exception_handler(404)

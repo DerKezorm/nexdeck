@@ -15,6 +15,7 @@ from ..deps import (
     DbSession,
     MemberUser,
     OptionalUser,
+    PasswordUser,
     board_for_viewer,
     board_is_shared_with,
     board_permission,
@@ -459,8 +460,8 @@ def list_kiosk_tokens(slug: str, user: CurrentUser, db: DbSession) -> list[dict]
 
 
 @router.post("/boards/{slug}/kiosk-tokens", status_code=status.HTTP_201_CREATED, summary="Create a kiosk link for a wall display")
-def create_kiosk_token(slug: str, body: KioskCreate, user: CurrentUser, db: DbSession) -> dict:
-    """The full token is shown once, right here."""
+def create_kiosk_token(slug: str, body: KioskCreate, user: PasswordUser, db: DbSession) -> dict:
+    """The full token is shown once, right here. Not from a session opened at home without a password."""
     board, permission = require_board(db, slug, user, "edit")
     # ⚠️ Creating a link needs "edit" and the body carried "allow_actions", so
     # a share that was deliberately not allowed to press buttons could mint a

@@ -100,6 +100,10 @@
       "done": "The password is set. Every browser and every API token of the account was signed out.",
       "stale": "This link is used up or too old. Ask for a new one on the sign-in page.",
       "toSignIn": "To the sign-in page"
+    },
+    "home": {
+      "again": "Continue as {{name}}",
+      "why": "This browser is on the home network."
     }
   },
   "setup": {
@@ -146,7 +150,8 @@
       "journal": "Log",
       "backups": "Backups",
       "media": "Media",
-      "player": "Music player"
+      "player": "Music player",
+      "homeNetwork": "Home network"
     },
     "mail": {
       "title": "Mail server",
@@ -445,12 +450,44 @@
       "collapsedHelp": "Covers least; a click opens it again.",
       "qualityTitle": "Sound quality on this device",
       "qualityHelp": "Less than the original saves data on the way. When the line keeps stalling, the player turns it down by itself."
+    },
+    "home": {
+      "title": "Signed in at home",
+      "help": "A browser on the home network is signed in as one ordinary account without a password, for a wall tablet. Everywhere else the sign-in page stays, and the session opened this way counts only at home.",
+      "seenAt": "nexdeck sees you at {{address}}.",
+      "seenNone": "nexdeck cannot tell your real address, so nobody is signed in automatically.",
+      "enabled": "Sign in on the home network without a password",
+      "enabledHelp": "Signing out on purpose holds it off in that browser for twelve hours.",
+      "networks": "Home networks",
+      "networksHelp": "One per line, like 192.168.1.0/24. Private ranges only.",
+      "account": "Account",
+      "accountHelp": "Never an administrator. This account cannot set a password, an e-mail address, a second factor, API tokens or kiosk links from the tablet.",
+      "noAccount": "Choose an account",
+      "proxies": "Forwarding headers are believed from: {{list}}.",
+      "noProxies": "No reverse proxy is named in NEXDECK_TRUSTED_PROXIES. Behind a proxy, name it there, or nobody is signed in automatically.",
+      "saved": "Saved. Sessions opened at home under the old setting have ended.",
+      "recent": "Signed in at home lately",
+      "ended": "ended",
+      "how": {
+        "off": "Signing in on the home network is switched off.",
+        "outside": "This address is outside the home networks.",
+        "direct": "Seen directly, without a proxy in between.",
+        "via_proxy": "Seen through a proxy named in NEXDECK_TRUSTED_PROXIES.",
+        "forwarded_by_unknown": "Something in front of nexdeck forwards this request for somebody else and is not named in NEXDECK_TRUSTED_PROXIES, so the real address is unknown.",
+        "proxy_without_forwarding": "The proxy in front of nexdeck says nothing about whom it forwards for.",
+        "unreadable_forwarding": "The proxy's forwarding header could not be read.",
+        "no_peer": "The connection carries no address.",
+        "no_account": "The chosen account is missing, disabled or an administrator.",
+        "factor_required": "Every account owes a second factor on this installation.",
+        "home": "At home."
+      }
     }
   },
   "menu": {
     "settings": "My settings",
     "system": "System",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signInWithPassword": "Sign in with a password"
   },
   "users": {
     "role": {

@@ -13,7 +13,7 @@ import { Avatar } from './Avatar'
 const HeaderPill = lazy(() => import('./player/HeaderPill').then((module) => ({ default: module.HeaderPill })))
 
 /** What the tools need to know about the account; the preview page invents one. */
-export type HeaderUser = Pick<User, 'display_name' | 'username' | 'role' | 'avatar_url'>
+export type HeaderUser = Pick<User, 'display_name' | 'username' | 'role' | 'avatar_url'> & Partial<Pick<User, 'auth_kind'>>
 
 interface Props {
   user: HeaderUser | null
@@ -188,7 +188,10 @@ function UserMenu({ user }: { user: HeaderUser }) {
             onClick={() => void logout().then(() => navigate('/login'))}
           >
             <LogOut size={15} />
-            {t('menu.signOut')}
+            {/* Signed in on the home network without a password: leaving
+                means signing in as somebody, and the page will not sign
+                straight back in for twelve hours. */}
+            {user.auth_kind === 'home' ? t('menu.signInWithPassword') : t('menu.signOut')}
           </button>
         </div>
       )}

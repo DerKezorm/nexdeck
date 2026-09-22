@@ -67,8 +67,15 @@ def _user_from_cookie(request: Request, db: DbSessionType) -> User | None:
         return None
     if claims.issued_ms < user.password_changed_ms:
         return None
+    if session.kind == "home":
+        from .services import home_network
+
+        # Opened without a password, so good only where that is allowed:
+        # carried out of the house, the cookie opens nothing.
+        if not home_network.still_home(db, request, session):
+            return None
     _touch_session(db, session)
-    request.state.auth_kind = "session"
+    request.state.auth_kind = "home" if session.kind == "home" else "session"
     return user
 
 
@@ -161,6 +168,31 @@ def current_user(user: Annotated[User | None, Depends(optional_user)]) -> User:
 
 
 CurrentUser = Annotated[User, Depends(current_user)]
+
+
+def refuse_at_home(request: Request) -> None:
+    """Nothing that would let the account in from elsewhere, from a session opened at home.
+
+    A session opened on the home network without a password counts only
+    there. A password, an address for a reset link, a second factor, an API
+    token or a kiosk link made from it would each be a way in from anywhere,
+    around the very rule that makes the session acceptable.
+    """
+    if getattr(request.state, "auth_kind", "") == "home":
+        raise error(
+            "home_session",
+            "Signed in on the home network without a password, this browser may not create a way in from elsewhere. Sign in with a password for that.",
+            status.HTTP_403_FORBIDDEN,
+        )
+
+
+def not_at_home(request: Request, user: CurrentUser) -> User:
+    refuse_at_home(request)
+    return user
+
+
+#: The signed-in account, but not from a session opened at home without a password.
+PasswordUser = Annotated[User, Depends(not_at_home)]
 OptionalUser = Annotated[User | None, Depends(optional_user)]
 
 
