@@ -228,8 +228,11 @@ async def test_github_says_when_the_hourly_limit_is_used_up(ctx: Context) -> Non
     respx.get("https://api.github.com/repos/owner/name/releases/latest").mock(
         return_value=httpx.Response(403, json={"message": "API rate limit exceeded for 203.0.113.1."}),
     )
-    data = await get_adapter("github").fetch("releases", {}, {"repos": "owner/name"}, ctx)
-    assert "limit" in (data.error or "").lower()
+    # The whole card says so, with what helps, rather than one line of it.
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("github").fetch("releases", {}, {"repos": "owner/name"}, ctx)
+    assert failure.value.code == "rate_limited" and "limit" in failure.value.message
+    assert "token" in failure.value.hint
 
 
 # -- share prices --------------------------------------------------------------

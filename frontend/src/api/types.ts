@@ -84,6 +84,8 @@ export interface AdapterSpec {
   beta: boolean
   docs_url: string
   needs_integration: boolean
+  /** Works without a connection, and takes one when there is: GitHub with a token. */
+  optional_integration?: boolean
   /** The connection may refuse some of its cards; ask `/integrations/{id}/barred/{widget}` before adding one. */
   bars_widgets?: boolean
   fields: FieldSpec[]

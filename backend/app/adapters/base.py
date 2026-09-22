@@ -1197,6 +1197,8 @@ class Adapter:
     widgets: tuple[WidgetType, ...] = ()
     #: Adapters without a connection (clock, notes) set this to False.
     needs_integration: bool = True
+    #: Works without a connection, and takes one when there is: GitHub with a token.
+    optional_integration: bool = False
     #: True when :meth:`barred` may refuse a card for a given connection, so
     #: the library knows to ask before it adds one.
     bars_widgets: bool = False
@@ -1252,6 +1254,7 @@ class Adapter:
             "beta": self.beta,
             "docs_url": self.docs_url,
             "needs_integration": self.needs_integration,
+            "optional_integration": self.optional_integration,
             "bars_widgets": self.bars_widgets,
             "fields": [f.to_dict() for f in self.fields],
             "widgets": [w.to_dict(self.kind) for w in self.widgets],

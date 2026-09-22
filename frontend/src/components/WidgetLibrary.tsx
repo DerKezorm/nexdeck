@@ -118,7 +118,10 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
 
   const choose = (adapter: AdapterSpec, widget: WidgetTypeSpec) => {
     if (!adapter.needs_integration) {
-      void create(adapter, widget, null)
+      // A card that can do without a connection still takes the first there
+      // is: a GitHub card with a token has a hundred times the requests.
+      const optional = adapter.optional_integration ? (integrations.data ?? []).find((i) => i.kind === adapter.kind) : undefined
+      void create(adapter, widget, optional ? optional.id : null)
       return
     }
     const matching = (integrations.data ?? []).filter((i) => i.kind === adapter.kind)

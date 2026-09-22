@@ -37,7 +37,7 @@ export function IntegrationsSettings() {
     const needle = adapterSearch.trim().toLowerCase()
     const groups: Record<string, AdapterSpec[]> = {}
     for (const adapter of adapters.data ?? []) {
-      if (!adapter.needs_integration) continue
+      if (!adapter.needs_integration && !adapter.optional_integration) continue
       // The technical name counts: somebody types "wol", "pbs" or "npm",
       // which none of the written-out names contain.
       const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''}`.toLowerCase()

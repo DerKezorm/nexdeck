@@ -1251,7 +1251,15 @@
     "Wall display": "Wandanzeige",
     "What is down, what is running, what DNS keeps out and what the line does, with bookmarks and a card for notes.": "Was ausgefallen ist, was läuft, was der DNS-Filter abhält und was die Leitung macht, mit Lesezeichen und einer Karte für Notizen.",
     "What is playing and what arrived, what was asked for, what airs next and what is still downloading.": "Was läuft und was neu ist, was angefragt wurde, was als Nächstes kommt und was noch lädt.",
-    "nexmail": "nexmail"
+    "nexmail": "nexmail",
+    "Issues and pull requests": "Issues und Pull Requests",
+    "One per line, as owner/name. At most ten.": "Eins pro Zeile, als owner/name. Höchstens zehn.",
+    "Optional. A fine-grained token with read access raises the limit from 60 to 5,000 requests an hour and reaches private repositories.": "Optional. Ein Fine-grained Token mit Lesezugriff hebt die Grenze von 60 auf 5.000 Anfragen pro Stunde und erreicht auch private Repositories.",
+    "Projects": "Projekte",
+    "Releases, open issues and pull requests, and the latest workflow runs of the projects you follow.": "Releases, offene Issues und Pull Requests und die letzten Workflow-Läufe der Projekte, denen du folgst.",
+    "The latest run of every workflow, red ones first.": "Der letzte Lauf jedes Workflows, rote zuerst.",
+    "What is open in the projects you follow, the latest changed first. Pull requests say whether they are drafts or wait for a review.": "Was in den Projekten offen ist, denen du folgst, zuletzt Geändertes zuerst. Pull Requests sagen, ob sie Entwürfe sind oder auf ein Review warten.",
+    "Workflow runs": "Workflow-Läufe"
   },
   "labels": {
     "Jobs": "Jobs",
@@ -1912,6 +1920,10 @@
     "The newest test failed": "Der neueste Test ist fehlgeschlagen",
     "The newest test failed. The numbers are from the test before it.": "Der neueste Test ist fehlgeschlagen. Die Zahlen stammen vom Test davor.",
     "The ping grows a lot while the line is busy": "Der Ping wächst stark, während die Leitung ausgelastet ist",
-    "This test did not measure the ping under load": "Dieser Test hat den Ping unter Last nicht gemessen"
+    "This test did not measure the ping under load": "Dieser Test hat den Ping unter Last nicht gemessen",
+    "Failing workflows": "Rote Workflows",
+    "Review requested": "Review angefragt",
+    "Needs approval": "Wartet auf Freigabe",
+    "Timed out": "Zeit überschritten"
   }
 }
