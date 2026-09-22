@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from ..adapters import get_adapter, split_widget_kind
 from ..models import Board, Integration, Page, Widget
-from . import health as health_service
 from . import grid
+from . import health as health_service
 from .boards import COLUMNS, place_widget, unique_slug
 
 Spec = tuple[str, str, str | None, dict[str, Any], tuple[int, int, int, int]]

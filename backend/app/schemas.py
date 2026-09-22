@@ -237,6 +237,13 @@ class WidgetPatch(BaseModel):
     page_id: int | None = None
 
 
+class WidgetMove(BaseModel):
+    """Cards to put on another page, of this board or of another one."""
+
+    ids: list[int] = Field(min_length=1, max_length=300)
+    page_id: int
+
+
 class WidgetPreview(BaseModel):
     """Draft settings for a preview fetch. Nothing is saved."""
 

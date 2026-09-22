@@ -1,11 +1,13 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
+import { namedSizes, resized, shiftGroup } from '../lib/arranging'
 import { fittingRow, perTwelfth } from '../lib/grid'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
+import { CardMenu, type MoveTarget } from './CardMenu'
 import { WidgetCard } from './WidgetCard'
 
 const ResponsiveGrid = WidthProvider(Responsive)
@@ -55,12 +57,18 @@ interface Props {
   fitHeight?: boolean
   /** What the page leaves free under the board, in pixels, for fitting its height. */
   bottomSpace?: number
+  /** Pages a card may be moved to from its menu; without them the menu offers sizes only. */
+  moveTargets?: MoveTarget[]
+  onMove?: (widgetIds: number[], pageId: number) => void
+  /** Counted up by the page when it puts an arrangement back itself, so the grid draws it fresh. */
+  epoch?: number
 }
+
+const STEP: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
 /** One press of an arrow key: one cell, or one cell of size with Shift. */
 function moved(item: LayoutItem, key: string, resize: boolean, cols: number, floor: [number, number]): LayoutItem | null {
-  const step: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
-  const move = step[key]
+  const move = STEP[key]
   if (!move) return null
   const [dx, dy] = move
   if (resize) {
@@ -80,7 +88,7 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40 } = props
+  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
   const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
   // The grid draws at the width WidthProvider assumes before it has measured,
@@ -95,6 +103,48 @@ export function BoardGrid(props: Props) {
   const host = useRef<HTMLDivElement>(null)
   const rows = useMemo(() => Math.max(1, ...wide.map((item) => item.y + item.h)), [wide])
   const rowHeight = useFittingRow(host, Boolean(fitHeight) && screen === 'lg', rows, bottomSpace) ?? (compact ? 60 : ROW_HEIGHT)
+
+  /**
+   * Several cards at once: Shift, Ctrl or Cmd and a press adds a card to the
+   * selection or takes it out. A drag or an arrow key on any of them moves
+   * them all; Escape and leaving edit mode let go.
+   */
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
+  useEffect(() => {
+    if (!editing) setSelected(new Set())
+  }, [editing])
+  // ⚠️ On the press, not the click: the grid starts its drag on the press and
+  // the release lands on its placeholder, so a click never arrives.
+  const pick = (event: MouseEvent<HTMLDivElement>, id: string) => {
+    if (!(event.shiftKey || event.ctrlKey || event.metaKey)) return
+    if ((event.target as HTMLElement).closest('.card-controls')) return
+    event.preventDefault()
+    event.stopPropagation()
+    setSelected((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const group = (id: string) => selected.size > 1 && selected.has(id)
+  // A new grid when an arrangement is put back that the grid itself did not
+  // make: a group move it refused, or a size from the menu.
+  const [redraw, setRedraw] = useState(0)
+  // The grid reports a drag twice, first as a drag and then as a change of
+  // layout that knows of the one card only. A group move answers the first
+  // and swallows the second.
+  const handled = useRef(false)
+  const dragStop = (_layout: Layout[], before: Layout, after: Layout) => {
+    if (!onLayoutChange || !group(after.i)) return
+    // A card put back where it was makes no second report to swallow.
+    if (after.x === before.x && after.y === before.y) return
+    handled.current = true
+    const moved = shiftGroup(wide.map(plain), selected, after.x - before.x, after.y - before.y, columns)
+    if (moved) onLayoutChange('lg', moved)
+    else setRedraw((n) => n + 1)
+  }
+
   /**
    * Move or resize the focused card with the arrow keys.
    *
@@ -103,16 +153,32 @@ export function BoardGrid(props: Props) {
    */
   const nudge = (event: KeyboardEvent<HTMLDivElement>, widget: WidgetView) => {
     if (!onLayoutChange || event.altKey || event.ctrlKey || event.metaKey) return
-    if (!event.key.startsWith('Arrow')) return
     // Only when the card itself has the focus, not something inside it.
     if (event.target !== event.currentTarget) return
+    if (event.key === 'Escape' && selected.size) {
+      event.preventDefault()
+      setSelected(new Set())
+      return
+    }
+    if (!event.key.startsWith('Arrow')) return
     event.preventDefault()
     const item = wide.find((one) => one.i === String(widget.id))
     if (!item) return
+    if (group(item.i) && !event.shiftKey) {
+      const [dx, dy] = STEP[event.key] ?? [0, 0]
+      const moved = shiftGroup(wide.map(plain), selected, dx, dy, columns)
+      if (moved) onLayoutChange('lg', moved)
+      return
+    }
     const next = moved(item as LayoutItem, event.key, event.shiftKey, columns, floorOf(widget, columns))
     if (!next) return
     onLayoutChange('lg', wide.map((one) => plain(one.i === next.i ? next : one)))
   }
+
+  const [menu, setMenu] = useState<{ id: number; anchor: DOMRect } | null>(null)
+  const openMenu = useCallback((id: number, anchor: DOMRect) => setMenu({ id, anchor }), [])
+  const menuCard = menu ? widgets.find((one) => one.id === menu.id) : undefined
+  const menuSpot = menu ? wide.find((one) => one.i === String(menu.id)) : undefined
 
   return (
     <>
@@ -129,7 +195,7 @@ export function BoardGrid(props: Props) {
         // so for one render a 24-column arrangement would lie on 12 columns:
         // the grid pulls every card past the edge back in, and edit mode
         // saves that.
-        key={columns}
+        key={`${columns}-${redraw}-${props.epoch ?? 0}`}
         className={`board ${editing ? 'board-editing' : ''}`}
         layouts={gridLayouts}
         breakpoints={BREAKPOINTS}
@@ -156,7 +222,15 @@ export function BoardGrid(props: Props) {
         preventCollision={!autoCompact}
         useCSSTransforms
         onBreakpointChange={(next: string) => setScreen(next === 'sm' ? 'sm' : 'lg')}
+        onDragStart={() => {
+          handled.current = false
+        }}
+        onDragStop={dragStop}
         onLayoutChange={(_current: Layout[], all: Layouts) => {
+          if (handled.current) {
+            handled.current = false
+            return
+          }
           if (!onLayoutChange || !editing) return
           // Only the wide arrangement is kept. When it is still what the board
           // handed in, the change was in the stack, which is worked out from
@@ -178,7 +252,10 @@ export function BoardGrid(props: Props) {
             tabIndex={editing ? 0 : undefined}
             role={editing ? 'application' : undefined}
             aria-label={editing ? t('board.moveWith', { name: widget.title || widget.kind }) : undefined}
+            aria-selected={editing && selected.has(String(widget.id)) ? true : undefined}
+            className={editing && selected.has(String(widget.id)) ? 'card-selected' : undefined}
             onKeyDown={editing ? (event) => nudge(event, widget) : undefined}
+            onMouseDownCapture={editing ? (event) => pick(event, String(widget.id)) : undefined}
           >
             <GridCard
               widget={widget}
@@ -190,11 +267,36 @@ export function BoardGrid(props: Props) {
               onRefresh={onRefresh}
               onSettings={onSettings}
               onRemove={onRemove}
+              onArrange={editing && onLayoutChange ? openMenu : undefined}
             />
           </div>
         ))}
       </ResponsiveGrid>
       </div>
+      {editing && selected.size > 1 && (
+        <p role="status" className="text-xs text-muted px-1 pt-3">
+          {t('arrange.selected', { count: selected.size })}
+        </p>
+      )}
+      {menu && menuCard && menuSpot && onLayoutChange && (
+        <CardMenu
+          anchor={menu.anchor}
+          carrying={group(menuSpot.i) ? selected.size : 1}
+          sizes={namedSizes(floorOf(menuCard, columns), sizeOf(menuCard, columns), columns)}
+          current={{ w: menuSpot.w, h: menuSpot.h }}
+          targets={onMove ? moveTargets ?? [] : []}
+          onSize={(w, h) => {
+            onLayoutChange('lg', resized(wide.map(plain), menuSpot.i, w, h, columns))
+            setRedraw((n) => n + 1)
+          }}
+          onMove={(pageId) => {
+            const ids = group(menuSpot.i) ? [...selected].map(Number) : [menuCard.id]
+            setSelected(new Set())
+            onMove?.(ids, pageId)
+          }}
+          onClose={() => setMenu(null)}
+        />
+      )}
     </>
   )
 }
@@ -209,6 +311,7 @@ interface CardProps {
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void
+  onArrange?: (widgetId: number, anchor: DOMRect) => void
 }
 
 /**
@@ -221,7 +324,8 @@ interface CardProps {
  * the memo anyway. So the closures are made here, from props that are stable
  * for as long as the card is, and the wrapper is what the grid renders.
  */
-const GridCard = memo(function GridCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove }: CardProps) {
+const GridCard = memo(function GridCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove, onArrange }: CardProps) {
+  const arrange = useCallback((anchor: DOMRect) => onArrange?.(widget.id, anchor), [onArrange, widget.id])
   const act = useCallback((action: Action) => onAction?.(widget.id, action), [onAction, widget.id])
   const refresh = useCallback(() => onRefresh?.(widget.id), [onRefresh, widget.id])
   const settings = useCallback(() => onSettings?.(widget.id), [onSettings, widget.id])
@@ -237,6 +341,7 @@ const GridCard = memo(function GridCard({ widget, data, series, editing, canAct,
       onRefresh={onRefresh && !editing && !widget.client_only ? refresh : undefined}
       onSettings={onSettings ? settings : undefined}
       onRemove={onRemove ? remove : undefined}
+      onArrange={onArrange ? arrange : undefined}
     />
   )
 })
@@ -322,6 +427,12 @@ function sameArrangement(one: Layout[], other: Layout[]): boolean {
     const spot = spots.get(item.i)
     return spot !== undefined && spot.x === item.x && spot.y === item.y && spot.w === item.w && spot.h === item.h
   })
+}
+
+/** The size a card is made at, inside the columns. */
+function sizeOf(widget: WidgetView, cols: number): [number, number] {
+  const [w, h] = widget.default_size ?? widget.min_size ?? [3, 2]
+  return [Math.max(1, Math.min(cols, w)), Math.max(1, h)]
 }
 
 /** The smallest the adapter says this card is still usable at. */

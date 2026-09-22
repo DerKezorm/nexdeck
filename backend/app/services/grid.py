@@ -62,21 +62,29 @@ def rescale(items: list[dict[str, Any]], before: int, after: int, floors: dict[s
     width: cards that stood side by side still meet, and the gaps between
     them shrink or grow with the rest. A card is at least its floor wide
     (``floors``, already in ``after`` columns) and stays inside the grid.
-    Where shrinking still makes two cards share a cell, the lower one moves
-    down until it does not, so no card ends up hidden under another.
+    Where shrinking still makes two cards share a cell, ``settle`` moves the
+    lower one down, so no card ends up hidden under another.
     """
     if before == after:
         return [dict(item) for item in items]
     factor = after / before
-    placed: list[dict[str, Any]] = []
-    for item in sorted(items, key=lambda one: (one["y"], one["x"])):
+    converted: list[dict[str, Any]] = []
+    for item in items:
         left = _edge(item["x"], factor)
         right = _edge(item["x"] + item["w"], factor)
-        width = max(1, (floors or {}).get(str(item["i"]), 1), right - left)
-        width = min(width, after)
-        left = min(left, after - width)
+        width = min(after, max(1, (floors or {}).get(str(item["i"]), 1), right - left))
         spot = {key: value for key, value in item.items() if key not in ("minW", "maxW")}
-        spot.update({"x": left, "w": width})
+        spot.update({"x": min(left, after - width), "w": width})
+        converted.append(spot)
+    return settle(converted)
+
+
+def settle(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The cards read top to bottom; one that overlaps a card above it moves
+    down until it does not. A card that overlaps nothing stays where it is."""
+    placed: list[dict[str, Any]] = []
+    for item in sorted(items, key=lambda one: (one["y"], one["x"])):
+        spot = dict(item)
         while any(_overlap(spot, other) for other in placed):
             spot["y"] += 1
         placed.append(spot)

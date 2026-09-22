@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, LayoutGrid, Plus, Settings2 } from 'lucide-react'
+import { Check, FoldVertical, LayoutGrid, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { BoardSettingsSheet } from '../components/BoardSettingsSheet'
+import type { MoveTarget } from '../components/CardMenu'
 import { CommandPalette } from '../components/CommandPalette'
 import { DemoNotice } from '../components/DemoNotice'
 import { MobileTabBar } from '../components/MobileTabBar'
@@ -23,6 +24,7 @@ import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { startingValue, unanswered } from '../lib/unanswered'
+import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
@@ -100,10 +102,19 @@ export function BoardPage() {
   // quietly putting the other person's work back.
   const versions = useRef<Record<number, number>>({})
   useEffect(() => {
+    // ⚠️ The higher of the two, never simply the board's. The board's copy is
+    // rewritten on every change to draw it at once, and it still carries the
+    // version from when it was fetched: taken as it came, it wound the number
+    // back after every save, and the next save was refused as somebody
+    // else's change. A version only ever goes up.
     for (const page of pages) {
-      if (typeof page.layout_version === 'number') versions.current[page.id] = page.layout_version
+      if (typeof page.layout_version === 'number') versions.current[page.id] = Math.max(versions.current[page.id] ?? 0, page.layout_version)
     }
   }, [pages])
+
+  // What waits to be saved, per page, and its timer. See the saving below.
+  const timers = useRef<Record<number, number>>({})
+  const draft = useRef<Record<number, Partial<Record<Breakpoint, LayoutItem[]>>>>({})
 
   useStream({
     board: slug,
@@ -115,6 +126,10 @@ export function BoardPage() {
       // save from this browser starts from where the page really is.
       const moved = payload as { page_id: number; layouts: unknown; version?: number }
       if (typeof moved.version === 'number') versions.current[moved.page_id] = moved.version
+      // ⚠️ Not over a change of our own still waiting to be saved. The answer
+      // to the previous save arrives after an undo pressed right behind it,
+      // and would put back what was just taken back, until the next save.
+      if (draft.current[moved.page_id]) return
       queryClient.setQueryData<BoardWithLive>(['board', slug], (old) =>
         old ? { ...old, pages: old.pages.map((p) => (p.id === payload.page_id ? { ...p, layouts: payload.layouts as typeof p.layouts } : p)) } : old,
       )
@@ -128,8 +143,6 @@ export function BoardPage() {
   // was on screen, gone after a reload, and nothing said so. A timer per page
   // is the fix, and switching away flushes what is pending rather than
   // dropping it.
-  const timers = useRef<Record<number, number>>({})
-  const draft = useRef<Record<number, Partial<Record<Breakpoint, LayoutItem[]>>>>({})
   const save = useCallback(
     (pageId: number) => {
       const body = draft.current[pageId]
@@ -149,15 +162,78 @@ export function BoardPage() {
     },
     [t],
   )
-  const onLayoutChange = useCallback(
-    (breakpoint: Breakpoint, layout: LayoutItem[]) => {
-      if (!activePage) return
-      const pageId = activePage.id
+  const queue = useCallback(
+    (pageId: number, breakpoint: Breakpoint, layout: LayoutItem[]) => {
       draft.current[pageId] = { ...(draft.current[pageId] ?? {}), [breakpoint]: layout }
       window.clearTimeout(timers.current[pageId])
       timers.current[pageId] = window.setTimeout(() => save(pageId), 700)
     },
-    [activePage, save],
+    [save],
+  )
+  /**
+   * The arrangement as the board shows it, written into the board's copy at
+   * once. The grid draws from that copy, so a change the grid did not make
+   * itself, a group moved by keys, a size from the menu, an undo, shows the
+   * moment it is made rather than after the server has echoed it.
+   */
+  const shown = useCallback(
+    (pageId: number): LayoutItem[] =>
+      (queryClient.getQueryData<BoardWithLive>(['board', slug])?.pages.find((p) => p.id === pageId)?.layouts.lg ?? []).map(({ i, x, y, w, h }) => ({ i, x, y, w, h })),
+    [queryClient, slug],
+  )
+  const show = useCallback(
+    (pageId: number, lg: LayoutItem[]) =>
+      queryClient.setQueryData<BoardWithLive>(['board', slug], (old) =>
+        old ? { ...old, pages: old.pages.map((p) => (p.id === pageId ? { ...p, layouts: { ...p.layouts, lg } } : p)) } : old,
+      ),
+    [queryClient, slug],
+  )
+  // What can be taken back, per page, and a count that redraws the buttons.
+  const steps = useRef<Record<number, Steps>>({})
+  const stepsOf = (pageId: number) => (steps.current[pageId] ??= new Steps())
+  const [can, setCan] = useState({ undo: false, redo: false })
+  const note = (pageId: number) => setCan({ undo: stepsOf(pageId).canUndo, redo: stepsOf(pageId).canRedo })
+  useEffect(() => {
+    if (activePage) setCan({ undo: steps.current[activePage.id]?.canUndo ?? false, redo: steps.current[activePage.id]?.canRedo ?? false })
+  }, [activePage])
+  // Bumped when an arrangement is put back from here, so the grid draws it fresh.
+  const [epoch, setEpoch] = useState(0)
+  const onLayoutChange = useCallback(
+    (breakpoint: Breakpoint, layout: LayoutItem[]) => {
+      if (!activePage) return
+      const pageId = activePage.id
+      if (breakpoint === 'lg') {
+        stepsOf(pageId).record(shown(pageId))
+        show(pageId, layout)
+        note(pageId)
+      }
+      queue(pageId, breakpoint, layout)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePage, queue, shown, show],
+  )
+  /** Undo, redo or close the gaps: an arrangement put back from outside the grid. */
+  const putBack = useCallback(
+    (how: 'undo' | 'redo' | 'gaps') => {
+      if (!activePage) return
+      const pageId = activePage.id
+      const now = shown(pageId)
+      let next: LayoutItem[] | null
+      if (how === 'gaps') {
+        next = closeGaps(now)
+        if (next.every((item, index) => item.y === now[index].y)) return
+        stepsOf(pageId).record(now)
+      } else {
+        next = how === 'undo' ? stepsOf(pageId).undo(now) : stepsOf(pageId).redo(now)
+      }
+      if (!next) return
+      show(pageId, next)
+      queue(pageId, 'lg', next)
+      note(pageId)
+      setEpoch((n) => n + 1)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePage, shown, show, queue],
   )
   // Leaving a page, or the board, writes what is still waiting.
   const flush = useCallback(() => {
@@ -174,11 +250,24 @@ export function BoardPage() {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setPalette((v) => !v)
+        return
+      }
+      // Undo and redo belong to a text field while one has the focus.
+      if (!editing || !(event.ctrlKey || event.metaKey) || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
+      const key = event.key.toLowerCase()
+      if (key === 'z') {
+        event.preventDefault()
+        putBack(event.shiftKey ? 'redo' : 'undo')
+      } else if (key === 'y') {
+        event.preventDefault()
+        putBack('redo')
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [editing, putBack])
 
   // The player's bar sits where the edit bar does; it steps aside while editing.
   useEffect(() => {
@@ -298,6 +387,32 @@ export function BoardPage() {
   const onSettings = useCallback((id: number) => setSettingsFor(id), [])
   const onRemove = useCallback((id: number) => setRemoving(id), [])
 
+  /** Where a card may go: the other pages of this board first, then every page of a board this person may change. */
+  const moveTargets = useMemo<MoveTarget[]>(() => {
+    if (!data || !activePage) return []
+    const here: MoveTarget = { boardName: data.name, current: true, pages: pages.filter((p) => p.id !== activePage.id).map((p) => ({ id: p.id, name: p.name })) }
+    const elsewhere = (boards.data ?? [])
+      .filter((entry) => entry.id !== data.id && !entry.provisioned && ['edit', 'act', 'owner'].includes(entry.permission))
+      .map((entry) => ({ boardName: entry.name, current: false, pages: entry.pages.map((p) => ({ id: p.id, name: p.name })) }))
+    return [here, ...elsewhere]
+  }, [data, activePage, pages, boards.data])
+  const onMove = useCallback(
+    (ids: number[], pageId: number) => {
+      // What is still waiting to be saved goes first: the server takes the
+      // cards from where it has them, and that should be where they are.
+      flush()
+      const name = moveTargets.flatMap((target) => target.pages.map((page) => ({ ...page, board: target.current ? '' : target.boardName }))).find((page) => page.id === pageId)
+      post<{ moved: number }>('/widgets/move', { ids, page_id: pageId })
+        .then((answer) => {
+          setToast({ text: t('arrange.moved', { count: answer.moved, page: name ? (name.board ? `${name.board} › ${name.name}` : name.name) : '' }), level: 'ok' })
+          void Promise.all([board.refetch(), boards.refetch()])
+        })
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flush, moveTargets, t],
+  )
+
   const allActions = useMemo(() => {
     const list: { widget: WidgetView; action: Action }[] = []
     if (!canAct) return list
@@ -406,6 +521,9 @@ export function BoardPage() {
           columns={gridColumns(data.settings)}
           fitHeight={Boolean(settings.fit_height)}
           onLayoutChange={onLayoutChange}
+          epoch={epoch}
+          moveTargets={moveTargets}
+          onMove={onMove}
           onAction={onAction}
           onRefresh={onRefresh}
           onSettings={onSettings}
@@ -426,6 +544,17 @@ export function BoardPage() {
           <button className="btn btn-flat" onClick={() => setNewPage(true)} aria-label={t('board.addPage')}>
             <Plus size={15} /> <span className="hidden sm:inline">{t('board.addPage')}</span>
           </button>
+          <span className="w-px h-5 bg-line mx-0.5" aria-hidden="true" />
+          <button className="btn btn-flat btn-icon" onClick={() => putBack('undo')} disabled={!can.undo} aria-label={t('arrange.undo')} title={t('arrange.undoTitle')}>
+            <Undo2 size={15} />
+          </button>
+          <button className="btn btn-flat btn-icon" onClick={() => putBack('redo')} disabled={!can.redo} aria-label={t('arrange.redo')} title={t('arrange.redoTitle')}>
+            <Redo2 size={15} />
+          </button>
+          <button className="btn btn-flat btn-icon" onClick={() => putBack('gaps')} aria-label={t('arrange.closeGaps')} title={t('arrange.closeGapsTitle')}>
+            <FoldVertical size={15} />
+          </button>
+          <span className="w-px h-5 bg-line mx-0.5" aria-hidden="true" />
           <button className="btn btn-flat" onClick={() => setBoardSettings(true)} aria-label={t('board.settings')}>
             <Settings2 size={15} /> <span className="hidden sm:inline">{t('board.settings')}</span>
           </button>

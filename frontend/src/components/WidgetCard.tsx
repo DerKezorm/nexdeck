@@ -1,4 +1,4 @@
-import { AlertTriangle, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
+import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,12 +19,14 @@ interface Props {
   onRefresh?: () => void
   onSettings?: () => void
   onRemove?: () => void
+  /** Opens the menu of sizes and pages, below the button that was pressed. */
+  onArrange?: (anchor: DOMRect) => void
 }
 
 const INTERACTIVE = 'a, button, input, select, textarea, [role="button"], .no-click'
 
 /** The frame every widget shares: header, floating controls, body, error strip. */
-export function WidgetCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove }: Props) {
+export function WidgetCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove, onArrange }: Props) {
   const { t, i18n } = useTranslation()
   // A failed fetch is an error state of its own: red, with the server's reason.
   // The server names the reason by code; other languages translate the code,
@@ -76,6 +78,11 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
           <ExternalLink size={13} />
         </a>
       )}
+      {editing && onArrange && (
+        <button className="btn btn-icon h-6 w-6 btn-flat" onClick={(event) => onArrange(event.currentTarget.getBoundingClientRect())} aria-label={t('arrange.menu')} title={t('arrange.menu')} aria-haspopup="menu">
+          <Ellipsis size={13} />
+        </button>
+      )}
       {editing && onSettings && (
         <button className="btn btn-icon h-6 w-6 btn-flat" onClick={onSettings} aria-label={t('widget.settings')} title={t('widget.settings')}>
           <Settings2 size={13} />
@@ -88,7 +95,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, onAction, on
       )}
     </>
   )
-  const showControls = editing ? Boolean(onSettings || onRemove) : Boolean(onRefresh || link)
+  const showControls = editing ? Boolean(onSettings || onRemove || onArrange) : Boolean(onRefresh || link)
 
   return (
     <section

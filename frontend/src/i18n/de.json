@@ -1017,5 +1017,23 @@
     "search": "Suche",
     "notices": "Hinweise",
     "more": "Mehr"
+  },
+  "arrange": {
+    "menu": "Größe und Platz",
+    "size": "Größe",
+    "sizeTitle": "{{w}} Spalten, {{h}} Zeilen",
+    "move": "Verschieben nach",
+    "moveMany": "{{count}} Karten verschieben nach",
+    "nowhere": "Es gibt keine andere Seite. Leg erst eine Seite oder ein Board an.",
+    "moved_one": "Nach {{page}} verschoben.",
+    "moved_other": "{{count}} Karten nach {{page}} verschoben.",
+    "selected_one": "{{count}} Karte ausgewählt.",
+    "selected_other": "{{count}} Karten ausgewählt. Zieh eine davon oder nimm die Pfeiltasten, dann bewegen sich alle; Escape hebt die Auswahl auf.",
+    "undo": "Rückgängig",
+    "undoTitle": "Rückgängig (Strg+Z)",
+    "redo": "Wiederholen",
+    "redoTitle": "Wiederholen (Strg+Umschalt+Z)",
+    "closeGaps": "Lücken schließen",
+    "closeGapsTitle": "Lücken schließen: Jede Karte rückt so weit nach oben wie möglich, die Spalten bleiben, wie sie sind"
   }
 }

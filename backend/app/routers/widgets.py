@@ -27,10 +27,16 @@ from ..deps import (
     require_board_id,
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
-from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetPatch, WidgetPreview
+from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetMove, WidgetPatch, WidgetPreview
 from ..services import grid, history
 from ..services import health as health_service
-from ..services.boards import _validate_options, place_widget, remove_from_layouts, widget_view
+from ..services.boards import (
+    _validate_options,
+    card_sizes,
+    place_widget,
+    remove_from_layouts,
+    widget_view,
+)
 from ..services.collector import collector
 from ..services.hass_ws import hass_listener
 from ..services.notify import emit
@@ -150,6 +156,84 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     collector.unschedule(widget_id)
     hass_listener.forget_widgets(integration_id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
+
+
+@router.post("/widgets/move", summary="Put cards on another page, of this board or another")
+def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
+    """The cards go together and arrive as they stood: side by side stays
+    side by side, below the last row of the page they land on. They keep
+    their settings, their checks and their history.
+
+    Edit is needed on the board a card leaves and on the one it lands on,
+    and neither may come from a file on the server.
+
+    ⚠️ A card built on a connection reserved for administrators stays on
+    the boards the administrator put it on. Carried to a member's own board
+    it would be shown to everyone that board is shared with, which is the
+    decision the reservation keeps for administrators. The options are checked for the
+    same reason: a calendar card names its sources there.
+    """
+    target = db.get(Page, body.page_id)
+    if target is None:
+        raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
+    to_board, _ = require_board_id(db, target.board_id, user, "edit")
+    if to_board.provisioned:
+        raise error("provisioned", "That board comes from a file on the server; change the file instead.", status.HTTP_409_CONFLICT)
+    moving: list[tuple[Widget, Page]] = []
+    boards = {to_board.id: to_board}
+    for widget_id in dict.fromkeys(body.ids):
+        widget, page = _widget(db, widget_id)
+        if page.id == target.id:
+            continue
+        if page.board_id not in boards:
+            from_board, _ = require_board_id(db, page.board_id, user, "edit")
+            if from_board.provisioned:
+                raise error("provisioned", "This board comes from a file on the server; change the file instead.", status.HTTP_409_CONFLICT)
+            boards[from_board.id] = from_board
+        if page.board_id != to_board.id and user.role != Role.admin.value:
+            if widget.integration is not None and widget.integration.admin_only:
+                raise error("integration_locked", f"{widget.title or widget.kind} reads a connection reserved for administrators and stays on its board.", status.HTTP_403_FORBIDDEN)
+            _validate_options(db, widget.kind, widget.options, user)
+        moving.append((widget, page))
+    if not moving:
+        return {"moved": 0, "page_id": target.id}
+
+    to_columns = grid.columns(to_board.settings)
+    # Where each card stands now, in the columns of the board it lands on.
+    spots: list[dict] = []
+    for widget, page in moving:
+        from_columns = grid.columns(boards[page.board_id].settings)
+        spot = next((dict(item) for item in (page.layouts or {}).get("lg", []) if item.get("i") == str(widget.id)), None)
+        if spot is None:
+            default = card_sizes(widget, from_columns)[0]
+            spot = {"i": str(widget.id), "x": 0, "y": 0, "w": default[0], "h": default[1]}
+        floor = card_sizes(widget, to_columns)[1][0]
+        [spot] = grid.rescale([{key: spot[key] for key in ("i", "x", "y", "w", "h")}], from_columns, to_columns, {str(widget.id): floor})
+        spots.append(spot)
+    # Cards from different pages may now claim the same cells.
+    block = grid.settle(spots)
+    top = min(spot["y"] for spot in block)
+    bottom = max((item["y"] + item["h"] for item in (target.layouts or {}).get("lg", [])), default=0)
+    placed = {spot["i"]: {**spot, "y": spot["y"] - top + bottom} for spot in block}
+
+    for widget, page in moving:
+        remove_from_layouts(page, widget.id)
+        widget.page_id = target.id
+        adapter, widget_kind = split_widget_kind(widget.kind)
+        widget_type = adapter.widget(widget_kind)
+        # The screens nobody reads get a place the usual way; the wide one gets the block's.
+        place_widget(target, widget.id, widget_type.default_size, widget_type.min_size, to_columns)
+        layouts = dict(target.layouts)
+        layouts["lg"] = [placed[item["i"]] if item["i"] == str(widget.id) else item for item in layouts["lg"]]
+        target.layouts = layouts
+    for page in {page.id: page for _moved, page in moving}.values():
+        page.layout_version = (page.layout_version or 0) + 1
+    target.layout_version = (target.layout_version or 0) + 1
+    db.commit()
+    for board_id in boards:
+        hub.publish(board_topic(board_id), "board", {"id": board_id, "changed": True})
+    logger.info("%d card(s) moved to page %r of board %r by %s.", len(moving), target.name, to_board.slug, user.username)
+    return {"moved": len(moving), "page_id": target.id}
 
 
 @router.post("/widgets/{widget_id}/preview", summary="Fetch a widget's data with draft settings, without saving")

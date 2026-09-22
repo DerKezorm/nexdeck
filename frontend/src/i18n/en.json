@@ -1017,5 +1017,23 @@
     "search": "Search",
     "notices": "Notices",
     "more": "More"
+  },
+  "arrange": {
+    "menu": "Size and place",
+    "size": "Size",
+    "sizeTitle": "{{w}} columns by {{h}} rows",
+    "move": "Move to",
+    "moveMany": "Move {{count}} cards to",
+    "nowhere": "No other page to go to. Add a page or a board first.",
+    "moved_one": "Moved to {{page}}.",
+    "moved_other": "{{count}} cards moved to {{page}}.",
+    "selected_one": "{{count}} card selected.",
+    "selected_other": "{{count}} cards selected. Drag one or use the arrow keys to move them together; Escape lets go.",
+    "undo": "Undo",
+    "undoTitle": "Undo (Ctrl+Z)",
+    "redo": "Redo",
+    "redoTitle": "Redo (Ctrl+Shift+Z)",
+    "closeGaps": "Close gaps",
+    "closeGapsTitle": "Close gaps: every card moves up as far as it can, columns stay as they are"
   }
 }
