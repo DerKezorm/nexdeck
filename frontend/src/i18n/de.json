@@ -874,7 +874,19 @@
       "noField": "Diese Kachel hat nichts zum Ausfüllen.",
       "notAllowed": "Von diesem Brett aus darfst du nichts starten."
     },
-    "saveFile": "{{name}} speichern"
+    "saveFile": "{{name}} speichern",
+    "note": {
+      "edit": "Notiz bearbeiten",
+      "field": "Notiz",
+      "done": "Fertig",
+      "saving": "Speichert…",
+      "saved": "Gespeichert",
+      "failed": "Nicht gespeichert. Noch einmal versuchen.",
+      "conflict": "Die Notiz wurde woanders geändert, während du geschrieben hast.",
+      "keepMine": "Meine behalten",
+      "takeTheirs": "Die andere nehmen",
+      "tickConflict": "Die Notiz wurde woanders geändert; so steht sie jetzt."
+    }
   },
   "player": {
     "title": "Musik",

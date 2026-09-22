@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Moon,
   Pause,
+  Pencil,
   Play,
   RotateCw,
   Search,
@@ -32,6 +33,7 @@ import type { TFunction } from 'i18next'
 import { fileUrl, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
+import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
 import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
@@ -41,6 +43,7 @@ import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
 import { WolCard } from './WolCard'
+import { NoteEditor, saveNote } from './NoteEditor'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
@@ -49,6 +52,8 @@ export interface RenderProps {
   data: WidgetData | undefined
   series?: Record<string, number[]>
   canAct?: boolean
+  /** May change the board: a note card is then written from the card itself. */
+  canWrite?: boolean
   onAction?: (action: Action) => void
   link?: string
   editing?: boolean
@@ -645,9 +650,23 @@ function loadMarkdown(): Promise<void> {
   return loading
 }
 
-export function TextCard({ data }: RenderProps) {
-  const source = String(data?.meta?.markdown ?? '')
+/**
+ * A note, and for whoever may change the board, written from the card: the
+ * pencil or a double click opens the text, and a box of a `- [ ]` list ticks
+ * on a touch. Not while the board is being arranged, where a click picks the
+ * card up. Saving goes through `NoteEditor`, which refuses to write over a
+ * change made elsewhere.
+ */
+export function TextCard({ widget, data, canWrite, editing }: RenderProps) {
+  const { t } = useTranslation()
+  const served = String(widget.options?.content ?? data?.meta?.markdown ?? '')
+  // What this card last saved, until the board catches up with it.
+  const [saved, setSaved] = useState<string | null>(null)
+  const source = saved ?? served
+  const [writing, setWriting] = useState(false)
+  const [problem, setProblem] = useState('')
   const [ready, setReady] = useState(render !== null)
+  const writable = Boolean(canWrite && !editing && widget.kind === 'core.markdown')
   useEffect(() => {
     if (render !== null) return
     let alive = true
@@ -658,11 +677,67 @@ export function TextCard({ data }: RenderProps) {
       alive = false
     }
   }, [])
-  const html = useMemo(() => (ready && render ? render(source) : ''), [source, ready])
-  if (!ready || !render) {
-    return <div className="flex-1 min-h-0 scroll px-3 pb-3 text-[13px] whitespace-pre-wrap">{source}</div>
+  useEffect(() => {
+    if (saved !== null && served === saved) setSaved(null)
+  }, [served, saved])
+  const html = useMemo(() => {
+    if (!ready || !render) return ''
+    const drawn = render(source)
+    // Marked draws the boxes disabled; for a writer they tick.
+    return writable ? drawn.replace(/<input([^>]*?) disabled=""/g, '<input$1') : drawn
+  }, [source, ready, writable])
+
+  if (writing) {
+    return <NoteEditor widgetId={widget.id} initial={source} onSaved={setSaved} onClose={() => setWriting(false)} />
   }
-  return <div className="prose-card flex-1 min-h-0 scroll px-3 pb-3 text-[13px]" dangerouslySetInnerHTML={{ __html: html }} />
+
+  const tick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const box = event.target as HTMLElement
+    if (!writable || !(box instanceof HTMLInputElement) || box.type !== 'checkbox') return
+    const boxes = Array.from(event.currentTarget.querySelectorAll('input[type="checkbox"]'))
+    const next = toggleTask(source, boxes.indexOf(box))
+    if (next === null) return
+    const before = source
+    setSaved(next)
+    setProblem('')
+    void saveNote(widget.id, next, before).then((answer) => {
+      if (answer.ok) return
+      setSaved(answer.current ?? null)
+      setProblem(answer.current !== undefined ? t('card.note.tickConflict') : t('card.note.failed'))
+    })
+  }
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col relative group/note">
+      {!ready || !render ? (
+        <div className="flex-1 min-h-0 scroll px-3 pb-3 text-[13px] whitespace-pre-wrap">{source}</div>
+      ) : (
+        <div
+          className="prose-card flex-1 min-h-0 scroll px-3 pb-3 text-[13px]"
+          onClick={tick}
+          onDoubleClick={writable ? () => setWriting(true) : undefined}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      )}
+      {problem && (
+        <p className="mx-3 mb-2 text-[11px] text-bad" role="alert">
+          {problem}
+        </p>
+      )}
+      {writable && (
+        // Faint but always there: a wall tablet has no hover to reveal it.
+        <button
+          type="button"
+          className="btn btn-icon btn-flat h-7 w-7 absolute right-1.5 bottom-1.5 opacity-50 hover:opacity-100 focus-visible:opacity-100 group-hover/note:opacity-100 no-drag"
+          aria-label={t('card.note.edit')}
+          title={t('card.note.edit')}
+          onClick={() => setWriting(true)}
+        >
+          <Pencil size={14} />
+        </button>
+      )}
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------

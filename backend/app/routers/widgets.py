@@ -27,7 +27,15 @@ from ..deps import (
     require_board_id,
 )
 from ..models import HealthCheck, Integration, Page, Role, User, Widget
-from ..schemas import ActionBody, HealthBody, WidgetCreate, WidgetMove, WidgetPatch, WidgetPreview
+from ..schemas import (
+    ActionBody,
+    HealthBody,
+    NoteBody,
+    WidgetCreate,
+    WidgetMove,
+    WidgetPatch,
+    WidgetPreview,
+)
 from ..services import grid, history
 from ..services import health as health_service
 from ..services.boards import (
@@ -142,6 +150,41 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         health_service.health.reset(widget.health_check.id)
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
     return widget_view(db, widget, columns=grid.columns(board.settings))
+
+
+@router.put("/widgets/{widget_id}/note", summary="Write a note card's text, straight from the card")
+def put_note(widget_id: int, body: NoteBody, user: CurrentUser, db: DbSession) -> dict:
+    """The text of a Notes card, typed into the card itself.
+
+    Its own address rather than a change of the card's settings, for two
+    reasons. It touches the text and nothing else, so a save from the card
+    cannot wind back an option somebody changed in the settings meanwhile.
+    And it is refused when the stored text is no longer the one the typing
+    started from: two tablets on the same list would otherwise take turns
+    wiping out each other's lines, silently. The refusal carries the stored
+    text, so the card can offer both.
+    """
+    widget, page = _widget(db, widget_id)
+    board, _ = require_board_id(db, page.board_id, user, "edit")
+    if widget.kind != "core.markdown":
+        raise error("not_a_note", "Only a Notes card is written from the card.")
+    options = dict(widget.options or {})
+    # A new card holds no text of its own yet and shows the field's default;
+    # that is what its first save starts from.
+    adapter, kind = split_widget_kind(widget.kind)
+    default = next((field.default for field in adapter.widget(kind).options if field.name == "content"), "")
+    stored = str(options["content"]) if "content" in options else str(default or "")
+    if stored != body.based_on and stored != body.content:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail={
+            "code": "note_changed", "message": "The note was changed elsewhere while you were typing.", "current": stored,
+        })
+    if stored != body.content:
+        options["content"] = body.content
+        widget.options = options
+        db.commit()
+        collector.schedule(widget.id)
+        hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
+    return {"content": body.content}
 
 
 @router.delete("/widgets/{widget_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove a widget")

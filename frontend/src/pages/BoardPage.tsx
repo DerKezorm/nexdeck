@@ -521,6 +521,7 @@ export function BoardPage() {
           series={liveSeries}
           editing={editing}
           canAct={canAct}
+          canWrite={canEdit}
           autoCompact={Boolean(settings.compact)}
           // The saved columns, never the draft: the pages are only carried over
           // to new columns when the sheet is saved.

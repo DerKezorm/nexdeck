@@ -874,7 +874,19 @@
       "noField": "This card has nothing to fill in.",
       "notAllowed": "You may not start anything from this board."
     },
-    "saveFile": "Save {{name}}"
+    "saveFile": "Save {{name}}",
+    "note": {
+      "edit": "Edit note",
+      "field": "Note",
+      "done": "Done",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Not saved. Try again.",
+      "conflict": "This note was changed elsewhere while you were typing.",
+      "keepMine": "Keep mine",
+      "takeTheirs": "Take the other",
+      "tickConflict": "This note was changed elsewhere; here is how it stands now."
+    }
   },
   "player": {
     "title": "Music",

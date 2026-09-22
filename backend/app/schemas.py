@@ -237,6 +237,17 @@ class WidgetPatch(BaseModel):
     page_id: int | None = None
 
 
+#: The longest note a card takes: a long shopping list, not a document.
+NOTE_LIMIT = 20_000
+
+
+class NoteBody(BaseModel):
+    content: str = Field(max_length=NOTE_LIMIT)
+    #: The text the editing started from. A save whose starting point is no
+    #: longer what is stored was written over somebody else's change.
+    based_on: str = Field(default="", max_length=NOTE_LIMIT)
+
+
 class WidgetMove(BaseModel):
     """Cards to put on another page, of this board or of another one."""
 

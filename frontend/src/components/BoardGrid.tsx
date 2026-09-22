@@ -43,6 +43,8 @@ interface Props {
   series?: Record<number, Record<string, number[]>>
   editing?: boolean
   canAct?: boolean
+  /** May change the board: a note card is written from the card itself. */
+  canWrite?: boolean
   onLayoutChange?: (breakpoint: Breakpoint, layout: LayoutItem[]) => void
   onAction?: (widgetId: number, action: Action) => void
   onRefresh?: (widgetId: number) => void
@@ -88,7 +90,7 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets, layouts, data, series, editing, canAct, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
+  const { widgets, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
   const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
   // The grid draws at the width WidthProvider assumes before it has measured,
@@ -294,6 +296,7 @@ export function BoardGrid(props: Props) {
               series={series?.[widget.id]}
               editing={editing}
               canAct={canAct}
+              canWrite={canWrite}
               onAction={onAction}
               onRefresh={onRefresh}
               onSettings={onSettings}
@@ -339,6 +342,7 @@ interface CardProps {
   series: Record<string, number[]> | undefined
   editing?: boolean
   canAct?: boolean
+  canWrite?: boolean
   onAction?: (widgetId: number, action: Action) => void
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
@@ -356,7 +360,7 @@ interface CardProps {
  * the memo anyway. So the closures are made here, from props that are stable
  * for as long as the card is, and the wrapper is what the grid renders.
  */
-const GridCard = memo(function GridCard({ widget, data, series, editing, canAct, onAction, onRefresh, onSettings, onRemove, onArrange }: CardProps) {
+const GridCard = memo(function GridCard({ widget, data, series, editing, canAct, canWrite, onAction, onRefresh, onSettings, onRemove, onArrange }: CardProps) {
   const arrange = useCallback((anchor: DOMRect) => onArrange?.(widget.id, anchor), [onArrange, widget.id])
   const act = useCallback((action: Action) => onAction?.(widget.id, action), [onAction, widget.id])
   const refresh = useCallback(() => onRefresh?.(widget.id), [onRefresh, widget.id])
@@ -369,6 +373,7 @@ const GridCard = memo(function GridCard({ widget, data, series, editing, canAct,
       series={series}
       editing={editing}
       canAct={canAct}
+      canWrite={canWrite}
       onAction={onAction ? act : undefined}
       onRefresh={onRefresh && !editing && !widget.client_only ? refresh : undefined}
       onSettings={onSettings ? settings : undefined}
