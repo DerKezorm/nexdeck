@@ -518,7 +518,7 @@ textarea.input {
 
 /* A card taken into a selection: solid where the others are dashed, and a
    ring, so the difference does not rest on colour alone. */
-.card-selected > .card.is-editing {
+.card-selected .card.is-editing {
   border-style: solid;
   box-shadow: 0 0 0 2px var(--nd-accent), 0 0 0 5px var(--nd-accent-soft);
 }

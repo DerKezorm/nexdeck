@@ -47,7 +47,7 @@ function board(extra: Record<string, unknown> = {}) {
       } as unknown as Parameters<typeof BoardGrid>[0])}
     />,
   )
-  const wrapper = (id: number) => view.container.querySelector(`[data-widget="${id}"]`)!.parentElement as HTMLElement
+  const wrapper = (id: number) => view.container.querySelector(`[data-widget="${id}"]`)!.parentElement!.parentElement as HTMLElement
   return { saved, moved, view, wrapper, handed: () => captured[captured.length - 1] }
 }
 
@@ -91,6 +91,23 @@ describe('a selection', () => {
     // What the grid reports next knows of the one dragged card only.
     grid.onLayoutChange([], { lg: [{ i: '1', x: 0, y: 5, w: 4, h: 2 }, { i: '2', x: 4, y: 0, w: 4, h: 2 }, { i: '3', x: 0, y: 2, w: 4, h: 2 }] })
     expect(saved.mock.calls.length).toBe(calls)
+  })
+
+  it('takes the other selected cards along while one is still being dragged', () => {
+    const { wrapper, handed } = board()
+    fireEvent.mouseDown(wrapper(1), { shiftKey: true })
+    fireEvent.mouseDown(wrapper(2), { shiftKey: true })
+    const inner = (id: number) => wrapper(id).firstElementChild as HTMLElement
+    const grid = () => handed() as { onDrag: (l: Layout[], a: Layout, b: Layout) => void }
+    act(() => grid().onDrag([], { i: '1', x: 0, y: 0, w: 4, h: 2 }, { i: '1', x: 0, y: 5, w: 4, h: 2 }))
+    // Five rows down: 5 × (68 + 12) pixels, before the pointer has let go.
+    expect(inner(2).style.transform).toContain('400px')
+    expect(inner(2).style.opacity).toBe('1')
+    expect(inner(1).style.transform, 'the grid moves the dragged card itself').toBe('')
+    expect(inner(3).style.transform, 'a card outside the selection stays').toBe('')
+    // Where the group would land on card 3, the others fade.
+    act(() => grid().onDrag([], { i: '1', x: 0, y: 0, w: 4, h: 2 }, { i: '1', x: 0, y: 2, w: 4, h: 2 }))
+    expect(inner(2).style.opacity).toBe('0.4')
   })
 
   it('stays put where the group cannot go, and saves nothing', () => {

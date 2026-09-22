@@ -482,12 +482,14 @@ export function BoardPage() {
       <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
         <DemoNotice admin={user?.role === 'admin'} />
         {widgets.length === 0 && (
-          <div className="glass rounded-2xl p-8 text-center max-w-md mx-auto mt-10">
+          <div className="glass rounded-2xl p-8 text-center max-w-xl mx-auto mt-10">
             <LayoutGrid className="mx-auto text-accent" size={28} />
             <h2 className="font-semibold mt-3">{t('board.empty.title')}</h2>
             <p className="text-sm text-muted mt-1">{canEdit ? t('board.empty.body') : t('board.empty.readonly')}</p>
             {canEdit && (
-              <div className="mt-4 flex justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2 [&>.btn]:whitespace-nowrap">
+                {/* ⚠️ Whole buttons wrap, never their words: three in a row broke
+                    every label in two when the box was narrower than they were. */}
                 <button
                   className="btn btn-accent"
                   onClick={() => {

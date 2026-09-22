@@ -204,12 +204,21 @@ class GithubAdapter(Adapter):
             return None
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        if str(config.get("token") or "").strip():
+        """What the connection is good for: the requests it has this hour.
+
+        ⚠️ Asked of /rate_limit, which GitHub does not count. The test used to
+        fetch nexdeck's own latest release, and "nexdeck is at v0.16.1" read as
+        if something had been set up that nobody had set up. The projects are
+        chosen on each card; the connection only carries the token.
+        """
+        token = str(config.get("token") or "").strip()
+        answer, _ = await self._get(config, ctx, "/rate_limit")
+        core = ((answer or {}).get("resources") or {}).get("core") or {}
+        left, of = core.get("remaining", "?"), core.get("limit", "?")
+        if token:
             user, _ = await self._get(config, ctx, "/user")
-            limit = ctx.cache.get(LIMIT) or {}
-            return f"GitHub answers for {(user or {}).get('login', '?')}, {limit.get('remaining', '?')} of {limit.get('limit', '?')} requests left this hour."
-        release, _ = await self._get(config, ctx, "/repos/DerKezorm/nexdeck/releases/latest")
-        return f"GitHub answers; nexdeck is at {release.get('tag_name')}." if release else "GitHub answers."
+            return f"GitHub accepts the token of {(user or {}).get('login', '?')}: {left} of {of} requests left this hour."
+        return f"GitHub answers without a token: {left} of {of} requests left this hour. The projects are chosen on each card."
 
     # -- the cards --------------------------------------------------------------
 

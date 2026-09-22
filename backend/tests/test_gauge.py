@@ -184,6 +184,8 @@ def test_a_card_shown_as_a_dial_may_be_made_as_small_as_a_dial(client: TestClien
     setup_admin(client)
     board = client.post("/api/v1/boards", json={"name": "Wall"}, headers=CSRF).json()
     page = board["pages"][0]["id"]
+    # Twelve columns, so the sizes below are the adapter's own twelfths.
+    client.put(f"/api/v1/boards/{board['slug']}/grid", json={"columns": 12}, headers=CSRF)
 
     made = client.post(f"/api/v1/pages/{page}/widgets", json={
         "kind": "synology.system", "title": "Synology",

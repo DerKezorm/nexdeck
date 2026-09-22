@@ -160,3 +160,13 @@ def test_a_github_card_takes_a_token_connection_and_works_without(client: TestCl
     bound = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "github.runs", "integration_id": connection.json()["id"], "options": {"repos": "o/n"}}, headers=CSRF)
     assert bound.status_code == 201, bound.text
     assert bound.json()["widget"]["integration_id"] == connection.json()["id"]
+
+
+@respx.mock
+async def test_the_connection_test_says_what_the_connection_is_good_for(ctx: Context) -> None:
+    """It used to report nexdeck's own release, which nobody had asked for."""
+    respx.get(f"{API}/rate_limit").mock(return_value=httpx.Response(200, json={"resources": {"core": {"limit": 60, "remaining": 57}}}))
+    said = await GITHUB.test({}, ctx)
+    assert "without a token" in said and "57 of 60" in said and "nexdeck" not in said
+    respx.get(f"{API}/user").mock(return_value=httpx.Response(200, json={"login": "someone"}))
+    assert "someone" in await GITHUB.test({"token": "github-token-for-tests"}, Context(httpx.AsyncClient(), cache={}))

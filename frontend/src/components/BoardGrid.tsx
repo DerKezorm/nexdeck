@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
@@ -135,7 +135,36 @@ export function BoardGrid(props: Props) {
   // layout that knows of the one card only. A group move answers the first
   // and swallows the second.
   const handled = useRef(false)
+  /**
+   * While one card of a selection is dragged, the others go with it on
+   * screen. The grid moves only the card under the pointer; the rest are
+   * shifted by the same step here, and faded where the group cannot land.
+   *
+   * ⚠️ Reported on 22.09.2026: the others stood still until the pointer let
+   * go and then jumped, which looked as if the selection had not taken.
+   */
+  const [follow, setFollow] = useState<{ dragged: string; dx: number; dy: number; fits: boolean; column: number } | null>(null)
+  const drag = (_layout: Layout[], before: Layout, after: Layout) => {
+    if (!group(after.i)) return
+    const dx = after.x - before.x
+    const dy = after.y - before.y
+    if (follow && follow.dx === dx && follow.dy === dy) return
+    // Measured here, in the handler: the grid is not read while it is drawn.
+    const width = host.current?.clientWidth ?? 0
+    const column = (width - GAP * (columns - 1)) / columns
+    setFollow({ dragged: after.i, dx, dy, column, fits: shiftGroup(wide.map(plain), selected, dx, dy, columns) !== null })
+  }
+  const followStyle = (id: string): CSSProperties | undefined => {
+    if (!follow || id === follow.dragged || !selected.has(id)) return undefined
+    return {
+      transform: `translate(${follow.dx * (follow.column + GAP)}px, ${follow.dy * (rowHeight + GAP)}px)`,
+      opacity: follow.fits ? 1 : 0.4,
+      position: 'relative',
+      zIndex: 3,
+    }
+  }
   const dragStop = (_layout: Layout[], before: Layout, after: Layout) => {
+    setFollow(null)
     if (!onLayoutChange || !group(after.i)) return
     // A card put back where it was makes no second report to swallow.
     if (after.x === before.x && after.y === before.y) return
@@ -225,6 +254,7 @@ export function BoardGrid(props: Props) {
         onDragStart={() => {
           handled.current = false
         }}
+        onDrag={drag}
         onDragStop={dragStop}
         onLayoutChange={(_current: Layout[], all: Layouts) => {
           if (handled.current) {
@@ -257,6 +287,7 @@ export function BoardGrid(props: Props) {
             onKeyDown={editing ? (event) => nudge(event, widget) : undefined}
             onMouseDownCapture={editing ? (event) => pick(event, String(widget.id)) : undefined}
           >
+            <div className="h-full" style={followStyle(String(widget.id))}>
             <GridCard
               widget={widget}
               data={data[widget.id]}
@@ -269,6 +300,7 @@ export function BoardGrid(props: Props) {
               onRemove={onRemove}
               onArrange={editing && onLayoutChange ? openMenu : undefined}
             />
+            </div>
           </div>
         ))}
       </ResponsiveGrid>
