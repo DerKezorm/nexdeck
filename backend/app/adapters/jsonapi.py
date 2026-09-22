@@ -73,6 +73,7 @@ class JsonApiAdapter(Adapter):
         ),
         WidgetType(
             kind="list",
+            bars=True,
             label="List",
             description="A list from an array in the response.",
             renderer="list",

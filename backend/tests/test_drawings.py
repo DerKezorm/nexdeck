@@ -26,20 +26,25 @@ from app.adapters.base import (
 # ---------------------------------------------------------------------------
 
 
-def test_every_list_card_offers_bars() -> None:
-    """One rule in WidgetType, not a field written into ninety adapters."""
-    seen = 0
-    for adapter in all_adapters():
-        for widget in adapter.widgets:
-            if widget.renderer != "list":
-                continue
-            seen += 1
-            view = next((one for one in widget.options if one.name == "view"), None)
-            assert view is not None, f"{adapter.kind}.{widget.kind} has no view field"
-            assert "bars" in {value for value, _ in view.options}, f"{adapter.kind}.{widget.kind}"
-    # ⚠️ A floor, or this test passes on an empty list. The guard that had no
-    # floor is why every test in this repo that walks a set has one.
-    assert seen > 50, f"only {seen} list cards found; the walk is broken"
+def test_only_list_cards_that_declared_bars_offer_them() -> None:
+    """Declared, like the ring. It used to be every list card, and on 143 of
+    157 the switch did nothing (22.09.2026); whether a declaration is right is
+    held by ``test_bars_are_offered_where_they_can_be_drawn``."""
+    offered = {
+        f"{adapter.kind}.{widget.kind}"
+        for adapter in all_adapters()
+        for widget in adapter.widgets
+        if any(one.name == "view" and "bars" in {value for value, _ in one.options}
+               for one in widget.options)
+    }
+    declared = {
+        f"{adapter.kind}.{widget.kind}"
+        for adapter in all_adapters()
+        for widget in adapter.widgets
+        if widget.bars and widget.renderer == "list"
+    }
+    assert offered == declared
+    assert len(declared) >= 10, "hardly any card declares bars, so this test proves little"
 
 
 def test_only_cards_that_declared_a_ring_offer_one() -> None:

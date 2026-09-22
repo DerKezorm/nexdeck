@@ -41,6 +41,7 @@ class TdarrAdapter(Adapter):
         ),
         WidgetType(
             kind="nodes",
+            bars=True,
             label="Nodes",
             description="One line per node with what it is doing.",
             renderer="list",

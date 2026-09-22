@@ -171,10 +171,16 @@ class WidgetType:
     #: only place that knows what the whole is, and this flag only decides
     #: whether the choice appears at all.
     ring: bool = False
-    #: Whether a list can be drawn as bars. Only where the values on the right
-    #: are numbers: a list of issues whose value is "1 h" offered the switch,
-    #: and it changed nothing (reported on 22.09.2026).
-    bars: bool = True
+    #: Whether a list can be drawn as bars. Declared, like the ring: the
+    #: drawing needs rows that carry numbers, and ``as_bars`` refuses it for
+    #: rows of text.
+    #:
+    #: ⚠️ It used to be offered to every list. Counted on 22.09.2026: 14 of
+    #: 157 list cards could draw it, and on the other 143 the switch "Rows /
+    #: Bars" changed nothing, which is how it was reported, on a list of
+    #: GitHub issues whose values are "1 h". The guard
+    #: ``test_bars_are_offered_where_they_can_be_drawn`` holds both directions.
+    bars: bool = False
 
     def __post_init__(self) -> None:
         """Never smaller than the drawing can bear.

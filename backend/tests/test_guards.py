@@ -762,3 +762,44 @@ def test_every_service_stands_in_the_adapter_document() -> None:
     missing = [one.label for one in all_adapters()
                if one.kind not in NOT_A_SERVICE and one.label not in written]
     assert missing == [], "services the adapter document does not name: " + ", ".join(missing)
+
+
+def _draws_bars(adapter, widget) -> bool:
+    """Whether the card's demo, at a few moments, gives rows the bars can be drawn from."""
+    from app.adapters.base import as_bars
+
+    options = {field.name: field.default for field in widget.options}
+    options["view"] = "bars"
+    for tick in (0, 300, 3600):
+        data = adapter.demo(widget.kind, dict(options), tick)
+        if (as_bars(data, options).meta or {}).get("renderer") == "bars":
+            return True
+    return False
+
+
+def test_bars_are_offered_where_they_can_be_drawn() -> None:
+    """⚠️ The switch "Rows / Bars" was on every list card and did something on
+    fourteen of 157: the server refuses bars for rows of text, and most lists
+    carry an age, a state or a name where a number would be. Counted on
+    22.09.2026 after it was reported on a list of GitHub issues.
+
+    Both ways: a card that offers bars draws them, and a list that could draw
+    them is noticed, so the next card with numbers is a decision and not an
+    oversight."""
+    offered_in_vain, could_but_does_not = [], []
+    lists = 0
+    for adapter in all_adapters():
+        for widget in adapter.widgets:
+            if widget.renderer != "list":
+                continue
+            lists += 1
+            draws = _draws_bars(adapter, widget)
+            view = next((field for field in widget.options if field.name == "view"), None)
+            offers = view is not None and "bars" in {value for value, _label in view.options}
+            if offers and not draws:
+                offered_in_vain.append(f"{adapter.kind}.{widget.kind}")
+            if draws and not offers:
+                could_but_does_not.append(f"{adapter.kind}.{widget.kind}")
+    assert lists > 100, "the lists were not found, so this guard proves nothing"
+    assert offered_in_vain == [], f"cards offering bars their rows cannot give: {offered_in_vain}"
+    assert could_but_does_not == [], f"lists with numbers that do not offer bars (set bars=True): {could_but_does_not}"

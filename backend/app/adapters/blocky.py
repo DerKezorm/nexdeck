@@ -62,7 +62,7 @@ class BlockyAdapter(Adapter):
     widgets = (
         WidgetType(kind="blocking", label="Blocking", description="The share of queries blocked in the last 24 hours, the queries, and a button to pause blocking for five minutes.",
                    renderer="value", default_size=(3, 2), refresh_seconds=60, ring=True, metrics=("blocked_percent", "queries")),
-        WidgetType(kind="top", label="Top blocked", description="The domains blocked most often in the last 24 hours.",
+        WidgetType(kind="top", bars=True, label="Top blocked", description="The domains blocked most often in the last 24 hours.",
                    renderer="list", default_size=(3, 3), refresh_seconds=300,
                    options=(Field("limit", "Entries", type="number", default=10),)),
     )

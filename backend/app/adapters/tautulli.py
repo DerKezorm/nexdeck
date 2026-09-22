@@ -58,6 +58,7 @@ class TautulliAdapter(Adapter):
         ),
         WidgetType(
             kind="top",
+            bars=True,
             label="Most watched",
             description="The titles and users of the last days.",
             renderer="list",

@@ -156,6 +156,7 @@ class NexmailAdapter(Adapter):
     widgets = (
         WidgetType(
             kind="unread",
+            bars=True,
             label="Unread mail",
             description="Unread mail in the inbox, in total and for each mailbox.",
             renderer="list",

@@ -94,6 +94,7 @@ class MediaAdapter(Adapter):
         ),
         WidgetType(
             kind="libraries",
+            bars=True,
             label="Libraries",
             description="One row per library, with a button that looks for new files.",
             renderer="list",

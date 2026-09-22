@@ -35,7 +35,7 @@ class PiholeAdapter(Adapter):
     )
     widgets = (
         WidgetType(kind="summary", label="Blocking", description="Blocked share, queries, clients and a pause button.", renderer="gauge", default_size=(2, 2), refresh_seconds=30, ring=True, metrics=("blocked_percent", "queries")),
-        WidgetType(kind="top", label="Top blocked", description="The domains blocked most often today.", renderer="list", default_size=(3, 3), refresh_seconds=120, options=(Field("limit", "Entries", type="number", default=8),)),
+        WidgetType(kind="top", bars=True, label="Top blocked", description="The domains blocked most often today.", renderer="list", default_size=(3, 3), refresh_seconds=120, options=(Field("limit", "Entries", type="number", default=8),)),
     )
 
     async def _session(self, config: dict[str, Any], ctx: Context, force: bool = False) -> str:

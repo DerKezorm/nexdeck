@@ -39,6 +39,7 @@ class JellystatAdapter(Adapter):
     widgets = (
         WidgetType(
             kind="libraries",
+            bars=True,
             label="Libraries",
             description="One line per library with what it holds.",
             renderer="list",
@@ -48,6 +49,7 @@ class JellystatAdapter(Adapter):
         ),
         WidgetType(
             kind="watched",
+            bars=True,
             label="Most watched",
             description="The titles played most in the last days.",
             renderer="list",

@@ -39,6 +39,7 @@ class NextdnsAdapter(Adapter):
         ),
         WidgetType(
             kind="top",
+            bars=True,
             label="Top blocked",
             description="The domains blocked most often.",
             renderer="list",
