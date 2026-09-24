@@ -39,4 +39,9 @@ def test_the_board_history_lists_the_headline_of_a_card_that_declares_nothing(cl
 
     lines = client.get(f"/api/v1/boards/{board['slug']}/history").json()
     points = lines[str(card["id"])][history.HEADLINE]
-    assert len(points) == 1 and points[0][1] > 0, "the collector wrote the number down, and the board offers it"
+    # ⚠️ Not exactly one point: making the card schedules a collection of its
+    # own, and when that one is done before the history is read, the refresh
+    # above writes a second point with the same number. Seen once in a full
+    # run on 24.09.2026, under the load of another test run on the machine.
+    assert points, "the collector wrote the number down, and the board offers it"
+    assert {value for _ts, value in points} == {points[0][1]} and points[0][1] > 0
