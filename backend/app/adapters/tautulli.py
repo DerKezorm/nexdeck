@@ -21,6 +21,10 @@ from .base import (
     human_bytes,
 )
 
+#: What the "Most watched" card shows, and the group of ``get_home_stats``
+#: that holds it. Tautulli answers every group in one reply.
+_TOP_STAT = {"titles": "top_movies", "shows": "top_tv", "music": "top_music", "users": "top_users"}
+
 
 class TautulliAdapter(Adapter):
     kind = "tautulli"
@@ -66,7 +70,9 @@ class TautulliAdapter(Adapter):
             refresh_seconds=900,
             options=(
                 Field("days", "Days", type="number", default=7),
-                Field("show", "Show", type="select", default="titles", options=(("titles", "Titles"), ("users", "Users"))),
+                # ``titles`` stays the key for movies: boards saved before TV shows
+                # and music were offered carry it.
+                Field("show", "Show", type="select", default="titles", options=(("titles", "Movies"), ("shows", "TV shows"), ("music", "Music"), ("users", "Users"))),
                 Field("limit", "Entries", type="number", default=6),
             ),
         ),
@@ -94,7 +100,7 @@ class TautulliAdapter(Adapter):
         if widget_kind == "top":
             days = int(options.get("days") or 7)
             limit = int(options.get("limit") or 6)
-            wanted = "top_users" if str(options.get("show")) == "users" else "top_movies"
+            wanted = _TOP_STAT.get(str(options.get("show")), "top_movies")
             stats = await self._cmd(config, ctx, "get_home_stats", {"time_range": days, "stats_count": limit}, cache=600)
             rows: list[dict[str, Any]] = []
             for group in stats or []:
@@ -162,6 +168,10 @@ class TautulliAdapter(Adapter):
             rows = [("The Quiet Harbour", 14), ("Harbour Lights", 11), ("Northern Shore", 9), ("Copper Sky", 6), ("Signal Lost", 4)]
             if str(options.get("show")) == "users":
                 rows = [("Alex", 42), ("Sam", 31), ("Kim", 18), ("Robin", 7)]
+            elif str(options.get("show")) == "shows":
+                rows = [("Harbour Lights", 23), ("Northern Shore", 17), ("The Long Watch", 9), ("Tidewater", 5)]
+            elif str(options.get("show")) == "music":
+                rows = [("The Copper Bells", 38), ("Low Tide", 21), ("Signal Lost", 12), ("Northern Choir", 6)]
             return WidgetData(
                 items=[{"title": title, "subtitle": "", "value": plays, "status": "ok"} for title, plays in rows],
                 secondary=[{"label": "Days", "value": int(options.get("days") or 7)}],

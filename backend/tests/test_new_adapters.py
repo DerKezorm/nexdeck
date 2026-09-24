@@ -265,6 +265,24 @@ async def test_tautulli_reads_its_envelope_and_counts_transcodes(ctx: Context) -
 
 
 @respx.mock
+async def test_tautulli_most_watched_reads_the_group_that_was_chosen(ctx: Context) -> None:
+    """Issue #15: the card only ever read the movies."""
+    respx.get("http://tautulli:8181/api/v2").mock(return_value=httpx.Response(200, json={"response": {"result": "success", "data": [
+        {"stat_id": "top_movies", "rows": [{"title": "The Quiet Harbour", "year": 2021, "total_plays": 14}]},
+        {"stat_id": "top_tv", "rows": [{"title": "Harbour Lights", "year": 2019, "total_plays": 23}]},
+        {"stat_id": "top_music", "rows": [{"title": "The Copper Bells", "total_plays": 38}]},
+        {"stat_id": "top_users", "rows": [{"friendly_name": "Alex", "total_plays": 42}]},
+    ]}}))
+    tautulli = get_adapter("tautulli")
+    config = {"url": "http://tautulli:8181", "api_key": "key"}
+    shown = {}
+    for show in ("titles", "shows", "music", "users"):
+        data = await tautulli.fetch("top", config, {"show": show}, Context(httpx.AsyncClient(), cache={}))
+        shown[show] = [item["title"] for item in data.items]
+    assert shown == {"titles": ["The Quiet Harbour"], "shows": ["Harbour Lights"], "music": ["The Copper Bells"], "users": ["Alex"]}
+
+
+@respx.mock
 async def test_tautulli_failure_message_reaches_the_card(ctx: Context) -> None:
     respx.get("http://tautulli:8181/api/v2").mock(return_value=httpx.Response(200, json={"response": {"result": "error", "message": "Invalid apikey"}}))
     with pytest.raises(AdapterError) as failure:
