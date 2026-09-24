@@ -119,6 +119,35 @@ class NexviewAdapter(Adapter):
                                     verify=not config.get("insecure"), cache_seconds=cache)
         return answer if isinstance(answer, dict) else {}
 
+    async def _procurement(self, config: dict[str, Any], ctx: Context) -> str:
+        """How this Nexview procures: ``arr`` through Radarr and Sonarr, ``nex`` through nexcrate.
+
+        From the dashboard tile, where Nexview added it without touching the
+        rest. A Nexview that does not say is one from before nexcrate, and so
+        is one whose tile cannot be read: the card then behaves as it always did.
+        """
+        try:
+            tile = await self._tile(config, ctx)
+        except AdapterError:
+            return "arr"
+        return "nex" if isinstance(tile, dict) and tile.get("beschaffung") == "nex" else "arr"
+
+    async def _version_names(self, config: dict[str, Any], ctx: Context) -> dict[str, str]:
+        """The names of the versions a request may ask for, by their key.
+
+        A request carries only the key (``fassung``), which with nexcrate is
+        nexcrate's version id. Nexview's own config names them for its
+        interface; without it the card falls back to 4K or nothing.
+        """
+        try:
+            answer = await ctx.get_json(f"{base_url(config)}/api/config", headers=self._headers(config),
+                                        verify=not config.get("insecure"), cache_seconds=300)
+        except AdapterError:
+            return {}
+        versions = answer.get("fassungen") if isinstance(answer, dict) else None
+        return {str(one["kennung"]): str(one["name"]) for one in versions or []
+                if isinstance(one, dict) and one.get("kennung") and one.get("name")}
+
     async def _targets(self, config: dict[str, Any], ctx: Context, media_type: str, tier: str) -> dict[str, Any] | None:
         """The folders and profiles a request of this kind may be approved into.
 
@@ -164,9 +193,18 @@ class NexviewAdapter(Adapter):
         # list of folders, not ten.
         wanted = {(str(row.get("media_type")), str(row.get("tier") or "standard")) for row in shown
                   if row.get("root_folder_path") is None or row.get("quality_profile_id") is None}
-        targets = {kind: await self._targets(config, ctx, *kind) for kind in sorted(wanted)} if may_decide else {}
+        # ⚠️ With nexcrate behind Nexview there is no folder and no profile to
+        # choose: both hang on the version, and every request leaves them
+        # empty. Asking for them anyway earned 409 not_in_this_mode, and the
+        # card lost its approve button on every row. The way Nexview procures
+        # is only asked for when a row lacks a target, which with nexcrate is
+        # every row, and with Radarr and Sonarr is when the lists are asked for
+        # anyway.
+        nex = bool(wanted) and await self._procurement(config, ctx) == "nex"
+        versions = await self._version_names(config, ctx) if nex else {}
+        targets = {kind: await self._targets(config, ctx, *kind) for kind in sorted(wanted)} if may_decide and not nex else {}
 
-        items = [self._approval_row(row, targets, may_decide) for row in shown]
+        items = [self._approval_row(row, targets, may_decide, nex=nex, versions=versions) for row in shown]
         items = [item for item in items if item is not None]
         # The rows exist to be pressed, so their buttons show without a
         # hover: a wall display with a touchscreen has none.
@@ -183,7 +221,7 @@ class NexviewAdapter(Adapter):
 
     @staticmethod
     def _approval_row(row: dict[str, Any], targets: dict[tuple[str, str], dict[str, Any] | None],
-                      may_decide: bool) -> dict[str, Any] | None:
+                      may_decide: bool, *, nex: bool = False, versions: dict[str, str] | None = None) -> dict[str, Any] | None:
         request_id = row.get("id")
         if not isinstance(request_id, int) or isinstance(request_id, bool) or request_id < 1:
             return None
@@ -194,7 +232,9 @@ class NexviewAdapter(Adapter):
             "id": request_id,
             "title": title,
             "subtitle": str(row.get("display_name") or row.get("username") or ""),
-            "value": "4K" if row.get("tier") == "uhd" else "",
+            # With nexcrate the version is what the request asks for, by name;
+            # without a name, and with Radarr and Sonarr, the tier as before.
+            "value": (versions or {}).get(str(row.get("fassung") or "")) or ("4K" if row.get("tier") == "uhd" else ""),
             # A whole address already: Nexview builds it from TMDB's image base.
             "art": str(row.get("poster_path") or ""),
             "status": "warn",
@@ -205,7 +245,7 @@ class NexviewAdapter(Adapter):
         needs_folder = row.get("root_folder_path") is None
         needs_profile = row.get("quality_profile_id") is None
         approve: dict[str, Any] | None = {"id": "approve", "label": "Approve", "icon": "check", "params": {"id": request_id}}
-        if needs_folder or needs_profile:
+        if (needs_folder or needs_profile) and not nex:
             offer = targets.get((str(row.get("media_type")), str(row.get("tier") or "standard"))) or {}
             folders = [Choice(value=str(one["path"]), label=str(one["path"]))
                        for one in offer.get("root_folders") or [] if isinstance(one, dict) and one.get("path")]

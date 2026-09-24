@@ -49,6 +49,25 @@ def _waiting(*rows: dict) -> respx.Route:
     return respx.get(f"{NEXVIEW}/api/admin/requests").mock(return_value=httpx.Response(200, json=list(rows)))
 
 
+def _tile(beschaffung: str | None = None) -> respx.Route:
+    """Nexview's dashboard tile. Without ``beschaffung``, as every Nexview
+    before nexcrate answers it; with nexcrate, ``nex`` (branch nex, 1.0.0)."""
+    tile = {"version": "0.35.2", "befunde": {}, "anfragen": {}, "bibliothek": {}, "instanzen": [], "tickets_offen": 0}
+    if beschaffung is not None:
+        tile["beschaffung"] = beschaffung
+    return respx.get(f"{NEXVIEW}/api/v1/dashboard").mock(return_value=httpx.Response(200, json=tile))
+
+
+#: A request as Nexview lists it with nexcrate: no folder and no profile, ever;
+#: the version it asks for is nexcrate's version id.
+WITH_NEXCRATE = {"id": 14, "title": "Copper Sky", "display_name": "Ben", "media_type": "movie", "tier": "uhd",
+                 "fassung": "v-films-4k", "root_folder_path": None, "quality_profile_id": None, "poster_path": None}
+NEXCRATE_CONFIG = {"beschaffung": "nex", "fassungen": [
+    {"kennung": "v-films-hd", "media_type": "movie", "name": "Films HD", "klasse": "hd", "quelle": "nex"},
+    {"kennung": "v-films-4k", "media_type": "movie", "name": "Films 4K HDR", "klasse": "uhd", "quelle": "nex"},
+]}
+
+
 def _fetch(ctx: Context, limit: int = 8):
     return get_adapter("nexview").fetch("approvals", CONFIG, {"limit": limit}, ctx)
 
@@ -79,6 +98,7 @@ async def test_a_row_without_a_target_offers_the_lists_of_its_own_instance(ctx: 
     same film in 1080p, with different folders and different profiles."""
     _me(["lesen", "entscheiden"], role="approver")
     _waiting(NO_TARGET_4K)
+    _tile()
     options = respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
     data = await _fetch(ctx)
 
@@ -97,6 +117,7 @@ async def test_only_the_missing_half_is_asked(ctx: Context) -> None:
     half it already has would be asking to overwrite it."""
     _me(["lesen", "entscheiden"])
     _waiting({**NO_TARGET_4K, "root_folder_path": "/media/films-4k"})
+    _tile()
     respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
     data = await _fetch(ctx)
     assert [one["name"] for one in data.items[0]["actions"][0]["asks"]] == ["quality_profile_id"]
@@ -106,6 +127,7 @@ async def test_only_the_missing_half_is_asked(ctx: Context) -> None:
 async def test_no_list_from_nexview_means_no_button_rather_than_an_empty_choice(ctx: Context) -> None:
     _me(["lesen", "entscheiden"])
     _waiting(NO_TARGET_4K)
+    _tile()
     respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(502))
     data = await _fetch(ctx)
     row = data.items[0]
@@ -137,6 +159,7 @@ async def test_an_account_that_decides_nothing_lists_nothing_and_asks_nothing(ct
 async def test_ten_waiting_films_ask_for_their_folders_once(ctx: Context) -> None:
     _me(["lesen", "entscheiden"])
     _waiting(*[{**NO_TARGET_4K, "id": 20 + number} for number in range(5)])
+    _tile()
     options = respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
     data = await _fetch(ctx)
     assert len(data.items) == 5
@@ -150,6 +173,92 @@ async def test_the_list_is_cut_to_the_card_but_the_count_is_not(ctx: Context) ->
     data = await _fetch(ctx, limit=3)
     assert len(data.items) == 3
     assert data.metrics == {"waiting": 12.0}
+
+
+# -- with nexcrate behind Nexview (Nexview 1.0.0) ---------------------------
+
+
+@respx.mock
+async def test_with_nexcrate_a_row_is_approved_without_folder_or_profile(ctx: Context) -> None:
+    """⚠️ With nexcrate, Nexview answers the lists with 409 not_in_this_mode,
+    and the card took that for "no target" and dropped the approve button on
+    every row. There is nothing to choose: folder and profile hang on the version."""
+    _me(["lesen", "entscheiden"], role="approver")
+    _waiting(WITH_NEXCRATE)
+    _tile("nex")
+    respx.get(f"{NEXVIEW}/api/config").mock(return_value=httpx.Response(200, json=NEXCRATE_CONFIG))
+    options = respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(409, json={
+        "detail": {"code": "not_in_this_mode", "message": "Nicht in dieser Betriebsart."}}))
+    data = await _fetch(ctx)
+    row = data.items[0]
+    assert not options.called, "with nexcrate there are no lists to ask for"
+    assert [one["id"] for one in row["actions"]] == ["approve", "reject"]
+    assert "asks" not in row["actions"][0]
+    assert row["subtitle"] == "Ben"
+    # The version it asks for, by name, instead of folder and profile.
+    assert row["value"] == "Films 4K HDR"
+
+
+@respx.mock
+async def test_with_nexcrate_approving_sends_neither_folder_nor_profile(ctx: Context) -> None:
+    _me(["lesen", "entscheiden"])
+    _waiting(WITH_NEXCRATE)
+    _tile("nex")
+    respx.get(f"{NEXVIEW}/api/config").mock(return_value=httpx.Response(200, json=NEXCRATE_CONFIG))
+    data = await _fetch(ctx)
+    approve = data.items[0]["actions"][0]
+    # The card's own button through the guard and on to Nexview, as a press would go.
+    live.set(7_778, WidgetData(items=data.items))
+    try:
+        given = collector._refuse_unless_offered(7_778, "approve", dict(approve["params"]))
+    finally:
+        live.forget(7_778)
+    route = respx.post(f"{NEXVIEW}/api/admin/requests/14/approve").mock(return_value=httpx.Response(200, json={}))
+    await get_adapter("nexview").action("approvals", "approve", given, CONFIG, {}, ctx)
+    assert json.loads(route.calls.last.request.content) == {}
+
+
+@respx.mock
+async def test_with_nexcrate_and_no_names_the_tier_shows_as_before(ctx: Context) -> None:
+    _me(["lesen", "entscheiden"])
+    _waiting(WITH_NEXCRATE)
+    _tile("nex")
+    respx.get(f"{NEXVIEW}/api/config").mock(return_value=httpx.Response(500))
+    data = await _fetch(ctx)
+    assert data.items[0]["value"] == "4K"
+    assert [one["id"] for one in data.items[0]["actions"]] == ["approve", "reject"]
+
+
+@respx.mock
+async def test_with_radarr_and_sonarr_said_outright_the_lists_are_asked_as_before(ctx: Context) -> None:
+    _me(["lesen", "entscheiden"])
+    _waiting(NO_TARGET_4K)
+    _tile("arr")
+    config = respx.get(f"{NEXVIEW}/api/config")
+    options = respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
+    data = await _fetch(ctx)
+    assert options.called and not config.called
+    assert [one["name"] for one in data.items[0]["actions"][0]["asks"]] == ["root_folder_path", "quality_profile_id"]
+    assert data.items[0]["value"] == "4K"
+
+
+@respx.mock
+async def test_a_nexview_whose_tile_cannot_be_read_is_taken_for_radarr_and_sonarr(ctx: Context) -> None:
+    _me(["lesen", "entscheiden"])
+    _waiting(NO_TARGET_4K)
+    respx.get(f"{NEXVIEW}/api/v1/dashboard").mock(return_value=httpx.Response(500))
+    respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
+    data = await _fetch(ctx)
+    assert [one["name"] for one in data.items[0]["actions"][0]["asks"]] == ["root_folder_path", "quality_profile_id"]
+
+
+@respx.mock
+async def test_rows_that_carry_their_target_do_not_ask_how_nexview_procures(ctx: Context) -> None:
+    _me(["lesen", "entscheiden"])
+    _waiting(READY)
+    tile = _tile("arr")
+    await _fetch(ctx)
+    assert not tile.called, "nothing to choose, so nothing to find out"
 
 
 # -- what pressing does ------------------------------------------------------
@@ -216,6 +325,7 @@ async def test_the_guard_takes_a_folder_this_row_offered_and_no_other(ctx: Conte
     apart: a folder from another instance's list is not a folder for this row."""
     _me(["lesen", "entscheiden"])
     _waiting(NO_TARGET_4K)
+    _tile()
     respx.get(f"{NEXVIEW}/api/arr/movie/options").mock(return_value=httpx.Response(200, json=FILMS_4K))
     data = await _fetch(ctx)
     live.set(7_777, WidgetData(items=data.items))
