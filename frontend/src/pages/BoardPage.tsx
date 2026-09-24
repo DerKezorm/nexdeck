@@ -458,7 +458,10 @@ export function BoardPage() {
   }
 
   return (
-    <div className="min-h-full pb-24 md:pb-10">
+    // ⚠️ While editing, the page leaves more room below the board than the
+    // edit bar takes, so the lowest card scrolls out from under it. With the
+    // usual room the bar lay over that card's resize corner (issue #12).
+    <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`}>
       <BackgroundLayer background={previewBackground ?? data.background} />
       <TopBar
         boardName={data.name}

@@ -126,3 +126,39 @@ test('a board is arranged by the handful, and every step reaches the server', as
 
   expect(trouble, `the browser reported: ${trouble.join(' | ')}`).toEqual([])
 })
+
+test('the lowest card can still be resized with the edit bar in front of it', async ({ page }) => {
+  // Issue #12: the edit bar floats over the foot of the page, and the page
+  // left less room below the board than the bar is high. Scrolled all the way
+  // down, the resize corner of the lowest card sat under the bar.
+  await signIn(page)
+  const made = await page.request.post('/api/v1/boards', { data: { name: 'Tall card' }, headers: CSRF })
+  const board = (await made.json()) as BoardView
+  const pageId = board.pages[0].id
+  const card = await page.request.post(`/api/v1/pages/${pageId}/widgets`, { data: { kind: 'core.markdown', title: 'Tall', options: { content: 'Tall' } }, headers: CSRF })
+  const id = String((await card.json()).widget.id)
+  // Under the middle of the bar, and taller than the window.
+  await page.request.put(`/api/v1/pages/${pageId}/layouts`, { data: { lg: [{ i: id, x: 6, y: 0, w: 8, h: 30 }] }, headers: CSRF })
+
+  await page.goto(`/b/${board.slug}`)
+  await page.getByRole('button', { name: 'Edit board' }).click()
+  const handle = page.locator('.react-grid-item', { has: page.locator('section[aria-label="Tall"]') }).locator('.react-resizable-handle')
+  await expect(handle).toBeVisible()
+  await page.evaluate(() => {
+    for (const element of [document.scrollingElement, ...document.querySelectorAll('*')]) {
+      if (element && element.scrollHeight > element.clientHeight) element.scrollTop = element.scrollHeight
+    }
+  })
+
+  const box = (await handle.boundingBox())!
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+  const reachable = await handle.evaluate((corner, [px, py]) => corner.contains(document.elementFromPoint(px, py)), [x, y])
+  expect(reachable, 'something lies over the resize corner').toBe(true)
+
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x, y - 200, { steps: 8 })
+  await page.mouse.up()
+  await expect.poll(async () => (await places(page, board.slug)).Tall?.[3]).toBeLessThan(30)
+})
