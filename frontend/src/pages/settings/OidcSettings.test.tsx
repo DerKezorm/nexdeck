@@ -65,7 +65,11 @@ describe('identity providers', () => {
 
     const issuer = screen.getByLabelText('Issuer URL')
     await user.clear(issuer)
-    await user.type(issuer, 'https://auth.example.com/application/o/deck/')
+    // Pasted, not typed: typed key by key the whole form draws itself 45
+    // times, and under the load of a full CI run that took the test past its
+    // five seconds.
+    await user.click(issuer)
+    await user.paste('https://auth.example.com/application/o/deck/')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(calls.patch).toHaveLength(1))
