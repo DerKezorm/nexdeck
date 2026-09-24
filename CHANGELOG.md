@@ -3,6 +3,18 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased (0.18.1)
+
+### New
+
+- **An identity provider can be changed.** Until now it could only be deleted and added again, which let go of every account linked to it. Each provider has a pencil now; the form takes its settings, an empty secret field keeps the secret, and a switch turns the provider off without removing it. A new short name is pointed out, because it changes the redirect URI to register at the provider. Asked for in issue #10.
+- **Tautulli's Most watched card shows TV shows and music too.** It only ever read the movies. Boards that show titles keep showing movies. Reported in issue #15.
+
+### Fixed
+
+- **Sign-in through authentik without a signing key says what is wrong.** When no signing key is chosen for the provider, authentik signs with the client secret (HS256) and publishes an empty key set. nexdeck does not accept a token signed with the client secret, and it still does not, but the sign-in page and the log said only that the answer could not be verified, with "PyJWKSetError" as the reason. Both now say to choose a signing key for the provider in authentik. Reported in issue #11.
+- **The lowest card can be resized in edit mode.** The edit bar floats over the foot of the page, and the page left less room below the board than the bar is high, so scrolled all the way down, the resize corner of the lowest card sat under the bar. Reported in issue #12.
+
 ## 0.18.0 (2026-09-22)
 
 ### New
