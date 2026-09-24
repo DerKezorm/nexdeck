@@ -53,6 +53,8 @@ that one of twenty-one renderers draws.
 | FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
 | Tailscale | devices, status | | API access token from the admin console |
 | Headscale | nodes, status | | API key from `headscale apikeys create` |
+| NetBird | peers, status | | personal access token, best of a service user; self-hosted or NetBird Cloud (https://api.netbird.io) |
+| Pangolin | status, sites, resources (public with their health, private with their destination) | | Integration API key of the organization with List Sites, List Resources and List Site Resources, plus the organization ID. Self-hosted, the Integration API needs `enable_integration_api` in config.yml and a route to port 3003; Pangolin Cloud at https://api.pangolin.net |
 | wg-easy | WireGuard clients, VPN | | user and password; wg-easy 15 or newer |
 | NetBox | devices, prefixes, inventory | | API token, read-only is enough; a v2 token is pasted whole, starting with nbt_ |
 | Gluetun | tunnel | | none, or the API key if the control server has roles |
