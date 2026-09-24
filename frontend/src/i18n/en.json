@@ -63,6 +63,7 @@
       "oidc_state_mismatch": "The sign-in attempt expired. Try again.",
       "oidc_unreachable": "The identity provider could not be reached.",
       "oidc_bad_token": "The identity provider's answer could not be verified.",
+      "oidc_no_signing_key": "The identity provider signs with its client secret, which nexdeck does not accept. An administrator has to choose a signing key for it (in authentik: Signing Key on the provider).",
       "oidc_no_account": "No nexdeck account is linked to this identity yet.",
       "oidc_disabled": "This account is disabled.",
       "oidc_token_refused": "The identity provider refused the sign-in code.",

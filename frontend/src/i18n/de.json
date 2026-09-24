@@ -63,6 +63,7 @@
       "oidc_state_mismatch": "Der Anmeldeversuch ist abgelaufen. Versuch es noch einmal.",
       "oidc_unreachable": "Der Anbieter ist nicht erreichbar.",
       "oidc_bad_token": "Die Antwort des Anbieters ließ sich nicht prüfen.",
+      "oidc_no_signing_key": "Der Anbieter unterschreibt mit seinem Client-Geheimnis, und das nimmt nexdeck nicht an. Ein Administrator muss dort einen Signaturschlüssel wählen (in authentik: Signing Key am Provider).",
       "oidc_no_account": "Mit dieser Identität ist noch kein nexdeck-Konto verknüpft.",
       "oidc_disabled": "Dieses Konto ist gesperrt.",
       "oidc_token_refused": "Der Anbieter hat den Anmeldecode abgelehnt.",

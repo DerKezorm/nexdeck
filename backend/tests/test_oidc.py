@@ -227,3 +227,70 @@ def test_removing_a_provider_says_who_it_would_lock_out(client: TestClient, prov
     assert forced.status_code == 204
     with db_session() as db:
         assert db.query(OidcProvider).count() == 0
+
+
+# -- the signature: what authentik sends without a signing key (issue #11) ---
+
+
+def _rsa_token(claims: dict, kid: str = "k1") -> tuple[str, dict]:
+    """A token signed like a provider with a key signs it, and its key set entry."""
+    import json
+
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
+    return jwt.encode(claims, key, algorithm="RS256", headers={"kid": kid}), {**public, "kid": kid, "use": "sig", "alg": "RS256"}
+
+
+def _key_set(monkeypatch: pytest.MonkeyPatch, keys: list[dict]) -> None:
+    """The provider's key set, without a provider; pyjwt fetches it over urllib."""
+    import jwt
+
+    monkeypatch.setattr(oidc_service, "_jwks_clients", {})
+    monkeypatch.setattr(jwt.PyJWKClient, "fetch_data", lambda _self: {"keys": keys})
+
+
+def _claims() -> dict:
+    """Fresh each time: an expiry fixed when the file loads ran out during a
+    full run, which takes longer than five minutes to reach these tests."""
+    return {"sub": "abc", "aud": PROVIDER["client_id"], "iss": PROVIDER["issuer_url"], "nonce": "n-1", "exp": int(time.time()) + 300}
+
+
+async def test_a_token_signed_with_the_client_secret_is_refused_by_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    """authentik without a signing key signs with HS256 and the client secret.
+    nexdeck does not take that, and it has to say so rather than "PyJWKSetError"."""
+    import jwt
+
+    token = jwt.encode(_claims(), PROVIDER["client_secret"], algorithm="HS256")
+    _key_set(monkeypatch, [])
+    with pytest.raises(oidc_service.OidcError) as refused:
+        await oidc_service.claims(DOCUMENT, PROVIDER["client_id"], token, "n-1", PROVIDER["issuer_url"])
+    assert refused.value.code == "oidc_no_signing_key"
+    assert "Signing Key" in refused.value.message and "HS256" in refused.value.message
+
+
+async def test_an_empty_key_set_is_named(monkeypatch: pytest.MonkeyPatch) -> None:
+    token, _entry = _rsa_token(_claims())
+    _key_set(monkeypatch, [])
+    with pytest.raises(oidc_service.OidcError) as refused:
+        await oidc_service.claims(DOCUMENT, PROVIDER["client_id"], token, "n-1", PROVIDER["issuer_url"])
+    assert refused.value.code == "oidc_no_signing_key"
+
+
+async def test_a_token_signed_with_a_published_key_still_passes(monkeypatch: pytest.MonkeyPatch) -> None:
+    token, entry = _rsa_token(_claims())
+    _key_set(monkeypatch, [entry])
+    payload = await oidc_service.claims(DOCUMENT, PROVIDER["client_id"], token, "n-1", PROVIDER["issuer_url"])
+    assert payload["sub"] == "abc"
+
+
+async def test_a_key_set_without_a_matching_key_stays_a_bad_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keys there, just not this one: that is not the missing signing key."""
+    token, _entry = _rsa_token(_claims(), kid="k1")
+    _other, entry = _rsa_token(_claims(), kid="k2")
+    _key_set(monkeypatch, [entry])
+    with pytest.raises(oidc_service.OidcError) as refused:
+        await oidc_service.claims(DOCUMENT, PROVIDER["client_id"], token, "n-1", PROVIDER["issuer_url"])
+    assert refused.value.code == "oidc_bad_token"

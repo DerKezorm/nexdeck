@@ -132,7 +132,29 @@ def _jwks_client(uri: str) -> jwt.PyJWKClient:
     return client
 
 
+#: What an ID token may be signed with. **No HS256**: a token signed with the
+#: client secret would be checked with the client secret, and a forged ``alg``
+#: header is the best known trick against JWT. Nexview refuses it for the
+#: same reason.
+ALGORITHMS = ["RS256", "ES256", "RS384", "RS512", "ES384", "ES512", "PS256"]
+
+#: Said at the sign-in page and in the log when a provider signs with its
+#: client secret or publishes no keys. authentik does both at once when no
+#: signing key is chosen for the provider, and before this the only words
+#: were "PyJWKSetError" (issue #11).
+NO_SIGNING_KEY = (
+    "The identity provider signs with its client secret or publishes no signing key. "
+    "Choose a signing key for the provider; in authentik that is Signing Key on the provider."
+)
+
+
 async def claims(document: dict[str, Any], client_id: str, id_token: str, nonce: str, issuer_url: str) -> dict[str, Any]:
+    try:
+        algorithm = str(jwt.get_unverified_header(id_token).get("alg") or "")
+    except jwt.PyJWTError as error:
+        raise OidcError("oidc_bad_token", f"The ID token could not be read: {error.__class__.__name__}.") from error
+    if algorithm.upper().startswith("HS"):
+        raise OidcError("oidc_no_signing_key", f"{NO_SIGNING_KEY} The ID token came signed with {algorithm}.")
     try:
         # ⚠️ Two things here, and both were wrong. PyJWKClient fetches with
         # urllib, which blocks: in an async function that holds the whole
@@ -142,7 +164,12 @@ async def claims(document: dict[str, Any], client_id: str, id_token: str, nonce:
         # that was thrown away immediately; the key set was fetched every
         # single time.
         key = await asyncio.to_thread(_jwks_client(document["jwks_uri"]).get_signing_key_from_jwt, id_token)
-        payload = jwt.decode(id_token, key.key, algorithms=["RS256", "ES256", "RS384", "RS512", "ES384", "ES512", "PS256"], audience=client_id, options={"verify_iss": False})
+        payload = jwt.decode(id_token, key.key, algorithms=ALGORITHMS, audience=client_id, options={"verify_iss": False})
+    except jwt.PyJWKSetError as error:
+        # ``{"keys": []}``, or no key pyjwt can use. Not PyJWKClientError: that
+        # is also what a key set says when it simply has no key with the
+        # token's ``kid``, and that is an ordinary bad token.
+        raise OidcError("oidc_no_signing_key", f"{NO_SIGNING_KEY} The key set said: {error}") from error
     except jwt.PyJWTError as error:
         raise OidcError("oidc_bad_token", f"The ID token could not be verified: {error.__class__.__name__}.") from error
     issued_by = str(payload.get("iss", "")).rstrip("/")
