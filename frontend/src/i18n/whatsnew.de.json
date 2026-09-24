@@ -731,6 +731,20 @@
         "Die unterste Karte eines Boards lässt sich im Bearbeitungsmodus wieder in der Größe ändern; die Bearbeitungsleiste lag über ihrer Ecke.",
         "Die Karte „Most watched“ von Tautulli zeigt neben Filmen auch Serien und Musik."
       ]
+    },
+    "0.19.1": {
+      "lead": "Nexviews Freigabe-Karte ist bereit für das kommende Nexview mit nexcrate.",
+      "sections": [
+        {
+          "title": "Freigeben, wenn nexcrate hinter Nexview steht",
+          "body": "Beschafft nexcrate, hat eine Anfrage weder Ordner noch Profil zur Auswahl, und die Karte zeigte bisher gar keinen Freigabe-Knopf. Jetzt gibt sie direkt frei und zeigt die Fassung, die angefragt wurde, mit ihrem Namen. Mit Radarr und Sonarr ändert sich nichts.",
+          "path": "Bearbeiten > Widget hinzufügen > Nexview > Anfragen zur Freigabe"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Zwei Tests, die unter Last ab und zu scheiterten, laufen wieder stabil."
+      ]
     }
   }
 }

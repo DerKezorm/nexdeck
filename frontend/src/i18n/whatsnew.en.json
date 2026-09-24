@@ -731,6 +731,20 @@
         "The lowest card of a board can be resized in edit mode; the edit bar used to lie over its corner.",
         "Tautulli's Most watched card shows TV shows and music as well as movies."
       ]
+    },
+    "0.19.1": {
+      "lead": "Nexview's approval card is ready for the coming Nexview with nexcrate.",
+      "sections": [
+        {
+          "title": "Approving with nexcrate behind Nexview",
+          "body": "With nexcrate doing the fetching, a request has no folder and no profile to choose, and the card used to show no approve button at all. Now it approves straight away and shows the version the request asks for by name. With Radarr and Sonarr nothing changes.",
+          "path": "Edit mode > Add widget > Nexview > Requests to approve"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Two tests that failed now and then under load are steady again."
+      ]
     }
   }
 }

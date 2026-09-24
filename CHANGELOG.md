@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.19.1 (2026-09-24)
+
+### Fixed
+
+- **Nexview's approval card is ready for Nexview with nexcrate.** When nexcrate does the fetching behind Nexview (Nexview 1.0.0, not released yet), Nexview leaves folder and profile empty on every request, because both belong to the version asked for, and it refuses the lists of folders and profiles. The card took that for a request without a target and showed no approve button on any row. It now reads from Nexview's dashboard tile whether Radarr and Sonarr or nexcrate do the fetching. With nexcrate it asks for no lists, approves without folder or profile, and shows the version a request asks for by its name. A Nexview that does not say, which is every Nexview up to now, behaves exactly as before.
+
 ## 0.19.0 (2026-09-24)
 
 ### New
