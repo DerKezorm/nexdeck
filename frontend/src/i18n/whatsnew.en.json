@@ -705,6 +705,32 @@
         "A connection sheet can carry a short setup guide, and shows only the fields that belong to what you chose.",
         "The search for a connection finds the vendor behind a protocol: type Cisco or Netgear and the SNMP connection comes up."
       ]
+    },
+    "0.19.0": {
+      "lead": "Two more networks on the board: NetBird's peers and Pangolin's sites and resources. And four things people reported, fixed.",
+      "sections": [
+        {
+          "title": "NetBird",
+          "body": "The peers of your NetBird network, self-hosted or on NetBird Cloud: who is connected, when the others were last seen, and whose login has expired. An expired login comes first, because that peer stays cut off until somebody signs it in again. A personal access token is all it needs, best one of a service user.",
+          "path": "Settings > Integrations > NetBird"
+        },
+        {
+          "title": "Pangolin",
+          "body": "Sites online or offline, and the resources Pangolin serves from them: public ones with their health, private ones with their destination. It reads the Integration API, which a self-hosted Pangolin has to switch on first; the connection sheet says how. A key that lacks one of the three permissions it needs is told which one.",
+          "path": "Settings > Integrations > Pangolin"
+        },
+        {
+          "title": "Identity providers can be changed",
+          "body": "A pencil next to each provider opens it in the form. Leave the secret empty to keep it, switch a provider off without removing it, and see a warning when a new short name changes the redirect URI. Until now the only way was to delete it, which let go of every linked account.",
+          "path": "System > Identity providers"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Sign-in through authentik without a signing key now says exactly that, instead of an error nobody could read.",
+        "The lowest card of a board can be resized in edit mode; the edit bar used to lie over its corner.",
+        "Tautulli's Most watched card shows TV shows and music as well as movies."
+      ]
     }
   }
 }

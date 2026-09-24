@@ -705,6 +705,32 @@
         "Ein Anbindungsblatt kann eine kurze Anleitung mitbringen und zeigt nur die Felder, die zur getroffenen Wahl gehören.",
         "Die Suche nach einer Anbindung findet den Hersteller hinter dem Protokoll: Tippe Cisco oder Netgear, und die SNMP-Anbindung steht da."
       ]
+    },
+    "0.19.0": {
+      "lead": "Zwei weitere Netze auf dem Board: die Peers von NetBird und die Standorte und Ressourcen von Pangolin. Dazu vier gemeldete Fehler, behoben.",
+      "sections": [
+        {
+          "title": "NetBird",
+          "body": "Die Peers deines NetBird-Netzes, selbst betrieben oder in der NetBird Cloud: wer verbunden ist, wann die anderen zuletzt gesehen wurden und wessen Anmeldung abgelaufen ist. Eine abgelaufene Anmeldung steht vorn, denn dieser Peer bleibt abgeschnitten, bis ihn jemand neu anmeldet. Es braucht nur ein Access Token, am besten das eines Service Users.",
+          "path": "Einstellungen > Anbindungen > NetBird"
+        },
+        {
+          "title": "Pangolin",
+          "body": "Standorte online oder offline, und die Ressourcen, die Pangolin von dort ausliefert: öffentliche mit ihrem Zustand, private mit ihrem Ziel. Gelesen wird die Integration API, die ein selbst betriebenes Pangolin erst einschalten muss; das Anbindungsblatt sagt, wie. Fehlt dem Schlüssel eine der drei nötigen Berechtigungen, wird sie genannt.",
+          "path": "Einstellungen > Anbindungen > Pangolin"
+        },
+        {
+          "title": "Anmeldeanbieter lassen sich ändern",
+          "body": "Ein Stift neben jedem Anbieter holt ihn ins Formular. Ein leeres Geheimnis-Feld behält das Geheimnis, ein Schalter nimmt den Anbieter vom Netz, ohne ihn zu löschen, und ein neuer Kurzname warnt, dass sich die Rücksprungadresse ändert. Bisher blieb nur Löschen, und damit waren alle verknüpften Konten weg.",
+          "path": "System > Anmeldeanbieter"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Anmeldung über authentik ohne Signaturschlüssel sagt jetzt genau das, statt einer Fehlermeldung, die niemand lesen konnte.",
+        "Die unterste Karte eines Boards lässt sich im Bearbeitungsmodus wieder in der Größe ändern; die Bearbeitungsleiste lag über ihrer Ecke.",
+        "Die Karte „Most watched“ von Tautulli zeigt neben Filmen auch Serien und Musik."
+      ]
     }
   }
 }
