@@ -1,13 +1,16 @@
 """NetBird, against the answers its management API gives.
 
-The peer below is the example of NetBird's OpenAPI description, trimmed to the
-fields that matter and given a second and a third peer. The 401 answers were
-recorded from a live netbird-server 0.79.0 on 24.09.2026.
+The first peer below is the example of NetBird's OpenAPI description, trimmed
+to the fields that matter and given a second and a third peer.
+``fixtures/netbird_peers.json`` and the 401 answers were recorded from a live
+netbird-server 0.79.0 with two clients on 24.09.2026, one of them stopped.
 """
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import httpx
 import pytest
@@ -102,6 +105,24 @@ async def test_a_page_instead_of_the_api_is_not_taken_for_peers(ctx: Context) ->
     with pytest.raises(AdapterError) as failure:
         await get_adapter("netbird").fetch("peers", CONFIG, {}, ctx)
     assert failure.value.code == "not_json"
+
+
+@respx.mock
+async def test_the_recorded_answer_of_a_real_server(ctx: Context) -> None:
+    recorded = json.loads((Path(__file__).parent / "fixtures" / "netbird_peers.json").read_text(encoding="utf-8"))
+    respx.get(f"{URL}/api/peers").mock(return_value=httpx.Response(200, json=recorded))
+    data = await get_adapter("netbird").fetch("peers", CONFIG, {}, ctx)
+    assert [(item["title"], item["status"]) for item in data.items] == [("bench-peer-a", "ok"), ("bench-peer-b", "unknown")]
+    assert data.items[0]["value"] == "now"
+    assert data.items[1]["value"].endswith((" min", " h", " d")), "the stopped one says when it went"
+    assert data.items[0]["subtitle"] == "100.76.94.67 · Alpine Linux 3.24.2"
+
+
+@respx.mock
+async def test_an_address_with_api_on_the_end_is_taken_as_well(ctx: Context) -> None:
+    route = respx.get(f"{URL}/api/peers").mock(return_value=httpx.Response(200, json=[]))
+    await get_adapter("netbird").fetch("peers", {**CONFIG, "url": f"{URL}/api"}, {}, ctx)
+    assert route.called
 
 
 def test_the_demo_draws_both_cards() -> None:

@@ -1,5 +1,6 @@
 {
   "adapter": {
+    "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service Users > ein Benutzer > Access Tokens. Ein Service User mit der Rolle User liest alle Peers und kann nichts ändern.",
     "Both": "Beide",
     "Integration API URL": "URL der Integration API",
     "One line per site with its type and address, and whether it is online.": "Eine Zeile je Standort mit Typ und Adresse, und ob er online ist.",
@@ -19,7 +20,6 @@
     "One line per peer with its address and system, and when it was last seen.": "Eine Zeile je Peer mit Adresse und System, und wann er zuletzt gesehen wurde.",
     "Peers": "Peers",
     "Peers of a NetBird network, which are connected and which need to sign in again.": "Peers eines NetBird-Netzes: welche verbunden sind und welche sich neu anmelden müssen.",
-    "Team > Users or Service users > a user > Access tokens. A service user is the tidy choice.": "Team > Users oder Service Users > ein Benutzer > Access Tokens. Ein Service User ist die saubere Wahl.",
     "The address of your NetBird dashboard, or https://api.netbird.io for NetBird Cloud.": "Die Adresse deines NetBird-Dashboards, oder https://api.netbird.io für NetBird Cloud.",
     "Jellystat hands out the top five of each.": "Jellystat liefert von jeder Art die fünf meistgesehenen.",
     "Shows": "Serien",

@@ -4,11 +4,14 @@ Self-hosted or NetBird Cloud, the management API is the same: ``/api`` under
 the address the dashboard runs on, or ``https://api.netbird.io`` for the
 cloud. It takes a personal access token as ``Authorization: Token <PAT>``.
 
-Measured against a live netbird-server 0.79.0 (24.09.2026): without a token
-and with a wrong one it answers 401 with ``{"message": ..., "code": 401}``.
-The shape of a peer comes from NetBird's OpenAPI description. ``connected``
-means the peer holds its line to the management server open, which is what
-the dashboard shows as online.
+Measured against a live netbird-server 0.79.0 with two clients (24.09.2026):
+``connected`` is whether the peer holds its line to the management server
+open, which is what the dashboard shows as online. ``last_seen`` is set when
+a peer connects and when it goes, not while it stays, so for a connected
+peer it says nothing and the card says "now". A service user with the plain
+User role reads every peer, also with "regular users view blocked" on,
+which is how a fresh installation starts. Without a token and with a wrong
+one the answer is 401 with ``{"message": ..., "code": 401}``.
 """
 
 from __future__ import annotations
@@ -29,9 +32,11 @@ class NetbirdAdapter(Adapter):
     description = "Peers of a NetBird network, which are connected and which need to sign in again."
     icon = "netbird"
     docs_url = "https://docs.netbird.io/api"
+    #: Both cards seen against a live netbird-server 0.79.0 with two clients (24.09.2026).
+    beta = False
     fields = (
         Field("url", "URL", type="url", default=CLOUD, placeholder="https://netbird.example.com", help="The address of your NetBird dashboard, or https://api.netbird.io for NetBird Cloud."),
-        Field("token", "Access token", type="password", secret=True, required=True, help="Team > Users or Service users > a user > Access tokens. A service user is the tidy choice."),
+        Field("token", "Access token", type="password", secret=True, required=True, help="Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (
@@ -58,12 +63,18 @@ class NetbirdAdapter(Adapter):
     )
 
     def default_link(self, config: dict[str, Any]) -> str:
-        address = base_url(config) or CLOUD
+        address = self._root(config)
         return "https://app.netbird.io" if address == CLOUD else address
+
+    @staticmethod
+    def _root(config: dict[str, Any]) -> str:
+        """The address without ``/api``, which people paste along with it; with it, the answer was a bare 404."""
+        address = base_url(config) or CLOUD
+        return address[: -len("/api")] if address.endswith("/api") else address
 
     async def _peers(self, config: dict[str, Any], ctx: Context, cache: float = 60) -> list[dict[str, Any]]:
         payload = await ctx.get_json(
-            f"{base_url(config) or CLOUD}/api/peers",
+            f"{self._root(config)}/api/peers",
             headers={"Authorization": f"Token {config.get('token') or ''}", "Accept": "application/json"},
             verify=not config.get("insecure"),
             cache_seconds=cache,
