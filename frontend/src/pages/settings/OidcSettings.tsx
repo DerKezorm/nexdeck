@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, del, get, post } from '../../api/client'
+import { ApiError, del, get, patch, post } from '../../api/client'
 import type { About } from '../../api/types'
 import { Field, Select, Switch, Toast } from '../../components/ui'
 import { SettingsCard } from './SettingsCard'
@@ -30,19 +30,45 @@ export function OidcSettings() {
   const providers = useQuery({ queryKey: ['oidc-providers'], queryFn: () => get<Provider[]>('/oidc/providers') })
   const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about') })
   const [form, setForm] = useState(EMPTY)
+  // The provider the form is changing; null while it adds a new one. Until
+  // 0.18.1 there was no way to change one at all, only to delete it and add
+  // it again (issue #10), which loses every account linked to it.
+  const [editing, setEditing] = useState<Provider | null>(null)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
   const base = about.data?.public_url || window.location.origin
+  const edit = (provider: Provider) => {
+    // The secret never comes back from the server; left empty, it is kept.
+    const { slug, label, issuer_url, client_id, scopes, enabled, auto_create, trusts_second_factor, default_role } = provider
+    setForm({ slug, label, issuer_url, client_id, client_secret: '', scopes, enabled, auto_create, trusts_second_factor, default_role })
+    setEditing(provider)
+    requestAnimationFrame(() => document.getElementById('o-slug')?.focus())
+  }
+  const reset = () => {
+    setForm(EMPTY)
+    setEditing(null)
+  }
+  const save = () =>
+    void (editing ? patch(`/oidc/providers/${editing.id}`, form) : post('/oidc/providers', form))
+      .then(() => {
+        if (editing) setToast({ text: t('common.saved'), level: 'ok' })
+        reset()
+        void providers.refetch()
+      })
+      .catch(fail)
   return (
     <>
       <SettingsCard title={t('settings.system.oidc')} description={t('settings.system.oidcHelp')}>
         <ul className="space-y-1.5 mb-4">
           {(providers.data ?? []).map((provider) => (
-            <li key={provider.id} className="flex items-center gap-2 rounded-xl border border-line p-2.5 text-sm">
+            <li key={provider.id} className={`flex items-center gap-2 rounded-xl border p-2.5 text-sm ${editing?.id === provider.id ? 'border-accent' : 'border-line'}`}>
               <span className="flex-1 truncate">
                 {provider.label} <span className="text-faint text-xs">{provider.issuer_url}</span>
               </span>
               <span className="dot" data-status={provider.enabled ? 'ok' : 'unknown'} />
+              <button className="btn btn-icon h-7 w-7" onClick={() => edit(provider)} aria-label={t('settings.system.oidcEdit', { name: provider.label })} aria-pressed={editing?.id === provider.id}>
+                <Pencil size={14} />
+              </button>
               <button className="btn btn-icon h-7 w-7 btn-danger" onClick={() => void del(`/oidc/providers/${provider.id}`).then(() => providers.refetch()).catch(fail)} aria-label={t('common.delete')}>
                 <Trash2 size={14} />
               </button>
@@ -63,7 +89,15 @@ export function OidcSettings() {
             <input id="o-client" className="input" value={form.client_id} onChange={(e) => setForm((f) => ({ ...f, client_id: e.target.value }))} />
           </Field>
           <Field label={t('settings.system.oidcSecret')} htmlFor="o-secret">
-            <input id="o-secret" className="input" type="password" autoComplete="off" value={form.client_secret} onChange={(e) => setForm((f) => ({ ...f, client_secret: e.target.value }))} />
+            <input
+              id="o-secret"
+              className="input"
+              type="password"
+              autoComplete="off"
+              placeholder={editing?.has_secret ? t('settings.system.oidcSecretKept') : undefined}
+              value={form.client_secret}
+              onChange={(e) => setForm((f) => ({ ...f, client_secret: e.target.value }))}
+            />
           </Field>
           <Field label={t('settings.system.oidcRole')} htmlFor="o-role">
             <Select
@@ -78,23 +112,21 @@ export function OidcSettings() {
             />
           </Field>
         </div>
+        {editing && <Switch checked={form.enabled} onChange={(enabled) => setForm((f) => ({ ...f, enabled }))} label={t('settings.system.oidcEnabled')} description={t('settings.system.oidcEnabledHelp')} />}
         <Switch checked={form.auto_create} onChange={(auto_create) => setForm((f) => ({ ...f, auto_create }))} label={t('settings.system.oidcAutoCreate')} description={t('settings.system.oidcAutoCreateHelp')} />
         <Switch checked={form.trusts_second_factor} onChange={(trusts_second_factor) => setForm((f) => ({ ...f, trusts_second_factor }))} label={t('settings.system.oidcTrustsSecondFactor')} description={t('settings.system.oidcTrustsSecondFactorHelp')} />
         <p className="text-[11px] text-faint mb-2">{t('settings.system.oidcRedirect', { url: `${base}/api/v1/auth/oidc/${form.slug || 'slug'}/callback` })}</p>
-        <button
-          className="btn btn-accent"
-          disabled={!form.slug || !form.label || !form.issuer_url || !form.client_id}
-          onClick={() =>
-            void post('/oidc/providers', form)
-              .then(() => {
-                setForm(EMPTY)
-                void providers.refetch()
-              })
-              .catch(fail)
-          }
-        >
-          {t('settings.system.oidcAdd')}
-        </button>
+        {editing && editing.slug !== form.slug && <p className="text-[11px] text-warn mb-2">{t('settings.system.oidcSlugChanged')}</p>}
+        <div className="flex gap-2">
+          <button className="btn btn-accent" disabled={!form.slug || !form.label || !form.issuer_url || !form.client_id} onClick={save}>
+            {editing ? t('common.save') : t('settings.system.oidcAdd')}
+          </button>
+          {editing && (
+            <button className="btn" onClick={reset}>
+              {t('common.cancel')}
+            </button>
+          )}
+        </div>
       </SettingsCard>
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>

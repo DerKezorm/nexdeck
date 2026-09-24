@@ -283,6 +283,11 @@
       "oidcTrustsSecondFactor": "This provider checks a second factor itself",
       "oidcTrustsSecondFactorHelp": "Off means nexdeck asks for its own code after this provider signs somebody in, if that account has one set up. Turn it on where authentik, Authelia or Keycloak already ask.",
       "oidcRedirect": "Redirect URI to register at the provider: {{url}}",
+      "oidcEdit": "Edit {{name}}",
+      "oidcSecretKept": "Left empty, the secret stays as it is",
+      "oidcEnabled": "Offer this provider",
+      "oidcEnabledHelp": "Off hides its button on the sign-in page, and nobody can sign in through it.",
+      "oidcSlugChanged": "A new short name changes the redirect URI. Register the new one at the provider as well.",
       "oidcAdd": "Add provider"
     },
     "search": {
