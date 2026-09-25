@@ -42,7 +42,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const [refresh, setRefresh] = useState('')
   const [pageId, setPageId] = useState('')
   const [options, setOptions] = useState<Record<string, unknown>>({})
-  const [health, setHealth] = useState({ kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, enabled: true, insecure: false })
+  const [health, setHealth] = useState({ kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, insecure: false })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -73,7 +73,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     // without condition: renaming an app card put the TLS box back to off, the
     // timeout back to five seconds and the expected status back to any, and
     // two minutes later every administrator got an outage notice about a
-    // service that had been fine all along.
+    // service that had been fine all along. Everything but `enabled`, which
+    // the switch below decides (see save).
     if (widget.health) {
       const check = widget.health
       setHealth({
@@ -81,7 +82,6 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         interval_seconds: check.interval_seconds ?? 30,
         timeout_seconds: check.timeout_seconds ?? 5,
         expect_status: check.expect_status ?? 0,
-        enabled: check.enabled ?? true,
         insecure: check.insecure ?? false,
       })
     }
@@ -174,7 +174,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           interval_seconds: health.interval_seconds,
           timeout_seconds: health.timeout_seconds,
           expect_status: health.expect_status,
-          enabled: health.enabled,
+          // ⚠️ On, because the switch that says so is on. This used to send
+          // back whatever the check had, and nothing in the sheet shows that
+          // flag: a demo tile's check starts switched off, and a tile edited
+          // into a real service stayed grey through every save. Issue #17.
+          enabled: true,
           insecure: health.insecure,
         })
       }

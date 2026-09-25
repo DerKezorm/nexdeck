@@ -88,6 +88,23 @@ it('sends back the check that is there, not the factory one', async () => {
   expect(body.interval_seconds).toBe(120)
 })
 
+it('switches a check on that was off, since the switch that shows says on', async () => {
+  // ⚠️ A demo tile's check starts switched off, and nothing in the sheet shows
+  // that flag. Sending it back as it was kept an edited tile grey for good.
+  const sent: Record<string, unknown>[] = []
+  vi.stubGlobal('fetch', answerWith(sent))
+  const off = { ...WIDGET, health: { ...HEALTH, enabled: false } }
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <WidgetSettingsSheet widget={off as never} pages={[{ id: 1, name: 'one' }]} onClose={vi.fn()} onSaved={vi.fn()} onDeleted={vi.fn()} />
+    </QueryClientProvider>,
+  )
+  await userEvent.click(await screen.findByRole('button', { name: /save|speichern/i }))
+  await waitFor(() => expect(sent.length).toBeGreaterThan(0))
+  expect(sent[0].enabled).toBe(true)
+  expect(sent[0].insecure).toBe(true)
+})
+
 it('shows the switch of the check once, in the box of the check', async () => {
   vi.stubGlobal('fetch', answerWith([], APP_OPTIONS))
   render(

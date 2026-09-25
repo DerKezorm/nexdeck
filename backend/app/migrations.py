@@ -129,6 +129,22 @@ def _asset_digest_column(connection: Connection) -> None:
     connection.execute(text("CREATE INDEX IF NOT EXISTS ix_assets_digest ON assets (digest)"))
 
 
+def _demo_checks_back_on(connection: Connection) -> None:
+    """Switch on the checks of app tiles that no longer point at the demo's addresses.
+
+    ⚠️ The demo board makes its app tiles with their checks switched off,
+    because they point at example.com. Before 0.17 leaving the demo kept
+    those tiles, the settings sheet sent the switched-off flag back on every
+    save and showed it nowhere, so a demo tile edited into a real service
+    stayed grey for good (issue #17). A tile still on example.com stays as
+    it is; the demo may still be running.
+    """
+    connection.execute(text(
+        "UPDATE health_checks SET enabled = 1 WHERE enabled = 0 AND target NOT LIKE '%.example.com%' "
+        "AND widget_id IN (SELECT id FROM widgets WHERE kind = 'core.app' AND link NOT LIKE '%.example.com%')"
+    ))
+
+
 def _session_kind_columns(connection: Connection) -> None:
     _add_column(connection, "sessions", "kind", "VARCHAR(20) NOT NULL DEFAULT 'password'")
     _add_column(connection, "sessions", "address", "VARCHAR(64) NOT NULL DEFAULT ''")
@@ -148,6 +164,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (11, "A page counts its saved layouts", _layout_version_column),
     (12, "An upload knows its own fingerprint", _asset_digest_column),
     (13, "A session says how it was opened, and from where", _session_kind_columns),
+    (14, "App tiles that left the demo check their address again", _demo_checks_back_on),
 ]
 
 
