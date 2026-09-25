@@ -69,6 +69,22 @@ describe('renderers', () => {
     expect(screen.getByText('4m')).toBeInTheDocument()
   })
 
+  it('says on the dot of an app tile why it is the colour it is', () => {
+    const health = { id: 1, kind: 'http', target: 'https://sonarr.example.org', interval_seconds: 30, timeout_seconds: 5, expect_status: 0,
+      insecure: false, enabled: true, last_ok: true, last_latency_ms: 12, down_since: null, last_error: '', bars: [] }
+    const tile = (changes: Record<string, unknown>) => ({ ...DEMO_VIEWS[0], id: 12, renderer: 'app', title: 'Sonarr', options: {}, health: { ...health, ...changes } }) as unknown as WidgetView
+    const dot = (view: WidgetView) => {
+      const { container, unmount } = render(<>{renderWidget({ widget: view, data: undefined })}</>)
+      const title = container.querySelector('.dot')?.getAttribute('title') ?? ''
+      unmount()
+      return title
+    }
+    expect(dot(tile({ enabled: false, last_ok: null, last_latency_ms: null }))).toMatch(/switched off|abgeschaltet/)
+    expect(dot(tile({ last_ok: null, last_latency_ms: null, last_error: 'No address to check yet.' }))).toMatch(/No address|Adresse/)
+    expect(dot(tile({ last_ok: false, last_error: 'HTTP 502' }))).toContain('HTTP 502')
+    expect(dot(tile({}))).toContain('12 ms')
+  })
+
   it('shows the value and the unit of a value card', () => {
     const view = DEMO_VIEWS.find((v) => v.renderer === 'value')!
     render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} series={DEMO_SERIES[view.id]} />)

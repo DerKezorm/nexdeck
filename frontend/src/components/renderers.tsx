@@ -1413,6 +1413,18 @@ export function AppTile({ widget, data, link }: RenderProps) {
   const description = String(data?.meta?.description ?? '')
   const href = safeUrl(link || widget.link || widget.service_link) || undefined
   const bars = health?.bars ?? []
+  // Why the dot is the colour it is, on hover. A grey dot used to say nothing
+  // at all, and issue #17 took five rounds to find a check switched off.
+  const dotStatus: Status = widget.options?.check === false ? 'unknown' : status
+  const reason = widget.options?.check === false || !health
+    ? t('card.noCheck')
+    : health.enabled === false
+      ? t('card.checkOff')
+      : health.last_ok === null
+        ? tLabel(health.last_error || 'Not checked yet.')
+        : health.last_ok
+          ? (health.last_latency_ms !== null ? `${health.last_latency_ms} ms` : '')
+          : tLabel(health.last_error || '')
   const Tag = href ? 'a' : 'div'
   return (
     <Tag
@@ -1428,7 +1440,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
           {description && <div className="text-[11px] text-muted truncate">{description}</div>}
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="dot" data-status={widget.options?.check === false ? 'unknown' : status} />
+          <span className="dot" data-status={dotStatus} title={[t(`status.${dotStatus}`), reason].filter(Boolean).join(' · ')} />
           {health?.last_latency_ms !== null && health?.last_latency_ms !== undefined && <span className="num text-[10px] text-faint">{health.last_latency_ms} ms</span>}
         </div>
       </div>

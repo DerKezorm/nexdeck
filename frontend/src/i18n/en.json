@@ -930,7 +930,9 @@
       "keepMine": "Keep mine",
       "takeTheirs": "Take the other",
       "tickConflict": "This note was changed elsewhere; here is how it stands now."
-    }
+    },
+    "noCheck": "No reachability check",
+    "checkOff": "The check is switched off"
   },
   "player": {
     "title": "Music",

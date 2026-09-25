@@ -930,7 +930,9 @@
       "keepMine": "Meine behalten",
       "takeTheirs": "Die andere nehmen",
       "tickConflict": "Die Notiz wurde woanders geändert; so steht sie jetzt."
-    }
+    },
+    "noCheck": "Keine Erreichbarkeitsprüfung",
+    "checkOff": "Die Prüfung ist abgeschaltet"
   },
   "player": {
     "title": "Musik",
