@@ -1401,7 +1401,12 @@
     "GitHub projects": "GitHub-Projekte",
     "One per line, as owner/name, up to ten. Each shows its newest release; one from the last seven days stands out.": "Eins pro Zeile, als besitzer/name, bis zu zehn. Jedes zeigt sein neuestes Release; eines aus den letzten sieben Tagen wird hervorgehoben.",
     "nexdeck itself": "nexdeck selbst",
-    "Through the update check in System. With that switched off, the card shows what a check by hand found and asks nothing itself.": "Über die Update-Prüfung unter System. Ist sie ausgeschaltet, zeigt die Karte, was eine Prüfung von Hand gefunden hat, und fragt selbst nichts."
+    "Through the update check in System. With that switched off, the card shows what a check by hand found and asks nothing itself.": "Über die Update-Prüfung unter System. Ist sie ausgeschaltet, zeigt die Karte, was eine Prüfung von Hand gefunden hat, und fragt selbst nichts.",
+    "This machine": "Dieser Rechner",
+    "Processor, memory, load, temperature and a disk of the machine nexdeck runs on, read from the kernel. No agent needed.": "Prozessor, Speicher, Last, Temperatur und eine Platte des Rechners, auf dem nexdeck läuft, direkt vom Kernel gelesen. Ohne Agent.",
+    "File system": "Dateisystem",
+    "A path whose file system the card shows. Empty means the one nexdeck keeps its data on, which in Docker is a volume of the host.": "Ein Pfad, dessen Dateisystem die Karte zeigt. Leer heißt: das, auf dem nexdeck seine Daten ablegt; in Docker ist das ein Volume des Hosts.",
+    "Show the temperature": "Temperatur zeigen"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2163,6 +2168,7 @@
     "pre-release": "Vorabversion",
     "The last run could not update everything": "Der letzte Lauf konnte nicht alles aktualisieren",
     "What's Up Docker": "What's Up Docker",
-    "Cup": "Cup"
+    "Cup": "Cup",
+    "Swap": "Auslagerung"
   }
 }

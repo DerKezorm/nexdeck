@@ -72,6 +72,8 @@ export interface Secondary {
   metric?: string
   /** Which of the card's declared pieces this row is; see {@link Primary.part}. */
   part?: string
+  /** What the row would say if there were room, shown on hover. */
+  hint?: string
 }
 
 export interface WidgetData {

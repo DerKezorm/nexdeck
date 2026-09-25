@@ -384,7 +384,8 @@ export function StatsCard({ data, series }: RenderProps) {
           const isPercent = row.unit === '%'
           const points = row.metric ? series?.[row.metric] : undefined
           return (
-            <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3">
+            // A row may say more than fits beside its bar: "3.1 GB of 7.8 GB" on hover.
+            <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3" title={row.hint ? tLabel(row.hint) : undefined}>
               {/* Labels grow with the language, values never wrap: "WAN eingehend" and "95.8 MB/s" must both fit. */}
               <div className="text-[11px] text-muted min-w-[4.6rem] max-w-[10rem] truncate" title={tLabel(row.label)}>
                 {tLabel(row.label)}

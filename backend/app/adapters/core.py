@@ -5,7 +5,20 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType
+from . import demo as fake
+from .base import (
+    Action,
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+    duration_short,
+    human_bytes,
+    status_from_percent,
+    worst,
+)
 
 
 class CoreAdapter(Adapter):
@@ -231,6 +244,21 @@ class CoreAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="host",
+            label="This machine",
+            description="Processor, memory, load, temperature and a disk of the machine nexdeck runs on, read from the kernel. No agent needed.",
+            renderer="stats",
+            default_size=(3, 3),
+            min_size=(2, 2),
+            refresh_seconds=15,
+            metrics=("cpu", "memory"),
+            options=(
+                Field("disk", "File system", placeholder="/data",
+                      help="A path whose file system the card shows. Empty means the one nexdeck keeps its data on, which in Docker is a volume of the host."),
+                Field("temperature", "Show the temperature", type="bool", default=True),
+            ),
+        ),
+        WidgetType(
             kind="app",
             label="App tile",
             description="A launcher tile: icon, name, link and an optional reachability check.",
@@ -315,7 +343,27 @@ class CoreAdapter(Adapter):
             return self._notices(ctx, options)
         if widget_kind == "updates":
             return await self._updates(ctx, options)
+        if widget_kind == "host":
+            return self._host(ctx, options)
         return self.demo(widget_kind, options, 0)
+
+    @staticmethod
+    def _host(ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The machine nexdeck runs on, one look per refresh; the processor share is between two looks."""
+        from ..config import get_settings
+        from ..services import hoststats
+
+        key = f"host:cpu:{ctx.widget_id}"
+        disk = str(options.get("disk") or "").strip() or str(get_settings().data_dir.resolve())
+        try:
+            machine = hoststats.read(disk, ctx.cache.get(key))
+        except hoststats.NoProc:
+            raise AdapterError(
+                "This machine has no /proc to read; the card reads Linux directly.", code="no_proc",
+                hint="nexdeck in Docker runs on Linux. On Windows or macOS without Docker, Glances, Netdata or Beszel can read the machine.",
+            ) from None
+        ctx.cache[key] = machine.sample
+        return host_card(machine, show_temperature=options.get("temperature", True))
 
     async def _updates(self, ctx: Context, options: dict[str, Any]) -> WidgetData:
         """What has a newer version, gathered from every source the card names.
@@ -662,6 +710,18 @@ class CoreAdapter(Adapter):
                 {"title": "nexdeck 0.20.0 is out", "subtitle": "", "status": "ok", "emphasis": True, "when": now - 3 * 3600},
                 {"title": "Backup written", "subtitle": "", "status": "ok", "emphasis": False, "when": now - 26 * 3600},
             ], primary={"label": "Unread", "value": 2}, meta={"empty": "No notices.", "headline": True})
+        if widget_kind == "host":
+            from ..services.hoststats import Machine
+
+            gib = 1024 ** 3
+            machine = Machine(
+                cpu=round(fake.walk("host-cpu", tick, 4, 38), 1), cores=8,
+                memory_total=32 * gib, memory_used=int(fake.walk("host-memory", tick, 11, 14) * gib),
+                load=(round(fake.walk("host-load", tick, 0.3, 2.4), 2), 0.9, 0.7), uptime=13 * 86400 + 4 * 3600,
+                temperature=(round(fake.walk("host-temperature", tick, 44, 58), 1), "coretemp Package id 0"),
+                disk_total=2000 * gib, disk_used=1240 * gib, disk_path="/data",
+            )
+            return host_card(machine, show_temperature=options.get("temperature", True))
         if widget_kind == "updates":
             return WidgetData(status="bad", items=[
                 {"title": "Watchtower", "subtitle": "The last run could not update everything", "status": "bad", "value": "1"},
@@ -677,6 +737,39 @@ class CoreAdapter(Adapter):
                 "open_new_tab": options.get("open_new_tab", True),
             })
         raise KeyError(widget_kind)
+
+
+def host_card(machine: Any, show_temperature: bool = True) -> WidgetData:
+    """The rows of the host card from one look at the machine."""
+    def share(used: int, total: int) -> float | None:
+        return round(100 * used / total, 1) if total else None
+
+    memory = share(machine.memory_used, machine.memory_total)
+    disk = share(machine.disk_used, machine.disk_total)
+    rows: list[dict[str, Any]] = []
+    if memory is not None:
+        rows.append({"label": "Memory", "value": memory, "unit": "%", "metric": "memory",
+                     "hint": f"{human_bytes(machine.memory_used)} of {human_bytes(machine.memory_total)}"})
+    if machine.swap_total:
+        rows.append({"label": "Swap", "value": share(machine.swap_used, machine.swap_total), "unit": "%",
+                     "hint": f"{human_bytes(machine.swap_used)} of {human_bytes(machine.swap_total)}"})
+    if machine.load is not None:
+        rows.append({"label": "Load", "value": " ".join(f"{one:.2f}" for one in machine.load),
+                     "hint": f"{machine.cores} cores" if machine.cores else ""})
+    if show_temperature and machine.temperature is not None:
+        rows.append({"label": "Temperature", "value": machine.temperature[0], "unit": "°C", "hint": machine.temperature[1]})
+    if disk is not None:
+        rows.append({"label": "Disk", "value": disk, "unit": "%",
+                     "hint": f"{human_bytes(machine.disk_total - machine.disk_used)} free of {human_bytes(machine.disk_total)} · {machine.disk_path}"})
+    if machine.uptime is not None:
+        rows.append({"label": "Uptime", "value": duration_short(machine.uptime)})
+    metrics = {name: value for name, value in (("cpu", machine.cpu), ("memory", memory)) if value is not None}
+    return WidgetData(
+        status=status_from_percent(worst(machine.cpu, memory, disk)),
+        primary={"label": "CPU", "value": machine.cpu, "unit": "%"},
+        secondary=rows,
+        metrics=metrics,
+    )
 
 
 async def waiting_at(adapter: Adapter, config: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
