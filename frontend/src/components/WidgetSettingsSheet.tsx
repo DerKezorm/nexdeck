@@ -30,6 +30,9 @@ interface Props {
   onPreviewData?: (widgetId: number, data: WidgetData | null) => void
 }
 
+/** A check as a card without one starts it. */
+const FRESH_CHECK = { kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, insecure: false }
+
 /** Everything about one widget: title, icon, link, connection, options, reachability check. */
 export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted, onPreview, onPreviewData }: Props) {
   const { t } = useTranslation()
@@ -42,7 +45,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const [refresh, setRefresh] = useState('')
   const [pageId, setPageId] = useState('')
   const [options, setOptions] = useState<Record<string, unknown>>({})
-  const [health, setHealth] = useState({ kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, insecure: false })
+  const [health, setHealth] = useState(FRESH_CHECK)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -84,6 +87,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         expect_status: check.expect_status ?? 0,
         insecure: check.insecure ?? false,
       })
+    } else {
+      // ⚠️ The sheet stays mounted between cards. Without this a card with no
+      // check yet took over the check of the card opened before it: its kind,
+      // its interval, its TLS box, and in issue #17 its switched-off flag.
+      setHealth(FRESH_CHECK)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget?.id])

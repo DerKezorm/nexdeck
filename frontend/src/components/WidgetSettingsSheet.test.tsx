@@ -105,6 +105,24 @@ it('switches a check on that was off, since the switch that shows says on', asyn
   expect(sent[0].insecure).toBe(true)
 })
 
+it('gives a card without a check a fresh one, not the card opened before', async () => {
+  // ⚠️ The sheet stays mounted between cards; its check settings used to stay too.
+  const sent: Record<string, unknown>[] = []
+  vi.stubGlobal('fetch', answerWith(sent))
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const sheet = (widget: unknown) => (
+    <QueryClientProvider client={client}>
+      <WidgetSettingsSheet widget={widget as never} pages={[{ id: 1, name: 'one' }]} onClose={vi.fn()} onSaved={vi.fn()} onDeleted={vi.fn()} />
+    </QueryClientProvider>
+  )
+  const { rerender } = render(sheet({ ...WIDGET, health: { ...HEALTH, kind: 'tcp' } }))
+  await screen.findByRole('button', { name: /save|speichern/i })
+  rerender(sheet({ ...WIDGET, id: 4, title: 'Plex', health: null }))
+  await userEvent.click(await screen.findByRole('button', { name: /save|speichern/i }))
+  await waitFor(() => expect(sent.length).toBeGreaterThan(0))
+  expect(sent[0]).toMatchObject({ kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, insecure: false, enabled: true })
+})
+
 it('shows the switch of the check once, in the box of the check', async () => {
   vi.stubGlobal('fetch', answerWith([], APP_OPTIONS))
   render(
