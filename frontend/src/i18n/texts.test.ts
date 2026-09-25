@@ -61,6 +61,8 @@ describe('server texts', () => {
     expect(translateText('labels', 'online · battery 84% · Person')).toBe('online · Akku 84 % · Person')
     expect(translateText('labels', 'Reolink answers · Home Hub · 3 cameras')).toBe('Reolink antwortet · Home Hub · 3 Kameras')
     expect(translateText('labels', 'signed in, no plays · Chrome ×2')).toBe('angemeldet, keine Wiedergaben · Chrome ×2')
+    expect(translateText('labels', '10 new episodes')).toBe('10 neue Folgen')
+    expect(translateText('labels', 'Season 3')).toBe('Staffel 3')
   })
 
   it('leave unknown text alone', async () => {

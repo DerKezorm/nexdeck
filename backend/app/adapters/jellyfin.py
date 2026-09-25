@@ -20,7 +20,7 @@ from .base import (
     human_bytes,
     path_segment,
 )
-from .media_base import Library, MediaAdapter, Stream
+from .media_base import Library, MediaAdapter, Stream, new_episodes
 from .music import (
     ALBUM_PAGE,
     ARTIST_PAGE,
@@ -278,14 +278,21 @@ class JellyfinAdapter(MediaAdapter, MusicLibrary):
                 "Limit": limit * 5 if item_type == "Episode" else limit,
                 "Fields": "DateCreated,ProductionYear,SeriesId,ParentIndexNumber,IndexNumber,AlbumArtist",
             })
-            seen: set[str] = set()
+            seen: dict[str, tuple[dict[str, Any], int]] = {}
             for entry in (payload or {}).get("Items") or []:
                 series = str(entry.get("SeriesId") or "")
                 if item_type == "Episode" and series:
                     if series in seen:
+                        poster, episodes = seen[series]
+                        seen[series] = (poster, episodes + 1)
                         continue
-                    seen.add(series)
+                    seen[series] = (self._poster(entry), 1)
+                    items.append(seen[series][0])
+                    continue
                 items.append(self._poster(entry))
+            for poster, episodes in seen.values():
+                if episodes > 1:
+                    poster["subtitle"] = new_episodes(episodes)
         items.sort(key=lambda item: item.get("added_at") or 0, reverse=True)
         return WidgetData(items=items[:limit], meta={"empty": "Nothing new"})
 

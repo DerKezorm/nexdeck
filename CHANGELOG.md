@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.19.2 (2026-09-25)
+
+### Fixed
+
+- **Plex's Recently added card shows a series once, not once per episode.** Plex lists every new episode on its own, so thirty new episodes of one show were thirty times the same cover. A series is now one cover at the place of its newest episode. One new episode keeps its number and title under the cover, several are counted ("10 new episodes"). A series library is asked for more than the card shows, so the card still fills up. Jellyfin and Emby already showed a series once and now count its new episodes the same way. Reported in issue #16.
+- **Covers in a card too low for them no longer lie over each other.** The rows of the cover grid were squeezed into the height of the card, so each row of covers covered the next. The rows keep the height of their covers now, and the card scrolls. This held for every cover card: Plex, Jellyfin, Emby and nexcrate. Reported in issue #16.
+
 ## 0.19.1 (2026-09-24)
 
 ### Fixed

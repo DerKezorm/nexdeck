@@ -61,6 +61,11 @@ class Library:
 EVERYTHING = "all"
 
 
+def new_episodes(count: int) -> str:
+    """What a recently-added cover says when it stands for several new episodes of one series."""
+    return f"{count} new episodes"
+
+
 class MediaAdapter(Adapter):
     category = "media"
     #: The one thing a button may ask a media server to do. Reading is free;

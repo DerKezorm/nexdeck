@@ -89,6 +89,8 @@ const PATTERNS: Record<string, [RegExp, string][]> = {
     [/^(\d+) of (\d+) ports up$/, '$1 von $2 Ports verbunden'],
     [/^(\d+) uplink\(s\) down$/, '$1 Uplink(s) ausgefallen'],
     [/^class (\d)$/, 'Klasse $1'],
+    [/^(\d+) new episodes$/, '$1 neue Folgen'],
+    [/^Season (\d+)$/, 'Staffel $1'],
     [/^The device answers$/, 'Das Gerät antwortet'],
     [/^(.+) answers$/, '$1 antwortet'],
   ],

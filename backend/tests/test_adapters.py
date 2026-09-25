@@ -664,12 +664,47 @@ async def test_plex_recently_added_merges_sections_newest_first(ctx: Context) ->
     ]}}))
     config = {"url": PLEX, "token": "tok"}
     data = await get_adapter("plex").fetch("recent", config, {"kind": "all", "limit": 8}, ctx)
-    assert [(item["title"], item["subtitle"]) for item in data.items] == [("Harbour Lights", "Season 3"), ("Aurora Fields", "Northern Sky"), ("Orbital", "2025"), ("Harbour Lights", "S03E04 · Landfall")], "newest first across sections, photos skipped; an album shows its title over the artist"
+    assert [(item["title"], item["subtitle"]) for item in data.items] == [("Harbour Lights", "Season 3"), ("Aurora Fields", "Northern Sky"), ("Orbital", "2025")], "newest first across sections, photos skipped; an album shows its title over the artist; the season and the older episode of the same show are one cover"
     assert data.items[0]["art"] == "proxy:/library/metadata/20/thumb/1", "the browser gets a path, never the token"
     movies = await get_adapter("plex").fetch("recent", config, {"kind": "movies", "limit": 8}, ctx)
     assert [item["title"] for item in movies.items] == ["Orbital"]
     sent = respx.get(f"{PLEX}/library/sections/1/recentlyAdded").calls.last.request
     assert sent.headers["X-Plex-Token"] == "tok" and sent.url.params["X-Plex-Container-Size"] == "8"
+
+
+def _plex_episode(show: str, key: str, season: int, number: int, added: int) -> dict[str, Any]:
+    return {"type": "episode", "title": f"Part {number}", "grandparentTitle": show, "grandparentRatingKey": key,
+            "parentIndex": season, "index": number, "grandparentThumb": f"/library/metadata/{key}/thumb/1", "addedAt": added}
+
+
+@respx.mock
+async def test_plex_recently_added_shows_a_series_once_with_its_new_episodes(ctx: Context) -> None:
+    """Issue #16: thirty new episodes of one show were thirty times the same cover."""
+    respx.get(f"{PLEX}/library/sections").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Directory": [
+        {"key": "1", "type": "movie", "title": "Movies"}, {"key": "2", "type": "show", "title": "Series"},
+    ]}}))
+    respx.get(f"{PLEX}/library/sections/1/recentlyAdded").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Metadata": [
+        {"type": "movie", "title": "Orbital", "year": 2025, "thumb": "/library/metadata/10/thumb/1", "addedAt": 650},
+        {"type": "movie", "title": "Glass Bridge", "year": 2026, "thumb": "/library/metadata/11/thumb/1", "addedAt": 50},
+    ]}}))
+    shows = respx.get(f"{PLEX}/library/sections/2/recentlyAdded").mock(return_value=httpx.Response(200, json={"MediaContainer": {"Metadata": [
+        *[_plex_episode("Harbour Lights", "21", 1, number, 1000 - number) for number in range(1, 11)],
+        _plex_episode("Tide Lines", "31", 2, 5, 600),
+        # Another show with the same name is another cover: the key decides, not the title.
+        _plex_episode("Tide Lines", "41", 1, 1, 400),
+        _plex_episode("Tide Lines", "41", 1, 2, 300),
+    ]}}))
+    config = {"url": PLEX, "token": "tok"}
+    data = await get_adapter("plex").fetch("recent", config, {"kind": "all", "limit": 4}, ctx)
+    assert [(item["title"], item["subtitle"], item["art"]) for item in data.items] == [
+        ("Harbour Lights", "10 new episodes", "proxy:/library/metadata/21/thumb/1"),
+        ("Orbital", "2025", "proxy:/library/metadata/10/thumb/1"),
+        ("Tide Lines", "S02E05 · Part 5", "proxy:/library/metadata/31/thumb/1"),
+        ("Tide Lines", "2 new episodes", "proxy:/library/metadata/41/thumb/1"),
+    ], "a show is one cover at its newest episode; one new episode keeps its number, several are counted; the card still fills up to the limit"
+    assert shows.calls.last.request.url.params["X-Plex-Container-Size"] == "20", "a series library is asked for more than the card shows, so the card fills up after merging"
+    only_one = await get_adapter("plex").fetch("recent", config, {"kind": "series", "limit": 1}, ctx)
+    assert [(item["title"], item["subtitle"]) for item in only_one.items] == [("Harbour Lights", "10 new episodes")]
     assert get_adapter("plex").demo("recent", {"kind": "music", "limit": 8}, 0).items == [{"title": "Aurora Fields", "subtitle": "Northern Sky", "art": "", "kind": "album"}]
 
 
@@ -901,12 +936,12 @@ async def test_jellyfin_recently_added_one_row_per_series(ctx: Context) -> None:
     _jellyfin_routes()
     data = await get_adapter("jellyfin").fetch("recent", {"url": JF, "api_key": "tok"}, {"kind": "all", "limit": 8}, ctx)
     assert [(item["title"], item["subtitle"], item["art"]) for item in data.items] == [
-        ("Harbour Lights", "S03E05 · Ebb", "proxy:/Items/s1/Images/Primary?maxHeight=400"),
+        ("Harbour Lights", "2 new episodes", "proxy:/Items/s1/Images/Primary?maxHeight=400"),
         ("Orbital", "2025", "proxy:/Items/m1/Images/Primary?maxHeight=400"),
         ("Northern Sky", "Aurora Fields", "proxy:/Items/a1/Images/Primary?maxHeight=400"),
         ("Tide Lines", "S01E01 · Pilot", "proxy:/Items/s2/Images/Primary?maxHeight=400"),
         ("The Quiet Harbour", "2026", "proxy:/Items/m2/Images/Primary?maxHeight=400"),
-    ], "newest first across the types; a series appears once, with its newest episode"
+    ], "newest first across the types; a series appears once, with its newest episode; one new episode keeps its number, several are counted"
     movies = await get_adapter("jellyfin").fetch("recent", {"url": JF, "api_key": "tok"}, {"kind": "movies", "limit": 1}, ctx)
     assert [item["title"] for item in movies.items] == ["Orbital"]
 

@@ -22,7 +22,7 @@ from .base import (
     path_segment,
     status_from_percent,
 )
-from .media_base import EVERYTHING, Library, MediaAdapter, Stream
+from .media_base import EVERYTHING, Library, MediaAdapter, Stream, new_episodes
 from .music import (
     ALBUM_PAGE,
     ARTIST_PAGE,
@@ -245,22 +245,51 @@ class PlexAdapter(MediaAdapter, MusicLibrary):
     # -- recently added ----------------------------------------------------------
 
     async def _recent(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
-        """The newest items of the chosen library types, one poster each."""
+        """The newest items of the chosen library types, one poster each; a series appears once, at its newest episode."""
         wanted = KINDS.get(str(options.get("kind") or "all"), KINDS["all"])
         limit = max(1, min(40, int(options.get("limit") or 8)))
         sections = await self._get(config, ctx, "/library/sections", cache=600)
-        items: list[dict[str, Any]] = []
+        entries: list[dict[str, Any]] = []
         for section in (sections.get("MediaContainer") or {}).get("Directory") or []:
             if section.get("type") not in wanted or not section.get("key"):
                 continue
+            # Plex lists every new episode on its own. A series library is asked
+            # for more than the card shows, so the card still fills up once the
+            # episodes of one series have become one cover.
+            size = limit * 5 if section.get("type") == "show" else limit
             payload = await self._get(
                 config, ctx, f"/library/sections/{section['key']}/recentlyAdded", cache=120,
-                headers={"X-Plex-Container-Start": "0", "X-Plex-Container-Size": str(limit)}, params={"X-Plex-Container-Start": 0, "X-Plex-Container-Size": limit},
+                headers={"X-Plex-Container-Start": "0", "X-Plex-Container-Size": str(size)}, params={"X-Plex-Container-Start": 0, "X-Plex-Container-Size": size},
             )
-            for entry in (payload.get("MediaContainer") or {}).get("Metadata") or []:
+            entries.extend((payload.get("MediaContainer") or {}).get("Metadata") or [])
+        entries.sort(key=lambda entry: int(entry.get("addedAt") or 0), reverse=True)
+        items: list[dict[str, Any]] = []
+        series: dict[str, tuple[dict[str, Any], int]] = {}
+        for entry in entries:
+            show = self._show_of(entry)
+            if show is None:
                 items.append(self._poster(entry))
-        items.sort(key=lambda item: item.get("added_at") or 0, reverse=True)
+            elif show in series:
+                poster, episodes = series[show]
+                series[show] = (poster, episodes + (entry.get("type") == "episode"))
+            else:
+                poster = self._poster(entry)
+                series[show] = (poster, int(entry.get("type") == "episode"))
+                items.append(poster)
+        for poster, episodes in series.values():
+            if episodes > 1:
+                poster["subtitle"] = new_episodes(episodes)
         return WidgetData(items=items[:limit], meta={"empty": "Nothing new"})
+
+    @staticmethod
+    def _show_of(entry: dict[str, Any]) -> str | None:
+        """The series an episode or season belongs to, by Plex's key and by name only when the key is missing."""
+        kind = entry.get("type")
+        if kind == "episode":
+            return str(entry.get("grandparentRatingKey") or entry.get("grandparentTitle") or "") or None
+        if kind == "season":
+            return str(entry.get("parentRatingKey") or entry.get("parentTitle") or "") or None
+        return None
 
     @staticmethod
     def _poster(entry: dict[str, Any]) -> dict[str, Any]:

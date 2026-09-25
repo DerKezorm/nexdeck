@@ -561,12 +561,17 @@ export function CountersCard({ data }: RenderProps) {
 // Posters: covers in a grid, newest first
 // ---------------------------------------------------------------------------
 
+// ⚠️ auto-rows-max is load-bearing. A cover clips its corners (overflow
+// hidden), and a grid item that clips has no minimum height, so the rows
+// were squeezed into the card and each row of covers lay over the next
+// (issue #16). With rows as tall as their covers the card scrolls instead.
+
 export function PostersCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
   return (
-    <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
+    <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {
         const art = mediaUrl(widget.id, item.art as string | undefined)
         return (
