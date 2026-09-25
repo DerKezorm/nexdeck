@@ -1364,7 +1364,18 @@
     "Power over ethernet: the budget, what is drawn, and which ports deliver power.": "Power over Ethernet: das Budget, was gezogen wird und welche Ports Strom liefern.",
     "A network uplink went down": "Ein Netz-Uplink ist ausgefallen",
     "Hide what is over": "Vergangenes ausblenden",
-    "Today's appointments leave the card once they have ended. All-day entries stay the whole day.": "Heutige Termine verschwinden von der Karte, sobald sie vorbei sind. Ganztägige Einträge bleiben den ganzen Tag."
+    "Today's appointments leave the card once they have ended. All-day entries stay the whole day.": "Heutige Termine verschwinden von der Karte, sobald sie vorbei sind. Ganztägige Einträge bleiben den ganzen Tag.",
+    "Public IP address": "Öffentliche IP-Adresse",
+    "The address your connection has on the internet, and when it changes.": "Die Adresse, die dein Anschluss im Internet hat, und wann sie sich ändert.",
+    "The address, and the one before when it changes.": "Die Adresse, und bei einem Wechsel die vorige.",
+    "Service": "Dienst",
+    "ipify: the address only": "ipify: nur die Adresse",
+    "ipwho.is: with provider and place": "ipwho.is: mit Anbieter und Ort",
+    "ipwho.is is free for personal use and limits how often it may be asked each month.": "ipwho.is ist für den privaten Gebrauch kostenlos und begrenzt, wie oft es im Monat gefragt werden darf.",
+    "IPv4": "IPv4",
+    "IPv6 where there is one": "IPv6, wo es eines gibt",
+    "Show only the last block": "Nur den letzten Block zeigen",
+    "For a board that guests see: the rest of the address is dotted out.": "Für ein Board, das Gäste sehen: Der Rest der Adresse wird durch Punkte ersetzt."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2112,6 +2123,9 @@
     "This device reports no PoE through the standard MIB": "Dieses Gerät meldet kein PoE über die Standard-MIB",
     "The device lists no PoE ports, only its budget": "Das Gerät führt keine PoE-Ports, nur sein Budget",
     "Unknown maker": "Hersteller unbekannt",
-    "This port has only 32-bit counters, which go round faster than they are read at this speed.": "Dieser Port hat nur 32-Bit-Zähler, die bei dieser Geschwindigkeit schneller überlaufen, als sie gelesen werden."
+    "This port has only 32-bit counters, which go round faster than they are read at this speed.": "Dieser Port hat nur 32-Bit-Zähler, die bei dieser Geschwindigkeit schneller überlaufen, als sie gelesen werden.",
+    "Before": "Vorher",
+    "Provider": "Anbieter",
+    "The address changed within the last hour.": "Die Adresse hat sich in der letzten Stunde geändert."
   }
 }

@@ -7,6 +7,7 @@ project uses semantic versioning.
 
 ### New
 
+- **Public IP address.** A card with the address your connection has on the internet, asked of ipify (the address alone, IPv4 or IPv6 where there is one) or of ipwho.is (with provider and place). No account and no key. When the address changes, the card says so for an hour and keeps the one before. Each card remembers its own, so an IPv4 and an IPv6 card side by side do not take each other for a change. For a board that guests see, it can show the last block only.
 - **Calendar entries show their time of day.** An appointment from an iCal feed carried only its day. It now shows its time as well, written the way the browser writes times, and a day lists its all-day entries first and then the rest by the clock. A time written in UTC, or with a zone the file names as Google Calendar does, is placed on the server's clock (the `TZ` of the container) one occurrence at a time, so a weekly meeting keeps its hour after the clocks change; a floating time, and a zone the server does not know, are taken as written. An appointment late in the evening in UTC now lands on the right day. A new switch, on by default, leaves out today's appointments once they have ended; one that is under way stays until its end.
 
 ### Fixed
