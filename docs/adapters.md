@@ -133,7 +133,7 @@ that one of twenty-one renderers draws.
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | Karakeep | recent bookmarks, reading list | | API key from Settings > API Keys |
 | Linkwarden | recent links, links | | access token from Settings > Access Tokens |
-| YouTube | videos | | none; the channel feeds need no account |
+| YouTube | videos, subscriptions | | none for videos; subscriptions need a YouTube Data API v3 key and a public subscription list |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |
 | Twitch | live | | client ID and secret of an application at dev.twitch.tv |

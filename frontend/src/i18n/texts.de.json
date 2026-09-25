@@ -1406,7 +1406,12 @@
     "Processor, memory, load, temperature and a disk of the machine nexdeck runs on, read from the kernel. No agent needed.": "Prozessor, Speicher, Last, Temperatur und eine Platte des Rechners, auf dem nexdeck läuft, direkt vom Kernel gelesen. Ohne Agent.",
     "File system": "Dateisystem",
     "A path whose file system the card shows. Empty means the one nexdeck keeps its data on, which in Docker is a volume of the host.": "Ein Pfad, dessen Dateisystem die Karte zeigt. Leer heißt: das, auf dem nexdeck seine Daten ablegt; in Docker ist das ein Volume des Hosts.",
-    "Show the temperature": "Temperatur zeigen"
+    "Show the temperature": "Temperatur zeigen",
+    "Channels read": "Gelesene Kanäle",
+    "Newest videos of the channels an account follows. Needs a connection with an API key, and the account's subscriptions have to be public.": "Die neuesten Videos der Kanäle, die ein Konto abonniert hat. Braucht eine Anbindung mit API-Schlüssel, und die Abos des Kontos müssen öffentlich sein.",
+    "Only for the Subscriptions card: a key for the YouTube Data API v3 from the Google Cloud console. The Videos card needs none.": "Nur für die Abo-Karte: ein Schlüssel für die YouTube Data API v3 aus der Google Cloud Console. Die Video-Karte braucht keinen.",
+    "The channel whose subscriptions are read, as a handle with @ or the ID starting with UC.": "Der Kanal, dessen Abos gelesen werden, als Handle mit @ oder als ID, die mit UC beginnt.",
+    "The most active first, at most 50. The list is read once a day; each channel is one free feed.": "Die aktivsten zuerst, höchstens 50. Die Liste wird einmal am Tag gelesen; jeder Kanal ist ein kostenloser Feed."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
