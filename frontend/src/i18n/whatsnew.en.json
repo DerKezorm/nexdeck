@@ -773,6 +773,48 @@
       "small": [
         "The settings of an app tile show the reachability switch once, in the box of the check."
       ]
+    },
+    "0.20.0": {
+      "lead": "A status page, one list of updates, the machine nexdeck runs on, your public address, the notices on the board and your YouTube subscriptions. The calendar shows times now, and a demo tile that stayed grey checks its address again.",
+      "sections": [
+        {
+          "title": "Status page",
+          "body": "Every card with a reachability check on one card: how each answered last and how fast, its availability bars and how much of the time it was up, what is down at the top. It shows this board or every board of its owner, never somebody else's.",
+          "path": "Edit mode (pencil) > Add widget > Basics > Status page"
+        },
+        {
+          "title": "One list of updates",
+          "body": "What has a newer version, gathered in one place: the containers What's Up Docker and Cup list, a Watchtower run that failed, the newest release of the GitHub projects you follow, and nexdeck itself. nexdeck is asked about only through the update check in System.",
+          "path": "Edit mode (pencil) > Add widget > Basics > Updates"
+        },
+        {
+          "title": "This machine",
+          "body": "Processor, memory, load, temperature, uptime and the disk nexdeck keeps its data on, read straight from the kernel. No agent, and in Docker nothing to mount.",
+          "path": "Edit mode (pencil) > Add widget > Basics > This machine"
+        },
+        {
+          "title": "Your public address",
+          "body": "The address your connection has on the internet, from ipify or ipwho.is, without an account. When it changes the card says so and keeps the address before; for a board guests see it can show the last block only.",
+          "path": "Edit mode (pencil) > Add widget > Public IP address"
+        },
+        {
+          "title": "Notices and YouTube subscriptions",
+          "body": "The notice centre as a card, for a wall where nobody opens the bell. And the newest videos of the channels an account follows, with a YouTube Data API key on the YouTube connection.",
+          "path": "Edit mode (pencil) > Add widget > Basics > Notices, or YouTube > Subscriptions"
+        },
+        {
+          "title": "Times in the calendar",
+          "body": "Appointments from iCal show their time, all-day entries first. Times from Google Calendar and other zones are placed on the server's clock, each occurrence on its own, and today's appointments leave the card once they are over.",
+          "path": "Edit mode (pencil) > Add widget > Calendar > Upcoming"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "App tiles from the demo board that stayed grey check their address again, and saving a tile switches its check on (issue #17).",
+        "The dot of an app tile says on hover why it is grey or red.",
+        "A percentage row in a stats card keeps its bar; Docker's CPU, counted per core, keeps its line.",
+        "TrueNAS: a key that may not read statistics no longer costs the system card five seconds on every refresh."
+      ]
     }
   }
 }

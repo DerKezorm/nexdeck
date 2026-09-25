@@ -773,6 +773,48 @@
       "small": [
         "Das Blatt einer App-Kachel zeigt den Schalter „Erreichbarkeit prüfen“ nur noch einmal, im Kasten der Prüfung."
       ]
+    },
+    "0.20.0": {
+      "lead": "Eine Statusseite, eine Liste aller Updates, der Rechner, auf dem nexdeck läuft, deine öffentliche Adresse, die Meldungen auf dem Board und deine YouTube-Abos. Der Kalender zeigt jetzt Uhrzeiten, und eine Demo-Kachel, die grau blieb, prüft ihre Adresse wieder.",
+      "sections": [
+        {
+          "title": "Statusseite",
+          "body": "Jede Karte mit Erreichbarkeitsprüfung auf einer Karte: wie sie zuletzt antwortete und wie schnell, ihre Verfügbarkeitsbalken und wie viel der Zeit sie erreichbar war, Ausfälle oben. Sie zeigt dieses Board oder alle Boards seines Besitzers, nie die eines anderen.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Statusseite"
+        },
+        {
+          "title": "Eine Liste aller Updates",
+          "body": "Was eine neuere Version hat, an einer Stelle: die Container aus What's Up Docker und Cup, ein gescheiterter Watchtower-Lauf, das neueste Release der GitHub-Projekte, denen du folgst, und nexdeck selbst. Nach nexdeck wird nur über die Update-Prüfung unter System gefragt.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Updates"
+        },
+        {
+          "title": "Dieser Rechner",
+          "body": "Prozessor, Speicher, Last, Temperatur, Laufzeit und die Platte, auf der nexdeck seine Daten ablegt, direkt vom Kernel gelesen. Ohne Agent, und in Docker ohne etwas einzubinden.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Dieser Rechner"
+        },
+        {
+          "title": "Deine öffentliche Adresse",
+          "body": "Die Adresse, die dein Anschluss im Internet hat, von ipify oder ipwho.is, ohne Konto. Ändert sie sich, sagt die Karte das und behält die vorige; für ein Board, das Gäste sehen, zeigt sie auf Wunsch nur den letzten Block.",
+          "path": "Bearbeiten > Widget hinzufügen > Öffentliche IP-Adresse"
+        },
+        {
+          "title": "Meldungen und YouTube-Abos",
+          "body": "Die Glocke als Karte, für eine Wand, an der niemand sie öffnet. Und die neuesten Videos der Kanäle, die ein Konto abonniert hat, mit einem Schlüssel für die YouTube Data API an der YouTube-Anbindung.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Meldungen, oder YouTube > Abos"
+        },
+        {
+          "title": "Uhrzeiten im Kalender",
+          "body": "Termine aus iCal zeigen ihre Uhrzeit, ganztägige zuerst. Zeiten aus Google Kalender und anderen Zonen werden in die Uhr des Servers umgerechnet, jede Wiederholung für sich, und heutige Termine verschwinden, sobald sie vorbei sind.",
+          "path": "Bearbeiten > Widget hinzufügen > Kalender > Demnächst"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "App-Kacheln von der Demo-Tafel, die grau blieben, prüfen ihre Adresse wieder, und Speichern schaltet die Prüfung einer Kachel ein (Issue #17).",
+        "Der Punkt einer App-Kachel sagt beim Überfahren, warum er grau oder rot ist.",
+        "Eine Prozentzeile in einer Stats-Karte behält ihren Balken; Docker-CPU, je Kern gezählt, behält ihre Linie.",
+        "TrueNAS: Ein Schlüssel ohne Recht auf die Statistik kostet die System-Karte nicht mehr bei jedem Abruf fünf Sekunden."
+      ]
     }
   }
 }
