@@ -50,6 +50,25 @@ describe('renderers', () => {
     expect(times[0].closest('div')).toHaveTextContent('Choir')
   })
 
+  it('draws the availability bars of a status row and how long ago a notice came', () => {
+    const view = { ...DEMO_VIEWS[0], id: 11, renderer: 'list' } as WidgetView
+    const now = Date.now() / 1000
+    const data = {
+      status: 'bad',
+      meta: { bars: '24h' },
+      items: [
+        { title: 'Nextcloud', subtitle: 'ConnectError', status: 'bad', value: 97, unit: '%', bars: [1, 1, 0.5, 0, null] },
+        { title: 'Backup written', status: 'ok', when: now - 240 },
+      ],
+    } as unknown as WidgetData
+    render(<>{renderWidget({ widget: view, data })}</>)
+    const bars = screen.getAllByTestId('availability-bars')
+    expect(bars).toHaveLength(1)
+    expect(bars[0].children).toHaveLength(5)
+    expect(screen.getByText('97%')).toBeInTheDocument()
+    expect(screen.getByText('4m')).toBeInTheDocument()
+  })
+
   it('shows the value and the unit of a value card', () => {
     const view = DEMO_VIEWS.find((v) => v.renderer === 'value')!
     render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} series={DEMO_SERIES[view.id]} />)

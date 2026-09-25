@@ -1375,7 +1375,22 @@
     "IPv4": "IPv4",
     "IPv6 where there is one": "IPv6, wo es eines gibt",
     "Show only the last block": "Nur den letzten Block zeigen",
-    "For a board that guests see: the rest of the address is dotted out.": "Für ein Board, das Gäste sehen: Der Rest der Adresse wird durch Punkte ersetzt."
+    "For a board that guests see: the rest of the address is dotted out.": "Für ein Board, das Gäste sehen: Der Rest der Adresse wird durch Punkte ersetzt.",
+    "Status page": "Statusseite",
+    "Every card with a reachability check: how it answers, its bars and how much of the time it was up.": "Jede Karte mit Erreichbarkeitsprüfung: wie sie antwortet, ihre Balken und wie viel der Zeit sie erreichbar war.",
+    "Which cards": "Welche Karten",
+    "The cards on this board": "Die Karten auf diesem Board",
+    "Every board of this board's owner": "Alle Boards des Besitzers dieses Boards",
+    "Boards that belong to somebody else never show up here.": "Boards, die jemand anderem gehören, erscheinen hier nie.",
+    "No bars": "Keine Balken",
+    "Only what is down": "Nur was ausgefallen ist",
+    "Notices": "Meldungen",
+    "The notices of this board's owner, for a wall where nobody opens the bell. Everyone who can see the board sees them.": "Die Meldungen des Board-Besitzers, für eine Wand, an der niemand die Glocke öffnet. Jeder, der das Board sehen darf, sieht sie.",
+    "Which notices": "Welche Meldungen",
+    "All of them": "Alle",
+    "Warnings and errors": "Warnungen und Fehler",
+    "Errors only": "Nur Fehler",
+    "Only unread ones": "Nur ungelesene"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2126,6 +2141,11 @@
     "This port has only 32-bit counters, which go round faster than they are read at this speed.": "Dieser Port hat nur 32-Bit-Zähler, die bei dieser Geschwindigkeit schneller überlaufen, als sie gelesen werden.",
     "Before": "Vorher",
     "Provider": "Anbieter",
-    "The address changed within the last hour.": "Die Adresse hat sich in der letzten Stunde geändert."
+    "The address changed within the last hour.": "Die Adresse hat sich in der letzten Stunde geändert.",
+    "Not checked yet.": "Noch nicht geprüft.",
+    "Everything answers.": "Alles antwortet.",
+    "No card here has a reachability check.": "Hier hat keine Karte eine Erreichbarkeitsprüfung.",
+    "No notices.": "Keine Meldungen.",
+    "This board has no owner whose notices it could show.": "Dieses Board hat keinen Besitzer, dessen Meldungen es zeigen könnte."
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from .base import Action, Adapter, AdapterError, Context, Field, WidgetData, WidgetType
@@ -171,6 +172,46 @@ class CoreAdapter(Adapter):
             refresh_seconds=15,
         ),
         WidgetType(
+            kind="status",
+            label="Status page",
+            description="Every card with a reachability check: how it answers, its bars and how much of the time it was up.",
+            renderer="list",
+            default_size=(4, 3),
+            min_size=(2, 2),
+            refresh_seconds=30,
+            # The availability of each service side by side, for whoever wants the chart.
+            bars=True,
+            options=(
+                Field("scope", "Which cards", type="select", default="board",
+                      options=(("board", "The cards on this board"), ("owner", "Every board of this board's owner")),
+                      help="Boards that belong to somebody else never show up here."),
+                Field("bars", "Availability bars", type="select", default="24h",
+                      options=(
+                          ("24h", "Last 24 hours, one bar per 30 minutes"),
+                          ("6h", "Last 6 hours, one bar per 7.5 minutes"),
+                          ("1h", "Last hour, one bar per minute"),
+                          ("live", "Last 48 checks, one bar each"),
+                          ("none", "No bars"),
+                      )),
+                Field("only_down", "Only what is down", type="bool", default=False),
+            ),
+        ),
+        WidgetType(
+            kind="notices",
+            label="Notices",
+            description="The notices of this board's owner, for a wall where nobody opens the bell. Everyone who can see the board sees them.",
+            renderer="list",
+            default_size=(3, 3),
+            min_size=(2, 2),
+            refresh_seconds=30,
+            options=(
+                Field("level", "Which notices", type="select", default="all",
+                      options=(("all", "All of them"), ("warn", "Warnings and errors"), ("error", "Errors only"))),
+                Field("unread_only", "Only unread ones", type="bool", default=False),
+                Field("limit", "Entries", type="number", default=8),
+            ),
+        ),
+        WidgetType(
             kind="app",
             label="App tile",
             description="A launcher tile: icon, name, link and an optional reachability check.",
@@ -249,7 +290,134 @@ class CoreAdapter(Adapter):
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "problems":
             return self._problems(ctx)
+        if widget_kind == "status":
+            return self._status(ctx, options)
+        if widget_kind == "notices":
+            return self._notices(ctx, options)
         return self.demo(widget_kind, options, 0)
+
+    @staticmethod
+    def _board_of(db, widget_id: int | None):  # noqa: ANN001, ANN205
+        """The board a card stands on, or None for a card that is gone."""
+        from ..models import Board, Page, Widget
+
+        me = db.get(Widget, widget_id) if widget_id is not None else None
+        page = db.get(Page, me.page_id) if me is not None else None
+        return db.get(Board, page.board_id) if page is not None else None
+
+    @classmethod
+    def _status(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The reachability checks of this board, or of every board its owner has.
+
+        ⚠️ The owner's boards and no others. The card is read once for all
+        who see it, a guest on a shared board included, so "every board"
+        cannot mean the boards of the viewer; it means the boards of whoever
+        put the card there, who chose to show them.
+        """
+        from sqlalchemy import select
+
+        from ..db import db_session
+        from ..models import Board, HealthCheck, Page, Widget
+        from ..services import health
+
+        window = str(options.get("bars") or "24h")
+        drawn = window if window in health.BAR_WINDOWS or window == "live" else None
+        nothing = WidgetData(status="unknown", items=[], meta={"empty": "No card here has a reachability check."})
+        with db_session() as db:
+            board = cls._board_of(db, ctx.widget_id)
+            if board is None:
+                return nothing
+            boards = [board]
+            if options.get("scope") == "owner" and board.owner_id is not None:
+                boards = list(db.scalars(select(Board).where(Board.owner_id == board.owner_id).order_by(Board.name)))
+            names = {one.id: one.name for one in boards}
+            rows = db.execute(
+                select(Widget.id, Widget.title, Page.board_id, HealthCheck.last_ok, HealthCheck.last_error, HealthCheck.last_latency_ms)
+                .join(Page, Widget.page_id == Page.id)
+                .join(HealthCheck, HealthCheck.widget_id == Widget.id)
+                .where(Page.board_id.in_(list(names)), HealthCheck.enabled.is_(True))
+            ).all()
+            # The availability needs the bars even when none are drawn.
+            bars = health.bars_for(db, {row.id: drawn or "24h" for row in rows})
+        if not rows:
+            return nothing
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            known = [bar for bar in bars.get(row.id, []) if bar is not None]
+            if row.last_ok is False:
+                status, said = "bad", row.last_error or "Down"
+            elif row.last_ok is None:
+                status, said = "unknown", row.last_error or "Not checked yet."
+            else:
+                status, said = "ok", f"{row.last_latency_ms} ms" if row.last_latency_ms is not None else ""
+            title = row.title or "App tile"
+            item: dict[str, Any] = {"title": f"{title} · {names[row.board_id]}" if len(names) > 1 else title, "subtitle": said, "status": status}
+            if known:
+                # ⚠️ Down to the whole per cent, never up: a card rounds anything
+                # from 10 on to whole numbers, and 99.96 would have read 100
+                # for a service that was gone for a while.
+                item.update(value=math.floor(100 * sum(known) / len(known) + 1e-9), unit="%")
+            if drawn:
+                item["bars"] = bars.get(row.id, [])
+            items.append(item)
+        order = {"bad": 0, "unknown": 1, "ok": 2}
+        items.sort(key=lambda item: (order[item["status"]], item["title"].lower()))
+        down = sum(1 for item in items if item["status"] == "bad")
+        if options.get("only_down"):
+            items = [item for item in items if item["status"] == "bad"]
+        return WidgetData(
+            status="bad" if down else "ok",
+            items=items,
+            primary={"label": "Down", "value": down},
+            meta={"empty": "Everything answers.", "bars": drawn or ""},
+        )
+
+    @classmethod
+    def _notices(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The notice centre of the board's owner, newest first.
+
+        Notices belong to one account each. The card is read once for
+        everyone who sees it, so it shows those of whoever owns the board,
+        and it never marks one as read.
+        """
+        from sqlalchemy import func, select
+
+        from ..db import db_session
+        from ..models import Notice
+
+        levels = {"warn": ("warn", "error", "bad"), "error": ("error", "bad")}.get(str(options.get("level") or "all"))
+        try:
+            limit = max(1, min(50, int(options.get("limit") or 8)))
+        except (TypeError, ValueError):
+            limit = 8
+        with db_session() as db:
+            board = cls._board_of(db, ctx.widget_id)
+            if board is None or board.owner_id is None:
+                return WidgetData(status="unknown", items=[], meta={"empty": "This board has no owner whose notices it could show."})
+            query = select(Notice).where(Notice.user_id == board.owner_id)
+            if levels:
+                query = query.where(Notice.level.in_(levels))
+            if options.get("unread_only"):
+                query = query.where(Notice.read_at.is_(None))
+            notices = list(db.scalars(query.order_by(Notice.created_at.desc(), Notice.id.desc()).limit(limit)))
+            unread = db.scalar(select(func.count()).select_from(Notice).where(Notice.user_id == board.owner_id, Notice.read_at.is_(None))) or 0
+            rows = [(n.title, n.body, n.level, n.link, n.created_at, n.read_at is None) for n in notices]
+        weight = {"error": "bad", "bad": "bad", "warn": "warn"}
+        items: list[dict[str, Any]] = []
+        for title, body, level, link, created_at, is_unread in rows:
+            item: dict[str, Any] = {"title": title, "subtitle": body, "status": weight.get(level, "ok"), "emphasis": is_unread}
+            if created_at is not None:
+                item["when"] = created_at.timestamp()
+            if link:
+                item["url"] = link
+            items.append(item)
+        loud = {item["status"] for item in items if item["emphasis"]}
+        return WidgetData(
+            status="bad" if "bad" in loud else "warn" if "warn" in loud else "ok",
+            items=items,
+            primary={"label": "Unread", "value": unread},
+            meta={"empty": "No notices.", "headline": bool(unread)},
+        )
 
     @staticmethod
     def _problems(ctx: Context) -> WidgetData:
@@ -379,6 +547,25 @@ class CoreAdapter(Adapter):
                 ],
                 meta={"empty": "Everything is fine"},
             )
+        if widget_kind == "status":
+            day = [1.0] * 40 + [0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            rows = [
+                {"title": "Nextcloud", "subtitle": "The service could not be reached.", "error_code": "unreachable", "status": "bad", "value": 97, "unit": "%", "bars": day[:-1] + [0.0]},
+                {"title": "Jellyfin", "subtitle": "41 ms", "status": "ok", "value": 100, "unit": "%", "bars": [1.0] * 48},
+                {"title": "Radarr", "subtitle": "12 ms", "status": "ok", "value": 98, "unit": "%", "bars": day},
+            ]
+            if options.get("only_down"):
+                rows = rows[:1]
+            return WidgetData(status="bad", items=rows, primary={"label": "Down", "value": 1}, meta={"empty": "Everything answers.", "bars": "24h"})
+        if widget_kind == "notices":
+            import time
+
+            now = time.time()
+            return WidgetData(status="warn", items=[
+                {"title": "Nextcloud is down", "subtitle": "Nextcloud has not answered for 3 minutes (ConnectError).", "status": "bad", "emphasis": True, "when": now - 240},
+                {"title": "nexdeck 0.20.0 is out", "subtitle": "", "status": "ok", "emphasis": True, "when": now - 3 * 3600},
+                {"title": "Backup written", "subtitle": "", "status": "ok", "emphasis": False, "when": now - 26 * 3600},
+            ], primary={"label": "Unread", "value": 2}, meta={"empty": "No notices.", "headline": True})
         if widget_kind == "app":
             return WidgetData(meta={
                 "description": options.get("description") or "",

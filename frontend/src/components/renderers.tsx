@@ -111,6 +111,28 @@ export function renderWidget(props: RenderProps) {
 // Shared pieces
 // ---------------------------------------------------------------------------
 
+/**
+ * A row of availability bars: green up, amber partly, red down, faint where
+ * nothing is known yet. The app tile draws one, and so does every row of the
+ * status page.
+ */
+function AvailabilityBars({ bars, title, className = '' }: { bars: (number | null)[]; title?: string; className?: string }) {
+  return (
+    <div className={`flex gap-[2px] h-[6px] ${className}`} title={title} aria-hidden="true" data-testid="availability-bars">
+      {bars.map((bar, index) => (
+        <span
+          key={index}
+          className="flex-1 rounded-sm"
+          style={{
+            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= 0.99 ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
+            opacity: bar === null ? 1 : 0.85,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 /** A history line is worth drawing once it has a few points and moves at all. */
 function worthDrawing(points: number[] | undefined): points is number[] {
   return Boolean(points && points.length >= 5 && new Set(points).size > 1)
@@ -452,6 +474,13 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
                 {item.subtitle ? <div className="text-[11px] text-muted truncate">{subtitleOf(item)}</div> : null}
+                {Array.isArray(item.bars) && item.bars.length > 0 && (
+                  <AvailabilityBars
+                    bars={item.bars as (number | null)[]}
+                    title={t(`card.bars.${String(data?.meta?.bars || '24h')}`, { defaultValue: t('card.bars.24h') })}
+                    className="mt-1"
+                  />
+                )}
                 {progress !== null && (
                   <div className="bar mt-1" data-status={status}>
                     <i style={{ width: `${progress}%` }} />
@@ -479,6 +508,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
               {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
               {item.value !== undefined && item.value !== '' && (
                 <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : tLabel(String(item.value))}</span>
+              )}
+              {/* How long ago, in epoch seconds, for a row that is an event: a notice. */}
+              {(item.value === undefined || item.value === '') && typeof item.when === 'number' && (
+                <span className="num text-xs text-faint whitespace-nowrap">{timeAgo(item.when)}</span>
               )}
               {item.url ? (
                 <a href={safeUrl(item.url)} target="_blank" rel="noopener noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')}>
@@ -1398,20 +1431,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
           {health?.last_latency_ms !== null && health?.last_latency_ms !== undefined && <span className="num text-[10px] text-faint">{health.last_latency_ms} ms</span>}
         </div>
       </div>
-      {bars.length > 0 && (
-        <div className="flex gap-[2px] mt-2 h-[6px]" title={t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })} aria-hidden="true">
-          {bars.map((bar, index) => (
-            <span
-              key={index}
-              className="flex-1 rounded-sm"
-              style={{
-                background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= 0.99 ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
-                opacity: bar === null ? 1 : 0.85,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {bars.length > 0 && <AvailabilityBars bars={bars} title={t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })} className="mt-2" />}
     </Tag>
   )
 }
