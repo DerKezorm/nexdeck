@@ -8,6 +8,7 @@ project uses semantic versioning.
 ### Fixed
 
 - **A TCP or ping check on an app tile reaches the service when Target is left empty.** The check then takes the tile's link, and the link is a whole address such as `http://nas:7878`. TCP read `http://nas` as the name of the machine and ping tried to reach the whole address, so the dot stayed red for a service that was up. TCP now knocks at the host and port of the link, 80 or 443 when the link names none, and ping reaches the host; a ping check with `host:port` in Target pings the host. Checks already saved this way are right from their next run, without saving them again. Found while looking into issue #17.
+- **The settings of an app tile show the reachability switch once.** It stood twice, once among the options and once in the box of the check, both for the same setting. The one in the box stays, with the kind of check under it. Seen in issue #17.
 
 ## 0.19.2 (2026-09-25)
 

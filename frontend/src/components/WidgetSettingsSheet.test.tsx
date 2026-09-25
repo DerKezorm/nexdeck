@@ -44,12 +44,18 @@ const WIDGET = {
   health: HEALTH,
 }
 
-function answerWith(sent: Record<string, unknown>[]) {
+/** The options of the app tile as the server describes them, trimmed to the two switches. */
+const APP_OPTIONS = [
+  { name: 'check', label: 'Check reachability', type: 'bool', default: true },
+  { name: 'open_new_tab', label: 'Open in a new tab', type: 'bool', default: true },
+]
+
+function answerWith(sent: Record<string, unknown>[], options: unknown[] = []) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     if (init?.body && url.includes('/health')) sent.push(JSON.parse(String(init.body)))
     if (url.includes('/adapters')) {
-      return new Response(JSON.stringify([{ kind: 'core', label: 'Core', needs_integration: false, fields: [], widgets: [{ kind: 'core.app', label: 'App', options: [] }] }]), {
+      return new Response(JSON.stringify([{ kind: 'core', label: 'Core', needs_integration: false, fields: [], widgets: [{ kind: 'core.app', label: 'App', options }] }]), {
         status: 200, headers: { 'content-type': 'application/json' },
       })
     }
@@ -80,4 +86,16 @@ it('sends back the check that is there, not the factory one', async () => {
   expect(body.timeout_seconds).toBe(20)
   expect(body.expect_status).toBe(401)
   expect(body.interval_seconds).toBe(120)
+})
+
+it('shows the switch of the check once, in the box of the check', async () => {
+  vi.stubGlobal('fetch', answerWith([], APP_OPTIONS))
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <WidgetSettingsSheet widget={WIDGET as never} pages={[{ id: 1, name: 'one' }]} onClose={vi.fn()} onSaved={vi.fn()} onDeleted={vi.fn()} />
+    </QueryClientProvider>,
+  )
+  // The other switch of the list is there, so the options have arrived.
+  expect(await screen.findByRole('switch', { name: /open in a new tab|in einem neuen tab/i })).toBeInTheDocument()
+  expect(screen.getAllByRole('switch', { name: /check reachability|erreichbarkeit prüfen/i })).toHaveLength(1)
 })

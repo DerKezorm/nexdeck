@@ -239,6 +239,10 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           changed nothing. */}
       {spec?.options
         .filter((option) => {
+          // ⚠️ The app tile's own box below has this switch, with the kind of
+          // check under it. From the list it was a second switch of the same
+          // name for the same option, one screen apart. Seen in issue #17.
+          if (isApp && option.name === 'check') return false
           if (!option.only_when) return true
           const [name, wanted] = option.only_when
           const current = options[name] ?? spec.options.find((other) => other.name === name)?.default
