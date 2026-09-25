@@ -759,6 +759,20 @@
       "small": [
         "Covers in a card too low for them keep their rows apart and the card scrolls, on every cover card."
       ]
+    },
+    "0.19.3": {
+      "lead": "TCP and ping checks on an app tile reach the service when Target is left empty.",
+      "sections": [
+        {
+          "title": "TCP and ping checks on the tile's link",
+          "body": "With Target left empty, a TCP or ping check takes the tile's link, and the link is a whole address such as http://nas:7878. TCP read http://nas as the name of the machine and ping tried the whole address, so the dot stayed red for a service that was up. TCP now knocks at the host and port of the link, 80 or 443 when it names none, and ping reaches the host. Checks saved that way are right from their next run.",
+          "path": "Edit mode (pencil) > settings of an app tile > Check reachability"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The settings of an app tile show the reachability switch once, in the box of the check."
+      ]
     }
   }
 }

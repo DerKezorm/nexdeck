@@ -759,6 +759,20 @@
       "small": [
         "Cover in einer zu niedrigen Karte halten ihre Zeilen auseinander, und die Karte blättert; das gilt für jede Cover-Karte."
       ]
+    },
+    "0.19.3": {
+      "lead": "TCP- und Ping-Prüfungen einer App-Kachel erreichen den Dienst, wenn „Ziel“ leer bleibt.",
+      "sections": [
+        {
+          "title": "TCP und Ping auf den Link der Kachel",
+          "body": "Bleibt „Ziel“ leer, nimmt eine TCP- oder Ping-Prüfung den Link der Kachel, und der ist eine ganze Adresse wie http://nas:7878. TCP las http://nas als Namen des Rechners, Ping versuchte die ganze Adresse, und der Punkt blieb rot, obwohl der Dienst lief. Jetzt klopft TCP an Host und Port des Links, an 80 oder 443, wenn er keinen nennt, und Ping erreicht den Host. So gespeicherte Prüfungen stimmen ab ihrem nächsten Lauf.",
+          "path": "Bearbeiten > Einstellungen einer App-Kachel > Erreichbarkeit prüfen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Das Blatt einer App-Kachel zeigt den Schalter „Erreichbarkeit prüfen“ nur noch einmal, im Kasten der Prüfung."
+      ]
     }
   }
 }
