@@ -39,6 +39,24 @@ function gridWidth(page: Page): Promise<number> {
   return page.evaluate(() => document.querySelector('.board')?.getBoundingClientRect().width ?? 0)
 }
 
+/**
+ * Wait until every card lies inside the board's new width.
+ *
+ * ⚠️ The board is narrower at once; the cards follow a moment later, when the
+ * grid has drawn its new layout. Two equal readings 150 ms apart were taken
+ * for "settled" while the grid had not started yet, and the phone was measured
+ * with the wide arrangement: 3 runs of 28 on 25.09.2026, the cards at left
+ * 1050 on a board 390 wide.
+ */
+async function fitted(page: Page): Promise<void> {
+  await expect.poll(() => page.evaluate(() => {
+    const grid = document.querySelector('.board')
+    if (!grid) return false
+    const right = grid.getBoundingClientRect().right
+    return [...grid.querySelectorAll(':scope > .react-grid-item')].every((element) => element.getBoundingClientRect().right <= right + 1)
+  })).toBe(true)
+}
+
 /** Every card in the order a reader meets them, read once nothing moves any more. */
 async function cards(page: Page): Promise<Board> {
   const measure = () =>
@@ -78,6 +96,7 @@ test('a phone stacks the board in the order of the wide one, a tablet shows it a
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect.poll(() => gridWidth(page)).toBeLessThan(400)
+  await fitted(page)
   const phone = await cards(page)
   expect(phone.cards.map((card) => card.name), 'the phone does not follow the order of the wide board').toEqual(order)
   // The full width or half of it, nothing narrower: a list at a third of a
@@ -92,6 +111,7 @@ test('a phone stacks the board in the order of the wide one, a tablet shows it a
 
   await page.setViewportSize({ width: 820, height: 1180 })
   await expect.poll(() => gridWidth(page)).toBeGreaterThan(700)
+  await fitted(page)
   const tablet = await cards(page)
   expect(tablet.cards.map((card) => card.name), 'the tablet does not show the wide arrangement').toEqual(order)
   // The same arrangement, only narrower: every card starts at the same share of the width.
@@ -109,6 +129,7 @@ test('on a phone, edit mode moves nothing and saves nothing', async ({ page }) =
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page)
   await expect.poll(() => gridWidth(page)).toBeLessThan(400)
+  await fitted(page)
   const before = await cards(page)
 
   await page.getByRole('button', { name: 'Edit board' }).first().click()
