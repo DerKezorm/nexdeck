@@ -246,6 +246,14 @@ class TruenasAdapter(Adapter):
                         message = json.loads(await socket.recv())
                         if message.get("id") == number and "error" in message:
                             return None
+                        # ⚠️ Taken and then ended: TrueNAS answers the
+                        # subscription with an id and only afterwards says it
+                        # stopped, with ``notify_unsubscribed`` (a key whose
+                        # role may not read the statistics). Waiting for an
+                        # event after that cost every refresh the whole wait.
+                        ended = message.get("params") if message.get("method") == "notify_unsubscribed" else None
+                        if isinstance(ended, dict) and str(ended.get("collection") or "").startswith(REALTIME):
+                            return None
                         params = message.get("params") if message.get("method") == "collection_update" else None
                         if isinstance(params, dict) and str(params.get("collection") or "").startswith(REALTIME):
                             fields = params.get("fields")

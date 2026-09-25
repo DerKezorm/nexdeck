@@ -49,11 +49,14 @@ REALTIME = {
 class FakeTruenas:
     """A WebSocket that speaks JSON-RPC like TrueNAS, one per connection."""
 
-    def __init__(self, key: str = KEY, refuse: dict[str, str] | None = None, realtime: dict[str, Any] | None = REALTIME) -> None:
+    def __init__(self, key: str = KEY, refuse: dict[str, str] | None = None, realtime: dict[str, Any] | None = REALTIME,
+                 unsubscribe: str | None = None) -> None:
         self.key = key
         self.refuse = refuse or {}
         #: None: the subscription is taken and no event ever comes.
         self.realtime = realtime
+        #: An errname: the subscription is taken and then ended with it, as in TrueNAS' jsonrpc.rst.
+        self.unsubscribe = unsubscribe
         self.sent: list[dict[str, Any]] = []
         self.opened: list[str] = []
         self.closed = 0
@@ -80,7 +83,12 @@ class FakeTruenas:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": "e88dddb2-aea8-4e41-ba87-08323ffb8b29"}))
             # Another collection first: only the one asked for counts.
             self._pending.append(json.dumps({"jsonrpc": "2.0", "method": "collection_update", "params": {"msg": "changed", "collection": "alert.list", "fields": {}}}))
-            if self.realtime is not None:
+            if self.unsubscribe is not None:
+                self._pending.append(json.dumps({"jsonrpc": "2.0", "method": "notify_unsubscribed", "params": {
+                    "collection": message["params"][0],
+                    "error": {"error": 13, "errname": self.unsubscribe, "reason": "Not authorized", "trace": None, "extra": []},
+                }}))
+            elif self.realtime is not None:
                 self._pending.append(json.dumps({"jsonrpc": "2.0", "method": "collection_update",
                                                  "params": {"msg": "added", "collection": message["params"][0], "fields": self.realtime}}))
         elif method in self.refuse:
@@ -392,7 +400,13 @@ async def test_without_a_realtime_event_the_load_average_stands_in(ctx: Context,
 
     adapter = get_adapter("truenas")
     config = {"url": "https://truenas.example.com", "api_key": KEY}
-    for fake, wait in ((FakeTruenas(refuse={"core.subscribe": "EACCES"}), module.REALTIME_WAIT), (FakeTruenas(realtime=None), 0.05)):
+    cases = (
+        (FakeTruenas(refuse={"core.subscribe": "EACCES"}), module.REALTIME_WAIT),
+        # Taken, then ended: as much an answer as a refusal.
+        (FakeTruenas(unsubscribe="EACCES"), module.REALTIME_WAIT),
+        (FakeTruenas(realtime=None), 0.05),
+    )
+    for fake, wait in cases:
         monkeypatch.setattr(module, "REALTIME_WAIT", wait)
         monkeypatch.setattr(adapter, "_open_socket", fake.open)
         quiet = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
