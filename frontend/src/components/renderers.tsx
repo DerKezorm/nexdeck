@@ -368,12 +368,17 @@ export function StatsCard({ data, series }: RenderProps) {
                 {tLabel(row.label)}
               </div>
               <div className="min-w-0">
-                {worthDrawing(points) ? (
-                  <Sparkline values={points} height={16} min={isPercent ? 0 : undefined} max={isPercent ? 100 : undefined} />
-                ) : isPercent && numeric !== null ? (
+                {/* ⚠️ A percentage is a bar, history or not. The line used to
+                    take the bar's place once five readings had come in, about
+                    two minutes after the card was added, and with it went the
+                    colour that says 75 and 90 per cent. The value card still
+                    draws the history of its one number. */}
+                {isPercent && numeric !== null ? (
                   <div className="bar" data-status={numeric >= 90 ? 'bad' : numeric >= 75 ? 'warn' : 'ok'}>
                     <i style={{ width: `${Math.min(100, numeric)}%` }} />
                   </div>
+                ) : worthDrawing(points) ? (
+                  <Sparkline values={points} height={16} min={isPercent ? 0 : undefined} max={isPercent ? 100 : undefined} />
                 ) : (
                   <div className="bar">
                     <i style={{ width: 0 }} />
@@ -610,6 +615,11 @@ export function CalendarCard({ data }: RenderProps) {
           {entries.map((entry, index) => (
             <div key={index} className="flex items-center gap-2 py-1">
               <span className="dot" data-status={statusOf(entry.status)} />
+              {typeof entry.time === 'string' && (
+                <time dateTime={entry.time} className="num text-[11px] text-muted shrink-0 tabular-nums">
+                  {clockOf(entry.time)}
+                </time>
+              )}
               <span className="text-[13px] font-medium truncate flex-1">{String(entry.title ?? '')}</span>
               <span className="text-[11px] text-muted truncate max-w-[45%]">{tLabel(String(entry.subtitle ?? ''))}</span>
             </div>
@@ -618,6 +628,13 @@ export function CalendarCard({ data }: RenderProps) {
       ))}
     </ul>
   )
+}
+
+/** "18:30" from the server, in the viewer's way of writing a time: 18:30 or 6:30 PM. */
+function clockOf(value: string): string {
+  const [hours, minutes] = value.split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return value
+  return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
 
 function dayLabel(date: string, t: TFunction): string {

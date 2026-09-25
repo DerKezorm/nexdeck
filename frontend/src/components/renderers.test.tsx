@@ -20,6 +20,36 @@ describe('renderers', () => {
     expect(drawn).toBe(DEMO_VIEWS.length)
   })
 
+  it('keeps the bar of a percentage row once its history has come in', () => {
+    const view = { ...DEMO_VIEWS[0], id: 9, renderer: 'stats' } as WidgetView
+    const data = {
+      status: 'ok',
+      primary: { label: 'CPU', value: 82, unit: '%' },
+      metrics: { cpu: 82 },
+      secondary: [{ label: 'Traffic', value: 3.2, unit: 'MB/s', metric: 'rx' }],
+    } as unknown as WidgetData
+    const series = { cpu: [10, 30, 50, 70, 80, 82], rx: [1, 2, 3, 2, 3, 3.2] }
+    render(<>{renderWidget({ widget: view, data, series })}</>)
+    const cpu = screen.getByTitle('CPU').parentElement!
+    const bar = cpu.querySelector('.bar')
+    expect(bar).toHaveAttribute('data-status', 'warn')
+    expect(bar?.querySelector('i')).toHaveStyle({ width: '82%' })
+    expect(cpu.querySelector('svg')).toBeNull()
+    // A row that is not a share keeps its line.
+    expect(screen.getByTitle('Traffic').parentElement!.querySelector('svg')).not.toBeNull()
+  })
+
+  it('shows the time of a timed calendar entry and none for an all-day one', () => {
+    const view = { ...DEMO_VIEWS[0], id: 10, renderer: 'calendar' } as WidgetView
+    const today = new Date().toISOString().slice(0, 10)
+    const data = { status: 'ok', items: [{ date: today, title: 'Holiday' }, { date: today, title: 'Choir', time: '19:30' }] } as unknown as WidgetData
+    const { container } = render(<>{renderWidget({ widget: view, data })}</>)
+    const times = container.querySelectorAll('time')
+    expect(times).toHaveLength(1)
+    expect(times[0]).toHaveAttribute('datetime', '19:30')
+    expect(times[0].closest('div')).toHaveTextContent('Choir')
+  })
+
   it('shows the value and the unit of a value card', () => {
     const view = DEMO_VIEWS.find((v) => v.renderer === 'value')!
     render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} series={DEMO_SERIES[view.id]} />)

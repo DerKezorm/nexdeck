@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **Calendar entries show their time of day.** An appointment from an iCal feed carried only its day. It now shows its time as well, written the way the browser writes times, and a day lists its all-day entries first and then the rest by the clock. A time written in UTC, or with a zone the file names as Google Calendar does, is placed on the server's clock (the `TZ` of the container) one occurrence at a time, so a weekly meeting keeps its hour after the clocks change; a floating time, and a zone the server does not know, are taken as written. An appointment late in the evening in UTC now lands on the right day. A new switch, on by default, leaves out today's appointments once they have ended; one that is under way stays until its end.
+
+### Fixed
+
+- **A percentage row in a stats card keeps its bar.** Once five readings had come in, about two minutes after the card was added, a line took the bar's place, and with it went the colour that marks 75 and 90 per cent. A share is a bar again; rows that are not shares keep their line.
+- **TrueNAS: a statistics subscription that TrueNAS ends is noticed at once.** For a key whose role may not read the statistics, TrueNAS takes the subscription and ends it a moment later with `notify_unsubscribed`. The system card waited five seconds for an event on every refresh; it now falls back to the load average straight away.
+
 ## 0.19.3 (2026-09-25)
 
 ### Fixed

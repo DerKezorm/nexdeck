@@ -1362,7 +1362,9 @@
     "On a gigabit switch that is usually a cable or a device holding the port back.": "An einem Gigabit-Switch bremst dann meist ein Kabel oder ein Gerät den Port aus.",
     "PoE": "PoE",
     "Power over ethernet: the budget, what is drawn, and which ports deliver power.": "Power over Ethernet: das Budget, was gezogen wird und welche Ports Strom liefern.",
-    "A network uplink went down": "Ein Netz-Uplink ist ausgefallen"
+    "A network uplink went down": "Ein Netz-Uplink ist ausgefallen",
+    "Hide what is over": "Vergangenes ausblenden",
+    "Today's appointments leave the card once they have ended. All-day entries stay the whole day.": "Heutige Termine verschwinden von der Karte, sobald sie vorbei sind. Ganztägige Einträge bleiben den ganzen Tag."
   },
   "labels": {
     "Private resources": "Private Ressourcen",

@@ -255,6 +255,110 @@ def test_ics_parser_and_recurrence() -> None:
     assert occurrences(events[2], *window) == [date(2026, 9, 12)], "a yearly rule from 1990 lands on this year's date"
 
 
+TIMED_ICS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Holiday
+DTSTART;VALUE=DATE:20261021
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Standup in UTC
+DTSTART:20261021T090000Z
+DTEND:20261021T091500Z
+RRULE:FREQ=WEEKLY;COUNT=3
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Choir in Berlin
+DTSTART;TZID=Europe/Berlin:20261021T193000
+DTEND;TZID=Europe/Berlin:20261021T210000
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Outlook meeting
+DTSTART;TZID=W. Europe Standard Time:20261021T183000
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Late call
+DTSTART:20261021T233000Z
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+def test_the_ics_parser_keeps_the_time_of_day_on_this_servers_clock() -> None:
+    """A timed entry keeps its time, placed on the server's clock occurrence by occurrence."""
+    from zoneinfo import ZoneInfo
+
+    from app.adapters.ical import on_this_clock
+
+    berlin = ZoneInfo("Europe/Berlin")
+    holiday, standup, choir, outlook, late = parse_ics(TIMED_ICS)
+    assert holiday["all_day"] is True and "clock" not in holiday
+    assert standup["all_day"] is False and standup["length"] == timedelta(minutes=15)
+    days = occurrences(standup, date(2026, 10, 20), date(2026, 11, 10))
+    # The clocks go back on 25 October: 09:00 UTC is 11:00 before, 10:00 after.
+    assert [on_this_clock(standup, day, berlin)[:2] for day in days] == [
+        (date(2026, 10, 21), "11:00"), (date(2026, 10, 28), "10:00"), (date(2026, 11, 4), "10:00"),
+    ]
+    assert on_this_clock(standup, days[0], berlin)[2] == datetime(2026, 10, 21, 11, 15), "over at its end"
+    assert on_this_clock(choir, date(2026, 10, 21), berlin) == (date(2026, 10, 21), "19:30", datetime(2026, 10, 21, 21, 0))
+    assert on_this_clock(choir, date(2026, 10, 21), UTC)[1] == "17:30", "a named zone is placed on the server's clock"
+    assert on_this_clock(outlook, date(2026, 10, 21), UTC)[1] == "18:30", "a zone Python does not know is taken as written"
+    assert on_this_clock(late, date(2026, 10, 21), berlin)[:2] == (date(2026, 10, 22), "01:30"), "late in UTC is tomorrow here"
+    assert on_this_clock(holiday, date(2026, 10, 21), berlin) == (date(2026, 10, 21), None, None)
+
+
+def test_the_calendar_sorts_by_the_clock_and_leaves_out_what_is_over() -> None:
+    from app.adapters.ical import drop_what_is_over, in_order
+
+    items = [
+        {"date": "2026-10-22", "title": "Tomorrow", "time": "08:00", "over": "2026-10-22T09:00"},
+        {"date": "2026-10-21", "title": "Lunch", "time": "12:00", "over": "2026-10-21T13:00"},
+        {"date": "2026-10-21", "title": "Standup", "time": "09:30", "over": "2026-10-21T09:45"},
+        {"date": "2026-10-21", "title": "Meeting", "time": "10:00", "over": "2026-10-21T11:00"},
+        {"date": "2026-10-21", "title": "Release"},
+    ]
+    items.sort(key=in_order)
+    assert [i["title"] for i in items] == ["Release", "Standup", "Meeting", "Lunch", "Tomorrow"], "all-day first, then by the clock"
+    left = drop_what_is_over(items, now=datetime(2026, 10, 21, 10, 30))
+    assert [i["title"] for i in left] == ["Release", "Meeting", "Lunch", "Tomorrow"], "a meeting under way stays until it ends"
+
+
+@respx.mock
+async def test_an_ical_card_shows_the_time_and_hides_what_is_over(monkeypatch: pytest.MonkeyPatch) -> None:
+    import app.adapters.ical as module
+    from app.adapters import get_adapter
+    from app.adapters.base import Context
+
+    monkeypatch.setattr(module, "_now", lambda: datetime(2026, 10, 21, 10, 30))
+    respx.get("https://cal.example.com/family.ics").mock(return_value=httpx.Response(200, text="""BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Review
+DTSTART:20261022T080000
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Lunch
+DTSTART:20261021T120000
+DTEND:20261021T130000
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Standup
+DTSTART:20261021T093000
+DTEND:20261021T094500
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Holiday
+DTSTART;VALUE=DATE:20261021
+END:VEVENT
+END:VCALENDAR
+"""))
+    adapter = get_adapter("ical")
+    config = {"url": "https://cal.example.com/family.ics", "name": "Family"}
+    ctx = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+    shown = await adapter.fetch("events", config, {"days": 7}, ctx)
+    assert [(i["title"], i.get("time")) for i in shown.items] == [("Holiday", None), ("Lunch", "12:00"), ("Review", "08:00")]
+    everything = await adapter.fetch("events", config, {"days": 7, "hide_past": False}, ctx)
+    assert [i["title"] for i in everything.items] == ["Holiday", "Standup", "Lunch", "Review"]
+
+
 # -- prometheus text ---------------------------------------------------------
 
 
