@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **A TCP or ping check on an app tile reaches the service when Target is left empty.** The check then takes the tile's link, and the link is a whole address such as `http://nas:7878`. TCP read `http://nas` as the name of the machine and ping tried to reach the whole address, so the dot stayed red for a service that was up. TCP now knocks at the host and port of the link, 80 or 443 when the link names none, and ping reaches the host; a ping check with `host:port` in Target pings the host. Checks already saved this way are right from their next run, without saving them again. Found while looking into issue #17.
+
 ## 0.19.2 (2026-09-25)
 
 ### Fixed

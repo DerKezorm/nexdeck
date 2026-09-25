@@ -113,6 +113,35 @@ async def check_ping(target: str, timeout: float) -> tuple[bool, int, str]:
     return code == 0, int((time.perf_counter() - started) * 1000), "reply" if code == 0 else "no reply"
 
 
+def shape_target(kind: str, address: str) -> str:
+    """An address as the probe needs it: the URL for HTTP, host:port for TCP, the host for ping.
+
+    ⚠️ The settings sheet sends the tile's link as the target when the Target
+    field is left empty, and the link is a URL. TCP read ``http://nas:7878``
+    as the host ``http://nas`` and failed on the name, ping pinged the whole
+    string, and the dot stayed red for a service that was up. Shaped here, at
+    every check, so the checks already saved that way are right too. Issue #17.
+    """
+    address = address.strip()
+    if kind == "http":
+        return address
+    if "://" not in address:
+        host, _, port = address.rpartition(":")
+        # host:port typed into a ping check; a bare IPv6 address has more colons and stays whole.
+        if kind == "ping" and host and ":" not in host and port.isdigit():
+            return host
+        return address
+    parsed = urlsplit(address)
+    host = parsed.hostname or ""
+    if kind == "ping" or not host:
+        return host
+    try:
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    except ValueError:
+        return address
+    return f"[{host}]:{port}" if ":" in host else f"{host}:{port}"
+
+
 def service_target(kind: str, widget: Widget | None) -> str:
     """The address of a widget's integration, shaped for the check: the URL, host:port, or the host."""
     if widget is None or widget.integration is None:
@@ -131,19 +160,15 @@ def service_target(kind: str, widget: Widget | None) -> str:
         return ""
     if kind == "http" or not url:
         return url
-    parsed = urlsplit(url if "://" in url else f"http://{url}")
-    host = parsed.hostname or ""
-    if kind == "tcp":
-        return f"{host}:{parsed.port or (443 if parsed.scheme == 'https' else 80)}"
-    return host
+    return shape_target(kind, url if "://" in url else f"http://{url}")
 
 
 async def run_check(check: HealthCheck) -> tuple[bool, int, str]:
     timeout = float(check.timeout_seconds or 5)
     if check.kind == "tcp":
-        return await check_tcp(check.target, timeout)
+        return await check_tcp(shape_target("tcp", check.target or ""), timeout)
     if check.kind == "ping":
-        return await check_ping(check.target, timeout)
+        return await check_ping(shape_target("ping", check.target or ""), timeout)
     return await check_http(check.target, timeout, check.expect_status or 0, check.insecure)
 
 

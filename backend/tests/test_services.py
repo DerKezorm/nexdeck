@@ -63,6 +63,59 @@ async def test_tcp_check_needs_host_and_port() -> None:
     assert not ok and "host:port" in detail
 
 
+async def test_a_tcp_or_ping_check_on_a_url_probes_its_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ With Target left empty the settings sheet sends the tile's link, a URL.
+
+    TCP read ``http://nas:7878`` as the host ``http://nas`` and ping pinged the
+    whole string: a red dot for a service that was up. Issue #17.
+    """
+    probed: list[tuple[str, str]] = []
+
+    async def tcp(target: str, timeout: float) -> tuple[bool, int, str]:
+        probed.append(("tcp", target))
+        return True, 1, "open"
+
+    async def ping(target: str, timeout: float) -> tuple[bool, int, str]:
+        probed.append(("ping", target))
+        return True, 1, "reply"
+
+    monkeypatch.setattr(health_service, "check_tcp", tcp)
+    monkeypatch.setattr(health_service, "check_ping", ping)
+    cases = [
+        ("tcp", "http://radarr.example.com:7879/", "radarr.example.com:7879"),
+        ("tcp", "https://radarr.example.com", "radarr.example.com:443"),
+        ("tcp", "http://radarr.example.com/radarr", "radarr.example.com:80"),
+        ("tcp", "http://[fd00::5]:7879", "[fd00::5]:7879"),
+        ("tcp", "radarr.example.com:7879", "radarr.example.com:7879"),
+        ("ping", "http://radarr.example.com:7879/radarr", "radarr.example.com"),
+        ("ping", "radarr.example.com:7879", "radarr.example.com"),
+        ("ping", "radarr.example.com", "radarr.example.com"),
+        ("ping", "fd00::5", "fd00::5"),
+    ]
+    for kind, target, _ in cases:
+        await health_service.run_check(HealthCheck(kind=kind, target=target, timeout_seconds=1))
+    assert probed == [(kind, wanted) for kind, _, wanted in cases]
+
+
+async def test_a_tcp_check_on_a_url_reaches_the_port(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The same, against a real listener: the port of the URL answers, and the check says so."""
+    from app import config
+
+    monkeypatch.setenv("NEXDECK_ALLOW_LOOPBACK_TARGETS", "1")
+    config.reset_settings_cache()
+    server = await asyncio.start_server(lambda _reader, writer: writer.close(), "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    try:
+        ok, _, detail = await health_service.run_check(HealthCheck(kind="tcp", target=f"http://127.0.0.1:{port}/", timeout_seconds=2))
+    finally:
+        server.close()
+        await server.wait_closed()
+        # The settings are cached; loopback must not stay open for the tests after this one.
+        monkeypatch.delenv("NEXDECK_ALLOW_LOOPBACK_TARGETS")
+        config.reset_settings_cache()
+    assert ok and detail == "open", detail
+
+
 def test_outage_is_announced_after_the_threshold(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     setup_admin(client)
     board = client.post("/api/v1/boards", json={"name": "H"}, headers=CSRF).json()
