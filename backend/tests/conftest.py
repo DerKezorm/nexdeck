@@ -40,9 +40,16 @@ def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 @pytest.fixture
 def client(data_dir: Path) -> Iterator[TestClient]:
     from app.main import app
+    from app.services.collector import collector
     from app.services.state import live
 
     live.clear()
+    # ⚠️ The collector outlives the test, and its caches are keyed by
+    # integration id, which starts at 1 in every fresh database. A Reolink
+    # token one test planted stood in the next test's cache, so that test
+    # sent "T1" to the camera instead of the token its own login got. Only
+    # when the planting test ran first, which the full run never does.
+    collector._caches.clear()
     with TestClient(app) as test_client:
         yield test_client
     from app import db
