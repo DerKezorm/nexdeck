@@ -120,6 +120,21 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
     return payload
 
 
+def update_check_on(db: DbSession) -> bool:
+    """Whether the operator lets nexdeck ask GitHub by itself."""
+    return bool(get_setting(db, "general").get("update_check", get_settings().update_check))
+
+
+async def known_latest_version(allowed: bool) -> str | None:
+    """The newest version as far as this installation may know it.
+
+    ⚠️ Asked only when the switch in System allows it. Anything else that shows
+    the version, a card for instance, goes through here: a way out that
+    passes the switch is a way out the operator did not agree to.
+    """
+    return await latest_version() if allowed else _update_cache.get("version")  # type: ignore[return-value]
+
+
 async def latest_version(force: bool = False) -> str | None:
     now = time.monotonic()
     if not force and _update_cache.get("until", 0) > now:

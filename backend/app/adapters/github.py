@@ -194,6 +194,23 @@ class GithubAdapter(Adapter):
             else "Follow fewer projects or give the cards a longer interval.",
         )
 
+    async def newest_release(self, config: dict[str, Any], ctx: Context, repo: str) -> dict[str, Any] | None:
+        """The newest release of one project, for a card that gathers from several places.
+
+        Through the same ETags and the same rate limit as the cards here, so a
+        project asked for on two cards costs one request. None when the
+        project has no release.
+        """
+        answer, _old = await self._get(config, ctx, f"/repos/{repo}/releases/latest")
+        if not isinstance(answer, dict):
+            return None
+        return {
+            "tag": str(answer.get("tag_name") or answer.get("name") or "?"),
+            "url": str(answer.get("html_url") or f"https://github.com/{repo}/releases"),
+            "published": self._stamp(answer.get("published_at") or answer.get("created_at") or ""),
+            "prerelease": bool(answer.get("prerelease")),
+        }
+
     @staticmethod
     def _repos(options: dict[str, Any], presets: bool) -> list[str]:
         own = [line.strip().strip("/") for line in str(options.get("repos") or "").splitlines() if line.strip()]

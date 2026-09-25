@@ -1390,7 +1390,18 @@
     "All of them": "Alle",
     "Warnings and errors": "Warnungen und Fehler",
     "Errors only": "Nur Fehler",
-    "Only unread ones": "Nur ungelesene"
+    "Only unread ones": "Nur ungelesene",
+    "Updates": "Updates",
+    "One list of what has a newer version: containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.": "Eine Liste von allem, was eine neuere Version hat: Container aus What's Up Docker und Cup, ein gescheiterter Watchtower-Lauf, die Projekte, denen du auf GitHub folgst, und nexdeck selbst.",
+    "Container sources": "Container-Quellen",
+    "What's Up Docker": "What's Up Docker",
+    "Cup": "Cup",
+    "Watchtower": "Watchtower",
+    "Watchtower updates by itself; it shows up only when its last run could not update everything.": "Watchtower aktualisiert von selbst; es erscheint nur, wenn sein letzter Lauf nicht alles aktualisieren konnte.",
+    "GitHub projects": "GitHub-Projekte",
+    "One per line, as owner/name, up to ten. Each shows its newest release; one from the last seven days stands out.": "Eins pro Zeile, als besitzer/name, bis zu zehn. Jedes zeigt sein neuestes Release; eines aus den letzten sieben Tagen wird hervorgehoben.",
+    "nexdeck itself": "nexdeck selbst",
+    "Through the update check in System. With that switched off, the card shows what a check by hand found and asks nothing itself.": "Über die Update-Prüfung unter System. Ist sie ausgeschaltet, zeigt die Karte, was eine Prüfung von Hand gefunden hat, und fragt selbst nichts."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2146,6 +2157,12 @@
     "Everything answers.": "Alles antwortet.",
     "No card here has a reachability check.": "Hier hat keine Karte eine Erreichbarkeitsprüfung.",
     "No notices.": "Keine Meldungen.",
-    "This board has no owner whose notices it could show.": "Dieses Board hat keinen Besitzer, dessen Meldungen es zeigen könnte."
+    "This board has no owner whose notices it could show.": "Dieses Board hat keinen Besitzer, dessen Meldungen es zeigen könnte.",
+    "New version": "Neue Version",
+    "Newest release": "Neuestes Release",
+    "pre-release": "Vorabversion",
+    "The last run could not update everything": "Der letzte Lauf konnte nicht alles aktualisieren",
+    "What's Up Docker": "What's Up Docker",
+    "Cup": "Cup"
   }
 }

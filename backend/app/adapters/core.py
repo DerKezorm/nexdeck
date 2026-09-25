@@ -212,6 +212,25 @@ class CoreAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="updates",
+            label="Updates",
+            description="One list of what has a newer version: containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.",
+            renderer="list",
+            default_size=(4, 3),
+            min_size=(2, 2),
+            refresh_seconds=900,
+            options=(
+                Field("sources", "Container sources", type="integrations", default=[],
+                      options=(("wud", "What's Up Docker"), ("cup", "Cup"), ("watchtower", "Watchtower")),
+                      help="Watchtower updates by itself; it shows up only when its last run could not update everything."),
+                Field("repos", "GitHub projects", type="textarea", placeholder="owner/name",
+                      help="One per line, as owner/name, up to ten. Each shows its newest release; one from the last seven days stands out."),
+                Field("nexdeck", "nexdeck itself", type="bool", default=True,
+                      help="Through the update check in System. With that switched off, the card shows what a check by hand found and asks nothing itself."),
+                Field("limit", "Entries", type="number", default=12),
+            ),
+        ),
+        WidgetType(
             kind="app",
             label="App tile",
             description="A launcher tile: icon, name, link and an optional reachability check.",
@@ -294,7 +313,84 @@ class CoreAdapter(Adapter):
             return self._status(ctx, options)
         if widget_kind == "notices":
             return self._notices(ctx, options)
+        if widget_kind == "updates":
+            return await self._updates(ctx, options)
         return self.demo(widget_kind, options, 0)
+
+    async def _updates(self, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """What has a newer version, gathered from every source the card names.
+
+        Each source is asked on its own: one that fails becomes a line above
+        the rows, and the others still speak.
+        """
+        rows: list[dict[str, Any]] = []
+        failures: list[str] = []
+        sources = options.get("sources") or []
+        if isinstance(sources, str):
+            sources = [one for one in sources.split(",") if one.strip()]
+        repos = [line.strip().strip("/") for line in str(options.get("repos") or "").splitlines() if line.strip()][:10]
+        ask_nexdeck = options.get("nexdeck", True)
+        if not sources and not repos and not ask_nexdeck:
+            raise AdapterError("Nothing is chosen to look at.", code="missing_sources",
+                               hint="Open the card's settings and pick a source, a project or nexdeck itself.")
+        for source in sources:
+            try:
+                if ctx.resolve_integration is None:
+                    raise AdapterError("Sources cannot be resolved here.", code="no_resolver")
+                adapter, config, source_ctx = await ctx.resolve_integration(int(source))
+                rows.extend(await waiting_at(adapter, config, source_ctx))
+            except (AdapterError, ValueError, KeyError) as error:
+                failures.append(str(getattr(error, "message", error)))
+        if repos:
+            rows.extend(await self._releases(repos, ctx, failures))
+        if ask_nexdeck:
+            mine = await nexdeck_row()
+            if mine is not None:
+                rows.append(mine)
+        weight = {"bad": 0, "warn": 1}
+        rows.sort(key=lambda row: (weight.get(str(row.get("status")), 2), str(row.get("title") or "").lower()))
+        try:
+            limit = max(1, min(50, int(options.get("limit") or 12)))
+        except (TypeError, ValueError):
+            limit = 12
+        statuses = {row.get("status") for row in rows}
+        return WidgetData(
+            status="bad" if "bad" in statuses else "warn" if "warn" in statuses or failures else "ok",
+            items=rows[:limit],
+            error="; ".join(failures) if failures and not rows else None,
+            meta={"empty": "Everything is up to date.", "notice": "; ".join(failures) if rows else ""},
+        )
+
+    @staticmethod
+    async def _releases(repos: list[str], ctx: Context, failures: list[str]) -> list[dict[str, Any]]:
+        """The newest release of each project, one that came this week stands out."""
+        import time
+
+        from . import get_adapter
+
+        github = get_adapter("github")
+        rows: list[dict[str, Any]] = []
+        for repo in repos:
+            if repo.count("/") != 1:
+                failures.append(f"{repo} is not owner/name.")
+                continue
+            try:
+                release = await github.newest_release({}, ctx, repo)
+            except AdapterError as error:
+                failures.append(f"{repo}: {error.message}")
+                continue
+            if release is None:
+                continue
+            fresh = bool(release["published"]) and time.time() - release["published"] < 7 * 86400
+            rows.append({
+                "title": repo,
+                "subtitle": " · ".join(("Newest release", "pre-release")) if release["prerelease"] else "Newest release",
+                "status": "ok",
+                "value": release["tag"],
+                "url": release["url"],
+                "emphasis": fresh,
+            })
+        return rows
 
     @staticmethod
     def _board_of(db, widget_id: int | None):  # noqa: ANN001, ANN205
@@ -566,6 +662,14 @@ class CoreAdapter(Adapter):
                 {"title": "nexdeck 0.20.0 is out", "subtitle": "", "status": "ok", "emphasis": True, "when": now - 3 * 3600},
                 {"title": "Backup written", "subtitle": "", "status": "ok", "emphasis": False, "when": now - 26 * 3600},
             ], primary={"label": "Unread", "value": 2}, meta={"empty": "No notices.", "headline": True})
+        if widget_kind == "updates":
+            return WidgetData(status="bad", items=[
+                {"title": "Watchtower", "subtitle": "The last run could not update everything", "status": "bad", "value": "1"},
+                {"title": "immich-server", "subtitle": " · ".join(("Major", "What's Up Docker")), "status": "warn", "value": "1.140.1 → 2.0.0"},
+                {"title": "nexdeck", "subtitle": "New version", "status": "warn", "value": "0.19.3 → 0.20.0"},
+                {"title": "ghcr.io/home-assistant/home-assistant", "subtitle": " · ".join(("Minor", "Cup")), "status": "ok", "value": "2026.9.1 → 2026.10.0"},
+                {"title": "jellyfin/jellyfin", "subtitle": "Newest release", "status": "ok", "value": "v10.11.11", "emphasis": True},
+            ], meta={"empty": "Everything is up to date.", "notice": ""})
         if widget_kind == "app":
             return WidgetData(meta={
                 "description": options.get("description") or "",
@@ -573,6 +677,62 @@ class CoreAdapter(Adapter):
                 "open_new_tab": options.get("open_new_tab", True),
             })
         raise KeyError(widget_kind)
+
+
+async def waiting_at(adapter: Adapter, config: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
+    """The rows a container source has waiting, read from its own card.
+
+    What's Up Docker and Cup already list their updates; their rows come
+    along without the ones they could not check and without buttons, which
+    belong to the source's own card. Watchtower keeps no list of what waits,
+    it updates by itself, so it has a row only when its last run failed.
+    """
+    if adapter.kind in ("wud", "cup"):
+        data = await adapter.fetch("updates", config, {"limit": 50}, ctx)
+        rows = []
+        for row in data.items:
+            if row.get("status") == "unknown":
+                continue
+            kept = {key: row[key] for key in ("title", "status", "value", "url") if key in row}
+            kept["subtitle"] = " · ".join(part for part in (str(row.get("subtitle") or ""), adapter.label) if part)
+            rows.append(kept)
+        return rows
+    if adapter.kind == "watchtower":
+        data = await adapter.fetch("summary", config, {}, ctx)
+        failed = int((data.metrics or {}).get("failed") or 0)
+        if not failed:
+            return []
+        return [{"title": adapter.label, "subtitle": "The last run could not update everything", "status": "bad", "value": str(failed)}]
+    return []
+
+
+async def nexdeck_row() -> dict[str, Any] | None:
+    """nexdeck's own row when a newer version is known, through the switch in System."""
+    from .. import __version__
+    from ..db import db_session
+    from ..routers import system
+
+    with db_session() as db:
+        allowed = system.update_check_on(db)
+    newest = await system.known_latest_version(allowed)
+    if not newest or not is_newer(newest, __version__):
+        return None
+    return {"title": "nexdeck", "subtitle": "New version", "status": "warn", "value": f"{__version__} → {newest}",
+            "url": f"{system.REPO_URL}/releases"}
+
+
+def is_newer(offered: str, running: str) -> bool:
+    """0.20.0 over 0.19.3; a version that is not three numbers counts when it differs."""
+    def parts(version: str) -> tuple[int, ...] | None:
+        try:
+            return tuple(int(piece) for piece in version.strip().lstrip("v").split("."))
+        except ValueError:
+            return None
+
+    left, right = parts(offered), parts(running)
+    if left is None or right is None:
+        return offered.strip().lstrip("v") != running.strip().lstrip("v")
+    return left > right
 
 
 def parse_pictures(written: Any) -> list[dict[str, str]]:
