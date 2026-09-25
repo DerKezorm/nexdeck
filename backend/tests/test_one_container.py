@@ -64,6 +64,7 @@ async def test_docker_gives_everything_it_has(ctx: Context) -> None:
 
     assert data.status == "ok"
     assert data.primary["label"] == "CPU" and data.primary["value"] == 40.0
+    assert data.primary["share"] is False, "docker stats counts every core as 100; no share bar for that"
     # The four the container cards used to throw away.
     assert "Network in" in _labels(data) and "Network out" in _labels(data)
     assert "Disk read" in _labels(data) and "Disk written" in _labels(data)
@@ -225,3 +226,13 @@ async def test_proxmox_pays_for_nothing_extra(ctx: Context) -> None:
     assert data.primary["value"] == 12.0
     assert _value(data, "Storage") == 56.2
     assert _value(data, "Node") == "pve"
+
+
+def test_only_a_per_core_number_says_it_is_no_share() -> None:
+    """Proxmox gives a share of the guest's cores; Docker gives a hundred per core."""
+    from app.adapters import containers
+
+    common = {"title": "x", "state": "running", "ok_states": ("running",), "cpu": 40.0, "memory_used": None, "memory_limit": None}
+    assert containers.card(**common).primary["share"] is True
+    assert containers.card(**common, cpu_per_core=True).primary["share"] is False
+    assert get_adapter("docker").demo("load", {}, 0).primary["share"] is False

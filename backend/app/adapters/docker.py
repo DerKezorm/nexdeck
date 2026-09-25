@@ -224,7 +224,8 @@ class DockerAdapter(Adapter):
             memory = sum(s[1] or 0 for s in stats.values())
             return WidgetData(
                 status=status_from_percent(cpu, 300, 600),
-                primary={"label": "CPU", "value": cpu, "unit": "%"},
+                # Per core, as docker stats counts it: eight busy cores are 800.
+                primary={"label": "CPU", "value": cpu, "unit": "%", "share": False},
                 secondary=[
                     {"label": "Memory", "value": human_bytes(memory), "metric": "memory"},
                     {"label": "Containers", "value": len(running)},
@@ -325,7 +326,7 @@ class DockerAdapter(Adapter):
         return containers_one.card(
             title=wanted, state=state, ok_states=("running",),
             cpu=cpu, memory_used=used, memory_limit=limit,
-            extra=extra, history=history,
+            extra=extra, history=history, cpu_per_core=True,
             actions=self._actions_for(state, entry.get("Id", "")),
         )
 
@@ -405,7 +406,7 @@ class DockerAdapter(Adapter):
             cpu = round(sum(i["cpu"] or 0 for i in items), 1)
             memory = sum(fake.walk(f"mem-{n}", tick, 60, 900) for n in names)
             return WidgetData(
-                primary={"label": "CPU", "value": cpu, "unit": "%"},
+                primary={"label": "CPU", "value": cpu, "unit": "%", "share": False},
                 secondary=[{"label": "Memory", "value": f"{memory / 1024:.1f} GB", "metric": "memory"}, {"label": "Containers", "value": running}],
                 metrics={"cpu": cpu, "memory": memory},
                 meta={"cpu_unit": "%", "memory_unit": "MB"},

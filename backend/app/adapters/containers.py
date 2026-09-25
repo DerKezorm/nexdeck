@@ -62,6 +62,7 @@ def card(
     extra: list[dict[str, Any]] | None = None,
     actions: list[dict[str, Any]] | None = None,
     history: bool = True,
+    cpu_per_core: bool = False,
 ) -> WidgetData:
     """The rows, in the order every one of these cards uses them.
 
@@ -87,8 +88,9 @@ def card(
 
     return WidgetData(
         status="ok" if state in ok_states else ("unknown" if not state else "bad"),
+        # Docker counts every core as 100, so its number is no share of anything.
         primary={"label": "CPU", "value": cpu, "unit": "%" if cpu is not None else "",
-                 "metric": "cpu" if history else ""},
+                 "metric": "cpu" if history else "", "share": not cpu_per_core},
         secondary=rows,
         metrics=measured_now,
         meta={"title": title, "cpu_unit": "%", "memory_unit": "MB",

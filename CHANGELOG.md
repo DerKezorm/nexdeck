@@ -19,7 +19,7 @@ project uses semantic versioning.
 ### Fixed
 
 - **An app tile that came from the demo checks its address again.** The demo board makes its app tiles with their reachability checks switched off, because they point at example.com. Installations from before 0.17 kept those tiles when the demo was left, and the settings sheet sent the switched-off flag back on every save without showing it anywhere, so a demo tile edited into a real service stayed grey for good, with no answer and no bars. Saving a tile with **Check reachability** on now always switches its check on, and the update switches on the checks of app tiles that no longer point at example.com. Reported in issue #17.
-- **A percentage row in a stats card keeps its bar.** Once five readings had come in, about two minutes after the card was added, a line took the bar's place, and with it went the colour that marks 75 and 90 per cent. A share is a bar again; rows that are not shares keep their line.
+- **A percentage row in a stats card keeps its bar.** Once five readings had come in, about two minutes after the card was added, a line took the bar's place, and with it went the colour that marks 75 and 90 per cent. A share is a bar again; rows that are not shares keep their line, and so does a percentage that is no share of anything: Docker and Portainer count every core as 100, so their 127 per cent is a quiet host and not a full red bar.
 - **TrueNAS: a statistics subscription that TrueNAS ends is noticed at once.** For a key whose role may not read the statistics, TrueNAS takes the subscription and ends it a moment later with `notify_unsubscribed`. The system card waited five seconds for an event on every refresh; it now falls back to the load average straight away.
 
 ## 0.19.3 (2026-09-25)

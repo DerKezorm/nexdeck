@@ -374,7 +374,7 @@ export function GaugeCard({ data }: RenderProps) {
 
 export function StatsCard({ data, series }: RenderProps) {
   const rows: Secondary[] = []
-  if (data?.primary) rows.push({ label: data.primary.label ?? '', value: data.primary.value, unit: data.primary.unit, metric: Object.keys(data.metrics ?? {})[0] })
+  if (data?.primary) rows.push({ label: data.primary.label ?? '', value: data.primary.value, unit: data.primary.unit, metric: Object.keys(data.metrics ?? {})[0], share: (data.primary as Secondary).share })
   rows.push(...(data?.secondary ?? []))
   return (
     <div className="flex-1 flex flex-col px-3 pb-2.5 min-h-0 scroll">
@@ -382,6 +382,10 @@ export function StatsCard({ data, series }: RenderProps) {
         {rows.map((row, index) => {
           const numeric = typeof row.value === 'number' ? row.value : null
           const isPercent = row.unit === '%'
+          // ⚠️ Only a share is a bar. Docker counts every core as 100, so its
+          // 127 is a quiet host and was drawn as a full red bar beside a
+          // green dot. Such a row says so, and anything over 100 is no share.
+          const isShare = isPercent && numeric !== null && numeric >= 0 && numeric <= 100 && row.share !== false
           const points = row.metric ? series?.[row.metric] : undefined
           return (
             // A row may say more than fits beside its bar: "3.1 GB of 7.8 GB" on hover.
@@ -396,7 +400,7 @@ export function StatsCard({ data, series }: RenderProps) {
                     two minutes after the card was added, and with it went the
                     colour that says 75 and 90 per cent. The value card still
                     draws the history of its one number. */}
-                {isPercent && numeric !== null ? (
+                {isShare && numeric !== null ? (
                   <div className="bar" data-status={numeric >= 90 ? 'bad' : numeric >= 75 ? 'warn' : 'ok'}>
                     <i style={{ width: `${Math.min(100, numeric)}%` }} />
                   </div>

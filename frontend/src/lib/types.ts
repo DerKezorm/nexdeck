@@ -74,6 +74,8 @@ export interface Secondary {
   part?: string
   /** What the row would say if there were room, shown on hover. */
   hint?: string
+  /** False for a percentage that is no share of a whole, such as Docker's CPU per core. */
+  share?: boolean
 }
 
 export interface WidgetData {

@@ -39,6 +39,20 @@ describe('renderers', () => {
     expect(screen.getByTitle('Traffic').parentElement!.querySelector('svg')).not.toBeNull()
   })
 
+  it('draws no share bar for a percentage that is no share', () => {
+    // Docker counts every core as 100: 127 is a quiet host, and 60 of eight cores no warning either.
+    const view = { ...DEMO_VIEWS[0], id: 13, renderer: 'stats' } as WidgetView
+    const colouredBar = (primary: Record<string, unknown>) => {
+      const { container, unmount } = render(<>{renderWidget({ widget: view, data: { status: 'ok', primary } as unknown as WidgetData })}</>)
+      const found = container.querySelector('.bar[data-status]')
+      unmount()
+      return found
+    }
+    expect(colouredBar({ label: 'CPU', value: 127, unit: '%' })).toBeNull()
+    expect(colouredBar({ label: 'CPU', value: 60, unit: '%', share: false })).toBeNull()
+    expect(colouredBar({ label: 'CPU', value: 60, unit: '%' })).not.toBeNull()
+  })
+
   it('shows the time of a timed calendar entry and none for an all-day one', () => {
     const view = { ...DEMO_VIEWS[0], id: 10, renderer: 'calendar' } as WidgetView
     const today = new Date().toISOString().slice(0, 10)

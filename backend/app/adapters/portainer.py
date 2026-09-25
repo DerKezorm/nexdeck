@@ -225,7 +225,7 @@ class PortainerAdapter(Adapter):
         return containers_one.card(
             title=wanted, state=state, ok_states=("running",),
             cpu=cpu, memory_used=used, memory_limit=limit, extra=extra,
-            history=bool(options.get("history", True)),
+            history=bool(options.get("history", True)), cpu_per_core=True,
             actions=DockerAdapter._actions_for(state, entry.get("Id", "")),
         )
 
