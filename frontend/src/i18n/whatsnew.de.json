@@ -745,6 +745,20 @@
       "small": [
         "Zwei Tests, die unter Last ab und zu scheiterten, laufen wieder stabil."
       ]
+    },
+    "0.19.2": {
+      "lead": "„Zuletzt hinzugefügt“ zeigt eine Serie einmal, und Cover liegen nicht mehr übereinander.",
+      "sections": [
+        {
+          "title": "Ein Cover je Serie",
+          "body": "Plex führte jede neue Folge einzeln, zehn neue Folgen einer Serie waren also zehnmal dasselbe Cover. Jetzt ist eine Serie ein Cover an der Stelle ihrer neuesten Folge, darunter die Zahl der neuen Folgen. Eine einzelne neue Folge behält Nummer und Titel. Jellyfin und Emby zählen ihre neuen Folgen genauso.",
+          "path": "Bearbeiten > Widget hinzufügen > Plex > Zuletzt hinzugefügt"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Cover in einer zu niedrigen Karte halten ihre Zeilen auseinander, und die Karte blättert; das gilt für jede Cover-Karte."
+      ]
     }
   }
 }

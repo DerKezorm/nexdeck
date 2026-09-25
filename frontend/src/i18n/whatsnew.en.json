@@ -745,6 +745,20 @@
       "small": [
         "Two tests that failed now and then under load are steady again."
       ]
+    },
+    "0.19.2": {
+      "lead": "Recently added shows a series once, and covers no longer lie over each other.",
+      "sections": [
+        {
+          "title": "One cover per series",
+          "body": "Plex listed every new episode on its own, so ten new episodes of one show were ten times the same cover. A series is now one cover at the place of its newest episode, with the number of new episodes under it. A single new episode keeps its number and title. Jellyfin and Emby count their new episodes the same way.",
+          "path": "Edit mode (pencil) > Add widget > Plex > Recently added"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Covers in a card too low for them keep their rows apart and the card scrolls, on every cover card."
+      ]
     }
   }
 }
