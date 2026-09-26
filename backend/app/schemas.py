@@ -316,6 +316,7 @@ class IntegrationPatch(BaseModel):
     enabled: bool | None = None
     demo: bool | None = None
     admin_only: bool | None = None
+    muted: bool | None = None
 
 
 class IntegrationTest(BaseModel):

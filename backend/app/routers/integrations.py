@@ -53,7 +53,7 @@ def _public(db: DbSession, integration: Integration) -> dict:
         "id": integration.id, "kind": integration.kind, "label": adapter.label, "icon": adapter.icon, "beta": adapter.beta,
         "name": integration.name, "config": public_config(integration), "enabled": integration.enabled, "demo": integration.demo,
         "last_ok_at": integration.last_ok_at, "last_error": integration.last_error, "widget_count": int(widgets),
-        "admin_only": integration.admin_only,
+        "admin_only": integration.admin_only, "muted": integration.muted,
         "created_at": integration.created_at,
     }
 
@@ -130,10 +130,21 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
         if body.admin_only != integration.admin_only:
             changed.append("reserved for administrators" if body.admin_only else "open to everyone")
         integration.admin_only = body.admin_only
-    integration.last_error = ""
+    if body.muted is not None:
+        if body.muted != integration.muted:
+            changed.append("muted" if body.muted else "notices on again")
+        integration.muted = body.muted
+    # ⚠️ The bell alone leaves the cards alone. Rescheduling logs every card
+    # of the connection in again and wipes its last error, for a switch that
+    # changes nothing about how they talk to the service.
+    only_the_bell = body.model_dump(exclude_unset=True).keys() <= {"muted"}
+    if not only_the_bell:
+        integration.last_error = ""
     db.commit()
     if changed:
         logger.info("Connection %r (%s): %s, by %s.", integration.name, integration.kind, "; ".join(changed), user.username)
+    if only_the_bell:
+        return _public(db, integration)
     collector.reschedule_integration(integration.id, farewell)
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)

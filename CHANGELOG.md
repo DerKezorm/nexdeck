@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **A connection can be muted.** A bell stands next to every connection under Settings > Integrations. One click crosses it out, and from then on nothing about that connection is told anywhere: not in the bell at the top, not on Telegram, e-mail, ntfy, Gotify, Discord, Slack or Apprise, not as a browser push. That covers its outages and recoveries, a card that stopped working or had its credentials rejected, finished downloads, new requests and what its buttons did. The cards keep running and the connection keeps its settings; which events go to which channel is still chosen on the channel. An app tile that only links to the same service has its own check and is muted on the tile. Requested in issue #20.
+
 ## 0.22.0 (2026-09-26)
 
 ### New

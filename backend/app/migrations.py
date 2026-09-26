@@ -150,6 +150,10 @@ def _session_kind_columns(connection: Connection) -> None:
     _add_column(connection, "sessions", "address", "VARCHAR(64) NOT NULL DEFAULT ''")
 
 
+def _muted_column(connection: Connection) -> None:
+    _add_column(connection, "integrations", "muted", "BOOLEAN NOT NULL DEFAULT 0")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -165,6 +169,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (12, "An upload knows its own fingerprint", _asset_digest_column),
     (13, "A session says how it was opened, and from where", _session_kind_columns),
     (14, "App tiles that left the demo check their address again", _demo_checks_back_on),
+    (15, "A connection can be muted", _muted_column),
 ]
 
 

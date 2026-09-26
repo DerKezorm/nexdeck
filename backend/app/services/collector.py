@@ -366,7 +366,7 @@ class Collector:
             logger.debug("Widget %s changed while it was being read; the older answer is dropped.", widget_id)
             return interval
 
-        self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options)
+        self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options, integration_id)
         live.set(widget_id, data)
         kept = history.recorded(data)
         if kept:
@@ -490,7 +490,8 @@ class Collector:
             return WidgetData(status="unknown", error=f"Unexpected error: {error.__class__.__name__}.", meta={"code": "crash"})
 
     def _tell_about(self, widget_id: int, title: str, adapter: Any, widget_kind: str,
-                    before: WidgetData | None, after: WidgetData, options: dict[str, Any]) -> None:
+                    before: WidgetData | None, after: WidgetData, options: dict[str, Any],
+                    integration_id: int | None = None) -> None:
         """Ask the adapter what happened, and pass it on once.
 
         ⚠️ Once. A card refreshing every thirty seconds would otherwise send
@@ -498,7 +499,7 @@ class Collector:
         already costs more trust than the first one earns.
         """
         if after.error:
-            self._tell_about_failure(widget_id, title, after)
+            self._tell_about_failure(widget_id, title, after, integration_id)
             return
         self._broken.discard(widget_id)
         try:
@@ -515,9 +516,9 @@ class Collector:
             self._forget_old_keys(now)
             logger.info("%s on %r: %s", detected.event, title, detected.title)
             emit(detected.event, detected.title, detected.body,
-                 level="warn" if detected.level in ("warn", "bad") else "info")
+                 level="warn" if detected.level in ("warn", "bad") else "info", integration_id=integration_id)
 
-    def _tell_about_failure(self, widget_id: int, title: str, data: WidgetData) -> None:
+    def _tell_about_failure(self, widget_id: int, title: str, data: WidgetData, integration_id: int | None = None) -> None:
         """A card that stopped working, said once and not on every retry."""
         if widget_id in self._broken:
             return
@@ -525,9 +526,9 @@ class Collector:
         code = str((data.meta or {}).get("code") or "")
         if code == "auth_failed":
             emit("auth_rejected", f"{title}: the service rejected its credentials",
-                 data.error or "", level="warn")
+                 data.error or "", level="warn", integration_id=integration_id)
         else:
-            emit("widget_broken", f"{title} stopped working", data.error or "", level="warn")
+            emit("widget_broken", f"{title} stopped working", data.error or "", level="warn", integration_id=integration_id)
 
     def _forget_old_keys(self, now: float) -> None:
         """⚠️ Without this the note of what was already told grows for the life

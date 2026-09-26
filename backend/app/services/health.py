@@ -245,7 +245,7 @@ class HealthService:
 
         await asyncio.gather(*(one(row) for row in snapshot))
 
-    def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str] | None]:
+    def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]:
         """Unknown, not down: no result, no outage, no message."""
         with db_session() as db:
             check = db.scalar(select(HealthCheck).options(selectinload(HealthCheck.widget)).where(HealthCheck.id == check_id))
@@ -266,15 +266,15 @@ class HealthService:
         """Write the result and tell whoever is listening, in one call."""
         self._announce(self._write(check_id, ok, latency, detail))
 
-    def _announce(self, outcome: tuple[int | None, dict, tuple[str, str, str, str] | None]) -> None:
+    def _announce(self, outcome: tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]) -> None:
         board_id, payload, announce = outcome
         if board_id is not None:
             hub.publish(board_topic(board_id), "health", payload)
         if announce is not None:
-            event, title, body, level = announce
-            notify.emit(event, title, body, level=level)
+            event, title, body, level, integration_id = announce
+            notify.emit(event, title, body, level=level, integration_id=integration_id)
 
-    def _write(self, check_id: int, ok: bool, latency: int, detail: str) -> tuple[int | None, dict, tuple[str, str, str, str] | None]:
+    def _write(self, check_id: int, ok: bool, latency: int, detail: str) -> tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]:
         """The database half: everything that must not run on the event loop."""
         settings = get_settings()
         now = utcnow()
@@ -290,12 +290,14 @@ class HealthService:
             check.last_checked_at = now
             check.last_error = "" if ok else detail[:300]
             name = (check.widget.title if check.widget else "") or check.target
+            # A check on a card of a muted connection is as quiet as the card.
+            integration_id = check.widget.integration_id if check.widget else None
             board_id = None
             if check.widget is not None:
                 page = db.get(Page, check.widget.page_id)
                 board_id = page.board_id if page else None
                 history.record(db, check.widget.id, {"latency": float(latency), "up": 1.0 if ok else 0.0})
-            announce: tuple[str, str, str, str] | None = None
+            announce: tuple[str, str, str, str, int | None] | None = None
             if ok:
                 if check.down_since is not None:
                     open_outage = db.scalar(
@@ -305,7 +307,7 @@ class HealthService:
                         open_outage.ended_at = now
                         if open_outage.announced:
                             length = int((now - open_outage.started_at).total_seconds())
-                            announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info")
+                            announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info", integration_id)
                 check.down_since = None
             else:
                 if check.down_since is None:
@@ -319,7 +321,7 @@ class HealthService:
                         )
                         if open_outage is not None and not open_outage.announced:
                             open_outage.announced = True
-                            announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error")
+                            announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error", integration_id)
             payload = {
                 "check_id": check.id, "widget_id": check.widget_id, "ok": ok, "latency_ms": latency,
                 "detail": detail, "down_since": check.down_since.isoformat() if check.down_since else None,

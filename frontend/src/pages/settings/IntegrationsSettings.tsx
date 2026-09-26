@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
+import { Bell, BellOff, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -9,7 +9,7 @@ import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
-import { Confirm, Field, Select, Sheet, Switch } from '../../components/ui'
+import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
 import { useAuth } from '../../stores/auth'
@@ -28,6 +28,18 @@ export function IntegrationsSettings() {
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
   const [adapterSearch, setAdapterSearch] = useState('')
+  const [bellFailed, setBellFailed] = useState('')
+
+  /** The bell of one connection, flipped where it stands. Nothing to open, nothing to save. */
+  const toggleBell = async (integration: Integration) => {
+    setBellFailed('')
+    try {
+      await patch(`/integrations/${integration.id}`, { muted: !integration.muted })
+      await integrations.refetch()
+    } catch (failure) {
+      setBellFailed(failure instanceof ApiError ? failure.message : t('settings.integrations.bellFailed'))
+    }
+  }
 
   useEffect(() => {
     if (params.get('add')) {
@@ -100,6 +112,15 @@ export function IntegrationsSettings() {
               <span className="dot" data-status={!integration.enabled ? 'unknown' : integration.last_error ? 'bad' : integration.last_ok_at || integration.demo ? 'ok' : 'unknown'} />
               {admin && (
                 <>
+                  <button
+                    className={`btn btn-icon h-7 w-7 ${integration.muted ? 'text-muted' : ''}`}
+                    onClick={() => void toggleBell(integration)}
+                    aria-pressed={integration.muted}
+                    aria-label={t(integration.muted ? 'settings.integrations.unmute' : 'settings.integrations.mute', { name: integration.name })}
+                    title={t(integration.muted ? 'settings.integrations.mutedHelp' : 'settings.integrations.notifyHelp')}
+                  >
+                    {integration.muted ? <BellOff size={14} /> : <Bell size={14} />}
+                  </button>
                   <button className="btn h-7 text-xs" onClick={() => setEditing(integration)}>
                     {t('common.edit')}
                   </button>
@@ -111,6 +132,11 @@ export function IntegrationsSettings() {
             </li>
           ))}
         </ul>
+        {bellFailed && (
+          <Toast level="error" onClose={() => setBellFailed('')}>
+            {bellFailed}
+          </Toast>
+        )}
       </SettingsCard>
       {admin && (
         <SettingsCard title={t('settings.integrations.add')} description={t('settings.integrations.addHelp')}>

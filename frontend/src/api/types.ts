@@ -108,6 +108,8 @@ export interface Integration {
   demo: boolean
   /** Locked: only administrators may build cards on it, and only they see it listed. */
   admin_only: boolean
+  /** Muted: nothing about it reaches the bell or a channel. Its cards keep running. */
+  muted: boolean
   last_ok_at: string | null
   last_error: string
   widget_count: number

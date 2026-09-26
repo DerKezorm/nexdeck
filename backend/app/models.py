@@ -306,6 +306,9 @@ class Integration(Base):
     #: Locked: only administrators may build cards on this connection. Users
     #: still see its cards on a board that was shared with them.
     admin_only: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: Muted: nothing this connection or its cards notice is told, neither in
+    #: the bell nor on any channel. The cards keep running.
+    muted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     last_ok_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)

@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy import select
 
 from ..db import db_session
-from ..models import Notice, NotificationChannel, Role, Subscription, User
+from ..models import Integration, Notice, NotificationChannel, Role, Subscription, User
 from .loop import spawn
 from .sse import hub, user_topic
 
@@ -55,11 +55,21 @@ class Message:
 
 
 def emit(event: str, title: str, body: str = "", *, level: str = "info", link: str = "",
-         user_ids: list[int] | None = None) -> None:
-    """Create notices and dispatch channels. Safe to call from anywhere in the loop."""
+         user_ids: list[int] | None = None, integration_id: int | None = None) -> None:
+    """Create notices and dispatch channels. Safe to call from anywhere in the loop.
+
+    ``integration_id`` names the connection the news is about. A muted one is
+    told nowhere: not in the bell, not on a channel. One check here instead of
+    one at every caller, so a new kind of news cannot forget it.
+    """
     message = Message(event=event, title=title[:200], body=body, level=level, link=link)
     targets: list[int] = []
     with db_session() as db:
+        if integration_id is not None:
+            integration = db.get(Integration, integration_id)
+            if integration is not None and integration.muted:
+                logger.debug("%s about muted connection %r not told: %s", event, integration.name, message.title)
+                return
         if user_ids is None:
             targets = list(db.scalars(select(User.id).where(User.role == Role.admin.value, User.disabled.is_(False))))
         else:
