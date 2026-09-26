@@ -860,7 +860,7 @@
     "notifyNote": "Wohin nexdeck schreibt, wenn etwas passiert. Apprise allein spricht mit hundert weiteren.",
     "builtWith": "Gebaut mit",
     "family": "Die nexapps-Familie",
-    "familyNote": "Nexview fragt Filme und Serien an, nexmail ist der Mail-Client, nexpulse misst die Leitung, nexdeck sieht den Maschinen zu, auf denen sie laufen."
+    "familyNote": "Nexview fragt Filme und Serien an, nexmail ist der Mail-Client, nexpulse misst die Leitung, nexcrate holt Filme, Serien und Musik, nexbeat findet Musik, nextrmnl öffnet SSH und SFTP im Browser, und nexdeck sieht den Maschinen zu, auf denen sie laufen."
   },
   "status": {
     "ok": "Alles in Ordnung",
