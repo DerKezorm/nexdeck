@@ -815,6 +815,20 @@
         "Eine Prozentzeile in einer Stats-Karte behält ihren Balken; Docker-CPU, je Kern gezählt, behält ihre Linie.",
         "TrueNAS: Ein Schlüssel ohne Recht auf die Statistik kostet die System-Karte nicht mehr bei jedem Abruf fünf Sekunden."
       ]
+    },
+    "0.21.0": {
+      "lead": "nextrmnl kommt aufs Board: laufende SSH-Sitzungen, die letzten davon und ob deine Verbindungen antworten. Die Über-Seite nennt die ganze nexapps-Familie.",
+      "sections": [
+        {
+          "title": "nextrmnl",
+          "body": "Vier Karten aus dem Verbindungsmanager der nexapps-Familie: sein Zustand, wer gerade wohin verbunden ist, die letzten Sitzungen und wie sie endeten, und ob jede Verbindung antwortet. Antwortet ein Server mit einem anderen Hostschlüssel, wird die Karte rot. Es braucht nextrmnl 0.3.0 oder neuer und dort einen Lese-Schlüssel, der kein Terminal, keine Datei und keinen Tresor öffnet.",
+          "path": "Einstellungen > Anbindungen > nextrmnl"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Über-Seite nennt in der Familienzeile nexcrate, nexbeat und nextrmnl neben Nexview, nexmail und nexpulse."
+      ]
     }
   }
 }

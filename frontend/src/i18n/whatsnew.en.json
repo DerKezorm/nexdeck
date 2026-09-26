@@ -815,6 +815,20 @@
         "A percentage row in a stats card keeps its bar; Docker's CPU, counted per core, keeps its line.",
         "TrueNAS: a key that may not read statistics no longer costs the system card five seconds on every refresh."
       ]
+    },
+    "0.21.0": {
+      "lead": "nextrmnl joins the board: live SSH sessions, the latest ones and whether your connections answer. The About page names the whole nexapps family.",
+      "sections": [
+        {
+          "title": "nextrmnl",
+          "body": "Four cards from the connection manager of the nexapps family: its status, who is connected where right now, the latest sessions and how they ended, and whether each connection answers. A server that answers with another host key turns the card red. It needs nextrmnl 0.3.0 or newer and a read-only API key from there, which opens no terminal, no file and no vault.",
+          "path": "Settings > Integrations > nextrmnl"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The About page names nexcrate, nexbeat and nextrmnl in the family line, next to Nexview, nexmail and nexpulse."
+      ]
     }
   }
 }
