@@ -47,7 +47,12 @@
       "nexpulse_busy": "nexpulse is already running a test. The card shows it as soon as it is done.",
       "nexpulse_source_off": "This source is turned off in nexpulse. Turn it on there, or pick another source in the card's settings.",
       "nexpulse_source_unknown": "nexpulse does not know this source. Pick another one in the card's settings.",
-      "nexpulse_bad_range": "nexpulse does not know this period. Pick another one in the card's settings."
+      "nexpulse_bad_range": "nexpulse does not know this period. Pick another one in the card's settings.",
+      "nextrmnl_key_missing": "nextrmnl received no API key. Enter the key in this connection.",
+      "nextrmnl_key_invalid": "nextrmnl does not know this key, it was deleted, or the account that made it is no operator any more. Create a new key in nextrmnl under Settings → Security → API keys.",
+      "nextrmnl_keys_off": "API keys are switched off on this nextrmnl. The operator switches them on under Settings → Security → API keys.",
+      "nextrmnl_refused": "nextrmnl refused the request.",
+      "nextrmnl_too_old": "This nextrmnl has no API for dashboards yet. It needs a version with API keys."
     }
   },
   "auth": {

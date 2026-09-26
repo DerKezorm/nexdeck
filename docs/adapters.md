@@ -44,6 +44,7 @@ that one of twenty-one renderers draws.
 | UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
 | Speedtest Tracker | latest, history | | API token |
 | Public IP address | address | | none (ipify or ipwho.is) |
+| nextrmnl | status, sessions, history, connections | | read-only API key from nextrmnl 0.3.0 or newer, with API keys switched on |
 | nexpulse | latest result (a running test live, a button to start one), history (speed or ping idle and under load), period summary, recent tests, latency under load (graded A+ to F) | | API key from nexpulse under Settings > API keys; a key that may only read fills every card, one with "Read and start tests" adds the button. nexpulse 0.1.1 or newer tells nexdeck which kind of key it is; on 0.1.0 the button is always shown |
 | Traefik | overview, routers | | none, or basic authentication |
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |

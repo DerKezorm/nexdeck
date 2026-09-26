@@ -1411,7 +1411,19 @@
     "Newest videos of the channels an account follows. Needs a connection with an API key, and the account's subscriptions have to be public.": "Die neuesten Videos der Kanäle, die ein Konto abonniert hat. Braucht eine Anbindung mit API-Schlüssel, und die Abos des Kontos müssen öffentlich sein.",
     "Only for the Subscriptions card: a key for the YouTube Data API v3 from the Google Cloud console. The Videos card needs none.": "Nur für die Abo-Karte: ein Schlüssel für die YouTube Data API v3 aus der Google Cloud Console. Die Video-Karte braucht keinen.",
     "The channel whose subscriptions are read, as a handle with @ or the ID starting with UC.": "Der Kanal, dessen Abos gelesen werden, als Handle mit @ oder als ID, die mit UC beginnt.",
-    "The most active first, at most 50. The list is read once a day; each channel is one free feed.": "Die aktivsten zuerst, höchstens 50. Die Liste wird einmal am Tag gelesen; jeder Kanal ist ein kostenloser Feed."
+    "The most active first, at most 50. The list is read once a day; each channel is one free feed.": "Die aktivsten zuerst, höchstens 50. Die Liste wird einmal am Tag gelesen; jeder Kanal ist ein kostenloser Feed.",
+    "Live SSH sessions, the latest ones and whether your connections answer, from nextrmnl, through a read-only API key.": "Laufende SSH-Sitzungen, die letzten Sitzungen und ob deine Verbindungen antworten, aus nextrmnl, über einen Lese-Schlüssel.",
+    "The address nextrmnl is reached at.": "Die Adresse, unter der nextrmnl erreichbar ist.",
+    "A key from nextrmnl under Settings → Security → API keys. The operator makes it, and API keys have to be switched on there.": "Ein Schlüssel aus nextrmnl unter Einstellungen → Sicherheit → API-Schlüssel. Der Betreiber legt ihn an, und API-Schlüssel müssen dort eingeschaltet sein.",
+    "Live sessions, today's sessions and failures, connections, and whether an update waits.": "Laufende Sitzungen, die heutigen Sitzungen und Fehlschläge, Verbindungen und ob ein Update wartet.",
+    "Live sessions": "Laufende Sitzungen",
+    "Who is connected where right now, and since when.": "Wer gerade wohin verbunden ist, und seit wann.",
+    "Latest sessions": "Letzte Sitzungen",
+    "The latest sessions and how they ended; a changed host key stands out.": "Die letzten Sitzungen und wie sie endeten; ein geänderter Hostschlüssel fällt auf.",
+    "Between 1 and 100.": "Zwischen 1 und 100.",
+    "Connections": "Verbindungen",
+    "Whether the port of each connection answers, and how fast.": "Ob der Port jeder Verbindung antwortet, und wie schnell.",
+    "Only what does not answer": "Nur was nicht antwortet"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2174,6 +2186,17 @@
     "The last run could not update everything": "Der letzte Lauf konnte nicht alles aktualisieren",
     "What's Up Docker": "What's Up Docker",
     "Cup": "Cup",
-    "Swap": "Auslagerung"
+    "Swap": "Auslagerung",
+    "Live sessions": "Laufende Sitzungen",
+    "Failed today": "Heute gescheitert",
+    "Connections": "Verbindungen",
+    "Cut off": "Abgebrochen",
+    "Host key changed": "Hostschlüssel geändert",
+    "No live session.": "Keine laufende Sitzung.",
+    "No session yet.": "Noch keine Sitzung.",
+    "Every connection answers.": "Jede Verbindung antwortet.",
+    "No connection yet.": "Noch keine Verbindung.",
+    "An update of nextrmnl is out.": "Ein Update von nextrmnl ist erschienen.",
+    "A server answered with another host key than before.": "Ein Server hat mit einem anderen Hostschlüssel geantwortet als zuvor."
   }
 }

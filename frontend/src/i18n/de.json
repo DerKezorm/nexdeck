@@ -47,7 +47,12 @@
       "nexpulse_busy": "nexpulse misst gerade schon. Die Karte zeigt das Ergebnis, sobald der Test fertig ist.",
       "nexpulse_source_off": "Diese Quelle ist in nexpulse abgeschaltet. Schalte sie dort ein oder wähle in den Karteneinstellungen eine andere Quelle.",
       "nexpulse_source_unknown": "nexpulse kennt diese Quelle nicht. Wähle in den Karteneinstellungen eine andere.",
-      "nexpulse_bad_range": "nexpulse kennt diesen Zeitraum nicht. Wähle in den Karteneinstellungen einen anderen."
+      "nexpulse_bad_range": "nexpulse kennt diesen Zeitraum nicht. Wähle in den Karteneinstellungen einen anderen.",
+      "nextrmnl_key_missing": "nextrmnl hat keinen API-Schlüssel erhalten. Trage den Schlüssel in dieser Anbindung ein.",
+      "nextrmnl_key_invalid": "nextrmnl kennt diesen Schlüssel nicht, er wurde gelöscht, oder das Konto, das ihn angelegt hat, ist kein Betreiber mehr. Leg in nextrmnl unter Einstellungen → Sicherheit → API-Schlüssel einen neuen an.",
+      "nextrmnl_keys_off": "API-Schlüssel sind in diesem nextrmnl abgeschaltet. Einschalten kann sie der Betreiber unter Einstellungen → Sicherheit → API-Schlüssel.",
+      "nextrmnl_refused": "nextrmnl hat die Anfrage abgelehnt.",
+      "nextrmnl_too_old": "Dieses nextrmnl hat noch keine API für Dashboards. Es braucht eine Fassung mit API-Schlüsseln."
     }
   },
   "auth": {

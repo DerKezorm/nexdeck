@@ -7,7 +7,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-134-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-135-3fb6d4)](#the-services-it-speaks-to)
 [![Website](https://img.shields.io/badge/nexdeck.nexapps.dev-3fb6d4?logo=readthedocs&logoColor=white)](https://nexdeck.nexapps.dev)
 
 ![A nexdeck board: clock, search, weather, Docker load, Pi-hole, what is playing on Plex, monitors, app tiles and feeds](docs/screenshot-overview.png)
@@ -15,7 +15,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **134 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **135 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
@@ -107,7 +107,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 ## The services it speaks to
 
-**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Kopia, Duplicati, Portainer, Nomad, Cup, Coolify, Gitea, Forgejo, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, Glances, Beszel, Prometheus, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN, Backrest, Komodo, Netdata, Ollama, Open WebUI, Watchtower, What's Up Docker, Zabbix.
+**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Kopia, Duplicati, Portainer, Nomad, Cup, Coolify, Gitea, Forgejo, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, Glances, Beszel, Prometheus, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN, Backrest, Komodo, Netdata, Ollama, Open WebUI, Watchtower, What's Up Docker, Zabbix, nextrmnl.
 
 **Network.** Public IP address, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, Traefik, Nginx Proxy Manager, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, nexpulse, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
 
