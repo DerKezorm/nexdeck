@@ -75,12 +75,25 @@ def valid_name(name: str) -> bool:
 
 
 async def fetch_icon(name: str, ext: str) -> tuple[bytes, str] | None:
-    """Return ``(bytes, content_type)`` or None when no source has the icon."""
+    """Return ``(bytes, content_type)`` or None when no source has the icon.
+
+    ⚠️ The browser asks for every logo as ``.svg``, and some exist only as a
+    PNG: Dockhand and ReadMeABook in both collections (checked 26.09.2026).
+    They showed the grey box. An SVG nobody has is therefore answered with
+    the PNG, under its own content type, which an ``<img>`` draws the same.
+    """
     if not valid_name(name) or ext not in ("svg", "png", "webp"):
         return None
     shipped = BUNDLED / f"{name}.svg"
     if ext == "svg" and shipped.is_file():
         return shipped.read_bytes(), _content_type("svg")
+    found = await _from_the_collections(name, ext)
+    if found is None and ext == "svg":
+        found = await _from_the_collections(name, "png")
+    return found
+
+
+async def _from_the_collections(name: str, ext: str) -> tuple[bytes, str] | None:
     key = f"{name}.{ext}"
     cached = _cache_dir() / key
     max_age = get_settings().icon_cache_days * 86400
@@ -142,10 +155,13 @@ async def _names(source: str, tree_url: str) -> list[str]:
         if response.status_code == 200:
             for entry in response.json().get("tree", []):
                 path = entry.get("path", "")
-                if path.startswith("svg/") and path.endswith(".svg"):
-                    names.append(path[4:-4])
+                # A logo that exists only as a PNG is served too; see fetch_icon.
+                for folder in ("svg", "png"):
+                    if path.startswith(f"{folder}/") and path.endswith(f".{folder}"):
+                        names.append(path[len(folder) + 1:-len(folder) - 1])
     except (httpx.HTTPError, ValueError) as error:
         logger.info("Icon index %s unavailable: %s", source, error.__class__.__name__)
+    names = sorted(set(names))
     if names:
         file.write_text(json.dumps(names), encoding="utf-8")
     _index[source] = (time.monotonic() + (INDEX_SECONDS if names else 300), names)

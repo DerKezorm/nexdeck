@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import httpx
 import pytest
@@ -382,6 +383,47 @@ def test_icon_names_and_search_merge_both_collections(client: TestClient, monkey
     hits = client.get("/api/v1/icons/search?q=rad").json()
     assert [entry["name"] for entry in hits] == ["radarr", "radarr-4k"]
     assert client.get("/api/v1/icons/search?q=nothing-here").json() == []
+
+
+def test_a_logo_that_exists_only_as_a_png_is_served_for_the_svg(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The browser asks for every logo as .svg; Dockhand's is a PNG in both collections and drew the grey box."""
+    from app.services import icons
+
+    asked: list[str] = []
+
+    async def cdn(_self: object, url: str, **_kwargs: object) -> httpx.Response:
+        asked.append(url.rsplit("/", 2)[-2] + "/" + url.rsplit("/", 1)[-1])
+        if url.endswith("/png/dockhand.png") or url.endswith("/svg/arcane.svg"):
+            return httpx.Response(200, content=b"\x89PNG-bytes" if url.endswith(".png") else b"<svg/>")
+        return httpx.Response(404)
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", cdn)
+    monkeypatch.setattr(icons, "_negative", {})
+    logo = client.get("/api/v1/icons/dockhand.svg")
+    assert logo.status_code == 200 and logo.headers["content-type"] == "image/png"
+    assert logo.content == b"\x89PNG-bytes"
+    assert asked == ["svg/dockhand.svg", "svg/dockhand.svg", "png/dockhand.png"], "both collections for the SVG first"
+    asked.clear()
+    again = client.get("/api/v1/icons/dockhand.svg")
+    assert again.headers["content-type"] == "image/png" and asked == [], "from the cache, the missing SVG remembered"
+    svg = client.get("/api/v1/icons/arcane.svg")
+    assert svg.headers["content-type"].startswith("image/svg+xml") and asked == ["svg/arcane.svg"]
+    assert client.get("/api/v1/icons/nothing-at-all.svg").status_code == 404
+
+
+async def test_the_picker_lists_logos_that_exist_only_as_a_png(data_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import icons
+
+    async def tree(_self: object, url: str, **_kwargs: object) -> httpx.Response:
+        return httpx.Response(200, json={"tree": [{"path": "svg/arcane.svg"}, {"path": "png/arcane.png"}, {"path": "png/dockhand.png"},
+                                                  {"path": "webp/dockhand.webp"}, {"path": "README.md"}]})
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", tree)
+    monkeypatch.setattr(icons, "_index", {})
+    try:
+        assert await icons._names("dashboard-icons", "https://api.github.example/tree") == ["arcane", "dockhand"]
+    finally:
+        await icons.close_client()
 
 
 def test_bundled_logos_are_served_and_listed_without_network(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:

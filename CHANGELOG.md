@@ -9,6 +9,10 @@ project uses semantic versioning.
 
 - **Dockhand.** The Docker manager, read through its API across every environment it manages, those it reaches directly and those behind its Hawser agent. Five cards: an **overview** of running and unhealthy containers, stacks, environments, image updates, images, volumes and networks, all from one request; **environments** with whether each answers, how many of its containers run, and its processor and memory; **stacks** with their state and how many of their containers run; **containers** with their health; and **image updates**, the containers Dockhand found a newer image for. Every card but the environments can be narrowed to one environment. An environment Dockhand cannot reach is named as such, even though Dockhand answers its lists as if it were empty. An empty update list says whether Dockhand checks on a schedule or has simply not been asked. A token from Profile > API tokens, or none when Dockhand's sign-in is off. Requested in issue #21.
 
+### Fixed
+
+- **Logos that exist only as a picture file show up.** The browser asks for every logo as a drawing (SVG), and some services have none in either collection, only a PNG: ReadMeABook and Dockhand among them. Their cards and tiles showed a grey box. The server now answers with the PNG when there is no SVG, and the logo picker lists those names too.
+
 ## 0.23.0 (2026-09-26)
 
 ### New
