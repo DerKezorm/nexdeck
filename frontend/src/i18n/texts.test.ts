@@ -66,6 +66,12 @@ describe('server texts', () => {
     // Dockhand's environment and update rows.
     expect(translateText('labels', 'Online · CPU 3.4 % · Memory 41 % · 2 unhealthy')).toBe('Online · CPU 3.4 % · Speicher 41 % · 2 ungesund')
     expect(translateText('labels', 'redis:7.2 · 7.4.1 available · Main')).toBe('redis:7.2 · 7.4.1 verfügbar · Main')
+    // UrBackup, Elasticsearch, OpenWrt and Kubernetes rows.
+    expect(translateText('labels', 'File backup overdue · File backup 3 d ago · Offline, last seen 2 h ago')).toBe('Dateisicherung überfällig · Dateisicherung vor 3 d · Nicht erreichbar, zuletzt vor 2 h')
+    expect(translateText('labels', 'No room for a replica · 5 documents')).toBe('Kein Platz für ein Replikat · 5 Dokumente')
+    expect(translateText('labels', 'Static address · 192.168.1.1/24 · up 4m 19s')).toBe('Feste Adresse · 192.168.1.1/24 · seit 4m 19s')
+    expect(translateText('labels', 'Crashing · shop · 3 restarts')).toBe('Stürzt ab · shop · 3 Neustarts')
+    expect(translateText('labels', '14 min ago')).toBe('vor 14 min')
   })
 
   it('leave unknown text alone', async () => {

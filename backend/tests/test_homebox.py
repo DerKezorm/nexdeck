@@ -51,7 +51,8 @@ async def test_the_inventory_in_numbers(ctx: Context) -> None:
     assert statistics.calls.last.request.headers["Authorization"] == "Bearer hb_made_up_key"
     assert data.primary == {"label": "Things", "value": 6}
     # ⚠️ Measured: the statistics count four batteries at 5.00 as 20.00.
-    assert data.secondary == [{"label": "Total value", "value": "1,147.49 USD"}, {"label": "Locations", "value": 8}]
+    assert data.secondary == [{"label": "Total value", "value": "1,147.49 USD", "part": "value"},
+                              {"label": "Locations", "value": 8, "part": "locations"}]
     assert data.metrics == {"items": 6.0}
 
 
@@ -120,3 +121,93 @@ async def test_the_connection_test(ctx: Context) -> None:
         "latest": {"version": "v0.26.3", "date": "2026-06-14 01:57:51 +0000 UTC"}, "demo": False, "allowRegistration": True}))
     respx.get(f"{HB}/api/v1/groups/statistics").mock(return_value=httpx.Response(200, json=STATISTICS))
     assert await get_adapter("homebox").test(CONFIG, ctx) == "Homebox v0.26.2 answers with 6 items."
+
+
+# -- measured again on 26.09.2026, v0.26.2 and v0.25.0 side by side ----------
+
+ACCOUNT = {"url": HB, "username": "tester@example.com", "password": "a-password-for-the-cards"}
+TOKEN = {"token": "Bearer made-up-session-token", "expiresAt": "2026-10-03T21:39:38.427325409Z", "attachmentToken": "made-up"}
+PLACES = [{"id": "a", "name": "Garage", "total": 134}, {"id": "b", "name": "Office", "total": 1199}, {"id": "c", "name": "Kitchen", "total": 349.9}]
+TAGS = [{"id": "d", "name": "Tools", "total": 129}, {"id": "e", "name": "Kitchen", "total": 349.9}, {"id": "f", "name": "Electronics", "total": 1682.9}]
+
+
+@respx.mock
+async def test_without_a_key_the_account_signs_in_once(ctx: Context) -> None:
+    """⚠️ Homebox 0.25 has no API keys; its token already says Bearer."""
+    login = respx.post(f"{HB}/api/v1/users/login").mock(return_value=httpx.Response(200, json=TOKEN))
+    statistics = respx.get(f"{HB}/api/v1/groups/statistics").mock(return_value=httpx.Response(200, json=STATISTICS))
+    respx.get(f"{HB}/api/v1/groups").mock(return_value=httpx.Response(200, json=GROUP))
+    await get_adapter("homebox").fetch("inventory", ACCOUNT, {}, ctx)
+    await get_adapter("homebox").fetch("inventory", ACCOUNT, {}, ctx)
+    assert login.call_count == 1
+    assert statistics.calls.last.request.headers["Authorization"] == "Bearer made-up-session-token"
+    import json
+    assert json.loads(login.calls.last.request.content) == {"username": "tester@example.com", "password": "a-password-for-the-cards", "stayLoggedIn": False}
+
+
+@respx.mock
+async def test_a_token_let_go_early_is_replaced_once(ctx: Context) -> None:
+    login = respx.post(f"{HB}/api/v1/users/login").mock(side_effect=[httpx.Response(200, json=TOKEN),
+                                                                     httpx.Response(200, json={**TOKEN, "token": "Bearer a-new-one"})])
+    respx.get(f"{HB}/api/v1/groups/statistics").mock(side_effect=[httpx.Response(401, json={"error": "unauthorized"}),
+                                                                  httpx.Response(200, json=STATISTICS)])
+    data = await get_adapter("homebox").fetch("inventory", ACCOUNT, {"currency": "EUR"}, ctx)
+    assert data.primary == {"label": "Things", "value": 6} and login.call_count == 2
+
+
+@respx.mock
+async def test_a_wrong_password_and_a_key_on_an_old_homebox(ctx: Context) -> None:
+    respx.post(f"{HB}/api/v1/users/login").mock(return_value=httpx.Response(401, json={"error": "unauthorized"}))
+    with pytest.raises(AuthFailed, match="e-mail or the password"):
+        await get_adapter("homebox").fetch("inventory", ACCOUNT, {}, ctx)
+    respx.get(f"{HB}/api/v1/groups/statistics").mock(return_value=httpx.Response(401, json={"error": "unauthorized"}))
+    with pytest.raises(AuthFailed, match="before 0.26 have no keys"):
+        await get_adapter("homebox").fetch("inventory", CONFIG, {}, ctx)
+
+
+@respx.mock
+async def test_the_export_falls_back_to_the_old_address_and_remembers_it(ctx: Context) -> None:
+    new = respx.get(f"{HB}/api/v1/entities/export").mock(return_value=httpx.Response(404, text="404 page not found"))
+    old = respx.get(f"{HB}/api/v1/items/export").mock(return_value=httpx.Response(200, text=EXPORT))
+    data = await get_adapter("homebox").fetch("warranties", CONFIG, {"days": 3650}, ctx)
+    assert {row["title"] for row in data.items} == {"Wifi Router", "Cordless Drill", "Coffee Machine"}
+    assert ctx.cache["homebox_export"] == "/items/export"
+    # The answers are cached as well; without them only the remembered address is asked.
+    remembered = {"homebox_export": ctx.cache["homebox_export"]}
+    await get_adapter("homebox").fetch("warranties", CONFIG, {"days": 30}, Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache=remembered))
+    assert new.call_count == 1 and old.call_count == 2, "the old address first once it is known"
+
+
+@respx.mock
+async def test_a_given_currency_spares_the_question_and_the_value_can_stay_off(ctx: Context) -> None:
+    respx.get(f"{HB}/api/v1/groups/statistics").mock(return_value=httpx.Response(200, json=STATISTICS))
+    group = respx.get(f"{HB}/api/v1/groups").mock(return_value=httpx.Response(200, json=GROUP))
+    data = await get_adapter("homebox").fetch("inventory", CONFIG, {"currency": "EUR"}, ctx)
+    assert data.secondary[0]["value"] == "1,147.49 EUR" and not group.called
+    await get_adapter("homebox").fetch("inventory", CONFIG, {"show_value": False}, ctx)
+    assert not group.called, "no currency needed for a value that is not shown"
+
+
+@respx.mock
+async def test_value_by_place_largest_first_with_shares(ctx: Context) -> None:
+    respx.get(f"{HB}/api/v1/groups").mock(return_value=httpx.Response(200, json=GROUP))
+    respx.get(f"{HB}/api/v1/groups/statistics/locations").mock(return_value=httpx.Response(200, json=PLACES))
+    data = await get_adapter("homebox").fetch("worth", CONFIG, {}, ctx)
+    assert [(row["title"], row["value"], row["subtitle"], row["progress"]) for row in data.items] == [
+        ("Office", "1,199.00 USD", "71 %", 71.2), ("Kitchen", "349.90 USD", "21 %", 20.8), ("Garage", "134.00 USD", "8 %", 8.0)]
+    assert "not listed" in data.meta["notice"]
+
+
+@respx.mock
+async def test_value_by_tag(ctx: Context) -> None:
+    respx.get(f"{HB}/api/v1/groups/statistics/tags").mock(return_value=httpx.Response(200, json=TAGS))
+    data = await get_adapter("homebox").fetch("worth", CONFIG, {"by": "tag", "currency": "EUR", "limit": 2}, ctx)
+    assert [(row["title"], row["value"]) for row in data.items] == [("Electronics", "1,682.90 EUR"), ("Kitchen", "349.90 EUR")]
+    assert "counts for both" in data.meta["notice"]
+
+
+@pytest.mark.parametrize("kind", [widget.kind for widget in get_adapter("homebox").widgets])
+def test_demo_has_every_card(kind: str) -> None:
+    for tick in range(3):
+        card = get_adapter("homebox").demo(kind, {}, tick)
+        assert card.items or card.primary

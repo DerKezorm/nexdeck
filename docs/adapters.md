@@ -35,6 +35,9 @@ that one of twenty-one renderers draws.
 | Komodo | stacks, deployments, overview | restart a stack | API key and secret of a user, best a service user, with Read on stacks, deployments and servers and Execute on a stack to restart it; Komodo 2 |
 | Arcane | overview, environments, projects, containers, image updates | start, stop and restart a container; start, stop, redeploy and update a project; update a container to its newer image | API key from Settings > API keys; environments:list, containers:list and projects:list for the cards, images:list, volumes:list and networks:list for the overview's counts, and containers:start, containers:stop, containers:restart, projects:deploy, projects:down, projects:update and image-updates:check for the buttons; Arcane 2.14 |
 | Dockhand | overview, environments, stacks, containers, image updates | | API token from Profile > API tokens, or nothing when Dockhand's sign-in is switched off; a token may do everything its user may, and in the free edition every user may do everything, though the cards only read; Dockhand 1.0 |
+| Kubernetes | cluster, nodes, workloads, pods in trouble | | service account token bound to the ClusterRole view and to a ClusterRole with get and list on nodes (view alone does not reach nodes); usage figures need metrics-server |
+| UrBackup | overview, machines, backups | | an account of the web interface with the rights status and progress, or nothing when UrBackup has no account; finished backups need an administrator |
+| Elasticsearch and OpenSearch | cluster health, indices, nodes | | Elasticsearch: an API key (the encoded value) or a user; OpenSearch: a user; the cluster privilege monitor and the index privilege monitor are enough |
 | Netdata | raised alerts, load per node, alerts | | none; the agent's API is open, and a parent answers for every node that streams to it |
 | Ollama | loaded models, installed models, models | unload a model | none; Ollama has no sign-in, so its port stays inside the network |
 | Open WebUI | users, models, accounts | | API key of an administrator from Settings > Account > API keys; API keys have to be switched on in the admin settings, they are off by default |
@@ -52,6 +55,7 @@ that one of twenty-one renderers draws.
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
 | OPNsense | system, gateways | | API key and secret |
 | pfSense | system, interfaces | | API key of the package pfSense-pkg-RESTAPI |
+| OpenWrt | router, interfaces, DHCP devices | | root, or an rpcd login with the read groups luci-mod-status-index, luci-mod-status-index-dhcp and luci-base-network-status (the last also reads the wireless configuration); needs LuCI or uhttpd-mod-ubus |
 | MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
 | SNMP (switches and network devices) | device, ports, port traffic, findings, PoE | | SNMPv3 user with SHA and AES, read only; or an SNMPv2c community, which travels unencrypted. Any vendor, standard MIBs only (IF-MIB, EtherLike, ENTITY, POWER-ETHERNET, LLDP); never writes |
 | FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
@@ -128,7 +132,7 @@ that one of twenty-one renderers draws.
 | evcc | energy, charging | | none; the state is readable without a password |
 | BookOrbit | reading now, recently added, library | | user and password; BookOrbit has no API keys and allows five sign-ins a minute, so the token is kept |
 | Ghostfolio | portfolio, holdings | | security token of the account from Settings > Access; it is exchanged for a JWT that lasts 180 days |
-| Homebox | inventory, warranties | | API key from Profile > API Keys; Homebox shows it only once |
+| Homebox | inventory, value by place or tag, warranties | | API key from Profile > API Keys (Homebox 0.26 and newer; shown only once), or the account's e-mail and password on older versions |
 | PhotoPrism | photo library, recently added | start indexing | app password from Settings > Account > Apps and Devices; a client access token cannot list photos |
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
