@@ -829,6 +829,20 @@
       "small": [
         "Die Über-Seite nennt in der Familienzeile nexcrate, nexbeat und nextrmnl neben Nexview, nexmail und nexpulse."
       ]
+    },
+    "0.22.0": {
+      "lead": "Arcane kommt aufs Board: jede Docker-Umgebung, die es verwaltet, mit ihren Projekten, Containern und wartenden Image-Updates, und den Knöpfen dazu.",
+      "sections": [
+        {
+          "title": "Arcane",
+          "body": "Fünf Karten aus dem Docker-Verwalter Arcane, über die lokale Umgebung und jede hinter seinen Agenten: ein Überblick, die Umgebungen und ob jede antwortet, Projekte mit Starten, Stoppen, neu Ausrollen und Aktualisieren, Container mit ihrer Gesundheit und Starten, Stoppen und Neustarten, und die Container mit neuerem Image, je mit einem Knopf, der es holt und den Container neu anlegt. Jede Karte außer den Umgebungen lässt sich auf eine Umgebung beschränken. Ein eingeschränkter API-Schlüssel aus Arcane reicht; das Verbindungsblatt nennt, welche Rechte jede Karte und jeder Knopf braucht.",
+          "path": "Einstellungen > Anbindungen > Arcane"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Gewünscht in Issue #18. Gemessen an Arcane 2.14.0 mit einem Agenten; Rückmeldungen zu anderen Versionen sind willkommen."
+      ]
     }
   }
 }

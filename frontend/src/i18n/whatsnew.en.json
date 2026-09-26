@@ -829,6 +829,20 @@
       "small": [
         "The About page names nexcrate, nexbeat and nextrmnl in the family line, next to Nexview, nexmail and nexpulse."
       ]
+    },
+    "0.22.0": {
+      "lead": "Arcane joins the board: every Docker environment it manages, with its projects, containers and waiting image updates, and the buttons to act on them.",
+      "sections": [
+        {
+          "title": "Arcane",
+          "body": "Five cards from the Docker manager Arcane, across the local environment and every one behind its agents: an overview, the environments and whether each answers, projects with start, stop, redeploy and update, containers with their health and start, stop and restart, and the containers with a newer image, each with a button that pulls it and recreates the container. Every card but the environments can be narrowed to one environment. A scoped API key from Arcane is enough; the connection sheet lists the permissions each card and button needs.",
+          "path": "Settings > Integrations > Arcane"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Requested in issue #18. Measured against Arcane 2.14.0 with one agent; a report from other versions is welcome."
+      ]
     }
   }
 }
