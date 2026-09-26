@@ -63,6 +63,9 @@ describe('server texts', () => {
     expect(translateText('labels', 'signed in, no plays · Chrome ×2')).toBe('angemeldet, keine Wiedergaben · Chrome ×2')
     expect(translateText('labels', '10 new episodes')).toBe('10 neue Folgen')
     expect(translateText('labels', 'Season 3')).toBe('Staffel 3')
+    // Dockhand's environment and update rows.
+    expect(translateText('labels', 'Online · CPU 3.4 % · Memory 41 % · 2 unhealthy')).toBe('Online · CPU 3.4 % · Speicher 41 % · 2 ungesund')
+    expect(translateText('labels', 'redis:7.2 · 7.4.1 available · Main')).toBe('redis:7.2 · 7.4.1 verfügbar · Main')
   })
 
   it('leave unknown text alone', async () => {

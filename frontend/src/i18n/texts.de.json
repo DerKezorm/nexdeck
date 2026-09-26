@@ -1445,7 +1445,16 @@
     "Latest requests": "Neueste Anfragen",
     "The newest requests with who asked and where each one stands; failed ones turn red.": "Die neuesten Anfragen, wer sie gestellt hat und wo jede steht; fehlgeschlagene werden rot.",
     "Only open requests": "Nur offene Anfragen",
-    "Leaves out what is downloaded, available, denied or cancelled.": "Lässt weg, was heruntergeladen, verfügbar, abgelehnt oder abgebrochen ist."
+    "Leaves out what is downloaded, available, denied or cancelled.": "Lässt weg, was heruntergeladen, verfügbar, abgelehnt oder abgebrochen ist.",
+    "Every Docker environment Dockhand manages: containers with their health, compose stacks and the image updates it found.": "Jede Docker-Umgebung, die Dockhand verwaltet: Container mit ihrer Gesundheit, Compose-Stacks und die Image-Updates, die es gefunden hat.",
+    "A token from Profile > API tokens, starting with dh_. Empty when sign-in is switched off in Dockhand. A token may do everything its user may, and in Dockhand's free edition that is everything; the cards only read.": "Ein Token aus Profile > API tokens, beginnt mit dh_. Leer lassen, wenn die Anmeldung in Dockhand abgeschaltet ist. Ein Token darf alles, was sein Benutzer darf, und in der kostenlosen Fassung von Dockhand ist das alles; die Karten lesen nur.",
+    "Dockhand overview": "Dockhand-Überblick",
+    "Running containers of every environment, with the unhealthy ones, stacks, environments, image updates, images, volumes and networks.": "Laufende Container aller Umgebungen, dazu die ungesunden, Stacks, Umgebungen, Image-Updates, Images, Volumes und Netzwerke.",
+    "Every environment with whether it answers, how many of its containers run, and its processor and memory.": "Jede Umgebung, ob sie antwortet, wie viele ihrer Container laufen, und ihr Prozessor und Speicher.",
+    "Processor and memory": "Prozessor und Speicher",
+    "Compose stacks with their state and how many of their containers run, troubled ones first.": "Compose-Stacks mit ihrem Zustand und wie viele ihrer Container laufen, die mit Problemen zuerst.",
+    "Containers with their state and health, troubled ones first.": "Container mit Zustand und Gesundheit, die mit Problemen zuerst.",
+    "Containers whose image has a newer version, as Dockhand recorded when it last checked.": "Container, deren Image eine neuere Version hat, wie Dockhand es bei seiner letzten Prüfung festgehalten hat."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2259,6 +2268,11 @@
     "No request yet.": "Noch keine Anfrage.",
     "Requests": "Anfragen",
     "Downloads": "Downloads",
-    "Download running": "Download läuft"
+    "Download running": "Download läuft",
+    "No containers.": "Keine Container.",
+    "No compose stacks.": "Keine Compose-Stacks.",
+    "Dockhand manages no environment yet.": "Dockhand verwaltet noch keine Umgebung.",
+    "Everything is up to date, as Dockhand last checked.": "Alles ist aktuell, nach Dockhands letzter Prüfung.",
+    "No update recorded. Dockhand's scheduled update check is off, so it records one only when somebody checks.": "Kein Update festgehalten. Dockhands geplante Update-Prüfung ist aus, es hält also nur etwas fest, wenn jemand prüft."
   }
 }
