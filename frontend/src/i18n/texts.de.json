@@ -1436,7 +1436,16 @@
     "Every environment with whether it answers and how many of its containers run.": "Jede Umgebung, ob sie antwortet und wie viele ihrer Container laufen.",
     "Compose projects with their state, troubled ones first, with start, stop, redeploy and update.": "Compose-Projekte mit ihrem Zustand, die mit Problemen zuerst, mit Starten, Stoppen, neu Ausrollen und Aktualisieren.",
     "Containers with their state and health, troubled ones first, with start, stop and restart.": "Container mit Zustand und Gesundheit, die mit Problemen zuerst, mit Starten, Stoppen und Neustarten.",
-    "Containers whose image has a newer version, as Arcane last checked, with a button to pull it and recreate the container.": "Container, deren Image eine neuere Version hat, nach Arcanes letzter Prüfung, mit einem Knopf, der sie holt und den Container neu anlegt."
+    "Containers whose image has a newer version, as Arcane last checked, with a button to pull it and recreate the container.": "Container, deren Image eine neuere Version hat, nach Arcanes letzter Prüfung, mit einem Knopf, der sie holt und den Container neu anlegt.",
+    "Audiobook requests, what is downloading and how ReadMeABook is doing, through an administrator's API token.": "Hörbuch-Anfragen, was gerade lädt und wie es ReadMeABook geht, über den API-Token eines Administrators.",
+    "An rmab_ token of an administrator, from Profile > API Tokens. A user's token is not let near the figures the cards read. Needs ReadMeABook 1.2.0 or newer.": "Ein rmab_-Token eines Administrators, aus Profile > API Tokens. Der Token eines Benutzers kommt an die Zahlen, die die Karten lesen, nicht heran. Braucht ReadMeABook 1.2.0 oder neuer.",
+    "ReadMeABook overview": "ReadMeABook-Überblick",
+    "What is downloading, all requests, what finished and failed in the last 30 days, the users, and ReadMeABook's own health.": "Was gerade lädt, alle Anfragen, was in den letzten 30 Tagen fertig wurde und was fehlschlug, die Nutzer und ReadMeABooks eigener Zustand.",
+    "Books downloading right now, with how far they are, the speed and the time left.": "Bücher, die gerade laden, mit Fortschritt, Tempo und Restzeit.",
+    "Latest requests": "Neueste Anfragen",
+    "The newest requests with who asked and where each one stands; failed ones turn red.": "Die neuesten Anfragen, wer sie gestellt hat und wo jede steht; fehlgeschlagene werden rot.",
+    "Only open requests": "Nur offene Anfragen",
+    "Leaves out what is downloaded, available, denied or cancelled.": "Lässt weg, was heruntergeladen, verfügbar, abgelehnt oder abgebrochen ist."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2234,6 +2243,22 @@
     "Arcane has redeployed the project.": "Arcane hat das Projekt neu ausgerollt.",
     "Arcane has pulled the new images and recreated the project.": "Arcane hat die neuen Images geholt und das Projekt neu angelegt.",
     "Arcane has pulled the new image and recreated the container.": "Arcane hat das neue Image geholt und den Container neu angelegt.",
-    "Arcane found nothing newer to update to.": "Arcane hat nichts Neueres gefunden."
+    "Arcane found nothing newer to update to.": "Arcane hat nichts Neueres gefunden.",
+    "Awaiting approval": "Wartet auf Freigabe",
+    "Nothing found yet": "Noch nichts gefunden",
+    "Processing": "Wird verarbeitet",
+    "Awaiting import": "Wartet auf Import",
+    "Downloaded": "Heruntergeladen",
+    "Needs attention": "Braucht einen Blick",
+    "Denied": "Abgelehnt",
+    "Searching": "Sucht",
+    "Done in 30 days": "Fertig in 30 Tagen",
+    "Failed in 30 days": "Fehlgeschlagen in 30 Tagen",
+    "Nothing is downloading.": "Gerade lädt nichts.",
+    "No open request.": "Keine offene Anfrage.",
+    "No request yet.": "Noch keine Anfrage.",
+    "Requests": "Anfragen",
+    "Downloads": "Downloads",
+    "Download running": "Download läuft"
   }
 }

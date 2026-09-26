@@ -52,7 +52,9 @@
       "nextrmnl_key_invalid": "nextrmnl kennt diesen Schlüssel nicht, er wurde gelöscht, oder das Konto, das ihn angelegt hat, ist kein Betreiber mehr. Leg in nextrmnl unter Einstellungen → Sicherheit → API-Schlüssel einen neuen an.",
       "nextrmnl_keys_off": "API-Schlüssel sind in diesem nextrmnl abgeschaltet. Einschalten kann sie der Betreiber unter Einstellungen → Sicherheit → API-Schlüssel.",
       "nextrmnl_refused": "nextrmnl hat die Anfrage abgelehnt.",
-      "nextrmnl_too_old": "Dieses nextrmnl hat noch keine API für Dashboards. Es braucht eine Fassung mit API-Schlüsseln."
+      "nextrmnl_too_old": "Dieses nextrmnl hat noch keine API für Dashboards. Es braucht eine Fassung mit API-Schlüsseln.",
+      "readmeabook_not_admin": "Dieser Token gehört einem Benutzer, keinem Administrator, und ReadMeABook zeigt seine Zahlen nur Administratoren. Leg den Token an, während du als Administrator angemeldet bist.",
+      "readmeabook_too_old": "Dieses ReadMeABook lässt API-Tokens seine Zahlen nicht lesen. Es braucht Version 1.2.0 oder neuer."
     }
   },
   "auth": {

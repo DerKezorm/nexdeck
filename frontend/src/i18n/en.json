@@ -52,7 +52,9 @@
       "nextrmnl_key_invalid": "nextrmnl does not know this key, it was deleted, or the account that made it is no operator any more. Create a new key in nextrmnl under Settings → Security → API keys.",
       "nextrmnl_keys_off": "API keys are switched off on this nextrmnl. The operator switches them on under Settings → Security → API keys.",
       "nextrmnl_refused": "nextrmnl refused the request.",
-      "nextrmnl_too_old": "This nextrmnl has no API for dashboards yet. It needs a version with API keys."
+      "nextrmnl_too_old": "This nextrmnl has no API for dashboards yet. It needs a version with API keys.",
+      "readmeabook_not_admin": "This token belongs to a user, not an administrator, and ReadMeABook shows its figures only to administrators. Create a token while signed in as an administrator.",
+      "readmeabook_too_old": "This ReadMeABook does not let API tokens read its figures. It needs version 1.2.0 or newer."
     }
   },
   "auth": {

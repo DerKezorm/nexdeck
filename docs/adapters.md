@@ -84,6 +84,7 @@ that one of twenty-one renderers draws.
 | Immich | archive, storage, users | | API key of an administrator |
 | Bazarr | status, missing subtitles, recently fetched | | API key |
 | Audiobookshelf | library, listening now | | API key |
+| ReadMeABook | overview, downloading, latest requests | | API token (rmab_) of an administrator from Profile > API Tokens; a user's token is turned away from the admin figures the cards read; ReadMeABook 1.2.0 or newer |
 | Navidrome | library, playing now | | account; the Subsonic API signs each request with a salted token |
 | Komga | library, recently added | | API key, or the account on older versions |
 | Kavita | library, recently added | | API key; the token is fetched once and kept |
