@@ -843,6 +843,25 @@
       "small": [
         "Requested in issue #18. Measured against Arcane 2.14.0 with one agent; a report from other versions is welcome."
       ]
+    },
+    "0.23.0": {
+      "lead": "Every connection gets a bell to mute it, and ReadMeABook joins the board with its audiobook requests and downloads.",
+      "sections": [
+        {
+          "title": "A bell on every connection",
+          "body": "Next to each connection stands a bell. One click crosses it out, and nothing about that connection is told any more: not in the bell at the top and not on any channel, from outages and broken cards to finished downloads and new requests. The cards keep running. Which events go to which channel is still chosen on the channel itself.",
+          "path": "Settings > Integrations"
+        },
+        {
+          "title": "ReadMeABook",
+          "body": "Three cards from the audiobook request engine ReadMeABook: an overview with what is downloading, the requests, what finished and failed in the last 30 days and ReadMeABook's own health; the downloads with progress, speed and time left; and the latest requests with who asked and where each stands. New requests and books reaching the library are told. It needs an administrator's API token; the connection test says when a user's token was entered.",
+          "path": "Settings > Integrations > ReadMeABook"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Requested in issues #19 and #20. ReadMeABook is beta: seen against version 1.2.3, but not yet with a running download; a report is welcome."
+      ]
     }
   }
 }

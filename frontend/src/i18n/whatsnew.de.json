@@ -843,6 +843,25 @@
       "small": [
         "Gewünscht in Issue #18. Gemessen an Arcane 2.14.0 mit einem Agenten; Rückmeldungen zu anderen Versionen sind willkommen."
       ]
+    },
+    "0.23.0": {
+      "lead": "Jede Anbindung bekommt eine Glocke zum Stummschalten, und ReadMeABook kommt mit seinen Hörbuch-Anfragen und Downloads aufs Board.",
+      "sections": [
+        {
+          "title": "Eine Glocke an jeder Anbindung",
+          "body": "Neben jeder Anbindung steht eine Glocke. Ein Klick streicht sie durch, und von dieser Anbindung wird nichts mehr gemeldet: nicht in der Glocke oben und auf keinem Kanal, von Ausfällen und kaputten Karten bis zu fertigen Downloads und neuen Anfragen. Die Karten laufen weiter. Welche Ereignisse welchen Kanal nehmen, legt weiterhin der Kanal selbst fest.",
+          "path": "Einstellungen > Anbindungen"
+        },
+        {
+          "title": "ReadMeABook",
+          "body": "Drei Karten aus dem Hörbuch-Anfragedienst ReadMeABook: ein Überblick mit dem, was gerade lädt, den Anfragen, was in den letzten 30 Tagen fertig wurde und was fehlschlug, und ReadMeABooks eigenem Zustand; die Downloads mit Fortschritt, Tempo und Restzeit; und die neuesten Anfragen, wer sie gestellt hat und wo jede steht. Neue Anfragen und Bücher, die in der Bibliothek ankommen, werden gemeldet. Nötig ist der API-Token eines Administrators; der Verbindungstest sagt es, wenn der Token eines Benutzers eingetragen ist.",
+          "path": "Einstellungen > Anbindungen > ReadMeABook"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Gewünscht in Issue #19 und #20. ReadMeABook ist Beta: gesehen an Version 1.2.3, aber noch nicht mit einem laufenden Download; Rückmeldungen sind willkommen."
+      ]
     }
   }
 }
