@@ -33,6 +33,7 @@ that one of twenty-one renderers draws.
 | Syncthing | folders, status | | API key |
 | Backrest | backup plans, backups | back up a plan now | user and password of Backrest's own sign-in, or nothing when it is switched off |
 | Komodo | stacks, deployments, overview | restart a stack | API key and secret of a user, best a service user, with Read on stacks, deployments and servers and Execute on a stack to restart it; Komodo 2 |
+| Arcane | overview, environments, projects, containers, image updates | start, stop and restart a container; start, stop, redeploy and update a project; update a container to its newer image | API key from Settings > API keys; environments:list, containers:list and projects:list for the cards, images:list, volumes:list and networks:list for the overview's counts, and containers:start, containers:stop, containers:restart, projects:deploy, projects:down, projects:update and image-updates:check for the buttons; Arcane 2.14 |
 | Netdata | raised alerts, load per node, alerts | | none; the agent's API is open, and a parent answers for every node that streams to it |
 | Ollama | loaded models, installed models, models | unload a model | none; Ollama has no sign-in, so its port stays inside the network |
 | Open WebUI | users, models, accounts | | API key of an administrator from Settings > Account > API keys; API keys have to be switched on in the admin settings, they are off by default |

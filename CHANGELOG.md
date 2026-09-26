@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **Arcane.** The Docker manager, read and steered through its API with one key, across every environment it manages: the local one and those behind its agents. Five cards: an **overview** of running and unhealthy containers, projects, environments, image updates, images, volumes and networks; **environments**, each asked in turn, because Arcane still called an environment online for up to two minutes after its agent had stopped; **projects** with start, stop, redeploy and, when a newer image is waiting, update; **containers** with their health and start, stop and restart; and **image updates**, the containers Arcane found a newer image for, each with a button that pulls it and recreates the container. Every card but the environments can be narrowed to one environment. A scoped key is enough, and a refusal names the permission it lacks. A failed start is reported even though Arcane answers it with success and hides the error in the stream that follows. Requested in issue #18.
+
 ## 0.21.0 (2026-09-26)
 
 ### New
