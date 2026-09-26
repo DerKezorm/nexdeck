@@ -63,6 +63,7 @@ class NextrmnlAdapter(Adapter):
     icon = "nextrmnl"
     docs_url = "https://nextrmnl.nexapps.dev"
     keywords = ("SSH", "SFTP", "terminal", "PuTTY")
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://ssh.example.com",
               help="The address nextrmnl is reached at."),

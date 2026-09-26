@@ -8,7 +8,7 @@ project uses semantic versioning.
 ### New
 
 - **The About page names the whole nexapps family.** nexcrate, nexbeat and nextrmnl joined Nexview, nexmail and nexpulse in the family line, each with its one sentence.
-- **nextrmnl.** The connection manager of the nexapps family, read through the read-only API keys nextrmnl 0.3.0 brings. Four cards: **Status** with live sessions, today's sessions and failures, the number of connections and a waiting update; **Live sessions**, who is connected where and since when; **Latest sessions** and how they ended, where a server answering with another host key turns the card red; and **Connections**, whether each port answers and how fast, or only those that do not. A key there opens no terminal, no file and no vault, and nextrmnl leaves the sender addresses out of what it hands over. A refused key says whether it is unknown or API keys are switched off in nextrmnl. **Beta** until it has run against a released nextrmnl with API keys; it ran against the unreleased one.
+- **nextrmnl.** The connection manager of the nexapps family, read through the read-only API keys nextrmnl 0.3.0 brings. Four cards: **Status** with live sessions, today's sessions and failures, the number of connections and a waiting update; **Live sessions**, who is connected where and since when; **Latest sessions** and how they ended, where a server answering with another host key turns the card red; and **Connections**, whether each port answers and how fast, or only those that do not. A key there opens no terminal, no file and no vault, and nextrmnl leaves the sender addresses out of what it hands over. A refused key says whether it is unknown or API keys are switched off in nextrmnl.
 
 ## 0.20.0 (2026-09-25)
 
