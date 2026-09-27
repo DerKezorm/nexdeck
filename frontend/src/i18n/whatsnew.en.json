@@ -948,6 +948,25 @@
         "Four texts that stayed English in German are translated: \"just now\" on Home Assistant, \"Transcode\" on Plex and Jellyfin, \"published\" on n8n and a note on Nomad.",
         "All six new connections were measured against live instances and are not beta."
       ]
+    },
+    "0.26.0": {
+      "lead": "Two new connections join the board: PatchMon, for the updates and security updates waiting on your hosts, and IMAP, for any mailbox.",
+      "sections": [
+        {
+          "title": "PatchMon",
+          "body": "An overview of how many hosts need updates, with the security updates waiting and the hosts up to date, offline or waiting for a reboot; the hosts themselves, those with security updates and those offline first; and the operating systems they run, also as a ring. Each card can be narrowed to one host group. It needs a key of PatchMon's type API with the scope host: get; a GetHomepage key does not work.",
+          "path": "Settings > Integrations > PatchMon"
+        },
+        {
+          "title": "IMAP",
+          "body": "Any mailbox over IMAP: the unread mail in the folders you pick, the latest mail with sender, subject and age, and every folder with its unread and all its mail. The text of a mail is never read and nothing is marked as read. User name and password or app password; OAuth2 is not supported, so Microsoft 365 is mostly out of reach.",
+          "path": "Settings > Integrations > IMAP"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Both were requested in issues #24 and #22 and measured against live instances: PatchMon 2.1.3 with three agents, and Dovecot and Stalwart for IMAP. Neither is beta."
+      ]
     }
   }
 }

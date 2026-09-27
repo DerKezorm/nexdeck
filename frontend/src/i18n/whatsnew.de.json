@@ -948,6 +948,25 @@
         "Vier Texte, die im Deutschen englisch geblieben waren, sind übersetzt: „just now“ bei Home Assistant, „Transcode“ bei Plex und Jellyfin, „published“ bei n8n und ein Hinweis bei Nomad.",
         "Alle sechs neuen Anbindungen wurden gegen echte Instanzen gemessen und sind nicht Beta."
       ]
+    },
+    "0.26.0": {
+      "lead": "Zwei neue Anbindungen kommen aufs Board: PatchMon für die anstehenden Updates und Sicherheitsupdates deiner Hosts, und IMAP für jedes Postfach.",
+      "sections": [
+        {
+          "title": "PatchMon",
+          "body": "Ein Überblick, wie viele Hosts Updates brauchen, mit den anstehenden Sicherheitsupdates und den Hosts, die aktuell, offline oder für einen Neustart fällig sind; die Hosts selbst, die mit Sicherheitsupdates und die offline zuerst; und ihre Betriebssysteme, auch als Ring. Jede Karte lässt sich auf eine Hostgruppe eingrenzen. Nötig ist ein Schlüssel von PatchMons Typ API mit dem Recht host: get; ein GetHomepage-Schlüssel geht nicht.",
+          "path": "Einstellungen > Anbindungen > PatchMon"
+        },
+        {
+          "title": "IMAP",
+          "body": "Jedes Postfach über IMAP: die ungelesenen Mails in den Ordnern, die du wählst, die neuesten Mails mit Absender, Betreff und Alter, und jeder Ordner mit seinen ungelesenen und allen Mails. Der Text einer Mail wird nie gelesen, und nichts wird als gelesen markiert. Benutzername und Passwort oder App-Passwort; OAuth2 gibt es nicht, deshalb bleibt Microsoft 365 meist außen vor.",
+          "path": "Einstellungen > Anbindungen > IMAP"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Beide wurden in den Issues #24 und #22 gewünscht und gegen echte Instanzen gemessen: PatchMon 2.1.3 mit drei Agenten, Dovecot und Stalwart für IMAP. Keine davon ist Beta."
+      ]
     }
   }
 }
