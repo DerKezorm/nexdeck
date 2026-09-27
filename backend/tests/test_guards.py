@@ -6,6 +6,7 @@ never pass by accident.
 
 from __future__ import annotations
 
+import ast
 import inspect
 import json
 import re
@@ -358,6 +359,9 @@ def _looks_like_data(text: str) -> bool:
         return True
     if not any(ch.isalpha() for ch in text):
         return True
+    # Host names and image references: workstation.example.com, ghcr.io/owner/app.
+    if " " not in text and ("." in text or "/" in text):
+        return True
     return text.islower() and " " not in text and len(text) <= 5
 
 
@@ -451,6 +455,53 @@ def test_every_channel_text_has_a_german_translation() -> None:
     assert not missing, f"channel texts without a German entry: {sorted(missing)}"
 
 
+#: Values in the demo data that are names, not words: places, providers, devices.
+DEMO_NAMES = {"Amsterdam North Holland", "Berlin, Germany", "Core switch", "Example Telecom", "Netherlands"}
+
+
+def _shown_values(source: str) -> list[str]:
+    """Written-out texts that reach the cards through the value of a row or
+    item, or as one part of a subtitle joined with " · ". The frontend
+    translates both by their English wording, word by word for the parts.
+
+    ⚠️ The label pattern above only saw ``"label": "..."`` and
+    ``"subtitle": "..."``. "just now" (a value) and "Transcode" (one branch of
+    a condition inside a joined subtitle) stayed English in German and Spanish
+    until 27.09.2026, and no guard said a word.
+    """
+    found: list[str] = []
+
+    def words(node: ast.AST | None) -> None:
+        # A literal, or either branch of "a" if ... else "b". An f-string is
+        # left alone: its pieces are no text of their own.
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            found.append(node.value)
+        elif isinstance(node, ast.IfExp):
+            words(node.body)
+            words(node.orelse)
+        elif isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+            for element in node.elts:
+                words(element)
+        elif isinstance(node, ast.GeneratorExp):
+            words(node.elt)
+            for generator in node.generators:
+                words(generator.iter)
+
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Dict):
+            keys = {key.value for key in node.keys if isinstance(key, ast.Constant)}
+            # A row or an item: something with a label or a title beside its value.
+            if "value" in keys and keys & {"label", "title"}:
+                for key, value in zip(node.keys, node.values, strict=True):
+                    if isinstance(key, ast.Constant) and key.value == "value":
+                        words(value)
+        elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "join"
+              and isinstance(node.func.value, ast.Constant) and node.func.value.value == " · "):
+            for argument in node.args:
+                words(argument)
+    return found
+
+
 def test_every_data_label_has_a_german_translation() -> None:
     """Labels of values, chips, rows and actions come from the adapters as English
     words; the cards translate them by text."""
@@ -461,13 +512,13 @@ def test_every_data_label_has_a_german_translation() -> None:
     checked = 0
     for path in ADAPTERS.glob("*.py"):
         source = path.read_text(encoding="utf-8")
-        for pattern in (LABEL_LITERAL, ACTION_LABEL, ASK_LABEL):
-            for text in pattern.findall(source):
-                if _looks_like_data(text):
-                    continue
-                checked += 1
-                if text not in german:
-                    missing.add(text)
+        texts = [text for pattern in (LABEL_LITERAL, ACTION_LABEL, ASK_LABEL) for text in pattern.findall(source)]
+        for text in texts + [text for text in _shown_values(source) if text not in DEMO_NAMES]:
+            if _looks_like_data(text):
+                continue
+            checked += 1
+            if text not in german:
+                missing.add(text)
     for text in FINDING_LABELS.values():
         checked += 1
         if text not in german:

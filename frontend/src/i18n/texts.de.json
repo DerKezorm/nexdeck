@@ -2411,6 +2411,10 @@
     "Resumed incremental image backup": "Fortgesetzte inkrementelle Image-Sicherung",
     "Resumed full image backup": "Fortgesetzte vollständige Image-Sicherung",
     "Deleted": "Gelöscht",
-    "Backup": "Sicherung"
+    "Backup": "Sicherung",
+    "Transcode": "Transkodierung",
+    "just now": "gerade eben",
+    "published": "veröffentlicht",
+    "unknown: the token reads one namespace": "unbekannt: das Token liest nur einen Namensraum"
   }
 }

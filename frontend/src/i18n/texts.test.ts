@@ -5,15 +5,20 @@
  */
 import i18next from 'i18next'
 
-import './index'
+import { LANGUAGES } from './index'
 import de from './texts.de.json'
 import es from './texts.es.json'
+import fr from './texts.fr.json'
+import it_ from './texts.it.json'
 import { PATTERNS, registerTexts, translateText, type TextBundle } from './texts'
+
+/** Every language besides English and German, each with its table of server texts. */
+const OTHERS: Record<string, TextBundle> = { es, fr, it: it_ } as Record<string, TextBundle>
 
 describe('server texts', () => {
   beforeAll(() => {
     registerTexts('de', de as TextBundle)
-    registerTexts('es', es as TextBundle)
+    for (const [code, bundle] of Object.entries(OTHERS)) registerTexts(code, bundle)
   })
   afterEach(async () => {
     await i18next.changeLanguage('en')
@@ -82,6 +87,8 @@ describe('server texts', () => {
     // "Direct play" used to stand here as the unknown one. Since Tautulli
     // arrived it is in the table, and the Plex card gets the German word too.
     expect(translateText('labels', 'Living room · 4K · Direct play')).toBe('Living room · 4K · Direktwiedergabe')
+    expect(translateText('labels', 'Bedroom TV · 1080p · Transcode')).toBe('Bedroom TV · 1080p · Transkodierung')
+    expect(translateText('labels', 'just now')).toBe('gerade eben')
     expect(translateText('labels', 'A sentence made of steel')).toBe('A sentence made of steel')
     expect(translateText('labels', '')).toBe('')
     expect(translateText('labels', null)).toBe('')
@@ -99,35 +106,43 @@ describe('server texts', () => {
     expect(Object.keys(de.labels).length).toBeGreaterThan(80)
   })
 
-  it('has a Spanish table that knows every text the German one does', () => {
-    const spanish = es as TextBundle
-    for (const section of ['adapter', 'labels'] as const) {
-      const german = Object.keys(de[section])
-      expect(german.filter((text) => !(text in spanish[section])), `${section}: missing in Spanish`).toEqual([])
-      expect(Object.keys(spanish[section]).filter((text) => !(text in de[section])), `${section}: only in Spanish`).toEqual([])
-      for (const [english, translated] of Object.entries(spanish[section])) {
-        expect(translated.trim(), `${section}: ${english}`).not.toBe('')
-        expect(translated, `${section}: ${english}`).not.toContain('—')
+  it('has a table and a list of patterns for every language on offer', () => {
+    expect(['en', 'de', ...Object.keys(OTHERS)].sort()).toEqual(Object.keys(LANGUAGES).sort())
+    expect(Object.keys(PATTERNS).sort()).toEqual(['de', ...Object.keys(OTHERS)].sort())
+  })
+
+  for (const [code, table] of Object.entries(OTHERS)) {
+    it(`${code}: knows every text the German table does, and no other`, () => {
+      for (const section of ['adapter', 'labels'] as const) {
+        const german = Object.keys(de[section])
+        expect(german.filter((text) => !(text in table[section])), `${section}: missing in ${code}`).toEqual([])
+        expect(Object.keys(table[section]).filter((text) => !(text in de[section])), `${section}: only in ${code}`).toEqual([])
+        for (const [english, translated] of Object.entries(table[section])) {
+          expect(translated.trim(), `${section}: ${english}`).not.toBe('')
+          expect(translated, `${section}: ${english}`).not.toContain('—')
+        }
       }
-    }
-  })
+    })
 
-  it('has a Spanish pattern for every German one, in the same order', () => {
-    // Order matters: the first pattern that fits wins, so a general one ahead
-    // of a narrow one would swallow it.
-    expect(PATTERNS.es.map(([pattern]) => pattern.source)).toEqual(PATTERNS.de.map(([pattern]) => pattern.source))
-    for (const [pattern, replacement] of PATTERNS.es) {
-      const groups = new RegExp(`${pattern.source}|`).exec('')!.length - 1
-      for (let group = 1; group <= groups; group++) expect(replacement, pattern.source).toContain(`$${group}`)
-    }
-  })
+    it(`${code}: has a pattern for every German one, in the same order`, () => {
+      // Order matters: the first pattern that fits wins, so a general one ahead
+      // of a narrow one would swallow it.
+      const patterns = PATTERNS[code] ?? []
+      expect(patterns.map(([pattern]) => pattern.source)).toEqual(PATTERNS.de.map(([pattern]) => pattern.source))
+      for (const [pattern, replacement] of patterns) {
+        const groups = new RegExp(`${pattern.source}|`).exec('')!.length - 1
+        for (let group = 1; group <= groups; group++) expect(replacement, pattern.source).toContain(`$${group}`)
+        expect(replacement, pattern.source).not.toContain('—')
+      }
+    })
 
-  it('translate words and phrases in Spanish', async () => {
-    await i18next.changeLanguage('es')
-    expect(translateText('labels', 'Used')).not.toBe('Used')
-    expect(translateText('adapter', 'Show seconds')).not.toBe('Show seconds')
-    expect(translateText('labels', 'Up 3 days')).toMatch(/3/)
-    expect(translateText('labels', 'Up 3 days')).not.toBe('Up 3 days')
-    expect(translateText('labels', 'A sentence made of steel')).toBe('A sentence made of steel')
-  })
+    it(`${code}: translates words and phrases`, async () => {
+      await i18next.changeLanguage(code)
+      expect(translateText('labels', 'Used')).not.toBe('Used')
+      expect(translateText('adapter', 'Show seconds')).not.toBe('Show seconds')
+      expect(translateText('labels', 'Up 3 days')).toMatch(/3/)
+      expect(translateText('labels', 'Up 3 days')).not.toBe('Up 3 days')
+      expect(translateText('labels', 'A sentence made of steel')).toBe('A sentence made of steel')
+    })
+  }
 })

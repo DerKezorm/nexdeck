@@ -6,6 +6,8 @@
 import de from './de.json'
 import en from './en.json'
 import es from './es.json'
+import fr from './fr.json'
+import it_ from './it.json'
 import { LANGUAGES } from './index'
 
 function paths(value: unknown, prefix = ''): string[] {
@@ -18,7 +20,7 @@ function lookup(data: unknown, path: string): unknown {
 }
 
 /** Every language besides English, each with its interface texts. */
-const TRANSLATIONS: Record<string, unknown> = { de, es }
+const TRANSLATIONS: Record<string, unknown> = { de, es, fr, it: it_ }
 const english = new Set(paths(en))
 
 describe('language files', () => {

@@ -1,6 +1,5 @@
 import de from '../i18n/whatsnew.de.json'
 import en from '../i18n/whatsnew.en.json'
-import es from '../i18n/whatsnew.es.json'
 
 export interface WhatsNewEntry {
   lead: string
@@ -9,7 +8,13 @@ export interface WhatsNewEntry {
   small: string[]
 }
 
-const FILES: Record<string, { entries: Record<string, WhatsNewEntry> }> = { en, de, es }
+/**
+ * "What's new" is written in English and German only. Every other language
+ * shows the English entries: a translation of each release note is more
+ * upkeep than the window is worth, and English is what the rest of the world
+ * gets from the release notes anyway.
+ */
+const FILES: Record<string, { entries: Record<string, WhatsNewEntry> }> = { en, de }
 
 export function entriesFor(language: string): Record<string, WhatsNewEntry> {
   return (FILES[language] ?? FILES.en).entries

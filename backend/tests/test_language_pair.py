@@ -52,9 +52,9 @@ def test_the_pair_is_saved_with_the_account(client: TestClient) -> None:
 @pytest.mark.parametrize(
     "fields",
     [
-        {"locale": "fr"},
+        {"locale": "tlh"},
         {"locale": ""},
-        {"language_pair": ["en", "fr"]},
+        {"language_pair": ["en", "tlh"]},
         {"language_pair": ["en", "en"]},
         {"language_pair": ["en"]},
         {"language_pair": ["en", "de", "de"]},
@@ -69,13 +69,13 @@ def test_unknown_codes_and_crooked_pairs_are_refused(client: TestClient, fields:
 
 
 def test_the_other_ways_in_check_the_code_as_well(client: TestClient) -> None:
-    assert client.post("/api/v1/setup", json={**ADMIN, "locale": "fr"}).status_code == 422
+    assert client.post("/api/v1/setup", json={**ADMIN, "locale": "tlh"}).status_code == 422
     setup_admin(client)
-    new = client.post("/api/v1/users", json={"username": "ben", "password": "long-enough-1", "locale": "fr"}, headers=CSRF)
+    new = client.post("/api/v1/users", json={"username": "ben", "password": "long-enough-1", "locale": "tlh"}, headers=CSRF)
     assert new.status_code == 422, new.text
     ben = create_user(client, "ben")
-    assert client.patch(f"/api/v1/users/{ben['id']}", json={"locale": "fr"}, headers=CSRF).status_code == 422
-    assert client.patch("/api/v1/settings", json={"default_locale": "fr"}, headers=CSRF).status_code == 422
+    assert client.patch(f"/api/v1/users/{ben['id']}", json={"locale": "tlh"}, headers=CSRF).status_code == 422
+    assert client.patch("/api/v1/settings", json={"default_locale": "tlh"}, headers=CSRF).status_code == 422
     assert client.patch("/api/v1/settings", json={"default_locale": "de"}, headers=CSRF).status_code == 200
 
 
@@ -122,7 +122,7 @@ def test_setup_and_a_new_account_keep_the_chosen_language_in_the_pair(client: Te
 
 def test_a_broken_stored_pair_reads_as_the_default() -> None:
     assert languages.read_pair("en,de") == ["en", "de"]
-    for stored in ("", "en", "en,en", "en,fr", "en,de,en", "EN,DE"):
+    for stored in ("", "en", "en,en", "en,tlh", "en,de,en", "EN,DE"):
         assert languages.read_pair(stored) == ["en", "de"], stored
 
 

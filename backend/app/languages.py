@@ -11,7 +11,7 @@ from typing import Annotated, Protocol
 
 from pydantic import AfterValidator
 
-SUPPORTED: tuple[str, ...] = ("en", "de", "es")
+SUPPORTED: tuple[str, ...] = ("en", "de", "es", "fr", "it")
 
 #: The two buttons in the top bar until somebody chooses others.
 DEFAULT_PAIR: tuple[str, str] = ("en", "de")

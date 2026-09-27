@@ -43,7 +43,7 @@ describe('the pair where nobody is signed in', () => {
 
   it('takes the first language of the browser that nexdeck speaks', () => {
     LANGUAGES.xx = 'Xxish'
-    browserAsks('fr-FR', 'xx-YY', 'de')
+    browserAsks('tlh', 'xx-YY', 'de')
     expect(browserLanguage()).toBe('xx')
     expect(guestPair('en')).toEqual(['en', 'xx'])
   })
@@ -55,8 +55,17 @@ describe('the pair where nobody is signed in', () => {
     expect(guestPair('de')).toEqual(['en', 'de'])
   })
 
+  it('offers French to a French browser and Italian to an Italian one', () => {
+    browserAsks('fr-FR', 'fr', 'en')
+    expect(guestPair('en')).toEqual(['en', 'fr'])
+    browserAsks('it-IT', 'en')
+    expect(guestPair('en')).toEqual(['en', 'it'])
+    browserAsks('fr-CH')
+    expect(storedLanguage()).toBe('fr')
+  })
+
   it('falls back to German when the browser asks for nothing nexdeck speaks', () => {
-    browserAsks('fr-FR', 'it')
+    browserAsks('tlh', 'la')
     expect(browserLanguage()).toBeNull()
     expect(guestPair('en')).toEqual(['en', 'de'])
   })
@@ -67,7 +76,7 @@ describe('the language a signed-out page starts in', () => {
     browserAsks('en-US')
     localStorage.setItem('nexdeck.language', 'de')
     expect(storedLanguage()).toBe('de')
-    localStorage.setItem('nexdeck.language', 'fr')
+    localStorage.setItem('nexdeck.language', 'tlh')
     expect(storedLanguage()).toBe('en')
   })
 
@@ -83,7 +92,7 @@ describe('the account pair', () => {
   })
 
   it('falls back to English and German otherwise', () => {
-    for (const broken of [undefined, [], ['en'], ['en', 'en'], ['en', 'fr'], ['en', 'de', 'xx']]) {
+    for (const broken of [undefined, [], ['en'], ['en', 'en'], ['en', 'tlh'], ['en', 'de', 'xx']]) {
       expect(accountPair(broken)).toEqual(['en', 'de'])
     }
   })
