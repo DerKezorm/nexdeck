@@ -156,9 +156,12 @@ answers; a report with the service's version is welcome.
 Everything an adapter says is English: field labels, help texts, widget names
 and descriptions, and the labels of values, chips, rows and actions. The
 interface translates them by their English wording from
-`frontend/src/i18n/texts.de.json`; a guard in `backend/tests/test_guards.py`
-fails when a new text has no German entry. Data that is not a label (names,
-sizes, identifiers) passes through untouched.
+`frontend/src/i18n/texts.de.json` and `texts.es.json`; a guard in
+`backend/tests/test_guards.py` fails when a new text has no German entry, and
+another when a language knows less than German does. Words around a number
+("3 restarts") are translated by a pattern in `frontend/src/i18n/texts.ts`,
+one list per language. Data that is not a label (names, sizes, identifiers)
+passes through untouched.
 
 A widget that draws itself from its options (clock, notes, bookmarks, embedded
 page, app tile) sets `client_only=True`; the settings sheet then hides the

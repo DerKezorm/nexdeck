@@ -23,6 +23,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 - **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
 - **Sign in your way.** Local accounts, OpenID Connect (authentik, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
+- **In English, German or Spanish.** The interface and every card, including what the services report. Each account picks the two languages that stand in its top bar.
 
 ## A board is whatever you put on it
 

@@ -485,6 +485,26 @@ def test_german_texts_are_complete_and_clean() -> None:
             assert "\u2014" not in german, (section, english)
 
 
+def test_every_other_language_translates_what_german_does() -> None:
+    """The German table is the one the guards above hold against the adapters.
+    Every further language has to know the same texts, or a new adapter would
+    reach German and stay English everywhere else."""
+    from app.languages import SUPPORTED
+
+    german = _german_texts()
+    others = [code for code in SUPPORTED if code not in ("en", "de")]
+    assert others, "no language besides English and German to hold against the German table"
+    for code in others:
+        texts = json.loads((GERMAN_TEXTS.parent / f"texts.{code}.json").read_text(encoding="utf-8"))
+        for section in ("adapter", "labels"):
+            missing = sorted(set(german[section]) - set(texts[section]))
+            extra = sorted(set(texts[section]) - set(german[section]))
+            assert missing == [] and extra == [], (code, section, missing[:20], extra[:20])
+            for english, translated in texts[section].items():
+                assert translated.strip(), (code, section, english)
+                assert "—" not in translated, (code, section, english)
+
+
 def test_client_only_widgets_are_exactly_the_basics() -> None:
     """The settings sheet hides the refresh interval for widgets that draw themselves."""
     from_the_server = {"problems", "status", "notices", "updates", "host"}

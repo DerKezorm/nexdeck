@@ -1,5 +1,6 @@
 import de from '../i18n/whatsnew.de.json'
 import en from '../i18n/whatsnew.en.json'
+import es from '../i18n/whatsnew.es.json'
 
 export interface WhatsNewEntry {
   lead: string
@@ -8,7 +9,7 @@ export interface WhatsNewEntry {
   small: string[]
 }
 
-const FILES: Record<string, { entries: Record<string, WhatsNewEntry> }> = { en, de }
+const FILES: Record<string, { entries: Record<string, WhatsNewEntry> }> = { en, de, es }
 
 export function entriesFor(language: string): Record<string, WhatsNewEntry> {
   return (FILES[language] ?? FILES.en).entries

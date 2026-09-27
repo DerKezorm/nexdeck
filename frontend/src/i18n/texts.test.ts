@@ -7,11 +7,13 @@ import i18next from 'i18next'
 
 import './index'
 import de from './texts.de.json'
-import { registerTexts, translateText, type TextBundle } from './texts'
+import es from './texts.es.json'
+import { PATTERNS, registerTexts, translateText, type TextBundle } from './texts'
 
 describe('server texts', () => {
   beforeAll(() => {
     registerTexts('de', de as TextBundle)
+    registerTexts('es', es as TextBundle)
   })
   afterEach(async () => {
     await i18next.changeLanguage('en')
@@ -95,5 +97,37 @@ describe('server texts', () => {
     }
     expect(Object.keys(de.adapter).length).toBeGreaterThan(200)
     expect(Object.keys(de.labels).length).toBeGreaterThan(80)
+  })
+
+  it('has a Spanish table that knows every text the German one does', () => {
+    const spanish = es as TextBundle
+    for (const section of ['adapter', 'labels'] as const) {
+      const german = Object.keys(de[section])
+      expect(german.filter((text) => !(text in spanish[section])), `${section}: missing in Spanish`).toEqual([])
+      expect(Object.keys(spanish[section]).filter((text) => !(text in de[section])), `${section}: only in Spanish`).toEqual([])
+      for (const [english, translated] of Object.entries(spanish[section])) {
+        expect(translated.trim(), `${section}: ${english}`).not.toBe('')
+        expect(translated, `${section}: ${english}`).not.toContain('—')
+      }
+    }
+  })
+
+  it('has a Spanish pattern for every German one, in the same order', () => {
+    // Order matters: the first pattern that fits wins, so a general one ahead
+    // of a narrow one would swallow it.
+    expect(PATTERNS.es.map(([pattern]) => pattern.source)).toEqual(PATTERNS.de.map(([pattern]) => pattern.source))
+    for (const [pattern, replacement] of PATTERNS.es) {
+      const groups = new RegExp(`${pattern.source}|`).exec('')!.length - 1
+      for (let group = 1; group <= groups; group++) expect(replacement, pattern.source).toContain(`$${group}`)
+    }
+  })
+
+  it('translate words and phrases in Spanish', async () => {
+    await i18next.changeLanguage('es')
+    expect(translateText('labels', 'Used')).not.toBe('Used')
+    expect(translateText('adapter', 'Show seconds')).not.toBe('Show seconds')
+    expect(translateText('labels', 'Up 3 days')).toMatch(/3/)
+    expect(translateText('labels', 'Up 3 days')).not.toBe('Up 3 days')
+    expect(translateText('labels', 'A sentence made of steel')).toBe('A sentence made of steel')
   })
 })
