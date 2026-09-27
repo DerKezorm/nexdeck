@@ -28,4 +28,6 @@ regexes = [
   '''A-long-enough-password''',
   '''correct-horse-battery''',
   '''demo-password-123''',
+  # The Elasticsearch API key the tests use: base64 for "test-key-for-the-cards".
+  '''dGVzdC1rZXktZm9yLXRoZS1jYXJkcw==''',
 ]
