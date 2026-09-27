@@ -6,8 +6,17 @@ import { registerTexts, type TextBundle } from './texts'
 
 /**
  * English ships in the bundle; every other language is fetched when chosen.
- * Adding a language means adding two JSON files here and one line in LANGUAGES:
- * the interface texts, and the server texts translated by their English wording.
+ *
+ * Adding a language means:
+ * - a line in LANGUAGES, and the code in SUPPORTED in backend/app/languages.py
+ *   (a guard keeps the two equal);
+ * - <code>.json with every key of en.json, and a loader for it below;
+ * - texts.<code>.json with every server text texts.de.json knows, translated
+ *   from the English key, and a loader for it below;
+ * - patterns.<code>.ts, the German patterns in texts.ts in the same order,
+ *   registered in PATTERNS there;
+ * - the new tables in the lists of complete.test.ts and texts.test.ts.
+ * "What's new" stays English and German; every other language shows English.
  */
 export const LANGUAGES: Record<string, string> = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', it: 'Italiano' }
 

@@ -7,8 +7,12 @@ project uses semantic versioning.
 
 ### New
 
-- **Spanish.** The interface, the cards, the texts the services report and the setup guides of every connection are in Spanish too. It is chosen in the profile or in the top bar, and a browser that asks for Spanish starts with it on the sign-in page. The "What's new" window is written in English and German only and shows English in every other language.
+- **Spanish, French and Italian.** The interface, the cards, the texts the services report and the setup guides of every connection are in Spanish, French and Italian too. A language is chosen in the profile or in the top bar, and a browser that asks for one of them starts with it on the sign-in page. The "What's new" window is written in English and German only and shows English in every other language.
 - **The two languages in the top bar are yours to choose.** The top bar keeps two language buttons, however many languages nexdeck speaks. Under Profile each account picks which two stand there; everybody starts with English and German, as before. The language in use is always one of the two: choosing another one in the profile puts it in place of the button that was not active, so the way back stays one press away. Where nobody is signed in, the buttons are English and the language of the browser, or German when nexdeck does not speak it. The sign-in page has the two buttons too. The server refuses a language code it does not know.
+
+### Fixed
+
+- **Four texts on the cards stayed English in German.** "just now" on the Home Assistant card, "Transcode" beside a stream on the Plex and Jellyfin cards, "published" on the n8n card and the note on the Nomad card that the token reads only one namespace. The check that holds every text on a card against the German table did not look at values or at the parts of a line joined with a dot, and the chips and rows of a card did not translate a value at all. Both do now.
 
 ## 0.24.0 (2026-09-27)
 
