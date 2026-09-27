@@ -107,7 +107,7 @@ class DownloadAdapter(Adapter):
             if snapshot.remaining_bytes is not None:
                 secondary.append({"label": "Left", "value": human_bytes(snapshot.remaining_bytes)})
             if snapshot.upload_bps is not None:
-                secondary.append({"label": "Up", "value": human_rate(snapshot.upload_bps)})
+                secondary.append({"label": "Upload", "value": human_rate(snapshot.upload_bps)})
             if snapshot.free_bytes is not None:
                 secondary.append({"label": "Free", "value": human_bytes(snapshot.free_bytes)})
             card = WidgetData(

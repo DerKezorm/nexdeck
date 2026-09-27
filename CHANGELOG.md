@@ -12,6 +12,7 @@ project uses semantic versioning.
 
 ### Fixed
 
+- **Upload speed read "Reachable" in German.** The speed card of the download clients labelled the upload "Up", and the FRITZ!Box connection card its two rates "Down" and "Up". The table translates those words as a service being up or down. They are "Download" and "Upload" now.
 - **Four texts on the cards stayed English in German.** "just now" on the Home Assistant card, "Transcode" beside a stream on the Plex and Jellyfin cards, "published" on the n8n card and the note on the Nomad card that the token reads only one namespace. The check that holds every text on a card against the German table did not look at values or at the parts of a line joined with a dot, and the chips and rows of a card did not translate a value at all. Both do now.
 
 ## 0.24.0 (2026-09-27)
