@@ -902,6 +902,52 @@
         "Logos, die es nur als Bilddatei gibt, etwa die von ReadMeABook und Dockhand, erscheinen jetzt statt eines grauen Kastens, und die Logo-Auswahl führt sie ebenfalls.",
         "Dockhand wurde in Issue #21 gewünscht und an Dockhand 1.0.49 gemessen, mit einer direkt erreichten Engine und einer hinter Hawser; Rückmeldungen aus größeren Umgebungen sind willkommen."
       ]
+    },
+    "0.25.0": {
+      "lead": "nexdeck spricht Spanisch, Französisch und Italienisch, und jedes Konto wählt die zwei Sprachen in seiner Leiste oben selbst. Sechs neue Anbindungen kommen aufs Board: Minecraft, OctoPrint, rTorrent, FreshRSS, Linkding und openmediavault.",
+      "sections": [
+        {
+          "title": "Spanisch, Französisch und Italienisch",
+          "body": "Die Oberfläche, die Karten, die Texte der Dienste und die Einrichtungshilfen jeder Anbindung gibt es jetzt auch auf Spanisch, Französisch und Italienisch. Ein Browser, der nach einer davon fragt, bekommt sie schon auf der Anmeldeseite. Dieses Fenster bleibt in diesen Sprachen englisch.",
+          "path": "Profil > Sprache"
+        },
+        {
+          "title": "Deine zwei Sprachen in der Leiste oben",
+          "body": "Die Leiste oben behält zwei Sprachknöpfe, egal wie viele Sprachen nexdeck spricht, und jedes Konto wählt, welche zwei dort stehen. Alle beginnen wie bisher mit Englisch und Deutsch. Wählst du im Profil eine andere Sprache, tritt sie an die Stelle des Knopfs, der gerade nicht aktiv war; der Weg zurück bleibt ein Klick.",
+          "path": "Profil > Sprachen in der Leiste oben"
+        },
+        {
+          "title": "Minecraft",
+          "body": "Ob ein Java- oder Bedrock-Server läuft, wie viele darauf spielen, Version, Antwortzeit und Nachricht des Tages, und wer online ist, soweit der Server es verrät. Ein Konto braucht es nicht. Ein ausgeschalteter Server steht als offline auf der Karte, und ein Server, der seine Spieler verbirgt, gilt nicht als leer.",
+          "path": "Einstellungen > Anbindungen > Minecraft"
+        },
+        {
+          "title": "OctoPrint",
+          "body": "Der Zustand des 3D-Druckers mit den Temperaturen von Düse, Bett und Kammer, und der Druckauftrag mit Datei, Fortschritt, vergangener und verbleibender Zeit. Ein ausgeschalteter Drucker ist ein Zustand auf der Karte, kein Fehler.",
+          "path": "Einstellungen > Anbindungen > OctoPrint"
+        },
+        {
+          "title": "rTorrent",
+          "body": "Jeder Torrent mit Zustand, Fortschritt und Tempo, ein Überblick nach Zuständen, dazu Warteschlange und Tempo wie bei den anderen Download-Programmen, mit Anhalten und Fortsetzen. Die Anbindung spricht direkt über XML-RPC mit rTorrent oder über ruTorrent und findet selbst heraus, welcher Weg geht.",
+          "path": "Einstellungen > Anbindungen > rTorrent"
+        },
+        {
+          "title": "FreshRSS und Linkding",
+          "body": "FreshRSS zeigt, was ungelesen ist, je Feed oder Kategorie, und die neuesten Einträge; dafür braucht es das API-Passwort aus dem FreshRSS-Profil, nicht das Anmeldepasswort. Linkding zeigt, wie viele Lesezeichen es gibt, mit den ungelesenen, archivierten und geteilten, und die zuletzt gespeicherten.",
+          "path": "Einstellungen > Anbindungen > FreshRSS oder Linkding"
+        },
+        {
+          "title": "openmediavault",
+          "body": "Das NAS mit Prozessor, Speicher, Last, Laufzeit, anstehenden Updates und Version, seine Dateisysteme mit ihrer Belegung und seine Platten mit ihrem SMART-Zustand. openmediavault sperrt ein Konto nach drei falschen Kennwörtern, deshalb versucht nexdeck ein abgewiesenes Kennwort erst nach 15 Minuten wieder.",
+          "path": "Einstellungen > Anbindungen > openmediavault"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Das Upload-Tempo auf den Karten der Download-Programme und auf der FRITZ!Box-Karte heißt Upload und steht nicht mehr als „Erreichbar“ da.",
+        "Vier Texte, die im Deutschen englisch geblieben waren, sind übersetzt: „just now“ bei Home Assistant, „Transcode“ bei Plex und Jellyfin, „published“ bei n8n und ein Hinweis bei Nomad.",
+        "Alle sechs neuen Anbindungen wurden gegen echte Instanzen gemessen und sind nicht Beta."
+      ]
     }
   }
 }

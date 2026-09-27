@@ -902,6 +902,52 @@
         "Logos that exist only as a picture file, such as those of ReadMeABook and Dockhand, show up instead of a grey box, and the logo picker lists them too.",
         "Dockhand was requested in issue #21 and measured against Dockhand 1.0.49 with one engine reached directly and one behind Hawser; a report from larger setups is welcome."
       ]
+    },
+    "0.25.0": {
+      "lead": "nexdeck speaks Spanish, French and Italian, and each account chooses the two languages in its top bar. Six new connections join the board: Minecraft, OctoPrint, rTorrent, FreshRSS, Linkding and openmediavault.",
+      "sections": [
+        {
+          "title": "Spanish, French and Italian",
+          "body": "The interface, the cards, the texts the services report and the setup guides of every connection are in Spanish, French and Italian too. A browser that asks for one of them starts with it on the sign-in page. This window stays in English in those languages.",
+          "path": "Profile > Language"
+        },
+        {
+          "title": "Your two languages in the top bar",
+          "body": "The top bar keeps two language buttons, however many languages nexdeck speaks, and every account picks which two stand there. Everybody starts with English and German, as before. Choosing another language in the profile puts it in place of the button that was not active, so the way back stays one press away.",
+          "path": "Profile > Languages in the top bar"
+        },
+        {
+          "title": "Minecraft",
+          "body": "Whether a Java or Bedrock server is up, how many play on it, its version, latency and message of the day, and who is online, as far as the server tells. No account is needed. A server that is off shows as offline on the card, and a server that hides its players is not called empty.",
+          "path": "Settings > Integrations > Minecraft"
+        },
+        {
+          "title": "OctoPrint",
+          "body": "The 3D printer's state with nozzle, bed and chamber temperatures, and the print job with its file, progress, time taken and time left. A printer that is switched off is a state on the card, not an error.",
+          "path": "Settings > Integrations > OctoPrint"
+        },
+        {
+          "title": "rTorrent",
+          "body": "Every torrent with its state, progress and speed, an overview by state, and the queue and speed cards of the other download clients, with pause and resume. It talks to rTorrent straight over XML-RPC or through ruTorrent and finds out which by itself.",
+          "path": "Settings > Integrations > rTorrent"
+        },
+        {
+          "title": "FreshRSS and Linkding",
+          "body": "FreshRSS shows what is unread, per feed or category, and the newest entries; it needs the API password from the FreshRSS profile, not the sign-in password. Linkding shows how many bookmarks there are, with the unread, archived and shared ones, and the ones saved last.",
+          "path": "Settings > Integrations > FreshRSS or Linkding"
+        },
+        {
+          "title": "openmediavault",
+          "body": "The NAS with processor, memory, load, uptime, waiting updates and version, its file systems with how full they are, and its disks with their SMART state. openmediavault locks an account after three wrong passwords, so nexdeck tries a refused password again only every 15 minutes.",
+          "path": "Settings > Integrations > openmediavault"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The upload speed on the cards of the download clients and on the FRITZ!Box card is called Upload, and no longer reads like a service being reachable in German.",
+        "Four texts that stayed English in German are translated: \"just now\" on Home Assistant, \"Transcode\" on Plex and Jellyfin, \"published\" on n8n and a note on Nomad.",
+        "All six new connections were measured against live instances and are not beta."
+      ]
     }
   }
 }
