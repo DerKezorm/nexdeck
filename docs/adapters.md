@@ -27,6 +27,7 @@ that one of twenty-one renderers draws.
 | Unraid | system, array, guests | | API key (GraphQL) |
 | Nextcloud | overview, active users, free space | | serverinfo token, or an administrator account |
 | TrueNAS | system, pools, alerts | | API key; use https, where a Read-Only Administrator is enough; over http only a TrueNAS before 25.04 is read, with a full administrator's key, because later versions deprecate the REST API that http is limited to |
+| openmediavault | system, file systems, disks | | admin, or a user in the group openmediavault-admin; other users may sign in but read nothing. Three wrong passwords in five minutes lock the account in openmediavault until faillock resets it, so a refused password is tried again only every 15 minutes |
 | Proxmox Backup Server | datastores, host, tasks | | API token; DatastoreAudit on /datastore and Sys.Audit on /system |
 | Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
 | Duplicati | backup jobs, backups | | the password of the web interface; Duplicati 2.1 or newer |
@@ -86,6 +87,7 @@ that one of twenty-one renderers draws.
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
 | Tautulli | now playing, streams, most watched | | API key |
 | RomM | platforms, recently added games, game library | | client API token with roms.read and platforms.read |
+| Minecraft | server status, players online | | none; the server list ping of Java Edition over TCP, and for Bedrock Edition both the RakNet ping over UDP and the NetherNet join query over TCP that Bedrock 1.26 answers by default. SRV records are not followed |
 | Immich | archive, storage, users | | API key of an administrator |
 | Bazarr | status, missing subtitles, recently fetched | | API key |
 | Audiobookshelf | library, listening now | | API key |
@@ -103,6 +105,7 @@ that one of twenty-one renderers draws.
 | Prowlarr | indexers, status | | API key |
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
+| rTorrent | queue, speed, torrents, rTorrent overview | pause, resume | the XML-RPC address (such as :8000/RPC2 of crazymax/rtorrent-rutorrent) or the address of ruTorrent, with the web server's user and password when one is set |
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
 | Tube Archivist | download queue, latest videos, video archive | start downloads | API token from Settings > Application, sent as Token |
@@ -135,12 +138,15 @@ that one of twenty-one renderers draws.
 | Homebox | inventory, value by place or tag, warranties | | API key from Profile > API Keys (Homebox 0.26 and newer; shown only once), or the account's e-mail and password on older versions |
 | PhotoPrism | photo library, recently added | start indexing | app password from Settings > Account > Apps and Devices; a client access token cannot list photos |
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
+| OctoPrint | printer, print job | | application key from User Settings > Application Keys; its user needs the permission Status (groups Users or Read-only) |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile, status page, notices, updates, this machine | | none |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
+| FreshRSS | feed reader, unread, unread by feed | | user name and the API password from Settings > Profile, not the sign-in password; API access allowed under Administration > Authentication |
 | Karakeep | recent bookmarks, reading list | | API key from Settings > API Keys |
 | Linkwarden | recent links, links | | access token from Settings > Access Tokens |
+| Linkding | bookmarks, recent bookmarks | | REST API token from Settings > Integrations; each account sees its own bookmarks only |
 | YouTube | videos, subscriptions | | none for videos; subscriptions need a YouTube Data API v3 key and a public subscription list |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |

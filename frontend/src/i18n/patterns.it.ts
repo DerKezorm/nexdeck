@@ -85,4 +85,6 @@ export const patterns: Pattern[] = [
   [/^(\S+) available$/, '$1 disponibile'],
   [/^The device answers$/, 'Il dispositivo risponde'],
   [/^(.+) answers$/, '$1 risponde'],
+  [/^Nozzle (\d+)$/, 'Ugello $1'],
+  [/^Nothing answers on (.+)\.$/, 'Su $1 non risponde nulla.'],
 ]

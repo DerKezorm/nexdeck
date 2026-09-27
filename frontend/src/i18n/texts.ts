@@ -115,6 +115,8 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\S+) available$/, '$1 verfügbar'],
     [/^The device answers$/, 'Das Gerät antwortet'],
     [/^(.+) answers$/, '$1 antwortet'],
+    [/^Nozzle (\d+)$/, 'Düse $1'],
+    [/^Nothing answers on (.+)\.$/, 'Unter $1 antwortet nichts.'],
   ],
   es: spanish,
   fr: french,
