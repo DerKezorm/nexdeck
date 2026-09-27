@@ -573,7 +573,8 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     TrueNAS 2026-09-18 against 25.10.7, nexmail the same day against 0.17.0, nexpulse 2026-09-19 against 0.1.0,
     NetBird 2026-09-24 against netbird-server 0.79.0 with two clients, nextrmnl 2026-09-26 against 0.3.0, Arcane the same day against 2.14.0 with one agent, Dockhand the same day against 1.0.49 with a Hawser agent, Elasticsearch 9.5.3 and OpenSearch 3.8.0, UrBackup 2.5.37, OpenWrt 25.12.5 and Kubernetes (k3s v1.37.0) the same night;
     Minecraft 2026-09-27 against Java 26.3 and Paper 26.2 and Bedrock 1.26.52.3, OctoPrint 1.11.8 with its virtual printer, rTorrent 0.16.22 with ruTorrent 5.3.14,
-    FreshRSS 1.30.0, Linkding 1.47.0 and openmediavault 8.5.9 the same day);
+    FreshRSS 1.30.0, Linkding 1.47.0 and openmediavault 8.5.9 the same day; PatchMon 2.1.3 with three agents
+    and IMAP against Dovecot 2.4.5 and Stalwart 0.16.23 the same afternoon);
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
@@ -583,7 +584,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "paperless", "pihole", "plex", "portainer", "prometheus", "prowlarr", "proxmox", "qbittorrent", "radarr", "reolink", "romm", "sabnzbd", "seerr", "semaphore",
         "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
         "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix", "truenas", "nexmail", "nexpulse", "netbird", "nextrmnl", "arcane", "dockhand", "elasticsearch", "urbackup", "openwrt", "kubernetes",
-        "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault"}
+        "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault", "patchmon", "imap"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

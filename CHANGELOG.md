@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **PatchMon.** The hosts PatchMon watches: an overview of how many need updates, with the security updates and updates waiting, the hosts up to date, offline, waiting for a reboot or not reported yet, also as a ring; the hosts themselves, those with security updates and those offline first; and the operating systems they run. Each card can be narrowed to one host group. One key of PatchMon's type API with the scope host: get reads all three; a GetHomepage key is refused by PatchMon, and the connection sheet says so. PatchMon answers only at the address in its CORS_ORIGIN, and a refusal for that reason is named as such. Requested in issue #24.
+- **IMAP.** Any mailbox over IMAP: the unread mail in the folders picked, the latest mail with sender, subject and age, and every folder with its unread and all its mail. It reads counts and headers only, never the text of a mail, and opens folders read-only, so nothing is marked as read. TLS, STARTTLS or, on a trusted network, no encryption; a password is never sent over a connection that should have been encrypted and is not. User name and password or app password; OAuth2 is not supported, so Microsoft 365 is mostly out of reach. Requested in issue #22.
+
 ## 0.25.0 (2026-09-27)
 
 ### New

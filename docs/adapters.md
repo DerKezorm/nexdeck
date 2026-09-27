@@ -19,6 +19,7 @@ that one of twenty-one renderers draws.
 | Portainer | containers, summary | container actions | access token |
 | Nomad | jobs, nodes, cluster | stop a job, scale a task group up or down | none on a cluster without ACLs, else an ACL token with node:read and namespace:read-job; the buttons need namespace:scale-job or namespace:submit-job |
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
+| PatchMon | PatchMon overview, hosts, operating systems | | a key of usage type API with the scope host: get, from Settings > Integrations > Auto-Enrollment & API (a GetHomepage key is refused); the URL has to be one named in PatchMon's CORS_ORIGIN |
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
 | Gitea, Forgejo | open issues or pull requests, Actions jobs, repositories | | access token with read access to repositories, issues and the user |
 | Semaphore UI | last runs, automation | | API token of a user; the cards see the projects that user sees |
@@ -82,6 +83,7 @@ that one of twenty-one renderers draws.
 | Jellyfin, Emby | now playing, library, libraries, recently added (covers), findings, users and devices, top of the week, music player | scan every library (one alone does nothing on these, measured); play music in the browser, instant mixes, make and change playlists | API key |
 | Nexview | requests, library, instances, requests to approve | approve with target folder and profile, turn down | API key; approving needs an approver's key that may write |
 | nexmail | unread mail (total and per mailbox, a mailbox whose sign-in fails is marked), latest mail (sender and subject, unread ones highlighted, each row opens the message in nexmail) | | API key from nexmail 0.17.0 or newer under Settings > API keys, with the mailboxes shared on it; the latest mail card needs the scope "Count, sender and subject" and is not offered for a key that may only count. The operator of nexmail has to allow API keys first |
+| IMAP | unread mail, latest mail, folders | | user name and password or app password of the mailbox, over TLS, STARTTLS or, on a trusted network, unencrypted; no OAuth2, so Microsoft 365 is mostly out of reach. Reads counts and the sender, subject and date of a mail, never its text, and never marks anything as read |
 | nexcrate | library (there, wanted, on its way, stuck, as a ring), downloads (progress and time left), stuck downloads (needing you first, with the buttons nexcrate offers), coming up, just arrived (posters and covers), why is it missing (nexcrate's reason per wanted title), storage, findings | try again, search again, remove and search again, clear, on a stuck download | paired from the connection sheet: nexdeck shows a code, the owner confirms it in nexcrate and the key arrives by itself; a key made in nexcrate's settings works too. Every card reads with "read"; the buttons need "operate" |
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
