@@ -862,6 +862,46 @@
       "small": [
         "Gewünscht in Issue #19 und #20. ReadMeABook ist Beta: gesehen an Version 1.2.3, aber noch nicht mit einem laufenden Download; Rückmeldungen sind willkommen."
       ]
+    },
+    "0.24.0": {
+      "lead": "Fünf neue Anbindungen kommen aufs Board: Dockhand, Kubernetes, UrBackup, Elasticsearch und OpenSearch, und OpenWrt. Homebox zeigt jetzt, was jeder Ort wert ist.",
+      "sections": [
+        {
+          "title": "Dockhand",
+          "body": "Fünf Karten aus dem Docker-Verwalter Dockhand, über alle Umgebungen, die er verwaltet, direkt erreichte wie solche hinter seinem Hawser-Agenten: ein Überblick, die Umgebungen mit Prozessor und Speicher, die Compose-Stacks, die Container mit ihrer Gesundheit und die Image-Updates, die Dockhand gefunden hat. Jede Karte außer den Umgebungen lässt sich auf eine Umgebung einschränken. Eine Umgebung, die Dockhand nicht erreicht, wird als solche genannt, statt eine leere Liste zu zeigen. Der Token ist freiwillig: leer lassen, wenn die Anmeldung in Dockhand abgeschaltet ist.",
+          "path": "Einstellungen > Anbindungen > Dockhand"
+        },
+        {
+          "title": "Kubernetes",
+          "body": "Ein Cluster, nur lesend über den Token eines Dienstkontos: ein Überblick über Pods, Knoten, Workloads und Last; die Knoten mit der Angabe, ob sie bereit, gesperrt oder unter Druck sind; die Workloads mit der Zahl ihrer bereiten Pods; und die Pods mit Problemen, gelesen aus ihren Containern, denn ein Pod, der immer wieder abstürzt, nennt sich trotzdem laufend. Das Anbindungsblatt nennt die eine Regel, die der Token braucht, um die Knoten zu sehen.",
+          "path": "Einstellungen > Anbindungen > Kubernetes"
+        },
+        {
+          "title": "UrBackup",
+          "body": "Welche Rechner rechtzeitig gesichert sind und welche überfällig, noch nie gesichert oder ohne gewählte Ordner, dazu die laufenden Sicherungen mit ihrem Fortschritt und die fertigen. nexdeck meldet sich so an wie UrBackups eigene Oberfläche, das Passwort verlässt nexdeck also nie.",
+          "path": "Einstellungen > Anbindungen > UrBackup"
+        },
+        {
+          "title": "Elasticsearch und OpenSearch",
+          "body": "Eine Anbindung für beide: der Zustand des Clusters mit Knoten, Indizes, Dokumenten und Größe; die Indizes, rote und gelbe zuerst; und die Knoten mit Platte, Heap und Prozessor. Ein einzelner Knoten, der gelb bleibt, wird erklärt, statt bernsteinfarben dazustehen, und eine Ablehnung nennt das fehlende Recht.",
+          "path": "Einstellungen > Anbindungen > Elasticsearch"
+        },
+        {
+          "title": "OpenWrt",
+          "body": "Speicher, Last, Laufzeit, Firmware und Platz des Routers, seine Schnittstellen mit Adresse und Datenverkehr und die Geräte, denen er eine Adresse gegeben hat. Gelesen wird über dieselbe Schnittstelle, die LuCI nutzt, als root oder mit einem Konto, das nur lesen darf.",
+          "path": "Einstellungen > Anbindungen > OpenWrt"
+        },
+        {
+          "title": "Was jeder Ort wert ist",
+          "body": "Eine neue Homebox-Karte zeigt, was die Dinge an jedem Ort oder unter jedem Schlagwort wert sind, die größten zuerst und jeweils mit ihrem Anteil. Auch Homebox vor 0.26 geht: Dort gibt es keine API-Schlüssel, die Anbindung meldet sich dann mit dem Konto an.",
+          "path": "Board bearbeiten > Widget hinzufügen > Homebox > Wert je Ort"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Logos, die es nur als Bilddatei gibt, etwa die von ReadMeABook und Dockhand, erscheinen jetzt statt eines grauen Kastens, und die Logo-Auswahl führt sie ebenfalls.",
+        "Dockhand wurde in Issue #21 gewünscht und an Dockhand 1.0.49 gemessen, mit einer direkt erreichten Engine und einer hinter Hawser; Rückmeldungen aus größeren Umgebungen sind willkommen."
+      ]
     }
   }
 }

@@ -862,6 +862,46 @@
       "small": [
         "Requested in issues #19 and #20. ReadMeABook is beta: seen against version 1.2.3, but not yet with a running download; a report is welcome."
       ]
+    },
+    "0.24.0": {
+      "lead": "Five new connections join the board: Dockhand, Kubernetes, UrBackup, Elasticsearch and OpenSearch, and OpenWrt. Homebox now shows what each place is worth.",
+      "sections": [
+        {
+          "title": "Dockhand",
+          "body": "Five cards from the Docker manager Dockhand, across every environment it manages, those it reaches directly and those behind its Hawser agent: an overview, the environments with their processor and memory, the compose stacks, the containers with their health, and the image updates Dockhand found. Every card but the environments can be narrowed to one environment. An environment Dockhand cannot reach is named as such instead of showing an empty list. The token is optional: leave it empty when sign-in is switched off in Dockhand.",
+          "path": "Settings > Integrations > Dockhand"
+        },
+        {
+          "title": "Kubernetes",
+          "body": "A cluster read-only through a service account token: an overview of pods, nodes, workloads and load; the nodes with whether each is ready, cordoned or under pressure; the workloads with how many of their pods are ready; and the pods in trouble, read from their containers, because a pod that keeps crashing still calls itself running. The connection sheet names the one rule to add so the token may see the nodes.",
+          "path": "Settings > Integrations > Kubernetes"
+        },
+        {
+          "title": "UrBackup",
+          "body": "Which machines are backed up in time and which are overdue, never backed up or have no folders chosen, the backups running with how far they are, and those that finished. nexdeck signs in the way UrBackup's own interface does, so the password never leaves nexdeck.",
+          "path": "Settings > Integrations > UrBackup"
+        },
+        {
+          "title": "Elasticsearch and OpenSearch",
+          "body": "One connection for either: the cluster's health with its nodes, indices, documents and size; the indices, red and yellow first; and the nodes with disk, heap and processor. A single node that stays yellow is explained instead of standing there amber, and a refusal names the privilege that is missing.",
+          "path": "Settings > Integrations > Elasticsearch"
+        },
+        {
+          "title": "OpenWrt",
+          "body": "The router's memory, load, uptime, firmware and storage, its interfaces with their address and traffic, and the devices it gave an address to. It reads through the same interface LuCI uses, as root or as a login with read rights only.",
+          "path": "Settings > Integrations > OpenWrt"
+        },
+        {
+          "title": "What each place is worth",
+          "body": "A new Homebox card shows what the things in each place, or under each tag, are worth, the largest first with each one's share. Homebox before 0.26 works too: without API keys there, the connection signs in with the account.",
+          "path": "Edit board > Add widget > Homebox > Value by place"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Logos that exist only as a picture file, such as those of ReadMeABook and Dockhand, show up instead of a grey box, and the logo picker lists them too.",
+        "Dockhand was requested in issue #21 and measured against Dockhand 1.0.49 with one engine reached directly and one behind Hawser; a report from larger setups is welcome."
+      ]
     }
   }
 }
