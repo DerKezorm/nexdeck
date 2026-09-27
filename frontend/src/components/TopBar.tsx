@@ -112,9 +112,10 @@ export function TopBar(props: Props) {
           onClick={onSearch}
           aria-label={t('palette.title')}
         >
-          <Search size={14} />
-          <span className="flex-1 text-left">{t('palette.placeholder')}</span>
-          <kbd className="num text-[10px] px-1.5 py-0.5 rounded border border-line text-faint">Ctrl K</kbd>
+          <Search size={14} className="shrink-0" />
+          {/* One line in every language: French wrapped to two and burst the bar. */}
+          <span className="flex-1 min-w-0 truncate text-left">{t('palette.placeholder')}</span>
+          <kbd className="shrink-0 num text-[10px] px-1.5 py-0.5 rounded border border-line text-faint">Ctrl K</kbd>
         </button>
       </div>
       <div className="flex items-center gap-1.5">

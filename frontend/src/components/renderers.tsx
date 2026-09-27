@@ -153,6 +153,16 @@ function worthDrawing(points: number[] | undefined): points is number[] {
  * all: the `.chips` rule in app.css asks the card's height, so a small card
  * keeps the sideways row and a large one shows every chip.
  */
+/**
+ * A value as the card shows it: a number formatted, a word translated like a
+ * label. Chips and rows showed "just now" or the note that a token reads one
+ * namespace in English in every language, although the tables knew them.
+ */
+function shownValue(value: number | string | null | undefined, unit?: string): string {
+  if (typeof value === 'string' && value !== '' && !unit) return tLabel(value)
+  return formatValue(value, unit)
+}
+
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
   if (!items?.length) return null
   return (
@@ -160,7 +170,7 @@ function Chips({ items, series }: { items?: Secondary[]; series?: Record<string,
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
           {tLabel(item.label)}
-          <b className="num">{formatValue(item.value, item.unit)}</b>
+          <b className="num">{shownValue(item.value, item.unit)}</b>
           {item.metric && worthDrawing(series?.[item.metric]) && (
             <span className="inline-block w-8 ml-1 -mb-0.5">
               <Sparkline values={series![item.metric]} height={10} fill={false} />
@@ -412,7 +422,7 @@ export function StatsCard({ data, series }: RenderProps) {
                   </div>
                 )}
               </div>
-              <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">{formatValue(row.value, row.unit)}</div>
+              <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">{shownValue(row.value, row.unit)}</div>
             </div>
           )
         })}

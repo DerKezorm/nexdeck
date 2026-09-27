@@ -22,10 +22,12 @@ export function SettingsNav({ base, entries, label }: { base: string; entries: N
             to={entry.to ? `${base}/${entry.to}` : base}
             end={entry.to === ''}
             className={({ isActive }) =>
-              `flex items-center gap-2 h-9 px-3 rounded-lg text-sm whitespace-nowrap ${isActive ? 'bg-accent-soft text-accent font-medium' : 'text-muted hover:text-ink hover:bg-surface-hover'}`
+              // ⚠️ In the column a long name wraps: "Proveedores de inicio de sesión"
+              // was cut, and squeezed its symbol out of sight with it.
+              `flex items-center gap-2 h-9 md:h-auto md:min-h-9 md:py-2 px-3 rounded-lg text-sm leading-snug whitespace-nowrap md:whitespace-normal ${isActive ? 'bg-accent-soft text-accent font-medium' : 'text-muted hover:text-ink hover:bg-surface-hover'}`
             }
           >
-            <entry.icon size={15} />
+            <entry.icon size={15} className="shrink-0" />
             {entry.label}
           </NavLink>
         ))}

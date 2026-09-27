@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Bell, BellOff, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
+import { Bell, BellOff, Pencil, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -121,8 +121,11 @@ export function IntegrationsSettings() {
                   >
                     {integration.muted ? <BellOff size={14} /> : <Bell size={14} />}
                   </button>
-                  <button className="btn h-7 text-xs" onClick={() => setEditing(integration)}>
-                    {t('common.edit')}
+                  {/* A pencil on a phone: "Modifier" or "Modifica" beside three other
+                      buttons left the name two letters wide. */}
+                  <button className="btn h-7 text-xs max-sm:w-7 max-sm:px-0" onClick={() => setEditing(integration)} aria-label={t('common.edit')}>
+                    <Pencil size={14} className="sm:hidden" />
+                    <span className="max-sm:hidden">{t('common.edit')}</span>
                   </button>
                   <button className="btn btn-icon h-7 w-7 btn-danger" onClick={() => setRemoving(integration)} aria-label={t('common.delete')}>
                     <Trash2 size={14} />

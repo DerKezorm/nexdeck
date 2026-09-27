@@ -819,7 +819,7 @@
   },
   "palette": {
     "title": "Recherche",
-    "placeholder": "Rechercher des services, des actions, des tableaux…",
+    "placeholder": "Rechercher services, actions, tableaux…",
     "nothing": "Aucun résultat.",
     "open": "Ouvrir",
     "action": "Action",
