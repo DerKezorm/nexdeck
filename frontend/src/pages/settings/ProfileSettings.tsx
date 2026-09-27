@@ -7,7 +7,7 @@ import type { BoardSummary, User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
 import { Field, PasswordInput, Select, Toast } from '../../components/ui'
-import { LANGUAGES } from '../../i18n'
+import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
@@ -25,6 +25,14 @@ export function ProfileSettings() {
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
+  const pair = accountPair(user.language_pair)
+  const languageOptions = Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))
+  /** One button changed; taking the other button's language swaps the two. */
+  const choosePair = (index: 0 | 1, code: string) => {
+    const other = pair[1 - index]
+    const next: [string, string] = index === 0 ? [code, code === other ? pair[0] : other] : [code === other ? pair[1] : other, code]
+    void update({ language_pair: next }).catch(failed)
+  }
   /** Whether the two fields above the button differ from what is stored. */
   const dirty = displayName !== (user.display_name ?? '') || email !== (user.email ?? '')
   const failed = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
@@ -108,13 +116,33 @@ export function ProfileSettings() {
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label={t('settings.profile.language')} htmlFor="p-lang">
-            <Select id="p-lang" value={user.locale} onChange={(locale) => void update({ locale })} options={Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))} />
+            <Select id="p-lang" value={user.locale} onChange={(locale) => void update({ locale })} options={languageOptions} />
           </Field>
           <Field label={t('settings.profile.theme')} htmlFor="p-theme">
             <Select id="p-theme" value={user.theme} onChange={(theme) => void update({ theme: theme as 'dark' | 'light' | 'system' })} options={[{ value: 'dark', label: t('settings.profile.theme_dark') }, { value: 'light', label: t('settings.profile.theme_light') }, { value: 'system', label: t('settings.profile.theme_system') }]} />
           </Field>
           <Field label={t('settings.profile.startBoard')} htmlFor="p-start">
             <Select id="p-start" value={user.start_board_id ? String(user.start_board_id) : ''} onChange={(value) => void update({ start_board_id: value ? Number(value) : 0 })} options={[{ value: '', label: t('settings.profile.firstBoard') }, ...(boards.data ?? []).map((b) => ({ value: String(b.id), label: b.name }))]} />
+          </Field>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
+            <div id="p-pair" className="flex gap-2">
+              <select id="p-pair-1" className="input" aria-label={t('settings.profile.barFirst')} aria-describedby="p-pair-1-help" value={pair[0]} onChange={(e) => choosePair(0, e.target.value)}>
+                {languageOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select id="p-pair-2" className="input" aria-label={t('settings.profile.barSecond')} aria-describedby="p-pair-1-help" value={pair[1]} onChange={(e) => choosePair(1, e.target.value)}>
+                {languageOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </Field>
         </div>
       </SettingsCard>

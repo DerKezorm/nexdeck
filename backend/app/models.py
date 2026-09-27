@@ -86,6 +86,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(200))
     role: Mapped[str] = mapped_column(String(16), default=Role.user.value)
     locale: Mapped[str] = mapped_column(String(8), default="en")
+    #: The two languages in the top bar, as "en,de"; ``locale`` is one of them.
+    language_pair: Mapped[str] = mapped_column(String(32), default="en,de")
     theme: Mapped[str] = mapped_column(String(8), default="dark")
     start_board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     disabled: Mapped[bool] = mapped_column(Boolean, default=False)

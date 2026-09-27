@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Request, Response, status
 from sqlalchemy import func, select
 
-from .. import __version__
+from .. import __version__, languages
 from ..config import get_settings
 from ..deps import DbSession, error
 from ..models import Board, OidcProvider, Role, User
@@ -42,7 +42,8 @@ async def run_setup(body: SetupBody, request: Request, response: Response, db: D
         raise error("already_set_up", "nexdeck is already set up.", status.HTTP_409_CONFLICT)
     # A fresh installation has nothing "new" to announce: the first account
     # has seen this version by definition.
-    user = User(username=body.username, display_name=body.display_name.strip() or body.username, password_hash=hash_password(body.password), role=Role.admin.value, locale=body.locale, seen_version=__version__)
+    user = User(username=body.username, display_name=body.display_name.strip() or body.username, password_hash=hash_password(body.password), role=Role.admin.value, locale="en", language_pair=languages.write_pair(list(languages.DEFAULT_PAIR)), seen_version=__version__)
+    languages.apply(user, body.locale, None)
     db.add(user)
     db.flush()
     if body.demo:

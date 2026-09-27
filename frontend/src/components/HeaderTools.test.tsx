@@ -7,7 +7,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
-import i18n from '../i18n'
+import i18n, { LANGUAGES } from '../i18n'
+import { useAuth } from '../stores/auth'
 import { HeaderTools, type HeaderUser } from './HeaderTools'
 
 const USER: HeaderUser = { display_name: 'Ada Lovelace', username: 'ada', role: 'admin', avatar_url: null }
@@ -22,6 +23,8 @@ function show(user: HeaderUser | null = USER, unread = 0) {
 
 afterEach(async () => {
   document.documentElement.removeAttribute('data-theme')
+  useAuth.setState({ user: null })
+  delete LANGUAGES.xx
   if (i18n.language !== 'en') await i18n.changeLanguage('en')
 })
 
@@ -80,5 +83,30 @@ describe('HeaderTools', () => {
     await screen.findByRole('button', { name: 'Hinweise' })
     expect(i18n.language).toBe('de')
     expect(screen.getByRole('button', { name: 'Deutsch' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('shows two languages however many there are, the own pair of the account in its order', async () => {
+    LANGUAGES.xx = 'Xxish'
+    const patched: unknown[] = []
+    useAuth.setState({
+      user: { id: 1, username: 'ada', locale: 'en', language_pair: ['xx', 'en'] } as never,
+      update: (async (fields: unknown) => {
+        patched.push(fields)
+      }) as never,
+    })
+    show()
+    const group = screen.getByRole('group', { name: 'Language' })
+    const buttons = [...group.querySelectorAll('button')].map((button) => button.getAttribute('aria-label'))
+    expect(buttons).toEqual(['Xxish', 'English'])
+    expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Xxish' }))
+    expect(patched).toEqual([{ locale: 'xx' }])
+  })
+
+  it('falls back to English and German when the stored pair is no pair', () => {
+    useAuth.setState({ user: { id: 1, username: 'ada', locale: 'en', language_pair: ['en', 'fr'] } as never })
+    show()
+    const group = screen.getByRole('group', { name: 'Language' })
+    expect([...group.querySelectorAll('button')].map((button) => button.textContent)).toEqual(['en', 'de'])
   })
 })

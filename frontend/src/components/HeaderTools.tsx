@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import type { User } from '../api/types'
-import { LANGUAGES, setLanguage } from '../i18n'
+import { accountPair, guestPair, LANGUAGES, setLanguage } from '../i18n'
 import { applyTheme, currentTheme, useAuth } from '../stores/auth'
 import { usePlayer } from '../stores/player'
 import { Avatar } from './Avatar'
@@ -86,10 +86,18 @@ function ThemePill({ signedIn }: { signedIn: boolean }) {
   )
 }
 
-/** The language, switched here and kept with the account. */
-function LanguagePill({ signedIn }: { signedIn: boolean }) {
+/**
+ * The language, switched here and kept with the account.
+ *
+ * Two buttons, whatever nexdeck speaks: the account chooses which two in its
+ * profile, and the language on screen is always one of them. Where nobody is
+ * signed in the pair is guessed from the screen and the browser.
+ */
+export function LanguagePill({ signedIn }: { signedIn: boolean }) {
   const { t, i18n } = useTranslation()
   const update = useAuth((s) => s.update)
+  const chosen = useAuth((s) => s.user?.language_pair)
+  const pair = signedIn ? accountPair(chosen) : guestPair(i18n.language)
   const choose = async (code: string) => {
     if (code === i18n.language) return
     if (signedIn) await update({ locale: code })
@@ -97,15 +105,15 @@ function LanguagePill({ signedIn }: { signedIn: boolean }) {
   }
   return (
     <div className={PILL} role="group" aria-label={t('settings.profile.language')}>
-      {Object.entries(LANGUAGES).map(([code, label]) => (
+      {pair.map((code) => (
         <button
           key={code}
           type="button"
           className={`${SEGMENT} px-2 py-1 text-[11px] font-semibold uppercase ${i18n.language === code ? ACTIVE : IDLE}`}
           onClick={() => void choose(code)}
           aria-pressed={i18n.language === code}
-          aria-label={label}
-          title={label}
+          aria-label={LANGUAGES[code]}
+          title={LANGUAGES[code]}
         >
           {code}
         </button>

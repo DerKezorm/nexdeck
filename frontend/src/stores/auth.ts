@@ -21,7 +21,7 @@ interface AuthState {
   /** Signed in on the home network without a password; `again` after signing out on purpose. */
   homeSignIn: (again?: boolean) => Promise<void>
   logout: () => Promise<void>
-  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
+  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'language_pair' | 'theme' | 'start_board_id' | 'seen_version'>>) => Promise<void>
   /** Take an account the server just handed back, after an upload for instance. */
   setUser: (user: User) => void
 }
@@ -101,7 +101,8 @@ export const useAuth = create<AuthState>((set, getState) => ({
   update: async (fields) => {
     const user = await patch<User>('/auth/me', fields)
     set({ user })
-    if (fields.locale) await setLanguage(fields.locale)
+    // The server's answer, not the request: a new pair can move the language too.
+    if (fields.locale || fields.language_pair) await setLanguage(user.locale)
     if (fields.theme) applyTheme(fields.theme)
     void getState
   },

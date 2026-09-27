@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, status
 from sqlalchemy import func, select
 
+from .. import languages
 from ..config import get_settings
 from ..deps import COOKIE_NAME, CurrentUser, DbSession, PasswordUser, error, refuse_at_home
 from ..models import Notice, OidcProvider, Session, User, utcnow
@@ -65,6 +66,7 @@ def user_public(user: User, request: Request | None = None) -> UserPublic:
     return UserPublic(
         id=user.id, username=user.username, display_name=user.display_name or user.username, role=user.role,
         locale=user.locale, theme=user.theme, start_board_id=user.start_board_id, disabled=user.disabled,
+        language_pair=languages.read_pair(user.language_pair),
         seen_version=user.seen_version, has_password=has_usable_password(user.password_hash),
         auth_kind=getattr(request.state, "auth_kind", "session") if request is not None else "session",
         avatar_url=avatars.url_for(user.avatar),
@@ -228,8 +230,7 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
         # A reset link to an address of one's choosing is a password by post.
         refuse_at_home(request)
         user.email = own_address(db, user, body.email)
-    if body.locale is not None:
-        user.locale = body.locale
+    languages.apply(user, body.locale, body.language_pair)
     if body.theme is not None:
         user.theme = body.theme
     if body.start_board_id is not None:

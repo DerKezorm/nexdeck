@@ -46,12 +46,48 @@ export async function setLanguage(code: string): Promise<void> {
   }
 }
 
+/** The two buttons in the top bar of an account that has not chosen others. */
+export const DEFAULT_PAIR: [string, string] = ['en', 'de']
+
+/** The first language the browser asks for that nexdeck speaks, if any. */
+export function browserLanguage(): string | null {
+  try {
+    const asked = navigator.languages?.length ? navigator.languages : [navigator.language]
+    for (const tag of asked) {
+      const code = (tag || '').toLowerCase().split('-')[0]
+      if (code in LANGUAGES) return code
+    }
+  } catch {
+    // no navigator to ask
+  }
+  return null
+}
+
 export function storedLanguage(): string {
   try {
-    return localStorage.getItem('nexdeck.language') || (navigator.language.startsWith('de') ? 'de' : 'en')
+    const kept = localStorage.getItem('nexdeck.language')
+    if (kept && kept in LANGUAGES) return kept
   } catch {
-    return 'en'
+    // storage may be unavailable
   }
+  return browserLanguage() ?? 'en'
+}
+
+/**
+ * The two buttons where nobody is signed in: English, and next to it the
+ * language on screen, else the browser's, else German. The language on
+ * screen is always one of the two, so the way back is never hidden.
+ */
+export function guestPair(active: string): [string, string] {
+  if (active !== 'en' && active in LANGUAGES) return ['en', active]
+  const browser = browserLanguage()
+  return ['en', browser && browser !== 'en' ? browser : 'de']
+}
+
+/** The account's two buttons, as long as they are two languages nexdeck speaks. */
+export function accountPair(pair: readonly string[] | undefined): [string, string] {
+  if (pair?.length === 2 && pair[0] !== pair[1] && pair.every((code) => code in LANGUAGES)) return [pair[0], pair[1]]
+  return DEFAULT_PAIR
 }
 
 export default i18next

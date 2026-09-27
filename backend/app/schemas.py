@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from .languages import Code, Pair
+
 # -- users -------------------------------------------------------------------
 
 
@@ -15,6 +17,8 @@ class UserPublic(BaseModel):
     display_name: str
     role: str
     locale: str
+    #: The two languages in the top bar; ``locale`` is always one of them.
+    language_pair: list[str]
     theme: str
     start_board_id: int | None
     disabled: bool
@@ -36,7 +40,8 @@ class MePatch(BaseModel):
     display_name: str | None = Field(default=None, max_length=120)
     #: An empty string clears the address.
     email: str | None = Field(default=None, max_length=200)
-    locale: str | None = Field(default=None, max_length=8)
+    locale: Code | None = None
+    language_pair: Pair | None = None
     theme: Literal["dark", "light", "system"] | None = None
     start_board_id: int | None = None
     seen_version: str | None = Field(default=None, max_length=16)
@@ -52,7 +57,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8, max_length=200)
     display_name: str = Field(default="", max_length=120)
     role: Literal["admin", "user", "guest"] = "user"
-    locale: str = Field(default="en", max_length=8)
+    locale: Code = "en"
 
 
 class UserPatch(BaseModel):
@@ -60,14 +65,14 @@ class UserPatch(BaseModel):
     role: Literal["admin", "user", "guest"] | None = None
     disabled: bool | None = None
     password: str | None = Field(default=None, min_length=8, max_length=200)
-    locale: str | None = Field(default=None, max_length=8)
+    locale: Code | None = None
 
 
 class SetupBody(BaseModel):
     username: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9._-]+$")
     password: str = Field(min_length=8, max_length=200)
     display_name: str = Field(default="", max_length=120)
-    locale: str = Field(default="en", max_length=8)
+    locale: Code = "en"
     demo: bool = False
     docker_host: str = Field(default="", max_length=300)
 
@@ -375,7 +380,7 @@ class SettingsBody(BaseModel):
     public_url: str | None = Field(default=None, max_length=300)
     update_check: bool | None = None
     demo: bool | None = None
-    default_locale: str | None = Field(default=None, max_length=8)
+    default_locale: Code | None = None
     #: Whether everybody has to set up a second factor before doing anything.
     require_two_factor: bool | None = None
 

@@ -6,6 +6,8 @@ export interface User {
   display_name: string
   role: 'admin' | 'user' | 'guest'
   locale: string
+  /** The two languages in the top bar; `locale` is always one of them. */
+  language_pair: string[]
   theme: 'dark' | 'light' | 'system'
   start_board_id: number | null
   disabled: boolean

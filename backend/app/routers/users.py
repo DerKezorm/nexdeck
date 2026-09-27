@@ -7,6 +7,7 @@ import logging
 from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
 
+from .. import languages
 from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import ApiToken, Board, KioskToken, NotificationChannel, Page, Role, User, Widget
 from ..schemas import UserCreate, UserPatch, UserPublic
@@ -37,7 +38,8 @@ def list_users(user: CurrentUser, db: DbSession) -> list[dict]:
 def create_user(body: UserCreate, admin: AdminUser, db: DbSession, request: Request) -> UserPublic:
     if db.scalar(select(User).where(func.lower(User.username) == body.username.lower())):
         raise error("taken", "That user name is taken.", status.HTTP_409_CONFLICT)
-    user = User(username=body.username, display_name=body.display_name.strip() or body.username, password_hash=hash_password(body.password), role=body.role, locale=body.locale)
+    user = User(username=body.username, display_name=body.display_name.strip() or body.username, password_hash=hash_password(body.password), role=body.role, locale="en", language_pair=languages.write_pair(list(languages.DEFAULT_PAIR)))
+    languages.apply(user, body.locale, None)
     db.add(user)
     db.commit()
     logger.info("Account %r created as %s by %s.", user.username, user.role, admin.username)
@@ -68,8 +70,7 @@ def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -
         user.disabled = body.disabled
         if body.disabled:
             user.password_changed_ms = now_ms()
-    if body.locale is not None:
-        user.locale = body.locale
+    languages.apply(user, body.locale, None)
     if body.password:
         user.password_hash = hash_password(body.password)
         user.password_changed_ms = now_ms()

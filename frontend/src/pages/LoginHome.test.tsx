@@ -33,7 +33,7 @@ vi.mock('../api/client', () => ({
   put: vi.fn(async () => ({})),
   patch: vi.fn(),
 }))
-vi.mock('../i18n', () => ({ setLanguage: vi.fn(async () => undefined) }))
+vi.mock('../i18n', async (importOriginal) => ({ ...(await importOriginal<typeof import('../i18n')>()), setLanguage: vi.fn(async () => undefined) }))
 
 function login() {
   useAuth.setState({ user: null, loading: false, status: { needs_setup: false, providers: [], can_reset_password: false } as never })

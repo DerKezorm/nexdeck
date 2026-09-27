@@ -13,6 +13,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, get, post } from '../api/client'
 import { BackgroundLayer } from '../components/BackgroundLayer'
+import { LanguagePill } from '../components/HeaderTools'
 import { Logo } from '../components/Logo'
 import { Field, PasswordInput } from '../components/ui'
 import { useAuth } from '../stores/auth'
@@ -122,6 +123,11 @@ export function LoginPage() {
   const shell = (children: React.ReactNode) => (
     <div className="min-h-full flex items-center justify-center p-6">
       <BackgroundLayer />
+      {/* Before anybody is signed in the language is the browser's guess;
+          somebody at a borrowed laptop needs a way to their own. */}
+      <div className="fixed top-4 right-4 z-10">
+        <LanguagePill signedIn={false} />
+      </div>
       <div className="glass rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-center mb-6">
           <Logo size={34} />

@@ -12,6 +12,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ProfileSettings } from './ProfileSettings'
+import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 
 const calls = vi.hoisted(() => ({ patched: [] as unknown[] }))
@@ -31,6 +32,7 @@ const ME = {
   email: 'deck@example.com',
   role: 'admin',
   locale: 'en',
+  language_pair: ['en', 'de'],
   theme: 'dark',
   has_password: true,
   avatar_url: null,
@@ -97,5 +99,22 @@ describe('ProfileSettings', () => {
     await user.clear(field)
     await user.type(field, ME.email)
     expect(screen.getByRole('button', { name: /name and address/i })).toBeDisabled()
+  })
+
+  it('saves the two languages of the top bar with the account', async () => {
+    show()
+    const user = userEvent.setup()
+    const first = screen.getByRole('combobox', { name: 'First language in the top bar' })
+    const second = screen.getByRole('combobox', { name: 'Second language in the top bar' })
+    expect([(first as HTMLSelectElement).value, (second as HTMLSelectElement).value]).toEqual(['en', 'de'])
+    await user.selectOptions(first, 'de')
+    // The language the other button had: the two change places, never twice the same.
+    expect(calls.patched).toEqual([{ language_pair: ['de', 'en'] }])
+  })
+
+  it('offers every language nexdeck speaks in both places', () => {
+    show()
+    const second = screen.getByRole('combobox', { name: 'Second language in the top bar' })
+    expect([...(second as HTMLSelectElement).options].map((option) => option.value)).toEqual(Object.keys(LANGUAGES))
   })
 })
