@@ -89,4 +89,5 @@ export const patterns: Pattern[] = [
   [/^Nothing answers on (.+)\.$/, 'No responde nada en $1.'],
   [/^(\d+) messages$/, '$1 mensajes'],
   [/^(\d+) security updates$/, '$1 actualizaciones de seguridad'],
+  [/^(\d+) request\(s\) failed$/, '$1 solicitud(es) fallida(s)'],
 ]

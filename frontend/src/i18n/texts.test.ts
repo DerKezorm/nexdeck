@@ -41,6 +41,7 @@ describe('server texts', () => {
     await i18next.changeLanguage('de')
     expect(translateText('labels', '1.1 TB of 3.6 TB · normal')).toBe('1.1 TB von 3.6 TB · normal')
     expect(translateText('labels', '3 problem(s)')).toBe('3 Problem(e)')
+    expect(translateText('labels', '2 request(s) failed')).toBe('2 Anfrage(n) fehlgeschlagen')
     expect(translateText('labels', '1 error finding(s), 2 warning(s)')).toBe('1 Fehler-Befund(e), 2 Warnung(en)')
     expect(translateText('labels', 'Up 3 days')).toBe('Läuft seit 3 Tagen')
     expect(translateText('labels', '3 device(s) offline')).toBe('3 Gerät(e) offline')

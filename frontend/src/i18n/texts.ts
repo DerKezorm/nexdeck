@@ -119,6 +119,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^Nothing answers on (.+)\.$/, 'Unter $1 antwortet nichts.'],
     [/^(\d+) messages$/, '$1 Nachrichten'],
     [/^(\d+) security updates$/, '$1 Sicherheitsupdates'],
+    [/^(\d+) request\(s\) failed$/, '$1 Anfrage(n) fehlgeschlagen'],
   ],
   es: spanish,
   fr: french,

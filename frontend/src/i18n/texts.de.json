@@ -1620,7 +1620,11 @@
     "Nothing picked means the inbox.": "Nichts gewählt heißt der Posteingang.",
     "Special folders": "Sonderordner",
     "Drafts, sent mail, junk, trash and archive, as the server marks them.": "Entwürfe, Gesendetes, Spam, Papierkorb und Archiv, so wie der Server sie kennzeichnet.",
-    "Only folders with unread mail": "Nur Ordner mit ungelesenen Mails"
+    "Only folders with unread mail": "Nur Ordner mit ungelesenen Mails",
+    "Waiting and running music requests, the library and requests to approve from nexbeat.": "Wartende und laufende Musikanfragen, die Bibliothek und Anfragen zur Freigabe aus nexbeat.",
+    "A token from nexbeat under Profile > API tokens. Read-only is enough for the numbers; approving requests needs an administrator's token that may write.": "Ein Token aus nexbeat unter Profil > API-Token. Für die Zahlen reicht einer, der nur lesen darf; zum Freigeben braucht es den Token eines Admins mit Schreibrecht.",
+    "Waiting, running and failed requests, and what arrived this week.": "Wartende, laufende und fehlgeschlagene Anfragen, dazu was diese Woche angekommen ist.",
+    "Artists and albums in Lidarr or nexcrate, as nexbeat knows them.": "Künstler und Alben in Lidarr oder nexcrate, so wie nexbeat sie kennt."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2602,6 +2606,14 @@
     "No folder has unread mail.": "Kein Ordner hat ungelesene Mails.",
     "No folders.": "Keine Ordner.",
     "A picked folder does not exist on the server": "Ein gewählter Ordner existiert auf dem Server nicht",
-    "A folder picked on this card does not exist on the server any more. Pick the folders again.": "Ein auf dieser Karte gewählter Ordner existiert auf dem Server nicht mehr. Wähle die Ordner neu."
+    "A folder picked on this card does not exist on the server any more. Pick the folders again.": "Ein auf dieser Karte gewählter Ordner existiert auf dem Server nicht mehr. Wähle die Ordner neu.",
+    "Source": "Quelle",
+    "With music": "Mit Musik",
+    "Whole artist": "Ganzer Künstler",
+    "This token belongs to an account that is not an administrator, so only its own requests are counted.": "Dieser Token gehört zu einem Konto ohne Adminrechte, also zählen nur seine eigenen Anfragen.",
+    "This token belongs to an account that is not an administrator, so there is nothing to list.": "Dieser Token gehört zu einem Konto ohne Adminrechte, also gibt es nichts aufzulisten.",
+    "This token may only read. Approving needs an administrator's token that may write.": "Dieser Token darf nur lesen. Zum Freigeben braucht es den Token eines Admins mit Schreibrecht.",
+    "nexbeat has no target for requests": "nexbeat hat kein Ziel für Anfragen",
+    "Approved, but nexbeat could not hand it on. It is under Requests in nexbeat.": "Freigegeben, aber nexbeat konnte sie nicht weitergeben. Sie steht in nexbeat unter Anfragen."
   }
 }

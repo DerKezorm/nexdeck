@@ -1620,7 +1620,11 @@
     "Nothing picked means the inbox.": "Ne rien choisir signifie la boîte de réception.",
     "Special folders": "Dossiers spéciaux",
     "Drafts, sent mail, junk, trash and archive, as the server marks them.": "Brouillons, envoyés, indésirables, corbeille et archive, tels que le serveur les signale.",
-    "Only folders with unread mail": "Uniquement les dossiers avec des courriers non lus"
+    "Only folders with unread mail": "Uniquement les dossiers avec des courriers non lus",
+    "Waiting and running music requests, the library and requests to approve from nexbeat.": "Demandes de musique en attente et en cours, la bibliothèque et les demandes à approuver depuis nexbeat.",
+    "A token from nexbeat under Profile > API tokens. Read-only is enough for the numbers; approving requests needs an administrator's token that may write.": "Un jeton de nexbeat sous Profile > API tokens. La lecture seule suffit pour les chiffres ; approuver des demandes nécessite le jeton d’un administrateur autorisé à écrire.",
+    "Waiting, running and failed requests, and what arrived this week.": "Demandes en attente, en cours et en échec, et ce qui est arrivé cette semaine.",
+    "Artists and albums in Lidarr or nexcrate, as nexbeat knows them.": "Artistes et albums dans Lidarr ou nexcrate, tels que nexbeat les connaît."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -2602,6 +2606,14 @@
     "No folder has unread mail.": "Aucun dossier n’a de courrier non lu.",
     "No folders.": "Aucun dossier.",
     "A picked folder does not exist on the server": "Un dossier choisi n’existe pas sur le serveur",
-    "A folder picked on this card does not exist on the server any more. Pick the folders again.": "Un dossier choisi sur cette carte n’existe plus sur le serveur. Choisissez à nouveau les dossiers."
+    "A folder picked on this card does not exist on the server any more. Pick the folders again.": "Un dossier choisi sur cette carte n’existe plus sur le serveur. Choisissez à nouveau les dossiers.",
+    "Source": "Source",
+    "With music": "Avec musique",
+    "Whole artist": "Artiste entier",
+    "This token belongs to an account that is not an administrator, so only its own requests are counted.": "Ce jeton appartient à un compte qui n’est pas administrateur, seules ses propres demandes sont donc comptées.",
+    "This token belongs to an account that is not an administrator, so there is nothing to list.": "Ce jeton appartient à un compte qui n’est pas administrateur, il n’y a donc rien à lister.",
+    "This token may only read. Approving needs an administrator's token that may write.": "Ce jeton ne peut que lire. Pour approuver, il faut le jeton d’un administrateur autorisé à écrire.",
+    "nexbeat has no target for requests": "nexbeat n’a pas de destination pour les demandes",
+    "Approved, but nexbeat could not hand it on. It is under Requests in nexbeat.": "Approuvée, mais nexbeat n’a pas pu la transmettre. Elle se trouve dans nexbeat sous Requests."
   }
 }
