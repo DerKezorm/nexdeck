@@ -967,6 +967,20 @@
       "small": [
         "Beide wurden in den Issues #24 und #22 gewünscht und gegen echte Instanzen gemessen: PatchMon 2.1.3 mit drei Agenten, Dovecot und Stalwart für IMAP. Keine davon ist Beta."
       ]
+    },
+    "0.27.0": {
+      "lead": "nexbeat kommt aufs Board: deine Musikanfragen, die Bibliothek und, für Admins, die Anfragen zur Freigabe mit Knöpfen.",
+      "sections": [
+        {
+          "title": "nexbeat",
+          "body": "Drei Karten: wartende, laufende und fehlgeschlagene Anfragen samt dem, was diese Woche angekommen ist; die Bibliothek mit Künstlern und Alben aus Lidarr oder nexcrate; und die Anfragen zur Freigabe mit Cover, zum Freigeben und Ablehnen direkt vom Board. Nötig ist ein API-Token aus nexbeat 1.2.0 unter Profil > API-Token. Einer, der nur lesen darf, füllt jede Karte; für die Knöpfe braucht es den Token eines Admins mit Schreibrecht.",
+          "path": "Einstellungen > Anbindungen > nexbeat"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Der Verbindungstest sagt, ob der Token freigeben darf. Der Token eines gewöhnlichen Kontos zählt nur dessen eigene Anfragen, und die Karte sagt das dazu."
+      ]
     }
   }
 }

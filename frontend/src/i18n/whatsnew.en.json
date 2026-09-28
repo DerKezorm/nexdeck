@@ -967,6 +967,20 @@
       "small": [
         "Both were requested in issues #24 and #22 and measured against live instances: PatchMon 2.1.3 with three agents, and Dovecot and Stalwart for IMAP. Neither is beta."
       ]
+    },
+    "0.27.0": {
+      "lead": "nexbeat joins the board: your music requests, the library and, for administrators, the requests to approve with buttons.",
+      "sections": [
+        {
+          "title": "nexbeat",
+          "body": "Three cards: waiting, running and failed requests and what arrived this week; the library with artists and albums from Lidarr or nexcrate; and the requests to approve with their covers, approved or turned down right from the board. It needs an API token from nexbeat 1.2.0 under Profile > API tokens. A read-only token fills every card; the buttons need an administrator's token that may write.",
+          "path": "Settings > Integrations > nexbeat"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The connection test says whether the token may approve. A token of an ordinary account counts only that account's requests, and the card says so."
+      ]
     }
   }
 }

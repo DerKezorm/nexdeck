@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.27.0 (2026-09-28)
+
+### New
+
+- **nexbeat.** The music requests of nexbeat on the board: waiting, running and failed requests and what arrived this week; the library, artists and albums in Lidarr or nexcrate as nexbeat knows them; and the requests to approve, with their covers and buttons to approve and turn down. It reads through an API token from nexbeat 1.2.0 or newer, made under Profile > API tokens. A read-only token fills every card; the buttons need an administrator's token that may write, and the connection test says which kind of token it is. A user's token counts only that user's requests, and the card says so. When nexbeat approves a request but cannot hand it on to Lidarr or nexcrate, the button says that instead of a plain "Approved".
+
+### Fixed
+
+- **The link to nexbeat on the About page** pointed at an address that does not exist. It now goes to nexbeat's repository.
+
 ## 0.26.0 (2026-09-27)
 
 ### New
