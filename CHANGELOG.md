@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.28.0 (2026-09-29)
+
+### New
+
+- **Headings and dividers.** A new card under Basics splits a page into sections: a title across the page with a line, the title alone, or the line alone as a divider. It has no ground or frame of its own, so it reads as a break between cards and not as one more card. New, it takes the whole width and one row; it can be made narrower to stand over one column of cards. Alignment, text size and colour are set in the card's settings. Requested in issue #25.
+- **Groups from Homepage and Homarr as sections.** The import asks whether the groups become sections on one page, each under a heading with its name, or a page each as before. Sections are the default, because both dashboards show their groups side by side on one screen. What stood above every group, such as the clock and the search, stays at the top without a heading. With a single group there is nothing to ask. Through the API a page per group is still what happens unless `arrangement` says `sections`.
+
+### Fixed
+
+- **Basic cards made by an import carried nexdeck's own symbol.** Notes, bookmarks and the other basic cards from an import or a board file showed the dashboard symbol in their header, where the same card added from the menu has none. They now come without one unless the file names a symbol.
+
 ## 0.27.0 (2026-09-28)
 
 ### New

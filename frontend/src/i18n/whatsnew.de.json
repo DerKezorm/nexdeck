@@ -981,6 +981,26 @@
       "small": [
         "Der Verbindungstest sagt, ob der Token freigeben darf. Der Token eines gewöhnlichen Kontos zählt nur dessen eigene Anfragen, und die Karte sagt das dazu."
       ]
+    },
+    "0.28.0": {
+      "lead": "Überschriften und Trennlinien teilen eine Seite in Abschnitte, und ein Board aus Homepage oder Homarr behält seine Gruppen auf einem Bildschirm.",
+      "sections": [
+        {
+          "title": "Überschriften und Trennlinien",
+          "body": "Eine neue Karte unter Grundlagen: ein Titel über die Seite mit Linie, nur der Titel oder nur die Linie als Trennlinie. Sie hat keinen eigenen Hintergrund und keinen Rahmen, wirkt also wie ein Einschnitt zwischen den Karten und nicht wie eine weitere Karte. Neu angelegt nimmt sie die ganze Breite und eine Zeile ein; schmaler gezogen steht sie über einer einzelnen Spalte. Ausrichtung, Schriftgröße und Farbe stehen in ihren Einstellungen.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Überschrift"
+        },
+        {
+          "title": "Gruppen als Abschnitte beim Import",
+          "body": "Der Import aus Homepage oder Homarr fragt jetzt, was aus den Gruppen wird: Abschnitte auf einer Seite, jede unter einer Überschrift mit ihrem Namen, oder wie bisher je eine Seite. Voreingestellt sind Abschnitte, weil beide Dashboards ihre Gruppen nebeneinander zeigen. Uhr, Suche und Wetter bleiben ohne Überschrift oben.",
+          "path": "Einstellungen > Boards"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Beides wurde in Issue #25 gewünscht.",
+        "Grundlagen-Karten aus einem Import, etwa Notizen und Lesezeichen, tragen kein nexdeck-Symbol mehr, genau wie beim Anlegen über das Menü."
+      ]
     }
   }
 }

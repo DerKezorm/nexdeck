@@ -981,6 +981,26 @@
       "small": [
         "The connection test says whether the token may approve. A token of an ordinary account counts only that account's requests, and the card says so."
       ]
+    },
+    "0.28.0": {
+      "lead": "Headings and dividers split a page into sections, and a board imported from Homepage or Homarr keeps its groups on one screen.",
+      "sections": [
+        {
+          "title": "Headings and dividers",
+          "body": "A new card under Basics: a title across the page with a line, the title alone, or only the line as a divider. It has no ground or frame of its own, so it reads as a break between cards rather than one more card. New, it takes the whole width and one row; drawn narrower, it heads a single column. Alignment, text size and colour are in its settings.",
+          "path": "Edit mode > Add widget > Basics > Heading"
+        },
+        {
+          "title": "Groups as sections when importing",
+          "body": "The import from Homepage or Homarr now asks what the groups become: sections on one page, each under a heading with the group's name, or a page each as before. Sections are the default, because both dashboards show their groups side by side. The clock, search and weather stay at the top without a heading.",
+          "path": "Settings > Boards"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Both were requested in issue #25.",
+        "Basic cards made by an import, such as notes and bookmarks, no longer carry nexdeck's own symbol, the same as when they are added from the menu."
+      ]
     }
   }
 }
