@@ -567,7 +567,7 @@ def import_board(
                 raise ImportError_(f"Unknown widget kind {kind!r}.") from error
             widget_type = adapter.widget(widget_kind)
             integration = by_name.get(str(widget_doc.get("integration"))) if widget_doc.get("integration") else None
-            widget = Widget(page_id=page.id, kind=kind, title=str(widget_doc.get("title") or widget_type.label), icon=str(widget_doc.get("icon") or adapter.icon),
+            widget = Widget(page_id=page.id, kind=kind, title=str(widget_doc.get("title") or widget_type.label), icon=str(widget_doc.get("icon") or (adapter.icon if adapter.kind != "core" else "")),
                             link=str(widget_doc.get("link") or ""), integration_id=integration.id if integration else None,
                             options=dict(widget_doc.get("options") or {}), refresh_seconds=widget_doc.get("refresh_seconds"))
             db.add(widget)

@@ -18,6 +18,8 @@ import { Field, Select } from './ui'
 
 type Source = 'homepage' | 'homarr'
 type FileName = 'services' | 'bookmarks' | 'widgets' | 'config'
+/** A page per group, or one page with every group under a heading. */
+type Arrangement = 'sections' | 'pages'
 
 interface PlanConnection {
   key: string
@@ -67,6 +69,9 @@ export function DashboardImport() {
   const [files, setFiles] = useState<Record<FileName, string>>({ services: '', bookmarks: '', widgets: '', config: '' })
   const [plan, setPlan] = useState<Plan | null>(null)
   const [name, setName] = useState('')
+  // Sections by default: both dashboards show their groups side by side on one
+  // screen, and a page per group was the one thing people missed (issue 25).
+  const [arrangement, setArrangement] = useState<Arrangement>('sections')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -112,7 +117,7 @@ export function DashboardImport() {
     if (!plan) return
     setBusy(true)
     setError('')
-    post<{ slug: string }>('/imports/apply', { plan, name })
+    post<{ slug: string }>('/imports/apply', { plan, name, arrangement })
       .then((board) => navigate(`/b/${board.slug}`))
       .catch(fail)
       .finally(() => setBusy(false))
@@ -160,6 +165,20 @@ export function DashboardImport() {
       <Field label={t('imports.name')} htmlFor="import-name">
         <input id="import-name" className="input" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
       </Field>
+
+      {plan.pages.length > 1 && (
+        <div className="mb-4">
+          <p id="import-arrangement" className="text-xs font-medium text-muted mb-1.5">{t('imports.arrangement')}</p>
+          <div className="flex gap-1 flex-wrap" role="group" aria-labelledby="import-arrangement">
+            {(['sections', 'pages'] as const).map((entry) => (
+              <button key={entry} type="button" className="btn h-8 text-xs" aria-pressed={arrangement === entry} onClick={() => setArrangement(entry)}>
+                {t(`imports.arrangements.${entry}`)}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-faint mt-1">{t('imports.arrangementHelp')}</p>
+        </div>
+      )}
 
       {plan.connections.length > 0 && (
         <>

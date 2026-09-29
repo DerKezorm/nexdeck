@@ -8,13 +8,15 @@ back, possibly with missing values filled in and cards left out, and only
 then are connections created and the board made, through the ordinary
 import with the rights of whoever asked.
 
-Homepage: every group of ``services.yaml`` becomes a page. A service whose
+Homepage: every group of ``services.yaml`` becomes a page, or a section
+under a heading card when the person picks one page for all. A service whose
 widget nexdeck has an adapter for becomes a connection and a card; one that
 is only a link becomes an app tile, with a reachability check where
 Homepage had one. ``bookmarks.yaml`` becomes bookmark cards, and
 ``widgets.yaml`` gives the clock, the search and the weather.
 
-Homarr (up to 0.15, the JSON config): every category becomes a page, apps
+Homarr (up to 0.15, the JSON config): every category becomes a page or a
+section the same way, apps
 the same way as Homepage's services, and the clock, weather, bookmark,
 notebook and iframe widgets come along.
 
@@ -39,7 +41,7 @@ from sqlalchemy.orm import Session
 from ..adapters import all_adapters, get_adapter
 from ..adapters.base import Adapter, WidgetType
 from ..models import Board, Integration, Role, User
-from .boards import ImportError_, import_board
+from .boards import MAX_WIDGETS, ImportError_, import_board
 from .integrations import resolve_config, store_config, validate_required
 
 
@@ -176,11 +178,12 @@ class _Plan:
         self.notes: list[str] = []
         self.cards = 0
 
-    def page(self, name: str) -> dict[str, Any]:
+    def page(self, name: str, top: bool = False) -> dict[str, Any]:
+        """The page of this name. ``top`` marks what stood above every group, which gets no heading of its own."""
         for page in self.pages:
             if page["name"] == name:
                 return page
-        page = {"name": name[:80] or "Overview", "cards": []}
+        page = {"name": name[:80] or "Overview", "cards": [], "top": top}
         self.pages.append(page)
         return page
 
@@ -288,7 +291,7 @@ def from_homepage(services: str, bookmarks: str = "", widgets: str = "") -> dict
     first = None
     for kind, options in _entries(found_widgets):
         options = options if isinstance(options, dict) else {}
-        first = first or plan.page("Overview")
+        first = first or plan.page("Overview", top=True)
         if kind == "datetime":
             plan.card(first, kind="core.clock", title="Clock", options={"date": True})
         elif kind == "search":
@@ -349,7 +352,7 @@ def from_homarr(text: str) -> dict[str, Any]:
     def page_for(item: dict[str, Any]) -> dict[str, Any]:
         area = item.get("area") if isinstance(item.get("area"), dict) else {}
         category = categories.get(str((area.get("properties") or {}).get("id"))) if area.get("type") == "category" else None
-        return plan.page(category or "Overview")
+        return plan.page(category or "Overview", top=not category)
 
     for app in config["apps"]:
         if not isinstance(app, dict):
@@ -396,6 +399,25 @@ def from_homarr(text: str) -> dict[str, Any]:
 # -- both ------------------------------------------------------------------------
 
 
+def _sections(pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Every page's cards in a row, each group under a heading with its name.
+
+    What stood above every group (the clock, the search, Homarr's apps outside
+    any category) goes first and without a heading: it was never a group.
+    """
+    widgets: list[dict[str, Any]] = []
+    for page in sorted(pages, key=lambda page: not page["top"]):
+        if not page["top"]:
+            widgets.append({"kind": "core.heading", "title": page["name"], "icon": "", "link": "", "integration": None, "options": {}})
+        widgets += page["widgets"]
+    if len(widgets) > MAX_WIDGETS:
+        # ⚠️ Said here, in the words of this dialog. The import below would
+        # refuse as well, but with a count that includes the headings, which
+        # the person never saw and cannot leave out.
+        raise DashboardImportError(f"With a heading for every group these are {len(widgets)} cards, and at most {MAX_WIDGETS} fit on a board. Make a page of each group, or leave some cards out.")
+    return widgets
+
+
 def detect(files: dict[str, str]) -> str:
     joined = "\n".join(files.values()).lstrip()
     return "homarr" if joined.startswith("{") else "homepage"
@@ -423,8 +445,12 @@ def preview(db: Session, user: User, source: str, files: dict[str, str]) -> dict
     return plan
 
 
-def apply(db: Session, user: User, plan: dict[str, Any], name: str) -> Board:
+def apply(db: Session, user: User, plan: dict[str, Any], name: str, arrangement: str = "pages") -> Board:
     """Create what the plan says and make the board.
+
+    ``arrangement`` is ``pages``, a page per group, or ``sections``: one page,
+    every group under a heading card with its name, the way Homepage and
+    Homarr show their groups side by side on one screen.
 
     The plan came back from the browser, so it is read like any other input:
     kinds and fields are checked here, the board goes through the untrusted
@@ -484,9 +510,13 @@ def apply(db: Session, user: User, plan: dict[str, Any], name: str) -> Board:
                 "options": card.get("options") if isinstance(card.get("options"), dict) else {},
             })
         if widgets:
-            pages.append({"name": _text(page.get("name"))[:80] or "Overview", "widgets": widgets})
+            pages.append({"name": _text(page.get("name"))[:80] or "Overview", "widgets": widgets, "top": page.get("top") is True})
     if not pages:
         raise DashboardImportError("Every card was left out, so there is no board to make.")
+    if arrangement == "sections" and len(pages) > 1:
+        pages = [{"name": "Overview", "widgets": _sections(pages)}]
+    for page in pages:
+        page.pop("top", None)
     document = {
         "nexdeck": 1,
         "board": {"name": name.strip()[:80] or "Imported", "icon": "layout-dashboard", "settings": {"columns": 24}},

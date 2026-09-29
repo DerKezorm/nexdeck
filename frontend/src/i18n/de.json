@@ -1170,7 +1170,7 @@
       "homarr": "Homarr"
     },
     "pick": "Dateien wählen…",
-    "servicesHelp": "Jede Gruppe wird eine Seite. Ein Dienst mit einem Widget, das nexdeck kennt, wird Anbindung und Karte, jeder andere eine Kachel.",
+    "servicesHelp": "Jede Gruppe wird ein Abschnitt oder eine Seite, das wählst du im nächsten Schritt. Ein Dienst mit einem Widget, das nexdeck kennt, wird Anbindung und Karte, jeder andere eine Kachel.",
     "homarrConfig": "Konfiguration (JSON)",
     "homarrHelp": "Homarr bis 0.15 legt ein Board in data/configs ab. Homarr ab 1.0 hält Boards in einer Datenbank, die das hier nicht lesen kann.",
     "look": "Zeigen, was entstehen würde",
@@ -1179,6 +1179,12 @@
       "homarr": "Aus Homarr"
     },
     "name": "Name des neuen Boards",
+    "arrangement": "Die Gruppen werden",
+    "arrangements": {
+      "sections": "Abschnitte auf einer Seite",
+      "pages": "je eine Seite"
+    },
+    "arrangementHelp": "Abschnitte halten alles auf einem Bildschirm, jede Gruppe unter einer Überschrift, wie das andere Dashboard sie gezeigt hat. Seiten zeigen immer eine Gruppe.",
     "connections": "Anbindungen",
     "create": "Neu anlegen",
     "useExisting": "{{name}} nutzen",

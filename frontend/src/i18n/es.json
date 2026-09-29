@@ -1170,7 +1170,7 @@
       "homarr": "Homarr"
     },
     "pick": "Elegir archivos…",
-    "servicesHelp": "Cada grupo se convierte en una página. Un servicio con un widget que nexdeck conoce se convierte en una conexión y una tarjeta; cualquier otro, en un mosaico.",
+    "servicesHelp": "Cada grupo se convierte en una sección o en una página, según lo que elijas a continuación. Un servicio con un widget que nexdeck conoce se convierte en una conexión y una tarjeta; cualquier otro, en un mosaico.",
     "homarrConfig": "Configuración (JSON)",
     "homarrHelp": "Homarr hasta la 0.15 guarda un tablero en data/configs. Homarr 1.0 y posteriores guardan los tableros en una base de datos, que esto no puede leer.",
     "look": "Mostrar lo que se crearía",
@@ -1179,6 +1179,12 @@
       "homarr": "Desde Homarr"
     },
     "name": "Nombre del tablero nuevo",
+    "arrangement": "Los grupos pasan a ser",
+    "arrangements": {
+      "sections": "Secciones en una página",
+      "pages": "Una página cada uno"
+    },
+    "arrangementHelp": "Las secciones lo mantienen todo en una pantalla, cada grupo bajo un encabezado, como lo mostraba el otro panel. Las páginas muestran un grupo cada vez.",
     "connections": "Conexiones",
     "create": "Crearlo",
     "useExisting": "Usar {{name}}",

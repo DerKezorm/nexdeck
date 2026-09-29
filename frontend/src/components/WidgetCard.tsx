@@ -48,7 +48,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
   // Clocks and app tiles draw themselves without a header; the player's cover runs to the edge.
-  const bare = ['app', 'clock', 'button', 'image', 'player'].includes(widget.renderer)
+  const bare = ['app', 'clock', 'button', 'image', 'player', 'heading'].includes(widget.renderer)
+  // A heading has no ground at all: it stands between the cards, not among them.
+  const plain = widget.renderer === 'heading'
   // With a link, the whole card is the link; app tiles are anchors already.
   // ⚠️ Not the player: every gap between its buttons would open the media
   // server in a new tab, which is not what a miss next to "pause" should do.
@@ -100,7 +102,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
 
   return (
     <section
-      className={`card glass ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''}`}
+      className={`card glass ${plain ? 'card-plain' : ''} ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''}`}
       data-status={status}
       data-widget={widget.id}
       aria-label={widget.title || widget.kind}

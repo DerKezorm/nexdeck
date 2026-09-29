@@ -38,6 +38,8 @@ class ImportFiles(BaseModel):
 class ImportPlan(BaseModel):
     plan: dict[str, Any]
     name: str = Field(default="", max_length=80)
+    #: A page per group, or one page with every group under a heading.
+    arrangement: Literal["pages", "sections"] = "pages"
 
 
 @router.post("/preview", summary="Read another dashboard's files into a plan, without making anything")
@@ -51,7 +53,7 @@ def preview(body: ImportFiles, user: MemberUser, db: DbSession) -> dict:
 @router.post("/apply", status_code=status.HTTP_201_CREATED, summary="Make the board a plan describes")
 def apply(body: ImportPlan, user: MemberUser, db: DbSession) -> dict:
     try:
-        board = dashboard_import.apply(db, user, body.plan, body.name)
+        board = dashboard_import.apply(db, user, body.plan, body.name, body.arrangement)
     except dashboard_import.DashboardImportError as failure:
         db.rollback()
         raise error("bad_import", str(failure)) from failure

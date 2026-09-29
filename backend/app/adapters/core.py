@@ -157,6 +157,28 @@ class CoreAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="heading",
+            label="Heading",
+            description="A title across the page with an optional line, to split the cards into sections. With the line alone it is a divider.",
+            renderer="heading",
+            # The whole row and one row high: a heading stands above its group.
+            # Narrower is allowed, for a heading over one column of cards.
+            default_size=(12, 1),
+            min_size=(1, 1),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("style", "What it shows", type="select", default="both",
+                      options=(("both", "Title and line"), ("title", "Title only"), ("line", "Line only"))),
+                Field("align", "Alignment", type="select", default="left",
+                      options=(("left", "Left"), ("center", "Centred"))),
+                Field("size", "Text size", type="select", default="normal",
+                      options=(("small", "Small"), ("normal", "Normal"), ("large", "Large"))),
+                Field("colour", "Colour", type="colour", default="",
+                      help="Empty keeps the look of every other card."),
+            ),
+        ),
+        WidgetType(
             kind="image",
             label="Picture",
             description="One picture, or a list of them as a slideshow.",
@@ -635,6 +657,9 @@ class CoreAdapter(Adapter):
             })
         if widget_kind == "markdown":
             return WidgetData(meta={"markdown": options.get("content") or ""})
+        if widget_kind == "heading":
+            # Drawn from the card's own options, so a change shows while the sheet is open.
+            return WidgetData()
         if widget_kind == "image":
             return WidgetData(items=parse_pictures(options.get("pictures")), meta={
                 "every": max(0, int(options.get("every") or 0)),

@@ -1170,7 +1170,7 @@
       "homarr": "Homarr"
     },
     "pick": "Choisir des fichiers…",
-    "servicesHelp": "Chaque groupe devient une page. Un service avec un widget que nexdeck connaît devient une connexion et une carte, tout autre une tuile.",
+    "servicesHelp": "Chaque groupe devient une section ou une page, selon ce que vous choisissez ensuite. Un service avec un widget que nexdeck connaît devient une connexion et une carte, tout autre une tuile.",
     "homarrConfig": "Configuration (JSON)",
     "homarrHelp": "Homarr jusqu’à la version 0.15 conserve un tableau dans data/configs. Homarr 1.0 et suivants conservent les tableaux dans une base de données, que cet outil ne sait pas lire.",
     "look": "Afficher ce qui serait créé",
@@ -1179,6 +1179,12 @@
       "homarr": "Depuis Homarr"
     },
     "name": "Nom du nouveau tableau",
+    "arrangement": "Les groupes deviennent",
+    "arrangements": {
+      "sections": "Des sections sur une page",
+      "pages": "Une page chacun"
+    },
+    "arrangementHelp": "Les sections gardent tout sur un écran, chaque groupe sous un titre, comme l’autre tableau de bord les montrait. Les pages montrent un groupe à la fois.",
     "connections": "Connexions",
     "create": "Créer",
     "useExisting": "Utiliser {{name}}",

@@ -28,12 +28,12 @@ const PLAN: Plan = {
   notes: ['Media > Radarr: api_key is a Homepage placeholder, not a value. Fill it in below.'],
 }
 
-const sent = vi.hoisted(() => ({ calls: [] as { path: string; body: Record<string, unknown> }[] }))
+const sent = vi.hoisted(() => ({ calls: [] as { path: string; body: Record<string, unknown> }[], plan: null as unknown }))
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
   post: vi.fn(async (path: string, body: Record<string, unknown>) => {
     sent.calls.push({ path, body })
-    return path === '/imports/preview' ? structuredClone(PLAN) : { slug: 'from-homepage' }
+    return path === '/imports/preview' ? structuredClone(sent.plan ?? PLAN) : { slug: 'from-homepage' }
   }),
 }))
 
@@ -47,6 +47,7 @@ function show() {
 
 beforeEach(() => {
   sent.calls = []
+  sent.plan = null
   useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin' } as never })
 })
 
@@ -103,5 +104,44 @@ describe('the plan', () => {
     await planned()
     const options = Array.from((screen.getByRole('combobox', { name: 'Radarr' }) as HTMLSelectElement).options).map((option) => option.value)
     expect(options).toEqual(['9', 'none'])
+  })
+})
+
+describe('the groups', () => {
+  const TWO: Plan = {
+    ...PLAN,
+    pages: [
+      PLAN.pages[0],
+      { name: 'Network', cards: [{ key: 'c4', kind: 'core.app', title: 'Gateway', icon: 'lucide:link', connection: null, include: true }] },
+    ],
+  }
+
+  async function planned() {
+    show()
+    await userEvent.type(screen.getByLabelText('services.yaml'), '- Media:')
+    await userEvent.click(screen.getByRole('button', { name: 'Show what would be made' }))
+    await screen.findByLabelText('Name of the new board')
+    await userEvent.type(screen.getByLabelText('API key'), 'typed-in')
+  }
+
+  it('become sections on one page unless pages are picked', async () => {
+    sent.plan = TWO
+    await planned()
+    const sections = screen.getByRole('button', { name: 'Sections on one page' })
+    expect(sections).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'Make the board' }))
+    await waitFor(() => expect(sent.calls).toHaveLength(2))
+    expect(sent.calls[1].body.arrangement).toBe('sections')
+
+    await userEvent.click(screen.getByRole('button', { name: 'A page each' }))
+    expect(sections).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(screen.getByRole('button', { name: 'Make the board' }))
+    await waitFor(() => expect(sent.calls).toHaveLength(3))
+    expect(sent.calls[2].body.arrangement).toBe('pages')
+  })
+
+  it('are not asked about when there is only one', async () => {
+    await planned()
+    expect(screen.queryByRole('button', { name: 'Sections on one page' })).toBeNull()
   })
 })

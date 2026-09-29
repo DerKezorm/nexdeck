@@ -229,3 +229,99 @@ def test_a_guest_imports_nothing(client: TestClient) -> None:
     guest = TestClient(client.app)
     login(guest, "visitor", "another-long-password")
     assert guest.post("/api/v1/imports/preview", json={"files": {"services": "- A: []"}}, headers=CSRF).status_code == 403
+
+
+# -- groups as sections on one page (issue 25) ---------------------------------------
+
+
+def _filled(plan: dict) -> dict:
+    """The preview with Radarr's placeholder key typed in, as the dialog lets one."""
+    for connection in plan["connections"]:
+        if connection["name"] == "Radarr":
+            connection["config"]["api_key"] = "radarr-key-typed-in"
+    return plan
+
+
+def _rows(page: dict) -> list[tuple[str, str, dict]]:
+    """The page's cards in reading order, each with its spot on the wide board."""
+    spots = {item["i"]: item for item in page["layouts"]["lg"]}
+    cards = [(widget["kind"], widget["title"], spots[str(widget["id"])]) for widget in page["widgets"]]
+    return sorted(cards, key=lambda card: (card[2]["y"], card[2]["x"]))
+
+
+def test_sections_put_every_group_on_one_page_under_a_heading_of_its_name(client: TestClient) -> None:
+    setup_admin(client)
+    plan = _filled(_preview(client, _homepage()))
+    made = client.post("/api/v1/imports/apply", json={"plan": plan, "name": "One screen", "arrangement": "sections"}, headers=CSRF)
+    assert made.status_code == 201, made.text
+    board = made.json()
+    assert [page["name"] for page in board["pages"]] == ["Overview"]
+    # A basic card made by the import has no symbol of nexdeck's own, as one made from the menu.
+    assert {w["icon"] for w in board["pages"][0]["widgets"] if w["kind"] == "core.heading"} == {""}
+    rows = _rows(board["pages"][0])
+    headings = [(title, spot) for kind, title, spot in rows if kind == "core.heading"]
+    # What stood above the groups (search, clock, weather, bookmarks) has no heading.
+    assert [title for title, _spot in headings] == ["Media", "Infrastructure"]
+    assert [kind for kind, _title, _spot in rows[:5]] == ["core.search", "core.clock", "weather.current", "core.bookmarks", "core.bookmarks"]
+    # A heading takes the whole row of the 24 columns and one row of height.
+    assert all(spot["w"] == 24 and spot["h"] == 1 and spot["x"] == 0 for _title, spot in headings)
+    # Every card of a group lies between its heading and the next one.
+    media, infrastructure = headings[0][1]["y"], headings[1][1]["y"]
+    groups = {card["title"]: page["name"] for page in plan["pages"] for card in page["cards"]}
+    for kind, title, spot in rows:
+        if kind == "core.heading":
+            continue
+        where = groups[title]
+        if where == "Media":
+            assert media < spot["y"] and spot["y"] + spot["h"] <= infrastructure, title
+        elif where == "Infrastructure":
+            assert spot["y"] > infrastructure, title
+        else:
+            assert spot["y"] + spot["h"] <= media, title
+    # The cards themselves are the same as with a page per group.
+    assert sorted(title for kind, title, _ in rows if kind != "core.heading") == sorted(groups)
+
+
+def test_pages_stay_what_the_api_makes_unless_sections_are_asked_for(client: TestClient) -> None:
+    setup_admin(client)
+    plan = _filled(_preview(client, _homepage()))
+    board = client.post("/api/v1/imports/apply", json={"plan": plan, "name": "Pages", "arrangement": "pages"}, headers=CSRF).json()
+    assert [page["name"] for page in board["pages"]] == ["Overview", "Media", "Infrastructure"]
+    assert not any(w["kind"] == "core.heading" for page in board["pages"] for w in page["widgets"])
+    refused = client.post("/api/v1/imports/apply", json={"plan": plan, "name": "X", "arrangement": "columns"}, headers=CSRF)
+    assert refused.status_code == 422
+
+
+def test_one_group_left_needs_no_heading(client: TestClient) -> None:
+    setup_admin(client)
+    plan = _preview(client, {"services": _read("homepage-services.yaml")})
+    for page in plan["pages"]:
+        for card in page["cards"]:
+            card["include"] = card["title"] == "Sonarr"
+    for connection in plan["connections"]:
+        if connection["name"] == "Radarr":
+            connection["use"] = None
+    board = client.post("/api/v1/imports/apply", json={"plan": plan, "name": "Just one", "arrangement": "sections"}, headers=CSRF).json()
+    assert [page["name"] for page in board["pages"]] == ["Media"]
+    assert [w["title"] for w in board["pages"][0]["widgets"]] == ["Sonarr"]
+
+
+def test_homarrs_apps_outside_a_category_come_first_and_without_a_heading() -> None:
+    plan = dashboard_import.from_homarr(_read("homarr-config.json"))
+    assert [(page["name"], page["top"]) for page in plan["pages"]] == [("Media", False), ("Network", False), ("Overview", True)]
+    pages = [{"name": page["name"], "top": page["top"], "widgets": [{"title": card["title"]} for card in page["cards"]]} for page in plan["pages"]]
+    widgets = dashboard_import._sections(pages)
+    overview = [card["title"] for card in plan["pages"][2]["cards"]]
+    assert [w["title"] for w in widgets[:len(overview)]] == overview
+    assert [w["title"] for w in widgets if w.get("kind") == "core.heading"] == ["Media", "Network"]
+
+
+def test_too_many_cards_with_their_headings_are_refused_in_the_dialogs_words(monkeypatch) -> None:
+    monkeypatch.setattr(dashboard_import, "MAX_WIDGETS", 4)
+    pages = [{"name": name, "top": False, "widgets": [{"title": f"{name} 1"}, {"title": f"{name} 2"}]} for name in ("A", "B")]
+    try:
+        dashboard_import._sections(pages)
+    except dashboard_import.DashboardImportError as failure:
+        assert "6 cards" in str(failure) and "page of each group" in str(failure)
+    else:
+        raise AssertionError("six cards on a board of four were let through")

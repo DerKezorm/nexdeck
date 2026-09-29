@@ -1624,7 +1624,20 @@
     "Waiting and running music requests, the library and requests to approve from nexbeat.": "Solicitudes de música pendientes y en curso, la biblioteca y las solicitudes por aprobar de nexbeat.",
     "A token from nexbeat under Profile > API tokens. Read-only is enough for the numbers; approving requests needs an administrator's token that may write.": "Un token de nexbeat en Profile > API tokens. Para las cifras basta con solo lectura; aprobar solicitudes necesita el token de un administrador que pueda escribir.",
     "Waiting, running and failed requests, and what arrived this week.": "Solicitudes pendientes, en curso y fallidas, y lo que llegó esta semana.",
-    "Artists and albums in Lidarr or nexcrate, as nexbeat knows them.": "Artistas y álbumes en Lidarr o nexcrate, tal como los conoce nexbeat."
+    "Artists and albums in Lidarr or nexcrate, as nexbeat knows them.": "Artistas y álbumes en Lidarr o nexcrate, tal como los conoce nexbeat.",
+    "Heading": "Encabezado",
+    "A title across the page with an optional line, to split the cards into sections. With the line alone it is a divider.": "Un título a lo ancho de la página con una línea opcional, para dividir las tarjetas en secciones. Solo con la línea es un separador.",
+    "What it shows": "Qué muestra",
+    "Title and line": "Título y línea",
+    "Title only": "Solo el título",
+    "Line only": "Solo la línea",
+    "Alignment": "Alineación",
+    "Left": "Izquierda",
+    "Centred": "Centrado",
+    "Text size": "Tamaño del texto",
+    "Small": "Pequeño",
+    "Normal": "Normal",
+    "Large": "Grande"
   },
   "labels": {
     "Private resources": "Recursos privados",

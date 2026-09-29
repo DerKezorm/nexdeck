@@ -143,7 +143,7 @@ that one of twenty-one renderers draws.
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
 | OctoPrint | printer, print job | | application key from User Settings > Application Keys; its user needs the permission Status (groups Users or Read-only) |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
-| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile, status page, notices, updates, this machine | | none |
+| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile, heading, status page, notices, updates, this machine | | none |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | FreshRSS | feed reader, unread, unread by feed | | user name and the API password from Settings > Profile, not the sign-in password; API access allowed under Administration > Authentication |
@@ -193,7 +193,7 @@ a tight spot.
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
-`counters`, `camera`, `bars`, `ring`, `timeline`. A fetch may pick another renderer for its data through
+`counters`, `camera`, `bars`, `ring`, `timeline`, `heading`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
 
 Images such as posters are never linked with a token in the browser: an adapter

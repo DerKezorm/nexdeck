@@ -1170,7 +1170,7 @@
       "homarr": "Homarr"
     },
     "pick": "Pick files…",
-    "servicesHelp": "Every group becomes a page. A service with a widget nexdeck knows becomes a connection and a card, any other a tile.",
+    "servicesHelp": "Every group becomes a section or a page, as you choose next. A service with a widget nexdeck knows becomes a connection and a card, any other a tile.",
     "homarrConfig": "Configuration (JSON)",
     "homarrHelp": "Homarr up to 0.15 keeps a board in data/configs. Homarr 1.0 and later keep boards in a database, which this cannot read.",
     "look": "Show what would be made",
@@ -1179,6 +1179,12 @@
       "homarr": "From Homarr"
     },
     "name": "Name of the new board",
+    "arrangement": "The groups become",
+    "arrangements": {
+      "sections": "Sections on one page",
+      "pages": "A page each"
+    },
+    "arrangementHelp": "Sections keep everything on one screen, each group under a heading, as the other dashboard showed them. Pages show one group at a time.",
     "connections": "Connections",
     "create": "Create it",
     "useExisting": "Use {{name}}",

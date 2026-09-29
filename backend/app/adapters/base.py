@@ -99,6 +99,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "button": (1, 1),
     "image": (1, 1),
     "wol": (1, 1),
+    # A title or a line; one row high, and a column wide over a single column of cards.
+    "heading": (1, 1),
     "clock": (2, 1),
     "text": (2, 1),
     "search": (2, 1),

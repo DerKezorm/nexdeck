@@ -197,6 +197,20 @@ body {
   cursor: grabbing;
 }
 
+/* A heading between the cards: no ground, no frame, no shadow. While the board
+   is arranged it keeps the dashed frame every card has, or there would be
+   nothing to see where to take hold of it. */
+.card.card-plain {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.card.card-plain:not(.is-editing) {
+  border-color: transparent;
+}
+
 /* Status dot with a soft halo. */
 .dot {
   display: inline-block;

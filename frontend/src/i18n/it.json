@@ -1170,7 +1170,7 @@
       "homarr": "Homarr"
     },
     "pick": "Scegli file…",
-    "servicesHelp": "Ogni gruppo diventa una pagina. Un servizio con un widget che nexdeck conosce diventa una connessione e una scheda, qualsiasi altro un riquadro.",
+    "servicesHelp": "Ogni gruppo diventa una sezione o una pagina, come scegli nel passo successivo. Un servizio con un widget che nexdeck conosce diventa una connessione e una scheda, qualsiasi altro un riquadro.",
     "homarrConfig": "Configurazione (JSON)",
     "homarrHelp": "Homarr fino alla 0.15 conserva una bacheca in data/configs. Homarr 1.0 e successivi conservano le bacheche in un database, che qui non si può leggere.",
     "look": "Mostra cosa verrebbe creato",
@@ -1179,6 +1179,12 @@
       "homarr": "Da Homarr"
     },
     "name": "Nome della nuova bacheca",
+    "arrangement": "I gruppi diventano",
+    "arrangements": {
+      "sections": "Sezioni in una pagina",
+      "pages": "Una pagina ciascuno"
+    },
+    "arrangementHelp": "Le sezioni tengono tutto in una schermata, ogni gruppo sotto un'intestazione, come li mostrava l'altra dashboard. Le pagine mostrano un gruppo alla volta.",
     "connections": "Connessioni",
     "create": "Crealo",
     "useExisting": "Usa {{name}}",

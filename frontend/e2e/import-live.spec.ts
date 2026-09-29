@@ -49,8 +49,16 @@ test("a board from Homepage's services.yaml", async ({ page }) => {
   await make.click()
 
   await expect(page).toHaveURL(/\/b\/imported-lab/)
-  await expect(page.getByRole('button', { name: 'Media' })).toBeVisible()
+  // Sections by default: every group on the one page, under a heading of its name.
+  await expect(page.getByRole('heading', { name: 'Media', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Infrastructure', level: 2 })).toBeVisible()
   await expect(page.locator('section[aria-label="Sonarr"]')).toBeVisible()
+  // The heading lies above its group, and has no ground of its own.
+  const media = await page.locator('section[aria-label="Media"]').boundingBox()
+  const sonarr = await page.locator('section[aria-label="Sonarr"]').boundingBox()
+  expect(media && sonarr && media.y + media.height <= sonarr.y).toBe(true)
+  const ground = await page.locator('section[aria-label="Media"]').evaluate((element) => getComputedStyle(element).backgroundColor)
+  expect(ground).toBe('rgba(0, 0, 0, 0)')
   const connections = await (await page.request.get('/api/v1/integrations')).json()
   expect(connections.map((c: { name: string }) => c.name)).toEqual(expect.arrayContaining(['Sonarr', 'Radarr', 'Proxmox', 'AdGuard']))
   expect(trouble, `the browser reported: ${trouble.join(' | ')}`).toEqual([])

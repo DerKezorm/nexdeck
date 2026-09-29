@@ -39,6 +39,7 @@ import { safeUrl } from '../lib/safeUrl'
 import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
+import { HeadingCard } from './HeadingCard'
 import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
@@ -90,6 +91,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   ring: RingCard,
   app: AppTile,
   button: ButtonCard,
+  heading: HeadingCard,
   image: ImageCard,
   posters: PostersCard,
   counters: CountersCard,
