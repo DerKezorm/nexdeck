@@ -1001,6 +1001,20 @@
         "Beides wurde in Issue #25 gewünscht.",
         "Grundlagen-Karten aus einem Import, etwa Notizen und Lesezeichen, tragen kein nexdeck-Symbol mehr, genau wie beim Anlegen über das Menü."
       ]
+    },
+    "0.28.1": {
+      "lead": "Lehnt PeaNUT eine Anmeldung ab, sagt die USV-Karte jetzt, warum, und was hilft.",
+      "sections": [
+        {
+          "title": "PeaNUT: abgelehnte Anmeldung erklärt",
+          "body": "PeaNUT 6.0.0 weist auf seiner API ein richtiges Passwort ab, obwohl die eigene Anmeldeseite es annimmt: eines mit Doppelpunkt oder mit Zeichen wie Umlauten, und jedes Passwort, wenn PeaNUT hinter einem Reverse Proxy mit HTTPS steht. Karte und Verbindungstest sagten bisher nur, die Zugangsdaten seien abgelehnt. Jetzt nennen sie die Ursache und den Ausweg: ein Passwort ohne diese Zeichen, die einfache http-Adresse von PeaNUT, oder WEB_USERNAME und WEB_PASSWORD am PeaNUT-Container.",
+          "path": "Einstellungen > Verbindungen > UPS (PeaNUT) > Verbindung testen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Gemeldet in Issue #26."
+      ]
     }
   }
 }

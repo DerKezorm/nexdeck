@@ -1001,6 +1001,20 @@
         "Both were requested in issue #25.",
         "Basic cards made by an import, such as notes and bookmarks, no longer carry nexdeck's own symbol, the same as when they are added from the menu."
       ]
+    },
+    "0.28.1": {
+      "lead": "When PeaNUT turns away a sign-in, the UPS card now says why and what helps.",
+      "sections": [
+        {
+          "title": "PeaNUT: a refused sign-in explained",
+          "body": "PeaNUT 6.0.0 refuses a password that is right on its API while its own sign-in page takes it: one with a colon or with characters such as umlauts, and any password when PeaNUT sits behind a reverse proxy with HTTPS. The card and the connection test used to say only that the credentials were rejected. They now name the cause and the way around it: a password without those characters, PeaNUT's plain http address, or WEB_USERNAME and WEB_PASSWORD on the PeaNUT container.",
+          "path": "Settings > Connections > UPS (PeaNUT) > Test connection"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Reported in issue #26."
+      ]
     }
   }
 }
