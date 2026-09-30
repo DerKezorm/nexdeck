@@ -120,7 +120,7 @@ that one of twenty-one renderers draws.
 | Beszel | hosts, host | | user and password |
 | Glances | system, file systems, sensors | | optional password |
 | Scrutiny | disks, disk health | | none |
-| UPS (PeaNUT) | UPS, UPS details | | optional sign-in |
+| UPS (PeaNUT) | UPS, UPS details | | optional sign-in; PeaNUT 6.0.0 refuses a password with a colon or umlauts on its API, and any password behind a reverse proxy with HTTPS unless WEB_USERNAME and WEB_PASSWORD are set on its container |
 | Gotify | messages, message count | | client token (an application token may only write) |
 | ntfy | messages | | topic, and a token for a protected one |
 | Prometheus | query value, query list | | optional basic auth |

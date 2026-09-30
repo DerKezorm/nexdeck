@@ -77,13 +77,55 @@ class PeanutAdapter(Adapter):
         user = str(config.get("username") or "")
         return (user, str(config.get("password") or "")) if user else None
 
+    @staticmethod
+    def _refused(config: dict[str, Any]) -> AdapterError:
+        """Why PeaNUT said 401, as far as it can be told from here.
+
+        ⚠️ PeaNUT 6.0.0 turns away passwords that are right (issue #26). Its API
+        cuts the Basic header at the second colon and reads it as ASCII, so a
+        password with a colon or an umlaut never matches. And it checks the
+        password by calling itself at the address the request came in on,
+        which fails behind a reverse proxy that speaks HTTPS: the call goes
+        out as https to PeaNUT's plain http port. Measured on 30.09.2026
+        against brandawg93/peanut:6.0.0. The sign-in page is not affected, so
+        "the password works in the browser" proves nothing here.
+        """
+        user = str(config.get("username") or "")
+        if not user:
+            return AdapterError("PeaNUT asks for a sign-in.", code="auth_failed",
+                                hint="Enter the user name and password of PeaNUT.")
+        password = str(config.get("password") or "")
+        if ":" in password or not password.isascii():
+            return AdapterError(
+                "PeaNUT rejected the user name and password.", code="auth_failed",
+                hint="PeaNUT 6 cannot check a password with a colon or with characters such as umlauts on its API, "
+                     "even when the sign-in page takes it. Choose one without them in PeaNUT.",
+            )
+        return AdapterError(
+            "PeaNUT rejected the user name and password.", code="auth_failed",
+            hint="If they are right: PeaNUT 6 fails its own check behind a reverse proxy with HTTPS. "
+                 "Use PeaNUT's plain http address here, or set WEB_USERNAME and WEB_PASSWORD on the PeaNUT container.",
+        )
+
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, cache: float = 15) -> Any:
-        return await ctx.get_json(
+        response = await ctx.request(
+            "GET",
             f"{base_url(config)}/api/v1{path}",
             auth=self._auth(config),
             verify=not config.get("insecure"),
             cache_seconds=cache,
+            auth_errors=False,
         )
+        if response.status_code in (401, 403):
+            raise self._refused(config)
+        if response.status_code >= 400:
+            raise AdapterError(f"PeaNUT answered with HTTP {response.status_code}.", code="http_error",
+                               hint="Check the URL; it is the address of PeaNUT's web page, port 8080 by default.")
+        try:
+            return response.json()
+        except ValueError as error:
+            raise AdapterError("PeaNUT did not answer with JSON.", code="not_json",
+                               hint="The URL probably points at a login page or a reverse proxy.") from error
 
     async def _device(self, config: dict[str, Any], ctx: Context, cache: float = 15) -> tuple[str, dict[str, Any]]:
         """The chosen UPS with its variables, or the first one PeaNUT knows."""

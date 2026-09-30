@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **PeaNUT: a refused sign-in now says why.** PeaNUT 6.0.0 turns away a password that is right on its API while its sign-in page takes it: one with a colon or with characters such as umlauts, and any password when PeaNUT sits behind a reverse proxy with HTTPS. The connection test and the card said only that the credentials were rejected. They now name the cause and the way around it: a password without those characters, PeaNUT's plain http address, or WEB_USERNAME and WEB_PASSWORD on the PeaNUT container. Without a user name the card asks for one. Reported in issue #26.
+
 ## 0.28.0 (2026-09-29)
 
 ### New

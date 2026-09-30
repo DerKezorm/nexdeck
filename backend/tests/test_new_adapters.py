@@ -190,6 +190,26 @@ async def test_peanut_says_when_there_is_no_ups(ctx: Context) -> None:
     assert failure.value.code == "no_device"
 
 
+@respx.mock
+@pytest.mark.parametrize(("config", "says"), [
+    ({}, "Enter the user name"),
+    ({"username": "ups", "password": "right:one"}, "colon"),
+    ({"username": "ups", "password": "Pässwort1"}, "umlauts"),
+    ({"username": "ups", "password": "plain-one"}, "WEB_USERNAME and WEB_PASSWORD"),
+])
+async def test_peanut_says_why_it_was_turned_away(ctx: Context, config: dict, says: str) -> None:
+    """PeaNUT 6.0.0 answers 401 to passwords that are right (issue #26): one
+    with a colon or an umlaut, and any behind a reverse proxy with HTTPS.
+    "Check the API key or the password" sent people after the wrong thing."""
+    route = respx.get("http://peanut:8080/api/v1/devices").mock(return_value=httpx.Response(401, json="Unauthorized"))
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("peanut").fetch("ups", {"url": "http://peanut:8080", **config}, {}, ctx)
+    assert failure.value.code == "auth_failed"
+    assert says in failure.value.hint
+    sent = route.calls.last.request.headers.get("authorization")
+    assert (sent is not None) == bool(config), "the sign-in goes along as Basic, and only when there is one"
+
+
 # -- scrutiny ------------------------------------------------------------------
 
 
