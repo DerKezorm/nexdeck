@@ -1002,7 +1002,7 @@
         "Grundlagen-Karten aus einem Import, etwa Notizen und Lesezeichen, tragen kein nexdeck-Symbol mehr, genau wie beim Anlegen über das Menü."
       ]
     },
-    "0.28.1": {
+    "0.28.2": {
       "lead": "Lehnt PeaNUT eine Anmeldung ab, sagt die USV-Karte jetzt, warum, und was hilft.",
       "sections": [
         {

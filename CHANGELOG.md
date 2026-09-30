@@ -3,11 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## 0.28.1 (2026-09-30)
+## 0.28.2 (2026-09-30)
 
 ### Fixed
 
 - **PeaNUT: a refused sign-in now says why.** PeaNUT 6.0.0 turns away a password that is right on its API while its sign-in page takes it: one with a colon or with characters such as umlauts, and any password when PeaNUT sits behind a reverse proxy with HTTPS. The connection test and the card said only that the credentials were rejected. They now name the cause and the way around it: a password without those characters, PeaNUT's plain http address, or WEB_USERNAME and WEB_PASSWORD on the PeaNUT container. Without a user name the card asks for one. Reported in issue #26.
+- **Ten advisories in PyJWT and two in the build tools.** PyJWT, which checks the sign-in tokens and OIDC answers, goes from 2.13.0 to 2.14.0; brace-expansion and fast-uri, used only while the interface is built, move to their fixed versions. Every pinned dependency again has nothing open against it.
 
 ## 0.28.0 (2026-09-29)
 
