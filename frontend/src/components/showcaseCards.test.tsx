@@ -61,6 +61,14 @@ describe('a list in showcase mode', () => {
   })
 })
 
+describe('a row that says who', () => {
+  it('makes up the person and the device in its line, as the card of what is playing does', () => {
+    showcase(true)
+    render(<>{renderWidget({ widget: view('tautulli.activity', 'list'), data: data([{ title: 'Dune', subtitle: 'grandma · Bedroom TV · transcode', user: 'grandma' }]) })}</>)
+    expect(screen.getByText('Alex · Living room TV · transcode')).toBeInTheDocument()
+  })
+})
+
 describe('what is playing in showcase mode', () => {
   it('makes up the person and the device and keeps the quality', () => {
     showcase(true)

@@ -26,6 +26,39 @@ from .base import (
 _TOP_STAT = {"titles": "top_movies", "shows": "top_tv", "music": "top_music", "users": "top_users"}
 
 
+def _days(options: dict[str, Any]) -> int:
+    try:
+        return max(7, min(366, int(options.get("days") or 91)))
+    except (TypeError, ValueError):
+        return 91
+
+
+def heat_of(graph: Any, hours: bool) -> WidgetData:
+    """One square per day from Tautulli's graph by date: the series (TV,
+    Movies, Music, Live TV) are added up, since a day is one square.
+
+    ``duration`` comes in seconds and is shown in hours.
+    """
+    graph = graph if isinstance(graph, dict) else {}
+    categories = [str(one) for one in graph.get("categories") or []]
+    totals = [0.0] * len(categories)
+    for series in graph.get("series") or []:
+        for index, value in enumerate((series or {}).get("data") or []):
+            if index < len(totals) and isinstance(value, (int, float)):
+                totals[index] += float(value)
+    if hours:
+        totals = [round(value / 3600, 1) for value in totals]
+    days = [[day, int(value) if not hours else value] for day, value in zip(categories, totals)]
+    total = sum(value for _day, value in days)
+    busiest = max(days, key=lambda pair: pair[1], default=None)
+    secondary: list[dict[str, Any]] = [{"label": "Busiest day", "value": busiest[0]}] if busiest and busiest[1] else []
+    return WidgetData(
+        primary={"label": "Hours watched" if hours else "Plays", "value": round(total, 1) if hours else int(total)},
+        secondary=secondary,
+        meta={"heatmap": {"days": days, "unit": "h" if hours else ""}, "empty": "Nothing was played in these days."},
+    )
+
+
 class TautulliAdapter(Adapter):
     kind = "tautulli"
     #: Confirmed against a live instance on 2026-09-07.
@@ -76,6 +109,20 @@ class TautulliAdapter(Adapter):
                 Field("limit", "Entries", type="number", default=6),
             ),
         ),
+        WidgetType(
+            kind="days",
+            label="Plays per day",
+            description="Every day of the last weeks as a square, darker the more was played, the way GitHub draws contributions.",
+            renderer="heatmap",
+            default_size=(4, 2),
+            refresh_seconds=1800,
+            options=(
+                Field("days", "Days", type="select", default="91",
+                      options=(("35", "Five weeks"), ("91", "Thirteen weeks"), ("182", "Half a year"), ("364", "A year"))),
+                Field("measure", "Count", type="select", default="plays",
+                      options=(("plays", "Plays"), ("duration", "Hours watched"))),
+            ),
+        ),
     )
 
     async def _cmd(self, config: dict[str, Any], ctx: Context, command: str, params: dict[str, Any] | None = None, cache: float = 15) -> Any:
@@ -97,6 +144,12 @@ class TautulliAdapter(Adapter):
         return f"Tautulli answers and watches {name}."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind == "days":
+            days = _days(options)
+            hours = options.get("measure") == "duration"
+            graph = await self._cmd(config, ctx, "get_plays_by_date",
+                                    {"time_range": days, "y_axis": "duration" if hours else "plays"}, cache=1800)
+            return heat_of(graph, hours)
         if widget_kind == "top":
             days = int(options.get("days") or 7)
             limit = int(options.get("limit") or 6)
@@ -138,6 +191,8 @@ class TautulliAdapter(Adapter):
             items.append({
                 "title": session.get("full_title") or session.get("title") or "?",
                 "subtitle": f"{session.get('friendly_name', '?')} · {session.get('player', '?')} · {decision}",
+                # Who it is, apart from the line: showcase mode replaces the person and the player.
+                "user": str(session.get("friendly_name") or ""),
                 "progress": float(session.get("progress_percent") or 0),
                 "value": f"{int(float(session.get('progress_percent') or 0))}%",
                 "status": "warn" if decision == "transcode" else "ok",
@@ -150,6 +205,20 @@ class TautulliAdapter(Adapter):
         )
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "days":
+            import math
+            from datetime import date, timedelta
+
+            days = _days(options)
+            today = date.today()
+            categories = [(today - timedelta(days=days - 1 - index)).isoformat() for index in range(days)]
+            # Weekends and the evenings of a holiday stretch play more; a few days nothing at all.
+            plays = []
+            for index, day in enumerate(categories):
+                weekday = date.fromisoformat(day).weekday()
+                wave = 0.5 + 0.5 * math.sin(index / 9.0)
+                plays.append(0 if (index * 7) % 23 == 0 else round((2 + 6 * wave) * (1.8 if weekday >= 4 else 1.0)))
+            return heat_of({"categories": categories, "series": [{"name": "TV", "data": plays}]}, False)
         streams = int(fake.walk("tautulli-streams", tick, 0, 4))
         transcodes = 1 if streams >= 2 else 0
         bandwidth = streams * 12_000_000.0
@@ -183,6 +252,7 @@ class TautulliAdapter(Adapter):
             items.append({
                 "title": title,
                 "subtitle": f"{who} · {player} · {decision}",
+                "user": who,
                 "progress": round(progress, 1),
                 "value": f"{progress:.0f}%",
                 "status": "warn" if decision == "transcode" else "ok",

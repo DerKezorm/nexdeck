@@ -1648,7 +1648,16 @@
     "A wide strip of bars per service": "Une large bande de barres par service",
     "In and out, mirrored": "Entrée et sortie, en miroir",
     "Energy flow": "Flux d'énergie",
-    "Solar, house, battery, grid and car as one picture, with the power moving between them.": "Solaire, maison, batterie, réseau et voiture en une seule image, avec l'énergie qui circule entre eux."
+    "Solar, house, battery, grid and car as one picture, with the power moving between them.": "Solaire, maison, batterie, réseau et voiture en une seule image, avec l'énergie qui circule entre eux.",
+    "A year": "Un an",
+    "Count": "Compter",
+    "Every day of the last weeks as a square, darker the more was played, the way GitHub draws contributions.": "Chaque jour des dernières semaines en carré, plus foncé quand on a plus regardé, comme GitHub dessine les contributions.",
+    "Five weeks": "Cinq semaines",
+    "Half a year": "Six mois",
+    "Hours watched": "Heures regardées",
+    "Plays": "Lectures",
+    "Plays per day": "Lectures par jour",
+    "Thirteen weeks": "Treize semaines"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -2640,6 +2649,9 @@
     "nexbeat has no target for requests": "nexbeat n’a pas de destination pour les demandes",
     "Approved, but nexbeat could not hand it on. It is under Requests in nexbeat.": "Approuvée, mais nexbeat n’a pas pu la transmettre. Elle se trouve dans nexbeat sous Requests.",
     "Feed-in": "Injection",
-    "Car": "Voiture"
+    "Car": "Voiture",
+    "Busiest day": "Jour le plus chargé",
+    "Plays": "Lectures",
+    "Hours watched": "Heures regardées"
   }
 }

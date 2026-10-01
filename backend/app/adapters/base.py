@@ -131,6 +131,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "inout": (3, 2),
     # Five places round a house need room to stand apart.
     "flow": (3, 3),
+    # Thirteen weeks of seven squares and a line of numbers under them.
+    "heatmap": (3, 2),
 }
 
 #: Pairs of metrics that are one line going in and one going out. A card that

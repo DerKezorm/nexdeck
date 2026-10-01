@@ -42,6 +42,7 @@ import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
 import { FlowCard } from './FlowCard'
+import { HeatmapCard } from './HeatmapCard'
 import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
@@ -106,6 +107,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   strips: StripsCard,
   inout: InOutCard,
   flow: FlowCard,
+  heatmap: HeatmapCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -466,6 +468,8 @@ function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>
   if (!disguise.on) return [title, subtitle]
   if (/^(nexmail|imap)\.latest$/.test(kind)) return [disguise.as('sender', title), subtitle ? disguise.as('subject', subtitle) : subtitle]
   if (item.worded) return [title, disguise.free(subtitle)]
+  // A row that says who: the person and the device in its line are made up, as on the card of what is playing.
+  if (typeof item.user === 'string' && item.user) subtitle = playingLine(subtitle, item.user)
   if ((item.art && item.art_shape !== 'square') || MEDIA_ROWS.test(kind)) return [disguise.media(title), disguise.free(subtitle)]
   if (kind.endsWith('.users')) return [disguise.as('person', title), disguise.free(subtitle)]
   return [disguise.free(title), disguise.free(subtitle)]
