@@ -733,7 +733,12 @@
       "stars": "Starry sky",
       "daytime": "Follows the time of day"
     },
-    "livingHelp": "The last three move, slowly. With less motion asked for in the system they hold still."
+    "livingHelp": "The last three move, slowly. With less motion asked for in the system they hold still.",
+    "kioskRest": "Rest on a clock after",
+    "kioskRestHelp": "Without a touch for this long, the display shows the time, the weather and what is down, large on black, and moves it a little every minute so nothing burns in. A touch brings the board back.",
+    "kioskRestNever": "Never",
+    "kioskRestMinutes_one": "{{count}} minute",
+    "kioskRestMinutes_other": "{{count}} minutes"
   },
   "widget": {
     "remove": {
@@ -855,7 +860,11 @@
   },
   "kiosk": {
     "invalid": "This kiosk link is not valid any more.",
-    "pages": "Pages"
+    "pages": "Pages",
+    "restWake": "Touch to show the board",
+    "restFine": "Everything answers",
+    "restDown_one": "{{count}} down",
+    "restDown_other": "{{count}} down"
   },
   "whatsnew": {
     "title": "What's new",

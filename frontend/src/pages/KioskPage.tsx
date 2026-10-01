@@ -14,7 +14,8 @@ import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
-import { anyCardDown } from '../lib/cardStatus'
+import { anyCardDown, cardStatus } from '../lib/cardStatus'
+import { WallRest, type Rest } from '../components/WallRest'
 import { useLive } from '../stores/live'
 
 function withinWindow(from: string, to: string, now: Date): boolean {
@@ -138,6 +139,42 @@ export function KioskPage() {
     return () => window.clearInterval(id)
   }, [data])
 
+  // ⚠️ Every touch, key and wheel resets the count, the touch that ends the
+  // rest included: the board comes back, and the time starts again.
+  const restMinutes = data?.kiosk?.rest_minutes ?? 0
+  const [resting, setResting] = useState(false)
+  useEffect(() => {
+    if (!restMinutes) {
+      setResting(false)
+      return
+    }
+    let timer = 0
+    const awake = () => {
+      setResting(false)
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setResting(true), restMinutes * 60_000)
+    }
+    awake()
+    const events = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
+    for (const name of events) window.addEventListener(name, awake, { passive: true })
+    return () => {
+      window.clearTimeout(timer)
+      for (const name of events) window.removeEventListener(name, awake)
+    }
+  }, [restMinutes])
+  // What the rest shows: the first weather card of the board, and every card that is down on any page.
+  const rest: Rest = useMemo(() => {
+    const all = (data?.pages ?? []).flatMap((one) => one.widgets)
+    const weather = all.find((widget) => widget.renderer === 'weather' && liveData[widget.id]?.primary)
+    const reading = weather ? liveData[weather.id] : undefined
+    return {
+      weather: reading?.primary
+        ? { value: reading.primary.value ?? '', unit: reading.primary.unit ?? '', condition: String(reading.meta?.condition ?? ''), place: reading.primary.label ?? '' }
+        : null,
+      down: all.filter((widget) => cardStatus(widget, liveData[widget.id]) === 'bad').map((widget) => widget.title || widget.kind),
+    }
+  }, [data, liveData])
+
   const page = data?.pages[pageIndex % Math.max(1, data?.pages.length ?? 1)]
   const widgets: WidgetView[] = useMemo(() => (page?.widgets ?? []).map((w) => (w.health ? { ...w, health: { ...w.health, ...(liveHealth[w.id] ?? {}) } } : w)), [page, liveHealth])
 
@@ -206,6 +243,7 @@ export function KioskPage() {
           }}
         />
       </main>
+      {resting && <WallRest rest={rest} onWake={() => setResting(false)} />}
       {/* ⚠️ The board's own sheet, not a copy of it. The title is translated
           there, which it once was not here: the same button read "Restart?"
           on the wall and "Neu starten?" one screen away. */}

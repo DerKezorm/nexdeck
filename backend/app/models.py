@@ -357,6 +357,8 @@ class KioskToken(Base):
     #: ``HH:MM`` local times; empty means no dimming.
     dim_from: Mapped[str] = mapped_column(String(5), default="")
     dim_to: Mapped[str] = mapped_column(String(5), default="")
+    #: Minutes without a touch until the display rests on a large clock; 0 never.
+    rest_minutes: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     #: When the display stops being let in. Empty means no end.

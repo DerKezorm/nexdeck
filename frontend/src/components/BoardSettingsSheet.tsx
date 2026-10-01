@@ -37,7 +37,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [deletingPage, setDeletingPage] = useState<{ id: number; name: string; widgets: number } | null>(null)
   const [newBoard, setNewBoard] = useState('')
   const [importText, setImportText] = useState('')
-  const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '' })
+  const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '', rest_minutes: 0 })
   const [freshToken, setFreshToken] = useState<KioskToken | null>(null)
   const users = useQuery({ queryKey: ['users'], queryFn: () => get<{ id: number; username: string; display_name: string; role: string }[]>('/users'), enabled: open && tab === 'sharing' })
   const shares = useQuery({ queryKey: ['shares', board.slug], queryFn: () => get<{ id: number; user_id: number | null; role: string | null; level: string }[]>(`/boards/${board.slug}/shares`), enabled: open && tab === 'sharing' && canEdit })
@@ -318,6 +318,14 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               <input className="input" type="time" value={kioskForm.dim_to} onChange={(e) => setKioskForm((f) => ({ ...f, dim_to: e.target.value }))} />
             </Field>
           </div>
+          <Field label={t('board.kioskRest')} help={t('board.kioskRestHelp')} htmlFor="kiosk-rest">
+            <Select
+              id="kiosk-rest"
+              value={String(kioskForm.rest_minutes)}
+              onChange={(value) => setKioskForm((f) => ({ ...f, rest_minutes: Number(value) }))}
+              options={[0, 5, 10, 15, 30, 60].map((minutes) => ({ value: String(minutes), label: minutes ? t('board.kioskRestMinutes', { count: minutes }) : t('board.kioskRestNever') }))}
+            />
+          </Field>
           <Switch checked={kioskForm.allow_actions} onChange={(allow_actions) => setKioskForm((f) => ({ ...f, allow_actions }))} label={t('board.kioskAllow')} description={t('board.kioskAllowHelp')} />
           <button className="btn btn-accent mt-2" onClick={() => void post<KioskToken>(`/boards/${board.slug}/kiosk-tokens`, kioskForm).then((created) => { setFreshToken(created); void kiosks.refetch() })}>
             {t('board.kioskCreate')}

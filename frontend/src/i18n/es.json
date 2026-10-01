@@ -733,7 +733,12 @@
       "stars": "Cielo estrellado",
       "daytime": "Sigue la hora del día"
     },
-    "livingHelp": "Los tres últimos se mueven, despacio. Si el sistema pide menos movimiento, se quedan quietos."
+    "livingHelp": "Los tres últimos se mueven, despacio. Si el sistema pide menos movimiento, se quedan quietos.",
+    "kioskRest": "Reposo con reloj tras",
+    "kioskRestHelp": "Si nadie la toca durante ese tiempo, la pantalla muestra la hora, el tiempo y lo que está caído, en grande sobre negro, y lo desplaza un poco cada minuto para que nada se queme. Un toque devuelve el tablero.",
+    "kioskRestNever": "Nunca",
+    "kioskRestMinutes_one": "{{count}} minuto",
+    "kioskRestMinutes_other": "{{count}} minutos"
   },
   "widget": {
     "remove": {
@@ -855,7 +860,11 @@
   },
   "kiosk": {
     "invalid": "Este enlace de quiosco ya no es válido.",
-    "pages": "Páginas"
+    "pages": "Páginas",
+    "restWake": "Toca para ver el tablero",
+    "restFine": "Todo responde",
+    "restDown_one": "{{count}} caído",
+    "restDown_other": "{{count}} caídos"
   },
   "whatsnew": {
     "title": "Novedades",

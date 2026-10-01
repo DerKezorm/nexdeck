@@ -733,7 +733,12 @@
       "stars": "Sternenhimmel",
       "daytime": "Folgt der Tageszeit"
     },
-    "livingHelp": "Die letzten drei bewegen sich, langsam. Ist im System weniger Bewegung eingestellt, stehen sie still."
+    "livingHelp": "Die letzten drei bewegen sich, langsam. Ist im System weniger Bewegung eingestellt, stehen sie still.",
+    "kioskRest": "Ruhebild nach",
+    "kioskRestHelp": "Wird die Anzeige so lange nicht berührt, zeigt sie Uhrzeit, Wetter und was ausgefallen ist, groß auf Schwarz, und verschiebt das jede Minute ein wenig, damit nichts einbrennt. Eine Berührung holt das Board zurück.",
+    "kioskRestNever": "Nie",
+    "kioskRestMinutes_one": "{{count}} Minute",
+    "kioskRestMinutes_other": "{{count}} Minuten"
   },
   "widget": {
     "remove": {
@@ -855,7 +860,11 @@
   },
   "kiosk": {
     "invalid": "Dieser Kiosk-Link gilt nicht mehr.",
-    "pages": "Seiten"
+    "pages": "Seiten",
+    "restWake": "Berühren, um das Board zu zeigen",
+    "restFine": "Alles antwortet",
+    "restDown_one": "{{count}} ausgefallen",
+    "restDown_other": "{{count}} ausgefallen"
   },
   "whatsnew": {
     "title": "Was ist neu",

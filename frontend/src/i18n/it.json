@@ -733,7 +733,12 @@
       "stars": "Cielo stellato",
       "daytime": "Segue l'ora del giorno"
     },
-    "livingHelp": "Gli ultimi tre si muovono, lentamente. Se il sistema chiede meno movimento, restano fermi."
+    "livingHelp": "Gli ultimi tre si muovono, lentamente. Se il sistema chiede meno movimento, restano fermi.",
+    "kioskRest": "Riposo con orologio dopo",
+    "kioskRestHelp": "Se nessuno lo tocca per questo tempo, lo schermo mostra l'ora, il meteo e ciò che non risponde, in grande su nero, e lo sposta un po' ogni minuto perché nulla si imprima. Un tocco riporta la bacheca.",
+    "kioskRestNever": "Mai",
+    "kioskRestMinutes_one": "{{count}} minuto",
+    "kioskRestMinutes_other": "{{count}} minuti"
   },
   "widget": {
     "remove": {
@@ -855,7 +860,11 @@
   },
   "kiosk": {
     "invalid": "Questo link kiosk non è più valido.",
-    "pages": "Pagine"
+    "pages": "Pagine",
+    "restWake": "Tocca per mostrare la bacheca",
+    "restFine": "Tutto risponde",
+    "restDown_one": "{{count}} non risponde",
+    "restDown_other": "{{count}} non rispondono"
   },
   "whatsnew": {
     "title": "Novità",

@@ -23,3 +23,8 @@ keep the screen on. The board uses the dark theme on displays, in the colour
 theme, accent, card style and style sheet chosen under Appearance. While a card
 is down it glows red and the background turns faintly red, so a display says
 it from across the room.
+
+A link can let the display rest after a few minutes without a touch: the
+time, the day, the weather of the board's first weather card and what is down,
+large on black. The picture moves a few pixels every minute, so a screen that
+shows it all night does not burn it in. A touch brings the board back.

@@ -733,7 +733,12 @@
       "stars": "Ciel étoilé",
       "daytime": "Suit l'heure du jour"
     },
-    "livingHelp": "Les trois derniers bougent, lentement. Si le système demande moins d'animations, ils restent immobiles."
+    "livingHelp": "Les trois derniers bougent, lentement. Si le système demande moins d'animations, ils restent immobiles.",
+    "kioskRest": "Repos sur une horloge après",
+    "kioskRestHelp": "Sans contact pendant ce temps, l'écran affiche l'heure, la météo et ce qui est en panne, en grand sur fond noir, et les déplace un peu chaque minute pour que rien ne marque l'écran. Un contact ramène le tableau.",
+    "kioskRestNever": "Jamais",
+    "kioskRestMinutes_one": "{{count}} minute",
+    "kioskRestMinutes_other": "{{count}} minutes"
   },
   "widget": {
     "remove": {
@@ -855,7 +860,11 @@
   },
   "kiosk": {
     "invalid": "Ce lien kiosque n’est plus valide.",
-    "pages": "Pages"
+    "pages": "Pages",
+    "restWake": "Touchez pour afficher le tableau",
+    "restFine": "Tout répond",
+    "restDown_one": "{{count}} en panne",
+    "restDown_other": "{{count}} en panne"
   },
   "whatsnew": {
     "title": "Nouveautés",

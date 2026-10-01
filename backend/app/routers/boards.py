@@ -97,7 +97,8 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
     view = board_view(db, board, permission)
     # Only on the display's own board; a cookie left over from another says nothing about this one.
     if kiosk is not None and kiosk.board_id == board.id:
-        view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name}
+        view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name,
+                         "rest_minutes": kiosk.rest_minutes}
     return view
 
 
@@ -135,7 +136,8 @@ def kiosk_board(request: Request, db: DbSession) -> dict:
     if board is None:
         raise error("not_found", "The board of this kiosk token is gone.", status.HTTP_404_NOT_FOUND)
     view = board_view(db, board, "act" if kiosk.allow_actions else "view")
-    view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name}
+    view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name,
+                         "rest_minutes": kiosk.rest_minutes}
     return view
 
 
@@ -471,7 +473,8 @@ def create_kiosk_token(slug: str, body: KioskCreate, user: PasswordUser, db: DbS
     token, token_hash, prefix = new_opaque_token("nk")
     ends = utcnow() + timedelta(days=body.expires_days) if body.expires_days else None
     row = KioskToken(board_id=board.id, name=body.name, token_hash=token_hash, prefix=prefix, allow_actions=body.allow_actions,
-                     cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to, expires_at=ends)
+                     cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to, rest_minutes=body.rest_minutes,
+                     expires_at=ends)
     db.add(row)
     db.commit()
     # A kiosk link is a way in that needs no password. Its making belongs in
@@ -500,5 +503,6 @@ def delete_kiosk_token(token_id: int, user: CurrentUser, db: DbSession) -> None:
 
 def _kiosk_public(token: KioskToken) -> dict:
     return {"id": token.id, "name": token.name, "prefix": token.prefix, "allow_actions": token.allow_actions, "cycle_seconds": token.cycle_seconds,
-            "dim_from": token.dim_from, "dim_to": token.dim_to, "created_at": token.created_at, "last_used_at": token.last_used_at,
+            "dim_from": token.dim_from, "dim_to": token.dim_to, "rest_minutes": token.rest_minutes,
+            "created_at": token.created_at, "last_used_at": token.last_used_at,
             "expires_at": token.expires_at}

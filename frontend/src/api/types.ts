@@ -164,6 +164,7 @@ export interface KioskToken {
   cycle_seconds: number
   dim_from: string
   dim_to: string
+  rest_minutes?: number
   created_at: string
   last_used_at: string | null
   token?: string
@@ -172,7 +173,7 @@ export interface KioskToken {
 
 export interface BoardWithLive extends BoardView {
   live: Record<string, WidgetData>
-  kiosk?: { cycle_seconds: number; dim_from: string; dim_to: string; allow_actions: boolean; name: string }
+  kiosk?: { cycle_seconds: number; dim_from: string; dim_to: string; allow_actions: boolean; name: string; rest_minutes?: number }
 }
 
 export interface About {

@@ -154,6 +154,11 @@ def _muted_column(connection: Connection) -> None:
     _add_column(connection, "integrations", "muted", "BOOLEAN NOT NULL DEFAULT 0")
 
 
+def _rest_column(connection: Connection) -> None:
+    """Every display keeps showing its board until it is told to rest."""
+    _add_column(connection, "kiosk_tokens", "rest_minutes", "INTEGER NOT NULL DEFAULT 0")
+
+
 def _language_pair_column(connection: Connection) -> None:
     """Everybody keeps the two buttons they had: English and German."""
     _add_column(connection, "users", "language_pair", "VARCHAR(32) NOT NULL DEFAULT 'en,de'")
@@ -176,6 +181,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (14, "App tiles that left the demo check their address again", _demo_checks_back_on),
     (15, "A connection can be muted", _muted_column),
     (16, "Each account chooses the two languages in its top bar", _language_pair_column),
+    (17, "A wall display can rest on a large clock", _rest_column),
 ]
 
 

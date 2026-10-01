@@ -199,6 +199,8 @@ class KioskCreate(BaseModel):
     cycle_seconds: int = Field(default=0, ge=0, le=3600)
     dim_from: str = Field(default="", max_length=5)
     dim_to: str = Field(default="", max_length=5)
+    #: Minutes without a touch until the display rests on a large clock; 0 never.
+    rest_minutes: int = Field(default=0, ge=0, le=240)
     #: Days until the link stops working. 0 means it does not expire on its own.
     expires_days: int = Field(default=0, ge=0, le=3650)
 
