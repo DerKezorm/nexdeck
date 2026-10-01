@@ -126,6 +126,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "log": (3, 2),
     "timeline": (3, 2),
     "bars": (3, 2),
+    # A strip of bars needs its width; two rows of services is the least worth showing.
+    "strips": (3, 2),
 }
 #: For a renderer nobody listed. Two by two is the smallest that holds a title
 #: and a line under it without one sitting on the other.

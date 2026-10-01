@@ -229,6 +229,10 @@ class CoreAdapter(Adapter):
                           ("none", "No bars"),
                       )),
                 Field("only_down", "Only what is down", type="bool", default=False),
+                # The same rows drawn as wide strips of bars, one service each: the look
+                # of a public status page, and what reads from across a room.
+                Field("look", "Look", type="select", default="rows",
+                      options=(("rows", "Rows with small bars"), ("strips", "A wide strip of bars per service"))),
             ),
         ),
         WidgetType(
@@ -535,8 +539,13 @@ class CoreAdapter(Adapter):
             status="bad" if down else "ok",
             items=items,
             primary={"label": "Down", "value": down},
-            meta={"empty": "Everything answers.", "bars": drawn or ""},
+            meta={"empty": "Everything answers.", "bars": drawn or "", **cls._look(options, drawn)},
         )
+
+    @staticmethod
+    def _look(options: dict[str, Any], drawn: str | None) -> dict[str, Any]:
+        """Strips, when asked for and when there are bars to draw them with."""
+        return {"renderer": "strips"} if options.get("look") == "strips" and drawn else {}
 
     @classmethod
     def _notices(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
@@ -725,7 +734,7 @@ class CoreAdapter(Adapter):
             ]
             if options.get("only_down"):
                 rows = rows[:1]
-            return WidgetData(status="bad", items=rows, primary={"label": "Down", "value": 1}, meta={"empty": "Everything answers.", "bars": "24h"})
+            return WidgetData(status="bad", items=rows, primary={"label": "Down", "value": 1}, meta={"empty": "Everything answers.", "bars": "24h", **self._look(options, "24h")})
         if widget_kind == "notices":
             import time
 

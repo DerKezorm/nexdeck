@@ -189,3 +189,20 @@ def test_the_demos_of_both_cards_draw_rows() -> None:
     core = get_adapter("core")
     assert core.demo("status", {}, 0).items and core.demo("notices", {}, 0).items
     assert len(core.demo("status", {"only_down": True}, 0).items) == 1
+
+
+async def test_the_status_page_draws_strips_when_asked_and_when_there_are_bars(client: TestClient) -> None:
+    """The strips are the same rows drawn wide; without bars there is nothing to draw them with."""
+    setup_admin(client)
+    lab = _board(client, "Lab")
+    page = lab["pages"][0]["id"]
+    _checked(_tile(client, page, "Radarr"), True, latency=12)
+    status = _card(client, page, "core.status")
+
+    assert "renderer" not in (await _read("status", status)).meta, "rows, as before"
+    strips = await _read("status", status, look="strips")
+    assert strips.meta["renderer"] == "strips"
+    assert len(strips.items[0]["bars"]) == 48
+    assert "renderer" not in (await _read("status", status, look="strips", bars="none")).meta
+    demo = get_adapter("core").demo("status", {"look": "strips"}, 0)
+    assert demo.meta["renderer"] == "strips"

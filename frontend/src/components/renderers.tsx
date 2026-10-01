@@ -102,6 +102,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   ask: AskCard,
   wol: WolCard,
   player: PlayerCard,
+  strips: StripsCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -579,6 +580,58 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
         </div>
       ) : null}
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Strips: one wide row of availability bars per service, as a status page has
+// ---------------------------------------------------------------------------
+
+/**
+ * What a strip of bars looks like: green up, amber partly, red down, faint
+ * unknown. Taller than the bars under a row, and each bar says its share.
+ */
+function Strip({ bars, label }: { bars: (number | null)[]; label: string }) {
+  return (
+    <div className="flex gap-[2px] h-5 min-w-0" role="img" aria-label={label} data-testid="strip">
+      {bars.map((bar, index) => (
+        <span
+          key={index}
+          className="flex-1 rounded-[2px] bar-in"
+          style={{
+            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= 0.99 ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
+            opacity: bar === null ? 1 : 0.85,
+            animationDelay: `${index * 10}ms`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+export function StripsCard({ data }: RenderProps) {
+  const { t } = useTranslation()
+  const disguise = useDisguise()
+  const items = data?.items ?? []
+  if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
+  const span = t(`card.bars.${String(data?.meta?.bars || '24h')}`, { defaultValue: t('card.bars.24h') })
+  return (
+    <ul className="flex-1 min-h-0 scroll px-3 pb-2.5 flex flex-col gap-2 justify-center" data-testid="strips">
+      {items.map((item, index) => {
+        const bars = Array.isArray(item.bars) ? (item.bars as (number | null)[]) : []
+        const name = disguise.free(String(item.title ?? ''))
+        return (
+          <li key={String(item.id ?? index)} className="grid grid-cols-[minmax(4.5rem,9rem)_1fr_auto] items-center gap-3" title={item.subtitle ? disguise.free(tLabel(String(item.subtitle))) : undefined}>
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="dot" data-status={statusOf(item.status)} />
+              <span className="text-[13px] truncate">{name}</span>
+            </span>
+            <Strip bars={bars} label={`${name}: ${span}`} />
+            <span className="num text-[12px] text-muted text-right min-w-[3.2rem]">{item.value !== undefined && item.value !== '' ? formatValue(item.value as number | string, String(item.unit ?? '')) : ''}</span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

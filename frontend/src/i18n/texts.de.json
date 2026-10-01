@@ -1643,7 +1643,9 @@
     "Text size": "Schriftgröße",
     "Small": "Klein",
     "Normal": "Normal",
-    "Large": "Groß"
+    "Large": "Groß",
+    "Rows with small bars": "Zeilen mit kleinen Balken",
+    "A wide strip of bars per service": "Ein breiter Balkenstreifen je Dienst"
   },
   "labels": {
     "Private resources": "Private Ressourcen",

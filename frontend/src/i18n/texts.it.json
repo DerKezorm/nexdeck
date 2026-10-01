@@ -1643,7 +1643,9 @@
     "Text size": "Dimensione del testo",
     "Small": "Piccolo",
     "Normal": "Normale",
-    "Large": "Grande"
+    "Large": "Grande",
+    "Rows with small bars": "Righe con barre piccole",
+    "A wide strip of bars per service": "Una striscia larga di barre per servizio"
   },
   "labels": {
     "Private resources": "Risorse private",
