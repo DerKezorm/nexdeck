@@ -1246,5 +1246,32 @@
     "kept": "Tus propios tableros, tarjetas y conexiones se quedan. Si no queda ningún tablero, se crea un tablero de inicio nuevo.",
     "nothing": "La demo no inventó nada aquí; solo se desactiva el interruptor.",
     "confirm": "Salir del modo demo"
+  },
+  "showcase": {
+    "mode": "Modo escaparate",
+    "media": "Ocultar también títulos de películas y música",
+    "on": "Escaparate",
+    "hidden": "Oculto en el modo escaparate",
+    "offTitle": "El modo escaparate está activo: los nombres y las direcciones son inventados. Pulsa para desactivarlo."
+  },
+  "picture": {
+    "menu": "Guardar el tablero como imagen",
+    "title": "El tablero como imagen",
+    "help": "Dibujada en este navegador al doble de tamaño, lista para un foro o un chat. No se envía nada a ningún sitio.",
+    "preview": "Vista previa de la imagen",
+    "frame": "Marco",
+    "frames": {
+      "gradient": "Degradado",
+      "accent": "Color de acento",
+      "none": "Ninguno"
+    },
+    "note": "Nota «made with nexdeck»",
+    "showcase": "Inventar nombres y direcciones",
+    "showcaseHelp": "Modo escaparate solo para esta imagen.",
+    "save": "Guardar PNG",
+    "copy": "Copiar",
+    "copied": "Copiada",
+    "drawing": "Dibujando la imagen…",
+    "failed": "No se pudo dibujar la imagen."
   }
 }

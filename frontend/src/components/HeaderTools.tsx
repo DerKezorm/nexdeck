@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, Moon, Server, Sun, UserRound } from 'lucide-react'
+import { Bell, Camera, ChevronDown, EyeOff, LogOut, Moon, Server, Sun, UserRound } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
@@ -6,6 +6,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { User } from '../api/types'
 import { accountPair, guestPair, LANGUAGES, setLanguage } from '../i18n'
 import { applyTheme, currentTheme, useAuth } from '../stores/auth'
+import { usePicture } from '../lib/boardPicture'
+import { madeUp, useShowcase } from '../lib/showcase'
 import { usePlayer } from '../stores/player'
 import { Avatar } from './Avatar'
 
@@ -149,7 +151,16 @@ function UserMenu({ user }: { user: HeaderUser }) {
       window.removeEventListener('keydown', onKey)
     }
   }, [open])
-  const name = user.display_name || user.username
+  const showcase = useShowcase((state) => state.on)
+  const media = useShowcase((state) => state.media)
+  const setShowcase = useShowcase((state) => state.setOn)
+  const setMedia = useShowcase((state) => state.setMedia)
+  const pictureAvailable = usePicture((state) => state.available)
+  const openPicture = usePicture((state) => state.setOpen)
+  const real = user.display_name || user.username
+  // In showcase mode the account has a made-up name and no picture of its own.
+  const name = showcase ? madeUp('person', real) : real
+  const avatar = showcase ? undefined : user.avatar_url
   const entries = [
     { to: '/settings', icon: UserRound, label: t('menu.settings') },
     { to: '/system', icon: Server, label: t('menu.system') },
@@ -164,14 +175,14 @@ function UserMenu({ user }: { user: HeaderUser }) {
         aria-expanded={open}
         aria-label={name}
       >
-        <Avatar url={user.avatar_url} name={name} size={26} />
+        <Avatar url={avatar} name={name} size={26} />
         <span className="hidden max-w-32 truncate text-[13px] text-muted sm:inline">{name}</span>
         <ChevronDown size={13} className="text-faint" />
       </button>
       {open && (
         <div role="menu" className="glass-strong absolute right-0 top-11 z-50 w-56 rounded-xl p-1 shadow-2xl">
           <div className="mb-1 flex items-center gap-2.5 border-b border-line px-3 py-2.5">
-            <Avatar url={user.avatar_url} name={name} size={36} />
+            <Avatar url={avatar} name={name} size={36} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{name}</p>
               <p className="truncate text-[11px] text-muted">{t(`users.role.${user.role}`)}</p>
@@ -189,6 +200,25 @@ function UserMenu({ user }: { user: HeaderUser }) {
               {entry.label}
             </Link>
           ))}
+          {/* Showcase mode: a way of drawing, kept in this browser, never stored on the server. */}
+          <div className="mt-1 border-t border-line pt-1">
+            <MenuSwitch checked={showcase} onChange={setShowcase} icon={<EyeOff size={15} />} label={t('showcase.mode')} />
+            {showcase && <MenuSwitch checked={media} onChange={setMedia} label={t('showcase.media')} indent />}
+            {pictureAvailable && (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-surface-hover hover:text-ink"
+                onClick={() => {
+                  setOpen(false)
+                  openPicture(true)
+                }}
+              >
+                <Camera size={15} />
+                {t('picture.menu')}
+              </button>
+            )}
+          </div>
           <button
             type="button"
             role="menuitem"
@@ -204,6 +234,50 @@ function UserMenu({ user }: { user: HeaderUser }) {
         </div>
       )}
     </div>
+  )
+}
+
+/** A switch in the account menu: a row that says what it is, and a small toggle that says whether it is on. */
+function MenuSwitch({ checked, onChange, label, icon, indent = false }: { checked: boolean; onChange: (value: boolean) => void; label: string; icon?: React.ReactNode; indent?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-surface-hover hover:text-ink ${indent ? 'pl-9 text-[13px]' : ''}`}
+      onClick={() => onChange(!checked)}
+    >
+      {icon}
+      <span className="flex-1">{label}</span>
+      <span className={`relative h-4 w-7 flex-none rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-line-strong'}`} aria-hidden="true">
+        <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${checked ? 'left-3.5' : 'left-0.5'}`} />
+      </span>
+    </button>
+  )
+}
+
+/**
+ * While showcase mode is on, a mark in the bar says so, and a press on it
+ * switches it off: a board that lies about its names must not look like one
+ * that does not.
+ */
+function ShowcaseMark() {
+  const { t } = useTranslation()
+  const on = useShowcase((state) => state.on)
+  const setOn = useShowcase((state) => state.setOn)
+  if (!on) return null
+  return (
+    <button
+      type="button"
+      className="flex h-8 items-center gap-1.5 rounded-full border border-accent/50 bg-accent-soft px-2.5 text-[12px] font-medium text-accent"
+      onClick={() => setOn(false)}
+      title={t('showcase.offTitle')}
+      aria-label={t('showcase.offTitle')}
+      data-testid="showcase-mark"
+    >
+      <EyeOff size={13} />
+      <span className="hidden sm:inline">{t('showcase.on')}</span>
+    </button>
   )
 }
 
@@ -223,6 +297,7 @@ export function HeaderTools({ user, unread, onNotices }: Props) {
           <HeaderPill />
         </Suspense>
       )}
+      <ShowcaseMark />
       <NoticeButton unread={unread} onClick={onNotices} />
       <span className="hidden sm:flex items-center gap-1.5">
         <ThemePill signedIn={signedIn} />

@@ -1246,5 +1246,32 @@
     "kept": "Le tue bacheche, schede e connessioni restano. Se non rimane alcuna bacheca, ne viene creata una nuova di partenza.",
     "nothing": "La demo qui non ha inventato nulla; si disattiva solo l'interruttore.",
     "confirm": "Esci dalla modalità demo"
+  },
+  "showcase": {
+    "mode": "Modalità vetrina",
+    "media": "Nascondi anche i titoli di film e musica",
+    "on": "Vetrina",
+    "hidden": "Nascosto in modalità vetrina",
+    "offTitle": "La modalità vetrina è attiva: nomi e indirizzi sono inventati. Premi per disattivarla."
+  },
+  "picture": {
+    "menu": "Salva la bacheca come immagine",
+    "title": "La bacheca come immagine",
+    "help": "Disegnata in questo browser a dimensione doppia, pronta per un forum o una chat. Non viene inviato nulla da nessuna parte.",
+    "preview": "Anteprima dell'immagine",
+    "frame": "Cornice",
+    "frames": {
+      "gradient": "Sfumatura",
+      "accent": "Colore d'accento",
+      "none": "Nessuna"
+    },
+    "note": "Nota «made with nexdeck»",
+    "showcase": "Inventa nomi e indirizzi",
+    "showcaseHelp": "Modalità vetrina solo per questa immagine.",
+    "save": "Salva PNG",
+    "copy": "Copia",
+    "copied": "Copiata",
+    "drawing": "Disegno dell'immagine…",
+    "failed": "Non è stato possibile disegnare l'immagine."
   }
 }

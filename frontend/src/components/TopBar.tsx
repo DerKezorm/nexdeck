@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
+import { useDisguise } from '../lib/showcase'
 import { HeaderTools, type HeaderUser } from './HeaderTools'
 import { LogoMark } from './Logo'
 
@@ -37,6 +38,8 @@ interface Props {
 /** The slim top bar: board and pages left, search in the middle, tools right. */
 export function TopBar(props: Props) {
   const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, user, boards = [], onSwitchBoard } = props
+  // A board or a page may carry a name or an address, as "Anna's room" or "nas.lan" does.
+  const disguise = useDisguise()
   const { t } = useTranslation()
   const [menu, setMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -49,7 +52,7 @@ export function TopBar(props: Props) {
     return () => window.removeEventListener('mousedown', onClick)
   }, [menu])
   return (
-    <header className="glass-strong sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none">
+    <header className="glass-strong sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none" data-no-picture>
       <Link to="/" className="flex items-center gap-2 mr-1" aria-label="nexdeck">
         <LogoMark size={26} />
         <span className="font-semibold tracking-tight hidden lg:inline">
@@ -59,7 +62,7 @@ export function TopBar(props: Props) {
       <span className="w-px h-5 bg-line-strong hidden lg:block" />
       <div className="relative" ref={menuRef}>
         <button className="btn btn-flat px-2 gap-1 font-semibold" onClick={() => setMenu((v) => !v)} aria-haspopup="menu" aria-expanded={menu}>
-          {boardName}
+          {disguise.free(boardName)}
           <ChevronDown size={14} className="text-muted" />
         </button>
         {menu && (
@@ -75,7 +78,7 @@ export function TopBar(props: Props) {
                 }}
               >
                 <LayoutDashboard size={14} className="text-muted" />
-                <span className="flex-1 truncate">{board.name}</span>
+                <span className="flex-1 truncate">{disguise.free(board.name)}</span>
                 {board.name === boardName && <Check size={14} className="text-accent" />}
               </button>
             ))}
@@ -102,7 +105,7 @@ export function TopBar(props: Props) {
             onClick={() => onPage(page.id)}
             aria-current={page.id === activePage ? 'page' : undefined}
           >
-            {page.name}
+            {disguise.free(page.name)}
           </button>
         ))}
       </nav>

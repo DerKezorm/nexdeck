@@ -22,6 +22,7 @@
     "i18next": "^25.6.1",
     "lucide-react": "^0.545.0",
     "marked": "^16.3.0",
+    "modern-screenshot": "^4.7.0",
     "mpegts.js": "^1.8.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

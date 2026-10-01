@@ -86,11 +86,14 @@ function starShadows(seed: number, count: number): string {
 }
 export const STARS = [starShadows(7, 70), starShadows(19, 60), starShadows(43, 50)]
 
+/** Each layer twinkles at its own pace; written out, so the class guard can find them. */
+const LAYERS = ['nd-star-layer-1', 'nd-star-layer-2', 'nd-star-layer-3']
+
 function Stars() {
   return (
     <div className="nd-stars absolute inset-0" data-testid="background-stars">
       {STARS.map((shadows, index) => (
-        <i key={index} className={`nd-star-layer nd-star-layer-${index + 1}`} style={{ boxShadow: shadows }} />
+        <i key={index} className={`nd-star-layer ${LAYERS[index]}`} style={{ boxShadow: shadows }} />
       ))}
     </div>
   )
@@ -122,7 +125,7 @@ export function BackgroundLayer({ background, alarm = false }: { background?: Ba
   const sky = skyAt(hour)
   const gradient = BUNDLED[name] ?? BUNDLED.aurora
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+    <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true" data-background>
       <div className="absolute inset-0" style={{ background: 'var(--nd-bg)' }} />
       {isImage && background?.value ? (
         <div

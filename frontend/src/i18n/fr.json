@@ -1246,5 +1246,32 @@
     "kept": "Vos propres tableaux, cartes et connexions restent. S’il ne reste aucun tableau, un nouveau tableau de départ est créé.",
     "nothing": "La démo n’a rien inventé ici ; seul le mode se désactive.",
     "confirm": "Quitter le mode démo"
+  },
+  "showcase": {
+    "mode": "Mode vitrine",
+    "media": "Masquer aussi les titres de films et de musique",
+    "on": "Vitrine",
+    "hidden": "Masqué en mode vitrine",
+    "offTitle": "Le mode vitrine est actif : les noms et les adresses sont inventés. Appuyez pour le désactiver."
+  },
+  "picture": {
+    "menu": "Enregistrer le tableau en image",
+    "title": "Le tableau en image",
+    "help": "Dessinée dans ce navigateur, en taille double, prête pour un forum ou une discussion. Rien n'est envoyé nulle part.",
+    "preview": "Aperçu de l'image",
+    "frame": "Cadre",
+    "frames": {
+      "gradient": "Dégradé",
+      "accent": "Couleur d'accent",
+      "none": "Aucun"
+    },
+    "note": "Mention « made with nexdeck »",
+    "showcase": "Inventer les noms et les adresses",
+    "showcaseHelp": "Mode vitrine pour cette image seulement.",
+    "save": "Enregistrer en PNG",
+    "copy": "Copier",
+    "copied": "Copiée",
+    "drawing": "Dessin de l'image…",
+    "failed": "L'image n'a pas pu être dessinée."
   }
 }

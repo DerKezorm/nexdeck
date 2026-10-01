@@ -67,6 +67,8 @@ export default defineConfig({
           // vendor chunk however carefully the import was written: a dynamic
           // import only splits a chunk if nothing else pulls the module in.
           if (id.includes('node_modules/marked') || id.includes('node_modules/dompurify')) return undefined
+          // The picture of a board is drawn by a library that loads when someone asks for a picture, and only then.
+          if (id.includes('node_modules/modern-screenshot')) return undefined
           if (id.includes('node_modules')) return 'vendor'
           return undefined
         },

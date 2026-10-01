@@ -36,6 +36,7 @@ import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
+import { playingLine, useDisguise, type Disguise } from '../lib/showcase'
 import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
@@ -168,7 +169,8 @@ function shownValue(value: number | string | null | undefined, unit?: string): s
 
 /** A value as the card shows it, rolling to a new reading when it is a number. */
 function Shown({ value, unit }: { value: number | string | null | undefined; unit?: string }) {
-  return typeof value === 'number' ? <Rolled value={value} unit={unit} /> : <>{shownValue(value, unit)}</>
+  const disguise = useDisguise()
+  return typeof value === 'number' ? <Rolled value={value} unit={unit} /> : <>{disguise.free(shownValue(value, unit))}</>
 }
 
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
@@ -448,8 +450,26 @@ export function StatsCard({ data, series }: RenderProps) {
 // List: rows with status, value, optional progress and actions
 // ---------------------------------------------------------------------------
 
+/**
+ * What a row of a list says, in showcase mode: a cover's title as media, a
+ * mail as a made-up sender and subject, a row of a list of users as a person,
+ * anything else by the shape of what is in it.
+ */
+/** Kinds of card whose rows are titles of films, series, music or books: queues, requests, what arrived or was watched. */
+const MEDIA_ROWS = /\.(queue|requests|approvals|recent|arrivals|top|torrents|downloads|wanted|history|watched|listening|playing|activity)$/
+
+function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>, title: string, subtitle: string): [string, string] {
+  if (!disguise.on) return [title, subtitle]
+  if (/^(nexmail|imap)\.latest$/.test(kind)) return [disguise.as('sender', title), subtitle ? disguise.as('subject', subtitle) : subtitle]
+  if (item.worded) return [title, disguise.free(subtitle)]
+  if ((item.art && item.art_shape !== 'square') || MEDIA_ROWS.test(kind)) return [disguise.media(title), disguise.free(subtitle)]
+  if (kind.endsWith('.users')) return [disguise.as('person', title), disguise.free(subtitle)]
+  return [disguise.free(title), disguise.free(subtitle)]
+}
+
 export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
+  const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
   // A row that carries an error code is translated by the code; other subtitles by wording.
@@ -479,6 +499,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
           const status = statusOf(item.status)
           const progress = typeof item.progress === 'number' ? item.progress : null
           const memory = typeof item.memory_percent === 'number' ? item.memory_percent : null
+          const [title, subtitle] = listRow(disguise, widget.kind, item, item.worded ? tLabel(String(item.title ?? '')) : String(item.title ?? ''), item.subtitle ? subtitleOf(item) : '')
           return (
             <li key={String(item.id ?? index)} className="group/row flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-surface-hover">
               {item.art ? (
@@ -488,7 +509,8 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 // `art_shape: square` for a picture that is not a cover, such
                 // as the crop of a camera detection.
                 <span className={`relative shrink-0 rounded overflow-hidden bg-surface-hover ${item.art_shape === 'square' ? 'w-10 aspect-square' : 'w-8 aspect-[2/3]'}`}>
-                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                  {/* The crop of a camera picture shows the home; in showcase mode it is blurred. */}
+                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${disguise.on && item.art_shape === 'square' ? 'blur-md scale-110' : ''}`} />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>
               ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}
@@ -498,10 +520,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                       a fault: an unread mail is not a yellow one. */}
                   {/* A title is a name as it stands, unless the row says it is
                       nexdeck's own wording: a finding, a kind of media. */}
-                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{item.worded ? tLabel(String(item.title ?? '')) : String(item.title ?? '')}</span>
+                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{title}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
-                {item.subtitle ? <div className="text-[11px] text-muted truncate">{subtitleOf(item)}</div> : null}
+                {subtitle ? <div className="text-[11px] text-muted truncate">{subtitle}</div> : null}
                 {Array.isArray(item.bars) && item.bars.length > 0 && (
                   <AvailabilityBars
                     bars={item.bars as (number | null)[]}
@@ -535,7 +557,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
               ) : null}
               {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
               {item.value !== undefined && item.value !== '' && (
-                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : tLabel(String(item.value))}</span>
+                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : disguise.free(tLabel(String(item.value)))}</span>
               )}
               {/* How long ago, in epoch seconds, for a row that is an event: a notice. */}
               {(item.value === undefined || item.value === '') && typeof item.when === 'number' && (
@@ -566,6 +588,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
 
 export function NowPlayingCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
+  const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{t('card.nothingPlaying')}</Empty>
   return (
@@ -574,17 +597,21 @@ export function NowPlayingCard({ widget, data }: RenderProps) {
         {items.map((item, index) => {
           const progress = typeof item.progress === 'number' ? item.progress : 0
           const paused = item.state === 'paused'
+          // The person and the device are made up in showcase mode; what plays only when titles are asked for too.
+          const title = disguise.media(String(item.title ?? ''))
+          const subtitle = tLabel(String(item.subtitle ?? ''))
+          const line = disguise.on ? disguise.free(playingLine(subtitle, String(item.user ?? ''))) : subtitle
           return (
             <li key={index} className="flex gap-3 items-center">
               <div
                 className="w-10 h-14 rounded-md flex-none overflow-hidden bg-gradient-to-br from-accent/40 to-indigo-500/40 flex items-center justify-center text-[10px] font-semibold text-white/80"
                 style={item.art ? { backgroundImage: `url(${mediaUrl(widget.id, String(item.art))})`, backgroundSize: 'cover' } : undefined}
               >
-                {!item.art && String(item.title ?? '?').slice(0, 2).toUpperCase()}
+                {!item.art && (title || '?').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-medium truncate">{String(item.title ?? '')}</div>
-                <div className="text-[11px] text-muted truncate">{tLabel(String(item.subtitle ?? ''))}</div>
+                <div className="text-[13px] font-medium truncate">{title}</div>
+                <div className="text-[11px] text-muted truncate">{line}</div>
                 <div className="flex items-center gap-2 mt-1.5">
                   {paused ? <Pause size={11} className="text-warn flex-none" /> : <Play size={11} className="text-ok flex-none" />}
                   <div className="bar flex-1">
@@ -634,18 +661,21 @@ export function CountersCard({ data }: RenderProps) {
 
 export function PostersCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
+  const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
   return (
     <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {
         const art = mediaUrl(widget.id, item.art as string | undefined)
+        const title = disguise.media(String(item.title ?? ''))
+        const subtitle = item.subtitle ? disguise.free(tLabel(String(item.subtitle))) : ''
         return (
-          <li key={String(item.id ?? index)} className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${String(item.title ?? '')}${item.subtitle ? ` · ${String(item.subtitle)}` : ''}`}>
-            {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{String(item.title ?? '?').slice(0, 2).toUpperCase()}</span>}
+          <li key={String(item.id ?? index)} className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${title}${subtitle ? ` · ${subtitle}` : ''}`}>
+            {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{(title || '?').slice(0, 2).toUpperCase()}</span>}
             <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
-              <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{String(item.title ?? '')}</div>
-              {item.subtitle ? <div className="text-[10px] text-white/70 truncate">{tLabel(String(item.subtitle))}</div> : null}
+              <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{title}</div>
+              {subtitle ? <div className="text-[10px] text-white/70 truncate">{subtitle}</div> : null}
             </div>
           </li>
         )
@@ -658,8 +688,11 @@ export function PostersCard({ widget, data }: RenderProps) {
 // Calendar: upcoming items grouped by day
 // ---------------------------------------------------------------------------
 
-export function CalendarCard({ data }: RenderProps) {
+export function CalendarCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
+  const disguise = useDisguise()
+  // An appointment of one's own comes from an iCal calendar and says so; the rest are releases.
+  const appointment = (entry: Record<string, unknown>) => widget.kind === 'ical.events' || entry.appointment === true
   const items = data?.items ?? []
   if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
@@ -681,8 +714,9 @@ export function CalendarCard({ data }: RenderProps) {
                   {clockOf(entry.time)}
                 </time>
               )}
-              <span className="text-[13px] font-medium truncate flex-1">{String(entry.title ?? '')}</span>
-              <span className="text-[11px] text-muted truncate max-w-[45%]">{tLabel(String(entry.subtitle ?? ''))}</span>
+              <span className="text-[13px] font-medium truncate flex-1">{appointment(entry) ? disguise.as('event', String(entry.title ?? '')) : disguise.media(String(entry.title ?? ''))}</span>
+              {/* Where an appointment is says more than what it is: in showcase mode it is left out. */}
+              <span className="text-[11px] text-muted truncate max-w-[45%]">{appointment(entry) && disguise.on ? '' : disguise.free(tLabel(String(entry.subtitle ?? '')))}</span>
             </div>
           ))}
         </li>
@@ -827,6 +861,11 @@ export function TextCard({ widget, data, canWrite, editing }: RenderProps) {
 // Bookmarks
 // ---------------------------------------------------------------------------
 
+function BookmarkTitle({ text }: { text: string }) {
+  const disguise = useDisguise()
+  return <span className="text-[13px] truncate">{disguise.free(text)}</span>
+}
+
 export function BookmarksCard({ data }: RenderProps) {
   const { t } = useTranslation()
   const items = data?.items ?? []
@@ -843,7 +882,7 @@ export function BookmarksCard({ data }: RenderProps) {
             className={`flex items-center gap-2.5 rounded-lg hover:bg-surface-hover ${grid ? 'flex-col justify-center text-center p-2' : 'px-2 py-1.5'}`}
           >
             <ServiceIcon icon={String(item.icon || 'lucide:link')} size={grid ? 24 : 18} />
-            <span className="text-[13px] truncate">{String(item.title ?? '')}</span>
+            <BookmarkTitle text={String(item.title ?? '')} />
           </a>
         </li>
       ))}
@@ -1008,6 +1047,7 @@ const CONDITION_ICONS: Record<string, ComponentType<LucideProps>> = {
 }
 
 export function WeatherCard({ data }: RenderProps) {
+  const disguise = useDisguise()
   const condition = String(data?.meta?.condition ?? 'overcast')
   const night = data?.meta?.is_day === false
   const Icon = night && condition === 'clear' ? Moon : (CONDITION_ICONS[condition] ?? Cloud)
@@ -1023,7 +1063,7 @@ export function WeatherCard({ data }: RenderProps) {
           </div>
           <div className="text-[11px] text-muted mt-1 capitalize truncate">
             {condition.replace('-', ' ')}
-            {data?.primary?.label ? ` · ${tLabel(data.primary.label)}` : ''}
+            {data?.primary?.label ? ` · ${disguise.as('city', tLabel(data.primary.label))}` : ''}
           </div>
         </div>
         <div className="ml-auto hidden lg:block">
@@ -1056,6 +1096,7 @@ export function WeatherCard({ data }: RenderProps) {
 
 export function FeedCard({ data }: RenderProps) {
   const { t } = useTranslation()
+  const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{t('card.noEntries')}</Empty>
   const cards = data?.meta?.style === 'cards'
@@ -1065,9 +1106,9 @@ export function FeedCard({ data }: RenderProps) {
         <li key={index}>
           <a href={safeUrl(item.url) || '#'} target="_blank" rel="noopener noreferrer" className={`block rounded-lg hover:bg-surface-hover ${cards ? 'p-2' : 'px-2 py-1.5'}`}>
             {cards && item.image ? <div className="aspect-video rounded-md bg-cover bg-center mb-2" style={{ backgroundImage: `url(${item.image})` }} /> : null}
-            <div className="text-[13px] font-medium leading-snug line-clamp-2">{String(item.title ?? '')}</div>
+            <div className="text-[13px] font-medium leading-snug line-clamp-2">{disguise.free(String(item.title ?? ''))}</div>
             <div className="text-[11px] text-faint mt-0.5 truncate">
-              {String(item.source ?? '')}
+              {disguise.free(String(item.source ?? ''))}
               {item.published ? ` · ${timeAgo(Number(item.published))}` : ''}
             </div>
           </a>
@@ -1083,13 +1124,14 @@ export function FeedCard({ data }: RenderProps) {
 
 export function LogCard({ data }: RenderProps) {
   const { t } = useTranslation()
+  const disguise = useDisguise()
   const lines = (data?.meta?.lines_preview as string[] | undefined) ?? []
   return (
     <pre className="flex-1 min-h-0 scroll px-3 pb-3 m-0 font-mono text-[11px] leading-[1.5] text-muted whitespace-pre-wrap">
       {lines.length ? (
         lines.map((line, index) => (
           <div key={index} className={/error|fatal/i.test(line) ? 'text-bad' : /warn/i.test(line) ? 'text-warn' : ''}>
-            {line}
+            {disguise.free(line)}
           </div>
         ))
       ) : (

@@ -230,7 +230,9 @@ class IcalAdapter(Adapter):
                 shown, clock, over = on_this_clock(event, day)
                 if not start <= shown <= end:
                     continue
-                item = {"date": shown.isoformat(), "title": event.get("summary", "(untitled)"), "subtitle": event.get("location", "") or ("all day" if event.get("all_day") else ""), "status": "ok", "source": config.get("name") or "Calendar"}
+                item = {"date": shown.isoformat(), "title": event.get("summary", "(untitled)"), "subtitle": event.get("location", "") or ("all day" if event.get("all_day") else ""), "status": "ok", "source": config.get("name") or "Calendar",
+                        # An appointment of one's own, not a release: showcase mode makes it up.
+                        "appointment": True}
                 if clock is not None:
                     item.update(time=clock, over=over.isoformat(timespec="minutes") if over else None)
                 items.append(item)
@@ -246,7 +248,7 @@ class IcalAdapter(Adapter):
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         today = datetime.now(UTC).date()
         names = [("Dentist", "Main street 1", "08:30"), ("Team call", "", "14:00"), ("Garbage collection", "all day", None), ("Birthday party", "Home", "18:00")]
-        return WidgetData(items=[{"date": (today + timedelta(days=i * 2)).isoformat(), "title": n, "subtitle": s, "status": "ok", "source": "Family", **({"time": c} if c else {})} for i, (n, s, c) in enumerate(names)])
+        return WidgetData(items=[{"date": (today + timedelta(days=i * 2)).isoformat(), "title": n, "subtitle": s, "status": "ok", "source": "Family", "appointment": True, **({"time": c} if c else {})} for i, (n, s, c) in enumerate(names)])
 
 
 class CalendarAdapter(Adapter):
@@ -307,7 +309,7 @@ class CalendarAdapter(Adapter):
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         today = datetime.now(UTC).date()
         rows = [("Harbour Lights", "S03E05", "Sonarr", 0, None), ("Copper Sky", "Digital release", "Radarr", 0, None), ("Dentist", "Main street 1", "Family", 1, "08:30"), ("Orbital Decay", "S01E09", "Sonarr", 1, None), ("Nightshift", "Digital release", "Radarr", 2, None), ("Team call", "", "Work", 3, "14:00")]
-        return WidgetData(items=[{"date": (today + timedelta(days=d)).isoformat(), "title": t, "subtitle": s, "source": src, "status": "ok" if src not in ("Sonarr", "Radarr") else "warn", **({"time": c} if c else {})} for t, s, src, d, c in rows])
+        return WidgetData(items=[{"date": (today + timedelta(days=d)).isoformat(), "title": t, "subtitle": s, "source": src, "status": "ok" if src not in ("Sonarr", "Radarr") else "warn", **({"time": c} if c else {}), **({"appointment": True} if src not in ("Sonarr", "Radarr") else {})} for t, s, src, d, c in rows])
 
 
 ADAPTER = IcalAdapter()

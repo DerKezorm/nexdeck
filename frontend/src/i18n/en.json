@@ -1246,5 +1246,32 @@
     "kept": "Your own boards, cards and connections stay. If no board is left, a new starting board is made.",
     "nothing": "The demo invented nothing here; only the switch goes off.",
     "confirm": "Leave demo mode"
+  },
+  "showcase": {
+    "mode": "Showcase mode",
+    "media": "Hide film and music titles too",
+    "on": "Showcase",
+    "hidden": "Hidden in showcase mode",
+    "offTitle": "Showcase mode is on: names and addresses are made up. Press to switch it off."
+  },
+  "picture": {
+    "menu": "Save board as picture",
+    "title": "Board as a picture",
+    "help": "Drawn in this browser at twice the size, ready for a forum or a chat. Nothing is sent anywhere.",
+    "preview": "Preview of the picture",
+    "frame": "Frame",
+    "frames": {
+      "gradient": "Colour gradient",
+      "accent": "Accent colour",
+      "none": "None"
+    },
+    "note": "Note “made with nexdeck”",
+    "showcase": "Make names and addresses up",
+    "showcaseHelp": "Showcase mode for this picture only.",
+    "save": "Save PNG",
+    "copy": "Copy",
+    "copied": "Copied",
+    "drawing": "Drawing the picture…",
+    "failed": "The picture could not be drawn."
   }
 }

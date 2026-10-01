@@ -30,6 +30,9 @@ import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { anyCardDown } from '../lib/cardStatus'
+import { domainsOf, useShowcase } from '../lib/showcase'
+import { usePicture } from '../lib/boardPicture'
+import { PictureDialog } from '../components/PictureDialog'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
@@ -414,6 +417,30 @@ export function BoardPage() {
     [flush, moveTargets, t],
   )
 
+  // Showcase mode replaces every name under a domain the board's services live
+  // on, and the account's own names: both are read here, where they are known.
+  const setShowcaseDomains = useShowcase((state) => state.setDomains)
+  const setShowcaseNames = useShowcase((state) => state.setNames)
+  useEffect(() => {
+    const addresses = (data?.pages ?? []).flatMap((page) => page.widgets.flatMap((widget) => [widget.link, widget.service_link]))
+    setShowcaseDomains(domainsOf([window.location.href, ...addresses]))
+  }, [data, setShowcaseDomains])
+  useEffect(() => {
+    setShowcaseNames([user?.display_name ?? '', user?.username ?? ''])
+  }, [user, setShowcaseNames])
+
+  // The account menu offers to save this board as a picture while it is open.
+  const pictureOpen = usePicture((state) => state.open)
+  const setPictureOpen = usePicture((state) => state.setOpen)
+  const setPictureAvailable = usePicture((state) => state.setAvailable)
+  useEffect(() => {
+    setPictureAvailable(true)
+    return () => {
+      setPictureAvailable(false)
+      setPictureOpen(false)
+    }
+  }, [setPictureAvailable, setPictureOpen])
+
   const allActions = useMemo(() => {
     const list: { widget: WidgetView; action: Action }[] = []
     if (!canAct) return list
@@ -462,7 +489,8 @@ export function BoardPage() {
     // ⚠️ While editing, the page leaves more room below the board than the
     // edit bar takes, so the lowest card scrolls out from under it. With the
     // usual room the bar lay over that card's resize corner (issue #12).
-    <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`}>
+    <>
+    <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       <TopBar
         boardName={data.name}
@@ -484,7 +512,9 @@ export function BoardPage() {
         onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
       />
       <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
-        <DemoNotice admin={user?.role === 'admin'} />
+        <div data-no-picture>
+          <DemoNotice admin={user?.role === 'admin'} />
+        </div>
         {widgets.length === 0 && (
           <div className="glass rounded-2xl p-8 text-center max-w-xl mx-auto mt-10">
             <LayoutGrid className="mx-auto text-accent" size={28} />
@@ -575,6 +605,7 @@ export function BoardPage() {
         </div>
       )}
 
+      <div data-no-picture>
       <MobileTabBar
         boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={data.id}
@@ -590,6 +621,7 @@ export function BoardPage() {
         activePage={activePage.slug}
         onPage={(slug) => navigate(`/b/${data.slug}/${slug}`)}
       />
+      </div>
 
       <WidgetLibrary
         open={library}
@@ -711,5 +743,7 @@ export function BoardPage() {
         </Toast>
       )}
     </div>
+    <PictureDialog open={pictureOpen} onClose={() => setPictureOpen(false)} boardName={data.name} />
+    </>
   )
 }

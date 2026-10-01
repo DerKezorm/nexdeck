@@ -1246,5 +1246,32 @@
     "kept": "Deine eigenen Boards, Kacheln und Verbindungen bleiben. Bleibt kein Board übrig, entsteht ein neues Startboard.",
     "nothing": "Die Demo hat hier nichts erfunden; nur der Schalter geht aus.",
     "confirm": "Demo-Modus verlassen"
+  },
+  "showcase": {
+    "mode": "Vorzeige-Modus",
+    "media": "Auch Film- und Musiktitel verbergen",
+    "on": "Vorzeigen",
+    "hidden": "Im Vorzeige-Modus verborgen",
+    "offTitle": "Der Vorzeige-Modus ist an: Namen und Adressen sind erfunden. Ein Klick schaltet ihn aus."
+  },
+  "picture": {
+    "menu": "Board als Bild speichern",
+    "title": "Board als Bild",
+    "help": "In diesem Browser gezeichnet, in doppelter Größe, fertig für ein Forum oder einen Chat. Nichts wird irgendwohin geschickt.",
+    "preview": "Vorschau des Bildes",
+    "frame": "Rahmen",
+    "frames": {
+      "gradient": "Farbverlauf",
+      "accent": "Akzentfarbe",
+      "none": "Keiner"
+    },
+    "note": "Hinweis „made with nexdeck“",
+    "showcase": "Namen und Adressen erfinden",
+    "showcaseHelp": "Vorzeige-Modus nur für dieses Bild.",
+    "save": "PNG speichern",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "drawing": "Das Bild wird gezeichnet …",
+    "failed": "Das Bild ließ sich nicht zeichnen."
   }
 }

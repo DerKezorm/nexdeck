@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { cardStatus } from '../lib/cardStatus'
 import { safeUrl } from '../lib/safeUrl'
+import { useDisguise } from '../lib/showcase'
 
 import { tLabel } from '../i18n/texts'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -30,6 +31,10 @@ const INTERACTIVE = 'a, button, input, select, textarea, [role="button"], .no-cl
 /** The frame every widget shares: header, floating controls, body, error strip. */
 export function WidgetCard({ widget, data, series, editing, canAct, canWrite, onAction, onRefresh, onSettings, onRemove, onArrange }: Props) {
   const { t, i18n } = useTranslation()
+  const disguise = useDisguise()
+  // A camera, an embedded page and a note show the home itself, and nothing in
+  // them can be told apart from the rest: in showcase mode they are blurred.
+  const veiled = disguise.on && ['camera', 'iframe', 'text'].includes(widget.renderer)
   // A failed fetch is an error state of its own: red, with the server's reason.
   // The server names the reason by code; other languages translate the code,
   // English shows the server's own sentence with its specifics.
@@ -39,7 +44,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   const showFindings = widget.options?.show_findings === true
   const status = cardStatus(widget, data)
   const errorCode = String(data?.meta?.code ?? '')
-  const errorText = failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : ''
+  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : '')
   // ⚠️ data?.link comes from the service, not from the operator. A
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
@@ -107,8 +112,8 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       {!bare && (
         <header className="flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9">
           <ServiceIcon icon={widget.icon} size={18} />
-          <h3 className="text-[13px] font-medium truncate flex-1 text-ink/90" title={widget.title}>
-            {widget.title}
+          <h3 className="text-[13px] font-medium truncate flex-1 text-ink/90" title={disguise.free(widget.title)}>
+            {disguise.free(widget.title)}
           </h3>
           {/* Why yellow or red, right on the card; the veil already says it for failures. */}
           {!failed && (status === 'warn' || status === 'bad') && reasons.length > 0 && (
@@ -126,9 +131,14 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       )}
       {/* The controls float over the corner: always while editing, on hover otherwise. */}
       {showControls && <div className="card-controls glass">{controls}</div>}
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div className={`flex-1 min-h-0 flex flex-col ${veiled ? 'nd-veiled' : ''}`} aria-hidden={veiled || undefined}>
         {renderWidget({ widget, data, series, canAct, canWrite, onAction, link, editing })}
       </div>
+      {veiled && (
+        <div className={`nd-veil ${bare ? 'inset-0' : 'inset-x-0 bottom-0 top-9'}`} data-testid="showcase-veil">
+          {t('showcase.hidden')}
+        </div>
+      )}
       {/* The failure lies over the body: the layout underneath stays as it is, the
           last good values show through, and the red is impossible to miss. */}
       {failed && (
