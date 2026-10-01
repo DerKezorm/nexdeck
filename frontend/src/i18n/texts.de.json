@@ -1687,7 +1687,13 @@
     "Settings > API keys": "Einstellungen > API-Schlüssel",
     "Each source with what its files take of the disk, and the files and shares in all.": "Jede Quelle mit dem, was ihre Dateien vom Datenträger belegen, und Dateien und Freigaben insgesamt.",
     "Made in FileBrowser's settings under API tokens, with the permission api.": "Angelegt in den Einstellungen von FileBrowser unter API-Tokens, mit dem Recht api.",
-    "What the files of each source take on their disk, how many there are, and the open shares.": "Was die Dateien jeder Quelle auf ihrem Datenträger belegen, wie viele es sind, und die offenen Freigaben."
+    "What the files of each source take on their disk, how many there are, and the open shares.": "Was die Dateien jeder Quelle auf ihrem Datenträger belegen, wie viele es sind, und die offenen Freigaben.",
+    "Settings > API in Tracearr; it starts with trr_pub_.": "Einstellungen > API in Tracearr; er beginnt mit trr_pub_.",
+    "Streams across Plex, Jellyfin and Emby, and the accounts that look shared.": "Streams über Plex, Jellyfin und Emby, und die Konten, die geteilt aussehen.",
+    "Streams now, plays and hours watched today, and the alerts of the last day.": "Streams jetzt, Wiedergaben und geschaute Stunden heute, und die Warnungen des letzten Tages.",
+    "Tracearr overview": "Tracearr-Übersicht",
+    "Violations": "Verstöße",
+    "What Tracearr flagged and nobody has looked at yet: shared accounts, too many streams, far-apart places.": "Was Tracearr gemeldet hat und noch niemand angesehen hat: geteilte Konten, zu viele Streams, weit entfernte Orte."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2685,6 +2691,10 @@
     "Hours watched": "Stunden geschaut",
     "Errored": "Fehlerhaft",
     "Unreachable": "Nicht erreichbar",
-    "Shares": "Freigaben"
+    "Shares": "Freigaben",
+    "Hours today": "Stunden heute",
+    "Plays today": "Wiedergaben heute",
+    "Streams": "Streams",
+    "Alerts": "Warnungen"
   }
 }

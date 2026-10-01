@@ -88,7 +88,8 @@ that one of twenty-one renderers draws.
 | nexcrate | library (there, wanted, on its way, stuck, as a ring), downloads (progress and time left), stuck downloads (needing you first, with the buttons nexcrate offers), coming up, just arrived (posters and covers), why is it missing (nexcrate's reason per wanted title), storage, findings | try again, search again, remove and search again, clear, on a stuck download | paired from the connection sheet: nexdeck shows a code, the owner confirms it in nexcrate and the key arrives by itself; a key made in nexcrate's settings works too. Every card reads with "read"; the buttons need "operate" |
 | Seerr | requests, counts | approve, decline | API key |
 | Overseerr, Jellyseerr | requests, counts | approve, decline | API key; same API as Seerr, listed under their own names |
-| Tautulli | now playing, streams, most watched | | API key |
+| Tautulli | now playing, streams, most watched, plays per day | | API key |
+| Tracearr | Tracearr overview, violations | | the public API key from Settings > API, which starts with trr_pub_ |
 | RomM | platforms, recently added games, game library | | client API token with roms.read and platforms.read |
 | Minecraft | server status, players online | | none; the server list ping of Java Edition over TCP, and for Bedrock Edition both the RakNet ping over UDP and the NetherNet join query over TCP that Bedrock 1.26 answers by default. SRV records are not followed |
 | Immich | archive, storage, users | | API key of an administrator |
@@ -108,7 +109,7 @@ that one of twenty-one renderers draws.
 | Prowlarr | indexers, status | | API key |
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
-| Qui | Qui overview, instances | none | an API key, made under Settings > API keys; one key reads every qBittorrent behind Qui |
+| Qui | Qui overview, instances | | an API key, made under Settings > API keys; one key reads every qBittorrent behind Qui |
 | rTorrent | queue, speed, torrents, rTorrent overview | pause, resume | the XML-RPC address (such as :8000/RPC2 of crazymax/rtorrent-rutorrent) or the address of ruTorrent, with the web server's user and password when one is set |
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
@@ -135,9 +136,9 @@ that one of twenty-one renderers draws.
 | Kimai | time entries, booked time | stop a running timer | API token from Profile > API access |
 | Dawarich | distance, distance by month | | API key of the account; distances follow Dawarich's hourly calculation |
 | wger | weight, weigh-ins | | API key from the profile, sent as Token |
-| FileBrowser Quantum | storage | none | an API token with the permission api, made in FileBrowser's settings; shares are counted when the token may read them |
+| FileBrowser Quantum | storage | | an API token with the permission api, made in FileBrowser's settings; shares are counted when the token may read them |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
-| evcc | energy, charging | | none; the state is readable without a password |
+| evcc | energy, energy flow, charging | | none; the state is readable without a password |
 | BookOrbit | reading now, recently added, library | | user and password; BookOrbit has no API keys and allows five sign-ins a minute, so the token is kept |
 | Ghostfolio | portfolio, holdings | | security token of the account from Settings > Access; it is exchanged for a JWT that lasts 180 days |
 | Homebox | inventory, value by place or tag, warranties | | API key from Profile > API Keys (Homebox 0.26 and newer; shown only once), or the account's e-mail and password on older versions |
