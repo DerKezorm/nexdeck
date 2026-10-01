@@ -391,7 +391,24 @@
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
-      "pixels": "{{count}} px"
+      "pixels": "{{count}} px",
+      "looksTitle": "Styles",
+      "looksHelp": "Thème et cartes assortis, en un clic. Visible tout de suite ; enregistré avec le bouton.",
+      "looks": {
+        "classic": "nexdeck",
+        "midnight": "Néon de minuit",
+        "frost": "Givre nordique",
+        "latte": "Papier latte",
+        "castle": "Château de nuit",
+        "workshop": "Atelier",
+        "evening": "Soirée rosé"
+      },
+      "lookShare": "Partager le style",
+      "lookShareHelp": "Le thème, une couleur à vous et les cartes en un court texte : copiez-le ici et collez-le dans un autre nexdeck. Votre feuille de style reste à part, c'est du code.",
+      "lookCopy": "Copier le style",
+      "lookCopied": "Copié",
+      "lookPasteLabel": "Un style à coller",
+      "lookTake": "Prendre ce style"
     },
     "journal": {
       "title": "Niveau de journalisation",

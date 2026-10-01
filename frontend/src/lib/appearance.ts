@@ -224,3 +224,55 @@ export function readTheme(text: string): { theme: Theme } | { error: string } {
 export function themeFile(theme: Theme): string {
   return JSON.stringify({ nexdeck_theme: 1, name: theme.name, dark: theme.dark, light: theme.light }, null, 2)
 }
+
+const STYLES: CardStyle[] = ['glass', 'flat', 'outline', 'neon']
+
+/**
+ * The whole look as the text it is shared as: the theme, a colour of one's
+ * own, the cards. No style sheet: a sheet written for one installation can
+ * break another, and it is the one part that is code.
+ */
+export function lookFile(look: Appearance): string {
+  return JSON.stringify({
+    nexdeck_look: 1,
+    theme: look.theme ? { name: look.theme.name, dark: look.theme.dark, light: look.theme.light } : null,
+    accent: HEX.test(look.accent ?? '') ? look.accent : '',
+    card_style: look.card_style ?? 'glass',
+    radius: look.radius ?? 16,
+    gap: look.gap ?? 12,
+  })
+}
+
+/**
+ * A look read from pasted text, or an error in words. A theme on its own, as
+ * it was shared before looks existed, is taken as a look with that theme.
+ * Numbers out of bounds and unknown styles fall back rather than fail; the
+ * server checks again on saving.
+ */
+export function readLook(text: string): { look: Partial<Appearance> } | { error: string } {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return { error: 'json' }
+  }
+  if (!parsed || typeof parsed !== 'object') return { error: 'shape' }
+  const value = parsed as Record<string, unknown>
+  if (!('nexdeck_look' in value)) {
+    const theme = readTheme(text)
+    return 'error' in theme ? theme : { look: { theme: theme.theme } }
+  }
+  const look: Partial<Appearance> = {}
+  if (value.theme) {
+    const theme = readTheme(JSON.stringify(value.theme))
+    if ('error' in theme) return theme
+    look.theme = theme.theme
+  } else look.theme = null
+  look.accent = typeof value.accent === 'string' && HEX.test(value.accent) ? value.accent : ''
+  look.card_style = STYLES.includes(value.card_style as CardStyle) ? (value.card_style as CardStyle) : 'glass'
+  const within = (number: unknown, low: number, high: number, fallback: number) => (typeof number === 'number' && Number.isInteger(number) && number >= low && number <= high ? number : fallback)
+  look.radius = within(value.radius, 0, 28, 16)
+  look.gap = within(value.gap, 4, 28, 12)
+  return { look }
+}
+

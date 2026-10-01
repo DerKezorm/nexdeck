@@ -54,7 +54,6 @@ afterEach(() => {
 describe('the rest of a wall display', () => {
   it('comes after the minutes without a touch, says what is down, and goes at a touch', async () => {
     show()
-    await screen.findByLabelText('One', {}, { timeout: 3000 }).catch(() => undefined)
     await act(async () => {
       await vi.advanceTimersByTimeAsync(4 * 60_000)
     })

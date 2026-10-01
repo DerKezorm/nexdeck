@@ -391,7 +391,24 @@
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
-      "pixels": "{{count}} px"
+      "pixels": "{{count}} px",
+      "looksTitle": "Stili",
+      "looksHelp": "Tema e schede che stanno bene insieme, con un clic. Si vede subito; si salva con il pulsante.",
+      "looks": {
+        "classic": "nexdeck",
+        "midnight": "Neon di mezzanotte",
+        "frost": "Brina nordica",
+        "latte": "Carta latte",
+        "castle": "Castello notturno",
+        "workshop": "Officina",
+        "evening": "Sera rosé"
+      },
+      "lookShare": "Condividi lo stile",
+      "lookShareHelp": "Il tema, un colore tuo e le schede come un breve testo: copialo qui e incollalo in un altro nexdeck. Il tuo foglio di stile resta fuori, è codice.",
+      "lookCopy": "Copia lo stile",
+      "lookCopied": "Copiato",
+      "lookPasteLabel": "Uno stile da incollare",
+      "lookTake": "Usa questo stile"
     },
     "journal": {
       "title": "Livello di log",

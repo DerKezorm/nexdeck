@@ -391,7 +391,24 @@
       },
       "radius": "Ecken",
       "gap": "Abstand zwischen Karten",
-      "pixels": "{{count}} px"
+      "pixels": "{{count}} px",
+      "looksTitle": "Looks",
+      "looksHelp": "Farbschema und Karten, die zusammenpassen, mit einem Klick. Sofort zu sehen, gespeichert mit dem Knopf.",
+      "looks": {
+        "classic": "nexdeck",
+        "midnight": "Mitternachts-Neon",
+        "frost": "Nordischer Frost",
+        "latte": "Latte-Papier",
+        "castle": "Nachtschloss",
+        "workshop": "Werkstatt",
+        "evening": "Rosé-Abend"
+      },
+      "lookShare": "Look teilen",
+      "lookShareHelp": "Farbschema, eigene Farbe und Karten als kurzer Text: hier kopieren und in einem anderen nexdeck einfügen. Dein eigenes CSS bleibt draußen, es ist Code.",
+      "lookCopy": "Look kopieren",
+      "lookCopied": "Kopiert",
+      "lookPasteLabel": "Ein Look zum Einfügen",
+      "lookTake": "Diesen Look übernehmen"
     },
     "journal": {
       "title": "Protokollstufe",

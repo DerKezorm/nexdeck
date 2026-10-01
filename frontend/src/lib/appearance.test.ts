@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, darker, useLook } from './appearance'
+import { accentVariables, applyAppearance, channels, darker, lookFile, readLook, useLook } from './appearance'
 
 describe('the accent colour', () => {
   it('reads the three parts of a colour', () => {
@@ -91,5 +91,27 @@ describe('the cards', () => {
     applyAppearance(base)
     expect(document.documentElement.dataset.cards).toBeUndefined()
     expect(useLook.getState().gap).toBe(12)
+  })
+})
+
+describe('a look to share', () => {
+  const base = { preset: 'cyan', accent: '#ff00aa', css: '.secret { }', colour: '#ff00aa', card_style: 'neon' as const, radius: 6, gap: 20, theme: { name: 'Dusk', dark: { bg: '#101010' } } }
+
+  it('travels as theme, colour and cards, and leaves the style sheet at home', () => {
+    const text = lookFile(base)
+    expect(text).not.toContain('secret')
+    const read = readLook(text)
+    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', radius: 6, gap: 20 })
+  })
+
+  it('takes a theme shared on its own, as before looks existed', () => {
+    const read = readLook(JSON.stringify({ nexdeck_theme: 1, name: 'Old', dark: { bg: '#000000' } }))
+    expect('look' in read && read.look.theme?.name).toBe('Old')
+  })
+
+  it('falls back on what is out of bounds, and says so in words for what is not a look', () => {
+    const read = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, card_style: 'wood', radius: 99, gap: 2 }))
+    expect('look' in read && [read.look.card_style, read.look.radius, read.look.gap]).toEqual(['glass', 16, 12])
+    expect(readLook('nonsense')).toEqual({ error: 'json' })
   })
 })

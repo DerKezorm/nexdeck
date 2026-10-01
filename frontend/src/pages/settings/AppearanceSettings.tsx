@@ -7,6 +7,7 @@ import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
 import { SettingsCard } from './SettingsCard'
+import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
 
 const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12 }
@@ -136,6 +137,7 @@ export function AppearanceSettings() {
           {t('common.save')}
         </button>
       </SettingsCard>
+      <LookShare form={form} onChange={setForm} onSave={store} />
       <SettingsCard title={t('settings.appearance.title')} description={t('settings.appearance.help')}>
         <Field label={t('settings.appearance.accent')} help={t('settings.appearance.accentHelp')}>
           <div className="flex flex-wrap gap-2">

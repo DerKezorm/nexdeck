@@ -391,7 +391,24 @@
       },
       "radius": "Corners",
       "gap": "Gap between cards",
-      "pixels": "{{count}} px"
+      "pixels": "{{count}} px",
+      "looksTitle": "Looks",
+      "looksHelp": "Theme and cards that go together, in one click. Shown at once; saved with the button.",
+      "looks": {
+        "classic": "nexdeck",
+        "midnight": "Midnight neon",
+        "frost": "Nordic frost",
+        "latte": "Latte paper",
+        "castle": "Night castle",
+        "workshop": "Workshop",
+        "evening": "Rosé evening"
+      },
+      "lookShare": "Share the look",
+      "lookShareHelp": "The theme, a colour of your own and the cards as a short text: copy it here and paste it into another nexdeck. Your own style sheet stays out, it is code.",
+      "lookCopy": "Copy the look",
+      "lookCopied": "Copied",
+      "lookPasteLabel": "A look to paste",
+      "lookTake": "Take this look"
     },
     "journal": {
       "title": "Log level",

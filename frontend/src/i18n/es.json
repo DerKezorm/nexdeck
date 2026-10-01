@@ -391,7 +391,24 @@
       },
       "radius": "Esquinas",
       "gap": "Espacio entre tarjetas",
-      "pixels": "{{count}} px"
+      "pixels": "{{count}} px",
+      "looksTitle": "Estilos",
+      "looksHelp": "Tema y tarjetas que combinan, con un clic. Se ve al momento; se guarda con el botón.",
+      "looks": {
+        "classic": "nexdeck",
+        "midnight": "Neón de medianoche",
+        "frost": "Escarcha nórdica",
+        "latte": "Papel latte",
+        "castle": "Castillo nocturno",
+        "workshop": "Taller",
+        "evening": "Tarde rosé"
+      },
+      "lookShare": "Compartir el estilo",
+      "lookShareHelp": "El tema, un color propio y las tarjetas como un texto corto: cópialo aquí y pégalo en otro nexdeck. Tu hoja de estilo propia se queda fuera, es código.",
+      "lookCopy": "Copiar el estilo",
+      "lookCopied": "Copiado",
+      "lookPasteLabel": "Un estilo para pegar",
+      "lookTake": "Usar este estilo"
     },
     "journal": {
       "title": "Nivel de registro",
