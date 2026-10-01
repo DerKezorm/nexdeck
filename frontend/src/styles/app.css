@@ -373,6 +373,38 @@ body {
   transition: width 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+/* A bar grows in from nothing when its card first shows; later readings glide. */
+.bar > i {
+  animation: nd-bar-in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+@keyframes nd-bar-in {
+  from {
+    width: 0;
+  }
+}
+
+/* A history line is drawn in from the left when its card first shows. */
+.nd-reveal {
+  animation: nd-reveal 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+@keyframes nd-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar > i,
+  .nd-reveal {
+    animation: none;
+  }
+}
+
 .bar[data-status='warn'] > i {
   background: var(--nd-warn);
 }

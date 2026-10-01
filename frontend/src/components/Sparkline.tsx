@@ -29,7 +29,8 @@ export function Sparkline({ values, height = 36, color = 'var(--nd-accent)', fil
     <svg
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className={className}
+      // Drawn in from the left when the card first shows, once; later readings move the line in place.
+      className={`nd-reveal ${className}`}
       style={{ width: '100%', height }}
       aria-hidden="true"
     >

@@ -45,6 +45,7 @@ import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
 import { WolCard } from './WolCard'
 import { NoteEditor, saveNote } from './NoteEditor'
+import { Rolled } from './Rolled'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
@@ -165,6 +166,11 @@ function shownValue(value: number | string | null | undefined, unit?: string): s
   return formatValue(value, unit)
 }
 
+/** A value as the card shows it, rolling to a new reading when it is a number. */
+function Shown({ value, unit }: { value: number | string | null | undefined; unit?: string }) {
+  return typeof value === 'number' ? <Rolled value={value} unit={unit} /> : <>{shownValue(value, unit)}</>
+}
+
 function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
   if (!items?.length) return null
   return (
@@ -172,7 +178,9 @@ function Chips({ items, series }: { items?: Secondary[]; series?: Record<string,
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
           {tLabel(item.label)}
-          <b className="num">{shownValue(item.value, item.unit)}</b>
+          <b className="num">
+            <Shown value={item.value} unit={item.unit} />
+          </b>
           {item.metric && worthDrawing(series?.[item.metric]) && (
             <span className="inline-block w-8 ml-1 -mb-0.5">
               <Sparkline values={series![item.metric]} height={10} fill={false} />
@@ -274,8 +282,9 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
         </div>
       )}
       <div className="flex-1 flex flex-col justify-center px-3 min-h-0 relative">
-        <div className="num text-[30px] leading-none font-semibold tracking-tight rise" key={String(primary?.value)}>
-          {formatValue(primary?.value)}
+        {/* A number rolls to its new reading; a word rises in, as it always did. */}
+        <div className={`num text-[30px] leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`} key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}>
+          <Rolled value={primary?.value} />
           {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{primary.unit}</span>}
         </div>
         {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{tLabel(primary.label)}</div>}
@@ -366,7 +375,7 @@ export function GaugeCard({ data }: RenderProps) {
       </svg>
       <div className="min-w-0 flex-1">
         <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
-        <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate">{formatValue(primary?.value, primary?.unit)}</div>
+        <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Rolled value={primary?.value} unit={primary?.unit} /></div>
         {ceiling !== null && (
           <div className="text-[10px] text-muted num">
             {t('gauge.of')} {formatValue(ceiling, primary?.unit)}
@@ -424,7 +433,9 @@ export function StatsCard({ data, series }: RenderProps) {
                   </div>
                 )}
               </div>
-              <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">{shownValue(row.value, row.unit)}</div>
+              <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">
+                <Shown value={row.value} unit={row.unit} />
+              </div>
             </div>
           )
         })}
@@ -453,7 +464,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
         // A total above its own rows, for a list whose rows add up to one
         // number: unread mail in all mailboxes, then each mailbox.
         <div className="px-3 pb-1.5 flex items-baseline gap-2" data-testid="list-headline">
-          <span className="num text-[26px] leading-none font-semibold tracking-tight">{formatValue(data.primary.value, data.primary.unit)}</span>
+          <span className="num text-[26px] leading-none font-semibold tracking-tight"><Rolled value={data.primary.value} unit={data.primary.unit} /></span>
           {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{tLabel(data.primary.label)}</span> : null}
         </div>
       ) : null}
@@ -604,7 +615,7 @@ export function CountersCard({ data }: RenderProps) {
       {items.map((item, index) => (
         <div key={index} className="flex flex-col items-center gap-2.5 min-w-0">
           <ServiceIcon icon={String(item.icon ?? 'lucide:box')} size={26} className="text-accent" />
-          <div className="num text-2xl font-semibold leading-none">{formatValue(item.value as number | string | null | undefined)}</div>
+          <div className="num text-2xl font-semibold leading-none"><Rolled value={item.value as number | string | null | undefined} /></div>
           <div className="text-[10px] uppercase tracking-wider text-muted truncate max-w-full">{tLabel(String(item.label ?? ''))}</div>
         </div>
       ))}
@@ -1007,7 +1018,7 @@ export function WeatherCard({ data }: RenderProps) {
         <Icon size={36} className="text-accent flex-none" strokeWidth={1.5} />
         <div className="min-w-0">
           <div className="num text-[28px] leading-none font-semibold">
-            {formatValue(data?.primary?.value)}
+            <Rolled value={data?.primary?.value} />
             <span className="text-sm text-muted ml-1">{data?.primary?.unit}</span>
           </div>
           <div className="text-[11px] text-muted mt-1 capitalize truncate">
@@ -1122,7 +1133,7 @@ export function ChartCard({ data, series }: RenderProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-3">
       <div className="flex items-baseline gap-2">
-        <span className="num text-2xl font-semibold">{formatValue(current, unit)}</span>
+        <span className="num text-2xl font-semibold"><Rolled value={current} unit={unit} /></span>
         <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>
         {all.length > 1 && (
           <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
@@ -1212,7 +1223,7 @@ export function TimelineCard({ data }: RenderProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-2.5">
       <div className="flex items-baseline gap-2">
-        <span className="num text-2xl font-semibold">{formatValue(data?.primary?.value, data?.primary?.unit ?? '')}</span>
+        <span className="num text-2xl font-semibold"><Rolled value={data?.primary?.value} unit={data?.primary?.unit ?? ''} /></span>
         {/* Named once. With several lines the legend below carries the names,
             and repeating the first one up here made the card say "Download"
             twice with nothing to tell the two apart. */}
@@ -1307,7 +1318,7 @@ export function BarsCard({ data, onAction, canAct, series }: RenderProps) {
                 {String(item.title ?? '')}
               </span>
               <span className="num text-[11px] text-muted whitespace-nowrap tabular-nums">
-                {value === null ? '' : formatValue(value, String(item.unit ?? ''))}
+                {value === null ? '' : <Rolled value={value} unit={String(item.unit ?? '')} />}
               </span>
               <span className="col-span-2 bar" data-status={status}>
                 <i style={{ width: value !== null && top > 0 ? `${Math.max(1.5, (value / top) * 100)}%` : 0 }} />
@@ -1386,8 +1397,8 @@ export function RingCard({ data }: RenderProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="num text-lg font-semibold leading-none">
             {data?.primary?.value !== undefined && data?.primary?.value !== null
-              ? formatValue(data.primary.value, data.primary.unit ?? '')
-              : formatValue(whole)}
+              ? <Rolled value={data.primary.value} unit={data.primary.unit ?? ''} />
+              : <Rolled value={whole} />}
           </span>
         </div>
       </div>
