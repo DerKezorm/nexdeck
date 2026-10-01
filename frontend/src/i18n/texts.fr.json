@@ -1679,7 +1679,12 @@
     "An ICS link, or the address of a CalDAV calendar such as https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Private addresses stay secret.": "Un lien ICS ou l'adresse d'un calendrier CalDAV, par exemple https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Les adresses privées restent secrètes.",
     "Events from an iCal (ICS) address or a CalDAV calendar: Google, Nextcloud, Radicale, Baïkal, iCloud or any calendar that exports one.": "Événements d'une adresse iCal (ICS) ou d'un calendrier CalDAV : Google, Nextcloud, Radicale, Baïkal, iCloud ou tout calendrier qui en exporte une.",
     "For Nextcloud an app password, made under Settings > Security.": "Pour Nextcloud, un mot de passe d'application créé dans Paramètres > Sécurité.",
-    "Only for a CalDAV calendar. An ICS link needs none.": "Seulement pour un calendrier CalDAV. Un lien ICS n'en a pas besoin."
+    "Only for a CalDAV calendar. An ICS link needs none.": "Seulement pour un calendrier CalDAV. Un lien ICS n'en a pas besoin.",
+    "Download and upload across every instance, and how many torrents run, seed or fail.": "Téléchargement et envoi de toutes les instances, et combien de torrents tournent, partagent ou échouent.",
+    "One or many qBittorrent through Qui: speeds, torrents that run, seed or fail, and each instance.": "Un ou plusieurs qBittorrent via Qui : débits, torrents qui tournent, partagent ou échouent, et chaque instance.",
+    "One row per qBittorrent: whether it answers, its speeds and its torrents.": "Une ligne par qBittorrent : s'il répond, ses débits et ses torrents.",
+    "Qui overview": "Aperçu de Qui",
+    "Settings > API keys": "Paramètres > Clés d'API"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -2674,6 +2679,8 @@
     "Car": "Voiture",
     "Busiest day": "Jour le plus chargé",
     "Plays": "Lectures",
-    "Hours watched": "Heures regardées"
+    "Hours watched": "Heures regardées",
+    "Errored": "En erreur",
+    "Unreachable": "Injoignables"
   }
 }

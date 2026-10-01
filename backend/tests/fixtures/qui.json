@@ -1,0 +1,138 @@
+{
+ "instances": [
+  {
+   "id": 1,
+   "name": "Seedbox",
+   "host": "http://qbittorrent:8080",
+   "username": "admin",
+   "hasApiKey": false,
+   "tlsSkipVerify": false,
+   "hasLocalFilesystemAccess": false,
+   "useHardlinks": false,
+   "hardlinkBaseDir": "",
+   "hardlinkDirPreset": "flat",
+   "useReflinks": false,
+   "fallbackToRegularMode": false,
+   "connected": false,
+   "hasDecryptionError": false,
+   "recentErrors": [
+    {
+     "id": 1,
+     "instanceId": 1,
+     "errorType": "authentication",
+     "errorMessage": "qBittorrent authentication requires user action",
+     "occurredAt": "2026-10-01T21:30:00Z"
+    }
+   ],
+   "sortOrder": 0,
+   "isActive": true,
+   "sshPort": 22,
+   "sshHostKeyPinned": false,
+   "filesystemMode": "none",
+   "reannounceSettings": {
+    "enabled": false,
+    "initialWaitSeconds": 15,
+    "reannounceIntervalSeconds": 7,
+    "maxAgeSeconds": 600,
+    "maxRetries": 50,
+    "aggressive": false,
+    "monitorAll": true,
+    "excludeCategories": false,
+    "categories": [],
+    "excludeTags": false,
+    "tags": [],
+    "excludeTrackers": false,
+    "trackers": []
+   }
+  }
+ ],
+ "torrents": {
+  "total": 1,
+  "activeTaskCount": 0,
+  "stats": {
+   "total": 1,
+   "downloading": 0,
+   "seeding": 0,
+   "paused": 1,
+   "error": 0,
+   "checking": 0,
+   "totalDownloadSpeed": 0,
+   "totalUploadSpeed": 0,
+   "totalDownloadData": 0,
+   "totalUploadData": 0,
+   "totalSize": 0,
+   "totalRemainingSize": 0,
+   "totalSeedingSize": 0
+  },
+  "counts": {
+   "status": {
+    "active": 0,
+    "all": 1,
+    "checking": 0,
+    "completed": 0,
+    "downloading": 0,
+    "errored": 0,
+    "inactive": 1,
+    "moving": 0,
+    "paused": 1,
+    "resumed": 0,
+    "running": 0,
+    "seeding": 0,
+    "stalled": 0,
+    "stalled_downloading": 0,
+    "stalled_uploading": 0,
+    "stopped": 1,
+    "tracker_down": 0,
+    "tracker_error": 0,
+    "unregistered": 0
+   },
+   "categories": {
+    "": 1
+   },
+   "categorySizes": {
+    "": 0
+   },
+   "tags": {
+    "": 1
+   },
+   "tagSizes": {
+    "": 0
+   },
+   "trackers": {},
+   "total": 1
+  },
+  "serverState": {
+   "alltime_dl": 8232,
+   "alltime_ul": 11704,
+   "average_time_queue": 0,
+   "connection_status": "firewalled",
+   "dht_nodes": 57,
+   "dl_info_data": 0,
+   "dl_info_speed": 0,
+   "dl_rate_limit": 0,
+   "free_space_on_disk": -1,
+   "global_ratio": "1.42",
+   "queued_io_jobs": 0,
+   "queueing": true,
+   "read_cache_hits": "0",
+   "read_cache_overload": "0",
+   "refresh_interval": 1500,
+   "total_buffers_size": 0,
+   "total_peer_connections": 0,
+   "total_queued_size": 0,
+   "total_wasted_session": 0,
+   "up_info_data": 0,
+   "up_info_speed": 0,
+   "up_rate_limit": 0,
+   "use_alt_speed_limits": false,
+   "use_subcategories": false,
+   "write_cache_overload": "0"
+  },
+  "useSubcategories": true,
+  "hasMore": false,
+  "trackerHealthSupported": true,
+  "isCrossInstance": false,
+  "partialResults": false,
+  "torrents": []
+ }
+}

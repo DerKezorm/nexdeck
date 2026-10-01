@@ -1679,7 +1679,12 @@
     "An ICS link, or the address of a CalDAV calendar such as https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Private addresses stay secret.": "Un enlace ICS o la dirección de un calendario CalDAV, como https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Las direcciones privadas se mantienen en secreto.",
     "Events from an iCal (ICS) address or a CalDAV calendar: Google, Nextcloud, Radicale, Baïkal, iCloud or any calendar that exports one.": "Eventos de una dirección iCal (ICS) o de un calendario CalDAV: Google, Nextcloud, Radicale, Baïkal, iCloud o cualquier calendario que la ofrezca.",
     "For Nextcloud an app password, made under Settings > Security.": "Para Nextcloud, una contraseña de aplicación creada en Ajustes > Seguridad.",
-    "Only for a CalDAV calendar. An ICS link needs none.": "Solo para un calendario CalDAV. Un enlace ICS no lo necesita."
+    "Only for a CalDAV calendar. An ICS link needs none.": "Solo para un calendario CalDAV. Un enlace ICS no lo necesita.",
+    "Download and upload across every instance, and how many torrents run, seed or fail.": "Descarga y subida de todas las instancias, y cuántos torrents están activos, compartiendo o con error.",
+    "One or many qBittorrent through Qui: speeds, torrents that run, seed or fail, and each instance.": "Uno o varios qBittorrent a través de Qui: velocidades, torrents activos, compartiendo o con error, y cada instancia.",
+    "One row per qBittorrent: whether it answers, its speeds and its torrents.": "Una fila por qBittorrent: si responde, sus velocidades y sus torrents.",
+    "Qui overview": "Resumen de Qui",
+    "Settings > API keys": "Ajustes > Claves de API"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2674,6 +2679,8 @@
     "Car": "Coche",
     "Busiest day": "Día con más",
     "Plays": "Reproducciones",
-    "Hours watched": "Horas vistas"
+    "Hours watched": "Horas vistas",
+    "Errored": "Con error",
+    "Unreachable": "Inaccesibles"
   }
 }

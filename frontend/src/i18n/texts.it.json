@@ -1679,7 +1679,12 @@
     "An ICS link, or the address of a CalDAV calendar such as https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Private addresses stay secret.": "Un link ICS o l'indirizzo di un calendario CalDAV, ad esempio https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Gli indirizzi privati restano segreti.",
     "Events from an iCal (ICS) address or a CalDAV calendar: Google, Nextcloud, Radicale, Baïkal, iCloud or any calendar that exports one.": "Eventi da un indirizzo iCal (ICS) o da un calendario CalDAV: Google, Nextcloud, Radicale, Baïkal, iCloud o qualsiasi calendario che ne esporti uno.",
     "For Nextcloud an app password, made under Settings > Security.": "Per Nextcloud una password per app, creata in Impostazioni > Sicurezza.",
-    "Only for a CalDAV calendar. An ICS link needs none.": "Solo per un calendario CalDAV. Un link ICS non ne ha bisogno."
+    "Only for a CalDAV calendar. An ICS link needs none.": "Solo per un calendario CalDAV. Un link ICS non ne ha bisogno.",
+    "Download and upload across every instance, and how many torrents run, seed or fail.": "Download e upload di tutte le istanze, e quanti torrent sono attivi, in seed o in errore.",
+    "One or many qBittorrent through Qui: speeds, torrents that run, seed or fail, and each instance.": "Uno o più qBittorrent tramite Qui: velocità, torrent attivi, in seed o in errore, e ogni istanza.",
+    "One row per qBittorrent: whether it answers, its speeds and its torrents.": "Una riga per qBittorrent: se risponde, le sue velocità e i suoi torrent.",
+    "Qui overview": "Panoramica di Qui",
+    "Settings > API keys": "Impostazioni > Chiavi API"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -2674,6 +2679,8 @@
     "Car": "Auto",
     "Busiest day": "Giorno più intenso",
     "Plays": "Riproduzioni",
-    "Hours watched": "Ore guardate"
+    "Hours watched": "Ore guardate",
+    "Errored": "In errore",
+    "Unreachable": "Non raggiungibili"
   }
 }

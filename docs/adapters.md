@@ -108,6 +108,7 @@ that one of twenty-one renderers draws.
 | Prowlarr | indexers, status | | API key |
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
+| Qui | Qui overview, instances | none | an API key, made under Settings > API keys; one key reads every qBittorrent behind Qui |
 | rTorrent | queue, speed, torrents, rTorrent overview | pause, resume | the XML-RPC address (such as :8000/RPC2 of crazymax/rtorrent-rutorrent) or the address of ruTorrent, with the web server's user and password when one is set |
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
