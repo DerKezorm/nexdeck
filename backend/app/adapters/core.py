@@ -698,10 +698,16 @@ class CoreAdapter(Adapter):
             })
         if widget_kind == "markdown":
             return WidgetData(meta={"markdown": options.get("content") or ""})
-        if widget_kind in ("heading", "tabs", "group"):
-            # Drawn from the card's own options, so a change shows while the sheet
-            # is open; a holder draws the data its cards already have.
+        if widget_kind == "heading":
+            # Drawn from the card's own options, so a change shows while the sheet is open.
             return WidgetData()
+        if widget_kind in ("tabs", "group"):
+            # A holder draws the data its cards already have; its own answer only
+            # says what it is and how many it holds, which keeps it apart from a
+            # heading that answers nothing.
+            cards = options.get("cards") if isinstance(options.get("cards"), list) else []
+            own = {"turn": str(options.get("turn") or "0")} if widget_kind == "tabs" else {"columns": str(options.get("columns") or "auto")}
+            return WidgetData(meta={"holder": widget_kind, "holds": len(cards), **own})
         if widget_kind == "image":
             return WidgetData(items=parse_pictures(options.get("pictures")), meta={
                 "every": max(0, int(options.get("every") or 0)),
