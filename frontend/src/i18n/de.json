@@ -1000,7 +1000,8 @@
     },
     "noCheck": "Keine Erreichbarkeitsprüfung",
     "checkOff": "Die Prüfung ist abgeschaltet",
-    "flow": "Wohin der Strom fließt"
+    "flow": "Wohin der Strom fließt",
+    "topology": "Wie die Orte zusammenhängen"
   },
   "player": {
     "title": "Musik",

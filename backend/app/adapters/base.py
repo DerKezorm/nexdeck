@@ -138,6 +138,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "tabs": (2, 2),
     # A title and at least one row of cards inside.
     "group": (3, 2),
+    # A tree needs room to branch: three levels and a few boxes side by side.
+    "topology": (4, 3),
 }
 
 #: Pairs of metrics that are one line going in and one going out. A card that

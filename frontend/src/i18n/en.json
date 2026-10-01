@@ -1000,7 +1000,8 @@
     },
     "noCheck": "No reachability check",
     "checkOff": "The check is switched off",
-    "flow": "Where the power goes"
+    "flow": "Where the power goes",
+    "topology": "How the places hang together"
   },
   "player": {
     "title": "Music",

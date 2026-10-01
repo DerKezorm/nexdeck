@@ -43,6 +43,7 @@ import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
 import { FlowCard } from './FlowCard'
 import { HeatmapCard } from './HeatmapCard'
+import { TopologyCard } from './TopologyCard'
 import { GroupCard, TabsCard } from './GroupCards'
 import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
@@ -109,6 +110,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   inout: InOutCard,
   flow: FlowCard,
   heatmap: HeatmapCard,
+  topology: TopologyCard,
   // Wrapped, not named: the holders draw their cards with this very file, and
   // a module that is still loading would hand over its names as undefined.
   tabs: (props: RenderProps) => <TabsCard {...props} />,

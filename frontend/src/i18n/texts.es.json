@@ -1693,7 +1693,9 @@
     "Streams now, plays and hours watched today, and the alerts of the last day.": "Reproducciones ahora, reproducciones y horas vistas hoy, y las alertas del último día.",
     "Tracearr overview": "Resumen de Tracearr",
     "Violations": "Infracciones",
-    "What Tracearr flagged and nobody has looked at yet: shared accounts, too many streams, far-apart places.": "Lo que Tracearr marcó y nadie ha revisado aún: cuentas compartidas, demasiadas reproducciones, lugares muy distantes."
+    "What Tracearr flagged and nobody has looked at yet: shared accounts, too many streams, far-apart places.": "Lo que Tracearr marcó y nadie ha revisado aún: cuentas compartidas, demasiadas reproducciones, lugares muy distantes.",
+    "Map": "Mapa",
+    "The cluster as a picture: its nodes, and under each node the machines and containers it runs, with how each stands.": "El clúster como imagen: sus nodos y, bajo cada nodo, las máquinas y contenedores que ejecuta, con su estado."
   },
   "labels": {
     "Private resources": "Recursos privados",

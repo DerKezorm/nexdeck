@@ -1000,7 +1000,8 @@
     },
     "noCheck": "Aucun test de joignabilité",
     "checkOff": "Le test est désactivé",
-    "flow": "Où va l'énergie"
+    "flow": "Où va l'énergie",
+    "topology": "Comment les éléments sont reliés"
   },
   "player": {
     "title": "Musique",

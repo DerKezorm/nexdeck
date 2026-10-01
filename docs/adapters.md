@@ -15,7 +15,7 @@ that one of twenty-one renderers draws.
 | Adapter | Widgets | Actions | Credentials |
 |---|---|---|---|
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
-| Proxmox VE | node, guests, summary | start, shutdown, reboot | API token |
+| Proxmox VE | node, guests, map, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
 | Nomad | jobs, nodes, cluster | stop a job, scale a task group up or down | none on a cluster without ACLs, else an ACL token with node:read and namespace:read-job; the buttons need namespace:scale-job or namespace:submit-job |
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |

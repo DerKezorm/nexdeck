@@ -69,6 +69,16 @@ class ProxmoxAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="map",
+            label="Map",
+            description="The cluster as a picture: its nodes, and under each node the machines and containers it runs, with how each stands.",
+            renderer="topology",
+            default_size=(6, 4),
+            refresh_seconds=30,
+            metrics=("running",),
+            options=(Field("show_stopped", "Show stopped guests", type="bool", default=True),),
+        ),
+        WidgetType(
             kind="summary",
             label="Cluster summary",
             description="Running guests and nodes in one number.",
@@ -180,6 +190,8 @@ class ProxmoxAdapter(Adapter):
             )
         guests = await self._get(config, ctx, "/cluster/resources?type=vm") or []
         running = [g for g in guests if g.get("status") == "running"]
+        if widget_kind == "map":
+            return map_of(nodes, guests, bool(options.get("show_stopped", True)))
         if widget_kind == "summary":
             return WidgetData(
                 primary={"label": "Running guests", "value": len(running), "unit": f"/ {len(guests)}"},
@@ -240,6 +252,15 @@ class ProxmoxAdapter(Adapter):
                               secondary=[{"label": "Memory", "value": memory, "unit": "%", "metric": "memory"}, {"label": "Storage", "value": 44.2, "unit": "%"}, {"label": "Uptime", "value": duration_short(41 * 86400 + tick)}],
                               metrics={"cpu": cpu, "memory": memory}, meta={"node": "pve"})
         guests = [("media", "qemu", 101), ("homeassistant", "qemu", 102), ("pihole", "lxc", 201), ("nexdeck", "lxc", 202), ("backup", "lxc", 203), ("windows-test", "qemu", 110)]
+        if widget_kind == "map":
+            second = [("gitea", "lxc", 301), ("nextcloud", "qemu", 302), ("monitoring", "lxc", 303)]
+            return map_of(
+                [{"node": "pve", "status": "online", "cpu": cpu / 100, "mem": memory, "maxmem": 100},
+                 {"node": "pve2", "status": "online", "cpu": fake.walk("pve2-cpu", tick, 0.04, 0.3), "mem": 31, "maxmem": 100}],
+                [{"node": "pve", "type": kind, "vmid": vmid, "name": name, "status": "stopped" if name == "windows-test" else "running"} for name, kind, vmid in guests]
+                + [{"node": "pve2", "type": kind, "vmid": vmid, "name": name, "status": "running"} for name, kind, vmid in second],
+                bool(options.get("show_stopped", True)),
+            )
         items = []
         running = 0
         for _index, (name, kind, vmid) in enumerate(guests):
@@ -254,6 +275,44 @@ class ProxmoxAdapter(Adapter):
         if widget_kind == "summary":
             return WidgetData(primary={"label": "Running guests", "value": running, "unit": f"/ {len(guests)}"}, secondary=[{"label": "Nodes", "value": 1}, {"label": "Online", "value": 1}], metrics={"running": float(running)})
         return WidgetData(items=items, secondary=[{"label": "Running", "value": running}, {"label": "Total", "value": len(guests)}], metrics={"running": float(running)})
+
+
+def map_of(nodes: list[dict[str, Any]], guests: list[dict[str, Any]], show_stopped: bool) -> WidgetData:
+    """The cluster as a tree: the cluster on top, its nodes, each node's guests under it.
+
+    Every place is ``{id, name, kind, parent, status, detail}``, the shape
+    the topology card draws whatever it came from.
+    """
+    places: list[dict[str, Any]] = [{"id": "cluster", "name": "Cluster", "kind": "cluster", "parent": None, "status": "ok", "detail": f"{len(nodes)} node(s)"}]
+    down_nodes = 0
+    for node in sorted(nodes, key=lambda one: str(one.get("node") or "")):
+        name = str(node.get("node") or "?")
+        online = node.get("status") == "online"
+        down_nodes += not online
+        detail = f"CPU {round(float(node.get('cpu') or 0) * 100)}% · RAM {round(percent(node.get('mem'), node.get('maxmem')) or 0)}%" if online else "offline"
+        places.append({"id": f"node/{name}", "name": name, "kind": "host", "parent": "cluster", "status": "ok" if online else "bad", "detail": detail})
+    known = {place["id"] for place in places}
+    running = 0
+    for guest in sorted(guests, key=lambda one: (str(one.get("node") or ""), int(one.get("vmid") or 0))):
+        state = str(guest.get("status") or "unknown")
+        running += state == "running"
+        if state != "running" and not show_stopped:
+            continue
+        parent = f"node/{guest.get('node')}"
+        places.append({
+            "id": f"{guest.get('node')}/{guest.get('type')}/{guest.get('vmid')}",
+            "name": str(guest.get("name") or guest.get("vmid")),
+            "kind": "container" if guest.get("type") == "lxc" else "vm",
+            "parent": parent if parent in known else "cluster",
+            "status": "ok" if state == "running" else "unknown",
+            "detail": f"{'LXC' if guest.get('type') == 'lxc' else 'VM'} {guest.get('vmid')}",
+        })
+    return WidgetData(
+        status="bad" if down_nodes else "ok",
+        primary={"label": "Running guests", "value": running, "unit": f"/ {len(guests)}"},
+        metrics={"running": float(running)},
+        meta={"topology": {"places": places}},
+    )
 
 
 ADAPTER = ProxmoxAdapter()

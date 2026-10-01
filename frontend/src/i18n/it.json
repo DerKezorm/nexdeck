@@ -1000,7 +1000,8 @@
     },
     "noCheck": "Nessuna verifica di raggiungibilità",
     "checkOff": "La verifica è disattivata",
-    "flow": "Dove va l'energia"
+    "flow": "Dove va l'energia",
+    "topology": "Come sono collegati i punti"
   },
   "player": {
     "title": "Musica",

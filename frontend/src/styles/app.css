@@ -595,6 +595,17 @@ body {
   }
 }
 
+/* A map: faint dots run down the lines to what is up. */
+.nd-topology-run {
+  fill: none;
+  stroke: var(--nd-accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1 10;
+  opacity: 0.7;
+  animation: nd-flow 2.4s linear infinite;
+}
+
 /* The energy flow: dots run along a line the way the power runs. */
 .nd-flow-run {
   fill: none;
@@ -646,6 +657,7 @@ body {
   .bar > i,
   .bar-in,
   .nd-flow-run,
+  .nd-topology-run,
   .nd-reveal {
     animation: none;
   }
