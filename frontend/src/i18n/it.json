@@ -973,7 +973,8 @@
       "tickConflict": "Questa nota è stata modificata altrove; ecco com'è adesso."
     },
     "noCheck": "Nessuna verifica di raggiungibilità",
-    "checkOff": "La verifica è disattivata"
+    "checkOff": "La verifica è disattivata",
+    "flow": "Dove va l'energia"
   },
   "player": {
     "title": "Musica",

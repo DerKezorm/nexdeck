@@ -1646,7 +1646,9 @@
     "Large": "Grande",
     "Rows with small bars": "Filas con barras pequeñas",
     "A wide strip of bars per service": "Una franja ancha de barras por servicio",
-    "In and out, mirrored": "Entrada y salida, en espejo"
+    "In and out, mirrored": "Entrada y salida, en espejo",
+    "Energy flow": "Flujo de energía",
+    "Solar, house, battery, grid and car as one picture, with the power moving between them.": "Solar, casa, batería, red y coche en una sola imagen, con la energía moviéndose entre ellos."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2636,6 +2638,8 @@
     "This token belongs to an account that is not an administrator, so there is nothing to list.": "Este token pertenece a una cuenta que no es de administrador, así que no hay nada que listar.",
     "This token may only read. Approving needs an administrator's token that may write.": "Este token solo puede leer. Para aprobar hace falta el token de un administrador que pueda escribir.",
     "nexbeat has no target for requests": "nexbeat no tiene destino para las solicitudes",
-    "Approved, but nexbeat could not hand it on. It is under Requests in nexbeat.": "Aprobada, pero nexbeat no pudo entregarla. Está en nexbeat, en Requests."
+    "Approved, but nexbeat could not hand it on. It is under Requests in nexbeat.": "Aprobada, pero nexbeat no pudo entregarla. Está en nexbeat, en Requests.",
+    "Feed-in": "Inyección",
+    "Car": "Coche"
   }
 }

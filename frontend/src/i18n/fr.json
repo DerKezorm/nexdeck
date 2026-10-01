@@ -973,7 +973,8 @@
       "tickConflict": "Cette note a été modifiée ailleurs ; voici son état actuel."
     },
     "noCheck": "Aucun test de joignabilité",
-    "checkOff": "Le test est désactivé"
+    "checkOff": "Le test est désactivé",
+    "flow": "Où va l'énergie"
   },
   "player": {
     "title": "Musique",

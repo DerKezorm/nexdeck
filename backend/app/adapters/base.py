@@ -129,6 +129,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     # A strip of bars needs its width; two rows of services is the least worth showing.
     "strips": (3, 2),
     "inout": (3, 2),
+    # Five places round a house need room to stand apart.
+    "flow": (3, 3),
 }
 
 #: Pairs of metrics that are one line going in and one going out. A card that

@@ -21,6 +21,54 @@ def _kilowatts(watts: Any) -> float:
     return round(float(watts or 0) / 1000.0, 2)
 
 
+def _grid_watts(state: dict[str, Any]) -> Any:
+    grid = state.get("grid")
+    return grid.get("power") if isinstance(grid, dict) else state.get("gridPower")
+
+
+def _battery(state: dict[str, Any]) -> tuple[Any, Any]:
+    """Battery power in watts (positive while it feeds the house) and its charge, from either shape evcc used."""
+    battery = state.get("battery")
+    power = state.get("batteryPower")
+    soc = state.get("batterySoc")
+    if isinstance(battery, dict):
+        power = battery.get("power", power)
+        soc = battery.get("soc", soc)
+    elif isinstance(battery, list) and battery:
+        # One entry per battery in newer evcc: the powers add up, the charge is the mean.
+        powers = [float(one.get("power") or 0) for one in battery if isinstance(one, dict)]
+        socs = [float(one["soc"]) for one in battery if isinstance(one, dict) and isinstance(one.get("soc"), (int, float))]
+        power = sum(powers) if powers else power
+        soc = sum(socs) / len(socs) if socs else soc
+    return power, soc
+
+
+def flow_of(state: dict[str, Any]) -> WidgetData:
+    """Where the power goes, in kilowatts, for the energy flow card.
+
+    Signs as evcc has them: the grid is positive while the house takes from
+    it, the battery positive while it gives to the house. A battery or a car
+    the installation does not have is left out, not drawn as zero.
+    """
+    battery_power, battery_soc = _battery(state)
+    points = state.get("loadpoints") or []
+    car = sum(float(point.get("chargePower") or 0) for point in points if isinstance(point, dict))
+    has_battery = battery_power is not None or battery_soc is not None
+    flow = {
+        "solar": _kilowatts(state.get("pvPower")),
+        "home": _kilowatts(state.get("homePower")),
+        "grid": _kilowatts(_grid_watts(state)),
+        "battery": _kilowatts(battery_power) if has_battery else None,
+        "battery_soc": round(float(battery_soc), 1) if isinstance(battery_soc, (int, float)) else None,
+        "car": _kilowatts(car) if points else None,
+    }
+    return WidgetData(
+        primary={"label": "House", "value": flow["home"], "unit": "kW"},
+        metrics={"home": flow["home"], "pv": flow["solar"], "grid": flow["grid"]},
+        meta={"flow": flow},
+    )
+
+
 class EvccAdapter(Adapter):
     kind = "evcc"
     label = "evcc"
@@ -44,6 +92,15 @@ class EvccAdapter(Adapter):
             default_size=(3, 2),
             refresh_seconds=30,
             metrics=("home", "pv", "grid", "battery"),
+        ),
+        WidgetType(
+            kind="flow",
+            label="Energy flow",
+            description="Solar, house, battery, grid and car as one picture, with the power moving between them.",
+            renderer="flow",
+            default_size=(4, 3),
+            refresh_seconds=15,
+            metrics=("home", "pv", "grid"),
         ),
         WidgetType(
             kind="charging",
@@ -108,6 +165,9 @@ class EvccAdapter(Adapter):
                 meta={"empty": "No charging point."},
             )
 
+        if widget_kind == "flow":
+            return flow_of(state)
+
         battery = state.get("battery")
         battery_soc = state.get("batterySoc")
         if battery_soc is None and isinstance(battery, dict):
@@ -156,6 +216,14 @@ class EvccAdapter(Adapter):
             )
 
         grid = round(house + car - solar, 2)
+        if widget_kind == "flow":
+            battery = round(min(2.5, max(-2.5, house + car - solar - grid * 0.4)), 2)
+            return WidgetData(
+                primary={"label": "House", "value": house, "unit": "kW"},
+                metrics={"home": house, "pv": solar, "grid": round(grid - battery, 2)},
+                meta={"flow": {"solar": round(solar, 2), "home": round(house, 2), "grid": round(grid - battery, 2), "battery": battery,
+                               "battery_soc": round(fake.walk("evcc-battery", tick, 24, 98, period=1500), 1), "car": car}},
+            )
         return WidgetData(
             primary={"label": "House", "value": house, "unit": "kW"},
             secondary=[

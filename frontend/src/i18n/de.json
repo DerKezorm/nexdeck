@@ -973,7 +973,8 @@
       "tickConflict": "Die Notiz wurde woanders geändert; so steht sie jetzt."
     },
     "noCheck": "Keine Erreichbarkeitsprüfung",
-    "checkOff": "Die Prüfung ist abgeschaltet"
+    "checkOff": "Die Prüfung ist abgeschaltet",
+    "flow": "Wohin der Strom fließt"
   },
   "player": {
     "title": "Musik",

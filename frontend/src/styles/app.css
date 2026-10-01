@@ -525,6 +525,25 @@ body {
   }
 }
 
+/* The energy flow: dots run along a line the way the power runs. */
+.nd-flow-run {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 0 12;
+  animation: nd-flow 1.5s linear infinite;
+}
+
+.nd-flow-back {
+  animation-direction: reverse;
+}
+
+@keyframes nd-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
 /* The bars of a strip grow up one after the other when the card first shows. */
 .bar-in {
   transform-origin: bottom;
@@ -554,6 +573,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bar > i,
   .bar-in,
+  .nd-flow-run,
   .nd-reveal {
     animation: none;
   }

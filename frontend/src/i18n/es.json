@@ -973,7 +973,8 @@
       "tickConflict": "Esta nota se cambió en otro sitio; así está ahora."
     },
     "noCheck": "Sin comprobación de disponibilidad",
-    "checkOff": "La comprobación está desactivada"
+    "checkOff": "La comprobación está desactivada",
+    "flow": "Adónde va la energía"
   },
   "player": {
     "title": "Música",

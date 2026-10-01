@@ -41,6 +41,7 @@ import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
+import { FlowCard } from './FlowCard'
 import { CameraCard } from './CameraCard'
 import { ImageCard } from './ImageCard'
 import { SearchCard } from './SearchCard'
@@ -104,6 +105,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   player: PlayerCard,
   strips: StripsCard,
   inout: InOutCard,
+  flow: FlowCard,
 }
 
 export function renderWidget(props: RenderProps) {
