@@ -380,7 +380,18 @@
       "themeExport": "Guardar como archivo",
       "themeAccent": "El tema trae su propio acento para oscuro y para claro. Un color propio abajo sigue ganando.",
       "loadFailed": "No se pudo leer el aspecto desde el servidor.",
-      "retry": "Intentar de nuevo"
+      "retry": "Intentar de nuevo",
+      "cardsTitle": "Tarjetas",
+      "cardsHelp": "Cómo se dibuja cada tarjeta, para todos. Un marco rojo o ámbar se mantiene en cada estilo.",
+      "cardStyle": {
+        "glass": "Cristal",
+        "flat": "Plana",
+        "outline": "Contorno",
+        "neon": "Borde neón"
+      },
+      "radius": "Esquinas",
+      "gap": "Espacio entre tarjetas",
+      "pixels": "{{count}} px"
     },
     "journal": {
       "title": "Nivel de registro",

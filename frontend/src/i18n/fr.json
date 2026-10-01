@@ -380,7 +380,18 @@
       "themeExport": "Enregistrer dans un fichier",
       "themeAccent": "Le thème apporte son propre accent pour le sombre et le clair. Votre propre couleur ci-dessous reste prioritaire.",
       "loadFailed": "Impossible de lire l’apparence depuis le serveur.",
-      "retry": "Réessayer"
+      "retry": "Réessayer",
+      "cardsTitle": "Cartes",
+      "cardsHelp": "La façon dont chaque carte est dessinée, pour tout le monde. Un cadre rouge ou orange reste dans chaque style.",
+      "cardStyle": {
+        "glass": "Verre",
+        "flat": "Plate",
+        "outline": "Contour",
+        "neon": "Bord néon"
+      },
+      "radius": "Coins",
+      "gap": "Espace entre les cartes",
+      "pixels": "{{count}} px"
     },
     "journal": {
       "title": "Niveau de journalisation",

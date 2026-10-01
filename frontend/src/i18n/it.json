@@ -380,7 +380,18 @@
       "themeExport": "Salva come file",
       "themeAccent": "Il tema porta il proprio accento per lo scuro e per il chiaro. Un tuo colore qui sotto vale comunque.",
       "loadFailed": "Impossibile leggere l'aspetto dal server.",
-      "retry": "Riprova"
+      "retry": "Riprova",
+      "cardsTitle": "Schede",
+      "cardsHelp": "Come viene disegnata ogni scheda, per tutti. Una cornice rossa o ambra resta in ogni stile.",
+      "cardStyle": {
+        "glass": "Vetro",
+        "flat": "Piatta",
+        "outline": "Contorno",
+        "neon": "Bordo neon"
+      },
+      "radius": "Angoli",
+      "gap": "Spazio tra le schede",
+      "pixels": "{{count}} px"
     },
     "journal": {
       "title": "Livello di log",

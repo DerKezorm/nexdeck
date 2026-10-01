@@ -5,11 +5,19 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Toast } from '../../components/ui'
-import { accentVariables, applyAppearance, type Appearance } from '../../lib/appearance'
+import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
 import { SettingsCard } from './SettingsCard'
 import { ThemeChooser } from './ThemeChooser'
 
-const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {} }
+const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12 }
+
+/** What each style looks like in its button, drawn with the same colours the card will use. */
+const SAMPLE: Record<CardStyle, React.CSSProperties> = {
+  glass: { background: 'var(--nd-surface)', border: '1px solid var(--nd-border)', backdropFilter: 'blur(8px)' },
+  flat: { background: 'var(--nd-bg-elev)', border: '1px solid var(--nd-border)' },
+  outline: { background: 'transparent', border: '1.5px solid var(--nd-border-strong)' },
+  neon: { background: 'var(--nd-surface)', border: '1px solid color-mix(in srgb, var(--nd-accent) 45%, transparent)', boxShadow: '0 0 14px -4px var(--nd-accent-glow)' },
+}
 
 /**
  * The look of the whole installation: a colour theme, one accent colour
@@ -41,7 +49,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12 })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -80,6 +88,51 @@ export function AppearanceSettings() {
           onChange={(theme) => setForm((current) => ({ ...current, theme }))}
         />
         <button className="btn btn-accent mt-4" onClick={store}>
+          {t('common.save')}
+        </button>
+      </SettingsCard>
+      <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
+        <ul className="grid gap-2 grid-cols-2 sm:grid-cols-4" aria-label={t('settings.appearance.cardsTitle')}>
+          {(form.card_styles ?? ['glass', 'flat', 'outline', 'neon']).map((style) => {
+            const chosen = (form.card_style ?? 'glass') === style
+            return (
+              <li key={style}>
+                <button
+                  type="button"
+                  aria-pressed={chosen}
+                  onClick={() => setForm((current) => ({ ...current, card_style: style }))}
+                  className={`w-full text-left rounded-xl border p-2 ${chosen ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-hover'}`}
+                >
+                  <span className="block h-12 p-1.5" aria-hidden="true">
+                    <span className="block h-full p-1.5" style={{ ...SAMPLE[style], borderRadius: Math.min(form.radius ?? 16, 14) }}>
+                      <span className="block h-1.5 w-2/3 rounded-full bg-ink/70" />
+                      <span className="block h-1.5 w-1/3 rounded-full bg-accent mt-1.5" />
+                    </span>
+                  </span>
+                  <span className="mt-1 flex items-center gap-1 text-xs font-medium">
+                    {chosen && <Check size={12} className="text-accent" />}
+                    {t(`settings.appearance.cardStyle.${style}`)}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+        <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
+          <Field label={t('settings.appearance.radius')} htmlFor="a-radius">
+            <div className="flex items-center gap-3">
+              <input id="a-radius" type="range" min={0} max={28} className="flex-1 accent-[var(--nd-accent)]" value={form.radius ?? 16} onChange={(e) => setForm((current) => ({ ...current, radius: Number(e.target.value) }))} />
+              <span className="num text-xs text-muted w-12 text-right">{t('settings.appearance.pixels', { count: form.radius ?? 16 })}</span>
+            </div>
+          </Field>
+          <Field label={t('settings.appearance.gap')} htmlFor="a-gap">
+            <div className="flex items-center gap-3">
+              <input id="a-gap" type="range" min={4} max={28} className="flex-1 accent-[var(--nd-accent)]" value={form.gap ?? 12} onChange={(e) => setForm((current) => ({ ...current, gap: Number(e.target.value) }))} />
+              <span className="num text-xs text-muted w-12 text-right">{t('settings.appearance.pixels', { count: form.gap ?? 12 })}</span>
+            </div>
+          </Field>
+        </div>
+        <button className="btn btn-accent mt-2" onClick={store}>
           {t('common.save')}
         </button>
       </SettingsCard>
@@ -152,7 +205,7 @@ export function AppearanceSettings() {
           <button
             className="btn"
             onClick={() => {
-              setForm({ ...EMPTY, presets: form.presets, themes: form.themes })
+              setForm({ ...EMPTY, presets: form.presets, themes: form.themes, card_styles: form.card_styles })
             }}
           >
             {t('settings.appearance.reset')}

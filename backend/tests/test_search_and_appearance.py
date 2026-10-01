@@ -217,3 +217,60 @@ def test_a_wall_display_may_not_change_them(client: TestClient) -> None:
     display.post("/api/v1/kiosk/session", json={"token": made.json()["token"]}, headers=CSRF)
     refused = display.put("/api/v1/settings/search", json={"enabled": False, "targets": []}, headers=CSRF)
     assert refused.status_code == 401
+
+
+def test_a_wall_display_is_painted_with_the_look_of_the_installation(client: TestClient) -> None:
+    """⚠️ The same hole the search targets had. A kiosk has no session, so the
+    look answered 401 and every wall display stood in nexdeck's own cyan,
+    whatever theme, accent or style sheet the operator had chosen, on the one
+    screen that hangs in a room. A colour and a style sheet are nothing a
+    display may not see."""
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "Hall"}, headers=CSRF).json()
+    client.put("/api/v1/settings/appearance", json={"preset": "violet", "accent": "", "css": ".card { border-radius: 4px; }"}, headers=CSRF)
+    made = client.post(f"/api/v1/boards/{board['slug']}/kiosk-tokens", json={"name": "Hall display"}, headers=CSRF)
+    assert made.status_code == 201, made.text
+
+    display = TestClient(client.app)
+    assert display.get("/api/v1/settings/appearance").status_code == 401, "a stranger still gets nothing"
+    display.post("/api/v1/kiosk/session", json={"token": made.json()["token"]}, headers=CSRF)
+
+    answer = display.get("/api/v1/settings/appearance")
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["colour"] == "#a78bfa"
+    assert answer.json()["css"] == ".card { border-radius: 4px; }"
+    assert display.put("/api/v1/settings/appearance", json={"preset": "rose"}, headers=CSRF).status_code == 401
+
+
+def test_the_cards_are_drawn_the_way_the_administrator_chose(admin_client: TestClient) -> None:
+    fresh = admin_client.get("/api/v1/settings/appearance").json()
+    assert (fresh["card_style"], fresh["radius"], fresh["gap"]) == ("glass", 16, 12), "nexdeck as it always looked"
+    assert fresh["card_styles"] == ["glass", "flat", "outline", "neon"]
+    stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "card_style": "neon", "radius": 4, "gap": 20})
+    assert stored.status_code == 200, stored.text
+    again = admin_client.get("/api/v1/settings/appearance").json()
+    assert (again["card_style"], again["radius"], again["gap"]) == ("neon", 4, 20)
+    # A save from an older page that knows nothing of cards puts them back, it does not fail.
+    older = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "accent": "", "css": ""})
+    assert (older.json()["card_style"], older.json()["radius"], older.json()["gap"]) == ("glass", 16, 12)
+
+
+@pytest.mark.parametrize(("body", "code"), [
+    ({"card_style": "wood"}, "no_such_card_style"),
+    ({"radius": 29}, "bad_radius"),
+    ({"radius": -1}, "bad_radius"),
+    ({"gap": 3}, "bad_gap"),
+    ({"gap": 100}, "bad_gap"),
+])
+def test_a_card_that_is_not_one_is_refused_in_words(body: dict, code: str, admin_client: TestClient) -> None:
+    answer = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", **body})
+    assert answer.status_code == 400, answer.text
+    assert answer.json()["detail"]["code"] == code
+
+
+def test_a_stored_card_out_of_bounds_reads_as_the_default() -> None:
+    """A value written by hand into the database must not reach the page."""
+    assert appearance._within(99, appearance.RADIUS) == 16
+    assert appearance._within(True, appearance.GAP) == 12
+    assert appearance._within("8", appearance.GAP) == 12
+    assert appearance._within(8, appearance.GAP) == 8

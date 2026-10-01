@@ -8,6 +8,8 @@
  * The accent is written into the four variables the whole interface builds
  * on, in both brightnesses, so a light board follows the same colour.
  */
+import { create } from 'zustand'
+
 export type Palette = Record<string, string>
 export interface Theme {
   name: string
@@ -32,7 +34,21 @@ export interface Appearance {
   themes?: Record<string, Theme>
   /** What in the chosen theme falls below 4.5:1. */
   weak?: WeakSpot[]
+  /** How a card is drawn, its corners and the room between two, in pixels. */
+  card_style?: CardStyle
+  radius?: number
+  gap?: number
+  card_styles?: CardStyle[]
 }
+
+/** How a card is drawn. Glass is nexdeck as it always looked. */
+export type CardStyle = 'glass' | 'flat' | 'outline' | 'neon'
+
+/**
+ * The part of the look a component has to know as a number rather than as a
+ * colour: the grid needs the gap to lay the cards out, not only to draw them.
+ */
+export const useLook = create<{ gap: number }>(() => ({ gap: 12 }))
 
 const STYLE_ID = 'nexdeck-appearance'
 const THEME_ID = 'nexdeck-theme'
@@ -142,6 +158,14 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   }
   tagFor(THEME_ID, themeCss(look?.theme), document.getElementById(STYLE_ID))
   tagFor(STYLE_ID, (look?.css ?? '').trim())
+  // The cards: a style the sheet answers to, and two sizes. Glass is the
+  // default and needs no mark, so a page without a stored look is unchanged.
+  const style = look?.card_style && look.card_style !== 'glass' ? look.card_style : ''
+  if (style) root.dataset.cards = style
+  else delete root.dataset.cards
+  if (typeof look?.radius === 'number') root.style.setProperty('--nd-radius', `${look.radius}px`)
+  else root.style.removeProperty('--nd-radius')
+  useLook.setState({ gap: typeof look?.gap === 'number' ? look.gap : 12 })
 }
 
 /** The contrast ratio of two #rrggbb colours, from 1 to 21, the way WCAG counts it. */

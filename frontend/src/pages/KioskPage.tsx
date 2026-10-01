@@ -9,6 +9,7 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
+import { applyAppearance, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
@@ -113,6 +114,14 @@ export function KioskPage() {
     for (const [id, series] of Object.entries(history.data)) setSeriesFor(Number(id), series)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.data])
+  // ⚠️ The look of the installation, on the wall as well. The display has no
+  // session, and the shell paints the look only for someone signed in: every
+  // kiosk stood in nexdeck's own cyan, whatever theme, accent or style sheet
+  // the operator had chosen. Read again every half hour, as the board is.
+  const look = useQuery({ queryKey: ['kiosk-appearance', token], queryFn: () => get<Appearance>('/settings/appearance'), enabled: Boolean(data), refetchInterval: 30 * 60_000 })
+  useEffect(() => {
+    if (look.data) applyAppearance(look.data)
+  }, [look.data])
   useStream({ board: data?.slug, enabled: Boolean(data), onBoardChanged: () => void board.refetch(), onConnected: () => void board.refetch() })
 
   const cycle = data?.kiosk?.cycle_seconds ?? 0

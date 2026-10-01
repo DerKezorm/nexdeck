@@ -211,6 +211,49 @@ body {
   border-color: transparent;
 }
 
+/* How a card is drawn, chosen under Appearance. Glass is the default and has
+   no rule of its own. A heading stays without a ground in every style, and a
+   card that is red or amber keeps its coloured frame in every style too: the
+   frame says how it stands, the style only how it looks. */
+:root[data-cards='flat'] .card.glass:not(.card-plain) {
+  background: var(--nd-bg-elev);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* A frame on next to nothing. Not quite transparent: over a photo as the
+   background a card on nothing at all could not be read. */
+:root[data-cards='outline'] .card.glass:not(.card-plain) {
+  background: color-mix(in srgb, var(--nd-bg) 35%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border: 1.5px solid var(--nd-border-strong);
+}
+
+:root[data-cards='neon'] .card.glass:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']) {
+  border-color: color-mix(in srgb, var(--nd-accent) 45%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nd-accent) 18%, transparent),
+    0 0 28px -8px var(--nd-accent-glow);
+}
+
+:root[data-cards='outline'] .card.glass[data-status='bad'],
+:root[data-cards='neon'] .card.glass[data-status='bad'] {
+  border-color: color-mix(in srgb, var(--nd-bad) 55%, var(--nd-border));
+}
+
+:root[data-cards='outline'] .card.glass[data-status='warn'],
+:root[data-cards='neon'] .card.glass[data-status='warn'] {
+  border-color: color-mix(in srgb, var(--nd-warn) 45%, var(--nd-border));
+}
+
+:root[data-cards] .card.glass.is-editing {
+  border-style: dashed;
+  border-color: var(--nd-accent);
+}
+
 /* Status dot with a soft halo. */
 .dot {
   display: inline-block;

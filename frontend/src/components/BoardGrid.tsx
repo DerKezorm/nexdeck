@@ -5,6 +5,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 import { namedSizes, resized, shiftGroup } from '../lib/arranging'
+import { useLook } from '../lib/appearance'
 import { fittingRow, perTwelfth } from '../lib/grid'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { CardMenu, type MoveTarget } from './CardMenu'
@@ -104,7 +105,9 @@ export function BoardGrid(props: Props) {
   const cols = useMemo(() => ({ lg: columns, sm: COLUMNS.sm }), [columns])
   const host = useRef<HTMLDivElement>(null)
   const rows = useMemo(() => Math.max(1, ...wide.map((item) => item.y + item.h)), [wide])
-  const rowHeight = useFittingRow(host, Boolean(fitHeight) && screen === 'lg', rows, bottomSpace) ?? (compact ? 60 : ROW_HEIGHT)
+  // The room between two cards is the operator's to choose, under Appearance.
+  const gap = useLook((look) => look.gap)
+  const rowHeight = useFittingRow(host, Boolean(fitHeight) && screen === 'lg', rows, bottomSpace, gap) ?? (compact ? 60 : ROW_HEIGHT)
 
   /**
    * Several cards at once: Shift, Ctrl or Cmd and a press adds a card to the
@@ -153,13 +156,13 @@ export function BoardGrid(props: Props) {
     if (follow && follow.dx === dx && follow.dy === dy) return
     // Measured here, in the handler: the grid is not read while it is drawn.
     const width = host.current?.clientWidth ?? 0
-    const column = (width - GAP * (columns - 1)) / columns
+    const column = (width - gap * (columns - 1)) / columns
     setFollow({ dragged: after.i, dx, dy, column, fits: shiftGroup(wide.map(plain), selected, dx, dy, columns) !== null })
   }
   const followStyle = (id: string): CSSProperties | undefined => {
     if (!follow || id === follow.dragged || !selected.has(id)) return undefined
     return {
-      transform: `translate(${follow.dx * (follow.column + GAP)}px, ${follow.dy * (rowHeight + GAP)}px)`,
+      transform: `translate(${follow.dx * (follow.column + gap)}px, ${follow.dy * (rowHeight + gap)}px)`,
       opacity: follow.fits ? 1 : 0.4,
       position: 'relative',
       zIndex: 3,
@@ -232,7 +235,7 @@ export function BoardGrid(props: Props) {
         breakpoints={BREAKPOINTS}
         cols={cols}
         rowHeight={rowHeight}
-        margin={[GAP, GAP]}
+        margin={[gap, gap]}
         containerPadding={[0, 0]}
         isDraggable={Boolean(editing)}
         isResizable={Boolean(editing)}
@@ -487,7 +490,7 @@ function floorOf(widget: WidgetView, cols: number): [number, number] {
  * page scrolled a little keeps its rows; measured again whenever the window
  * or the space above the grid changes.
  */
-function useFittingRow(host: RefObject<HTMLDivElement | null>, enabled: boolean, rows: number, bottomSpace: number): number | null {
+function useFittingRow(host: RefObject<HTMLDivElement | null>, enabled: boolean, rows: number, bottomSpace: number, gap: number = GAP): number | null {
   const [height, setHeight] = useState<number | null>(null)
   useEffect(() => {
     if (!enabled) {
@@ -500,7 +503,7 @@ function useFittingRow(host: RefObject<HTMLDivElement | null>, enabled: boolean,
       const element = host.current
       if (!element) return
       const top = element.getBoundingClientRect().top + window.scrollY
-      setHeight(fittingRow(window.innerHeight - top - bottomSpace, rows, GAP))
+      setHeight(fittingRow(window.innerHeight - top - bottomSpace, rows, gap))
     }
     const later = () => {
       if (!frame) frame = window.requestAnimationFrame(measure)
@@ -514,6 +517,6 @@ function useFittingRow(host: RefObject<HTMLDivElement | null>, enabled: boolean,
       watcher?.disconnect()
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [host, enabled, rows, bottomSpace])
+  }, [host, enabled, rows, bottomSpace, gap])
   return height
 }

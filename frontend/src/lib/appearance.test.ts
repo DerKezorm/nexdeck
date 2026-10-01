@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, darker } from './appearance'
+import { accentVariables, applyAppearance, channels, darker, useLook } from './appearance'
 
 describe('the accent colour', () => {
   it('reads the three parts of a colour', () => {
@@ -61,5 +61,35 @@ describe('painting it on', () => {
     applyAppearance({ preset: 'violet', accent: '', colour: '#a78bfa', css: '' })
     applyAppearance(null)
     expect(document.documentElement.style.getPropertyValue('--nd-accent')).toBe('')
+  })
+})
+
+describe('the cards', () => {
+  const base = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee' }
+  beforeEach(() => {
+    document.documentElement.removeAttribute('style')
+    delete document.documentElement.dataset.cards
+    useLook.setState({ gap: 12 })
+  })
+
+  it('marks the page with a style other than glass, and its corners and gap', () => {
+    applyAppearance({ ...base, card_style: 'neon', radius: 4, gap: 20 })
+    expect(document.documentElement.dataset.cards).toBe('neon')
+    expect(document.documentElement.style.getPropertyValue('--nd-radius')).toBe('4px')
+    expect(useLook.getState().gap).toBe(20)
+  })
+
+  it('leaves no mark for glass, so the sheet nexdeck ships draws it as always', () => {
+    applyAppearance({ ...base, card_style: 'flat', radius: 8, gap: 6 })
+    applyAppearance({ ...base, card_style: 'glass' })
+    expect(document.documentElement.dataset.cards).toBeUndefined()
+    expect(document.documentElement.style.getPropertyValue('--nd-radius')).toBe('')
+    expect(useLook.getState().gap).toBe(12)
+  })
+
+  it('keeps nexdeck as it was when the server knows nothing of cards yet', () => {
+    applyAppearance(base)
+    expect(document.documentElement.dataset.cards).toBeUndefined()
+    expect(useLook.getState().gap).toBe(12)
   })
 })

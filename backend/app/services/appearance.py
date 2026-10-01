@@ -1,4 +1,4 @@
-"""How the installation looks: a colour theme, the accent colour and a style sheet of its own.
+"""How the installation looks: a colour theme, the accent colour, the cards and a style sheet of its own.
 
 nexdeck ships one look in two brightnesses. That is enough for most, and not
 enough for the people who put a dashboard on a wall and want it to match the
@@ -50,7 +50,14 @@ PRESETS: dict[str, str] = {
     "sky": "#38bdf8",
     "slate": "#94a3b8",
 }
-DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None}
+#: How a card is drawn. Glass is what nexdeck has always been: see-through over
+#: the background. Flat is solid, outline is a frame on nothing, neon a frame
+#: that glows in the accent.
+CARD_STYLES: tuple[str, ...] = ("glass", "flat", "outline", "neon")
+#: Corners and gaps in pixels, with the bounds a board still reads well in.
+RADIUS = (0, 28, 16)
+GAP = (4, 28, 12)
+DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None, "card_style": "glass", "radius": RADIUS[2], "gap": GAP[2]}
 
 
 class AppearanceError(Exception):
@@ -68,11 +75,21 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         "accent": str(value.get("accent") or ""),
         "css": str(value.get("css") or ""),
         "theme": value.get("theme"),
+        "card_style": value["card_style"] if value.get("card_style") in CARD_STYLES else "glass",
+        "radius": _within(value.get("radius"), RADIUS),
+        "gap": _within(value.get("gap"), GAP),
+        "card_styles": list(CARD_STYLES),
         "presets": PRESETS,
         "themes": themes.THEMES,
         # What in the chosen theme is hard to read, so the page can say so.
         "weak": themes.weak_spots(value["theme"]) if value.get("theme") else [],
     }
+
+
+def _within(value: Any, bounds: tuple[int, int, int]) -> int:
+    """A stored number inside its bounds, or the default for anything else."""
+    low, high, default = bounds
+    return value if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high else default
 
 
 def colour_of(config: dict[str, Any]) -> str:
@@ -104,7 +121,21 @@ def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
         theme = themes.check(incoming.get("theme"))
     except themes.ThemeError as failure:
         raise AppearanceError(str(failure), "bad_theme") from failure
-    value = {"preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme}
+    card_style = str(incoming.get("card_style") or "glass")
+    if card_style not in CARD_STYLES:
+        raise AppearanceError(f"A card is drawn as {', '.join(CARD_STYLES)}.", "no_such_card_style")
+    sizes: dict[str, int] = {}
+    for name, (low, high, default) in (("radius", RADIUS), ("gap", GAP)):
+        number = incoming.get(name)
+        if number is None:
+            number = default
+        if not isinstance(number, int) or isinstance(number, bool) or not low <= number <= high:
+            raise AppearanceError(f"The {'corners' if name == 'radius' else 'gap'} go from {low} to {high} pixels.", f"bad_{name}")
+        sizes[name] = number
+    value = {
+        "preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme,
+        "card_style": card_style, **sizes,
+    }
     row = db.get(Setting, KEY)
     if row is None:
         db.add(Setting(key=KEY, value=value))

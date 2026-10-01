@@ -380,7 +380,18 @@
       "themeExport": "Save as a file",
       "themeAccent": "The theme brings its own accent for dark and for light. A colour of your own below still wins.",
       "loadFailed": "The look could not be read from the server.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "cardsTitle": "Cards",
+      "cardsHelp": "How every card is drawn, for everyone. A red or amber frame stays in every style.",
+      "cardStyle": {
+        "glass": "Glass",
+        "flat": "Flat",
+        "outline": "Outline",
+        "neon": "Neon edge"
+      },
+      "radius": "Corners",
+      "gap": "Gap between cards",
+      "pixels": "{{count}} px"
     },
     "journal": {
       "title": "Log level",

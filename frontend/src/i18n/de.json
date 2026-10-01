@@ -380,7 +380,18 @@
       "themeExport": "Als Datei speichern",
       "themeAccent": "Das Thema bringt eigene Akzente für Dunkel und Hell mit. Eine eigene Farbe weiter unten gewinnt trotzdem.",
       "loadFailed": "Das Aussehen ließ sich nicht vom Server lesen.",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "cardsTitle": "Karten",
+      "cardsHelp": "Wie jede Karte gezeichnet wird, für alle. Ein roter oder gelber Rahmen bleibt in jedem Stil.",
+      "cardStyle": {
+        "glass": "Glas",
+        "flat": "Flach",
+        "outline": "Umriss",
+        "neon": "Neonkante"
+      },
+      "radius": "Ecken",
+      "gap": "Abstand zwischen Karten",
+      "pixels": "{{count}} px"
     },
     "journal": {
       "title": "Protokollstufe",
