@@ -15,6 +15,7 @@ from app.adapters.base import (
     WidgetType,
     as_bars,
     as_chart,
+    as_inout,
     as_ring,
     offer_views,
     ring_of,
@@ -293,3 +294,32 @@ def test_the_four_values_are_named_once_and_used_three_times() -> None:
     rows = [data.primary, *data.secondary]
     assert [row["part"] for row in rows] == keys
     assert sorted(data.metrics) == sorted(keys)
+
+
+# ---------------------------------------------------------------------------
+# In and out, mirrored, for a card that measures a line each way
+# ---------------------------------------------------------------------------
+
+
+def test_in_and_out_are_drawn_mirrored_when_both_are_measured() -> None:
+    data = as_inout(WidgetData(metrics={"clients": 12.0, "wan_down": 40.0, "wan_up": 8.0}), {"view": "inout"})
+    assert data.meta["renderer"] == "inout"
+    assert data.meta["inout"] == ["wan_down", "wan_up"]
+
+
+def test_in_without_out_stays_what_it_is() -> None:
+    assert as_inout(WidgetData(metrics={"wan_down": 40.0}), {"view": "inout"}).meta.get("renderer") is None
+    assert as_inout(WidgetData(metrics={"wan_down": 40.0, "wan_up": 8.0}), {"view": "value"}).meta.get("renderer") is None
+
+
+def test_in_and_out_are_offered_where_a_pair_is_declared_and_nowhere_else() -> None:
+    offered = {
+        f"{adapter.kind}.{widget.kind}"
+        for adapter in all_adapters()
+        for widget in adapter.widgets
+        if any(one.name == "view" and "inout" in {value for value, _ in one.options} for one in widget.options)
+    }
+    assert {"unifi.summary", "unifi.console", "fritzbox.connection", "speedtest.latest", "nexpulse.latest"} <= offered
+    assert "glances.system" not in offered, "cpu and memory are not a way in and a way out"
+    assert "gatus.summary" not in offered, "endpoints up and down are counted, not carried"
+    assert len(offered) >= 5, f"only {sorted(offered)}"

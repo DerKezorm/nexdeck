@@ -103,6 +103,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   wol: WolCard,
   player: PlayerCard,
   strips: StripsCard,
+  inout: InOutCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -1267,6 +1268,73 @@ export function ChartCard({ data, series }: RenderProps) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// In and out: two lines mirrored on one axis, in above and out below
+// ---------------------------------------------------------------------------
+
+/** One half of the mirror: an area from the axis, up for in and down for out, scaled to its own highest point. */
+function half(points: number[], width: number, mid: number, room: number, downward: boolean): { line: string; area: string } {
+  const high = Math.max(...points, 0) || 1
+  const step = width / Math.max(1, points.length - 1)
+  const at = points.map((value, index) => [index * step, downward ? mid + (value / high) * room : mid - (value / high) * room] as const)
+  const line = at.map(([x, y], index) => `${index ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`).join(' ')
+  return { line, area: `${line} L${width} ${mid} L0 ${mid} Z` }
+}
+
+export function InOutCard({ data, series }: RenderProps) {
+  const { t } = useTranslation()
+  const [inside, outside] = (Array.isArray(data?.meta?.inout) ? data.meta.inout : []) as string[]
+  const down = (inside && series?.[inside]) || []
+  const up = (outside && series?.[outside]) || []
+  const row = (metric: string) => [data?.primary, ...(data?.secondary ?? [])].find((one) => one && 'metric' in one && one.metric === metric) as Secondary | undefined
+  const width = 100
+  const height = 60
+  const mid = height * 0.58
+  const drawn = down.length > 1 && up.length > 1
+  const top = drawn ? half(down, width, mid, mid - 2, false) : null
+  const bottom = drawn ? half(up, width, mid, height - mid - 2, true) : null
+  return (
+    <div className="flex-1 flex flex-col min-h-0 px-3 pb-2.5">
+      <div className="relative flex-1 min-h-[40px]" title={t('card.history')}>
+        {top && bottom ? (
+          <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="nd-reveal absolute inset-0 w-full h-full" aria-hidden="true" data-testid="inout">
+            <defs>
+              <linearGradient id="nd-in" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="var(--nd-accent)" stopOpacity="0.45" />
+                <stop offset="1" stopColor="var(--nd-accent)" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="nd-out" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stopColor="#818cf8" stopOpacity="0.45" />
+                <stop offset="1" stopColor="#818cf8" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d={top.area} fill="url(#nd-in)" />
+            <path d={bottom.area} fill="url(#nd-out)" />
+            <path d={top.line} fill="none" stroke="var(--nd-accent)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+            <path d={bottom.line} fill="none" stroke="#818cf8" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+            <line x1="0" x2={width} y1={mid} y2={mid} stroke="var(--nd-border-strong)" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
+          </svg>
+        ) : (
+          <Empty>{t('card.collecting')}</Empty>
+        )}
+      </div>
+      <div className="flex gap-1.5 mt-1.5">
+        {[inside, outside].map((metric, index) => {
+          const one = metric ? row(metric) : undefined
+          return (
+            <span key={metric || index} className="chip" style={{ color: index ? '#a5b4fc' : 'var(--nd-accent)' }}>
+              {index ? '↑' : '↓'} {one ? tLabel(one.label) : metric}
+              <b className="num">
+                <Shown value={one?.value} unit={one?.unit} />
+              </b>
+            </span>
+          )
+        })}
+      </div>
     </div>
   )
 }

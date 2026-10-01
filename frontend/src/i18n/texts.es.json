@@ -1645,7 +1645,8 @@
     "Normal": "Normal",
     "Large": "Grande",
     "Rows with small bars": "Filas con barras pequeñas",
-    "A wide strip of bars per service": "Una franja ancha de barras por servicio"
+    "A wide strip of bars per service": "Una franja ancha de barras por servicio",
+    "In and out, mirrored": "Entrada y salida, en espejo"
   },
   "labels": {
     "Private resources": "Recursos privados",

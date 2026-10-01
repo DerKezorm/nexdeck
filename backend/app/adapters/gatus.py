@@ -97,7 +97,7 @@ class GatusAdapter(Adapter):
                    renderer="list", default_size=(3, 3), refresh_seconds=60, metrics=("down",),
                    options=(Field("limit", "Entries", type="number", default=10),)),
         WidgetType(kind="summary", label="Endpoint health", description="How many endpoints are up, how many are down, and when Gatus last checked.",
-                   renderer="value", default_size=(3, 2), refresh_seconds=60, metrics=("up", "down")),
+                   renderer="value", default_size=(3, 2), refresh_seconds=60, metrics=("up", "down"), inout=False),
     )
 
     async def _statuses(self, config: dict[str, Any], ctx: Context, results: int = RECENT, cache: float = 10) -> list[dict[str, Any]]:

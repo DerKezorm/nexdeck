@@ -128,7 +128,20 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "bars": (3, 2),
     # A strip of bars needs its width; two rows of services is the least worth showing.
     "strips": (3, 2),
+    "inout": (3, 2),
 }
+
+#: Pairs of metrics that are one line going in and one going out. A card that
+#: records both can draw them mirrored on one axis, in above and out below.
+INOUT_PAIRS: tuple[tuple[str, str], ...] = (
+    ("wan_down", "wan_up"), ("down", "up"), ("download", "upload"), ("rx", "tx"), ("sync_down", "sync_up"),
+)
+
+
+def inout_pair(metrics: tuple[str, ...] | list[str] | Any) -> tuple[str, str] | None:
+    """The first pair of in and out among a card's metrics, if it has one."""
+    names = set(metrics or ())
+    return next((pair for pair in INOUT_PAIRS if pair[0] in names and pair[1] in names), None)
 #: For a renderer nobody listed. Two by two is the smallest that holds a title
 #: and a line under it without one sitting on the other.
 DEFAULT_MIN = (2, 2)
@@ -185,6 +198,10 @@ class WidgetType:
     #: GitHub issues whose values are "1 h". The guard
     #: ``test_bars_are_offered_where_they_can_be_drawn`` holds both directions.
     bars: bool = False
+    #: Whether a pair of metrics named like in and out (``down`` and ``up``)
+    #: really is traffic. False where the pair counts things: Gatus's ``up`` and
+    #: ``down`` are endpoints, and a mirror of those would be nonsense.
+    inout: bool = True
 
     def __post_init__(self) -> None:
         """Never smaller than the drawing can bear.
@@ -225,6 +242,11 @@ class WidgetType:
         # sparkline inside the card it belongs to.
         if len(self.metrics) >= 2 and self.renderer != "chart" and not self.client_only:
             extra += (("chart", "A chart"),)
+        # A line in and a line out, mirrored on one axis: what a router or a
+        # download client is about, in one picture rather than two lines that
+        # cross because they live on scales a hundred times apart.
+        if self.inout and inout_pair(self.metrics) and not self.client_only:
+            extra += (("inout", "In and out, mirrored"),)
         if extra:
             object.__setattr__(self, "options", offer_views(self.options, self.renderer, extra))
         if self.parts:
@@ -735,6 +757,17 @@ def as_chart(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     return data
 
 
+def as_inout(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw in and out mirrored, when asked and when the card measured both right now."""
+    if str(options.get("view") or "value") != "inout":
+        return data
+    pair = inout_pair(list(data.metrics or {}))
+    if pair is None:
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "inout", "inout": list(pair)}
+    return data
+
+
 def as_ring(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     """Draw the slices the fetch worked out, when the card is asked to be one.
 
@@ -779,6 +812,7 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
     data = as_bars(data, options)
     data = as_ring(data, options)
     data = as_chart(data, options)
+    data = as_inout(data, options)
     return as_gauge(data, options)
 
 
