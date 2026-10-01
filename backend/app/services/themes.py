@@ -3,8 +3,14 @@
 A theme names the fifteen colours the interface is built from, once for the
 dark look and once for the light one, as ``#rrggbb``. The browser derives the
 see-through surfaces and the soft and glowing shades of the accent from them.
-nexdeck ships seven of its own; any other can be pasted in as JSON and taken
-out again the same way.
+nexdeck ships seven of its own and six known ones from elsewhere (Catppuccin,
+Nord, Dracula, Tokyo Night, Gruvbox, Rosé Pine); any other can be pasted in as
+JSON and taken out again the same way.
+
+The known ones follow their published palettes. Where a colour of the original
+falls below 4.5:1 here, it is darkened or lightened in its own hue until it
+clears the line, and no further: Catppuccin Latte's yellow, for one, is a text
+colour nobody could read on its own page.
 
 Every colour that is drawn as text is checked against the page, the raised
 page and the card: below 4.5:1 it is hard to read for many and impossible
@@ -138,6 +144,96 @@ THEMES: dict[str, dict[str, Any]] = {
             "border": "#e4d6ea", "border-strong": "#d1bddb", "text": "#261a2e", "text-muted": "#54405f",
             "text-faint": "#665271", "accent": "#a21caf", "on-accent": "#ffffff", "ok": "#147c3b",
             "warn": "#92400e", "bad": "#be123c", "unknown": "#6b5c73",
+        },
+    },
+    "catppuccin": {
+        "name": "Catppuccin",
+        "dark": {
+            "bg": "#181825", "bg-elev": "#1e1e2e", "surface": "#26263a", "surface-hover": "#313244",
+            "border": "#313244", "border-strong": "#45475a", "text": "#cdd6f4", "text-muted": "#bac2de",
+            "text-faint": "#a6adc8", "accent": "#cba6f7", "on-accent": "#11111b", "ok": "#a6e3a1",
+            "warn": "#f9e2af", "bad": "#f38ba8", "unknown": "#9399b2",
+        },
+        "light": {
+            "bg": "#e6e9ef", "bg-elev": "#eff1f5", "surface": "#f6f7fa", "surface-hover": "#dce0e8",
+            "border": "#ccd0da", "border-strong": "#bcc0cc", "text": "#4c4f69", "text-muted": "#5c5f77",
+            "text-faint": "#626576", "accent": "#8534ef", "on-accent": "#ffffff", "ok": "#2c7420",
+            "warn": "#8a5b0f", "bad": "#cd0f38", "unknown": "#636675",
+        },
+    },
+    "nord": {
+        "name": "Nord",
+        "dark": {
+            "bg": "#242933", "bg-elev": "#2e3440", "surface": "#343b49", "surface-hover": "#3b4252",
+            "border": "#3b4252", "border-strong": "#4c566a", "text": "#eceff4", "text-muted": "#d8dee9",
+            "text-faint": "#b4bccb", "accent": "#88c0d0", "on-accent": "#2e3440", "ok": "#a3be8c",
+            "warn": "#ebcb8b", "bad": "#d4999b", "unknown": "#a0a9b9",
+        },
+        "light": {
+            "bg": "#e5e9f0", "bg-elev": "#eceff4", "surface": "#f4f6f9", "surface-hover": "#d8dee9",
+            "border": "#d8dee9", "border-strong": "#c2cad8", "text": "#2e3440", "text-muted": "#3b4252",
+            "text-faint": "#4c566a", "accent": "#486a90", "on-accent": "#ffffff", "ok": "#536d3d",
+            "warn": "#9f4e33", "bad": "#ab434f", "unknown": "#4c566a",
+        },
+    },
+    "dracula": {
+        "name": "Dracula",
+        "dark": {
+            "bg": "#21222c", "bg-elev": "#282a36", "surface": "#2f3140", "surface-hover": "#3a3c4e",
+            "border": "#3a3c4e", "border-strong": "#6272a4", "text": "#f8f8f2", "text-muted": "#d6d8e8",
+            "text-faint": "#a9aed0", "accent": "#bd93f9", "on-accent": "#21222c", "ok": "#50fa7b",
+            "warn": "#f1fa8c", "bad": "#ff6e6e", "unknown": "#9aa0c0",
+        },
+        "light": {
+            "bg": "#f3eedb", "bg-elev": "#fffbeb", "surface": "#fffdf5", "surface-hover": "#ece6cf",
+            "border": "#e3dcc2", "border-strong": "#cfc6a6", "text": "#1f1f1f", "text-muted": "#4a4636",
+            "text-faint": "#6c664b", "accent": "#644ac9", "on-accent": "#ffffff", "ok": "#14710a",
+            "warn": "#7c6613", "bad": "#c33828", "unknown": "#6c664b",
+        },
+    },
+    "tokyonight": {
+        "name": "Tokyo Night",
+        "dark": {
+            "bg": "#16161e", "bg-elev": "#1a1b26", "surface": "#1f2335", "surface-hover": "#292e42",
+            "border": "#292e42", "border-strong": "#3b4261", "text": "#c0caf5", "text-muted": "#a9b1d6",
+            "text-faint": "#8f98c2", "accent": "#7aa2f7", "on-accent": "#16161e", "ok": "#9ece6a",
+            "warn": "#e0af68", "bad": "#f7768e", "unknown": "#838cb5",
+        },
+        "light": {
+            "bg": "#d5d6db", "bg-elev": "#e1e2e7", "surface": "#e9e9ed", "surface-hover": "#c4c8da",
+            "border": "#c4c8da", "border-strong": "#a8aecb", "text": "#343b58", "text-muted": "#3256ab",
+            "text-faint": "#545a74", "accent": "#1358b1", "on-accent": "#ffffff", "ok": "#47632d",
+            "warn": "#705730", "bad": "#b60a38", "unknown": "#51597a",
+        },
+    },
+    "gruvbox": {
+        "name": "Gruvbox",
+        "dark": {
+            "bg": "#1d2021", "bg-elev": "#282828", "surface": "#32302f", "surface-hover": "#3c3836",
+            "border": "#3c3836", "border-strong": "#504945", "text": "#ebdbb2", "text-muted": "#d5c4a1",
+            "text-faint": "#bdae93", "accent": "#fe8019", "on-accent": "#1d2021", "ok": "#b8bb26",
+            "warn": "#fabd2f", "bad": "#fb6c5c", "unknown": "#a89984",
+        },
+        "light": {
+            "bg": "#f2e5bc", "bg-elev": "#fbf1c7", "surface": "#fdf6d9", "surface-hover": "#ebdbb2",
+            "border": "#ebdbb2", "border-strong": "#d5c4a1", "text": "#3c3836", "text-muted": "#504945",
+            "text-faint": "#665c54", "accent": "#af3a03", "on-accent": "#ffffff", "ok": "#6a680c",
+            "warn": "#885b0f", "bad": "#9d0006", "unknown": "#6d625a",
+        },
+    },
+    "rosepine": {
+        "name": "Rosé Pine",
+        "dark": {
+            "bg": "#191724", "bg-elev": "#1f1d2e", "surface": "#26233a", "surface-hover": "#2f2c45",
+            "border": "#2a273f", "border-strong": "#403d52", "text": "#e0def4", "text-muted": "#c4c0dd",
+            "text-faint": "#a8a4c2", "accent": "#ebbcba", "on-accent": "#191724", "ok": "#9ccfd8",
+            "warn": "#f6c177", "bad": "#eb6f92", "unknown": "#908caa",
+        },
+        "light": {
+            "bg": "#f2e9e1", "bg-elev": "#faf4ed", "surface": "#fffaf3", "surface-hover": "#f4ede8",
+            "border": "#dfdad9", "border-strong": "#cecacd", "text": "#575279", "text-muted": "#5f5a82",
+            "text-faint": "#686485", "accent": "#735d8f", "on-accent": "#ffffff", "ok": "#286983",
+            "warn": "#915b10", "bad": "#a14e65", "unknown": "#696580",
         },
     },
 }
