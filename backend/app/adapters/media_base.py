@@ -29,6 +29,8 @@ class Stream:
     paused: bool = False
     transcoding: bool = False
     art: str = ""
+    #: The wide picture of what plays, for behind the card: the fanart of a film, the series of an episode.
+    backdrop: str = ""
 
 
 @dataclass
@@ -82,7 +84,10 @@ class MediaAdapter(Adapter):
             default_size=(4, 3),
             refresh_seconds=15,
             metrics=("streams",),
-            options=(Field("limit", "Streams", type="number", default=6),),
+            options=(
+                Field("limit", "Streams", type="number", default=6),
+                Field("backdrop", "Picture of what plays behind the card", type="bool", default=True),
+            ),
         ),
         WidgetType(
             kind="library",
@@ -231,6 +236,11 @@ class MediaAdapter(Adapter):
                 "title": s.title, "subtitle": s.subtitle, "progress": round(s.progress, 1),
                 "remaining": duration_short(s.remaining_seconds) if s.remaining_seconds else "",
                 "state": "paused" if s.paused else "playing", "art": s.art,
+                # ⚠️ Who it is travels with the row. The line under the title
+                # names them too, but only as words, and showcase mode needs to
+                # know which of the words is the person to make one up.
+                "user": s.user,
+                **({"backdrop": s.backdrop} if s.backdrop and options.get("backdrop", True) else {}),
             } for s in streams[:limit]],
             secondary=[{"label": "Streams", "value": len(streams)}, {"label": "Transcoding", "value": transcoding}],
             metrics={"streams": float(len(streams))},
@@ -270,14 +280,15 @@ class MediaAdapter(Adapter):
                 Library(id="2", name="Series", kind="show", count=96),
                 Library(id="5", name="Music", kind="artist", count=282),
             ])
-        titles = [("The Quiet Harbour", "Living room · 4K · Direct play", "Alex"), ("Harbour Lights S03E04", "Bedroom TV · 1080p · Transcode", "Sam"), ("Orbital", "Phone · 720p", "Kim")]
+        titles = [("The Quiet Harbour", "Alex · Living room · 4K · Direct play", "Alex"), ("Harbour Lights S03E04", "Sam · Bedroom TV · 1080p · Transcode", "Sam"), ("Orbital", "Kim · Phone · 720p", "Kim")]
         streams = []
         for index, (title, subtitle, user) in enumerate(titles):
             if index == 2 and fake.flicker(f"{self.kind}-third", tick, 0.5):
                 continue
             progress = (fake.walk(f"{self.kind}-prog{index}", tick, 0, 100, period=500) + tick * 0.1) % 100
             streams.append(Stream(title=title, subtitle=subtitle, user=user, progress=progress,
-                                  remaining_seconds=(100 - progress) * 60, paused=index == 2, transcoding=index == 1))
+                                  remaining_seconds=(100 - progress) * 60, paused=index == 2, transcoding=index == 1,
+                                  backdrop="demo:backdrop"))
         if widget_kind == "library":
             return self._library(streams, {"Movies": 1284, "Series": 96, "Artists": 282}, options)
         return self._nowplaying(streams, options)

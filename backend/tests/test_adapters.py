@@ -186,6 +186,11 @@ async def test_jellyfin_sessions_and_counts(ctx: Context) -> None:
     assert stream["state"] == "paused"
     assert "Transcode" in stream["subtitle"]
     assert 'MediaBrowser Token="tok"' in respx.calls.last.request.headers["Authorization"]
+    # ⚠️ Who it is travels with the row: showcase mode reads it to make the person up.
+    assert stream["user"] and stream["subtitle"].startswith(stream["user"])
+    assert stream["backdrop"].startswith("proxy:/Items/") and "/Images/Backdrop" in stream["backdrop"]
+    bare = await jellyfin.fetch("nowplaying", config, {"limit": 6, "backdrop": False}, ctx)
+    assert "backdrop" not in bare.items[0], "the picture behind the card can be switched off"
     library = await jellyfin.fetch("library", config, {}, ctx)
     assert library.primary == {"label": "Movies", "value": 12}
 

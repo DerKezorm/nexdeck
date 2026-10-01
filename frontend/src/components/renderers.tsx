@@ -646,13 +646,36 @@ export function StripsCard({ data }: RenderProps) {
 // Now playing: media streams
 // ---------------------------------------------------------------------------
 
+/**
+ * The picture behind a card of what plays, over the whole card, header and
+ * all: blurred a little, and darkened from the left, where the words are.
+ * The demo has no pictures and gets an evening sky instead.
+ */
+function Backdrop({ widgetId, source }: { widgetId: number; source: string }) {
+  const demo = source.startsWith('demo:')
+  return (
+    <div className="nd-backdrop" aria-hidden="true" data-testid="backdrop">
+      {demo ? (
+        <div className="absolute -inset-4" style={{ background: 'radial-gradient(160px 110px at 72% 44%, rgba(255,214,150,0.85), transparent 70%), linear-gradient(180deg, #1d1433 0%, #5b2a5c 30%, #c35f6e 52%, #f2a27a 57%, #23314f 58%, #142039 75%, #0a1222 100%)' }} />
+      ) : (
+        <img src={mediaUrl(widgetId, source)} alt="" className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] max-w-none object-cover" />
+      )}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(6,9,14,0.92) 0%, rgba(6,9,14,0.66) 50%, rgba(6,9,14,0.3) 100%)' }} />
+    </div>
+  )
+}
+
 export function NowPlayingCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
   const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{t('card.nothingPlaying')}</Empty>
+  // The wide picture of the first thing playing, behind the whole card. Not in
+  // showcase mode with titles hidden: a film's picture names the film.
+  const wide = disguise.mediaHidden ? '' : String(items.find((item) => item.backdrop)?.backdrop ?? '')
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
+    <div className={`flex-1 min-h-0 flex flex-col ${wide ? 'nd-on-backdrop' : ''}`}>
+      {wide && <Backdrop widgetId={widget.id} source={wide} />}
       <ul className="flex-1 min-h-0 scroll px-3 pb-2 space-y-2">
         {items.map((item, index) => {
           const progress = typeof item.progress === 'number' ? item.progress : 0
@@ -719,11 +742,42 @@ export function CountersCard({ data }: RenderProps) {
 // were squeezed into the card and each row of covers lay over the next
 // (issue #16). With rows as tall as their covers the card scrolls instead.
 
+/**
+ * Covers running past in one row, slowly, and holding still under the
+ * pointer. The row is there twice, so the band runs on without a jump; the
+ * second copy is hidden from a screen reader. With less motion asked for it
+ * is a row that scrolls by hand.
+ */
+function PosterBand({ widget, items }: { widget: RenderProps['widget']; items: Record<string, unknown>[] }) {
+  const disguise = useDisguise()
+  const cover = (item: Record<string, unknown>, index: number, copy: boolean) => {
+    const art = mediaUrl(widget.id, item.art as string | undefined)
+    const title = disguise.media(String(item.title ?? ''))
+    return (
+      <li key={`${copy ? 'b' : 'a'}-${String(item.id ?? index)}`} className="relative h-full aspect-[2/3] flex-none rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" aria-hidden={copy || undefined} title={title}>
+        {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{(title || '?').slice(0, 2).toUpperCase()}</span>}
+        <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
+          <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{title}</div>
+        </div>
+      </li>
+    )
+  }
+  return (
+    <div className="nd-band flex-1 min-h-0 px-3 pb-3" data-testid="poster-band">
+      <ul className="nd-band-track h-full" style={{ animationDuration: `${Math.max(20, items.length * 5)}s` }}>
+        {items.map((item, index) => cover(item, index, false))}
+        {items.map((item, index) => cover(item, index, true))}
+      </ul>
+    </div>
+  )
+}
+
 export function PostersCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
   const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
+  if (data?.meta?.band) return <PosterBand widget={widget} items={items} />
   return (
     <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {

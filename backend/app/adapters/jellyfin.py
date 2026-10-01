@@ -225,6 +225,11 @@ class JellyfinAdapter(MediaAdapter, MusicLibrary):
     def _art(item_id: Any) -> str:
         return f"proxy:/Items/{item_id}/Images/Primary?maxHeight=400" if item_id else ""
 
+    @staticmethod
+    def _backdrop(item_id: Any) -> str:
+        """The wide picture of a film or a series, small enough for behind a card."""
+        return f"proxy:/Items/{item_id}/Images/Backdrop?maxWidth=960&quality=80" if item_id else ""
+
     # -- streams and library (the shared media shape) ----------------------------
 
     async def sessions(self, config: dict[str, Any], ctx: Context) -> list[Stream]:
@@ -254,6 +259,7 @@ class JellyfinAdapter(MediaAdapter, MusicLibrary):
                 remaining_seconds=(duration - position) if duration else None,
                 paused=bool((session.get("PlayState") or {}).get("IsPaused")), transcoding=transcoding,
                 art=self._art(item.get("SeriesId") or item.get("Id")),
+                backdrop=self._backdrop(item.get("SeriesId") or item.get("Id")),
             ))
         return streams
 

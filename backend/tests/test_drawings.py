@@ -323,3 +323,14 @@ def test_in_and_out_are_offered_where_a_pair_is_declared_and_nowhere_else() -> N
     assert "glances.system" not in offered, "cpu and memory are not a way in and a way out"
     assert "gatus.summary" not in offered, "endpoints up and down are counted, not carried"
     assert len(offered) >= 5, f"only {sorted(offered)}"
+
+
+def test_covers_can_run_past_as_a_band() -> None:
+    from app.adapters.base import as_band
+
+    assert as_band(WidgetData(items=[{"title": "A"}]), {"view": "band"}).meta["band"] is True
+    assert "band" not in as_band(WidgetData(items=[]), {"view": "value"}).meta
+    widget = get_adapter("plex").widget("recent")
+    view = next(one for one in widget.options if one.name == "view")
+    assert dict(view.options)["value"] == "Covers in a grid" and "band" in dict(view.options)
+

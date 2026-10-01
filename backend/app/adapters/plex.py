@@ -218,11 +218,14 @@ class PlexAdapter(MediaAdapter, MusicLibrary):
             quality = f"{quality}p" if quality and quality.isdigit() else quality.upper()
             subtitle = " · ".join(p for p in [(item.get("User") or {}).get("title", ""), player.get("title", ""), quality, "Transcode" if transcoding else "Direct play"] if p)
             art = item.get("thumb") or item.get("grandparentThumb") or ""
+            # The wide picture: an episode's is its series', a film's its own.
+            backdrop = item.get("grandparentArt") or item.get("art") or ""
             streams.append(Stream(
                 title=title, subtitle=subtitle, user=(item.get("User") or {}).get("title", ""), progress=progress,
                 remaining_seconds=(duration - offset) / 1000 if duration else None,
                 paused=player.get("state") == "paused", transcoding=transcoding,
                 art=f"proxy:{art}" if art else "",
+                backdrop=f"proxy:{backdrop}" if backdrop else "",
             ))
         return streams
 

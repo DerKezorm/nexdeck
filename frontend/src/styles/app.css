@@ -498,6 +498,38 @@ body {
   display: none;
 }
 
+/* The picture of what plays, behind a whole card: under everything in the
+   card, and the words on it white, in either brightness, since the picture
+   is darkened. */
+.nd-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.nd-backdrop img,
+.nd-backdrop > div:first-child {
+  filter: blur(2px) saturate(1.15);
+}
+
+.card:has(.nd-on-backdrop) {
+  isolation: isolate;
+  color: #f1f5f9;
+}
+
+.card:has(.nd-on-backdrop) .text-muted,
+.card:has(.nd-on-backdrop) .text-faint {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.card:has(.nd-on-backdrop) .chip {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
 /* Showcase mode: a camera, an embedded page or a note, blurred, with a word on top. */
 .nd-veiled {
   filter: blur(14px) saturate(0.8);
@@ -522,6 +554,39 @@ body {
 @keyframes nd-bar-in {
   from {
     width: 0;
+  }
+}
+
+/* Covers running past: the track is the row twice, and moves by half itself. */
+.nd-band {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+}
+
+.nd-band-track {
+  display: flex;
+  gap: 0.5rem;
+  width: max-content;
+  animation: nd-band 60s linear infinite;
+}
+
+.nd-band:hover .nd-band-track {
+  animation-play-state: paused;
+}
+
+@keyframes nd-band {
+  to {
+    transform: translateX(calc(-50% - 0.25rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nd-band {
+    overflow-x: auto;
+  }
+
+  .nd-band-track {
+    animation: none;
   }
 }
 

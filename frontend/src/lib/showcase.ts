@@ -258,9 +258,11 @@ export interface Disguise {
   as: (kind: Kind, text: string) => string
   /** The title of a film, a series or an album: made up only when media titles are asked for too. */
   media: (text: string) => string
+  /** Whether titles are made up too, and with them every picture that would give the title away. */
+  mediaHidden: boolean
 }
 
-const PLAIN: Disguise = { on: false, free: (text) => text, as: (_kind, text) => text, media: (text) => text }
+const PLAIN: Disguise = { on: false, free: (text) => text, as: (_kind, text) => text, media: (text) => text, mediaHidden: false }
 
 /** The way a card writes what it shows, in showcase mode or not. */
 export function useDisguise(): Disguise {
@@ -271,7 +273,7 @@ export function useDisguise(): Disguise {
   return useMemo(() => {
     if (!on) return PLAIN
     const free = (text: string) => scrub(text, domains, names)
-    return { on: true, free, as: madeUp, media: (text: string) => (media ? madeUp('media', text) : free(text)) }
+    return { on: true, free, as: madeUp, media: (text: string) => (media ? madeUp('media', text) : free(text)), mediaHidden: media }
   }, [on, media, domains, names])
 }
 

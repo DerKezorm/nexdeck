@@ -251,6 +251,10 @@ class WidgetType:
         # cross because they live on scales a hundred times apart.
         if self.inout and inout_pair(self.metrics) and not self.client_only:
             extra += (("inout", "In and out, mirrored"),)
+        # Covers can run past as a band, slowly, one row across the card: what
+        # a wall shows best, and what nobody has to scroll.
+        if self.renderer == "posters":
+            extra += (("band", "A band that moves past"),)
         if extra:
             object.__setattr__(self, "options", offer_views(self.options, self.renderer, extra))
         if self.parts:
@@ -592,7 +596,7 @@ def offer_views(options: tuple[Field, ...], renderer: str,
     """
     # What the card already is, named as the operator sees it. "The number"
     # under a card that draws a dial would be a third thing on a list of two.
-    own = ("value", {"list": "Rows", "gauge": "A dial", "stats": "The rows"}.get(renderer, "The number"))
+    own = ("value", {"list": "Rows", "gauge": "A dial", "stats": "The rows", "posters": "Covers in a grid"}.get(renderer, "The number"))
     for index, one in enumerate(options):
         if one.name != "view":
             continue
@@ -761,6 +765,14 @@ def as_chart(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     return data
 
 
+def as_band(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Covers as a moving band, when asked; the drawing stays the covers card."""
+    if str(options.get("view") or "value") != "band":
+        return data
+    data.meta = {**(data.meta or {}), "band": True}
+    return data
+
+
 def as_inout(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     """Draw in and out mirrored, when asked and when the card measured both right now."""
     if str(options.get("view") or "value") != "inout":
@@ -817,6 +829,7 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
     data = as_ring(data, options)
     data = as_chart(data, options)
     data = as_inout(data, options)
+    data = as_band(data, options)
     return as_gauge(data, options)
 
 
