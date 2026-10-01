@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
-import { BUNDLED } from './BackgroundLayer'
+import { BUNDLED, LIVING } from './BackgroundLayer'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
 
 interface Props {
@@ -133,19 +133,23 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           <Field label={t('board.name')} htmlFor="b-name">
             <input id="b-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
-          <Field label={t('board.background')}>
+          <Field label={t('board.background')} help={t('board.livingHelp')}>
             <div className="grid grid-cols-4 gap-2">
-              {Object.entries(BUNDLED).map(([key, gradient]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`h-14 rounded-xl border ${background.kind === 'bundled' && (background.value ?? 'aurora') === key ? 'border-accent' : 'border-line'}`}
-                  style={{ background: `${gradient === 'none' ? '' : gradient + ','} var(--nd-bg)` }}
-                  onClick={() => setBackground({ kind: 'bundled', value: key })}
-                  aria-label={key}
-                  title={key}
-                />
-              ))}
+              {Object.entries({ ...BUNDLED, ...LIVING }).map(([key, gradient]) => {
+                const chosen = background.kind === 'bundled' && (background.value ?? 'aurora') === key
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`h-14 rounded-xl border ${chosen ? 'border-accent' : 'border-line'}`}
+                    style={{ background: `${gradient === 'none' ? '' : gradient + ','} var(--nd-bg)` }}
+                    onClick={() => setBackground({ kind: 'bundled', value: key })}
+                    aria-label={t(`board.backgrounds.${key}`, key)}
+                    aria-pressed={chosen}
+                    title={t(`board.backgrounds.${key}`, key)}
+                  />
+                )
+              })}
             </div>
           </Field>
           <Field label={t('board.upload')} help={t('board.uploadHelp')}>

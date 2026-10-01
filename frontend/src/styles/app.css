@@ -373,6 +373,99 @@ body {
   transition: width 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+/* The grounds that move. The aurora drifts in three soft clouds, slowly
+   enough that nobody sees it move, only that it is not where it was. */
+.nd-blob {
+  position: absolute;
+  width: 70vmax;
+  height: 50vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+}
+
+.nd-blob-1 {
+  background: var(--nd-aurora-1);
+  left: -20vmax;
+  top: -25vmax;
+  animation: nd-drift-1 38s ease-in-out infinite alternate;
+}
+
+.nd-blob-2 {
+  background: var(--nd-aurora-2);
+  right: -25vmax;
+  top: -10vmax;
+  animation: nd-drift-2 46s ease-in-out infinite alternate;
+}
+
+.nd-blob-3 {
+  background: var(--nd-aurora-3);
+  left: 10vmax;
+  bottom: -30vmax;
+  animation: nd-drift-3 52s ease-in-out infinite alternate;
+}
+
+@keyframes nd-drift-1 {
+  to {
+    transform: translate(28vmax, 14vmax) scale(1.15);
+  }
+}
+
+@keyframes nd-drift-2 {
+  to {
+    transform: translate(-30vmax, 20vmax) scale(0.9);
+  }
+}
+
+@keyframes nd-drift-3 {
+  to {
+    transform: translate(24vmax, -18vmax) scale(1.2);
+  }
+}
+
+/* Each layer of stars is one dot with its sky as shadows, and twinkles as a
+   whole, each at its own pace. A light page has no night sky. */
+.nd-star-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  animation: nd-twinkle 5s ease-in-out infinite;
+}
+
+.nd-star-layer-2 {
+  animation-duration: 7s;
+  animation-delay: -2s;
+}
+
+.nd-star-layer-3 {
+  animation-duration: 9s;
+  animation-delay: -5s;
+}
+
+@keyframes nd-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+:root[data-theme='light'] .nd-stars {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nd-blob,
+  .nd-star-layer {
+    animation: none;
+  }
+}
+
 /* A bar grows in from nothing when its card first shows; later readings glide. */
 .bar > i {
   animation: nd-bar-in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;

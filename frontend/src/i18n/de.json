@@ -719,7 +719,21 @@
     "widthFull": "Volle Breite",
     "fitHeight": "Höhe ans Fenster anpassen",
     "fitHeightHelp": "Die Zeilen wachsen oder schrumpfen, bis die Seite ohne Scrollen ins Fenster passt. Eine Seite, die dafür zu lang ist, behält ihre Zeilen und scrollt. Nicht auf dem Handy.",
-    "demoData": "Einige Verbindungen stehen noch im Demo-Modus und zeigen erfundene Daten."
+    "demoData": "Einige Verbindungen stehen noch im Demo-Modus und zeigen erfundene Daten.",
+    "backgrounds": {
+      "aurora": "Aurora",
+      "dusk": "Abenddämmerung",
+      "ember": "Glut",
+      "ocean": "Ozean",
+      "forest": "Wald",
+      "violet": "Violett",
+      "mono": "Grau",
+      "none": "Keiner",
+      "flow": "Fließende Aurora",
+      "stars": "Sternenhimmel",
+      "daytime": "Folgt der Tageszeit"
+    },
+    "livingHelp": "Die letzten drei bewegen sich, langsam. Ist im System weniger Bewegung eingestellt, stehen sie still."
   },
   "widget": {
     "remove": {

@@ -719,7 +719,21 @@
     "widthFull": "Full width",
     "fitHeight": "Fit the height to the window",
     "fitHeightHelp": "The rows grow or shrink until the page fits the window without scrolling. A page too long for that keeps its usual rows and scrolls. Not on phones.",
-    "demoData": "Some connections are still in demo mode and show invented data."
+    "demoData": "Some connections are still in demo mode and show invented data.",
+    "backgrounds": {
+      "aurora": "Aurora",
+      "dusk": "Dusk",
+      "ember": "Ember",
+      "ocean": "Ocean",
+      "forest": "Forest",
+      "violet": "Violet",
+      "mono": "Grey",
+      "none": "None",
+      "flow": "Drifting aurora",
+      "stars": "Starry sky",
+      "daytime": "Follows the time of day"
+    },
+    "livingHelp": "The last three move, slowly. With less motion asked for in the system they hold still."
   },
   "widget": {
     "remove": {

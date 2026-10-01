@@ -719,7 +719,21 @@
     "widthFull": "Larghezza piena",
     "fitHeight": "Adatta l'altezza alla finestra",
     "fitHeightHelp": "Le righe crescono o si restringono finché la pagina entra nella finestra senza scorrere. Una pagina troppo lunga mantiene le righe consuete e scorre. Non sui telefoni.",
-    "demoData": "Alcune connessioni sono ancora in modalità demo e mostrano dati inventati."
+    "demoData": "Alcune connessioni sono ancora in modalità demo e mostrano dati inventati.",
+    "backgrounds": {
+      "aurora": "Aurora",
+      "dusk": "Crepuscolo",
+      "ember": "Brace",
+      "ocean": "Oceano",
+      "forest": "Foresta",
+      "violet": "Viola",
+      "mono": "Grigio",
+      "none": "Nessuno",
+      "flow": "Aurora in movimento",
+      "stars": "Cielo stellato",
+      "daytime": "Segue l'ora del giorno"
+    },
+    "livingHelp": "Gli ultimi tre si muovono, lentamente. Se il sistema chiede meno movimento, restano fermi."
   },
   "widget": {
     "remove": {
