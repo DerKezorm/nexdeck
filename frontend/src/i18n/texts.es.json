@@ -1684,7 +1684,10 @@
     "One or many qBittorrent through Qui: speeds, torrents that run, seed or fail, and each instance.": "Uno o varios qBittorrent a través de Qui: velocidades, torrents activos, compartiendo o con error, y cada instancia.",
     "One row per qBittorrent: whether it answers, its speeds and its torrents.": "Una fila por qBittorrent: si responde, sus velocidades y sus torrents.",
     "Qui overview": "Resumen de Qui",
-    "Settings > API keys": "Ajustes > Claves de API"
+    "Settings > API keys": "Ajustes > Claves de API",
+    "Each source with what its files take of the disk, and the files and shares in all.": "Cada origen con lo que ocupan sus archivos en el disco, y los archivos y enlaces compartidos en total.",
+    "Made in FileBrowser's settings under API tokens, with the permission api.": "Creado en los ajustes de FileBrowser en Tokens de API, con el permiso api.",
+    "What the files of each source take on their disk, how many there are, and the open shares.": "Lo que ocupan los archivos de cada origen en su disco, cuántos hay y los enlaces compartidos abiertos."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2681,6 +2684,7 @@
     "Plays": "Reproducciones",
     "Hours watched": "Horas vistas",
     "Errored": "Con error",
-    "Unreachable": "Inaccesibles"
+    "Unreachable": "Inaccesibles",
+    "Shares": "Compartidos"
   }
 }

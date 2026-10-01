@@ -135,6 +135,7 @@ that one of twenty-one renderers draws.
 | Kimai | time entries, booked time | stop a running timer | API token from Profile > API access |
 | Dawarich | distance, distance by month | | API key of the account; distances follow Dawarich's hourly calculation |
 | wger | weight, weigh-ins | | API key from the profile, sent as Token |
+| FileBrowser Quantum | storage | none | an API token with the permission api, made in FileBrowser's settings; shares are counted when the token may read them |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
 | evcc | energy, charging | | none; the state is readable without a password |
 | BookOrbit | reading now, recently added, library | | user and password; BookOrbit has no API keys and allows five sign-ins a minute, so the token is kept |
