@@ -7,6 +7,7 @@ the upcoming items of several sources, iCal feeds and *arr instances alike.
 
 from __future__ import annotations
 
+import base64
 import re
 from datetime import UTC, date, datetime, timedelta, tzinfo
 from typing import Any
@@ -190,16 +191,37 @@ HIDE_PAST = Field("hide_past", "Hide what is over", type="bool", default=True,
                   help="Today's appointments leave the card once they have ended. All-day entries stay the whole day.")
 
 
+#: Every event of a CalDAV calendar with its data, the question every server answers.
+CALENDAR_QUERY = (
+    b'<?xml version="1.0" encoding="utf-8"?>'
+    b'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+    b'<d:prop><c:calendar-data/></d:prop>'
+    b'<c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT"/></c:comp-filter></c:filter>'
+    b"</c:calendar-query>"
+)
+
+
+def calendar_data(xml: str) -> list[str]:
+    """The calendars inside a CalDAV multistatus answer, one per event, unescaped."""
+    import html
+
+    found = re.findall(r"<(?:[\w-]+:)?calendar-data[^>]*>(.*?)</(?:[\w-]+:)?calendar-data>", xml, flags=re.S)
+    return [html.unescape(one.strip()) for one in found if "BEGIN:VCALENDAR" in html.unescape(one)]
+
+
 class IcalAdapter(Adapter):
     kind = "ical"
     label = "iCal feed"
     category = "basics"
-    description = "Events from an iCal (ICS) address: Google, Nextcloud, iCloud or any calendar that exports one."
+    description = "Events from an iCal (ICS) address or a CalDAV calendar: Google, Nextcloud, Radicale, Baïkal, iCloud or any calendar that exports one."
     icon = "lucide:calendar"
     beta = False
     fields = (
-        Field("url", "ICS address", type="url", secret=True, required=True, help="Private addresses stay secret."),
+        Field("url", "ICS address", type="url", secret=True, required=True,
+              help="An ICS link, or the address of a CalDAV calendar such as https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Private addresses stay secret."),
         Field("name", "Calendar name", placeholder="Family"),
+        Field("username", "User name", help="Only for a CalDAV calendar. An ICS link needs none."),
+        Field("password", "Password", type="password", secret=True, help="For Nextcloud an app password, made under Settings > Security."),
     )
     widgets = (
         WidgetType(kind="events", label="Events", description="Upcoming events of this calendar.", renderer="calendar", default_size=(3, 3), refresh_seconds=900, options=(Field("days", "Days ahead", type="number", default=14), Field("limit", "Entries", type="number", default=20), HIDE_PAST)),
@@ -210,13 +232,41 @@ class IcalAdapter(Adapter):
         return f"The feed answers with {len(events)} events."
 
     async def _events(self, config: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
+        """The events of the feed or the calendar, whichever way the address hands them out.
+
+        An ICS link answers a plain GET. A CalDAV calendar answers it as well
+        in Radicale; Nextcloud and Baïkal hand the whole calendar out with
+        ``?export`` instead; and every CalDAV server answers a REPORT, which
+        is the last way tried. Each way is tried only when the one before gave
+        no calendar, so an ICS link costs one request as before.
+        """
         url = str(config.get("url") or "")
         if url.startswith("webcal://"):
             url = "https://" + url[len("webcal://"):]
-        response = await ctx.request("GET", url, cache_seconds=600, timeout=30)
-        if response.status_code >= 400:
+        user = str(config.get("username") or "")
+        # ⚠️ As a header, not as ``auth=``: the cache keys a GET by address and
+        # headers, and two calendars at one address with different people's
+        # passwords must never be handed each other's answer.
+        auth = {"Authorization": "Basic " + base64.b64encode(f"{user}:{config.get('password') or ''}".encode()).decode()} if user else None
+        response = await ctx.request("GET", url, cache_seconds=600, timeout=30, headers=auth)
+        if response.status_code in (401, 403):
+            raise AdapterError("The calendar refused the user name or the password.", code="auth_failed",
+                               hint="For Nextcloud use an app password; for an ICS link leave both empty.")
+        if response.status_code < 400 and "BEGIN:VCALENDAR" in response.text:
+            return parse_ics(response.text)
+        if auth is None and response.status_code >= 400:
             raise AdapterError(f"The calendar answered with HTTP {response.status_code}.", code="http_error")
-        return parse_ics(response.text)
+        exported = await ctx.request("GET", url + ("&" if "?" in url else "?") + "export", cache_seconds=600, timeout=30, headers=auth)
+        if exported.status_code < 400 and "BEGIN:VCALENDAR" in exported.text:
+            return parse_ics(exported.text)
+        reported = await ctx.request("REPORT", url, content=CALENDAR_QUERY, timeout=30,
+                                     headers={**(auth or {}), "Depth": "1", "Content-Type": "application/xml; charset=utf-8"})
+        if reported.status_code in (401, 403):
+            raise AdapterError("The calendar refused the user name or the password.", code="auth_failed")
+        if reported.status_code >= 400:
+            raise AdapterError(f"The calendar answered with HTTP {reported.status_code}.", code="http_error",
+                               hint="Use the address of one calendar, not of the account or the server.")
+        return parse_ics("\n".join(calendar_data(reported.text)))
 
     async def upcoming(self, config: dict[str, Any], ctx: Context, days: int) -> list[dict[str, Any]]:
         # ⚠️ Today on this server's clock, not in UTC: between midnight and

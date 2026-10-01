@@ -118,7 +118,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 **Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, Syncthing, Paperless-ngx, Firefly III, Mealie, Grocy, Vikunja, Kimai, Dawarich, wger, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes, Wallos, OctoPrint.
 
-**Feeds, weather and messages.** Hacker News, YouTube, GitHub, share prices, Twitch, RSS, Miniflux, FreshRSS, Karakeep, Linkwarden, Linkding, iCal, Weather, ntfy, Gotify, nexmail, IMAP.
+**Feeds, weather and messages.** Hacker News, YouTube, GitHub, share prices, Twitch, RSS, Miniflux, FreshRSS, Karakeep, Linkwarden, Linkding, iCal and CalDAV, Weather, ntfy, Gotify, nexmail, IMAP.
 
 Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
 

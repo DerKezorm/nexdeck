@@ -1675,7 +1675,11 @@
     "Several cards in one, a tab each: more on a small screen, and a wall that turns the pages itself.": "Più schede in una, una scheda ciascuna: di più su uno schermo piccolo, e una parete che sfoglia da sola.",
     "Six": "Sei",
     "Tabs": "Schede",
-    "Turn the tabs": "Cambiare scheda"
+    "Turn the tabs": "Cambiare scheda",
+    "An ICS link, or the address of a CalDAV calendar such as https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Private addresses stay secret.": "Un link ICS o l'indirizzo di un calendario CalDAV, ad esempio https://cloud.example.com/remote.php/dav/calendars/alex/personal/. Gli indirizzi privati restano segreti.",
+    "Events from an iCal (ICS) address or a CalDAV calendar: Google, Nextcloud, Radicale, Baïkal, iCloud or any calendar that exports one.": "Eventi da un indirizzo iCal (ICS) o da un calendario CalDAV: Google, Nextcloud, Radicale, Baïkal, iCloud o qualsiasi calendario che ne esporti uno.",
+    "For Nextcloud an app password, made under Settings > Security.": "Per Nextcloud una password per app, creata in Impostazioni > Sicurezza.",
+    "Only for a CalDAV calendar. An ICS link needs none.": "Solo per un calendario CalDAV. Un link ICS non ne ha bisogno."
   },
   "labels": {
     "Private resources": "Risorse private",
