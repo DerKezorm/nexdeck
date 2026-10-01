@@ -31,6 +31,7 @@ import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { anyCardDown } from '../lib/cardStatus'
 import { domainsOf, useShowcase } from '../lib/showcase'
+import { useEditedPage } from '../lib/groups'
 import { usePicture } from '../lib/boardPicture'
 import { PictureDialog } from '../components/PictureDialog'
 import { useLive } from '../stores/live'
@@ -428,6 +429,12 @@ export function BoardPage() {
   useEffect(() => {
     setShowcaseNames([user?.display_name ?? '', user?.username ?? ''])
   }, [user, setShowcaseNames])
+
+  // The cards of the page in view, for the picker of a tabs card or a group.
+  const setEditedPage = useEditedPage((state) => state.setWidgets)
+  useEffect(() => {
+    setEditedPage(widgets)
+  }, [widgets, setEditedPage])
 
   // The account menu offers to save this board as a picture while it is open.
   const pictureOpen = usePicture((state) => state.open)

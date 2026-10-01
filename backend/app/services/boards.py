@@ -315,6 +315,9 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
     }
     for page in pages:
         page_doc: dict[str, Any] = {"name": page.name, "slug": page.slug, "icon": page.icon, "widgets": []}
+        # A holding card names its cards by place on the page, "#2" for the
+        # third: the numbers of the cards are new after every import.
+        place = {widget.id: index for index, widget in enumerate(page.widgets)}
         for widget in page.widgets:
             if widget.integration is not None:
                 integrations[widget.integration.id] = widget.integration
@@ -326,7 +329,7 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
             page_doc["widgets"].append({
                 "kind": widget.kind, "title": widget.title, "icon": widget.icon, "link": widget.link,
                 "integration": widget.integration.name if widget.integration else None,
-                "options": widget.options or {}, "refresh_seconds": widget.refresh_seconds, "layout": layout,
+                "options": _by_place(widget, place), "refresh_seconds": widget.refresh_seconds, "layout": layout,
             })
         document["pages"].append(page_doc)
     document["integrations"] = [
@@ -335,6 +338,33 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
         for i in integrations.values()
     ]
     return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
+
+
+#: Cards that hold other cards of their page, by number in ``options["cards"]``.
+GROUP_KINDS = frozenset({"core.tabs", "core.group"})
+#: More than this in one card is a page, not a group.
+MOST_TUCKED = 12
+
+
+def clean_cards(db: Session, page_id: int, own_id: int | None, kind: str, options: dict | None) -> dict | None:
+    """The cards a holding card may keep: cards of its own page, no holder
+    among them and not itself, each once, at most twelve. Anything else is
+    left out rather than refused: a card that was deleted or moved meanwhile
+    is simply no longer in it.
+    """
+    if kind not in GROUP_KINDS or not options or "cards" not in options:
+        return options
+    wanted: list[int] = []
+    for entry in options.get("cards") or []:
+        try:
+            number = int(entry)
+        except (TypeError, ValueError):
+            continue
+        if number != own_id and number not in wanted:
+            wanted.append(number)
+    present = {row.id: row.kind for row in db.scalars(select(Widget).where(Widget.page_id == page_id, Widget.id.in_(wanted or [-1])))}
+    kept = [number for number in wanted if number in present and present[number] not in GROUP_KINDS][:MOST_TUCKED]
+    return {**options, "cards": kept}
 
 
 def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
@@ -360,6 +390,28 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
             integration = require_integration(db, integration_id, user)
             if allowed and integration.kind not in allowed:
                 raise error("bad_source", f"A {integration.kind} connection cannot be a source here.")
+
+
+def _by_place(widget: Widget, place: dict[int, int]) -> dict:
+    options = dict(widget.options or {})
+    if widget.kind in GROUP_KINDS and isinstance(options.get("cards"), list):
+        options["cards"] = [f"#{place[number]}" for number in options["cards"] if isinstance(number, int) and number in place]
+    return options
+
+
+def _by_number(made: list[Widget]) -> None:
+    """The places a holding card names in a file, turned back into the numbers of the cards just made."""
+    for widget in made:
+        cards = (widget.options or {}).get("cards")
+        if widget.kind not in GROUP_KINDS or not isinstance(cards, list):
+            continue
+        numbers = []
+        for entry in cards:
+            if isinstance(entry, str) and entry.startswith("#") and entry[1:].isdigit() and int(entry[1:]) < len(made):
+                target = made[int(entry[1:])]
+                if target.kind not in GROUP_KINDS and target.id != widget.id:
+                    numbers.append(target.id)
+        widget.options = {**widget.options, "cards": numbers[:MOST_TUCKED]}
 
 
 def _user_of(db: Session, owner_id: int | None) -> User | None:
@@ -559,6 +611,7 @@ def import_board(
         db.add(page)
         db.flush()
         placer = Placer(page, grid.columns(board.settings))
+        made: list[Widget] = []
         for widget_doc in page_doc.get("widgets") or []:
             kind = str(widget_doc.get("kind") or "")
             try:
@@ -572,6 +625,7 @@ def import_board(
                             options=dict(widget_doc.get("options") or {}), refresh_seconds=widget_doc.get("refresh_seconds"))
             db.add(widget)
             db.flush()
+            made.append(widget)
             layout = widget_doc.get("layout") or {}
             if layout:
                 spots = {}
@@ -589,6 +643,7 @@ def import_board(
             else:
                 placer.add(widget.id, widget_type.default_size, widget_type.min_size)
             health_service.ensure_check_for_widget(db, widget)
+        _by_number(made)
         placer.finish()
     if not document.get("pages"):
         db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))

@@ -32,12 +32,13 @@ logger = logging.getLogger("nexdeck.adapters")
 #: kinds that may be picked; the server checks both the kind and whether the
 #: person editing may build on that connection at all.
 FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations",
-                    "textarea", "timezone", "items", "choices", "colour", "board", "pictures"]
+                    "textarea", "timezone", "items", "choices", "colour", "board", "pictures", "cards"]
 #: ``items`` picks among the rows a card is showing; ``choices`` picks among
 #: values the service itself hands out, through ``Adapter.choices``;
 #: ``board`` picks one of this installation's own boards, which no service
 #: knows about; ``pictures`` is a list somebody builds by uploading files
-#: or naming addresses, not a text field with a syntax.
+#: or naming addresses, not a text field with a syntax. ``cards`` picks other
+#: cards of the same page, for a card that holds them.
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
@@ -133,6 +134,10 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "flow": (3, 3),
     # Thirteen weeks of seven squares and a line of numbers under them.
     "heatmap": (3, 2),
+    # A row of tabs and the card under it.
+    "tabs": (2, 2),
+    # A title and at least one row of cards inside.
+    "group": (3, 2),
 }
 
 #: Pairs of metrics that are one line going in and one going out. A card that

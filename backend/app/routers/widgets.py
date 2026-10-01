@@ -40,6 +40,7 @@ from ..services import grid, history
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
+    clean_cards,
     card_sizes,
     place_widget,
     remove_from_layouts,
@@ -100,6 +101,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
                     link=body.link.strip(), integration_id=body.integration_id, options=body.options, refresh_seconds=body.refresh_seconds)
     db.add(widget)
     db.flush()
+    widget.options = clean_cards(db, page.id, widget.id, body.kind, body.options)
     size = (body.w or widget_type.default_size[0], body.h or widget_type.default_size[1])
     place_widget(page, widget.id, size, widget_type.min_size, grid.columns(board.settings))
     health_service.ensure_check_for_widget(db, widget)
@@ -128,7 +130,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         widget.link = body.link.strip()
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
-        widget.options = body.options
+        widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
     if body.clear_refresh:
         widget.refresh_seconds = None
     elif body.refresh_seconds is not None:

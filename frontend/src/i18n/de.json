@@ -1283,5 +1283,14 @@
     "copied": "Kopiert",
     "drawing": "Das Bild wird gezeichnet …",
     "failed": "Das Bild ließ sich nicht zeichnen."
+  },
+  "groups": {
+    "empty": "Noch keine Karten darin.",
+    "emptyEditing": "Öffne die Einstellungen dieser Karte und hake die Karten an, die sie halten soll.",
+    "cards_one": "{{count}} Karte",
+    "cards_other": "{{count}} Karten",
+    "down_one": "{{count}} ausgefallen",
+    "down_other": "{{count}} ausgefallen",
+    "none": "Auf dieser Seite gibt es noch keine anderen Karten."
   }
 }

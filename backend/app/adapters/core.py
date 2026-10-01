@@ -179,6 +179,38 @@ class CoreAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="tabs",
+            label="Tabs",
+            description="Several cards in one, a tab each: more on a small screen, and a wall that turns the pages itself.",
+            renderer="tabs",
+            default_size=(4, 3),
+            min_size=(2, 2),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("cards", "Cards in it", type="cards", default=[],
+                      help="Cards of this page. They leave the board and live in this card until it is removed."),
+                Field("turn", "Turn the tabs", type="select", default="0",
+                      options=(("0", "By hand"), ("10", "Every 10 seconds"), ("20", "Every 20 seconds"), ("60", "Every minute"))),
+            ),
+        ),
+        WidgetType(
+            kind="group",
+            label="Group",
+            description="A titled box that holds cards side by side, folds away and moves as one.",
+            renderer="group",
+            default_size=(12, 3),
+            min_size=(3, 2),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("cards", "Cards in it", type="cards", default=[],
+                      help="Cards of this page. They leave the board and live in this box until it is removed."),
+                Field("columns", "Cards side by side", type="select", default="auto",
+                      options=(("auto", "As many as fit"), ("2", "Two"), ("3", "Three"), ("4", "Four"), ("6", "Six"))),
+            ),
+        ),
+        WidgetType(
             kind="image",
             label="Picture",
             description="One picture, or a list of them as a slideshow.",
@@ -666,8 +698,9 @@ class CoreAdapter(Adapter):
             })
         if widget_kind == "markdown":
             return WidgetData(meta={"markdown": options.get("content") or ""})
-        if widget_kind == "heading":
-            # Drawn from the card's own options, so a change shows while the sheet is open.
+        if widget_kind in ("heading", "tabs", "group"):
+            # Drawn from the card's own options, so a change shows while the sheet
+            # is open; a holder draws the data its cards already have.
             return WidgetData()
         if widget_kind == "image":
             return WidgetData(items=parse_pictures(options.get("pictures")), meta={

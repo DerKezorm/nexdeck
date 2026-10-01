@@ -1283,5 +1283,14 @@
     "copied": "Copiata",
     "drawing": "Disegno dell'immagine…",
     "failed": "Non è stato possibile disegnare l'immagine."
+  },
+  "groups": {
+    "empty": "Ancora nessuna scheda qui.",
+    "emptyEditing": "Apri le impostazioni di questa scheda e spunta le schede che deve contenere.",
+    "cards_one": "{{count}} scheda",
+    "cards_other": "{{count}} schede",
+    "down_one": "{{count}} non risponde",
+    "down_other": "{{count}} non rispondono",
+    "none": "In questa pagina non ci sono ancora altre schede."
   }
 }

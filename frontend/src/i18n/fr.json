@@ -1283,5 +1283,14 @@
     "copied": "Copiée",
     "drawing": "Dessin de l'image…",
     "failed": "L'image n'a pas pu être dessinée."
+  },
+  "groups": {
+    "empty": "Pas encore de cartes ici.",
+    "emptyEditing": "Ouvrez les réglages de cette carte et cochez les cartes qu'elle doit contenir.",
+    "cards_one": "{{count}} carte",
+    "cards_other": "{{count}} cartes",
+    "down_one": "{{count}} en panne",
+    "down_other": "{{count}} en panne",
+    "none": "Il n'y a pas encore d'autres cartes sur cette page."
   }
 }

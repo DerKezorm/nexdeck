@@ -530,6 +530,11 @@ body {
   color: #e2e8f0;
 }
 
+/* A card inside a group: the box around it is the frame, so no shadow of its own. */
+.nd-in-group > .card {
+  box-shadow: none;
+}
+
 /* Showcase mode: a camera, an embedded page or a note, blurred, with a word on top. */
 .nd-veiled {
   filter: blur(14px) saturate(0.8);

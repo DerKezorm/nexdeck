@@ -1660,7 +1660,22 @@
     "Thirteen weeks": "Tredici settimane",
     "Picture of what plays behind the card": "Immagine di ciò che è in riproduzione dietro la scheda",
     "A band that moves past": "Una fascia che scorre",
-    "Covers in a grid": "Copertine in griglia"
+    "Covers in a grid": "Copertine in griglia",
+    "A titled box that holds cards side by side, folds away and moves as one.": "Un riquadro con titolo che tiene le schede affiancate, si richiude e si sposta tutto insieme.",
+    "As many as fit": "Quante ne entrano",
+    "By hand": "A mano",
+    "Cards in it": "Schede dentro",
+    "Cards of this page. They leave the board and live in this box until it is removed.": "Schede di questa pagina. Lasciano la bacheca e vivono in questo riquadro finché non viene rimosso.",
+    "Cards of this page. They leave the board and live in this card until it is removed.": "Schede di questa pagina. Lasciano la bacheca e vivono in questa scheda finché non viene rimossa.",
+    "Cards side by side": "Schede affiancate",
+    "Every 10 seconds": "Ogni 10 secondi",
+    "Every 20 seconds": "Ogni 20 secondi",
+    "Every minute": "Ogni minuto",
+    "Group": "Gruppo",
+    "Several cards in one, a tab each: more on a small screen, and a wall that turns the pages itself.": "Più schede in una, una scheda ciascuna: di più su uno schermo piccolo, e una parete che sfoglia da sola.",
+    "Six": "Sei",
+    "Tabs": "Schede",
+    "Turn the tabs": "Cambiare scheda"
   },
   "labels": {
     "Private resources": "Risorse private",

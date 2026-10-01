@@ -1283,5 +1283,14 @@
     "copied": "Copiada",
     "drawing": "Dibujando la imagen…",
     "failed": "No se pudo dibujar la imagen."
+  },
+  "groups": {
+    "empty": "Todavía no hay tarjetas.",
+    "emptyEditing": "Abre los ajustes de esta tarjeta y marca las tarjetas que debe contener.",
+    "cards_one": "{{count}} tarjeta",
+    "cards_other": "{{count}} tarjetas",
+    "down_one": "{{count}} caída",
+    "down_other": "{{count}} caídas",
+    "none": "Todavía no hay otras tarjetas en esta página."
   }
 }

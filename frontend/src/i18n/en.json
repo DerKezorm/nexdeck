@@ -1283,5 +1283,14 @@
     "copied": "Copied",
     "drawing": "Drawing the picture…",
     "failed": "The picture could not be drawn."
+  },
+  "groups": {
+    "empty": "No cards in here yet.",
+    "emptyEditing": "Open the settings of this card and tick the cards it should hold.",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards",
+    "down_one": "{{count}} down",
+    "down_other": "{{count}} down",
+    "none": "There are no other cards on this page yet."
   }
 }

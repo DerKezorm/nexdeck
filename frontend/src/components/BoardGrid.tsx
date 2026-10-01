@@ -6,6 +6,7 @@ import 'react-resizable/css/styles.css'
 
 import { namedSizes, resized, shiftGroup } from '../lib/arranging'
 import { useLook } from '../lib/appearance'
+import { PageCardsContext, tucked, useFolded } from '../lib/groups'
 import { fittingRow, perTwelfth } from '../lib/grid'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { CardMenu, type MoveTarget } from './CardMenu'
@@ -91,7 +92,13 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
+  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
+  // Cards that live inside a tabs card or a group are not on the grid; the
+  // holder draws them, from the whole page handed down below.
+  const inside = useMemo(() => tucked(everyCard), [everyCard])
+  const widgets = useMemo(() => everyCard.filter((widget) => !inside.has(widget.id)), [everyCard, inside])
+  const pageCards = useMemo(() => ({ widgets: everyCard, canAct, editing, onAction }), [everyCard, canAct, editing, onAction])
+  const folded = useFolded((state) => state.folded)
   const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
   // The grid draws at the width WidthProvider assumes before it has measured,
@@ -100,7 +107,14 @@ export function BoardGrid(props: Props) {
   // ⚠️ Rebuilt only when the arrangement or the cards change. Without the memo
   // this ran on every widget tick, once or twice a second on a board of
   // thirty, and handed react-grid-layout a new object identity each time.
-  const wide = useMemo(() => layoutFor(layouts.lg, widgets, columns), [layouts.lg, widgets, columns])
+  // ⚠️ A folded group is one row high while the board is looked at, and as
+  // tall as it was saved while it is arranged: a fold is somebody's view and
+  // must never be what edit mode saves.
+  const wide = useMemo(() => {
+    const laid = layoutFor(layouts.lg, widgets, columns)
+    if (editing || !folded.length) return laid
+    return laid.map((item) => (folded.includes(Number(item.i)) && widgets.some((one) => one.id === Number(item.i) && one.kind === 'core.group') ? { ...item, h: 1, minH: 1 } : item))
+  }, [layouts.lg, widgets, columns, editing, folded])
   const gridLayouts: Layouts = useMemo(() => ({ lg: wide, sm: stackedFor(wide, COLUMNS.sm, columns) }), [wide, columns])
   const cols = useMemo(() => ({ lg: columns, sm: COLUMNS.sm }), [columns])
   const host = useRef<HTMLDivElement>(null)
@@ -215,7 +229,7 @@ export function BoardGrid(props: Props) {
   const menuSpot = menu ? wide.find((one) => one.i === String(menu.id)) : undefined
 
   return (
-    <>
+    <PageCardsContext.Provider value={pageCards}>
       {/* On a phone a card cannot be dragged, so edit mode says where it can. */}
       {editing && screen === 'sm' && (
         <p role="note" className="text-xs text-muted px-1 pb-3">
@@ -335,7 +349,7 @@ export function BoardGrid(props: Props) {
           onClose={() => setMenu(null)}
         />
       )}
-    </>
+    </PageCardsContext.Provider>
   )
 }
 

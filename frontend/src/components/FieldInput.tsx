@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 
 import { get } from '../api/client'
 import type { BoardSummary, FieldSpec, Integration } from '../api/types'
-import { tAdapter } from '../i18n/texts'
+import { tAdapter, tLabel } from '../i18n/texts'
+import { GROUP_KINDS, useEditedPage } from '../lib/groups'
 import { PicturePicker } from './PicturePicker'
 import { NexcratePairing } from './NexcratePairing'
 import { PlexSignIn } from './PlexSignIn'
@@ -257,6 +258,47 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
  *
  * The value is what an address is made of later: "home", or "home/media".
  */
+/**
+ * Other cards of the page, for a card that holds them: ticked ones move in,
+ * in the order they were ticked. A holder is never offered, so nothing ends
+ * up inside itself.
+ */
+function CardsPicker({ value, onChange, label, help }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
+  const { t } = useTranslation()
+  const page = useEditedPage((state) => state.widgets)
+  const chosen = Array.isArray(value) ? value.map(Number) : []
+  const offered = page.filter((widget) => !GROUP_KINDS.has(widget.kind))
+  if (!offered.length) {
+    return (
+      <Field label={label} help={help}>
+        <p className="text-[12px] text-faint">{t('groups.none')}</p>
+      </Field>
+    )
+  }
+  return (
+    <Field label={label} help={help}>
+      <ul className="space-y-1 max-h-56 overflow-y-auto" aria-label={label}>
+        {offered.map((widget) => {
+          const ticked = chosen.includes(widget.id)
+          return (
+            <li key={widget.id}>
+              <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ticked}
+                  onChange={() => onChange(ticked ? chosen.filter((one) => one !== widget.id) : [...chosen, widget.id])}
+                />
+                <span className="truncate">{widget.title || tLabel(widget.kind)}</span>
+                {ticked && <span className="num text-[11px] text-faint ml-auto">{chosen.indexOf(widget.id) + 1}</span>}
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+    </Field>
+  )
+}
+
 function BoardPicker({ value, onChange, label, help }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
   const { t } = useTranslation()
   const boards = useQuery({ queryKey: ['boards', false], queryFn: () => get<BoardSummary[]>('/boards') })
@@ -344,6 +386,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
   }
   if (spec.type === 'pictures') {
     return <PicturePicker value={value} onChange={onChange} label={label} help={help} />
+  }
+  if (spec.type === 'cards') {
+    return <CardsPicker value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'board') {
     return <BoardPicker value={value} onChange={onChange} label={label} help={help} />

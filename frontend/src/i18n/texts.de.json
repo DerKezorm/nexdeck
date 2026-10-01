@@ -1660,7 +1660,22 @@
     "Thirteen weeks": "Dreizehn Wochen",
     "Picture of what plays behind the card": "Bild des Gespielten hinter der Karte",
     "A band that moves past": "Ein Band, das vorbeizieht",
-    "Covers in a grid": "Cover im Raster"
+    "Covers in a grid": "Cover im Raster",
+    "A titled box that holds cards side by side, folds away and moves as one.": "Ein Kasten mit Titel, der Karten nebeneinander hält, sich zuklappen lässt und als Ganzes umzieht.",
+    "As many as fit": "So viele, wie passen",
+    "By hand": "Von Hand",
+    "Cards in it": "Karten darin",
+    "Cards of this page. They leave the board and live in this box until it is removed.": "Karten dieser Seite. Sie verlassen das Board und wohnen in diesem Kasten, bis er entfernt wird.",
+    "Cards of this page. They leave the board and live in this card until it is removed.": "Karten dieser Seite. Sie verlassen das Board und wohnen in dieser Karte, bis sie entfernt wird.",
+    "Cards side by side": "Karten nebeneinander",
+    "Every 10 seconds": "Alle 10 Sekunden",
+    "Every 20 seconds": "Alle 20 Sekunden",
+    "Every minute": "Jede Minute",
+    "Group": "Gruppe",
+    "Several cards in one, a tab each: more on a small screen, and a wall that turns the pages itself.": "Mehrere Karten in einer, je ein Reiter: mehr auf kleinem Bildschirm, und eine Wand, die selbst weiterblättert.",
+    "Six": "Sechs",
+    "Tabs": "Reiter",
+    "Turn the tabs": "Reiter wechseln"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
