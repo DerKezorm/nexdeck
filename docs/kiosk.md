@@ -19,4 +19,7 @@ icons and uploaded pictures, and nothing else. Revoke it in the same menu; the d
 that the link is no longer valid.
 
 Tablets: add the link to the home screen; Fully Kiosk Browser and similar apps
-keep the screen on. The board uses the dark theme on displays.
+keep the screen on. The board uses the dark theme on displays, in the colour
+theme, accent, card style and style sheet chosen under Appearance. While a card
+is down it glows red and the background turns faintly red, so a display says
+it from across the room.

@@ -8,7 +8,7 @@ sqlalchemy==2.0.44
 pydantic==2.12.4
 pydantic-settings==2.14.2
 bcrypt==5.0.0
-pyjwt==2.14.0
+pyjwt==2.15.0
 httpx==0.28.1
 cryptography==50.0.1
 # Web Push: py-vapid signs each message for the push service (RFC 8292),

@@ -34,8 +34,8 @@ interactive documentation lives at `/api/docs` on every installation.
 | `GET /api/v1/settings/search` | The targets the bar may hand a typed word to. Every signed-in account may read them; the bar needs them on every page. |
 | `PUT /api/v1/settings/search` | Change them. Administrators only. |
 | `GET /api/v1/settings/search/suggestions` | Targets built out of the connected services. Administrators only. |
-| `GET /api/v1/settings/appearance` | The accent colour and the style sheet of the installation. Every signed-in account may read them; every page is painted with them. |
-| `PUT /api/v1/settings/appearance` | Change them. Administrators only. |
+| `GET /api/v1/settings/appearance` | The look of the installation: colour theme, accent colour, style sheet, and how cards are drawn (`card_style` glass, flat, outline or neon, `radius` 0 to 28 and `gap` 4 to 28 pixels). Every signed-in account and every kiosk display may read it; every page is painted with it. |
+| `PUT /api/v1/settings/appearance` | Change it. Administrators only. A field left out goes back to its default. |
 
 Errors come as `{"detail": {"code": "...", "message": "..."}}` with an
 English message; the interface translates known codes.
