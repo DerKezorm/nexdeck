@@ -48,7 +48,7 @@ def heat_of(graph: Any, hours: bool) -> WidgetData:
                 totals[index] += float(value)
     if hours:
         totals = [round(value / 3600, 1) for value in totals]
-    days = [[day, int(value) if not hours else value] for day, value in zip(categories, totals)]
+    days = [[day, int(value) if not hours else value] for day, value in zip(categories, totals, strict=True)]
     total = sum(value for _day, value in days)
     busiest = max(days, key=lambda pair: pair[1], default=None)
     secondary: list[dict[str, Any]] = [{"label": "Busiest day", "value": busiest[0]}] if busiest and busiest[1] else []

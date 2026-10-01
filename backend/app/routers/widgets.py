@@ -40,8 +40,8 @@ from ..services import grid, history
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
-    clean_cards,
     card_sizes,
+    clean_cards,
     place_widget,
     remove_from_layouts,
     widget_view,
