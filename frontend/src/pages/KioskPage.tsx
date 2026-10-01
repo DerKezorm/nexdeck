@@ -14,6 +14,7 @@ import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
+import { anyCardDown } from '../lib/cardStatus'
 import { useLive } from '../stores/live'
 
 function withinWindow(from: string, to: string, now: Date): boolean {
@@ -160,7 +161,7 @@ export function KioskPage() {
   const run = (widgetId: number, action: Action) => void post(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
   return (
     <div className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
-      <BackgroundLayer background={data.background} />
+      <BackgroundLayer background={data.background} alarm={anyCardDown(widgets, liveData)} />
       {/* ⚠️ Not aria-hidden. These are the only way to change page on a
           display with a touchscreen, and hiding a container that holds
           focusable buttons is explicitly not allowed: a screen reader

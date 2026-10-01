@@ -29,6 +29,7 @@ import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
+import { anyCardDown } from '../lib/cardStatus'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
@@ -462,7 +463,7 @@ export function BoardPage() {
     // edit bar takes, so the lowest card scrolls out from under it. With the
     // usual room the bar lay over that card's resize corner (issue #12).
     <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`}>
-      <BackgroundLayer background={previewBackground ?? data.background} />
+      <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       <TopBar
         boardName={data.name}
         pages={pages.map((p) => ({ id: p.id, name: p.name }))}

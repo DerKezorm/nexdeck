@@ -254,6 +254,40 @@ body {
   border-color: var(--nd-accent);
 }
 
+/* A card that is down glows, slowly, in every card style: the frame alone was
+   easy to miss on a wall across the room. A breath every few seconds, not a
+   blink. While the board is arranged it stays still, and with less motion
+   asked for it keeps the halo without the breathing. */
+.card.glass[data-status='bad']:not(.is-editing):not(.card-plain) {
+  animation: nd-down 3.2s ease-in-out infinite;
+}
+
+@keyframes nd-down {
+  0%,
+  100% {
+    box-shadow:
+      var(--nd-shadow),
+      0 0 0 1px color-mix(in srgb, var(--nd-bad) 30%, transparent),
+      0 0 18px -6px color-mix(in srgb, var(--nd-bad) 45%, transparent);
+  }
+  50% {
+    box-shadow:
+      var(--nd-shadow),
+      0 0 0 1px color-mix(in srgb, var(--nd-bad) 55%, transparent),
+      0 0 30px -4px color-mix(in srgb, var(--nd-bad) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card.glass[data-status='bad']:not(.is-editing):not(.card-plain) {
+    animation: none;
+    box-shadow:
+      var(--nd-shadow),
+      0 0 0 1px color-mix(in srgb, var(--nd-bad) 45%, transparent),
+      0 0 24px -6px color-mix(in srgb, var(--nd-bad) 50%, transparent);
+  }
+}
+
 /* Status dot with a soft halo. */
 .dot {
   display: inline-block;

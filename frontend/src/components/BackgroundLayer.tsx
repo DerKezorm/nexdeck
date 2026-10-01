@@ -1,7 +1,8 @@
 /**
  * The stage behind every board: a soft aurora by default, an uploaded image
  * with blur and dim when the board has one. Fixed, behind everything, and
- * never a network request unless the owner uploaded something.
+ * never a network request unless the owner uploaded something. It turns
+ * faintly red while a card on the board is down.
  */
 export interface Background {
   kind: string
@@ -22,7 +23,11 @@ export const BUNDLED: Record<string, string> = {
   none: 'none',
 }
 
-export function BackgroundLayer({ background }: { background?: Background }) {
+/** The red behind a board with a card down: two soft glows, like the aurora but in the colour of trouble. */
+const ALARM =
+  'radial-gradient(1100px 600px at 85% -10%, color-mix(in srgb, var(--nd-bad) 26%, transparent), transparent 60%), radial-gradient(900px 600px at 0% 110%, color-mix(in srgb, var(--nd-bad) 16%, transparent), transparent 60%)'
+
+export function BackgroundLayer({ background, alarm = false }: { background?: Background; alarm?: boolean }) {
   const kind = background?.kind ?? 'bundled'
   const blur = background?.blur ?? 18
   const dim = background?.dim ?? 45
@@ -44,6 +49,10 @@ export function BackgroundLayer({ background }: { background?: Background }) {
         <div className="absolute inset-0" style={{ background: gradient }} />
       )}
       {isImage && <div className="absolute inset-0" style={{ background: `rgba(6,9,14,${dim / 100})` }} />}
+      {/* A card on the board is red: the room turns a little red as well, so a
+          wall display says it from across the room. Faded in and out, never
+          blinking, and always there so the fade has something to run on. */}
+      <div className="absolute inset-0 transition-opacity duration-[1200ms]" style={{ opacity: alarm ? 1 : 0, background: ALARM }} data-testid="background-alarm" data-on={alarm ? 'true' : 'false'} />
       <div
         className="absolute inset-0 opacity-[0.35]"
         style={{

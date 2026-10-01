@@ -2,6 +2,7 @@ import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2 } f
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { cardStatus } from '../lib/cardStatus'
 import { safeUrl } from '../lib/safeUrl'
 
 import { tLabel } from '../i18n/texts'
@@ -35,13 +36,8 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   const failed = Boolean(data?.error)
   // With findings switched off, the card keeps its numbers and drops the alarm:
   // a Findings card next to it says what is wrong, once instead of on every card.
-  // ⚠️ Switched on, not switched off. A card that shouts by default
-  // means a board full of colour nobody reads any more; a card that is
-  // quiet until asked means the colour still means something. Cards made
-  // before this carry the old answer, written down by migration 8.
   const showFindings = widget.options?.show_findings === true
-  const reported = data?.status ?? 'unknown'
-  const status = failed ? 'bad' : !showFindings && (reported === 'warn' || reported === 'bad') ? 'ok' : reported
+  const status = cardStatus(widget, data)
   const errorCode = String(data?.meta?.code ?? '')
   const errorText = failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : ''
   // ⚠️ data?.link comes from the service, not from the operator. A
