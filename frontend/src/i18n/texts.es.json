@@ -1697,7 +1697,13 @@
     "Map": "Mapa",
     "The cluster as a picture: its nodes, and under each node the machines and containers it runs, with how each stands.": "El clúster como imagen: sus nodos y, bajo cada nodo, las máquinas y contenedores que ejecuta, con su estado.",
     "Gateway, switches and access points as a tree, each hung on the device it is plugged into, with its clients and how it stands.": "Gateway, switches y puntos de acceso como un árbol, cada uno colgado del dispositivo al que está conectado, con sus clientes y su estado.",
-    "Network map": "Mapa de red"
+    "Network map": "Mapa de red",
+    "What the hunter found missing and upgraded in Sonarr, Radarr and the other Arr apps, and when it looks next.": "Lo que el cazador buscó como ausente y mejoró en Sonarr, Radarr y las demás apps Arr, y cuándo vuelve a mirar.",
+    "NeutArr shows it on the User page, under API key.": "NeutArr la muestra en la página de usuario, en API key.",
+    "NeutArr overview": "Resumen de NeutArr",
+    "Items hunted and upgraded across every app, and how many apps are connected.": "Elementos buscados y mejorados en todas las apps, y cuántas apps están conectadas.",
+    "Hunted apps": "Apps rastreadas",
+    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Cada app en la que caza NeutArr: conectada o no, lo que encontró, sus llamadas en esta hora y cuándo vuelve a mirar."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2699,6 +2705,9 @@
     "Hours today": "Horas hoy",
     "Plays today": "Reproducciones hoy",
     "Streams": "Reproducciones",
-    "Alerts": "Alertas"
+    "Alerts": "Alertas",
+    "Hunted": "Buscados",
+    "Upgraded": "Mejorados",
+    "Apps": "Apps"
   }
 }
