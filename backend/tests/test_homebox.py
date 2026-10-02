@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 import httpx
 import pytest
@@ -37,6 +37,20 @@ GROUP = {"id": "made-up-group", "name": "Example Home", "createdAt": "2026-09-11
 @pytest.fixture
 def ctx() -> Context:
     return Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+
+
+@pytest.fixture
+def on_the_measured_day(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The card reads the day from the clock, and the router's warranty ended on 01.09.2026: from 01.10.2026
+    on it was more than 30 days ago and left the card, which turned two tests red. They now stand on TODAY."""
+    from app.adapters import homebox
+
+    class Measured(datetime):
+        @classmethod
+        def now(cls, tz=None):  # type: ignore[override]
+            return datetime(TODAY.year, TODAY.month, TODAY.day, 12, tzinfo=tz or UTC)
+
+    monkeypatch.setattr(homebox, "datetime", Measured)
 
 
 def _rows() -> list[dict[str, str]]:
@@ -92,7 +106,7 @@ def test_a_location_is_not_an_item_even_with_a_date() -> None:
 
 
 @respx.mock
-async def test_the_warranty_card_reads_the_export(ctx: Context) -> None:
+async def test_the_warranty_card_reads_the_export(ctx: Context, on_the_measured_day: None) -> None:
     export = respx.get(f"{HB}/api/v1/entities/export").mock(return_value=httpx.Response(200, text=EXPORT, headers={"Content-Type": "text/csv"}))
     data = await get_adapter("homebox").fetch("warranties", CONFIG, {"days": 3650}, ctx)
     assert export.calls.last.request.headers["Authorization"] == "Bearer hb_made_up_key"
@@ -166,7 +180,7 @@ async def test_a_wrong_password_and_a_key_on_an_old_homebox(ctx: Context) -> Non
 
 
 @respx.mock
-async def test_the_export_falls_back_to_the_old_address_and_remembers_it(ctx: Context) -> None:
+async def test_the_export_falls_back_to_the_old_address_and_remembers_it(ctx: Context, on_the_measured_day: None) -> None:
     new = respx.get(f"{HB}/api/v1/entities/export").mock(return_value=httpx.Response(404, text="404 page not found"))
     old = respx.get(f"{HB}/api/v1/items/export").mock(return_value=httpx.Response(200, text=EXPORT))
     data = await get_adapter("homebox").fetch("warranties", CONFIG, {"days": 3650}, ctx)
