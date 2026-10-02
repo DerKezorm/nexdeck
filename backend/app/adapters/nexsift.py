@@ -1,16 +1,19 @@
 """nexsift: the notification inbox of the nexapps family, read through its API keys.
 
-Written on 02.10.2026 against the code of nexsift 0.5.0, whose read API
-(``routers/api_v1.py``) is built for this card. ⚠️ Not yet measured against
-a running nexsift.
+Written against nexsift 0.5.0, whose read API (``routers/api_v1.py``) is
+built for this card, and measured against it on 02.10.2026: a fresh
+installation with a webhook source and four messages, keys switched off
+and on, with a right, a wrong and no key. The message text sent along
+came back in no answer.
 
 - A key is sent as ``Authorization: Bearer nxs_…``, never as a cookie and
   never in the address. It may read the numbers of the inbox and the titles
   of its newest lines, nothing else: no message text, no sender address, no
   token. A dashboard is often seen by guests.
 - Keys are switched off out of the box. nexsift then answers 403
-  ``api_keys_off`` for every key, a wrong key 401 ``api_key_invalid``, none
-  at all 401 ``api_key_missing``; the card tells the three apart.
+  ``api_keys_off`` for every key, a wrong one included, since the switch is
+  asked first. Switched on, a wrong key gets 401 ``api_key_invalid``; none
+  at all is always 401 ``api_key_missing``. The card tells off from wrong.
 - ``/api/v1/status`` counts lines that are neither archived nor deleted:
   unread, critical and not resolved, warnings unread, all lines, messages
   since midnight UTC, sources, targets whose last delivery failed.

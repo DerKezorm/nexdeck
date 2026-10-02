@@ -1,5 +1,5 @@
-"""nexsift 0.5.0, written from its read API (routers/api_v1.py); not yet
-measured against a running nexsift."""
+"""nexsift 0.5.0, measured on 02.10.2026 against a fresh installation: the
+shapes are the measured ones, the counts and names made up."""
 
 from __future__ import annotations
 
