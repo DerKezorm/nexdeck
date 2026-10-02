@@ -1048,6 +1048,25 @@
         "Eine Wandanzeige kann nach einer Weile ohne Berührung auf eine große Uhr wechseln.",
         "Wandanzeigen bekommen jetzt das Farbschema, die Akzentfarbe und das CSS aus „Aussehen“; bisher blieben sie im Cyan von nexdeck."
       ]
+    },
+    "0.29.1": {
+      "lead": "App-Kacheln bleiben grün, wenn der Dienst läuft, ein roter Punkt sagt, warum, und nexlore kommt aufs Board.",
+      "sections": [
+        {
+          "title": "Erreichbarkeit im Gedränge",
+          "body": "Bisher starteten alle Prüfungen einer Runde im selben Augenblick, und ein Server vor einem Dienst konnte die Verbindung in diesem Ansturm abbrechen. Die Kachel blieb dann rot, obwohl der Dienst lief. Jetzt starten die Prüfungen kurz nacheinander, und eine gescheiterte Verbindung wird eine Sekunde später noch einmal versucht, bevor die Kachel rot wird. Fährst du über einen roten Punkt, steht dort der Grund: ein abgebrochener Handschlag, eine abgelehnte Verbindung, ein unbekannter Name oder ein Zertifikat, dem nicht vertraut wird.",
+          "path": "Board > App-Kachel > der Punkt in ihrer Ecke"
+        },
+        {
+          "title": "nexlore",
+          "body": "Die Notizen aus nexlore auf dem Board: offene Aufgaben, heute fällige und überfällige, der Eingang und die Notizen insgesamt; die fälligen Aufgaben, jede mit Link auf ihre Notiz; und die zuletzt geänderten Notizen. Mit einem Token der Stufe Schreiben hakst du eine Aufgabe auf der Karte ab und schickst eine Zeile in den Eingang. Es braucht nexlore 0.4.0 und einen API-Token aus Mein Konto > Verbindungen.",
+          "path": "System > Anbindungen > Anbindung hinzufügen > nexlore"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "nexlore ist als Beta markiert, bis es in mehr als einem Zuhause gelaufen ist."
+      ]
     }
   }
 }

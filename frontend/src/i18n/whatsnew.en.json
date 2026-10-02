@@ -1048,6 +1048,25 @@
         "A wall display can rest on a large clock after a while without a touch.",
         "Wall displays are painted with the theme, accent and style sheet chosen under Appearance; they used to stay in nexdeck's own cyan."
       ]
+    },
+    "0.29.1": {
+      "lead": "App tiles stay green for a service that is up, a red dot says why, and nexlore comes to the board.",
+      "sections": [
+        {
+          "title": "Reachability checks in a busy moment",
+          "body": "Every check of a round used to start in the same instant, and a server in front of a service could break the connection off in that rush, so its tile stayed red while the service was up. The checks now start a moment apart, and a failed connection is tried once more a second later before the tile turns red. Hover a red dot and it says why: a broken-off handshake, a refused connection, a name that was not found or a certificate that is not trusted.",
+          "path": "Board > app tile > the dot in its corner"
+        },
+        {
+          "title": "nexlore",
+          "body": "The notes of nexlore on the board: open tasks, those due today and overdue, the inbox and the notes in all; the tasks that are due, each linking to its note; and the notes changed last. With a token of the level Write a task is ticked off on the card and a line goes into the inbox. It needs nexlore 0.4.0 and an API token made under My account > Connections.",
+          "path": "System > Integrations > Add an integration > nexlore"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "nexlore is marked beta until it has run in more homes than one."
+      ]
     }
   }
 }
