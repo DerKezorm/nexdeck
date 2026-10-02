@@ -3,6 +3,29 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.29.0 (2026-10-02)
+
+### New
+
+- **Showcase mode.** One switch in the account menu replaces what would give your home away with made-up names that read like real ones: addresses, host names and your own domain, people and devices in what is playing, appointments and where they are, mail senders and subjects. A camera, an embedded page and a note are blurred. Made for screenshots in forums and issues.
+- **The board as a picture.** Save board as picture puts the board at twice its size on a frame of colour with a small "made with nexdeck", with showcase mode on for the picture.
+- **Six known colour themes.** Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine, each tuned so text and states stay readable.
+- **Cards drawn four ways.** Glass, flat, outline or with a neon edge, with corners and gaps of your choice, under System > Appearance.
+- **Looks.** Seven ready-made looks set theme, cards and background in one click, and a look can be copied as text and pasted into another nexdeck.
+- **Backgrounds that move.** A drifting aurora, a starry sky and one that follows the time of day.
+- **Numbers roll and a card that is down glows.** Values count to each new reading and lines draw themselves in. A card that goes down glows red, and the room behind it turns a little red too.
+- **Tabs and groups.** A tabs card holds several cards and shows one at a time; on a wall display it can turn the tabs itself. A group is a titled box of cards side by side that folds away to one row. Removing either brings its cards back to the page. Requested in issue #25.
+- **New ways to draw.** The status page as wide strips of bars; in and out mirrored on one axis for routers, download clients and speed tests; the energy flow of evcc between solar, house, battery, grid and car; Tautulli's plays per day as squares; covers as a band that moves past, and the picture of what plays behind the card.
+- **Maps.** Proxmox as a map of nodes with the machines and containers on each, and UniFi as a map of the network, each device hung on the one it is plugged into, with its clients. The UniFi map needs the Integration API key.
+- **A wall display rests.** After a chosen time without a touch, a kiosk link shows a large clock with the date until the screen is touched again.
+- **Qui, FileBrowser Quantum, Tracearr, NeutArr and nexsift.** Qui with its qBittorrent instances, FileBrowser Quantum with the storage of each source, Tracearr with streams and flagged accounts, NeutArr (the continuation of Huntarr) with what it hunted in each Arr app and when it looks next, and nexsift with the unread, the critical and the newest lines of its inbox. All five are marked beta.
+- **CalDAV calendars.** The iCal connection now reads a CalDAV calendar too, with a user name and password, such as Nextcloud, Radicale or Baïkal.
+
+### Fixed
+
+- **Wall displays ignored the chosen look.** Kiosk links were drawn in nexdeck's own cyan whatever theme, accent or style sheet was set under Appearance. They now look like the board.
+- **Dependencies.** PyJWT 2.15.0 and DOMPurify 3.4.16. Every pinned dependency has nothing open against it.
+
 ## 0.28.2 (2026-09-30)
 
 ### Fixed

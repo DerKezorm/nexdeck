@@ -1015,6 +1015,39 @@
       "small": [
         "Gemeldet in Issue #26."
       ]
+    },
+    "0.29.0": {
+      "lead": "Ein Board, das man zeigen will: erfundene Namen für den Screenshot, ein Bild mit Rahmen, neue Farben und Darstellungen, Karten, die Karten halten, und fünf neue Dienste.",
+      "sections": [
+        {
+          "title": "Vorzeige-Modus und das Board als Bild",
+          "body": "Der Vorzeige-Modus ersetzt, was dein Zuhause verraten würde, durch erfundene Namen, die wie echte aussehen: Adressen, Hostnamen und deine eigene Domain, Personen und Geräte bei dem, was läuft, Termine und wo sie stattfinden, Absender und Betreffzeilen von Mails. Kamera, eingebettete Seite und Notiz werden weichgezeichnet. „Board als Bild speichern“ legt das Board in doppelter Größe auf einen farbigen Rahmen, fertig für ein Forum, mit Vorzeige-Modus für das Bild.",
+          "path": "Kontomenü > Vorzeige-Modus, Board als Bild speichern"
+        },
+        {
+          "title": "Farbschemata, Karten und Looks",
+          "body": "Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox und Rosé Pine kommen zu den Farbschemata. Karten gibt es als Glas, flach, Umriss oder mit Neonkante, mit Ecken und Abständen nach Wahl, und sieben fertige Looks setzen das mit einem Klick zusammen; ein Look lässt sich kopieren und in ein anderes nexdeck einfügen.",
+          "path": "System > Aussehen"
+        },
+        {
+          "title": "Reiter und Gruppen",
+          "body": "Eine Reiter-Karte hält mehrere Karten und zeigt eine nach der anderen, an der Wand auch von selbst. Eine Gruppe ist ein Kasten mit Titel, der Karten nebeneinander hält und sich auf eine Zeile zuklappen lässt. Die Karten wählst du in den Einstellungen der Gruppe; entfernst du sie, kommen die Karten zurück.",
+          "path": "Bearbeiten > Widget hinzufügen > Grundlagen > Reiter, Gruppe"
+        },
+        {
+          "title": "Neue Darstellungen",
+          "body": "Die Statusseite als breite Balkenstreifen. Rein und raus gespiegelt auf einer Achse für Router, Download-Programme und Speedtests. Der Energiefluss von evcc mit dem Strom zwischen Solar, Haus, Speicher, Netz und Auto. Tautullis Wiedergaben je Tag als Quadrate. Proxmox als Karte aus Knoten und Gästen, und UniFi als Netzkarte, jedes Gerät an dem, an dem es hängt. Cover als vorbeiziehendes Band und das Bild des Gespielten hinter der Karte.",
+          "path": "Einstellungen einer Karte > Ansicht"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Neu: Qui, FileBrowser Quantum, Tracearr, NeutArr (der Nachfolger von Huntarr) und nexsift, und CalDAV-Kalender über die iCal-Anbindung.",
+        "Hintergründe, die sich bewegen: eine fließende Aurora, ein Sternenhimmel und einer, der der Tageszeit folgt.",
+        "Zahlen zählen zum neuen Wert hoch; eine ausgefallene Karte glimmt rot, und der Raum dahinter färbt sich leicht mit.",
+        "Eine Wandanzeige kann nach einer Weile ohne Berührung auf eine große Uhr wechseln.",
+        "Wandanzeigen bekommen jetzt das Farbschema, die Akzentfarbe und das CSS aus „Aussehen“; bisher blieben sie im Cyan von nexdeck."
+      ]
     }
   }
 }

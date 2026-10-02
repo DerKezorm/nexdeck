@@ -1015,6 +1015,39 @@
       "small": [
         "Reported in issue #26."
       ]
+    },
+    "0.29.0": {
+      "lead": "A board you want to show: made-up names for the screenshot, a picture on a frame, new colours and ways to draw, cards that hold cards, and five new services.",
+      "sections": [
+        {
+          "title": "Showcase mode and the board as a picture",
+          "body": "Showcase mode replaces what would give your home away with made-up names that read like real ones: addresses, host names and your own domain, people and devices in what is playing, appointments and where they are, mail senders and subjects. A camera, an embedded page and a note are blurred. Save board as picture puts the board at twice its size on a frame of colour, ready for a forum, with showcase mode on for the picture.",
+          "path": "Account menu > Showcase mode, Save board as picture"
+        },
+        {
+          "title": "Themes, cards and looks",
+          "body": "Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine join the themes. Cards are drawn as glass, flat, outline or with a neon edge, with corners and gaps of your choice, and seven ready-made looks put it together in one click; a look can be copied and pasted into another nexdeck.",
+          "path": "System > Appearance"
+        },
+        {
+          "title": "Tabs and groups",
+          "body": "A tabs card holds several cards and shows one at a time, and on a wall it can turn the tabs itself. A group is a titled box of cards side by side that folds away to one row. Pick the cards in the holder's settings; removing it brings them back.",
+          "path": "Edit mode > Add widget > Basics > Tabs, Group"
+        },
+        {
+          "title": "New ways to draw",
+          "body": "The status page as wide strips of bars. In and out mirrored on one axis for routers, download clients and speed tests. The energy flow of evcc with the power running between solar, house, battery, grid and car. Tautulli's plays per day as squares. Proxmox as a map of nodes and guests, and UniFi as a map of the network, each device hung on the one it is plugged into. Covers as a band that moves past, and the picture of what plays behind the card.",
+          "path": "A card's settings > View"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "New: Qui, FileBrowser Quantum, Tracearr, NeutArr (the continuation of Huntarr) and nexsift, and CalDAV calendars through the iCal connection.",
+        "Backgrounds that move: a drifting aurora, a starry sky and one that follows the time of day.",
+        "Numbers roll to each new reading; a card that is down glows red, and the room behind it turns a little red.",
+        "A wall display can rest on a large clock after a while without a touch.",
+        "Wall displays are painted with the theme, accent and style sheet chosen under Appearance; they used to stay in nexdeck's own cyan."
+      ]
     }
   }
 }
