@@ -1703,7 +1703,15 @@
     "NeutArr overview": "Panoramica NeutArr",
     "Items hunted and upgraded across every app, and how many apps are connected.": "Elementi cercati e migliorati in tutte le app, e quante app sono collegate.",
     "Hunted apps": "App cacciate",
-    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Ogni app in cui NeutArr caccia: collegata o no, cosa ha trovato, le sue chiamate di quest'ora e quando guarda di nuovo."
+    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Ogni app in cui NeutArr caccia: collegata o no, cosa ha trovato, le sue chiamate di quest'ora e quando guarda di nuovo.",
+    "Critical and open": "Critiche e aperte",
+    "Inbox": "Posta in arrivo",
+    "Newest lines": "Righe più recenti",
+    "Settings > API keys in nexsift: switch on Allow API keys, then make one. It starts with nxs_ and may only read.": "Impostazioni > Chiavi API in nexsift: attiva Consenti chiavi API, poi creane una. Inizia con nxs_ e può solo leggere.",
+    "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Le righe più recenti della posta con provenienza e ora, in rosso finché critiche e aperte. Solo titoli, mai il testo.",
+    "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "La posta delle notifiche dell'homelab: cosa è non letto, cosa è critico e aperto, e le righe più recenti.",
+    "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Righe non lette, ciò che è critico e ancora aperto, avvisi, i messaggi di oggi e le destinazioni fallite.",
+    "nexsift inbox": "Posta di nexsift"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -2708,6 +2716,7 @@
     "Alerts": "Avvisi",
     "Hunted": "Cercati",
     "Upgraded": "Migliorati",
-    "Apps": "App"
+    "Apps": "App",
+    "Warnings": "Avvisi"
   }
 }

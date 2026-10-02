@@ -1703,7 +1703,15 @@
     "NeutArr overview": "Resumen de NeutArr",
     "Items hunted and upgraded across every app, and how many apps are connected.": "Elementos buscados y mejorados en todas las apps, y cuántas apps están conectadas.",
     "Hunted apps": "Apps rastreadas",
-    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Cada app en la que caza NeutArr: conectada o no, lo que encontró, sus llamadas en esta hora y cuándo vuelve a mirar."
+    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Cada app en la que caza NeutArr: conectada o no, lo que encontró, sus llamadas en esta hora y cuándo vuelve a mirar.",
+    "Critical and open": "Críticas y abiertas",
+    "Inbox": "Bandeja de entrada",
+    "Newest lines": "Líneas más recientes",
+    "Settings > API keys in nexsift: switch on Allow API keys, then make one. It starts with nxs_ and may only read.": "Ajustes > Claves API en nexsift: activa Permitir claves API y crea una. Empieza por nxs_ y solo puede leer.",
+    "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Las líneas más recientes de la bandeja con su origen y hora, en rojo mientras sean críticas y abiertas. Solo títulos, nunca el texto.",
+    "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "La bandeja de notificaciones del homelab: lo no leído, lo crítico y abierto, y las líneas más recientes.",
+    "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Líneas no leídas, lo crítico aún abierto, avisos, los mensajes de hoy y los destinos que fallaron.",
+    "nexsift inbox": "Bandeja de nexsift"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2708,6 +2716,7 @@
     "Alerts": "Alertas",
     "Hunted": "Buscados",
     "Upgraded": "Mejorados",
-    "Apps": "Apps"
+    "Apps": "Apps",
+    "Warnings": "Avisos"
   }
 }

@@ -156,6 +156,8 @@ function Thanks() {
             <Out href="https://github.com/DerKezorm/nexbeat">nexbeat</Out>
             {' · '}
             <Out href="https://nextrmnl.nexapps.dev">nextrmnl</Out>
+            {' · '}
+            <Out href="https://github.com/DerKezorm/nexsift">nexsift</Out>
             <span className="mt-0.5 block text-xs leading-relaxed text-muted">{t('about.familyNote')}</span>
           </p>
         </div>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexsift">
+  <defs>
+    <linearGradient id="nexsift-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
+      <stop offset="0" stop-color="#fafafa"/>
+      <stop offset=".5" stop-color="#d4d4d8"/>
+      <stop offset="1" stop-color="#71717a"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#111114"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexsift-g)" stroke-width="2.5" stroke-opacity=".55"/>
+  <path d="M15 17h34L36.5 32v10L27.5 47V32Z" fill="none" stroke="url(#nexsift-g)" stroke-width="4.5" stroke-linejoin="round"/>
+  <circle cx="44" cy="46" r="3" fill="#d4d4d8"/>
+</svg>

@@ -1703,7 +1703,15 @@
     "NeutArr overview": "NeutArr-Übersicht",
     "Items hunted and upgraded across every app, and how many apps are connected.": "Gesuchte und verbesserte Titel über alle Apps, und wie viele Apps verbunden sind.",
     "Hunted apps": "Durchsuchte Apps",
-    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Jede App, in der NeutArr sucht: verbunden oder nicht, was es gefunden hat, seine Abrufe in dieser Stunde und wann es wieder nachsieht."
+    "Each app NeutArr hunts in: connected or not, what it found, its calls this hour and when it looks next.": "Jede App, in der NeutArr sucht: verbunden oder nicht, was es gefunden hat, seine Abrufe in dieser Stunde und wann es wieder nachsieht.",
+    "Critical and open": "Kritisch und offen",
+    "Inbox": "Posteingang",
+    "Newest lines": "Neueste Zeilen",
+    "Settings > API keys in nexsift: switch on Allow API keys, then make one. It starts with nxs_ and may only read.": "Einstellungen > API-Schlüssel in nexsift: „API-Schlüssel erlauben“ einschalten, dann einen anlegen. Er beginnt mit nxs_ und darf nur lesen.",
+    "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Die neuesten Zeilen des Posteingangs mit Herkunft und Zeit, rot solange kritisch und offen. Nur Titel, nie der Text.",
+    "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "Der Benachrichtigungs-Posteingang des Homelabs: was ungelesen ist, was kritisch und offen ist, und die neuesten Zeilen.",
+    "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Ungelesene Zeilen, was kritisch und noch offen ist, Warnungen, die Meldungen von heute und Ziele, die gescheitert sind.",
+    "nexsift inbox": "nexsift-Posteingang"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2708,6 +2716,7 @@
     "Alerts": "Warnungen",
     "Hunted": "Gesucht",
     "Upgraded": "Verbessert",
-    "Apps": "Apps"
+    "Apps": "Apps",
+    "Warnings": "Warnungen"
   }
 }
