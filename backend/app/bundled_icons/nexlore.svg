@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexlore">
+  <defs>
+    <linearGradient id="nexlore-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
+      <stop offset="0" stop-color="#ccfbf1"/>
+      <stop offset=".5" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0a1514"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexlore-g)" stroke-width="2.5" stroke-opacity=".55"/>
+  <path d="M20 42 32 22l12 20M20 42h24" fill="none" stroke="url(#nexlore-g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".7"/>
+  <circle cx="32" cy="22" r="5.5" fill="#2dd4bf"/>
+  <circle cx="20" cy="42" r="4.5" fill="url(#nexlore-g)"/>
+  <circle cx="44" cy="42" r="4.5" fill="url(#nexlore-g)"/>
+</svg>

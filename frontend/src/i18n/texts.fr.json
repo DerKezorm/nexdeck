@@ -1711,7 +1711,18 @@
     "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Les lignes les plus récentes de la boîte avec leur origine et l'heure, en rouge tant qu'elles sont critiques et ouvertes. Titres seulement, jamais le texte.",
     "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "La boîte de notifications du homelab : le non lu, le critique et ouvert, et les lignes les plus récentes.",
     "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Lignes non lues, le critique encore ouvert, avertissements, les messages du jour et les cibles en échec.",
-    "nexsift inbox": "Boîte nexsift"
+    "nexsift inbox": "Boîte nexsift",
+    "Notes and tasks of nexlore: what is due, what changed last, and a line into the inbox.": "Notes et tâches de nexlore : ce qui est dû, ce qui a changé en dernier, et une ligne dans la boîte de réception.",
+    "My account > Connections > API tokens in nexlore; it starts with nxa_. Read fills the cards, Write also ticks tasks off and captures.": "Mon compte > Connexions > Jetons d'API dans nexlore ; il commence par nxa_. Lecture remplit les cartes, Écriture coche aussi les tâches et capture.",
+    "nexlore overview": "Aperçu nexlore",
+    "Open tasks, those due today and overdue, what waits in the inbox, and the notes in all. With a write token, a line goes into the inbox from here.": "Tâches ouvertes, celles dues aujourd'hui et en retard, ce qui attend dans la boîte de réception, et les notes au total. Avec un jeton d'écriture, une ligne part d'ici dans la boîte.",
+    "The tasks that are due, the overdue first, each with its note. With a write token, a tap ticks one off.": "Les tâches dues, les retards d'abord, chacune avec sa note. Avec un jeton d'écriture, une touche en coche une.",
+    "Changed last": "Modifiées en dernier",
+    "The notes changed last, newest first, each opening in nexlore.": "Les notes modifiées en dernier, la plus récente d'abord, chacune s'ouvre dans nexlore.",
+    "Overdue and today": "En retard et aujourd'hui",
+    "Due this week": "Dues cette semaine",
+    "All open": "Toutes les ouvertes",
+    "Capture": "Capturer"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -2717,6 +2728,9 @@
     "Hunted": "Cherchés",
     "Upgraded": "Améliorés",
     "Apps": "Apps",
-    "Warnings": "Avertissements"
+    "Warnings": "Avertissements",
+    "Open tasks": "Tâches ouvertes",
+    "Notes": "Notes",
+    "Into the inbox": "Dans la boîte de réception"
   }
 }

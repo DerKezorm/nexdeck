@@ -1711,7 +1711,18 @@
     "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Las líneas más recientes de la bandeja con su origen y hora, en rojo mientras sean críticas y abiertas. Solo títulos, nunca el texto.",
     "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "La bandeja de notificaciones del homelab: lo no leído, lo crítico y abierto, y las líneas más recientes.",
     "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Líneas no leídas, lo crítico aún abierto, avisos, los mensajes de hoy y los destinos que fallaron.",
-    "nexsift inbox": "Bandeja de nexsift"
+    "nexsift inbox": "Bandeja de nexsift",
+    "Notes and tasks of nexlore: what is due, what changed last, and a line into the inbox.": "Notas y tareas de nexlore: lo que vence, lo último que cambió y una línea a la bandeja de entrada.",
+    "My account > Connections > API tokens in nexlore; it starts with nxa_. Read fills the cards, Write also ticks tasks off and captures.": "Mi cuenta > Conexiones > Tokens de API en nexlore; empieza por nxa_. Leer llena las tarjetas, Escribir también marca tareas y captura.",
+    "nexlore overview": "Resumen de nexlore",
+    "Open tasks, those due today and overdue, what waits in the inbox, and the notes in all. With a write token, a line goes into the inbox from here.": "Tareas abiertas, las que vencen hoy y las atrasadas, lo que espera en la bandeja de entrada y las notas en total. Con un token de escritura, desde aquí va una línea a la bandeja.",
+    "The tasks that are due, the overdue first, each with its note. With a write token, a tap ticks one off.": "Las tareas que vencen, primero las atrasadas, cada una con su nota. Con un token de escritura, un toque la marca como hecha.",
+    "Changed last": "Cambiadas por última vez",
+    "The notes changed last, newest first, each opening in nexlore.": "Las notas cambiadas por última vez, la más reciente primero, cada una se abre en nexlore.",
+    "Overdue and today": "Atrasadas y hoy",
+    "Due this week": "Vencen esta semana",
+    "All open": "Todas las abiertas",
+    "Capture": "Capturar"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2717,6 +2728,9 @@
     "Hunted": "Buscados",
     "Upgraded": "Mejorados",
     "Apps": "Apps",
-    "Warnings": "Avisos"
+    "Warnings": "Avisos",
+    "Open tasks": "Tareas abiertas",
+    "Notes": "Notas",
+    "Into the inbox": "A la bandeja de entrada"
   }
 }

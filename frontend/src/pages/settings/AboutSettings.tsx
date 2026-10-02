@@ -158,6 +158,8 @@ function Thanks() {
             <Out href="https://nextrmnl.nexapps.dev">nextrmnl</Out>
             {' · '}
             <Out href="https://github.com/DerKezorm/nexsift">nexsift</Out>
+            {' · '}
+            <Out href="https://www.nexlore.de">nexlore</Out>
             <span className="mt-0.5 block text-xs leading-relaxed text-muted">{t('about.familyNote')}</span>
           </p>
         </div>

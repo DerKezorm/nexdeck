@@ -54,6 +54,7 @@ that one of twenty-one renderers draws.
 | nextrmnl | status, sessions, history, connections | | read-only API key from nextrmnl 0.3.0 or newer, with API keys switched on |
 | nexpulse | latest result (a running test live, a button to start one), history (speed or ping idle and under load), period summary, recent tests, latency under load (graded A+ to F) | | API key from nexpulse under Settings > API keys; a key that may only read fills every card, one with "Read and start tests" adds the button. nexpulse 0.1.1 or newer tells nexdeck which kind of key it is; on 0.1.0 the button is always shown |
 | nexsift | nexsift inbox, newest lines | | an API key from Settings > API keys, after switching on Allow API keys; it may only read numbers and titles, never the text of a message |
+| nexlore | nexlore overview, tasks, changed last | tick a task off, capture a line into the inbox | an API token from My account > Connections > API tokens, after the operator has switched API tokens on; Read fills the cards, Write also ticks off and captures |
 | Traefik | overview, routers | | none, or basic authentication |
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
 | OPNsense | system, gateways | | API key and secret |

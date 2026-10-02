@@ -1711,7 +1711,18 @@
     "The newest lines of the inbox with where they came from and when, red while critical and open. Titles only, never the text.": "Die neuesten Zeilen des Posteingangs mit Herkunft und Zeit, rot solange kritisch und offen. Nur Titel, nie der Text.",
     "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "Der Benachrichtigungs-Posteingang des Homelabs: was ungelesen ist, was kritisch und offen ist, und die neuesten Zeilen.",
     "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Ungelesene Zeilen, was kritisch und noch offen ist, Warnungen, die Meldungen von heute und Ziele, die gescheitert sind.",
-    "nexsift inbox": "nexsift-Posteingang"
+    "nexsift inbox": "nexsift-Posteingang",
+    "Notes and tasks of nexlore: what is due, what changed last, and a line into the inbox.": "Notizen und Aufgaben aus nexlore: was fällig ist, was zuletzt geändert wurde, und eine Zeile in den Eingang.",
+    "My account > Connections > API tokens in nexlore; it starts with nxa_. Read fills the cards, Write also ticks tasks off and captures.": "Mein Konto > Verbindungen > API-Token in nexlore; er beginnt mit nxa_. Lesen füllt die Karten, Schreiben hakt auch Aufgaben ab und erfasst.",
+    "nexlore overview": "nexlore-Übersicht",
+    "Open tasks, those due today and overdue, what waits in the inbox, and the notes in all. With a write token, a line goes into the inbox from here.": "Offene Aufgaben, heute fällige und überfällige, was im Eingang wartet, und die Notizen insgesamt. Mit einem Schreib-Token geht von hier eine Zeile in den Eingang.",
+    "The tasks that are due, the overdue first, each with its note. With a write token, a tap ticks one off.": "Die fälligen Aufgaben, die überfälligen zuerst, jede mit ihrer Notiz. Mit einem Schreib-Token hakt ein Tippen eine ab.",
+    "Changed last": "Zuletzt geändert",
+    "The notes changed last, newest first, each opening in nexlore.": "Die zuletzt geänderten Notizen, die neueste zuerst, jede öffnet sich in nexlore.",
+    "Overdue and today": "Überfällig und heute",
+    "Due this week": "Fällig diese Woche",
+    "All open": "Alle offenen",
+    "Capture": "Erfassen"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2717,6 +2728,9 @@
     "Hunted": "Gesucht",
     "Upgraded": "Verbessert",
     "Apps": "Apps",
-    "Warnings": "Warnungen"
+    "Warnings": "Warnungen",
+    "Open tasks": "Offene Aufgaben",
+    "Notes": "Notizen",
+    "Into the inbox": "In den Eingang"
   }
 }
