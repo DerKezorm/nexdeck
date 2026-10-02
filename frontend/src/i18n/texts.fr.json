@@ -2731,6 +2731,12 @@
     "Warnings": "Avertissements",
     "Open tasks": "Tâches ouvertes",
     "Notes": "Notes",
-    "Into the inbox": "Dans la boîte de réception"
+    "Into the inbox": "Dans la boîte de réception",
+    "The certificate is not trusted.": "Le certificat n'est pas reconnu.",
+    "The TLS handshake was broken off.": "La négociation TLS a été interrompue.",
+    "The name was not found.": "Le nom est introuvable.",
+    "The connection was refused.": "La connexion a été refusée.",
+    "The host cannot be reached.": "L'hôte est injoignable.",
+    "No answer in time.": "Pas de réponse à temps."
   }
 }

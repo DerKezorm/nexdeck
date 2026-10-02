@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **nexlore.** The notes of nexlore on the board, through its API tokens (nexlore 0.4.0 or newer): an overview with the open tasks, those due today and overdue, the inbox and the notes in all; the tasks that are due, the overdue first, each linking to its note; and the notes changed last. With a token of the level Write a task is ticked off on the card and a line goes into the inbox; a read token gets neither button. Marked beta.
+
+### Fixed
+
+- **An app tile turned red for a service that was up.** Every reachability check of a round started in the same instant, up to sixteen at once, and a server in front of a service could break the TLS handshake off in that burst, round after round. The checks of a round now start a moment apart, a failure to connect is tried once more a second later before the tile turns red, and the dot says why a check failed, such as a broken-off handshake, a refused connection or an untrusted certificate, where it used to say only ConnectError.
+
 ## 0.29.0 (2026-10-02)
 
 ### New

@@ -8,8 +8,11 @@ threshold an outage is opened and announced, and the recovery closes it.
 from __future__ import annotations
 
 import asyncio
+import errno
 import logging
 import platform
+import socket
+import ssl
 import time
 from datetime import datetime
 from urllib.parse import urlsplit
@@ -29,6 +32,19 @@ logger = logging.getLogger("nexdeck.health")
 
 WAKE_SECONDS = 5
 PARALLEL = 16
+#: Between the starts of two checks of one round.
+#:
+#: ⚠️ Every check of a round used to start in the same instant, sixteen at
+#: once. Measured on 02.10.2026 on a Synology with 27 HTTP checks: 26 went to
+#: the home address, one (Home Assistant) to a server outside, and that server
+#: broke the TLS handshake off in the burst (``SSLEOFError``), four rounds out
+#: of four, while the same check alone, first, or one second later answered
+#: four times out of four. The tile stayed red for a service that was up.
+#: Spread like this, a round of thirty checks takes six seconds of its minute.
+STAGGER_SECONDS = 0.2
+#: After a failure to connect, one more try this much later before a check
+#: counts as down: a connection refused once in a busy moment is not an outage.
+RETRY_SECONDS = 1.0
 
 
 _clients: dict[bool, httpx.AsyncClient] = {}
@@ -56,19 +72,60 @@ async def check_http(target: str, timeout: float, expect_status: int, insecure: 
         guard_member_target(target)
     except AdapterError as barred:
         return False, 0, barred.message
-    started = time.perf_counter()
-    try:
-        response = await http_client(insecure).get(target, timeout=timeout)
-    except AdapterError as barred:
-        return False, int((time.perf_counter() - started) * 1000), barred.message
-    except httpx.HTTPError as error:
-        return False, int((time.perf_counter() - started) * 1000), error.__class__.__name__
+    for attempt in (1, 2):
+        started = time.perf_counter()
+        try:
+            response = await http_client(insecure).get(target, timeout=timeout)
+        except AdapterError as barred:
+            return False, int((time.perf_counter() - started) * 1000), barred.message
+        except httpx.ConnectError as error:
+            if attempt == 1:
+                await asyncio.sleep(RETRY_SECONDS)
+                continue
+            return False, int((time.perf_counter() - started) * 1000), reason(error)
+        except httpx.HTTPError as error:
+            return False, int((time.perf_counter() - started) * 1000), reason(error)
+        break
     latency = int((time.perf_counter() - started) * 1000)
     if expect_status:
         return response.status_code == expect_status, latency, f"HTTP {response.status_code}"
     # Anything the server answered with, short of a server error, counts as
     # reachable: 401 from a login page still proves the service is up.
     return response.status_code < 500, latency, f"HTTP {response.status_code}"
+
+
+def reason(error: BaseException) -> str:
+    """Why a request failed, in words a person can act on.
+
+    ⚠️ The check used to keep only the class name, ``ConnectError``, which is
+    the same for a refused port, a name nobody knows, a certificate nobody
+    trusts and a handshake the other side broke off. On 02.10.2026 that cost an
+    hour of looking in the wrong place: the cause sat three exceptions down.
+    """
+    chain: list[BaseException] = []
+    waiting: list[BaseException] = [error]
+    # Both links, and each exception once: httpx wraps httpcore, which wraps
+    # anyio, which wraps ssl, some with ``from`` and some without.
+    while waiting and len(chain) < 12:
+        current = waiting.pop(0)
+        if any(current is seen for seen in chain):
+            continue
+        chain.append(current)
+        waiting.extend(link for link in (current.__cause__, current.__context__) if link is not None)
+    for cause in chain:
+        if isinstance(cause, ssl.SSLCertVerificationError):
+            return "The certificate is not trusted."
+        if isinstance(cause, ssl.SSLError):
+            return "The TLS handshake was broken off."
+        if isinstance(cause, socket.gaierror):
+            return "The name was not found."
+        if isinstance(cause, ConnectionRefusedError):
+            return "The connection was refused."
+        if isinstance(cause, OSError) and cause.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
+            return "The host cannot be reached."
+    if isinstance(error, httpx.TimeoutException):
+        return "No answer in time."
+    return error.__class__.__name__
 
 
 async def check_tcp(target: str, timeout: float) -> tuple[bool, int, str]:
@@ -225,8 +282,9 @@ class HealthService:
             return
         semaphore = asyncio.Semaphore(PARALLEL)
 
-        async def one(row: tuple) -> None:
+        async def one(row: tuple, place: int) -> None:
             check_id, kind, target, timeout, expect, insecure, interval = row
+            await asyncio.sleep(place * STAGGER_SECONDS)
             async with semaphore:
                 probe = HealthCheck(id=check_id, kind=kind, target=target, timeout_seconds=timeout,
                                     expect_status=expect, insecure=insecure)
@@ -243,7 +301,7 @@ class HealthService:
             # which is only safe on the loop they belong to.
             self._announce(await asyncio.to_thread(self._write, check_id, ok, latency, detail))
 
-        await asyncio.gather(*(one(row) for row in snapshot))
+        await asyncio.gather(*(one(row, place) for place, row in enumerate(snapshot)))
 
     def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]:
         """Unknown, not down: no result, no outage, no message."""

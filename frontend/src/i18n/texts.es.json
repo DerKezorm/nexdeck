@@ -2731,6 +2731,12 @@
     "Warnings": "Avisos",
     "Open tasks": "Tareas abiertas",
     "Notes": "Notas",
-    "Into the inbox": "A la bandeja de entrada"
+    "Into the inbox": "A la bandeja de entrada",
+    "The certificate is not trusted.": "No se confía en el certificado.",
+    "The TLS handshake was broken off.": "Se interrumpió el saludo TLS.",
+    "The name was not found.": "No se encontró el nombre.",
+    "The connection was refused.": "Se rechazó la conexión.",
+    "The host cannot be reached.": "No se puede llegar al equipo.",
+    "No answer in time.": "Sin respuesta a tiempo."
   }
 }
