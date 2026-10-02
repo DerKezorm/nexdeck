@@ -48,7 +48,7 @@ that one of twenty-one renderers draws.
 | Zabbix | problems, open problems | acknowledge | API token of a user with read access to the host groups; the plain User role may acknowledge |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |
 | AdGuard Home | summary, top blocked | pause 5 min, enable | user and password |
-| UniFi Network | network, console, devices, findings, wlans | | API key (Network 9.0+), or a local account without two-factor |
+| UniFi Network | network, console, devices, network map, findings, wlans | | API key (Network 9.0+), or a local account without two-factor; the network map needs the key |
 | Speedtest Tracker | latest, history | | API token |
 | Public IP address | address | | none (ipify or ipwho.is) |
 | nextrmnl | status, sessions, history, connections | | read-only API key from nextrmnl 0.3.0 or newer, with API keys switched on |

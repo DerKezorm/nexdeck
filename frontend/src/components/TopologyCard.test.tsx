@@ -39,3 +39,27 @@ describe('the map', () => {
     expect(map.querySelectorAll('.nd-topology-run')).toHaveLength(5)
   })
 })
+
+describe('a deep network', () => {
+  it('hangs every level under its own parent, however deep', () => {
+    const chain: Place[] = [
+      { id: 'gw', name: 'gateway', parent: null, status: 'ok' },
+      { id: 'core', name: 'core', parent: 'gw', status: 'ok' },
+      { id: 'rack', name: 'rack', parent: 'core', status: 'ok' },
+      { id: 'ap1', name: 'ap 1', parent: 'core', status: 'ok' },
+      { id: 'garden', name: 'garden', parent: 'rack', status: 'bad' },
+    ]
+    const { boxes } = layout(chain)
+    const at = (id: string) => boxes.find((box) => box.place.id === id)!
+    expect(boxes).toHaveLength(5)
+    expect(at('garden').y).toBeGreaterThan(at('rack').y)
+    expect(at('rack').y).toBeGreaterThan(at('core').y)
+    expect(at('core').y).toBeGreaterThan(at('gw').y)
+  })
+
+  it('draws a place whose parent is unknown as a root rather than losing it', () => {
+    const { boxes } = layout([{ id: 'x', name: 'x', parent: 'elsewhere' }, { id: 'y', name: 'y', parent: null }])
+    expect(boxes.map((box) => box.place.id).sort()).toEqual(['x', 'y'])
+  })
+})
+

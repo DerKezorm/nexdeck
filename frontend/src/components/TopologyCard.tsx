@@ -27,48 +27,86 @@ export interface Box {
   level: number
 }
 
-const WIDTH = 640
-const ROOT_H = 34
+const BOX_W = 150
+const BOX_H = 34
 const ROW_GAP = 30
 const LEAF_W = 112
 const LEAF_H = 30
-const LEAF_GAP = 8
+const GAP = 10
+/** Leaves of one place go into a grid of up to this many columns once there are more of them than that. */
+const GRID = 3
+
+interface Shape {
+  width: number
+}
 
 /**
- * Where every place stands: the root on top, the next level spread across
- * the width, and the places under each of those in a grid of up to three
- * columns beneath it. Deeper levels are laid out as leaves of their parent.
+ * Where every place stands, for a tree of any depth: each place above its
+ * children, each subtree as wide as its children side by side, and a place
+ * whose children are all leaves, more than three of them, with those leaves
+ * in a grid of three under it, which keeps a node with twenty machines from
+ * spreading across the whole card. A place whose parent is missing is a root.
  */
-export function layout(places: Place[]): { boxes: Box[]; height: number } {
+export function layout(places: Place[]): { boxes: Box[]; height: number; width: number } {
   const known = new Set(places.map((place) => place.id))
-  const roots = places.filter((place) => !place.parent || !known.has(place.parent))
-  const childrenOf = (id: string) => places.filter((place) => place.parent === id)
+  const children = new Map<string, Place[]>()
+  for (const place of places) {
+    if (place.parent && known.has(place.parent) && place.parent !== place.id) children.set(place.parent, [...(children.get(place.parent) ?? []), place])
+  }
+  const roots = places.filter((place) => !place.parent || !known.has(place.parent) || place.parent === place.id)
+  const kids = (id: string) => children.get(id) ?? []
+  const leafy = (id: string) => kids(id).length > GRID && kids(id).every((child) => !kids(child.id).length)
+  const shapes = new Map<string, Shape>()
+  const seen = new Set<string>()
+  const measure = (place: Place): number => {
+    if (seen.has(place.id)) return BOX_W
+    seen.add(place.id)
+    const own = kids(place.id).length ? BOX_W : LEAF_W
+    let width = own
+    if (leafy(place.id)) width = Math.max(own, GRID * LEAF_W + (GRID - 1) * GAP)
+    else if (kids(place.id).length) width = Math.max(own, kids(place.id).reduce((sum, child) => sum + measure(child), 0) + (kids(place.id).length - 1) * GAP)
+    shapes.set(place.id, { width })
+    return width
+  }
   const boxes: Box[] = []
-  if (!roots.length) return { boxes, height: 0 }
-  const rootW = 150
-  roots.forEach((root, index) => boxes.push({ place: root, x: (WIDTH / (roots.length + 1)) * (index + 1) - rootW / 2, y: 0, w: rootW, h: ROOT_H, level: 0 }))
-  const middle = roots.flatMap((root) => childrenOf(root.id))
-  if (!middle.length) return { boxes, height: ROOT_H }
-  const slot = WIDTH / middle.length
-  const midY = ROOT_H + ROW_GAP
-  const midW = Math.min(150, slot - 12)
-  let bottom = midY + ROOT_H
-  middle.forEach((place, index) => {
-    const centre = slot * index + slot / 2
-    boxes.push({ place, x: centre - midW / 2, y: midY, w: midW, h: ROOT_H, level: 1 })
-    const leaves = childrenOf(place.id)
-    const columns = Math.max(1, Math.min(3, Math.floor((slot - 8) / (LEAF_W + LEAF_GAP)), leaves.length))
-    const leafW = Math.min(LEAF_W, (slot - 8 - (columns - 1) * LEAF_GAP) / columns)
-    const span = columns * leafW + (columns - 1) * LEAF_GAP
-    leaves.forEach((leaf, n) => {
-      const column = n % columns
-      const row = Math.floor(n / columns)
-      const y = midY + ROOT_H + ROW_GAP + row * (LEAF_H + LEAF_GAP)
-      boxes.push({ place: leaf, x: centre - span / 2 + column * (leafW + LEAF_GAP), y, w: leafW, h: LEAF_H, level: 2 })
-      bottom = Math.max(bottom, y + LEAF_H)
-    })
-  })
-  return { boxes, height: bottom }
+  let height = 0
+  const placed = new Set<string>()
+  const put = (place: Place, left: number, y: number, level: number) => {
+    if (placed.has(place.id)) return
+    placed.add(place.id)
+    const span = shapes.get(place.id)?.width ?? BOX_W
+    const leaf = !kids(place.id).length
+    const w = leaf ? LEAF_W : BOX_W
+    const h = leaf ? LEAF_H : BOX_H
+    boxes.push({ place, x: left + span / 2 - w / 2, y, w, h, level })
+    height = Math.max(height, y + h)
+    const below = y + h + ROW_GAP
+    if (leafy(place.id)) {
+      const columns = Math.min(GRID, kids(place.id).length)
+      const grid = columns * LEAF_W + (columns - 1) * GAP
+      kids(place.id).forEach((child, index) => {
+        const row = Math.floor(index / columns)
+        const x = left + span / 2 - grid / 2 + (index % columns) * (LEAF_W + GAP)
+        const top = below + row * (LEAF_H + GAP)
+        placed.add(child.id)
+        boxes.push({ place: child, x, y: top, w: LEAF_W, h: LEAF_H, level: level + 1 })
+        height = Math.max(height, top + LEAF_H)
+      })
+      return
+    }
+    let cursor = left + (span - (kids(place.id).reduce((sum, child) => sum + (shapes.get(child.id)?.width ?? BOX_W), 0) + (kids(place.id).length - 1) * GAP)) / 2
+    for (const child of kids(place.id)) {
+      put(child, cursor, below, level + 1)
+      cursor += (shapes.get(child.id)?.width ?? BOX_W) + GAP
+    }
+  }
+  let left = 0
+  for (const root of roots) {
+    const width = measure(root)
+    put(root, left, 0, 0)
+    left += width + GAP * 2
+  }
+  return { boxes, height, width: Math.max(left - GAP * 2, BOX_W) }
 }
 
 const COLOUR: Record<string, string> = { ok: 'var(--nd-ok)', warn: 'var(--nd-warn)', bad: 'var(--nd-bad)' }
@@ -77,20 +115,20 @@ export function TopologyCard({ data }: { data: WidgetData | undefined }) {
   const { t } = useTranslation()
   const disguise = useDisguise()
   const places = ((data?.meta?.topology as { places?: Place[] } | undefined)?.places ?? []).filter((place) => place && typeof place.id === 'string')
-  const { boxes, height } = layout(places)
+  const { boxes, height, width } = layout(places)
   if (!boxes.length) return <div className="flex-1 flex items-center justify-center text-xs text-faint">{t('card.collecting')}</div>
   const byId = new Map(boxes.map((box) => [box.place.id, box]))
   return (
     <div className="flex-1 min-h-0 px-2 pb-2">
-      <svg viewBox={`-4 -4 ${WIDTH + 8} ${height + 8}`} className="w-full h-full" role="img" aria-label={t('card.topology')} data-testid="topology">
+      <svg viewBox={`-4 -4 ${width + 8} ${height + 8}`} className="w-full h-full" role="img" aria-label={t('card.topology')} data-testid="topology">
         {boxes.map((box) => {
           const parent = box.place.parent ? byId.get(box.place.parent) : undefined
           if (!parent) return null
           const from = { x: parent.x + parent.w / 2, y: parent.y + parent.h }
           const to = { x: box.x + box.w / 2, y: box.y }
           const bend = (from.y + to.y) / 2
-          // Leaves of one parent share a trunk: down from the parent, across, and down into each.
-          const d = box.level === 2 ? `M${from.x} ${from.y} V${parent.y + parent.h + ROW_GAP / 2} H${to.x} V${to.y}` : `M${from.x} ${from.y} C${from.x} ${bend}, ${to.x} ${bend}, ${to.x} ${to.y}`
+          // Children share a trunk: down from the parent, across, and down into each.
+          const d = box.h === LEAF_H ? `M${from.x} ${from.y} V${parent.y + parent.h + ROW_GAP / 2} H${to.x} V${to.y}` : `M${from.x} ${from.y} C${from.x} ${bend}, ${to.x} ${bend}, ${to.x} ${to.y}`
           const live = box.place.status === 'ok'
           return (
             <g key={`line-${box.place.id}`}>
@@ -101,7 +139,7 @@ export function TopologyCard({ data }: { data: WidgetData | undefined }) {
         })}
         {boxes.map((box) => {
           const colour = COLOUR[box.place.status ?? ''] ?? 'var(--nd-unknown)'
-          const small = box.level === 2
+          const small = box.h === LEAF_H
           return (
             <g key={box.place.id} data-status={box.place.status ?? 'unknown'}>
               <rect x={box.x} y={box.y} width={box.w} height={box.h} rx="8" fill="color-mix(in srgb, var(--nd-text) 6%, var(--nd-bg))" stroke={box.place.status === 'bad' ? 'var(--nd-bad)' : 'var(--nd-border-strong)'} />

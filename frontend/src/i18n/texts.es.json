@@ -1695,7 +1695,9 @@
     "Violations": "Infracciones",
     "What Tracearr flagged and nobody has looked at yet: shared accounts, too many streams, far-apart places.": "Lo que Tracearr marcó y nadie ha revisado aún: cuentas compartidas, demasiadas reproducciones, lugares muy distantes.",
     "Map": "Mapa",
-    "The cluster as a picture: its nodes, and under each node the machines and containers it runs, with how each stands.": "El clúster como imagen: sus nodos y, bajo cada nodo, las máquinas y contenedores que ejecuta, con su estado."
+    "The cluster as a picture: its nodes, and under each node the machines and containers it runs, with how each stands.": "El clúster como imagen: sus nodos y, bajo cada nodo, las máquinas y contenedores que ejecuta, con su estado.",
+    "Gateway, switches and access points as a tree, each hung on the device it is plugged into, with its clients and how it stands.": "Gateway, switches y puntos de acceso como un árbol, cada uno colgado del dispositivo al que está conectado, con sus clientes y su estado.",
+    "Network map": "Mapa de red"
   },
   "labels": {
     "Private resources": "Recursos privados",

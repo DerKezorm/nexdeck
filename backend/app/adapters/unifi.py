@@ -103,6 +103,7 @@ class UnifiAdapter(Adapter):
         WidgetType(kind="summary", label="Network", description="Clients, devices and WAN throughput.", renderer="stats", default_size=(3, 3), refresh_seconds=30, metrics=("clients", "wan_down", "wan_up")),
         WidgetType(kind="console", label="Console", description="The console at a glance: gateway, uptime, versions, firmware state, device and client counts, WAN throughput.", renderer="list", default_size=(3, 3), refresh_seconds=60, metrics=("wan_down", "wan_up")),
         WidgetType(kind="devices", label="Devices", description="Access points, switches and gateways with state and load.", renderer="list", default_size=(3, 3), refresh_seconds=60),
+        WidgetType(kind="map", label="Network map", description="Gateway, switches and access points as a tree, each hung on the device it is plugged into, with its clients and how it stands.", renderer="topology", default_size=(6, 4), refresh_seconds=120),
         WidgetType(kind="findings", label="Findings", description="Does the console run, and what is wrong: offline devices, odd device states, firmware updates, a strained gateway.", renderer="list", default_size=(3, 2), refresh_seconds=60),
         WidgetType(
             kind="switch", label="Switch", renderer="list", default_size=(3, 4), refresh_seconds=60,
@@ -252,6 +253,30 @@ class UnifiAdapter(Adapter):
                 return label
         return "Device"
 
+    async def _map_api(self, config: dict[str, Any], ctx: Context, site_id: str, devices: list[dict[str, Any]]) -> WidgetData:
+        """The devices as a tree, each hung on the device it uplinks to.
+
+        Measured on 01.10.2026 against a console of 24 devices (Network 9):
+        the list of devices carries no uplink, the detail of each one does,
+        as ``uplink.deviceId``, and 23 of the 24 named a device of the list;
+        the gateway has none. One detail per device, so a console of fifty
+        costs fifty requests every two minutes, cached like every other.
+        Clients name their device as ``uplinkDeviceId``, which gives the count
+        under each.
+        """
+        asked = [device for device in devices if device.get("id")]
+        details = await asyncio.gather(
+            *(self._api(config, ctx, f"/sites/{site_id}/devices/{device['id']}") for device in asked), return_exceptions=True)
+        clients, _ = await self._pages(config, ctx, f"/sites/{site_id}/clients")
+        per_device: dict[str, int] = {}
+        for client in clients:
+            under = str(client.get("uplinkDeviceId") or "")
+            if under:
+                per_device[under] = per_device.get(under, 0) + 1
+        uplinks = {str(device["id"]): str(((detail or {}).get("uplink") or {}).get("deviceId") or "") if isinstance(detail, dict) else ""
+                   for device, detail in zip(asked, details, strict=True)}
+        return network_map(asked, uplinks, per_device, self._kind, self._is_gateway)
+
     async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
         """The switches of this console, for the field that picks one.
 
@@ -339,6 +364,8 @@ class UnifiAdapter(Adapter):
         devices, _ = await self._pages(config, ctx, f"/sites/{site_id}/devices")
         if widget_kind == "switch":
             return await self._switch_api(config, options, ctx, site_id, devices)
+        if widget_kind == "map":
+            return await self._map_api(config, ctx, site_id, devices)
         online = [d for d in devices if str(d.get("state", "")).upper() == "ONLINE"]
         offline = len(devices) - len(online)
         gateway_down = any(self._is_gateway(d) and str(d.get("state", "")).upper() != "ONLINE" for d in devices)
@@ -539,6 +566,13 @@ class UnifiAdapter(Adapter):
         return response.json().get("data") or []
 
     async def _fetch_legacy(self, widget_kind: str, config: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind == "map":
+            # The tree comes from the Integration API's uplink of each device,
+            # measured there; the old API was never measured for it.
+            raise AdapterError(
+                "The network map needs the Integration API.", code="needs_api_key",
+                hint="Put an API key into this connection: Settings, Control Plane, Integrations.",
+            )
         if widget_kind == "switch":
             # ⚠️ Said plainly rather than left empty. The old API identifies a
             # device by its MAC and the new one by an id, so a switch picked
@@ -643,6 +677,19 @@ class UnifiAdapter(Adapter):
         return WidgetData(status=status, items=items, meta={**self._offline_meta(offline), "empty": calm})
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind == "map":
+            garden_down = fake.flicker("unifi-map-garden", tick, 0.25)
+            devices = [
+                {"id": "gw", "name": "Dream Machine", "model": "UDM-Pro", "features": ["switching"], "state": "ONLINE"},
+                {"id": "core", "name": "Core switch", "model": "USW-24-PoE", "features": ["switching"], "state": "ONLINE"},
+                {"id": "rack", "name": "Rack switch", "model": "USW-Flex-Mini", "features": ["switching"], "state": "ONLINE"},
+                {"id": "living", "name": "Living room AP", "model": "U6-Pro", "features": ["accessPoint"], "state": "ONLINE"},
+                {"id": "office", "name": "Office AP", "model": "U6-Lite", "features": ["accessPoint"], "state": "ONLINE"},
+                {"id": "garden", "name": "Garden AP", "model": "U6-Mesh", "features": ["accessPoint"], "state": "OFFLINE" if garden_down else "ONLINE"},
+            ]
+            uplinks = {"gw": "", "core": "gw", "rack": "core", "living": "core", "office": "core", "garden": "rack"}
+            return network_map(devices, uplinks, {"living": 14, "office": 6, "garden": 0 if garden_down else 2, "rack": 3, "core": 9},
+                               self._kind, lambda device: device["id"] == "gw")
         if widget_kind == "wifi":
             return WidgetData(status="ok", items=[
                 {"title": "Home", "subtitle": "Default (VLAN 1) · WPA3 · 2.4 + 5 GHz · all access points", "status": "ok"},
@@ -698,6 +745,39 @@ class UnifiAdapter(Adapter):
         return WidgetData(primary={"label": "Clients", "value": clients},
                           secondary=[{"label": "Wi-Fi", "value": clients - 9}, {"label": "WAN down", "value": human_bits(down), "metric": "wan_down"}, {"label": "WAN up", "value": human_bits(up), "metric": "wan_up"}, {"label": "Devices", "value": "4 / 5"}],
                           metrics={"clients": float(clients), "wan_down": round(down / 1e6, 2), "wan_up": round(up / 1e6, 2)}, status="warn")
+
+
+def network_map(devices: list[dict[str, Any]], uplinks: dict[str, str], clients: dict[str, int], kind_of: Any, is_gateway: Any) -> WidgetData:
+    """The places of the topology card: each device under the one it uplinks to.
+
+    A device whose uplink is not on the list (another site, a device being
+    adopted) hangs at the top beside the gateway rather than nowhere.
+    """
+    known = {str(device.get("id")) for device in devices}
+    places: list[dict[str, Any]] = []
+    offline = 0
+    gateway_down = False
+    ordered = sorted(devices, key=lambda device: (0 if is_gateway(device) else 1, str(device.get("name") or "").lower()))
+    for device in ordered:
+        identity = str(device.get("id"))
+        online = str(device.get("state", "")).upper() == "ONLINE"
+        offline += not online
+        gateway_down = gateway_down or (is_gateway(device) and not online)
+        parent = uplinks.get(identity) or None
+        count = clients.get(identity, 0)
+        places.append({
+            "id": identity,
+            "name": str(device.get("name") or device.get("model") or "?"),
+            "kind": str(kind_of(device)).lower().replace(" ", "-"),
+            "parent": parent if parent in known and parent != identity else None,
+            "status": "ok" if online else "bad",
+            "detail": " · ".join(part for part in (str(device.get("model") or ""), f"{count} clients" if count else "") if part) if online else "offline",
+        })
+    return WidgetData(
+        status="bad" if gateway_down else "warn" if offline else "ok",
+        primary={"label": "Devices", "value": len(devices) - offline, "unit": f"/ {len(devices)}"},
+        meta={"topology": {"places": places}, **({"status_reason": f"{offline} device(s) offline"} if offline else {})},
+    )
 
 
 ADAPTER = UnifiAdapter()
