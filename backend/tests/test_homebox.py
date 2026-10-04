@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import httpx
 import pytest
@@ -140,7 +140,15 @@ async def test_the_connection_test(ctx: Context) -> None:
 # -- measured again on 26.09.2026, v0.26.2 and v0.25.0 side by side ----------
 
 ACCOUNT = {"url": HB, "username": "tester@example.com", "password": "a-password-for-the-cards"}
-TOKEN = {"token": "Bearer made-up-session-token", "expiresAt": "2026-10-03T21:39:38.427325409Z", "attachmentToken": "made-up"}
+# ⚠️ Seven days from now, as Homebox hands it out, with its nanoseconds. It
+# stood fixed on 2026-10-03, and the adapter takes a token up again a day
+# early: from 2026-10-02 on every fetch signed in anew (found by the release
+# run of 0.29.2).
+TOKEN = {
+    "token": "Bearer made-up-session-token",
+    "expiresAt": (datetime.now(UTC) + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S.427325409Z"),
+    "attachmentToken": "made-up",
+}
 PLACES = [{"id": "a", "name": "Garage", "total": 134}, {"id": "b", "name": "Office", "total": 1199}, {"id": "c", "name": "Kitchen", "total": 349.9}]
 TAGS = [{"id": "d", "name": "Tools", "total": 129}, {"id": "e", "name": "Kitchen", "total": 349.9}, {"id": "f", "name": "Electronics", "total": 1682.9}]
 
