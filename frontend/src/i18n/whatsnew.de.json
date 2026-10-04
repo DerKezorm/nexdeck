@@ -1081,6 +1081,26 @@
       "small": [
         "Danke an bluedsticker für die Meldung und die Screenshots (#27)."
       ]
+    },
+    "0.30.0": {
+      "lead": "Zwei neue Anbindungen: Mailpit für die Mails, die es auffängt, und Real-Debrid für das restliche Premium und die Torrents des Kontos.",
+      "sections": [
+        {
+          "title": "Mailpit",
+          "body": "Die Mails, die Mailpit aufgefangen hat, auf dem Board. Die Übersicht zählt ungelesene und alle Mails, was seit dem Start von Mailpit ankam und was abgelehnt wurde, und die Größe seiner Datenbank; solange der Chaos-Modus läuft, wird sie gelb. Neueste Mails zeigt Absender und Betreff, ungelesene hervorgehoben, und ein Tippen öffnet die Mail in Mailpit. Die Suche von Mailpit selbst dient als Filter, etwa to:alerts@example.com. Verlangt Mailpit eine Anmeldung, kommen hier derselbe Benutzer und dasselbe Passwort hinein; ein Webroot gehört mit in die Adresse. Das Lesen markiert keine Mail als gelesen.",
+          "path": "System > Anbindungen > Anbindung hinzufügen > Mailpit"
+        },
+        {
+          "title": "Real-Debrid",
+          "body": "Die Kontokarte zeigt die restlichen Premium-Tage, wann es endet, die Treuepunkte und die laufenden Torrents gegen ihre Grenze, und sie wird eine Woche vor dem Ende gelb. Die Torrent-Karte führt sie mit Fortschritt auf und mit dem, was sie aufhält, etwa eine Dateiauswahl, auf die Real-Debrid wartet. Letzte Downloads zeigt die zuletzt freigeschalteten Links. Es braucht den privaten API-Token von real-debrid.com/apitoken. Real-Debrid lehnt viele Adressen von VPNs und Rechenzentren ab; die Karte sagt das, statt den Token zu beschuldigen.",
+          "path": "System > Anbindungen > Anbindung hinzufügen > Real-Debrid"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Beide sind als Beta markiert, bis sie in mehr als einem Zuhause gelaufen sind. Real-Debrid ist nach der Doku gebaut, ohne Konto zum Ausprobieren.",
+        "Danke an C0NN0RAD0, der sich beide gewünscht hat (#28, #29)."
+      ]
     }
   }
 }

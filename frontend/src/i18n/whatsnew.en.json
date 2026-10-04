@@ -1081,6 +1081,26 @@
       "small": [
         "Thanks to bluedsticker for the report and the screenshots (#27)."
       ]
+    },
+    "0.30.0": {
+      "lead": "Two new integrations: Mailpit, for the mail it catches, and Real-Debrid, for the premium left and the torrents on the account.",
+      "sections": [
+        {
+          "title": "Mailpit",
+          "body": "The mail Mailpit caught, on the board. The overview counts unread and all mail, what came in and what was refused since Mailpit started, and the size of its database, and it turns amber while chaos is on. Latest mail shows sender and subject of the newest mail, unread ones highlighted, and a tap opens the mail in Mailpit. Mailpit's own search works as a filter, such as to:alerts@example.com. If Mailpit asks for a login, the same user and password go in here; with a webroot the URL includes it. Reading never marks a mail as read.",
+          "path": "System > Integrations > Add an integration > Mailpit"
+        },
+        {
+          "title": "Real-Debrid",
+          "body": "The account card shows the days of premium left, when it ends, the fidelity points and the torrents running against their limit, and turns amber a week before premium runs out. The torrents card lists them with their progress and what holds them up, such as a file selection Real-Debrid waits for. Latest downloads lists the links unrestricted last. It needs the private API token from real-debrid.com/apitoken. Real-Debrid refuses many addresses of VPNs and data centres; the card says so rather than blaming the token.",
+          "path": "System > Integrations > Add an integration > Real-Debrid"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Both are marked beta until they have run in more homes than one. Real-Debrid was built from its documentation, without an account to try it on.",
+        "Thanks to C0NN0RAD0 for asking for both (#28, #29)."
+      ]
     }
   }
 }
