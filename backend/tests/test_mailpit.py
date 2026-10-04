@@ -36,14 +36,16 @@ def mail(id_: str, name: str, address: str, subject: str, read: bool, minutes: i
             "Snippet": "Made up."}
 
 
-MESSAGES = {
-    "total": 3, "unread": 2, "count": 3, "messages_count": 3, "messages_unread": 2, "start": 0, "tags": [],
-    "messages": [
-        mail("4GszTwyHRXD934TADwK86w", "Sonarr", "sonarr@example.com", "Episode imported: Example Show S01E02", False, 2),
-        mail("5wo4qi3zSdpG6I9XTgqMHn", "", "alerts@example.com", "[FIRING:1] Disk almost full", True, 3),
-        mail("6xp5rj4aTeYH7J0UEhrNIo", "Backup Robot", "backup@example.com", "", False, 90),
-    ],
-}
+def messages() -> dict:
+    """Made anew in every test: the ages are counted from now, and a full run takes half an hour."""
+    return {
+        "total": 3, "unread": 2, "count": 3, "messages_count": 3, "messages_unread": 2, "start": 0, "tags": [],
+        "messages": [
+            mail("4GszTwyHRXD934TADwK86w", "Sonarr", "sonarr@example.com", "Episode imported: Example Show S01E02", False, 2),
+            mail("5wo4qi3zSdpG6I9XTgqMHn", "", "alerts@example.com", "[FIRING:1] Disk almost full", True, 3),
+            mail("6xp5rj4aTeYH7J0UEhrNIo", "Backup Robot", "backup@example.com", "", False, 90),
+        ],
+    }
 
 
 @pytest.fixture
@@ -73,7 +75,7 @@ async def test_chaos_turns_the_overview_amber_and_a_new_version_is_named(ctx: Co
 
 @respx.mock
 async def test_the_latest_mail_names_the_sender_and_opens_in_mailpit(ctx: Context) -> None:
-    route = respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=MESSAGES))
+    route = respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=messages()))
     data = await get_adapter("mailpit").fetch("latest", CONFIG, {"limit": 2}, ctx)
     assert route.calls.last.request.url.params["limit"] == "2"
     assert [(row["title"], row["subtitle"], row["emphasis"]) for row in data.items] == [
@@ -86,15 +88,15 @@ async def test_the_latest_mail_names_the_sender_and_opens_in_mailpit(ctx: Contex
 
 @respx.mock
 async def test_a_mail_without_a_subject_says_so(ctx: Context) -> None:
-    respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=MESSAGES))
+    respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=messages()))
     data = await get_adapter("mailpit").fetch("latest", CONFIG, {}, ctx)
     assert data.items[-1]["subtitle"] == "(no subject)"
 
 
 @respx.mock
 async def test_only_unread_and_a_search_go_to_mailpits_own_search(ctx: Context) -> None:
-    listing = respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=MESSAGES))
-    search = respx.get(f"{API}/search").mock(return_value=httpx.Response(200, json={**MESSAGES, "messages": []}))
+    listing = respx.get(f"{API}/messages").mock(return_value=httpx.Response(200, json=messages()))
+    search = respx.get(f"{API}/search").mock(return_value=httpx.Response(200, json={**messages(), "messages": []}))
     data = await get_adapter("mailpit").fetch("latest", CONFIG, {"unread_only": True, "query": "to:ops@example.com"}, ctx)
     assert not listing.called
     assert search.calls.last.request.url.params["query"] == "to:ops@example.com is:unread"
