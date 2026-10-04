@@ -1067,6 +1067,20 @@
       "small": [
         "nexlore is marked beta until it has run in more homes than one."
       ]
+    },
+    "0.29.2": {
+      "lead": "The bar sits clear on an iPad: no blur from the system over it, and nothing cut off when the iPad is held upright.",
+      "sections": [
+        {
+          "title": "nexdeck on the iPad",
+          "body": "Installed on the Home Screen of iPadOS 26, the bar lay under the blur the system puts over the top of every installed app. In the installed app the bar is now one solid colour, which the system leaves clear; in a browser tab it stays glass. Held upright, the bar used to run past the right edge and cut off the account menu. Now the search field shrinks down to its magnifier, the pages can be swiped when there are too many of them, and below 1024 pixels the account shows only its picture.",
+          "path": "Board > the bar at the top"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Thanks to bluedsticker for the report and the screenshots (#27)."
+      ]
     }
   }
 }

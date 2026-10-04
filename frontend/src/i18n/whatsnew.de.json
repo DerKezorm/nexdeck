@@ -1067,6 +1067,20 @@
       "small": [
         "nexlore ist als Beta markiert, bis es in mehr als einem Zuhause gelaufen ist."
       ]
+    },
+    "0.29.2": {
+      "lead": "Die Leiste liegt auf dem iPad frei: keine Unschärfe des Systems darüber, und hochkant wird nichts mehr abgeschnitten.",
+      "sections": [
+        {
+          "title": "nexdeck auf dem iPad",
+          "body": "Auf dem Home-Bildschirm von iPadOS 26 lag die Leiste unter der Unschärfe, die das System über den oberen Rand jeder installierten App legt. In der installierten App ist die Leiste jetzt einfarbig, und das System lässt sie frei; im Browser-Tab bleibt sie aus Glas. Hochkant lief die Leiste über den rechten Rand und schnitt das Kontomenü ab. Jetzt schrumpft das Suchfeld bis auf die Lupe, zu viele Seiten lassen sich wischen, und unter 1024 Pixeln zeigt das Konto nur das Profilbild.",
+          "path": "Board > die Leiste oben"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an bluedsticker für die Meldung und die Screenshots (#27)."
+      ]
     }
   }
 }
