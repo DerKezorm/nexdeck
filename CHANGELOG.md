@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### New
+
+- **Mailpit (#28).** The mail Mailpit caught, on the board: unread and all mail, what came in and what was refused since it started, and the size of its database, amber while chaos is on; and the newest mail with sender and subject, unread ones highlighted, each opening in Mailpit, with Mailpit's own search as a filter. Works with Mailpit's login and a webroot. Reading never marks a mail as read. Measured against Mailpit 1.31.4; marked beta.
+- **Real-Debrid (#29).** The days of premium left and when it ends, the fidelity points and the torrents running against their limit; the torrents with their progress and what holds them up; and the links unrestricted last. A refused address, as Real-Debrid often does for VPNs and data centres, is told apart from a wrong token. Built from Real-Debrid's documentation without an account; marked beta until it has been seen on one.
+
 ## 0.29.2 (2026-10-04)
 
 ### Fixed
