@@ -156,6 +156,19 @@ body {
   -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 
+/* ⚠️ Issue #27, 04.10.2026: an app installed on the Home Screen of iPadOS 26
+   gets a blur over the top 40 points of the page, and nexdeck's bar sat in it.
+   WebKit leaves it out only where a full-width bar at the edge paints one solid
+   colour, so the bars of the installed app are solid; in a browser tab they
+   stay glass. */
+@media (display-mode: standalone) {
+  .glass-strong.app-bar {
+    background: var(--nd-bg-elev);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* The widget card. */
 .card {
   position: relative;

@@ -38,7 +38,7 @@ export function MobileTabBar({ boards, active, onBoard, onSearch, onNotices, onM
   const manyPages = (pages?.length ?? 0) > 1
   const shownBoards = boards.slice(0, manyPages ? 2 : 3)
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 glass-strong border-x-0 border-b-0 rounded-none pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.boards')}>
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 glass-strong app-bar border-x-0 border-b-0 rounded-none pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.boards')}>
       <div className="flex items-stretch h-14">
         {shownBoards.map((board) => (
           <button

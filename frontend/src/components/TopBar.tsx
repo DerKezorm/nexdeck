@@ -52,7 +52,7 @@ export function TopBar(props: Props) {
     return () => window.removeEventListener('mousedown', onClick)
   }, [menu])
   return (
-    <header className="glass-strong sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none" data-no-picture>
+    <header className="glass-strong app-bar sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none" data-no-picture>
       <Link to="/" className="flex items-center gap-2 mr-1" aria-label="nexdeck">
         <LogoMark size={26} />
         <span className="font-semibold tracking-tight hidden lg:inline">
@@ -97,7 +97,7 @@ export function TopBar(props: Props) {
           </div>
         )}
       </div>
-      <nav className="hidden md:flex items-center gap-0.5 ml-1" aria-label={t('board.pages')}>
+      <nav className="hidden md:flex items-center gap-0.5 ml-1 min-w-0 overflow-x-auto scrollbar-none [&>*]:shrink-0 whitespace-nowrap" aria-label={t('board.pages')}>
         {pages.map((page) => (
           <button
             key={page.id}
@@ -109,7 +109,9 @@ export function TopBar(props: Props) {
           </button>
         ))}
       </nav>
-      <div className="flex-1 flex justify-center px-2">
+      {/* ⚠️ min-w: a flex item keeps the width of its content unless told otherwise, and the
+          placeholder alone pushed the account menu off an upright iPad (issue #27). */}
+      <div className="flex-1 min-w-10 flex justify-center px-2">
         <button
           className="hidden sm:flex items-center gap-2 h-8 w-full max-w-[420px] px-3 rounded-lg border border-line bg-bg/40 text-muted text-[13px] hover:border-line-strong transition-colors"
           onClick={onSearch}
@@ -118,7 +120,7 @@ export function TopBar(props: Props) {
           <Search size={14} className="shrink-0" />
           {/* One line in every language: French wrapped to two and burst the bar. */}
           <span className="flex-1 min-w-0 truncate text-left">{t('palette.placeholder')}</span>
-          <kbd className="shrink-0 num text-[10px] px-1.5 py-0.5 rounded border border-line text-faint">Ctrl K</kbd>
+          <kbd className="hidden lg:inline shrink-0 num text-[10px] px-1.5 py-0.5 rounded border border-line text-faint">Ctrl K</kbd>
         </button>
       </div>
       <div className="flex items-center gap-1.5">

@@ -150,3 +150,69 @@ test('on a phone, edit mode moves nothing and saves nothing', async ({ page }) =
   await page.waitForTimeout(1500)
   expect(saves, 'a phone sent its stack to the server').toEqual([])
 })
+
+/**
+ * ⚠️ Issue #27, 04.10.2026: on an iPad held upright (1032 wide) the bar ran
+ * past the right edge, the account menu was cut off and the whole page could
+ * be dragged sideways. The search field kept the width of its placeholder,
+ * because a flex item does not shrink below its content unless told to.
+ */
+test('the bar of a board with four pages fits a tablet held upright', async ({ page }) => {
+  await signIn(page)
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  const made = await page.request.post('/api/v1/boards', { ...write, data: { name: 'Upright', slug: 'upright' } })
+  expect(made.status()).toBe(201)
+  try {
+    for (const name of ['Overview', 'LAN', 'Remote', 'IP']) {
+      const added = await page.request.post('/api/v1/boards/upright/pages', { ...write, data: { name } })
+      expect(added.status()).toBe(201)
+    }
+    for (const size of [{ width: 1032, height: 1376 }, { width: 820, height: 1180 }, { width: 768, height: 1024 }]) {
+      await page.setViewportSize(size)
+      await page.goto('/b/upright')
+      const account = page.getByRole('button', { name: ACCOUNT.username, exact: true })
+      await expect(account).toBeVisible()
+      const box = await account.boundingBox()
+      expect(box && box.x + box.width, `the account menu leaves the screen at ${size.width}`).toBeLessThanOrEqual(size.width)
+      const sideways = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      expect(sideways, `the page can be dragged sideways at ${size.width}`).toBeLessThanOrEqual(0)
+      await expect(page.getByRole('button', { name: 'IP', exact: true })).toBeVisible()
+      if (size.width >= 820) {
+        // Not only there, but in sight: the pages scroll once they no longer fit, and an iPad fits all of them.
+        const last = await page.getByRole('button', { name: 'IP', exact: true }).boundingBox()
+        const pages = await page.getByRole('navigation', { name: 'Pages' }).boundingBox()
+        expect(last && pages && last.x + last.width, `the last page is scrolled away at ${size.width}`).toBeLessThanOrEqual((pages?.x ?? 0) + (pages?.width ?? 0) + 1)
+      }
+    }
+
+    // The installed app: iPadOS 26 blurs the top of the page unless the bar there is one solid colour.
+    // Chromium cannot pretend to be installed (setEmulatedMedia ignores display-mode), so the rule
+    // for it is switched on where it stands, in its own layer, and the bar is measured.
+    const bar = () => page.locator('header').first().evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { background: style.backgroundColor, filter: style.backdropFilter }
+    })
+    expect((await bar()).filter, 'the bar in a browser tab is no longer glass').not.toBe('none')
+    const found = await page.evaluate(() => {
+      const walk = (rules: CSSRuleList): boolean => {
+        for (const rule of [...rules]) {
+          if (rule instanceof CSSMediaRule && rule.conditionText.includes('display-mode: standalone')) {
+            const parent = rule.parentRule as CSSGroupingRule | null
+            const inner = [...rule.cssRules].map((one) => one.cssText).join('\n')
+            if (parent) parent.insertRule(`@media all { ${inner} }`, parent.cssRules.length)
+            else rule.parentStyleSheet?.insertRule(`@media all { ${inner} }`, rule.parentStyleSheet.cssRules.length)
+            return true
+          }
+          if ('cssRules' in rule && walk((rule as CSSGroupingRule).cssRules)) return true
+        }
+        return false
+      }
+      return [...document.styleSheets].some((sheet) => walk(sheet.cssRules))
+    })
+    expect(found, 'no rule for the installed app').toBe(true)
+    expect((await bar()).filter, 'the bar of the installed app is still glass').toBe('none')
+    expect((await bar()).background, 'the bar of the installed app lets the page show through').toMatch(/^rgb\(/)
+  } finally {
+    await page.request.delete('/api/v1/boards/upright', write)
+  }
+})

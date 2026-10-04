@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **The bar on an iPad (#27).** Installed on the Home Screen of iPadOS 26, the top of the page lies under a blur from the system, and the bar of glass sat in it. In the installed app the bars are now one solid colour, which the system leaves clear; in a browser tab they stay glass. Held upright, the bar ran past the right edge, cut off the account menu and let the page be dragged sideways: the search field kept the width of its placeholder. It now shrinks down to its icon, the pages scroll when there are too many, and the account shows only its picture below 1024 pixels.
+
 ## 0.29.1 (2026-10-02)
 
 ### New

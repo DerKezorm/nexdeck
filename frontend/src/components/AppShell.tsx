@@ -36,7 +36,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   return (
     <div className="min-h-full pb-20 md:pb-8">
       <BackgroundLayer />
-      <header className="glass-strong sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none">
+      <header className="glass-strong app-bar sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none">
         <Link to="/" className="btn btn-icon btn-flat" aria-label={t('common.back')}>
           <ArrowLeft size={16} />
         </Link>
