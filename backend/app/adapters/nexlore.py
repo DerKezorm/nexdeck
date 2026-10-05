@@ -18,6 +18,12 @@ and API tokens switched off.
 - Days are counted on nexdeck's clock: every request that counts days sends
   ``today``, every write sends ``now``, as nexlore asks of programs.
 - Nothing is ever deleted, moved or renamed: nexlore's API has no route for it.
+- The daily note is asked for with ``POST /daily``, which makes it from the
+  space's template when it is missing, as a click on "Today" in nexlore does.
+  That needs a write token, and it means the card makes the day's note on its
+  first refresh of the day, whether anybody writes in it or not. The space is
+  a setting of each card, picked from the spaces the token may write in;
+  without one the card makes nothing.
 """
 
 from __future__ import annotations
@@ -50,7 +56,7 @@ class NexloreAdapter(Adapter):
     kind = "nexlore"
     label = "nexlore"
     category = "other"
-    description = "Notes and tasks of nexlore: what is due, what changed last, and a line into the inbox."
+    description = "Notes and tasks of nexlore: what is due, what changed last, today's daily note, and a line into the inbox."
     icon = "nexlore"
     beta = True
     docs_url = "https://www.nexlore.de"
@@ -90,6 +96,18 @@ class NexloreAdapter(Adapter):
             default_size=(4, 3),
             refresh_seconds=300,
             options=(Field("limit", "Entries", type="number", default=6),),
+        ),
+        WidgetType(
+            kind="daily",
+            label="Daily note",
+            description="Today's daily note of one space, made from the space's template when it is missing. A line goes into it from here. Needs a token with the level Write.",
+            renderer="text",
+            default_size=(4, 3),
+            refresh_seconds=300,
+            options=(
+                Field("space", "Space", type="choices", required=True,
+                      help="The space whose daily note this card shows and writes to. Only spaces the token may write in are offered."),
+            ),
         ),
     )
 
@@ -143,6 +161,18 @@ class NexloreAdapter(Adapter):
             limit = _limit(options, 6)
             rows = await self._call("GET", config, ctx, "/recent", params={"limit": limit})
             return recent_of(rows if isinstance(rows, list) else [], base_url(config), limit)
+        if widget_kind == "daily":
+            space = _space(options)
+            if not await self._writes(config, ctx):
+                raise AdapterError("The daily note needs a token with the level Write: nexlore makes the note when it is missing.",
+                                   code="read_only")
+            made = await self._call("POST", config, ctx, "/daily", body={
+                "space": space, "date": today.isoformat(), "now": _now()})
+            path = str((made or {}).get("path") or "") if isinstance(made, dict) else ""
+            if not path:
+                raise AdapterError("nexlore did not say where the daily note is.", code="bad_answer")
+            note = await self._call("GET", config, ctx, "/note", params={"path": path}, cache=0)
+            return daily_of(note if isinstance(note, dict) else {}, path, base_url(config))
         if widget_kind == "tasks":
             show = str(options.get("show") or "due")
             whens = {"due": ("overdue", "today"), "week": ("overdue", "today", "week")}.get(show)
@@ -158,11 +188,28 @@ class NexloreAdapter(Adapter):
         numbers = await self._call("GET", config, ctx, "/dashboard", params={"today": today.isoformat()})
         return overview_of(numbers if isinstance(numbers, dict) else {}, await self._writes(config, ctx))
 
+    async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
+        if field != "space":
+            return await super().choices(field, config, ctx)
+        spaces = await self._call("GET", config, ctx, "/spaces", cache=60)
+        return spaces_of(spaces if isinstance(spaces, list) else [])
+
+    def demo_choices(self, field: str) -> list[tuple[str, str]]:
+        return [(name, name) for name in DEMO_SPACES] if field == "space" else []
+
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any],
                      config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
+        if action_id == "daily_add":
+            text = str(params.get("text") or "").strip()
+            if not text:
+                raise AdapterError("There is nothing to add.", code="bad_param")
+            answer = await self._call("POST", config, ctx, "/daily", body={
+                "space": _space(options), "date": _today().isoformat(), "text": text, "now": _now()})
+            where = str((answer or {}).get("path") or "") if isinstance(answer, dict) else ""
+            return f"In the daily note: {where}." if where else "In the daily note."
         if action_id == "capture":
             answer = await self._call("POST", config, ctx, "/inbox", body={
-                "text": str(params.get("text") or ""), "now": datetime.now().astimezone().isoformat(timespec="seconds")})
+                "text": str(params.get("text") or ""), "now": _now()})
             where = str((answer or {}).get("path") or "") if isinstance(answer, dict) else ""
             return f"In the inbox: {where}." if where else "In the inbox."
         if action_id == "complete":
@@ -186,6 +233,12 @@ class NexloreAdapter(Adapter):
                 {"path": "Homelab/Network plan.md", "title": "Network plan", "space": "Homelab", "modified": (now - timedelta(days=2)).isoformat()},
             ]
             return recent_of(rows, base, _limit(options, 6))
+        if widget_kind == "daily":
+            space = str(options.get("space") or DEMO_SPACES[0])
+            title = today.isoformat()
+            content = DEMO_DAILY.format(title=title, done="x" if fake.flicker("nexlore-daily", tick, 0.5) else " ")
+            return daily_of({"path": f"{space}/Daily/{title}.md", "title": title, "content": content},
+                            f"{space}/Daily/{title}.md", base)
         if widget_kind == "tasks":
             renewed = fake.flicker("nexlore-renew", tick, 0.5)
             items = [
@@ -207,9 +260,38 @@ class NexloreAdapter(Adapter):
                             "tasks_week": 5, "inbox": 3}, True)
 
 
+DEMO_SPACES = ("Home", "Homelab")
+
+DEMO_DAILY = """---
+created: {title}
+---
+# {title}
+
+## Plan
+- [{done}] Check the backup of last night
+- [ ] Order the timber for the garden shed
+
+## Notes
+The new switch is in the rack; the [[Network plan]] still shows the old one.
+"""
+
+
 def _today() -> date:
     """Today on nexdeck's clock, which is the clock of the people looking at the board."""
     return datetime.now().astimezone().date()
+
+
+def _now() -> str:
+    """The moment on nexdeck's clock, with its offset, as nexlore asks of every write."""
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _space(options: dict[str, Any]) -> str:
+    """The card's space. Never a guess: without one the card makes no note anywhere."""
+    space = str(options.get("space") or "").strip()
+    if not space:
+        raise AdapterError("Pick a space in the card's settings.", code="bad_param")
+    return space
 
 
 def _limit(options: dict[str, Any], default: int) -> int:
@@ -244,6 +326,40 @@ def _epoch(moment: Any) -> float | None:
 def _capture() -> Action:
     return Action(id="capture", label="Capture", icon="plus",
                   asks=[Ask(name="text", label="Into the inbox", kind="text", placeholder="[ ] call the plumber", max_length=2000)])
+
+
+def _add_to_daily() -> Action:
+    return Action(id="daily_add", label="Add", icon="plus",
+                  asks=[Ask(name="text", label="Into today's note", kind="text", placeholder="- [ ] call the plumber", max_length=2000)])
+
+
+def without_front_matter(text: str) -> str:
+    """The note as it reads: a front matter block at the very top is left out."""
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return text
+    for number, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return "".join(lines[number + 1:]).lstrip("\r\n")
+    return text
+
+
+def spaces_of(rows: list[Any]) -> list[tuple[str, str]]:
+    """The spaces a daily note can be made in: those where the account may write."""
+    names = [str(row.get("name") or "") for row in rows
+             if isinstance(row, dict) and row.get("name") and row.get("role") in ("write", "manage")]
+    return [(name, name) for name in sorted(names, key=str.casefold)]
+
+
+def daily_of(note: dict[str, Any], path: str, base: str) -> WidgetData:
+    body = without_front_matter(str(note.get("content") or ""))
+    return WidgetData(
+        status="ok",
+        actions=[] if note.get("readonly") else [_add_to_daily()],
+        meta={"markdown": body if body.strip() else "*Nothing written today yet.*",
+              "url": note_url(base, str(note.get("path") or path)),
+              "title": str(note.get("title") or "")},
+    )
 
 
 def overview_of(numbers: dict[str, Any], writes: bool) -> WidgetData:

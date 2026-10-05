@@ -1712,7 +1712,7 @@
     "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines.": "La bandeja de notificaciones del homelab: lo no leído, lo crítico y abierto, y las líneas más recientes.",
     "Unread lines, what is critical and still open, warnings, the messages of today and targets that failed.": "Líneas no leídas, lo crítico aún abierto, avisos, los mensajes de hoy y los destinos que fallaron.",
     "nexsift inbox": "Bandeja de nexsift",
-    "Notes and tasks of nexlore: what is due, what changed last, and a line into the inbox.": "Notas y tareas de nexlore: lo que vence, lo último que cambió y una línea a la bandeja de entrada.",
+    "Notes and tasks of nexlore: what is due, what changed last, today's daily note, and a line into the inbox.": "Notas y tareas de nexlore: lo que vence, lo último que cambió, la nota diaria de hoy y una línea a la bandeja de entrada.",
     "My account > Connections > API tokens in nexlore; it starts with nxa_. Read fills the cards, Write also ticks tasks off and captures.": "Mi cuenta > Conexiones > Tokens de API en nexlore; empieza por nxa_. Leer llena las tarjetas, Escribir también marca tareas y captura.",
     "nexlore overview": "Resumen de nexlore",
     "Open tasks, those due today and overdue, what waits in the inbox, and the notes in all. With a write token, a line goes into the inbox from here.": "Tareas abiertas, las que vencen hoy y las atrasadas, lo que espera en la bandeja de entrada y las notas en total. Con un token de escritura, desde aquí va una línea a la bandeja.",
@@ -1738,7 +1738,11 @@
     "Active only": "Solo activos",
     "All": "Todos",
     "Latest downloads": "Últimas descargas",
-    "The links unrestricted last, newest first, with their hoster and size.": "Los últimos enlaces desbloqueados, los más recientes primero, con su servidor y tamaño."
+    "The links unrestricted last, newest first, with their hoster and size.": "Los últimos enlaces desbloqueados, los más recientes primero, con su servidor y tamaño.",
+    "Daily note": "Nota diaria",
+    "Today's daily note of one space, made from the space's template when it is missing. A line goes into it from here. Needs a token with the level Write.": "La nota diaria de hoy de un espacio, creada con la plantilla del espacio si falta. Desde aquí se le añade una línea. Necesita un token con el nivel Escritura.",
+    "Space": "Espacio",
+    "The space whose daily note this card shows and writes to. Only spaces the token may write in are offered.": "El espacio cuya nota diaria muestra esta tarjeta y en el que escribe. Solo se ofrecen los espacios en los que el token puede escribir."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2771,6 +2775,8 @@
     "virus found": "virus encontrado",
     "compressing": "comprimiendo",
     "uploading": "subiendo",
-    "dead": "muerto"
+    "dead": "muerto",
+    "Add": "Añadir",
+    "Into today's note": "A la nota de hoy"
   }
 }

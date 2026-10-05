@@ -895,9 +895,12 @@ function loadMarkdown(): Promise<void> {
  * card up. Saving goes through `NoteEditor`, which refuses to write over a
  * change made elsewhere.
  */
-export function TextCard({ widget, data, canWrite, editing }: RenderProps) {
+export function TextCard({ widget, data, canWrite, editing, canAct, onAction }: RenderProps) {
   const { t } = useTranslation()
   const served = String(widget.options?.content ?? data?.meta?.markdown ?? '')
+  // A note served by a service (nexlore's daily note) brings its own way back
+  // to the service and its own buttons; the card's own note has neither.
+  const away = String(data?.meta?.url ?? '')
   // What this card last saved, until the board catches up with it.
   const [saved, setSaved] = useState<string | null>(null)
   const source = saved ?? served
@@ -962,6 +965,18 @@ export function TextCard({ widget, data, canWrite, editing }: RenderProps) {
           {problem}
         </p>
       )}
+      {away || data?.actions?.length ? (
+        <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
+          {away ? (
+            <a href={safeUrl(away)} target="_blank" rel="noopener noreferrer" className="text-faint hover:text-accent" aria-label={t('card.open')} title={t('card.open')}>
+              <ExternalLink size={12} />
+            </a>
+          ) : (
+            <span />
+          )}
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+        </div>
+      ) : null}
       {writable && (
         // Faint but always there: a wall tablet has no hover to reveal it.
         <button

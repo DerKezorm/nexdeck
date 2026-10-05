@@ -135,3 +135,63 @@ async def test_changed_last_links_each_note(ctx: Context) -> None:
 async def test_the_connection_test_names_level_and_reach(ctx: Context) -> None:
     respx.get(f"{BASE}/me").mock(return_value=httpx.Response(200, json={**ME_READ, "spaces": ["Home"]}))
     assert await get_adapter("nexlore").test(CONFIG, ctx) == "nexlore 0.4.0 answers; the token of alex reads in 1 chosen space(s)."
+
+
+DAILY_NOTE = {"path": "Home/Daily/2026-10-02.md", "title": "2026-10-02", "hash": "d41d",
+              "content": "---\ncreated: 2026-10-02\n---\n# 2026-10-02\n\n- [ ] Water the beans\n", "tags": [], "front": {"created": "2026-10-02"},
+              "modified": "2026-10-02T05:12:40Z", "readonly": False}
+
+
+@respx.mock
+async def test_the_daily_note_is_asked_for_in_the_cards_space_and_drawn_without_its_front_matter(ctx: Context) -> None:
+    daily = respx.post(f"{BASE}/daily").mock(return_value=httpx.Response(200, json={"path": "Home/Daily/2026-10-02.md", "created": True}))
+    note = respx.get(f"{BASE}/note").mock(return_value=httpx.Response(200, json=DAILY_NOTE))
+    respx.get(f"{BASE}/me").mock(return_value=httpx.Response(200, json=ME_WRITE))
+    data = await get_adapter("nexlore").fetch("daily", CONFIG, {"space": "Home"}, ctx)
+    body = json.loads(daily.calls.last.request.content)
+    assert (body["space"], body["date"]) == ("Home", "2026-10-02") and "text" not in body
+    assert datetime.fromisoformat(body["now"]).tzinfo is not None
+    assert note.calls.last.request.url.params["path"] == "Home/Daily/2026-10-02.md"
+    assert data.meta["markdown"] == "# 2026-10-02\n\n- [ ] Water the beans\n"
+    assert data.meta["url"] == "http://nexlore:8470/note/Home/Daily/2026-10-02.md"
+    assert [action.id for action in data.actions] == ["daily_add"]
+
+
+@respx.mock
+async def test_the_daily_note_makes_nothing_without_a_space_or_with_a_read_token(ctx: Context) -> None:
+    daily = respx.post(f"{BASE}/daily").mock(return_value=httpx.Response(200, json={"path": "Home/Daily/2026-10-02.md", "created": True}))
+    respx.get(f"{BASE}/me").mock(return_value=httpx.Response(200, json=ME_WRITE))
+    with pytest.raises(AdapterError, match="Pick a space"):
+        await get_adapter("nexlore").fetch("daily", CONFIG, {}, ctx)
+    with pytest.raises(AdapterError, match="Pick a space"):
+        await get_adapter("nexlore").action("daily", "daily_add", {"text": "a line"}, CONFIG, {"space": " "}, ctx)
+    respx.get(f"{BASE}/me").mock(return_value=httpx.Response(200, json=ME_READ))
+    fresh = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
+    with pytest.raises(AdapterError, match="level Write"):
+        await get_adapter("nexlore").fetch("daily", CONFIG, {"space": "Home"}, fresh)
+    assert daily.calls.call_count == 0
+
+
+@respx.mock
+async def test_a_line_goes_into_the_daily_note_of_the_cards_space(ctx: Context) -> None:
+    daily = respx.post(f"{BASE}/daily").mock(return_value=httpx.Response(200, json={"path": "Homelab/Daily/2026-10-02.md", "created": False}))
+    answer = await get_adapter("nexlore").action("daily", "daily_add", {"text": " - [ ] call the plumber "}, CONFIG, {"space": "Homelab"}, ctx)
+    assert answer == "In the daily note: Homelab/Daily/2026-10-02.md."
+    body = json.loads(daily.calls.last.request.content)
+    assert (body["space"], body["date"], body["text"]) == ("Homelab", "2026-10-02", "- [ ] call the plumber")
+
+
+@respx.mock
+async def test_only_spaces_the_token_may_write_in_are_offered(ctx: Context) -> None:
+    respx.get(f"{BASE}/spaces").mock(return_value=httpx.Response(200, json=[
+        {"name": "work", "role": "read", "notes": 3, "daily_folder": "", "template_folder": ""},
+        {"name": "Homelab", "role": "manage", "notes": 53, "daily_folder": "Daily", "template_folder": ""},
+        {"name": "home", "role": "write", "notes": 9, "daily_folder": "", "template_folder": ""}]))
+    assert await get_adapter("nexlore").choices("space", CONFIG, ctx) == [("home", "home"), ("Homelab", "Homelab")]
+
+
+def test_front_matter_is_left_out_only_at_the_very_top() -> None:
+    assert module.without_front_matter("---\na: 1\n---\n\nText") == "Text"
+    assert module.without_front_matter("---\r\na: 1\r\n---\r\nText") == "Text"
+    assert module.without_front_matter("Text\n---\nmore") == "Text\n---\nmore"
+    assert module.without_front_matter("---\nnever closed") == "---\nnever closed"
