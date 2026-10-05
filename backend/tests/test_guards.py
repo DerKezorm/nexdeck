@@ -12,6 +12,7 @@ import json
 import re
 from pathlib import Path
 
+import pytest
 from fastapi.routing import APIRoute
 
 from app import deps
@@ -729,6 +730,23 @@ def test_the_compose_file_passes_on_what_the_example_offers() -> None:
     }
     lost = sorted(name for name in offered - not_for_compose if name not in compose)
     assert lost == [], "variables the example offers that never reach the container: " + ", ".join(lost)
+
+
+def test_an_empty_variable_counts_as_not_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The compose file hands over ``NEXDECK_DEMO=""`` when .env leaves it
+    out, and the server refused to start: ``""`` is not a boolean. Every
+    setting, set but empty, has to fall back to its default.
+    """
+    from app.config import Settings
+
+    names = [name for name in Settings.model_fields if not name.startswith("_")]
+    assert len(names) >= 15, f"only {len(names)} settings were found, so this guard proves nothing"
+    for name in names:
+        monkeypatch.setenv(f"NEXDECK_{name.upper()}", "")
+    settings = Settings()
+    assert settings.demo is False
+    assert settings.log_level == "INFO"
+    assert settings.session_days == Settings.model_fields["session_days"].default
 
 
 def test_every_document_is_reachable_from_the_readme() -> None:
