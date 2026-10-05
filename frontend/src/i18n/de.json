@@ -953,6 +953,8 @@
     "noImage": "Kein Bild von der Kamera",
     "history": "Verlauf der letzten 24 Stunden",
     "bars": {
+      "30d": "Verfügbarkeit der letzten 30 Tage, ein Balken je Tag",
+      "7d": "Verfügbarkeit der letzten 7 Tage, ein Balken je 6 Stunden",
       "24h": "Verfügbarkeit der letzten 24 Stunden, ein Balken je 30 Minuten",
       "6h": "Verfügbarkeit der letzten 6 Stunden, ein Balken je 7,5 Minuten",
       "1h": "Verfügbarkeit der letzten Stunde, ein Balken je Minute",

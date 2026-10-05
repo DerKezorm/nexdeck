@@ -421,6 +421,10 @@ class HealthCheck(Base):
     last_checked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     last_error: Mapped[str] = mapped_column(String(300), default="")
     down_since: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: Since when this check measures. Before it, a bar of the last 7 or 30
+    #: days is unknown rather than up: a check made yesterday has not seen
+    #: the month. Checks from before 0.31.0 count from the update.
+    created_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True, default=utcnow)
 
     widget: Mapped[Widget | None] = relationship(back_populates="health_check")
     outages: Mapped[list[Outage]] = relationship(back_populates="check", cascade="all, delete-orphan")

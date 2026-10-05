@@ -953,6 +953,8 @@
     "noImage": "Nessuna immagine dalla telecamera",
     "history": "Cronologia delle ultime 24 ore",
     "bars": {
+      "30d": "Disponibilità degli ultimi 30 giorni, una barra al giorno",
+      "7d": "Disponibilità degli ultimi 7 giorni, una barra ogni 6 ore",
       "24h": "Disponibilità delle ultime 24 ore, una barra ogni 30 minuti",
       "6h": "Disponibilità delle ultime 6 ore, una barra ogni 7,5 minuti",
       "1h": "Disponibilità dell'ultima ora, una barra al minuto",

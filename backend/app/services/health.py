@@ -14,7 +14,7 @@ import platform
 import socket
 import ssl
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 import httpx
@@ -434,8 +434,16 @@ def ensure_check_for_widget(db, widget: Widget) -> HealthCheck | None:  # noqa: 
 
 
 #: The windows an app tile can show: hours covered and number of bars.
-BAR_WINDOWS: dict[str, tuple[int, int]] = {"24h": (24, 48), "6h": (6, 48), "1h": (1, 60)}
+BAR_WINDOWS: dict[str, tuple[int, int]] = {"30d": (720, 30), "7d": (168, 28), "24h": (24, 48), "6h": (6, 48), "1h": (1, 60)}
 LIVE_BARS = 48
+#: Windows longer than the history keeps (a day of minute averages). They are
+#: read from the outages, which are kept a year.
+#:
+#: ⚠️ Every outage is there, the short ones included: one is opened on the
+#: first failed check and closed on the first good one; only announcing it
+#: waits for the threshold. What none of them knows is a stretch in which
+#: nexdeck itself was not running: nothing was checked, and it counts as up.
+LONG_WINDOWS = ("7d", "30d")
 
 
 def bars_window(options: dict | None) -> str:
@@ -451,6 +459,8 @@ def uptime_bars(db, widget_id: int, window: str = "24h") -> list[float | None]: 
     a few hours and then folded into minute averages, so an old "check" in
     the live row is really a minute.
     """
+    if window in LONG_WINDOWS:
+        return bars_for(db, {widget_id: window}).get(widget_id, [None] * BAR_WINDOWS[window][1])
     hours = 24 if window == "live" else BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])[0]
     return bars_from(history.series(db, widget_id, "up", hours=hours), window)
 
@@ -466,9 +476,53 @@ def bars_for(db, wanted: dict[int, str]) -> dict[int, list[float | None]]:  # no
     for widget_id, window in wanted.items():
         by_window.setdefault(window, []).append(widget_id)
     for window, widget_ids in by_window.items():
+        if window in LONG_WINDOWS:
+            out.update(outage_bars_for(db, widget_ids, window))
+            continue
         hours = 24 if window == "live" else BAR_WINDOWS.get(window, BAR_WINDOWS["24h"])[0]
         for widget_id, points in history.series_for(db, widget_ids, "up", hours=hours).items():
             out[widget_id] = bars_from(points, window)
+    return out
+
+
+def outage_bars_for(db, widget_ids: list[int], window: str, now: float | None = None) -> dict[int, list[float | None]]:  # noqa: ANN001
+    """Bars of a long window from the outages: each the share of its slice that was up.
+
+    A slice before the check was made is unknown, and one it covers only in
+    part is measured over that part. An outage still open runs until now.
+    """
+    hours, bars = BAR_WINDOWS[window]
+    end = time.time() if now is None else now
+    start = end - hours * 3600
+    width = hours * 3600 / bars
+    checks = {row.widget_id: row for row in db.execute(
+        select(HealthCheck.id, HealthCheck.widget_id, HealthCheck.created_at).where(HealthCheck.widget_id.in_(widget_ids)))}
+    spans: dict[int, list[tuple[float, float]]] = {}
+    if checks:
+        for check_id, began, ended in db.execute(
+            select(Outage.check_id, Outage.started_at, Outage.ended_at).where(
+                Outage.check_id.in_([row.id for row in checks.values()]),
+                (Outage.ended_at.is_(None)) | (Outage.ended_at >= datetime.fromtimestamp(start, UTC)),
+            )
+        ):
+            spans.setdefault(check_id, []).append((began.timestamp(), ended.timestamp() if ended else end))
+    out: dict[int, list[float | None]] = {}
+    for widget_id in widget_ids:
+        check = checks.get(widget_id)
+        if check is None:
+            out[widget_id] = [None] * bars
+            continue
+        since = check.created_at.timestamp() if check.created_at else end
+        row: list[float | None] = []
+        for index in range(bars):
+            left = max(start + index * width, since)
+            right = start + (index + 1) * width
+            if right - left < 1:
+                row.append(None)
+                continue
+            down = sum(max(0.0, min(right, until) - max(left, began)) for began, until in spans.get(check.id, []))
+            row.append(round(max(0.0, 1 - down / (right - left)), 4))
+        out[widget_id] = row
     return out
 
 

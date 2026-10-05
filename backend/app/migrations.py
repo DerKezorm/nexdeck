@@ -164,6 +164,12 @@ def _language_pair_column(connection: Connection) -> None:
     _add_column(connection, "users", "language_pair", "VARCHAR(32) NOT NULL DEFAULT 'en,de'")
 
 
+def _check_since_column(connection: Connection) -> None:
+    """A check from before knows nothing older than today: its long bars start here."""
+    _add_column(connection, "health_checks", "created_at", "DATETIME")
+    connection.execute(text("UPDATE health_checks SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -182,6 +188,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (15, "A connection can be muted", _muted_column),
     (16, "Each account chooses the two languages in its top bar", _language_pair_column),
     (17, "A wall display can rest on a large clock", _rest_column),
+    (18, "A reachability check knows since when it measures", _check_since_column),
 ]
 
 

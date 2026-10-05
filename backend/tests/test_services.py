@@ -541,6 +541,61 @@ def test_uptime_bars_windows_and_live_row(client: TestClient) -> None:
     assert health.bars_window({"bars": "nonsense"}) == "24h" and health.bars_window(None) == "24h"
 
 
+
+def test_the_long_windows_read_the_outages_and_know_nothing_before_the_check(client: TestClient) -> None:
+    """⚠️ A week and a month lie beyond the day the history keeps; the outages are kept a year.
+
+    A slice before the check was made is unknown, not up: a check made yesterday has not seen the month.
+    """
+    setup_admin(client)
+    board = client.post("/api/v1/boards", json={"name": "H"}, headers=CSRF).json()
+    widget = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets",
+                         json={"kind": "core.app", "title": "Svc", "link": "http://svc.invalid", "options": {"check": True, "bars": "30d"}},
+                         headers=CSRF).json()["widget"]
+    day = 86400
+    now = time.time()  # the last bar ends now
+    with db_session() as db:
+        check = db.scalar(select(HealthCheck).where(HealthCheck.widget_id == widget["id"]))
+        assert check is not None and check.created_at is not None, "a new check knows since when it measures"
+        check.created_at = datetime.fromtimestamp(now - 10 * day, UTC)
+        # Six hours down, wholly inside the third bar from the end.
+        down_from = now - 2.5 * day
+        db.add(Outage(check_id=check.id, started_at=datetime.fromtimestamp(down_from, UTC),
+                      ended_at=datetime.fromtimestamp(down_from + 6 * 3600, UTC)))
+        # Still down: the last hour of the last bar.
+        db.add(Outage(check_id=check.id, started_at=datetime.fromtimestamp(now - 3600, UTC)))
+        # Long over before the window began: left out.
+        db.add(Outage(check_id=check.id, started_at=datetime.fromtimestamp(now - 60 * day, UTC),
+                      ended_at=datetime.fromtimestamp(now - 59 * day, UTC)))
+        db.commit()
+        month = health_service.outage_bars_for(db, [widget["id"]], "30d", now=now)[widget["id"]]
+        week = health_service.outage_bars_for(db, [widget["id"]], "7d", now=now)[widget["id"]]
+        # Through the door every card uses, not only the helper: the six hours come back.
+        assert health_service.uptime_bars(db, widget["id"], "30d")[27] == 0.75
+        assert health_service.bars_for(db, {widget["id"]: "7d"})[widget["id"]][0] == 1.0
+    assert len(month) == 30 and month[:20] == [None] * 20, "nothing before the check was made"
+    assert month[20:27] == [1.0] * 7
+    assert month[27] == 0.75 and month[28] == 1.0
+    assert month[29] == round(1 - 1 / 24, 4)
+    assert len(week) == 28 and week[-1] == round(1 - 1 / 6, 4)
+    assert health_service.bars_window({"bars": "7d"}) == "7d" and health_service.bars_window({"bars": "30d"}) == "30d"
+
+
+def test_a_check_from_before_the_update_measures_from_the_update(tmp_path: Path) -> None:
+    from sqlalchemy import create_engine, text
+
+    from app.migrations import _check_since_column
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'old.db'}")
+    with engine.begin() as connection:
+        connection.execute(text("CREATE TABLE health_checks (id INTEGER PRIMARY KEY, target VARCHAR(600))"))
+        connection.execute(text("INSERT INTO health_checks (id, target) VALUES (1, 'http://svc.invalid')"))
+        _check_since_column(connection)
+        _check_since_column(connection)
+        since = connection.execute(text("SELECT created_at FROM health_checks")).scalar()
+    assert since is not None
+    assert abs(datetime.fromisoformat(since).replace(tzinfo=UTC).timestamp() - time.time()) < 120
+
 def test_a_check_without_target_takes_the_shape_the_probe_needs() -> None:
     from types import SimpleNamespace
 

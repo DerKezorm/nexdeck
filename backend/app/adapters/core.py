@@ -254,6 +254,8 @@ class CoreAdapter(Adapter):
                       help="Boards that belong to somebody else never show up here."),
                 Field("bars", "Availability bars", type="select", default="24h",
                       options=(
+                          ("30d", "Last 30 days, one bar per day"),
+                          ("7d", "Last 7 days, one bar per 6 hours"),
                           ("24h", "Last 24 hours, one bar per 30 minutes"),
                           ("6h", "Last 6 hours, one bar per 7.5 minutes"),
                           ("1h", "Last hour, one bar per minute"),
@@ -335,6 +337,8 @@ class CoreAdapter(Adapter):
                     default="24h",
                     help="What the row of bars at the bottom of the tile shows.",
                     options=(
+                        ("30d", "Last 30 days, one bar per day"),
+                        ("7d", "Last 7 days, one bar per 6 hours"),
                         ("24h", "Last 24 hours, one bar per 30 minutes"),
                         ("6h", "Last 6 hours, one bar per 7.5 minutes"),
                         ("1h", "Last hour, one bar per minute"),

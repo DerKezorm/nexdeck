@@ -133,6 +133,14 @@ export function renderWidget(props: RenderProps) {
  * nothing is known yet. The app tile draws one, and so does every row of the
  * status page.
  */
+/**
+ * A bar is green only from this share up.
+ *
+ * ⚠️ It was 0.99, which a slice of a day crosses with fourteen minutes down:
+ * once a bar stood for a whole day, a real outage stayed green.
+ */
+const UP = 0.999
+
 function AvailabilityBars({ bars, title, className = '' }: { bars: (number | null)[]; title?: string; className?: string }) {
   return (
     <div className={`flex gap-[2px] h-[6px] ${className}`} title={title} aria-hidden="true" data-testid="availability-bars">
@@ -141,7 +149,7 @@ function AvailabilityBars({ bars, title, className = '' }: { bars: (number | nul
           key={index}
           className="flex-1 rounded-sm"
           style={{
-            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= 0.99 ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
+            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= UP ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
             opacity: bar === null ? 1 : 0.85,
           }}
         />
@@ -613,7 +621,7 @@ function Strip({ bars, label }: { bars: (number | null)[]; label: string }) {
           key={index}
           className="flex-1 rounded-[2px] bar-in"
           style={{
-            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= 0.99 ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
+            background: bar === null ? 'color-mix(in srgb, var(--nd-text) 8%, transparent)' : bar >= UP ? 'var(--nd-ok)' : bar > 0.5 ? 'var(--nd-warn)' : 'var(--nd-bad)',
             opacity: bar === null ? 1 : 0.85,
             animationDelay: `${index * 10}ms`,
           }}
