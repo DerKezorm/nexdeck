@@ -1742,7 +1742,24 @@
     "Daily note": "Nota del giorno",
     "Today's daily note of one space, made from the space's template when it is missing. A line goes into it from here. Needs a token with the level Write.": "La nota del giorno di uno spazio, creata dal modello dello spazio se manca. Da qui vi si aggiunge una riga. Richiede un token con il livello Scrittura.",
     "Space": "Spazio",
-    "The space whose daily note this card shows and writes to. Only spaces the token may write in are offered.": "Lo spazio di cui questa carta mostra la nota del giorno e in cui scrive. Sono offerti solo gli spazi in cui il token può scrivere."
+    "The space whose daily note this card shows and writes to. Only spaces the token may write in are offered.": "Lo spazio di cui questa carta mostra la nota del giorno e in cui scrive. Sono offerti solo gli spazi in cui il token può scrivere.",
+    "Last 30 days, one bar per day": "Ultimi 30 giorni, una barra al giorno",
+    "Last 7 days, one bar per 6 hours": "Ultimi 7 giorni, una barra ogni 6 ore",
+    "This month's budget, the balances of the accounts and what each category has left, through actual-http-api.": "Il budget di questo mese, i saldi dei conti e quanto resta a ogni categoria, tramite actual-http-api.",
+    "actual-http-api URL": "URL di actual-http-api",
+    "The address of actual-http-api, the container that reads Actual for other programs. Actual's own address does not answer here.": "L'indirizzo di actual-http-api, il container che legge Actual per altri programmi. L'indirizzo di Actual stesso qui non risponde.",
+    "The API_KEY set on actual-http-api.": "L'API_KEY impostato su actual-http-api.",
+    "Sync ID": "ID di sincronizzazione",
+    "In Actual: Settings > Show advanced settings > Sync ID.": "In Actual: Settings > Show advanced settings > Sync ID.",
+    "Only for a budget with end-to-end encryption.": "Solo per un budget con crittografia end-to-end.",
+    "Currency symbol": "Simbolo di valuta",
+    "Put in front of every amount. Empty shows the numbers alone.": "Messo davanti a ogni importo. Vuoto mostra solo i numeri.",
+    "What is left to budget this month, what is budgeted and spent, and how many categories are overspent.": "Quanto resta da assegnare questo mese, quanto è assegnato e speso, e quante categorie sono sforate.",
+    "Each open account with its balance, and the sums on and off budget.": "Ogni conto aperto con il suo saldo, e le somme dentro e fuori dal budget.",
+    "Show accounts off budget": "Mostra i conti fuori dal budget",
+    "What each category of this month has spent of its budget, the overspent first.": "Quanto ogni categoria ha speso del suo budget questo mese, prima quelle sforate.",
+    "Every category": "Tutte le categorie",
+    "Only overspent": "Solo sforate"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -2777,6 +2794,11 @@
     "uploading": "caricamento",
     "dead": "morto",
     "Add": "Aggiungi",
-    "Into today's note": "Nella nota di oggi"
+    "Into today's note": "Nella nota di oggi",
+    "To budget": "Da assegnare",
+    "Budgeted": "Assegnato",
+    "Overspent": "Sforato",
+    "On budget": "Nel budget",
+    "Off budget": "Fuori dal budget"
   }
 }

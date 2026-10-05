@@ -54,7 +54,7 @@ that one of twenty-one renderers draws.
 | nextrmnl | status, sessions, history, connections | | read-only API key from nextrmnl 0.3.0 or newer, with API keys switched on |
 | nexpulse | latest result (a running test live, a button to start one), history (speed or ping idle and under load), period summary, recent tests, latency under load (graded A+ to F) | | API key from nexpulse under Settings > API keys; a key that may only read fills every card, one with "Read and start tests" adds the button. nexpulse 0.1.1 or newer tells nexdeck which kind of key it is; on 0.1.0 the button is always shown |
 | nexsift | nexsift inbox, newest lines | | an API key from Settings > API keys, after switching on Allow API keys; it may only read numbers and titles, never the text of a message |
-| nexlore | nexlore overview, tasks, changed last | tick a task off, capture a line into the inbox | an API token from My account > Connections > API tokens, after the operator has switched API tokens on; Read fills the cards, Write also ticks off and captures |
+| nexlore | nexlore overview, tasks, changed last, daily note | tick a task off, capture a line into the inbox, add a line to the daily note | an API token from My account > Connections > API tokens, after the operator has switched API tokens on; Read fills the cards, Write also ticks off and captures; the daily note needs Write, because it is made from the space's template when it is missing |
 | Traefik | overview, routers | | none, or basic authentication |
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
 | OPNsense | system, gateways | | API key and secret |
@@ -143,6 +143,7 @@ that one of twenty-one renderers draws.
 | wger | weight, weigh-ins | | API key from the profile, sent as Token |
 | FileBrowser Quantum | storage | | an API token with the permission api, made in FileBrowser's settings; shares are counted when the token may read them |
 | Firefly III | money, subscriptions, budgets | | personal access token from Profile > OAuth |
+| Actual Budget | this month (left to budget, budgeted, spent, overspent categories), accounts (balances, on and off budget), categories (spent of the budget, overspent first) | | through [actual-http-api](https://github.com/jhonderson/actual-http-api), a second container next to Actual, because Actual has no API of its own: its URL, its API_KEY and the budget's sync ID (Settings > Show advanced settings), and for an end-to-end encrypted budget its password. Reads only |
 | evcc | energy, energy flow, charging | | none; the state is readable without a password |
 | BookOrbit | reading now, recently added, library | | user and password; BookOrbit has no API keys and allows five sign-ins a minute, so the token is kept |
 | Ghostfolio | portfolio, holdings | | security token of the account from Settings > Access; it is exchanged for a JWT that lasts 180 days |
