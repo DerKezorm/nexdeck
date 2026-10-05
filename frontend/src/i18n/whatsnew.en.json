@@ -1101,6 +1101,31 @@
         "Both are marked beta until they have run in more homes than one. Real-Debrid was built from its documentation, without an account to try it on.",
         "Thanks to C0NN0RAD0 for asking for both (#28, #29)."
       ]
+    },
+    "0.31.0": {
+      "lead": "Today's nexlore daily note on a card, availability over a week and a month, and Actual Budget as a new integration.",
+      "sections": [
+        {
+          "title": "nexlore daily note",
+          "body": "A new nexlore card shows today's daily note of one space and makes it from the space's template when it is missing, as a click on Today in nexlore does. The space is picked in the card's settings, and only spaces the token may write in are offered. A line goes into the note from the card, and the link opens the note in nexlore. It needs a token with the level Write.",
+          "path": "Edit mode (pencil) > Add widget > nexlore > Daily note"
+        },
+        {
+          "title": "A week and a month of availability",
+          "body": "App tiles and the status card can show the last 7 days, one bar per 6 hours, or the last 30 days, one bar per day. The bars come from the outages nexdeck keeps for a year. A check counts from the day it was made, so the days before stay grey instead of green; checks from before this version count from the update. A bar is green only from 99.9 per cent now: before, a day with fourteen minutes down still looked fine.",
+          "path": "App tile or status card > Settings > Availability bars"
+        },
+        {
+          "title": "Actual Budget",
+          "body": "Three cards: this month, with what is left to budget, what is budgeted and spent, and how many categories are overspent; the accounts with their balances on and off budget; and the categories with what each has spent of its budget, the overspent first. Actual has no API of its own, so nexdeck reads it through actual-http-api, a small second container next to Actual. It needs that container's address and API key and the budget's sync ID from Actual's advanced settings. Nothing is ever written.",
+          "path": "System > Integrations > Add an integration > Actual Budget"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The compose file in the repository starts again when .env leaves NEXDECK_DEMO out. The empty variable stopped the server with a validation error; an empty variable now counts as not set.",
+        "Actual Budget is marked beta until it has run on more budgets than one."
+      ]
     }
   }
 }

@@ -3,6 +3,19 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.31.0 (2026-10-05)
+
+### New
+
+- **Today's daily note from nexlore.** A new nexlore card shows the daily note of one space and makes it from the space's template when it is missing, as a click on Today in nexlore does. The space is a setting of the card, and only spaces the token may write in are offered; without one the card makes nothing anywhere. A line goes into the note from the card, and the link opens it in nexlore. Needs a token with the level Write.
+- **Availability over a week and a month.** App tiles and the status card can show the last 7 days, one bar per 6 hours, or the last 30 days, one bar per day. The bars are read from the outages, which nexdeck keeps for a year. A check knows since when it measures: the days before stay grey instead of green, and checks from before this version count from the update. Time in which nexdeck itself was not running cannot be measured and counts as up.
+- **Actual Budget.** This month (what is left to budget, budgeted, spent, overspent categories), the accounts with their balances on and off budget, and the categories with what each has spent of its budget, the overspent first. Actual has no API of its own, so nexdeck reads it through [actual-http-api](https://github.com/jhonderson/actual-http-api), a second container next to Actual. Measured against Actual 26.10.0; marked beta. Nothing is ever written.
+
+### Fixed
+
+- **The compose file starts again without NEXDECK_DEMO.** It hands over an empty `NEXDECK_DEMO` when `.env` leaves the variable out, and the server stopped at start with a validation error. Every setting that is set but empty now counts as not set.
+- **A bar is green only from 99.9 per cent.** At 99 a slice of a day stayed green with fourteen minutes down.
+
 ## 0.30.0 (2026-10-04)
 
 ### New

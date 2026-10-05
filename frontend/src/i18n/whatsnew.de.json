@@ -1101,6 +1101,31 @@
         "Beide sind als Beta markiert, bis sie in mehr als einem Zuhause gelaufen sind. Real-Debrid ist nach der Doku gebaut, ohne Konto zum Ausprobieren.",
         "Danke an C0NN0RAD0, der sich beide gewünscht hat (#28, #29)."
       ]
+    },
+    "0.31.0": {
+      "lead": "Die heutige Tagesnotiz aus nexlore auf einer Karte, Verfügbarkeit über eine Woche und einen Monat, und Actual Budget als neue Anbindung.",
+      "sections": [
+        {
+          "title": "Tagesnotiz aus nexlore",
+          "body": "Eine neue nexlore-Karte zeigt die heutige Tagesnotiz eines Bereichs und legt sie aus der Vorlage des Bereichs an, wenn sie fehlt, wie ein Klick auf Heute in nexlore. Den Bereich wählt man in den Einstellungen der Karte; angeboten werden nur Bereiche, in die das Token schreiben darf. Von der Karte aus geht eine Zeile in die Notiz, und der Link öffnet sie in nexlore. Es braucht ein Token mit der Stufe Schreiben.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexlore > Tagesnotiz"
+        },
+        {
+          "title": "Verfügbarkeit über Woche und Monat",
+          "body": "App-Kacheln und die Statuskarte zeigen auf Wunsch die letzten 7 Tage, ein Balken je 6 Stunden, oder die letzten 30 Tage, ein Balken je Tag. Die Balken kommen aus den Ausfällen, die nexdeck ein Jahr lang aufhebt. Ein Check zählt ab dem Tag, an dem er angelegt wurde; die Tage davor bleiben grau statt grün, und Checks von vor dieser Version zählen ab dem Update. Grün ist ein Balken jetzt erst ab 99,9 Prozent: vorher sah ein Tag mit vierzehn Minuten Ausfall noch gut aus.",
+          "path": "App-Kachel oder Statuskarte > Einstellungen > Verfügbarkeitsbalken"
+        },
+        {
+          "title": "Actual Budget",
+          "body": "Drei Karten: dieser Monat, mit dem, was noch zu verteilen ist, was verteilt und ausgegeben ist, und wie viele Kategorien überzogen sind; die Konten mit ihren Salden im und außerhalb des Budgets; und die Kategorien mit dem, was jede von ihrem Budget ausgegeben hat, die überzogenen zuerst. Actual hat keine eigene API, deshalb liest nexdeck es über actual-http-api, einen kleinen zweiten Container neben Actual. Es braucht dessen Adresse und API-Schlüssel und die Sync-ID des Budgets aus Actuals erweiterten Einstellungen. Geschrieben wird nie etwas.",
+          "path": "System > Anbindungen > Anbindung hinzufügen > Actual Budget"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Compose-Datei aus dem Repository startet wieder, wenn .env NEXDECK_DEMO weglässt. Die leere Variable hielt den Server mit einem Prüffehler an; eine leere Variable gilt jetzt als nicht gesetzt.",
+        "Actual Budget ist als Beta markiert, bis es an mehr als einem Budget gelaufen ist."
+      ]
     }
   }
 }
