@@ -469,25 +469,81 @@ export function BoardPage() {
     setPreviewData((current) => nextPreview(current, current?.id ?? 0, null))
   }
 
+  // ⚠️ Both bars stand in every state of the page, the same elements under the
+  // same keys, so a board that is still loading keeps them on screen. The app
+  // installed on iPadOS 26 blurs the top of the page unless it finds a solid
+  // bar there; a switch to a board not loaded yet showed a spinner and no bar,
+  // and the blur came back and stayed until the app was started again (#27).
+  const listed = menuBoards.find((entry) => entry.slug === slug)
+  const topBar = (
+    <TopBar
+      key="top-bar"
+      boardName={data?.name ?? listed?.name ?? ''}
+      pages={pages.map((p) => ({ id: p.id, name: p.name }))}
+      activePage={activePage?.id ?? -1}
+      onPage={(id) => {
+        const page = pages.find((p) => p.id === id)
+        if (page) navigate(`/b/${slug}/${page.slug}`)
+      }}
+      editing={editing}
+      onEdit={() => setEditing((v) => !v)}
+      canEdit={canEdit}
+      unread={unread}
+      onNotices={() => openNotices(true)}
+      onSearch={() => setPalette(true)}
+      onBoards={() => setBoardSettings(true)}
+      user={user}
+      boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
+      onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
+    />
+  )
+  const tabBar = (
+    <div key="tab-bar" data-no-picture>
+      <MobileTabBar
+        boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
+        active={data?.id ?? listed?.id ?? -1}
+        onBoard={(id) => {
+          const target = boards.data?.find((b) => b.id === id)
+          if (target) navigate(`/b/${target.slug}`)
+        }}
+        onSearch={() => setPalette(true)}
+        onNotices={() => openNotices(true)}
+        onMenu={() => navigate('/settings')}
+        unread={unread}
+        pages={pages.map((page) => ({ id: page.id, name: page.name, slug: page.slug }))}
+        activePage={activePage?.slug}
+        onPage={(pageSlug) => navigate(`/b/${slug}/${pageSlug}`)}
+      />
+    </div>
+  )
+
   if (board.isLoading) {
     return (
-      <div className="min-h-full flex items-center justify-center">
+      <div className="min-h-full">
         <BackgroundLayer />
-        <Spinner />
+        {topBar}
+        <div className="flex items-center justify-center py-32">
+          <Spinner />
+        </div>
+        {tabBar}
       </div>
     )
   }
   if (board.isError || !data || !activePage) {
     const failure = board.error
     return (
-      <div className="min-h-full flex items-center justify-center p-6">
+      <div className="min-h-full">
         <BackgroundLayer />
-        <div className="glass rounded-2xl p-6 text-center">
-          <p className="font-medium">{failure instanceof ApiError && failure.status === 404 ? t('board.notFound') : t('board.loadFailed')}</p>
-          <button className="btn mt-4" onClick={() => navigate('/')}>
-            {t('common.back')}
-          </button>
+        {topBar}
+        <div className="flex items-center justify-center p-6 py-32">
+          <div className="glass rounded-2xl p-6 text-center">
+            <p className="font-medium">{failure instanceof ApiError && failure.status === 404 ? t('board.notFound') : t('board.loadFailed')}</p>
+            <button className="btn mt-4" onClick={() => navigate('/')}>
+              {t('common.back')}
+            </button>
+          </div>
         </div>
+        {tabBar}
       </div>
     )
   }
@@ -499,25 +555,7 @@ export function BoardPage() {
     <>
     <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
-      <TopBar
-        boardName={data.name}
-        pages={pages.map((p) => ({ id: p.id, name: p.name }))}
-        activePage={activePage.id}
-        onPage={(id) => {
-          const page = pages.find((p) => p.id === id)
-          if (page) navigate(`/b/${slug}/${page.slug}`)
-        }}
-        editing={editing}
-        onEdit={() => setEditing((v) => !v)}
-        canEdit={canEdit}
-        unread={unread}
-        onNotices={() => openNotices(true)}
-        onSearch={() => setPalette(true)}
-        onBoards={() => setBoardSettings(true)}
-        user={user}
-        boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
-        onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
-      />
+      {topBar}
       <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
         <div data-no-picture>
           <DemoNotice admin={user?.role === 'admin'} />
@@ -612,23 +650,7 @@ export function BoardPage() {
         </div>
       )}
 
-      <div data-no-picture>
-      <MobileTabBar
-        boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
-        active={data.id}
-        onBoard={(id) => {
-          const target = boards.data?.find((b) => b.id === id)
-          if (target) navigate(`/b/${target.slug}`)
-        }}
-        onSearch={() => setPalette(true)}
-        onNotices={() => openNotices(true)}
-        onMenu={() => navigate('/settings')}
-        unread={unread}
-        pages={pages.map((page) => ({ id: page.id, name: page.name, slug: page.slug }))}
-        activePage={activePage.slug}
-        onPage={(slug) => navigate(`/b/${data.slug}/${slug}`)}
-      />
-      </div>
+      {tabBar}
 
       <WidgetLibrary
         open={library}

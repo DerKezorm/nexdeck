@@ -1210,7 +1210,14 @@ export function WeatherCard({ data }: RenderProps) {
             {data?.primary?.label ? ` · ${disguise.as('city', tLabel(data.primary.label))}` : ''}
           </div>
         </div>
-        <div className="ml-auto hidden lg:block">
+        {/* ⚠️ By the width of the card, not of the screen: an iPad Pro held upright is as wide
+            as a laptop, and "Feels like" lay over the temperature of a narrow card (#27).
+            As many chips as there is room for, none cut off at the edge; min-w-0 so a longer
+            label in another language scrolls instead of pushing. */}
+        <div className="ml-auto min-w-0 hidden @xs/card:block @sm/card:hidden">
+          <Chips items={data?.secondary?.slice(0, 1)} />
+        </div>
+        <div className="ml-auto min-w-0 hidden @sm/card:block">
           <Chips items={data?.secondary?.slice(0, 2)} />
         </div>
       </div>

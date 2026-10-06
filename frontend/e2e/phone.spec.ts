@@ -216,3 +216,115 @@ test('the bar of a board with four pages fits a tablet held upright', async ({ p
     await page.request.delete('/api/v1/boards/upright', write)
   }
 })
+
+test('the bar stays on the page while another board loads', async ({ page }) => {
+  // ⚠️ Issue #27, 06.10.2026: in the app installed on iPadOS 26 the blur came back over the bar
+  // after a switch to another board, and stayed until the app was started again. Switching
+  // pages did no harm. The board that was not loaded yet showed a spinner and no bar at all,
+  // and WebKit looks for a solid bar at the top edge; this is the one moment it found none.
+  await signIn(page)
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  for (const [name, slug] of [['First', 'switch-first'], ['Second', 'switch-second']]) {
+    const made = await page.request.post('/api/v1/boards', { ...write, data: { name, slug, in_menu: true } })
+    expect(made.status()).toBe(201)
+  }
+  try {
+    await page.setViewportSize({ width: 1032, height: 1376 })
+    await page.goto('/b/switch-first')
+    await expect(page.getByRole('button', { name: 'First', exact: true })).toBeVisible()
+    // Every moment without a bar is counted, and the bar itself is kept to compare.
+    await page.evaluate(() => {
+      const state = window as unknown as { barGone: number; bar: Element | null }
+      state.barGone = 0
+      state.bar = document.querySelector('header.app-bar')
+      new MutationObserver(() => {
+        if (!document.querySelector('header.app-bar')) state.barGone += 1
+      }).observe(document.body, { childList: true, subtree: true })
+    })
+    // The second board answers late, as it does over a slow line.
+    let held = false
+    await page.route('**/api/v1/boards/switch-second', async (route) => {
+      held = true
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue()
+    })
+    await page.getByRole('button', { name: 'First', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Second' }).click()
+    await expect.poll(() => held).toBe(true)
+    // Read once while the answer is held back, not polled: a poll waits until the board is there.
+    expect(await page.evaluate(() => document.querySelectorAll('header.app-bar').length), 'no bar while the board loads').toBe(1)
+    await expect(page.getByRole('button', { name: 'Second', exact: true })).toBeVisible()
+    const after = await page.evaluate(() => {
+      const state = window as unknown as { barGone: number; bar: Element | null }
+      return { gone: state.barGone, same: state.bar === document.querySelector('header.app-bar') }
+    })
+    expect(after.gone, 'the bar left the page during the switch').toBe(0)
+    expect(after.same, 'the bar was taken down and built anew').toBe(true)
+  } finally {
+    await page.unroute('**/api/v1/boards/switch-second')
+    await page.request.delete('/api/v1/boards/switch-first', write)
+    await page.request.delete('/api/v1/boards/switch-second', write)
+  }
+})
+
+test('the weather chips stay clear of the temperature on a narrow card', async ({ page }) => {
+  // Issue #27: on an upright iPad the chip "Feels like" lay over "19 °C". The chips came with the
+  // width of the screen, and an iPad Pro held upright is as wide as a laptop, while the card is not.
+  await signIn(page)
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  const made = await page.request.post('/api/v1/boards', { ...write, data: { name: 'Weather', slug: 'weather-narrow' } })
+  expect(made.status()).toBe(201)
+  try {
+    const pageId = (await made.json()).pages[0].id
+    const ids: string[] = []
+    for (const title of ['Weather narrow', 'Weather wide']) {
+      const card = await page.request.post(`/api/v1/pages/${pageId}/widgets`, { ...write, data: { kind: 'weather.current', title, options: { place: 'Springfield' } } })
+      expect(card.status()).toBe(201)
+      ids.push(String((await card.json()).widget.id))
+    }
+    // Six of 24 columns, as on the iPad in the report, and one with room to spare.
+    const placed = await page.request.put(`/api/v1/pages/${pageId}/layouts`, {
+      ...write,
+      data: { lg: [{ i: ids[0], x: 0, y: 0, w: 6, h: 2 }, { i: ids[1], x: 6, y: 0, w: 12, h: 2 }] },
+    })
+    expect(placed.ok()).toBe(true)
+
+    const measure = (title: string) =>
+      page.locator(`section[aria-label="${title}"]`).evaluate((card) => {
+        const box = (element: Element) => element.getBoundingClientRect()
+        const temperature = card.querySelector('.num[class*="text-[28px]"]')
+        const chips = [...card.querySelectorAll('.chip')].filter((chip) => box(chip).width > 0)
+        const outer = box(card)
+        // The text, not its box: the box shrinks with the column and the number runs out of it.
+        const range = document.createRange()
+        if (temperature) range.selectNodeContents(temperature)
+        const number = temperature ? range.getBoundingClientRect() : null
+        return {
+          chips: chips.length,
+          over: chips.some((chip) => {
+            const c = box(chip)
+            return !!number && c.left < number.right && c.right > number.left && c.top < number.bottom && c.bottom > number.top
+          }),
+          outside: chips.some((chip) => box(chip).right > outer.right + 1),
+        }
+      })
+    for (const size of [{ width: 1032, height: 1376 }, { width: 1376, height: 1032 }, { width: 820, height: 1180 }]) {
+      await page.setViewportSize(size)
+      await page.goto('/b/weather-narrow')
+      // Both cards with their numbers: a card without data yet has no chips to lie anywhere.
+      for (const title of ['Weather narrow', 'Weather wide']) {
+        await expect(page.locator(`section[aria-label="${title}"] .num[class*="text-[28px]"]`)).toContainText(/\d/)
+      }
+      await fitted(page)
+      for (const title of ['Weather narrow', 'Weather wide']) {
+        const seen = await measure(title)
+        expect(seen.over, `a chip lies over the temperature on "${title}" at ${size.width}`).toBe(false)
+        expect(seen.outside, `a chip runs out of "${title}" at ${size.width}`).toBe(false)
+      }
+      // Where there is room the chips are still there.
+      expect((await measure('Weather wide')).chips, `the wide card lost its chips at ${size.width}`).toBe(2)
+    }
+  } finally {
+    await page.request.delete('/api/v1/boards/weather-narrow', write)
+  }
+})
