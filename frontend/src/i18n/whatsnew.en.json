@@ -1147,6 +1147,27 @@
         "The reload and open buttons of a hovered card stand beside its status dot and beta mark instead of over them.",
         "Thanks to bluedsticker, C0NN0RAD0 and utlilb for the reports and the screenshots (#27, #28, #29, #19)."
       ]
+    },
+    "0.32.0": {
+      "lead": "Reclaimerr joins nexdeck: what its clean-up rules have marked for deletion, when each title goes, and buttons to keep what should stay.",
+      "sections": [
+        {
+          "title": "Reclaimerr",
+          "body": "Three new cards over Reclaimerr's external API. The overview counts the titles marked for deletion, the space they free, the next automatic deletion and the protections, and turns amber when the last sync or scan is old or a task failed. Leaving soon lists the titles that go by themselves first, nearest deadline first, then the ones marked by hand, each with its size and an open delete request of a user on its row; a title can be postponed, kept, given a fresh timer or protected from there. Tasks shows the schedule with the last and next run, and Run now for tasks that neither delete nor write to Radarr and Sonarr. The token comes from Settings > Integrations in Reclaimerr; a card whose token lacks a scope says which. Marked beta.",
+          "path": "Settings > Integrations > Reclaimerr, then Edit mode (pencil) > Add widget > Reclaimerr"
+        },
+        {
+          "title": "Told when something was cleaned up",
+          "body": "When Reclaimerr deletes or moves a title, nexdeck can tell you, as a new kind of news: Media was cleaned up. It is read by the Reclaimerr overview card, so that card has to be on a board.",
+          "path": "Settings > Channels > the events of a channel"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "An error on a card that names something, such as a missing scope, is translated with the name kept, in every language.",
+        "Times like \"in 5 d\" on a card are translated into Spanish, French and Italian too.",
+        "Thanks to utlilb for the request (#31)."
+      ]
     }
   }
 }

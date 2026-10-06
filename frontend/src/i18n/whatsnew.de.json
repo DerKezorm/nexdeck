@@ -1147,6 +1147,27 @@
         "Die Knöpfe Neu laden und Öffnen einer Karte stehen beim Überfahren neben Statuspunkt und Beta-Zeichen statt darüber.",
         "Danke an bluedsticker, C0NN0RAD0 und utlilb für die Meldungen und Screenshots (#27, #28, #29, #19)."
       ]
+    },
+    "0.32.0": {
+      "lead": "Reclaimerr kommt zu nexdeck: was seine Aufräumregeln zum Löschen vorgemerkt haben, wann jeder Titel geht, und Knöpfe, um zu behalten, was bleiben soll.",
+      "sections": [
+        {
+          "title": "Reclaimerr",
+          "body": "Drei neue Karten über die externe API von Reclaimerr. Die Übersicht zählt die zum Löschen vorgemerkten Titel, den Platz, den sie freigeben, die nächste automatische Löschung und die Schutzeinträge, und wird gelb, wenn die letzte Synchronisierung oder der letzte Scan alt ist oder ein Auftrag fehlschlug. Geht bald listet zuerst die Titel, die von selbst gehen, die nächste Frist zuerst, dann die von Hand vorgemerkten, jeweils mit Größe und einem offenen Löschwunsch eines Nutzers in der Zeile; von dort lässt sich ein Titel aufschieben, behalten, mit neuer Frist versehen oder schützen. Aufträge zeigt den Zeitplan mit letztem und nächstem Lauf und Jetzt starten für Aufträge, die weder löschen noch in Radarr und Sonarr schreiben. Das Token kommt aus Settings > Integrations in Reclaimerr; fehlt ihm eine Berechtigung, sagt die Karte welche. Als Beta markiert.",
+          "path": "Einstellungen > Anbindungen > Reclaimerr, dann Bearbeiten (Stift) > Widget hinzufügen > Reclaimerr"
+        },
+        {
+          "title": "Bescheid, wenn aufgeräumt wurde",
+          "body": "Löscht oder verschiebt Reclaimerr einen Titel, kann nexdeck dir das melden, als neue Art von Nachricht: Medien wurden aufgeräumt. Gelesen wird das von der Karte Reclaimerr-Übersicht, sie muss also auf einem Board stehen.",
+          "path": "Einstellungen > Kanäle > die Ereignisse eines Kanals"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein Fehler auf einer Karte, der etwas beim Namen nennt, etwa eine fehlende Berechtigung, wird übersetzt und behält den Namen, in jeder Sprache.",
+        "Zeitangaben wie „in 5 d“ auf einer Karte werden jetzt auch ins Spanische, Französische und Italienische übersetzt.",
+        "Danke an utlilb für den Wunsch (#31)."
+      ]
     }
   }
 }

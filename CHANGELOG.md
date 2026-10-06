@@ -3,11 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.32.0 (2026-10-06)
 
 ### New
 
 - **Reclaimerr (#31).** What Reclaimerr's clean-up rules have marked for deletion, read through its external API with a scoped token. An **overview** with the titles marked, the space they free, the next automatic deletion and the protections, amber when the last sync or scan is old or a task failed; **leaving soon** with the titles that go by themselves first, nearest deadline first, then the ones marked for deletion by hand, each with its size and an open delete request of a user on its row; and the **tasks** with their schedule and last and next run. A title can be postponed, kept, given a fresh timer or protected from the card, and a task that neither deletes nor writes to Radarr and Sonarr can be started. A title Reclaimerr deleted or moved is told as "media was cleaned up". A card whose token lacks a scope names it. Sizes come from the movie or the whole series, so a season or an episode has none. Measured against Reclaimerr 0.5.5; marked beta.
+
+### Fixed
+
+- **An error that names something is translated, with the name kept.** An error on a card without a sentence of its own stood in English in every other language. It is now translated by its wording, and a name in it, such as a missing scope, stays as it is.
+- **Times like "in 5 d" are translated into Spanish, French and Italian.** They stood in English on the nexcrate cards; Reclaimerr's use them too.
 
 ## 0.31.1 (2026-10-06)
 
