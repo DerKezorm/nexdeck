@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.33.0 (2026-10-06)
 
 ### New
 
@@ -12,7 +12,7 @@ project uses semantic versioning.
 ### Changed
 
 - **Reclaimerr's leaving soon shows up to 200 titles (#31).** The cap of 50 was nexdeck's own; it reads every candidate anyway.
-- **nexlore and nexsift are out of beta.** Every card and every button ran against nexlore 1.5.1 and nexsift 0.10.0.
+- **nexlore, nexsift and Reclaimerr are out of beta.** Every card and every button of nexlore and nexsift ran against nexlore 1.5.1 and nexsift 0.10.0; Reclaimerr was confirmed on a real instance by the person who asked for it (#31), notifications included.
 - **oauthlib is pinned to 4.0.0.** apprise pulls it in, and 3.3.1 carries two advisories on the server side apprise never uses; a build can no longer fall back to it.
 
 ## 0.32.0 (2026-10-06)

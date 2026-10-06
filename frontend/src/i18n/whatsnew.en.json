@@ -1168,6 +1168,27 @@
         "Times like \"in 5 d\" on a card are translated into Spanish, French and Italian too.",
         "Thanks to utlilb for the request (#31)."
       ]
+    },
+    "0.33.0": {
+      "lead": "M3U Editor joins nexdeck: what your IPTV playlists and guides look like, what the stream proxy carries right now, and what the DVR records.",
+      "sections": [
+        {
+          "title": "M3U Editor",
+          "body": "Five new cards over M3U Editor's API. The overview shows the streams running now with their viewers and bandwidth, and counts the playlists, channels and guides; it turns amber when a sync failed or is old. Active streams lists each channel the proxy carries with its viewers by user name, never their addresses, how long it runs and its bandwidth, amber on a failover source or with errors. Playlists and Guides show the channels and the last sync, each with a button to sync it. Recordings shows what the DVR records now, what comes next and what it recorded last. A token from API Tokens in M3U Editor with the View ability is enough. Marked beta.",
+          "path": "Settings > Integrations > M3U Editor, then Edit mode (pencil) > Add widget > M3U Editor"
+        },
+        {
+          "title": "nexlore, nexsift and Reclaimerr out of beta",
+          "body": "Every card and every button of nexlore and nexsift ran against a real nexlore 1.5.1 and nexsift 0.10.0, and Reclaimerr was confirmed on a real instance by the person who asked for it, notifications included. The beta mark is gone from all three.",
+          "path": "Edit mode (pencil) > Add widget > nexlore, nexsift or Reclaimerr"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Reclaimerr's leaving soon card shows up to 200 titles instead of 50.",
+        "oauthlib, which apprise pulls in, is pinned to 4.0.0, so no build falls back to a version with known advisories.",
+        "Thanks to C0NN0RAD0 and utlilb for the requests, and to utlilb for testing Reclaimerr (#32, #31)."
+      ]
     }
   }
 }

@@ -1168,6 +1168,27 @@
         "Zeitangaben wie „in 5 d“ auf einer Karte werden jetzt auch ins Spanische, Französische und Italienische übersetzt.",
         "Danke an utlilb für den Wunsch (#31)."
       ]
+    },
+    "0.33.0": {
+      "lead": "M3U Editor kommt zu nexdeck: wie es um deine IPTV-Playlists und Programmführer steht, was der Stream-Proxy gerade überträgt und was der DVR aufnimmt.",
+      "sections": [
+        {
+          "title": "M3U Editor",
+          "body": "Fünf neue Karten über die API von M3U Editor. Die Übersicht zeigt die laufenden Streams mit Zuschauern und Bandbreite und zählt Playlists, Kanäle und Programmführer; sie wird gelb, wenn eine Synchronisierung fehlschlug oder alt ist. Aktive Streams listet jeden Kanal, den der Proxy überträgt, mit den Zuschauern nach Benutzernamen, nie mit ihren Adressen, mit Laufzeit und Bandbreite, gelb auf einer Ersatzquelle oder bei Fehlern. Playlists und Programmführer zeigen die Kanäle und die letzte Synchronisierung, jeweils mit einem Knopf zum Synchronisieren. Aufnahmen zeigt, was der DVR gerade aufnimmt, was als Nächstes kommt und was er zuletzt aufgenommen hat. Ein Token aus API Tokens in M3U Editor mit der Fähigkeit View reicht. Als Beta markiert.",
+          "path": "Einstellungen > Anbindungen > M3U Editor, dann Bearbeiten (Stift) > Widget hinzufügen > M3U Editor"
+        },
+        {
+          "title": "nexlore, nexsift und Reclaimerr ohne Beta",
+          "body": "Jede Karte und jeder Knopf von nexlore und nexsift lief gegen ein echtes nexlore 1.5.1 und nexsift 0.10.0, und Reclaimerr hat der Melder an seiner eigenen Instanz bestätigt, die Benachrichtigungen eingeschlossen. Das Beta-Zeichen ist bei allen dreien weg.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexlore, nexsift oder Reclaimerr"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Reclaimerr-Karte Geht bald zeigt bis zu 200 Titel statt 50.",
+        "oauthlib, das apprise mitbringt, ist auf 4.0.0 festgelegt, damit kein Bau auf eine Fassung mit bekannten Sicherheitsmeldungen zurückfällt.",
+        "Danke an C0NN0RAD0 und utlilb für die Wünsche, und an utlilb fürs Testen von Reclaimerr (#32, #31)."
+      ]
     }
   }
 }
