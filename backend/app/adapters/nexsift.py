@@ -49,7 +49,8 @@ class NexsiftAdapter(Adapter):
     category = "monitoring"
     description = "The notification inbox of the homelab: what is unread, what is critical and open, and the newest lines."
     icon = "nexsift"
-    beta = True
+    #: Out of beta on 06.10.2026: every card and button run against 0.10.0.
+    beta = False
     docs_url = "https://github.com/DerKezorm/nexsift"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://nexsift:8490"),

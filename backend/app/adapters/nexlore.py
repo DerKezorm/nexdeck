@@ -58,7 +58,8 @@ class NexloreAdapter(Adapter):
     category = "other"
     description = "Notes and tasks of nexlore: what is due, what changed last, today's daily note, and a line into the inbox."
     icon = "nexlore"
-    beta = True
+    #: Out of beta on 06.10.2026: every card and button run against 1.5.1.
+    beta = False
     docs_url = "https://www.nexlore.de"
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://nexlore:8470"),
