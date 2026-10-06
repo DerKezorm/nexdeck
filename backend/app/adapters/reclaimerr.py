@@ -3,7 +3,9 @@
 Built for issue #31 from Reclaimerr's external API (``/api/v1``, documented at
 https://jessielw.github.io/Reclaimerr/reference/api/) and its route handlers
 and answer models in the source of 0.5.5, then measured against a live
-Reclaimerr 0.5.5 with a Jellyfin of made-up titles behind it.
+Reclaimerr 0.5.5 with a Jellyfin of made-up titles behind it, and confirmed
+on a real one by the person who asked for it, notifications through Apprise
+included.
 
 - Only the external API. A token made by an administrator under Settings >
   Integrations rides as ``Authorization: Bearer rcl_…``. The cookie routes
@@ -246,6 +248,8 @@ class ReclaimerrAdapter(Adapter):
     category = "media"
     description = "What Reclaimerr's clean-up rules have marked for deletion, when each title goes and how much space it frees, and its tasks."
     icon = "reclaimerr"
+    #: Out of beta on 06.10.2026: confirmed on the instance of the person who asked for it in #31.
+    beta = False
     docs_url = "https://jessielw.github.io/Reclaimerr/reference/api/"
     keywords = ("clean-up", "cleanup", "deletion", "Maintainerr")
     fields = (
