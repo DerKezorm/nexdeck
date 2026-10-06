@@ -1126,6 +1126,27 @@
         "Die Compose-Datei aus dem Repository startet wieder, wenn .env NEXDECK_DEMO weglässt. Die leere Variable hielt den Server mit einem Prüffehler an; eine leere Variable gilt jetzt als nicht gesetzt.",
         "Actual Budget ist als Beta markiert, bis es an mehr als einem Budget gelaufen ist."
       ]
+    },
+    "0.31.1": {
+      "lead": "Real-Debrid zeigt seinen Datenverbrauch, drei Anbindungen verlassen die Beta, und auf dem iPad bleibt die Leiste nach einem Boardwechsel klar.",
+      "sections": [
+        {
+          "title": "Datenverbrauch bei Real-Debrid",
+          "body": "Zwei neue Real-Debrid-Karten. Datenverbrauch zeigt einen Balken für jeden der letzten 7, 14 oder 31 Tage, mit der Summe und dem Hoster, von dem das meiste kam. Hoster-Grenzen listet jeden Hoster mit einer Grenze im Konto: was verbraucht ist und was übrig bleibt, und ob die Grenze täglich, wöchentlich oder monatlich neu beginnt. Ab 80 Prozent wird es gelb, an der Grenze rot.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Real-Debrid > Datenverbrauch oder Hoster-Grenzen"
+        },
+        {
+          "title": "nexdeck auf dem iPad",
+          "body": "In der auf iPadOS 26 installierten App kam die Unschärfe des Systems nach einem Wechsel auf ein anderes Board über die Leiste zurück und blieb, bis die App neu startete. Ein Board, das noch lud, zeigte für einen Moment keine Leiste. Jetzt bleibt die Leiste stehen, während das nächste Board lädt. Auf einer schmalen Wetterkarte im Hochformat laufen die Chips nicht mehr über die Temperatur: Sie richten sich jetzt nach der Breite der Karte, nicht des Bildschirms.",
+          "path": "Board > die Leiste oben, und die Wetterkarte"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Mailpit, Real-Debrid und ReadMeABook sind aus der Beta: Jede wurde von der Person bestätigt, die sie sich gewünscht hatte.",
+        "Die Knöpfe Neu laden und Öffnen einer Karte stehen beim Überfahren neben Statuspunkt und Beta-Zeichen statt darüber.",
+        "Danke an bluedsticker, C0NN0RAD0 und utlilb für die Meldungen und Screenshots (#27, #28, #29, #19)."
+      ]
     }
   }
 }

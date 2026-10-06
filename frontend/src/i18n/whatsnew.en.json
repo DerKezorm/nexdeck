@@ -1126,6 +1126,27 @@
         "The compose file in the repository starts again when .env leaves NEXDECK_DEMO out. The empty variable stopped the server with a validation error; an empty variable now counts as not set.",
         "Actual Budget is marked beta until it has run on more budgets than one."
       ]
+    },
+    "0.31.1": {
+      "lead": "Real-Debrid shows its traffic, three integrations leave beta, and the iPad keeps a clear bar after a board switch.",
+      "sections": [
+        {
+          "title": "Real-Debrid traffic",
+          "body": "Two new Real-Debrid cards. Data used shows a bar for each of the last 7, 14 or 31 days, with the total and the hoster most of it came from. Hoster limits lists each hoster with a limit on the account: what is used against what is left, and whether it resets daily, weekly or monthly. It turns amber from 80 per cent and red at the limit.",
+          "path": "Edit mode (pencil) > Add widget > Real-Debrid > Data used or Hoster limits"
+        },
+        {
+          "title": "nexdeck on the iPad",
+          "body": "In the app installed on iPadOS 26, the system blur came back over the bar after a switch to another board and stayed until the app was started again. A board that was still loading showed no bar for a moment. The bar now stays on the page while the next board loads. On a narrow weather card, held upright, the chips no longer run over the temperature: they go by the width of the card now, not of the screen.",
+          "path": "Board > the bar at the top, and the weather card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Mailpit, Real-Debrid and ReadMeABook are out of beta: each was confirmed by the person who asked for it.",
+        "The reload and open buttons of a hovered card stand beside its status dot and beta mark instead of over them.",
+        "Thanks to bluedsticker, C0NN0RAD0 and utlilb for the reports and the screenshots (#27, #28, #29, #19)."
+      ]
     }
   }
 }

@@ -3,6 +3,19 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.31.1 (2026-10-06)
+
+### New
+
+- **Real-Debrid traffic (#29).** Two new Real-Debrid cards. Data used: a bar for each of the last 7, 14 or 31 days, with the total and the hoster most of it came from. Hoster limits: each hoster with a limit on the account, what is used against what is left, and whether it resets daily, weekly or monthly; amber from 80 per cent, red at the limit. Built from Real-Debrid's documentation; its days are taken in Paris time.
+- **Mailpit, Real-Debrid and ReadMeABook are out of beta.** Each was confirmed by the person who asked for it, on their own instance (#28, #29, #19).
+
+### Fixed
+
+- **The blur came back over the bar on an iPad after a board switch (#27).** A board that was not loaded yet showed a spinner and no bar, and in the app installed on iPadOS 26 the system blur returned and stayed until the app was started again. The bar now stays on the page while the next board loads.
+- **The weather chips lay over the temperature on a narrow card (#27).** They appeared by the width of the screen, and an iPad Pro held upright is as wide as a laptop. They now go by the width of the card: none, one or two, as many as fit.
+- **The buttons of a hovered card covered its status dot and beta mark.** In a card with a header they now stand in it, beside the dot.
+
 ## 0.31.0 (2026-10-05)
 
 ### New
