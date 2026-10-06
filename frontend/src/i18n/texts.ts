@@ -120,6 +120,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) messages$/, '$1 Nachrichten'],
     [/^(\d+) security updates$/, '$1 Sicherheitsupdates'],
     [/^(\d+) request\(s\) failed$/, '$1 Anfrage(n) fehlgeschlagen'],
+    [/^(\d+) of (\d+) links$/, '$1 von $2 Links'],
   ],
   es: spanish,
   fr: french,

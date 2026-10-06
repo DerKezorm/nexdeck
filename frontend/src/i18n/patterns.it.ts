@@ -90,4 +90,5 @@ export const patterns: Pattern[] = [
   [/^(\d+) messages$/, '$1 messaggi'],
   [/^(\d+) security updates$/, '$1 aggiornamenti di sicurezza'],
   [/^(\d+) request\(s\) failed$/, '$1 richiesta/e non riuscita/e'],
+  [/^(\d+) of (\d+) links$/, '$1 link su $2'],
 ]

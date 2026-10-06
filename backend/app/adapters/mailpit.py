@@ -2,7 +2,8 @@
 
 Measured on 04.10.2026 against Mailpit 1.31.4 on docker-dev, with three
 made-up mails sent over its SMTP port, once open, once behind its own login
-with a webroot (issue #28).
+with a webroot (issue #28). Confirmed on 05.10.2026 by the reporter of #28 on
+their own Mailpit, so it left beta with 0.31.1.
 
 - Mailpit has no API keys. With ``MP_UI_AUTH`` or ``--ui-auth-file`` the API
   sits behind the same Basic login as the web interface: 401 with
@@ -45,7 +46,7 @@ class MailpitAdapter(Adapter):
     category = "monitoring"
     description = "The mail Mailpit caught: how much, how much unread, and the newest with sender and subject."
     icon = "mailpit"
-    beta = True
+    beta = False
     docs_url = "https://mailpit.axllent.org/docs/api-v1/"
     keywords = ("Mail", "E-mail", "SMTP", "MailHog")
     fields = (

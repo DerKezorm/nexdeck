@@ -1,5 +1,6 @@
 """Real-Debrid's REST API 1.0, from its documentation (https://api.real-debrid.com/): no account was at hand to
-measure against, so the shapes are the documented ones and the adapter stays beta. Names and numbers made up."""
+measure against, so the shapes are the documented ones; the reporter of #29 confirmed the first three cards on
+a real account (06.10.2026), the traffic cards are from the documentation only. Names and numbers made up."""
 
 from __future__ import annotations
 
@@ -140,3 +141,72 @@ def test_the_demo_fills_every_card() -> None:
     assert adapter.demo("account", {}, 1).primary["label"] == "Premium days"
     assert adapter.demo("torrents", {}, 1).items
     assert adapter.demo("downloads", {}, 1).items
+    assert len(adapter.demo("traffic", {}, 1).items) == 7
+    assert adapter.demo("limits", {}, 1).items
+
+
+GIB = 1024 ** 3
+
+
+@respx.mock
+async def test_data_used_draws_a_bar_for_each_day_and_counts_a_missing_one_as_nothing(ctx: Context) -> None:
+    from app.adapters import realdebrid
+
+    today = realdebrid._today()
+    yesterday = (today - timedelta(days=1)).isoformat()
+    route = respx.get(f"{API}/traffic/details").mock(return_value=httpx.Response(200, json={
+        today.isoformat(): {"host": {"real-debrid.com": 3 * GIB, "1fichier.com": GIB // 2}, "bytes": 3 * GIB + GIB // 2},
+        yesterday: {"host": {"1fichier.com": 12 * GIB}, "bytes": 12 * GIB},
+    }))
+    data = await get_adapter("realdebrid").fetch("traffic", CONFIG, {"days": "7"}, ctx)
+    params = route.calls.last.request.url.params
+    assert params["end"] == today.isoformat() and params["start"] == (today - timedelta(days=6)).isoformat()
+    assert [row["title"] for row in data.items] == [(today - timedelta(days=back)).isoformat() for back in range(7)]
+    assert [row["value"] for row in data.items] == [3.5, 12.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    assert {row["unit"] for row in data.items} == {" GB"}
+    assert data.primary == {"label": "Today", "value": "3.5 GB"}
+    assert {row["label"]: row["value"] for row in data.secondary} == {"7 days": "15.5 GB", "Most from": "1fichier.com"}
+
+
+@respx.mock
+async def test_data_used_takes_no_more_days_than_offered(ctx: Context) -> None:
+    route = respx.get(f"{API}/traffic/details").mock(return_value=httpx.Response(200, json={}))
+    data = await get_adapter("realdebrid").fetch("traffic", CONFIG, {"days": "365"}, ctx)
+    params = route.calls.last.request.url.params
+    assert len(data.items) == 7
+    assert (datetime.fromisoformat(params["end"]) - datetime.fromisoformat(params["start"])).days == 6
+    assert data.primary["value"] == "0 B" and [row["label"] for row in data.secondary] == ["7 days"]
+
+
+TRAFFIC = {
+    "1fichier.com": {"left": 12 * GIB, "bytes": 88 * GIB, "links": 14, "limit": 100, "type": "gigabytes", "extra": 0, "reset": "daily"},
+    "rapidgator.net": {"left": 40 * GIB, "bytes": 10 * GIB, "links": 2, "limit": 50, "type": "gigabytes", "extra": 0, "reset": "daily"},
+    "example-hoster.com": {"left": 0, "bytes": 0, "links": 20, "limit": 20, "type": "links", "extra": 0, "reset": "weekly"},
+    "quiet-hoster.com": {"left": 50 * GIB, "bytes": 0, "links": 0, "limit": 50, "type": "gigabytes", "extra": 0, "reset": "monthly"},
+}
+
+
+@respx.mock
+async def test_hoster_limits_show_what_is_used_against_what_is_left(ctx: Context) -> None:
+    respx.get(f"{API}/traffic").mock(return_value=httpx.Response(200, json=TRAFFIC))
+    data = await get_adapter("realdebrid").fetch("limits", CONFIG, {}, ctx)
+    assert [(row["title"], row["value"], row["status"]) for row in data.items] == [
+        ("example-hoster.com", "100%", "bad"),
+        ("1fichier.com", "88%", "warn"),
+        ("rapidgator.net", "20%", "ok"),
+    ]
+    assert data.items[0]["subtitle"] == "20 of 20 links · resets weekly"
+    assert data.items[1]["subtitle"] == "88.0 GB of 100.0 GB · resets daily"
+    assert data.items[1]["progress"] == 88.0
+    assert data.status == "bad" and data.meta["status_reason"] == "A hoster has reached its limit."
+
+
+@respx.mock
+async def test_hoster_limits_can_show_the_unused_ones_too(ctx: Context) -> None:
+    respx.get(f"{API}/traffic").mock(return_value=httpx.Response(200, json={"quiet-hoster.com": TRAFFIC["quiet-hoster.com"]}))
+    adapter = get_adapter("realdebrid")
+    used = await adapter.fetch("limits", CONFIG, {}, ctx)
+    assert used.items == [] and used.meta["empty"] == "No hoster with a limit was used in its current period."
+    every = await adapter.fetch("limits", CONFIG, {"show": "all"}, Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={}))
+    assert [(row["title"], row["value"], row["subtitle"]) for row in every.items] == [("quiet-hoster.com", "0%", "0 B of 50.0 GB · resets monthly")]
+    assert every.status == "ok"

@@ -1759,7 +1759,16 @@
     "Show accounts off budget": "Konten außerhalb des Budgets zeigen",
     "What each category of this month has spent of its budget, the overspent first.": "Was jede Kategorie diesen Monat von ihrem Budget ausgegeben hat, die überzogenen zuerst.",
     "Every category": "Alle Kategorien",
-    "Only overspent": "Nur überzogene"
+    "Only overspent": "Nur überzogene",
+    "Data used": "Datenverbrauch",
+    "What the account downloaded on each of the last days, with the total over all of them.": "Was das Konto an jedem der letzten Tage heruntergeladen hat, mit der Summe über alle.",
+    "14 days": "14 Tage",
+    "31 days": "31 Tage",
+    "Hoster limits": "Hoster-Grenzen",
+    "The hosters with a limit on the account: how much of it is used, and when it starts again.": "Die Hoster mit einer Grenze im Konto: wie viel davon verbraucht ist und wann sie neu beginnt.",
+    "Hosters": "Hoster",
+    "Used in their period": "In ihrem Zeitraum genutzt",
+    "All with a limit": "Alle mit einer Grenze"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2799,6 +2808,17 @@
     "Budgeted": "Verteilt",
     "Overspent": "Überzogen",
     "On budget": "Im Budget",
-    "Off budget": "Außerhalb des Budgets"
+    "Off budget": "Außerhalb des Budgets",
+    "7 days": "7 Tage",
+    "14 days": "14 Tage",
+    "31 days": "31 Tage",
+    "Most from": "Am meisten von",
+    "resets daily": "täglich neu",
+    "resets weekly": "wöchentlich neu",
+    "resets monthly": "monatlich neu",
+    "No hoster with a limit was used in its current period.": "Kein Hoster mit Grenze wurde in seinem laufenden Zeitraum genutzt.",
+    "No hoster on the account has a limit.": "Kein Hoster im Konto hat eine Grenze.",
+    "A hoster has reached its limit.": "Ein Hoster hat seine Grenze erreicht.",
+    "A hoster is close to its limit.": "Ein Hoster ist nahe an seiner Grenze."
   }
 }
