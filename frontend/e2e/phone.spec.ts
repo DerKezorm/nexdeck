@@ -224,14 +224,14 @@ test('the bar stays on the page while another board loads', async ({ page }) => 
   // and WebKit looks for a solid bar at the top edge; this is the one moment it found none.
   await signIn(page)
   const write = { headers: { 'X-Nexdeck-Request': '1' } }
-  for (const [name, slug] of [['First', 'switch-first'], ['Second', 'switch-second']]) {
+  for (const [name, slug] of [['Switch from', 'switch-first'], ['Switch to', 'switch-second']]) {
     const made = await page.request.post('/api/v1/boards', { ...write, data: { name, slug, in_menu: true } })
     expect(made.status()).toBe(201)
   }
   try {
     await page.setViewportSize({ width: 1032, height: 1376 })
     await page.goto('/b/switch-first')
-    await expect(page.getByRole('button', { name: 'First', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Switch from', exact: true })).toBeVisible()
     // Every moment without a bar is counted, and the bar itself is kept to compare.
     await page.evaluate(() => {
       const state = window as unknown as { barGone: number; bar: Element | null }
@@ -248,12 +248,12 @@ test('the bar stays on the page while another board loads', async ({ page }) => 
       await new Promise((resolve) => setTimeout(resolve, 1500))
       await route.continue()
     })
-    await page.getByRole('button', { name: 'First', exact: true }).click()
-    await page.getByRole('menuitem', { name: 'Second' }).click()
+    await page.getByRole('button', { name: 'Switch from', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Switch to', exact: true }).click()
     await expect.poll(() => held).toBe(true)
     // Read once while the answer is held back, not polled: a poll waits until the board is there.
     expect(await page.evaluate(() => document.querySelectorAll('header.app-bar').length), 'no bar while the board loads').toBe(1)
-    await expect(page.getByRole('button', { name: 'Second', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Switch to', exact: true })).toBeVisible()
     const after = await page.evaluate(() => {
       const state = window as unknown as { barGone: number; bar: Element | null }
       return { gone: state.barGone, same: state.bar === document.querySelector('header.app-bar') }
