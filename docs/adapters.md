@@ -107,6 +107,7 @@ that one of twenty-one renderers draws.
 | Unmanic | workers, queue | | none |
 | FileFlows | status, running | | optional access token |
 | Maintainerr | collections, status | | none |
+| Reclaimerr | Reclaimerr overview (titles marked for deletion, space they free, next automatic deletion, protections; amber on an old sync or scan or a failed task), leaving soon (the titles that go by themselves first, nearest deadline first, then the ones marked by hand, with size, days left and an open delete request of a user), tasks (schedule, last and next run) | postpone, keep, reset the timer, protect, on a title (a title marked by hand can only be protected); run now, on a task that neither deletes nor writes to Radarr and Sonarr | an rcl_ token from Settings > Integrations. Reading needs system:read, candidates:read, media:read, protections:read, tasks:read and events:read; the buttons need candidates:manage and tasks:run, and a card says which scope it misses. Sizes are known for whole movies and series only. What users vote for deletion is not in Reclaimerr's external API |
 | Jellystat | libraries, most watched | | API key |
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |

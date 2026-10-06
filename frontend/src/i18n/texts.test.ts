@@ -82,6 +82,35 @@ describe('server texts', () => {
     expect(translateText('labels', '14 min ago')).toBe('vor 14 min')
   })
 
+  it('translate the Reclaimerr phrases in every language', async () => {
+    // The texts as the adapter writes them; "last (.+)" from an older card
+    // stood before them once and turned "ran 14 min ago" into half German.
+    const said = [
+      'Movie version · 331.4 KB · Delete request open',
+      'Postponed, in 23 d',
+      'in 2 d',
+      'at least 312.4 GB',
+      'every 15 min · ran 4 min ago',
+      'Postpone 7 d',
+      'Last media sync 3 d ago. · Sync Media failed.',
+      'The API token lacks the scope candidates:read.',
+    ]
+    const expected: Record<string, string[]> = {
+      de: ['Filmfassung · 331.4 KB · Löschwunsch offen', 'Aufgeschoben, in 23 d', 'in 2 d', 'mindestens 312.4 GB', 'alle 15 min · lief vor 4 min',
+        'Um 7 Tage aufschieben', 'Letzte Mediensynchronisierung vor 3 d. · Sync Media fehlgeschlagen.', 'Dem API-Token fehlt die Berechtigung candidates:read.'],
+      es: ['Versión de película · 331.4 KB · Solicitud de borrado abierta', 'Aplazado, en 23 d', 'en 2 d', 'al menos 312.4 GB', 'cada 15 min · se ejecutó hace 4 min',
+        'Aplazar 7 días', 'Última sincronización de medios hace 3 d. · Sync Media falló.', 'Al token de API le falta el permiso candidates:read.'],
+      fr: ['Version du film · 331.4 KB · Demande de suppression ouverte', 'Reporté, dans 23 d', 'dans 2 d', 'au moins 312.4 GB', 'toutes les 15 min · exécutée il y a 4 min',
+        'Reporter de 7 jours', 'Dernière synchronisation des médias il y a 3 d. · Sync Media a échoué.', 'Il manque au jeton d’API l’autorisation candidates:read.'],
+      it: ['Versione del film · 331.4 KB · Richiesta di eliminazione aperta', 'Rinviato, tra 23 d', 'tra 2 d', 'almeno 312.4 GB', 'ogni 15 min · eseguito 4 min fa',
+        'Rinvia di 7 giorni', 'Ultima sincronizzazione dei media 3 d fa. · Sync Media non riuscito.', 'Al token API manca il permesso candidates:read.'],
+    }
+    for (const [code, words] of Object.entries(expected)) {
+      await i18next.changeLanguage(code)
+      expect(said.map((text) => translateText('labels', text)), code).toEqual(words)
+    }
+  })
+
   it('leave unknown text alone', async () => {
     await i18next.changeLanguage('de')
     expect(translateText('labels', 'Living room · 4K · Hi10P')).toBe('Living room · 4K · Hi10P')

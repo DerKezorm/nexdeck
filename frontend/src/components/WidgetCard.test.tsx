@@ -4,7 +4,12 @@
  * what its colour means.
  */
 import { fireEvent, render, screen } from '@testing-library/react'
+import i18next from 'i18next'
 import { MemoryRouter } from 'react-router-dom'
+
+import deScreen from '../i18n/de.json'
+import de from '../i18n/texts.de.json'
+import { registerTexts, type TextBundle } from '../i18n/texts'
 
 import { DEMO_DATA, DEMO_VIEWS } from '../demo/board'
 import { WidgetCard } from './WidgetCard'
@@ -62,6 +67,23 @@ describe('WidgetCard', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /^Error/ })).toBeInTheDocument()
     expect(screen.queryByRole('contentinfo')).toBeNull()
+  })
+
+  it('translates an error without a sentence of its own by its wording, keeping the name inside', async () => {
+    registerTexts('de', de as TextBundle)
+    i18next.addResourceBundle('de', 'translation', deScreen, true, true)
+    await i18next.changeLanguage('de')
+    try {
+      const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
+      const { unmount } = render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'The API token lacks the scope candidates:read.', meta: { code: 'missing_scope' } }} />)
+      expect(screen.getByTestId('card-error')).toHaveTextContent('Dem API-Token fehlt die Berechtigung candidates:read.')
+      unmount()
+      // A code with a sentence of its own keeps that sentence.
+      render(<WidgetCard widget={{ ...view, id: view.id + 2000 }} data={{ status: 'unknown', error: 'The service could not be reached: ConnectError.', meta: { code: 'unreachable' } }} />)
+      expect(screen.getByTestId('card-error')).toHaveTextContent('Der Dienst ist nicht erreichbar.')
+    } finally {
+      await i18next.changeLanguage('en')
+    }
   })
 
   it('writes the reason for a warning into the header', () => {

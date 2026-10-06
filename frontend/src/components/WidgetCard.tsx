@@ -37,14 +37,16 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   const veiled = disguise.on && ['camera', 'iframe', 'text'].includes(widget.renderer)
   // A failed fetch is an error state of its own: red, with the server's reason.
   // The server names the reason by code; other languages translate the code,
-  // English shows the server's own sentence with its specifics.
+  // English shows the server's own sentence with its specifics. A code without
+  // a sentence of its own is translated by its wording, so a sentence with a
+  // name in it (a missing scope, for one) keeps the name in every language.
   const failed = Boolean(data?.error)
   // With findings switched off, the card keeps its numbers and drops the alarm:
   // a Findings card next to it says what is wrong, once instead of on every card.
   const showFindings = widget.options?.show_findings === true
   const status = cardStatus(widget, data)
   const errorCode = String(data?.meta?.code ?? '')
-  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: String(data?.error) })) : '')
+  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: tLabel(String(data?.error)) })) : '')
   // ⚠️ data?.link comes from the service, not from the operator. A
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
