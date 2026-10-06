@@ -576,7 +576,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     Minecraft 2026-09-27 against Java 26.3 and Paper 26.2 and Bedrock 1.26.52.3, OctoPrint 1.11.8 with its virtual printer, rTorrent 0.16.22 with ruTorrent 5.3.14,
     FreshRSS 1.30.0, Linkding 1.47.0 and openmediavault 8.5.9 the same day; PatchMon 2.1.3 with three agents
     and IMAP against Dovecot 2.4.5 and Stalwart 0.16.23 the same afternoon; nexbeat 2026-09-28 against 1.2.0;
-    Mailpit and Real-Debrid 2026-10-06, both by the people who asked for them in #28 and #29, on their own instances);
+    Mailpit, Real-Debrid and ReadMeABook 2026-10-06, each by the people who asked for them in #28, #29 and #19, on their own instances);
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
@@ -587,7 +587,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
         "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix", "truenas", "nexmail", "nexpulse", "netbird", "nextrmnl", "arcane", "dockhand", "elasticsearch", "urbackup", "openwrt", "kubernetes",
         "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault", "patchmon", "imap", "nexbeat",
-        "mailpit", "realdebrid"}
+        "mailpit", "realdebrid", "readmeabook"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

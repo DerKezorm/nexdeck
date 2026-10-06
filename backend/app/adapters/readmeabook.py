@@ -96,8 +96,10 @@ class ReadMeABookAdapter(Adapter):
     #: Seen against a live ReadMeABook 1.2.3 on 26.09.2026, set up with made-up
     #: services behind it: the test, the overview, a request moving from
     #: "searching" to "awaiting_search", an administrator's and a user's token
-    #: and a wrong one. A running download was never seen, so it stays beta.
-    beta = True
+    #: and a wrong one. A running download was never seen there; out of beta on
+    #: 06.10.2026, after the reporter of #19 had used the cards for a while on
+    #: their own ReadMeABook without trouble.
+    beta = False
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://readmeabook:3030"),
         Field("api_key", "API token", type="password", secret=True, required=True,
