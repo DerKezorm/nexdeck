@@ -1427,6 +1427,7 @@
     "Latest sessions": "Letzte Sitzungen",
     "The latest sessions and how they ended; a changed host key stands out.": "Die letzten Sitzungen und wie sie endeten; ein geänderter Hostschlüssel fällt auf.",
     "Between 1 and 100.": "Zwischen 1 und 100.",
+    "Between 1 and 200.": "Zwischen 1 und 200.",
     "Connections": "Verbindungen",
     "Whether the port of each connection answers, and how fast.": "Ob der Port jeder Verbindung antwortet, und wie schnell.",
     "Only what does not answer": "Nur was nicht antwortet",

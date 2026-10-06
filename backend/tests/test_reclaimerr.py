@@ -271,6 +271,17 @@ async def test_all_candidates_shows_the_kept_ones_too() -> None:
 
 
 @respx.mock
+async def test_the_card_shows_more_than_fifty_titles_when_asked() -> None:
+    """Issue #31: a user asked for 75. nexdeck reads every candidate anyway;
+    the cap was its own."""
+    _scopes(["candidates:read"])
+    _candidates(*(_candidate(n) for n in range(1, 251)))
+    card = await RCL.fetch("leaving", CONFIG, {"limit": 75}, _ctx())
+    assert len(card.items) == 75
+    card = await RCL.fetch("leaving", CONFIG, {"limit": 1000}, _ctx())
+    assert len(card.items) == 200
+
+@respx.mock
 async def test_titles_marked_by_hand_are_shown_by_default_after_the_ones_with_a_deadline() -> None:
     """Measured on Reclaimerr 0.5.5: automatic deletion is off until a rule opts in,
     and then every candidate is "disabled". A card showing only the ones with a

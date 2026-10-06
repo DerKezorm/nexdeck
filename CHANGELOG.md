@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **Reclaimerr's leaving soon shows up to 200 titles (#31).** The cap of 50 was nexdeck's own; it reads every candidate anyway.
+
 ## 0.32.0 (2026-10-06)
 
 ### New

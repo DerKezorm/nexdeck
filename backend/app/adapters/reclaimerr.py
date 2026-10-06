@@ -174,7 +174,7 @@ def _limit(options: dict[str, Any], default: int = 8) -> int:
         wanted = int(options.get("limit") or default)
     except (TypeError, ValueError):
         wanted = default
-    return max(1, min(50, wanted))
+    return max(1, min(200, wanted))
 
 
 def _hours(options: dict[str, Any]) -> int:
@@ -279,7 +279,7 @@ class ReclaimerrAdapter(Adapter):
             refresh_seconds=300,
             options=(
                 Field("show", "Show", type="select", default="marked", options=SHOW),
-                Field("limit", "Entries", type="number", default=8, help="Between 1 and 50."),
+                Field("limit", "Entries", type="number", default=8, help="Between 1 and 200."),
                 Field("postpone", "Postpone by", type="select", default="7", options=POSTPONE),
             ),
         ),

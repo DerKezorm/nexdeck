@@ -1427,6 +1427,7 @@
     "Latest sessions": "Últimas sesiones",
     "The latest sessions and how they ended; a changed host key stands out.": "Las últimas sesiones y cómo terminaron; una clave de host cambiada destaca.",
     "Between 1 and 100.": "Entre 1 y 100.",
+    "Between 1 and 200.": "Entre 1 y 200.",
     "Connections": "Conexiones",
     "Whether the port of each connection answers, and how fast.": "Si responde el puerto de cada conexión, y lo rápido que lo hace.",
     "Only what does not answer": "Solo lo que no responde",
