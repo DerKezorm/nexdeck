@@ -5,9 +5,15 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### New
+
+- **M3U Editor (#32).** What M3U Editor serves and what its stream proxy carries, read with an API token that only needs the View ability. An **overview** with the streams running now, their viewers and bandwidth, and the playlists, channels and guides, amber when a sync failed or is old; **active streams** with the channel, the viewers by user name (never their addresses), how long it runs and its bandwidth, amber on a failover source or errors; **playlists** and **guides** with their channels and last sync and a button to sync one; and **recordings**, running first, then planned, then the last ones. Custom, merged and alias playlists are listed but counted and synced through their sources. Measured against M3U Editor 0.13.1 with its embedded proxy; marked beta.
+
 ### Changed
 
 - **Reclaimerr's leaving soon shows up to 200 titles (#31).** The cap of 50 was nexdeck's own; it reads every candidate anyway.
+- **nexlore and nexsift are out of beta.** Every card and every button ran against nexlore 1.5.1 and nexsift 0.10.0.
+- **oauthlib is pinned to 4.0.0.** apprise pulls it in, and 3.3.1 carries two advisories on the server side apprise never uses; a build can no longer fall back to it.
 
 ## 0.32.0 (2026-10-06)
 

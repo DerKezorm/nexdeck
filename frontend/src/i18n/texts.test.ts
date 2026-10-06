@@ -111,6 +111,36 @@ describe('server texts', () => {
     }
   })
 
+  it('translate the M3U Editor phrases in every language', async () => {
+    // The texts as the adapter writes them. "(.+) failed." from an older card
+    // would catch the first reason if the M3U Editor patterns stood after it.
+    const said = [
+      '2 viewer(s) · admin, kids · started 6 min ago · On a failover source · 3 error(s)',
+      '5 of 5 channels on · 1 VOD · 5 groups · 1 streaming · synced 2 h ago',
+      'Custom playlist · 3 of 3 channels on · last try 10 min ago',
+      'Example News · ends in 20 min',
+      'Channel 3 · ended 5 min ago · 13.0 MB',
+      'Example TV: the last sync failed. · Old TV: last synced 3 d ago. · New TV: never synced.',
+      'M3U Editor answers · 2 playlist(s) · 1 guide(s)',
+    ]
+    const expected: Record<string, string[]> = {
+      de: ['2 Zuschauer · admin, kids · läuft seit 6 min · Auf einer Ersatzquelle · 3 Fehler',
+        '5 von 5 Kanälen an · 1 VOD · 5 Gruppen · 1 laufen · synchronisiert vor 2 h',
+        'Eigene Playlist · 3 von 3 Kanälen an · letzter Versuch vor 10 min', 'Example News · endet in 20 min', 'Kanal 3 · endete vor 5 min · 13.0 MB',
+        'Example TV: Die letzte Synchronisierung schlug fehl. · Old TV: zuletzt vor 3 d synchronisiert. · New TV: nie synchronisiert.',
+        'M3U Editor antwortet · 2 Playlist(s) · 1 Programmführer'],
+    }
+    for (const [code, words] of Object.entries(expected)) {
+      await i18next.changeLanguage(code)
+      expect(said.map((text) => translateText('labels', text)), code).toEqual(words)
+    }
+    for (const code of Object.keys(OTHERS)) {
+      await i18next.changeLanguage(code)
+      for (const text of said) expect(translateText('labels', text), `${code}: ${text}`).not.toBe(text)
+      expect(translateText('labels', said[5]), code).not.toMatch(/failed|synced/)
+    }
+  })
+
   it('leave unknown text alone', async () => {
     await i18next.changeLanguage('de')
     expect(translateText('labels', 'Living room · 4K · Hi10P')).toBe('Living room · 4K · Hi10P')
