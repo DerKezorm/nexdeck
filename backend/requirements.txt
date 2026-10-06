@@ -22,6 +22,10 @@ pyyaml==6.0.3
 websockets==15.0.1
 # One adapter, a hundred notification services.
 apprise==1.9.5
+# apprise pulls it in through requests-oauthlib. Below 4.0.0 it has two
+# advisories (GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv), both on the server
+# side apprise never uses; pinned so no build falls back to 3.3.1.
+oauthlib==4.0.0
 # RSS and Atom parsing for the feed widget.
 feedparser==6.0.12
 python-multipart==0.0.31
