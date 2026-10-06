@@ -910,6 +910,34 @@ textarea.input {
   opacity: 1;
 }
 
+/* ⚠️ In a card with a head they stand in it, between the title and the dot.
+   Floating over the corner they lay on the status dot and the beta mark
+   exactly when somebody looked at the card (issue #29). Folded to nothing
+   until the card is hovered or holds the focus, so the title keeps its room;
+   folded, not hidden, so the keyboard still reaches them. */
+.card-controls.in-head {
+  position: static;
+  flex: none;
+  max-width: 0;
+  padding: 0;
+  overflow: hidden;
+  transition:
+    opacity 120ms ease,
+    max-width 120ms ease;
+}
+
+.card:hover .card-controls.in-head,
+.card:focus-within .card-controls.in-head,
+.card.is-editing .card-controls.in-head {
+  max-width: 8rem;
+  opacity: 1;
+}
+
+/* The head is inert while editing (see the overrides); its buttons are not. */
+.card.is-editing .card-controls.in-head {
+  pointer-events: auto;
+}
+
 /* A card taken into a selection: solid where the others are dashed, and a
    ring, so the difference does not rest on colour alone. */
 .card-selected .card.is-editing {
