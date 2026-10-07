@@ -1189,6 +1189,33 @@
         "oauthlib, which apprise pulls in, is pinned to 4.0.0, so no build falls back to a version with known advisories.",
         "Thanks to C0NN0RAD0 and utlilb for the requests, and to utlilb for testing Reclaimerr (#32, #31)."
       ]
+    },
+    "0.34.0": {
+      "lead": "Three new integrations: GitLab for the projects you follow, Alertmanager for the alerts your Prometheus raises, and Cloudflare for your tunnels, zones and traffic. And the drawings read better on a phone.",
+      "sections": [
+        {
+          "title": "GitLab",
+          "body": "Four cards for GitLab.com or your own GitLab. Projects shows each project with the latest pipeline of its default branch, its open merge requests and issues, and when it last changed. Pipelines shows the latest run of the default branch, of every branch or of the release tags, red ones first; the merge request pipelines that fill most of GitLab's list are left out. Merge requests and issues lists what is open, and a merge request says why it cannot be merged yet. Releases shows the newest release of each project. Public projects need no token; one with read_api reaches private ones. Marked beta.",
+          "path": "Settings > Integrations > GitLab, then Edit mode (pencil) > Add widget > GitLab"
+        },
+        {
+          "title": "Alertmanager",
+          "body": "Firing alerts lists what fires and nobody silenced, critical first, with what it is about and since when; matchers as in Alertmanager narrow it down, and silenced and inhibited alerts can be shown too. The overview counts what fires, what is critical and what a silence or an inhibition keeps quiet. Silences lists the ones in force and the ones still to come, with how many alerts each one silences. Works behind a proxy with basic authentication or a bearer token, and with Grafana's and Mimir's Alertmanager. Marked beta.",
+          "path": "Settings > Integrations > Alertmanager, then Edit mode (pencil) > Add widget > Alertmanager"
+        },
+        {
+          "title": "Cloudflare",
+          "body": "Tunnels shows every Cloudflare Tunnel as healthy, degraded, down or never run, with its connections and the data centres they reach. Zones shows your domains, and which of them are paused or still wait for their name servers. Traffic shows a zone's requests, visits and data over the last 24 hours and the share Cloudflare answered from its cache. A token that may only read is enough. Built from Cloudflare's documentation and not yet tried against a real account, so it is marked beta; a word in an issue if it works for you helps.",
+          "path": "Settings > Integrations > Cloudflare, then Edit mode (pencil) > Add widget > Cloudflare"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "A network map with many machines stays readable on a phone: the machines under a node take three, two or one column, whichever draws the map largest.",
+        "A group on a phone no longer draws its cards over one another; each keeps its height and the group scrolls.",
+        "\"In and out, mirrored\" knows both numbers on the FRITZ!Box, nexpulse, Speedtest Tracker and rTorrent cards, and on a narrow card the label gives way to the number.",
+        "A long detail line on the network map stops before the edge of its box."
+      ]
     }
   }
 }

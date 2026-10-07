@@ -1189,6 +1189,33 @@
         "oauthlib, das apprise mitbringt, ist auf 4.0.0 festgelegt, damit kein Bau auf eine Fassung mit bekannten Sicherheitsmeldungen zurückfällt.",
         "Danke an C0NN0RAD0 und utlilb für die Wünsche, und an utlilb fürs Testen von Reclaimerr (#32, #31)."
       ]
+    },
+    "0.34.0": {
+      "lead": "Drei neue Anbindungen: GitLab für die Projekte, denen du folgst, Alertmanager für die Alarme deines Prometheus und Cloudflare für deine Tunnels, Zonen und den Verkehr. Und die Zeichnungen lesen sich am Handy besser.",
+      "sections": [
+        {
+          "title": "GitLab",
+          "body": "Vier Karten für GitLab.com oder dein eigenes GitLab. Projekte zeigt jedes Projekt mit der letzten Pipeline seines Standard-Branches, den offenen Merge Requests und Issues und wann es sich zuletzt geändert hat. Pipelines zeigt den letzten Lauf des Standard-Branches, jedes Branches oder der Release-Tags, rote zuerst; die Pipelines von Merge Requests, die den Großteil der Liste von GitLab füllen, bleiben draußen. Merge Requests und Issues listet, was offen ist, und ein Merge Request sagt, warum er noch nicht gemergt werden kann. Releases zeigt das neueste Release jedes Projekts. Öffentliche Projekte brauchen kein Token; eines mit read_api erreicht private. Als Beta markiert.",
+          "path": "Einstellungen > Anbindungen > GitLab, dann Bearbeiten (Stift) > Widget hinzufügen > GitLab"
+        },
+        {
+          "title": "Alertmanager",
+          "body": "Aktive Alarme listet, was feuert und niemand stummgeschaltet hat, kritische zuerst, mit Anlass und seit wann; Matcher wie in Alertmanager grenzen ein, und stummgeschaltete und unterdrückte Alarme lassen sich dazuholen. Die Übersicht zählt, was feuert, was kritisch ist und was eine Stummschaltung oder Unterdrückung ruhig hält. Stummschaltungen listet die geltenden und die kommenden, mit der Zahl der Alarme, die jede stumm hält. Geht auch hinter einem Proxy mit Basic Authentication oder Bearer-Token und mit dem Alertmanager von Grafana und Mimir. Als Beta markiert.",
+          "path": "Einstellungen > Anbindungen > Alertmanager, dann Bearbeiten (Stift) > Widget hinzufügen > Alertmanager"
+        },
+        {
+          "title": "Cloudflare",
+          "body": "Tunnels zeigt jeden Cloudflare Tunnel als gesund, eingeschränkt, ausgefallen oder nie gelaufen, mit seinen Verbindungen und den Rechenzentren, die sie erreichen. Zonen zeigt deine Domains und welche davon pausiert sind oder noch auf ihre Nameserver warten. Verkehr zeigt Anfragen, Besuche und Daten einer Zone in den letzten 24 Stunden und den Anteil, den Cloudflare aus dem Cache beantwortet hat. Ein Token, das nur lesen darf, reicht. Gebaut nach der Doku von Cloudflare und noch nicht an einem echten Konto ausprobiert, darum als Beta markiert; ein Wort in einem Issue, wenn es bei dir läuft, hilft.",
+          "path": "Einstellungen > Anbindungen > Cloudflare, dann Bearbeiten (Stift) > Widget hinzufügen > Cloudflare"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Eine Netzkarte mit vielen Geräten bleibt am Handy lesbar: Die Geräte unter einem Knoten stehen in drei, zwei oder einer Spalte, je nachdem, womit die Karte am größten wird.",
+        "Eine Gruppe am Handy zeichnet ihre Karten nicht mehr übereinander; jede behält ihre Höhe, und die Gruppe scrollt.",
+        "„In and out, mirrored“ kennt beide Zahlen auf den Karten von FRITZ!Box, nexpulse, Speedtest Tracker und rTorrent, und in einer schmalen Karte weicht die Beschriftung der Zahl.",
+        "Eine lange Detailzeile auf der Netzkarte endet vor dem Rand ihres Kastens."
+      ]
     }
   }
 }
