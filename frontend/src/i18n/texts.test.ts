@@ -111,6 +111,31 @@ describe('server texts', () => {
     }
   })
 
+  it('translate the GitLab, Alertmanager and Cloudflare phrases in every language', async () => {
+    // The rows as the adapters write them; "73+ MRs" is a list GitLab did not count.
+    const said = [
+      'Failed · 71 MRs · 4 issues',
+      'Pipeline running · 73+ MRs',
+      '1 alert(s) · Backup host in maintenance · operator',
+      'Inhibited · warning · node1.example.com',
+      'Degraded · 2 connection(s) · fra06',
+    ]
+    const expected: Record<string, string[]> = {
+      de: ['Fehlgeschlagen · 71 MRs · 4 Issues', 'Pipeline läuft · 73+ MRs', '1 Alarm(e) · Backup host in maintenance · operator',
+        'Unterdrückt · warning · node1.example.com', 'Eingeschränkt · 2 Verbindung(en) · fra06'],
+      es: ['Fallido · 71 MR · 4 issues', 'Pipeline en curso · 73+ MR', '1 alerta(s) · Backup host in maintenance · operator',
+        'Inhibidas · warning · node1.example.com', 'Degradado · 2 conexión(es) · fra06'],
+      fr: ['Échec · 71 MR · 4 tickets', 'Pipeline en cours · 73+ MR', '1 alerte(s) · Backup host in maintenance · operator',
+        'Inhibées · warning · node1.example.com', 'Dégradé · 2 connexion(s) · fra06'],
+      it: ['Non riuscito · 71 MR · 4 issue', 'Pipeline in corso · 73+ MR', '1 avviso/i · Backup host in maintenance · operator',
+        'Inibiti · warning · node1.example.com', 'Degradato · 2 connessione/i · fra06'],
+    }
+    for (const [code, words] of Object.entries(expected)) {
+      await i18next.changeLanguage(code)
+      expect(said.map((text) => translateText('labels', text)), code).toEqual(words)
+    }
+  })
+
   it('translate the M3U Editor phrases in every language', async () => {
     // The texts as the adapter writes them. "(.+) failed." from an older card
     // would catch the first reason if the M3U Editor patterns stood after it.

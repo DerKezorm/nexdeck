@@ -21,6 +21,7 @@ that one of twenty-one renderers draws.
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
 | PatchMon | PatchMon overview, hosts, operating systems | | a key of usage type API with the scope host: get, from Settings > Integrations > Auto-Enrollment & API (a GetHomepage key is refused); the URL has to be one named in PatchMon's CORS_ORIGIN |
 | Coolify | applications, deployments, status | | API token; the API has to be switched on in Coolify |
+| GitLab | projects (latest pipeline of the default branch, open merge requests and issues), pipelines (default branch, every branch or release tags; merge request pipelines left out), merge requests and issues (why a merge request cannot be merged yet), releases | | none for public projects; a personal, group or project access token with read_api for private ones. GitLab.com or your own GitLab; without a token GitLab.com allows 500 requests a minute per address |
 | Gitea, Forgejo | open issues or pull requests, Actions jobs, repositories | | access token with read access to repositories, issues and the user |
 | Semaphore UI | last runs, automation | | API token of a user; the cards see the projects that user sees |
 | Meilisearch | indexes, search | | a key of its own with stats.get, indexes.get, tasks.get and version |
@@ -40,6 +41,7 @@ that one of twenty-one renderers draws.
 | Kubernetes | cluster, nodes, workloads, pods in trouble | | service account token bound to the ClusterRole view and to a ClusterRole with get and list on nodes (view alone does not reach nodes); usage figures need metrics-server |
 | UrBackup | overview, machines, backups | | an account of the web interface with the rights status and progress, or nothing when UrBackup has no account; finished backups need an administrator |
 | Elasticsearch and OpenSearch | cluster health, indices, nodes | | Elasticsearch: an API key (the encoded value) or a user; OpenSearch: a user; the cluster privilege monitor and the index privilege monitor are enough |
+| Alertmanager | firing alerts (critical first, matchers as a filter, silenced and inhibited ones on request), Alertmanager overview (firing, critical, warning, silenced, inhibited, silences in force), silences (in force and still to come, with how many alerts each keeps quiet) | | none; Alertmanager has no sign-in of its own. Basic authentication or a bearer token when a proxy in front of it asks for one; Grafana's and Mimir's Alertmanager with their path in the URL. API v2 |
 | Netdata | raised alerts, load per node, alerts | | none; the agent's API is open, and a parent answers for every node that streams to it |
 | Ollama | loaded models, installed models, models | unload a model | none; Ollama has no sign-in, so its port stays inside the network |
 | Open WebUI | users, models, accounts | | API key of an administrator from Settings > Account > API keys; API keys have to be switched on in the admin settings, they are off by default |
@@ -63,6 +65,7 @@ that one of twenty-one renderers draws.
 | MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
 | SNMP (switches and network devices) | device, ports, port traffic, findings, PoE | | SNMPv3 user with SHA and AES, read only; or an SNMPv2c community, which travels unencrypted. Any vendor, standard MIBs only (IF-MIB, EtherLike, ENTITY, POWER-ETHERNET, LLDP); never writes |
 | FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
+| Cloudflare | tunnels (healthy, degraded, down or never run, with their connections and data centres), zones (active, waiting for the name servers, paused), traffic (a zone's requests, visits, data and cached share over 24 hours) | | an API token with Account > Cloudflare Tunnel > Read, Zone > Zone > Read and Account > Account Analytics > Read, and the account ID for the tunnels. Built from Cloudflare's documentation, not yet measured |
 | Tailscale | devices, status | | API access token from the admin console |
 | Headscale | nodes, status | | API key from `headscale apikeys create` |
 | NetBird | peers, status | | personal access token, best of a service user; self-hosted or NetBird Cloud (https://api.netbird.io) |

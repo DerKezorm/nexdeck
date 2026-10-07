@@ -5,9 +5,18 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### New
+
+- **GitLab.** The projects you follow on GitLab.com or your own GitLab: a **projects** card with the latest pipeline of each default branch, the open merge requests and issues and the last change; **pipelines** of the default branch, of every branch or of the release tags, red ones first and without the merge request pipelines that make up most of the list; **merge requests and issues**, with the reason a merge request cannot be merged yet; and **releases**. Public projects need no token; a token with read_api reaches private ones. Measured against GitLab.com; marked beta.
+- **Alertmanager.** The **firing alerts**, critical first, with matchers as a filter and the silenced and inhibited ones on request; an **overview** of what fires and what is kept quiet; and the **silences** in force and still to come, with how many alerts each one silences. Through API v2, also behind a proxy with basic authentication or a bearer token, and in Grafana and Mimir. Measured against Alertmanager 0.34.1; marked beta.
+- **Cloudflare.** The **tunnels** with their state, connections and data centres, the **zones** that are active, paused or waiting for their name servers, and a zone's **traffic** over the last day: requests, visits, data and the share answered from the cache. Built from Cloudflare's documentation, including its change of 5 October that took the connections out of the tunnel list; not yet measured against an account, marked beta.
+
 ### Fixed
 
-- **"In and out, mirrored" knows both numbers on every card.** The FRITZ!Box, nexpulse, Speedtest Tracker and rTorrent cards did not say which row was the download and which the upload, so the two chips under the drawing read "down –" and "up –". A test now holds every card that offers the drawing to it.
+- **The chips under "In and out, mirrored" keep their numbers on a narrow card.** The label gives way and the arrow stays; the second chip used to run past the edge and cut its value in half.
+- **A network map with many machines stays readable on a phone or a tablet.** The machines under a node stood in three columns whatever the card, and the map of a cluster with two nodes and nine guests shrank to a font of five pixels with the card empty above and below; the card now takes three, two or one column, whichever draws the map largest.
+
+- **"In and out, mirrored" knows both numbers on every card.** The FRITZ!Box, nexpulse, Speedtest Tracker and rTorrent cards did not say which row was the download and which the upload, so the two chips under the drawing showed no number. A test now holds every card that offers the drawing to it.
 - **A group on a phone no longer draws its cards over one another.** The cards wrap to one a row there, inside a box no taller than the wide board made it; each now keeps the height of the smallest card on the board, and the group scrolls.
 - **The network map cuts a long detail line before the edge of its box**, as with a switch and its clients, rather than letting it run into the border.
 

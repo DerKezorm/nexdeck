@@ -117,5 +117,9 @@ export const patterns: Pattern[] = [
   [/^Last media sync (\d+ (?:min|h|d)) ago\.$/, 'Última sincronización de medios hace $1.'],
   [/^Last candidate scan (\d+ (?:min|h|d)) ago\.$/, 'Último escaneo de candidatos hace $1.'],
   [/^The API token lacks the scope ([a-z]+:[a-z]+)\.$/, 'Al token de API le falta el permiso $1.'],
+  [/^(\d+\+?) MRs$/, '$1 MR'],
+  [/^(\d+\+?) issues$/, '$1 issues'],
+  [/^(\d+) alert\(s\)$/, '$1 alerta(s)'],
+  [/^(\d+) connection\(s\)$/, '$1 conexión(es)'],
   [/^(.+) failed\.$/, '$1 falló.'],
 ]
