@@ -3,7 +3,8 @@
 Built for issue #32 from M3U Editor's routes (``routes/web.php``) and their
 controllers in the source of 0.13.1, then measured against a live M3U Editor
 0.13.1 (all in one, embedded proxy) with a made-up playlist of four channels,
-a made-up guide, three viewers on two channels and three recordings.
+a made-up guide, three viewers on two channels and three recordings, and
+confirmed on a real one by the person who asked for it.
 
 - One API token from API Tokens in M3U Editor, sent as ``Authorization:
   Bearer``. Without ``Accept: application/json`` a refused token is sent on to
@@ -164,6 +165,8 @@ class M3uEditorAdapter(Adapter):
     category = "media"
     description = "M3U Editor's playlists and guides with their last sync, what its stream proxy carries right now, and its recordings."
     icon = "m3u-editor"
+    #: Out of beta on 07.10.2026: confirmed on the instance of the person who asked for it in #32.
+    beta = False
     docs_url = "https://github.com/sparkison/m3u-editor"
     keywords = ("IPTV", "M3U", "Xtream", "EPG", "DVR", "playlist")
     fields = (

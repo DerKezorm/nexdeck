@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **M3U Editor is out of beta.** The person who asked for it confirmed every card on a real instance (#32).
+
 ## 0.34.0 (2026-10-07)
 
 ### New
