@@ -5,7 +5,8 @@ import { DEMO_VIEWS } from '../demo/board'
 import { cardsOf, PageCardsContext, tucked, useFolded } from '../lib/groups'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { useLive } from '../stores/live'
-import { GroupCard, TabsCard } from './GroupCards'
+import { CARD_FLOOR, GroupCard, TabsCard } from './GroupCards'
+import { ROW_HEIGHT } from './BoardGrid'
 
 const card = (id: number, kind: string, title: string, options: Record<string, unknown> = {}, renderer = 'value') =>
   ({ ...DEMO_VIEWS[0], id, kind, title, renderer, options }) as WidgetView
@@ -59,5 +60,19 @@ describe('the group', () => {
     expect(useFolded.getState().folded).toEqual([4])
     expect(screen.getByRole('button', { expanded: false })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Speed' })).toBeNull()
+  })
+})
+
+describe('a group on a phone', () => {
+  it('keeps every card at least two board rows tall and scrolls, rather than drawing one over the next', () => {
+    expect(CARD_FLOOR).toBe(2 * ROW_HEIGHT)
+    render(
+      <PageCardsContext.Provider value={{ widgets: [clock, notes, group] }}>
+        <GroupCard widget={group} data={undefined} />
+      </PageCardsContext.Provider>,
+    )
+    const box = screen.getByText('901').closest('.nd-in-group')!.parentElement!
+    expect(box.style.gridAutoRows).toBe(`minmax(${CARD_FLOOR}px, 1fr)`)
+    expect(box).toHaveClass('overflow-y-auto')
   })
 })

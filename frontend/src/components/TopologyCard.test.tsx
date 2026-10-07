@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { WidgetData } from '../lib/types'
-import { layout, type Place, TopologyCard } from './TopologyCard'
+import { layout, type Place, roomFor, TopologyCard } from './TopologyCard'
 
 const places: Place[] = [
   { id: 'cluster', name: 'Cluster', parent: null, status: 'ok' },
@@ -63,3 +63,16 @@ describe('a deep network', () => {
   })
 })
 
+describe('the detail line', () => {
+  it('ends before the rounded corner of its box, in the mono font every character is 0.6 em of', () => {
+    for (const [width, size] of [[150, 10], [112, 9]]) {
+      expect(19 + roomFor(width, size) * size * 0.6).toBeLessThanOrEqual(width - 8)
+    }
+    const places = [
+      { id: 'sw', name: 'Core switch', parent: null, status: 'ok', detail: 'USW-24-PoE · 9 clients' },
+      { id: 'ap', name: 'AP', parent: 'sw', status: 'ok' },
+    ]
+    render(<TopologyCard data={{ status: 'ok', meta: { topology: { places } } } as unknown as WidgetData} />)
+    expect(screen.getByText('USW-24-PoE · 9 clie…')).toBeInTheDocument()
+  })
+})

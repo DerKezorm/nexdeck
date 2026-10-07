@@ -13,6 +13,9 @@ import { renderWidget } from './renderers'
 import { ServiceIcon } from './ServiceIcon'
 import { WidgetCard } from './WidgetCard'
 
+/** Two rows of the board (ROW_HEIGHT 68): no card on it is smaller. */
+export const CARD_FLOOR = 136
+
 /** What a holder says while it holds nothing yet: where its cards come from. */
 function Waiting({ editing }: { editing?: boolean }) {
   const { t } = useTranslation()
@@ -108,9 +111,16 @@ export function GroupCard({ widget }: RenderProps) {
       </button>
       {!folded &&
         (cards.length ? (
+          // ⚠️ Every row keeps the height of the smallest card on the board,
+          // and the box scrolls past it. On a phone the cards wrap to one a
+          // row inside a box no taller than the wide board made it, and three
+          // of them shared the height of one, drawn over each other.
           <div
-            className="flex-1 min-h-0 grid gap-2.5 px-3 pb-3 auto-rows-fr"
-            style={{ gridTemplateColumns: columns === 'auto' ? 'repeat(auto-fit, minmax(180px, 1fr))' : `repeat(${Number(columns) || 3}, minmax(0, 1fr))` }}
+            className="flex-1 min-h-0 grid gap-2.5 px-3 pb-3 overflow-y-auto"
+            style={{
+              gridTemplateColumns: columns === 'auto' ? 'repeat(auto-fit, minmax(180px, 1fr))' : `repeat(${Number(columns) || 3}, minmax(0, 1fr))`,
+              gridAutoRows: `minmax(${CARD_FLOOR}px, 1fr)`,
+            }}
           >
             {cards.map((card) => (
               <div key={card.id} className="min-h-0 nd-in-group">

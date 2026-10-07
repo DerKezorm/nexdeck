@@ -130,8 +130,8 @@ class FritzboxAdapter(Adapter):
             return WidgetData(
                 status="ok" if link.lower() == "up" else "bad",
                 secondary=[
-                    {"label": "Sync down", "value": f"{sync_down / 1_000_000:.1f} Mbit/s"},
-                    {"label": "Sync up", "value": f"{sync_up / 1_000_000:.1f} Mbit/s"},
+                    {"label": "Sync down", "metric": "sync_down", "value": f"{sync_down / 1_000_000:.1f} Mbit/s"},
+                    {"label": "Sync up", "metric": "sync_up", "value": f"{sync_up / 1_000_000:.1f} Mbit/s"},
                     {"label": "Received", "value": human_bytes(self._total(traffic, "Received"))},
                     {"label": "Sent", "value": human_bytes(self._total(traffic, "Sent"))},
                 ],
@@ -147,9 +147,9 @@ class FritzboxAdapter(Adapter):
         up = float(traffic.get("NewByteSendRate") or 0)
         return WidgetData(
             status="ok" if connected else "bad",
-            primary={"label": "Download", "value": f"{human_bytes(down)}/s"},
+            primary={"label": "Download", "metric": "down", "value": f"{human_bytes(down)}/s"},
             secondary=[
-                {"label": "Upload", "value": f"{human_bytes(up)}/s"},
+                {"label": "Upload", "metric": "up", "value": f"{human_bytes(up)}/s"},
                 {"label": "Public address", "value": address.get("NewExternalIPAddress") or "?"},
                 {"label": "Uptime", "value": duration_short(float(status.get("NewUptime") or 0))},
             ],
@@ -169,8 +169,8 @@ class FritzboxAdapter(Adapter):
             return WidgetData(
                 status="ok",
                 secondary=[
-                    {"label": "Sync down", "value": "250.0 Mbit/s"},
-                    {"label": "Sync up", "value": "50.0 Mbit/s"},
+                    {"label": "Sync down", "metric": "sync_down", "value": "250.0 Mbit/s"},
+                    {"label": "Sync up", "metric": "sync_up", "value": "50.0 Mbit/s"},
                     {"label": "Received", "value": human_bytes(fake.counter("fritz-in", tick, 4.1e13, 4e8))},
                     {"label": "Sent", "value": human_bytes(fake.counter("fritz-out", tick, 6.2e12, 8e7))},
                 ],
@@ -180,9 +180,9 @@ class FritzboxAdapter(Adapter):
         up = fake.walk("fritz-up", tick, 10_000, 900_000, period=70)
         return WidgetData(
             status="ok",
-            primary={"label": "Download", "value": f"{human_bytes(down)}/s"},
+            primary={"label": "Download", "metric": "down", "value": f"{human_bytes(down)}/s"},
             secondary=[
-                {"label": "Upload", "value": f"{human_bytes(up)}/s"},
+                {"label": "Upload", "metric": "up", "value": f"{human_bytes(up)}/s"},
                 {"label": "Public address", "value": "203.0.113.77"},
                 {"label": "Uptime", "value": "9d 4h"},
             ],

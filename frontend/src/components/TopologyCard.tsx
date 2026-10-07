@@ -149,7 +149,7 @@ export function TopologyCard({ data }: { data: WidgetData | undefined }) {
               </text>
               {box.place.detail && (
                 <text x={box.x + 19} y={box.y + (small ? 24 : 28)} fontSize={small ? 9 : 10} className="num fill-[var(--nd-text-faint)]">
-                  {clip(box.place.detail, small ? Math.floor(box.w / 5.6) - 3 : Math.floor(box.w / 6) - 3)}
+                  {clip(box.place.detail, roomFor(box.w, small ? 9 : 10))}
                 </text>
               )}
               <title>{[box.place.name, box.place.detail].filter(Boolean).join(' · ')}</title>
@@ -159,6 +159,18 @@ export function TopologyCard({ data }: { data: WidgetData | undefined }) {
       </svg>
     </div>
   )
+}
+
+/**
+ * How many characters of a detail line fit inside its box: from where the
+ * text starts (19) to the rounded corner on the right (8), in JetBrains Mono,
+ * whose every character is 0.6 of the font size wide.
+ *
+ * ⚠️ It was the box over a guessed width, less three: 22 characters in a
+ * large box where 20 fit, and "USW-24-PoE · 9 clients" ran into the edge.
+ */
+export function roomFor(boxWidth: number, fontSize: number): number {
+  return Math.floor((boxWidth - 19 - 8) / (fontSize * 0.6))
 }
 
 /** A name cut to what fits its box, with an ellipsis. */

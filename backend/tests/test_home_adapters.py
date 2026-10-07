@@ -120,7 +120,7 @@ async def test_fritzbox_reads_the_line_out_of_three_soap_answers(ctx: Context) -
     respx.post(url__startswith="http://fritz.box:49000/igdupnp/control/").mock(side_effect=answer)
     data = await get_adapter("fritzbox").fetch("connection", config, {}, ctx)
     assert data.status == "ok"
-    assert data.primary == {"label": "Download", "value": "2.0 MB/s"}
+    assert data.primary == {"label": "Download", "metric": "down", "value": "2.0 MB/s"}
     values = {entry["label"]: entry["value"] for entry in data.secondary}
     assert values["Upload"] == "125.0 KB/s"
     assert values["Public address"] == "203.0.113.77"

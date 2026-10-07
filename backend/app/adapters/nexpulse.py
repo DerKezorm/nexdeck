@@ -419,7 +419,7 @@ class NexpulseAdapter(Adapter):
         ping = _number(latest.get("ping_ms"))
         jitter = _number(latest.get("jitter_ms"))
         secondary = [
-            {"label": "Upload", "value": upload, "unit": "Mbps"},
+            {"label": "Upload", "metric": "upload", "value": upload, "unit": "Mbps"},
             {"label": "Ping", "value": ping, "unit": "ms"},
         ]
         if jitter is not None:
@@ -441,7 +441,7 @@ class NexpulseAdapter(Adapter):
             meta["notice"] = "The newest test failed. The numbers are from the test before it."
         card = WidgetData(
             status=state,
-            primary={"label": "Download", "value": download, "unit": "Mbps"},
+            primary={"label": "Download", "metric": "download", "value": download, "unit": "Mbps"},
             secondary=secondary,
             metrics=measured({"download": download, "upload": upload, "ping": ping}),
             meta=meta,
@@ -480,9 +480,9 @@ class NexpulseAdapter(Adapter):
         good = [one for _at, one in inside if one.get("status") == "ok"]
         newest = good[-1] if good else {}
         down, up = _number(newest.get("download_mbps")), _number(newest.get("upload_mbps"))
-        primary = {"label": "Upload", "value": up, "unit": "Mbps"} if shown == "upload" \
-            else {"label": "Download", "value": down, "unit": "Mbps"}
-        secondary = [{"label": "Upload", "value": up, "unit": "Mbps"}, tests] if shown == "speed" else [tests]
+        primary = {"label": "Upload", "metric": "upload", "value": up, "unit": "Mbps"} if shown == "upload" \
+            else {"label": "Download", "metric": "download", "value": down, "unit": "Mbps"}
+        secondary = [{"label": "Upload", "metric": "upload", "value": up, "unit": "Mbps"}, tests] if shown == "speed" else [tests]
         return WidgetData(
             primary=primary, secondary=secondary,
             metrics=measured({"download": down, "upload": up}),
@@ -505,7 +505,7 @@ class NexpulseAdapter(Adapter):
 
         download, upload, ping = pick("download_mbps"), pick("upload_mbps"), pick("ping_ms")
         secondary: list[dict[str, Any]] = [
-            {"label": "Upload", "value": upload, "unit": "Mbps"},
+            {"label": "Upload", "metric": "upload", "value": upload, "unit": "Mbps"},
             {"label": "Ping", "value": ping, "unit": "ms"},
             {"label": "Tests", "value": tests},
         ]
@@ -523,7 +523,7 @@ class NexpulseAdapter(Adapter):
             reasons.append(f"{below} of {ok} tests below the plan")
         return WidgetData(
             status="warn" if reasons else "ok",
-            primary={"label": "Download", "value": download, "unit": "Mbps"},
+            primary={"label": "Download", "metric": "download", "value": download, "unit": "Mbps"},
             secondary=secondary,
             metrics=measured({"download": download, "upload": upload, "ping": ping}),
             meta={"status_reason": " · ".join(reasons)} if reasons else {},

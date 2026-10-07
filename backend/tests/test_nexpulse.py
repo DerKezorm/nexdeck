@@ -168,7 +168,7 @@ async def test_the_latest_result_with_a_key_that_may_only_read_has_no_button(ctx
     _rights(False)
     card = await get_adapter("nexpulse").fetch("latest", CONFIG, {}, ctx)
     assert card.status == "ok"
-    assert card.primary == {"label": "Download", "value": 912.4, "unit": "Mbps"}
+    assert card.primary == {"label": "Download", "metric": "download", "value": 912.4, "unit": "Mbps"}
     assert [chip["label"] for chip in card.secondary] == ["Upload", "Ping", "Jitter", "Tested"]
     assert card.actions == []
 
@@ -339,7 +339,7 @@ async def test_the_summary_takes_the_figure_that_was_picked(ctx: Context) -> Non
     asked = respx.get(f"{BASE}/api/v1/stats").mock(return_value=httpx.Response(200, json=fixture("stats")))
     card = await get_adapter("nexpulse").fetch("summary", CONFIG, {"period": "30d", "figure": "median"}, ctx)
     assert asked.calls.last.request.url.params["range"] == "30d"
-    assert card.primary == {"label": "Download", "value": 905.2, "unit": "Mbps"}
+    assert card.primary == {"label": "Download", "metric": "download", "value": 905.2, "unit": "Mbps"}
     assert {"label": "Failed", "value": 2} in card.secondary and {"label": "Below plan", "value": 1} in card.secondary
     assert card.status == "warn", "2 of 20 failed is a tenth"
     assert "2 of 20 tests failed" in card.meta["status_reason"]

@@ -3,6 +3,14 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **"In and out, mirrored" knows both numbers on every card.** The FRITZ!Box, nexpulse, Speedtest Tracker and rTorrent cards did not say which row was the download and which the upload, so the two chips under the drawing read "down –" and "up –". A test now holds every card that offers the drawing to it.
+- **A group on a phone no longer draws its cards over one another.** The cards wrap to one a row there, inside a box no taller than the wide board made it; each now keeps the height of the smallest card on the board, and the group scrolls.
+- **The network map cuts a long detail line before the edge of its box**, as with a switch and its clients, rather than letting it run into the border.
+
 ## 0.33.0 (2026-10-06)
 
 ### New

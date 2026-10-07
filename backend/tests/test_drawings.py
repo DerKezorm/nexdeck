@@ -17,6 +17,7 @@ from app.adapters.base import (
     as_chart,
     as_inout,
     as_ring,
+    inout_pair,
     offer_views,
     ring_of,
     shape_for_display,
@@ -323,6 +324,23 @@ def test_in_and_out_are_offered_where_a_pair_is_declared_and_nowhere_else() -> N
     assert "glances.system" not in offered, "cpu and memory are not a way in and a way out"
     assert "gatus.summary" not in offered, "endpoints up and down are counted, not carried"
     assert len(offered) >= 5, f"only {sorted(offered)}"
+
+
+def test_every_card_offering_in_and_out_names_the_rows_its_chips_read() -> None:
+    """⚠️ The chips under the drawing find their number by the row's metric.
+    A FRITZ!Box, a speed test and a torrent client wrote "Download" and
+    "Upload" without one, and the chips read "down –" and "up –" under a
+    drawing that knew both numbers."""
+    unnamed = []
+    for adapter in all_adapters():
+        for widget in adapter.widgets:
+            pair = inout_pair(widget.metrics) if widget.inout and not widget.client_only else None
+            if pair is None:
+                continue
+            data = adapter.demo(widget.kind, {}, 3)
+            named = {row.get("metric") for row in [data.primary, *(data.secondary or [])] if row}
+            unnamed += [f"{adapter.kind}.{widget.kind}:{metric}" for metric in pair if metric not in named]
+    assert not unnamed, unnamed
 
 
 def test_covers_can_run_past_as_a_band() -> None:

@@ -153,8 +153,8 @@ class SpeedtestAdapter(Adapter):
         ok = data.get("status", "completed") == "completed" and data.get("successful", True)
         card = WidgetData(
             status="ok" if ok else "warn",
-            primary={"label": "Download", "value": download, "unit": "Mbps"},
-            secondary=[{"label": "Upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": str(data.get("created_at", ""))[:16].replace("T", " ")}],
+            primary={"label": "Download", "metric": "download", "value": download, "unit": "Mbps"},
+            secondary=[{"label": "Upload", "metric": "upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": str(data.get("created_at", ""))[:16].replace("T", " ")}],
             metrics=measured({"download": download, "upload": upload, "ping": ping}),
         )
         return as_gauge(card, options)
@@ -223,9 +223,9 @@ class SpeedtestAdapter(Adapter):
         newest = inside[-1][1]
         down, up = _mbps(newest, "download"), _mbps(newest, "upload")
         return WidgetData(
-            primary={"label": "Download", "value": down, "unit": "Mbps"},
+            primary={"label": "Download", "metric": "download", "value": down, "unit": "Mbps"},
             secondary=[
-                {"label": "Upload", "value": up, "unit": "Mbps"},
+                {"label": "Upload", "metric": "upload", "value": up, "unit": "Mbps"},
                 {"label": "Measurements", "value": len(inside)},
             ],
             metrics=measured({"download": down, "upload": up}),
@@ -264,8 +264,8 @@ class SpeedtestAdapter(Adapter):
         download = fake.walk("st-down", tick, 880, 960, period=1200)
         upload = fake.walk("st-up", tick, 44, 51, period=1200)
         ping = fake.walk("st-ping", tick, 7, 12, period=600)
-        card = WidgetData(primary={"label": "Download", "value": download, "unit": "Mbps"},
-                          secondary=[{"label": "Upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": "today 06:00"}],
+        card = WidgetData(primary={"label": "Download", "metric": "download", "value": download, "unit": "Mbps"},
+                          secondary=[{"label": "Upload", "metric": "upload", "value": upload, "unit": "Mbps"}, {"label": "Ping", "value": ping, "unit": "ms"}, {"label": "Tested", "value": "today 06:00"}],
                           metrics={"download": download, "upload": upload, "ping": ping})
         return as_gauge(card, options)
 

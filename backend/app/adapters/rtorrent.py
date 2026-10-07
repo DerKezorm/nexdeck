@@ -308,8 +308,8 @@ class RTorrentAdapter(DownloadAdapter):
             status="bad" if counts["error"] else "ok",
             primary={"label": "Torrents", "value": len(rows)},
             secondary=[
-                {"label": "Download", "value": human_rate(down), "part": "download"},
-                {"label": "Upload", "value": human_rate(up), "part": "upload"},
+                {"label": "Download", "metric": "download", "value": human_rate(down), "part": "download"},
+                {"label": "Upload", "metric": "upload", "value": human_rate(up), "part": "upload"},
                 {"label": "Downloading", "value": counts["downloading"], "part": "downloading"},
                 {"label": "Seeding", "value": counts["seeding"], "part": "seeding"},
                 {"label": "Paused", "value": counts["paused"], "part": "paused"},
