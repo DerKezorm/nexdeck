@@ -26,6 +26,20 @@ describe('in and out, mirrored', () => {
     expect(screen.getByText('4.2 Mbit/s')).toBeInTheDocument()
   })
 
+  it('lets the label give way on a narrow card and keeps the number whole', () => {
+    // jsdom lays nothing out; what is held here is which part may shrink.
+    render(<>{renderWidget({ widget: view, data, series: { wan_down: [100, 300, 200], wan_up: [2, 4, 3] } })}</>)
+    const value = screen.getByText('4.2 Mbit/s').closest('b')!
+    expect(value).toHaveClass('shrink-0')
+    expect(value.previousElementSibling).toHaveClass('truncate')
+    expect(value.previousElementSibling).toHaveTextContent('WAN up')
+    expect(value.parentElement!.firstElementChild).toHaveClass('shrink-0')
+    expect(value.parentElement!.firstElementChild).toHaveTextContent('↑')
+    // Each chip may shrink and cuts what it cannot show inside itself, so two numbers never run into each other.
+    expect(value.parentElement).toHaveClass('min-w-0', 'overflow-hidden')
+    expect(value.parentElement!.parentElement).toHaveClass('overflow-hidden')
+  })
+
   it('waits for a history before it draws one', () => {
     render(<>{renderWidget({ widget: view, data, series: { wan_down: [100] } })}</>)
     expect(screen.queryByTestId('inout')).toBeNull()

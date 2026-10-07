@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { WidgetData } from '../lib/types'
-import { layout, type Place, roomFor, TopologyCard } from './TopologyCard'
+import { bestGrid, layout, type Place, roomFor, TopologyCard } from './TopologyCard'
 
 const places: Place[] = [
   { id: 'cluster', name: 'Cluster', parent: null, status: 'ok' },
@@ -74,5 +74,39 @@ describe('the detail line', () => {
     ]
     render(<TopologyCard data={{ status: 'ok', meta: { topology: { places } } } as unknown as WidgetData} />)
     expect(screen.getByText('USW-24-PoE · 9 clie…')).toBeInTheDocument()
+  })
+})
+
+describe('the columns of the leaves', () => {
+  // A cluster with two nodes and nine guests, as the Proxmox map draws it.
+  const cluster: Place[] = [
+    { id: 'c', name: 'Cluster', parent: null },
+    { id: 'a', name: 'pve', parent: 'c' },
+    { id: 'b', name: 'pve2', parent: 'c' },
+    ...['media', 'ha', 'win', 'pihole', 'deck', 'backup'].map((name) => ({ id: name, name, parent: 'a' })),
+    ...['git', 'cloud', 'watch'].map((name) => ({ id: name, name, parent: 'b' })),
+  ]
+  const scale = (grid: number, width: number, height: number) => {
+    const shape = layout(cluster, grid)
+    return Math.min(width / (shape.width + 8), height / (shape.height + 8))
+  }
+
+  it('stay three on a wide card and where nothing is measured', () => {
+    expect(bestGrid(cluster, 0, 0)).toBe(3)
+    expect(bestGrid(cluster, 1100, 320)).toBe(3)
+  })
+
+  it('narrow on a phone, so the map is drawn larger than three columns would draw it', () => {
+    const grid = bestGrid(cluster, 340, 300)
+    expect(grid).toBeLessThan(3)
+    expect(scale(grid, 340, 300)).toBeGreaterThan(scale(3, 340, 300) * 1.4)
+  })
+
+  it('put every leaf under its own place in one column when asked for one', () => {
+    const { boxes } = layout(cluster, 1)
+    const media = boxes.find((box) => box.place.id === 'media')!
+    const pihole = boxes.find((box) => box.place.id === 'pihole')!
+    expect(pihole.x).toBe(media.x)
+    expect(pihole.y).toBeGreaterThan(media.y)
   })
 })

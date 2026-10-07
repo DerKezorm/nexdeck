@@ -1,7 +1,9 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useDisguise } from '../lib/showcase'
 import type { WidgetData } from '../lib/types'
+import { useBoxSize } from '../lib/useBoxSize'
 
 /**
  * A map of places and what hangs on what: a cluster with its nodes and the
@@ -46,8 +48,9 @@ interface Shape {
  * whose children are all leaves, more than three of them, with those leaves
  * in a grid of three under it, which keeps a node with twenty machines from
  * spreading across the whole card. A place whose parent is missing is a root.
+ * ``grid`` is how many columns such leaves get; see bestGrid.
  */
-export function layout(places: Place[]): { boxes: Box[]; height: number; width: number } {
+export function layout(places: Place[], grid = GRID): { boxes: Box[]; height: number; width: number } {
   const known = new Set(places.map((place) => place.id))
   const children = new Map<string, Place[]>()
   for (const place of places) {
@@ -55,7 +58,7 @@ export function layout(places: Place[]): { boxes: Box[]; height: number; width: 
   }
   const roots = places.filter((place) => !place.parent || !known.has(place.parent) || place.parent === place.id)
   const kids = (id: string) => children.get(id) ?? []
-  const leafy = (id: string) => kids(id).length > GRID && kids(id).every((child) => !kids(child.id).length)
+  const leafy = (id: string) => kids(id).length > grid && kids(id).every((child) => !kids(child.id).length)
   const shapes = new Map<string, Shape>()
   const seen = new Set<string>()
   const measure = (place: Place): number => {
@@ -63,7 +66,7 @@ export function layout(places: Place[]): { boxes: Box[]; height: number; width: 
     seen.add(place.id)
     const own = kids(place.id).length ? BOX_W : LEAF_W
     let width = own
-    if (leafy(place.id)) width = Math.max(own, GRID * LEAF_W + (GRID - 1) * GAP)
+    if (leafy(place.id)) width = Math.max(own, grid * LEAF_W + (grid - 1) * GAP)
     else if (kids(place.id).length) width = Math.max(own, kids(place.id).reduce((sum, child) => sum + measure(child), 0) + (kids(place.id).length - 1) * GAP)
     shapes.set(place.id, { width })
     return width
@@ -82,11 +85,11 @@ export function layout(places: Place[]): { boxes: Box[]; height: number; width: 
     height = Math.max(height, y + h)
     const below = y + h + ROW_GAP
     if (leafy(place.id)) {
-      const columns = Math.min(GRID, kids(place.id).length)
-      const grid = columns * LEAF_W + (columns - 1) * GAP
+      const columns = Math.min(grid, kids(place.id).length)
+      const across = columns * LEAF_W + (columns - 1) * GAP
       kids(place.id).forEach((child, index) => {
         const row = Math.floor(index / columns)
-        const x = left + span / 2 - grid / 2 + (index % columns) * (LEAF_W + GAP)
+        const x = left + span / 2 - across / 2 + (index % columns) * (LEAF_W + GAP)
         const top = below + row * (LEAF_H + GAP)
         placed.add(child.id)
         boxes.push({ place: child, x, y: top, w: LEAF_W, h: LEAF_H, level: level + 1 })
@@ -109,17 +112,44 @@ export function layout(places: Place[]): { boxes: Box[]; height: number; width: 
   return { boxes, height, width: Math.max(left - GAP * 2, BOX_W) }
 }
 
+/**
+ * How many columns the leaves get so that the map is drawn largest in a box
+ * of this size: three where nothing has been measured.
+ *
+ * ⚠️ Always three, the map of a Proxmox cluster with two nodes and nine
+ * guests was 3.6 times as wide as tall. On a phone it shrank to a font of
+ * five pixels, with the card's height empty above and below it.
+ */
+export function bestGrid(places: Place[], width: number, height: number): number {
+  if (width <= 0 || height <= 0) return GRID
+  let best = GRID
+  let largest = 0
+  for (const grid of [GRID, 2, 1]) {
+    const shape = layout(places, grid)
+    const scale = Math.min(width / (shape.width + 8), height / (shape.height + 8))
+    // A narrower grid has to draw clearly larger to be worth the longer columns.
+    if (scale > largest * 1.05) {
+      best = grid
+      largest = scale
+    }
+  }
+  return best
+}
+
 const COLOUR: Record<string, string> = { ok: 'var(--nd-ok)', warn: 'var(--nd-warn)', bad: 'var(--nd-bad)' }
 
 export function TopologyCard({ data }: { data: WidgetData | undefined }) {
   const { t } = useTranslation()
   const disguise = useDisguise()
+  const host = useRef<HTMLDivElement>(null)
+  const size = useBoxSize(host)
   const places = ((data?.meta?.topology as { places?: Place[] } | undefined)?.places ?? []).filter((place) => place && typeof place.id === 'string')
-  const { boxes, height, width } = layout(places)
-  if (!boxes.length) return <div className="flex-1 flex items-center justify-center text-xs text-faint">{t('card.collecting')}</div>
+  const { boxes, height, width } = layout(places, bestGrid(places, size.width - 16, size.height - 8))
   const byId = new Map(boxes.map((box) => [box.place.id, box]))
+  // One element throughout, so the size is measured on the box that stays.
   return (
-    <div className="flex-1 min-h-0 px-2 pb-2">
+    <div ref={host} className="flex-1 min-h-0 px-2 pb-2 flex">
+      {!boxes.length ? <div className="flex-1 flex items-center justify-center text-xs text-faint">{t('card.collecting')}</div> : (
       <svg viewBox={`-4 -4 ${width + 8} ${height + 8}`} className="w-full h-full" role="img" aria-label={t('card.topology')} data-testid="topology">
         {boxes.map((box) => {
           const parent = box.place.parent ? byId.get(box.place.parent) : undefined
@@ -157,6 +187,7 @@ export function TopologyCard({ data }: { data: WidgetData | undefined }) {
           )
         })}
       </svg>
+      )}
     </div>
   )
 }

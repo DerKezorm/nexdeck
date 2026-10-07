@@ -1419,13 +1419,19 @@ export function InOutCard({ data, series }: RenderProps) {
           <Empty>{t('card.collecting')}</Empty>
         )}
       </div>
-      <div className="flex gap-1.5 mt-1.5">
+      {/* ⚠️ On a narrow card the label gives way, the arrow and the number
+          stay, and what still does not fit is cut inside its own chip: the
+          second chip ran past the edge and cut off the upload in the middle
+          of its value, and without the cut the two numbers ran into one
+          another. */}
+      <div className="flex gap-1.5 mt-1.5 min-w-0 overflow-hidden">
         {[inside, outside].map((metric, index) => {
           const one = metric ? row(metric) : undefined
           return (
-            <span key={metric || index} className="chip" style={{ color: index ? '#a5b4fc' : 'var(--nd-accent)' }}>
-              {index ? '↑' : '↓'} {one ? tLabel(one.label) : metric}
-              <b className="num">
+            <span key={metric || index} className="chip min-w-0 overflow-hidden" style={{ color: index ? '#a5b4fc' : 'var(--nd-accent)' }}>
+              <span className="shrink-0">{index ? '↑' : '↓'}</span>
+              <span className="truncate">{one ? tLabel(one.label) : metric}</span>
+              <b className="num shrink-0">
                 <Shown value={one?.value} unit={one?.unit} />
               </b>
             </span>
