@@ -1235,6 +1235,26 @@
       "small": [
         "Thanks to ForexSs for reporting the tall tiles with screenshots (#33), and to C0NN0RAD0 for testing M3U Editor (#32)."
       ]
+    },
+    "0.35.0": {
+      "lead": "authentik sets itself up with one button, and every account can be linked to a sign-in provider under Profile. A forgotten password no longer locks you out.",
+      "sections": [
+        {
+          "title": "authentik in one step",
+          "body": "Enter the address of authentik and an API token and press Set up: nexdeck creates the signing key, the mapping, the provider and the application in authentik by itself and adds itself as a sign-in provider. Every step reports whether it worked. The token is used for that only and not stored. Whoever would rather not hand over a token downloads a blueprint.",
+          "path": "System > Sign-in providers"
+        },
+        {
+          "title": "Link your account to a provider",
+          "body": "Signed in with your password once, you press Link and confirm at authentik. From then on the provider takes you straight into your account, without a password. Until now the first sign-in through a provider made a second, empty account.",
+          "path": "Profile > Sign in through a provider"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Linking goes through the provider itself, never through a matching address: in authentik everybody can change their own.",
+        "A provider the button creates does not create accounts. That stays a switch under Sign-in providers."
+      ]
     }
   }
 }

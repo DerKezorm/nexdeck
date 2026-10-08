@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.35.0 (2026-10-08)
+
+### New
+
+- **authentik in one step.** Under System, Sign-in providers an administrator enters the address of authentik and a one-time API token, and nexdeck sets up its side in authentik by itself: a signing key, a scope mapping for the address, the provider and the application, and then adds itself as the sign-in provider "authentik". Every step reports whether it worked and, if not, what authentik answered. Pressing it again updates instead of duplicating, and a second nexdeck next to the first gets names of its own. The token is used for this run only: it is not stored, not logged and not shown again. Whoever would rather not hand over a token downloads a blueprint that creates the same objects. The provider carries `grant_types`, without which authentik 2026.8 refuses every sign-in. A provider made this way does not create accounts; that stays a switch.
+- **Link your own account to a sign-in provider.** Under Profile every account can link itself to an enabled provider; afterwards signing in there takes it straight into this account, without a password. Until now a provider either made a new account on first sign-in or turned the person away, so an administrator who signed in through authentik got a second, empty account instead of their own. Linking goes through the provider itself and never through a matching address, because authentik lets every user change their own. An identity linked to another account stays there, and the last way into an account without a password cannot be unlinked.
+
 ## 0.34.1 (2026-10-08)
 
 ### Changed

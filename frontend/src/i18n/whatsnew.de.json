@@ -1235,6 +1235,26 @@
       "small": [
         "Danke an ForexSs für die Meldung der hohen Kacheln samt Bildern (#33) und an C0NN0RAD0 fürs Testen von M3U Editor (#32)."
       ]
+    },
+    "0.35.0": {
+      "lead": "authentik richtet sich mit einem Knopf ein, und jedes Konto lässt sich unter Profil mit einem Anmeldeanbieter verknüpfen. Ein vergessenes Passwort sperrt dich dann nicht mehr aus.",
+      "sections": [
+        {
+          "title": "authentik in einem Schritt",
+          "body": "Adresse von authentik und ein API-Token eintragen, auf Einrichten drücken: nexdeck legt Schlüssel, Zuordnung, Anbieter und Anwendung in authentik selbst an und trägt sich als Anmeldeanbieter ein. Jeder Schritt meldet, ob er geklappt hat. Das Token wird nur dafür benutzt und nicht gespeichert. Wer kein Token herausgeben will, lädt einen Blueprint herunter.",
+          "path": "System > Anmeldeanbieter"
+        },
+        {
+          "title": "Konto mit einem Anbieter verknüpfen",
+          "body": "Einmal mit Passwort angemeldet, drückst du auf Verknüpfen und bestätigst bei authentik. Danach kommst du über den Anbieter direkt in dein Konto, auch ohne Passwort. Bisher legte die erste Anmeldung über einen Anbieter ein zweites, leeres Konto an.",
+          "path": "Profil > Anmelden über einen Anbieter"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Verknüpft wird nur über den Anbieter selbst, nie über eine gleiche Mailadresse: In authentik kann jeder seine eigene Adresse ändern.",
+        "Ein Anbieter, den der Knopf anlegt, legt keine neuen Konten an. Das bleibt ein Schalter unter Anmeldeanbieter."
+      ]
     }
   }
 }
