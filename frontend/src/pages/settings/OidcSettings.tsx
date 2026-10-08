@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Download, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, del, get, patch, post } from '../../api/client'
+import { ApiError, del, get, patch, post, serverUrl } from '../../api/client'
 import type { About } from '../../api/types'
 import { Field, Select, Switch, Toast } from '../../components/ui'
 import { SettingsCard } from './SettingsCard'
@@ -24,6 +24,11 @@ interface Provider {
 
 const EMPTY = { slug: '', label: '', issuer_url: '', client_id: '', client_secret: '', scopes: 'openid profile email', enabled: true, auto_create: true, trusts_second_factor: false, default_role: 'user' }
 
+interface Steps {
+  ok: boolean
+  steps: { key: string; ok: boolean; detail: string }[]
+}
+
 /** Sign-in through authentik, Keycloak, Authelia, Pocket ID and the rest. */
 export function OidcSettings() {
   const { t } = useTranslation()
@@ -35,6 +40,9 @@ export function OidcSettings() {
   // it again (issue #10), which loses every account linked to it.
   const [editing, setEditing] = useState<Provider | null>(null)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  const [authentik, setAuthentik] = useState({ url: '', token: '' })
+  const [steps, setSteps] = useState<Steps | null>(null)
+  const [busy, setBusy] = useState(false)
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
   const base = about.data?.public_url || window.location.origin
   const edit = (provider: Provider) => {
@@ -56,8 +64,62 @@ export function OidcSettings() {
         void providers.refetch()
       })
       .catch(fail)
+  const runAuthentik = () => {
+    setBusy(true)
+    setSteps(null)
+    void post<Steps>('/oidc/authentik/setup', authentik)
+      .then((result) => {
+        setSteps(result)
+        // The token was for this run only; it does not stay in the page either.
+        setAuthentik((a) => ({ ...a, token: '' }))
+        void providers.refetch()
+      })
+      .catch(fail)
+      .finally(() => setBusy(false))
+  }
+  const noAddress = about.isSuccess && !about.data?.public_url
   return (
     <>
+      <SettingsCard title={t('settings.system.authentik')} description={t('settings.system.authentikHelp')}>
+        {noAddress && <p className="text-[12px] text-warn mb-2">{t('settings.system.authentikNoAddress')}</p>}
+        <form
+          className="grid sm:grid-cols-2 gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            runAuthentik()
+          }}
+        >
+          <Field label={t('settings.system.authentikUrl')} htmlFor="a-url">
+            <input id="a-url" className="input" type="url" placeholder="https://auth.example.com" value={authentik.url} onChange={(e) => setAuthentik((a) => ({ ...a, url: e.target.value }))} />
+          </Field>
+          <Field label={t('settings.system.authentikToken')} htmlFor="a-token" help={t('settings.system.authentikTokenHelp')}>
+            <input id="a-token" className="input" type="password" autoComplete="new-password" value={authentik.token} onChange={(e) => setAuthentik((a) => ({ ...a, token: e.target.value }))} />
+          </Field>
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
+            <button type="submit" className="btn btn-accent" disabled={busy || noAddress || !authentik.url.trim() || !authentik.token.trim()}>
+              {busy ? t('settings.system.authentikBusy') : t('settings.system.authentikRun')}
+            </button>
+            {!noAddress && (
+              <a className="btn" href={serverUrl('/api/v1/oidc/authentik/blueprint')} download>
+                <Download size={14} />
+                {t('settings.system.authentikBlueprint')}
+              </a>
+            )}
+          </div>
+        </form>
+        {steps && (
+          <>
+            <ol className="mt-3 space-y-1 text-xs" data-testid="authentik-steps">
+              {steps.steps.map((step) => (
+                <li key={step.key} className={step.ok ? 'text-ok' : 'text-bad'}>
+                  {step.ok ? '✓' : '✗'} {t(`settings.system.authentikStep.${step.key}`, { defaultValue: step.key })}: {step.detail}
+                </li>
+              ))}
+            </ol>
+            {steps.ok && <p className="mt-2 text-[12px]">{t('settings.system.authentikDone')}</p>}
+          </>
+        )}
+      </SettingsCard>
       <SettingsCard title={t('settings.system.oidc')} description={t('settings.system.oidcHelp')}>
         <ul className="space-y-1.5 mb-4">
           {(providers.data ?? []).map((provider) => (

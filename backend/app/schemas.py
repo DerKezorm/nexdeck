@@ -378,6 +378,13 @@ class OidcProviderBody(BaseModel):
     trusts_second_factor: bool = False
 
 
+class AuthentikSetupBody(BaseModel):
+    """Where authentik is, and a token that may create applications there. The token is not stored."""
+
+    url: str = Field(min_length=1, max_length=300)
+    token: str = Field(min_length=1, max_length=2000)
+
+
 class SettingsBody(BaseModel):
     public_url: str | None = Field(default=None, max_length=300)
     update_check: bool | None = None

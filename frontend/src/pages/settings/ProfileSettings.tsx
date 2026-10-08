@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, post, upload } from '../../api/client'
@@ -23,6 +23,24 @@ export function ProfileSettings() {
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  const links = useQuery({ queryKey: ['oidc-links'], queryFn: () => get<{ slug: string; label: string; linked: boolean }[]>('/auth/oidc/links') })
+  // Back from the provider after linking: say how it went, once, and take it
+  // out of the address so a reload does not say it again.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const linked = params.get('oidc_linked')
+    const failure = params.get('oidc_error')
+    if (!linked && !failure) return
+    setToast(
+      linked
+        ? { text: t('settings.profile.providerLinked'), level: 'ok' }
+        : { text: t(`auth.oidc.${failure}`, { defaultValue: t('auth.oidc.failed') }), level: 'error' },
+    )
+    params.delete('oidc_linked')
+    params.delete('oidc_error')
+    const rest = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
+  }, [t])
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
   const pair = accountPair(user.language_pair)
@@ -192,6 +210,36 @@ export function ProfileSettings() {
         </p>
       )}
       <TwoFactorCard hasPassword={user.has_password} onDone={(text, level) => setToast({ text, level })} />
+
+      {(links.data ?? []).length > 0 && (
+        <SettingsCard title={t('settings.profile.providers')} description={t('settings.profile.providersHelp')}>
+          <ul className="space-y-1.5">
+            {(links.data ?? []).map((provider) => (
+              <li key={provider.slug} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 truncate">{provider.label}</span>
+                {/* Not linked, the button says so already; on a phone a second word squeezed the name to three letters. */}
+                {provider.linked && <span className="text-[12px] text-ok">{t('settings.profile.providerIsLinked')}</span>}
+                {provider.linked ? (
+                  <button className="btn h-7 text-xs" onClick={() => void del(`/auth/oidc/${provider.slug}/link`).then(() => links.refetch()).catch(failed)}>
+                    {t('settings.profile.providerUnlink')}
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-accent h-7 text-xs"
+                    onClick={() =>
+                      void post<{ url: string }>(`/auth/oidc/${provider.slug}/link`)
+                        .then(({ url }) => window.location.assign(url))
+                        .catch(failed)
+                    }
+                  >
+                    {t('settings.profile.providerLink', { name: provider.label })}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </SettingsCard>
+      )}
 
       <SettingsCard title={t('settings.profile.sessions')} description={t('settings.profile.sessionsHelp')}>
         <ul className="space-y-1 mb-3">

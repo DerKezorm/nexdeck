@@ -116,6 +116,8 @@ GUESTS_MAY_CHANGE: dict[str, str] = {
     "POST /api/v1/auth/two-factor/confirm": "own second factor",
     "POST /api/v1/auth/two-factor/recovery-codes": "own second factor",
     "DELETE /api/v1/auth/two-factor": "own second factor",
+    "POST /api/v1/auth/oidc/{slug}/link": "own link to a sign-in provider",
+    "DELETE /api/v1/auth/oidc/{slug}/link": "own link to a sign-in provider",
     "POST /api/v1/notices/read": "marking one's own notices as read",
     "DELETE /api/v1/notices/{notice_id}": "one of one's own notices",
     "DELETE /api/v1/notices": "all of one's own read notices",

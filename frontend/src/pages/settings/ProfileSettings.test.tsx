@@ -15,11 +15,14 @@ import { ProfileSettings } from './ProfileSettings'
 import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 
-const calls = vi.hoisted(() => ({ patched: [] as unknown[] }))
+const calls = vi.hoisted(() => ({ patched: [] as unknown[], posted: [] as string[] }))
 vi.mock('../../api/client', () => ({
   ApiError: class ApiError extends Error {},
-  get: vi.fn(async () => []),
-  post: vi.fn(async () => ({})),
+  get: vi.fn(async (path: string) => (path === '/auth/oidc/links' ? [{ slug: 'authentik', label: 'authentik', linked: false }] : [])),
+  post: vi.fn(async (path: string) => {
+    calls.posted.push(path)
+    return path.endsWith('/link') ? { url: 'https://auth.example.com/application/o/authorize/?state=x' } : {}
+  }),
   del: vi.fn(async () => ({})),
   upload: vi.fn(async () => ({})),
   serverUrl: (path: string) => path,
@@ -116,5 +119,19 @@ describe('ProfileSettings', () => {
     show()
     const second = screen.getByRole('combobox', { name: 'Second language in the top bar' })
     expect([...(second as HTMLSelectElement).options].map((option) => option.value)).toEqual(Object.keys(LANGUAGES))
+  })
+
+  it('links the account to a provider through the provider itself', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { assign, search: '', pathname: '/settings' })
+    try {
+      const user = userEvent.setup()
+      show()
+      await user.click(await screen.findByRole('button', { name: 'Link with authentik' }, { timeout: 3000 }))
+      expect(calls.posted).toContain('/auth/oidc/authentik/link')
+      expect(assign).toHaveBeenCalledWith('https://auth.example.com/application/o/authorize/?state=x')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

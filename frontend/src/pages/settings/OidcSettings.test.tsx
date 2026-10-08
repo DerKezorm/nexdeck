@@ -24,11 +24,23 @@ const PROVIDER = {
   default_role: 'guest',
 }
 
-const calls = vi.hoisted(() => ({ patch: [] as { path: string; body: unknown }[], post: [] as unknown[] }))
+const STEPS = {
+  ok: true,
+  steps: [
+    { key: 'reached', ok: true, detail: 'authentik 2026.8.1' },
+    { key: 'filled', ok: true, detail: 'added the sign-in provider' },
+  ],
+}
+
+const calls = vi.hoisted(() => ({ patch: [] as { path: string; body: unknown }[], post: [] as unknown[], setup: [] as unknown[] }))
 vi.mock('../../api/client', () => ({
   ApiError: class ApiError extends Error {},
   get: vi.fn(async (path: string) => (path === '/oidc/providers' ? [PROVIDER] : { public_url: 'https://deck.example.com' })),
-  post: vi.fn(async (_path: string, body: unknown) => {
+  post: vi.fn(async (path: string, body: unknown) => {
+    if (path === '/oidc/authentik/setup') {
+      calls.setup.push(body)
+      return STEPS
+    }
     calls.post.push(body)
     return {}
   }),
@@ -37,6 +49,7 @@ vi.mock('../../api/client', () => ({
     return {}
   }),
   del: vi.fn(async () => ({})),
+  serverUrl: (path: string) => path,
 }))
 
 function show() {
@@ -52,6 +65,25 @@ describe('identity providers', () => {
   beforeEach(() => {
     calls.patch.length = 0
     calls.post.length = 0
+    calls.setup.length = 0
+  })
+
+  it('set authentik up with a one-time token and forget the token afterwards', async () => {
+    const user = userEvent.setup()
+    show()
+    const button = await screen.findByRole('button', { name: 'Set up' }, { timeout: 3000 })
+    expect(button).toBeDisabled()
+    await user.click(screen.getByLabelText('Address of authentik'))
+    await user.paste('https://auth.example.com')
+    await user.click(screen.getByLabelText('API token'))
+    await user.paste('one-time')
+    await user.click(button)
+
+    await waitFor(() => expect(calls.setup).toEqual([{ url: 'https://auth.example.com', token: 'one-time' }]))
+    expect(await screen.findByText(/authentik reached: authentik 2026.8.1/)).toBeInTheDocument()
+    expect(screen.getByText(/link your account with authentik once under Profile/)).toBeInTheDocument()
+    expect(screen.getByLabelText('API token')).toHaveValue('')
+    expect(screen.getByRole('link', { name: 'Download a blueprint instead' })).toHaveAttribute('href', '/api/v1/oidc/authentik/blueprint')
   })
 
   it('are changed in place, and an empty secret field keeps the secret', async () => {

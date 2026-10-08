@@ -62,6 +62,11 @@ class OidcError(Exception):
         self.message = message
 
 
+def forget_discovery(issuer_url: str) -> None:
+    """Drop the kept document, so the next sign-in reads the provider afresh."""
+    _discovery.pop(issuer_url.rstrip("/"), None)
+
+
 async def discovery(issuer_url: str) -> dict[str, Any]:
     issuer = issuer_url.rstrip("/")
     hit = _discovery.get(issuer)

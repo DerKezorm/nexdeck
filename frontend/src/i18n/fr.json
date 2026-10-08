@@ -71,11 +71,12 @@
       "oidc_unreachable": "Impossible de joindre le fournisseur d’identité.",
       "oidc_bad_token": "La réponse du fournisseur d’identité n’a pas pu être vérifiée.",
       "oidc_no_signing_key": "Le fournisseur d’identité signe avec son secret client, ce que nexdeck n’accepte pas. Un administrateur doit lui attribuer une clé de signature (dans authentik : Signing Key sur le provider).",
-      "oidc_no_account": "Aucun compte nexdeck n’est encore lié à cette identité.",
+      "oidc_no_account": "Aucun compte nexdeck n'est encore lié à cette identité. Connectez-vous une fois avec votre mot de passe et liez-la sous Profil.",
       "oidc_disabled": "Ce compte est désactivé.",
       "oidc_token_refused": "Le fournisseur d’identité a refusé le code de connexion.",
       "oidc_no_public_url": "L’URL publique n’est pas définie. Un administrateur doit d’abord la définir.",
-      "oidc_bad_discovery": "La configuration du fournisseur d’identité est incomplète."
+      "oidc_bad_discovery": "La configuration du fournisseur d’identité est incomplète.",
+      "oidc_taken": "Cette identité est déjà liée à un autre compte nexdeck."
     },
     "confirmPassword": "Confirmer le mot de passe",
     "showPassword": "Afficher le mot de passe",
@@ -215,7 +216,13 @@
       "signOut": "Se déconnecter ici",
       "confirmPassword": "Répéter le nouveau mot de passe",
       "saveProfile": "Enregistrer le nom et l’adresse",
-      "unsaved": "Pas encore enregistré"
+      "unsaved": "Pas encore enregistré",
+      "providers": "Se connecter via un fournisseur",
+      "providersHelp": "Une fois lié, la connexion via le fournisseur mène directement à ce compte, même si le mot de passe est perdu.",
+      "providerIsLinked": "lié",
+      "providerLink": "Lier à {{name}}",
+      "providerUnlink": "Délier",
+      "providerLinked": "Lié. Désormais, vous pouvez aussi vous connecter par ce biais."
     },
     "integrations": {
       "title": "Intégrations",
@@ -304,7 +311,25 @@
       "oidcEnabled": "Proposer ce fournisseur",
       "oidcEnabledHelp": "Désactivé, son bouton disparaît de la page de connexion et personne ne peut se connecter par lui.",
       "oidcSlugChanged": "Un nouveau nom court change l’URI de redirection. Enregistrez aussi la nouvelle chez le fournisseur.",
-      "oidcAdd": "Ajouter un fournisseur"
+      "oidcAdd": "Ajouter un fournisseur",
+      "authentik": "authentik en une étape",
+      "authentikHelp": "Avec un jeton d'API qui peut créer des applications, nexdeck crée lui-même le fournisseur et l'application dans authentik et s'ajoute ci-dessous comme fournisseur de connexion. Le jeton ne sert qu'à cela et n'est pas enregistré.",
+      "authentikNoAddress": "Indiquez d'abord l'adresse publique sous Adresse : authentik y renvoie le navigateur.",
+      "authentikUrl": "Adresse d'authentik",
+      "authentikToken": "Jeton d'API",
+      "authentikTokenHelp": "Dans authentik sous Annuaire, Jetons et mots de passe d'application, objectif API Token.",
+      "authentikRun": "Configurer",
+      "authentikBusy": "Configuration …",
+      "authentikBlueprint": "Télécharger un blueprint à la place",
+      "authentikDone": "Terminé. Liez maintenant votre compte à authentik une fois sous Profil, et la connexion par ce biais fonctionne sans mot de passe.",
+      "authentikStep": {
+        "reached": "authentik joint",
+        "signingKey": "Clé de signature",
+        "mapping": "Correspondance pour l'adresse",
+        "provider": "Fournisseur",
+        "application": "Application",
+        "filled": "Fournisseur de connexion ici"
+      }
     },
     "search": {
       "title": "Recherche vers l’extérieur",

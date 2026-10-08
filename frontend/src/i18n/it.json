@@ -71,11 +71,12 @@
       "oidc_unreachable": "Impossibile raggiungere il provider di identità.",
       "oidc_bad_token": "Impossibile verificare la risposta del provider di identità.",
       "oidc_no_signing_key": "Il provider di identità firma con il suo client secret, che nexdeck non accetta. Un amministratore deve scegliere una chiave di firma per il provider (in authentik: Signing Key sul provider).",
-      "oidc_no_account": "Nessun account nexdeck è ancora collegato a questa identità.",
+      "oidc_no_account": "Nessun account nexdeck è ancora collegato a questa identità. Accedi una volta con la password e collegala in Profilo.",
       "oidc_disabled": "Questo account è disattivato.",
       "oidc_token_refused": "Il provider di identità ha rifiutato il codice di accesso.",
       "oidc_no_public_url": "L'URL pubblico non è impostato. Un amministratore deve prima impostarlo.",
-      "oidc_bad_discovery": "La configurazione del provider di identità è incompleta."
+      "oidc_bad_discovery": "La configurazione del provider di identità è incompleta.",
+      "oidc_taken": "Questa identità è già collegata a un altro account nexdeck."
     },
     "confirmPassword": "Conferma password",
     "showPassword": "Mostra password",
@@ -215,7 +216,13 @@
       "signOut": "Esci da qui",
       "confirmPassword": "Ripeti la nuova password",
       "saveProfile": "Salva nome e indirizzo",
-      "unsaved": "Non ancora salvato"
+      "unsaved": "Non ancora salvato",
+      "providers": "Accedi tramite un provider",
+      "providersHelp": "Una volta collegato, l'accesso tramite il provider porta direttamente a questo account, anche se la password va persa.",
+      "providerIsLinked": "collegato",
+      "providerLink": "Collega con {{name}}",
+      "providerUnlink": "Scollega",
+      "providerLinked": "Collegato. D'ora in poi puoi accedere anche da lì."
     },
     "integrations": {
       "title": "Integrazioni",
@@ -304,7 +311,25 @@
       "oidcEnabled": "Offri questo provider",
       "oidcEnabledHelp": "Disattivato nasconde il suo pulsante nella pagina di accesso, e nessuno può accedere tramite esso.",
       "oidcSlugChanged": "Un nuovo nome breve cambia l'URI di reindirizzamento. Registra anche quello nuovo presso il provider.",
-      "oidcAdd": "Aggiungi provider"
+      "oidcAdd": "Aggiungi provider",
+      "authentik": "authentik in un passo",
+      "authentikHelp": "Con un token API che può creare applicazioni, nexdeck crea da solo provider e applicazione in authentik e si aggiunge qui sotto come provider di accesso. Il token serve solo a questo e non viene salvato.",
+      "authentikNoAddress": "Prima imposta l'indirizzo pubblico in Indirizzo: authentik rimanda lì il browser.",
+      "authentikUrl": "Indirizzo di authentik",
+      "authentikToken": "Token API",
+      "authentikTokenHelp": "In authentik sotto Directory, Token e password delle app, scopo API Token.",
+      "authentikRun": "Configura",
+      "authentikBusy": "Configurazione …",
+      "authentikBlueprint": "Scarica invece un blueprint",
+      "authentikDone": "Fatto. Ora collega una volta il tuo account ad authentik in Profilo, e l'accesso da lì funziona senza password.",
+      "authentikStep": {
+        "reached": "authentik raggiunto",
+        "signingKey": "Chiave di firma",
+        "mapping": "Mappatura per l'indirizzo",
+        "provider": "Provider",
+        "application": "Applicazione",
+        "filled": "Provider di accesso qui"
+      }
     },
     "search": {
       "title": "Ricerca che esce di casa",
