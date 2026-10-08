@@ -9,6 +9,10 @@ project uses semantic versioning.
 
 - **M3U Editor is out of beta.** The person who asked for it confirmed every card on a real instance (#32).
 
+### Fixed
+
+- **App tiles in a group are one line high again (#33).** 0.34.0 gave every card in a group the height of the smallest card with a body, so the cards on a phone would stop being drawn over each other; a group of app tiles then held tiles four times as tall that scrolled. A group of app tiles, buttons and headings keeps its tiles one line high; a group with other cards keeps the larger floor.
+
 ## 0.34.0 (2026-10-07)
 
 ### New

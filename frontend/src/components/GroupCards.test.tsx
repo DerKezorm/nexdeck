@@ -5,7 +5,7 @@ import { DEMO_VIEWS } from '../demo/board'
 import { cardsOf, PageCardsContext, tucked, useFolded } from '../lib/groups'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { useLive } from '../stores/live'
-import { CARD_FLOOR, GroupCard, TabsCard } from './GroupCards'
+import { CARD_FLOOR, GroupCard, rowFloor, TabsCard, TILE_FLOOR } from './GroupCards'
 import { ROW_HEIGHT } from './BoardGrid'
 
 const card = (id: number, kind: string, title: string, options: Record<string, unknown> = {}, renderer = 'value') =>
@@ -74,5 +74,26 @@ describe('a group on a phone', () => {
     const box = screen.getByText('901').closest('.nd-in-group')!.parentElement!
     expect(box.style.gridAutoRows).toBe(`minmax(${CARD_FLOOR}px, 1fr)`)
     expect(box).toHaveClass('overflow-y-auto')
+  })
+})
+
+describe('a group of app tiles (#33)', () => {
+  const tile = (id: number, title: string) => card(id, 'core.app', title, {}, 'app')
+  const tiles = card(9, 'core.group', 'Shops', { cards: [5, 6, 7] }, 'group')
+
+  it('keeps its tiles one line high, as before 0.34.0, rather than the height of a card with a body', () => {
+    render(
+      <PageCardsContext.Provider value={{ widgets: [tile(5, 'ebay'), tile(6, 'Amazon'), tile(7, 'iCloud'), tiles] }}>
+        <GroupCard widget={tiles} data={undefined} />
+      </PageCardsContext.Provider>,
+    )
+    const box = screen.getByText('Amazon').closest('.nd-in-group')!.parentElement!
+    expect(box.style.gridAutoRows).toBe(`minmax(${TILE_FLOOR}px, 1fr)`)
+  })
+
+  it('takes the floor of a card with a body as soon as one sits among the tiles', () => {
+    expect(rowFloor([{ renderer: 'app' }, { renderer: 'app' }])).toBe(TILE_FLOOR)
+    expect(rowFloor([{ renderer: 'app' }, { renderer: 'value' }])).toBe(CARD_FLOOR)
+    expect(rowFloor([{ renderer: 'heading' }, { renderer: 'button' }])).toBe(TILE_FLOOR)
   })
 })
