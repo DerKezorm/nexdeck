@@ -54,7 +54,11 @@
       "nextrmnl_refused": "nextrmnl hat die Anfrage abgelehnt.",
       "nextrmnl_too_old": "Dieses nextrmnl hat noch keine API für Dashboards. Es braucht eine Fassung mit API-Schlüsseln.",
       "readmeabook_not_admin": "Dieser Token gehört einem Benutzer, keinem Administrator, und ReadMeABook zeigt seine Zahlen nur Administratoren. Leg den Token an, während du als Administrator angemeldet bist.",
-      "readmeabook_too_old": "Dieses ReadMeABook lässt API-Tokens seine Zahlen nicht lesen. Es braucht Version 1.2.0 oder neuer."
+      "readmeabook_too_old": "Dieses ReadMeABook lässt API-Tokens seine Zahlen nicht lesen. Es braucht Version 1.2.0 oder neuer.",
+      "nginxignition_stats_unsupported": "Dieser nginx-Bau unterstützt keine Verkehrsstatistiken.",
+      "nginxignition_stats_disabled": "Die Verkehrsstatistiken sind in den Einstellungen abgeschaltet.",
+      "nginxignition_stats_stopped": "Verkehrsstatistiken brauchen ein laufendes nginx.",
+      "nginxignition_stats_unavailable": "nginx ignition konnte die Verkehrsstatistiken von nginx nicht lesen."
     }
   },
   "auth": {

@@ -7,7 +7,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-165-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-166-3fb6d4)](#the-services-it-speaks-to)
 [![Website](https://img.shields.io/badge/nexdeck.nexapps.dev-3fb6d4?logo=readthedocs&logoColor=white)](https://nexdeck.nexapps.dev)
 
 ![A nexdeck board: clock, search, weather, Docker load, Pi-hole, what is playing on Plex, monitors, app tiles and feeds](docs/screenshot-overview.png)
@@ -15,7 +15,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **165 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **166 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Yours to look at.** Thirteen colour themes besides nexdeck's own, Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine among them, cards drawn as glass, flat, outline or with a neon edge, and backgrounds that drift, show the stars or follow the time of day. Numbers roll to each new reading, and a card that goes down glows red while the room behind it turns a little red too.
@@ -112,7 +112,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 **Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, Kopia, Duplicati, Portainer, Nomad, Cup, Coolify, Gitea, Forgejo, GitLab, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, openmediavault, Glances, Beszel, Prometheus, Alertmanager, Grafana, Scrutiny, UPS through PeaNUT, Wake-on-LAN, Backrest, Komodo, Arcane, Dockhand, Kubernetes, UrBackup, Elasticsearch and OpenSearch, Netdata, Ollama, Open WebUI, Watchtower, What's Up Docker, Zabbix, nextrmnl, PatchMon.
 
-**Network.** Public IP address, Cloudflare, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, OpenWrt, Traefik, Nginx Proxy Manager, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, nexpulse, nexsift, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
+**Network.** Public IP address, Cloudflare, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, OpenWrt, Traefik, Nginx Proxy Manager, nginx ignition, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, nexpulse, nexsift, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
 
 **Media.** Plex, Jellyfin, Emby, Tautulli, Tracearr, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, NeutArr, Bazarr, SABnzbd, NZBGet, qBittorrent, Qui, Transmission, Deluge, rTorrent, MeTube, Seerr, Overseerr, Jellyseerr, ReadMeABook, Nexview, nexcrate, nexbeat, Maintainerr, Reclaimerr, Tdarr, Unmanic, FileFlows, RomM, Sportarr, Tube Archivist, Real-Debrid, M3U Editor, Minecraft.
 

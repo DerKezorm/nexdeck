@@ -1839,7 +1839,12 @@
     "Your domains on Cloudflare: active, waiting for the name servers, or paused.": "I tuoi domini su Cloudflare: attivi, in attesa dei name server o in pausa.",
     "A zone's requests, visits and data over the last 24 hours, and the share Cloudflare answered from its cache.": "Richieste, visite e dati di una zona nelle ultime 24 ore e la quota che Cloudflare ha servito dalla cache.",
     "Zone": "Zona",
-    "The domain as it stands in Cloudflare.": "Il dominio come appare in Cloudflare."
+    "The domain as it stands in Cloudflare.": "Il dominio come appare in Cloudflare.",
+    "Whether nginx runs, the traffic it carries, and the certificates that run out.": "Se nginx è in esecuzione, il traffico che trasporta e i certificati che scadono.",
+    "Whether nginx runs and since when, how many hosts, streams and certificates there are, and which nginx answers.": "Se nginx è in esecuzione e da quanto, quanti host, stream e certificati ci sono, e quale nginx risponde.",
+    "What nginx is carrying: requests, bytes and response time since it started, and the connections it has right now.": "Cosa trasporta nginx: richieste, byte e tempo di risposta dall'avvio, e le connessioni che ha adesso.",
+    "How many certificates there are, how many run out within thirty days, and the days the nearest one has left.": "Quanti certificati ci sono, quanti scadono entro trenta giorni, e quanti giorni restano al più vicino.",
+    "Made in nginx ignition under the user menu. It carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons.": "Creato in nginx ignition dal menu utente. Porta le permissioni dell'utente che lo ha creato: uno che può solo leggere riempie tutte le schede, uno che può scrivere aggiunge i pulsanti."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -2964,6 +2969,15 @@
     "Cached": "Dalla cache",
     "Zones": "Zone",
     "Need attention": "Richiedono attenzione",
-    "Failing pipelines": "Pipeline fallite"
+    "Failing pipelines": "Pipeline fallite",
+    "Avg. time": "Tempo medio",
+    "Certificate": "Certificato",
+    "Reading": "In lettura",
+    "Reload": "Ricarica",
+    "Renew": "Rinnova",
+    "Writing": "In scrittura",
+    "Expiring within 30d": "Scade entro 30 g",
+    "Expiring within 7d": "Scade entro 7 g",
+    "Next expiration in": "Prossima scadenza tra"
   }
 }

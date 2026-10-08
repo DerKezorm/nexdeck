@@ -1839,7 +1839,12 @@
     "Your domains on Cloudflare: active, waiting for the name servers, or paused.": "Vos domaines chez Cloudflare : actifs, en attente des serveurs de noms ou en pause.",
     "A zone's requests, visits and data over the last 24 hours, and the share Cloudflare answered from its cache.": "Les requêtes, visites et données d’une zone sur les dernières 24 heures, et la part que Cloudflare a servie depuis son cache.",
     "Zone": "Zone",
-    "The domain as it stands in Cloudflare.": "Le domaine tel qu’il figure dans Cloudflare."
+    "The domain as it stands in Cloudflare.": "Le domaine tel qu’il figure dans Cloudflare.",
+    "Whether nginx runs, the traffic it carries, and the certificates that run out.": "Si nginx tourne, le trafic qu'il transporte et les certificats qui expirent.",
+    "Whether nginx runs and since when, how many hosts, streams and certificates there are, and which nginx answers.": "Si nginx tourne et depuis quand, combien de hôtes, de flux et de certificats existent, et quel nginx répond.",
+    "What nginx is carrying: requests, bytes and response time since it started, and the connections it has right now.": "Ce que nginx transporte : demandes, octets et temps de réponse depuis son démarrage, et les connexions qu'il a maintenant.",
+    "How many certificates there are, how many run out within thirty days, and the days the nearest one has left.": "Combien de certificats existent, combien expirent dans trente jours, et combien de jours reste-t-il au plus proche.",
+    "Made in nginx ignition under the user menu. It carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons.": "Créé dans nginx ignition sous le menu utilisateur. Il porte les permissions de l'utilisateur qui l'a créé : celui qui ne peut que lire remplit toutes les cartes, celui qui peut écrire ajoute les boutons."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -2964,6 +2969,15 @@
     "Cached": "Depuis le cache",
     "Zones": "Zones",
     "Need attention": "À surveiller",
-    "Failing pipelines": "Pipelines en échec"
+    "Failing pipelines": "Pipelines en échec",
+    "Avg. time": "Temps moyen",
+    "Certificate": "Certificat",
+    "Reading": "En lecture",
+    "Reload": "Recharger",
+    "Renew": "Renouveler",
+    "Writing": "En écriture",
+    "Expiring within 30d": "Expire dans 30 j",
+    "Expiring within 7d": "Expire dans 7 j",
+    "Next expiration in": "Prochaine expiration dans"
   }
 }

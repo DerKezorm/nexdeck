@@ -54,7 +54,11 @@
       "nextrmnl_refused": "nextrmnl ha rifiutato la richiesta.",
       "nextrmnl_too_old": "Questo nextrmnl non ha ancora un'API per le dashboard. Serve una versione con chiavi API.",
       "readmeabook_not_admin": "Questo token appartiene a un utente, non a un amministratore, e ReadMeABook mostra i suoi dati solo agli amministratori. Crea un token dopo aver effettuato l'accesso come amministratore.",
-      "readmeabook_too_old": "Questo ReadMeABook non permette ai token API di leggere i suoi dati. Serve la versione 1.2.0 o successiva."
+      "readmeabook_too_old": "Questo ReadMeABook non permette ai token API di leggere i suoi dati. Serve la versione 1.2.0 o successiva.",
+      "nginxignition_stats_unsupported": "Questa build di nginx non supporta le statistiche di traffico.",
+      "nginxignition_stats_disabled": "Le statistiche di traffico sono disattivate nelle impostazioni.",
+      "nginxignition_stats_stopped": "Le statistiche di traffico richiedono che nginx sia in esecuzione.",
+      "nginxignition_stats_unavailable": "nginx ignition non ha potuto leggere le statistiche di traffico di nginx."
     }
   },
   "auth": {

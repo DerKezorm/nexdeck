@@ -1839,7 +1839,12 @@
     "Your domains on Cloudflare: active, waiting for the name servers, or paused.": "Tus dominios en Cloudflare: activos, esperando a los servidores de nombres o en pausa.",
     "A zone's requests, visits and data over the last 24 hours, and the share Cloudflare answered from its cache.": "Las peticiones, visitas y datos de una zona en las últimas 24 horas y la parte que Cloudflare sirvió desde su caché.",
     "Zone": "Zona",
-    "The domain as it stands in Cloudflare.": "El dominio tal como aparece en Cloudflare."
+    "The domain as it stands in Cloudflare.": "El dominio tal como aparece en Cloudflare.",
+    "Whether nginx runs, the traffic it carries, and the certificates that run out.": "Si nginx está en marcha, el tráfico que transporta y los certificados que caducan.",
+    "Whether nginx runs and since when, how many hosts, streams and certificates there are, and which nginx answers.": "Si nginx está en marcha y desde cuándo, cuántos hosts, streams y certificados hay, y qué nginx responde.",
+    "What nginx is carrying: requests, bytes and response time since it started, and the connections it has right now.": "Lo que transporta nginx: solicitudes, bytes y tiempo de respuesta desde que arrancó, y las conexiones que tiene ahora.",
+    "How many certificates there are, how many run out within thirty days, and the days the nearest one has left.": "Cuántos certificados hay, cuántos caducan en treinta días, y cuántos días le quedan al más próximo.",
+    "Made in nginx ignition under the user menu. It carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons.": "Hecho en nginx ignition bajo el menú de usuario. Lleva los permisos del usuario que lo creó: uno que solo puede leer llena todas las tarjetas, uno que puede escribir añade los botones."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -2964,6 +2969,15 @@
     "Cached": "Desde caché",
     "Zones": "Zonas",
     "Need attention": "Requieren atención",
-    "Failing pipelines": "Pipelines fallidas"
+    "Failing pipelines": "Pipelines fallidas",
+    "Avg. time": "Tiempo medio",
+    "Certificate": "Certificado",
+    "Reading": "Leyendo",
+    "Reload": "Recargar",
+    "Renew": "Renovar",
+    "Writing": "Escribiendo",
+    "Expiring within 30d": "Caduca en 30 d",
+    "Expiring within 7d": "Caduca en 7 d",
+    "Next expiration in": "Caduca el próximo en"
   }
 }
