@@ -1216,6 +1216,25 @@
         "\"In and out, mirrored\" knows both numbers on the FRITZ!Box, nexpulse, Speedtest Tracker and rTorrent cards, and on a narrow card the label gives way to the number.",
         "A long detail line on the network map stops before the edge of its box."
       ]
+    },
+    "0.34.1": {
+      "lead": "App tiles in a group are one line high again, as they were before 0.34.0, and M3U Editor is out of beta.",
+      "sections": [
+        {
+          "title": "App tiles in a group",
+          "body": "0.34.0 gave every card in a group the height of the smallest card with a body, so the cards on a phone would no longer be drawn over each other. A group of app tiles then held tiles four times as tall that scrolled. A group of app tiles, buttons and headings keeps them one line high again; a group with other cards keeps the larger floor, so nothing overlaps on a phone.",
+          "path": "Edit mode (pencil) > Add widget > Basics > Group"
+        },
+        {
+          "title": "M3U Editor out of beta",
+          "body": "The person who asked for it confirmed every card on a real instance, so the beta mark is gone.",
+          "path": "Edit mode (pencil) > Add widget > M3U Editor"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Thanks to ForexSs for reporting the tall tiles with screenshots (#33), and to C0NN0RAD0 for testing M3U Editor (#32)."
+      ]
     }
   }
 }

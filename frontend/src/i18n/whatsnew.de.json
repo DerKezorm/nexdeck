@@ -1216,6 +1216,25 @@
         "„In and out, mirrored“ kennt beide Zahlen auf den Karten von FRITZ!Box, nexpulse, Speedtest Tracker und rTorrent, und in einer schmalen Karte weicht die Beschriftung der Zahl.",
         "Eine lange Detailzeile auf der Netzkarte endet vor dem Rand ihres Kastens."
       ]
+    },
+    "0.34.1": {
+      "lead": "App-Kacheln in einer Gruppe sind wieder eine Zeile hoch wie vor 0.34.0, und M3U Editor ist aus der Beta.",
+      "sections": [
+        {
+          "title": "App-Kacheln in einer Gruppe",
+          "body": "0.34.0 gab jeder Karte in einer Gruppe die Höhe der kleinsten Karte mit Inhalt, damit die Karten am Handy nicht mehr übereinanderliegen. Eine Gruppe aus App-Kacheln hatte danach viermal so hohe Kacheln, die scrollten. Eine Gruppe aus App-Kacheln, Knöpfen und Überschriften hält sie jetzt wieder eine Zeile hoch; eine Gruppe mit anderen Karten behält den größeren Boden, damit am Handy nichts überlappt.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Grundlagen > Gruppe"
+        },
+        {
+          "title": "M3U Editor ohne Beta",
+          "body": "Der Melder hat jede Karte an seiner eigenen Instanz bestätigt, darum ist das Beta-Zeichen weg.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > M3U Editor"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an ForexSs für die Meldung der hohen Kacheln samt Bildern (#33) und an C0NN0RAD0 fürs Testen von M3U Editor (#32)."
+      ]
     }
   }
 }
