@@ -3,11 +3,11 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## 0.36.0 (2026-10-08)
+## 0.36.0 (2026-10-09)
 
 ### New
 
-- **nginx ignition.** Status with the buttons to reload, start and stop it, the traffic it carries, and the certificates with how many run out soon. Reads with an API token; a token that may write adds the buttons. Requires nginx ignition 2.47.0 or later.
+- **nginx ignition.** Status with the buttons to reload, start and stop it, the traffic it carries, and the certificates with how many run out soon. Reads with an API token; a token that may write adds the buttons. Requires nginx ignition 2.47.0 or later. Contributed by the author of nginx ignition, and tested against a production instance (#34).
 
 ## 0.35.0 (2026-10-08)
 

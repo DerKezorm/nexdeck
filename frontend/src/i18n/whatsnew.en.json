@@ -1264,6 +1264,10 @@
           "body": "Status says whether nginx runs and since when, how many hosts, streams and certificates there are and which nginx answers, with the buttons to reload, start and stop it. Traffic shows the requests, bytes and response time since nginx started and the connections it has right now. Certificates shows how many there are, how many run out within thirty days and the days the nearest one has left, with a button to renew one. Read with an API token: one that may only read fills every card, one that may write adds the buttons. Needs nginx ignition 2.47.0 or later.",
           "path": "Edit mode (pencil) > Add widget > nginx ignition"
         }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Thanks to lucasdillmann, author of nginx ignition, for the integration and for testing every card on a production instance (#34)."
       ]
     }
   }
