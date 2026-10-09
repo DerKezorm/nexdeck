@@ -25,12 +25,14 @@ def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     from app import config, crypto, db
     from app.services import collector as collector_module
     from app.services import login_guard
+    from app.services import oidc as oidc_service
 
     config.reset_settings_cache()
     db.reset_engine()
     crypto.forget_key()
     collector_module.set_demo_flag(False)
     login_guard.reset()
+    oidc_service.forget_used_states()
     from app.routers import channels as channels_router
 
     channels_router.reset_test_presses()

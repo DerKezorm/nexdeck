@@ -1,8 +1,8 @@
 """OpenID Connect: discovery, the authorisation URL, the code exchange.
 
 Authorisation code flow with PKCE. The state, nonce and verifier travel in
-a short-lived signed cookie, so nothing is kept on the server between the
-two legs.
+a short-lived signed cookie. The server keeps one thing between the two legs:
+a hash of every state already used, so a callback cannot be played back.
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ import asyncio
 import base64
 import hashlib
 import secrets
+import threading
 import time
 from typing import Any
 from urllib.parse import urlencode
@@ -19,7 +20,8 @@ import httpx
 import jwt
 
 from ..adapters.base import outbound_client
-from ..security import ALGORITHM, _signing_key
+from ..config import get_settings
+from ..security import ALGORITHM
 
 COOKIE_NAME = "nexdeck_oidc"
 ATTEMPT_MINUTES = 10
@@ -92,18 +94,81 @@ def new_attempt() -> dict[str, str]:
     return {"state": secrets.token_urlsafe(24), "nonce": secrets.token_urlsafe(24), "verifier": verifier, "challenge": challenge}
 
 
+#: What an attempt cookie says it is. Checked on the way back in.
+ATTEMPT_TYPE = "oidc"
+
+
+def _attempt_key() -> bytes:
+    """A key of its own for the attempt cookie, derived from the secret like the session key.
+
+    ⚠️ Until 0.36.0 the attempt was signed with the session key. Not open then:
+    a session needs ``sub`` and ``sid``, which an attempt lacks, and a session
+    token has no ``state``. But one change on either side would have made the
+    one usable as the other. Two keys, and a ``type`` on top.
+    """
+    secret = get_settings().resolved_secret_key().encode("utf-8")
+    return hashlib.sha256(b"nexdeck-oidc-attempt:" + secret).digest()
+
+
 def pack_state(slug: str, attempt: dict[str, str], purpose: str = "login", user_id: int | None = None) -> str:
-    payload = {"slug": slug, "state": attempt["state"], "nonce": attempt["nonce"], "verifier": attempt["verifier"], "purpose": purpose, "user_id": user_id, "exp": int(time.time()) + ATTEMPT_MINUTES * 60}
-    return jwt.encode(payload, _signing_key(), algorithm=ALGORITHM)
+    payload = {
+        "type": ATTEMPT_TYPE, "slug": slug, "state": attempt["state"], "nonce": attempt["nonce"], "verifier": attempt["verifier"],
+        "purpose": purpose, "user_id": user_id, "exp": int(time.time()) + ATTEMPT_MINUTES * 60,
+    }
+    return jwt.encode(payload, _attempt_key(), algorithm=ALGORITHM)
 
 
 def unpack_state(raw: str | None) -> dict[str, Any] | None:
     if not raw:
         return None
     try:
-        return jwt.decode(raw, _signing_key(), algorithms=[ALGORITHM])
+        payload = jwt.decode(raw, _attempt_key(), algorithms=[ALGORITHM])
     except jwt.PyJWTError:
         return None
+    return payload if payload.get("type") == ATTEMPT_TYPE else None
+
+
+#: Hashes of the states already used, each kept until its attempt would have run out anyway.
+_used_states: dict[str, float] = {}
+_used_lock = threading.Lock()
+
+
+def consume_state(state: str) -> bool:
+    """Mark the state as used. False if it was used before.
+
+    ⚠️ Without this a callback could be repeated with the same cookie and the
+    same state as long as the provider still took the code.
+    """
+    now = time.monotonic()
+    digest = hashlib.sha256(state.encode("utf-8")).hexdigest()
+    with _used_lock:
+        for key in [key for key, until in _used_states.items() if until <= now]:
+            del _used_states[key]
+        if digest in _used_states:
+            return False
+        _used_states[digest] = now + ATTEMPT_MINUTES * 60
+        return True
+
+
+def forget_used_states() -> None:
+    """For the tests."""
+    with _used_lock:
+        _used_states.clear()
+
+
+def normal_issuer(issuer_url: str) -> str:
+    """An issuer as it is stored: no spaces around it, no slash at the end."""
+    return issuer_url.strip().rstrip("/")
+
+
+def same_issuer(a: str, b: str) -> bool:
+    """Two ways of writing one issuer: authentik hands it out with a slash at the end, the form stores it without.
+
+    A subject means something only at the issuer that handed it out, so a
+    provider pointed at another issuer loses its links. A space or a slash is
+    not another issuer, and must not cost anybody their link.
+    """
+    return normal_issuer(a) == normal_issuer(b)
 
 
 def authorization_url(document: dict[str, Any], client_id: str, redirect_uri: str, scopes: str, attempt: dict[str, str]) -> str:

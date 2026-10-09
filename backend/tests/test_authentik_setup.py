@@ -281,6 +281,37 @@ def test_a_new_issuer_drops_the_links_of_the_old_one(admin: TestClient, fake: Fa
         assert db.query(OidcProvider).count() == 1
 
 
+def test_the_button_after_a_hand_entry_of_the_same_issuer_drops_nothing(admin: TestClient, fake: FakeAuthentik) -> None:
+    """The operator typed authentik's issuer by hand, with a space and the slash at the end, then pressed the button."""
+    made = admin.post("/api/v1/oidc/providers", headers=CSRF, json={
+        "slug": "authentik", "label": "authentik", "issuer_url": f" {ISSUER} ", "client_id": "old", "client_secret": "old-secret",
+    })
+    assert made.status_code == 201, made.text
+    assert made.json()["issuer_url"] == ISSUER.rstrip("/"), "stored without spaces and without the slash at the end"
+    with db_session() as db:
+        user = db.query(User).first()
+        db.add(OidcLink(provider_id=made.json()["id"], user_id=user.id, subject="from-the-same-issuer", email=""))
+    assert run_setup(admin)["ok"] is True
+    with db_session() as db:
+        assert db.query(OidcLink).count() == 1
+
+
+def test_the_button_compares_a_stored_issuer_as_the_same_issuer(admin: TestClient, fake: FakeAuthentik) -> None:
+    """A row stored before the form cleaned the issuer up still counts as the same one."""
+    made = admin.post("/api/v1/oidc/providers", headers=CSRF, json={
+        "slug": "authentik", "label": "authentik", "issuer_url": ISSUER, "client_id": "old", "client_secret": "old-secret",
+    })
+    assert made.status_code == 201, made.text
+    with db_session() as db:
+        row = db.get(OidcProvider, made.json()["id"])
+        row.issuer_url = f"{ISSUER} "
+        user = db.query(User).first()
+        db.add(OidcLink(provider_id=row.id, user_id=user.id, subject="from-the-same-issuer", email=""))
+    assert run_setup(admin)["ok"] is True
+    with db_session() as db:
+        assert db.query(OidcLink).count() == 1
+
+
 def test_only_an_administrator_may_press_it(admin: TestClient, fake: FakeAuthentik) -> None:
     create_user(admin, "kim")
     browser = TestClient(admin.app)

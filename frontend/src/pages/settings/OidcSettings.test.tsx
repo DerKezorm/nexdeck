@@ -4,7 +4,7 @@
  * issuer URL cost every linked person their way in.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -22,6 +22,7 @@ const PROVIDER = {
   auto_create: false,
   trusts_second_factor: true,
   default_role: 'guest',
+  links: 0,
 }
 
 const STEPS = {
@@ -32,10 +33,15 @@ const STEPS = {
   ],
 }
 
-const calls = vi.hoisted(() => ({ patch: [] as { path: string; body: unknown }[], post: [] as unknown[], setup: [] as unknown[] }))
+const calls = vi.hoisted(() => ({ patch: [] as { path: string; body: unknown }[], post: [] as unknown[], setup: [] as unknown[], links: 0 }))
 vi.mock('../../api/client', () => ({
   ApiError: class ApiError extends Error {},
-  get: vi.fn(async (path: string) => (path === '/oidc/providers' ? [PROVIDER] : { public_url: 'https://deck.example.com' })),
+  get: vi.fn(async (path: string) => {
+    if (path === '/oidc/providers') return [PROVIDER]
+    // The count of linked accounts as the server has it now, not as the list had it.
+    if (path === '/oidc/providers/7') return { ...PROVIDER, links: calls.links }
+    return { public_url: 'https://deck.example.com' }
+  }),
   post: vi.fn(async (path: string, body: unknown) => {
     if (path === '/oidc/authentik/setup') {
       calls.setup.push(body)
@@ -66,6 +72,7 @@ describe('identity providers', () => {
     calls.patch.length = 0
     calls.post.length = 0
     calls.setup.length = 0
+    calls.links = 0
   })
 
   it('set authentik up with a one-time token and forget the token afterwards', async () => {
@@ -132,6 +139,60 @@ describe('identity providers', () => {
     expect(screen.queryByText(/changes the redirect URI/)).toBeNull()
     await user.type(screen.getByLabelText('Short name'), '2')
     expect(screen.getByText(/changes the redirect URI/)).toBeInTheDocument()
+  })
+
+  it('ask before another issuer drops the links, and say how many', async () => {
+    calls.links = 3
+    const user = userEvent.setup()
+    show()
+    await user.click(await screen.findByRole('button', { name: 'Edit authentik' }, { timeout: 3000 }))
+    const issuer = screen.getByLabelText('Issuer URL')
+    await user.clear(issuer)
+    await user.click(issuer)
+    await user.paste('https://id.example.com/realms/home')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Another issuer is another provider. 3 accounts will have to link again afterwards.')).toBeInTheDocument()
+    expect(calls.patch).toEqual([])
+    // Cancel keeps everything as it is.
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    expect(calls.patch).toEqual([])
+    expect(screen.getByLabelText('Issuer URL')).toHaveValue('https://id.example.com/realms/home')
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await user.click(await screen.findByRole('button', { name: 'Change the issuer' }))
+    await waitFor(() => expect(calls.patch).toHaveLength(1))
+    expect(calls.patch[0].body).toMatchObject({ issuer_url: 'https://id.example.com/realms/home' })
+  })
+
+  it('do not ask when the issuer is only written differently', async () => {
+    calls.links = 3
+    const user = userEvent.setup()
+    show()
+    await user.click(await screen.findByRole('button', { name: 'Edit authentik' }, { timeout: 3000 }))
+    const issuer = screen.getByLabelText('Issuer URL')
+    await user.clear(issuer)
+    await user.click(issuer)
+    // Without the slash at the end. Spaces never reach the value: an input of type url strips them.
+    await user.paste('https://auth.example.com/application/o/nexdeck')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(calls.patch).toHaveLength(1))
+    expect(screen.queryByText(/Another issuer is another provider/)).toBeNull()
+  })
+
+  it('hand out no accounts unless told to', async () => {
+    const user = userEvent.setup()
+    show()
+    const toggle = await screen.findByRole('switch', { name: 'Create accounts on first sign-in' }, { timeout: 3000 })
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByText(/Off: only invited people and linked accounts come in through this provider/)).toBeInTheDocument()
+    for (const [label, value] of [['Short name', 'pocket'], ['Button label', 'Pocket ID'], ['Issuer URL', 'https://pocket.example.com'], ['Client ID', 'nexdeck']]) {
+      await user.click(screen.getByLabelText(label))
+      await user.paste(value)
+    }
+    await user.click(screen.getByRole('button', { name: 'Add provider' }))
+    await waitFor(() => expect(calls.post).toHaveLength(1))
+    expect(calls.post[0]).toMatchObject({ slug: 'pocket', auto_create: false })
   })
 
   it('go back to adding one on cancel, without a word to the server', async () => {

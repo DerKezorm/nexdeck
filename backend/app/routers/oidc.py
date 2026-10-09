@@ -77,6 +77,9 @@ async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | 
         return refuse("oidc_denied", f"provider returned {request.query_params.get('error')!r}")
     if attempt is None or attempt.get("slug") != slug or not code or not state or attempt.get("state") != state:
         return refuse("oidc_state_mismatch", "state or cookie does not match the running attempt")
+    if not oidc.consume_state(state):
+        # The same cookie and state a second time: a copy of the callback, played back.
+        return refuse("oidc_state_mismatch", "this state was used already")
     try:
         # No account name here yet; the address bucket is all there is.
         login_guard.check(address)
@@ -261,27 +264,40 @@ def authentik_blueprint(admin: AdminUser, db: DbSession) -> Response:
     )
 
 
-def _provider_public(provider: OidcProvider) -> dict:
+def _link_count(db: DbSession, provider_id: int) -> int:
+    return int(db.scalar(select(func.count()).select_from(OidcLink).where(OidcLink.provider_id == provider_id)) or 0)
+
+
+def _provider_public(db: DbSession, provider: OidcProvider) -> dict:
+    """``links``: how many accounts are linked to it, for the question before its issuer changes."""
     return {"id": provider.id, "slug": provider.slug, "label": provider.label, "issuer_url": provider.issuer_url, "client_id": provider.client_id,
             "has_secret": bool(provider.client_secret), "scopes": provider.scopes, "enabled": provider.enabled, "auto_create": provider.auto_create, "default_role": provider.default_role,
-            "trusts_second_factor": provider.trusts_second_factor}
+            "trusts_second_factor": provider.trusts_second_factor, "links": _link_count(db, provider.id)}
 
 
 @router.get("/oidc/providers", summary="List identity providers")
 def list_providers(admin: AdminUser, db: DbSession) -> list[dict]:
-    return [_provider_public(p) for p in db.scalars(select(OidcProvider).order_by(OidcProvider.id))]
+    return [_provider_public(db, p) for p in db.scalars(select(OidcProvider).order_by(OidcProvider.id))]
+
+
+@router.get("/oidc/providers/{provider_id}", summary="One identity provider, with the number of linked accounts")
+def get_provider(provider_id: int, admin: AdminUser, db: DbSession) -> dict:
+    provider = db.get(OidcProvider, provider_id)
+    if provider is None:
+        raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
+    return _provider_public(db, provider)
 
 
 @router.post("/oidc/providers", status_code=status.HTTP_201_CREATED, summary="Add an identity provider")
 def create_provider(body: OidcProviderBody, admin: AdminUser, db: DbSession) -> dict:
     if db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug)):
         raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
-    provider = OidcProvider(slug=body.slug, label=body.label, issuer_url=body.issuer_url.rstrip("/"), client_id=body.client_id,
+    provider = OidcProvider(slug=body.slug, label=body.label, issuer_url=oidc.normal_issuer(body.issuer_url), client_id=body.client_id,
                             client_secret=encrypt(body.client_secret) if body.client_secret else "", scopes=body.scopes, enabled=body.enabled,
                             auto_create=body.auto_create, default_role=body.default_role, trusts_second_factor=body.trusts_second_factor)
     db.add(provider)
     db.commit()
-    return _provider_public(provider)
+    return _provider_public(db, provider)
 
 
 @router.patch("/oidc/providers/{provider_id}", summary="Change an identity provider")
@@ -294,9 +310,19 @@ def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, d
     clash = db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug, OidcProvider.id != provider_id))
     if clash is not None:
         raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
+    if not oidc.same_issuer(provider.issuer_url, body.issuer_url):
+        # ⚠️ Another issuer is another provider. A subject means something only
+        # at the issuer that handed it out; kept across the change, a subject at
+        # the new one that happens to equal an old one would sign in as that
+        # account. The form asks first, with the number.
+        gone = list(db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id)))
+        for link in gone:
+            db.delete(link)
+        oidc.forget_discovery(provider.issuer_url)
+        logger.warning("OIDC issuer of provider %s changed, %d links dropped", body.slug, len(gone))
     provider.slug = body.slug
     provider.label = body.label
-    provider.issuer_url = body.issuer_url.rstrip("/")
+    provider.issuer_url = oidc.normal_issuer(body.issuer_url)
     provider.client_id = body.client_id
     if body.client_secret:
         provider.client_secret = encrypt(body.client_secret)
@@ -306,7 +332,7 @@ def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, d
     provider.default_role = body.default_role
     provider.trusts_second_factor = body.trusts_second_factor
     db.commit()
-    return _provider_public(provider)
+    return _provider_public(db, provider)
 
 
 @router.delete("/oidc/providers/{provider_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove an identity provider")

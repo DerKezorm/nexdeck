@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post, serverUrl } from '../../api/client'
 import type { About } from '../../api/types'
-import { Field, Select, Switch, Toast } from '../../components/ui'
+import { Confirm, Field, Select, Switch, Toast } from '../../components/ui'
 import { SettingsCard } from './SettingsCard'
 
 interface Provider {
@@ -20,9 +20,18 @@ interface Provider {
   auto_create: boolean
   trusts_second_factor: boolean
   default_role: string
+  /** Accounts linked to it; they lose the link when the issuer changes. */
+  links: number
 }
 
-const EMPTY = { slug: '', label: '', issuer_url: '', client_id: '', client_secret: '', scopes: 'openid profile email', enabled: true, auto_create: true, trusts_second_factor: false, default_role: 'user' }
+// A new provider hands out no accounts unless the operator says so.
+const EMPTY = { slug: '', label: '', issuer_url: '', client_id: '', client_secret: '', scopes: 'openid profile email', enabled: true, auto_create: false, trusts_second_factor: false, default_role: 'user' }
+
+/** One issuer written two ways: spaces around it and the slash at the end do not count. Same rule as the server. */
+function sameIssuer(a: string, b: string): boolean {
+  const normal = (issuer: string) => issuer.trim().replace(/\/+$/, '')
+  return normal(a) === normal(b)
+}
 
 interface Steps {
   ok: boolean
@@ -43,6 +52,8 @@ export function OidcSettings() {
   const [authentik, setAuthentik] = useState({ url: '', token: '' })
   const [steps, setSteps] = useState<Steps | null>(null)
   const [busy, setBusy] = useState(false)
+  // How many accounts lose their link if the issuer changes; null while nobody is asked.
+  const [dropping, setDropping] = useState<number | null>(null)
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
   const base = about.data?.public_url || window.location.origin
   const edit = (provider: Provider) => {
@@ -56,7 +67,7 @@ export function OidcSettings() {
     setForm(EMPTY)
     setEditing(null)
   }
-  const save = () =>
+  const store = () =>
     void (editing ? patch(`/oidc/providers/${editing.id}`, form) : post('/oidc/providers', form))
       .then(() => {
         if (editing) setToast({ text: t('common.saved'), level: 'ok' })
@@ -64,6 +75,14 @@ export function OidcSettings() {
         void providers.refetch()
       })
       .catch(fail)
+  const save = () => {
+    if (!editing || sameIssuer(editing.issuer_url, form.issuer_url)) return store()
+    // Another issuer is another provider, and the server drops every link to
+    // this one. The number comes fresh from the server, not from the list.
+    void get<Provider>(`/oidc/providers/${editing.id}`)
+      .then((current) => (current.links > 0 ? setDropping(current.links) : store()))
+      .catch(fail)
+  }
   const runAuthentik = () => {
     setBusy(true)
     setSteps(null)
@@ -190,6 +209,18 @@ export function OidcSettings() {
           )}
         </div>
       </SettingsCard>
+      <Confirm
+        open={dropping !== null}
+        title={t('settings.system.oidcIssuerChangeTitle')}
+        body={t('settings.system.oidcIssuerChange', { count: dropping ?? 0 })}
+        confirmLabel={t('settings.system.oidcIssuerChangeGo')}
+        danger
+        onCancel={() => setDropping(null)}
+        onConfirm={() => {
+          setDropping(null)
+          store()
+        }}
+      />
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>
           {toast.text}

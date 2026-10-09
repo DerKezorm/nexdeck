@@ -301,22 +301,21 @@ async def _fill(db: DbSessionType, issuer: str, client_id: str, client_secret: s
     which is fixed at the network or with a corrected address.
 
     ⚠️ A new provider does **not** create accounts. Somebody signing in through
-    it gets into the account whose address authentik vouches for, or into the
-    one they linked under Profile, and nowhere else. Whoever wants accounts made
-    on first sign-in switches it on under Sign-in providers.
+    it gets into the account they linked under Profile, and nowhere else; never
+    through the address, which anybody can change at authentik. Whoever wants
+    accounts made on first sign-in switches it on under Sign-in providers.
     """
     provider = db.scalar(select(OidcProvider).where(OidcProvider.slug == PROVIDER_SLUG))
     if provider is None:
         provider = OidcProvider(
-            slug=PROVIDER_SLUG, label=PROVIDER_LABEL, issuer_url=issuer.rstrip("/"), client_id=client_id,
+            slug=PROVIDER_SLUG, label=PROVIDER_LABEL, issuer_url=oidc.normal_issuer(issuer), client_id=client_id,
             client_secret=encrypt(client_secret), scopes="openid profile email", enabled=True,
             auto_create=False, default_role=Role.user.value, trusts_second_factor=False,
         )
         db.add(provider)
         note = f"added the sign-in provider {PROVIDER_SLUG!r}"
     else:
-        previous = provider.issuer_url.rstrip("/")
-        if previous != issuer.rstrip("/"):
+        if not oidc.same_issuer(provider.issuer_url, issuer):
             # ⚠️ A subject means something only at the issuer that handed it
             # out. Kept across a change of issuer, a subject of the new one that
             # happens to equal an old one would walk into somebody else's account.
@@ -325,7 +324,7 @@ async def _fill(db: DbSessionType, issuer: str, client_id: str, client_secret: s
                 db.delete(link)
             if gone:
                 logger.warning("The issuer of %r changed; %d link(s) to the old one were removed.", PROVIDER_SLUG, len(gone))
-        provider.issuer_url = issuer.rstrip("/")
+        provider.issuer_url = oidc.normal_issuer(issuer)
         provider.client_id = client_id
         provider.client_secret = encrypt(client_secret)
         provider.enabled = True

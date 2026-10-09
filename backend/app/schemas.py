@@ -372,7 +372,8 @@ class OidcProviderBody(BaseModel):
     client_secret: str = Field(default="", max_length=600)
     scopes: str = Field(default="openid profile email", max_length=200)
     enabled: bool = True
-    auto_create: bool = True
+    #: Off unless said otherwise: a new provider hands out no accounts on its own.
+    auto_create: bool = False
     default_role: Literal["admin", "user", "guest"] = "user"
     #: The provider asks for a second factor itself, so nexdeck does not.
     trusts_second_factor: bool = False
