@@ -19,7 +19,7 @@ from app.adapters import get_adapter
 from app.adapters.base import AdapterError, Context, WidgetData
 
 BASE = "http://nginx-ignition:8090"
-CONFIG = {"url": BASE, "token": "eyJhbGciOiJIUzUxMiJ9.body.signature"}
+CONFIG = {"url": BASE, "token": "nexdeck-test-token"}
 ONE = {"pageSize": 1, "pageNumber": 0}
 FULL = {"pageSize": 1000, "pageNumber": 0}
 EVERY_PERMISSION = (
