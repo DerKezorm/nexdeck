@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import logging
 import secrets
 import threading
 import time
@@ -18,10 +19,15 @@ from urllib.parse import urlencode
 
 import httpx
 import jwt
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from ..adapters.base import outbound_client
 from ..config import get_settings
+from ..models import OidcLink, OidcProvider
 from ..security import ALGORITHM
+
+logger = logging.getLogger("nexdeck.oidc")
 
 COOKIE_NAME = "nexdeck_oidc"
 ATTEMPT_MINUTES = 10
@@ -169,6 +175,25 @@ def same_issuer(a: str, b: str) -> bool:
     not another issuer, and must not cost anybody their link.
     """
     return normal_issuer(a) == normal_issuer(b)
+
+
+def drop_links_on_new_issuer(db: Session, provider: OidcProvider, issuer: str, slug: str) -> bool:
+    """Before ``provider`` takes ``issuer``: if that is another issuer, its links go. True if it was another one.
+
+    ⚠️ Another issuer is another provider. A subject means something only at
+    the issuer that handed it out; kept across the change, a subject at the new
+    one that happens to equal an old one would sign in as that account. The
+    form by hand and the authentik button both come through here, so both say
+    it in the same words, a change with nothing to drop included.
+    """
+    if same_issuer(provider.issuer_url, issuer):
+        return False
+    gone = list(db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id)))
+    for link in gone:
+        db.delete(link)
+    forget_discovery(provider.issuer_url)
+    logger.warning("OIDC issuer of provider %s changed, %d links dropped", slug, len(gone))
+    return True
 
 
 def authorization_url(document: dict[str, Any], client_id: str, redirect_uri: str, scopes: str, attempt: dict[str, str]) -> str:

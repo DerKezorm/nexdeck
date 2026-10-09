@@ -310,16 +310,8 @@ def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, d
     clash = db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug, OidcProvider.id != provider_id))
     if clash is not None:
         raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
-    if not oidc.same_issuer(provider.issuer_url, body.issuer_url):
-        # ⚠️ Another issuer is another provider. A subject means something only
-        # at the issuer that handed it out; kept across the change, a subject at
-        # the new one that happens to equal an old one would sign in as that
-        # account. The form asks first, with the number.
-        gone = list(db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id)))
-        for link in gone:
-            db.delete(link)
-        oidc.forget_discovery(provider.issuer_url)
-        logger.warning("OIDC issuer of provider %s changed, %d links dropped", body.slug, len(gone))
+    # Another issuer drops the links of this provider; the form asks first, with the number.
+    oidc.drop_links_on_new_issuer(db, provider, body.issuer_url, body.slug)
     provider.slug = body.slug
     provider.label = body.label
     provider.issuer_url = oidc.normal_issuer(body.issuer_url)

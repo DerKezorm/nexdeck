@@ -265,8 +265,9 @@ def test_a_failed_discovery_keeps_what_authentik_handed_out(admin: TestClient, f
     assert row is not None and row.client_id == "generated-client-id"
 
 
-def test_a_new_issuer_drops_the_links_of_the_old_one(admin: TestClient, fake: FakeAuthentik) -> None:
+def test_a_new_issuer_drops_the_links_of_the_old_one(admin: TestClient, fake: FakeAuthentik, caplog: pytest.LogCaptureFixture) -> None:
     """⚠️ A subject means something only at the issuer that handed it out."""
+    caplog.set_level(logging.INFO)
     made = admin.post("/api/v1/oidc/providers", headers=CSRF, json={
         "slug": "authentik", "label": "authentik", "issuer_url": "https://old.example.com/application/o/deck/",
         "client_id": "old", "client_secret": "old-secret",
@@ -279,13 +280,27 @@ def test_a_new_issuer_drops_the_links_of_the_old_one(admin: TestClient, fake: Fa
     with db_session() as db:
         assert db.query(OidcLink).count() == 0
         assert db.query(OidcProvider).count() == 1
+    # The same line as a change by hand: one wording for one event.
+    assert "OIDC issuer of provider authentik changed, 1 links dropped" in caplog.text
 
 
-def test_the_button_after_a_hand_entry_of_the_same_issuer_drops_nothing(admin: TestClient, fake: FakeAuthentik) -> None:
+def test_a_new_issuer_is_logged_even_with_nothing_to_drop(admin: TestClient, fake: FakeAuthentik, caplog: pytest.LogCaptureFixture) -> None:
+    made = admin.post("/api/v1/oidc/providers", headers=CSRF, json={
+        "slug": "authentik", "label": "authentik", "issuer_url": "https://old.example.com/application/o/deck/",
+        "client_id": "old", "client_secret": "old-secret",
+    })
+    assert made.status_code == 201, made.text
+    caplog.set_level(logging.INFO)
+    assert run_setup(admin)["ok"] is True
+    assert "OIDC issuer of provider authentik changed, 0 links dropped" in caplog.text
+
+
+def test_the_button_after_a_hand_entry_of_the_same_issuer_drops_nothing(admin: TestClient, fake: FakeAuthentik, caplog: pytest.LogCaptureFixture) -> None:
     """The operator typed authentik's issuer by hand, with a space and the slash at the end, then pressed the button."""
     made = admin.post("/api/v1/oidc/providers", headers=CSRF, json={
         "slug": "authentik", "label": "authentik", "issuer_url": f" {ISSUER} ", "client_id": "old", "client_secret": "old-secret",
     })
+    caplog.set_level(logging.INFO)
     assert made.status_code == 201, made.text
     assert made.json()["issuer_url"] == ISSUER.rstrip("/"), "stored without spaces and without the slash at the end"
     with db_session() as db:
@@ -294,6 +309,7 @@ def test_the_button_after_a_hand_entry_of_the_same_issuer_drops_nothing(admin: T
     assert run_setup(admin)["ok"] is True
     with db_session() as db:
         assert db.query(OidcLink).count() == 1
+    assert "issuer of provider" not in caplog.text, "the same issuer is no change"
 
 
 def test_the_button_compares_a_stored_issuer_as_the_same_issuer(admin: TestClient, fake: FakeAuthentik) -> None:

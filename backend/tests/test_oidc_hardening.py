@@ -89,6 +89,27 @@ def test_same_issuer_ignores_spaces_and_the_slash_at_the_end() -> None:
     assert not oidc_service.same_issuer("https://a.example.com/o/x", "https://a.example.com/o/y")
 
 
+@pytest.mark.parametrize(("a", "b"), [
+    ("https://ID.example.com/realms/home", "https://id.example.com/realms/home"),
+    ("https://id.example.com/realms/Home", "https://id.example.com/realms/home"),
+    ("http://id.example.com/realms/home", "https://id.example.com/realms/home"),
+    ("https://id.example.com/realms/home", "https://id.example.com/realms/home/x"),
+    ("https://id.example.com/realms/home", "https://id.example.com/realms"),
+])
+def test_same_issuer_equates_nothing_else(a: str, b: str) -> None:
+    """Spaces and the slash at the end, nothing more: the token's ``iss`` is compared as written."""
+    assert not oidc_service.same_issuer(a, b)
+    assert not oidc_service.same_issuer(b, a)
+
+
+def test_an_issuer_changed_only_in_case_drops_the_links(client: TestClient, provider: dict) -> None:  # noqa: F811
+    _link(provider["id"], "a-1")
+    moved = client.patch(f"/api/v1/oidc/providers/{provider['id']}", json={**PROVIDER, "issuer_url": PROVIDER["issuer_url"].replace("home", "Home")}, headers=CSRF)
+    assert moved.status_code == 200, moved.text
+    assert moved.json()["links"] == 0
+    assert _links(provider["id"]) == 0
+
+
 # -- 2. a new provider lets nobody in on its own -------------------------------
 
 
@@ -166,6 +187,37 @@ def test_a_state_is_used_once(client: TestClient, provider: dict, monkeypatch: p
     assert _callback(first, PROVIDER["slug"], state).headers["location"] == "/"
 
     # The same cookie and the same state again, from a browser that kept a copy.
+    again = TestClient(client.app)
+    again.cookies.set(oidc_service.COOKIE_NAME, raw, path="/api/v1/auth/oidc")
+    replay = _callback(again, PROVIDER["slug"], state)
+    assert "oidc_state_mismatch" in replay.headers["location"], replay.headers["location"]
+    assert again.get("/api/v1/auth/me").status_code == 401
+
+
+def test_a_failed_code_exchange_uses_the_state_up_as_well(client: TestClient, provider: dict, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    """Used up when it is checked, not when the exchange worked: a refused code does not leave it open for a second go."""
+    _link(provider["id"], "a-1")
+    _pretend_the_provider_answers(monkeypatch, {"sub": "a-1"})
+    visitor = TestClient(client.app)
+    started = visitor.get(f"/api/v1/auth/oidc/{PROVIDER['slug']}/login", follow_redirects=False)
+    raw = ""
+    for header, value in started.headers.multi_items():
+        if header.lower() == "set-cookie" and value.startswith(f"{oidc_service.COOKIE_NAME}="):
+            raw = value.split("=", 1)[1].split(";", 1)[0]
+    state = oidc_service.unpack_state(raw)["state"]
+
+    async def refused(*_args, **_kwargs) -> dict:  # noqa: ANN002, ANN003
+        raise oidc_service.OidcError("oidc_token_refused", "The identity provider refused the code (HTTP 400).")
+
+    monkeypatch.setattr(oidc_service, "exchange", refused)
+    first = TestClient(client.app)
+    first.cookies.set(oidc_service.COOKIE_NAME, raw, path="/api/v1/auth/oidc")
+    assert "oidc_token_refused" in _callback(first, PROVIDER["slug"], state).headers["location"]
+
+    async def works(*_args, **_kwargs) -> dict:  # noqa: ANN002, ANN003
+        return {"id_token": "pretend", "access_token": "pretend"}
+
+    monkeypatch.setattr(oidc_service, "exchange", works)
     again = TestClient(client.app)
     again.cookies.set(oidc_service.COOKIE_NAME, raw, path="/api/v1/auth/oidc")
     replay = _callback(again, PROVIDER["slug"], state)

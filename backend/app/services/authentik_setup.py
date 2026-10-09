@@ -40,7 +40,7 @@ from sqlalchemy.orm import Session as DbSessionType
 
 from ..adapters.base import outbound_client
 from ..crypto import encrypt
-from ..models import OidcLink, OidcProvider, Role
+from ..models import OidcProvider, Role
 from . import oidc
 
 logger = logging.getLogger("nexdeck.authentik_setup")
@@ -315,15 +315,8 @@ async def _fill(db: DbSessionType, issuer: str, client_id: str, client_secret: s
         db.add(provider)
         note = f"added the sign-in provider {PROVIDER_SLUG!r}"
     else:
-        if not oidc.same_issuer(provider.issuer_url, issuer):
-            # ⚠️ A subject means something only at the issuer that handed it
-            # out. Kept across a change of issuer, a subject of the new one that
-            # happens to equal an old one would walk into somebody else's account.
-            gone = list(db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id)))
-            for link in gone:
-                db.delete(link)
-            if gone:
-                logger.warning("The issuer of %r changed; %d link(s) to the old one were removed.", PROVIDER_SLUG, len(gone))
+        # ⚠️ A subject means something only at the issuer that handed it out.
+        oidc.drop_links_on_new_issuer(db, provider, issuer, PROVIDER_SLUG)
         provider.issuer_url = oidc.normal_issuer(issuer)
         provider.client_id = client_id
         provider.client_secret = encrypt(client_secret)
