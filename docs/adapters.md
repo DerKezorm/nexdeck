@@ -59,6 +59,7 @@ that one of twenty-one renderers draws.
 | nexlore | nexlore overview, tasks, changed last, daily note | tick a task off, capture a line into the inbox, add a line to the daily note | an API token from My account > Connections > API tokens, after the operator has switched API tokens on; Read fills the cards, Write also ticks off and captures; the daily note needs Write, because it is made from the space's template when it is missing |
 | Traefik | overview, routers | | none, or basic authentication |
 | Nginx Proxy Manager | proxy hosts, certificates, status | | an account; the token is fetched and kept |
+| nginx ignition | status, traffic, certificates | reload, start, stop; renew a certificate | an API token, which carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons, which are offered only where they are the thing to press. Traffic needs the statistics switched on in nginx ignition, 2.47.0 or newer |
 | OPNsense | system, gateways | | API key and secret |
 | pfSense | system, interfaces | | API key of the package pfSense-pkg-RESTAPI |
 | OpenWrt | router, interfaces, DHCP devices | | root, or an rpcd login with the read groups luci-mod-status-index, luci-mod-status-index-dhcp and luci-base-network-status (the last also reads the wireless configuration); needs LuCI or uhttpd-mod-ubus |

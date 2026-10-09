@@ -54,7 +54,11 @@
       "nextrmnl_refused": "nextrmnl a refusé la requête.",
       "nextrmnl_too_old": "Ce nextrmnl n’a pas encore d’API pour les tableaux de bord. Il faut une version avec clés API.",
       "readmeabook_not_admin": "Ce jeton appartient à un utilisateur, pas à un administrateur, et ReadMeABook ne montre ses chiffres qu’aux administrateurs. Créez un jeton en étant connecté en tant qu’administrateur.",
-      "readmeabook_too_old": "Ce ReadMeABook ne permet pas aux jetons API de lire ses chiffres. Il faut la version 1.2.0 ou plus récente."
+      "readmeabook_too_old": "Ce ReadMeABook ne permet pas aux jetons API de lire ses chiffres. Il faut la version 1.2.0 ou plus récente.",
+      "nginxignition_stats_unsupported": "Cette version de nginx ne prend pas en charge les statistiques de trafic.",
+      "nginxignition_stats_disabled": "Les statistiques de trafic sont désactivées dans les réglages.",
+      "nginxignition_stats_stopped": "Les statistiques de trafic demandent que nginx tourne.",
+      "nginxignition_stats_unavailable": "nginx ignition n'a pas pu lire les statistiques de trafic de nginx."
     }
   },
   "auth": {
