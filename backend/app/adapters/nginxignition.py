@@ -303,7 +303,7 @@ class NginxIgnitionAdapter(Adapter):
         _name, soonest = _nearest(certificates)
         buttons = [Action(id="start", label="Start", icon="play", confirm=True)] if not running else [
             Action(id="reload", label="Reload", icon="rotate-cw", confirm=True),
-            Action(id="stop", label="Stop", icon="power", confirm=True)]
+            Action(id="stop", label="Stop", icon="power", confirm=True, danger=True)]
         return WidgetData(
             status="bad" if not running else "warn" if soonest is not None and soonest <= CERTIFICATE_WARN_DAYS else "ok",
             primary={"label": "Uptime" if running else "State",
@@ -335,7 +335,7 @@ class NginxIgnitionAdapter(Adapter):
             secondary=[
                 {"label": "Received", "value": human_bytes(zone.get("inBytes")), "metric": "received"},
                 {"label": "Sent", "value": human_bytes(zone.get("outBytes")), "metric": "sent"},
-                {"label": "Avg. time", "value": f"{average / 1000:.2f}s" if average >= 1000 else f"{average:.2f}ms",
+                {"label": "Avg. time", "value": f"{average / 1000:.2f}s" if average >= 1000 else f"{average}ms",
                  "metric": "avg_time"},
                 {"label": "Active", "value": int(connections.get("active") or 0), "metric": "active"},
                 {"label": "Reading", "value": int(connections.get("reading") or 0), "metric": "reading"},
@@ -374,6 +374,7 @@ class NginxIgnitionAdapter(Adapter):
             kind="choice",
             options=[Choice(value=entry["id"],
                            label=f"{entry['name']}, {entry['days']} d left" if entry["days"] > 0
+                           else f"{entry['name']}, runs out today" if entry["days"] == 0
                            else f"{entry['name']}, already run out")
                     for entry in waiting],
         )]
@@ -450,7 +451,8 @@ class NginxIgnitionAdapter(Adapter):
         name = str(after.meta.get("soonest") or "") or "A certificate"
         return [Detected(
             event="cert_expiring",
-            title=f"{name} runs out in {int(now)} days" if now > 0 else f"{name} has run out",
+            title=f"{name} runs out in {int(now)} days" if now > 0
+            else f"{name} runs out today" if now == 0 else f"{name} has run out",
             body="Renew it from this card, or let nginx ignition do it if auto-renew is on.",
             level="bad" if now <= CERTIFICATE_BAD_DAYS else "warn",
             key=f"cert_expiring:{name}:{int(now) // 7}",
@@ -497,7 +499,7 @@ def _demo_statistics(tick: int) -> dict[str, Any]:
                 "requestCounter": requests,
                 "inBytes": fake.walk("nginxignition-in", tick, 4e9, 9e10, period=600),
                 "outBytes": fake.walk("nginxignition-out", tick, 9e8, 4e10, period=600),
-                "requestMsec": round(mean * requests),
+                "requestMsec": round(mean),
                 "requestMsecCounter": requests,
                 "requestMsecs": {"times": [], "msecs": []},
                 "responses": {"1xx": 0, "2xx": requests - 200, "3xx": 80, "4xx": 120, "5xx": 900 if broken else 3,

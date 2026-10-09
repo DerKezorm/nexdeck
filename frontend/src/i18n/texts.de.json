@@ -1840,11 +1840,11 @@
     "A zone's requests, visits and data over the last 24 hours, and the share Cloudflare answered from its cache.": "Anfragen, Besuche und Daten einer Zone in den letzten 24 Stunden und der Anteil, den Cloudflare aus dem Cache beantwortet hat.",
     "Zone": "Zone",
     "The domain as it stands in Cloudflare.": "Die Domain, wie sie in Cloudflare steht.",
-    "Whether nginx runs, the traffic it carries, and the certificates that run out.": "Ob nginx läuft, die Datenmenge, die es transportiert, und die Zertifikate, die auslaufen.",
+    "Whether nginx runs, the traffic it carries, and the certificates that run out.": "Ob nginx läuft, was es transportiert und welche Zertifikate auslaufen.",
     "Whether nginx runs and since when, how many hosts, streams and certificates there are, and which nginx answers.": "Ob nginx läuft und seit wann, wie viele Hosts, Streams und Zertifikate es gibt, und welches nginx antwortet.",
     "What nginx is carrying: requests, bytes and response time since it started, and the connections it has right now.": "Was nginx transportiert: Anfragen, Bytes und Antwortzeit seit dem Start, und die Verbindungen, die es gerade hat.",
     "How many certificates there are, how many run out within thirty days, and the days the nearest one has left.": "Wie viele Zertifikate es gibt, wie viele in dreißig Tagen auslaufen, und wie viele Tage dem nächsten bleiben.",
-    "Made in nginx ignition under the user menu. It carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons.": "Ein API-Token aus dem Benutzermenü von nginx ignition. Er trägt die Rechte des Benutzers, der ihn erstellt hat: Einer, der nur lesen darf, füllt jede Karte, einer, der schreiben darf, kommt mit den Knöpfen."
+    "Made in nginx ignition under the user menu. It carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons.": "Ein API-Token aus dem Benutzermenü von nginx ignition. Er trägt die Rechte des Benutzers, der ihn erstellt hat: Einer, der nur lesen darf, füllt jede Karte, einer, der schreiben darf, bringt die Knöpfe mit."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -2976,8 +2976,8 @@
     "Reload": "Neu laden",
     "Renew": "Erneuern",
     "Writing": "Schreibend",
-    "Expiring within 30d": "Läuft in 30 Tagen ab",
-    "Expiring within 7d": "Läuft in 7 Tagen ab",
-    "Next expiration in": "Läuft als Nächstes ab in"
+    "Expiring within 30d": "Läuft binnen 30 Tagen ab",
+    "Expiring within 7d": "Läuft binnen 7 Tagen ab",
+    "Next expiration in": "Nächstes läuft ab in"
   }
 }

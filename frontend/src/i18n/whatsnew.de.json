@@ -1261,7 +1261,7 @@
       "sections": [
         {
           "title": "nginx ignition",
-          "body": "Status sagt, ob nginx läuft und seit wann, wie viele Hosts, Streams und Zertifikate es gibt und welches nginx antwortet, mit den Knöpfen zum Neuladen, Starten und Stoppen. Verkehr zeigt die Anfragen, Bytes und Antwortzeiten seit dem Start von nginx und die Verbindungen, die es gerade hat. Zertifikate zeigt, wie viele es gibt, wie viele binnen dreißig Tagen auslaufen und wie viele Tage das nächste noch hat, mit einem Knopf zum Erneuern. Gelesen wird mit einem API-Token: Einer, der nur lesen darf, füllt jede Karte, einer, der schreiben darf, kommt mit den Knöpfen. Braucht nginx ignition 2.47.0 oder neuer.",
+          "body": "Status sagt, ob nginx läuft und seit wann, wie viele Hosts, Streams und Zertifikate es gibt und welches nginx antwortet, mit den Knöpfen zum Neuladen, Starten und Stoppen. Datenmenge zeigt die Anfragen, Bytes und Antwortzeiten seit dem Start von nginx und die Verbindungen, die es gerade hat. Zertifikate zeigt, wie viele es gibt, wie viele binnen dreißig Tagen auslaufen und wie viele Tage das nächste noch hat, mit einem Knopf zum Erneuern. Gelesen wird mit einem API-Token: Einer, der nur lesen darf, füllt jede Karte, einer, der schreiben darf, bringt die Knöpfe mit. Braucht nginx ignition 2.47.0 oder neuer.",
           "path": "Bearbeiten (Stift) > Widget hinzufügen > nginx ignition"
         }
       ]

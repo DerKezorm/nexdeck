@@ -106,7 +106,7 @@ def mock_certificates(entries: list[dict[str, Any]], total: int | None = None) -
 
 
 def statistics(*, requests: int = 184_203, in_bytes: int = 107_374_182_400,
-               five: int = 3, four: int = 120, avg_msec: int = 2_763_045) -> dict[str, Any]:
+               five: int = 3, four: int = 120, avg_msec: int = 1_250) -> dict[str, Any]:
     """What nginx ignition answers with, the global zone and the connections."""
     return {
         "hostName": "nginx-ignition",
@@ -162,6 +162,7 @@ async def test_status_offers_each_command_only_where_it_is_the_thing_to_press(ct
     assert [one.id for one in running.actions] == ["reload", "stop"]
     assert [one.label for one in running.actions] == ["Reload", "Stop"]
     assert [one.confirm for one in running.actions] == [True, True], "acting on nginx asks first"
+    assert [one.danger for one in running.actions] == [False, True], "stopping the proxy stops everything behind it"
     assert running.primary == {"label": "Uptime", "value": "2d 3h"}
 
     mock_running(running=False)
@@ -223,11 +224,11 @@ async def test_traffic_reports_totals_and_never_a_rate(ctx: Context) -> None:
     assert data.status == "ok", "three 5xx out of 184203 is not an outage"
     assert data.primary == {"label": "Requests", "value": 184_203, "metric": "requests"}
     assert labels(data) == [
-        ("Received", "100.0 GB"), ("Sent", "25.0 GB"), ("Avg. time", "2763.05s"),
+        ("Received", "100.0 GB"), ("Sent", "25.0 GB"), ("Avg. time", "1.25s"),
         ("Active", 128), ("Reading", 18), ("Writing", 74), ("Waiting", 36),
     ]
     assert data.metrics == {"requests": 184_203.0, "received": 107_374_182_400.0,
-                            "sent": 26_843_545_600.0, "avg_time": 2_763_045.0,
+                            "sent": 26_843_545_600.0, "avg_time": 1_250.0,
                             "active": 128.0, "reading": 18.0, "writing": 74.0, "waiting": 36.0}
 
 
@@ -523,3 +524,15 @@ async def test_a_build_without_a_version_calls_itself_a_development_one(ctx: Con
 
     assert said == ("Connected successfully to nginx ignition development version "
                     "with nginx version 1.27.0.")
+
+
+def test_a_certificate_that_runs_out_today_has_not_run_out_yet() -> None:
+    """0 days left is today, and the card says so instead of calling it gone."""
+    adapter = get_adapter("nginxignition")
+
+    assert adapter.detect("certificates", _card(20), _card(0), {})[0].title == "example.com runs out today"
+    assert adapter.detect("certificates", _card(20), _card(-1), {})[0].title == "example.com has run out"
+    renew = adapter._renew_action([{"id": "a", "name": "today.example.com", "days": 0},
+                                   {"id": "b", "name": "gone.example.com", "days": -2}])
+    assert [one.label for one in renew.asks[0].options] == ["today.example.com, runs out today",
+                                                            "gone.example.com, already run out"]
