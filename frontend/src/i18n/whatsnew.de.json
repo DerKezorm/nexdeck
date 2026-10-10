@@ -1269,32 +1269,6 @@
       "small": [
         "Danke an lucasdillmann, Autor von nginx ignition, für die Anbindung und das Testen jeder Karte an einer echten Instanz (#34)."
       ]
-    },
-    "0.37.0": {
-      "lead": "Die Anmeldung geht jetzt wie in jeder nex-App: mehrere Anbieter nebeneinander, Microsoft Entra ID darunter, und das Passwort lässt sich abschalten, sobald ein Anbieter hereinlässt.",
-      "sections": [
-        {
-          "title": "Anmeldung in drei Karten",
-          "body": "Anmeldung mit Passwort, öffentliche Adresse und zweiter Faktor für alle, dann die Liste der Anbieter mit einem Dialog je Anbieter und einem Ziehgriff für die Reihenfolge der Knöpfe, dann authentik in einem Schritt. Jeder Schritt des authentik-Knopfs sagt in Worten, warum er angehalten hat.",
-          "path": "System > Anmeldung"
-        },
-        {
-          "title": "Microsoft Entra ID",
-          "body": "Trag https://login.microsoftonline.com/common/v2.0 (oder organizations, oder deinen Mandanten) als Aussteller ein. Jede Anmeldung wird gegen den Mandanten geprüft, der sie ausgestellt hat.",
-          "path": "System > Anmeldung > Anbieter hinzufügen"
-        },
-        {
-          "title": "Passwort aus, Administratoren behalten ihres",
-          "body": "Sobald ein Anbieter aktiv ist, kann die Anmeldeseite nur seine Knöpfe zeigen. Administratoren können sich immer mit Passwort anmelden, ein ausgefallener Anbieter sperrt also niemanden aus.",
-          "path": "System > Anmeldung > Anmeldung mit Passwort"
-        }
-      ],
-      "smallTitle": "Außerdem in dieser Version",
-      "small": [
-        "Ein Konto mit einem Anbieter zu verknüpfen fragt noch einmal nach dem Passwort; Administratoren lösen eine Verknüpfung in der Kontenliste.",
-        "Neue Anbieter prüfen den zweiten Faktor selbst; vorhandene behalten ihre Einstellung. Ein Anbieter gibt neuen Konten nicht mehr die Rolle Administrator.",
-        "Schon eingerichtete Anbieter behalten ihre Rückleitadresse, in authentik ist nichts zu ändern."
-      ]
     }
   }
 }
