@@ -67,21 +67,6 @@
     "wrong": "Nom d’utilisateur ou mot de passe incorrect.",
     "throttled": "Trop de tentatives. Patientez quelques minutes.",
     "signin": "Se connecter",
-    "with": "Se connecter avec {{name}}",
-    "oidc": {
-      "failed": "La connexion via le fournisseur d’identité n’a pas abouti.",
-      "oidc_denied": "Le fournisseur d’identité a refusé la connexion.",
-      "oidc_state_mismatch": "La tentative de connexion a expiré. Réessayez.",
-      "oidc_unreachable": "Impossible de joindre le fournisseur d’identité.",
-      "oidc_bad_token": "La réponse du fournisseur d’identité n’a pas pu être vérifiée.",
-      "oidc_no_signing_key": "Le fournisseur d’identité signe avec son secret client, ce que nexdeck n’accepte pas. Un administrateur doit lui attribuer une clé de signature (dans authentik : Signing Key sur le provider).",
-      "oidc_no_account": "Aucun compte nexdeck n'est encore lié à cette identité. Connectez-vous une fois avec votre mot de passe et liez-la sous Profil.",
-      "oidc_disabled": "Ce compte est désactivé.",
-      "oidc_token_refused": "Le fournisseur d’identité a refusé le code de connexion.",
-      "oidc_no_public_url": "L’URL publique n’est pas définie. Un administrateur doit d’abord la définir.",
-      "oidc_bad_discovery": "La configuration du fournisseur d’identité est incomplète.",
-      "oidc_taken": "Cette identité est déjà liée à un autre compte nexdeck."
-    },
     "confirmPassword": "Confirmer le mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
@@ -156,7 +141,7 @@
       "users": "Utilisateurs",
       "address": "Adresse",
       "mail": "Serveur de messagerie",
-      "oidc": "Fournisseurs de connexion",
+      "oidc": "Connexion",
       "about": "À propos",
       "search": "Recherche",
       "appearance": "Apparence",
@@ -220,13 +205,7 @@
       "signOut": "Se déconnecter ici",
       "confirmPassword": "Répéter le nouveau mot de passe",
       "saveProfile": "Enregistrer le nom et l’adresse",
-      "unsaved": "Pas encore enregistré",
-      "providers": "Se connecter via un fournisseur",
-      "providersHelp": "Une fois lié, la connexion via le fournisseur mène directement à ce compte, même si le mot de passe est perdu.",
-      "providerIsLinked": "lié",
-      "providerLink": "Lier à {{name}}",
-      "providerUnlink": "Délier",
-      "providerLinked": "Lié. Désormais, vous pouvez aussi vous connecter par ce biais."
+      "unsaved": "Pas encore enregistré"
     },
     "integrations": {
       "title": "Intégrations",
@@ -296,48 +275,7 @@
       "demoHelp": "Chaque widget affiche des données fictives. Désactivez-le quand vous connectez de vrais services.",
       "demoForced": "Défini par NEXDECK_DEMO sur le conteneur. Supprimez la variable et redémarrez pour le désactiver.",
       "updateCheck": "Rechercher des mises à jour",
-      "updateCheckHelp": "Demande à GitHub une fois par jour si une version plus récente existe. Désactivé par défaut.",
-      "oidc": "Fournisseurs d’identité",
-      "oidcHelp": "Connexion via authentik, Keycloak, Authelia, Pocket ID et d’autres qui parlent OpenID Connect.",
-      "oidcSlug": "Nom court",
-      "oidcLabel": "Libellé du bouton",
-      "oidcIssuer": "URL de l’émetteur",
-      "oidcClientId": "ID client",
-      "oidcSecret": "Secret client",
-      "oidcRole": "Rôle des nouveaux comptes",
-      "oidcAutoCreate": "Créer les comptes à la première connexion",
-      "oidcAutoCreateHelp": "Désactivé : seules les personnes invitées et les comptes liés entrent par ce fournisseur. Activé : quiconque y a un compte en obtient un ici comme membre.",
-      "oidcIssuerChangeTitle": "Changer d’émetteur ?",
-      "oidcIssuerChangeGo": "Changer d’émetteur",
-      "oidcIssuerChange_one": "Un autre émetteur est un autre fournisseur. {{count}} compte devra être lié à nouveau ensuite.",
-      "oidcIssuerChange_other": "Un autre émetteur est un autre fournisseur. {{count}} comptes devront être liés à nouveau ensuite.",
-      "oidcTrustsSecondFactor": "Ce fournisseur vérifie lui-même un second facteur",
-      "oidcTrustsSecondFactorHelp": "Désactivé, nexdeck demande son propre code après la connexion via ce fournisseur, si ce compte en a un configuré. Activez-le là où authentik, Authelia ou Keycloak le demandent déjà.",
-      "oidcRedirect": "URI de redirection à enregistrer chez le fournisseur : {{url}}",
-      "oidcEdit": "Modifier {{name}}",
-      "oidcSecretKept": "Laissé vide, le secret reste tel quel",
-      "oidcEnabled": "Proposer ce fournisseur",
-      "oidcEnabledHelp": "Désactivé, son bouton disparaît de la page de connexion et personne ne peut se connecter par lui.",
-      "oidcSlugChanged": "Un nouveau nom court change l’URI de redirection. Enregistrez aussi la nouvelle chez le fournisseur.",
-      "oidcAdd": "Ajouter un fournisseur",
-      "authentik": "authentik en une étape",
-      "authentikHelp": "Avec un jeton d'API qui peut créer des applications, nexdeck crée lui-même le fournisseur et l'application dans authentik et s'ajoute ci-dessous comme fournisseur de connexion. Le jeton ne sert qu'à cela et n'est pas enregistré.",
-      "authentikNoAddress": "Indiquez d'abord l'adresse publique sous Adresse : authentik y renvoie le navigateur.",
-      "authentikUrl": "Adresse d'authentik",
-      "authentikToken": "Jeton d'API",
-      "authentikTokenHelp": "Dans authentik sous Annuaire, Jetons et mots de passe d'application, objectif API Token.",
-      "authentikRun": "Configurer",
-      "authentikBusy": "Configuration …",
-      "authentikBlueprint": "Télécharger un blueprint à la place",
-      "authentikDone": "Terminé. Liez maintenant votre compte à authentik une fois sous Profil, et la connexion par ce biais fonctionne sans mot de passe.",
-      "authentikStep": {
-        "reached": "authentik joint",
-        "signingKey": "Clé de signature",
-        "mapping": "Correspondance pour l'adresse",
-        "provider": "Fournisseur",
-        "application": "Application",
-        "filled": "Fournisseur de connexion ici"
-      }
+      "updateCheckHelp": "Demande à GitHub une fois par jour si une version plus récente existe. Désactivé par défaut."
     },
     "search": {
       "title": "Recherche vers l’extérieur",
@@ -598,7 +536,11 @@
     "removeTokens_one": "{{count}} jeton API",
     "removeTokens_other": "{{count}} jetons API",
     "removeChannels_one": "{{count}} canal de notification",
-    "removeChannels_other": "{{count}} canaux de notification"
+    "removeChannels_other": "{{count}} canaux de notification",
+    "unlink": "Délier de {{name}}",
+    "unlinkTitle": "Délier de {{name}} ?",
+    "unlinkBody": "{{account}} ne pourra plus se connecter via {{name}} tant que le compte ne se sera pas lié de nouveau. Ton mot de passe le confirme.",
+    "unlinked": "Le lien avec {{name}} est retiré."
   },
   "channels": {
     "push": "Web Push sur cet appareil",
@@ -1345,5 +1287,15 @@
     "down_one": "{{count}} en panne",
     "down_other": "{{count}} en panne",
     "none": "Il n'y a pas encore d'autres cartes sur cette page."
+  },
+  "signIn": {
+    "order": "Déplacer {{name}}",
+    "copy": "Copier",
+    "copied": "Copié",
+    "more": "Plus"
+  },
+  "keyFactor": {
+    "text": "Ne fonctionne qu’une fois un second facteur configuré.",
+    "link": "Le configurer"
   }
 }

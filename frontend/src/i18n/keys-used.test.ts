@@ -8,7 +8,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import en from './en.json'
+import oidcEn from '../vendor/nexoidc/oidc.en.json'
+import enOwn from './en.json'
+import { withOidc } from './index'
+
+// The sign-in words of the shared module are merged into English at start (`withOidc`), so they count as present.
+const en = withOidc(enOwn, oidcEn)
 
 function files(directory: string): string[] {
   return readdirSync(directory).flatMap((name: string) => {

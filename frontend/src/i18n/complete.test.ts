@@ -9,6 +9,11 @@ import es from './es.json'
 import fr from './fr.json'
 import it_ from './it.json'
 import { LANGUAGES } from './index'
+import oidcEs from './oidc.es.json'
+import oidcFr from './oidc.fr.json'
+import oidcIt from './oidc.it.json'
+import oidcDe from '../vendor/nexoidc/oidc.de.json'
+import oidcEn from '../vendor/nexoidc/oidc.en.json'
 
 function paths(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return prefix ? [prefix] : []
@@ -61,4 +66,28 @@ describe('language files', () => {
       expect(offenders, `${language}: em dash`).toEqual([])
     }
   })
+})
+
+/**
+ * The sign-in words: German and English come from the shared module word for word; Spanish, French and Italian are
+ * nexdeck's own (`oidc.<code>.json`) and must carry every key and placeholder the module's English has (blueprint 06,
+ * "Sprachen"), or the page shows a path where a sentence belongs.
+ */
+describe('sign-in words in every language', () => {
+  const english = new Set(paths(oidcEn))
+  it('are not empty by accident', () => {
+    expect(english.size).toBeGreaterThan(100)
+  })
+  for (const [language, data] of Object.entries({ de: oidcDe, es: oidcEs, fr: oidcFr, it: oidcIt })) {
+    it(`${language}: knows the same keys and placeholders as English`, () => {
+      const known = new Set(paths(data))
+      expect([...known].filter((p) => !english.has(p)).sort(), `only in oidc.${language}`).toEqual([])
+      expect([...english].filter((p) => !known.has(p)).sort(), `missing from oidc.${language}`).toEqual([])
+      const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
+      const different = [...english].filter((p) => placeholders(String(lookup(oidcEn, p))) !== placeholders(String(lookup(data, p))))
+      expect(different, `placeholders differ between en and ${language}`).toEqual([])
+      const empty = [...known].filter((p) => String(lookup(data, p)).trim() === '' || String(lookup(data, p)).includes('—'))
+      expect(empty, `${language}: empty texts or em dashes`).toEqual([])
+    })
+  }
 })

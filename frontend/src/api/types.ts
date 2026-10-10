@@ -18,6 +18,17 @@ export interface User {
   avatar_url: string | null
   /** Where a password reset would go; empty while none is stored. */
   email: string
+  /** The sign-in providers the account is linked to (the administrator's list only). */
+  providers?: LinkedProvider[]
+  /** Signed in through a provider that checks the second factor itself while every account must have one: this
+   * session is spared, the account's API tokens wait until it sets one up. */
+  keys_need_second_factor?: boolean
+}
+
+export interface LinkedProvider {
+  provider_id: number
+  slug: string
+  label: string
 }
 
 export interface SetupStatus {
@@ -26,7 +37,8 @@ export interface SetupStatus {
   demo: boolean
   providers: { slug: string; label: string }[]
   /** Whether a forgotten password can be sent anywhere at all. */
-  can_reset_password: boolean
+  can_reset_password: boolean  /** The password form for everybody; off: only the provider buttons, and the small way in for an administrator. */
+  password_login?: boolean
 }
 
 export interface BoardSummary {
@@ -196,6 +208,12 @@ export interface About {
   license: string
   /** When the update check last asked GitHub, or null while it never has. */
   checked_at: string | null
+  /** A second factor is asked of every account with a password. */
+  require_two_factor?: boolean
+  /** Sign-in with a password for everybody (off: administrators only). */
+  password_login?: boolean
+  /** At least one sign-in provider is switched on; the password can be switched off only then. */
+  provider_active?: boolean
 }
 
 export interface Suggestion {

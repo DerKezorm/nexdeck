@@ -11,10 +11,10 @@ import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
 import { HomeNetworkSettings } from './HomeNetworkSettings'
 import { MailSettings } from './MailSettings'
-import { OidcSettings } from './OidcSettings'
 import { SearchSettings } from './SearchSettings'
 import { JournalSettings } from './JournalSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
+import { SignInSettings } from './SignInSettings'
 import { UsersSettings } from './UsersSettings'
 
 /**
@@ -36,7 +36,7 @@ export function SystemPage() {
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
     { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
-    { to: 'oidc', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
+    { to: 'sign-in', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
     { to: 'home-network', icon: House, label: t('settings.nav.homeNetwork'), show: admin },
     { to: 'journal', icon: ScrollText, label: t('settings.nav.journal'), show: admin },
     { to: 'backups', icon: Archive, label: t('settings.nav.backups'), show: admin },
@@ -59,7 +59,9 @@ export function SystemPage() {
             <Route path="mail" element={forAdmin(<MailSettings />)} />
             <Route path="search" element={forAdmin(<SearchSettings />)} />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
-            <Route path="oidc" element={forAdmin(<OidcSettings />)} />
+            <Route path="sign-in" element={forAdmin(<SignInSettings />)} />
+            {/* Where the sign-in providers were until the shared sign-in blueprint. */}
+            <Route path="oidc" element={<Navigate to="/system/sign-in" replace />} />
             <Route path="home-network" element={forAdmin(<HomeNetworkSettings />)} />
             <Route path="journal" element={forAdmin(<JournalSettings />)} />
             <Route path="backups" element={forAdmin(<BackupsSettings />)} />

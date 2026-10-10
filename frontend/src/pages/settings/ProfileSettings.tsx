@@ -6,9 +6,10 @@ import { ApiError, del, get, post, upload } from '../../api/client'
 import type { BoardSummary, User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
-import { Field, PasswordInput, Select, Toast } from '../../components/ui'
+import { Confirm, Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
+import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 import { SettingsCard } from './SettingsCard'
 
 export function ProfileSettings() {
@@ -23,21 +24,22 @@ export function ProfileSettings() {
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
-  const links = useQuery({ queryKey: ['oidc-links'], queryFn: () => get<{ slug: string; label: string; linked: boolean }[]>('/auth/oidc/links') })
+  const links = useQuery({ queryKey: ['oidc-links'], queryFn: () => get<{ slug: string; label: string; linked: boolean }[]>('/oidc/me') })
+  // Linking asks for the password once more: whoever the browser is at the provider gets this account.
+  const [linking, setLinking] = useState<{ slug: string; label: string } | null>(null)
+  const [linkPassword, setLinkPassword] = useState('')
   // Back from the provider after linking: say how it went, once, and take it
   // out of the address so a reload does not say it again.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const linked = params.get('oidc_linked')
-    const failure = params.get('oidc_error')
+    const linked = params.get('linked')
+    const failure = params.get('error')
     if (!linked && !failure) return
-    setToast(
-      linked
-        ? { text: t('settings.profile.providerLinked'), level: 'ok' }
-        : { text: t(`auth.oidc.${failure}`, { defaultValue: t('auth.oidc.failed') }), level: 'error' },
-    )
-    params.delete('oidc_linked')
-    params.delete('oidc_error')
+    const key = oidcErrorKey(failure)
+    if (linked) setToast({ text: t('oidc.account.linked'), level: 'ok' })
+    else if (key) setToast({ text: t(key), level: 'error' })
+    params.delete('linked')
+    params.delete('error')
     const rest = params.toString()
     window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
   }, [t])
@@ -53,7 +55,11 @@ export function ProfileSettings() {
   }
   /** Whether the two fields above the button differ from what is stored. */
   const dirty = displayName !== (user.display_name ?? '') || email !== (user.email ?? '')
-  const failed = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+  const failed = (failure: unknown) => {
+    const key = failure instanceof ApiError ? oidcErrorKey(failure.code) : null
+    setToast({ text: key ? t(key) : failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+  }
+  const linkedCount = (links.data ?? []).filter((provider) => provider.linked).length
   const pickPicture = (file: File) => {
     void upload('/auth/me/avatar', file)
       .then((updated) => {
@@ -212,27 +218,33 @@ export function ProfileSettings() {
       <TwoFactorCard hasPassword={user.has_password} onDone={(text, level) => setToast({ text, level })} />
 
       {(links.data ?? []).length > 0 && (
-        <SettingsCard title={t('settings.profile.providers')} description={t('settings.profile.providersHelp')}>
-          <ul className="space-y-1.5">
+        <SettingsCard title={t('oidc.account.title')} description={t('oidc.account.text')}>
+          <ul className="space-y-2" data-testid="account-providers">
             {(links.data ?? []).map((provider) => (
-              <li key={provider.slug} className="flex items-center gap-2 text-sm">
-                <span className="flex-1 truncate">{provider.label}</span>
-                {/* Not linked, the button says so already; on a phone a second word squeezed the name to three letters. */}
-                {provider.linked && <span className="text-[12px] text-ok">{t('settings.profile.providerIsLinked')}</span>}
+              <li key={provider.slug} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{provider.label}</span>
+                  {provider.linked && !user.has_password && linkedCount === 1 && (
+                    <span className="block text-[11px] text-faint">{t('oidc.account.only', { name: provider.label })}</span>
+                  )}
+                </span>
+                <span className={`text-[12px] ${provider.linked ? 'text-ok' : 'text-faint'}`}>
+                  {provider.linked ? t('oidc.account.linked') : t('oidc.account.notLinked')}
+                </span>
                 {provider.linked ? (
-                  <button className="btn h-7 text-xs" onClick={() => void del(`/auth/oidc/${provider.slug}/link`).then(() => links.refetch()).catch(failed)}>
-                    {t('settings.profile.providerUnlink')}
+                  <button className="btn h-7 text-xs" onClick={() => void del(`/oidc/${provider.slug}/link`).then(() => links.refetch()).catch(failed)}>
+                    {t('oidc.account.unlink')}
                   </button>
                 ) : (
                   <button
                     className="btn btn-accent h-7 text-xs"
-                    onClick={() =>
-                      void post<{ url: string }>(`/auth/oidc/${provider.slug}/link`)
-                        .then(({ url }) => window.location.assign(url))
-                        .catch(failed)
-                    }
+                    disabled={!user.has_password}
+                    onClick={() => {
+                      setLinkPassword('')
+                      setLinking(provider)
+                    }}
                   >
-                    {t('settings.profile.providerLink', { name: provider.label })}
+                    {t('oidc.account.link')}
                   </button>
                 )}
               </li>
@@ -240,6 +252,28 @@ export function ProfileSettings() {
           </ul>
         </SettingsCard>
       )}
+      <Confirm
+        open={linking !== null}
+        title={`${t('oidc.account.link')}: ${linking?.label ?? ''}`}
+        body={t('oidc.account.text')}
+        confirmLabel={t('oidc.account.link')}
+        confirmDisabled={!linkPassword}
+        onCancel={() => setLinking(null)}
+        onConfirm={() => {
+          const target = linking
+          setLinking(null)
+          if (!target) return
+          void post<{ url: string }>(`/oidc/${target.slug}/link`, { password: linkPassword })
+            .then(({ url }) => window.location.assign(url))
+            .catch((failure: unknown) => (failure instanceof ApiError && failure.code === 'bad_credentials' ? setToast({ text: t('auth.wrong'), level: 'error' }) : failed(failure)))
+        }}
+      >
+        <div className="mt-3">
+          <Field label={t('settings.twoFactor.confirmWithPassword')} htmlFor="link-password">
+            <PasswordInput id="link-password" autoComplete="current-password" value={linkPassword} onChange={setLinkPassword} />
+          </Field>
+        </div>
+      </Confirm>
 
       <SettingsCard title={t('settings.profile.sessions')} description={t('settings.profile.sessionsHelp')}>
         <ul className="space-y-1 mb-3">

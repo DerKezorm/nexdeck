@@ -24,7 +24,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://nexview.nexapps
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
 - **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
-- **Sign in your way.** Local accounts, OpenID Connect (authentik, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
+- **Sign in your way.** Local accounts, OpenID Connect with several providers side by side (authentik in one step, Microsoft Entra ID, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
 - **In English, German, Spanish, French or Italian.** The interface and every card, including what the services report. Each account picks the two languages that stand in its top bar.
 
 ## A board is whatever you put on it
@@ -98,13 +98,17 @@ Rarely needed, but real:
 | `NEXDECK_UPDATE_CHECK` | `0` | Ask GitHub whether a newer nexdeck exists. Off by default: it is an outbound call. |
 | `NEXDECK_CORS_ORIGINS` | empty | Origins allowed to call the API from a browser. `*` is refused at start-up, because with credentials it would let any site act as the signed-in user. |
 | `NEXDECK_BACKUP_EVERY_HOURS` | `24` | How often a snapshot is written by itself. `0` switches it off. |
-| `NEXDECK_TRUSTED_PROXIES` | empty | Addresses or networks of the reverse proxies in front of nexdeck, comma separated. Their `X-Forwarded-For` is believed when nexdeck decides whether a browser is on the home network; without it, a forwarded request is never signed in automatically. |
+| `NEXDECK_TRUSTED_PROXIES` | empty | Addresses or networks of the reverse proxies in front of nexdeck, comma separated. Their `X-Forwarded-For` is believed when nexdeck decides whether a browser is on the home network; without it, a forwarded request is never signed in automatically. Set, it is also the list whose `X-Forwarded-Proto` nexdeck believes (see below). |
 
 A guard test keeps this table in step with the settings in the code.
 
 ### Reverse proxy
 
-nexdeck speaks plain HTTP on port 8000 and trusts `X-Forwarded-Proto` for its cookies. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
+nexdeck speaks plain HTTP on port 8000 and takes the scheme from `X-Forwarded-Proto` for its cookies and for the redirect address it sends to a sign-in provider: the right-most value (the one the nearest proxy wrote), `http` or `https` in any case. While `NEXDECK_TRUSTED_PROXIES` is empty it believes every sender, as it always did; once it names your proxies, only theirs. This is the setting the authentik card means when it warns that the server sees a request as `http`. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
+
+### Sign-in providers
+
+Under System → Sign-in an administrator adds OpenID Connect providers (each gets a button on the sign-in page, in the order of the list), sets authentik up in one step with a one-time API token, or downloads a blueprint instead. Microsoft Entra ID takes `https://login.microsoftonline.com/common/v2.0` (or `organizations`, or a tenant) as the issuer. A provider's redirect address is `<public address>/api/v1/oidc/<short name>/callback`; providers set up with nexdeck 0.36 or older keep `/api/v1/auth/oidc/<short name>/callback`, which their provider already knows. Accounts are found by the provider's subject only, never by an e-mail address; people link their own account under Profile, with their password. Password sign-in can be switched off once a provider is active; administrators can always use their password.
 
 Signing in on the home network (System → Home network) needs the browser's real address. Behind a proxy, name the proxy in `NEXDECK_TRUSTED_PROXIES`; the page shows what nexdeck makes of your own address. The image starts uvicorn with `--no-proxy-headers` and reads the forwarding headers itself; a compose file that overrides the command should do the same.
 

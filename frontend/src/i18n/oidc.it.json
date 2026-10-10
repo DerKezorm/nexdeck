@@ -1,0 +1,132 @@
+{
+  "oidc": {
+    "login": {
+      "button": "Accedi con {{name}}",
+      "or": "oppure",
+      "operator": "Accedi come operatore con una password"
+    },
+    "invite": {
+      "button": "Continua con {{name}}"
+    },
+    "admin": {
+      "signInTitle": "Accesso",
+      "password": "Accesso con password",
+      "passwordHint": "Disattivato: fanno entrare solo i provider. Tu come operatore puoi sempre usare la tua password.",
+      "address": "Indirizzo pubblico",
+      "addressHint": "L’indirizzo con cui si raggiunge {{app}}. Lo usano gli inviti, i provider e i link nelle e-mail.",
+      "addressChangeConfirm": "authentik conosce ancora l’indirizzo di ritorno {{address}}. Dopo il salvataggio l’accesso tramite authentik funziona di nuovo solo quando esegui ancora il pulsante di “authentik in un passo”.",
+      "addressChangeHand_one": "Per {{count}} provider inserito a mano, cambia tu stesso l’indirizzo di ritorno presso di lui.",
+      "addressChangeHand_other": "Per {{count}} provider inseriti a mano, cambia tu stesso l’indirizzo di ritorno presso di loro.",
+      "providersTitle": "Provider di accesso",
+      "providersText": "Qualsiasi provider che parli OpenID Connect: authentik, Microsoft Entra ID, Keycloak, Authelia, Pocket ID. Ognuno ottiene un pulsante nella pagina di accesso.",
+      "empty": "Ancora nessun provider. Configura authentik qui sotto in un passo o aggiungi un provider a mano.",
+      "add": "Aggiungi un provider",
+      "edit": "Modifica",
+      "remove": "Rimuovi",
+      "removeConfirm_one": "Rimuovere “{{name}}”? {{count}} account perde il collegamento; per {{only}} di essi è l’unico modo per entrare.",
+      "removeConfirm_other": "Rimuovere “{{name}}”? {{count}} account perdono il collegamento; per {{only}} di essi è l’unico modo per entrare.",
+      "active": "attivo",
+      "inactive": "disattivato",
+      "managed": "configurato tramite authentik",
+      "label": "Nome sul pulsante",
+      "slug": "Nome breve",
+      "slugHint": "Fa parte dell’indirizzo di ritorno; non si può cambiare in seguito.",
+      "issuer": "Emittente (issuer)",
+      "issuerHint": "authentik: https://auth.example.com/application/o/{{app}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-TENANT/v2.0, oppure common o organizations per più tenant. Entra accetta solo indirizzi di ritorno https (localhost a parte) e invia l’indirizzo e-mail solo come claim facoltativo email.",
+      "clientId": "ID client",
+      "secret": "Segreto client",
+      "secretKept": "salvato, lascia vuoto per mantenerlo",
+      "redirect": "Indirizzo di ritorno per il provider",
+      "enabled": "Attivo",
+      "autoCreate": "Le persone nuove ricevono un account",
+      "autoCreateHint": "Disattivato: tramite questo provider entrano solo persone invitate e account collegati. Attivato: chi ha un account lì ne riceve uno qui come membro.",
+      "trustsSecondFactor": "Il provider verifica da sé il secondo fattore",
+      "trustsSecondFactorHint": "Disattivato: a chi ha qui un secondo fattore viene chiesto il codice dopo l’accesso tramite il provider.",
+      "scopes": "Ambiti (scopes)",
+      "issuerChangeConfirm_one": "Un altro emittente è un altro provider. {{count}} account dovrà collegarsi di nuovo in seguito.",
+      "issuerChangeConfirm_other": "Un altro emittente è un altro provider. {{count}} account dovranno collegarsi di nuovo in seguito."
+    },
+    "authentik": {
+      "title": "authentik in un passo",
+      "text": "Con un token API che può creare applicazioni, {{app}} configura da sé provider e applicazione in authentik. Il token viene usato solo per questo e mai salvato.",
+      "url": "Indirizzo di authentik",
+      "token": "Token API",
+      "run": "Configura",
+      "blueprint": "Scarica invece un blueprint",
+      "asking": "Un momento, si sta interrogando authentik. Può richiedere fino a 20 secondi.",
+      "noAddress": "Ancora nessun indirizzo pubblico. In questo momento raggiungi {{app}} a questo indirizzo, e authentik vi ritorna dopo l’accesso:",
+      "adopt": "Usalo e configura",
+      "adoptOnly": "Usalo soltanto",
+      "proxyWarning": "Il server riceve questa richiesta come {{address}}. Se {{app}} si trova dietro un proxy, il proxy deve trasmettere lo schema (X-Forwarded-Proto) e {{app}} deve fidarsi di lui (l’impostazione dei proxy fidati, vedi la documentazione).",
+      "stale": "authentik conosce ancora il vecchio indirizzo di ritorno {{address}}. L’accesso tramite authentik non funziona finché non esegui di nuovo il pulsante con un token.",
+      "step": {
+        "reached": "Connessione ad authentik",
+        "signingKey": "Chiave di firma",
+        "mapping": "Mappature per nome e indirizzo",
+        "provider": "Provider",
+        "application": "Applicazione",
+        "filled": "Impostazioni qui",
+        "binding": "Solo il tuo account"
+      },
+      "why": {
+        "unreachable": "authentik non è raggiungibile a questo indirizzo. Controlla l’indirizzo e se {{app}} raggiunge quella rete.",
+        "unusable": "Questo indirizzo non si può usare. Controlla come è scritto.",
+        "token": "authentik non ha accettato il token (risposta {{status}}). Controlla che sia valido e abbia i permessi necessari.",
+        "malformed": "Il token contiene caratteri che nessun token ha. Copialo ancora una volta da authentik.",
+        "answered": "A questo indirizzo risponde qualcosa, ma non authentik come previsto (risposta {{status}}). Controlla l’indirizzo; la risposta completa è nel registro.",
+        "slug": "Tutti gli slug che {{app}} darebbe alla sua applicazione appartengono già ad altre applicazioni in authentik. Rinomina lì il provider di {{app}} e riprova.",
+        "coupled": "Finché {{app}} è accoppiato, l’accesso arriva tramite l’accoppiamento. Prima disaccoppia, poi configura authentik qui.",
+        "issuer_change_one": "Questo è un altro authentik rispetto a prima, quindi un altro emittente. {{count}} account dovrà collegarsi di nuovo in seguito.",
+        "issuer_change_other": "Questo è un altro authentik rispetto a prima, quindi un altro emittente. {{count}} account dovranno collegarsi di nuovo in seguito.",
+        "public_url_needed": "{{app}} non ha ancora un indirizzo pubblico. Usa quello proposto, e {{app}} configura authentik con esso."
+      }
+    },
+    "account": {
+      "title": "Provider di accesso",
+      "text": "Collega il tuo account a un provider, così potrai accedere anche tramite lui. La tua password conferma che sei tu.",
+      "linked": "Collegato",
+      "notLinked": "Non collegato",
+      "link": "Collega",
+      "unlink": "Scollega",
+      "only": "Questo account accede solo tramite {{name}}."
+    },
+    "error": {
+      "oidc_not_configured": "Questo provider non è configurato.",
+      "oidc_provider_unreachable": "Il provider non è raggiungibile in questo momento.",
+      "oidc_provider_invalid": "La risposta del provider non è comprensibile.",
+      "oidc_issuer_mismatch": "Il provider si chiama diversamente da quanto inserito.",
+      "oidc_state_mismatch": "L’accesso è scaduto o proveniva da altrove. Riprova.",
+      "oidc_provider_error": "Il provider ha interrotto l’accesso.",
+      "oidc_token_refused": "Il provider non ha riscattato il codice.",
+      "oidc_token_invalid": "La risposta del provider non era valida.",
+      "oidc_no_signing_key": "Il provider firma senza chiave. Scegli lì una chiave di firma per il provider.",
+      "oidc_no_account": "Qui non c’è un account per te. Chiedi un invito, oppure accedi con la tua password e collega il tuo account in Il mio account, Sicurezza.",
+      "oidc_subject_taken": "Questa identità è già collegata a un altro account.",
+      "oidc_only_account": "Questo account accede solo tramite questo provider. L’ultimo collegamento resta.",
+      "oidc_link_mismatch": "Questo collegamento appartiene a un altro account.",
+      "invite_invalid": "L’invito è scaduto o è già stato usato.",
+      "account_blocked": "Questo account è bloccato. Rivolgiti all’operatore.",
+      "too_many_attempts": "Troppi tentativi. Aspetta un momento, poi riprova."
+    },
+    "formError": {
+      "slug_invalid": "Il nome breve accetta lettere dalla a alla z, cifre e trattini, fino a 40 caratteri.",
+      "slug_taken": "Un’altra voce ha già questo nome breve.",
+      "label_required": "Inserisci un nome per il pulsante.",
+      "issuer_invalid": "L’emittente deve iniziare con http:// o https://.",
+      "client_id_required": "Inserisci l’ID client.",
+      "client_secret_invalid": "Il segreto client è troppo lungo.",
+      "scopes_invalid": "Gli ambiti devono contenere openid.",
+      "provider_managed": "Questo provider viene da un accoppiamento e cambia solo lì.",
+      "provider_unknown": "Questo provider non esiste più."
+    },
+    "single": {
+      "admin": {
+        "passwordHint": "Disattivato: anche tu accedi allora solo tramite un provider. Per tornare indietro usa questo interruttore oppure, se nessun provider ti fa più entrare, un comando sul server.",
+        "addressHint": "L’indirizzo con cui raggiungi {{app}}. I provider ti rimandano lì dopo l’accesso."
+      },
+      "error": {
+        "oidc_no_account": "Questa identità non è collegata qui. Entra solo l’identità collegata all’account di {{app}}."
+      }
+    }
+  }
+}

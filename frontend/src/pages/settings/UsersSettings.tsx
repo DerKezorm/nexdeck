@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
+import { Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
-import type { User } from '../../api/types'
+import type { LinkedProvider, User } from '../../api/types'
 
 type Belongings = { boards: { slug: string; name: string }[]; kiosk_tokens: number; api_tokens: number; channels: number }
 import { Avatar } from '../../components/Avatar'
-import { Confirm, Dialog, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
+import { Confirm, Dialog, Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { useAuth } from '../../stores/auth'
+import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 import { SettingsCard } from './SettingsCard'
 
 export function UsersSettings() {
@@ -35,15 +36,9 @@ export function UsersSettings() {
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const roles = [{ value: 'admin', label: t('users.role.admin') }, { value: 'user', label: t('users.role.user') }, { value: 'guest', label: t('users.role.guest') }]
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
-  const about = useQuery({ queryKey: ['about'], queryFn: () => get<{ require_two_factor: boolean }>('/about') })
-  const demandTwoFactor = (wanted: boolean) => {
-    void patch('/settings', { require_two_factor: wanted })
-      .then(() => {
-        setToast({ text: t('common.saved'), level: 'ok' })
-        return about.refetch()
-      })
-      .catch(fail)
-  }
+  // The administrator unlinks an account from a provider with the own password (sign-in blueprint 01).
+  const [unlinking, setUnlinking] = useState<{ user: User; provider: LinkedProvider } | null>(null)
+  const [ownPassword, setOwnPassword] = useState('')
   const owned = belongings.data?.boards ?? []
   const alsoOnIt = [
     belongings.data?.kiosk_tokens ? t('users.removeKiosk', { count: belongings.data.kiosk_tokens }) : '',
@@ -52,15 +47,6 @@ export function UsersSettings() {
   ].filter(Boolean)
   return (
     <>
-      <SettingsCard title={t('settings.security.title')} description={t('settings.security.help')}>
-        <Switch
-          checked={about.data?.require_two_factor ?? false}
-          onChange={demandTwoFactor}
-          label={t('settings.security.requireTwoFactor')}
-          description={t('settings.security.requireTwoFactorHelp')}
-        />
-      </SettingsCard>
-
       <SettingsCard title={t('settings.users.title')} description={t('settings.users.help')}>
         <ul className="space-y-1.5">
           {(users.data ?? []).map((user) => (
@@ -72,6 +58,27 @@ export function UsersSettings() {
                   {user.disabled && <span className="chip ml-2 !py-0 text-[10px]">{t('users.disabled')}</span>}
                 </div>
                 {user.email && <div className="text-[11px] text-muted truncate">{user.email}</div>}
+                {(user.providers ?? []).length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1" data-testid="account-providers">
+                    {(user.providers ?? []).map((provider) => (
+                      <span key={provider.provider_id} className="chip !py-0 text-[10px] inline-flex items-center gap-1">
+                        {provider.label}
+                        <button
+                          type="button"
+                          className="text-faint hover:text-bad"
+                          aria-label={t('users.unlink', { name: provider.label })}
+                          title={t('users.unlink', { name: provider.label })}
+                          onClick={() => {
+                            setOwnPassword('')
+                            setUnlinking({ user, provider })
+                          }}
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <Select className="!w-32 !h-8" value={user.role} onChange={(role) => void patch(`/users/${user.id}`, { role }).then(() => users.refetch()).catch(fail)} options={roles} />
               {user.id !== me?.id && (
@@ -194,6 +201,36 @@ export function UsersSettings() {
           </div>
         )}
         {alsoOnIt.length > 0 && <p className="text-[11px] text-faint mt-2">{t('users.removeAlso', { what: alsoOnIt.join(', ') })}</p>}
+      </Confirm>
+      <Confirm
+        open={unlinking !== null}
+        title={t('users.unlinkTitle', { name: unlinking?.provider.label ?? '' })}
+        body={t('users.unlinkBody', { account: unlinking?.user.username ?? '', name: unlinking?.provider.label ?? '' })}
+        confirmLabel={t('oidc.account.unlink')}
+        confirmDisabled={!ownPassword}
+        danger
+        onCancel={() => setUnlinking(null)}
+        onConfirm={() => {
+          const target = unlinking
+          setUnlinking(null)
+          if (!target) return
+          void del(`/oidc/admin/accounts/${target.user.id}/links/${target.provider.provider_id}`, { password: ownPassword })
+            .then(() => {
+              setToast({ text: t('users.unlinked', { name: target.provider.label }), level: 'ok' })
+              return users.refetch()
+            })
+            .catch((failure: unknown) => {
+              const key = failure instanceof ApiError ? oidcErrorKey(failure.code) : null
+              if (key) setToast({ text: t(key), level: 'error' })
+              else fail(failure)
+            })
+        }}
+      >
+        <div className="mt-3">
+          <Field label={t('settings.twoFactor.confirmWithPassword')} htmlFor="unlink-password">
+            <PasswordInput id="unlink-password" autoComplete="current-password" value={ownPassword} onChange={setOwnPassword} />
+          </Field>
+        </div>
       </Confirm>
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>

@@ -67,21 +67,6 @@
     "wrong": "Benutzername oder Passwort ist falsch.",
     "throttled": "Zu viele Versuche. Warte ein paar Minuten.",
     "signin": "Anmelden",
-    "with": "Anmelden mit {{name}}",
-    "oidc": {
-      "failed": "Die Anmeldung über den Anbieter hat nicht geklappt.",
-      "oidc_denied": "Der Anbieter hat die Anmeldung abgelehnt.",
-      "oidc_state_mismatch": "Der Anmeldeversuch ist abgelaufen. Versuch es noch einmal.",
-      "oidc_unreachable": "Der Anbieter ist nicht erreichbar.",
-      "oidc_bad_token": "Die Antwort des Anbieters ließ sich nicht prüfen.",
-      "oidc_no_signing_key": "Der Anbieter unterschreibt mit seinem Client-Geheimnis, und das nimmt nexdeck nicht an. Ein Administrator muss dort einen Signaturschlüssel wählen (in authentik: Signing Key am Provider).",
-      "oidc_no_account": "Mit dieser Identität ist noch kein nexdeck-Konto verknüpft. Melde dich einmal mit Passwort an und verknüpfe sie unter Profil.",
-      "oidc_disabled": "Dieses Konto ist gesperrt.",
-      "oidc_token_refused": "Der Anbieter hat den Anmeldecode abgelehnt.",
-      "oidc_no_public_url": "Die öffentliche Adresse ist nicht eingestellt. Das muss ein Administrator zuerst tun.",
-      "oidc_bad_discovery": "Die Konfiguration des Anbieters ist unvollständig.",
-      "oidc_taken": "Diese Identität ist schon mit einem anderen nexdeck-Konto verknüpft."
-    },
     "confirmPassword": "Passwort bestätigen",
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen",
@@ -156,7 +141,7 @@
       "users": "Benutzer",
       "address": "Adresse",
       "mail": "Mailserver",
-      "oidc": "Anmeldeanbieter",
+      "oidc": "Anmeldung",
       "about": "Über",
       "search": "Suche",
       "appearance": "Aussehen",
@@ -220,13 +205,7 @@
       "signOut": "Hier abmelden",
       "confirmPassword": "Neues Passwort wiederholen",
       "saveProfile": "Name und Adresse speichern",
-      "unsaved": "Noch nicht gespeichert",
-      "providers": "Anmelden über einen Anbieter",
-      "providersHelp": "Verknüpft meldest du dich über den Anbieter direkt in dieses Konto an, auch wenn das Passwort einmal weg ist.",
-      "providerIsLinked": "verknüpft",
-      "providerLink": "Mit {{name}} verknüpfen",
-      "providerUnlink": "Lösen",
-      "providerLinked": "Verknüpft. Ab jetzt kommst du auch darüber herein."
+      "unsaved": "Noch nicht gespeichert"
     },
     "integrations": {
       "title": "Anbindungen",
@@ -296,48 +275,7 @@
       "demoHelp": "Jedes Widget zeigt erfundene Daten. Abschalten, wenn echte Dienste angebunden sind.",
       "demoForced": "Gesetzt durch NEXDECK_DEMO am Container. Variable entfernen und neu starten, um ihn abzuschalten.",
       "updateCheck": "Nach Updates suchen",
-      "updateCheckHelp": "Fragt einmal am Tag bei GitHub, ob es eine neuere Version gibt. Ab Werk aus.",
-      "oidc": "Anmeldeanbieter",
-      "oidcHelp": "Anmelden über authentik, Keycloak, Authelia, Pocket ID und andere, die OpenID Connect sprechen.",
-      "oidcSlug": "Kurzname",
-      "oidcLabel": "Beschriftung des Knopfs",
-      "oidcIssuer": "Issuer-Adresse",
-      "oidcClientId": "Client-ID",
-      "oidcSecret": "Client-Geheimnis",
-      "oidcRole": "Rolle für neue Konten",
-      "oidcAutoCreate": "Konten bei der ersten Anmeldung anlegen",
-      "oidcAutoCreateHelp": "Aus: Nur Eingeladene und Konten, die sich verknüpft haben, kommen über diesen Anbieter herein. An: Wer dort ein Konto hat, bekommt hier eines als Mitglied.",
-      "oidcIssuerChangeTitle": "Aussteller ändern?",
-      "oidcIssuerChangeGo": "Aussteller ändern",
-      "oidcIssuerChange_one": "Ein anderer Aussteller ist ein anderer Anbieter. {{count}} Konto muss sich danach neu verknüpfen.",
-      "oidcIssuerChange_other": "Ein anderer Aussteller ist ein anderer Anbieter. {{count}} Konten müssen sich danach neu verknüpfen.",
-      "oidcTrustsSecondFactor": "Dieser Anbieter prüft selbst einen zweiten Faktor",
-      "oidcTrustsSecondFactorHelp": "Aus heißt: nexdeck fragt nach der Anmeldung über diesen Anbieter den eigenen Code ab, sofern das Konto einen eingerichtet hat. Einschalten, wo authentik, Authelia oder Keycloak schon fragen.",
-      "oidcRedirect": "Beim Anbieter einzutragende Rücksprungadresse: {{url}}",
-      "oidcEdit": "{{name}} bearbeiten",
-      "oidcSecretKept": "Leer bleibt das bisherige Geheimnis",
-      "oidcEnabled": "Diesen Anbieter anbieten",
-      "oidcEnabledHelp": "Aus blendet seinen Knopf auf der Anmeldeseite aus, und niemand kann sich darüber anmelden.",
-      "oidcSlugChanged": "Ein neuer Kurzname ändert die Rücksprungadresse. Trage die neue auch beim Anbieter ein.",
-      "oidcAdd": "Anbieter hinzufügen",
-      "authentik": "authentik in einem Schritt",
-      "authentikHelp": "Mit einem API-Token, das Anwendungen anlegen darf, richtet nexdeck Anbieter und Anwendung in authentik selbst ein und trägt sich unten als Anmeldeanbieter ein. Das Token wird nur dafür benutzt und nicht gespeichert.",
-      "authentikNoAddress": "Erst die öffentliche Adresse unter Adresse eintragen: authentik schickt den Browser dorthin zurück.",
-      "authentikUrl": "Adresse von authentik",
-      "authentikToken": "API-Token",
-      "authentikTokenHelp": "In authentik unter Verzeichnis, Token und App-Passwörter, Zweck API-Token.",
-      "authentikRun": "Einrichten",
-      "authentikBusy": "Richte ein …",
-      "authentikBlueprint": "Stattdessen Blueprint herunterladen",
-      "authentikDone": "Fertig. Jetzt unter Profil einmal mit authentik verknüpfen, dann geht die Anmeldung darüber auch ohne Passwort.",
-      "authentikStep": {
-        "reached": "authentik erreicht",
-        "signingKey": "Schlüssel zum Signieren",
-        "mapping": "Zuordnung für die Adresse",
-        "provider": "Anbieter",
-        "application": "Anwendung",
-        "filled": "Anmeldeanbieter hier"
-      }
+      "updateCheckHelp": "Fragt einmal am Tag bei GitHub, ob es eine neuere Version gibt. Ab Werk aus."
     },
     "search": {
       "title": "Suche nach draußen",
@@ -598,7 +536,11 @@
     "removeTokens_one": "{{count}} API-Token",
     "removeTokens_other": "{{count}} API-Token",
     "removeChannels_one": "{{count}} Benachrichtigungskanal",
-    "removeChannels_other": "{{count}} Benachrichtigungskanäle"
+    "removeChannels_other": "{{count}} Benachrichtigungskanäle",
+    "unlink": "Verknüpfung mit {{name}} lösen",
+    "unlinkTitle": "Verknüpfung mit {{name}} lösen?",
+    "unlinkBody": "{{account}} kann sich dann nicht mehr über {{name}} anmelden, bis das Konto sich neu verknüpft. Dein Passwort bestätigt es.",
+    "unlinked": "Die Verknüpfung mit {{name}} ist gelöst."
   },
   "channels": {
     "push": "Web Push auf diesem Gerät",
@@ -1345,5 +1287,15 @@
     "down_one": "{{count}} ausgefallen",
     "down_other": "{{count}} ausgefallen",
     "none": "Auf dieser Seite gibt es noch keine anderen Karten."
+  },
+  "signIn": {
+    "order": "{{name}} verschieben",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "more": "Mehr"
+  },
+  "keyFactor": {
+    "text": "Wirkt erst, wenn du einen zweiten Faktor einrichtest.",
+    "link": "Einrichten"
   }
 }

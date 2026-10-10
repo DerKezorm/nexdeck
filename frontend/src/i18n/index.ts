@@ -1,6 +1,8 @@
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
+import oidcEn from '../vendor/nexoidc/oidc.en.json'
 import en from './en.json'
 import { registerTexts, type TextBundle } from './texts'
 
@@ -17,6 +19,10 @@ import { registerTexts, type TextBundle } from './texts'
  *   registered in PATTERNS there;
  * - the new tables in the lists of complete.test.ts and texts.test.ts.
  * "What's new" stays English and German; every other language shows English.
+ *
+ * The sign-in words (namespace `oidc`) come from the shared sign-in module, word for word in English and German
+ * (`vendor/nexoidc/oidc.<code>.json`, never edited here), and from `oidc.<code>.json` beside this file for the
+ * other languages. They are merged into each language as it loads, `{{app}}` filled in with nexdeck.
  */
 export const LANGUAGES: Record<string, string> = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', it: 'Italiano' }
 
@@ -25,6 +31,19 @@ const loaders: Record<string, () => Promise<{ default: Record<string, unknown> }
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   it: () => import('./it.json'),
+}
+
+/** The sign-in words of each language besides English (see above). */
+const oidcLoaders: Record<string, () => Promise<{ default: unknown }>> = {
+  de: () => import('../vendor/nexoidc/oidc.de.json'),
+  es: () => import('./oidc.es.json'),
+  fr: () => import('./oidc.fr.json'),
+  it: () => import('./oidc.it.json'),
+}
+
+/** A language's own words with the sign-in words merged in (nexdeck has many accounts, not one). */
+export function withOidc(words: Record<string, unknown>, oidc: unknown): Record<string, unknown> {
+  return { ...words, ...oidcWording(oidc as OidcWording, { singleAccount: false }) }
 }
 
 const textLoaders: Record<string, () => Promise<{ default: unknown }>> = {
@@ -37,16 +56,16 @@ const textLoaders: Record<string, () => Promise<{ default: unknown }>> = {
 void i18next.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  resources: { en: { translation: en } },
-  interpolation: { escapeValue: false },
+  resources: { en: { translation: withOidc(en, oidcEn) } },
+  interpolation: { escapeValue: false, defaultVariables: { app: 'nexdeck' } },
   returnNull: false,
 })
 
 export async function setLanguage(code: string): Promise<void> {
   const language = code in LANGUAGES ? code : 'en'
   if (!i18next.hasResourceBundle(language, 'translation') && loaders[language]) {
-    const bundle = await loaders[language]()
-    i18next.addResourceBundle(language, 'translation', bundle.default, true, true)
+    const [bundle, oidc] = await Promise.all([loaders[language](), oidcLoaders[language]()])
+    i18next.addResourceBundle(language, 'translation', withOidc(bundle.default, oidc.default), true, true)
     if (textLoaders[language]) {
       const texts = await textLoaders[language]()
       registerTexts(language, texts.default as TextBundle)

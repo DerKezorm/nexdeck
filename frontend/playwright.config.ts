@@ -22,6 +22,8 @@ export const FRONTEND_PORT = 5799
  * green.
  */
 export const BUILT_PORT = 8798
+/** The stand-in sign-in provider of `e2e/fake-provider.mjs` (nexoidc.spec.ts), never a real one. */
+export const PROVIDER_PORT = 8797
 /**
  * ⚠️ Outside the frontend on purpose. The Vite dev server watches its own
  * root and ignores only .git, node_modules, test-results, its cache and the
@@ -120,6 +122,14 @@ export default defineConfig({
       timeout: 120_000,
       stdout: 'pipe',
       stderr: 'pipe',
+    },
+    {
+      command: 'node e2e/fake-provider.mjs',
+      cwd: here,
+      url: `http://127.0.0.1:${PROVIDER_PORT}/health`,
+      reuseExistingServer: false,
+      timeout: 20_000,
+      env: { FAKE_PROVIDER_PORT: String(PROVIDER_PORT) },
     },
   ],
 })

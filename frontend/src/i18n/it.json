@@ -67,21 +67,6 @@
     "wrong": "Nome utente o password errati.",
     "throttled": "Troppi tentativi. Attendi qualche minuto.",
     "signin": "Accedi",
-    "with": "Accedi con {{name}}",
-    "oidc": {
-      "failed": "L'accesso tramite il provider di identità non è riuscito.",
-      "oidc_denied": "Il provider di identità ha rifiutato l'accesso.",
-      "oidc_state_mismatch": "Il tentativo di accesso è scaduto. Riprova.",
-      "oidc_unreachable": "Impossibile raggiungere il provider di identità.",
-      "oidc_bad_token": "Impossibile verificare la risposta del provider di identità.",
-      "oidc_no_signing_key": "Il provider di identità firma con il suo client secret, che nexdeck non accetta. Un amministratore deve scegliere una chiave di firma per il provider (in authentik: Signing Key sul provider).",
-      "oidc_no_account": "Nessun account nexdeck è ancora collegato a questa identità. Accedi una volta con la password e collegala in Profilo.",
-      "oidc_disabled": "Questo account è disattivato.",
-      "oidc_token_refused": "Il provider di identità ha rifiutato il codice di accesso.",
-      "oidc_no_public_url": "L'URL pubblico non è impostato. Un amministratore deve prima impostarlo.",
-      "oidc_bad_discovery": "La configurazione del provider di identità è incompleta.",
-      "oidc_taken": "Questa identità è già collegata a un altro account nexdeck."
-    },
     "confirmPassword": "Conferma password",
     "showPassword": "Mostra password",
     "hidePassword": "Nascondi password",
@@ -156,7 +141,7 @@
       "users": "Utenti",
       "address": "Indirizzo",
       "mail": "Server di posta",
-      "oidc": "Provider di accesso",
+      "oidc": "Accesso",
       "about": "Informazioni",
       "search": "Ricerca",
       "appearance": "Aspetto",
@@ -220,13 +205,7 @@
       "signOut": "Esci da qui",
       "confirmPassword": "Ripeti la nuova password",
       "saveProfile": "Salva nome e indirizzo",
-      "unsaved": "Non ancora salvato",
-      "providers": "Accedi tramite un provider",
-      "providersHelp": "Una volta collegato, l'accesso tramite il provider porta direttamente a questo account, anche se la password va persa.",
-      "providerIsLinked": "collegato",
-      "providerLink": "Collega con {{name}}",
-      "providerUnlink": "Scollega",
-      "providerLinked": "Collegato. D'ora in poi puoi accedere anche da lì."
+      "unsaved": "Non ancora salvato"
     },
     "integrations": {
       "title": "Integrazioni",
@@ -296,48 +275,7 @@
       "demoHelp": "Ogni widget mostra dati fittizi. Disattivala quando colleghi servizi reali.",
       "demoForced": "Impostata da NEXDECK_DEMO sul container. Rimuovi la variabile e riavvia per disattivarla.",
       "updateCheck": "Cerca aggiornamenti",
-      "updateCheckHelp": "Chiede a GitHub una volta al giorno se esiste una versione più recente. Disattivato per impostazione predefinita.",
-      "oidc": "Provider di identità",
-      "oidcHelp": "Accesso tramite authentik, Keycloak, Authelia, Pocket ID e altri che parlano OpenID Connect.",
-      "oidcSlug": "Nome breve",
-      "oidcLabel": "Etichetta del pulsante",
-      "oidcIssuer": "URL dell'issuer",
-      "oidcClientId": "Client ID",
-      "oidcSecret": "Client secret",
-      "oidcRole": "Ruolo per i nuovi account",
-      "oidcAutoCreate": "Crea account al primo accesso",
-      "oidcAutoCreateHelp": "Disattivato: entrano tramite questo provider solo le persone invitate e gli account collegati. Attivato: chi ha un account lì ne riceve uno qui come membro.",
-      "oidcIssuerChangeTitle": "Cambiare l'issuer?",
-      "oidcIssuerChangeGo": "Cambia l'issuer",
-      "oidcIssuerChange_one": "Un altro issuer è un altro provider. {{count}} account dovrà collegarsi di nuovo in seguito.",
-      "oidcIssuerChange_other": "Un altro issuer è un altro provider. {{count}} account dovranno collegarsi di nuovo in seguito.",
-      "oidcTrustsSecondFactor": "Questo provider verifica già un secondo fattore",
-      "oidcTrustsSecondFactorHelp": "Disattivato significa che nexdeck chiede il proprio codice dopo che questo provider ha fatto accedere qualcuno, se quell'account ne ha configurato uno. Attivalo dove authentik, Authelia o Keycloak lo chiedono già.",
-      "oidcRedirect": "URI di reindirizzamento da registrare presso il provider: {{url}}",
-      "oidcEdit": "Modifica {{name}}",
-      "oidcSecretKept": "Se lasciato vuoto, il secret resta com'è",
-      "oidcEnabled": "Offri questo provider",
-      "oidcEnabledHelp": "Disattivato nasconde il suo pulsante nella pagina di accesso, e nessuno può accedere tramite esso.",
-      "oidcSlugChanged": "Un nuovo nome breve cambia l'URI di reindirizzamento. Registra anche quello nuovo presso il provider.",
-      "oidcAdd": "Aggiungi provider",
-      "authentik": "authentik in un passo",
-      "authentikHelp": "Con un token API che può creare applicazioni, nexdeck crea da solo provider e applicazione in authentik e si aggiunge qui sotto come provider di accesso. Il token serve solo a questo e non viene salvato.",
-      "authentikNoAddress": "Prima imposta l'indirizzo pubblico in Indirizzo: authentik rimanda lì il browser.",
-      "authentikUrl": "Indirizzo di authentik",
-      "authentikToken": "Token API",
-      "authentikTokenHelp": "In authentik sotto Directory, Token e password delle app, scopo API Token.",
-      "authentikRun": "Configura",
-      "authentikBusy": "Configurazione …",
-      "authentikBlueprint": "Scarica invece un blueprint",
-      "authentikDone": "Fatto. Ora collega una volta il tuo account ad authentik in Profilo, e l'accesso da lì funziona senza password.",
-      "authentikStep": {
-        "reached": "authentik raggiunto",
-        "signingKey": "Chiave di firma",
-        "mapping": "Mappatura per l'indirizzo",
-        "provider": "Provider",
-        "application": "Applicazione",
-        "filled": "Provider di accesso qui"
-      }
+      "updateCheckHelp": "Chiede a GitHub una volta al giorno se esiste una versione più recente. Disattivato per impostazione predefinita."
     },
     "search": {
       "title": "Ricerca che esce di casa",
@@ -598,7 +536,11 @@
     "removeTokens_one": "{{count}} token API",
     "removeTokens_other": "{{count}} token API",
     "removeChannels_one": "{{count}} canale di notifica",
-    "removeChannels_other": "{{count}} canali di notifica"
+    "removeChannels_other": "{{count}} canali di notifica",
+    "unlink": "Scollega da {{name}}",
+    "unlinkTitle": "Scollegare da {{name}}?",
+    "unlinkBody": "{{account}} non potrà più accedere tramite {{name}} finché l'account non si collegherà di nuovo. La tua password lo conferma.",
+    "unlinked": "Il collegamento con {{name}} è stato rimosso."
   },
   "channels": {
     "push": "Web Push su questo dispositivo",
@@ -1345,5 +1287,15 @@
     "down_one": "{{count}} non risponde",
     "down_other": "{{count}} non rispondono",
     "none": "In questa pagina non ci sono ancora altre schede."
+  },
+  "signIn": {
+    "order": "Sposta {{name}}",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "more": "Altro"
+  },
+  "keyFactor": {
+    "text": "Funziona solo dopo che avrai configurato un secondo fattore.",
+    "link": "Configuralo"
   }
 }

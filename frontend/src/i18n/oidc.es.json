@@ -1,0 +1,132 @@
+{
+  "oidc": {
+    "login": {
+      "button": "Iniciar sesión con {{name}}",
+      "or": "o",
+      "operator": "Iniciar sesión como operador con contraseña"
+    },
+    "invite": {
+      "button": "Continuar con {{name}}"
+    },
+    "admin": {
+      "signInTitle": "Inicio de sesión",
+      "password": "Inicio de sesión con contraseña",
+      "passwordHint": "Desactivado: solo los proveedores dejan entrar. Tú como operador siempre puedes usar tu contraseña.",
+      "address": "Dirección pública",
+      "addressHint": "La dirección con la que se llega a {{app}}. La usan las invitaciones, los proveedores y los enlaces en los correos.",
+      "addressChangeConfirm": "authentik aún conoce la dirección de retorno {{address}}. Tras guardar, el inicio de sesión con authentik vuelve a funcionar solo cuando ejecutes otra vez el botón de “authentik en un paso”.",
+      "addressChangeHand_one": "Para {{count}} proveedor añadido a mano, cambia allí tú mismo la dirección de retorno.",
+      "addressChangeHand_other": "Para {{count}} proveedores añadidos a mano, cambia allí tú mismo la dirección de retorno.",
+      "providersTitle": "Proveedores de inicio de sesión",
+      "providersText": "Cualquier proveedor que hable OpenID Connect: authentik, Microsoft Entra ID, Keycloak, Authelia, Pocket ID. Cada uno tiene un botón en la página de inicio de sesión.",
+      "empty": "Aún no hay proveedores. Configura authentik abajo en un paso o añade un proveedor a mano.",
+      "add": "Añadir un proveedor",
+      "edit": "Editar",
+      "remove": "Quitar",
+      "removeConfirm_one": "¿Quitar “{{name}}”? {{count}} cuenta pierde el vínculo; para {{only}} de ellas es la única forma de entrar.",
+      "removeConfirm_other": "¿Quitar “{{name}}”? {{count}} cuentas pierden el vínculo; para {{only}} de ellas es la única forma de entrar.",
+      "active": "activo",
+      "inactive": "desactivado",
+      "managed": "configurado con authentik",
+      "label": "Nombre en el botón",
+      "slug": "Nombre corto",
+      "slugHint": "Forma parte de la dirección de retorno; no se puede cambiar después.",
+      "issuer": "Emisor (issuer)",
+      "issuerHint": "authentik: https://auth.example.com/application/o/{{app}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-DEL-INQUILINO/v2.0, o common u organizations para varios inquilinos. Entra solo acepta direcciones de retorno https (salvo localhost) y envía la dirección de correo solo como el claim opcional email.",
+      "clientId": "ID de cliente",
+      "secret": "Secreto de cliente",
+      "secretKept": "guardado, deja vacío para conservarlo",
+      "redirect": "Dirección de retorno para el proveedor",
+      "enabled": "Activo",
+      "autoCreate": "Las personas nuevas reciben una cuenta",
+      "autoCreateHint": "Desactivado: por este proveedor solo entran las personas invitadas y las cuentas vinculadas. Activado: quien tenga una cuenta allí recibe una aquí como miembro.",
+      "trustsSecondFactor": "El proveedor comprueba el segundo factor él mismo",
+      "trustsSecondFactorHint": "Desactivado: a quien tenga aquí un segundo factor se le pide el código tras iniciar sesión con el proveedor.",
+      "scopes": "Ámbitos (scopes)",
+      "issuerChangeConfirm_one": "Otro emisor es otro proveedor. {{count}} cuenta tendrá que vincularse de nuevo después.",
+      "issuerChangeConfirm_other": "Otro emisor es otro proveedor. {{count}} cuentas tendrán que vincularse de nuevo después."
+    },
+    "authentik": {
+      "title": "authentik en un paso",
+      "text": "Con un token de API que pueda crear aplicaciones, {{app}} configura él mismo el proveedor y la aplicación en authentik. El token se usa solo para eso y nunca se guarda.",
+      "url": "Dirección de authentik",
+      "token": "Token de API",
+      "run": "Configurar",
+      "blueprint": "Descargar un blueprint en su lugar",
+      "asking": "Un momento, se está consultando a authentik. Puede tardar hasta 20 segundos.",
+      "noAddress": "Aún no hay dirección pública. Ahora mismo llegas a {{app}} con esta dirección, y authentik vuelve a ella tras iniciar sesión:",
+      "adopt": "Usarla y configurar",
+      "adoptOnly": "Solo usarla",
+      "proxyWarning": "El servidor recibe esta petición como {{address}}. Si {{app}} está detrás de un proxy, el proxy tiene que pasar el esquema (X-Forwarded-Proto) y {{app}} tiene que confiar en él (el ajuste de proxys de confianza, ver la documentación).",
+      "stale": "authentik aún conoce la antigua dirección de retorno {{address}}. El inicio de sesión con authentik no funciona hasta que ejecutes el botón otra vez con un token.",
+      "step": {
+        "reached": "Conexión con authentik",
+        "signingKey": "Clave de firma",
+        "mapping": "Asignaciones para nombre y dirección",
+        "provider": "Proveedor",
+        "application": "Aplicación",
+        "filled": "Ajustes aquí",
+        "binding": "Solo tu cuenta"
+      },
+      "why": {
+        "unreachable": "No se llega a authentik en esta dirección. Comprueba la dirección y si {{app}} alcanza esa red.",
+        "unusable": "Esta dirección no se puede usar. Comprueba cómo está escrita.",
+        "token": "authentik no aceptó el token (respuesta {{status}}). Comprueba que sea válido y tenga los permisos necesarios.",
+        "malformed": "El token contiene caracteres que ningún token tiene. Cópialo otra vez de authentik.",
+        "answered": "Algo responde en esta dirección, pero no authentik como se esperaba (respuesta {{status}}). Comprueba la dirección; la respuesta completa está en el registro.",
+        "slug": "Todos los slugs que {{app}} daría a su aplicación ya pertenecen a otras aplicaciones en authentik. Cambia allí el nombre del proveedor de {{app}} e inténtalo de nuevo.",
+        "coupled": "Mientras {{app}} esté acoplado, el inicio de sesión llega por el acoplamiento. Desacopla primero y luego configura authentik aquí.",
+        "issuer_change_one": "Este es otro authentik que antes, es decir, otro emisor. {{count}} cuenta tendrá que vincularse de nuevo después.",
+        "issuer_change_other": "Este es otro authentik que antes, es decir, otro emisor. {{count}} cuentas tendrán que vincularse de nuevo después.",
+        "public_url_needed": "{{app}} aún no tiene dirección pública. Usa la propuesta y {{app}} configurará authentik con ella."
+      }
+    },
+    "account": {
+      "title": "Proveedores de inicio de sesión",
+      "text": "Vincula tu cuenta con un proveedor y podrás iniciar sesión también allí. Tu contraseña confirma que eres tú.",
+      "linked": "Vinculada",
+      "notLinked": "No vinculada",
+      "link": "Vincular",
+      "unlink": "Desvincular",
+      "only": "Esta cuenta inicia sesión solo con {{name}}."
+    },
+    "error": {
+      "oidc_not_configured": "Este proveedor no está configurado.",
+      "oidc_provider_unreachable": "El proveedor no está disponible ahora mismo.",
+      "oidc_provider_invalid": "La respuesta del proveedor no se entiende.",
+      "oidc_issuer_mismatch": "El proveedor se llama de otra forma que lo introducido.",
+      "oidc_state_mismatch": "El inicio de sesión caducó o vino de otro sitio. Inténtalo de nuevo.",
+      "oidc_provider_error": "El proveedor interrumpió el inicio de sesión.",
+      "oidc_token_refused": "El proveedor no canjeó el código.",
+      "oidc_token_invalid": "La respuesta del proveedor no era válida.",
+      "oidc_no_signing_key": "El proveedor firma sin clave. Elige allí una clave de firma para el proveedor.",
+      "oidc_no_account": "Aquí no hay cuenta para ti. Pide una invitación, o inicia sesión con tu contraseña y vincula tu cuenta en Mi cuenta, Seguridad.",
+      "oidc_subject_taken": "Esta identidad ya está vinculada con otra cuenta.",
+      "oidc_only_account": "Esta cuenta inicia sesión solo con este proveedor. El último vínculo se queda.",
+      "oidc_link_mismatch": "Este vínculo pertenece a otra cuenta.",
+      "invite_invalid": "La invitación caducó o ya se usó.",
+      "account_blocked": "Esta cuenta está bloqueada. Dirígete al operador.",
+      "too_many_attempts": "Demasiados intentos. Espera un momento y vuelve a intentarlo."
+    },
+    "formError": {
+      "slug_invalid": "El nombre corto admite de la a a la z, cifras y guiones, hasta 40 caracteres.",
+      "slug_taken": "Otra entrada ya tiene este nombre corto.",
+      "label_required": "Escribe un nombre para el botón.",
+      "issuer_invalid": "El emisor debe empezar por http:// o https://.",
+      "client_id_required": "Escribe el ID de cliente.",
+      "client_secret_invalid": "El secreto de cliente es demasiado largo.",
+      "scopes_invalid": "Los ámbitos deben contener openid.",
+      "provider_managed": "Este proveedor viene de un acoplamiento y solo cambia allí.",
+      "provider_unknown": "Este proveedor ya no existe."
+    },
+    "single": {
+      "admin": {
+        "passwordHint": "Desactivado: tú también inicias sesión solo con un proveedor. Para volver, usa este interruptor o, si ningún proveedor te deja entrar, un comando en el servidor.",
+        "addressHint": "La dirección con la que llegas a {{app}}. Los proveedores te devuelven allí tras iniciar sesión."
+      },
+      "error": {
+        "oidc_no_account": "Esta identidad no está vinculada aquí. Solo entra la identidad vinculada con la cuenta de {{app}}."
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { del, get, post } from '../../api/client'
 import type { ApiToken } from '../../api/types'
+import { KeyFactorHint } from '../../components/KeyFactorHint'
 import { Field } from '../../components/ui'
 import { SettingsCard } from './SettingsCard'
 
@@ -15,6 +16,7 @@ export function TokensSettings() {
   const [fresh, setFresh] = useState<ApiToken | null>(null)
   return (
     <SettingsCard title={t('settings.tokens.title')} description={t('settings.tokens.help')}>
+      <KeyFactorHint />
       <ul className="space-y-1.5 mb-4">
         {(tokens.data ?? []).map((token) => (
           <li key={token.id} className="flex items-center gap-2 rounded-xl border border-line p-2.5 text-sm">

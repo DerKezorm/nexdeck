@@ -11,12 +11,13 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
-import { ApiError, get, post } from '../api/client'
+import { ApiError, get, post, serverUrl } from '../api/client'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { LanguagePill } from '../components/HeaderTools'
 import { Logo } from '../components/Logo'
 import { Field, PasswordInput } from '../components/ui'
 import { useAuth } from '../stores/auth'
+import { oidcErrorKey } from '../vendor/nexoidc/oidc'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -35,7 +36,11 @@ export function LoginPage() {
   const [sent, setSent] = useState(false)
   // The home account's name, when this browser could come in without a password.
   const [home, setHome] = useState<string | null>(null)
-  const oidcError = new URLSearchParams(location.search).get('oidc_error')
+  // A refused sign-in at a provider comes back with ``?error=<code>``; only the module's codes are shown, never
+  // whatever else stands in the address.
+  const oidcError = oidcErrorKey(new URLSearchParams(location.search).get('error'))
+  // With the password switched off the form waits behind the small way in for an administrator.
+  const [operator, setOperator] = useState(false)
   // The provider proved who this is; it did not prove the second factor. The
   // ticket for that is in a short-lived cookie, not in the address, so an
   // empty ticket here is not a mistake.
@@ -199,27 +204,44 @@ export function LoginPage() {
   }
 
   // --- the ordinary way in -------------------------------------------------
+  const providers = status?.providers ?? []
+  const passwordForm = status?.password_login !== false || providers.length === 0 || operator
+  const buttons = providers.length > 0 && (
+    <div className="space-y-2" data-testid="provider-buttons">
+      {providers.map((provider) => (
+        <a key={provider.slug} className="btn w-full h-9" href={serverUrl(`/api/v1/oidc/${provider.slug}/start`)}>
+          {t('oidc.login.button', { name: provider.label })}
+        </a>
+      ))}
+    </div>
+  )
   return shell(
     <form onSubmit={submit}>
-      <Field label={t('auth.username')} htmlFor="username">
-        <input id="username" className="input" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
-      </Field>
-      <Field label={t('auth.password')} htmlFor="password">
-        <PasswordInput id="password" autoComplete="current-password" value={password} onChange={setPassword} />
-      </Field>
       {(error || oidcError) && (
         <p className="text-sm text-bad mb-3" role="alert">
-          {error || t(`auth.oidc.${oidcError}`, { defaultValue: t('auth.oidc.failed') })}
+          {error || (oidcError ? t(oidcError) : '')}
         </p>
       )}
-      <button className="btn btn-accent w-full h-9" type="submit" disabled={busy || !username || !password}>
-        {t('auth.signin')}
-      </button>
-      {/* Only where a link could actually be sent. */}
-      {status?.can_reset_password && (
-        <button className="mt-3 block mx-auto text-xs text-accent underline underline-offset-2" type="button" onClick={() => { setForgetting(true); setError('') }}>
-          {t('auth.forgot.link')}
-        </button>
+      {passwordForm ? (
+        <>
+          <Field label={t('auth.username')} htmlFor="username">
+            <input id="username" className="input" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
+          </Field>
+          <Field label={t('auth.password')} htmlFor="password">
+            <PasswordInput id="password" autoComplete="current-password" value={password} onChange={setPassword} />
+          </Field>
+          <button className="btn btn-accent w-full h-9" type="submit" disabled={busy || !username || !password}>
+            {t('auth.signin')}
+          </button>
+          {/* Only where a link could actually be sent. */}
+          {status?.can_reset_password && status?.password_login !== false && (
+            <button className="mt-3 block mx-auto text-xs text-accent underline underline-offset-2" type="button" onClick={() => { setForgetting(true); setError('') }}>
+              {t('auth.forgot.link')}
+            </button>
+          )}
+        </>
+      ) : (
+        buttons
       )}
       {home !== null && (
         <div className="mt-4 pt-4 border-t border-line">
@@ -237,15 +259,21 @@ export function LoginPage() {
           <p className="text-[11px] text-faint mt-1.5 text-center">{t('auth.home.why')}</p>
         </div>
       )}
-      {status?.providers?.length ? (
-        <div className="mt-4 pt-4 border-t border-line space-y-2">
-          {status.providers.map((provider) => (
-            <a key={provider.slug} className="btn w-full h-9" href={`/api/v1/auth/oidc/${provider.slug}/login`}>
-              {t('auth.with', { name: provider.label })}
-            </a>
-          ))}
-        </div>
-      ) : null}
+      {passwordForm && buttons && (
+        <>
+          <div className="my-4 flex items-center gap-3 text-xs text-faint" aria-hidden="true">
+            <span className="h-px flex-1 bg-[var(--nd-border)]" />
+            {t('oidc.login.or')}
+            <span className="h-px flex-1 bg-[var(--nd-border)]" />
+          </div>
+          {buttons}
+        </>
+      )}
+      {!passwordForm && (
+        <button className="mt-4 block mx-auto text-xs text-accent underline underline-offset-2" type="button" onClick={() => setOperator(true)}>
+          {t('oidc.login.operator')}
+        </button>
+      )}
     </form>,
   )
 }

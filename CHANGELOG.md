@@ -3,6 +3,30 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **Sign-in follows the blueprint every nex app shares.** System → Sign-in has three cards: password sign-in, the public address and the second factor for everybody; the providers, with a dialog per provider, marks for on, off and set up through authentik, a drag handle for the order of the buttons, and a question with numbers before an issuer changes or a provider goes; and authentik in one step, whose steps say in words why one stopped. The sign-in page shows the password form, "or", and a button per provider. The protocol, the linking and the authentik button are a shared module now, the same code and the same tests in every app.
+- **Password sign-in can be switched off** once a provider is active. Administrators can always use their password, so a provider that is down locks nobody out.
+- **Linking asks for the password once more**, and an administrator can unlink an account from a provider in the account list, with their own password.
+- **New providers trust the provider with the second factor** and create no accounts; providers from before keep what they had. A provider no longer offers the administrator role to the accounts it creates: an entry that gave "guest" keeps it, every other one makes members.
+- **"Require a second factor from everybody" holds only accounts with a password**, and not in a session that came through a provider which checks the second factor itself; the API tokens of such an account wait until it sets one up, and the token page says so.
+- **The scheme from a proxy** is the right-most value of `X-Forwarded-Proto`, in any case; with `NEXDECK_TRUSTED_PROXIES` set only those proxies are believed.
+
+### New
+
+- **Microsoft Entra ID**, with `common` or `organizations` for several tenants; every token is checked against the tenant that issued it.
+
+### Fixed
+
+- The authentik button no longer creates a scope mapping of its own; authentik's own mappings for openid, email and profile are used. One made by 0.35 or 0.36 stays in authentik and can be removed there.
+- The issuer of a token is compared letter for letter with what the provider's discovery says, `azp` and the expiry are checked, and a signed userinfo answer is verified.
+
+### Upgrading
+
+The provider table gets new columns and a backup is written before (Backups, "before sign-in providers"). Providers set up before keep their redirect address `/api/v1/auth/oidc/<short name>/callback`; nothing changes at the provider. Going back to 0.36 works for this version: 0.36 finds its columns, and whatever it changes is taken in at the next start (another issuer drops that provider's links, as it should have then).
+
 ## 0.36.0 (2026-10-09)
 
 ### New

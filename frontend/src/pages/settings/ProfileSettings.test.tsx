@@ -7,7 +7,7 @@
  * in the address looked for a second one and reported that there was none.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -15,12 +15,13 @@ import { ProfileSettings } from './ProfileSettings'
 import { LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 
-const calls = vi.hoisted(() => ({ patched: [] as unknown[], posted: [] as string[] }))
+const calls = vi.hoisted(() => ({ patched: [] as unknown[], posted: [] as string[], bodies: [] as unknown[] }))
 vi.mock('../../api/client', () => ({
   ApiError: class ApiError extends Error {},
-  get: vi.fn(async (path: string) => (path === '/auth/oidc/links' ? [{ slug: 'authentik', label: 'authentik', linked: false }] : [])),
-  post: vi.fn(async (path: string) => {
+  get: vi.fn(async (path: string) => (path === '/oidc/me' ? [{ slug: 'authentik', label: 'authentik', linked: false }] : [])),
+  post: vi.fn(async (path: string, body?: unknown) => {
     calls.posted.push(path)
+    calls.bodies.push(body)
     return path.endsWith('/link') ? { url: 'https://auth.example.com/application/o/authorize/?state=x' } : {}
   }),
   del: vi.fn(async () => ({})),
@@ -121,14 +122,20 @@ describe('ProfileSettings', () => {
     expect([...(second as HTMLSelectElement).options].map((option) => option.value)).toEqual(Object.keys(LANGUAGES))
   })
 
-  it('links the account to a provider through the provider itself', async () => {
+  it('links the account to a provider through the provider itself, after the password once more', async () => {
     const assign = vi.fn()
     vi.stubGlobal('location', { assign, search: '', pathname: '/settings' })
     try {
       const user = userEvent.setup()
       show()
-      await user.click(await screen.findByRole('button', { name: 'Link with authentik' }, { timeout: 3000 }))
-      expect(calls.posted).toContain('/auth/oidc/authentik/link')
+      const row = (await screen.findByText('Not linked', {}, { timeout: 3000 })).closest('li')!
+      expect(row).toHaveTextContent('authentik')
+      await user.click(screen.getByRole('button', { name: 'Link' }))
+      const dialog = screen.getByRole('dialog')
+      await user.type(within(dialog).getByLabelText('Your password'), 'my-own-password')
+      await user.click(within(dialog).getByRole('button', { name: 'Link' }))
+      expect(calls.posted).toContain('/oidc/authentik/link')
+      expect(calls.bodies).toContainEqual({ password: 'my-own-password' })
       expect(assign).toHaveBeenCalledWith('https://auth.example.com/application/o/authorize/?state=x')
     } finally {
       vi.unstubAllGlobals()

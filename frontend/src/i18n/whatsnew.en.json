@@ -1269,6 +1269,32 @@
       "small": [
         "Thanks to lucasdillmann, author of nginx ignition, for the integration and for testing every card on a production instance (#34)."
       ]
+    },
+    "0.37.0": {
+      "lead": "Sign-in works like in every nex app now: several providers side by side, Microsoft Entra ID among them, and the password can be switched off once a provider lets people in.",
+      "sections": [
+        {
+          "title": "Sign-in in three cards",
+          "body": "Password sign-in, the public address and the second factor for everybody, then the list of providers with a dialog for each and a drag handle for the order of the buttons, then authentik in one step. Every step of the authentik button says in words why it stopped.",
+          "path": "System > Sign-in"
+        },
+        {
+          "title": "Microsoft Entra ID",
+          "body": "Enter https://login.microsoftonline.com/common/v2.0 (or organizations, or your tenant) as the issuer. Every sign-in is checked against the tenant that issued it.",
+          "path": "System > Sign-in > Add a provider"
+        },
+        {
+          "title": "Password off, administrators keep theirs",
+          "body": "Once a provider is active, the sign-in page can show only its buttons. Administrators can always use their password, so a provider that is down locks nobody out.",
+          "path": "System > Sign-in > Sign-in with a password"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Linking an account to a provider asks for the password once more; an administrator can unlink an account in the account list.",
+        "New providers trust the provider with the second factor; existing ones keep what they had. A provider no longer offers the administrator role to accounts it creates.",
+        "Providers you set up before keep their redirect address, nothing to change at authentik."
+      ]
     }
   }
 }
