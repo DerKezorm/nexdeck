@@ -433,7 +433,7 @@
       "title": "Security",
       "help": "Rules that apply to every account on this installation.",
       "requireTwoFactor": "Require a second factor from everybody",
-      "requireTwoFactorHelp": "Accounts without one are asked to set one up and cannot switch it off again. Kiosk links and API tokens are untouched: a wall display has nobody to type a code."
+      "requireTwoFactorHelp": "Accounts with a password and without a second factor are asked to set one up and cannot switch it off again. Kiosk links are untouched: a wall display has nobody to type a code. The API tokens of such an account wait until it has one."
     },
     "media": {
       "title": "Media",

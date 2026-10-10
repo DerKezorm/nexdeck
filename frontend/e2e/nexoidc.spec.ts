@@ -63,6 +63,16 @@ async function addEntry(page: Page, slug: string, label: string): Promise<void> 
   expect(made.ok(), await made.text()).toBe(true)
 }
 
+/**
+ * The public address of the run: the sign-in sends the provider back there. Without it nexdeck would take the
+ * address of the request, and behind the Vite server of this run that is the backend's own port, which the browser
+ * never opened. Clearing it afterwards asks (a provider may still be listed), so it is confirmed.
+ */
+async function setAddress(page: Page, address: string): Promise<void> {
+  const done = await page.request.patch('/api/v1/settings', { data: { public_url: address, confirm_address: true }, headers: CSRF })
+  expect(done.ok(), await done.text()).toBe(true)
+}
+
 async function nextPerson(claims: Record<string, string>): Promise<void> {
   await fetch(`${ISSUER}/next`, { method: 'POST', body: JSON.stringify(claims) })
 }
@@ -90,22 +100,33 @@ async function linkedMember(page: Page, browser: Browser, slug: string, label: s
   const member = await fresh(browser)
   await signIn(member, MEMBER)
   await member.goto('/settings')
-  const row = member.getByTestId('account-providers').locator('li').filter({ hasText: label })
+  const row = member.getByTestId('account-providers').locator('li').filter({ has: member.getByText(label, { exact: true }) })
   await expect(row).toContainText('Not linked')
   await row.getByRole('button', { name: 'Link' }).click()
   const dialog = member.getByRole('dialog')
   await dialog.getByLabel('Your password').fill(MEMBER.password)
   await dialog.getByRole('button', { name: 'Link' }).click()
-  await expect(member.getByTestId('account-providers').locator('li').filter({ hasText: label })).toContainText('Linked')
+  await expect(member).toHaveURL(/\/settings/)
+  await expect(row).toContainText('Linked')
   await member.context().close()
   void slug
 }
 
-test('33: sign-in through the provider button ends in a session', async ({ page, browser }) => {
+test('33: sign-in through the provider button ends in a session', async ({ page, browser, baseURL }) => {
   await signIn(page, ADMIN)
-  await addEntry(page, 'standin33', 'Stand-in 33')
-  await linkedMember(page, browser, 'standin33', 'Stand-in 33', 'ossie-33')
+  await setAddress(page, baseURL!)
+  try {
+    await addEntry(page, 'standin33', 'Stand-in 33')
+    await linkedMember(page, browser, 'standin33', 'Stand-in 33', 'ossie-33')
+    await signInThroughTheButton(browser)
+  } finally {
+    await removeEntry(page, 'standin33')
+    await removeAccount(page, MEMBER.username)
+    await setAddress(page, '')
+  }
+})
 
+async function signInThroughTheButton(browser: Browser): Promise<void> {
   // A browser without a session: the button on the sign-in page, and in.
   const visitor = await fresh(browser)
   const problems = collectProblems(visitor)
@@ -126,10 +147,7 @@ test('33: sign-in through the provider button ends in a session', async ({ page,
   await expect(stranger).toHaveURL(/\/login\?error=oidc_no_account/)
   await expect(stranger.getByText('There is no account for you here.')).toBeVisible()
   await stranger.context().close()
-
-  await removeEntry(page, 'standin33')
-  await removeAccount(page, MEMBER.username)
-})
+}
 
 test('34: add, edit and remove a provider; the authentik card lists its steps', async ({ page }) => {
   const problems = collectProblems(page)
@@ -152,11 +170,12 @@ test('34: add, edit and remove a provider; the authentik card lists its steps', 
   const list = page.getByTestId('provider-list')
   await expect(list).toContainText('Stand-in')
   await expect(list).toContainText('on')
-  await list.locator('li').filter({ hasText: 'Stand-in' }).getByRole('button', { name: 'Edit' }).click()
+  const row = (name: string) => list.locator('li').filter({ has: page.getByText(name, { exact: true }) })
+  await row('Stand-in').getByRole('button', { name: 'Edit' }).click()
   await page.getByTestId('provider-form').getByLabel('Name on the button').fill('Stand-in 2')
   await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
   await expect(list).toContainText('Stand-in 2')
-  await list.locator('li').filter({ hasText: 'Stand-in 2' }).getByRole('button', { name: 'Remove' }).click()
+  await row('Stand-in 2').getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByRole('dialog')).toContainText('0 accounts lose the link')
   await page.getByRole('dialog').getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('Stand-in 2')).toHaveCount(0)
@@ -175,12 +194,13 @@ test('34: add, edit and remove a provider; the authentik card lists its steps', 
   expect(cleared.ok(), await cleared.text()).toBe(true)
 })
 
-test('pictures for the review: German, light', async ({ page, browser }) => {
+test('pictures for the review: German, light', async ({ page, browser, baseURL }) => {
   test.skip(!process.env.E2E_SHOTS, 'only when E2E_SHOTS names a folder')
   const folder = process.env.E2E_SHOTS!
   const shot = (target: Page, name: string) => target.screenshot({ path: path.join(folder, `${name}.png`), fullPage: true })
   await signIn(page, ADMIN)
   await page.request.patch('/api/v1/auth/me', { data: { locale: 'de', theme: 'light' }, headers: CSRF })
+  await setAddress(page, baseURL!)
   await addEntry(page, 'standin', 'Stand-in')
   await linkedMember(page, browser, 'standin', 'Stand-in', 'ossie-shots')
   await page.goto('/system/sign-in')

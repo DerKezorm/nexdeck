@@ -433,7 +433,7 @@
       "title": "Sicurezza",
       "help": "Regole che valgono per ogni account di questa installazione.",
       "requireTwoFactor": "Richiedi a tutti un secondo fattore",
-      "requireTwoFactorHelp": "Agli account che non ne hanno uno viene chiesto di configurarlo, e non possono più disattivarlo. I link kiosk e i token API non cambiano: davanti a uno schermo a parete non c'è nessuno che digiti un codice."
+      "requireTwoFactorHelp": "Agli account con password e senza secondo fattore viene chiesto di configurarlo, e non possono più disattivarlo. I link kiosk non cambiano: davanti a uno schermo a parete non c'è nessuno che digiti un codice. I token API di un account così aspettano finché non ne ha uno."
     },
     "media": {
       "title": "Media",

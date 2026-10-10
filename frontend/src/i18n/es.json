@@ -433,7 +433,7 @@
       "title": "Seguridad",
       "help": "Reglas que se aplican a todas las cuentas de esta instalación.",
       "requireTwoFactor": "Exigir un segundo factor a todo el mundo",
-      "requireTwoFactorHelp": "A las cuentas sin él se les pide que configuren uno y no pueden volver a desactivarlo. Los enlaces de quiosco y los tokens API no se ven afectados: una pantalla de pared no tiene a nadie que escriba un código."
+      "requireTwoFactorHelp": "A las cuentas con contraseña y sin segundo factor se les pide que configuren uno y no pueden volver a desactivarlo. Los enlaces de quiosco no se ven afectados: una pantalla de pared no tiene a nadie que escriba un código. Los tokens API de una cuenta así esperan hasta que tenga uno."
     },
     "media": {
       "title": "Multimedia",

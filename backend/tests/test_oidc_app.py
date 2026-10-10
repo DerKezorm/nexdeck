@@ -452,3 +452,19 @@ def test_the_account_list_names_the_providers_and_the_administrator_unlinks_with
     assert client.request("DELETE", path, json={"password": "wrong"}, headers=CSRF).status_code == 403
     assert client.request("DELETE", path, json={"password": ADMIN["password"]}, headers=CSRF).status_code == 204
     assert client.get("/api/v1/users").json()[1]["providers"] == []
+
+
+def test_a_short_secret_key_still_starts_a_sign_in(data_dir: Path, monkeypatch: pytest.MonkeyPatch, net: fakes.Network) -> None:
+    """``NEXDECK_SECRET_KEY`` may be short; the module wants 16 bytes and got them hashed (found by the e2e run)."""
+    from app import config, crypto
+    from app.main import app
+
+    monkeypatch.setenv("NEXDECK_SECRET_KEY", "short-key")
+    config.reset_settings_cache()
+    crypto.forget_key()
+    sso = net.add(fakes.FakeProvider())
+    with TestClient(app) as client:
+        setup_admin(client)
+        _add(client, sso, "sso")
+        answer = _browser().get("/api/v1/oidc/sso/start")
+    assert answer.status_code == 303 and answer.headers["location"].startswith(sso.base)

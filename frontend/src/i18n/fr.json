@@ -433,7 +433,7 @@
       "title": "Sécurité",
       "help": "Règles qui s’appliquent à tous les comptes de cette installation.",
       "requireTwoFactor": "Exiger un second facteur de tout le monde",
-      "requireTwoFactorHelp": "Les comptes qui n’en ont pas sont invités à en configurer un et ne peuvent plus le désactiver. Les liens kiosque et les jetons API ne sont pas concernés : devant un écran mural, personne ne saisit de code."
+      "requireTwoFactorHelp": "Les comptes avec un mot de passe et sans second facteur sont invités à en configurer un et ne peuvent plus le désactiver. Les liens kiosque ne sont pas concernés : devant un écran mural, personne ne saisit de code. Les jetons API d’un tel compte attendent qu’il en ait un."
     },
     "media": {
       "title": "Médias",

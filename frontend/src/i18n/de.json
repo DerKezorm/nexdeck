@@ -433,7 +433,7 @@
       "title": "Sicherheit",
       "help": "Regeln, die für jedes Konto dieser Installation gelten.",
       "requireTwoFactor": "Zweiten Faktor von allen verlangen",
-      "requireTwoFactorHelp": "Konten ohne einen werden aufgefordert, einen einzurichten, und können ihn nicht wieder abschalten. Kiosk-Links und API-Marken bleiben unberührt: An einer Wandanzeige steht niemand, der einen Code eintippt."
+      "requireTwoFactorHelp": "Konten mit Passwort und ohne zweiten Faktor werden aufgefordert, einen einzurichten, und können ihn nicht wieder abschalten. Kiosk-Links bleiben unberührt: An einer Wandanzeige steht niemand, der einen Code eintippt. Die API-Marken eines solchen Kontos warten, bis es einen hat."
     },
     "media": {
       "title": "Medien",

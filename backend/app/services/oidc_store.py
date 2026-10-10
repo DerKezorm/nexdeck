@@ -17,6 +17,7 @@ is taken over, an issuer it changed drops the links of the old one, because 0.36
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from typing import Any
@@ -92,7 +93,14 @@ def _save_public_url(url: str) -> None:
 
 
 def _server_secret() -> str:
-    return get_settings().resolved_secret_key()
+    """The installation secret as the module wants it, at least 16 bytes.
+
+    ⚠️ Hashed, not handed over as it is: ``NEXDECK_SECRET_KEY`` may be set to
+    anything, and the module refuses a secret shorter than 16 bytes with an
+    error on every start of a sign-in (found by the end-to-end run, whose key
+    has 15). The module derives its own key from this again.
+    """
+    return hashlib.sha256(b"nexdeck-oidc:" + get_settings().resolved_secret_key().encode("utf-8")).hexdigest()
 
 
 def configure() -> None:
