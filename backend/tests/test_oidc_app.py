@@ -406,6 +406,11 @@ def test_behind_a_tls_proxy_the_sign_in_sends_https_and_a_secure_cookie(client: 
     answer = _browser().get("/api/v1/oidc/sso/start", headers={"X-Forwarded-Proto": "http, HTTPS"})
     assert fakes.query_of(_location(answer))["redirect_uri"].startswith("https://testserver/")
     assert "secure" in answer.headers["set-cookie"].lower()
+    # The session cookie follows the same scheme (``cookie_secure``), not the raw header.
+    signed = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "http, HTTPS"})
+    assert signed.status_code == 200 and "secure" in signed.headers["set-cookie"].lower()
+    plain = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "https, http"})
+    assert plain.status_code == 200 and "secure" not in plain.headers["set-cookie"].lower()
 
 
 # --- Settings, account list ---------------------------------------------------------------------------------------
