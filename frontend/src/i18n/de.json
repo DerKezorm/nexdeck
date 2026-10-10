@@ -540,7 +540,8 @@
     "unlink": "Verknüpfung mit {{name}} lösen",
     "unlinkTitle": "Verknüpfung mit {{name}} lösen?",
     "unlinkBody": "{{account}} kann sich dann nicht mehr über {{name}} anmelden, bis das Konto sich neu verknüpft. Dein Passwort bestätigt es.",
-    "unlinked": "Die Verknüpfung mit {{name}} ist gelöst."
+    "unlinked": "Die Verknüpfung mit {{name}} ist gelöst.",
+    "moreFor": "Mehr für {{name}}"
   },
   "channels": {
     "push": "Web Push auf diesem Gerät",

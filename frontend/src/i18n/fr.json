@@ -540,7 +540,8 @@
     "unlink": "Délier de {{name}}",
     "unlinkTitle": "Délier de {{name}} ?",
     "unlinkBody": "{{account}} ne pourra plus se connecter via {{name}} tant que le compte ne se sera pas lié de nouveau. Ton mot de passe le confirme.",
-    "unlinked": "Le lien avec {{name}} est retiré."
+    "unlinked": "Le lien avec {{name}} est retiré.",
+    "moreFor": "Plus pour {{name}}"
   },
   "channels": {
     "push": "Web Push sur cet appareil",

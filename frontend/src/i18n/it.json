@@ -540,7 +540,8 @@
     "unlink": "Scollega da {{name}}",
     "unlinkTitle": "Scollegare da {{name}}?",
     "unlinkBody": "{{account}} non potrà più accedere tramite {{name}} finché l'account non si collegherà di nuovo. La tua password lo conferma.",
-    "unlinked": "Il collegamento con {{name}} è stato rimosso."
+    "unlinked": "Il collegamento con {{name}} è stato rimosso.",
+    "moreFor": "Altro per {{name}}"
   },
   "channels": {
     "push": "Web Push su questo dispositivo",

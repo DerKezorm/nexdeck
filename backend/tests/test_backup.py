@@ -255,6 +255,38 @@ def test_a_restore_puts_the_old_state_back(client: TestClient) -> None:
     assert not any(u["username"] == "kim" for u in after.get("/api/v1/users").json()), "kim came after the backup"
 
 
+def test_a_backup_of_036_brings_its_sign_in_providers_along_without_a_restart(client: TestClient) -> None:
+    """⚠️ The migrations only add the new columns; the secrets and the old callbacks come in with ``sync_list``, which
+    the start runs. A restore into a running nexdeck must do the same, or every provider keeps an empty secret and the
+    new callback (the one its provider does not know) until somebody restarts."""
+    from sqlalchemy import select, text
+
+    from app.crypto import decrypt_for, encrypt
+    from app.db import db_session, get_engine
+    from app.models import OidcProvider
+    from app.services import oidc_store
+
+    setup_admin(client)
+    # The database as 0.36 left it: the secret in the old column only, nothing in the new ones, no list noted.
+    with get_engine().begin() as connection:
+        connection.execute(text("DELETE FROM settings WHERE key = 'oidc_list'"))
+        connection.execute(text("DELETE FROM schema_version WHERE version >= 19"))
+        connection.execute(
+            text("INSERT INTO oidc_providers (slug, label, issuer_url, client_id, client_secret, scopes, enabled,"
+                 " auto_create, default_role, trusts_second_factor) VALUES ('kc', 'Keycloak',"
+                 " 'https://kc.example.com/realms/home', 'c', :s, 'openid', 1, 0, 'user', 0)"),
+            {"s": encrypt("the-real-secret")},
+        )
+    blob = _archive(client, _make(client)["name"])
+    oidc_store.sync_list()  # the running instance is fine, the archive is not
+
+    assert _upload(client, blob).status_code == 200
+    with db_session() as db:
+        row = db.scalars(select(OidcProvider)).one()
+        assert decrypt_for(row.client_secret_enc, f"oidc-provider:{row.id}") == "the-real-secret"
+        assert row.redirect_path == "/api/v1/auth/oidc/kc/callback"
+
+
 def test_a_restore_signs_everybody_out(client: TestClient) -> None:
     """⚠️ This does not happen by itself. Session cookies are signed with the
     secret key, and a backup of the same installation carries the same key, so

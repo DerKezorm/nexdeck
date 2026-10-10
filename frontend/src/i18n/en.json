@@ -540,7 +540,8 @@
     "unlink": "Unlink {{name}}",
     "unlinkTitle": "Unlink {{name}}?",
     "unlinkBody": "{{account}} can no longer sign in through {{name}} until the account links again. Your password confirms it.",
-    "unlinked": "The link to {{name}} is removed."
+    "unlinked": "The link to {{name}} is removed.",
+    "moreFor": "More for {{name}}"
   },
   "channels": {
     "push": "Web Push on this device",

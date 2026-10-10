@@ -540,7 +540,8 @@
     "unlink": "Desvincular de {{name}}",
     "unlinkTitle": "¿Desvincular de {{name}}?",
     "unlinkBody": "{{account}} ya no podrá iniciar sesión con {{name}} hasta que la cuenta se vincule de nuevo. Tu contraseña lo confirma.",
-    "unlinked": "El vínculo con {{name}} se ha quitado."
+    "unlinked": "El vínculo con {{name}} se ha quitado.",
+    "moreFor": "Más para {{name}}"
   },
   "channels": {
     "push": "Web Push en este dispositivo",

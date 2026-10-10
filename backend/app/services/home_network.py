@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import ipaddress
 import os
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -86,6 +87,9 @@ class RecordPeer:
         if scope.get("type") in ("http", "websocket") and "nexdeck.peer" not in scope:
             client = scope.get("client")
             scope["nexdeck.peer"] = client[0] if client else ""
+            # The scheme of the connection itself, before ``ProxyHeadersMiddleware`` below takes one from a header
+            # (``public_base``).
+            scope["nexdeck.scheme"] = scope.get("scheme") or "http"
             scope["headers"] = forwarded_proto_headers(scope.get("headers") or [], scope["nexdeck.peer"])
         await self.inner(scope, receive, send)
 
@@ -93,8 +97,9 @@ class RecordPeer:
 def forwarded_proto_headers(headers: list[tuple[bytes, bytes]], peer: str) -> list[tuple[bytes, bytes]]:
     """``X-Forwarded-Proto`` as uvicorn may take it, or not at all.
 
-    The scheme decides the redirect address the sign-in sends to a provider and
-    whether cookies are ``Secure`` (sign-in blueprint, "Hinter einem Proxy").
+    The scheme decides whether cookies are ``Secure`` (sign-in blueprint, "Hinter
+    einem Proxy"); the redirect address of the sign-in does not rest on it
+    (``public_base``).
     uvicorn believed it only when the whole header was exactly ``http`` or
     ``https``: a chain of proxies writes ``https, http`` and a proxy may write
     ``HTTPS``, and both were dropped. Now the right-most value counts (the
@@ -116,6 +121,34 @@ def forwarded_proto_headers(headers: list[tuple[bytes, bytes]], peer: str) -> li
     if last not in ("http", "https"):
         return kept
     return [*kept, (name, last.encode("latin-1"))]
+
+
+_HOST = re.compile(r"^(?:[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?|\[[0-9A-Fa-f:.]+\])(?::\d{1,5})?$")
+
+
+def public_base(request: Request) -> str:
+    """The address the sign-in takes for itself when no public address is set (``request_base`` of the module).
+
+    The real one of the request: the scheme of the connection and the ``Host`` header. Scheme and host out of the
+    forwarding headers (``X-Forwarded-Proto``, ``X-Forwarded-Host``) only when the sender is named in
+    ``NEXDECK_TRUSTED_PROXIES``, the right-most value, ``http`` or ``https`` in any case. Without that variable
+    nobody is believed: a header any visitor can send must not decide the redirect address the sign-in hands to a
+    provider. (The ``Secure`` flag of the session cookie keeps following ``X-Forwarded-Proto`` as it always did,
+    ``cookie_secure``.)
+    """
+    url = request.url
+    scheme = str(request.scope.get("nexdeck.scheme") or url.scheme)
+    host = url.netloc
+    proxies = trusted_proxies()
+    sender = _ip(str(request.scope.get("nexdeck.peer") or ""))
+    if proxies and sender is not None and _inside(sender, proxies):
+        proto = request.headers.get("x-forwarded-proto", "").split(",")[-1].strip().lower()
+        if proto in ("http", "https"):
+            scheme = proto
+        named = request.headers.get("x-forwarded-host", "").split(",")[-1].strip()
+        if named and _HOST.match(named):
+            host = named
+    return str(request.base_url.replace(scheme=scheme, netloc=host))
 
 
 def trusted_proxies() -> list[Network]:

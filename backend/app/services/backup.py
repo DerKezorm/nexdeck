@@ -702,6 +702,11 @@ def restore(data: bytes, password: str, *, without_safety_copy: bool = False) ->
     # An older backup is missing columns and tables; the ordinary startup path
     # brings them in.
     migrate()
+    # What the start does after the migrations as well (``main.lifespan``): a backup of 0.36 has the sign-in
+    # providers in the old columns only, and without this the secrets and the callbacks stay empty until a restart.
+    from .oidc_store import sync_list
+
+    sync_list()
     _sign_everybody_out()
 
     logger.info("Backup restored: version %s from %s.", profile.version, profile.created_at or "?")

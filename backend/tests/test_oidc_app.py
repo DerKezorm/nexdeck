@@ -55,10 +55,10 @@ def _round_trip(client: TestClient, fake: fakes.FakeProvider, slug: str) -> Any:
     return client.get(f"{back}?{urlencode(fake.authorize(target))}", follow_redirects=False)
 
 
-def _browser() -> TestClient:
+def _browser(peer: str = "testclient") -> TestClient:
     from app.main import app
 
-    return TestClient(app, base_url="http://testserver", follow_redirects=False)
+    return TestClient(app, base_url="http://testserver", follow_redirects=False, client=(peer, 50000))
 
 
 def _db() -> Any:
@@ -359,6 +359,35 @@ def test_a_provider_called_authentik_is_not_hidden_by_the_routes_of_the_button(
     assert _location(old).startswith("/login?error=")
 
 
+def test_the_old_start_route_of_036_still_starts_the_sign_in(client: TestClient, net: fakes.Network) -> None:
+    """A bookmark of ``/api/v1/auth/oidc/<slug>/login`` leads to the same start as the new route."""
+    setup_admin(client)
+    sso = net.add(fakes.FakeProvider())
+    _add(client, sso, "sso")
+    old = _browser().get("/api/v1/auth/oidc/sso/login")
+    assert _location(old).startswith(sso.base)
+    assert "set-cookie" in old.headers
+    assert _location(_browser().get("/api/v1/auth/oidc/nobody/login")).startswith("/login?error=")
+
+
+def test_an_account_has_one_link_per_provider(client: TestClient, net: fakes.Network) -> None:
+    """The database refuses a second link of the same account to the same provider (two subjects, one account)."""
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models import OidcLink
+
+    setup_admin(client)
+    sso = net.add(fakes.FakeProvider())
+    entry = _add(client, sso, "sso")
+    alex = create_user(client, "alex")
+    with _db() as db:
+        db.add(OidcLink(provider_id=entry["id"], account_id=alex["id"], subject="one", issuer=sso.issuer, email=""))
+        db.commit()
+        db.add(OidcLink(provider_id=entry["id"], account_id=alex["id"], subject="two", issuer=sso.issuer, email=""))
+        with pytest.raises(IntegrityError):
+            db.commit()
+
+
 def test_a_return_without_its_own_attempt_never_feeds_the_brake(client: TestClient, net: fakes.Network) -> None:
     from app.services import login_guard
 
@@ -399,14 +428,60 @@ def test_the_scheme_comes_from_the_rightmost_forwarded_proto_of_a_trusted_sender
     assert (b"host", b"deck.example.com") in headers
 
 
-def test_behind_a_tls_proxy_the_sign_in_sends_https_and_a_secure_cookie(client: TestClient, net: fakes.Network) -> None:
+def _redirect_uri_of(answer: Any) -> str:
+    return fakes.query_of(_location(answer))["redirect_uri"]
+
+
+def test_a_stranger_cannot_move_the_redirect_address_with_forwarding_headers(
+    client: TestClient, net: fakes.Network
+) -> None:
+    """Without a public address the sign-in takes the address of the request, and ``X-Forwarded-Proto`` and
+    ``X-Forwarded-Host`` from a visitor nobody named do not change it."""
     setup_admin(client)
     sso = net.add(fakes.FakeProvider())
     _add(client, sso, "sso")
-    answer = _browser().get("/api/v1/oidc/sso/start", headers={"X-Forwarded-Proto": "http, HTTPS"})
-    assert fakes.query_of(_location(answer))["redirect_uri"].startswith("https://testserver/")
-    assert "secure" in answer.headers["set-cookie"].lower()
-    # The session cookie follows the same scheme (``cookie_secure``), not the raw header.
+    forged = {"X-Forwarded-Proto": "https", "X-Forwarded-Host": "evil.example"}
+    answer = _browser().get("/api/v1/oidc/sso/start", headers=forged)
+    assert _redirect_uri_of(answer).startswith("http://testserver/")
+    # Named proxies exist, this sender is not one of them: the same.
+    import os
+
+    os.environ["NEXDECK_TRUSTED_PROXIES"] = "10.0.0.0/8"
+    try:
+        stranger = _browser("203.0.113.9").get("/api/v1/oidc/sso/start", headers=forged)
+        assert _redirect_uri_of(stranger).startswith("http://testserver/")
+    finally:
+        del os.environ["NEXDECK_TRUSTED_PROXIES"]
+    # The card for the address says the proxy is not believed.
+    seen = client.get("/api/v1/oidc/authentik/address", headers=forged).json()
+    assert seen["redirect_uri"].startswith("http://testserver/") and seen["proxy_ignored"] is True
+
+
+@pytest.mark.parametrize(
+    ("proto", "host", "expected"),
+    [
+        ("http, HTTPS", "deck.example.com", "https://deck.example.com/"),
+        ("https, http", "deck.example.com", "http://deck.example.com/"),
+        ("ftp", "deck.example.com", "http://deck.example.com/"),
+        ("https", "other.example, deck.example.com:8443", "https://deck.example.com:8443/"),
+        ("https", "bad host/../x", "https://testserver/"),
+    ],
+)
+def test_a_named_proxy_gives_the_scheme_and_the_host_the_sign_in_sends(
+    client: TestClient, net: fakes.Network, monkeypatch: pytest.MonkeyPatch, proto: str, host: str, expected: str
+) -> None:
+    monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", "10.0.0.0/8")
+    setup_admin(client)
+    sso = net.add(fakes.FakeProvider())
+    _add(client, sso, "sso")
+    answer = _browser("10.1.2.3").get("/api/v1/oidc/sso/start", headers={"X-Forwarded-Proto": proto, "X-Forwarded-Host": host})
+    assert _redirect_uri_of(answer).startswith(expected)
+    assert ("secure" in answer.headers["set-cookie"].lower()) is expected.startswith("https")
+
+
+def test_the_session_cookie_still_follows_the_forwarded_scheme(client: TestClient) -> None:
+    """The ``Secure`` flag of the session cookie is not part of the redirect address and stays as it was."""
+    setup_admin(client)
     signed = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "http, HTTPS"})
     assert signed.status_code == 200 and "secure" in signed.headers["set-cookie"].lower()
     plain = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "https, http"})

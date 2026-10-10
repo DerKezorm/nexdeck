@@ -48,6 +48,7 @@ from ..deps import AdminUser, CurrentUser, PasswordUser, error, refuse_at_home
 from ..models import User
 from ..security import create_step_token, has_usable_password, verify_password
 from ..services import login_guard
+from ..services.home_network import public_base
 from ..services.oidc_store import SqlStore
 from ..vendor.nexoidc import OidcError, ProviderInvalid, authentik, flow, providers
 from ..vendor.nexoidc import accounts as oidc_accounts
@@ -111,7 +112,8 @@ def store() -> Iterator[SqlStore]:
 
 
 def _base(request: Request) -> str:
-    return str(request.base_url)
+    # Not ``request.base_url``: that carries the scheme a forwarding header gave, from anybody (``public_base``).
+    return public_base(request)
 
 
 def _sender(request: Request) -> str:
@@ -371,6 +373,9 @@ def operator_unlink(
     request: Request,
     admin: AdminUser,
 ) -> None:
+    # An account opened at home without a password is never an administrator (``home_network.store``), so
+    # ``AdminUser`` already keeps such a session out; this says it once more where an account is taken apart,
+    # should that rule ever loosen. There is no test of its own: no session could reach it today.
     refuse_at_home(request)
     sender = _sender(request)
     try:

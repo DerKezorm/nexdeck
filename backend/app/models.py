@@ -218,7 +218,9 @@ class OidcProvider(Base):
     #: Rows stored before keep their value.
     auto_create: Mapped[bool] = mapped_column(Boolean, default=False)
     #: The role 0.36 gave accounts it created. Kept for the way back; nexdeck
-    #: no longer offers it in the form (``services/oidc_store.NEW_ACCOUNT_ROLE``).
+    #: no longer offers it in the form and reads it only through
+    #: ``services/oidc_store.role_for_new_account`` ("guest" stays, anything else
+    #: makes members).
     default_role: Mapped[str] = mapped_column(String(16), default=Role.user.value)
     #: "The provider checks the second factor itself". On for new entries
     #: (blueprint 01); entries from before keep the value they had, off by

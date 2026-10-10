@@ -12,7 +12,7 @@ project uses semantic versioning.
 - **Linking asks for the password once more**, and an administrator can unlink an account from a provider in the account list, with their own password.
 - **New providers trust the provider with the second factor** and create no accounts; providers from before keep what they had. A provider no longer offers the administrator role to the accounts it creates: an entry that gave "guest" keeps it, every other one makes members.
 - **"Require a second factor from everybody" holds only accounts with a password**, and not in a session that came through a provider which checks the second factor itself; the API tokens of such an account wait until it sets one up, and the token page says so.
-- **The scheme from a proxy** is the right-most value of `X-Forwarded-Proto`, in any case; with `NEXDECK_TRUSTED_PROXIES` set only those proxies are believed.
+- **The scheme from a proxy** is the right-most value of `X-Forwarded-Proto`, in any case; with `NEXDECK_TRUSTED_PROXIES` set only those proxies are believed. That decides the `Secure` flag of cookies. The redirect address of the sign-in, when no public address is set, takes scheme and host from `X-Forwarded-Proto` and `X-Forwarded-Host` only from a proxy named in `NEXDECK_TRUSTED_PROXIES`; by default from nobody, then it is the address the request came in on.
 
 ### New
 

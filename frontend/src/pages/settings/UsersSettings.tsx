@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Trash2, X } from 'lucide-react'
-import { useState } from 'react'
+import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
@@ -39,6 +39,24 @@ export function UsersSettings() {
   // The administrator unlinks an account from a provider with the own password (sign-in blueprint 01).
   const [unlinking, setUnlinking] = useState<{ user: User; provider: LinkedProvider } | null>(null)
   const [ownPassword, setOwnPassword] = useState('')
+  // The menu per account ("Unlink <provider>", sign-in blueprint 04): one at a time, closed by a click elsewhere or Escape.
+  const [menuFor, setMenuFor] = useState<number | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (menuFor === null) return
+    const away = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuFor(null)
+    }
+    const key = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuFor(null)
+    }
+    window.addEventListener('mousedown', away)
+    window.addEventListener('keydown', key)
+    return () => {
+      window.removeEventListener('mousedown', away)
+      window.removeEventListener('keydown', key)
+    }
+  }, [menuFor])
   const owned = belongings.data?.boards ?? []
   const alsoOnIt = [
     belongings.data?.kiosk_tokens ? t('users.removeKiosk', { count: belongings.data.kiosk_tokens }) : '',
@@ -61,25 +79,46 @@ export function UsersSettings() {
                 {(user.providers ?? []).length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1" data-testid="account-providers">
                     {(user.providers ?? []).map((provider) => (
-                      <span key={provider.provider_id} className="chip !py-0 text-[10px] inline-flex items-center gap-1">
+                      <span key={provider.provider_id} className="chip !py-0 text-[10px]">
                         {provider.label}
-                        <button
-                          type="button"
-                          className="text-faint hover:text-bad"
-                          aria-label={t('users.unlink', { name: provider.label })}
-                          title={t('users.unlink', { name: provider.label })}
-                          onClick={() => {
-                            setOwnPassword('')
-                            setUnlinking({ user, provider })
-                          }}
-                        >
-                          <X size={10} />
-                        </button>
                       </span>
                     ))}
                   </div>
                 )}
               </div>
+              {(user.providers ?? []).length > 0 && (
+                <div className="relative" ref={menuFor === user.id ? menuRef : undefined}>
+                  <button
+                    type="button"
+                    className="btn btn-icon h-8 w-8"
+                    aria-haspopup="menu"
+                    aria-expanded={menuFor === user.id}
+                    aria-label={t('users.moreFor', { name: user.display_name || user.username })}
+                    onClick={() => setMenuFor(menuFor === user.id ? null : user.id)}
+                  >
+                    <MoreHorizontal size={14} />
+                  </button>
+                  {menuFor === user.id && (
+                    <div className="absolute right-0 top-9 z-50 glass-strong rounded-xl p-1 min-w-56 shadow-2xl" role="menu">
+                      {(user.providers ?? []).map((provider) => (
+                        <button
+                          key={provider.provider_id}
+                          type="button"
+                          role="menuitem"
+                          className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-surface-hover"
+                          onClick={() => {
+                            setMenuFor(null)
+                            setOwnPassword('')
+                            setUnlinking({ user, provider })
+                          }}
+                        >
+                          {t('users.unlink', { name: provider.label })}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <Select className="!w-32 !h-8" value={user.role} onChange={(role) => void patch(`/users/${user.id}`, { role }).then(() => users.refetch()).catch(fail)} options={roles} />
               {user.id !== me?.id && (
                 <>
