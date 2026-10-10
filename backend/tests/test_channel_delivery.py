@@ -16,6 +16,9 @@ import json
 import socket
 import threading
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
+from email import message_from_string
+from email.utils import parsedate_to_datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
@@ -188,6 +191,25 @@ def test_the_mail_channel_delivers_a_message(client: TestClient, smtp: SmtpCatch
     assert mail["to"] == ["<you@example.com>"]
     assert "Subject: [nexdeck] nexdeck test message" in mail["body"]
     assert "the channel works" in mail["body"]
+
+
+def test_mail_carries_one_date_and_a_message_id(client: TestClient, smtp: SmtpCatcher) -> None:
+    """Without Date, iCloud, Outlook and Gmail drop the mail silently; smtplib adds neither field."""
+    setup_admin(client)
+    stored = client.put("/api/v1/settings/mail", json={
+        "host": "127.0.0.1", "port": smtp.port, "security": "none",
+        "from_address": "deck@example.com", "from_name": "nexdeck",
+    }, headers=CSRF)
+    assert stored.status_code == 200, stored.text
+    before = datetime.now(UTC) - timedelta(seconds=5)
+    result = send_through(client, "email", {"to_address": "you@example.com"})
+    assert result["ok"] is True, result
+    parsed = message_from_string(smtp.mails[0]["body"])
+    dates = parsed.get_all("Date")
+    assert dates is not None and len(dates) == 1
+    assert before <= parsedate_to_datetime(dates[0]) <= datetime.now(UTC) + timedelta(seconds=5)
+    ids = parsed.get_all("Message-ID")
+    assert ids is not None and len(ids) == 1 and ids[0].endswith("@example.com>")
 
 
 def test_ntfy_posts_to_the_topic_with_its_headers(client: TestClient, http: HttpCatcher) -> None:

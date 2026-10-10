@@ -14,7 +14,7 @@ import logging
 import re
 import smtplib
 from email.message import EmailMessage
-from email.utils import formataddr
+from email.utils import formataddr, formatdate, make_msgid
 from typing import Any
 
 from sqlalchemy.orm import Session as DbSessionType
@@ -111,6 +111,10 @@ def send(config: dict[str, Any], to_address: str, subject: str, body: str) -> No
     mail["Subject"] = subject
     mail["From"] = formataddr((config["from_name"] or "nexdeck", config["from_address"]))
     mail["To"] = to_address
+    # Pflichtfeld nach RFC 5322. smtplib ergaenzt weder Date noch Message-ID, und ohne
+    # Date verwerfen iCloud, Outlook und Gmail die Mail still.
+    mail["Date"] = formatdate(localtime=True)
+    mail["Message-ID"] = make_msgid(domain=config["from_address"].split("@")[-1])
     mail.set_content(body)
 
     port = int(config["port"] or 587)
