@@ -76,6 +76,7 @@ def _user_from_cookie(request: Request, db: DbSessionType) -> User | None:
             return None
     _touch_session(db, session)
     request.state.auth_kind = "home" if session.kind == "home" else "session"
+    request.state.session_kind = session.kind
     return user
 
 
@@ -137,7 +138,7 @@ def _kept_at_the_door(request: Request, db: DbSessionType, user: User) -> bool:
 
     if any(request.url.path.startswith(allowed) for allowed in PENDING_FACTOR_PATHS):
         return False
-    return two_factor.must_set_up(db, user)
+    return two_factor.must_set_up(db, user, getattr(request.state, "session_kind", None))
 
 
 def optional_user(request: Request, db: DbSession) -> User | None:

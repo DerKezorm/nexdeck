@@ -11,7 +11,7 @@ import logging
 from collections.abc import Callable
 
 from sqlalchemy import inspect, text
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, Engine
 
 from .db import get_engine
 from .models import Base
@@ -170,6 +170,39 @@ def _check_since_column(connection: Connection) -> None:
     connection.execute(text("UPDATE health_checks SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
 
 
+def _provider_list_columns(connection: Connection) -> None:
+    """The columns of the shared sign-in blueprint (part 01), added beside the ones 0.36 reads.
+
+    ⚠️ Added, not renamed, and every one with a default the database knows:
+    an operator who goes back to 0.36 keeps a table 0.36 can read and write.
+    ``created_at`` cannot get ``CURRENT_TIMESTAMP`` as a default in SQLite's
+    ``ADD COLUMN``, so it is filled once here and by nexdeck on every insert.
+    What only nexdeck can work out (the secret under its own context, the old
+    callback, the order, the entry of the authentik button) is done at every
+    start by ``services/oidc_store.sync_list``, because 0.36 may have changed
+    rows in between.
+    """
+    _add_column(connection, "oidc_providers", "client_secret_enc", "TEXT NOT NULL DEFAULT ''")
+    _add_column(connection, "oidc_providers", "managed", "VARCHAR(20) NOT NULL DEFAULT ''")
+    _add_column(connection, "oidc_providers", "position", "INTEGER NOT NULL DEFAULT 0")
+    _add_column(connection, "oidc_providers", "redirect_path", "VARCHAR(300) NOT NULL DEFAULT ''")
+    _add_column(connection, "oidc_providers", "created_at", "DATETIME")
+    _add_column(connection, "oidc_providers", "registered_redirect", "VARCHAR(500) NOT NULL DEFAULT ''")
+    _add_column(connection, "oidc_links", "issuer", "VARCHAR(500) NOT NULL DEFAULT ''")
+    _add_column(connection, "oidc_links", "created_at", "DATETIME")
+    _add_column(connection, "oidc_links", "last_used_at", "DATETIME")
+    connection.execute(text("UPDATE oidc_providers SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
+    connection.execute(text("UPDATE oidc_links SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
+    # One identity per provider and account. 0.36 replaced an account's link when it linked again, so a
+    # duplicate cannot come from it; should one exist anyway, the newest stays.
+    connection.execute(text(
+        "DELETE FROM oidc_links WHERE id NOT IN (SELECT MAX(id) FROM oidc_links GROUP BY provider_id, user_id)"
+    ))
+    connection.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_oidc_links_provider_account ON oidc_links (provider_id, user_id)"
+    ))
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -189,13 +222,38 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (16, "Each account chooses the two languages in its top bar", _language_pair_column),
     (17, "A wall display can rest on a large clock", _rest_column),
     (18, "A reachability check knows since when it measures", _check_since_column),
+    (19, "Sign-in providers follow the shared blueprint", _provider_list_columns),
 ]
+
+
+#: The migration that brings the sign-in providers to the shared blueprint; a backup is written before it.
+PROVIDER_LIST_VERSION = 19
+
+
+def _backup_before_the_provider_list(engine: Engine) -> None:
+    """A restore point before the sign-in providers change shape, when there are any.
+
+    Written as a manual backup, so the automatic rotation never throws it away.
+    """
+    names = set(inspect(engine).get_table_names())
+    if "schema_version" not in names or "oidc_providers" not in names:
+        return
+    with engine.connect() as connection:
+        current = int(connection.execute(text("SELECT MAX(version) FROM schema_version")).scalar() or 0)
+        rows = int(connection.execute(text("SELECT COUNT(*) FROM oidc_providers")).scalar() or 0)
+    if current >= PROVIDER_LIST_VERSION or not rows:
+        return
+    from .services import backup
+
+    backup.create(kind=backup.MANUAL, note="before sign-in providers")
 
 
 def migrate() -> None:
     engine = get_engine()
     # Asked before ``create_all``, which would answer it the same for every database.
     fresh = not set(Base.metadata.tables) & set(inspect(engine).get_table_names())
+    if not fresh:
+        _backup_before_the_provider_list(engine)
     Base.metadata.create_all(engine)
     newest = max((number for number, _name, _step in MIGRATIONS), default=0)
     with engine.begin() as connection:

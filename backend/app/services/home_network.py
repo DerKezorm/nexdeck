@@ -86,7 +86,36 @@ class RecordPeer:
         if scope.get("type") in ("http", "websocket") and "nexdeck.peer" not in scope:
             client = scope.get("client")
             scope["nexdeck.peer"] = client[0] if client else ""
+            scope["headers"] = forwarded_proto_headers(scope.get("headers") or [], scope["nexdeck.peer"])
         await self.inner(scope, receive, send)
+
+
+def forwarded_proto_headers(headers: list[tuple[bytes, bytes]], peer: str) -> list[tuple[bytes, bytes]]:
+    """``X-Forwarded-Proto`` as uvicorn may take it, or not at all.
+
+    The scheme decides the redirect address the sign-in sends to a provider and
+    whether cookies are ``Secure`` (sign-in blueprint, "Hinter einem Proxy").
+    uvicorn believed it only when the whole header was exactly ``http`` or
+    ``https``: a chain of proxies writes ``https, http`` and a proxy may write
+    ``HTTPS``, and both were dropped. Now the right-most value counts (the
+    nearest proxy wrote it), in any case, and only ``http`` or ``https``; for a
+    WebSocket uvicorn makes ``ws`` or ``wss`` of it. With
+    ``NEXDECK_TRUSTED_PROXIES`` set, only those proxies are believed; without
+    it, every sender, as before.
+    """
+    name = b"x-forwarded-proto"
+    values = [value for key, value in headers if key.lower() == name]
+    if not values:
+        return headers
+    kept = [(key, value) for key, value in headers if key.lower() != name]
+    proxies = trusted_proxies()
+    sender = _ip(peer)
+    if proxies and (sender is None or not _inside(sender, proxies)):
+        return kept
+    last = values[-1].decode("latin-1").split(",")[-1].strip().lower()
+    if last not in ("http", "https"):
+        return kept
+    return [*kept, (name, last.encode("latin-1"))]
 
 
 def trusted_proxies() -> list[Network]:

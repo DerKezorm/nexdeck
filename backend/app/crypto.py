@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 
@@ -106,3 +107,46 @@ def decrypt(value: str) -> str:
 
 def is_encrypted(value: str) -> bool:
     return value.startswith(PREFIX)
+
+
+#: Stretched keys by the secret they came from, for ``encrypt_for``.
+_stretched: dict[bytes, bytes] = {}
+
+
+def _context_fernet(context: str) -> Fernet:
+    """A key of its own for one purpose, derived from the stretched installation key.
+
+    One provider's ciphertext does not open under another's context: copying
+    the stored secret of one row into another gives nothing (blueprint 01,
+    ``oidc-provider:<id>``). The stretching is paid once per secret.
+    """
+    secret = get_settings().resolved_secret_key().encode("utf-8")
+    stretched = _stretched.get(secret)
+    if stretched is None:
+        stretched = base64.urlsafe_b64decode(_key_from(secret))
+        if len(_stretched) < 8:
+            _stretched[secret] = stretched
+    derived = hmac.new(stretched, b"nexdeck-context:" + context.encode("utf-8"), hashlib.sha256).digest()
+    return Fernet(base64.urlsafe_b64encode(derived))
+
+
+def encrypt_for(value: str, context: str) -> str:
+    """Encrypt under a context; "" stays "" (a public client has no secret)."""
+    if not value:
+        return ""
+    return PREFIX + _context_fernet(context).encrypt(value.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_for(value: str, context: str) -> str:
+    """The counterpart of ``encrypt_for``; raises ``SecretUnreadable`` under another key or context."""
+    if not value:
+        return ""
+    if not value.startswith(PREFIX):
+        raise SecretUnreadable("A stored secret is not encrypted.")
+    try:
+        return _context_fernet(context).decrypt(value[len(PREFIX) :].encode("utf-8")).decode("utf-8")
+    except InvalidToken as error:
+        raise SecretUnreadable(
+            "A stored secret cannot be decrypted. The NEXDECK_SECRET_KEY or the "
+            "data/secret.key file no longer matches the database."
+        ) from error

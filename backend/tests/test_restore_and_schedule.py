@@ -141,7 +141,9 @@ def test_every_migration_runs_against_a_database_that_predates_it(data_dir: Path
         "boards": ("in_menu",),
         "integrations": ("admin_only",),
         "api_tokens": ("expires_at", "revoked"),
-        "oidc_providers": ("trusts_second_factor",),
+        "oidc_providers": ("trusts_second_factor", "client_secret_enc", "managed", "position", "redirect_path",
+                           "created_at", "registered_redirect"),
+        "oidc_links": ("issuer", "created_at", "last_used_at"),
     }
     removed = 0
     with engine.begin() as connection:

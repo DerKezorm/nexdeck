@@ -12,7 +12,7 @@ from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import ApiToken, Board, KioskToken, NotificationChannel, Page, Role, User, Widget
 from ..schemas import UserCreate, UserPatch, UserPublic
 from ..security import hash_password, now_ms
-from ..services import avatars, history
+from ..services import avatars, history, oidc_store
 from ..services.collector import collector
 from .auth import user_public
 
@@ -26,7 +26,9 @@ def list_users(user: CurrentUser, db: DbSession) -> list[dict]:
     """Every signed-in user sees names and roles, for sharing boards."""
     rows = db.scalars(select(User).order_by(User.username))
     if user.role == Role.admin.value:
-        return [user_public(u).model_dump() for u in rows]
+        # The administrator sees which providers each account is linked to, and can unlink one (blueprint 01).
+        links = oidc_store.account_links(db)
+        return [{**user_public(u).model_dump(), "providers": links.get(u.id, [])} for u in rows]
     return [
         {"id": u.id, "username": u.username, "display_name": u.display_name or u.username, "role": u.role, "avatar_url": avatars.url_for(u.avatar)}
         for u in rows

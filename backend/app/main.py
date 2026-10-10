@@ -53,10 +53,9 @@ from .routers import (
 )
 from .routers import journal as journal_router
 from .security import prune_sessions
-from .services import backup, history, journal, provisioning, retention
+from .services import backup, history, journal, oidc_store, provisioning, retention
 from .services import channels as channel_service
 from .services import icons as icon_service
-from .services import oidc as oidc_service
 from .services.channels import webpush as webpush_service
 from .services.collector import collector
 from .services.hass_ws import hass_listener
@@ -64,6 +63,7 @@ from .services.health import health as health_service
 from .services.home_network import RecordPeer
 from .services.logs import log_tailer
 from .services.loop import set_main_loop
+from .vendor import nexoidc
 
 logger = logging.getLogger("nexdeck")
 
@@ -147,6 +147,8 @@ async def lifespan(app: FastAPI):
     anyio.to_thread.current_default_thread_limiter().total_tokens = get_settings().request_threads
     get_engine()
     migrate()
+    oidc_store.sync_list()
+    await nexoidc.warm()
     with db_session() as db:
         system.load_demo_flag(db)
         journal.apply_stored(db)
@@ -170,10 +172,11 @@ async def lifespan(app: FastAPI):
         await icon_service.close_client()
         await channel_service.close_client()
         await webpush_service.close_client()
-        await oidc_service.close_client()
         await system.close_client()
         set_main_loop(None)
 
+
+oidc_store.configure()
 
 app = FastAPI(
     title="nexdeck",

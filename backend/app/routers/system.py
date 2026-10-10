@@ -7,17 +7,17 @@ import time
 from datetime import UTC, datetime
 
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
 
 from .. import __version__
 from ..adapters.base import outbound_client
 from ..config import get_settings
-from ..deps import AdminUser, CurrentUser, DbSession
+from ..deps import AdminUser, CurrentUser, DbSession, error
 from ..models import Board, Integration, Setting, User, Widget
 from ..schemas import SettingsBody
 from ..services import collector as collector_module
-from ..services import two_factor
+from ..services import sign_in, two_factor
 from ..services.collector import collector, demo_flag, set_demo_flag
 from ..services.notify import emit
 from ..services.public_url import public_url
@@ -95,6 +95,8 @@ async def about(user: CurrentUser, db: DbSession) -> dict:
         "update_check": bool(general.get("update_check", settings.update_check)),
         "default_locale": general.get("default_locale", "en"),
         "require_two_factor": two_factor.required(db),
+        "password_login": sign_in.password_setting(db),
+        "provider_active": sign_in.any_provider_active(db),
         "repo_url": REPO_URL,
         "release_url": f"{REPO_URL}/releases",
         "issues_url": f"{REPO_URL}/issues",
@@ -186,11 +188,41 @@ def _tell_about_update(latest: str, current: str) -> None:
          f"This installation runs {current}.", link="https://github.com/DerKezorm/nexdeck/releases")
 
 
+def _checked_public_url(db: DbSession, request: Request, wanted: str, confirmed: bool) -> str:
+    """The address as it will be stored, after the question of the sign-in blueprint (part 04, card 1).
+
+    ⚠️ Providers send people back to an address behind the public one. Changed here, authentik still knows the
+    old one, and so does every provider entered by hand; the administrator is asked first (409 with the numbers),
+    clearing it included. Nothing looser than the module's own check is stored.
+    """
+    from ..services.oidc_store import SqlStore
+    from ..vendor.nexoidc import authentik, flow
+
+    address = wanted.strip()
+    if address:
+        try:
+            address = flow.clean_public_url(address)
+        except ValueError as why:
+            raise error("public_url_invalid", f"This is not a public address ({why}).",
+                        status.HTTP_422_UNPROCESSABLE_ENTITY) from why
+    question = authentik.public_url_guard(SqlStore(db), address, str(request.base_url), confirm=confirmed)
+    if question is not None:
+        from .oidc import public_url_change_error
+
+        raise public_url_change_error(question)
+    return address
+
+
 @router.patch("/api/v1/settings", summary="Change installation settings")
-def patch_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict:
+def patch_settings(body: SettingsBody, request: Request, user: AdminUser, db: DbSession) -> dict:
     general = get_setting(db, "general")
     if body.public_url is not None:
-        general["public_url"] = body.public_url.strip().rstrip("/")
+        general["public_url"] = _checked_public_url(db, request, body.public_url, body.confirm_address)
+    if body.password_login is not None:
+        try:
+            sign_in.set_password_login(db, body.password_login)
+        except sign_in.NoActiveProvider:
+            raise error("no_active_provider", "Switch a sign-in provider on first.", status.HTTP_409_CONFLICT) from None
     if body.update_check is not None:
         general["update_check"] = body.update_check
     if body.default_locale is not None:
@@ -206,14 +238,16 @@ def patch_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict:
     db.commit()
     named = [name for name, value in (("public URL", body.public_url), ("update check", body.update_check),
                                       ("default language", body.default_locale), ("demo mode", body.demo),
-                                      ("second factor for everybody", body.require_two_factor))
+                                      ("second factor for everybody", body.require_two_factor),
+                                      ("sign-in with a password", body.password_login))
              if value is not None]
     if named:
         logger.info("Installation settings changed by %s: %s.", user.username, ", ".join(named))
     if body.demo is not None:
         for widget_id in list(db.scalars(select(Widget.id))):
             collector.schedule(widget_id)
-    return {**general, "require_two_factor": two_factor.required(db)}
+    return {**general, "require_two_factor": two_factor.required(db), "password_login": sign_in.password_setting(db),
+            "provider_active": sign_in.any_provider_active(db)}
 
 
 @router.get("/api/v1/demo/leave", summary="What leaving demo mode would remove")

@@ -41,11 +41,11 @@ def _recent(key: str, now: float) -> list[float]:
     return kept
 
 
-def check(address: str, username: str = "") -> None:
+def check(address: str, username: str = "", per_account: int = MAX_PER_ACCOUNT) -> None:
     now = time.monotonic()
     if len(_recent(f"a:{address}", now)) >= MAX_PER_ADDRESS:
         raise TooManyAttempts
-    if username and len(_recent(f"u:{username.lower()}", now)) >= MAX_PER_ACCOUNT:
+    if username and len(_recent(f"u:{username.lower()}", now)) >= per_account:
         raise TooManyAttempts
 
 

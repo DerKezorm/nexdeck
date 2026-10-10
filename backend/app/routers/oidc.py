@@ -1,362 +1,456 @@
-"""OIDC sign-in and provider management."""
+"""Sign-in through OpenID Connect providers, their list, linking, and the authentik button.
+
+The protocol, who an identity is, the provider list and the button live in the shared module ``vendor/nexoidc``
+(the blueprint "Anmeldung mit OIDC und authentik", the same in every nex app); this router puts nexdeck around it:
+sessions, the sign-in brake, the password asked again before linking, the second factor, and the error answers.
+
+The return leg is a browser redirect, not an API answer: every outcome of a callback ends in a redirect, to ``/``
+with the session cookie, to the sign-in page with ``?error=<code>``, to ``/login?second_step=1`` when the code of
+nexdeck's own second factor is still due, or to the profile page after linking.
+
+Paths (all below ``/api/v1/oidc``):
+
+| Method | Path | Who |
+|---|---|---|
+| GET | ``/providers`` | anybody: slug and label of the active entries (sign-in page) |
+| GET, POST | ``/admin/providers`` | administrator: the list (never a secret), add one |
+| PUT | ``/admin/providers/order`` | administrator: ``{"ids": [...]}`` |
+| PUT, DELETE | ``/admin/providers/{id}`` | administrator: save (``dropped`` links), remove (``count``, ``only``) |
+| GET | ``/admin/providers/{id}/impact?issuer=`` | administrator: the numbers for the two confirmations |
+| GET | ``/{slug}/start`` | anybody: off to the provider |
+| GET | ``/{slug}/callback`` | anybody: the return |
+| GET | ``/me`` | signed in: every active entry with ``linked`` |
+| POST, DELETE | ``/{slug}/link`` | signed in: link (``{"password"}`` → ``{"url"}``), unlink |
+| DELETE | ``/admin/accounts/{account}/links/{provider}`` | administrator, with the own password |
+| POST | ``/authentik/setup`` | administrator: ``{"url", "token", "confirm_issuer_change", "public_url"}`` → 200 |
+| GET, POST | ``/authentik/address`` | administrator: the public address for the card; save it ("Use it only") |
+| GET | ``/authentik/blueprint`` | administrator: ``nexdeck-authentik.yaml``; 409 without a public address |
+
+The providers of nexdeck 0.36 and older know ``/api/v1/auth/oidc/<slug>/callback``; those entries carry it as their
+``redirect_path`` and come back through the second route below. ``/api/v1/auth/oidc/<slug>/login`` stays a start, for
+links somebody kept.
+"""
 
 from __future__ import annotations
 
 import logging
-import re
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import asdict
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Request, status
-from fastapi.responses import JSONResponse, RedirectResponse, Response
-from sqlalchemy import func, select
+from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, Field
 
-from ..crypto import decrypt, encrypt
-from ..deps import AdminUser, DbSession, PasswordUser, error, refuse_at_home
-from ..models import OidcLink, OidcProvider, Role, User
-from ..schemas import AuthentikSetupBody, OidcProviderBody
-from ..security import UNUSABLE_PASSWORD, create_step_token, has_usable_password
-from ..services import authentik_setup, login_guard, oidc, two_factor
-from ..services.public_url import public_url
+from ..db import session_factory
+from ..deps import AdminUser, CurrentUser, PasswordUser, error, refuse_at_home
+from ..models import User
+from ..security import create_step_token, has_usable_password, verify_password
+from ..services import login_guard
+from ..services.oidc_store import SqlStore
+from ..vendor.nexoidc import OidcError, ProviderInvalid, authentik, flow, providers
+from ..vendor.nexoidc import accounts as oidc_accounts
+from ..vendor.nexoidc import attempt as oidc_attempt
+from ..vendor.nexoidc.config import current
 from .auth import STEP_COOKIE, STEP_MINUTES, cookie_secure, open_session
 
 router = APIRouter(prefix="/api/v1", tags=["oidc"])
 logger = logging.getLogger("nexdeck.oidc")
 
-#: Where a linking attempt ends, with ``oidc_linked`` or ``oidc_error`` in the address.
-PROFILE_PAGE = "/settings"
+#: The sign-in page, asking for the code of nexdeck's own second factor after a provider that is not trusted with it.
+CODE_STEP = "/login?second_step=1"
+#: Refusals that cost nothing to produce (a forged or replayed return, a braked sender, an unknown provider): they
+#: never count against the sender. Nor does any return without a valid attempt cookie of this browser.
+FREE_REFUSALS = ("oidc_state_mismatch", "too_many_attempts", "oidc_not_configured")
+#: A session opened through a provider that checks the second factor itself: not held at the door to set one up.
+SESSION_VIA_PROVIDER = "provider"
 
 
-def _provider(db: DbSession, slug: str) -> OidcProvider:
-    provider = db.scalar(select(OidcProvider).where(OidcProvider.slug == slug, OidcProvider.enabled.is_(True)))
-    if provider is None:
-        raise error("not_found", "There is no such sign-in provider.", status.HTTP_404_NOT_FOUND)
-    return provider
+class ProviderIn(BaseModel):
+    label: str = Field(max_length=200)
+    slug: str = Field(default="", max_length=100)
+    issuer: str = Field(max_length=600)
+    client_id: str = Field(max_length=300)
+    client_secret: str = Field(default="", max_length=2000)
+    scopes: str = Field(default="openid profile email", max_length=500)
+    enabled: bool = True
+    auto_create: bool = False
+    trusts_second_factor: bool = True
 
 
-def _to_app(path: str, **params: str) -> RedirectResponse:
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    return RedirectResponse(f"{path}{'?' + query if query else ''}", status_code=status.HTTP_303_SEE_OTHER)
+class PasswordIn(BaseModel):
+    password: str = Field(default="", max_length=200)
 
 
-def _public_url(db: DbSession) -> str:
-    return public_url(db)
+class SetupIn(BaseModel):
+    url: str = Field(min_length=1, max_length=500)
+    token: str = Field(min_length=1, max_length=2000)
+    #: The answer to the button's question "another issuer, {count} accounts link again".
+    confirm_issuer_change: bool = False
+    #: The address the administrator confirmed in the card (the browser's own) while nexdeck has none.
+    public_url: str = Field(default="", max_length=600)
 
 
-@router.get("/auth/oidc/{slug}/login", summary="Start a sign-in at an identity provider")
-async def oidc_login(slug: str, request: Request, db: DbSession) -> RedirectResponse:
-    provider = _provider(db, slug)
+class AddressIn(BaseModel):
+    public_url: str = Field(max_length=600)
+    confirm: bool = False
+
+
+class OrderIn(BaseModel):
+    ids: list[int] = Field(max_length=200)
+
+
+@contextmanager
+def store() -> Iterator[SqlStore]:
+    db = session_factory()()
     try:
-        document = await oidc.discovery(provider.issuer_url)
-        redirect = oidc.redirect_uri(_public_url(db), slug)
-    except oidc.OidcError as failure:
-        logger.warning("OIDC sign-in via %r could not start: %s", slug, failure.message)
-        return _to_app("/login", oidc_error=failure.code)
-    attempt = oidc.new_attempt()
-    response = RedirectResponse(oidc.authorization_url(document, provider.client_id, redirect, provider.scopes, attempt), status_code=status.HTTP_302_FOUND)
-    response.set_cookie(oidc.COOKIE_NAME, oidc.pack_state(slug, attempt), max_age=oidc.ATTEMPT_MINUTES * 60, path="/api/v1/auth/oidc",
-                        httponly=True, samesite="lax", secure=cookie_secure(request))
-    return response
+        yield SqlStore(db)
+    finally:
+        db.close()
 
 
-@router.get("/auth/oidc/{slug}/callback", summary="Return from the identity provider")
-async def oidc_callback(slug: str, request: Request, db: DbSession, code: str | None = None, state: str | None = None, error_: str | None = None) -> RedirectResponse:
-    """Every outcome is a redirect to the app with a code in the address; never JSON."""
-    provider = _provider(db, slug)
-    attempt = oidc.unpack_state(request.cookies.get(oidc.COOKIE_NAME))
-    address = request.client.host if request.client else "?"
-    linking = attempt is not None and attempt.get("purpose") == "link"
+def _base(request: Request) -> str:
+    return str(request.base_url)
 
-    def refuse(code_: str, reason: str) -> RedirectResponse:
-        logger.warning("OIDC callback refused for %r: %s", slug, reason)
-        # A linking attempt started on the profile page and goes back there; a
-        # sign-in has no page to go back to but the sign-in page.
-        response = _to_app(PROFILE_PAGE if linking else "/login", oidc_error=code_)
-        response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
-        return response
 
-    if request.query_params.get("error"):
-        return refuse("oidc_denied", f"provider returned {request.query_params.get('error')!r}")
-    if attempt is None or attempt.get("slug") != slug or not code or not state or attempt.get("state") != state:
-        return refuse("oidc_state_mismatch", "state or cookie does not match the running attempt")
-    if not oidc.consume_state(state):
-        # The same cookie and state a second time: a copy of the callback, played back.
-        return refuse("oidc_state_mismatch", "this state was used already")
-    try:
-        # No account name here yet; the address bucket is all there is.
-        login_guard.check(address)
-    except login_guard.TooManyAttempts:
-        return refuse("oidc_too_many", "too many failed attempts from this address")
-    try:
-        document = await oidc.discovery(provider.issuer_url)
-        redirect = oidc.redirect_uri(_public_url(db), slug)
-        tokens = await oidc.exchange(document, provider.client_id, decrypt(provider.client_secret) if provider.client_secret else "", redirect, code, attempt["verifier"])
-        id_token = tokens.get("id_token")
-        if not id_token:
-            raise oidc.OidcError("oidc_bad_token", "The provider sent no ID token.")
-        payload = await oidc.claims(document, provider.client_id, id_token, attempt["nonce"], provider.issuer_url)
-        info = await oidc.userinfo(document, tokens.get("access_token", ""))
-    except oidc.OidcError as failure:
-        login_guard.failed(address)
-        return refuse(failure.code, failure.message)
-    subject = str(payload.get("sub") or "")
-    if not subject:
-        # ⚠️ Without this, the empty string became the key of the identity, and
-        # the second person whose provider omits ``sub`` would have been let
-        # into the account of the first. jwt.decode does not require the claim.
-        login_guard.failed(address)
-        return refuse("oidc_bad_token", "the ID token has no subject")
-    email = str(payload.get("email") or info.get("email") or "")
-    if linking:
-        login_guard.succeeded(address)
-        return _finish_link(db, provider, attempt, subject, email, refuse)
-    preferred = str(payload.get("preferred_username") or info.get("preferred_username") or email.split("@")[0] or f"user-{subject[:8]}")
-    display = str(payload.get("name") or info.get("name") or preferred)
-    link = db.scalar(select(OidcLink).where(OidcLink.provider_id == provider.id, OidcLink.subject == subject))
-    if link is not None:
-        user = db.get(User, link.user_id)
+def _sender(request: Request) -> str:
+    return request.client.host if request.client else "?"
+
+
+def _redirect(target: flow.Redirect, request: Request) -> RedirectResponse:
+    # 303: the browser loads the target with GET whatever way it came.
+    response = RedirectResponse(target.location, status_code=status.HTTP_303_SEE_OTHER)
+    cookie = target.cookie
+    secure = cookie.secure or cookie_secure(request)
+    if cookie.max_age == 0:
+        response.delete_cookie(cookie.name, path=cookie.path, secure=secure, httponly=True, samesite="lax")
     else:
-        if not provider.auto_create:
-            return refuse("oidc_no_account", "no linked account and auto-create is off")
-        username = re.sub(r"[^a-zA-Z0-9._-]", "-", preferred)[:64] or f"user-{subject[:8]}"
-        # ⚠️ Two goes are not enough. Adding the subject once was the whole
-        # collision handling, so a second person with the same preferred name
-        # and a subject starting with the same six characters walked into a
-        # unique constraint, and the callback answered 500 with a stack trace.
-        if db.scalar(select(User).where(func.lower(User.username) == username.lower())):
-            username = f"{username}-{subject[:6]}"
-        attempt_number = 2
-        while db.scalar(select(User).where(func.lower(User.username) == username.lower())):
-            username = f"{username[:58]}-{attempt_number}"
-            attempt_number += 1
-            if attempt_number > 50:
-                return refuse("oidc_name_taken", "no free user name could be made from the provider's claims")
-        user = User(username=username, display_name=display[:120], password_hash=UNUSABLE_PASSWORD, role=provider.default_role)
-        db.add(user)
-        db.flush()
-        db.add(OidcLink(provider_id=provider.id, user_id=user.id, subject=subject, email=email[:300]))
-        db.commit()
-        logger.info("OIDC created account %r via %r.", user.username, slug)
-    if user is None or user.disabled:
-        return refuse("oidc_disabled", "the linked account is disabled or gone")
-    login_guard.succeeded(address)
-    if two_factor.enabled(user) and not provider.trusts_second_factor:
-        # ⚠️ The provider proved who this is; it did not prove the second
-        # factor. Until 07.09.2026 this path opened a session outright, so an
-        # account with a confirmed authenticator app was let in without a code
-        # as long as it came through OIDC. The ticket travels in a short-lived
-        # cookie rather than in the address: this is a redirect, and anything
-        # in the address stands in the proxy log.
-        logger.info("%s came in through %r and now needs a code.", user.username, slug)
-        response = _to_app("/login", second_step="1")
-        response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
-        response.set_cookie(
-            STEP_COOKIE, create_step_token(user.id), max_age=STEP_MINUTES * 60, httponly=True,
-            samesite="lax", secure=cookie_secure(request), path="/api/v1/auth",
-        )
+        response.set_cookie(cookie.name, cookie.value, max_age=cookie.max_age, path=cookie.path,
+                            httponly=cookie.http_only, samesite="lax", secure=secure)
+    return response
+
+
+def _form_error(exc: ProviderInvalid) -> HTTPException:
+    return HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                         detail={"code": exc.code, "message": exc.message, "field": exc.field})
+
+
+def _braked(request: Request) -> bool:
+    try:
+        login_guard.check(_sender(request))
+    except login_guard.TooManyAttempts:
+        return True
+    return False
+
+
+# --- The provider list -------------------------------------------------------------------------------------------
+
+
+@router.get("/oidc/providers", summary="The active sign-in providers: slug and label (no sign-in needed)")
+def public_providers() -> list[dict[str, str]]:
+    with store() as s:
+        return providers.public_list(s)
+
+
+@router.get("/oidc/admin/providers", summary="The provider list for the administrator (never a secret)")
+def admin_providers(_admin: AdminUser, request: Request) -> list[dict[str, Any]]:
+    with store() as s:
+        coupled = providers.coupled(s)
+        return [providers.admin_view(entry, _base(request), len(s.links_of_provider(entry.id)), coupled=coupled)
+                for entry in s.list_providers()]
+
+
+@router.post("/oidc/admin/providers", status_code=status.HTTP_201_CREATED,
+             summary="Add a provider; the issuer is checked by discovery")
+async def add_provider(payload: ProviderIn, admin: AdminUser, request: Request) -> dict[str, Any]:
+    with store() as s:
+        try:
+            created = await providers.create(s, providers.Form(**payload.model_dump()))
+        except ProviderInvalid as exc:
+            raise _form_error(exc) from exc
+        logger.info("OIDC provider %s added by=%s", created.slug, admin.username)
+        return providers.admin_view(created, _base(request), 0)
+
+
+@router.put("/oidc/admin/providers/order", summary="Put the providers in this order (the drag handle)")
+def order_providers(payload: OrderIn, _admin: AdminUser) -> list[dict[str, str]]:
+    with store() as s:
+        try:
+            providers.reorder(s, payload.ids)
+        except ProviderInvalid as exc:
+            raise _form_error(exc) from exc
+        return providers.public_list(s)
+
+
+@router.put("/oidc/admin/providers/{provider_id}", summary="Save a provider; another issuer drops its links")
+async def save_provider(
+    provider_id: Annotated[int, Path(ge=1)], payload: ProviderIn, admin: AdminUser, request: Request
+) -> dict[str, Any]:
+    with store() as s:
+        try:
+            saved, dropped = await providers.update(s, provider_id, providers.Form(**payload.model_dump()))
+        except ProviderInvalid as exc:
+            raise _form_error(exc) from exc
+        logger.info("OIDC provider %s saved by=%s", saved.slug, admin.username)
+        view = providers.admin_view(saved, _base(request), len(s.links_of_provider(saved.id)))
+        return {**view, "dropped": dropped}
+
+
+@router.get("/oidc/admin/providers/{provider_id}/impact", summary="Who loses a link when the issuer changes or it goes")
+def provider_impact(
+    provider_id: Annotated[int, Path(ge=1)],
+    _admin: AdminUser,
+    issuer: Annotated[str, Query(max_length=600)] = "",
+) -> dict[str, Any]:
+    with store() as s:
+        if s.get_provider(provider_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND,
+                                detail={"code": "provider_unknown", "message": "No such provider.", "field": "id"})
+        removal = providers.removal_impact(s, provider_id)
+        change = providers.issuer_change_impact(s, provider_id, issuer) if issuer else 0
+        return {"issuer_change": change, **asdict(removal)}
+
+
+@router.delete("/oidc/admin/providers/{provider_id}", summary="Remove a provider with its links")
+def remove_provider(provider_id: Annotated[int, Path(ge=1)], admin: AdminUser) -> dict[str, Any]:
+    with store() as s:
+        try:
+            impact = providers.remove(s, provider_id)
+        except ProviderInvalid as exc:
+            raise _form_error(exc) from exc
+    logger.info("OIDC provider %s removed by=%s", provider_id, admin.username)
+    return asdict(impact)
+
+
+# --- Start and return --------------------------------------------------------------------------------------------
+
+
+@router.get("/oidc/{slug}/start", summary="Send the browser to the provider (no sign-in needed)")
+async def start(
+    slug: Annotated[str, Path(max_length=40)],
+    request: Request,
+    invite: Annotated[str | None, Query(max_length=64, pattern=r"^[A-Za-z0-9_-]+$")] = None,
+) -> RedirectResponse:
+    # nexdeck has no invitations: an ``?invite=`` names none, so the module refuses it with ``invite_invalid``.
+    with store() as s:
+        try:
+            if _braked(request):
+                raise OidcError("too_many_attempts", "sender is braked")
+            target = await flow.begin(s, slug, request_base=_base(request), invite=invite)
+        except OidcError as exc:
+            return _redirect(flow.refused(exc, None), request)
+    return _redirect(target, request)
+
+
+@router.get("/auth/oidc/{slug}/login", include_in_schema=False)
+async def old_start(slug: Annotated[str, Path(max_length=40)], request: Request) -> RedirectResponse:
+    """The start as nexdeck 0.36 named it; a bookmark of it still works."""
+    return await start(slug, request, None)
+
+
+async def _returned(slug: str, request: Request) -> RedirectResponse:
+    """The return from the provider. The order is the module's: the provider's own error, our cookie and state, the
+    single use of the state, then the provider; nothing is written before all that passed."""
+    cookie = request.cookies.get(current().cookie_name)
+    sender = _sender(request)
+    with store() as s:
+        try:
+            if _braked(request):
+                raise OidcError("too_many_attempts", "sender is braked")
+            arrival = await flow.finish(s, slug, cookie=cookie, params=dict(request.query_params))
+            if arrival.started.purpose == oidc_attempt.LINK:
+                account = _signed_in(request, s)
+                oidc_accounts.link(s, arrival, account.id if account else None)
+                return _redirect(flow.arrived(arrival, flow.linked_page(slug)), request)
+            s.creating_for = arrival.provider.id
+            s.display_name = arrival.identity.name or ""
+            signed = oidc_accounts.sign_in(s, arrival)
+        except OidcError as exc:
+            # ⚠️ Only a return that carries this browser's own attempt counts against the sender. Anybody can send
+            # ``?error=`` or rubbish to the callback; counted, that would lock a whole household out of signing in.
+            if exc.code not in FREE_REFUSALS and oidc_attempt.read(cookie) is not None:
+                login_guard.failed(sender)
+            return _redirect(flow.refused(exc, cookie), request)
+        user = s.db.get(User, signed.account_id)
+        assert user is not None
+        if signed.second_factor_due:
+            # The provider is not trusted with the second factor and the account has one here: the same waiting
+            # sign-in as after the password; the code step of the sign-in page finishes it.
+            response = _redirect(flow.arrived(arrival, CODE_STEP), request)
+            response.set_cookie(STEP_COOKIE, create_step_token(user.id), max_age=STEP_MINUTES * 60, httponly=True,
+                                samesite="lax", secure=cookie_secure(request), path="/api/v1/auth")
+            logger.info("Provider accepted, second factor waiting name=%s", user.username)
+            return response
+        response = _redirect(flow.arrived(arrival), request)
+        # A provider the entry trusts with the second factor spares the duty to set one up in this session.
+        kind = SESSION_VIA_PROVIDER if arrival.provider.trusts_second_factor else "password"
+        open_session(s.db, user, request, response, kind=kind)
         return response
-    response = _to_app("/")
-    response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
-    open_session(db, user, request, response)
-    return response
 
 
-def _finish_link(db: DbSession, provider: OidcProvider, attempt: dict, subject: str, email: str, refuse) -> RedirectResponse:  # noqa: ANN001
-    """Store the identity on the account that asked, instead of signing anybody in.
-
-    ⚠️ Only this way, never through the address. authentik lets a user change
-    their own address by default, so linking an account whose address matches
-    would let anybody with an authentik login into the account of whoever's
-    address they typed, the administrator's included.
-    """
-    user = db.get(User, int(attempt.get("user_id") or 0))
-    if user is None or user.disabled:
-        return refuse("oidc_disabled", "the account that asked to link is disabled or gone")
-    taken = db.scalar(select(OidcLink).where(OidcLink.provider_id == provider.id, OidcLink.subject == subject))
-    if taken is not None and taken.user_id != user.id:
-        return refuse("oidc_taken", f"that identity is linked to another account already (user id {taken.user_id})")
-    if taken is None:
-        # One identity per provider and account: linking again replaces the old one.
-        for old in db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id, OidcLink.user_id == user.id)):
-            db.delete(old)
-        db.add(OidcLink(provider_id=provider.id, user_id=user.id, subject=subject, email=email[:300]))
-        db.commit()
-    logger.info("%s linked their account to %r.", user.username, provider.slug)
-    response = _to_app(PROFILE_PAGE, oidc_linked=provider.slug)
-    response.delete_cookie(oidc.COOKIE_NAME, path="/api/v1/auth/oidc")
-    return response
+@router.get("/oidc/{slug}/callback", summary="The return from the provider (no sign-in needed)")
+async def callback(slug: Annotated[str, Path(max_length=40)], request: Request) -> RedirectResponse:
+    return await _returned(slug, request)
 
 
-# -- one's own links ---------------------------------------------------------
+@router.get("/auth/oidc/{slug}/callback", summary="The return, at the address providers of nexdeck 0.36 know")
+async def old_callback(slug: Annotated[str, Path(max_length=40)], request: Request) -> RedirectResponse:
+    return await _returned(slug, request)
 
 
-@router.get("/auth/oidc/links", summary="The sign-in providers and whether this account is linked to each")
-def my_links(user: PasswordUser, db: DbSession) -> list[dict]:
-    linked = {link.provider_id for link in db.scalars(select(OidcLink).where(OidcLink.user_id == user.id))}
-    return [
-        {"slug": p.slug, "label": p.label, "linked": p.id in linked}
-        for p in db.scalars(select(OidcProvider).where(OidcProvider.enabled.is_(True)).order_by(OidcProvider.id))
-    ]
+def _signed_in(request: Request, s: SqlStore) -> User | None:
+    """The account of this browser's session, without the dependency (the return is a plain GET)."""
+    from ..deps import _user_from_cookie
+
+    return _user_from_cookie(request, s.db)
 
 
-@router.post("/auth/oidc/{slug}/link", summary="Start linking this account to an identity provider")
-async def link_start(slug: str, request: Request, user: PasswordUser, db: DbSession) -> JSONResponse:
-    """Answers with the address to go to, and sets the attempt cookie on the way.
+# --- My account --------------------------------------------------------------------------------------------------
 
-    A POST, not a link to follow: it carries the CSRF header like every other
-    change, so no other page can start a linking attempt in somebody's browser.
-    """
-    provider = _provider(db, slug)
+
+@router.get("/oidc/me", summary="The active providers and whether the own account is linked to each")
+def my_providers(user: CurrentUser) -> list[dict[str, Any]]:
+    with store() as s:
+        linked = {link.provider_id for link in s.links_of_account(user.id)}
+        return [{"slug": entry.slug, "label": entry.label, "linked": entry.id in linked}
+                for entry in s.list_providers() if entry.enabled]
+
+
+@router.post("/oidc/{slug}/link", summary="Start linking the own account to a provider; needs the password")
+async def link_start(
+    slug: Annotated[str, Path(max_length=40)], payload: PasswordIn, request: Request, response: Response,
+    user: PasswordUser,
+) -> dict[str, str]:
+    """Linking hands the account to whoever the browser is at the provider, so it asks for the password again."""
+    sender = _sender(request)
     try:
-        document = await oidc.discovery(provider.issuer_url)
-        redirect = oidc.redirect_uri(_public_url(db), slug)
-    except oidc.OidcError as failure:
-        raise error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY) from None
-    attempt = oidc.new_attempt()
-    response = JSONResponse({"url": oidc.authorization_url(document, provider.client_id, redirect, provider.scopes, attempt)})
-    response.set_cookie(oidc.COOKIE_NAME, oidc.pack_state(slug, attempt, purpose="link", user_id=user.id), max_age=oidc.ATTEMPT_MINUTES * 60,
-                        path="/api/v1/auth/oidc", httponly=True, samesite="lax", secure=cookie_secure(request))
-    return response
+        login_guard.check(sender, user.username)
+    except login_guard.TooManyAttempts:
+        raise error("too_many_attempts", "Too many attempts. Try again later.", status.HTTP_429_TOO_MANY_REQUESTS) from None
+    if not has_usable_password(user.password_hash):
+        raise error("oidc_only_account", "This account has no password; it signs in through a provider.",
+                    status.HTTP_409_CONFLICT)
+    if not verify_password(payload.password, user.password_hash):
+        login_guard.failed(sender, user.username)
+        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    login_guard.succeeded(sender, user.username)
+    with store() as s:
+        try:
+            target = await flow.begin(s, slug, request_base=_base(request), link_account_id=user.id)
+        except OidcError as exc:
+            raise error(exc.code, exc.message, status.HTTP_409_CONFLICT) from exc
+    cookie = target.cookie
+    response.set_cookie(cookie.name, cookie.value, max_age=cookie.max_age, path=cookie.path, httponly=True,
+                        samesite="lax", secure=cookie.secure or cookie_secure(request))
+    logger.info("OIDC linking to provider %s started name=%s", slug, user.username)
+    return {"url": target.location}
 
 
-@router.delete("/auth/oidc/{slug}/link", status_code=status.HTTP_204_NO_CONTENT, summary="Undo the link to an identity provider")
-def link_remove(slug: str, user: PasswordUser, db: DbSession) -> None:
-    provider = db.scalar(select(OidcProvider).where(OidcProvider.slug == slug))
-    if provider is None:
-        raise error("not_found", "There is no such sign-in provider.", status.HTTP_404_NOT_FOUND)
-    links = list(db.scalars(select(OidcLink).where(OidcLink.user_id == user.id)))
-    mine = [link for link in links if link.provider_id == provider.id]
-    if mine and not has_usable_password(user.password_hash) and len(links) == len(mine):
-        # ⚠️ The last way into an account without a password.
-        raise error("would_lock_out", "This is the only way into this account. Set a password first.", status.HTTP_409_CONFLICT)
-    for link in mine:
-        db.delete(link)
-    db.commit()
+@router.delete("/oidc/{slug}/link", status_code=status.HTTP_204_NO_CONTENT,
+               summary="Unlink the own account from a provider")
+def unlink(slug: Annotated[str, Path(max_length=40)], user: CurrentUser) -> None:
+    with store() as s:
+        entry = s.provider_by_slug(slug)
+        if entry is None:
+            raise error("oidc_not_configured", "This provider is not set up.", status.HTTP_404_NOT_FOUND)
+        try:
+            removed = oidc_accounts.unlink(s, user.id, entry.id)
+        except OidcError as exc:
+            raise error(exc.code, exc.message, status.HTTP_409_CONFLICT) from exc
+        if not removed:
+            raise error("not_found", "This account is not linked to that provider.", status.HTTP_404_NOT_FOUND)
 
 
-# -- administration ----------------------------------------------------------
-
-
-def _authentik_redirect(db: DbSession) -> str:
+@router.delete("/oidc/admin/accounts/{account_id}/links/{provider_id}", status_code=status.HTTP_204_NO_CONTENT,
+               summary="Administrator: unlink an account from a provider (with the own password)")
+def operator_unlink(
+    account_id: Annotated[int, Path(ge=1)],
+    provider_id: Annotated[int, Path(ge=1)],
+    payload: PasswordIn,
+    request: Request,
+    admin: AdminUser,
+) -> None:
+    refuse_at_home(request)
+    sender = _sender(request)
     try:
-        return oidc.redirect_uri(_public_url(db), authentik_setup.PROVIDER_SLUG)
-    except oidc.OidcError as failure:
-        raise error("no_public_url", failure.message, status.HTTP_422_UNPROCESSABLE_ENTITY) from None
+        login_guard.check(sender, admin.username)
+    except login_guard.TooManyAttempts:
+        raise error("too_many_attempts", "Too many attempts. Try again later.", status.HTTP_429_TOO_MANY_REQUESTS) from None
+    if not has_usable_password(admin.password_hash) or not verify_password(payload.password, admin.password_hash):
+        login_guard.failed(sender, admin.username)
+        raise error("bad_credentials", "The password is wrong.", status.HTTP_403_FORBIDDEN)
+    login_guard.succeeded(sender, admin.username)
+    with store() as s:
+        entry = s.get_provider(provider_id)
+        target = s.db.get(User, account_id)
+        if target is None or entry is None:
+            raise error("not_found", "Not found.", status.HTTP_404_NOT_FOUND)
+        try:
+            removed = oidc_accounts.unlink(s, account_id, provider_id)
+        except OidcError as exc:
+            raise error(exc.code, exc.message, status.HTTP_409_CONFLICT) from exc
+        if not removed:
+            raise error("not_found", "Not found.", status.HTTP_404_NOT_FOUND)
+        name = target.username
+    logger.warning("OIDC link to provider %s removed by the administrator name=%s by=%s", entry.slug, name,
+                   admin.username)
+
+
+# --- authentik ---------------------------------------------------------------------------------------------------
 
 
 @router.post("/oidc/authentik/setup", summary="Set up provider and application in authentik with a one-time token")
-async def authentik_setup_run(body: AuthentikSetupBody, request: Request, admin: AdminUser, db: DbSession) -> dict:
-    """⚠️ The token is used for this run only: not stored, not logged, not echoed."""
+async def authentik_setup(payload: SetupIn, admin: AdminUser, request: Request) -> dict[str, Any]:
+    """⚠️ The token is used for this run only: not stored, not logged, not echoed. Always 200 with the steps."""
     refuse_at_home(request)
-    url = body.url.strip().rstrip("/")
-    if not url.lower().startswith(("http://", "https://")):
-        raise error("bad_url", "The authentik address must start with http:// or https://.", status.HTTP_422_UNPROCESSABLE_ENTITY)
-    redirect = _authentik_redirect(db)
-    logger.info("authentik setup started for %s by %s.", url, admin.username)
-    result = await authentik_setup.setup(db, url, body.token.strip(), redirect)
+    logger.info("authentik setup started by=%s", admin.username)
+    with store() as s:
+        result = await authentik.setup(
+            s,
+            payload.url,
+            payload.token,
+            _base(request),
+            confirm_issuer_change=payload.confirm_issuer_change,
+            public_url=payload.public_url,
+            headers=request.headers,
+        )
     return result.as_dict()
 
 
+@router.get("/oidc/authentik/address", summary="The public address, what the server sees and what authentik knows")
+def authentik_address(_admin: AdminUser, request: Request) -> dict[str, Any]:
+    with store() as s:
+        return authentik.address_view(s, _base(request), request.headers)
+
+
+def public_url_change_error(question: dict[str, Any]) -> HTTPException:
+    return HTTPException(status.HTTP_409_CONFLICT, detail={
+        "code": "public_url_change", "message": "The address changes the redirect address of providers.", **question,
+    })
+
+
+@router.post("/oidc/authentik/address", summary="Save the public address (\"Use it only\"); asks first on a change")
+def authentik_save_address(payload: AddressIn, admin: AdminUser, request: Request) -> dict[str, Any]:
+    with store() as s:
+        try:
+            view = authentik.save_public_url(s, payload.public_url, _base(request), confirm=payload.confirm)
+        except ValueError as exc:
+            raise error("public_url_invalid", "This is not a public address.", status.HTTP_422_UNPROCESSABLE_ENTITY) from exc
+        except authentik.PublicUrlChange as asked:
+            raise public_url_change_error(asked.question) from asked
+        except authentik.PublicUrlNotKept as exc:
+            raise error("public_url_needed", "The address could not be saved.", status.HTTP_409_CONFLICT) from exc
+    logger.info("Public address saved by=%s", admin.username)
+    return view
+
+
 @router.get("/oidc/authentik/blueprint", summary="Download a blueprint that creates the same objects in authentik")
-def authentik_blueprint(admin: AdminUser, db: DbSession) -> Response:
-    return Response(
-        content=authentik_setup.blueprint(_authentik_redirect(db)),
-        media_type="application/yaml",
-        headers={"Content-Disposition": 'attachment; filename="nexdeck-authentik.yaml"'},
-    )
-
-
-def _link_count(db: DbSession, provider_id: int) -> int:
-    return int(db.scalar(select(func.count()).select_from(OidcLink).where(OidcLink.provider_id == provider_id)) or 0)
-
-
-def _provider_public(db: DbSession, provider: OidcProvider) -> dict:
-    """``links``: how many accounts are linked to it, for the question before its issuer changes."""
-    return {"id": provider.id, "slug": provider.slug, "label": provider.label, "issuer_url": provider.issuer_url, "client_id": provider.client_id,
-            "has_secret": bool(provider.client_secret), "scopes": provider.scopes, "enabled": provider.enabled, "auto_create": provider.auto_create, "default_role": provider.default_role,
-            "trusts_second_factor": provider.trusts_second_factor, "links": _link_count(db, provider.id)}
-
-
-@router.get("/oidc/providers", summary="List identity providers")
-def list_providers(admin: AdminUser, db: DbSession) -> list[dict]:
-    return [_provider_public(db, p) for p in db.scalars(select(OidcProvider).order_by(OidcProvider.id))]
-
-
-@router.get("/oidc/providers/{provider_id}", summary="One identity provider, with the number of linked accounts")
-def get_provider(provider_id: int, admin: AdminUser, db: DbSession) -> dict:
-    provider = db.get(OidcProvider, provider_id)
-    if provider is None:
-        raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
-    return _provider_public(db, provider)
-
-
-@router.post("/oidc/providers", status_code=status.HTTP_201_CREATED, summary="Add an identity provider")
-def create_provider(body: OidcProviderBody, admin: AdminUser, db: DbSession) -> dict:
-    if db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug)):
-        raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
-    provider = OidcProvider(slug=body.slug, label=body.label, issuer_url=oidc.normal_issuer(body.issuer_url), client_id=body.client_id,
-                            client_secret=encrypt(body.client_secret) if body.client_secret else "", scopes=body.scopes, enabled=body.enabled,
-                            auto_create=body.auto_create, default_role=body.default_role, trusts_second_factor=body.trusts_second_factor)
-    db.add(provider)
-    db.commit()
-    return _provider_public(db, provider)
-
-
-@router.patch("/oidc/providers/{provider_id}", summary="Change an identity provider")
-def patch_provider(provider_id: int, body: OidcProviderBody, admin: AdminUser, db: DbSession) -> dict:
-    provider = db.get(OidcProvider, provider_id)
-    if provider is None:
-        raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
-    # ⚠️ The same check POST has. Without it the unique constraint answered,
-    # and a unique constraint answers with 500 and a stack trace.
-    clash = db.scalar(select(OidcProvider).where(OidcProvider.slug == body.slug, OidcProvider.id != provider_id))
-    if clash is not None:
-        raise error("taken", "That slug is taken.", status.HTTP_409_CONFLICT)
-    # Another issuer drops the links of this provider; the form asks first, with the number.
-    oidc.drop_links_on_new_issuer(db, provider, body.issuer_url, body.slug)
-    provider.slug = body.slug
-    provider.label = body.label
-    provider.issuer_url = oidc.normal_issuer(body.issuer_url)
-    provider.client_id = body.client_id
-    if body.client_secret:
-        provider.client_secret = encrypt(body.client_secret)
-    provider.scopes = body.scopes
-    provider.enabled = body.enabled
-    provider.auto_create = body.auto_create
-    provider.default_role = body.default_role
-    provider.trusts_second_factor = body.trusts_second_factor
-    db.commit()
-    return _provider_public(db, provider)
-
-
-@router.delete("/oidc/providers/{provider_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove an identity provider")
-def delete_provider(provider_id: int, admin: AdminUser, db: DbSession, force: bool = False) -> None:
-    """⚠️ Removing a provider takes its links with it (``ondelete="CASCADE"``).
-
-    An account created through that provider has ``UNUSABLE_PASSWORD`` and no
-    other way in, so deleting the provider locks it out for good, silently and
-    with no undo. Counting them first and saying the number is the difference
-    between a decision and an accident. ``force=true`` goes ahead anyway.
-    """
-    provider = db.get(OidcProvider, provider_id)
-    if provider is None:
-        raise error("not_found", "There is no such provider.", status.HTTP_404_NOT_FOUND)
-    if not force:
-        stranded = [
-            user.username
-            for link in db.scalars(select(OidcLink).where(OidcLink.provider_id == provider.id))
-            if (user := db.get(User, link.user_id)) is not None
-            and not has_usable_password(user.password_hash)
-            and db.scalar(select(func.count()).select_from(OidcLink).where(OidcLink.user_id == link.user_id)) == 1
-        ]
-        if stranded:
-            raise error(
-                "would_lock_out",
-                f"{len(stranded)} account(s) have no password and no other provider: {', '.join(sorted(stranded)[:5])}. "
-                "Give them a password first, or repeat with force=true.",
-                status.HTTP_409_CONFLICT,
-            )
-    db.delete(provider)
-    db.commit()
-
-
-def _role_check(role: str) -> str:
-    return role if role in {r.value for r in Role} else Role.user.value
+def authentik_blueprint(_admin: AdminUser, request: Request) -> Response:
+    with store() as s:
+        try:
+            text = authentik.blueprint(authentik.blueprint_redirect(s, _base(request)))
+        except authentik.PublicUrlNeeded as exc:
+            raise error("public_url_needed", "Set the public address first.", status.HTTP_409_CONFLICT) from exc
+    return Response(content=text, media_type="application/yaml",
+                    headers={"Content-Disposition": f'attachment; filename="{authentik.blueprint_filename()}"'})

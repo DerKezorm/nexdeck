@@ -24,15 +24,18 @@ def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("NEXDECK_LOG_LEVEL", "WARNING")
     from app import config, crypto, db
     from app.services import collector as collector_module
-    from app.services import login_guard
-    from app.services import oidc as oidc_service
+    from app.services import login_guard, oidc_store
+    from app.vendor.nexoidc import attempt as oidc_attempt
+    from app.vendor.nexoidc import protocol as oidc_protocol
 
     config.reset_settings_cache()
     db.reset_engine()
     crypto.forget_key()
     collector_module.set_demo_flag(False)
     login_guard.reset()
-    oidc_service.forget_used_states()
+    oidc_store.configure()
+    oidc_attempt.forget_used_states()
+    oidc_protocol.clear_caches()
     from app.routers import channels as channels_router
 
     channels_router.reset_test_presses()

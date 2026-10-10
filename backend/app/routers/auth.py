@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from .. import languages
 from ..config import get_settings
 from ..deps import COOKIE_NAME, CurrentUser, DbSession, PasswordUser, error, refuse_at_home
-from ..models import Notice, OidcProvider, Session, User, utcnow
+from ..models import Notice, Session, User, utcnow
 from ..schemas import (
     LoginBody,
     MePatch,
@@ -33,7 +33,7 @@ from ..security import (
     read_step_token,
     verify_password,
 )
-from ..services import avatars, login_guard, mail, password_reset, two_factor
+from ..services import avatars, login_guard, mail, password_reset, sign_in, two_factor
 from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -46,8 +46,9 @@ def cookie_secure(request: Request) -> bool:
         return True
     if mode == "never":
         return False
-    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-    return proto == "https"
+    # The scheme as the proxy middleware left it (``home_network.forwarded_proto_headers``): the same answer the
+    # sign-in gets for its redirect address, and nobody's header read twice in two ways.
+    return request.url.scheme in ("https", "wss")
 
 
 def set_session_cookie(response: Response, request: Request, token: str) -> None:
@@ -101,7 +102,9 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
     # said whether a name exists on this installation. The throttle counts
     # attempts, it does not hide that difference.
     right = verify_password(body.password, user.password_hash) if user is not None else burn_a_password_check(body.password)
-    if user is None or user.disabled or not right:
+    # ⚠️ With the password switched off only administrators may use theirs; anybody else gets the same answer as
+    # for a wrong password, so the form says nothing about which names exist or whose password was right.
+    if user is None or user.disabled or not right or not sign_in.password_allowed(db, user):
         login_guard.failed(address, body.username)
         logger.info("Sign-in refused for %r from %s.", body.username, address)
         raise error("bad_credentials", "User name or password is wrong.", status.HTTP_401_UNAUTHORIZED)
@@ -130,7 +133,10 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
 
 #: Where the OIDC return path leaves its half-finished sign-in.
 STEP_COOKIE = "nexdeck_step"
-STEP_MINUTES = 10
+#: As long as the ticket inside it lives (``security.create_step_token``).
+STEP_MINUTES = 5
+#: Wrong codes for one account before the code step waits (blueprint 01: five minutes, five tries).
+CODE_TRIES = 5
 
 
 @router.post("/login/second-step", response_model=UserPublic, summary="Finish a sign-in with the second factor")
@@ -152,7 +158,7 @@ def second_step(body: SecondStepBody, request: Request, response: Response, db: 
         raise error("bad_ticket", "That sign-in took too long. Start again.", status.HTTP_401_UNAUTHORIZED)
 
     try:
-        login_guard.check(address, f"2fa:{user.username}")
+        login_guard.check(address, f"2fa:{user.username}", per_account=CODE_TRIES)
     except login_guard.TooManyAttempts:
         raise error(
             "too_many_attempts", "Too many wrong codes. Try again in a few minutes.",
@@ -218,8 +224,10 @@ def own_address(db: DbSession, user: User, value: str) -> str:
 
 
 @router.get("/me", response_model=UserPublic, summary="Who am I")
-def me(user: CurrentUser, request: Request) -> UserPublic:
-    return user_public(user, request)
+def me(user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
+    public = user_public(user, request)
+    public.keys_need_second_factor = two_factor.keys_wait(db, user, getattr(request.state, "session_kind", None))
+    return public
 
 
 @router.patch("/me", response_model=UserPublic, summary="Change own profile settings")
@@ -305,9 +313,11 @@ def unread(user: CurrentUser, db: DbSession) -> dict:
 
 @router.get("/providers", summary="List sign-in providers")
 def providers(db: DbSession) -> list[dict]:
-    """Public: the buttons on the sign-in page."""
-    rows = db.scalars(select(OidcProvider).where(OidcProvider.enabled.is_(True)).order_by(OidcProvider.id))
-    return [{"slug": p.slug, "label": p.label} for p in rows]
+    """Public: the buttons on the sign-in page, in the order of the list (as ``/api/v1/oidc/providers``)."""
+    from ..services.oidc_store import SqlStore
+    from ..vendor.nexoidc import providers as oidc_providers
+
+    return oidc_providers.public_list(SqlStore(db))
 
 
 def utc_now_iso() -> str:

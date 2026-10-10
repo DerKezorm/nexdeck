@@ -29,6 +29,9 @@ class UserPublic(BaseModel):
     avatar_url: str | None = None
     #: Where a password reset would go; empty while none is stored.
     email: str = ""
+    #: Signed in through a provider that checks the second factor itself, while the installation asks one of
+    #: everybody: this session is spared, the account's API tokens wait until it sets one up.
+    keys_need_second_factor: bool = False
 
 
 class LoginBody(BaseModel):
@@ -85,6 +88,9 @@ class SetupStatus(BaseModel):
     #: Whether a forgotten password can be sent anywhere. Offering the link
     #: without a mail server would be a door that opens onto a wall.
     can_reset_password: bool = False
+    #: Whether the sign-in page offers the password form to everybody. Off: only the provider buttons, and below
+    #: them the small way in for an administrator.
+    password_login: bool = True
 
 
 # -- boards ------------------------------------------------------------------
@@ -364,28 +370,6 @@ class TokenCreate(BaseModel):
     expires_days: int = Field(default=0, ge=0, le=3650)
 
 
-class OidcProviderBody(BaseModel):
-    slug: str = Field(min_length=1, max_length=40, pattern=r"^[a-z0-9-]+$")
-    label: str = Field(min_length=1, max_length=80)
-    issuer_url: str = Field(min_length=8, max_length=300)
-    client_id: str = Field(min_length=1, max_length=300)
-    client_secret: str = Field(default="", max_length=600)
-    scopes: str = Field(default="openid profile email", max_length=200)
-    enabled: bool = True
-    #: Off unless said otherwise: a new provider hands out no accounts on its own.
-    auto_create: bool = False
-    default_role: Literal["admin", "user", "guest"] = "user"
-    #: The provider asks for a second factor itself, so nexdeck does not.
-    trusts_second_factor: bool = False
-
-
-class AuthentikSetupBody(BaseModel):
-    """Where authentik is, and a token that may create applications there. The token is not stored."""
-
-    url: str = Field(min_length=1, max_length=300)
-    token: str = Field(min_length=1, max_length=2000)
-
-
 class SettingsBody(BaseModel):
     public_url: str | None = Field(default=None, max_length=300)
     update_check: bool | None = None
@@ -393,6 +377,10 @@ class SettingsBody(BaseModel):
     default_locale: Code | None = None
     #: Whether everybody has to set up a second factor before doing anything.
     require_two_factor: bool | None = None
+    #: Sign-in with a password for everybody (off: administrators only; needs an active provider).
+    password_login: bool | None = None
+    #: The administrator answered the question about the redirect addresses that follow the public address.
+    confirm_address: bool = False
 
 
 class SmtpBody(BaseModel):

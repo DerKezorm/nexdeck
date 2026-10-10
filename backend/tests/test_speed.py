@@ -343,53 +343,6 @@ def test_web_push_builds_one_client_and_not_one_per_subscription(
     assert built.count == 1, f"four devices cost {built.count} clients, one TLS context each"
 
 
-def test_a_sign_in_builds_one_client_and_not_one_per_leg(
-    data_dir: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """One sign-in walks discovery, the code exchange and userinfo. Three
-    legs, three clients, three seconds of a stopped server, while the person
-    signing in sits on a redirect and waits.
-
-    The legs differ in timeout and headers; httpx takes both per request, so
-    sharing the client costs them nothing.
-    """
-    import asyncio
-
-    from app.services import oidc
-
-    monkeypatch.setattr(oidc, "_discovery", {})
-    built = Clients(oidc, monkeypatch)
-    document = {
-        "issuer": "https://id.example.com",
-        "authorization_endpoint": "https://id.example.com/auth",
-        "token_endpoint": "https://id.example.com/token",
-        "jwks_uri": "https://id.example.com/certs",
-        "userinfo_endpoint": "https://id.example.com/userinfo",
-    }
-
-    async def get(_self: object, _url: str, **_kwargs: object) -> object:
-        return SimpleNamespace(status_code=200, json=lambda: document)
-
-    async def post(_self: object, _url: str, **_kwargs: object) -> object:
-        return SimpleNamespace(status_code=200, json=lambda: {"id_token": "pretend", "access_token": "pretend"})
-
-    monkeypatch.setattr(httpx.AsyncClient, "get", get)
-    monkeypatch.setattr(httpx.AsyncClient, "post", post)
-
-    async def one_sign_in() -> None:
-        try:
-            assert await oidc.discovery("https://id.example.com")
-            assert await oidc.exchange(document, "nexdeck", "secret", "https://deck.example.com/cb", "code", "verifier")
-            assert await oidc.userinfo(document, "pretend")
-            # A second provider, so the discovery cache does not hide a build.
-            assert await oidc.discovery("https://other.example.com")
-        finally:
-            await oidc.close_client()
-
-    asyncio.run(one_sign_in())
-    assert built.count == 1, f"one sign-in cost {built.count} clients, one TLS context each"
-
-
 def test_the_update_check_builds_one_client_and_not_one_per_look(
     data_dir: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

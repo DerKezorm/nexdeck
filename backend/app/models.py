@@ -189,43 +189,70 @@ class ApiToken(Base):
 
 
 class OidcProvider(Base):
+    """One sign-in provider (the shared blueprint "Anmeldung mit OIDC und authentik", part 01).
+
+    ⚠️ Three columns keep the names nexdeck 0.36 gave them, ``issuer_url``,
+    ``client_secret`` and, in ``oidc_links``, ``user_id``, for one version:
+    an operator who goes back to 0.36 finds the table in the shape it reads,
+    and its providers still sign people in. The attributes carry the
+    blueprint's names. ``client_secret`` holds the secret the way 0.36 reads
+    it; ``client_secret_enc`` holds it under the provider's own context
+    (``oidc-provider:<id>``), and nexdeck reads only that one. Every column
+    0.36 does not know has a ``server_default``, so 0.36 still inserts rows.
+    """
+
     __tablename__ = "oidc_providers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     slug: Mapped[str] = mapped_column(String(40), unique=True)
     label: Mapped[str] = mapped_column(String(80))
-    issuer_url: Mapped[str] = mapped_column(String(300))
+    issuer: Mapped[str] = mapped_column("issuer_url", String(500))
     client_id: Mapped[str] = mapped_column(String(300))
-    client_secret: Mapped[str] = mapped_column(String(600))
-    scopes: Mapped[str] = mapped_column(String(200), default="openid profile email")
+    #: The secret as nexdeck 0.36 reads it (``crypto.encrypt``), kept beside the new one for the way back.
+    legacy_secret: Mapped[str] = mapped_column("client_secret", String(600), default="")
+    client_secret_enc: Mapped[str] = mapped_column(Text, default="", server_default="")
+    scopes: Mapped[str] = mapped_column(String(500), default="openid profile email")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    #: Create an account on first sign-in, with this role.
-    #:
-    #: ⚠️ Off by default; until 0.36.0 on, so a provider added by hand gave
-    #: anybody with a login there an account here, unless the operator thought
-    #: to switch it off. Rows stored before keep their value: no migration
-    #: touches the column, the default is applied only to new rows.
+    #: "New people get an account". ⚠️ Off by default; until 0.36.0 on, so a
+    #: provider added by hand gave anybody with a login there an account here.
+    #: Rows stored before keep their value.
     auto_create: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: The role 0.36 gave accounts it created. Kept for the way back; nexdeck
+    #: no longer offers it in the form (``services/oidc_store.NEW_ACCOUNT_ROLE``).
     default_role: Mapped[str] = mapped_column(String(16), default=Role.user.value)
-    #: This provider asks for a second factor itself, so nexdeck does not.
-    #:
-    #: ⚠️ Off by default, which is the safe way round: until 07.09.2026 the
-    #: OIDC return path opened a session outright, so an account with a
-    #: confirmed authenticator app was let in without a code as long as it came
-    #: through a provider. Whoever runs authentik or Authelia with MFA in front
-    #: ticks this and is not asked twice. nexdeck cannot find it out by itself.
-    trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: "The provider checks the second factor itself". On for new entries
+    #: (blueprint 01); entries from before keep the value they had, off by
+    #: default until 0.36.
+    trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: "" by hand, "authentik" set up by the authentik button (only that one is touched by it).
+    managed: Mapped[str] = mapped_column(String(20), default="", server_default="")
+    #: The order of the buttons on the sign-in page.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    #: The callback the provider knows when it is not the standard one: entries from before the list keep
+    #: ``/api/v1/auth/oidc/<slug>/callback``, which their provider has registered.
+    redirect_path: Mapped[str] = mapped_column(String(300), default="", server_default="")
+    created_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True, default=utcnow)
+    #: The redirect address the authentik button registered at authentik last.
+    registered_redirect: Mapped[str] = mapped_column(String(500), default="", server_default="")
 
 
 class OidcLink(Base):
     __tablename__ = "oidc_links"
-    __table_args__ = (UniqueConstraint("provider_id", "subject"),)
+    __table_args__ = (
+        UniqueConstraint("provider_id", "subject"),
+        Index("ux_oidc_links_provider_account", "provider_id", "user_id", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     provider_id: Mapped[int] = mapped_column(ForeignKey("oidc_providers.id", ondelete="CASCADE"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The account (``account_id`` in the blueprint); the column keeps the name 0.36 reads.
+    account_id: Mapped[int] = mapped_column("user_id", ForeignKey("users.id", ondelete="CASCADE"), index=True)
     subject: Mapped[str] = mapped_column(String(300))
+    #: The ``iss`` of the token that made the link; "" for a link nexdeck 0.36 made.
+    issuer: Mapped[str] = mapped_column(String(500), default="", server_default="")
     email: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True, default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="oidc_links")
 

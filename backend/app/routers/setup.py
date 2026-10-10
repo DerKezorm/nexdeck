@@ -10,11 +10,13 @@ from sqlalchemy import func, select
 from .. import __version__, languages
 from ..config import get_settings
 from ..deps import DbSession, error
-from ..models import Board, OidcProvider, Role, User
+from ..models import Board, Role, User
 from ..schemas import SetupBody, SetupStatus, UserPublic
 from ..security import hash_password
-from ..services import demo_board, password_reset
+from ..services import demo_board, password_reset, sign_in
 from ..services.collector import collector
+from ..services.oidc_store import SqlStore
+from ..vendor.nexoidc import providers as oidc_providers
 from .auth import open_session, user_public
 
 router = APIRouter(prefix="/api/v1/setup", tags=["setup"])
@@ -28,10 +30,11 @@ def needs_setup(db: DbSession) -> bool:
 @router.get("/status", response_model=SetupStatus, summary="Is the first start still pending")
 def setup_status(db: DbSession) -> SetupStatus:
     """Public: the app decides between the wizard and the sign-in page from this."""
-    providers = [{"slug": p.slug, "label": p.label} for p in db.scalars(select(OidcProvider).where(OidcProvider.enabled.is_(True)))]
+    providers = oidc_providers.public_list(SqlStore(db))
     return SetupStatus(
         needs_setup=needs_setup(db), version=__version__, demo=get_settings().demo,
         providers=providers, can_reset_password=password_reset.available(db),
+        password_login=sign_in.password_login(db),
     )
 
 

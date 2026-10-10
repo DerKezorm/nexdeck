@@ -22,6 +22,12 @@ from app.main import app
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "backend" / "app"
+#: The shared sign-in module (``bauplaene/oidc``), the same in every nex app and changed only at its source, where
+#: its own tests guard it; ``tests/nexoidc/test_nexoidc_vendored.py`` makes sure nothing here differs from it. Two
+#: guards below leave it out: its HTTP clients reach only what an administrator entered (the provider, authentik,
+#: often on the same host or network, which the outbound guard would refuse), and its letters ä, ö, ü, ß are the
+#: table that writes them out in a short name, not text anybody reads.
+VENDORED = BACKEND / "vendor"
 FRONTEND = ROOT / "frontend" / "src"
 
 #: Addresses that work without any sign-in, each with the reason.
@@ -39,8 +45,11 @@ PUBLIC: dict[str, str] = {
     "POST /api/v1/auth/reset": "the same link, redeemed",
     "POST /api/v1/auth/logout": "clears the cookie of the caller",
     "GET /api/v1/auth/providers": "the sign-in buttons",
-    "GET /api/v1/auth/oidc/{slug}/login": "starts a sign-in",
-    "GET /api/v1/auth/oidc/{slug}/callback": "the provider returns here",
+    "GET /api/v1/auth/oidc/{slug}/login": "starts a sign-in (the address of 0.36, kept for bookmarks)",
+    "GET /api/v1/auth/oidc/{slug}/callback": "the provider returns here (providers set up with 0.36 know this one)",
+    "GET /api/v1/oidc/providers": "the sign-in buttons: short name and label of the active providers",
+    "GET /api/v1/oidc/{slug}/start": "starts a sign-in",
+    "GET /api/v1/oidc/{slug}/callback": "the provider returns here",
     "GET /api/v1/icons/{name}.{ext}": "logos, like any image; kiosk displays have no session",
     "GET /api/v1/kiosk": "checks the kiosk token itself",
     "POST /api/v1/kiosk/session": "the door of a wall display: the token in the body is the credential",
@@ -116,8 +125,8 @@ GUESTS_MAY_CHANGE: dict[str, str] = {
     "POST /api/v1/auth/two-factor/confirm": "own second factor",
     "POST /api/v1/auth/two-factor/recovery-codes": "own second factor",
     "DELETE /api/v1/auth/two-factor": "own second factor",
-    "POST /api/v1/auth/oidc/{slug}/link": "own link to a sign-in provider",
-    "DELETE /api/v1/auth/oidc/{slug}/link": "own link to a sign-in provider",
+    "POST /api/v1/oidc/{slug}/link": "own link to a sign-in provider, with the own password",
+    "DELETE /api/v1/oidc/{slug}/link": "own link to a sign-in provider",
     "POST /api/v1/notices/read": "marking one's own notices as read",
     "DELETE /api/v1/notices/{notice_id}": "one of one's own notices",
     "DELETE /api/v1/notices": "all of one's own read notices",
@@ -200,6 +209,8 @@ def test_every_outbound_client_comes_from_the_one_factory() -> None:
         scanned += 1
         if path.name == "base.py" and path.parent.name == "adapters":
             continue  # the factory itself
+        if path.is_relative_to(VENDORED):
+            continue
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if "httpx.AsyncClient(" in line:
                 offenders.append(f"{path.relative_to(ROOT)}:{number}")
@@ -276,6 +287,8 @@ def test_backend_texts_are_english() -> None:
     scanned = 0
     for path in BACKEND.rglob("*.py"):
         scanned += 1
+        if path.is_relative_to(VENDORED):
+            continue
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if GERMAN.search(line):
                 offenders.append(f"{path.relative_to(ROOT)}:{number}")

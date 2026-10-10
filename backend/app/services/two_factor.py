@@ -217,6 +217,26 @@ def set_required(db: DbSessionType, wanted: bool) -> bool:
     return bool(wanted)
 
 
-def must_set_up(db: DbSessionType, user: User) -> bool:
-    """Is this person being kept at the door until they set one up?"""
-    return required(db) and not enabled(user)
+#: The session kind of a sign-in through a provider whose entry checks the second factor itself.
+VIA_PROVIDER = "provider"
+
+
+def must_set_up(db: DbSessionType, user: User, session_kind: str | None = None) -> bool:
+    """Is this person being kept at the door until they set one up?
+
+    Only accounts with a password (blueprint 01): an account that signs in through a provider only is not forced.
+    And not in a session opened through a provider whose entry checks the second factor itself, even when the account
+    has a password; signed in with that password, the duty holds as before. API tokens have no session: they wait
+    until the account has a factor (``keys_wait``).
+    """
+    from ..security import has_usable_password
+
+    if not required(db) or enabled(user) or not has_usable_password(user.password_hash):
+        return False
+    return session_kind != VIA_PROVIDER
+
+
+def keys_wait(db: DbSessionType, user: User, session_kind: str | None) -> bool:
+    """Spared the duty in this session, but its API tokens are held at the door until a factor is set up: the
+    token page says so ("Works only once you set up a second factor.")."""
+    return session_kind == VIA_PROVIDER and must_set_up(db, user, None)
