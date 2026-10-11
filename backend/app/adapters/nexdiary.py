@@ -43,7 +43,6 @@ from .base import (
 )
 from .nexapp_base import NexappApi, count_of
 
-
 #: Every request makes nexdiary decrypt the whole history of the account, so the answer is kept for five minutes and
 #: both cards, which read the one answer, ask only every ten.
 KEEP_SECONDS = 300
