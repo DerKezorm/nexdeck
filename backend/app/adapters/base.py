@@ -1246,6 +1246,13 @@ class MediaSource:
     #: How long the server may keep an image; 0 means every request goes to the service.
     cache_seconds: float = 3600
     media_type: str = ""
+    #: True for a service whose picture is an SVG drawn for exactly this use.
+    #:
+    #: ⚠️ Declared by the adapter, never guessed from the answer. The image
+    #: route refuses SVG, which is a document that can run script, and an
+    #: adapter that asks for it gets the answer checked for script and served
+    #: in a sandbox of its own.
+    svg: bool = False
 
 
 #: What a button's target list says for an action that acts on the whole

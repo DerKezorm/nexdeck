@@ -308,7 +308,7 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
         {/* A number rolls to its new reading; a word rises in, as it always did. */}
         <div className={`num text-[30px] leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`} key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}>
           <Rolled value={primary?.value} />
-          {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{primary.unit}</span>}
+          {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{tLabel(primary.unit)}</span>}
         </div>
         {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{tLabel(primary.label)}</div>}
       </div>
@@ -479,13 +479,20 @@ export function StatsCard({ data, series }: RenderProps) {
 /** Kinds of card whose rows are titles of films, series, music or books: queues, requests, what arrived or was watched. */
 const MEDIA_ROWS = /\.(queue|requests|approvals|recent|arrivals|top|torrents|downloads|wanted|history|watched|listening|playing|activity)$/
 
+/**
+ * Pictures that are not covers: the crop of a camera detection (`square`) and a board or page drawn small
+ * (`wide`, 16 to 10). They show the inside of the home or of somebody's work, so showcase mode blurs them,
+ * and their titles are names, not titles of films.
+ */
+const PICTURE_SHAPES = new Set(['square', 'wide'])
+
 function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>, title: string, subtitle: string): [string, string] {
   if (!disguise.on) return [title, subtitle]
   if (/^(nexmail|imap)\.latest$/.test(kind)) return [disguise.as('sender', title), subtitle ? disguise.as('subject', subtitle) : subtitle]
   if (item.worded) return [title, disguise.free(subtitle)]
   // A row that says who: the person and the device in its line are made up, as on the card of what is playing.
   if (typeof item.user === 'string' && item.user) subtitle = playingLine(subtitle, item.user)
-  if ((item.art && item.art_shape !== 'square') || MEDIA_ROWS.test(kind)) return [disguise.media(title), disguise.free(subtitle)]
+  if ((item.art && !PICTURE_SHAPES.has(String(item.art_shape ?? ''))) || MEDIA_ROWS.test(kind)) return [disguise.media(title), disguise.free(subtitle)]
   if (kind.endsWith('.users')) return [disguise.as('person', title), disguise.free(subtitle)]
   return [disguise.free(title), disguise.free(subtitle)]
 }
@@ -542,10 +549,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 // recently added. Small, and the dot moves onto its corner so
                 // the row still says how it stands.
                 // `art_shape: square` for a picture that is not a cover, such
-                // as the crop of a camera detection.
-                <span className={`relative shrink-0 rounded overflow-hidden bg-surface-hover ${item.art_shape === 'square' ? 'w-10 aspect-square' : 'w-8 aspect-[2/3]'}`}>
+                // as the crop of a camera detection; `wide` for a board's picture.
+                <span className={`relative shrink-0 rounded overflow-hidden bg-surface-hover ${item.art_shape === 'square' ? 'w-10 aspect-square' : item.art_shape === 'wide' ? 'w-16 aspect-[16/10]' : 'w-8 aspect-[2/3]'}`}>
                   {/* The crop of a camera picture shows the home; in showcase mode it is blurred. */}
-                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${disguise.on && item.art_shape === 'square' ? 'blur-md scale-110' : ''}`} />
+                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${disguise.on && PICTURE_SHAPES.has(String(item.art_shape ?? '')) ? 'blur-md scale-110' : ''}`} />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>
               ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}

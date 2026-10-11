@@ -32,6 +32,12 @@ describe('list row pictures', () => {
     expect(frameOf({ art: 'proxy:/thumb/1726680000.5-ab12cd', art_shape: 'square' }).className).toContain('aspect-square')
   })
 
+  it('are wide for a board', () => {
+    const frame = frameOf({ art: 'proxy:/board/Ab3_dEf-9xQ/dark/320/1791707400', art_shape: 'wide' })
+    expect(frame.className).toContain('aspect-[16/10]')
+    expect(frame.className).not.toContain('aspect-square')
+  })
+
   it('stay a cover without a shape', () => {
     expect(frameOf({ art: 'proxy:/Items/1/Images/Primary' }).className).toContain('aspect-[2/3]')
   })
