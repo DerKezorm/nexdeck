@@ -32,7 +32,7 @@
       "slug": "Nombre corto",
       "slugHint": "Forma parte de la dirección de retorno; no se puede cambiar después.",
       "issuer": "Emisor (issuer)",
-      "issuerHint": "authentik: https://auth.example.com/application/o/{{app}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-DEL-INQUILINO/v2.0, o common u organizations para varios inquilinos. Entra solo acepta direcciones de retorno https (salvo localhost) y envía la dirección de correo solo como el claim opcional email.",
+      "issuerHint": "authentik: https://auth.example.com/application/o/{{slug}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-DEL-INQUILINO/v2.0, o common u organizations para varios inquilinos. Entra solo acepta direcciones de retorno https (salvo localhost) y envía la dirección de correo solo como el claim opcional email.",
       "clientId": "ID de cliente",
       "secret": "Secreto de cliente",
       "secretKept": "guardado, deja vacío para conservarlo",
@@ -100,7 +100,7 @@
       "oidc_token_refused": "El proveedor no canjeó el código.",
       "oidc_token_invalid": "La respuesta del proveedor no era válida.",
       "oidc_no_signing_key": "El proveedor firma sin clave. Elige allí una clave de firma para el proveedor.",
-      "oidc_no_account": "Aquí no hay cuenta para ti. Pide una invitación, o inicia sesión con tu contraseña y vincula tu cuenta en Mi cuenta, Seguridad.",
+      "oidc_no_account": "Aquí no hay cuenta para ti. Pide una invitación, o inicia sesión con tu contraseña y vincula tu cuenta en los ajustes de tu cuenta.",
       "oidc_subject_taken": "Esta identidad ya está vinculada con otra cuenta.",
       "oidc_only_account": "Esta cuenta inicia sesión solo con este proveedor. El último vínculo se queda.",
       "oidc_link_mismatch": "Este vínculo pertenece a otra cuenta.",
@@ -118,6 +118,15 @@
       "scopes_invalid": "Los ámbitos deben contener openid.",
       "provider_managed": "Este proveedor viene de un acoplamiento y solo cambia allí.",
       "provider_unknown": "Este proveedor ya no existe."
+    },
+    "noInvitations": {
+      "admin": {
+        "addressHint": "La dirección con la que se llega a {{app}}. Los proveedores te devuelven allí tras iniciar sesión.",
+        "autoCreateHint": "Desactivado: por este proveedor solo entran las cuentas vinculadas. Activado: quien tenga una cuenta allí recibe una aquí como miembro."
+      },
+      "error": {
+        "oidc_no_account": "Aquí no hay cuenta para ti. Pídele una al operador, o inicia sesión con tu contraseña y vincula tu cuenta en los ajustes de tu cuenta."
+      }
     },
     "single": {
       "admin": {

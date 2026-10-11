@@ -32,7 +32,7 @@
       "slug": "Nom court",
       "slugHint": "Fait partie de l’adresse de retour ; ne peut plus être modifié ensuite.",
       "issuer": "Émetteur (issuer)",
-      "issuerHint": "authentik : https://auth.example.com/application/o/{{app}}/. Microsoft Entra ID : https://login.microsoftonline.com/ID-DU-LOCATAIRE/v2.0, ou common ou organizations pour plusieurs locataires. Entra n’accepte que des adresses de retour https (sauf localhost) et n’envoie l’adresse e-mail que comme claim facultatif email.",
+      "issuerHint": "authentik : https://auth.example.com/application/o/{{slug}}/. Microsoft Entra ID : https://login.microsoftonline.com/ID-DU-LOCATAIRE/v2.0, ou common ou organizations pour plusieurs locataires. Entra n’accepte que des adresses de retour https (sauf localhost) et n’envoie l’adresse e-mail que comme claim facultatif email.",
       "clientId": "ID client",
       "secret": "Secret client",
       "secretKept": "enregistré, laisser vide pour le conserver",
@@ -100,7 +100,7 @@
       "oidc_token_refused": "Le fournisseur n’a pas échangé le code.",
       "oidc_token_invalid": "La réponse du fournisseur n’était pas valide.",
       "oidc_no_signing_key": "Le fournisseur signe sans clé. Choisis là-bas une clé de signature pour le fournisseur.",
-      "oidc_no_account": "Il n’y a pas de compte pour toi ici. Demande une invitation, ou connecte-toi avec ton mot de passe et lie ton compte sous Mon compte, Sécurité.",
+      "oidc_no_account": "Il n’y a pas de compte pour toi ici. Demande une invitation, ou connecte-toi avec ton mot de passe et lie ton compte dans les réglages de ton compte.",
       "oidc_subject_taken": "Cette identité est déjà liée à un autre compte.",
       "oidc_only_account": "Ce compte se connecte uniquement via ce fournisseur. Le dernier lien reste.",
       "oidc_link_mismatch": "Ce lien appartient à un autre compte.",
@@ -118,6 +118,15 @@
       "scopes_invalid": "Les portées doivent contenir openid.",
       "provider_managed": "Ce fournisseur vient d’un couplage et ne change que là-bas.",
       "provider_unknown": "Ce fournisseur n’existe plus."
+    },
+    "noInvitations": {
+      "admin": {
+        "addressHint": "L’adresse à laquelle on atteint {{app}}. Les fournisseurs renvoient les gens à cette adresse après la connexion.",
+        "autoCreateHint": "Désactivé : seuls les comptes liés entrent via ce fournisseur. Activé : quiconque y a un compte en reçoit un ici comme membre."
+      },
+      "error": {
+        "oidc_no_account": "Il n’y a pas de compte pour toi ici. Demande-en un à l’opérateur, ou connecte-toi avec ton mot de passe et lie ton compte dans les réglages de ton compte."
+      }
     },
     "single": {
       "admin": {

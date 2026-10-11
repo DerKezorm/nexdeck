@@ -32,7 +32,7 @@
       "slug": "Nome breve",
       "slugHint": "Fa parte dell’indirizzo di ritorno; non si può cambiare in seguito.",
       "issuer": "Emittente (issuer)",
-      "issuerHint": "authentik: https://auth.example.com/application/o/{{app}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-TENANT/v2.0, oppure common o organizations per più tenant. Entra accetta solo indirizzi di ritorno https (localhost a parte) e invia l’indirizzo e-mail solo come claim facoltativo email.",
+      "issuerHint": "authentik: https://auth.example.com/application/o/{{slug}}/. Microsoft Entra ID: https://login.microsoftonline.com/ID-TENANT/v2.0, oppure common o organizations per più tenant. Entra accetta solo indirizzi di ritorno https (localhost a parte) e invia l’indirizzo e-mail solo come claim facoltativo email.",
       "clientId": "ID client",
       "secret": "Segreto client",
       "secretKept": "salvato, lascia vuoto per mantenerlo",
@@ -100,7 +100,7 @@
       "oidc_token_refused": "Il provider non ha riscattato il codice.",
       "oidc_token_invalid": "La risposta del provider non era valida.",
       "oidc_no_signing_key": "Il provider firma senza chiave. Scegli lì una chiave di firma per il provider.",
-      "oidc_no_account": "Qui non c’è un account per te. Chiedi un invito, oppure accedi con la tua password e collega il tuo account in Il mio account, Sicurezza.",
+      "oidc_no_account": "Qui non c’è un account per te. Chiedi un invito, oppure accedi con la tua password e collega il tuo account nelle impostazioni del tuo account.",
       "oidc_subject_taken": "Questa identità è già collegata a un altro account.",
       "oidc_only_account": "Questo account accede solo tramite questo provider. L’ultimo collegamento resta.",
       "oidc_link_mismatch": "Questo collegamento appartiene a un altro account.",
@@ -118,6 +118,15 @@
       "scopes_invalid": "Gli ambiti devono contenere openid.",
       "provider_managed": "Questo provider viene da un accoppiamento e cambia solo lì.",
       "provider_unknown": "Questo provider non esiste più."
+    },
+    "noInvitations": {
+      "admin": {
+        "addressHint": "L’indirizzo con cui si raggiunge {{app}}. I provider rimandano le persone lì dopo l’accesso.",
+        "autoCreateHint": "Disattivato: tramite questo provider entrano solo account collegati. Attivato: chi ha un account lì ne riceve uno qui come membro."
+      },
+      "error": {
+        "oidc_no_account": "Qui non c’è un account per te. Chiedine uno all’operatore, oppure accedi con la tua password e collega il tuo account nelle impostazioni del tuo account."
+      }
     },
     "single": {
       "admin": {

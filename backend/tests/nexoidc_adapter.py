@@ -5,10 +5,10 @@ The contract tests in ``tests/nexoidc/`` are the same in every nex app and never
 through this class: its real routes, a fresh database per test, its accounts and its second factor. Passwords and
 keys are made at run time; none is written into this file.
 
-nexdeck has no invitations (#job-193: the invitation parts of the blueprint do not apply). The contract tests have
-no switch for that, so ``make_invite`` skips the test that asks for one, by name and with the reason; what those
-tests check besides the invitation (the last link of an account without a password, the name of a new account
-from Entra) is checked with ``auto_create`` in ``tests/test_oidc_app.py``.
+nexdeck has no invitations (#job-193: the invitation parts of the blueprint do not apply). ``has_invitations`` is False, so
+the contract skips the tests that ask for an invitation, with the reason; what those tests check besides the
+invitation (the last link of an account without a password, the name of a new account from Entra) runs over
+``auto_create`` in the contract and in ``tests/test_oidc_app.py``.
 """
 
 from __future__ import annotations
@@ -24,7 +24,6 @@ from typing import Any
 
 import httpx
 import pyotp
-import pytest
 from fastapi.testclient import TestClient
 from oidc_contract import StandardAdapter
 from sqlalchemy import func, select
@@ -39,6 +38,7 @@ class Adapter(StandardAdapter):
     package = "app.vendor.nexoidc"
     api = "/api/v1"
     single_account = False
+    has_invitations = False
     only_authentik = False
     #: nexdeck is not part of the nexsuite Verbund (blueprint 06 names nexcanvas, nextasks, nexbrand, nexlore).
     supports_coupling = False
@@ -161,7 +161,7 @@ class Adapter(StandardAdapter):
         )
 
     def make_invite(self, rights: str) -> str:
-        pytest.skip("nexdeck has no invitations (#job-193); checked with auto_create in tests/test_oidc_app.py")
+        raise NotImplementedError("nexdeck has no invitations (has_invitations is False)")
 
     def rights_of(self, name: str) -> str | None:
         from app.db import session_factory

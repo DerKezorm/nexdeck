@@ -1,7 +1,7 @@
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
+import { oidcVariables, oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
 import oidcEn from '../vendor/nexoidc/oidc.en.json'
 import en from './en.json'
 import { registerTexts, type TextBundle } from './texts'
@@ -43,7 +43,7 @@ const oidcLoaders: Record<string, () => Promise<{ default: unknown }>> = {
 
 /** A language's own words with the sign-in words merged in (nexdeck has many accounts, not one). */
 export function withOidc(words: Record<string, unknown>, oidc: unknown): Record<string, unknown> {
-  return { ...words, ...oidcWording(oidc as OidcWording, { singleAccount: false }) }
+  return { ...words, ...oidcWording(oidc as OidcWording, { singleAccount: false, invitations: false }) }
 }
 
 const textLoaders: Record<string, () => Promise<{ default: unknown }>> = {
@@ -57,7 +57,7 @@ void i18next.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
   resources: { en: { translation: withOidc(en, oidcEn) } },
-  interpolation: { escapeValue: false, defaultVariables: { app: 'nexdeck' } },
+  interpolation: { escapeValue: false, defaultVariables: oidcVariables('nexdeck') },
   returnNull: false,
 })
 

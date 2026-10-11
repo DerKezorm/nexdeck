@@ -19,6 +19,7 @@ from ..schemas import SettingsBody
 from ..services import collector as collector_module
 from ..services import sign_in, two_factor
 from ..services.collector import collector, demo_flag, set_demo_flag
+from ..services.home_network import public_base
 from ..services.notify import emit
 from ..services.public_url import public_url
 from ..services.sse import hub
@@ -205,7 +206,7 @@ def _checked_public_url(db: DbSession, request: Request, wanted: str, confirmed:
         except ValueError as why:
             raise error("public_url_invalid", f"This is not a public address ({why}).",
                         status.HTTP_422_UNPROCESSABLE_ENTITY) from why
-    question = authentik.public_url_guard(SqlStore(db), address, str(request.base_url), confirm=confirmed)
+    question = authentik.public_url_guard(SqlStore(db), address, public_base(request), confirm=confirmed)
     if question is not None:
         from .oidc import public_url_change_error
 
