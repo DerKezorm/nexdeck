@@ -1354,6 +1354,26 @@
         "Danke an bluedsticker für die Ideen und die Meldung (#36).",
         "DELETE /api/v1/notices nimmt all=true, um auch die ungelesenen Hinweise zu löschen; ohne bleiben sie wie bisher."
       ]
+    },
+    "0.39.1": {
+      "lead": "Eine Sicherheitskorrektur für nexdeck hinter einem Reverse Proxy: Das Schema aus dem Proxy zählt nur noch von einem Proxy, den du genannt hast.",
+      "sections": [
+        {
+          "title": "Hinter einem Proxy, der TLS beendet: ihn nennen",
+          "body": "Bisher glaubte nexdeck X-Forwarded-Proto jedem Absender, solange NEXDECK_TRUSTED_PROXIES leer war. So entschied jeder, ob die Cookies das Secure-Merkmal tragen. Jetzt glaubt nexdeck ab Werk niemandem. Beendet ein Proxy vor nexdeck TLS, trag seine Adresse oder sein Netz in NEXDECK_TRUSTED_PROXIES ein, oder setz NEXDECK_COOKIE_SECURE=always. Sonst gehen die Cookies ohne Secure hinaus; die Anmeldung funktioniert weiter.",
+          "path": "README > Reverse proxy"
+        },
+        {
+          "title": "Anmeldung im Heimnetz hinter HAProxy",
+          "body": "Ein Proxy, der X-Forwarded-For eine eigene Zeile hinzufügt, statt an die mitgebrachte anzuhängen, wie HAProxy es tut, ließ die Zeile des Absenders gelten. nexdeck liest jetzt jede Zeile, von rechts.",
+          "path": "System > Heimnetz"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Von mehreren X-Forwarded-Host-Zeilen eines genannten Proxys zählt für die Rückleitadresse der Anmeldung die letzte.",
+        "Die authentik-Karte zeigt weiter, welches Schema ein Proxy nennt, und warnt, wenn nexdeck ihm nicht glaubt."
+      ]
     }
   }
 }

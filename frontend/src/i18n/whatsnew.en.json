@@ -1354,6 +1354,26 @@
         "Thanks to bluedsticker for the ideas and the report (#36).",
         "DELETE /api/v1/notices takes all=true to remove the unread notices too; without it only the read ones go, as before."
       ]
+    },
+    "0.39.1": {
+      "lead": "A security fix for nexdeck behind a reverse proxy: the scheme a proxy names counts only from a proxy you named.",
+      "sections": [
+        {
+          "title": "Behind a proxy that ends TLS: name it",
+          "body": "Until now nexdeck believed X-Forwarded-Proto from anybody while NEXDECK_TRUSTED_PROXIES was empty, so any sender decided whether the cookies carried the Secure flag. Now nobody is believed out of the box. If a proxy in front of nexdeck ends TLS, put its address or network in NEXDECK_TRUSTED_PROXIES, or set NEXDECK_COOKIE_SECURE=always. Otherwise the cookies go without the Secure flag; signing in keeps working.",
+          "path": "README > Reverse proxy"
+        },
+        {
+          "title": "Home network sign-in behind HAProxy",
+          "body": "A proxy that adds a line of its own to X-Forwarded-For instead of appending to the one it got, as HAProxy does, let the sender's line count. nexdeck now reads every line, from the right.",
+          "path": "System > Home network"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Of several X-Forwarded-Host lines from a named proxy the last one counts for the redirect address of the sign-in.",
+        "The authentik card still shows the scheme a proxy names and warns when nexdeck does not take its word."
+      ]
     }
   }
 }

@@ -3,6 +3,22 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.39.1 (2026-10-11)
+
+### Security
+
+- **The Secure flag of the cookies takes `X-Forwarded-Proto` only from a proxy named in `NEXDECK_TRUSTED_PROXIES`.** While that list was empty, nexdeck believed the header from every sender, so anybody could decide whether a cookie carried the Secure flag. Now nobody is believed out of the box: the scheme is the one the request came in on. Of a named proxy the right-most value of the last header line counts, `http` or `https` in any case (`ws` or `wss` on a WebSocket). The redirect address of the sign-in already followed this rule.
+- **Signing in on the home network behind a proxy that adds its own `X-Forwarded-For` line** (HAProxy's `option forwardfor` does) read only the first line, the one the sender brought along. nexdeck now reads every line, from the right.
+
+### Fixed
+
+- Of several `X-Forwarded-Host` lines from a named proxy the last one counts for the redirect address of the sign-in, not the first.
+- The authentik card still shows the scheme a proxy names and warns when nexdeck does not take its word, although nothing else sees the header any more.
+
+### Upgrading
+
+**Behind a reverse proxy that ends TLS, name the proxy in `NEXDECK_TRUSTED_PROXIES`** (its address or network, comma separated), **or set `NEXDECK_COOKIE_SECURE=always`.** Without either, the cookies are sent without the Secure flag from this version on; signing in keeps working. If the home network sign-in already works behind your proxy, the proxy is named and nothing changes. No change to the database.
+
 ## 0.39.0 (2026-10-11)
 
 ### New
