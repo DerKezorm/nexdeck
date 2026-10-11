@@ -1298,6 +1298,37 @@
         "A NEXDECK_SECRET_KEY shorter than 16 bytes no longer ends in an error 500.",
         "Restoring a backup from 0.36 brings its sign-in providers along at once."
       ]
+    },
+    "0.38.0": {
+      "lead": "Four more apps of the family on the board: nexpaper, nexdiary, nexcanvas and nexbrand. And the problems card now says what is wrong.",
+      "sections": [
+        {
+          "title": "nexpaper",
+          "body": "Inbox shows how many documents wait and the oldest of them, yellow from a number or an age you choose. Deadlines lists what falls due in the next 14 days: bills, contracts that end, warranties that run out. Library counts the documents, the ones filed, the new ones of the week and the ones whose text is being read. Read with an API key of scope read. Needs nexpaper 1.1.0 or later.",
+          "path": "Edit mode (pencil) > Add widget > nexpaper"
+        },
+        {
+          "title": "nexdiary",
+          "body": "Diary shows the streak, whether today is written, and the entries and notes of the month. Time capsule says in how many days the next one opens. Numbers only: no word of the diary, no value, no title reaches the board. Needs nexdiary 0.8.0 or later.",
+          "path": "Edit mode (pencil) > Add widget > nexdiary"
+        },
+        {
+          "title": "nexcanvas and nexbrand",
+          "body": "Boards lists the boards changed last with a small picture of each, and Board shows one board large, live, light or dark. nexbrand shows its clients and the latest versions of their design sets, drafts first.",
+          "path": "Edit mode (pencil) > Add widget > nexcanvas"
+        },
+        {
+          "title": "The problems card says what is wrong",
+          "body": "A yellow or red card used to show up as a count, such as 0 errors and 1 warning. Now its row names the first one or two red and yellow findings of that card, says how many more there are, and links to the card's address or its service.",
+          "path": "Edit mode (pencil) > Add widget > Problems"
+        }
+      ],
+      "smallTitle": "Also in this release",
+      "small": [
+        "Thanks to GeOppenheimer for the idea behind the problems card (#35).",
+        "The four new integrations start as beta. A card at the address of another app of the family says so instead of showing noughts.",
+        "A picture a service draws as SVG is passed on only when its integration asks for it, checked for script and served in a sandbox."
+      ]
     }
   }
 }

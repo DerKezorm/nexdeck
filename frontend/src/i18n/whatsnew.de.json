@@ -1298,6 +1298,37 @@
         "Ein NEXDECK_SECRET_KEY unter 16 Byte endet nicht mehr in Fehler 500.",
         "Ein Backup aus 0.36 wiederherzustellen bringt die Anmelde-Anbieter sofort mit."
       ]
+    },
+    "0.38.0": {
+      "lead": "Vier weitere Apps der Familie aufs Board: nexpaper, nexdiary, nexcanvas und nexbrand. Und die Problemkarte sagt jetzt, was los ist.",
+      "sections": [
+        {
+          "title": "nexpaper",
+          "body": "Eingang zeigt, wie viele Dokumente warten, und die ältesten davon, gelb ab einer Menge oder einem Alter, das du festlegst. Fristen zeigt, was in den nächsten 14 Tagen fällig wird: Rechnungen, Verträge, die enden, Garantien, die ablaufen. Ablage zählt die Dokumente, die abgelegten, die neuen der Woche und die, deren Text gerade gelesen wird. Gelesen wird mit einem API-Schlüssel mit Scope read. Braucht nexpaper 1.1.0 oder neuer.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexpaper"
+        },
+        {
+          "title": "nexdiary",
+          "body": "Tagebuch zeigt die Serie, ob heute geschrieben ist, und die Einträge und Notizen des Monats. Zeitkapsel sagt, in wie vielen Tagen sich die nächste öffnet. Nur Zahlen: Kein Wort aus dem Tagebuch, kein Wert, kein Titel kommt aufs Board. Braucht nexdiary 0.8.0 oder neuer.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexdiary"
+        },
+        {
+          "title": "nexcanvas und nexbrand",
+          "body": "Boards zeigt die zuletzt geänderten Boards mit je einem kleinen Bild, Board zeigt ein Board groß, live, hell oder dunkel. nexbrand zeigt seine Kunden und die neuesten Fassungen ihrer Gestaltung, Entwürfe zuerst.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > nexcanvas"
+        },
+        {
+          "title": "Die Problemkarte sagt, was los ist",
+          "body": "Eine gelbe oder rote Karte stand dort bisher nur als Zählung, etwa 0 Fehler und 1 Warnung. Jetzt nennt ihre Zeile die ersten ein oder zwei roten und gelben Befunde dieser Karte, sagt, wie viele es noch gibt, und verlinkt auf die Adresse der Karte oder ihren Dienst.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Probleme"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an GeOppenheimer für die Idee hinter der Problemkarte (#35).",
+        "Die vier neuen Anbindungen starten als Beta. Eine Karte an der Adresse einer anderen App der Familie sagt das, statt Nullen zu zeigen.",
+        "Ein Bild, das ein Dienst als SVG zeichnet, reicht nexdeck nur weiter, wenn die Anbindung danach fragt, geprüft auf Skripte und in einer Sandbox."
+      ]
     }
   }
 }

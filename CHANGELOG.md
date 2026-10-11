@@ -3,6 +3,22 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.38.0 (2026-10-11)
+
+### New
+
+- **nexpaper** (beta): Inbox with the oldest documents, yellow from a count or an age; Deadlines of the next 14 days (due, contract ends, warranty ends); Library. API key of scope read, nexpaper 1.1.0 or later.
+- **nexdiary** (beta): Diary (streak in days or weeks, written today, entries and notes of the month) and Time capsule (days until the next one opens). Numbers only, never a word of the diary. nexdiary 0.8.0 or later.
+- **nexcanvas** (beta): Boards, the ones changed last with a picture each, and Board, one board large and live.
+- **nexbrand** (beta): Clients, and the latest versions of their design sets.
+
+### Changed
+
+- **The problems card names what is wrong** (#35): a row lists the first red and yellow findings of its card, "+N more" when there are more, and links to the card's own address, the one it reports, or its service. Thanks to @GeOppenheimer.
+- Pictures that a service draws as SVG pass the image route only when the adapter declares it; they are checked for script (the words of a title aside) and served with a sandboxing Content-Security-Policy. Every other SVG is still refused.
+- A card of nexcanvas, nexbrand, nexpaper or nexdiary at the address of another app of the family says so instead of drawing noughts; an address with a path is told to drop it.
+- Lists can show wide pictures (16:10), blurred in showcase mode; the unit of a value card is translated.
+
 ## 0.37.0 (2026-10-11)
 
 ### Changed
