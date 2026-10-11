@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexcanvas">
+  <defs>
+    <linearGradient id="nexcanvas-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
+      <stop offset="0" stop-color="#ffe4dc"/>
+      <stop offset=".5" stop-color="#ff8a70"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#170d0a"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexcanvas-g)" stroke-width="2.5" stroke-opacity=".55"/>
+  <circle cx="22" cy="23" r="8.5" fill="none" stroke="url(#nexcanvas-g)" stroke-width="4.5"/>
+  <rect x="36" y="15.5" width="15" height="15" rx="3" fill="none" stroke="url(#nexcanvas-g)" stroke-width="4.5"/>
+  <path d="M32 36.5 43 50H21Z" fill="none" stroke="#ff8a70" stroke-width="4.5" stroke-linejoin="round"/>
+</svg>
