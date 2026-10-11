@@ -93,9 +93,9 @@ async def test_deadlines_come_soonest_first_yellow_within_three_days_and_red_whe
     respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=DASHBOARD))
     data = await get_adapter("nexpaper").fetch("deadlines", CONFIG, {}, ctx)
     assert [(item["title"], item["subtitle"], item["value"], item["status"]) for item in data.items] == [
-        ("Electricity bill", "2026-10-10", "1 d overdue", "bad"),
-        ("Car insurance", "2026-10-13", "in 2 d", "warn"),
-        ("Tax return", "2026-10-20", "in 9 d", "ok"),
+        ("Electricity bill", "Due · 2026-10-10", "1 d overdue", "bad"),
+        ("Car insurance", "Due · 2026-10-13", "in 2 d", "warn"),
+        ("Tax return", "Due · 2026-10-20", "in 9 d", "ok"),
     ]
     assert data.items[1]["url"] == "https://paper.example.com/d/40"
     assert data.status == "bad", "the 30th of November is beyond the 14 days and is left out"
@@ -109,7 +109,7 @@ async def test_deadlines_come_soonest_first_yellow_within_three_days_and_red_whe
 def test_the_day_is_named_and_the_edges_are_the_right_side() -> None:
     def rows(*days: str) -> list[tuple[str, str, str]]:
         data = module.deadlines_of({"deadlines": [{"id": number, "title": f"t{number}", "date": day} for number, day in enumerate(days)]}, TODAY, 10, "http://x")
-        return [(item["value"], item["status"], item["subtitle"]) for item in data.items]
+        return [(item["value"], item["status"], item["subtitle"].split(" · ")[-1]) for item in data.items]
 
     assert rows("2026-10-11") == [("Today", "warn", "2026-10-11")]
     assert rows("2026-10-12") == [("Tomorrow", "warn", "2026-10-12")]
@@ -118,6 +118,20 @@ def test_the_day_is_named_and_the_edges_are_the_right_side() -> None:
     assert rows("2026-10-25") == [("in 14 d", "ok", "2026-10-25")], "the fourteenth day is in"
     assert rows("2026-10-26") == []
     assert rows("not a day", "", "2026-10-12T09:00:00") == [("Tomorrow", "warn", "2026-10-12")], "a time after the day is ignored, a non-day is skipped"
+
+
+@respx.mock
+async def test_kinds_are_named_a_document_twice_is_two_rows_and_a_new_kind_shows_raw(ctx: Context) -> None:
+    rows = [
+        {"id": 7, "title": "Washing machine", "date": "2026-10-20", "kind": "warranty_end", "url": "https://paper.example.com/dokument/7"},
+        {"id": 7, "title": "Washing machine", "date": "2026-10-20", "kind": "contract_end", "url": "https://paper.example.com/dokument/7"},
+        {"id": 8, "title": "Letter", "date": "2026-10-21", "kind": "reminder", "url": "https://paper.example.com/eingang/8"},
+    ]
+    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"deadlines": rows}))
+    data = await get_adapter("nexpaper").fetch("deadlines", CONFIG, {}, ctx)
+    assert [item["subtitle"] for item in data.items] == ["Warranty ends · 2026-10-20", "Contract ends · 2026-10-20", "reminder · 2026-10-21"]
+    assert len({item["id"] for item in data.items}) == 3, "id plus kind is the key of a row"
+    assert [item["url"] for item in data.items][-1] == "https://paper.example.com/eingang/8", "the address is nexpaper's own, passed on"
 
 
 @respx.mock

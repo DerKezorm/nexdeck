@@ -3044,6 +3044,8 @@
     "day": "Tag",
     "days": "Tage",
     "week": "Woche",
-    "weeks": "Wochen"
+    "weeks": "Wochen",
+    "Contract ends": "Vertrag endet",
+    "Warranty ends": "Garantie endet"
   }
 }

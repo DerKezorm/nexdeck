@@ -3044,6 +3044,8 @@
     "day": "giorno",
     "days": "giorni",
     "week": "settimana",
-    "weeks": "settimane"
+    "weeks": "settimane",
+    "Contract ends": "Il contratto termina",
+    "Warranty ends": "La garanzia termina"
   }
 }

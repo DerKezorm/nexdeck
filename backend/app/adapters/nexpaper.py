@@ -48,6 +48,8 @@ from .nexapp_base import NexappApi, count_of, epoch_of
 #: How far ahead the deadlines card looks, and how close a deadline has to be to turn it yellow.
 LOOK_AHEAD_DAYS = 14
 SOON_DAYS = 3
+#: What a deadline is, as nexpaper names it (``kind``). Any other value is shown as it came.
+KINDS = {"due": "Due", "contract_end": "Contract ends", "warranty_end": "Warranty ends"}
 #: The inbox card turns yellow at this many documents, or when the oldest has waited this many days.
 WARN_COUNT = 10
 WARN_DAYS = 14
@@ -241,9 +243,10 @@ def deadlines_of(numbers: dict[str, Any], today: date, limit: int, base: str) ->
     for day, row in rows[:limit]:
         left = (day - today).days
         items.append({
-            "id": f"{row.get('id')}:{day.isoformat()}",
+            # A document can come twice, as a contract that ends and a warranty that ends: the key is both.
+            "id": f"{row.get('id')}:{row.get('kind')}",
             "title": str(row.get("title") or "?"),
-            "subtitle": day.isoformat(),
+            "subtitle": " · ".join(part for part in (KINDS.get(str(row.get("kind") or ""), str(row.get("kind") or "")), day.isoformat()) if part),
             "value": "Today" if left == 0 else "Tomorrow" if left == 1 else f"in {left} d" if left > 0 else f"{-left} d overdue",
             "status": "bad" if left < 0 else "warn" if left <= SOON_DAYS else "ok",
             "url": str(row.get("url") or "") or base,
