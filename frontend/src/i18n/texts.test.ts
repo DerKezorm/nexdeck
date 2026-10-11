@@ -196,6 +196,30 @@ describe('server texts', () => {
     expect(Object.keys(PATTERNS).sort()).toEqual(['de', ...Object.keys(OTHERS)].sort())
   })
 
+  it('translate the refusals of the nexapps family by their pattern, whichever app is named', async () => {
+    const refusals: [string, string][] = [
+      ['API access is switched off in nexcanvas.', 'nexcanvas'],
+      ['nexpaper does not know this key; it may have run out or been withdrawn.', 'nexpaper'],
+      ['nexbrand does not know this token; it may have run out or been withdrawn.', 'nexbrand'],
+      ['nexdiary asks for fewer requests for a minute.', 'nexdiary'],
+      ['nexcanvas answered with HTTP 503.', '503'],
+      ['This nexpaper has no dashboard route yet; it needs a newer version.', 'nexpaper'],
+      ['nexbrand refuses requests that carry an Origin header.', 'nexbrand'],
+      ['Only the first 12 of 20 clients are looked at.', '20'],
+      ['3 d overdue', '3 d'],
+    ]
+    for (const code of ['de', 'es', 'fr', 'it']) {
+      await i18next.changeLanguage(code)
+      for (const [english, kept] of refusals) {
+        const translated = translateText('labels', english)
+        expect(translated, `${code}: ${english}`).not.toBe(english)
+        expect(translated, `${code}: ${english}`).toContain(kept)
+      }
+      expect(translateText('labels', 'day')).not.toBe('day')
+      expect(translateText('labels', 'weeks')).not.toBe('weeks')
+    }
+  })
+
   for (const [code, table] of Object.entries(OTHERS)) {
     it(`${code}: knows every text the German table does, and no other`, () => {
       for (const section of ['adapter', 'labels'] as const) {
