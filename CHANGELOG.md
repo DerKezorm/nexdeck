@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.37.0 (2026-10-11)
 
 ### Changed
 
@@ -21,6 +21,8 @@ project uses semantic versioning.
 ### Fixed
 
 - The authentik button no longer creates a scope mapping of its own; authentik's own mappings for openid, email and profile are used. One made by 0.35 or 0.36 stays in authentik and can be removed there.
+- A `NEXDECK_SECRET_KEY` shorter than 16 bytes no longer ends in an error 500.
+- Restoring a backup made by 0.36 brings its sign-in providers along at once.
 - The issuer of a token is compared letter for letter with what the provider's discovery says, `azp` and the expiry are checked, and a signed userinfo answer is verified.
 
 ### Upgrading
