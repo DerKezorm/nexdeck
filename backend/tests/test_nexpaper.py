@@ -1,5 +1,6 @@
-"""nexpaper's ``GET /api/v1/dashboard`` as agreed with it (nexpaper 1.1.0), and ``routers/v1.py`` for the walls around
-it: the answer is the agreed one, the titles and counts made up. Not measured against a running instance."""
+"""nexpaper's ``GET /api/v1/dashboard`` (nexpaper 1.1.0), and ``routers/v1.py`` for the walls around
+it: the titles and counts made up. The adapter was also run against a fresh
+instance on 11.10.2026; these tests keep what that showed."""
 
 from __future__ import annotations
 
@@ -184,7 +185,7 @@ async def test_a_nexpaper_without_the_route_says_it_needs_a_newer_version(ctx: C
 @respx.mock
 async def test_missing_fields_do_not_bring_the_card_down(ctx: Context) -> None:
     adapter = get_adapter("nexpaper")
-    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={}))
+    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"inbox": 0}))
     for kind in ("inbox", "deadlines", "library"):
         fresh = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
         data = await adapter.fetch(kind, CONFIG, {}, fresh)
@@ -198,8 +199,12 @@ async def test_missing_fields_do_not_bring_the_card_down(ctx: Context) -> None:
     assert (await adapter.fetch("deadlines", CONFIG, {}, fresh)).items[0]["title"] == "?"
     assert {row["label"]: row["value"] for row in (await adapter.fetch("library", CONFIG, {}, fresh)).secondary}["This week"] == 3
     respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=["not", "an", "object"]))
-    again = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
-    assert (await adapter.fetch("inbox", CONFIG, {}, again)).items == []
+    for answer in (["not", "an", "object"], {}):
+        respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=answer))
+        again = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
+        with pytest.raises(AdapterError) as refused:
+            await adapter.fetch("inbox", CONFIG, {}, again)
+        assert refused.value.code == "wrong_app", "an answer with nothing of nexpaper's says so instead of drawing noughts"
 
 
 @respx.mock

@@ -1,5 +1,6 @@
-"""nexdiary's ``GET /api/v1/dashboard`` as agreed with it (nexdiary 0.8.0), and ``routers/v1.py`` for the walls around
-it: the answer is the agreed one, the counts made up. Not measured against a running instance."""
+"""nexdiary's ``GET /api/v1/dashboard`` (nexdiary 0.8.0), and ``routers/v1.py`` for the walls around
+it: the counts made up. The adapter was also run against a fresh
+instance on 11.10.2026; these tests keep what that showed."""
 
 from __future__ import annotations
 
@@ -138,11 +139,17 @@ async def test_an_answer_that_is_not_json_names_the_address(ctx: Context) -> Non
 @respx.mock
 async def test_missing_fields_do_not_bring_the_cards_down(ctx: Context) -> None:
     adapter = get_adapter("nexdiary")
-    for answer in ({}, ["not", "an", "object"], {"streak": "many", "next_capsule_days": "soon", "next_capsule": 5}):
+    for answer in ({"streak": None}, {"streak": "many", "next_capsule_days": "soon", "next_capsule": 5}):
         respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=answer))
         for kind in ("diary", "capsule"):
             fresh = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
             assert (await adapter.fetch(kind, CONFIG, {}, fresh)).status == "ok", (answer, kind)
+    for answer in ({}, ["not", "an", "object"]):
+        respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=answer))
+        fresh = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
+        with pytest.raises(AdapterError) as refused:
+            await adapter.fetch("diary", CONFIG, {}, fresh)
+        assert refused.value.code == "wrong_app", "an answer with nothing of nexdiary's says so instead of drawing noughts"
 
 
 @respx.mock

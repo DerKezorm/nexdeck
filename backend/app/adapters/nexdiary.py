@@ -1,10 +1,9 @@
 """nexdiary: the diary of a family, as numbers only, read through its API tokens.
 
-Written against the answer of nexdiary's ``GET /api/v1/dashboard`` as agreed
-with it (nexdiary 0.8.0) and against ``routers/v1.py`` for the walls around
-it. The route was not yet in a released nexdiary when this was written, so
-the shape below is the agreed one and has not been measured; the adapter is
-in beta for that reason.
+Written against nexdiary's ``GET /api/v1/dashboard`` and ``routers/v1.py`` for
+the walls around it, and measured on 11.10.2026 against a fresh nexdiary with
+made-up content: every card, a wrong credential, the API switched off, an
+Origin header, the rate. In beta until it has run against one in use.
 
 - The token (``nxa_…``) goes in ``Authorization: Bearer``, never in the
   address. nexdiary refuses any request that carries an ``Origin`` header
@@ -54,7 +53,7 @@ class NexdiaryAdapter(NexappApi, Adapter):
     category = "other"
     description = "The diary of a family in nexdiary, as numbers only: whether today is written, the streak, the month, and when the next time capsule opens."
     icon = "nexdiary"
-    #: Beta until every card has run against a real nexdiary.
+    #: Beta until every card has run against a nexdiary in use; measured against a fresh one on 11.10.2026.
     beta = True
     docs_url = "https://nexdiary.nexapps.dev"
     app = "nexdiary"
@@ -92,15 +91,15 @@ class NexdiaryAdapter(NexappApi, Adapter):
         return base_url(config)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        me = await self._get(config, ctx, "/me", cache=0)
+        me = await self._me(config, ctx)
         me = me if isinstance(me, dict) else {}
         return f"nexdiary {me.get('version') or '?'} answers; the token of {me.get('name') or '?'} reads."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         numbers = await self._get(config, ctx, "/dashboard", cache=KEEP_SECONDS, missing=(
             "This nexdiary has no dashboard route yet; it needs a newer version.", "too_old",
-            "Update nexdiary; the route came with the version that has a card for nexdeck."))
-        numbers = numbers if isinstance(numbers, dict) else {}
+            "Update nexdiary; the route came with the version that has a card for nexdeck. Or the address has a path: use the one you open nexdiary with."))
+        numbers = self._expect(numbers, "streak", "streak_unit", "today_written", "entries_month", "notes_month", "next_capsule", "next_capsule_days")
         return capsule_of(numbers) if widget_kind == "capsule" else diary_of(numbers)
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:

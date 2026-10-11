@@ -59,6 +59,23 @@ class NexappApi:
     where_make = ""
     #: The name of the connection field that holds the credential.
     secret = "api_key"
+    #: What only this app's ``/me`` answers with, and what only its siblings' do. The four answer ``/me`` alike
+    #: and two share the token prefix ``nxa_``, so without this a nexcanvas token at a nexdiary card passed the
+    #: test and drew a streak of nought (found against real instances on 11.10.2026).
+    own_fields: tuple[str, ...] = ()
+    sibling_fields: tuple[str, ...] = ("spaces", "clients", "scope")
+
+    async def _me(self, config: dict[str, Any], ctx: Context) -> dict[str, Any]:
+        """``/me``, refused when the address answers as another app of the family."""
+        me = await self._get(config, ctx, "/me", cache=0)
+        me = me if isinstance(me, dict) else {}
+        foreign = [name for name in self.sibling_fields if name in me and name not in self.own_fields]
+        if foreign or any(name not in me for name in self.own_fields):
+            raise AdapterError(
+                f"This address answers, but not as {self.app}.", code="wrong_app",
+                hint=f"Enter the address of {self.app} and a {self.thing} made there; another app of the family answers here.",
+            )
+        return me
 
     async def _get(
         self,
@@ -126,5 +143,23 @@ class NexappApi:
         if status == 404 and missing:
             message, missing_code, hint = missing
             raise AdapterError(message, code=missing_code, hint=hint)
+        if status == 404:
+            raise AdapterError(
+                f"{self.app} answered with HTTP 404.", code="http_error",
+                hint=f"Use the address you open {self.app} with, without a path such as /api/v1.",
+            )
         if status >= 400:
             raise AdapterError(f"{self.app} answered with HTTP {status}.", code="http_error")
+
+    def _expect(self, answer: Any, *fields: str) -> dict[str, Any]:
+        """The answer of a card's route, refused when it has none of the fields only this app sends.
+
+        Without it a card at the address of another app of the family drew noughts instead of saying so. One of
+        them is enough: an answer that lacks a few is still this app's, and the cards make do without them.
+        """
+        if not isinstance(answer, dict) or not any(field in answer for field in fields):
+            raise AdapterError(
+                f"This address answers, but not as {self.app}.", code="wrong_app",
+                hint=f"Enter the address of {self.app} and a {self.thing} made there; another app of the family answers here.",
+            )
+        return answer

@@ -1,5 +1,6 @@
 """nexbrand 0.2.0, from its ``docs/api.md`` and ``routers/v1.py``: the shapes are the documented ones, the names and
-counts made up. Not measured against a running instance."""
+counts made up. The adapter was also run against a fresh
+instance on 11.10.2026; these tests keep what that showed."""
 
 from __future__ import annotations
 

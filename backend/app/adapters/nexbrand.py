@@ -55,10 +55,11 @@ class NexbrandAdapter(NexappApi, Adapter):
     category = "other"
     description = "The design sets of an agency's clients in nexbrand: how many clients and projects there are, and the versions published or waiting as drafts."
     icon = "nexbrand"
-    #: Beta until every card has run against a real nexbrand.
+    #: Beta until every card has run against a nexbrand in use; measured against a fresh one on 11.10.2026.
     beta = True
     docs_url = "https://github.com/DerKezorm/nexbrand"
     app = "nexbrand"
+    own_fields = ("clients",)
     thing = "token"
     where_on = "nexbrand's operator switches API tokens on under Settings > Server > API"
     where_make = "Make a token under My account > Connections in nexbrand."
@@ -97,7 +98,7 @@ class NexbrandAdapter(NexappApi, Adapter):
         return base_url(config)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        me = await self._get(config, ctx, "/me", cache=0)
+        me = await self._me(config, ctx)
         me = me if isinstance(me, dict) else {}
         return (f"nexbrand {me.get('version') or '?'} answers; the token of {me.get('name') or '?'} "
                 f"({me.get('level') or '?'}) reads {count_of(me.get('clients'))} client(s).")

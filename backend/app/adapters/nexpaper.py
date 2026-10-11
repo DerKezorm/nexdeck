@@ -1,10 +1,9 @@
 """nexpaper: the household's paperwork, read through its API keys.
 
-Written against the answer of nexpaper's ``GET /api/v1/dashboard`` as agreed
-with it (nexpaper 1.1.0) and against ``routers/v1.py`` for the walls around
-it. The route was not yet in a released nexpaper when this was written, so
-the shape below is the agreed one and has not been measured; the adapter is
-in beta for that reason.
+Written against nexpaper's ``GET /api/v1/dashboard`` and ``routers/v1.py`` for
+the walls around it, and measured on 11.10.2026 against a fresh nexpaper with
+made-up content: every card, a wrong credential, the API switched off, an
+Origin header, the rate. In beta until it has run against one in use.
 
 - The key (``npk_…``) goes in ``Authorization: Bearer``, never in the
   address. nexpaper refuses any request that carries an ``Origin`` header
@@ -63,10 +62,11 @@ class NexpaperAdapter(NexappApi, Adapter):
     category = "other"
     description = "The paperwork of a household in nexpaper: what waits in the inbox, which deadlines are near, and how many documents are filed."
     icon = "nexpaper"
-    #: Beta until every card has run against a real nexpaper.
+    #: Beta until every card has run against a nexpaper in use; measured against a fresh one on 11.10.2026.
     beta = True
     docs_url = "https://nexpaper.nexapps.dev"
     app = "nexpaper"
+    own_fields = ("scope",)
     thing = "key"
     where_on = "nexpaper's operator switches API keys on under Settings > API"
     where_make = "Make a key with the scope Read under My account in nexpaper."
@@ -95,7 +95,7 @@ class NexpaperAdapter(NexappApi, Adapter):
         WidgetType(
             kind="deadlines",
             label="Deadlines",
-            description="What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days, red once it is overdue.",
+            description="What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days.",
             renderer="list",
             default_size=(4, 3),
             refresh_seconds=300,
@@ -116,7 +116,7 @@ class NexpaperAdapter(NexappApi, Adapter):
         return base_url(config)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        me = await self._get(config, ctx, "/me", cache=0)
+        me = await self._me(config, ctx)
         me = me if isinstance(me, dict) else {}
         if me.get("scope") and me.get("scope") != "read":
             raise AdapterError(
@@ -128,8 +128,8 @@ class NexpaperAdapter(NexappApi, Adapter):
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         numbers = await self._get(config, ctx, "/dashboard", cache=KEEP_SECONDS, missing=(
             "This nexpaper has no dashboard route yet; it needs a newer version.", "too_old",
-            "Update nexpaper; the route came with the version that has a card for nexdeck."))
-        numbers = numbers if isinstance(numbers, dict) else {}
+            "Update nexpaper; the route came with the version that has a card for nexdeck. Or the address has a path: use the one you open nexpaper with."))
+        numbers = self._expect(numbers, "inbox", "inbox_oldest", "filed", "total", "added_week", "processing", "deadlines")
         base = base_url(config)
         if widget_kind == "deadlines":
             return deadlines_of(numbers, _today(), _limit(options, 8), base)
@@ -154,7 +154,7 @@ class NexpaperAdapter(NexappApi, Adapter):
                                "processing": 1 if fake.flicker("nexpaper-ocr", tick, 0.4) else 0})
         waiting = int(fake.walk("nexpaper-inbox", tick, 4, 13))
         rows = [
-            {"id": 12 + number, "title": title, "added_at": _iso(now - 86400 * days), "url": f"http://nexpaper.example.com/d/{12 + number}"}
+            {"id": 12 + number, "title": title, "added_at": _iso(now - 86400 * days), "url": f"http://nexpaper.example.com/eingang/{12 + number}"}
             for number, (title, days) in enumerate((("Scan from the printer", 16), ("Letter from the council", 6), ("Phone bill", 2), ("Receipt, hardware store", 1)))
         ]
         return inbox_of({"inbox": waiting, "inbox_oldest": rows, "inbox_oldest_at": rows[0]["added_at"]}, now,

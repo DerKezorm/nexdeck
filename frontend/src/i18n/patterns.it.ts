@@ -134,5 +134,6 @@ export const patterns: Pattern[] = [
   [/^(\d+) in the inbox$/, '$1 in arrivo'],
   [/^oldest (\d+) d old$/, 'il più vecchio ha $1 g'],
   [/^(\d+ (?:min|h|d)) overdue$/, 'scaduto da $1'],
+  [/^This address answers, but not as (nex[a-z]+)\.$/, 'Questo indirizzo risponde, ma non come $1.'],
   [/^(.+) failed\.$/, '$1 non riuscito.'],
 ]

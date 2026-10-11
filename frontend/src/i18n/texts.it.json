@@ -1876,7 +1876,7 @@
     "Yellow after (days)": "Giallo dopo (giorni)",
     "Yellow when the oldest document has waited longer than this. 0 switches this off.": "Giallo quando il documento più vecchio aspetta da più di questo. 0 lo disattiva.",
     "Deadlines": "Scadenze",
-    "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days, red once it is overdue.": "Cosa scade nei prossimi 14 giorni, il più vicino per primo, ogni riga apre il suo documento. Giallo quando qualcosa scade entro 3 giorni, rosso quando è scaduto.",
+    "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days.": "Cosa scade nei prossimi 14 giorni, il più vicino per primo, ogni riga apre il suo documento. Giallo quando qualcosa scade entro 3 giorni.",
     "Filing": "Archivio",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Quanti documenti ci sono in tutto, quanti sono arrivati questa settimana e quanti vengono letti ora per il loro testo."
   },

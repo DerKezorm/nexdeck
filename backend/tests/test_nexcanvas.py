@@ -1,5 +1,6 @@
 """nexcanvas 0.4.1, from its ``docs/api.md`` and ``routers/v1.py``: the shapes are the documented ones, the names and
-counts made up. Not measured against a running instance."""
+counts made up. The adapter was also run against a fresh
+instance on 11.10.2026; these tests keep what that showed."""
 
 from __future__ import annotations
 
@@ -118,14 +119,16 @@ async def test_an_answer_that_is_not_json_names_the_address(ctx: Context) -> Non
 
 @respx.mock
 async def test_missing_fields_do_not_bring_the_card_down(ctx: Context) -> None:
-    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"recent": [{"title": "No id"}, "junk", None, {"id": "../x", "title": "Bad id"}]}))
+    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"boards": "many", "recent": [{"title": "No id"}, "junk", None, {"id": "../x", "title": "Bad id"}]}))
     data = await get_adapter("nexcanvas").fetch("boards", CONFIG, {}, ctx)
     assert data.primary == {"label": "Boards", "value": 0}
     assert [item["title"] for item in data.items] == ["No id", "Bad id"]
     assert all(item["art"] == "" for item in data.items), "a board without a usable id has no picture to ask for"
     respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=["not", "an", "object"]))
     fresh = Context(outbound_client(guard=False), integration_id=1, widget_id=1, cache={})
-    assert (await get_adapter("nexcanvas").fetch("boards", CONFIG, {}, fresh)).items == []
+    with pytest.raises(AdapterError) as refused:
+        await get_adapter("nexcanvas").fetch("boards", CONFIG, {}, fresh)
+    assert refused.value.code == "wrong_app", "an answer that is no dashboard of nexcanvas says so instead of drawing noughts"
 
 
 @respx.mock
@@ -220,3 +223,21 @@ def test_a_service_that_did_not_ask_for_svg_still_gets_none(client: TestClient) 
         respx.get("http://plex:32400/library/metadata/10/thumb/1").mock(return_value=httpx.Response(200, content=PICTURE, headers={"content-type": "image/svg+xml"}))
         refused = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"})
         assert refused.status_code == 404 and "SVG" in refused.json()["detail"]["message"]
+
+
+def test_a_board_title_that_reads_like_code_does_not_cost_the_picture(client: TestClient) -> None:
+    """"JavaScript: Basics" or "Online = yes" as a board's name read as an address or a handler (found
+    against nexcanvas on 11.10.2026); the words of the title are no markup, the rest is checked as before."""
+    widget = _widget_of_nexcanvas(client)
+    with respx.mock:
+        for title in (b"JavaScript: Basics", b"Online = yes", b"Plan: one = first", b"Tom &amp; Jerry"):
+            fine = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><title>' + title + b'</title><rect width="160" height="100"/></svg>'
+            respx.get(f"{BASE}/boards/{ID}/picture.svg").mock(return_value=httpx.Response(200, content=fine, headers={"content-type": "image/svg+xml"}))
+            answer = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": f"/board/{ID}/dark/1200/live"})
+            assert answer.status_code == 200 and answer.content == fine, title
+        for hostile in (b'<svg xmlns="http://www.w3.org/2000/svg"><title>Plan</title><rect onload="alert(1)"/></svg>',
+                        b'<svg xmlns="http://www.w3.org/2000/svg"><title>a<script>alert(1)</script></title></svg>',
+                        b'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><title>Plan</title></svg>'):
+            respx.get(f"{BASE}/boards/{ID}/picture.svg").mock(return_value=httpx.Response(200, content=hostile, headers={"content-type": "image/svg+xml"}))
+            refused = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": f"/board/{ID}/dark/1200/live"})
+            assert refused.status_code == 404, hostile

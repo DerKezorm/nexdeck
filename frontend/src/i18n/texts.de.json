@@ -1876,7 +1876,7 @@
     "Yellow after (days)": "Gelb nach (Tagen)",
     "Yellow when the oldest document has waited longer than this. 0 switches this off.": "Gelb, wenn das älteste Dokument länger wartet als das. 0 schaltet das ab.",
     "Deadlines": "Fristen",
-    "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days, red once it is overdue.": "Was in den nächsten 14 Tagen fällig wird, das Nächste zuerst, jede Zeile öffnet ihr Dokument. Gelb, wenn etwas in 3 Tagen fällig ist, rot, sobald es überfällig ist.",
+    "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days.": "Was in den nächsten 14 Tagen fällig wird, das Nächste zuerst, jede Zeile öffnet ihr Dokument. Gelb, wenn etwas in 3 Tagen fällig ist.",
     "Filing": "Ablage",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Wie viele Dokumente es insgesamt gibt, wie viele diese Woche dazukamen und wie viele gerade auf ihren Text gelesen werden."
   },

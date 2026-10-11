@@ -207,6 +207,7 @@ describe('server texts', () => {
       ['nexbrand refuses requests that carry an Origin header.', 'nexbrand'],
       ['Only the first 12 of 20 clients are looked at.', '20'],
       ['3 d overdue', '3 d'],
+      ['This address answers, but not as nexdiary.', 'nexdiary'],
     ]
     for (const code of ['de', 'es', 'fr', 'it']) {
       await i18next.changeLanguage(code)

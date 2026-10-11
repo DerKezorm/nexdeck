@@ -61,10 +61,11 @@ class NexcanvasAdapter(NexappApi, Adapter):
     category = "other"
     description = "The whiteboards of nexcanvas: the boards changed last with a small picture each, and one board large and alive."
     icon = "nexcanvas"
-    #: Beta until every card has run against a real nexcanvas.
+    #: Beta until every card has run against a nexcanvas in use; measured against a fresh one on 11.10.2026.
     beta = True
     docs_url = "https://www.nexcanvas.de"
     app = "nexcanvas"
+    own_fields = ("spaces",)
     thing = "token"
     where_on = "nexcanvas's operator switches API tokens on under Settings > Server > API"
     where_make = "Make a token under My account > Connections in nexcanvas."
@@ -104,7 +105,7 @@ class NexcanvasAdapter(NexappApi, Adapter):
         return base_url(config)
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
-        me = await self._get(config, ctx, "/me", cache=0)
+        me = await self._me(config, ctx)
         me = me if isinstance(me, dict) else {}
         spaces = me.get("spaces")
         return f"nexcanvas {me.get('version') or '?'} answers; the token of {me.get('name') or '?'} reads {len(spaces) if isinstance(spaces, list) else 0} space(s)."
@@ -117,7 +118,7 @@ class NexcanvasAdapter(NexappApi, Adapter):
                 "nexcanvas has no such board, or the token may not read it.", "no_board",
                 "Pick the board again in the card's settings."))
             return board_of(board if isinstance(board, dict) else {}, look, _interval(options))
-        numbers = await self._get(config, ctx, "/dashboard")
+        numbers = self._expect(await self._get(config, ctx, "/dashboard"), "boards", "recent", "changed_today", "changed_week")
         return boards_of(numbers if isinstance(numbers, dict) else {}, look)
 
     async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from typing import Any
 from urllib.parse import quote
@@ -359,6 +360,8 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
 IMAGE_TTL = 3600
 IMAGE_LIMIT = 300
 IMAGE_MAX_BYTES = 5 * 1024 * 1024
+#: The words of an SVG's title, with no "<" among them (see ``widget_image``).
+TITLE_WORDS = re.compile(rb"<title>[^<]*</title>", re.I)
 #: What the whole cache may weigh.
 #:
 #: ⚠️ It was bounded by the number of entries and nothing else, and one entry
@@ -443,7 +446,13 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     if content_type.split(";")[0].strip().lower() == "image/svg+xml":
         if not source.svg:
             raise error("no_image", "The service answered with SVG, which is not served as an image.", status.HTTP_404_NOT_FOUND)
-        refused = unsafe_svg(response.content) if response.status_code < 400 else "it is an error page"
+        # The words of a <title> are left out of the check: "JavaScript: Basics"
+        # or "Online = yes" as the name of a board looked like an address or a
+        # handler, and the picture was refused (found against nexcanvas on
+        # 11.10.2026). Only a title without a single "<" in it: XML allows no
+        # "<" in an attribute, so such a span cannot hide a tag or a handler.
+        checked = TITLE_WORDS.sub(b"<title></title>", response.content)
+        refused = unsafe_svg(checked) if response.status_code < 400 else "it is an error page"
         if refused:
             raise error("no_image", f"The service's SVG was refused: {refused}.", status.HTTP_404_NOT_FOUND)
     if response.status_code >= 400 or not content_type.startswith("image/") or len(response.content) > IMAGE_MAX_BYTES:
