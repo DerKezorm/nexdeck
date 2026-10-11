@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexbrand">
+  <defs>
+    <linearGradient id="nexbrand-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
+      <stop offset="0" stop-color="#9dbbff"/>
+      <stop offset=".5" stop-color="#2f7bff"/>
+      <stop offset="1" stop-color="#e255f5"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0d0d18"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexbrand-g)" stroke-width="2.5" stroke-opacity=".55"/>
+  <g transform="rotate(-34 31 49)"><rect x="25" y="21" width="12" height="29" rx="3.5" fill="none" stroke="#e255f5" stroke-width="3.6"/></g>
+  <g transform="rotate(-10 31 49)"><rect x="25" y="21" width="12" height="29" rx="3.5" fill="none" stroke="#ffe14a" stroke-width="3.6"/></g>
+  <g transform="rotate(14 31 49)"><rect x="25" y="21" width="12" height="29" rx="3.5" fill="url(#nexbrand-g)" stroke="url(#nexbrand-g)" stroke-width="3.6"/><rect x="27.5" y="23.5" width="7" height="7" rx="1.5" fill="#000" opacity=".28"/></g>
+  <circle cx="31" cy="45" r="2.6" fill="#0d0d18"/>
+</svg>
