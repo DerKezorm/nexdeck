@@ -206,3 +206,24 @@ async def test_the_status_page_draws_strips_when_asked_and_when_there_are_bars(c
     assert "renderer" not in (await _read("status", status, look="strips", bars="none")).meta
     demo = get_adapter("core").demo("status", {"look": "strips"}, 0)
     assert demo.meta["renderer"] == "strips"
+
+
+def test_clearing_the_notices_keeps_the_unread_unless_all_are_asked_for(client: TestClient) -> None:
+    """Issue #36: "Delete all" next to "Mark all as read". Only the caller's own go."""
+    setup_admin(client)
+    robin = create_user(client, "robin")
+    with db_session() as db:
+        admin_id = db.scalar(select(User.id).where(User.username == "admin"))
+    _notices(admin_id)
+    with db_session() as db:
+        db.add(Notice(user_id=robin["id"], event="outage", level="error", title="Robin's own", read_at=utcnow()))
+
+    def titles(user_id: int) -> list[str]:
+        with db_session() as db:
+            return sorted(db.scalars(select(Notice.title).where(Notice.user_id == user_id)))
+
+    assert client.delete("/api/v1/notices", headers=CSRF).status_code == 204
+    assert titles(admin_id) == ["Backup written", "Nextcloud is down"], "the read one goes, the unread stay"
+    assert client.delete("/api/v1/notices?all=true", headers=CSRF).status_code == 204
+    assert titles(admin_id) == []
+    assert titles(robin["id"]) == ["Robin's own"], "another user's notices are not mine to delete"

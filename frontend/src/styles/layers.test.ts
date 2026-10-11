@@ -67,7 +67,8 @@ describe('the style sheet', () => {
     const overrides = all.filter((rule) => rule.layers.includes('overrides')).map((rule) => rule.selector)
     // `.chips` wraps the chip row on a tall card, over `overflow-x-auto` on the element itself.
     // The board page drawn into a picture ends below its last card, over `min-h-full` and its room for the bars.
-    expect(overrides).toEqual(['.chips', '.card.is-editing > *:not(.card-controls)', 'body.has-player-bar main', ':root[data-picture] [data-board-page]'])
+    // In the installed app a dialog, sheet or the search begins below the bar, over `inset-0` (issue #36).
+    expect(overrides).toEqual(['body:has(header.app-bar) .overlay', '.chips', '.card.is-editing > *:not(.card-controls)', 'body.has-player-bar main', ':root[data-picture] [data-board-page]'])
     expect(css).toMatch(/@layer theme, base, components, utilities, overrides;/)
   })
 

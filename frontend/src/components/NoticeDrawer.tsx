@@ -1,11 +1,11 @@
 import { Check, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import type { Notice } from '../api/types'
 import { useNotices } from '../stores/notices'
-import { Sheet, Toast } from './ui'
+import { Confirm, Sheet, Toast } from './ui'
 
 const LEVEL_DOT: Record<string, string> = { info: 'ok', warn: 'warn', error: 'bad' }
 
@@ -50,6 +50,32 @@ export function NoticeList({ notices, onRead, onRemove }: { notices: Notice[]; o
   )
 }
 
+/** "Delete all", next to "Mark all as read" (issue #36). Unread ones go too, so it asks first. */
+export function DeleteAllNotices() {
+  const { t } = useTranslation()
+  const { notices, removeAll } = useNotices()
+  const [asking, setAsking] = useState(false)
+  return (
+    <>
+      <button className="btn btn-danger" onClick={() => setAsking(true)} disabled={!notices.length}>
+        {t('notices.deleteAll')}
+      </button>
+      <Confirm
+        open={asking}
+        danger
+        title={t('notices.deleteAllTitle')}
+        body={t('notices.deleteAllBody', { count: notices.length })}
+        confirmLabel={t('notices.deleteAll')}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => {
+          setAsking(false)
+          void removeAll()
+        }}
+      />
+    </>
+  )
+}
+
 export function NoticeDrawer() {
   const { t } = useTranslation()
   const { open, setOpen, notices, load, markAll, markRead, remove } = useNotices()
@@ -63,9 +89,10 @@ export function NoticeDrawer() {
       title={t('notices.title')}
       footer={
         <>
-          <Link className="btn" to="/notices" onClick={() => setOpen(false)}>
+          <Link className="btn mr-auto" to="/notices" onClick={() => setOpen(false)}>
             {t('notices.all')}
           </Link>
+          <DeleteAllNotices />
           <button className="btn btn-accent" onClick={() => void markAll()}>
             {t('notices.markAllRead')}
           </button>

@@ -683,6 +683,8 @@
     "kioskCreate": "Créer un lien kiosque",
     "fileHelp": "Un tableau est un fichier YAML : exportez-le, conservez-le dans Git, importez-le ailleurs. Les secrets ne sont jamais écrits.",
     "export": "Exporter en YAML",
+    "editYaml": "Modifier en YAML",
+    "editYamlHelp": "Le tableau sous forme de texte. Une page ou une carte qui garde son id reste la même, avec sa vérification et son historique ; une sans id est nouvelle, et celle que vous retirez est supprimée. Les connexions sont reconnues par leur nom.",
     "import": "Importer un tableau",
     "importHelp": "Collez le YAML d’un tableau exporté.",
     "importRun": "Importer",
@@ -838,7 +840,10 @@
     "empty": "Rien à signaler.",
     "markRead": "Marquer comme lu",
     "all": "Toutes les notifications",
-    "markAllRead": "Tout marquer comme lu"
+    "markAllRead": "Tout marquer comme lu",
+    "deleteAll": "Tout supprimer",
+    "deleteAllTitle": "Supprimer toutes les notifications ?",
+    "deleteAllBody": "Les {{count}} notifications seront supprimées, y compris celles non lues. Impossible de revenir en arrière."
   },
   "palette": {
     "title": "Recherche",

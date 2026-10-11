@@ -296,7 +296,7 @@ def board_summary(db: Session, board: Board, permission: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> str:
+def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with_ids: bool = False) -> str:
     """The board as YAML.
 
     ⚠️ ``reveal_locked`` is not a nicety. Exporting needs only "view", and a
@@ -305,6 +305,10 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
     names, ports, paths. For a connection the administrator reserved for
     himself that is exactly the part he reserved. A viewer gets the name and
     the kind, which is all an import needs to match it up again.
+
+    ``with_ids`` is for editing the board in place (``edit_board``): every page
+    and card carries its number, so what stays in the text keeps its row, and
+    with it its check and the history of its uptime bars.
     """
     pages = db.scalars(select(Page).options(selectinload(Page.widgets).selectinload(Widget.integration)).where(Page.board_id == board.id).order_by(Page.position)).all()
     integrations: dict[int, Integration] = {}
@@ -314,7 +318,7 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
         "pages": [],
     }
     for page in pages:
-        page_doc: dict[str, Any] = {"name": page.name, "slug": page.slug, "icon": page.icon, "widgets": []}
+        page_doc: dict[str, Any] = {**({"id": page.id} if with_ids else {}), "name": page.name, "slug": page.slug, "icon": page.icon, "widgets": []}
         # A holding card names its cards by place on the page, "#2" for the
         # third: the numbers of the cards are new after every import.
         place = {widget.id: index for index, widget in enumerate(page.widgets)}
@@ -327,6 +331,7 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False) -> s
                     if item.get("i") == str(widget.id):
                         layout[key] = {"x": item["x"], "y": item["y"], "w": item["w"], "h": item["h"]}
             page_doc["widgets"].append({
+                **({"id": widget.id} if with_ids else {}),
                 "kind": widget.kind, "title": widget.title, "icon": widget.icon, "link": widget.link,
                 "integration": widget.integration.name if widget.integration else None,
                 "options": _by_place(widget, place), "refresh_seconds": widget.refresh_seconds, "layout": layout,
@@ -525,6 +530,7 @@ def import_board(
     replace: Board | None = None,
     trusted: bool = False,
     allow_locked: bool = False,
+    keep_ids: bool = False,
 ) -> Board:
     """Create (or replace) a board from a YAML document.
 
@@ -541,6 +547,11 @@ def import_board(
 
     ``allow_locked`` says whether a widget may be tied to a connection the
     administrator reserved. It follows the caller, not the file.
+
+    ``keep_ids`` (with ``replace``) edits the board instead of rebuilding it: a
+    page or card whose ``id`` belongs to this board keeps its row and is changed
+    where it stands, anything else is new, and whatever the text no longer names
+    goes. A number from another board is not looked at, it only makes a new card.
     """
     import os
 
@@ -588,10 +599,16 @@ def import_board(
     # nexdeck draws; a file from before 0.17.0 has none and gets twelve.
     raw_settings = meta.get("settings") if isinstance(meta.get("settings"), dict) else {}
     settings = grid.clean(raw_settings, grid.columns(raw_settings))
+    old_pages: dict[int, Page] = {}
+    old_widgets: dict[int, Widget] = {}
     if replace is not None:
         board = replace
-        for page in list(db.scalars(select(Page).where(Page.board_id == board.id))):
-            db.delete(page)
+        for page in list(db.scalars(select(Page).options(selectinload(Page.widgets)).where(Page.board_id == board.id))):
+            if keep_ids:
+                old_pages[page.id] = page
+                old_widgets.update({widget.id: widget for widget in page.widgets})
+            else:
+                db.delete(page)
         db.flush()
         board.name = name
         board.icon = str(meta.get("icon") or board.icon)
@@ -607,8 +624,17 @@ def import_board(
         db.flush()
 
     for position, page_doc in enumerate(document.get("pages") or []):
-        page = Page(board_id=board.id, name=str(page_doc.get("name") or f"Page {position + 1}"), slug=slugify(str(page_doc.get("slug") or page_doc.get("name") or f"page-{position + 1}")), icon=str(page_doc.get("icon") or ""), position=position, layouts={key: [] for key in COLUMNS})
-        db.add(page)
+        page_name = str(page_doc.get("name") or f"Page {position + 1}")
+        page_slug = slugify(str(page_doc.get("slug") or page_doc.get("name") or f"page-{position + 1}"))
+        page = old_pages.pop(_number(page_doc.get("id")), None)
+        if page is not None:
+            page.name, page.slug, page.icon, page.position = page_name, page_slug, str(page_doc.get("icon") or ""), position
+            page.layouts = {key: [] for key in COLUMNS}
+            # An open browser arranging this page is told it moved on (``put_layouts``).
+            page.layout_version = (page.layout_version or 0) + 1
+        else:
+            page = Page(board_id=board.id, name=page_name, slug=page_slug, icon=str(page_doc.get("icon") or ""), position=position, layouts={key: [] for key in COLUMNS})
+            db.add(page)
         db.flush()
         placer = Placer(page, grid.columns(board.settings))
         made: list[Widget] = []
@@ -620,10 +646,19 @@ def import_board(
                 raise ImportError_(f"Unknown widget kind {kind!r}.") from error
             widget_type = adapter.widget(widget_kind)
             integration = by_name.get(str(widget_doc.get("integration"))) if widget_doc.get("integration") else None
-            widget = Widget(page_id=page.id, kind=kind, title=str(widget_doc.get("title") or widget_type.label), icon=str(widget_doc.get("icon") or (adapter.icon if adapter.kind != "core" else "")),
-                            link=str(widget_doc.get("link") or ""), integration_id=integration.id if integration else None,
-                            options=dict(widget_doc.get("options") or {}), refresh_seconds=widget_doc.get("refresh_seconds"))
-            db.add(widget)
+            fields = {
+                "kind": kind, "title": str(widget_doc.get("title") or widget_type.label), "icon": str(widget_doc.get("icon") or (adapter.icon if adapter.kind != "core" else "")),
+                "link": str(widget_doc.get("link") or ""), "integration_id": integration.id if integration else None,
+                "options": dict(widget_doc.get("options") or {}), "refresh_seconds": widget_doc.get("refresh_seconds"),
+            }
+            widget = old_widgets.pop(_number(widget_doc.get("id")), None)
+            if widget is not None:
+                for key, value in fields.items():
+                    setattr(widget, key, value)
+                widget.page = page
+            else:
+                widget = Widget(page_id=page.id, **fields)
+                db.add(widget)
             db.flush()
             made.append(widget)
             layout = widget_doc.get("layout") or {}
@@ -645,7 +680,19 @@ def import_board(
             health_service.ensure_check_for_widget(db, widget)
         _by_number(made)
         placer.finish()
+    # What the text no longer names. The cards first: one that moved to another page is no longer in its old
+    # page's list, so deleting that page cannot take it along.
+    for widget in old_widgets.values():
+        db.delete(widget)
+    db.flush()
+    for page in old_pages.values():
+        db.delete(page)
     if not document.get("pages"):
         db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))
     db.flush()
     return board
+
+
+def _number(value: Any) -> int | None:
+    """A row number from a file, or nothing: ``true`` is not 1."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else None

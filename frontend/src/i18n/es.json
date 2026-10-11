@@ -683,6 +683,8 @@
     "kioskCreate": "Crear enlace de quiosco",
     "fileHelp": "Un tablero es un archivo YAML: expórtalo, guárdalo en Git, impórtalo en otro sitio. Los secretos nunca se escriben.",
     "export": "Exportar como YAML",
+    "editYaml": "Editar como YAML",
+    "editYamlHelp": "El tablero como texto. Una página o tarjeta que conserva su id sigue siendo la misma, con su comprobación y su historial; una sin id es nueva, y la que quites se elimina. Las conexiones se asignan por nombre.",
     "import": "Importar un tablero",
     "importHelp": "Pega el YAML de un tablero exportado.",
     "importRun": "Importar",
@@ -838,7 +840,10 @@
     "empty": "Nada que informar.",
     "markRead": "Marcar como leído",
     "all": "Todos los avisos",
-    "markAllRead": "Marcar todo como leído"
+    "markAllRead": "Marcar todo como leído",
+    "deleteAll": "Eliminar todo",
+    "deleteAllTitle": "¿Eliminar todos los avisos?",
+    "deleteAllBody": "Se eliminarán los {{count}} avisos, también los no leídos. No se puede deshacer."
   },
   "palette": {
     "title": "Buscar",

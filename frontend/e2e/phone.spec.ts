@@ -267,6 +267,108 @@ test('the bar stays on the page while another board loads', async ({ page }) => 
   }
 })
 
+/**
+ * The rules of the installed app switched on where they stand. Chromium cannot pretend to be installed
+ * (setEmulatedMedia ignores display-mode), so they are copied into a layer that always applies.
+ */
+async function asInstalled(page: Page): Promise<void> {
+  // Every such rule, not the first: they stand in more than one layer.
+  const found = await page.evaluate(() => {
+    const rules: CSSMediaRule[] = []
+    const walk = (list: CSSRuleList) => {
+      for (const rule of [...list]) {
+        if (rule instanceof CSSMediaRule && rule.conditionText.includes('display-mode: standalone')) rules.push(rule)
+        else if ('cssRules' in rule) walk((rule as CSSGroupingRule).cssRules)
+      }
+    }
+    for (const sheet of [...document.styleSheets]) walk(sheet.cssRules)
+    for (const rule of rules) {
+      const parent = rule.parentRule as CSSGroupingRule | null
+      const inner = [...rule.cssRules].map((one) => one.cssText).join('\n')
+      if (parent) parent.insertRule(`@media all { ${inner} }`, parent.cssRules.length)
+      else rule.parentStyleSheet?.insertRule(`@media all { ${inner} }`, rule.parentStyleSheet.cssRules.length)
+    }
+    return rules.length
+  })
+  expect(found, 'the rules for the installed app, near the glass and over the utilities').toBeGreaterThanOrEqual(2)
+}
+
+/** What lies on top in the middle of the bar: the bar itself, or something laid over it. */
+function onTopOfTheBar(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const bar = document.querySelector('header.app-bar')
+    const hit = document.elementFromPoint(window.innerWidth / 2, 24)
+    return Boolean(bar && hit && bar.contains(hit))
+  })
+}
+
+test('in the installed app nothing lays its veil over the bar', async ({ page }) => {
+  // ⚠️ Issue #36, 11.10.2026: after every update the window with what is new brought the blur of iPadOS 26
+  // back over the bar, and it stayed. Its dark veil covered the whole page, the bar with it, as did every
+  // dialog, sheet and the search. Below the bar they now leave it in sight; in a browser tab nothing changes.
+  await signIn(page)
+  await page.setViewportSize({ width: 1032, height: 1376 })
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  const me = (await (await page.request.get('/api/v1/auth/me')).json()) as { seen_version: string | null }
+  try {
+    expect((await page.request.patch('/api/v1/auth/me', { ...write, data: { seen_version: '0.0.1' } })).status()).toBe(200)
+    await page.goto('/b/home')
+    const news = page.getByRole('dialog')
+    await expect(news).toBeVisible()
+    expect(await onTopOfTheBar(page), 'in a browser tab the veil covers the bar as it always did').toBe(false)
+    await asInstalled(page)
+    expect(await onTopOfTheBar(page), 'the window with what is new covers the bar').toBe(true)
+    await news.getByRole('button', { name: 'Close' }).first().click()
+    await expect(news).toBeHidden()
+
+    await page.getByRole('button', { name: 'Notices', exact: true }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    expect(await onTopOfTheBar(page), 'the notices cover the bar').toBe(true)
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toBeHidden()
+
+    await page.keyboard.press('Control+k')
+    await expect(page.getByRole('dialog', { name: 'Search' })).toBeVisible()
+    expect(await onTopOfTheBar(page), 'the search covers the bar').toBe(true)
+    await page.keyboard.press('Escape')
+  } finally {
+    await page.request.patch('/api/v1/auth/me', { ...write, data: { seen_version: me.seen_version } })
+  }
+})
+
+test('the bar stays on the page while a page that loads on demand arrives', async ({ page }) => {
+  // Issue #36, 11.10.2026, looking for the second way the blur came back: the first visit to a page that is
+  // loaded on demand. It never had a moment without a bar, because the router keeps the old page on screen
+  // until the new one is there (a mutation probe that took a bar out of the spinner stayed green). This keeps
+  // it that way; a fallback without a bar would be the board switch of issue #27 over again.
+  await signIn(page)
+  await page.setViewportSize({ width: 1032, height: 1376 })
+  await page.evaluate(() => {
+    const state = window as unknown as { barGone: number }
+    state.barGone = 0
+    new MutationObserver(() => {
+      if (!document.querySelector('header.app-bar')) state.barGone += 1
+    }).observe(document.body, { childList: true, subtree: true })
+  })
+  let held = false
+  await page.route(/NoticesPage/, async (route) => {
+    held = true
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await route.continue()
+  })
+  try {
+    await page.getByRole('button', { name: 'Notices', exact: true }).click()
+    await page.getByRole('link', { name: 'All notices' }).click()
+    await expect.poll(() => held).toBe(true)
+    expect(await page.evaluate(() => document.querySelectorAll('header.app-bar').length), 'no bar while the page loads').toBe(1)
+    await expect(page).toHaveURL(/\/notices$/)
+    await expect(page.getByRole('heading', { name: 'Notices' })).toBeVisible()
+    expect(await page.evaluate(() => (window as unknown as { barGone: number }).barGone), 'the bar left the page on the way').toBe(0)
+  } finally {
+    await page.unroute(/NoticesPage/)
+  }
+})
+
 test('the weather chips stay clear of the temperature on a narrow card', async ({ page }) => {
   // Issue #27: on an upright iPad the chip "Feels like" lay over "19 °C". The chips came with the
   // width of the screen, and an iPad Pro held upright is as wide as a laptop, while the card is not.

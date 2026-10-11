@@ -30,6 +30,7 @@ from ..schemas import (
     BoardCreate,
     BoardOrder,
     BoardPatch,
+    EditYamlBody,
     GridBody,
     ImportBody,
     KioskCreate,
@@ -421,10 +422,13 @@ def put_shares(slug: str, body: SharesBody, user: CurrentUser, db: DbSession) ->
 
 
 @router.get("/boards/{slug}/export", summary="Export a board as YAML")
-def export_board(slug: str, user: CurrentUser, db: DbSession) -> Response:
-    """Secrets are replaced by environment references, never written out."""
-    board, _ = require_board(db, slug, user, "view")
-    text = board_service.export_board(db, board, reveal_locked=user.role == Role.admin.value)
+def export_board(slug: str, user: CurrentUser, db: DbSession, ids: bool = False) -> Response:
+    """Secrets are replaced by environment references, never written out.
+
+    ``ids`` adds the numbers of pages and cards, for ``PUT /boards/{slug}/yaml``.
+    """
+    board, _ = require_board(db, slug, user, "edit" if ids else "view")
+    text = board_service.export_board(db, board, reveal_locked=user.role == Role.admin.value, with_ids=ids)
     return Response(content=text, media_type="application/yaml", headers={"Content-Disposition": f'attachment; filename="{board.slug}.yaml"'})
 
 
@@ -450,6 +454,32 @@ def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
         collector.schedule(widget_id)
     logger.info("Board %r imported by %s with %d card(s).", board.name, user.username, len(cards))
     return board_view(db, board, "owner")
+
+
+@router.put("/boards/{slug}/yaml", summary="Change a board by its YAML")
+def edit_board_yaml(slug: str, body: EditYamlBody, user: CurrentUser, db: DbSession) -> dict:
+    """The board edited as text (issue #36), with the same checks as an import.
+
+    The text comes from ``GET /boards/{slug}/export?ids=true``. A page or card
+    that keeps its ``id`` keeps its row, its check and its history; one without
+    is new, and one left out is deleted. Synchronous for the reason ``import_board``
+    gives.
+    """
+    board, permission = require_board(db, slug, user, "edit")
+    try:
+        board_service.import_board(
+            db, body.yaml_text, owner_id=user.id, replace=board, keep_ids=True,
+            trusted=False, allow_locked=user.role == "admin",
+        )
+    except ImportError_ as failure:
+        db.rollback()
+        raise error("bad_import", str(failure)) from failure
+    db.commit()
+    for widget_id in db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)):
+        collector.schedule(widget_id)
+    _announce(board.id)
+    logger.info("Board %r changed as YAML by %s.", board.name, user.username)
+    return board_view(db, board, permission)
 
 
 # -- kiosk tokens ------------------------------------------------------------

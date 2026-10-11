@@ -683,6 +683,8 @@
     "kioskCreate": "Create kiosk link",
     "fileHelp": "A board is a YAML file: export it, keep it in Git, import it elsewhere. Secrets are never written out.",
     "export": "Export as YAML",
+    "editYaml": "Edit as YAML",
+    "editYamlHelp": "The board as text. A page or card that keeps its id stays the same card, with its check and its history; one without an id is new, and one you remove is deleted. Connections are matched by name.",
     "import": "Import a board",
     "importHelp": "Paste the YAML of an exported board.",
     "importRun": "Import",
@@ -838,7 +840,10 @@
     "empty": "Nothing to report.",
     "markRead": "Mark as read",
     "all": "All notices",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "deleteAllTitle": "Delete all notices?",
+    "deleteAllBody": "All {{count}} notices go, the unread ones too. This cannot be undone."
   },
   "palette": {
     "title": "Search",

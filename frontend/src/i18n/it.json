@@ -683,6 +683,8 @@
     "kioskCreate": "Crea link kiosk",
     "fileHelp": "Una bacheca è un file YAML: esportala, conservala in Git, importala altrove. I secret non vengono mai scritti.",
     "export": "Esporta come YAML",
+    "editYaml": "Modifica come YAML",
+    "editYamlHelp": "La bacheca come testo. Una pagina o scheda che mantiene il suo id resta la stessa, con il suo controllo e la sua cronologia; una senza id è nuova, e quella che rimuovi viene eliminata. Le connessioni vengono abbinate per nome.",
     "import": "Importa una bacheca",
     "importHelp": "Incolla lo YAML di una bacheca esportata.",
     "importRun": "Importa",
@@ -838,7 +840,10 @@
     "empty": "Niente da segnalare.",
     "markRead": "Segna come letto",
     "all": "Tutti gli avvisi",
-    "markAllRead": "Segna tutti come letti"
+    "markAllRead": "Segna tutti come letti",
+    "deleteAll": "Elimina tutto",
+    "deleteAllTitle": "Eliminare tutti gli avvisi?",
+    "deleteAllBody": "Verranno eliminati tutti i {{count}} avvisi, anche quelli non letti. Non si può annullare."
   },
   "palette": {
     "title": "Cerca",

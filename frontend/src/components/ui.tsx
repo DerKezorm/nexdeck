@@ -25,7 +25,7 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
   useFocusTrap(open, panel)
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+    <div className="overlay fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
       <aside ref={panel} className={`relative glass-strong h-full ${wide ? 'w-full max-w-[640px]' : 'w-full max-w-[420px]'} flex flex-col shadow-2xl rounded-none border-y-0 border-r-0`}>
         <header className="flex items-center gap-2 px-4 h-12 border-b border-line">
@@ -64,7 +64,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   // confine a fixed dialog to itself, and a dialog opened from a sheet would
   // be squeezed into the sheet's column.
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">

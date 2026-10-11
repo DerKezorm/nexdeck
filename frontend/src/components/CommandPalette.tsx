@@ -133,7 +133,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
     onClose()
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4" role="dialog" aria-modal="true" aria-label={t('palette.title')}>
+    <div className="overlay fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4" role="dialog" aria-modal="true" aria-label={t('palette.title')}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className="relative glass-strong rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
         <input

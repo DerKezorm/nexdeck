@@ -13,6 +13,7 @@ interface NoticeState {
   markAll: () => Promise<void>
   markRead: (ids: number[]) => Promise<void>
   remove: (id: number) => Promise<void>
+  removeAll: () => Promise<void>
   setOpen: (open: boolean) => void
   dismissToast: () => void
 }
@@ -49,6 +50,10 @@ export const useNotices = create<NoticeState>((set, getState) => ({
       const notices = state.notices.filter((n) => n.id !== id)
       return { notices, unread: notices.filter((n) => !n.read_at).length }
     })
+  },
+  removeAll: async () => {
+    await del('/notices?all=true')
+    set({ notices: [], unread: 0 })
   },
   setOpen: (open) => set({ open }),
   dismissToast: () => set({ toast: null }),

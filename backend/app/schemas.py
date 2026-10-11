@@ -220,6 +220,10 @@ class ImportBody(BaseModel):
     slug: str | None = Field(default=None, max_length=80, pattern=r"^[a-z0-9-]*$")
 
 
+class EditYamlBody(BaseModel):
+    yaml_text: str = Field(min_length=1, max_length=2_000_000)
+
+
 # -- widgets -----------------------------------------------------------------
 
 

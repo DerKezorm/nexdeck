@@ -45,7 +45,12 @@ def delete_notice(notice_id: int, user: CurrentUser, db: DbSession) -> None:
     db.commit()
 
 
-@router.delete("", status_code=status.HTTP_204_NO_CONTENT, summary="Delete all read notices")
-def clear_read(user: CurrentUser, db: DbSession) -> None:
-    db.execute(delete(Notice).where(Notice.user_id == user.id, Notice.read_at.is_not(None)))
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT, summary="Delete my read notices, or all of them")
+def clear_notices(user: CurrentUser, db: DbSession, all: bool = False) -> None:
+    """Without ``all`` the unread ones stay, as they always did; with it the
+    list is emptied (issue #36). Only the caller's own notices either way."""
+    query = delete(Notice).where(Notice.user_id == user.id)
+    if not all:
+        query = query.where(Notice.read_at.is_not(None))
+    db.execute(query)
     db.commit()

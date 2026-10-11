@@ -1703,6 +1703,17 @@ textarea.input {
  * After the utilities. Only what has to win over a utility on purpose.
  * ---------------------------------------------------------------------- */
 @layer overrides {
+/* ⚠️ Issue #36, 11.10.2026: in the installed app the blur came back after every
+   update. The window with what is new, like every dialog, sheet and the search,
+   laid its dark veil over the whole page and the bar with it, and once the solid
+   bar was gone from the edge the blur stayed (issue #27, near the glass). Below a
+   bar they now leave it in sight. Here and not there: ``inset-0`` is a utility. */
+@media (display-mode: standalone) {
+  body:has(header.app-bar) .overlay {
+    top: 3rem;
+  }
+}
+
 /* The chip row wraps onto a second line on a card with room for it, three
    rows and up, and scrolls sideways on a smaller one. Wrapping everywhere
    printed the number, the title and the chips of a small card over each other
