@@ -1329,6 +1329,31 @@
         "The four new integrations start as beta. A card at the address of another app of the family says so instead of showing noughts.",
         "A picture a service draws as SVG is passed on only when its integration asks for it, checked for script and served in a sandbox."
       ]
+    },
+    "0.39.0": {
+      "lead": "Three things from one report on an iPad: the bar stays clear of the blur after an update, the notices can be cleared at once, and a board can be edited as text.",
+      "sections": [
+        {
+          "title": "The bar stays clear after an update",
+          "body": "In the app installed on iPadOS 26 the blur came back over the bar after every update. The window with what is new laid its dark veil over the bar, and so did every dialog, sheet and the search. In the installed app they now begin below the bar. In a browser tab nothing changes.",
+          "path": "Board > the bar at the top"
+        },
+        {
+          "title": "Delete all notices",
+          "body": "Next to Mark all as read there is now Delete all. It asks first, and then empties the list, unread notices included.",
+          "path": "Bell in the bar > Delete all"
+        },
+        {
+          "title": "Edit a board as YAML",
+          "body": "The board opens as text and is saved where it stands. Every page and card carries its id: one that keeps its id stays the same card, with its check and the history of its uptime bars, one without an id is new, and one you remove is deleted. The same checks as an import apply, and connections are matched by name.",
+          "path": "Board settings > File > Edit as YAML"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Thanks to bluedsticker for the ideas and the report (#36).",
+        "DELETE /api/v1/notices takes all=true to remove the unread notices too; without it only the read ones go, as before."
+      ]
     }
   }
 }

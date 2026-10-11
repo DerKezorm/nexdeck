@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.39.0 (2026-10-11)
+
+### New
+
+- **A board can be edited as YAML** (#36): Board settings → File → Edit as YAML. The text carries the id of every page and card; one that keeps its id stays the same card, with its check and the history of its uptime bars, one without is new, and one that is left out is deleted. The same checks as an import; connections are matched by name and never created.
+- **Delete all notices** (#36), next to "Mark all as read", in the drawer and on the notices page, after a question. `DELETE /api/v1/notices?all=true` takes the unread ones too; without it only the read ones go, as before.
+
+### Fixed
+
+- **The blur of iPadOS 26 came back over the bar** in the installed app after every update (#36). The window with what is new, and every dialog, sheet and the search, laid its dark veil over the bar; in the installed app they now begin below it. Thanks to @bluedsticker for the report and the ideas.
+
 ## 0.38.0 (2026-10-11)
 
 ### New

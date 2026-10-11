@@ -1329,6 +1329,31 @@
         "Die vier neuen Anbindungen starten als Beta. Eine Karte an der Adresse einer anderen App der Familie sagt das, statt Nullen zu zeigen.",
         "Ein Bild, das ein Dienst als SVG zeichnet, reicht nexdeck nur weiter, wenn die Anbindung danach fragt, geprüft auf Skripte und in einer Sandbox."
       ]
+    },
+    "0.39.0": {
+      "lead": "Drei Dinge aus einer Meldung vom iPad: Die Leiste bleibt nach einem Update frei von der Unschärfe, die Hinweise lassen sich auf einmal leeren, und ein Board lässt sich als Text bearbeiten.",
+      "sections": [
+        {
+          "title": "Die Leiste bleibt nach einem Update frei",
+          "body": "In der unter iPadOS 26 installierten App kam die Unschärfe nach jedem Update über die Leiste zurück. Das Fenster mit den Neuigkeiten legte seinen dunklen Schleier über die Leiste, ebenso jeder Dialog, jedes Seitenfach und die Suche. In der installierten App beginnen sie jetzt unter der Leiste. Im Browser-Tab ändert sich nichts.",
+          "path": "Board > die Leiste oben"
+        },
+        {
+          "title": "Alle Hinweise löschen",
+          "body": "Neben Alle als gelesen markieren gibt es jetzt Alle löschen. Es fragt zuerst und leert dann die Liste, auch die ungelesenen Hinweise.",
+          "path": "Glocke in der Leiste > Alle löschen"
+        },
+        {
+          "title": "Ein Board als YAML bearbeiten",
+          "body": "Das Board öffnet sich als Text und wird an Ort und Stelle gespeichert. Jede Seite und Karte trägt ihre id: Eine, die ihre id behält, bleibt dieselbe Karte, samt Prüfung und Verlauf ihrer Uptime-Balken, eine ohne id ist neu, und eine, die du entfernst, wird gelöscht. Es gelten dieselben Prüfungen wie beim Import, und Verbindungen werden über ihren Namen zugeordnet.",
+          "path": "Board-Einstellungen > Datei > Als YAML bearbeiten"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an bluedsticker für die Ideen und die Meldung (#36).",
+        "DELETE /api/v1/notices nimmt all=true, um auch die ungelesenen Hinweise zu löschen; ohne bleiben sie wie bisher."
+      ]
     }
   }
 }
