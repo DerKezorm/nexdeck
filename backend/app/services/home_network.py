@@ -75,7 +75,9 @@ class RecordPeer:
     the forwarding headers exactly as uvicorn's ``--forwarded-allow-ips "*"``
     did, so every log line and the sign-in brake see what they always saw;
     the image now starts uvicorn with ``--no-proxy-headers`` so that the peer
-    recorded here is the real one.
+    recorded here is the real one. The scheme is not taken from anybody:
+    ``X-Forwarded-Proto`` reaches that middleware only from a proxy named in
+    ``NEXDECK_TRUSTED_PROXIES`` (``forwarded_proto_headers``).
     """
 
     def __init__(self, app: Any) -> None:
@@ -90,23 +92,32 @@ class RecordPeer:
             # The scheme of the connection itself, before ``ProxyHeadersMiddleware`` below takes one from a header
             # (``public_base``).
             scope["nexdeck.scheme"] = scope.get("scheme") or "http"
-            scope["headers"] = forwarded_proto_headers(scope.get("headers") or [], scope["nexdeck.peer"])
+            headers = scope.get("headers") or []
+            # What the sender wrote, for the authentik card only: it shows what a proxy said and warns when nexdeck
+            # does not believe it (``card_headers``). Never an address or a scheme.
+            scope["nexdeck.forwarded"] = {
+                name: _last_line(headers, name.encode()) for name in ("x-forwarded-proto", "x-forwarded-host")
+            }
+            scope["headers"] = forwarded_proto_headers(headers, scope["nexdeck.peer"], scope["type"])
         await self.inner(scope, receive, send)
 
 
-def forwarded_proto_headers(headers: list[tuple[bytes, bytes]], peer: str) -> list[tuple[bytes, bytes]]:
+def forwarded_proto_headers(
+    headers: list[tuple[bytes, bytes]], peer: str, kind: str = "http"
+) -> list[tuple[bytes, bytes]]:
     """``X-Forwarded-Proto`` as uvicorn may take it, or not at all.
 
-    The scheme decides whether cookies are ``Secure`` (sign-in blueprint, "Hinter
-    einem Proxy"); the redirect address of the sign-in does not rest on it
-    (``public_base``).
-    uvicorn believed it only when the whole header was exactly ``http`` or
-    ``https``: a chain of proxies writes ``https, http`` and a proxy may write
-    ``HTTPS``, and both were dropped. Now the right-most value counts (the
-    nearest proxy wrote it), in any case, and only ``http`` or ``https``; for a
-    WebSocket uvicorn makes ``ws`` or ``wss`` of it. With
-    ``NEXDECK_TRUSTED_PROXIES`` set, only those proxies are believed; without
-    it, every sender, as before.
+    The scheme decides whether cookies are ``Secure``; the redirect address of the sign-in does not rest on it
+    (``public_base``). The rule of the shared sign-in module (README, "Hinter einem Proxy"):
+
+    - Only a proxy named in ``NEXDECK_TRUSTED_PROXIES`` is believed, and out of the box that list is empty: then
+      nobody is, and the scheme stays the connection's own. A header any visitor can send must not decide it.
+    - Of a trusted proxy the right-most value of the last header line counts: the nearest proxy wrote it, anything to
+      its left the sender may have brought along.
+    - Compared without regard to case, and only ``http`` or ``https``; on a WebSocket also ``ws`` or ``wss`` (Traefik
+      names those), which uvicorn keeps, as it makes ``ws`` or ``wss`` of the other two. Anything else: no value.
+
+    The header is removed whenever it is not believed, so nothing behind this can read it by mistake.
     """
     name = b"x-forwarded-proto"
     values = [value for key, value in headers if key.lower() == name]
@@ -115,12 +126,32 @@ def forwarded_proto_headers(headers: list[tuple[bytes, bytes]], peer: str) -> li
     kept = [(key, value) for key, value in headers if key.lower() != name]
     proxies = trusted_proxies()
     sender = _ip(peer)
-    if proxies and (sender is None or not _inside(sender, proxies)):
+    if not proxies or sender is None or not _inside(sender, proxies):
         return kept
     last = values[-1].decode("latin-1").split(",")[-1].strip().lower()
-    if last not in ("http", "https"):
+    if last not in (("http", "https", "ws", "wss") if kind == "websocket" else ("http", "https")):
         return kept
     return [*kept, (name, last.encode("latin-1"))]
+
+
+def _last_line(headers: list[tuple[bytes, bytes]], name: bytes) -> str:
+    values = [value for key, value in headers if key.lower() == name]
+    return values[-1].decode("latin-1") if values else ""
+
+
+def card_headers(request: Request) -> dict[str, str]:
+    """``X-Forwarded-Proto`` and ``X-Forwarded-Host`` as the sender wrote them (the last line of each), for the
+    authentik card of the sign-in module, which shows what a proxy said and warns when the app does not take its
+    word (``address_view``). The module never builds an address from them (README, "Hinter einem Proxy")."""
+    raw = request.scope.get("nexdeck.forwarded")
+    if isinstance(raw, dict):
+        return {key: value for key, value in raw.items() if value}
+    return {key: value for key in ("x-forwarded-proto", "x-forwarded-host") if (value := _last_value(request, key))}
+
+
+def _last_value(request: Request, name: str) -> str:
+    values = request.headers.getlist(name)
+    return values[-1] if values else ""
 
 
 _HOST = re.compile(r"^(?:[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?|\[[0-9A-Fa-f:.]+\])(?::\d{1,5})?$")
@@ -131,10 +162,10 @@ def public_base(request: Request) -> str:
 
     The real one of the request: the scheme of the connection and the ``Host`` header. Scheme and host out of the
     forwarding headers (``X-Forwarded-Proto``, ``X-Forwarded-Host``) only when the sender is named in
-    ``NEXDECK_TRUSTED_PROXIES``, the right-most value, ``http`` or ``https`` in any case. Without that variable
-    nobody is believed: a header any visitor can send must not decide the redirect address the sign-in hands to a
-    provider. (The ``Secure`` flag of the session cookie keeps following ``X-Forwarded-Proto`` as it always did,
-    ``cookie_secure``.)
+    ``NEXDECK_TRUSTED_PROXIES``, the right-most value of the last header line, ``http`` or ``https`` in any case.
+    Without that variable nobody is believed: a header any visitor can send must not decide the redirect address the
+    sign-in hands to a provider. The ``Secure`` flag of the cookies follows the same rule (``forwarded_proto_headers``,
+    ``cookie_secure``).
     """
     url = request.url
     scheme = str(request.scope.get("nexdeck.scheme") or url.scheme)
@@ -145,7 +176,7 @@ def public_base(request: Request) -> str:
         proto = request.headers.get("x-forwarded-proto", "").split(",")[-1].strip().lower()
         if proto in ("http", "https"):
             scheme = proto
-        named = request.headers.get("x-forwarded-host", "").split(",")[-1].strip()
+        named = _last_value(request, "x-forwarded-host").split(",")[-1].strip()
         if named and _HOST.match(named):
             host = named
     return str(request.base_url.replace(scheme=scheme, netloc=host))
@@ -194,10 +225,12 @@ def seen_address(request: Request) -> tuple[str | None, str]:
         # Something in front forwards for somebody else, and nobody said it
         # may: whoever that is, it is not known.
         return (None, "forwarded_by_unknown") if headers else (str(peer), "direct")
-    chain = [part for part in (headers.get("x-forwarded-for") or "").split(",") if part.strip()]
+    # Every line of X-Forwarded-For, in order: a proxy may add a line of its own (HAProxy's ``option forwardfor``)
+    # instead of appending to the sender's, and reading the first line alone would take the sender's word.
+    chain = [part for line in request.headers.getlist("x-forwarded-for") for part in line.split(",") if part.strip()]
     if not chain and headers.get("x-real-ip"):
-        # nginx's usual line when it sets no X-Forwarded-For.
-        chain = [str(headers["x-real-ip"])]
+        # nginx's usual line when it sets no X-Forwarded-For; the last one, the nearest proxy's.
+        chain = [_last_value(request, "x-real-ip")]
     for entry in reversed(chain):
         address = _ip(entry)
         if address is None:

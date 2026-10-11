@@ -48,7 +48,7 @@ from ..deps import AdminUser, CurrentUser, PasswordUser, error, refuse_at_home
 from ..models import User
 from ..security import create_step_token, has_usable_password, verify_password
 from ..services import login_guard
-from ..services.home_network import public_base
+from ..services.home_network import card_headers, public_base
 from ..services.oidc_store import SqlStore
 from ..vendor.nexoidc import OidcError, ProviderInvalid, authentik, flow, providers
 from ..vendor.nexoidc import accounts as oidc_accounts
@@ -418,7 +418,7 @@ async def authentik_setup(payload: SetupIn, admin: AdminUser, request: Request) 
             _base(request),
             confirm_issuer_change=payload.confirm_issuer_change,
             public_url=payload.public_url,
-            headers=request.headers,
+            headers=card_headers(request),
         )
     return result.as_dict()
 
@@ -426,7 +426,8 @@ async def authentik_setup(payload: SetupIn, admin: AdminUser, request: Request) 
 @router.get("/oidc/authentik/address", summary="The public address, what the server sees and what authentik knows")
 def authentik_address(_admin: AdminUser, request: Request) -> dict[str, Any]:
     with store() as s:
-        return authentik.address_view(s, _base(request), request.headers)
+        # What the sender wrote, to show and to warn by; the address itself is ``_base``.
+        return authentik.address_view(s, _base(request), card_headers(request))
 
 
 def public_url_change_error(question: dict[str, Any]) -> HTTPException:

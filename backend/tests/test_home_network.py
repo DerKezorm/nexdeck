@@ -88,6 +88,14 @@ def test_the_address_is_the_connections_own_and_a_stranger_cannot_forward_it(cli
     # Read from the right: what a stranger wrote on the left does not count.
     forged = _browser(client, ("192.168.1.2", 50000), {"X-Forwarded-For": "192.168.1.20, 203.0.113.9"})
     assert _sign_in(forged).status_code == 401
+    # Two lines, as HAProxy's ``option forwardfor`` writes them: the stranger's own line first, the proxy's last.
+    # Reading the first line alone took the stranger's word for being at home.
+    two_lines = [("X-Forwarded-For", "192.168.1.20"), ("X-Forwarded-For", "203.0.113.9"), *CSRF.items()]
+    proxy = _browser(client, ("192.168.1.2", 50000))
+    assert proxy.post("/api/v1/auth/home", json={}, headers=two_lines).status_code == 401
+    turned = [("X-Forwarded-For", "203.0.113.9"), ("X-Forwarded-For", "192.168.1.20"), *CSRF.items()]
+    assert proxy.post("/api/v1/auth/home", json={}, headers=turned).status_code == 200, "the proxy's line is believed"
+    proxy.post("/api/v1/auth/logout", headers=CSRF)
     assert _sign_in(_browser(client, ("192.168.1.2", 50000), {"X-Forwarded-For": "192.168.1.20"})).status_code == 200
     assert _sign_in(_browser(client, ("192.168.1.2", 50000), {"X-Real-IP": "192.168.1.21"})).status_code == 200
     # The proxy's own requests, without saying for whom: unknown.

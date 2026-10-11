@@ -34,7 +34,8 @@ class Settings(BaseSettings):
     #: Needed for OIDC return addresses and Web Push.
     public_url: str = ""
     #: ``auto`` sets the Secure cookie flag when the request came over HTTPS
-    #: (directly or via ``X-Forwarded-Proto``); ``always``/``never`` force it.
+    #: (directly, or via ``X-Forwarded-Proto`` from a proxy named in
+    #: ``NEXDECK_TRUSTED_PROXIES``); ``always``/``never`` force it.
     cookie_secure: Literal["auto", "always", "never"] = "auto"
     #: Days a browser session stays valid without activity.
     session_days: int = 30

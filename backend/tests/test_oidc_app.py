@@ -405,26 +405,39 @@ def test_a_return_without_its_own_attempt_never_feeds_the_brake(client: TestClie
 
 
 @pytest.mark.parametrize(
-    ("sent", "trusted", "peer", "secure"),
+    ("lines", "trusted", "peer", "kind", "believed"),
     [
-        ("https", "", "203.0.113.9", True),
-        ("HTTPS", "", "203.0.113.9", True),
-        ("https, http", "", "203.0.113.9", False),
-        ("http, https", "", "203.0.113.9", True),
-        ("ftp", "", "203.0.113.9", False),
-        ("https", "10.0.0.0/8", "10.1.2.3", True),
-        ("https", "10.0.0.0/8", "203.0.113.9", False),
+        # Out of the box nobody is believed: the scheme stays the connection's own (the shared module README,
+        # "Hinter einem Proxy"). Until 0.39.0 every sender was, while the list was empty.
+        (["https"], "", "203.0.113.9", "http", None),
+        (["https"], "", "10.1.2.3", "http", None),
+        (["https"], "", "127.0.0.1", "http", None),
+        (["https"], "10.0.0.0/8", "10.1.2.3", "http", b"https"),
+        (["https"], "10.0.0.0/8", "203.0.113.9", "http", None),
+        (["https"], "10.0.0.0/8", "testclient", "http", None),
+        (["HTTPS"], "10.0.0.0/8", "10.1.2.3", "http", b"https"),
+        (["https, http"], "10.0.0.0/8", "10.1.2.3", "http", b"http"),
+        (["http, https"], "10.0.0.0/8", "10.1.2.3", "http", b"https"),
+        (["https", "http"], "10.0.0.0/8", "10.1.2.3", "http", b"http"),
+        (["http", "https"], "10.0.0.0/8", "10.1.2.3", "http", b"https"),
+        (["ftp"], "10.0.0.0/8", "10.1.2.3", "http", None),
+        (["wss"], "10.0.0.0/8", "10.1.2.3", "http", None),
+        (["wss"], "10.0.0.0/8", "10.1.2.3", "websocket", b"wss"),
+        (["ws, WSS"], "10.0.0.0/8", "10.1.2.3", "websocket", b"wss"),
+        (["https"], "10.0.0.0/8", "10.1.2.3", "websocket", b"https"),
+        (["wss"], "", "10.1.2.3", "websocket", None),
     ],
 )
-def test_the_scheme_comes_from_the_rightmost_forwarded_proto_of_a_trusted_sender(
-    monkeypatch: pytest.MonkeyPatch, sent: str, trusted: str, peer: str, secure: bool
+def test_the_scheme_comes_from_the_rightmost_forwarded_proto_of_a_trusted_proxy_only(
+    monkeypatch: pytest.MonkeyPatch, lines: list[str], trusted: str, peer: str, kind: str, believed: bytes | None
 ) -> None:
     from app.services.home_network import forwarded_proto_headers
 
     monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", trusted)
-    headers = forwarded_proto_headers([(b"host", b"deck.example.com"), (b"x-forwarded-proto", sent.encode())], peer)
-    proto = [value for key, value in headers if key == b"x-forwarded-proto"]
-    assert (proto == [b"https"]) is secure
+    sent = [(b"host", b"deck.example.com"), *((b"X-Forwarded-Proto", line.encode()) for line in lines)]
+    headers = forwarded_proto_headers(sent, peer, kind)
+    proto = [value for key, value in headers if key.lower() == b"x-forwarded-proto"]
+    assert proto == ([believed] if believed else []), "a header not believed is removed, not passed on"
     assert (b"host", b"deck.example.com") in headers
 
 
@@ -479,13 +492,68 @@ def test_a_named_proxy_gives_the_scheme_and_the_host_the_sign_in_sends(
     assert ("secure" in answer.headers["set-cookie"].lower()) is expected.startswith("https")
 
 
-def test_the_session_cookie_still_follows_the_forwarded_scheme(client: TestClient) -> None:
-    """The ``Secure`` flag of the session cookie is not part of the redirect address and stays as it was."""
+def test_of_several_forwarded_host_lines_the_last_one_counts(
+    client: TestClient, net: fakes.Network, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A proxy that adds a line of its own instead of appending: the sender's line comes first and is not taken."""
+    monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", "10.0.0.0/8")
     setup_admin(client)
-    signed = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "http, HTTPS"})
-    assert signed.status_code == 200 and "secure" in signed.headers["set-cookie"].lower()
-    plain = _browser().post("/api/v1/auth/login", json=ADMIN, headers={"X-Forwarded-Proto": "https, http"})
-    assert plain.status_code == 200 and "secure" not in plain.headers["set-cookie"].lower()
+    sso = net.add(fakes.FakeProvider())
+    _add(client, sso, "sso")
+    lines = [("X-Forwarded-Proto", "https"), ("X-Forwarded-Host", "evil.example"),
+             ("X-Forwarded-Host", "deck.example.com")]
+    answer = _browser("10.1.2.3").get("/api/v1/oidc/sso/start", headers=lines)
+    assert _redirect_uri_of(answer).startswith("https://deck.example.com/")
+
+
+def _session_cookie_is_secure(answer: Any) -> bool:
+    assert answer.status_code == 200, answer.text
+    lines = [line for line in answer.headers.get_list("set-cookie") if line.lower().startswith("nexdeck_session=")]
+    assert len(lines) == 1, answer.headers.get_list("set-cookie")
+    return "secure" in {part.strip().lower() for part in lines[0].split(";")[1:]}
+
+
+def test_the_session_cookie_takes_the_scheme_of_a_trusted_proxy_only(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The ``Secure`` flag follows the shared module's rule (README, "Hinter einem Proxy"): nobody is trusted out of
+    the box, a stranger's ``X-Forwarded-Proto`` counts for nothing, and of a trusted proxy the right-most value of
+    the last line."""
+    setup_admin(client)
+
+    def secure(peer: str, *lines: str) -> bool:
+        browser = TestClient(client.app, base_url="http://testserver", follow_redirects=False, client=(peer, 50000))
+        answer = browser.post("/api/v1/auth/login", json=ADMIN, headers=[("X-Forwarded-Proto", line) for line in lines])
+        return _session_cookie_is_secure(answer)
+
+    monkeypatch.delenv("NEXDECK_TRUSTED_PROXIES", raising=False)
+    assert not secure("10.1.2.3", "https"), "no proxy is trusted out of the box"
+    assert not secure("203.0.113.9", "https"), "no proxy is trusted out of the box"
+    monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", "10.0.0.0/8")
+    assert secure("10.1.2.3", "https"), "a named proxy is believed"
+    assert secure("10.1.2.3", "http, HTTPS"), "the right-most value, in any case"
+    assert not secure("10.1.2.3", "https, http"), "the right-most value counts"
+    assert secure("10.1.2.3", "http", "https"), "of several lines the last one counts"
+    assert not secure("10.1.2.3", "https", "http"), "of several lines the last one counts"
+    assert not secure("10.1.2.3", "javascript"), "not a scheme: the connection's own"
+    assert not secure("203.0.113.9", "https"), "a stranger's header is not believed"
+    # The operator's way out behind a proxy nexdeck was not told about.
+    from app.config import get_settings
+
+    monkeypatch.delenv("NEXDECK_TRUSTED_PROXIES")
+    monkeypatch.setattr(get_settings(), "cookie_secure", "always")
+    assert secure("203.0.113.9")
+
+
+def test_the_card_still_shows_a_scheme_nobody_believes_and_warns(client: TestClient) -> None:
+    """The header is gone for everything that builds an address or a flag, but the authentik card may show what a
+    proxy said and warns that nexdeck does not take its word; it is the hint to name the proxy."""
+    setup_admin(client)
+    seen = client.get("/api/v1/oidc/authentik/address", headers={"X-Forwarded-Proto": "https"}).json()
+    assert seen["seen"].startswith("http://testserver") and seen["forwarded_proto"] == "https"
+    assert seen["proxy_ignored"] is True
+    plain = client.get("/api/v1/oidc/authentik/address").json()
+    assert plain["forwarded_proto"] == "" and plain["proxy_ignored"] is False
 
 
 # --- Settings, account list ---------------------------------------------------------------------------------------

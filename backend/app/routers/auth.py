@@ -46,8 +46,10 @@ def cookie_secure(request: Request) -> bool:
         return True
     if mode == "never":
         return False
-    # The scheme as the proxy middleware left it (``home_network.forwarded_proto_headers``): the same answer the
-    # sign-in gets for its redirect address, and nobody's header read twice in two ways.
+    # The scheme as the proxy middleware left it (``home_network.forwarded_proto_headers``): the connection's own, or
+    # the right-most value of ``X-Forwarded-Proto`` from a proxy named in ``NEXDECK_TRUSTED_PROXIES``, never the
+    # header of anybody else (shared sign-in module README, "Hinter einem Proxy"). The same answer the sign-in gets
+    # for its redirect address. Behind a TLS proxy nexdeck was not told about: ``NEXDECK_COOKIE_SECURE=always``.
     return request.url.scheme in ("https", "wss")
 
 

@@ -83,7 +83,7 @@ Rarely needed, but real:
 |---|---|---|
 | `NEXDECK_DATA_DIR` | `/data` | Where the database, the key file, uploads and caches live. |
 | `NEXDECK_STATIC_DIR` | set in the image | The built frontend. Empty means the API only. |
-| `NEXDECK_COOKIE_SECURE` | `auto` | `auto` sets the Secure flag when the request came over HTTPS; `always` and `never` force it. |
+| `NEXDECK_COOKIE_SECURE` | `auto` | `auto` sets the Secure flag when the request came over HTTPS, directly or from a proxy named in `NEXDECK_TRUSTED_PROXIES`; `always` and `never` force it. |
 | `NEXDECK_SESSION_DAYS` | `30` | Days a browser stays signed in without activity. |
 | `NEXDECK_BCRYPT_ROUNDS` | `12` | Cost of a password hash. Lower is faster and weaker. |
 | `NEXDECK_DB_POOL_SIZE` | `20` | Database connections held open. |
@@ -98,13 +98,13 @@ Rarely needed, but real:
 | `NEXDECK_UPDATE_CHECK` | `0` | Ask GitHub whether a newer nexdeck exists. Off by default: it is an outbound call. |
 | `NEXDECK_CORS_ORIGINS` | empty | Origins allowed to call the API from a browser. `*` is refused at start-up, because with credentials it would let any site act as the signed-in user. |
 | `NEXDECK_BACKUP_EVERY_HOURS` | `24` | How often a snapshot is written by itself. `0` switches it off. |
-| `NEXDECK_TRUSTED_PROXIES` | empty | Addresses or networks of the reverse proxies in front of nexdeck, comma separated. Their `X-Forwarded-For` is believed when nexdeck decides whether a browser is on the home network; without it, a forwarded request is never signed in automatically. Set, it is also the list whose `X-Forwarded-Proto` and `X-Forwarded-Host` the sign-in believes for its redirect address, and the list whose `X-Forwarded-Proto` is believed for cookies (see below). |
+| `NEXDECK_TRUSTED_PROXIES` | empty | Addresses or networks of the reverse proxies in front of nexdeck, comma separated. Their `X-Forwarded-For` is believed when nexdeck decides whether a browser is on the home network; without it, a forwarded request is never signed in automatically. It is also the only list whose `X-Forwarded-Proto` is believed for the Secure flag of cookies and whose `X-Forwarded-Proto` and `X-Forwarded-Host` the sign-in believes for its redirect address; empty, nobody's is (see below). |
 
 A guard test keeps this table in step with the settings in the code.
 
 ### Reverse proxy
 
-nexdeck speaks plain HTTP on port 8000. Two things read the forwarding headers, and they differ on purpose. The `Secure` flag of the cookies follows `X-Forwarded-Proto`: the right-most value (the one the nearest proxy wrote), `http` or `https` in any case; while `NEXDECK_TRUSTED_PROXIES` is empty it believes every sender, as it always did, and once it names your proxies, only theirs. The redirect address the sign-in sends to a provider is stricter: with a public address set (System → Sign-in) that address is used and no header is read; without one, scheme and host come from `X-Forwarded-Proto` and `X-Forwarded-Host` (right-most value, `http` or `https`) only from a proxy named in `NEXDECK_TRUSTED_PROXIES`, and from nobody out of the box, so a visitor cannot make the sign-in send a provider an address of their choosing. Without a named proxy the sign-in uses the address the request really came in on. This is the setting the authentik card means when it warns that the server sees a request as `http`: name your proxy, or set the public address. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
+nexdeck speaks plain HTTP on port 8000. It believes `X-Forwarded-Proto` only from a proxy named in `NEXDECK_TRUSTED_PROXIES`, and out of the box from nobody: then the scheme is the one the request really came in on, so a visitor cannot choose it. Of a named proxy the right-most value of the last header line counts (the one the nearest proxy wrote), `http` or `https` in any case. That scheme decides the `Secure` flag of the cookies. **Behind a proxy that ends TLS, name it in `NEXDECK_TRUSTED_PROXIES`, or set `NEXDECK_COOKIE_SECURE=always`**; otherwise the cookies go without the Secure flag (until 0.39.0 every sender's header was believed for it). The redirect address the sign-in sends to a provider: with a public address set (System → Sign-in) that address is used and no header is read; without one, scheme and host come from `X-Forwarded-Proto` and `X-Forwarded-Host` by the same rule, so a visitor cannot make the sign-in send a provider an address of their choosing. Without a named proxy the sign-in uses the address the request really came in on. This is the setting the authentik card means when it warns that the server sees a request as `http`: name your proxy, or set the public address. Server-Sent Events need a proxy that does not buffer: for nginx, `proxy_buffering off;` on the location; Traefik and Caddy need nothing.
 
 ### Sign-in providers
 
