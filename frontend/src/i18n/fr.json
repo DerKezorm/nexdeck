@@ -979,7 +979,8 @@
     "noCheck": "Aucun test de joignabilité",
     "checkOff": "Le test est désactivé",
     "flow": "Où va l'énergie",
-    "topology": "Comment les éléments sont reliés"
+    "topology": "Comment les éléments sont reliés",
+    "problemsMore": "+{{count}} de plus"
   },
   "player": {
     "title": "Musique",

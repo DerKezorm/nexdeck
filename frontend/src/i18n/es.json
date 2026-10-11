@@ -979,7 +979,8 @@
     "noCheck": "Sin comprobación de disponibilidad",
     "checkOff": "La comprobación está desactivada",
     "flow": "Adónde va la energía",
-    "topology": "Cómo se conectan los lugares"
+    "topology": "Cómo se conectan los lugares",
+    "problemsMore": "+{{count}} más"
   },
   "player": {
     "title": "Música",

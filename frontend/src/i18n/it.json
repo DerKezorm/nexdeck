@@ -979,7 +979,8 @@
     "noCheck": "Nessuna verifica di raggiungibilità",
     "checkOff": "La verifica è disattivata",
     "flow": "Dove va l'energia",
-    "topology": "Come sono collegati i punti"
+    "topology": "Come sono collegati i punti",
+    "problemsMore": "+{{count}} altri"
   },
   "player": {
     "title": "Musica",

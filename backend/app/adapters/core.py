@@ -641,6 +641,7 @@ class CoreAdapter(Adapter):
 
         from ..db import db_session
         from ..models import HealthCheck, Page, Widget
+        from ..services.boards import service_link
         from ..services.state import live
 
         fine = WidgetData(status="ok", items=[], meta={"empty": "Everything is fine"})
@@ -652,8 +653,10 @@ class CoreAdapter(Adapter):
             if me is None or page is None:
                 return fine
             pages = list(db.scalars(select(Page).where(Page.board_id == page.board_id).order_by(Page.position)))
+            # The row leads where the card itself leads: its own link, then the
+            # one in its live state, then the service's (WidgetCard's order).
             rows = [
-                (other.name, widget.id, widget.title or widget.kind)
+                (other.name, widget.id, widget.title or widget.kind, widget.link, service_link(widget))
                 for other in pages
                 for widget in db.scalars(select(Widget).where(Widget.page_id == other.id))
                 if widget.id != me.id
@@ -666,28 +669,65 @@ class CoreAdapter(Adapter):
             failing = {
                 check.widget_id: check.last_error
                 for check in db.scalars(select(HealthCheck).where(
-                    HealthCheck.widget_id.in_([widget_id for _page, widget_id, _title in rows]),
+                    HealthCheck.widget_id.in_([row[1] for row in rows]),
                     HealthCheck.enabled.is_(True),
                     HealthCheck.last_ok.is_(False),
                 ))
             }
         items: list[dict[str, Any]] = []
-        for page_name, widget_id, title in rows:
+        for page_name, widget_id, title, own, service in rows:
             data = live.get(widget_id)
             where = page_name if several_pages else ""
+            item: dict[str, Any]
             if data is not None and data.error:
-                items.append({"title": title, "subtitle": data.error, "error_code": str(data.meta.get("code") or ""), "status": "bad", "value": where})
+                item = {"title": title, "subtitle": data.error, "error_code": str(data.meta.get("code") or ""), "status": "bad", "value": where}
             elif widget_id in failing:
-                items.append({"title": title, "subtitle": failing[widget_id] or "Error", "status": "bad", "value": where})
+                item = {"title": title, "subtitle": failing[widget_id] or "Error", "status": "bad", "value": where}
             elif data is None:
                 continue
             elif data.status in ("warn", "bad"):
-                reasons = [str(data.meta.get("status_reason") or ""), *(str(u) for u in (data.meta.get("urgent") or []))]
-                subtitle = " · ".join(r for r in reasons if r) or ("Error" if data.status == "bad" else "Warning")
-                items.append({"title": title, "subtitle": subtitle, "status": data.status, "value": where})
+                item = {"title": title, "status": data.status, "value": where, **CoreAdapter._findings_of(data)}
+            else:
+                continue
+            link = own or (data.link if data is not None else "") or service
+            if link:
+                item["url"] = link
+            items.append(item)
         items.sort(key=lambda item: (item["status"] != "bad", item["title"].lower()))
         status = "bad" if any(item["status"] == "bad" for item in items) else ("warn" if items else "ok")
         return WidgetData(status=status, items=items, meta={"empty": "Everything is fine"})
+
+    #: How many of a card's own yellow or red rows the problems card names.
+    FINDINGS_SHOWN = 2
+
+    @staticmethod
+    def _findings_of(data: WidgetData) -> dict[str, Any]:
+        """The subtitle of a yellow or red card: its first red and yellow rows, else its reason.
+
+        "Jellyfin findings: 0 error finding(s), 1 warning(s)" said that there
+        was something, not what (issue #35). A card whose rows carry no status
+        of their own keeps saying it the old way, by its reason.
+
+        ``findings`` and ``more`` let the browser translate each part on its
+        own; ``subtitle`` is the same in English, for anything that reads the
+        API.
+        """
+        loud = [row for row in data.items if isinstance(row, dict) and row.get("status") in ("bad", "warn")]
+        if not loud:
+            reasons = [str(data.meta.get("status_reason") or ""), *(str(u) for u in (data.meta.get("urgent") or []))]
+            return {"subtitle": " · ".join(r for r in reasons if r) or ("Error" if data.status == "bad" else "Warning")}
+        # Red before yellow, each in the order the card has them.
+        loud.sort(key=lambda row: row.get("status") != "bad")
+        shown = loud[: CoreAdapter.FINDINGS_SHOWN]
+        findings = [
+            {"title": str(row.get("title") or ""), "subtitle": str(row.get("subtitle") or ""), "worded": bool(row.get("worded"))}
+            for row in shown
+        ]
+        more = len(loud) - len(shown)
+        parts = [f"{f['title']}: {f['subtitle']}" if f["title"] and f["subtitle"] else f["title"] or f["subtitle"] for f in findings]
+        if more:
+            parts.append(f"+{more} more")
+        return {"subtitle": " · ".join(p for p in parts if p), "findings": findings, "more": more}
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         if widget_kind == "clock":
@@ -764,6 +804,11 @@ class CoreAdapter(Adapter):
                 status="bad",
                 items=[
                     {"title": "Radarr", "subtitle": "The service could not be reached.", "error_code": "unreachable", "status": "bad", "value": ""},
+                    {"title": "Jellyfin", "status": "warn", "value": "", **self._findings_of(WidgetData(status="warn", items=[
+                        {"title": "Jellyfin", "subtitle": "A restart is pending", "status": "warn"},
+                        {"title": "Sign-in", "subtitle": "6 failed sign-ins in 24 h", "status": "warn"},
+                        {"title": "Activity log", "subtitle": "2 error(s) in 24 h", "status": "warn"},
+                    ]))},
                     {"title": "UniFi Network", "subtitle": "1 device(s) offline", "status": "warn", "value": ""},
                 ],
                 meta={"empty": "Everything is fine"},

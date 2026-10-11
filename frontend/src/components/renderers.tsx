@@ -499,6 +499,18 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
   const subtitleOf = (item: Record<string, unknown>): string => {
     const text = String(item.subtitle ?? '')
     if (item.error_code && i18n.language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text })
+    // The problems card names the rows of the card it stands for; each part is
+    // translated on its own, a name stays a name.
+    if (Array.isArray(item.findings)) {
+      const parts = (item.findings as Record<string, unknown>[]).map((finding) => {
+        const name = finding.worded ? tLabel(String(finding.title ?? '')) : String(finding.title ?? '')
+        const said = tLabel(String(finding.subtitle ?? ''))
+        return name && said ? `${name}: ${said}` : name || said
+      })
+      const more = Number(item.more) || 0
+      if (more > 0) parts.push(t('card.problemsMore', { count: more }))
+      return parts.filter(Boolean).join(' · ')
+    }
     return tLabel(text)
   }
   return (

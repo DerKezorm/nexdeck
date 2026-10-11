@@ -979,7 +979,8 @@
     "noCheck": "Keine Erreichbarkeitsprüfung",
     "checkOff": "Die Prüfung ist abgeschaltet",
     "flow": "Wohin der Strom fließt",
-    "topology": "Wie die Orte zusammenhängen"
+    "topology": "Wie die Orte zusammenhängen",
+    "problemsMore": "+{{count}} weitere"
   },
   "player": {
     "title": "Musik",
