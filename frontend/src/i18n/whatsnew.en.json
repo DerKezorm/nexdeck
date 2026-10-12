@@ -1399,6 +1399,31 @@
         "Deleting a board no longer brings the blur back over the bar in the app installed on iPadOS 26. Thanks to bluedsticker (#40).",
         "Thanks to tilwegener for Papra and FortiGate (#41, #42) and to naamah75 for the badges (#38)."
       ]
+    },
+    "0.41.0": {
+      "lead": "Apps set up once and placed on any board, with an address for home and one for the road, and every number drawn the way you like it: a dial, LED bars, seven segments or a chart.",
+      "sections": [
+        {
+          "title": "The app catalog",
+          "body": "Set an app up once, with its name, icon and every address it is reached by, such as through the proxy, over Tailscale or directly. Place it from Add widget on any board and pick the address a tile opens. Change the app once and every tile follows. A tile you already have can be saved as an app from its settings.",
+          "path": "System > Apps"
+        },
+        {
+          "title": "An address for home and one for the road",
+          "body": "Name one address of an app for home and one for the road. A tile set to Automatic opens the home one in your home networks and the other one everywhere else. The home networks are the ones under Home network; they can be named there without switching the sign-in without a password on.",
+          "path": "System > Apps > At home, On the road"
+        },
+        {
+          "title": "Every number, the way you want it",
+          "body": "Every card with a measured number can be a dial, LED bars across or upright, seven-segment digits or a chart. Full at and Empty at set the span, Yellow from and Red from the colours; red below yellow means low numbers are the bad ones. A chart shows the last hour, six hours or a day.",
+          "path": "Card settings > View"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A chart of a day showed only its second half; it now fetches the hours it shows.",
+        "Thanks to bluedsticker for the app catalog (#37) and to naamah75 for the drawings (#39)."
+      ]
     }
   }
 }

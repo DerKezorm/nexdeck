@@ -1399,6 +1399,31 @@
         "Ein Board zu löschen holt die Unschärfe in der unter iPadOS 26 installierten App nicht mehr über die Leiste. Danke an bluedsticker (#40).",
         "Danke an tilwegener für Papra und FortiGate (#41, #42) und an naamah75 für die Plaketten (#38)."
       ]
+    },
+    "0.41.0": {
+      "lead": "Apps einmal einrichten und auf jedes Board legen, mit einer Adresse für daheim und einer für unterwegs, und jede Zahl so gezeichnet, wie du willst: als Zeiger, LED-Leiste, Siebensegment oder Diagramm.",
+      "sections": [
+        {
+          "title": "Der App-Katalog",
+          "body": "Eine App einmal einrichten, mit Name, Icon und jeder Adresse, unter der sie erreichbar ist, etwa über den Proxy, über Tailscale oder direkt. Über Widget hinzufügen auf jedes Board legen und die Adresse wählen, die eine Kachel öffnet. Die App einmal ändern, und alle Kacheln ziehen mit. Eine vorhandene Kachel lässt sich in ihren Einstellungen als App speichern.",
+          "path": "System > Apps"
+        },
+        {
+          "title": "Eine Adresse für daheim und eine für unterwegs",
+          "body": "Eine Adresse einer App für daheim und eine für unterwegs benennen. Eine Kachel auf Automatisch öffnet in deinen Heimnetzen die für daheim und überall sonst die andere. Die Heimnetze sind die unter Heimnetz; sie lassen sich dort eintragen, ohne die Anmeldung ohne Passwort einzuschalten.",
+          "path": "System > Apps > Daheim, Unterwegs"
+        },
+        {
+          "title": "Jede Zahl, wie du sie willst",
+          "body": "Jede Karte mit einer gemessenen Zahl kann ein Zeiger sein, eine LED-Leiste waagrecht oder senkrecht, Siebensegment-Ziffern oder ein Diagramm. Voll bei und Leer bei legen die Spanne fest, Gelb ab und Rot ab die Farben; liegt Rot unter Gelb, sind niedrige Zahlen die schlechten. Ein Diagramm zeigt die letzte Stunde, 6 Stunden oder einen Tag.",
+          "path": "Karteneinstellungen > Ansicht"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein Tagesdiagramm zeigte nur die zweite Tageshälfte; es holt seinen Zeitraum jetzt selbst.",
+        "Danke an bluedsticker für den App-Katalog (#37) und an naamah75 für die Darstellungsarten (#39)."
+      ]
     }
   }
 }

@@ -3,6 +3,23 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.41.0 (2026-10-12)
+
+### New
+
+- **Apps set up once and placed as tiles on any board** (#37). System, Apps keeps the catalog: an app with its name, icon, description and every address it is reached by, each with a label, such as through the proxy, over Tailscale or directly. A tile picks an app and the address it opens; changing the app once changes every tile. Apps are placed straight from Add widget, and a tile can be saved as an app from its settings. Thanks to @bluedsticker for the idea.
+- **Automatic address by network** (#37). An app names one address for home and one for the road, and a tile set to Automatic opens the home one in the home networks of System, Home network and the other one everywhere else. The networks can be named there without switching the sign-in without a password on.
+- **Every number card can be a dial, LED bars, seven segments or a chart** (#39). The choice is the same on every card whose big number is a measured number, 181 of them; a dial used to be offered on 22. LED bars run across or upright. Full at and Empty at set the span of the dial and the LEDs, and Yellow from and Red from colour them; red below yellow means low numbers are the bad ones. Thanks to @naamah75 for the request.
+- **A chart says how far back it reaches** (#39): the last hour, six hours or a day. A card that records one number can be a chart too.
+
+### Fixed
+
+- **A chart of a day showed only its second half.** The browser keeps the last 120 points of each metric for the sparklines, and a day arrives thinned to 240. A chart now asks the server for its own stretch, and again every minute.
+
+### Upgrading
+
+Nothing to do. The app catalog is a new table, created on start; going back to 0.40.0 leaves it unused, and tiles that follow an app then show their own name and link, which are empty for a tile placed from the catalog. The colour lines of the number drawings colour the drawing only; the status of a card, which the problems card and the notices read, stays what the service says.
+
 ## 0.40.0 (2026-10-12)
 
 ### New
