@@ -136,6 +136,21 @@ describe('server texts', () => {
     }
   })
 
+  it('translate the FortiGate phrases in every language', async () => {
+    // The rows as the adapter writes them: a tunnel with one of two selectors up, a cluster member.
+    const said = ['1 of 2 up', 'FGT60FTK00000001 · priority 200', 'Not on this FortiGate', 'in sync']
+    const expected: Record<string, string[]> = {
+      de: ['1 von 2 aktiv', 'FGT60FTK00000001 · Priorität 200', 'Nicht auf dieser FortiGate', 'gleich'],
+      es: ['1 de 2 activos', 'FGT60FTK00000001 · prioridad 200', 'No está en esta FortiGate', 'sincronizada'],
+      fr: ['1 sur 2 actifs', 'FGT60FTK00000001 · priorité 200', 'Absente de cette FortiGate', 'synchronisée'],
+      it: ['1 di 2 attivi', 'FGT60FTK00000001 · priorità 200', 'Non presente su questa FortiGate', 'sincronizzata'],
+    }
+    for (const [code, words] of Object.entries(expected)) {
+      await i18next.changeLanguage(code)
+      expect(said.map((text) => translateText('labels', text)), code).toEqual(words)
+    }
+  })
+
   it('translate the M3U Editor phrases in every language', async () => {
     // The texts as the adapter writes them. "(.+) failed." from an older card
     // would catch the first reason if the M3U Editor patterns stood after it.

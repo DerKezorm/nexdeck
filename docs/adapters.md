@@ -66,6 +66,7 @@ that one of twenty-one renderers draws.
 | nginx ignition | status, traffic, certificates | reload, start, stop; renew a certificate | an API token, which carries the permissions of the user who made it: one that may only read fills every card, one that may write adds the buttons, which are offered only where they are the thing to press. Traffic needs the statistics switched on in nginx ignition, 2.47.0 or newer |
 | OPNsense | system, gateways | | API key and secret |
 | pfSense | system, interfaces | | API key of the package pfSense-pkg-RESTAPI |
+| FortiGate | system (processor, memory, sessions, FortiOS version), interfaces (link, address, speed, traffic; the named ones turn the card red without a link), IPsec tunnels (by their phase 2 selectors), HA cluster (primary, configuration in sync) | | the token of a REST API administrator with a read-only profile and nexdeck under Trusted hosts, sent as a bearer token; an optional VDOM. Beta: not yet run against a FortiGate |
 | OpenWrt | router, interfaces, DHCP devices | | root, or an rpcd login with the read groups luci-mod-status-index, luci-mod-status-index-dhcp and luci-base-network-status (the last also reads the wireless configuration); needs LuCI or uhttpd-mod-ubus |
 | MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
 | SNMP (switches and network devices) | device, ports, port traffic, findings, PoE | | SNMPv3 user with SHA and AES, read only; or an SNMPv2c community, which travels unencrypted. Any vendor, standard MIBs only (IF-MIB, EtherLike, ENTITY, POWER-ETHERNET, LLDP); never writes |
@@ -142,9 +143,10 @@ that one of twenty-one renderers draws.
 | ntfy | messages | | topic, and a token for a protected one |
 | Prometheus | query value, query list | | optional basic auth |
 | Grafana | alerts, status | | service account token; needs unified alerting, so Grafana 9.0 or newer |
-| JSON API | value, list | | optional bearer token |
+| JSON API | value (with up to four badges from the same answer), list | | optional bearer token |
 | iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
+| Papra | documents (count, size, trash), latest documents (with tags), organizations | | an API key from API keys in the user menu with Read organizations and Read documents; the organization by name or ID, or the first the key can see. Beta: not yet run against a Papra |
 | Mealie | meal plan, shopping list, kitchen | | API token from Profile > Manage your API tokens |
 | Grocy | stock to watch, pantry | | API key from Manage API keys |
 | Vikunja | due tasks, tasks | | API token with read_all for tasks and projects; the time zone for "today" is a field, because a token cannot read the user's own |

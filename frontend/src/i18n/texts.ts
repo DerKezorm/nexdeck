@@ -165,6 +165,8 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^oldest (\d+) d old$/, 'ältestes $1 T alt'],
     [/^(\d+ (?:min|h|d)) overdue$/, '$1 überfällig'],
     [/^This address answers, but not as (nex[a-z]+)\.$/, 'Unter dieser Adresse antwortet etwas, aber nicht $1.'],
+    [/^(\d+) of (\d+) up$/, '$1 von $2 aktiv'],
+    [/^priority (\d+)$/, 'Priorität $1'],
     [/^(.+) failed\.$/, '$1 fehlgeschlagen.'],
   ],
   es: spanish,

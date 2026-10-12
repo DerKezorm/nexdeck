@@ -267,7 +267,7 @@ class FortigateAdapter(Adapter):
         items.sort(key=lambda item: 0 if item["value"] == "Primary" else 1)
         secondary: list[dict[str, Any]] = [{"label": "Members", "value": len(items)}]
         if in_sync is not None:
-            secondary.append({"label": "Sync", "value": "in sync" if in_sync else "out of sync"})
+            secondary.append({"label": "Configuration", "value": "in sync" if in_sync else "out of sync"})
         return WidgetData(status="warn" if in_sync is False else "ok", items=items, secondary=secondary)
 
     async def _in_sync(self, config: dict[str, Any], ctx: Context) -> bool | None:
@@ -313,7 +313,7 @@ class FortigateAdapter(Adapter):
             return WidgetData(status="ok", items=[
                 {"title": "fw-office-a", "subtitle": "FGT60FTK00000001 · priority 200", "value": "Primary", "status": "ok"},
                 {"title": "fw-office-b", "subtitle": "FGT60FTK00000002 · priority 100", "value": "Secondary", "status": "ok"},
-            ], secondary=[{"label": "Members", "value": 2}, {"label": "Sync", "value": "in sync"}])
+            ], secondary=[{"label": "Members", "value": 2}, {"label": "Configuration", "value": "in sync"}])
         cpu = fake.walk("fortigate-cpu", tick, 3, 38)
         memory = fake.walk("fortigate-mem", tick, 41, 58)
         sessions = int(fake.walk("fortigate-sessions", tick, 900, 4200))

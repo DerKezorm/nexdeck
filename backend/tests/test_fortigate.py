@@ -121,7 +121,7 @@ async def test_the_cluster_names_the_primary_and_the_sync(ctx: Context) -> None:
     data = await get_adapter("fortigate").fetch("ha", CONFIG, {}, ctx)
     assert [(item["title"], item["value"]) for item in data.items] == [("fw-office-a", "Primary"), ("fw-office-b", "Secondary")]
     assert data.items[0]["subtitle"] == "FGT60FTK00000001 · priority 200"
-    assert data.secondary == [{"label": "Members", "value": 2}, {"label": "Sync", "value": "in sync"}]
+    assert data.secondary == [{"label": "Members", "value": 2}, {"label": "Configuration", "value": "in sync"}]
     assert data.status == "ok"
     checksums.mock(return_value=httpx.Response(200, json=envelope([
         {"serial_no": "FGT60FTK00000001", "checksum": {"all": "c1"}},
@@ -129,7 +129,7 @@ async def test_the_cluster_names_the_primary_and_the_sync(ctx: Context) -> None:
     ])))
     ctx.cache.clear()
     drifted = await get_adapter("fortigate").fetch("ha", CONFIG, {}, ctx)
-    assert drifted.secondary[-1] == {"label": "Sync", "value": "out of sync"} and drifted.status == "warn"
+    assert drifted.secondary[-1] == {"label": "Configuration", "value": "out of sync"} and drifted.status == "warn"
 
 
 @respx.mock

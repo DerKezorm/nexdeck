@@ -75,6 +75,7 @@ class PapraAdapter(Adapter):
         ),
         WidgetType(
             kind="organizations",
+            bars=True,
             label="Organizations",
             description="Every organization the key can see, with its documents and their size.",
             renderer="list",
