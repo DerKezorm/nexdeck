@@ -158,7 +158,8 @@ def test_a_choice_that_names_nothing_leaves_the_card_alone() -> None:
 def test_the_synology_system_card_offers_a_box_per_row_and_a_dial() -> None:
     widget = get_adapter("synology").widget("system")
     names = [field.name for field in widget.options]
-    assert names == ["view", "gauge_part", "show_cpu", "show_memory", "show_volume", "show_temp"]
+    assert names == ["view", "gauge_part", "meter_direction", "level_warn", "level_bad",
+                     "show_cpu", "show_memory", "show_volume", "show_temp"]
     picker = next(field for field in widget.options if field.name == "gauge_part")
     assert [value for value, _label in picker.options] == ["cpu", "memory", "volume", "temp"]
 
@@ -370,7 +371,7 @@ def test_the_picker_reaches_a_card_through_the_ordinary_way() -> None:
 
 def test_the_dial_picker_only_appears_in_the_dial_view() -> None:
     picker = next(field for field in get_adapter("synology").widget("system").options if field.name == "gauge_part")
-    assert picker.only_when == ("view", "gauge")
+    assert picker.only_when == ("view", "gauge|meter|segments")
 
 
 def test_the_row_details_of_the_volume_card_only_appear_in_the_list_view() -> None:
@@ -387,7 +388,7 @@ def test_the_condition_reaches_the_frontend() -> None:
     drops is a condition nobody acts on."""
     payload = get_adapter("synology").widget("system").to_dict("synology")
     picker = next(field for field in payload["options"] if field["name"] == "gauge_part")
-    assert picker["only_when"] == ["view", "gauge"]
+    assert picker["only_when"] == ["view", "gauge|meter|segments"]
     plain = next(field for field in payload["options"] if field["name"] == "view")
     assert plain["only_when"] is None
 
@@ -405,18 +406,22 @@ async def test_the_volume_dial_follows_the_rows_that_were_picked() -> None:
     ]}
     original = dict(SYSTEM_ANSWERS)
     SYSTEM_ANSWERS.update(two_volumes)
+    # The LEDs and the digits show one volume too, the same one (issue #39).
+    shown = {}
     try:
-        with respx.mock:
-            _dsm()
-            ctx = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
-            data = await get_adapter("synology").fetch(
-                "volumes", CONFIG, {"view": "gauge", "only_items": ["volume_2"]}, ctx,
-            )
+        for view in ("gauge", "meter", "segments"):
+            with respx.mock:
+                _dsm()
+                ctx = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+                shown[view] = await get_adapter("synology").fetch(
+                    "volumes", CONFIG, {"view": view, "only_items": ["volume_2"]}, ctx,
+                )
     finally:
         SYSTEM_ANSWERS.clear()
         SYSTEM_ANSWERS.update(original)
-    assert data.primary["label"] == "volume_2", "the fullest of the picked ones, not of all"
-    assert data.primary["value"] == 10.0
+    for view, data in shown.items():
+        assert data.primary["label"] == "volume_2", f"{view}: the fullest of the picked ones, not of all"
+        assert data.primary["value"] == 10.0, view
 
 
 def test_the_settings_sheet_is_told_about_the_rows_it_would_hide() -> None:

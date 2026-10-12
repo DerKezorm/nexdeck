@@ -25,13 +25,16 @@ from .base import (
     WidgetData,
     WidgetType,
     base_url,
+    drawing_fields,
     gauge_pick_field,
     gauge_view_field,
     human_bytes,
     join_parts,
     keep_items,
+    offer_views,
     percent,
     percent_text,
+    single_number_view,
     status_from_percent,
     worst,
 )
@@ -98,7 +101,10 @@ class SynologyAdapter(Adapter):
             # are no rows, so they are not shown there.
             parts=(("subtitle", "Size and health"), ("progress", "Usage bar"), ("value", "Percentage")),
             parts_only_when=("view", "value"),
-            options=(gauge_view_field(),),
+            # The fullest volume as a dial, a row of LEDs or its percentage in
+            # digits: a list card, so the number drawings are named here.
+            options=(*offer_views((gauge_view_field(),), "list", (("meter", "LED bars"), ("segments", "Seven segments"))),
+                     *drawing_fields((), own_dial=True)),
         ),
         WidgetType(
             kind="disks",
@@ -243,7 +249,7 @@ class SynologyAdapter(Adapter):
             # traded its rows for a dial. So it is applied here first, or
             # "only volume_2" would silently pick the fullest of all of them.
             items = keep_items(WidgetData(items=items), options).items
-            if str(options.get("view") or "value") == "gauge" and items:
+            if single_number_view(options) and items:
                 # ⚠️ A dial shows one number and a box can hold several
                 # volumes. The fullest is the one worth a needle, and the card
                 # says which one it is rather than leaving that to be guessed.

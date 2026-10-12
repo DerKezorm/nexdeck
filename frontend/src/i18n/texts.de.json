@@ -1905,7 +1905,17 @@
     "Tick Read organizations and Read documents. The card writes nothing.": "Read organizations und Read documents ankreuzen. Die Karte schreibt nichts.",
     "Under System, Administrators, create a REST API admin with that profile.": "Unter System, Administrators einen REST API admin mit diesem Profil anlegen.",
     "VDOM": "VDOM",
-    "What came in last, newest first, with its tags.": "Was zuletzt kam, das Neueste zuerst, mit seinen Tags."
+    "What came in last, newest first, with its tags.": "Was zuletzt kam, das Neueste zuerst, mit seinen Tags.",
+    "Across": "Waagrecht",
+    "Upright": "Senkrecht",
+    "LED bars": "LED-Leiste",
+    "LEDs run": "LEDs laufen",
+    "Seven segments": "Siebensegment",
+    "Yellow from": "Gelb ab",
+    "Red from": "Rot ab",
+    "In the unit of the number. Empty leaves the colour to the card.": "In der Einheit der Zahl. Leer überlässt die Farbe der Karte.",
+    "Below Yellow from means low numbers are the bad ones, as with free space.": "Unter Gelb ab heißt: niedrige Zahlen sind die schlechten, wie bei freiem Platz.",
+    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Was als voll gilt, in der Einheit der Zahl. Bei Prozent nicht nötig. Leer lassen und die Karte bleibt eine Zahl."
   },
   "labels": {
     "Private resources": "Private Ressourcen",

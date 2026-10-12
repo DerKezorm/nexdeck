@@ -11,12 +11,16 @@ from __future__ import annotations
 
 from app.adapters import all_adapters, get_adapter
 from app.adapters.base import (
+    NUMBER_RENDERERS,
     WidgetData,
     WidgetType,
+    apply_level,
     as_bars,
     as_chart,
+    as_gauge,
     as_inout,
     as_ring,
+    as_segments,
     inout_pair,
     offer_views,
     ring_of,
@@ -82,13 +86,61 @@ def test_a_card_gathers_every_drawing_it_qualifies_for_in_one_field() -> None:
     options = get_adapter("pihole").widget("summary").options
     assert sum(1 for one in options if one.name == "view") == 1
     view = next(one for one in options if one.name == "view")
-    assert [value for value, _ in view.options] == ["value", "ring", "chart"]
+    # Pi-hole's card is a dial already, so "A dial" is its own drawing, not an extra.
+    assert [value for value, _ in view.options] == ["value", "ring", "meter", "segments", "chart"]
 
 
-def test_a_card_with_one_metric_is_not_offered_a_chart() -> None:
-    """One line is the sparkline the card already draws, minus its number."""
+def test_a_number_card_with_one_metric_is_offered_every_drawing_of_a_number() -> None:
+    """Issue #39: the same choices on every number. One metric used to get no
+    chart, as "the sparkline the card already draws, minus its number"; the
+    chart draws the reading, the lowest and the highest above the line."""
     widget = WidgetType(kind="x", label="X", description="", renderer="value", metrics=("only",))
-    assert not [one for one in widget.options if one.name == "view"]
+    view = next(one for one in widget.options if one.name == "view")
+    assert [value for value, _ in view.options] == ["value", "gauge", "meter", "segments", "chart"]
+    names = {one.name: one for one in widget.options}
+    assert names["gauge_max"].only_when == ("view", "gauge|meter")
+    assert names["meter_direction"].only_when == ("view", "meter")
+    assert names["level_warn"].only_when == names["level_bad"].only_when == ("view", "gauge|meter|segments")
+
+
+def test_a_card_without_a_number_is_offered_none_of_them() -> None:
+    """A card that records nothing has no measured number to draw, and a
+    clock or an app tile draws itself in the browser."""
+    for widget in (
+        WidgetType(kind="x", label="X", description="", renderer="value"),
+        WidgetType(kind="x", label="X", description="", renderer="value", metrics=("n",), client_only=True),
+        WidgetType(kind="x", label="X", description="", renderer="list", metrics=("n",)),
+    ):
+        view = next((one for one in widget.options if one.name == "view"), None)
+        offered = {value for value, _ in view.options} if view else set()
+        assert not offered & {"gauge", "meter", "segments"}, widget
+        assert not {"gauge_max", "meter_direction", "level_warn", "level_bad"} & {one.name for one in widget.options}
+
+
+def test_an_adapter_that_knew_its_dial_keeps_its_own_words_for_full() -> None:
+    """⚠️ No second "Full at" under the download speed, whose own field says
+    what full means on a line; and none on a card that measures a share."""
+    for kind, widget_kind in (("sabnzbd", "speed"), ("opnsense", "system")):
+        options = get_adapter(kind).widget(widget_kind).options
+        assert sum(1 for one in options if one.name == "gauge_max") <= 1
+    assert "gauge_max" not in {one.name for one in get_adapter("opnsense").widget("system").options}
+
+
+def test_every_number_card_offers_every_drawing_of_a_number() -> None:
+    """Held for all of them, not for a sample: the issue was that the choice
+    depended on which adapter a number came from."""
+    cards = [
+        (adapter.kind, widget)
+        for adapter in all_adapters()
+        for widget in adapter.widgets
+        if widget.renderer in NUMBER_RENDERERS and widget.metrics and not widget.client_only
+    ]
+    assert len(cards) > 150, f"only {len(cards)} number cards; the walk is broken"
+    for kind, widget in cards:
+        view = next(one for one in widget.options if one.name == "view")
+        offered = {value for value, _ in view.options}
+        wanted = {"meter", "segments", "chart"} | ({"gauge"} if widget.renderer != "gauge" else set())
+        assert wanted <= offered, f"{kind}.{widget.kind} misses {wanted - offered}"
 
 
 # ---------------------------------------------------------------------------
@@ -223,16 +275,18 @@ def test_a_card_measuring_two_things_can_be_drawn_as_one_chart() -> None:
     assert data.meta["renderer"] == "chart"
 
 
-def test_a_card_measuring_one_thing_right_now_stays_what_it_is() -> None:
-    """⚠️ The choice is offered because the widget declares two metrics, but
-    an adapter reports what it found: a Docker host with nothing running
-    reports one, and a chart of a single line is the sparkline the card
-    already had, minus the number it sat under."""
+def test_a_card_measuring_one_thing_is_drawn_as_a_chart_of_one_line() -> None:
     data = as_chart(WidgetData(metrics={"wan_down": 40.0}), {"view": "chart"})
+    assert data.meta["renderer"] == "chart"
+
+
+def test_a_card_that_measured_nothing_right_now_stays_what_it_is() -> None:
+    """A chart of no line is an empty box; the card keeps its number."""
+    data = as_chart(WidgetData(primary={"label": "Load", "value": None}), {"view": "chart"})
     assert data.meta.get("renderer") is None
 
 
-def test_the_chart_is_offered_wherever_two_metrics_are_declared() -> None:
+def test_the_chart_is_offered_wherever_two_metrics_or_a_number_are_declared() -> None:
     offered = sum(
         1
         for adapter in all_adapters()
@@ -244,7 +298,8 @@ def test_the_chart_is_offered_wherever_two_metrics_are_declared() -> None:
         1
         for adapter in all_adapters()
         for widget in adapter.widgets
-        if len(widget.metrics) >= 2 and widget.renderer != "chart" and not widget.client_only
+        if widget.renderer != "chart" and not widget.client_only
+        and (len(widget.metrics) >= 2 or (widget.renderer in NUMBER_RENDERERS and widget.metrics))
     )
     assert offered == declared
     assert declared > 20, f"only {declared} cards measure two things; the walk is broken"
@@ -258,12 +313,12 @@ def test_the_chart_is_offered_wherever_two_metrics_are_declared() -> None:
 def test_the_plex_load_card_can_be_a_dial_for_any_of_its_four_values() -> None:
     widget = get_adapter("plex").widget("load")
     view = next(one for one in widget.options if one.name == "view")
-    assert [value for value, _ in view.options] == ["value", "gauge", "chart"]
+    assert [value for value, _ in view.options] == ["value", "gauge", "meter", "segments", "chart"]
     picker = next(one for one in widget.options if one.name == "gauge_part")
     assert [value for value, _ in picker.options] == ["plex_cpu", "plex_memory", "host_cpu", "host_memory"]
-    # ⚠️ The picker is meaningless outside the dial, and an option that does
-    # nothing must not be on screen.
-    assert picker.only_when == ("view", "gauge")
+    # ⚠️ The picker is meaningless outside the views of one number, and an
+    # option that does nothing must not be on screen.
+    assert picker.only_when == ("view", "gauge|meter|segments")
 
 
 def test_the_needle_follows_the_row_that_was_picked() -> None:
@@ -351,4 +406,79 @@ def test_covers_can_run_past_as_a_band() -> None:
     widget = get_adapter("plex").widget("recent")
     view = next(one for one in widget.options if one.name == "view")
     assert dict(view.options)["value"] == "Covers in a grid" and "band" in dict(view.options)
+
+
+
+# ---------------------------------------------------------------------------
+# LEDs, seven segments and the lines for yellow and red (issue #39)
+# ---------------------------------------------------------------------------
+
+
+def _speed(value: float = 30.0, unit: str = "MB/s") -> WidgetData:
+    return WidgetData(status="ok", primary={"label": "Download", "value": value, "unit": unit}, metrics={"speed": value})
+
+
+def test_the_leds_share_the_dial_s_arithmetic() -> None:
+    data = as_gauge(_speed(30.0), {"view": "meter", "gauge_max": 120})
+    assert data.meta["renderer"] == "meter"
+    assert data.meta["gauge"] == {"share": 25.0, "max": 120.0}
+    assert data.meta["meter"] == {"direction": "across", "zones": {}, "low_is_bad": False}
+    # A share is full at a hundred by arithmetic, as for the dial.
+    share = as_gauge(_speed(64.0, "%"), {"view": "meter", "meter_direction": "upright"})
+    assert share.meta["gauge"] == {"share": 64.0} and share.meta["meter"]["direction"] == "upright"
+
+
+def test_the_leds_without_a_ceiling_stay_a_number() -> None:
+    """⚠️ As with the dial: a row of LEDs without a ceiling claims a share of
+    nothing, so the card keeps drawing the number until full is named."""
+    assert as_gauge(_speed(30.0), {"view": "meter"}).meta.get("renderer") is None
+
+
+def test_an_adapter_s_own_ceiling_lights_the_leds_too() -> None:
+    """A line's speed or a volume's size is passed to ``as_gauge`` once, and the
+    LEDs get it as the dial does."""
+    data = as_gauge(_speed(50.0), {"view": "meter"}, maximum=100)
+    assert data.meta["renderer"] == "meter" and data.meta["gauge"]["share"] == 50.0
+
+
+def test_the_led_zones_are_shares_of_the_same_ceiling() -> None:
+    data = as_gauge(_speed(30.0), {"view": "meter", "gauge_max": 200, "level_warn": 100, "level_bad": "150"})
+    assert data.meta["meter"]["zones"] == {"warn": 50.0, "bad": 75.0}
+
+
+def test_the_lines_colour_the_drawing_and_leave_the_status_alone() -> None:
+    """⚠️ The problems card, the notices and the red glow read ``status``; a
+    line drawn for the look of an LED row is not a fault of the service."""
+    options = {"view": "segments", "level_warn": 25, "level_bad": 40}
+    for value, level in ((10.0, "ok"), (25.0, "warn"), (39.9, "warn"), (40.0, "bad")):
+        data = apply_level(_speed(value), options)
+        assert data.meta["level"] == level, value
+        assert data.status == "ok"
+
+
+def test_red_below_yellow_means_low_numbers_are_the_bad_ones() -> None:
+    options = {"view": "meter", "level_warn": 20, "level_bad": 10}
+    assert [apply_level(_speed(v), options).meta["level"] for v in (50.0, 20.0, 10.0, 3.0)] == ["ok", "warn", "bad", "bad"]
+
+
+def test_no_lines_or_no_number_leave_the_colour_to_the_card() -> None:
+    assert "level" not in apply_level(_speed(99.0), {"view": "meter"}).meta
+    assert "level" not in apply_level(_speed(99.0), {"view": "value", "level_bad": 1}).meta
+    word = WidgetData(primary={"label": "State", "value": "online"})
+    assert "level" not in apply_level(word, {"view": "segments", "level_bad": 1}).meta
+
+
+def test_seven_segments_draw_numbers_and_leave_words_alone() -> None:
+    assert as_segments(_speed(12.5), {"view": "segments"}).meta["renderer"] == "segments"
+    word = WidgetData(primary={"label": "State", "value": "online"})
+    assert as_segments(word, {"view": "segments"}).meta.get("renderer") is None
+    assert as_segments(_speed(12.5), {"view": "value"}).meta.get("renderer") is None
+
+
+def test_the_row_picked_for_the_dial_is_the_one_the_leds_and_digits_show() -> None:
+    adapter = get_adapter("plex")
+    for view in ("meter", "segments"):
+        data = shape_for_display(adapter.demo("load", {}, tick=9), adapter, "load",
+                                 {"view": view, "gauge_part": "host_memory", "gauge_max": 100})
+        assert data.primary["part"] == "host_memory", view
 

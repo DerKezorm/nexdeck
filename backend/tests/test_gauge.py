@@ -103,7 +103,8 @@ def test_the_cards_he_asked_for_offer_it() -> None:
 def test_a_card_already_in_percent_offers_the_view_without_a_ceiling() -> None:
     for kind in ("mikrotik", "opnsense", "pfsense"):
         options = {field.name for field in get_adapter(kind).widget("system").options}
-        assert options == {"view"}, kind
+        # The LEDs and the lines for yellow and red, but no ceiling: a share is full at a hundred.
+        assert options == {"view", "meter_direction", "level_warn", "level_bad"}, kind
 
 
 def test_no_card_offers_a_ceiling_without_the_view_to_use_it() -> None:

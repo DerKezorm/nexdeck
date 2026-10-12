@@ -33,4 +33,17 @@ describe('shownField', () => {
     // fields it will be saved with.
     expect(shown({})).toEqual(['version', 'username', 'host'])
   })
+
+  it('takes several values joined by a bar', () => {
+    // The ceiling of a dial is the ceiling of the LEDs too (issue #39).
+    const views = [
+      { name: 'view', label: 'View', type: 'select', default: 'value' },
+      { name: 'gauge_max', label: 'Full at', type: 'number', only_when: ['view', 'gauge|meter'] },
+    ] as unknown as FieldSpec[]
+    const names = (view: string) => views.filter((field) => shownField(field, views, { view })).map((field) => field.name)
+    expect(names('gauge')).toEqual(['view', 'gauge_max'])
+    expect(names('meter')).toEqual(['view', 'gauge_max'])
+    expect(names('segments')).toEqual(['view'])
+    expect(names('gauge|meter')).toEqual(['view'])
+  })
 })

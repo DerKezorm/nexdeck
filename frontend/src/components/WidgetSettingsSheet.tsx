@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { shownField } from '../lib/fields'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { FieldInput } from './FieldInput'
 import { IconPicker } from './IconPicker'
@@ -255,10 +256,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           // check under it. From the list it was a second switch of the same
           // name for the same option, one screen apart. Seen in issue #17.
           if (isApp && option.name === 'check') return false
-          if (!option.only_when) return true
-          const [name, wanted] = option.only_when
-          const current = options[name] ?? spec.options.find((other) => other.name === name)?.default
-          return String(current ?? '') === wanted
+          return shownField(option, spec.options, options)
         })
         .map((option) => (
           <FieldInput

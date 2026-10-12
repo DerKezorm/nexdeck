@@ -165,7 +165,7 @@ def _drawn_as(widget: Widget, declared: str) -> str:
     declared renderer.
     """
     view = str((widget.options or {}).get("view") or "")
-    return view if view in ("gauge", "value") else declared
+    return view if view in ("gauge", "value", "meter", "segments") else declared
 
 
 def card_sizes(widget: Widget, columns: int = grid.BASE) -> tuple[list[int], list[int]]:

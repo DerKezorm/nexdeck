@@ -214,8 +214,15 @@ a tight spot.
 
 `value`, `gauge`, `stats`, `list`, `nowplaying`, `calendar`, `text`,
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
-`counters`, `camera`, `bars`, `ring`, `timeline`, `heading`. A fetch may pick another renderer for its data through
+`counters`, `camera`, `bars`, `ring`, `timeline`, `heading`, `meter`, `segments`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
+
+Every card drawn by `value`, `stats` or `gauge` that records at least one
+metric gets the drawings of a number by itself: a dial, LED bars, seven
+segments and a chart, with "Full at" for the dial and the LEDs and the lines
+"Yellow from" and "Red from" (red below yellow means low numbers are the bad
+ones). Those lines colour the drawing only (`meta["level"]`); the card's
+`status` stays what the service said.
 
 Images such as posters are never linked with a token in the browser: an adapter
 hands out `proxy:/path`, and `GET /api/v1/widgets/{id}/image?path=` fetches it
@@ -267,9 +274,15 @@ Rules:
 
 - Secrets are fields with `secret=True`; they are encrypted at rest and never returned by the API.
 - Raise `AdapterError` (or `AuthFailed`, `Unreachable`) with an English message and a hint; the card shows both.
-- `metrics` are numbers recorded for sparklines; name them stably. Two or
-  more of them also give the card a **View** option that draws them all as one
-  chart, so name them for a legend, not for a column.
+- `metrics` are numbers recorded for sparklines; name them stably. They also
+  give the card a **View** option that draws them as one chart (a number card
+  from one metric on, any other card from two), so name them for a legend, not
+  for a column.
+- **A dial needs to know what full is.** A number in `%` is full at 100 by
+  itself. A card that knows its own ceiling, such as a line's speed, passes it
+  as `as_gauge(card, options, maximum=...)`: the dial and the LED bars both use
+  it. A fetch that has to pick one number out of several for these views asks
+  `single_number_view(options)`.
 - **A drawing is offered, not written into the adapter.** A `list` card gets
   bars by itself. For a ring, set `ring=True` on the `WidgetType` **and** have
   the fetch write `meta["ring"] = ring_of(("Blocked", 400), ("Allowed", 600))`:

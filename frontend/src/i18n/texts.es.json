@@ -1905,7 +1905,17 @@
     "Tick Read organizations and Read documents. The card writes nothing.": "Marca Read organizations y Read documents. La tarjeta no escribe nada.",
     "Under System, Administrators, create a REST API admin with that profile.": "En System, Administrators, crea un REST API admin con ese perfil.",
     "VDOM": "VDOM",
-    "What came in last, newest first, with its tags.": "Lo último que llegó, lo más reciente primero, con sus etiquetas."
+    "What came in last, newest first, with its tags.": "Lo último que llegó, lo más reciente primero, con sus etiquetas.",
+    "Across": "En horizontal",
+    "Upright": "En vertical",
+    "LED bars": "Barra de LED",
+    "LEDs run": "Dirección de los LED",
+    "Seven segments": "Siete segmentos",
+    "Yellow from": "Amarillo desde",
+    "Red from": "Rojo desde",
+    "In the unit of the number. Empty leaves the colour to the card.": "En la unidad del número. Vacío deja el color a la tarjeta.",
+    "Below Yellow from means low numbers are the bad ones, as with free space.": "Por debajo de Amarillo desde significa que los números bajos son los malos, como con el espacio libre.",
+    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Lo que cuenta como lleno, en la unidad del número. No hace falta para un porcentaje. Si se deja vacío, la tarjeta sigue siendo un número."
   },
   "labels": {
     "Private resources": "Recursos privados",

@@ -107,6 +107,10 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "search": (2, 1),
     "value": (2, 2),
     "gauge": (2, 2),
+    # A row of LEDs with its number above it; upright it wants the height.
+    "meter": (2, 2),
+    # Digits and nothing else; one row holds them.
+    "segments": (2, 1),
     "list": (2, 2),
     "bookmarks": (2, 2),
     "camera": (2, 2),
@@ -156,6 +160,15 @@ def inout_pair(metrics: tuple[str, ...] | list[str] | Any) -> tuple[str, str] | 
 #: For a renderer nobody listed. Two by two is the smallest that holds a title
 #: and a line under it without one sitting on the other.
 DEFAULT_MIN = (2, 2)
+
+#: The drawings whose big number is a measured number, and so can be shown
+#: as a dial, LEDs, seven segments or a chart instead (issue #39).
+NUMBER_RENDERERS = ("value", "stats", "gauge")
+#: Views that show how full something is, and so need to know what full is.
+DIAL_VIEWS = ("gauge", "meter")
+#: Views that show one number and nothing else: the row a dial follows, the
+#: warning lines and the special cases of an adapter apply to all of them.
+SINGLE_NUMBER_VIEWS = ("gauge", "meter", "segments")
 
 
 @dataclass(frozen=True)
@@ -246,12 +259,22 @@ class WidgetType:
             extra += (("bars", "Bars"),)
         if self.ring:
             extra += (("ring", "A ring"),)
-        # ⚠️ Two metrics or more, because that is the whole argument for the
-        # drawing: a card that records `wan_down` and `wan_up` stores both and
-        # could only ever show one of them, and the two put side by side on
-        # separate cards had separate scales. One metric already has its
-        # sparkline inside the card it belongs to.
-        if len(self.metrics) >= 2 and self.renderer != "chart" and not self.client_only:
+        # ⚠️ Every card whose big number is a measured number can be drawn as a
+        # dial, a row of LEDs or seven segments (issue #39). The drawing is the
+        # screen's business, not the adapter's: one rule here rather than a
+        # field in each of the 170-odd number cards, most of which would
+        # simply never have been given one.
+        numbers = self.renderer in NUMBER_RENDERERS and bool(self.metrics) and not self.client_only
+        if numbers:
+            if self.renderer != "gauge":
+                extra += (("gauge", "A dial"),)
+            extra += (("meter", "LED bars"), ("segments", "Seven segments"))
+        # A history of what the card records, on one scale. A card that
+        # records two things gets both lines, which side by side on separate
+        # cards had separate scales. A number card that records one thing gets
+        # its line large, with the reading, the lowest and the highest above
+        # it: the issue asked for the same choices on every number.
+        if self.renderer != "chart" and not self.client_only and (len(self.metrics) >= 2 or numbers):
             extra += (("chart", "A chart"),)
         # A line in and a line out, mirrored on one axis: what a router or a
         # download client is about, in one picture rather than two lines that
@@ -262,8 +285,15 @@ class WidgetType:
         # a wall shows best, and what nobody has to scroll.
         if self.renderer == "posters":
             extra += (("band", "A band that moves past"),)
+        # Whether the adapter already knew what a full dial is: it offered one
+        # itself, either because its number is a share or with a ceiling field.
+        own_dial = self.renderer == "gauge" or any(
+            field.name == "view" and "gauge" in {value for value, _ in field.options} for field in self.options
+        )
         if extra:
             object.__setattr__(self, "options", offer_views(self.options, self.renderer, extra))
+        if numbers:
+            object.__setattr__(self, "options", tuple(self.options) + drawing_fields(self.options, own_dial))
         if self.parts:
             existing = {field.name for field in self.options}
             made = tuple(
@@ -582,8 +612,38 @@ def gauge_fields(what: str, placeholder: str = "") -> tuple[Field, ...]:
               options=(("value", "The number"), ("gauge", "A dial")),
               help="A dial needs to know what counts as full."),
         Field("gauge_max", "Full at", type="number", placeholder=placeholder,
-              help=f"{what} Leave empty and the card stays a number."),
+              help=f"{what} Leave empty and the card stays a number.",
+              only_when=("view", "|".join(DIAL_VIEWS))),
     )
+
+
+def drawing_fields(options: tuple[Field, ...], own_dial: bool) -> tuple[Field, ...]:
+    """The settings the dial, the LEDs and the seven segments need (issue #39).
+
+    Each appears only under the view it belongs to: an option that does
+    nothing must not be on screen.
+
+    ⚠️ "Full at" only where the adapter did not know already. A card that
+    offered its own dial either measures a share, where full is 100 by
+    arithmetic, or brought the field along with its own words for what full
+    means on that service.
+    """
+    have = {field.name for field in options}
+    made: list[Field] = []
+    if not own_dial and "gauge_max" not in have:
+        made.append(Field("gauge_max", "Full at", type="number",
+                          help="What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.",
+                          only_when=("view", "|".join(DIAL_VIEWS))))
+    made.append(Field("meter_direction", "LEDs run", type="select", default="across",
+                      options=(("across", "Across"), ("upright", "Upright")),
+                      only_when=("view", "meter")))
+    made.append(Field("level_warn", "Yellow from", type="number",
+                      help="In the unit of the number. Empty leaves the colour to the card.",
+                      only_when=("view", "|".join(SINGLE_NUMBER_VIEWS))))
+    made.append(Field("level_bad", "Red from", type="number",
+                      help="Below Yellow from means low numbers are the bad ones, as with free space.",
+                      only_when=("view", "|".join(SINGLE_NUMBER_VIEWS))))
+    return tuple(field for field in made if field.name not in have)
 
 
 def gauge_view_field() -> Field:
@@ -627,14 +687,19 @@ def gauge_pick_field(parts: tuple[tuple[str, str], ...]) -> Field:
     return Field(
         "gauge_part", "Dial shows", type="select", default=parts[0][0],
         options=tuple(parts),
-        only_when=("view", "gauge"),
+        only_when=("view", "|".join(SINGLE_NUMBER_VIEWS)),
     )
 
 
+def single_number_view(options: dict[str, Any]) -> bool:
+    """Whether the card is asked to show one number: as a dial, LEDs or digits."""
+    return str(options.get("view") or "value") in SINGLE_NUMBER_VIEWS
+
+
 def pick_gauge_row(data: WidgetData, options: dict[str, Any]) -> WidgetData:
-    """Move the chosen row to the front, so the dial draws that one."""
+    """Move the chosen row to the front, so the dial, the LEDs or the digits draw that one."""
     wanted = str(options.get("gauge_part") or "").strip()
-    if not wanted or str(options.get("view") or "value") != "gauge":
+    if not wanted or not single_number_view(options):
         return data
     if str((data.primary or {}).get("part") or "") == wanted:
         return data
@@ -654,12 +719,17 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
     Returns the card unchanged when the view was not asked for, or when there
     is no ceiling to measure against. Silently drawing an empty dial would be
     worse than drawing the number that was asked for.
+
+    The same share draws the dial and the row of LEDs: an adapter that knows
+    its own ceiling (a line's speed, a volume's size) passes it here once, and
+    both views have it.
     """
-    if str(options.get("view") or "value") != "gauge":
+    view = str(options.get("view") or "value")
+    if view not in DIAL_VIEWS:
         return data
     # Applied once, centrally, by the collector. An adapter that also calls it
     # must not turn its own percentage into a percentage of a percentage.
-    if (data.meta or {}).get("renderer") == "gauge":
+    if (data.meta or {}).get("renderer") in DIAL_VIEWS:
         return data
     value = (data.primary or {}).get("value")
     ceiling = maximum
@@ -685,7 +755,76 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
     dial: dict[str, Any] = {"share": round(share, 1)}
     if named:
         dial["max"] = ceiling
-    data.meta = {**(data.meta or {}), "renderer": "gauge", "gauge": dial}
+    meta: dict[str, Any] = {**(data.meta or {}), "renderer": view, "gauge": dial}
+    if view == "meter":
+        # The coloured stretches of the row: where yellow and red begin, as
+        # shares of the same ceiling the LEDs are lit against.
+        warn, bad = level_lines(options)
+        zones = {name: round(max(0.0, min(100.0, line / ceiling * 100)), 1)
+                 for name, line in (("warn", warn), ("bad", bad)) if line is not None}
+        meta["meter"] = {"direction": "upright" if options.get("meter_direction") == "upright" else "across",
+                         "zones": zones, "low_is_bad": low_is_bad(options)}
+    data.meta = meta
+    return data
+
+
+def level_lines(options: dict[str, Any]) -> tuple[float | None, float | None]:
+    """Where yellow and where red begin, in the unit of the card's number."""
+    def line(name: str) -> float | None:
+        raw = options.get(name)
+        if raw in (None, ""):
+            return None
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+    return line("level_warn"), line("level_bad")
+
+
+def low_is_bad(options: dict[str, Any]) -> bool:
+    """Red below yellow: a low number is the bad one, as with free space."""
+    warn, bad = level_lines(options)
+    return warn is not None and bad is not None and bad < warn
+
+
+def apply_level(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Colour one number by the lines the operator drew, when asked to show one number.
+
+    ⚠️ Only the colour of the drawing, under ``meta.level``. The card's own
+    status stays what the service said: the problems card, the notices and the
+    red glow of a card that went down all read ``status``, and a yellow line
+    somebody drew for the look of an LED row is not a fault of the service.
+    """
+    if not single_number_view(options):
+        return data
+    value = (data.primary or {}).get("value")
+    warn, bad = level_lines(options)
+    if (warn is None and bad is None) or isinstance(value, bool) or not isinstance(value, (int, float)):
+        return data
+    reversed_lines = low_is_bad(options)
+
+    def past(line: float | None) -> bool:
+        if line is None:
+            return False
+        return value <= line if reversed_lines else value >= line
+
+    level = "bad" if past(bad) else "warn" if past(warn) else "ok"
+    data.meta = {**(data.meta or {}), "level": level}
+    return data
+
+
+def as_segments(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw the number as seven-segment digits, when asked and when it is a number.
+
+    A word stays a word: "online" has no digits, and the card falls back to
+    drawing it as it always did.
+    """
+    if str(options.get("view") or "value") != "segments":
+        return data
+    value = (data.primary or {}).get("value")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "segments"}
     return data
 
 
@@ -758,15 +897,14 @@ def as_bars(data: WidgetData, options: dict[str, Any]) -> WidgetData:
 def as_chart(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     """Draw the card's own history instead of its number, when asked.
 
-    ⚠️ Refuses while the card is measuring fewer than two things right now.
-    The choice is offered because the widget *declares* two metrics, but an
-    adapter reports what it found: a Docker host with nothing running reports
-    one, and a chart of one line is the sparkline the card already had, minus
-    the number it sat under.
+    ⚠️ Refuses while the card measured nothing at all right now: a chart of no
+    line is an empty box. One line is drawn large, with the reading, the
+    lowest and the highest above it (issue #39); until 0.41.0 it was refused
+    as "the sparkline the card already had", which it is not.
     """
     if str(options.get("view") or "value") != "chart":
         return data
-    if len(data.metrics) < 2:
+    if not data.metrics:
         return data
     data.meta = {**(data.meta or {}), "renderer": "chart"}
     return data
@@ -837,7 +975,9 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
     data = as_chart(data, options)
     data = as_inout(data, options)
     data = as_band(data, options)
-    return as_gauge(data, options)
+    data = as_segments(data, options)
+    data = as_gauge(data, options)
+    return apply_level(data, options)
 
 
 class AdapterError(Exception):
