@@ -6,8 +6,10 @@ card writes nothing. Everything Papra keeps belongs to an organization, so
 every question goes through one: the one named in the connection, or the
 first the key can see.
 
-⚠️ Written against Papra's own sources (``apps/papra-server``, October 2026)
-and its API page, not yet against a running instance. Hence beta.
+Written against Papra's own sources (``apps/papra-server``, October 2026)
+and run against a fresh instance on 12.10.2026: two organizations, tags, a
+document in the trash, a key with both permissions and one without
+``organizations:read``. Not yet against an instance in use, hence beta.
 """
 
 from __future__ import annotations
@@ -131,7 +133,7 @@ class PapraAdapter(Adapter):
         if key is not None and missing:
             raise AdapterError(
                 "The key lacks " + " and ".join(missing) + ".", code="missing_permission",
-                hint="Make a new key in Papra with organizations:read and documents:read.",
+                hint="Make a new key in Papra with Read organizations and Read documents.",
             )
         organization = await self._organization(config, ctx)
         return f"Papra answers, organization {organization.get('name') or organization.get('id')}."

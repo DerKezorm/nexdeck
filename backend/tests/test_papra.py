@@ -1,6 +1,7 @@
 """Papra (issue #42). The answers are shaped after Papra's own sources
 (``documents.routes.ts``, ``organizations.routes.ts``, ``api-keys.routes.ts``,
-October 2026); the names and numbers are made up."""
+October 2026) and checked against a fresh instance on 12.10.2026; the names
+and numbers are made up."""
 
 from __future__ import annotations
 

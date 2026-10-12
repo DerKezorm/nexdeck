@@ -146,7 +146,7 @@ that one of twenty-one renderers draws.
 | JSON API | value (with up to four badges from the same answer), list | | optional bearer token |
 | iCal feed | events | | feed address |
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
-| Papra | documents (count, size, trash), latest documents (with tags), organizations | | an API key from API keys in the user menu with Read organizations and Read documents; the organization by name or ID, or the first the key can see. Beta: not yet run against a Papra |
+| Papra | documents (count, size, trash), latest documents (with tags), organizations | | an API key from API keys in the user menu with Read organizations and Read documents; the organization by name or ID, or the first the key can see. Beta: run against a fresh Papra, not yet one in use |
 | Mealie | meal plan, shopping list, kitchen | | API token from Profile > Manage your API tokens |
 | Grocy | stock to watch, pantry | | API key from Manage API keys |
 | Vikunja | due tasks, tasks | | API token with read_all for tasks and projects; the time zone for "today" is a field, because a token cannot read the user's own |
