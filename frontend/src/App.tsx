@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
+import { AppBarFrame } from './components/AppBar'
 import { BackgroundLayer } from './components/BackgroundLayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
@@ -80,6 +81,9 @@ export function App() {
           no message and no button, on a wall display nobody is standing at. */}
       <ErrorBoundary>
       <BrowserRouter>
+        {/* Outside Suspense and the routes: the bar stands while a page loads
+            and when one page gives way to the next (issues #27, #40). */}
+        <AppBarFrame>
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/setup" element={<SetupPage />} />
@@ -132,6 +136,7 @@ export function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
+        </AppBarFrame>
         <NoticeToast />
         {/* Beside the routes, not inside a page: music carries on when the board changes. */}
         <PlayerHost />

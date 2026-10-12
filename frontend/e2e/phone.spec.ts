@@ -309,6 +309,88 @@ test('the bar stays on the page when a board is deleted', async ({ page }) => {
 })
 
 /**
+ * Counts every moment without exactly one bar from now on, keeps the bar that holds the buttons to compare,
+ * and notes each address on the way. One bar, not "a bar": a second one, built by a page beside the shared
+ * one, is the bar of #40 again, and a probe that only asked for "a bar" stayed green on it.
+ */
+async function watchTheBar(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const state = window as unknown as { barGone: number; bar: Element | null; paths: string[] }
+    state.barGone = 0
+    state.paths = [location.pathname]
+    state.bar = document.querySelector('header.app-bar:has(button)')
+    new MutationObserver(() => {
+      if (document.querySelectorAll('header.app-bar').length !== 1) state.barGone += 1
+      if (state.paths.at(-1) !== location.pathname) state.paths.push(location.pathname)
+    }).observe(document.documentElement, { childList: true, subtree: true })
+  })
+}
+
+function theBarSoFar(page: Page): Promise<{ gone: number; same: boolean; paths: string[] }> {
+  return page.evaluate(() => {
+    const state = window as unknown as { barGone: number; bar: Element | null; paths: string[] }
+    return { gone: state.barGone, same: state.bar !== null && state.bar === document.querySelector('header.app-bar:has(button)'), paths: state.paths }
+  })
+}
+
+test('the bar stays the same from a board to the settings and the system and back', async ({ page }) => {
+  // ⚠️ Issue #40, 12.10.2026: in the app installed on iPadOS 26 the blur came back over the bar as soon as
+  // My settings or System opened. They had a bar of their own, a second one: going there took the board's
+  // bar down and put up another, and the blur stayed. Every page now fills the one bar that never leaves.
+  await signIn(page)
+  await page.setViewportSize({ width: 1032, height: 1376 })
+  await watchTheBar(page)
+  for (const [entry, address, title] of [
+    ['My settings', /\/settings/, 'Profile'],
+    ['System', /\/system/, 'Integrations'],
+  ] as const) {
+    await page.getByRole('button', { name: ACCOUNT.username, exact: true }).click()
+    await page.getByRole('menuitem', { name: entry }).click()
+    await expect(page).toHaveURL(address)
+    await expect(page.getByRole('link', { name: title }).first()).toBeVisible()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
+    await expect(page).toHaveURL(/\/b\/home$/)
+    await expect(page.locator('section[aria-label="Containers"]')).toBeVisible()
+  }
+  const after = await theBarSoFar(page)
+  expect(after.paths, 'the way back went through another page').not.toContain('/')
+  expect(after.gone, 'the bar left the page on the way').toBe(0)
+  expect(after.same, 'the bar was taken down and built anew').toBe(true)
+})
+
+test('the bar stays the same from signing in to the board', async ({ page }) => {
+  // ⚠️ Issue #40, 12.10.2026: in the app installed on iPadOS 26 the blur was there after signing in. The
+  // sign-in page had no bar, so the blur came, and stayed on the board. The language now sits in the bar
+  // every page shares: bare in a browser tab, as sign-in always looked, and solid in the installed app.
+  await page.setViewportSize({ width: 1032, height: 1376 })
+  await page.goto('/')
+  await expect(page.getByLabel('User name')).toBeVisible()
+  const bar = page.locator('header.app-bar')
+  await expect(bar.getByRole('button', { name: 'Deutsch', exact: true })).toBeVisible()
+  expect(await bar.evaluate((element) => getComputedStyle(element).backgroundColor), 'sign-in has a bar of glass in a browser tab').toBe('rgba(0, 0, 0, 0)')
+  await watchTheBar(page)
+  await page.getByLabel('User name').fill(ACCOUNT.username)
+  await page.getByLabel('Password', { exact: true }).fill(ACCOUNT.password)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/b\//)
+  await expect(bar.getByRole('button', { name: 'Edit board' })).toBeVisible()
+  const after = await theBarSoFar(page)
+  expect(after.gone, 'the bar left the page on the way to the board').toBe(0)
+  expect(after.same, 'the bar was taken down and built anew').toBe(true)
+  expect(await bar.evaluate((element) => getComputedStyle(element).backdropFilter), 'the board bar in a browser tab is no longer glass').not.toBe('none')
+
+  // The installed app: solid on sign-in too, and the language button still answers.
+  await page.request.post('/api/v1/auth/logout', { headers: { 'X-Nexdeck-Request': '1' } })
+  await page.goto('/login')
+  await expect(page.getByLabel('User name')).toBeVisible()
+  await asInstalled(page)
+  expect(await bar.evaluate((element) => getComputedStyle(element).backgroundColor), 'sign-in in the installed app has no solid bar').toMatch(/^rgb\(/)
+  await bar.getByRole('button', { name: 'Deutsch', exact: true }).click()
+  await expect(page.getByLabel('Benutzername')).toBeVisible()
+  await bar.getByRole('button', { name: 'English', exact: true }).click()
+})
+
+/**
  * The rules of the installed app switched on where they stand. Chromium cannot pretend to be installed
  * (setEmulatedMedia ignores display-mode), so they are copied into a layer that always applies.
  */

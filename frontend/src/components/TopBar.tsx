@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { useDisguise } from '../lib/showcase'
+import { Bar } from './AppBar'
 import { HeaderTools, type HeaderUser } from './HeaderTools'
 import { LogoMark } from './Logo'
 
@@ -54,7 +55,7 @@ export function TopBar(props: Props) {
     return () => window.removeEventListener('mousedown', onClick)
   }, [menu])
   return (
-    <header className="glass-strong app-bar sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none" data-no-picture>
+    <Bar>
       <Link to={home} className="flex items-center gap-2 mr-1" aria-label="nexdeck">
         <LogoMark size={26} />
         <span className="font-semibold tracking-tight hidden lg:inline">
@@ -133,6 +134,6 @@ export function TopBar(props: Props) {
         )}
         <HeaderTools user={user} unread={unread} onNotices={onNotices} />
       </div>
-    </header>
+    </Bar>
   )
 }

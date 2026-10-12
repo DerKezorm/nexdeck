@@ -6,7 +6,9 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
+import { useHomeBoardPath } from '../lib/homeBoard'
 import { useAuth } from '../stores/auth'
+import { Bar } from './AppBar'
 import { useNotices } from '../stores/notices'
 import { BackgroundLayer } from './BackgroundLayer'
 import { CommandPalette } from './CommandPalette'
@@ -22,6 +24,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const user = useAuth((state) => state.user)
   const { unread, setOpen } = useNotices()
   const [palette, setPalette] = useState(false)
+  const home = useHomeBoardPath()
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -36,15 +39,16 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   return (
     <div className="min-h-full pb-20 md:pb-8">
       <BackgroundLayer />
-      <header className="glass-strong app-bar sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none">
-        <Link to="/" className="btn btn-icon btn-flat" aria-label={t('common.back')}>
+      <Bar>
+        {/* Straight to the home board, not through ``/`` (issue #40). */}
+        <Link to={home} className="btn btn-icon btn-flat" aria-label={t('common.back')}>
           <ArrowLeft size={16} />
         </Link>
         <LogoMark size={24} />
         <span className="font-semibold text-[15px] truncate">{title}</span>
         <span className="flex-1" />
         <HeaderTools user={user} unread={unread} onNotices={() => setOpen(true)} />
-      </header>
+      </Bar>
       <main>{children}</main>
       <MobileTabBar
         boards={(boards.data ?? []).filter((b) => b.in_menu).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}

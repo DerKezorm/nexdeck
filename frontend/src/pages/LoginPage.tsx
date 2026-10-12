@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, get, post, serverUrl } from '../api/client'
+import { Bar } from '../components/AppBar'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { LanguagePill } from '../components/HeaderTools'
 import { Logo } from '../components/Logo'
@@ -129,10 +130,14 @@ export function LoginPage() {
     <div className="min-h-full flex items-center justify-center p-6">
       <BackgroundLayer />
       {/* Before anybody is signed in the language is the browser's guess;
-          somebody at a borrowed laptop needs a way to their own. */}
-      <div className="fixed top-4 right-4 z-10">
+          somebody at a borrowed laptop needs a way to their own. In the bar
+          every page shares, bare in a browser tab: in the app installed on
+          iPadOS 26 a page with no solid bar brings the blur back, and signing
+          in carried it onto the board (issue #40). */}
+      <Bar bare spacer={false}>
+        <span className="flex-1" />
         <LanguagePill signedIn={false} />
-      </div>
+      </Bar>
       <div className="glass rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-center mb-6">
           <Logo size={34} />

@@ -156,14 +156,32 @@ body {
   -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 
+/* The bar every page shares (components/AppBar.tsx) with nothing in it, or only
+   the language on sign-in: no surface in a browser tab, so sign-in looks as it
+   always did, and clicks pass through to the page below. In the installed app
+   the rule after this one keeps it solid, empty or not (issue #40), so this one
+   stands first. */
+.glass-strong.app-bar[data-look='bare'] {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+}
+.glass-strong.app-bar[data-look='bare'] > * {
+  pointer-events: auto;
+}
+
 /* ⚠️ Issue #27, 04.10.2026: an app installed on the Home Screen of iPadOS 26
    gets a blur over the top 40 points of the page, and nexdeck's bar sat in it.
    WebKit leaves it out only where a full-width bar at the edge paints one solid
    colour, so the bars of the installed app are solid; in a browser tab they
    stay glass. */
 @media (display-mode: standalone) {
-  .glass-strong.app-bar {
+  .glass-strong.app-bar,
+  .glass-strong.app-bar[data-look='bare'] {
     background: var(--nd-bg-elev);
+    border-color: var(--nd-border);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
