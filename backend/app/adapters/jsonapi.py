@@ -28,6 +28,25 @@ def join_path(base: str, path: str) -> str:
     return base.rstrip("/") + "/" + path
 
 
+#: As many badges as the foot of a card shows.
+MAX_BADGES = 4
+
+
+def parse_badges(text: str) -> list[tuple[str, str, str]]:
+    """The badges of a value card: one per line, ``Label | path | unit``.
+
+    A line without a path is left out, and so is everything past the fourth:
+    the card draws four and no more (issue #38).
+    """
+    badges: list[tuple[str, str, str]] = []
+    for line in (text or "").splitlines():
+        parts = [part.strip() for part in line.split("|")]
+        if len(parts) < 2 or not parts[1]:
+            continue
+        badges.append((parts[0], parts[1], parts[2] if len(parts) > 2 else ""))
+    return badges[:MAX_BADGES]
+
+
 def parse_headers(text: str) -> dict[str, str]:
     headers: dict[str, str] = {}
     for line in (text or "").splitlines():
@@ -69,6 +88,8 @@ class JsonApiAdapter(Adapter):
                 Field("bad_above", "Alarm above", type="number"),
                 Field("warn_below", "Warn below", type="number"),
                 Field("bad_below", "Alarm below", type="number"),
+                Field("badges", "Badges", type="textarea", placeholder="Latest | release.latest\nChannel | release.channel",
+                      help="Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response."),
             ),
         ),
         WidgetType(
@@ -115,17 +136,14 @@ class JsonApiAdapter(Adapter):
         number = as_number(raw)
         status = "ok"
         metrics: dict[str, float] = {}
-        value: Any = raw
+        value = shown(raw, options)
         if number is not None:
-            decimals = int(options.get("decimals") or 0)
-            value = round(number, decimals) if decimals else int(round(number))
             metrics["value"] = number
             status = threshold_status(number, options)
-        elif isinstance(raw, (dict, list)):
-            value = str(raw)[:60]
         return WidgetData(
             status=status,
             primary={"label": options.get("label") or "", "value": value, "unit": options.get("unit") or ""},
+            secondary=badges(payload, options),
             metrics=metrics,
         )
 
@@ -157,6 +175,43 @@ class JsonApiAdapter(Adapter):
             {"title": "certificates", "subtitle": "renewed 12 days ago", "value": 4},
             {"title": "snapshots", "subtitle": "last 03:00", "value": 17},
         ], secondary=[{"label": "Total", "value": 3}])
+
+
+def shown(raw: Any, options: dict[str, Any]) -> Any:
+    """A value from the response as the card shows it: rounded, or cut short."""
+    number = as_number(raw)
+    if number is not None:
+        decimals = int(options.get("decimals") or 0)
+        return round(number, decimals) if decimals else int(round(number))
+    if isinstance(raw, (dict, list)):
+        return str(raw)[:60]
+    return raw
+
+
+def badges(payload: Any, options: dict[str, Any]) -> list[dict[str, Any]]:
+    """The badges asked for in the card's settings, read from the same response.
+
+    ⚠️ A badge whose path finds nothing shows an empty value and leaves the
+    card standing. The main value is what the card is for; a release channel
+    the service stopped sending must not turn the whole card into an error.
+
+    ⚠️ Only a number the response sends as a number is rounded. Text stays as
+    it came: the latest version "1.5" is not a reading, and with no decimals
+    set it would have been shown as 2.
+    """
+    rows = []
+    for label, path, unit in parse_badges(str(options.get("badges") or "")):
+        try:
+            raw = extract(payload, path)
+        except PathError:
+            raw = None
+        value: Any = raw
+        if isinstance(raw, bool):
+            value = "true" if raw else "false"
+        elif isinstance(raw, (int, float)) or isinstance(raw, (dict, list)):
+            value = shown(raw, options)
+        rows.append({"label": label, "value": value, "unit": unit})
+    return rows
 
 
 def _safe(row: Any, path: Any) -> Any:

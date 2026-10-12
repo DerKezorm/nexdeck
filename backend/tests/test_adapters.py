@@ -266,6 +266,35 @@ async def test_json_api_value_with_thresholds(ctx: Context) -> None:
     assert failure.value.code == "path_error"
 
 
+@respx.mock
+async def test_json_api_value_carries_badges_from_the_same_answer(ctx: Context) -> None:
+    # Issue #38: a status endpoint that knows more than the one number.
+    respx.get("http://svc/api/status").mock(return_value=httpx.Response(200, json={
+        "installed": "1.4.2",
+        "release": {"latest": "1.5", "channel": "stable", "behind": 3, "size": 12.345, "update": True},
+    }))
+    api = get_adapter("jsonapi")
+    options = {
+        "path": "/status", "value_path": "installed", "label": "Installed",
+        "badges": "Latest | release.latest\n\nno path at all\nChannel|release.channel\nBehind | release.behind | releases\nGone | release.nothing\nFifth | release.size",
+    }
+    data = await api.fetch("value", {"url": "http://svc/api"}, options, ctx)
+    assert data.primary["value"] == "1.4.2"
+    assert data.secondary == [
+        # Text stays as it came: "1.5" is a version, not 2.
+        {"label": "Latest", "value": "1.5", "unit": ""},
+        {"label": "Channel", "value": "stable", "unit": ""},
+        {"label": "Behind", "value": 3, "unit": "releases"},
+        # A path that finds nothing leaves the card standing.
+        {"label": "Gone", "value": None, "unit": ""},
+    ]
+    numbers = await api.fetch("value", {"url": "http://svc/api"}, {"path": "/status", "value_path": "release.behind", "decimals": 1, "badges": "Size | release.size | MB\nUpdate | release.update"}, ctx)
+    assert numbers.secondary == [{"label": "Size", "value": 12.3, "unit": "MB"}, {"label": "Update", "value": "true", "unit": ""}]
+    # A card without the option stays as it was.
+    plain = await api.fetch("value", {"url": "http://svc/api"}, {"path": "/status", "value_path": "installed"}, ctx)
+    assert plain.secondary == []
+
+
 # -- uptime kuma -------------------------------------------------------------
 
 

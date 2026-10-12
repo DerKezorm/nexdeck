@@ -1878,7 +1878,9 @@
     "Deadlines": "Plazos",
     "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days.": "Lo que vence en los próximos 14 días, lo más próximo primero; cada línea abre su documento. Amarillo cuando algo vence en 3 días.",
     "Filing": "Archivo",
-    "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Cuántos documentos hay en total, cuántos llegaron esta semana y cuántos se están leyendo ahora para extraer su texto."
+    "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Cuántos documentos hay en total, cuántos llegaron esta semana y cuántos se están leyendo ahora para extraer su texto.",
+    "Badges": "Insignias",
+    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Valores pequeños al pie de la tarjeta, uno por línea: etiqueta | ruta del valor | unidad. Hasta cuatro, de la misma respuesta."
   },
   "labels": {
     "Private resources": "Recursos privados",

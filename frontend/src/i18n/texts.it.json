@@ -1878,7 +1878,9 @@
     "Deadlines": "Scadenze",
     "What falls due in the next 14 days, soonest first, each opening its document. Yellow when something is due within 3 days.": "Cosa scade nei prossimi 14 giorni, il più vicino per primo, ogni riga apre il suo documento. Giallo quando qualcosa scade entro 3 giorni.",
     "Filing": "Archivio",
-    "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Quanti documenti ci sono in tutto, quanti sono arrivati questa settimana e quanti vengono letti ora per il loro testo."
+    "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Quanti documenti ci sono in tutto, quanti sono arrivati questa settimana e quanti vengono letti ora per il loro testo.",
+    "Badges": "Badge",
+    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Piccoli valori in fondo alla scheda, uno per riga: etichetta | percorso del valore | unità. Fino a quattro, dalla stessa risposta."
   },
   "labels": {
     "Private resources": "Risorse private",
