@@ -1424,6 +1424,21 @@
         "Ein Tagesdiagramm zeigte nur die zweite Tageshälfte; es holt seinen Zeitraum jetzt selbst.",
         "Danke an bluedsticker für den App-Katalog (#37) und an naamah75 für die Darstellungsarten (#39)."
       ]
+    },
+    "0.41.1": {
+      "lead": "Die Leiste bleibt jetzt auf jeder Seite frei von der Unschärfe des iPads, von der Anmeldung bis zu den Einstellungen.",
+      "sections": [
+        {
+          "title": "Eine Leiste für jede Seite",
+          "body": "In der unter iPadOS 26 installierten App kam die Unschärfe über die Leiste zurück, sobald Meine Einstellungen oder System aufging, und nach der Anmeldung, und blieb, bis die App neu startete. Einstellungen und System hatten eine eigene Leiste, die Anmeldung keine. Jetzt teilen sich alle Seiten eine Leiste, die nie vom Bildschirm verschwindet. Auf der Anmeldeseite trägt sie die Sprachknöpfe; im Browser-Tab ändert sich nichts.",
+          "path": "Meine Einstellungen, System, Anmeldung"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Der Zurück-Pfeil in Meine Einstellungen und System führt direkt zu deinem Start-Board.",
+        "Danke an bluedsticker für die Meldung und die Screenshots (#40)."
+      ]
     }
   }
 }

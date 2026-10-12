@@ -1424,6 +1424,21 @@
         "A chart of a day showed only its second half; it now fetches the hours it shows.",
         "Thanks to bluedsticker for the app catalog (#37) and to naamah75 for the drawings (#39)."
       ]
+    },
+    "0.41.1": {
+      "lead": "The bar stays clear of the iPad blur on every page now, from signing in to the settings.",
+      "sections": [
+        {
+          "title": "One bar for every page",
+          "body": "In the app installed on iPadOS 26 the blur came back over the bar when My settings or System opened, and after signing in, and stayed until the app was started again. The settings and the system had a bar of their own and sign-in had none. Now every page shares one bar that never leaves the screen. On the sign-in page it holds the language buttons; in a browser tab nothing changes.",
+          "path": "My settings, System, sign-in"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The back arrow of My settings and System goes straight to your home board.",
+        "Thanks to bluedsticker for the report and the screenshots (#40)."
+      ]
     }
   }
 }

@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.41.1 (2026-10-12)
+
+### Fixed
+
+- **The blur of iPadOS 26 came back over the bar when My settings or System opened, and after signing in** (#40). In the app installed on the Home Screen, the settings and the system brought a bar of their own and the sign-in page had none, so each of these ways took one bar down and put another up, and the blur stayed until the app was started again. There is now one bar for every page, built once and filled by each page. On the sign-in page it holds the language buttons: bare in a browser tab, as before, and solid in the installed app. Thanks to @bluedsticker for the report and the screenshots.
+- The back arrow of My settings and System goes straight to the home board instead of through the page that only passes you on.
+
+### Upgrading
+
+Nothing to do. No change to the database.
+
 ## 0.41.0 (2026-10-12)
 
 ### New
