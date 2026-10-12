@@ -1374,6 +1374,31 @@
         "Of several X-Forwarded-Host lines from a named proxy the last one counts for the redirect address of the sign-in.",
         "The authentik card still shows the scheme a proxy names and warns when nexdeck does not take its word."
       ]
+    },
+    "0.40.0": {
+      "lead": "Two more services on the board, Papra and FortiGate, badges for JSON API cards, and the bar on the iPad stays clear when a board is deleted.",
+      "sections": [
+        {
+          "title": "Papra",
+          "body": "Documents counts what an organization keeps, with its size and the trash. Latest documents lists what came in last, with its tags, and Organizations shows every organization the key can see. Read only, with an API key that has Read organizations and Read documents. Beta.",
+          "path": "Edit mode (pencil) > Add widget > Papra"
+        },
+        {
+          "title": "FortiGate",
+          "body": "System shows processor, memory, sessions and the FortiOS version. Interfaces lists link, address, speed and traffic; name the WAN ports in the card and one without a link turns it red. IPsec tunnels shows every tunnel by its phase 2 selectors, and HA cluster the primary and whether the configuration is in sync. Read only, with the token of a REST API administrator. Beta.",
+          "path": "Edit mode (pencil) > Add widget > FortiGate"
+        },
+        {
+          "title": "Badges on JSON API cards",
+          "body": "A JSON API value card can carry up to four small values from the same answer at its foot, such as the latest version or a release channel. One per line: label | value path | unit. Text stays as it came, and a value that is missing leaves the card standing.",
+          "path": "Card settings > Badges"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Deleting a board no longer brings the blur back over the bar in the app installed on iPadOS 26. Thanks to bluedsticker (#40).",
+        "Thanks to tilwegener for Papra and FortiGate (#41, #42) and to naamah75 for the badges (#38)."
+      ]
     }
   }
 }

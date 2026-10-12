@@ -3,6 +3,22 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.40.0 (2026-10-12)
+
+### New
+
+- **Papra** (#42, beta): documents, their size and the trash of an organization, the latest documents with their tags, and every organization the key can see. Read only, with an API key that has Read organizations and Read documents; the organization by name or ID, or the first the key can see. Thanks to @tilwegener for the request.
+- **FortiGate** (#41, beta): processor, memory, sessions and the FortiOS version; interfaces with link, address, speed and traffic; IPsec tunnels by their phase 2 selectors; the HA cluster with its primary and whether the configuration is in sync. Read only, with the token of a REST API administrator sent as a bearer token, and an optional VDOM. Interfaces named in the card turn it red when one loses its link. Thanks to @tilwegener for the request.
+- **Badges on JSON API value cards** (#38): up to four small values from the same answer at the foot of the card, one per line as label | value path | unit, like the chips of a native integration. A number the answer sends as a number is rounded, text stays as it came; a path that finds nothing leaves the card standing. Thanks to @naamah75 for the request.
+
+### Fixed
+
+- **Deleting a board brought the blur of iPadOS 26 back over the bar** in the installed app (#40). The way home led through a page without a bar; it now goes to the start board directly, and so do the logo and the back button of a board that is not found. Thanks to @bluedsticker for the report.
+
+### Upgrading
+
+Nothing to do. No change to the database. Papra and FortiGate start as beta. Papra was run against a fresh instance, not yet one in use; FortiGate was written against Fortinet's documentation and has not yet met a FortiGate.
+
 ## 0.39.1 (2026-10-11)
 
 ### Security

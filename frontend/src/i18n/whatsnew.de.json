@@ -1374,6 +1374,31 @@
         "Von mehreren X-Forwarded-Host-Zeilen eines genannten Proxys zählt für die Rückleitadresse der Anmeldung die letzte.",
         "Die authentik-Karte zeigt weiter, welches Schema ein Proxy nennt, und warnt, wenn nexdeck ihm nicht glaubt."
       ]
+    },
+    "0.40.0": {
+      "lead": "Zwei Dienste mehr auf dem Board, Papra und FortiGate, Plaketten für JSON-API-Karten, und die Leiste auf dem iPad bleibt frei, wenn ein Board gelöscht wird.",
+      "sections": [
+        {
+          "title": "Papra",
+          "body": "Dokumente zählt, was eine Organisation aufbewahrt, samt Größe und Papierkorb. Neueste Dokumente zeigt, was zuletzt kam, mit seinen Tags, und Organisationen jede Organisation, die der Schlüssel sieht. Nur lesend, mit einem API-Schlüssel mit Read organizations und Read documents. Beta.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Papra"
+        },
+        {
+          "title": "FortiGate",
+          "body": "System zeigt Prozessor, Speicher, Sitzungen und die FortiOS-Version. Schnittstellen listet Verbindung, Adresse, Geschwindigkeit und Datenmenge; trägst du die WAN-Ports in der Karte ein, färbt eine ohne Verbindung sie rot. IPsec-Tunnel zeigt jeden Tunnel nach seinen Phase-2-Selektoren, HA-Cluster das primäre Gerät und ob die Konfiguration gleich ist. Nur lesend, mit dem Token eines REST-API-Administrators. Beta.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > FortiGate"
+        },
+        {
+          "title": "Plaketten auf JSON-API-Karten",
+          "body": "Eine JSON-API-Wertkarte trägt unten bis zu vier kleine Werte aus derselben Antwort, etwa die neueste Version oder einen Release-Kanal. Einer je Zeile: Bezeichnung | Wertpfad | Einheit. Text bleibt, wie er kommt, und ein fehlender Wert lässt die Karte stehen.",
+          "path": "Karteneinstellungen > Plaketten"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein Board zu löschen holt die Unschärfe in der unter iPadOS 26 installierten App nicht mehr über die Leiste. Danke an bluedsticker (#40).",
+        "Danke an tilwegener für Papra und FortiGate (#41, #42) und an naamah75 für die Plaketten (#38)."
+      ]
     }
   }
 }
