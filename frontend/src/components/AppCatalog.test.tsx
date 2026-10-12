@@ -8,8 +8,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { vi } from 'vitest'
 
+import { MemoryRouter } from 'react-router-dom'
+
 import { AppsSettings } from '../pages/settings/AppsSettings'
 import { useAuth } from '../stores/auth'
+import { WidgetLibrary } from './WidgetLibrary'
 import { WidgetSettingsSheet } from './WidgetSettingsSheet'
 
 const PAPERLESS = {
@@ -43,6 +46,7 @@ function server(sent: Sent[], apps: unknown[] = [PAPERLESS]) {
     if (url.includes('/integrations')) return json([])
     if (url.endsWith('/apps') && method === 'POST') return json({ ...PAPERLESS, id: 9, name: 'Films', addresses: [{ label: 'Main', url: 'https://films.example' }], home: '', away: '', tiles: 0 }, 201)
     if (url.endsWith('/apps')) return json(apps)
+    if (url.includes('/pages/') && method === 'POST') return json({ widget: { id: 11 } }, 201)
     return json({})
   })
 }
@@ -141,5 +145,31 @@ describe('System, Apps', () => {
     expect(screen.getByText(/2 tiles follow it\. They stay/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }))
     await waitFor(() => expect(sent.some((one) => one.method === 'DELETE' && one.url.endsWith('/apps/4'))).toBe(true))
+  })
+})
+
+describe('adding a card', () => {
+  it('places an app of the catalog straight away, already following it', async () => {
+    const sent: Sent[] = []
+    vi.stubGlobal('fetch', server(sent))
+    const created = vi.fn()
+    wrap(<MemoryRouter><WidgetLibrary open onClose={vi.fn()} pageId={1} onCreated={created} /></MemoryRouter>)
+    expect(await screen.findByText('Apps from the catalog')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /paperless/i }))
+    await waitFor(() => expect(created).toHaveBeenCalledWith(11))
+    const body = sent.find((one) => one.method === 'POST' && one.url.includes('/pages/1/widgets'))!.body
+    // No name of its own, so the app's shows and follows a rename.
+    expect(body).toMatchObject({ kind: 'core.app', title: '', options: { app_id: 4, address: 'auto' } })
+  })
+
+  it('finds an app by what the search says', async () => {
+    vi.stubGlobal('fetch', server([]))
+    wrap(<MemoryRouter><WidgetLibrary open onClose={vi.fn()} pageId={1} onCreated={vi.fn()} /></MemoryRouter>)
+    await screen.findByText('Apps from the catalog')
+    await userEvent.type(screen.getByLabelText(/search/i), 'documents')
+    expect(screen.getByRole('button', { name: /paperless/i })).toBeInTheDocument()
+    await userEvent.clear(screen.getByLabelText(/search/i))
+    await userEvent.type(screen.getByLabelText(/search/i), 'weather')
+    expect(screen.queryByText('Apps from the catalog')).toBeNull()
   })
 })

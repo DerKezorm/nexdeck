@@ -1915,7 +1915,13 @@
     "Red from": "Rojo desde",
     "In the unit of the number. Empty leaves the colour to the card.": "En la unidad del número. Vacío deja el color a la tarjeta.",
     "Below Yellow from means low numbers are the bad ones, as with free space.": "Por debajo de Amarillo desde significa que los números bajos son los malos, como con el espacio libre.",
-    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Lo que cuenta como lleno, en la unidad del número. No hace falta para un porcentaje. Si se deja vacío, la tarjeta sigue siendo un número."
+    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Lo que cuenta como lleno, en la unidad del número. No hace falta para un porcentaje. Si se deja vacío, la tarjeta sigue siendo un número.",
+    "Empty at": "Vacío en",
+    "Where the dial and the LEDs start, in the unit of the number. Empty means 0.": "Dónde empiezan la aguja y los LED, en la unidad del número. Vacío significa 0.",
+    "Chart shows": "El gráfico muestra",
+    "The last hour": "La última hora",
+    "The last 6 hours": "Las últimas 6 horas",
+    "The last 24 hours": "Las últimas 24 horas"
   },
   "labels": {
     "Private resources": "Recursos privados",

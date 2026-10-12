@@ -849,7 +849,8 @@
       "network": "Rete",
       "monitoring": "Monitoraggio e casa",
       "other": "Altro"
-    }
+    },
+    "apps": "App dal catalogo"
   },
   "notices": {
     "title": "Avvisi",
@@ -1001,7 +1002,9 @@
     "checkOff": "La verifica è disattivata",
     "flow": "Dove va l'energia",
     "topology": "Come sono collegati i punti",
-    "problemsMore": "+{{count}} altri"
+    "problemsMore": "+{{count}} altri",
+    "lastHours_one": "ultima ora",
+    "lastHours_other": "ultime {{count}} ore"
   },
   "player": {
     "title": "Musica",
@@ -1115,7 +1118,8 @@
     "noServers": "Questo account non ha un proprio server Plex."
   },
   "gauge": {
-    "of": "di"
+    "of": "di",
+    "range": "da {{min}} a {{max}}"
   },
   "backups": {
     "title": "Backup",

@@ -158,7 +158,7 @@ def test_a_choice_that_names_nothing_leaves_the_card_alone() -> None:
 def test_the_synology_system_card_offers_a_box_per_row_and_a_dial() -> None:
     widget = get_adapter("synology").widget("system")
     names = [field.name for field in widget.options]
-    assert names == ["view", "gauge_part", "meter_direction", "level_warn", "level_bad",
+    assert names == ["view", "gauge_part", "gauge_min", "meter_direction", "level_warn", "level_bad", "chart_hours",
                      "show_cpu", "show_memory", "show_volume", "show_temp"]
     picker = next(field for field in widget.options if field.name == "gauge_part")
     assert [value for value, _label in picker.options] == ["cpu", "memory", "volume", "temp"]

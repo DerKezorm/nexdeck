@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { ApiError, get, post } from '../api/client'
-import type { AdapterSpec, Integration, WidgetTypeSpec } from '../api/types'
+import type { AdapterSpec, AppEntry, Integration, WidgetTypeSpec } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
 import { ServiceIcon } from './ServiceIcon'
 import { Select, Sheet } from './ui'
@@ -70,6 +70,8 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
   const { t } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), enabled: open, staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: open })
+  // The app catalog (issue #37): an app is placed straight from here, already following it.
+  const apps = useQuery({ queryKey: ['apps'], queryFn: () => get<AppEntry[]>('/apps'), enabled: open, staleTime: 60_000 })
   const [query, setQuery] = useState('')
   const [picking, setPicking] = useState<{ adapter: AdapterSpec; widget: WidgetTypeSpec } | null>(null)
   const [integrationId, setIntegrationId] = useState<string>('')
@@ -87,6 +89,32 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     }
     return Object.entries(result).sort(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
   }, [adapters.data, query])
+
+  const catalog = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const list = Array.isArray(apps.data) ? apps.data : []
+    return list.filter((app) => !needle || `${app.name} ${app.description ?? ''}`.toLowerCase().includes(needle))
+  }, [apps.data, query])
+
+  /** An app tile that follows ``app``: its name and icon stay empty, so the app's show and follow a rename. */
+  const placeApp = async (app: AppEntry) => {
+    const tile = adapters.data?.find((one) => one.kind === 'core')?.widgets.find((one) => one.kind === 'core.app')
+    setBusy(true)
+    setError('')
+    try {
+      const defaults = Object.fromEntries((tile?.options ?? []).filter((o) => o.default !== null && o.default !== undefined).map((o) => [o.name, o.default]))
+      const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
+        kind: 'core.app',
+        title: '',
+        options: { ...defaults, app_id: app.id, address: app.home || app.away ? 'auto' : '' },
+      })
+      onCreated(result.widget.id)
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const create = async (adapter: AdapterSpec, widget: WidgetTypeSpec, chosen: number | null) => {
     setBusy(true)
@@ -167,6 +195,24 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
             </button>
           </div>
         </div>
+      )}
+      {catalog.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('library.apps')}</h3>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {catalog.map((app) => (
+              <li key={app.id}>
+                <button className="w-full text-left flex items-start gap-3 p-2.5 rounded-xl border border-line hover:border-line-strong hover:bg-surface-hover transition-colors" onClick={() => void placeApp(app)} disabled={busy}>
+                  <ServiceIcon icon={app.icon} size={22} className="mt-0.5" />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium">{app.name}</span>
+                    <span className="block text-[11px] text-muted leading-snug">{app.description || (app.addresses ?? []).map((one) => one.label).join(' · ')}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {groups.map(([category, entries]) => (
         <section key={category} className="mb-4">

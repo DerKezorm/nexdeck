@@ -1915,7 +1915,13 @@
     "Red from": "Rouge à partir de",
     "In the unit of the number. Empty leaves the colour to the card.": "Dans l'unité du nombre. Vide laisse la couleur à la carte.",
     "Below Yellow from means low numbers are the bad ones, as with free space.": "En dessous de Jaune à partir de, les petits nombres sont les mauvais, comme pour l'espace libre.",
-    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Ce qui compte comme plein, dans l'unité du nombre. Inutile pour un pourcentage. Laissé vide, la carte reste un nombre."
+    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Ce qui compte comme plein, dans l'unité du nombre. Inutile pour un pourcentage. Laissé vide, la carte reste un nombre.",
+    "Empty at": "Vide à",
+    "Where the dial and the LEDs start, in the unit of the number. Empty means 0.": "Où commencent l'aiguille et les LED, dans l'unité du nombre. Vide signifie 0.",
+    "Chart shows": "Le graphique montre",
+    "The last hour": "La dernière heure",
+    "The last 6 hours": "Les 6 dernières heures",
+    "The last 24 hours": "Les 24 dernières heures"
   },
   "labels": {
     "Private resources": "Ressources privées",

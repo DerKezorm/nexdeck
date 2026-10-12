@@ -30,7 +30,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type 
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
-import { fileUrl, mediaUrl } from '../api/client'
+import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
@@ -362,9 +362,8 @@ function levelColour(data: WidgetData | null | undefined): string {
 }
 
 export function GaugeCard({ data }: RenderProps) {
-  const { t } = useTranslation()
   const primary = data?.primary
-  const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number } | null
+  const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number; min?: number } | null
   // ⚠️ Two kinds of card end up here. One was turned into a dial by the
   // collector and carries its share in `meta`; the other measures a
   // percentage to begin with, and then the number *is* the share.
@@ -377,6 +376,7 @@ export function GaugeCard({ data }: RenderProps) {
   // Only where it adds something. A card that already measures a share
   // would read "18% of 100%", which is a sentence about nothing.
   const ceiling = typeof dial?.max === 'number' ? dial.max : null
+  const floor = typeof dial?.min === 'number' ? dial.min : null
 
   return (
     <div className="flex-1 flex items-center gap-3 px-4 pb-3 min-h-0">
@@ -413,15 +413,22 @@ export function GaugeCard({ data }: RenderProps) {
       <div className="min-w-0 flex-1">
         <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
         <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Rolled value={primary?.value} unit={primary?.unit} /></div>
-        {ceiling !== null && (
-          <div className="text-[10px] text-muted num">
-            {t('gauge.of')} {formatValue(ceiling, primary?.unit)}
-          </div>
-        )}
+        <DialRange floor={floor} ceiling={ceiling} unit={primary?.unit} />
         <div className="mt-1.5">
           <Chips items={data?.secondary} />
         </div>
       </div>
+    </div>
+  )
+}
+
+/** What the dial or the LEDs run between: "of 48 MB/s", or "15 °C to 29 °C" once a floor is named. */
+function DialRange({ floor, ceiling, unit }: { floor: number | null; ceiling: number | null; unit?: string }) {
+  const { t } = useTranslation()
+  if (ceiling === null) return null
+  return (
+    <div className="text-[10px] text-muted num">
+      {floor !== null ? t('gauge.range', { min: formatValue(floor, unit), max: formatValue(ceiling, unit) }) : `${t('gauge.of')} ${formatValue(ceiling, unit)}`}
     </div>
   )
 }
@@ -461,9 +468,8 @@ export function ledColour(position: number, meter: MeterMeta, fallback: string):
 }
 
 export function MeterCard({ data }: RenderProps) {
-  const { t } = useTranslation()
   const primary = data?.primary
-  const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number } | null
+  const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number; min?: number } | null
   const meter = (data?.meta?.meter ?? {}) as MeterMeta
   const upright = meter.direction === 'upright'
   const count = upright ? LEDS.upright : LEDS.across
@@ -472,6 +478,7 @@ export function MeterCard({ data }: RenderProps) {
   const lit = Math.round((share / 100) * count)
   const fallback = levelColour(data)
   const ceiling = typeof dial?.max === 'number' ? dial.max : null
+  const floor = typeof dial?.min === 'number' ? dial.min : null
   const lights = Array.from({ length: count }, (_, index) => {
     // The share at the far edge of this light: where it sits in the row.
     const position = ((index + 1) / count) * 100
@@ -492,11 +499,7 @@ export function MeterCard({ data }: RenderProps) {
     <div className="min-w-0">
       <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
       <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Rolled value={primary?.value} unit={primary?.unit} /></div>
-      {ceiling !== null && (
-        <div className="text-[10px] text-muted num">
-          {t('gauge.of')} {formatValue(ceiling, primary?.unit)}
-        </div>
-      )}
+      <DialRange floor={floor} ceiling={ceiling} unit={primary?.unit} />
     </div>
   )
   if (upright) {
@@ -1541,10 +1544,44 @@ export function LogCard({ data }: RenderProps) {
  * All the lines share one scale here, which is the whole point of drawing
  * them together.
  */
-export function ChartCard({ data, series }: RenderProps) {
+/**
+ * The history a chart asked for, fetched for its own stretch and again every minute.
+ *
+ * ⚠️ Not the board's series. The browser keeps the last 120 points of every
+ * metric for the sparklines, and a day arrives thinned to 240: what was drawn
+ * as "a day" was its second half. A chart that names its hours asks for them.
+ */
+function useChartHistory(widgetId: number, hours: number | null): Record<string, number[]> | null {
+  const [points, setPoints] = useState<Record<string, number[]> | null>(null)
+  useEffect(() => {
+    setPoints(null)
+    if (hours === null || !(widgetId > 0)) return
+    let gone = false
+    const read = () => {
+      get<Record<string, [number, number][]>>(`/widgets/${widgetId}/history?hours=${hours}`)
+        .then((answer) => {
+          if (gone || !answer || typeof answer !== 'object') return
+          setPoints(Object.fromEntries(Object.entries(answer).map(([metric, rows]) => [metric, (Array.isArray(rows) ? rows : []).map(([, value]) => value)])))
+        })
+        // The board's own series stay on screen; a chart that cannot fetch is not an empty one.
+        .catch(() => undefined)
+    }
+    read()
+    const timer = window.setInterval(read, 60_000)
+    return () => {
+      gone = true
+      window.clearInterval(timer)
+    }
+  }, [widgetId, hours])
+  return points
+}
+
+export function ChartCard({ data, series, widget }: RenderProps) {
   const { t } = useTranslation()
+  const hours = typeof data?.meta?.chart_hours === 'number' ? data.meta.chart_hours : null
+  const fetched = useChartHistory(widget?.id ?? 0, hours)
   const lines = Object.keys(data?.metrics ?? {})
-    .map((metric) => ({ metric, points: series?.[metric] ?? [] }))
+    .map((metric) => ({ metric, points: fetched?.[metric] ?? series?.[metric] ?? [] }))
     .filter((line) => line.points.length > 1)
   const all = lines.flatMap((line) => line.points)
   const low = all.length ? Math.min(...all) : 0
@@ -1565,6 +1602,7 @@ export function ChartCard({ data, series }: RenderProps) {
         <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>
         {all.length > 1 && (
           <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
+            {hours !== null && `${t('card.lastHours', { count: hours })} · `}
             {t('card.min')} {formatValue(low)} · {t('card.max')} {formatValue(high)}
           </span>
         )}

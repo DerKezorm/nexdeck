@@ -1915,7 +1915,13 @@
     "Red from": "Rot ab",
     "In the unit of the number. Empty leaves the colour to the card.": "In der Einheit der Zahl. Leer überlässt die Farbe der Karte.",
     "Below Yellow from means low numbers are the bad ones, as with free space.": "Unter Gelb ab heißt: niedrige Zahlen sind die schlechten, wie bei freiem Platz.",
-    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Was als voll gilt, in der Einheit der Zahl. Bei Prozent nicht nötig. Leer lassen und die Karte bleibt eine Zahl."
+    "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Was als voll gilt, in der Einheit der Zahl. Bei Prozent nicht nötig. Leer lassen und die Karte bleibt eine Zahl.",
+    "Empty at": "Leer bei",
+    "Where the dial and the LEDs start, in the unit of the number. Empty means 0.": "Wo Zeiger und LEDs beginnen, in der Einheit der Zahl. Leer heißt 0.",
+    "Chart shows": "Diagramm zeigt",
+    "The last hour": "Die letzte Stunde",
+    "The last 6 hours": "Die letzten 6 Stunden",
+    "The last 24 hours": "Die letzten 24 Stunden"
   },
   "labels": {
     "Private resources": "Private Ressourcen",

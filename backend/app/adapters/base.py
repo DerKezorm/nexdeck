@@ -274,7 +274,8 @@ class WidgetType:
         # cards had separate scales. A number card that records one thing gets
         # its line large, with the reading, the lowest and the highest above
         # it: the issue asked for the same choices on every number.
-        if self.renderer != "chart" and not self.client_only and (len(self.metrics) >= 2 or numbers):
+        chart = self.renderer != "chart" and not self.client_only and (len(self.metrics) >= 2 or numbers)
+        if chart:
             extra += (("chart", "A chart"),)
         # A line in and a line out, mirrored on one axis: what a router or a
         # download client is about, in one picture rather than two lines that
@@ -294,6 +295,8 @@ class WidgetType:
             object.__setattr__(self, "options", offer_views(self.options, self.renderer, extra))
         if numbers:
             object.__setattr__(self, "options", tuple(self.options) + drawing_fields(self.options, own_dial))
+        if chart and not any(field.name == "chart_hours" for field in self.options):
+            object.__setattr__(self, "options", (*self.options, chart_hours_field()))
         if self.parts:
             existing = {field.name for field in self.options}
             made = tuple(
@@ -617,6 +620,16 @@ def gauge_fields(what: str, placeholder: str = "") -> tuple[Field, ...]:
     )
 
 
+#: The stretches a chart can show. nexdeck keeps a day of minute rows
+#: (``history_minute_hours``), so a day is the longest that has anything in it.
+CHART_HOURS = (("1", "The last hour"), ("6", "The last 6 hours"), ("24", "The last 24 hours"))
+
+
+def chart_hours_field() -> Field:
+    return Field("chart_hours", "Chart shows", type="select", default="24", options=CHART_HOURS,
+                 only_when=("view", "chart"))
+
+
 def drawing_fields(options: tuple[Field, ...], own_dial: bool) -> tuple[Field, ...]:
     """The settings the dial, the LEDs and the seven segments need (issue #39).
 
@@ -634,6 +647,9 @@ def drawing_fields(options: tuple[Field, ...], own_dial: bool) -> tuple[Field, .
         made.append(Field("gauge_max", "Full at", type="number",
                           help="What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.",
                           only_when=("view", "|".join(DIAL_VIEWS))))
+    made.append(Field("gauge_min", "Empty at", type="number",
+                      help="Where the dial and the LEDs start, in the unit of the number. Empty means 0.",
+                      only_when=("view", "|".join(DIAL_VIEWS))))
     made.append(Field("meter_direction", "LEDs run", type="select", default="across",
                       options=(("across", "Across"), ("upright", "Upright")),
                       only_when=("view", "meter")))
@@ -745,22 +761,36 @@ def as_gauge(data: WidgetData, options: dict[str, Any], maximum: float | None = 
             ceiling = float(options.get("gauge_max") or 0) or None
         except (TypeError, ValueError):
             ceiling = None
-    if ceiling is None or ceiling <= 0 or not isinstance(value, (int, float)):
+    # Where the dial starts: 0 unless somebody named another floor, such as 15 °C
+    # for a room that is never colder.
+    floor = 0.0
+    floor_named = str(options.get("gauge_min") or "").strip() != ""
+    if floor_named:
+        try:
+            floor = float(options["gauge_min"])
+        except (TypeError, ValueError):
+            floor, floor_named = 0.0, False
+    if ceiling is None or ceiling <= floor or not isinstance(value, (int, float)):
         return data
     named = named or bool(str(options.get("gauge_max") or "").strip())
-    share = max(0.0, min(100.0, float(value) / ceiling * 100))
+    span = ceiling - floor
+    share = max(0.0, min(100.0, (float(value) - floor) / span * 100))
     # ⚠️ The number itself stays where it was. A dial that replaces
     # "38 MB/s" with "42%" answers a question nobody asked: the share is how
     # far round the needle goes, not what the card is for.
     dial: dict[str, Any] = {"share": round(share, 1)}
     if named:
         dial["max"] = ceiling
+    if floor_named:
+        dial["min"] = floor
+        # "of 80" alone would hide where it starts; the frontend says "15 to 80".
+        dial.setdefault("max", ceiling)
     meta: dict[str, Any] = {**(data.meta or {}), "renderer": view, "gauge": dial}
     if view == "meter":
         # The coloured stretches of the row: where yellow and red begin, as
         # shares of the same ceiling the LEDs are lit against.
         warn, bad = level_lines(options)
-        zones = {name: round(max(0.0, min(100.0, line / ceiling * 100)), 1)
+        zones = {name: round(max(0.0, min(100.0, (line - floor) / span * 100)), 1)
                  for name, line in (("warn", warn), ("bad", bad)) if line is not None}
         meta["meter"] = {"direction": "upright" if options.get("meter_direction") == "upright" else "across",
                          "zones": zones, "low_is_bad": low_is_bad(options)}
@@ -906,7 +936,9 @@ def as_chart(data: WidgetData, options: dict[str, Any]) -> WidgetData:
         return data
     if not data.metrics:
         return data
-    data.meta = {**(data.meta or {}), "renderer": "chart"}
+    hours = str(options.get("chart_hours") or "24")
+    data.meta = {**(data.meta or {}), "renderer": "chart",
+                 "chart_hours": int(hours) if hours in {value for value, _ in CHART_HOURS} else 24}
     return data
 
 

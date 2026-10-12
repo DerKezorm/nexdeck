@@ -849,7 +849,8 @@
       "network": "Réseau",
       "monitoring": "Supervision et maison",
       "other": "Autres"
-    }
+    },
+    "apps": "Apps du catalogue"
   },
   "notices": {
     "title": "Notifications",
@@ -1001,7 +1002,9 @@
     "checkOff": "Le test est désactivé",
     "flow": "Où va l'énergie",
     "topology": "Comment les éléments sont reliés",
-    "problemsMore": "+{{count}} de plus"
+    "problemsMore": "+{{count}} de plus",
+    "lastHours_one": "dernière heure",
+    "lastHours_other": "{{count}} dernières heures"
   },
   "player": {
     "title": "Musique",
@@ -1115,7 +1118,8 @@
     "noServers": "Ce compte n’a pas de serveur Plex à lui."
   },
   "gauge": {
-    "of": "sur"
+    "of": "sur",
+    "range": "de {{min}} à {{max}}"
   },
   "backups": {
     "title": "Sauvegardes",

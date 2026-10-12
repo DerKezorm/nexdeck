@@ -3,10 +3,11 @@
  * far as the share goes and colour by the lines drawn for them; the digits
  * must show the number as it is, without the grouping of a language.
  */
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
 
 import type { WidgetData, WidgetView } from '../lib/types'
-import { GaugeCard, ledColour, MeterCard, SegmentsCard, segmentText } from './renderers'
+import { ChartCard, GaugeCard, ledColour, MeterCard, SegmentsCard, segmentText } from './renderers'
 
 const VIEW = { id: 1, renderer: 'value' } as unknown as WidgetView
 
@@ -110,5 +111,25 @@ describe('GaugeCard colour', () => {
       <GaugeCard widget={VIEW} data={{ status: 'ok', primary: { label: 'CPU', value: 90, unit: '%' }, meta: { renderer: 'gauge', gauge: { share: 90 }, level: 'warn' } } as WidgetData} />,
     )
     expect(container.querySelectorAll('path')[1]?.getAttribute('stroke')).toBe('var(--nd-warn)')
+  })
+})
+
+describe('a floor and a stretch of history', () => {
+  it('says what the dial runs between once a floor is named', () => {
+    render(<GaugeCard widget={VIEW} data={{ status: 'ok', primary: { label: 'Room', value: 22, unit: '°C' }, meta: { renderer: 'gauge', gauge: { share: 50, min: 15, max: 29 } } } as WidgetData} />)
+    expect(screen.getByText(/15°C to 29°C/)).toBeInTheDocument()
+  })
+
+  it('fetches the hours the chart was asked for and draws them', async () => {
+    const asked: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      asked.push(String(input))
+      return new Response(JSON.stringify({ cpu: [[1, 10], [2, 30], [3, 20]] }), { status: 200, headers: { 'content-type': 'application/json' } })
+    }))
+    render(<ChartCard widget={{ ...VIEW, id: 5 } as WidgetView} series={{}} data={{ status: 'ok', primary: { label: 'CPU', value: 20, unit: '%' }, metrics: { cpu: 20 }, meta: { renderer: 'chart', chart_hours: 6 } } as WidgetData} />)
+    await waitFor(() => expect(asked.some((url) => url.includes('/widgets/5/history?hours=6'))).toBe(true))
+    // The fetched line is drawn: lowest and highest of it, not "collecting".
+    expect(await screen.findByText(/last 6 hours/)).toBeInTheDocument()
+    expect(screen.getByText(/min 10/i)).toBeInTheDocument()
   })
 })

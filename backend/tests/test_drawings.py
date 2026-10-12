@@ -482,3 +482,45 @@ def test_the_row_picked_for_the_dial_is_the_one_the_leds_and_digits_show() -> No
                                  {"view": view, "gauge_part": "host_memory", "gauge_max": 100})
         assert data.primary["part"] == "host_memory", view
 
+
+
+def test_a_floor_moves_where_the_dial_and_the_leds_start() -> None:
+    """A room is never colder than 15 °C: 22 of 15 to 29 is half, not three quarters."""
+    room = WidgetData(status="ok", primary={"label": "Living room", "value": 22.0, "unit": "°C"}, metrics={"temp": 22.0})
+    dial = as_gauge(room, {"view": "gauge", "gauge_min": 15, "gauge_max": 29})
+    assert dial.meta["gauge"] == {"share": 50.0, "max": 29.0, "min": 15.0}
+    leds = as_gauge(WidgetData(primary={"label": "Living room", "value": 22.0, "unit": "°C"}),
+                    {"view": "meter", "gauge_min": "15", "gauge_max": 29, "level_warn": 22, "level_bad": 25.5})
+    assert leds.meta["gauge"]["share"] == 50.0
+    assert leds.meta["meter"]["zones"] == {"warn": 50.0, "bad": 75.0}
+    # Below the floor is empty, not less than empty.
+    assert as_gauge(WidgetData(primary={"label": "x", "value": 9.0}), {"view": "gauge", "gauge_min": 15, "gauge_max": 29}).meta["gauge"]["share"] == 0.0
+
+
+def test_a_floor_at_or_above_the_ceiling_leaves_the_number() -> None:
+    data = as_gauge(WidgetData(primary={"label": "x", "value": 20.0}), {"view": "gauge", "gauge_min": 30, "gauge_max": 30})
+    assert data.meta.get("renderer") is None
+
+
+def test_a_percentage_with_a_floor_still_needs_no_ceiling() -> None:
+    data = as_gauge(WidgetData(primary={"label": "CPU", "value": 60.0, "unit": "%"}), {"view": "meter", "gauge_min": 20})
+    assert data.meta["gauge"] == {"share": 50.0, "min": 20.0, "max": 100.0}
+
+
+def test_the_chart_says_how_far_back_it_reaches() -> None:
+    """nexdeck keeps a day of minute rows, so a day is the longest offered."""
+    widget = WidgetType(kind="x", label="X", description="", renderer="value", metrics=("only",))
+    field = next(one for one in widget.options if one.name == "chart_hours")
+    assert [value for value, _ in field.options] == ["1", "6", "24"] and field.only_when == ("view", "chart")
+    two = WidgetData(metrics={"a": 1.0, "b": 2.0})
+    assert as_chart(two, {"view": "chart", "chart_hours": "6"}).meta["chart_hours"] == 6
+    assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart"}).meta["chart_hours"] == 24
+    assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart", "chart_hours": "720"}).meta["chart_hours"] == 24
+
+
+def test_every_card_offering_a_chart_offers_its_hours() -> None:
+    for adapter in all_adapters():
+        for widget in adapter.widgets:
+            view = next((one for one in widget.options if one.name == "view"), None)
+            if view is not None and "chart" in {value for value, _ in view.options}:
+                assert any(one.name == "chart_hours" for one in widget.options), f"{adapter.kind}.{widget.kind}"
