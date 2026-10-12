@@ -28,6 +28,7 @@ import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
+import { homeBoardPath } from '../lib/homeBoard'
 import { useAuth } from '../stores/auth'
 import { anyCardDown } from '../lib/cardStatus'
 import { domainsOf, useShowcase } from '../lib/showcase'
@@ -62,6 +63,7 @@ export function BoardPage() {
   /** What the menu shows: boards with the flag, plus the one being looked at,
       because a board that hid itself must still say where you are. */
   const menuBoards = useMemo(() => (boards.data ?? []).filter((entry) => entry.in_menu || entry.slug === slug), [boards.data, slug])
+  const home = homeBoardPath(boards.data ?? [], user?.start_board_id)
   const history = useQuery({ queryKey: ['board-history', slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${slug}/history`), enabled: Boolean(board.data), staleTime: 60_000 })
 
   const [editing, setEditing] = useState(false)
@@ -495,6 +497,7 @@ export function BoardPage() {
       user={user}
       boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
       onSwitchBoard={(boardSlug) => navigate(`/b/${boardSlug}`)}
+      home={home}
     />
   )
   const tabBar = (
@@ -538,7 +541,7 @@ export function BoardPage() {
         <div className="flex items-center justify-center p-6 py-32">
           <div className="glass rounded-2xl p-6 text-center">
             <p className="font-medium">{failure instanceof ApiError && failure.status === 404 ? t('board.notFound') : t('board.loadFailed')}</p>
-            <button className="btn mt-4" onClick={() => navigate('/')}>
+            <button className="btn mt-4" onClick={() => navigate(home)}>
               {t('common.back')}
             </button>
           </div>

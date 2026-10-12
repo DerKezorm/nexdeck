@@ -33,11 +33,13 @@ interface Props {
   user: HeaderUser | null
   boards?: BoardEntry[]
   onSwitchBoard?: (slug: string) => void
+  /** Where the logo leads: the home board itself, not ``/`` (see ``useHomeBoardPath``). */
+  home?: string
 }
 
 /** The slim top bar: board and pages left, search in the middle, tools right. */
 export function TopBar(props: Props) {
-  const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, user, boards = [], onSwitchBoard } = props
+  const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, user, boards = [], onSwitchBoard, home = '/' } = props
   // A board or a page may carry a name or an address, as "Anna's room" or "nas.lan" does.
   const disguise = useDisguise()
   const { t } = useTranslation()
@@ -53,7 +55,7 @@ export function TopBar(props: Props) {
   }, [menu])
   return (
     <header className="glass-strong app-bar sticky top-0 z-40 h-12 flex items-center gap-2 px-3 border-x-0 border-t-0 rounded-none" data-no-picture>
-      <Link to="/" className="flex items-center gap-2 mr-1" aria-label="nexdeck">
+      <Link to={home} className="flex items-center gap-2 mr-1" aria-label="nexdeck">
         <LogoMark size={26} />
         <span className="font-semibold tracking-tight hidden lg:inline">
           nex<span className="text-accent">deck</span>

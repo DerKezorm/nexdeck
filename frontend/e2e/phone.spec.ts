@@ -267,6 +267,47 @@ test('the bar stays on the page while another board loads', async ({ page }) => 
   }
 })
 
+test('the bar stays on the page when a board is deleted', async ({ page }) => {
+  // ⚠️ Issue #40, 11.10.2026: deleting a board brought back the blur of #27 in the app installed
+  // on iPadOS 26. The way home led through `/`, a page of its own that only passes the user on,
+  // and for that moment there was no bar. It now goes to the home board directly.
+  await signIn(page)
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  const made = await page.request.post('/api/v1/boards', { ...write, data: { name: 'Doomed', slug: 'doomed', in_menu: true } })
+  expect(made.status()).toBe(201)
+  try {
+    await page.setViewportSize({ width: 1032, height: 1376 })
+    await page.goto('/b/doomed')
+    await expect(page.getByRole('button', { name: 'Doomed', exact: true })).toBeVisible()
+    await page.evaluate(() => {
+      const state = window as unknown as { barGone: number; bar: Element | null; paths: string[] }
+      state.barGone = 0
+      state.paths = []
+      state.bar = document.querySelector('header.app-bar')
+      new MutationObserver(() => {
+        if (!document.querySelector('header.app-bar')) state.barGone += 1
+        if (state.paths.at(-1) !== location.pathname) state.paths.push(location.pathname)
+      }).observe(document.body, { childList: true, subtree: true })
+    })
+    await page.getByRole('button', { name: 'Doomed', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Manage boards' }).click()
+    await page.getByRole('button', { name: 'File', exact: true }).click()
+    await page.getByRole('button', { name: 'Delete this board' }).click()
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click()
+    await expect(page).toHaveURL(/\/b\/home$/)
+    await expect(page.getByRole('button', { name: 'Doomed', exact: true })).toHaveCount(0)
+    const after = await page.evaluate(() => {
+      const state = window as unknown as { barGone: number; bar: Element | null; paths: string[] }
+      return { gone: state.barGone, same: state.bar === document.querySelector('header.app-bar'), paths: state.paths }
+    })
+    expect(after.paths, 'the way home went through another page').not.toContain('/')
+    expect(after.gone, 'the bar left the page when the board was deleted').toBe(0)
+    expect(after.same, 'the bar was taken down and built anew').toBe(true)
+  } finally {
+    await page.request.delete('/api/v1/boards/doomed', write)
+  }
+})
+
 /**
  * The rules of the installed app switched on where they stand. Chromium cannot pretend to be installed
  * (setEmulatedMedia ignores display-mode), so they are copied into a layer that always applies.

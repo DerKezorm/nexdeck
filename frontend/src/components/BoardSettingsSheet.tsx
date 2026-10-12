@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
+import { useHomeBoardPath } from '../lib/homeBoard'
 import { BUNDLED, LIVING } from './BackgroundLayer'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
@@ -28,6 +29,7 @@ type Tab = 'boards' | 'look' | 'pages' | 'sharing' | 'kiosk' | 'file'
 export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onChanged, onPreview }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const homeAfterDelete = useHomeBoardPath(board.id)
   const [tab, setTab] = useState<Tab>('boards')
   const [name, setName] = useState(board.name)
   const [background, setBackground] = useState(board.background)
@@ -400,7 +402,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           void del(`/boards/${board.slug}`).then(() => {
             onChanged()
             onClose()
-            navigate('/')
+            navigate(homeAfterDelete, { replace: true })
           })
         }}
       />
