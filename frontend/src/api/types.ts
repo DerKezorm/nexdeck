@@ -230,3 +230,23 @@ export interface Suggestion {
 }
 
 export type { WidgetView }
+
+/** One address of an app in the catalog. */
+export interface AppAddress {
+  label: string
+  url: string
+}
+
+/** An app of the catalog (issue #37): set up once, placed as a tile on any board. */
+export interface AppEntry {
+  id: number
+  name: string
+  icon: string
+  description: string
+  addresses: AppAddress[]
+  /** The label of the address for the home networks, and for everywhere else. */
+  home: string
+  away: string
+  /** How many tiles follow it. */
+  tiles: number
+}

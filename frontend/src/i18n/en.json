@@ -149,7 +149,8 @@
       "backups": "Backups",
       "media": "Media",
       "player": "Music player",
-      "homeNetwork": "Home network"
+      "homeNetwork": "Home network",
+      "apps": "Apps"
     },
     "mail": {
       "title": "Mail server",
@@ -481,7 +482,7 @@
       "enabled": "Sign in on the home network without a password",
       "enabledHelp": "Signing out on purpose holds it off in that browser for twelve hours.",
       "networks": "Home networks",
-      "networksHelp": "One per line, like 192.168.1.0/24. Private ranges only.",
+      "networksHelp": "One per line, like 192.168.1.0/24. Private ranges only. App tiles set to open their address automatically use them too, even with the sign-in switched off.",
       "account": "Account",
       "accountHelp": "Never an administrator. This account cannot set a password, an e-mail address, a second factor, API tokens or kiosk links from the tablet.",
       "noAccount": "Choose an account",
@@ -814,7 +815,22 @@
     "pictureMove": "Move picture {{at}}",
     "pictureBadAddress": "That is not an address a picture can be loaded from.",
     "pictureLibrary": "From the media",
-    "pictureLibraryEmpty": "Nothing uploaded yet. Upload a file first."
+    "pictureLibraryEmpty": "Nothing uploaded yet. Upload a file first.",
+    "app": {
+      "label": "App from the catalog",
+      "help": "Name, icon, address and reachability check come from the app. Change it once under System, Apps and every tile follows.",
+      "none": "None, set up here",
+      "address": "Opens",
+      "auto": "Automatically, at home or on the road",
+      "autoHelp": "Automatically opens the home address in the home networks and the other one everywhere else.",
+      "first": "The first address ({{label}})",
+      "saveAs": "Save as app",
+      "saveAsHelp": "Puts this tile into the catalog, so any board can use it. The tile follows it from then on.",
+      "untitled": "App",
+      "firstLabel": "Main",
+      "titleHelp": "Empty: the name of the app.",
+      "linkFollows": "Empty: the address of the app. An address here wins over it."
+    }
   },
   "library": {
     "title": "Add a widget",
@@ -1304,5 +1320,34 @@
   "keyFactor": {
     "text": "Works only once you set up a second factor.",
     "link": "Set it up"
+  },
+  "apps": {
+    "title": "Apps",
+    "lead": "Set an app up once and place it as a tile on any board. Change an address here and every tile follows.",
+    "none": "No apps yet. Add one here, or save an app tile as an app from its settings.",
+    "add": "Add app",
+    "edit": "Edit app",
+    "editNamed": "Edit {{name}}",
+    "delete": "Delete app",
+    "deleteNamed": "Delete {{name}}?",
+    "deleteBody_one": "{{count}} tile follows it. It stays, as a tile of its own with the name, icon and address it shows now.",
+    "deleteBody_other": "{{count}} tiles follow it. They stay, as tiles of their own with the name, icon and address they show now.",
+    "tiles_one": "{{count}} tile",
+    "tiles_other": "{{count}} tiles",
+    "name": "Name",
+    "icon": "Icon",
+    "description": "Description",
+    "addresses": "Addresses",
+    "addressesHelp": "One for each way the app is reached, for example through the proxy, over Tailscale or directly by address and port.",
+    "label": "Label of address {{number}}",
+    "labelPlaceholder": "Proxy",
+    "url": "Address {{number}}",
+    "addAddress": "Add address",
+    "removeAddress": "Remove address {{number}}",
+    "home": "At home",
+    "away": "On the road",
+    "notSet": "Not set",
+    "automaticHelp": "With one of the two set, a tile can open its address automatically: the one for home in the home networks named under System, Home network, and the other one everywhere else.",
+    "deleteThis": "Delete {{name}}"
   }
 }

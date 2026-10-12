@@ -99,7 +99,9 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     _validate_options(db, body.kind, body.options, user)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
-    widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or widget_type.label, icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
+    # A tile that follows an app shows the app's name until it is given one of its own.
+    follows_app = body.kind == "core.app" and bool((body.options or {}).get("app_id"))
+    widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or ("" if follows_app else widget_type.label), icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
                     link=body.link.strip(), integration_id=body.integration_id, options=body.options, refresh_seconds=body.refresh_seconds)
     db.add(widget)
     db.flush()
@@ -646,8 +648,9 @@ def get_health(widget_id: int, request: Request, user: OptionalUser, db: DbSessi
 def put_health(widget_id: int, body: HealthBody, user: CurrentUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
     require_board_id(db, page.board_id, user, "edit")
-    if not body.target.strip() and widget.integration_id is None:
-        raise error("target_missing", "A check needs a target, or the widget an integration whose address it follows.")
+    follows_app = widget.kind == "core.app" and bool((widget.options or {}).get("app_id"))
+    if not body.target.strip() and widget.integration_id is None and not follows_app:
+        raise error("target_missing", "A check needs a target, or the widget an integration or an app whose address it follows.")
     check = widget.health_check or HealthCheck(widget_id=widget.id, target=body.target)
     check.kind = body.kind
     # An empty target means: the address of the widget's integration, looked up at every check.

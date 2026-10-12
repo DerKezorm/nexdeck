@@ -149,7 +149,8 @@
       "backups": "Sauvegardes",
       "media": "Médias",
       "player": "Lecteur de musique",
-      "homeNetwork": "Réseau domestique"
+      "homeNetwork": "Réseau domestique",
+      "apps": "Apps"
     },
     "mail": {
       "title": "Serveur de messagerie",
@@ -481,7 +482,7 @@
       "enabled": "Se connecter sans mot de passe sur le réseau domestique",
       "enabledHelp": "Une déconnexion volontaire la suspend dans ce navigateur pendant douze heures.",
       "networks": "Réseaux domestiques",
-      "networksHelp": "Un par ligne, comme 192.168.1.0/24. Plages privées uniquement.",
+      "networksHelp": "Un par ligne, comme 192.168.1.0/24. Plages privées uniquement. Les tuiles d'app qui choisissent leur adresse toutes seules s'en servent aussi, même si la connexion est désactivée.",
       "account": "Compte",
       "accountHelp": "Jamais un administrateur. Depuis la tablette, ce compte ne peut définir ni mot de passe, ni adresse e-mail, ni second facteur, ni jetons API, ni liens kiosque.",
       "noAccount": "Choisir un compte",
@@ -814,7 +815,22 @@
     "pictureMove": "Déplacer l’image {{at}}",
     "pictureBadAddress": "Ce n’est pas une adresse depuis laquelle une image peut être chargée.",
     "pictureLibrary": "Depuis les médias",
-    "pictureLibraryEmpty": "Rien de téléversé pour l’instant. Téléversez d’abord un fichier."
+    "pictureLibraryEmpty": "Rien de téléversé pour l’instant. Téléversez d’abord un fichier.",
+    "app": {
+      "label": "App du catalogue",
+      "help": "Le nom, l'icône, l'adresse et le contrôle d'accessibilité viennent de l'app. Modifiez-la une fois sous Système, Apps et toutes les tuiles suivent.",
+      "none": "Aucune, configurée ici",
+      "address": "Ouvre",
+      "auto": "Automatiquement, à la maison ou en déplacement",
+      "autoHelp": "Ouvre automatiquement l'adresse de la maison dans les réseaux domestiques et l'autre partout ailleurs.",
+      "first": "La première adresse ({{label}})",
+      "saveAs": "Enregistrer comme app",
+      "saveAsHelp": "Met cette tuile dans le catalogue pour que tout tableau puisse l'utiliser. La tuile la suit ensuite.",
+      "untitled": "App",
+      "firstLabel": "Principale",
+      "titleHelp": "Vide : le nom de l'app.",
+      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte."
+    }
   },
   "library": {
     "title": "Ajouter un widget",
@@ -1304,5 +1320,34 @@
   "keyFactor": {
     "text": "Ne fonctionne qu’une fois un second facteur configuré.",
     "link": "Le configurer"
+  },
+  "apps": {
+    "title": "Apps",
+    "lead": "Configurez une app une fois et posez-la comme tuile sur n'importe quel tableau. Changez une adresse ici et toutes les tuiles suivent.",
+    "none": "Pas encore d'app. Ajoutez-en une ici, ou enregistrez une tuile d'app comme app depuis ses réglages.",
+    "add": "Ajouter une app",
+    "edit": "Modifier l'app",
+    "editNamed": "Modifier {{name}}",
+    "delete": "Supprimer l'app",
+    "deleteNamed": "Supprimer {{name}} ?",
+    "deleteBody_one": "{{count}} tuile la suit. Elle reste, comme tuile à part entière avec le nom, l'icône et l'adresse qu'elle affiche maintenant.",
+    "deleteBody_other": "{{count}} tuiles la suivent. Elles restent, comme tuiles à part entière avec le nom, l'icône et l'adresse qu'elles affichent maintenant.",
+    "tiles_one": "{{count}} tuile",
+    "tiles_other": "{{count}} tuiles",
+    "name": "Nom",
+    "icon": "Icône",
+    "description": "Description",
+    "addresses": "Adresses",
+    "addressesHelp": "Une par façon d'atteindre l'app, par exemple via le proxy, par Tailscale ou directement par adresse et port.",
+    "label": "Libellé de l'adresse {{number}}",
+    "labelPlaceholder": "Proxy",
+    "url": "Adresse {{number}}",
+    "addAddress": "Ajouter une adresse",
+    "removeAddress": "Retirer l'adresse {{number}}",
+    "home": "À la maison",
+    "away": "En déplacement",
+    "notSet": "Non défini",
+    "automaticHelp": "Si l'une des deux est définie, une tuile peut choisir son adresse toute seule : celle de la maison dans les réseaux domestiques de Système, Réseau domestique, et l'autre partout ailleurs.",
+    "deleteThis": "Supprimer {{name}}"
   }
 }

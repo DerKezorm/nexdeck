@@ -149,7 +149,8 @@
       "backups": "Copias de seguridad",
       "media": "Multimedia",
       "player": "Reproductor de música",
-      "homeNetwork": "Red doméstica"
+      "homeNetwork": "Red doméstica",
+      "apps": "Apps"
     },
     "mail": {
       "title": "Servidor de correo",
@@ -481,7 +482,7 @@
       "enabled": "Iniciar sesión en la red doméstica sin contraseña",
       "enabledHelp": "Cerrar la sesión a propósito lo detiene en ese navegador durante doce horas.",
       "networks": "Redes domésticas",
-      "networksHelp": "Una por línea, como 192.168.1.0/24. Solo rangos privados.",
+      "networksHelp": "Una por línea, como 192.168.1.0/24. Solo rangos privados. Los mosaicos de app que eligen su dirección solos también las usan, aunque el inicio de sesión esté desactivado.",
       "account": "Cuenta",
       "accountHelp": "Nunca un administrador. Esta cuenta no puede establecer desde la tableta una contraseña, una dirección de correo, un segundo factor, tokens API ni enlaces de quiosco.",
       "noAccount": "Elige una cuenta",
@@ -814,7 +815,22 @@
     "pictureMove": "Mover la foto {{at}}",
     "pictureBadAddress": "Esa no es una dirección desde la que se pueda cargar una foto.",
     "pictureLibrary": "De multimedia",
-    "pictureLibraryEmpty": "Todavía no se ha subido nada. Sube primero un archivo."
+    "pictureLibraryEmpty": "Todavía no se ha subido nada. Sube primero un archivo.",
+    "app": {
+      "label": "App del catálogo",
+      "help": "El nombre, el icono, la dirección y la comprobación de alcance vienen de la app. Cámbiala una vez en Sistema, Apps y todos los mosaicos la siguen.",
+      "none": "Ninguna, configurado aquí",
+      "address": "Abre",
+      "auto": "Automáticamente, en casa o fuera",
+      "autoHelp": "Abre automáticamente la dirección de casa en las redes domésticas y la otra en cualquier otro lugar.",
+      "first": "La primera dirección ({{label}})",
+      "saveAs": "Guardar como app",
+      "saveAsHelp": "Pone este mosaico en el catálogo para que cualquier tablero pueda usarlo. Desde entonces el mosaico la sigue.",
+      "untitled": "App",
+      "firstLabel": "Principal",
+      "titleHelp": "Vacío: el nombre de la app.",
+      "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad."
+    }
   },
   "library": {
     "title": "Añadir un widget",
@@ -1304,5 +1320,34 @@
   "keyFactor": {
     "text": "Solo funciona cuando configures un segundo factor.",
     "link": "Configurarlo"
+  },
+  "apps": {
+    "title": "Apps",
+    "lead": "Configura una app una vez y colócala como mosaico en cualquier tablero. Cambia una dirección aquí y todos los mosaicos la siguen.",
+    "none": "Aún no hay apps. Añade una aquí o guarda un mosaico de app como app desde sus ajustes.",
+    "add": "Añadir app",
+    "edit": "Editar app",
+    "editNamed": "Editar {{name}}",
+    "delete": "Eliminar app",
+    "deleteNamed": "¿Eliminar {{name}}?",
+    "deleteBody_one": "{{count}} mosaico la sigue. Se queda, como mosaico propio con el nombre, el icono y la dirección que muestra ahora.",
+    "deleteBody_other": "{{count}} mosaicos la siguen. Se quedan, como mosaicos propios con el nombre, el icono y la dirección que muestran ahora.",
+    "tiles_one": "{{count}} mosaico",
+    "tiles_other": "{{count}} mosaicos",
+    "name": "Nombre",
+    "icon": "Icono",
+    "description": "Descripción",
+    "addresses": "Direcciones",
+    "addressesHelp": "Una por cada forma de llegar a la app, por ejemplo a través del proxy, por Tailscale o directamente con dirección y puerto.",
+    "label": "Etiqueta de la dirección {{number}}",
+    "labelPlaceholder": "Proxy",
+    "url": "Dirección {{number}}",
+    "addAddress": "Añadir dirección",
+    "removeAddress": "Quitar la dirección {{number}}",
+    "home": "En casa",
+    "away": "Fuera de casa",
+    "notSet": "Sin definir",
+    "automaticHelp": "Con una de las dos definida, un mosaico puede elegir su dirección solo: la de casa en las redes domésticas de Sistema, Red doméstica, y la otra en cualquier otro lugar.",
+    "deleteThis": "Eliminar {{name}}"
   }
 }

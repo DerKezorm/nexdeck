@@ -1,4 +1,4 @@
-import { Archive, Globe, House, Info, KeyRound, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
+import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -6,6 +6,7 @@ import { AppShell } from '../../components/AppShell'
 import { useAuth } from '../../stores/auth'
 import { AboutSettings } from './AboutSettings'
 import { AppearanceSettings } from './AppearanceSettings'
+import { AppsSettings } from './AppsSettings'
 import { BackupsSettings } from './BackupsSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
@@ -31,6 +32,7 @@ export function SystemPage() {
   const admin = user?.role === 'admin'
   const entries: NavEntry[] = [
     { to: 'integrations', icon: Plug, label: t('settings.nav.integrations') },
+    { to: 'apps', icon: LayoutGrid, label: t('settings.nav.apps'), show: admin },
     { to: 'users', icon: Users, label: t('settings.nav.users'), show: admin },
     { to: 'address', icon: Globe, label: t('settings.nav.address'), show: admin },
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
@@ -54,6 +56,7 @@ export function SystemPage() {
                 from the widget library, so they need an address of their own. */}
             <Route index element={<Navigate to="/system/integrations" replace />} />
             <Route path="integrations" element={<IntegrationsSettings />} />
+            <Route path="apps" element={forAdmin(<AppsSettings />)} />
             <Route path="users" element={forAdmin(<UsersSettings />)} />
             <Route path="address" element={forAdmin(<AddressSettings />)} />
             <Route path="mail" element={forAdmin(<MailSettings />)} />

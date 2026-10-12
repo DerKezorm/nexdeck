@@ -23,6 +23,7 @@ from .db import db_session, get_engine
 from .migrations import migrate
 from .routers import (
     appearance,
+    apps,
     assets,
     auth,
     avatars,
@@ -56,6 +57,7 @@ from .security import prune_sessions
 from .services import backup, history, journal, oidc_store, provisioning, retention
 from .services import channels as channel_service
 from .services import icons as icon_service
+from .services.apps import RememberRequest
 from .services.channels import webpush as webpush_service
 from .services.collector import collector
 from .services.hass_ws import hass_listener
@@ -211,7 +213,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates, imports, nexcrate, home_network):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates, imports, nexcrate, home_network):
     app.include_router(module.router)
 
 
@@ -311,6 +313,8 @@ async def security_headers(request: Request, call_next):  # noqa: ANN001
     return response
 
 
+# Inside the next one: an app tile asks where its browser is (services/apps.py).
+app.add_middleware(RememberRequest)
 # Outermost, and last added for that reason: the connection's own address is
 # kept before the forwarding headers rewrite it. See services/home_network.py.
 app.add_middleware(RecordPeer)

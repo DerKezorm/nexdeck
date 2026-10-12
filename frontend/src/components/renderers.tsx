@@ -1938,7 +1938,8 @@ export function AppTile({ widget, data, link }: RenderProps) {
   const health = widget.health
   const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
-  const description = String(data?.meta?.description ?? '')
+  // The tile's own line, else the one of the app it follows (issue #37).
+  const description = String(data?.meta?.description || widget.app?.description || '')
   const href = safeUrl(link || widget.link || widget.service_link) || undefined
   const bars = health?.bars ?? []
   // Why the dot is the colour it is, on hover. A grey dot used to say nothing

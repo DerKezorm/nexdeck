@@ -24,6 +24,8 @@ interactive documentation lives at `/api/docs` on every installation.
 | `GET /api/v1/widgets/{id}/audio/{track_id}` | The sound of one track, relayed by nexdeck with `Range` passed through. `quality` is `original`, `high` or `low`, `formats` lists what the browser plays, `start` is where converted sound begins. Needs the act permission. |
 | `POST /api/v1/widgets/{id}/music/playlists` | Create a playlist on the media server with `{"name": "...", "track_ids": [...]}`. `POST` and `DELETE` on `.../playlists/{playlist_id}/tracks` add tracks (`track_ids`) and take entries out (`entries`); `PATCH` and `DELETE` on `.../playlists/{playlist_id}` rename and delete. Smart playlists on Plex are refused. Needs the act permission. |
 | `GET /api/v1/adapters` | Every adapter with its fields and widgets. |
+| `GET /api/v1/apps` | The app catalog: apps with their addresses (`label`, `url`), the labels for `home` and `away`, and how many `tiles` follow each. Every member may read it. |
+| `POST /api/v1/apps` | Add an app. `PATCH /api/v1/apps/{id}` changes one, and every tile that follows it changes with it; `DELETE` turns its tiles into tiles of their own first. Administrators only. |
 | `GET /api/v1/boards/{slug}/export` | The board as YAML. |
 | `POST /api/v1/boards/import` | Create a board from YAML. |
 | `POST /api/v1/auth/me/avatar` | Upload the own profile picture as `multipart/form-data` with the field `file`. |

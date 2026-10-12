@@ -149,7 +149,8 @@
       "backups": "Backup",
       "media": "Media",
       "player": "Lettore musicale",
-      "homeNetwork": "Rete domestica"
+      "homeNetwork": "Rete domestica",
+      "apps": "App"
     },
     "mail": {
       "title": "Server di posta",
@@ -481,7 +482,7 @@
       "enabled": "Accedi nella rete domestica senza password",
       "enabledHelp": "Uscire di proposito lo sospende in quel browser per dodici ore.",
       "networks": "Reti domestiche",
-      "networksHelp": "Una per riga, ad esempio 192.168.1.0/24. Solo intervalli privati.",
+      "networksHelp": "Una per riga, ad esempio 192.168.1.0/24. Solo intervalli privati. Anche i riquadri app che scelgono da soli l'indirizzo le usano, pure con l'accesso disattivato.",
       "account": "Account",
       "accountHelp": "Mai un amministratore. Dal tablet questo account non può impostare password, indirizzo e-mail, secondo fattore, token API o link kiosk.",
       "noAccount": "Scegli un account",
@@ -814,7 +815,22 @@
     "pictureMove": "Sposta l'immagine {{at}}",
     "pictureBadAddress": "Da questo indirizzo non si può caricare un'immagine.",
     "pictureLibrary": "Dai media",
-    "pictureLibraryEmpty": "Nessun caricamento ancora. Prima carica un file."
+    "pictureLibraryEmpty": "Nessun caricamento ancora. Prima carica un file.",
+    "app": {
+      "label": "App dal catalogo",
+      "help": "Nome, icona, indirizzo e controllo di raggiungibilità vengono dall'app. Cambiala una volta in Sistema, App e tutti i riquadri la seguono.",
+      "none": "Nessuna, impostato qui",
+      "address": "Apre",
+      "auto": "Automaticamente, a casa o fuori",
+      "autoHelp": "Apre automaticamente l'indirizzo di casa nelle reti domestiche e l'altro ovunque.",
+      "first": "Il primo indirizzo ({{label}})",
+      "saveAs": "Salva come app",
+      "saveAsHelp": "Mette questo riquadro nel catalogo, così ogni bacheca può usarlo. Da allora il riquadro la segue.",
+      "untitled": "App",
+      "firstLabel": "Principale",
+      "titleHelp": "Vuoto: il nome dell'app.",
+      "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza."
+    }
   },
   "library": {
     "title": "Aggiungi un widget",
@@ -1304,5 +1320,34 @@
   "keyFactor": {
     "text": "Funziona solo dopo che avrai configurato un secondo fattore.",
     "link": "Configuralo"
+  },
+  "apps": {
+    "title": "App",
+    "lead": "Configura un'app una volta e mettila come riquadro su qualsiasi bacheca. Cambia un indirizzo qui e tutti i riquadri lo seguono.",
+    "none": "Ancora nessuna app. Aggiungine una qui, oppure salva un riquadro app come app dalle sue impostazioni.",
+    "add": "Aggiungi app",
+    "edit": "Modifica app",
+    "editNamed": "Modifica {{name}}",
+    "delete": "Elimina app",
+    "deleteNamed": "Eliminare {{name}}?",
+    "deleteBody_one": "{{count}} riquadro la segue. Resta, come riquadro a sé con il nome, l'icona e l'indirizzo che mostra ora.",
+    "deleteBody_other": "{{count}} riquadri la seguono. Restano, come riquadri a sé con il nome, l'icona e l'indirizzo che mostrano ora.",
+    "tiles_one": "{{count}} riquadro",
+    "tiles_other": "{{count}} riquadri",
+    "name": "Nome",
+    "icon": "Icona",
+    "description": "Descrizione",
+    "addresses": "Indirizzi",
+    "addressesHelp": "Uno per ogni modo in cui l'app è raggiungibile, per esempio tramite il proxy, con Tailscale o direttamente con indirizzo e porta.",
+    "label": "Etichetta dell'indirizzo {{number}}",
+    "labelPlaceholder": "Proxy",
+    "url": "Indirizzo {{number}}",
+    "addAddress": "Aggiungi indirizzo",
+    "removeAddress": "Rimuovi l'indirizzo {{number}}",
+    "home": "A casa",
+    "away": "Fuori casa",
+    "notSet": "Non impostato",
+    "automaticHelp": "Se è impostato uno dei due, un riquadro può scegliere l'indirizzo da solo: quello di casa nelle reti domestiche di Sistema, Rete domestica, e l'altro ovunque.",
+    "deleteThis": "Elimina {{name}}"
   }
 }

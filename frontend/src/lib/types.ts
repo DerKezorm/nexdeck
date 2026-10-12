@@ -103,11 +103,28 @@ export interface LayoutItem {
 
 export type Breakpoint = 'lg' | 'md' | 'sm'
 
+/** The app a tile follows (issue #37), as the board shows it. */
+export interface TileApp {
+  id: number
+  name: string
+  icon: string
+  description: string
+  /** The label the tile opens, "auto", or "" for the first address. */
+  address: string
+  addresses: string[]
+  automatic: boolean
+}
+
 export interface WidgetView {
   id: number
   kind: string
+  /** What the card shows: for a tile that follows an app, the app's name unless it has one of its own. */
   title: string
   icon: string
+  /** The tile's own name and icon, which may be empty; only for a tile that follows an app. */
+  own_title?: string
+  own_icon?: string
+  app?: TileApp | null
   link: string
   /** The address of the widget's integration, for cards without a link of their own. */
   service_link?: string

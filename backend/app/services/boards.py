@@ -209,18 +209,30 @@ def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = N
         beta = False
         client_only = False
     default_size, min_size = card_sizes(widget, columns)
+    # A tile that follows an app (issue #37) takes its address from the app,
+    # for the network this request comes from.
+    from . import apps as apps_service
+
+    app, app_link = apps_service.tile_view(db, widget)
     health = None
     if widget.health_check is not None:
         health = health_service.check_payload(widget.health_check)
         health["bars"] = (bars if bars is not None
                           else health_service.uptime_bars(db, widget.id, health_service.bars_window(widget.options)))
+    # ⚠️ What the card shows, under the names every part of the page reads;
+    # the tile's own values, which may be empty, only for its settings sheet.
+    # Saving the shown name back would pin the app's name to the tile and stop
+    # it following a rename.
+    own = {"own_title": widget.title, "own_icon": widget.icon} if app is not None else {}
     return {
         "id": widget.id,
         "kind": widget.kind,
-        "title": widget.title,
-        "icon": widget.icon,
+        "title": widget.title or (app["name"] if app is not None else ""),
+        "icon": widget.icon or (app["icon"] if app is not None else ""),
+        **own,
         "link": widget.link,
-        "service_link": service_link(widget),
+        "service_link": app_link if app is not None else service_link(widget),
+        "app": app,
         "renderer": renderer,
         "options": widget.options or {},
         "integration_id": widget.integration_id,
@@ -311,7 +323,10 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
     with it its check and the history of its uptime bars.
     """
     pages = db.scalars(select(Page).options(selectinload(Page.widgets).selectinload(Widget.integration)).where(Page.board_id == board.id).order_by(Page.position)).all()
+    from . import apps as apps_service
+
     integrations: dict[int, Integration] = {}
+    followed_apps: dict[int, Any] = {}
     document: dict[str, Any] = {
         "nexdeck": 1,
         "board": {"name": board.name, "slug": board.slug, "icon": board.icon, "background": board.background or {}, "settings": board.settings or {}},
@@ -330,11 +345,19 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
                 for item in (page.layouts or {}).get(key, []):
                     if item.get("i") == str(widget.id):
                         layout[key] = {"x": item["x"], "y": item["y"], "w": item["w"], "h": item["h"]}
+            options = _by_place(widget, place)
+            app = apps_service.followed(db, widget)
+            if app is not None:
+                # By name, not by number: the number means nothing on another
+                # installation, and the app travels along below.
+                followed_apps[app.id] = app
+                options = {key: value for key, value in (options or {}).items() if key != "app_id"}
+                options["app"] = app.name
             page_doc["widgets"].append({
                 **({"id": widget.id} if with_ids else {}),
                 "kind": widget.kind, "title": widget.title, "icon": widget.icon, "link": widget.link,
                 "integration": widget.integration.name if widget.integration else None,
-                "options": _by_place(widget, place), "refresh_seconds": widget.refresh_seconds, "layout": layout,
+                "options": options, "refresh_seconds": widget.refresh_seconds, "layout": layout,
             })
         document["pages"].append(page_doc)
     document["integrations"] = [
@@ -342,7 +365,76 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
          "config": export_config(i) if (reveal_locked or not i.admin_only) else {}}
         for i in integrations.values()
     ]
+    if followed_apps:
+        document["apps"] = [
+            {key: value for key, value in apps_service.app_view(app).items() if key != "id"}
+            for app in followed_apps.values()
+        ]
     return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
+
+
+def _apps_of(db: Session, document: dict[str, Any], trusted: bool) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    """The apps a file names: the ones found here by name, and what the file says of each.
+
+    Only a file the operator put on the server creates a missing app, as with
+    connections. Over HTTP a tile whose app is missing becomes a tile of its
+    own, with the name, icon and address the file gives it (``_follow_app``).
+    """
+    from ..models import App
+    from . import apps as apps_service
+
+    found: dict[str, Any] = {}
+    written: dict[str, dict[str, Any]] = {}
+    for entry in document.get("apps") or []:
+        if not isinstance(entry, dict) or not str(entry.get("name") or "").strip():
+            continue
+        name = str(entry["name"]).strip()[:120]
+        written[name] = entry
+        app = apps_service.by_name(db, name)
+        if app is None and trusted:
+            try:
+                addresses = apps_service.clean_addresses(entry.get("addresses"))
+                app = App(name=name, icon=str(entry.get("icon") or "")[:200], description=str(entry.get("description") or "")[:300],
+                          addresses=addresses, home=apps_service.clean_choice(addresses, str(entry.get("home") or "")),
+                          away=apps_service.clean_choice(addresses, str(entry.get("away") or "")))
+            except apps_service.AppRefused as error:
+                raise ImportError_(f"The app {name!r}: {error}") from error
+            db.add(app)
+            db.flush()
+        if app is not None:
+            found[name] = app
+    return found, written
+
+
+def _follow_app(fields: dict[str, Any], widget_doc: dict[str, Any], found: dict[str, Any], written: dict[str, dict[str, Any]], label: str) -> None:
+    """Tie an imported tile to its app by name, or make it a tile of its own."""
+    from types import SimpleNamespace
+
+    from . import apps as apps_service
+
+    options = fields["options"]
+    options.pop("app_id", None)
+    name = str(options.pop("app", "") or "")
+    if not name:
+        options.pop("address", None)
+        return
+    if name in found:
+        options["app_id"] = found[name].id
+        # No name of its own means the app's name, not "App tile".
+        if not str(widget_doc.get("title") or "").strip():
+            fields["title"] = ""
+        return
+    choice = str(options.pop("address", "") or "")
+    entry = written.get(name) or {}
+    try:
+        addresses = apps_service.clean_addresses(entry.get("addresses"))
+    except apps_service.AppRefused:
+        addresses = []
+    stand_in = SimpleNamespace(addresses=addresses, home=str(entry.get("home") or ""), away=str(entry.get("away") or ""))
+    if not str(widget_doc.get("title") or "").strip():
+        fields["title"] = name or label
+    fields["icon"] = fields["icon"] or str(entry.get("icon") or "")
+    fields["link"] = fields["link"] or apps_service.resolve(stand_in, choice, None)  # type: ignore[arg-type]
 
 
 #: Cards that hold other cards of their page, by number in ``options["cards"]``.
@@ -382,6 +474,15 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
     """
     if not options:
         return
+    if kind == "core.app" and options.get("app_id") not in (None, ""):
+        from ..models import App
+
+        try:
+            known = db.get(App, int(options["app_id"])) is not None
+        except (TypeError, ValueError):
+            known = False
+        if not known:
+            raise error("unknown_app", "There is no such app in the catalog.")
     adapter, widget_kind = split_widget_kind(kind)
     for field in adapter.widget(widget_kind).options:
         if field.type != "integrations":
@@ -594,6 +695,7 @@ def import_board(
         if existing.admin_only and not allow_locked:
             raise ImportError_(f"The connection {existing.name!r} is reserved for administrators.")
         by_name[existing.name] = existing
+    apps_found, apps_written = _apps_of(db, document, trusted)
 
     # A file is taken at its word about its columns, as long as they are ones
     # nexdeck draws; a file from before 0.17.0 has none and gets twelve.
@@ -651,6 +753,8 @@ def import_board(
                 "link": str(widget_doc.get("link") or ""), "integration_id": integration.id if integration else None,
                 "options": dict(widget_doc.get("options") or {}), "refresh_seconds": widget_doc.get("refresh_seconds"),
             }
+            if kind == "core.app":
+                _follow_app(fields, widget_doc, apps_found, apps_written, widget_type.label)
             widget = old_widgets.pop(_number(widget_doc.get("id")), None)
             if widget is not None:
                 for key, value in fields.items():

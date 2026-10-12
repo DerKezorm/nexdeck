@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post, put } from '../api/client'
-import type { AdapterSpec, Integration } from '../api/types'
+import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
 import { shownField } from '../lib/fields'
 import type { WidgetData, WidgetView } from '../lib/types'
+import { useAuth } from '../stores/auth'
 import { FieldInput } from './FieldInput'
 import { IconPicker } from './IconPicker'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
@@ -31,6 +32,9 @@ interface Props {
   onPreviewData?: (widgetId: number, data: WidgetData | null) => void
 }
 
+/** The same empty list every time, so an effect that reads the catalog does not run on every render. */
+const NO_APPS: AppEntry[] = []
+
 /** A check as a card without one starts it. */
 const FRESH_CHECK = { kind: 'http', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, insecure: false }
 
@@ -39,6 +43,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const { t } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
+  const admin = useAuth((s) => s.user?.role === 'admin')
+  // The catalog only matters to an app tile; a guest edits nothing and is not asked.
+  const appTile = widget?.kind === 'core.app'
+  const apps = useQuery({ queryKey: ['apps'], queryFn: () => get<AppEntry[]>('/apps'), enabled: appTile, staleTime: 60_000 })
+  // A list or nothing: an answer of another shape must not take the whole sheet down.
+  const catalog = Array.isArray(apps.data) ? apps.data : NO_APPS
   const [title, setTitle] = useState('')
   const [icon, setIcon] = useState('')
   const [link, setLink] = useState('')
@@ -64,8 +74,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     // ⚠️ The answer belonged to the card that was open before. Left standing,
     // the row picker of the next card lists the wrong rows, or none.
     setPreview(null)
-    setTitle(widget.title)
-    setIcon(widget.icon)
+    // ⚠️ The tile's own name and icon, not the app's it shows: saving the
+    // shown name back would pin it to the tile, which would stop following a
+    // rename of the app.
+    setTitle(widget.own_title ?? widget.title)
+    setIcon(widget.own_icon ?? widget.icon)
     setLink(widget.link)
     setIntegrationId(widget.integration_id ? String(widget.integration_id) : '')
     setRefresh(widget.refresh_seconds ? String(widget.refresh_seconds) : '')
@@ -97,9 +110,13 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget?.id])
   useEffect(() => {
-    if (widget) onPreview?.({ id: widget.id, title, icon, link, options })
+    if (!widget) return
+    // A tile that follows an app shows the app's name and icon while its own
+    // are empty, in the preview as on the board; an empty draft drew a blank card.
+    const app = widget.kind === 'core.app' ? catalog.find((one) => one.id === Number(options.app_id)) : undefined
+    onPreview?.({ id: widget.id, title: title || (app?.name ?? ''), icon: icon || (app?.icon ?? ''), link, options })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, icon, link, options, widget?.id])
+  }, [title, icon, link, options, widget?.id, catalog])
   // Options and the connection change what the server would show: ask it for
   // a preview after a short pause, without saving anything.
   useEffect(() => {
@@ -158,6 +175,49 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
     if (!icon) setIcon(chosen.icon)
   }
 
+  const followedApp = isApp ? catalog.find((app) => app.id === Number(options.app_id)) : undefined
+  /** Follow an app of the catalog, or stop following one. */
+  const chooseApp = (value: string) => {
+    const app = catalog.find((one) => String(one.id) === value)
+    if (!app) {
+      // Stopping keeps what the tile showed, so it does not go blank.
+      const was = followedApp
+      setOptions(({ app_id: _id, address: _address, ...rest }) => rest)
+      if (was) {
+        if (!title.trim()) setTitle(was.name)
+        if (!icon) setIcon(was.icon)
+        if (!link) setLink(widget.service_link || was.addresses[0]?.url || '')
+      }
+      return
+    }
+    // The app gives name, icon and address; the tile's own would win over it.
+    setOptions((o) => ({ ...o, app_id: app.id, address: app.home || app.away ? 'auto' : '' }))
+    setTitle('')
+    setIcon('')
+    setLink('')
+    setIntegrationId('')
+  }
+  /** Put this tile into the catalog and let it follow its new app. */
+  const saveAsApp = async () => {
+    setError('')
+    try {
+      const made = await post<AppEntry>('/apps', {
+        name: title.trim() || t('widget.app.untitled'),
+        icon,
+        description: String(options.description ?? '').trim(),
+        addresses: [{ label: t('widget.app.firstLabel'), url: link.trim() }],
+      })
+      await apps.refetch()
+      setOptions((o) => ({ ...o, app_id: made.id, address: '' }))
+      setTitle('')
+      setIcon('')
+      setLink('')
+      setIntegrationId('')
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    }
+  }
+
   const save = async () => {
     setBusy(true)
     setError('')
@@ -175,8 +235,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
         clear_refresh: refresh ? undefined : true,
         page_id: pageId ? Number(pageId) : undefined,
       })
-      if (isApp && (link || integrationId) && options.check !== false) {
-        // An empty target follows the integration's address on the server, at every check.
+      if (isApp && (link || integrationId || options.app_id) && options.check !== false) {
+        // An empty target follows the app's or the integration's address on the server, at every check.
         await put(`/widgets/${widget.id}/health`, {
           kind: health.kind,
           target: health.kind === 'http' ? link : (options.check_target as string) || link,
@@ -234,14 +294,44 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           {error}
         </p>
       )}
-      <Field label={t('widget.title')} htmlFor="w-title">
-        <input id="w-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+      {isApp && (
+        <div className="rounded-xl border border-line p-3 mb-3">
+          <Field label={t('widget.app.label')} htmlFor="w-app" help={t('widget.app.help')}>
+            <Select
+              id="w-app"
+              value={followedApp ? String(followedApp.id) : ''}
+              onChange={chooseApp}
+              options={[{ value: '', label: t('widget.app.none') }, ...catalog.map((app) => ({ value: String(app.id), label: app.name }))]}
+            />
+          </Field>
+          {followedApp && (
+            <Field label={t('widget.app.address')} htmlFor="w-app-address" help={followedApp.home || followedApp.away ? t('widget.app.autoHelp') : undefined}>
+              <Select
+                id="w-app-address"
+                value={String(options.address ?? '')}
+                onChange={(address) => setOptions((o) => ({ ...o, address }))}
+                options={[
+                  ...(followedApp.home || followedApp.away ? [{ value: 'auto', label: t('widget.app.auto') }] : [{ value: '', label: t('widget.app.first', { label: followedApp.addresses[0]?.label ?? '' }) }]),
+                  ...followedApp.addresses.map((one) => ({ value: one.label, label: `${one.label} · ${one.url}` })),
+                ]}
+              />
+            </Field>
+          )}
+          {!followedApp && admin && link.trim() && (
+            <button className="btn h-8 text-xs" onClick={() => void saveAsApp()} title={t('widget.app.saveAsHelp')}>
+              {t('widget.app.saveAs')}
+            </button>
+          )}
+        </div>
+      )}
+      <Field label={t('widget.title')} htmlFor="w-title" help={followedApp ? t('widget.app.titleHelp') : undefined}>
+        <input id="w-title" className="input" value={title} placeholder={followedApp?.name} onChange={(e) => setTitle(e.target.value)} />
       </Field>
       <IconPicker value={icon} onChange={setIcon} label={t('widget.icon')} />
-      <Field label={t('widget.link')} htmlFor="w-link" help={followed ? t('widget.linkFollows') : t('widget.linkHelp')}>
-        <input id="w-link" className="input" type="url" value={link} placeholder={followedUrl || 'https://'} onChange={(e) => setLink(e.target.value)} />
+      <Field label={t('widget.link')} htmlFor="w-link" help={followedApp ? t('widget.app.linkFollows') : followed ? t('widget.linkFollows') : t('widget.linkHelp')}>
+        <input id="w-link" className="input" type="url" value={link} placeholder={(followedApp && widget.app?.id === followedApp.id ? widget.service_link : '') || followedUrl || 'https://'} onChange={(e) => setLink(e.target.value)} />
       </Field>
-      {(adapter?.needs_integration || adapter?.optional_integration || isApp) && (
+      {(adapter?.needs_integration || adapter?.optional_integration || (isApp && !followedApp)) && (
         <Field label={isApp || adapter?.optional_integration ? t('widget.integrationOptional') : t('widget.integration')} htmlFor="w-int" help={isApp ? t('widget.integrationFollowHelp') : undefined}>
           <Select id="w-int" value={integrationId} onChange={chooseIntegration} options={[{ value: '', label: t('widget.noIntegration') }, ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
         </Field>

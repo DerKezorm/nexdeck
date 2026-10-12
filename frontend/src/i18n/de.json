@@ -149,7 +149,8 @@
       "backups": "Sicherungen",
       "media": "Medien",
       "player": "Musik-Player",
-      "homeNetwork": "Heimnetz"
+      "homeNetwork": "Heimnetz",
+      "apps": "Apps"
     },
     "mail": {
       "title": "Mailserver",
@@ -481,7 +482,7 @@
       "enabled": "Im Heimnetz ohne Passwort anmelden",
       "enabledHelp": "Wer sich absichtlich abmeldet, wird in diesem Browser zwölf Stunden lang nicht automatisch angemeldet.",
       "networks": "Heimnetze",
-      "networksHelp": "Eins pro Zeile, etwa 192.168.1.0/24. Nur private Bereiche.",
+      "networksHelp": "Eins pro Zeile, etwa 192.168.1.0/24. Nur private Bereiche. App-Kacheln, die ihre Adresse automatisch wählen, nutzen sie auch, selbst wenn die Anmeldung aus ist.",
       "account": "Konto",
       "accountHelp": "Nie ein Administrator. Vom Tablet aus kann dieses Konto kein Passwort, keine E-Mail-Adresse, keinen zweiten Faktor, keine API-Schlüssel und keine Kiosk-Links anlegen.",
       "noAccount": "Konto wählen",
@@ -814,7 +815,22 @@
     "pictureMove": "Bild {{at}} verschieben",
     "pictureBadAddress": "Aus dieser Adresse lässt sich kein Bild laden.",
     "pictureLibrary": "Aus den Medien",
-    "pictureLibraryEmpty": "Noch nichts hochgeladen. Lade zuerst eine Datei hoch."
+    "pictureLibraryEmpty": "Noch nichts hochgeladen. Lade zuerst eine Datei hoch.",
+    "app": {
+      "label": "App aus dem Katalog",
+      "help": "Name, Icon, Adresse und Erreichbarkeitsprüfung kommen von der App. Einmal unter System, Apps ändern, und alle Kacheln ziehen mit.",
+      "none": "Keine, hier eingerichtet",
+      "address": "Öffnet",
+      "auto": "Automatisch, daheim oder unterwegs",
+      "autoHelp": "Öffnet in den Heimnetzen automatisch die Adresse für daheim, überall sonst die andere.",
+      "first": "Die erste Adresse ({{label}})",
+      "saveAs": "Als App speichern",
+      "saveAsHelp": "Legt diese Kachel in den Katalog, damit jedes Board sie nutzen kann. Die Kachel folgt ihr ab dann.",
+      "untitled": "App",
+      "firstLabel": "Haupt",
+      "titleHelp": "Leer: der Name der App.",
+      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor."
+    }
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -1304,5 +1320,34 @@
   "keyFactor": {
     "text": "Wirkt erst, wenn du einen zweiten Faktor einrichtest.",
     "link": "Einrichten"
+  },
+  "apps": {
+    "title": "Apps",
+    "lead": "Eine App einmal einrichten und als Kachel auf jedes Board legen. Eine Adresse hier ändern, und alle Kacheln ziehen mit.",
+    "none": "Noch keine Apps. Hier eine anlegen, oder eine App-Kachel in ihren Einstellungen als App speichern.",
+    "add": "App hinzufügen",
+    "edit": "App bearbeiten",
+    "editNamed": "{{name}} bearbeiten",
+    "delete": "App löschen",
+    "deleteNamed": "{{name}} löschen?",
+    "deleteBody_one": "{{count}} Kachel folgt ihr. Sie bleibt, als eigene Kachel mit dem Namen, dem Icon und der Adresse, die sie jetzt zeigt.",
+    "deleteBody_other": "{{count}} Kacheln folgen ihr. Sie bleiben, als eigene Kacheln mit dem Namen, dem Icon und der Adresse, die sie jetzt zeigen.",
+    "tiles_one": "{{count}} Kachel",
+    "tiles_other": "{{count}} Kacheln",
+    "name": "Name",
+    "icon": "Icon",
+    "description": "Beschreibung",
+    "addresses": "Adressen",
+    "addressesHelp": "Eine je Weg, auf dem die App erreichbar ist, etwa über den Proxy, über Tailscale oder direkt mit Adresse und Port.",
+    "label": "Bezeichnung von Adresse {{number}}",
+    "labelPlaceholder": "Proxy",
+    "url": "Adresse {{number}}",
+    "addAddress": "Adresse hinzufügen",
+    "removeAddress": "Adresse {{number}} entfernen",
+    "home": "Daheim",
+    "away": "Unterwegs",
+    "notSet": "Nicht gesetzt",
+    "automaticHelp": "Ist eines von beiden gesetzt, kann eine Kachel ihre Adresse automatisch wählen: in den Heimnetzen unter System, Heimnetz die für daheim, überall sonst die andere.",
+    "deleteThis": "{{name}} löschen"
   }
 }

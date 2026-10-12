@@ -353,6 +353,30 @@ class Integration(Base):
     widgets: Mapped[list[Widget]] = relationship(back_populates="integration")
 
 
+class App(Base):
+    """An app set up once and placed as a tile on any board (issue #37).
+
+    An app tile that follows one takes its name, icon and address from here on
+    every read, so an address changed once is changed on every board. An app
+    has as many addresses as it is reached by, each with a label ("Proxy",
+    "Tailscale", "Direct"); a tile picks one, or lets nexdeck pick the one for
+    home or for the road by the network the browser is in.
+    """
+
+    __tablename__ = "apps"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    icon: Mapped[str] = mapped_column(String(200), default="")
+    description: Mapped[str] = mapped_column(String(300), default="")
+    #: ``[{"label": "Proxy", "url": "https://paperless.home.example"}, ...]``
+    addresses: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
+    #: The label of the address for the home networks, and for everywhere else.
+    home: Mapped[str] = mapped_column(String(40), default="")
+    away: Mapped[str] = mapped_column(String(40), default="")
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class Widget(Base):
     __tablename__ = "widgets"
 
