@@ -169,6 +169,8 @@ DIAL_VIEWS = ("gauge", "meter")
 #: Views that show one number and nothing else: the row a dial follows, the
 #: warning lines and the special cases of an adapter apply to all of them.
 SINGLE_NUMBER_VIEWS = ("gauge", "meter", "segments")
+#: The view that draws a dial card as its plain number with the rows under it.
+PLAIN_NUMBER_VIEW = "number"
 
 
 @dataclass(frozen=True)
@@ -255,6 +257,11 @@ class WidgetType:
         # are can be drawn as a ring. Written here once rather than into the
         # eighty list cards, which is eighty chances to word it differently.
         extra: tuple[tuple[str, str], ...] = ()
+        # ⚠️ A card that is a dial by birth can be the plain number too (issue
+        # #44). Not under "value": on these cards that is the dial, and every
+        # board saved before would switch drawing overnight.
+        if self.renderer == "gauge":
+            extra += ((PLAIN_NUMBER_VIEW, "The number"),)
         if self.renderer == "list" and self.bars:
             extra += (("bars", "Bars"),)
         if self.ring:
@@ -858,6 +865,14 @@ def as_segments(data: WidgetData, options: dict[str, Any]) -> WidgetData:
     return data
 
 
+def as_number(data: WidgetData, options: dict[str, Any]) -> WidgetData:
+    """Draw a dial card as its number, with the rows under it, when asked."""
+    if str(options.get("view") or "value") != PLAIN_NUMBER_VIEW:
+        return data
+    data.meta = {**(data.meta or {}), "renderer": "value"}
+    return data
+
+
 def timeline(
     *lines: tuple[str, str, list[tuple[float, float | None]]],
     unit: str = "",
@@ -1007,6 +1022,7 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
     data = as_chart(data, options)
     data = as_inout(data, options)
     data = as_band(data, options)
+    data = as_number(data, options)
     data = as_segments(data, options)
     data = as_gauge(data, options)
     return apply_level(data, options)

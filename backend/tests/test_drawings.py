@@ -87,7 +87,7 @@ def test_a_card_gathers_every_drawing_it_qualifies_for_in_one_field() -> None:
     assert sum(1 for one in options if one.name == "view") == 1
     view = next(one for one in options if one.name == "view")
     # Pi-hole's card is a dial already, so "A dial" is its own drawing, not an extra.
-    assert [value for value, _ in view.options] == ["value", "ring", "meter", "segments", "chart"]
+    assert [value for value, _ in view.options] == ["value", "number", "ring", "meter", "segments", "chart"]
 
 
 def test_a_number_card_with_one_metric_is_offered_every_drawing_of_a_number() -> None:
@@ -139,7 +139,7 @@ def test_every_number_card_offers_every_drawing_of_a_number() -> None:
     for kind, widget in cards:
         view = next(one for one in widget.options if one.name == "view")
         offered = {value for value, _ in view.options}
-        wanted = {"meter", "segments", "chart"} | ({"gauge"} if widget.renderer != "gauge" else set())
+        wanted = {"meter", "segments", "chart"} | ({"gauge"} if widget.renderer != "gauge" else {"number"})
         assert wanted <= offered, f"{kind}.{widget.kind} misses {wanted - offered}"
 
 
@@ -473,6 +473,21 @@ def test_seven_segments_draw_numbers_and_leave_words_alone() -> None:
     word = WidgetData(primary={"label": "State", "value": "online"})
     assert as_segments(word, {"view": "segments"}).meta.get("renderer") is None
     assert as_segments(_speed(12.5), {"view": "value"}).meta.get("renderer") is None
+
+
+def test_a_dial_card_can_be_drawn_as_its_plain_number() -> None:
+    """Issue #44: NextDNS and Technitium are dials by birth, and asking for the
+    number left the dial standing. "value" stays the dial on these cards, or
+    every board saved before would change its drawing."""
+    for kind in ("nextdns", "technitium"):
+        adapter = get_adapter(kind)
+        view = next(one for one in adapter.widget("summary").options if one.name == "view")
+        assert ("number", "The number") in view.options, kind
+        plain = shape_for_display(adapter.demo("summary", {}, tick=3), adapter, "summary", {"view": "number"})
+        assert plain.meta["renderer"] == "value", kind
+        assert plain.secondary, kind
+        dial = shape_for_display(adapter.demo("summary", {}, tick=3), adapter, "summary", {"view": "value"})
+        assert (dial.meta or {}).get("renderer") is None, kind
 
 
 def test_the_row_picked_for_the_dial_is_the_one_the_leds_and_digits_show() -> None:

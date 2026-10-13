@@ -230,7 +230,8 @@ a tight spot.
 
 Every card drawn by `value`, `stats` or `gauge` that records at least one
 metric gets the drawings of a number by itself: a dial, LED bars, seven
-segments and a chart, with "Full at" and "Empty at" for the dial and the
+segments and a chart (a card drawn by `gauge` gets "The number" instead of
+a dial, as the view `number`; `value` stays its dial), with "Full at" and "Empty at" for the dial and the
 LEDs, the lines "Yellow from" and "Red from" (red below yellow means low
 numbers are the bad ones), and the hours a chart reaches back: one, six or
 twenty-four, as far as nexdeck keeps minute rows. Those lines colour the drawing only (`meta["level"]`); the card's

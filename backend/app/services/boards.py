@@ -165,6 +165,8 @@ def _drawn_as(widget: Widget, declared: str) -> str:
     declared renderer.
     """
     view = str((widget.options or {}).get("view") or "")
+    if view == "number":
+        return "value"
     return view if view in ("gauge", "value", "meter", "segments") else declared
 
 
