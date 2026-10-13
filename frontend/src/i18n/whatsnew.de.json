@@ -1453,6 +1453,20 @@
       "small": [
         "Danke an bluedsticker für die Meldung und die Screenshots (#40)."
       ]
+    },
+    "0.41.3": {
+      "lead": "Karten, die als Tacho beginnen, können auch die reine Zahl zeigen.",
+      "sections": [
+        {
+          "title": "Die Zahl statt des Tachos",
+          "body": "NextDNS, Technitium, Pi-hole, AdGuard Home, Immich-Speicher, Nextcloud-Speicher und PeaNUT zeichnen von Haus aus einen Tacho, und ihre Ansicht bot keine reine Zahl an. Wähl dort Die Zahl, dann steht der Wert groß da und die übrigen Werte darunter. Karten, die schon auf einem Board liegen, bleiben, wie sie sind.",
+          "path": "Einstellungen einer Karte, Ansicht"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an naamah75 für die Meldung (#44)."
+      ]
     }
   }
 }

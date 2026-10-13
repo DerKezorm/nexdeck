@@ -3,11 +3,15 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.41.3 (2026-10-13)
 
 ### Fixed
 
 - **NextDNS, Technitium and the other cards that are a dial by default can show the plain number** (#44). Their View list had no such choice, and a board set to show the number kept the dial. The new choice "The number" draws the value large with the rows under it. Cards already on a board stay as they are. The other cards that start as a dial are Pi-hole, AdGuard Home, Immich storage, Nextcloud storage and PeaNUT. Thanks to @naamah75 for the report.
+
+### Upgrading
+
+Nothing to do. No change to the database.
 
 ## 0.41.2 (2026-10-13)
 

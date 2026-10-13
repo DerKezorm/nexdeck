@@ -1453,6 +1453,20 @@
       "small": [
         "Thanks to bluedsticker for the report and the screenshots (#40)."
       ]
+    },
+    "0.41.3": {
+      "lead": "Cards that start as a dial can show the plain number.",
+      "sections": [
+        {
+          "title": "The number instead of the dial",
+          "body": "NextDNS, Technitium, Pi-hole, AdGuard Home, Immich storage, Nextcloud storage and PeaNUT draw a dial by default, and their View list had no plain number. Choose The number there, and the value is drawn large with the other values under it. Cards already on a board stay as they are.",
+          "path": "A card's settings, View"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Thanks to naamah75 for the report (#44)."
+      ]
     }
   }
 }
