@@ -1439,6 +1439,20 @@
         "Der Zurück-Pfeil in Meine Einstellungen und System führt direkt zu deinem Start-Board.",
         "Danke an bluedsticker für die Meldung und die Screenshots (#40)."
       ]
+    },
+    "0.41.2": {
+      "lead": "Die Leiste bleibt auf dem hochkant gehaltenen iPad aufgeräumt, egal wie viele Seiten ein Board hat.",
+      "sections": [
+        {
+          "title": "Viele Seiten, schmaler Bildschirm",
+          "body": "Bei vielen Seiten lief das Suchfeld unter die Glocke, und ein langer Board-Name brach auf zwei Zeilen um. Schmal ist das Suchfeld jetzt ein einfacher Suchknopf, und der Board-Name bleibt in einer Zeile. Passen die Seiten nicht mehr hinein, blendet die Reihe dort aus, wo weitere kommen, mit einem Pfeil zum Weiterblättern, und die Seite, auf der du bist, bleibt immer im Bild.",
+          "path": "Die Leiste oben"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Danke an bluedsticker für die Meldung und die Screenshots (#40)."
+      ]
     }
   }
 }

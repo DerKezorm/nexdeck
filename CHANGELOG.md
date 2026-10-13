@@ -3,6 +3,18 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.41.2 (2026-10-13)
+
+### Fixed
+
+- **A crowded bar on an iPad held upright** (#40). With many pages the search field was squeezed to the width of its icon and still showed Ctrl K, which ran under the bell. The field now goes by its own width: narrow, it is a search button and nothing more.
+- **A long board name broke onto two lines** in the bar. It stays on one line now and is cut short if need be.
+- **A page added last seemed missing** when the row of pages no longer fit, because nothing said that the row scrolls. It now fades at the side where more pages are, with an arrow there to turn it on, and the page shown is always scrolled into sight. Thanks to @bluedsticker for the report and the screenshots.
+
+### Upgrading
+
+Nothing to do. No change to the database.
+
 ## 0.41.1 (2026-10-12)
 
 ### Fixed

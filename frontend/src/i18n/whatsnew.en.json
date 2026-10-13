@@ -1439,6 +1439,20 @@
         "The back arrow of My settings and System goes straight to your home board.",
         "Thanks to bluedsticker for the report and the screenshots (#40)."
       ]
+    },
+    "0.41.2": {
+      "lead": "The bar keeps its order on an iPad held upright, however many pages a board has.",
+      "sections": [
+        {
+          "title": "Many pages, a narrow screen",
+          "body": "With many pages the search field ran under the bell and a long board name broke onto two lines. Narrow, the search field is now a plain search button, and the board name stays on one line. When the pages no longer fit, the row fades at the side where there are more, with an arrow there to turn it on, and the page you are on is always in sight.",
+          "path": "The bar at the top"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Thanks to bluedsticker for the report and the screenshots (#40)."
+      ]
     }
   }
 }
