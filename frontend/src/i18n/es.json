@@ -626,6 +626,8 @@
     "settings": "Ajustes del tablero",
     "manage": "Gestionar tableros",
     "pages": "Páginas",
+    "pagesEarlier": "Páginas anteriores",
+    "pagesLater": "Más páginas",
     "edit": "Editar tablero",
     "confirmAction": "¿Ejecutar esta acción ahora?",
     "pageName": "Nombre de la página",

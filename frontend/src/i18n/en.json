@@ -626,6 +626,8 @@
     "settings": "Board settings",
     "manage": "Manage boards",
     "pages": "Pages",
+    "pagesEarlier": "Earlier pages",
+    "pagesLater": "More pages",
     "edit": "Edit board",
     "confirmAction": "Run this action now?",
     "pageName": "Page name",

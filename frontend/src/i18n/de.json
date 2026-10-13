@@ -626,6 +626,8 @@
     "settings": "Board-Einstellungen",
     "manage": "Boards verwalten",
     "pages": "Seiten",
+    "pagesEarlier": "Vorige Seiten",
+    "pagesLater": "Weitere Seiten",
     "edit": "Board bearbeiten",
     "confirmAction": "Diese Aktion jetzt ausführen?",
     "pageName": "Name der Seite",

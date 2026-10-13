@@ -626,6 +626,8 @@
     "settings": "Paramètres du tableau",
     "manage": "Gérer les tableaux",
     "pages": "Pages",
+    "pagesEarlier": "Pages précédentes",
+    "pagesLater": "Autres pages",
     "edit": "Modifier le tableau",
     "confirmAction": "Exécuter cette action maintenant ?",
     "pageName": "Nom de la page",

@@ -626,6 +626,8 @@
     "settings": "Impostazioni della bacheca",
     "manage": "Gestisci bacheche",
     "pages": "Pagine",
+    "pagesEarlier": "Pagine precedenti",
+    "pagesLater": "Altre pagine",
     "edit": "Modifica bacheca",
     "confirmAction": "Eseguire ora questa azione?",
     "pageName": "Nome della pagina",

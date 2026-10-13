@@ -217,6 +217,66 @@ test('the bar of a board with four pages fits a tablet held upright', async ({ p
   }
 })
 
+test('with many pages the search stays clear of the bell and the row says it scrolls', async ({ page }) => {
+  // ⚠️ Issue #40, 13.10.2026, on an upright iPad with seven pages: the search field, squeezed to 40 points,
+  // still showed "Ctrl K", which ran under the bell; the board name broke onto two lines; and the page added
+  // last seemed missing, because nothing said that the row scrolls.
+  await signIn(page)
+  const write = { headers: { 'X-Nexdeck-Request': '1' } }
+  const made = await page.request.post('/api/v1/boards', { ...write, data: { name: 'Testing ground', slug: 'crowded' } })
+  expect(made.status()).toBe(201)
+  try {
+    for (const name of ['Overview', 'Home', 'Tailscale', 'IP', 'Websites', 'Github', 'Seedbox']) {
+      expect((await page.request.post('/api/v1/boards/crowded/pages', { ...write, data: { name } })).status()).toBe(201)
+    }
+    await page.setViewportSize({ width: 1032, height: 1376 })
+    await page.goto('/b/crowded')
+    const bar = page.locator('header.app-bar')
+    const search = bar.getByRole('button', { name: 'Search' })
+    const bell = bar.getByRole('button', { name: 'Notices', exact: true })
+    await expect(bell).toBeVisible()
+    const field = await search.boundingBox()
+    const ring = await bell.boundingBox()
+    expect(field && ring && field.x + field.width, 'the search field reaches into the bell').toBeLessThanOrEqual(ring?.x ?? 0)
+    // Nothing inside the field may stick out of it, the key "Ctrl K" least of all.
+    const spill = await search.evaluate((button) => {
+      const own = button.getBoundingClientRect()
+      return [...button.querySelectorAll('*')].filter((inner) => {
+        const box = inner.getBoundingClientRect()
+        return box.width > 0 && getComputedStyle(inner).display !== 'none' && (box.right > own.right + 0.5 || box.left < own.left - 0.5)
+      }).length
+    })
+    expect(spill, 'something in the search field sticks out of it').toBe(0)
+    const name = bar.getByRole('button', { name: 'Testing ground' })
+    // The button keeps its height either way; the lines of the text inside it are what broke.
+    const lines = await name.evaluate((button) => {
+      const range = document.createRange()
+      range.selectNodeContents(button.querySelector('span') ?? button)
+      return new Set([...range.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top))).size
+    })
+    expect(lines, 'the board name broke onto two lines').toBe(1)
+
+    const row = bar.getByRole('navigation', { name: 'Pages' })
+    await expect(row, 'the row does not say there is more to the right').toHaveAttribute('data-more', 'right')
+    // The arrow turns the row on until the last page is there, and then says there is more the other way.
+    const later = bar.getByRole('button', { name: 'More pages' })
+    for (let turn = 0; turn < 6 && (await later.isVisible()); turn += 1) {
+      await later.click()
+      await page.waitForTimeout(400)
+    }
+    await expect(later).toBeHidden()
+    await expect(row, 'the row does not say there is more to the left').toHaveAttribute('data-more', 'left')
+    await expect(bar.getByRole('button', { name: 'Earlier pages' })).toBeVisible()
+    // The page shown is brought into sight, also when it is the last one.
+    await page.goto('/b/crowded/seedbox')
+    const shown = await row.getByRole('button', { name: 'Seedbox', exact: true }).boundingBox()
+    const room = await row.boundingBox()
+    expect(shown && room && shown.x + shown.width, 'the page shown is scrolled away').toBeLessThanOrEqual((room?.x ?? 0) + (room?.width ?? 0) + 1)
+  } finally {
+    await page.request.delete('/api/v1/boards/crowded', write)
+  }
+})
+
 test('the bar stays on the page while another board loads', async ({ page }) => {
   // ⚠️ Issue #27, 06.10.2026: in the app installed on iPadOS 26 the blur came back over the bar
   // after a switch to another board, and stayed until the app was started again. Switching
