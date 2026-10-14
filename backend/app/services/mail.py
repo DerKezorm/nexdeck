@@ -111,8 +111,8 @@ def send(config: dict[str, Any], to_address: str, subject: str, body: str) -> No
     mail["Subject"] = subject
     mail["From"] = formataddr((config["from_name"] or "nexdeck", config["from_address"]))
     mail["To"] = to_address
-    # Pflichtfeld nach RFC 5322. smtplib ergaenzt weder Date noch Message-ID, und ohne
-    # Date verwerfen iCloud, Outlook und Gmail die Mail still.
+    # Required by RFC 5322. smtplib adds neither Date nor Message-ID, and without
+    # a Date iCloud, Outlook and Gmail drop the mail silently.
     mail["Date"] = formatdate(localtime=True)
     mail["Message-ID"] = make_msgid(domain=config["from_address"].split("@")[-1])
     mail.set_content(body)
