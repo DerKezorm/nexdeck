@@ -136,6 +136,25 @@ async def test_kinds_are_named_a_document_twice_is_two_rows_and_a_new_kind_shows
 
 
 @respx.mock
+async def test_a_contracts_last_day_to_cancel_is_named_beside_its_end(ctx: Context) -> None:
+    # nexpaper 1.4.0 sends a contract with a notice period twice: its last day to cancel as ``notice``, its end as
+    # ``contract_end``.
+    rows = [
+        {"id": 9, "title": "Gym membership", "date": "2026-10-18", "kind": "notice", "url": "https://paper.example.com/dokument/9"},
+        {"id": 9, "title": "Gym membership", "date": "2026-10-25", "kind": "contract_end", "url": "https://paper.example.com/dokument/9"},
+    ]
+    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"deadlines": rows}))
+    data = await get_adapter("nexpaper").fetch("deadlines", CONFIG, {}, ctx)
+    assert [item["subtitle"] for item in data.items] == ["Last day to cancel · 2026-10-18", "Contract ends · 2026-10-25"]
+    assert len({item["id"] for item in data.items}) == 2, "the two days of one contract are two rows"
+
+
+def test_the_demo_shows_a_last_day_to_cancel() -> None:
+    data = get_adapter("nexpaper").demo("deadlines", {}, 0)
+    assert any(item["subtitle"].startswith("Last day to cancel · ") for item in data.items)
+
+
+@respx.mock
 async def test_the_filing_card_counts_and_records_the_total(ctx: Context) -> None:
     respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json=DASHBOARD))
     data = await get_adapter("nexpaper").fetch("library", CONFIG, {}, ctx)

@@ -47,8 +47,9 @@ from .nexapp_base import NexappApi, count_of, epoch_of
 #: How far ahead the deadlines card looks, and how close a deadline has to be to turn it yellow.
 LOOK_AHEAD_DAYS = 14
 SOON_DAYS = 3
-#: What a deadline is, as nexpaper names it (``kind``). Any other value is shown as it came.
-KINDS = {"due": "Due", "contract_end": "Contract ends", "warranty_end": "Warranty ends"}
+#: What a deadline is, as nexpaper names it (``kind``). Any other value is shown as it came. ``notice`` (nexpaper 1.4.0
+#: and later) is the last day to cancel a contract, its end minus the notice period.
+KINDS = {"due": "Due", "contract_end": "Contract ends", "warranty_end": "Warranty ends", "notice": "Last day to cancel"}
 #: The inbox card turns yellow at this many documents, or when the oldest has waited this many days.
 WARN_COUNT = 10
 WARN_DAYS = 14
@@ -144,7 +145,7 @@ class NexpaperAdapter(NexappApi, Adapter):
             rows = [
                 {"id": 40, "title": "Car insurance, renewal", "date": (today + timedelta(days=2)).isoformat(), "kind": "due"},
                 {"id": 41, "title": "Tax return, reminder", "date": (today + timedelta(days=9)).isoformat(), "kind": "due"},
-                {"id": 42, "title": "Gym membership, cancel by", "date": (today + timedelta(days=13)).isoformat(), "kind": "due"},
+                {"id": 42, "title": "Gym membership", "date": (today + timedelta(days=13)).isoformat(), "kind": "notice"},
             ]
             if fake.flicker("nexpaper-late", tick, 0.4):
                 rows.insert(0, {"id": 39, "title": "Electricity bill", "date": (today - timedelta(days=1)).isoformat(), "kind": "due"})
