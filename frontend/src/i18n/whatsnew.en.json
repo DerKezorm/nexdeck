@@ -1467,6 +1467,22 @@
       "small": [
         "Thanks to naamah75 for the report (#44)."
       ]
+    },
+    "0.41.4": {
+      "lead": "The nexpaper deadlines card names a contract's last day to cancel.",
+      "sections": [
+        {
+          "title": "Last day to cancel",
+          "body": "nexpaper 1.4.0 and later also sends the last day to cancel a contract with a notice period, its end minus the notice. The Deadlines card showed it as the raw word notice and now names it Last day to cancel.",
+          "path": "A nexpaper Deadlines card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A board dragged to a new place in the board list no longer jumps back for a moment on a slow server.",
+        "Older nexpaper versions never send this day, so their cards stay as they were.",
+        "Apprise, which sends the notifications, is now 1.13.1: older versions passed a channel's login headers on when a service redirected to another host."
+      ]
     }
   }
 }

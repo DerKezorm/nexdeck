@@ -3,6 +3,21 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.41.4 (2026-10-16)
+
+### Fixed
+
+- **The nexpaper Deadlines card names a contract's last day to cancel.** nexpaper 1.4.0 and later also sends that day for a contract with a notice period (its end minus the notice). The card showed it as the raw word "notice"; it now reads "Last day to cancel". Older nexpaper versions never send it, so nothing changes there.
+- **A board dragged to a new place in the board list stays there.** On a slow server the list fell back to the old order between letting go and the server's answer, so the row jumped back and then over again.
+
+### Security
+
+- **Apprise 1.13.1** (was 1.9.5). Older Apprise passed the auth headers of a notification channel on when the service redirected to another host (GHSA-856c-92hv-3vxx). It touches channels whose URL carries headers or a login.
+
+### Upgrading
+
+Nothing to do. No change to the database.
+
 ## 0.41.3 (2026-10-13)
 
 ### Fixed

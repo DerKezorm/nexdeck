@@ -1467,6 +1467,22 @@
       "small": [
         "Danke an naamah75 für die Meldung (#44)."
       ]
+    },
+    "0.41.4": {
+      "lead": "Die Fristen-Karte von nexpaper nennt den letzten Kündigungstag eines Vertrags.",
+      "sections": [
+        {
+          "title": "Letzter Kündigungstag",
+          "body": "nexpaper ab 1.4.0 schickt bei einem Vertrag mit Kündigungsfrist auch den letzten Tag, an dem man noch kündigen kann: das Vertragsende minus die Frist. Die Fristen-Karte zeigte ihn roh als notice und nennt ihn jetzt Letzter Kündigungstag.",
+          "path": "Eine nexpaper-Karte Fristen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein Board, das in der Board-Liste an einen neuen Platz gezogen wird, springt auf einem langsamen Server nicht mehr kurz zurück.",
+        "Ältere nexpaper-Versionen schicken diesen Tag nie, ihre Karten bleiben, wie sie waren.",
+        "Apprise, das die Benachrichtigungen verschickt, ist jetzt 1.13.1: ältere Versionen gaben die Anmeldedaten eines Kanals weiter, wenn ein Dienst auf einen anderen Host umleitete."
+      ]
     }
   }
 }
