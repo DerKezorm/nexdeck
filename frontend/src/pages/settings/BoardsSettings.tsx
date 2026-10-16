@@ -39,7 +39,7 @@ export function BoardsSettings() {
       in an order nobody asked for. */
   const save = (order: BoardSummary[]) => {
     setReordering(true)
-    void put('/boards/order', { slugs: order.map((one) => one.slug) })
+    return put('/boards/order', { slugs: order.map((one) => one.slug) })
       .then(() => boards.refetch())
       .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
       .finally(() => setReordering(false))

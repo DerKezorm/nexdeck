@@ -58,13 +58,24 @@ export function moved<T>(list: readonly T[], from: number, to: number): T[] {
 /**
  * @param saved  the order as it stands
  * @param keyOf  a stable key per row
- * @param onDrop called with the new order, only when something really moved
+ * @param onDrop called with the new order, only when something really moved.
+ *               When it returns a promise, the dropped order stays on screen
+ *               until that settles.
  */
-export function useHandleReorder<T>(saved: T[], keyOf: (one: T) => string, onDrop: (order: T[]) => void): Reorder<T> {
+export function useHandleReorder<T>(
+  saved: T[],
+  keyOf: (one: T) => string,
+  onDrop: (order: T[]) => void | Promise<unknown>,
+): Reorder<T> {
   const [dragged, setDragged] = useState<T[] | null>(null)
+  // ⚠️ The order just dropped, while the server is still being told. Without
+  // it the list fell back to `saved`, the order from before the drag, until
+  // the answer came: on a slow server the row jumped back where it came from
+  // for a second or two and then over again (end-to-end test on CI, 16.10.2026).
+  const [landing, setLanding] = useState<T[] | null>(null)
   const [holding, setHolding] = useState<string | null>(null)
   const boxes = useRef(new Map<string, HTMLElement>())
-  const rows = dragged ?? saved
+  const rows = dragged ?? landing ?? saved
 
   useEffect(() => {
     if (holding === null) return
@@ -94,7 +105,15 @@ export function useHandleReorder<T>(saved: T[], keyOf: (one: T) => string, onDro
 
   useEffect(() => {
     if (holding !== null || dragged === null) return
-    if (!dragged.every((one, place) => keyOf(one) === keyOf(saved[place]))) onDrop(dragged)
+    if (!dragged.every((one, place) => keyOf(one) === keyOf(saved[place]))) {
+      const told = onDrop(dragged)
+      // A promise only: a caller that hands back whatever its setter returned
+      // has nothing to wait for.
+      if (told instanceof Promise) {
+        setLanding(dragged)
+        void told.finally(() => setLanding(null))
+      }
+    }
     setDragged(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holding, dragged])

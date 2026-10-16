@@ -149,9 +149,25 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
     await page.mouse.up()
   }
 
+  // ⚠️ A slow server, on purpose. The list used to fall back to the order from
+  // before the drag until the answer came, and the row jumped back for that
+  // long: on CI this made the second drag start from a list that was not the
+  // one the test had read (16.10.2026). So the answer waits, the dropped order
+  // has to stay meanwhile, and the next drag waits for the handles to be free,
+  // as a hand would.
+  await page.route('**/api/v1/boards/order', async (route) => {
+    await new Promise((done) => setTimeout(done, 1500))
+    await route.continue()
+  })
+  const stillSaving = () => page.waitForTimeout(700)
+  const saved = () => expect(handles.first()).toBeEnabled()
+
   const start = await names()
   // Upwards: the last one to the top.
   await drag(2, 0)
+  await stillSaving()
+  expect(await names()).toEqual([start[2], start[0], start[1]])
+  await saved()
   await expect.poll(names).toEqual([start[2], start[0], start[1]])
 
   // ⚠️ And downwards, all the way past the last row. Reported by hand: this
@@ -159,7 +175,11 @@ test('setup wizard, demo board, edit mode, kiosk link, sign-out', async ({ page,
   // no row contains it any more, and the drag went deaf from there.
   const middleState = await names()
   await drag(0, 2)
+  await stillSaving()
+  expect(await names()).toEqual([middleState[1], middleState[2], middleState[0]])
+  await saved()
   await expect.poll(names).toEqual([middleState[1], middleState[2], middleState[0]])
+  await page.unroute('**/api/v1/boards/order')
 
   // And it survives a reload, so it really went to the server.
   await page.reload()
