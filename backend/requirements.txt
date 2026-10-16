@@ -21,7 +21,7 @@ pyyaml==6.0.3
 # Home Assistant speaks WebSocket; httpx does not.
 websockets==15.0.1
 # One adapter, a hundred notification services.
-apprise==1.9.5
+apprise==1.13.1
 # apprise pulls it in through requests-oauthlib. Below 4.0.0 it has two
 # advisories (GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv), both on the server
 # side apprise never uses; pinned so no build falls back to 3.3.1.
