@@ -63,7 +63,7 @@ export function SystemPage() {
             <Route path="search" element={forAdmin(<SearchSettings />)} />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="sign-in" element={forAdmin(<SignInSettings />)} />
-            {/* Where the sign-in providers were until the shared sign-in blueprint. */}
+            {/* Where the sign-in providers were until the provider list. */}
             <Route path="oidc" element={<Navigate to="/system/sign-in" replace />} />
             <Route path="home-network" element={forAdmin(<HomeNetworkSettings />)} />
             <Route path="journal" element={forAdmin(<JournalSettings />)} />

@@ -1,4 +1,4 @@
-"""Actual 26.10.0 behind actual-http-api 26.10.0, measured on 05.10.2026 on docker-dev with a made-up household
+"""Actual 26.10.0 behind actual-http-api 26.10.0, measured on 05.10.2026 on a test host with a made-up household
 budget: the shapes are the measured ones, names and amounts made up."""
 
 from __future__ import annotations

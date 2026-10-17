@@ -282,7 +282,7 @@ class MusicLibrary:
 
     # -- playlists ---------------------------------------------------------------
     #
-    # Decided on 11.09.2026: create, add tracks, remove tracks, rename, delete.
+    # Supported: create, add tracks, remove tracks, rename, delete.
     # A playlist is written on the connection's account, the same one the card
     # browses as. Measured the same day on Jellyfin 10.11.11 and Plex 1.43.3
     # with a throwaway playlist that was deleted afterwards.

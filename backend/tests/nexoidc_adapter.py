@@ -1,11 +1,10 @@
-"""nexoidc contract tests: nexdeck's adapter (copied once from ``bauplaene/oidc/tests-fuer-apps/adapter_template.py``,
-from then on nexdeck's own file).
+"""nexoidc contract tests: nexdeck's adapter (nexdeck's own file).
 
 The contract tests in ``tests/nexoidc/`` are the same in every nex app and never edited here. They reach nexdeck only
 through this class: its real routes, a fresh database per test, its accounts and its second factor. Passwords and
 keys are made at run time; none is written into this file.
 
-nexdeck has no invitations (#job-193: the invitation parts of the blueprint do not apply). ``has_invitations`` is False, so
+nexdeck has no invitations (the invitation parts of the module do not apply). ``has_invitations`` is False, so
 the contract skips the tests that ask for an invitation, with the reason; what those tests check besides the
 invitation (the last link of an account without a password, the name of a new account from Entra) runs over
 ``auto_create`` in the contract and in ``tests/test_oidc_app.py``.
@@ -40,7 +39,7 @@ class Adapter(StandardAdapter):
     single_account = False
     has_invitations = False
     only_authentik = False
-    #: nexdeck is not part of the nexsuite Verbund (blueprint 06 names nexcanvas, nextasks, nexbrand, nexlore).
+    #: nexdeck cannot be coupled to a central sign-in service.
     supports_coupling = False
     has_second_factor = True
     legacy_model = "list"

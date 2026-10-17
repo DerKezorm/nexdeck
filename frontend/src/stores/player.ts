@@ -3,7 +3,7 @@
  *
  * ⚠️ Not the card's. A card is unmounted the moment somebody switches board or
  * page, and music that stops there is music nobody can listen to while doing
- * anything else. Decided on 11.09.2026: it keeps playing, and a bar at the
+ * anything else. So it keeps playing, and a bar at the
  * bottom takes over while the card is out of sight. The cards and that bar
  * only tell this store what to do; `PlayerHost` owns the element that makes
  * the sound.
@@ -31,7 +31,7 @@ export const BAR_CORNERS: BarCorner[] = ['top-left', 'top-right', 'bottom-left',
  * The library opened as a sheet beside the board.
  *
  * ⚠️ For every card too small to carry the library itself, and for the bar at
- * the bottom. Decided on 11.09.2026 after the first test: a player two rows
+ * the bottom: a player two rows
  * high played beautifully and offered no way to find anything else to play.
  */
 export interface LibraryRequest {

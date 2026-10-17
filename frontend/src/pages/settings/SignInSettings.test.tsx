@@ -1,6 +1,6 @@
 /**
- * System, Sign-in as the shared sign-in blueprint lays it out (part 04): three cards in their order, the form as a
- * dialog with the fields in the blueprint's order, the questions before an address or an issuer changes and before
+ * System, Sign-in as the shared sign-in module lays it out: three cards in their order, the form as a
+ * dialog with the fields in the module's order, the questions before an address or an issuer changes and before
  * an entry goes, and the steps of the authentik button with names and reasons instead of codes.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -113,7 +113,7 @@ describe('System, Sign-in', () => {
     calls.askAddress = true
   })
 
-  it('shows the three cards in the order of the blueprint, with the marks of an entry', async () => {
+  it('shows the three cards in the order of the module, with the marks of an entry', async () => {
     show()
     const headings = await screen.findAllByRole('heading', { level: 2 })
     expect(headings.map((heading) => heading.textContent)).toEqual(['Sign-in', 'Sign-in providers', 'authentik in one step'])
@@ -137,7 +137,7 @@ describe('System, Sign-in', () => {
     await waitFor(() => expect(calls.patch.at(-1)).toEqual({ public_url: 'https://new.example.com', confirm_address: true }))
   })
 
-  it('opens the form as a dialog with the fields in the order of the blueprint', async () => {
+  it('opens the form as a dialog with the fields in the order of the module', async () => {
     show()
     await userEvent.click(await screen.findByRole('button', { name: 'Add a provider' }))
     const form = screen.getByTestId('provider-form')

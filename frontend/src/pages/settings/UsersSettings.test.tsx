@@ -1,6 +1,6 @@
 /**
  * The account list: a link to a sign-in provider is a mark, and it is undone in a menu of the account with the
- * administrator's own password (sign-in blueprint 04), not by a cross on the mark.
+ * administrator's own password (shared sign-in module), not by a cross on the mark.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'

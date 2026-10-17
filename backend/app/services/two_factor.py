@@ -224,7 +224,7 @@ VIA_PROVIDER = "provider"
 def must_set_up(db: DbSessionType, user: User, session_kind: str | None = None) -> bool:
     """Is this person being kept at the door until they set one up?
 
-    Only accounts with a password (blueprint 01): an account that signs in through a provider only is not forced.
+    Only accounts with a password: an account that signs in through a provider only is not forced.
     And not in a session opened through a provider whose entry checks the second factor itself, even when the account
     has a password; signed in with that password, the duty holds as before. API tokens have no session: they wait
     until the account has a factor (``keys_wait``).

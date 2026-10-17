@@ -1,5 +1,5 @@
 /**
- * Pflichttests 33 and 34 of the shared sign-in blueprint (copied once from bauplaene/oidc, then nexdeck's file).
+ * Two end-to-end tests of the shared sign-in module.
  *
  * The provider is the stand-in of `e2e/fake-provider.mjs` (OpenID Connect over http on 8797 with a key made at its
  * start, sending the browser straight back with a code for whoever POST /oidc/next named). Never a real provider,

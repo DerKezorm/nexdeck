@@ -4,7 +4,7 @@
 none of nexdeck's address checks reach its requests. A member could point a
 channel at a server of their own that answers with a redirect to 127.0.0.1, and
 read from the test result whether something listens beside nexdeck. Every other
-kind goes through a client that checks each hop. Decided on 12.09.2026: Apprise
+kind goes through a client that checks each hop. Apprise
 stays, for the people who may point the server anywhere already.
 """
 

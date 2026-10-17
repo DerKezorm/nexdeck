@@ -1,5 +1,5 @@
 /**
- * The sign-in page with providers (sign-in blueprint 04): the password form, "or", a button per provider in the
+ * The sign-in page with providers (shared sign-in module): the password form, "or", a button per provider in the
  * order of the list; with the password switched off only the buttons and the small way in for an administrator; a
  * refused sign-in said in words, and nothing shown that is not one of the module's codes.
  */

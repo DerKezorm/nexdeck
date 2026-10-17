@@ -117,7 +117,7 @@ def _context_fernet(context: str) -> Fernet:
     """A key of its own for one purpose, derived from the stretched installation key.
 
     One provider's ciphertext does not open under another's context: copying
-    the stored secret of one row into another gives nothing (blueprint 01,
+    the stored secret of one row into another gives nothing (context
     ``oidc-provider:<id>``). The stretching is paid once per secret.
     """
     secret = get_settings().resolved_secret_key().encode("utf-8")

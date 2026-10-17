@@ -29,7 +29,7 @@ logger = logging.getLogger("nexdeck.channels")
 #:
 #: ⚠️ Apprise sends through its own HTTP library and follows redirects there,
 #: where no address check of nexdeck reaches, so for a member it was a way of
-#: asking what listens beside the server. Decided on 12.09.2026.
+#: asking what listens beside the server.
 ADMIN_ONLY_KINDS = frozenset({"apprise"})
 
 #: How often one account may press "Send a test" within the window.

@@ -322,8 +322,8 @@ def put_layouts(page_id: int, body: LayoutsBody, user: CurrentUser, db: DbSessio
     ⚠️ A save that started from an older version is refused. Two browsers in
     edit mode used to overwrite each other without a word: the second save put
     the first person's arrangement back, on screen it looked saved, and after
-    a reload the work was gone. Decided on 07.09.2026: refuse and say so,
-    rather than lose an arrangement quietly.
+    a reload the work was gone. So the save is refused and says so, rather
+    than lose an arrangement quietly.
 
     A browser that sends no version is not checked. That is an older tab, and
     holding its save hostage would be worse than the race it might lose.

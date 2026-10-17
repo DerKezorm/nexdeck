@@ -1,4 +1,4 @@
-"""Whether people may sign in with a password (blueprint "Anmeldung mit OIDC und authentik", part 01).
+"""Whether people may sign in with a password (shared sign-in module).
 
 The administrator can switch the password off once at least one provider is active; then only the providers let
 people in. Administrators can always use their password: the way back if the provider fails. With no active provider

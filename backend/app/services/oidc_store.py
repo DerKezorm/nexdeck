@@ -1,7 +1,7 @@
 """nexdeck's side of the shared sign-in module ``vendor/nexoidc``: the ``Store`` over its tables, the start-up
 configuration, and the start-up check of the provider list.
 
-The module (the blueprint "Anmeldung mit OIDC und authentik", the same in every nex app) runs the protocol, decides
+The module (the same in every nex app) runs the protocol, decides
 who an identity is and keeps the provider list; it never sees a database. What is nexdeck's own lives here: accounts
 and their names, the role of an account a provider creates, and the encryption of the client secrets.
 
@@ -49,7 +49,7 @@ logger = logging.getLogger("nexdeck.oidc")
 APP_NAME = "nexdeck"
 API_PREFIX = "/api/v1"
 LOGIN_PAGE = "/login"
-#: The profile page; "My account" in the blueprint.
+#: The profile page, "My account".
 ACCOUNT_PAGE = "/settings"
 HOME = "/"
 #: The callback nexdeck 0.36 and older sent to every provider. Their providers know it, so it stays valid for them.
@@ -65,7 +65,7 @@ _AUTHENTIK_ISSUER = re.compile(r"/application/o/[-A-Za-z0-9_]+/?$")
 
 
 def role_for_new_account(stored_role: str) -> str:
-    """The role of an account a provider creates (blueprint 01: a member).
+    """The role of an account a provider creates (a member).
 
     ⚠️ 0.36 let the operator choose it per provider, administrator included: anybody with a login at that provider
     became an administrator here. New entries no longer offer the choice; an entry that had chosen "guest" keeps

@@ -259,7 +259,7 @@ def board_permission(db: DbSessionType, board: Board, user: User | None) -> str 
         # keep everything on the boards that were already theirs, actions
         # included, while the same downgrade did take "edit" and "act" away
         # from every share. "Guests may only look" has to mean that, or the
-        # downgrade is a label. Decided on 07.09.2026.
+        # downgrade is a label.
         return "view" if user.role == Role.guest.value else "owner"
     best: str | None = None
     for share in db.scalars(select(BoardShare).where(BoardShare.board_id == board.id)):

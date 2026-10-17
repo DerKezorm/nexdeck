@@ -1,6 +1,6 @@
 """Mailpit: the mail catcher for development, its mail counts and its newest mail.
 
-Measured on 04.10.2026 against Mailpit 1.31.4 on docker-dev, with three
+Measured on 04.10.2026 against Mailpit 1.31.4 on a test host, with three
 made-up mails sent over its SMTP port, once open, once behind its own login
 with a webroot (issue #28). Confirmed on 05.10.2026 by the reporter of #28 on
 their own Mailpit, so it left beta with 0.31.1.

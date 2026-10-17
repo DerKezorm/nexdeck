@@ -137,7 +137,7 @@ def login(body: LoginBody, request: Request, response: Response, db: DbSession) 
 STEP_COOKIE = "nexdeck_step"
 #: As long as the ticket inside it lives (``security.create_step_token``).
 STEP_MINUTES = 5
-#: Wrong codes for one account before the code step waits (blueprint 01: five minutes, five tries).
+#: Wrong codes for one account before the code step waits (five minutes, five tries).
 CODE_TRIES = 5
 
 

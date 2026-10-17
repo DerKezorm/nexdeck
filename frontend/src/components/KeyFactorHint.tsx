@@ -1,7 +1,7 @@
 /**
  * "Works only once you set up a second factor." for the API tokens of an account that must set up a second factor
  * but has none yet, and is spared the duty in this session because it came in through a provider that checks the
- * second factor itself (sign-in blueprint 01). A token has no session: it asks the account and stays shut until the
+ * second factor itself (shared sign-in module). A token has no session: it asks the account and stays shut until the
  * account sets one up. Making one stays possible; this only says so, with the way to the setup.
  */
 import { useTranslation } from 'react-i18next'

@@ -36,10 +36,10 @@ export function UsersSettings() {
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const roles = [{ value: 'admin', label: t('users.role.admin') }, { value: 'user', label: t('users.role.user') }, { value: 'guest', label: t('users.role.guest') }]
   const fail = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
-  // The administrator unlinks an account from a provider with the own password (sign-in blueprint 01).
+  // The administrator unlinks an account from a provider with the own password.
   const [unlinking, setUnlinking] = useState<{ user: User; provider: LinkedProvider } | null>(null)
   const [ownPassword, setOwnPassword] = useState('')
-  // The menu per account ("Unlink <provider>", sign-in blueprint 04): one at a time, closed by a click elsewhere or Escape.
+  // The menu per account ("Unlink <provider>"): one at a time, closed by a click elsewhere or Escape.
   const [menuFor, setMenuFor] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   useEffect(() => {

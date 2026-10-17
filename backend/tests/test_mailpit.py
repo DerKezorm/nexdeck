@@ -1,4 +1,4 @@
-"""Mailpit 1.31.4, measured on 04.10.2026 on docker-dev with three made-up mails: the shapes are the measured
+"""Mailpit 1.31.4, measured on 04.10.2026 on a test host with three made-up mails: the shapes are the measured
 ones, the senders made up."""
 
 from __future__ import annotations

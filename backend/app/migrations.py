@@ -171,7 +171,7 @@ def _check_since_column(connection: Connection) -> None:
 
 
 def _provider_list_columns(connection: Connection) -> None:
-    """The columns of the shared sign-in blueprint (part 01), added beside the ones 0.36 reads.
+    """The columns of the sign-in provider list, added beside the ones 0.36 reads.
 
     ⚠️ Added, not renamed, and every one with a default the database knows:
     an operator who goes back to 0.36 keeps a table 0.36 can read and write.
@@ -222,11 +222,11 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (16, "Each account chooses the two languages in its top bar", _language_pair_column),
     (17, "A wall display can rest on a large clock", _rest_column),
     (18, "A reachability check knows since when it measures", _check_since_column),
-    (19, "Sign-in providers follow the shared blueprint", _provider_list_columns),
+    (19, "Sign-in providers become a list", _provider_list_columns),
 ]
 
 
-#: The migration that brings the sign-in providers to the shared blueprint; a backup is written before it.
+#: The migration that brings the sign-in providers to the list; a backup is written before it.
 PROVIDER_LIST_VERSION = 19
 
 

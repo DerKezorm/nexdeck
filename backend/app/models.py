@@ -189,13 +189,13 @@ class ApiToken(Base):
 
 
 class OidcProvider(Base):
-    """One sign-in provider (the shared blueprint "Anmeldung mit OIDC und authentik", part 01).
+    """One sign-in provider (an entry of the provider list in the shared sign-in module).
 
     ⚠️ Three columns keep the names nexdeck 0.36 gave them, ``issuer_url``,
     ``client_secret`` and, in ``oidc_links``, ``user_id``, for one version:
     an operator who goes back to 0.36 finds the table in the shape it reads,
     and its providers still sign people in. The attributes carry the
-    blueprint's names. ``client_secret`` holds the secret the way 0.36 reads
+    module's names. ``client_secret`` holds the secret the way 0.36 reads
     it; ``client_secret_enc`` holds it under the provider's own context
     (``oidc-provider:<id>``), and nexdeck reads only that one. Every column
     0.36 does not know has a ``server_default``, so 0.36 still inserts rows.
@@ -222,8 +222,8 @@ class OidcProvider(Base):
     #: ``services/oidc_store.role_for_new_account`` ("guest" stays, anything else
     #: makes members).
     default_role: Mapped[str] = mapped_column(String(16), default=Role.user.value)
-    #: "The provider checks the second factor itself". On for new entries
-    #: (blueprint 01); entries from before keep the value they had, off by
+    #: "The provider checks the second factor itself". On for new entries;
+    #: entries from before keep the value they had, off by
     #: default until 0.36.
     trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=True)
     #: "" by hand, "authentik" set up by the authentik button (only that one is touched by it).
@@ -247,7 +247,7 @@ class OidcLink(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     provider_id: Mapped[int] = mapped_column(ForeignKey("oidc_providers.id", ondelete="CASCADE"))
-    #: The account (``account_id`` in the blueprint); the column keeps the name 0.36 reads.
+    #: The account (``account_id`` in the module); the column keeps the name 0.36 reads.
     account_id: Mapped[int] = mapped_column("user_id", ForeignKey("users.id", ondelete="CASCADE"), index=True)
     subject: Mapped[str] = mapped_column(String(300))
     #: The ``iss`` of the token that made the link; "" for a link nexdeck 0.36 made.

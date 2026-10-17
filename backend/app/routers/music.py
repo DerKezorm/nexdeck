@@ -67,7 +67,7 @@ _tidying: set[asyncio.Task[None]] = set()
 def _player(db: DbSession, widget_id: int, request: Request, user: OptionalUser) -> tuple[Widget, MusicLibrary, bool]:
     """The card, if it is a player and this person may play on its board.
 
-    ⚠️ "act", not "view", decided on 11.09.2026: whoever may press the buttons
+    ⚠️ "act", not "view": whoever may press the buttons
     on a board may play its music, and a kiosk only when its token allows
     actions. Looking at the board shows the newest albums and nothing more,
     because every address here makes the server call the media server with

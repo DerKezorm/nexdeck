@@ -1,6 +1,6 @@
 /**
- * System, Sign-in: three cards one below the other, as the shared sign-in blueprint lays them out for every nex app
- * (part 04). Order, wording and behaviour come from there; the parts (card, switch, field, dialog) are nexdeck's own.
+ * System, Sign-in: three cards one below the other, as the shared sign-in module lays them out for every nex app.
+ * Order, wording and behaviour come from there; the parts (card, switch, field, dialog) are nexdeck's own.
  *
  * 1. Sign-in: password sign-in (locked on while no provider is active), the public address, the second factor.
  * 2. Sign-in providers: the list with its marks, the drag handle, and the form as a dialog.
@@ -365,7 +365,7 @@ function CopyField({ value }: { value: string }) {
   )
 }
 
-/** The provider form as a dialog, fields in the blueprint's order. */
+/** The provider form as a dialog, fields in the module's order. */
 function ProviderDialog({ entry, publicUrl, onClose, onSaved }: { entry: OidcProvider | null; publicUrl: string; onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation()
   const problem = useProblem()

@@ -343,7 +343,7 @@ def test_being_made_a_guest_takes_the_boards_you_own_down_to_looking(client: Tes
     at the role, while the very same function already pushed a guest down from
     "edit" and "act" on every *share*. So somebody moved to guest kept full
     rights on every board that was already theirs, actions included, and the
-    person doing the moving had no way of knowing. Decided on 07.09.2026: the
+    person doing the moving had no way of knowing. So the
     role wins.
     """
     setup_admin(client)

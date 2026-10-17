@@ -26,7 +26,7 @@ def list_users(user: CurrentUser, db: DbSession) -> list[dict]:
     """Every signed-in user sees names and roles, for sharing boards."""
     rows = db.scalars(select(User).order_by(User.username))
     if user.role == Role.admin.value:
-        # The administrator sees which providers each account is linked to, and can unlink one (blueprint 01).
+        # The administrator sees which providers each account is linked to, and can unlink one.
         links = oidc_store.account_links(db)
         return [{**user_public(u).model_dump(), "providers": links.get(u.id, [])} for u in rows]
     return [
@@ -113,7 +113,7 @@ def delete_user(user_id: int, admin: AdminUser, db: DbSession, boards: str = "")
     # every card kept asking its service, every kiosk link kept working, and it
     # showed up in nobody's list, because "mine" was false for everyone and
     # "shared" only true where a share existed. Nobody could find it to stop
-    # it. Decided on 07.09.2026: ask, rather than pick one silently.
+    # it. So the question is asked, rather than one choice picked silently.
     theirs = list(db.scalars(select(Board).where(Board.owner_id == user.id)))
     if theirs and boards not in ("delete", "hand_over"):
         raise error(

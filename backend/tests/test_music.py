@@ -453,7 +453,7 @@ def test_music_counts_apart_from_the_cameras(client: TestClient, monkeypatch: py
 
 
 def test_looking_at_a_board_is_not_enough_to_play(client: TestClient) -> None:
-    """Decided on 11.09.2026: whoever may act on a board may play its music."""
+    """Whoever may act on a board may play its music."""
     setup_admin(client)
     board, widget_id = _player_card(client, demo=True)
     kim = create_user(client, "kim")

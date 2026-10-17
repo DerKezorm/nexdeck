@@ -1,7 +1,7 @@
 """Sign-in through OpenID Connect providers, their list, linking, and the authentik button.
 
 The protocol, who an identity is, the provider list and the button live in the shared module ``vendor/nexoidc``
-(the blueprint "Anmeldung mit OIDC und authentik", the same in every nex app); this router puts nexdeck around it:
+(the same in every nex app); this router puts nexdeck around it:
 sessions, the sign-in brake, the password asked again before linking, the second factor, and the error answers.
 
 The return leg is a browser redirect, not an API answer: every outcome of a callback ends in a redirect, to ``/``

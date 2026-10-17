@@ -163,7 +163,7 @@ async def send(kind: str, config: dict[str, Any], message: Message, *, user_id: 
         # ⚠️ An administrator's only. Apprise sends through its own HTTP library
         # and follows redirects there, where no address check of nexdeck
         # reaches, so a member's channel was a way of asking what listens
-        # beside the server. Decided on 12.09.2026.
+        # beside the server.
         def by_an_administrator() -> bool:
             from ...db import db_session
             from ...models import User

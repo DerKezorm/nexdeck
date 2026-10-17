@@ -11,8 +11,8 @@ a homelab dashboard that cannot reach 192.168.x is no use to anyone.
 * loopback, because that is nexdeck itself and whatever else listens beside it
 * 169.254.0.0/16, because it hands out the host's credentials on every cloud
 
-Decided on 07.09.2026, after the first draft barred far more and would have
-made the product worse.
+The list is kept short on purpose: a longer one would bar far more and make
+the product worse.
 """
 
 from __future__ import annotations

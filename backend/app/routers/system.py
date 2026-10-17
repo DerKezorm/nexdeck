@@ -190,7 +190,7 @@ def _tell_about_update(latest: str, current: str) -> None:
 
 
 def _checked_public_url(db: DbSession, request: Request, wanted: str, confirmed: bool) -> str:
-    """The address as it will be stored, after the question of the sign-in blueprint (part 04, card 1).
+    """The address as it will be stored, after the question of the sign-in settings.
 
     ⚠️ Providers send people back to an address behind the public one. Changed here, authentik still knows the
     old one, and so does every provider entered by hand; the administrator is asked first (409 with the numbers),

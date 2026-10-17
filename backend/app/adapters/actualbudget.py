@@ -1,7 +1,7 @@
 """Actual Budget: this month's budget, the accounts and the categories.
 
 Measured on 05.10.2026 against Actual 26.10.0 and actual-http-api 26.10.0 on
-docker-dev, with a made-up household budget: three open accounts, one off
+a test host, with a made-up household budget: three open accounts, one off
 budget, one closed, and one category overspent.
 
 - Actual has no HTTP API of its own. Its server only stores the budget file;
