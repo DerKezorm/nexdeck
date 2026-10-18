@@ -698,7 +698,7 @@ export function BoardPage() {
         onChanged={() => void Promise.all([board.refetch(), boards.refetch()])}
       />
       <NoticeDrawer />
-      <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} />
+      <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} data={liveData} />
       <WhatsNewDialog />
 
       <ActionSheet

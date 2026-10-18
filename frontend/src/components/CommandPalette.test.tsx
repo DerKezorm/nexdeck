@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { WidgetData, WidgetView } from '../lib/types'
 import { CommandPalette } from './CommandPalette'
 
 const settings = vi.hoisted(() => ({ value: {} as unknown }))
@@ -27,11 +28,11 @@ const TARGETS = {
   ],
 }
 
-function show() {
+function show(widgets: WidgetView[] = [], data: Record<number, WidgetData> = {}) {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <CommandPalette open onClose={vi.fn()} boards={[]} widgets={[]} />
+        <CommandPalette open onClose={vi.fn()} boards={[]} widgets={widgets} data={data} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -70,5 +71,71 @@ describe('CommandPalette', () => {
     await userEvent.type(screen.getByRole('textbox'), 'zzzqqq')
     // Plain words are a search, so the way out is offered rather than nothing.
     await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0))
+  })
+
+  describe('links on the board (issue #46)', () => {
+    const card = (id: number, kind: string, title: string): WidgetView => ({
+      id, kind, title, icon: '', link: '', renderer: '', options: {}, integration_id: null, refresh_seconds: null,
+    })
+    const WIDGETS = [
+      card(1, 'core.bookmarks', 'Docs'),
+      card(2, 'core.button', 'Router'),
+      card(3, 'linkding.recent', 'Saved'),
+      card(4, 'radarr.queue', 'Downloads'),
+    ]
+    const DATA: Record<number, WidgetData> = {
+      1: { status: 'ok', items: [
+        { title: 'Backup guide', url: 'https://docs.example.com/backup', icon: '' },
+        { title: 'Sneaky', url: 'javascript:alert(1)', icon: '' },
+      ] },
+      2: { status: 'ok', meta: { kind: 'link', where: 'https://router.example.com', new_tab: true } },
+      3: { status: 'ok', items: [{ title: 'DNS cheat sheet', url: 'https://wiki.example.org/dns' }] },
+      4: { status: 'ok', items: [{ title: 'Some movie', url: 'https://radarr.example.com/movie/1' }] },
+    }
+    let opened: string[]
+
+    beforeEach(() => {
+      settings.value = { enabled: false, targets: [] }
+      opened = []
+      vi.stubGlobal('open', (url: string) => {
+        opened.push(url)
+        return null
+      })
+    })
+
+    it('finds a bookmark by its exact title and opens it on Enter', async () => {
+      show(WIDGETS, DATA)
+      await userEvent.type(screen.getByRole('textbox'), 'Backup guide{Enter}')
+      expect(opened).toEqual(['https://docs.example.com/backup'])
+    })
+
+    it('finds a bookmark by its address, and marks it as a link', async () => {
+      show(WIDGETS, DATA)
+      await userEvent.type(screen.getByRole('textbox'), 'docs.example.com/backup')
+      const row = await screen.findByRole('option', { name: /Backup guide/ })
+      expect(row.textContent).toMatch(/Link/)
+    })
+
+    it('offers a button that leads to an address', async () => {
+      show(WIDGETS, DATA)
+      await userEvent.type(screen.getByRole('textbox'), 'Router{Enter}')
+      expect(opened).toEqual(['https://router.example.com'])
+    })
+
+    it('offers what a bookmark service card has loaded', async () => {
+      show(WIDGETS, DATA)
+      await userEvent.type(screen.getByRole('textbox'), 'cheat sheet')
+      expect(await screen.findByRole('option', { name: /DNS cheat sheet/ })).toBeTruthy()
+    })
+
+    it('leaves out rows of other lists and addresses nexdeck will not open', async () => {
+      show(WIDGETS, DATA)
+      const box = screen.getByRole('textbox')
+      await userEvent.type(box, 'Some movie')
+      await waitFor(() => expect(screen.getByText(/Nothing matches|Nichts passt/i)).toBeTruthy())
+      await userEvent.clear(box)
+      await userEvent.type(box, 'Sneaky')
+      await waitFor(() => expect(screen.getByText(/Nothing matches|Nichts passt/i)).toBeTruthy())
+    })
   })
 })

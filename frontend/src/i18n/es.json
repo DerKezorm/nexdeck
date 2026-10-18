@@ -866,9 +866,10 @@
   },
   "palette": {
     "title": "Buscar",
-    "placeholder": "Buscar servicios, acciones, tableros…",
+    "placeholder": "Buscar servicios, enlaces, acciones, tableros…",
     "nothing": "Nada coincide.",
     "open": "Abrir",
+    "link": "Enlace",
     "action": "Acción",
     "board": "Tablero",
     "page": "Página",

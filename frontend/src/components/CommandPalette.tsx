@@ -8,8 +8,9 @@ import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
 import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
-import type { Action, WidgetView } from '../lib/types'
+import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { useFocusTrap } from '../lib/useFocusTrap'
+import { linksOf } from './paletteLinks'
 import { ServiceIcon } from './ServiceIcon'
 
 interface Entry {
@@ -19,6 +20,8 @@ interface Entry {
   icon?: React.ReactNode
   run: () => void
   keywords: string
+  /** Leaves nexdeck: drawn with the arrow out. */
+  outside?: boolean
 }
 
 interface Props {
@@ -28,10 +31,12 @@ interface Props {
   widgets: WidgetView[]
   actions?: { widget: WidgetView; action: Action }[]
   onAction?: (widgetId: number, action: Action) => void
+  /** What the cards show, for the links on them: bookmarks, link buttons, saved links. */
+  data?: Record<number, WidgetData | undefined>
 }
 
-/** Ctrl+K: services, actions, boards, pages and settings, all from the keyboard. */
-export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction }: Props) {
+/** Ctrl+K: services, links, actions, boards, pages and settings, all from the keyboard. */
+export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -58,7 +63,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       // open, and the entry was offered anyway: pressing it opened a blank
       // window. Asked here, so an entry that cannot be opened is not offered.
       if (safeUrl(widget.link)) {
-        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
+        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
       }
     }
     for (const { widget, action } of actions) {
@@ -80,8 +85,28 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
     ]) {
       list.push({ id: `s${path}`, title: label, subtitle: t('palette.settings'), icon: <Settings size={16} />, keywords: label.toLowerCase(), run: () => navigate(path) })
     }
+    // Last, so an empty bar still opens on services and boards: a board with
+    // forty bookmarks would otherwise fill the first screen with them.
+    const seen = new Set<string>()
+    for (const widget of widgets) {
+      for (const link of linksOf(widget, data?.[widget.id])) {
+        const key = `${link.title}
+${link.url}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        list.push({
+          id: `l${widget.id}-${seen.size}`,
+          title: link.title,
+          subtitle: t('palette.link'),
+          icon: <ServiceIcon icon={link.icon} size={16} />,
+          keywords: `${link.title} ${link.url}`.toLowerCase(),
+          outside: true,
+          run: () => (link.newTab ? window.open(link.url, '_blank', 'noopener,noreferrer') : window.location.assign(link.url)),
+        })
+      }
+    }
     return list
-  }, [widgets, actions, boards, navigate, onAction, t])
+  }, [widgets, actions, boards, navigate, onAction, t, data])
 
   /**
    * The targets the bar may hand a word to. Read once and kept: they change
@@ -114,6 +139,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       subtitle: target.name,
       icon: target.icon ? <ServiceIcon icon={target.icon} size={16} /> : <Search size={16} />,
       keywords: '',
+      outside: true,
       run: () => window.open(searchUrl(target, words), '_blank', 'noopener,noreferrer'),
     }))
   }, [search.data, query])
@@ -182,7 +208,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
                 <span className="w-5 flex justify-center text-muted">{entry.icon ?? <Play size={14} />}</span>
                 <span className="flex-1 truncate text-sm">{entry.title}</span>
                 <span className="text-[11px] text-faint">{entry.subtitle}</span>
-                {(entry.id.startsWith('w') || entry.id.startsWith('x')) && <ExternalLink size={12} className="text-faint" />}
+                {entry.outside && <ExternalLink size={12} className="text-faint" />}
               </button>
             </li>
           ))}

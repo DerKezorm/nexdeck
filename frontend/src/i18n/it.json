@@ -866,9 +866,10 @@
   },
   "palette": {
     "title": "Cerca",
-    "placeholder": "Cerca servizi, azioni, bacheche…",
+    "placeholder": "Cerca servizi, link, azioni, bacheche…",
     "nothing": "Nessun risultato.",
     "open": "Apri",
+    "link": "Link",
     "action": "Azione",
     "board": "Bacheca",
     "page": "Pagina",

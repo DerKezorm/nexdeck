@@ -866,9 +866,10 @@
   },
   "palette": {
     "title": "Search",
-    "placeholder": "Search services, actions, boards…",
+    "placeholder": "Search services, links, actions, boards…",
     "nothing": "Nothing matches.",
     "open": "Open",
+    "link": "Link",
     "action": "Action",
     "board": "Board",
     "page": "Page",
