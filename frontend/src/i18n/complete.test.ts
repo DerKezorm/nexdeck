@@ -70,8 +70,8 @@ describe('language files', () => {
 
 /**
  * The sign-in words: German and English come from the shared module word for word; Spanish, French and Italian are
- * nexdeck's own (`oidc.<code>.json`) and must carry every key and placeholder the module's English has (blueprint 06,
- * "Sprachen"), or the page shows a path where a sentence belongs.
+ * nexdeck's own (`oidc.<code>.json`) and must carry every key and placeholder the module's English has, or the page
+ * shows a path where a sentence belongs.
  */
 describe('sign-in words in every language', () => {
   const english = new Set(paths(oidcEn))

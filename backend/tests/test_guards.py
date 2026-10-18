@@ -22,7 +22,7 @@ from app.main import app
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "backend" / "app"
-#: The shared sign-in module (``bauplaene/oidc``), the same in every nex app and changed only at its source, where
+#: The shared sign-in module, the same in every nex app and changed only at its source, where
 #: its own tests guard it; ``tests/nexoidc/test_nexoidc_vendored.py`` makes sure nothing here differs from it. Two
 #: guards below leave it out: its HTTP clients reach only what an administrator entered (the provider, authentik,
 #: often on the same host or network, which the outbound guard would refuse), and its letters ä, ö, ü, ß are the
