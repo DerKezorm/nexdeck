@@ -1483,6 +1483,21 @@
         "Older nexpaper versions never send this day, so their cards stay as they were.",
         "Apprise, which sends the notifications, is now 1.13.1: older versions passed a channel's login headers on when a service redirected to another host."
       ]
+    },
+    "0.42.0": {
+      "lead": "The search under Ctrl K finds the links on the board.",
+      "sections": [
+        {
+          "title": "Links in the search",
+          "body": "The entries of a Bookmarks card, buttons that open an address and the saved links a Karakeep, Linkwarden or Linkding card shows now appear in the search as Link. Type a title or part of the address and press Enter to open it. The search asks no service for more than its card already shows.",
+          "path": "Ctrl K or the search field in the bar"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Only the cards of the page that is open are searched, as before.",
+        "Thanks to luiscarrasco2324 for the idea (#46)."
+      ]
     }
   }
 }

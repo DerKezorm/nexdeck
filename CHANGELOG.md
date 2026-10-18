@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.42.0 (2026-10-18)
+
+### Added
+
+- **The command palette finds the links on the board** (#46). Entries of a Bookmarks card, Button cards that open an address and the saved links a Karakeep, Linkwarden or Linkding card shows appear as a "Link" group, found by title or address and opened on Enter. The palette reads what the cards already show and asks no service for more. As before, only the cards of the open page are searched.
+
+### Upgrading
+
+Nothing to do. No change to the database.
+
 ## 0.41.4 (2026-10-16)
 
 ### Fixed

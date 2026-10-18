@@ -1483,6 +1483,21 @@
         "Ältere nexpaper-Versionen schicken diesen Tag nie, ihre Karten bleiben, wie sie waren.",
         "Apprise, das die Benachrichtigungen verschickt, ist jetzt 1.13.1: ältere Versionen gaben die Anmeldedaten eines Kanals weiter, wenn ein Dienst auf einen anderen Host umleitete."
       ]
+    },
+    "0.42.0": {
+      "lead": "Die Suche unter Strg K findet die Links auf dem Board.",
+      "sections": [
+        {
+          "title": "Links in der Suche",
+          "body": "Die Einträge einer Lesezeichen-Karte, Knöpfe, die eine Adresse öffnen, und die gespeicherten Links, die eine Karte von Karakeep, Linkwarden oder Linkding zeigt, erscheinen jetzt in der Suche als Link. Titel oder einen Teil der Adresse tippen, Enter öffnet ihn. Die Suche fragt keinen Dienst nach mehr, als seine Karte schon zeigt.",
+          "path": "Strg K oder das Suchfeld in der Leiste"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Durchsucht werden wie bisher nur die Karten der offenen Seite.",
+        "Danke an luiscarrasco2324 für die Idee (#46)."
+      ]
     }
   }
 }
