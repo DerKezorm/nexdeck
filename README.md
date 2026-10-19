@@ -2,19 +2,20 @@
 
 **The live homelab dashboard.** Cards that move, actions on the cards, boards for the desk, the phone and the wall.
 
-nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerKezorm/nexview), nexmail, nexbeat, nexpulse and the Nexview Home Assistant integration.
+nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerKezorm/nexview), [nexcrate](https://github.com/DerKezorm/nexcrate), [nexpaper](https://github.com/DerKezorm/nexpaper), [nexmail](https://github.com/DerKezorm/nexmail), [nexpulse](https://github.com/DerKezorm/nexpulse) and more. Every one of them has cards on the board.
 
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
 [![Integrations](https://img.shields.io/badge/integrations-172-3fb6d4)](#the-services-it-speaks-to)
 
-![A nexdeck board: clock, search, weather, Docker load, Pi-hole, what is playing on Plex, monitors, app tiles and feeds](docs/screenshot-overview.png)
+![A nexdeck board in liquid glass: clock, weather, internet traffic, speed test, Pi-hole, charts of CPU and memory for Proxmox, TrueNAS and a NAS, app tiles, what is playing, downloads, AdGuard, containers, a UPS and uptime](docs/screenshot-overview.png)
 
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
 - **172 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **A map of your network.** A page can be a live plan of your UniFi network: gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions. You pick which servers and devices join it, and nothing moves by itself.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Yours to look at.** Thirteen colour themes besides nexdeck's own, Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine among them, cards drawn as glass, liquid glass with an edge that bends the light, flat, outline or with a neon edge, each card in a colour of its own if you like, and backgrounds that drift, show the stars or follow the time of day. Numbers roll to each new reading, and a card that goes down glows red while the room behind it turns a little red too.
@@ -41,6 +42,12 @@ What is playing, what the library holds, what is on its way in, and the covers o
 The same grid, a different question. Hosts, containers, pools, disks, certificates and what answers.
 
 ![An infrastructure board: Proxmox and Docker counts, Synology load, node and pool usage, containers, UniFi devices, disk temperatures, certificate expiry and reachability](docs/screenshot-infrastructure.png)
+
+### Your network
+
+A page of its own kind: the plan of a UniFi network, read from the console you already connected. Each link carries its traffic as dots or dashes in both directions, coloured by load, with the age of the value beside it. Click a device to light up its way to the internet and see its ports. Servers, the NAS and other wired devices join from a list; whatever the console finds later waits under Found until you place it. On a phone the plan becomes an indented list. UniFi only for now; SNMP is next.
+
+![A network plan: internet, gateway, core switch, servers, two more switches, access points and clients, with the traffic running along every link](docs/screenshot-topology.png)
 
 ### On the wall
 
