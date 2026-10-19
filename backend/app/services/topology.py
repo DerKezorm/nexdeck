@@ -468,7 +468,8 @@ def demo_console(now: float) -> tuple[list[dict], list[dict], list[dict], dict[s
         if kind == "udm":
             down, upward = _DEMO_TRAFFIC["01"]
             device["uplink"] = {"type": "wire", "port_idx": 9, "speed": 1000,
-                                "rx_bytes": _demo_bytes(down, seen, 0.5), "tx_bytes": _demo_bytes(upward, seen, 1.5)}
+                                "rx_bytes": _demo_bytes(down, seen, 0.5), "tx_bytes": _demo_bytes(upward, seen, 1.5),
+                                "rx_bytes-r": down / 8, "tx_bytes-r": upward / 8}
             device["system-stats"] = {"cpu": "23", "mem": "58"}
         elif wireless:
             device["uplink"] = {"type": "wireless", "uplink_mac": _mac(up), "tx_rate": 600000, "rx_rate": 600000,

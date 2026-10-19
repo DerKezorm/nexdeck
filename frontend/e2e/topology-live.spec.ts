@@ -50,7 +50,7 @@ test('a topology page is offered with a UniFi connection, named for you, and sho
   // The demo board has a card page called "Network" already; the new page gets an address of its own.
   await expect(page).toHaveURL(/\/network-2$/)
   const plan = page.locator('[data-topology-canvas]')
-  await expect(plan.locator('[data-node] text', { hasText: 'Core switch' })).toBeVisible({ timeout: 15_000 })
+  await expect(plan.locator('[data-node] section', { hasText: 'Core switch' })).toBeVisible({ timeout: 15_000 })
   await expect(plan.locator('[data-node]')).toHaveCount(8)
   await expect(page.getByRole('button', { name: /Found/ })).toHaveCount(1)
   expect(trouble).toEqual([])

@@ -1400,7 +1400,7 @@
     "kindCards": "Cards",
     "kindCardsHelp": "The usual page: cards on a grid.",
     "kindTopology": "Topology",
-    "kindTopologyHelp": "Your network as a plan, with the traffic on every link.",
+    "kindTopologyHelp": "Your UniFi network as a plan, with the traffic on every link.",
     "connection": "UniFi connection",
     "startAll": "Every network device, as a tree",
     "startAllHelp": "Gateway, switches and access points with their links. Clients are added one by one afterwards.",
@@ -1559,6 +1559,7 @@
       "days_one": "{{count}} day",
       "days_other": "{{count}} days"
     },
-    "defaultName": "Network"
+    "defaultName": "Network",
+    "readFrom": "Read from the UniFi connection “{{name}}”."
   }
 }

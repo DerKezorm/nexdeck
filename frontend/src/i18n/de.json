@@ -1400,7 +1400,7 @@
     "kindCards": "Karten",
     "kindCardsHelp": "Die gewohnte Seite: Karten im Raster.",
     "kindTopology": "Topologie",
-    "kindTopologyHelp": "Dein Netz als Plan, mit dem Verkehr auf jeder Verbindung.",
+    "kindTopologyHelp": "Dein UniFi-Netz als Plan, mit dem Verkehr auf jeder Verbindung.",
     "connection": "UniFi-Anbindung",
     "startAll": "Alle Netzwerkgeräte als Baum",
     "startAllHelp": "Gateway, Switches und Access Points mit ihren Verbindungen. Clients holst du danach einzeln dazu.",
@@ -1559,6 +1559,7 @@
       "days_one": "{{count}} Tag",
       "days_other": "{{count}} Tage"
     },
-    "defaultName": "Netzwerk"
+    "defaultName": "Netzwerk",
+    "readFrom": "Gelesen aus der UniFi-Anbindung „{{name}}“."
   }
 }

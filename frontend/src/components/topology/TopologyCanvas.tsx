@@ -1,6 +1,11 @@
 import { Box, Camera, Globe, HardDrive, Maximize2, Minus, Monitor, Network, Phone, Plus, Printer, Router, Server, Tv, Wifi, type LucideIcon } from 'lucide-react'
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { shownStyle, useLook } from '../../lib/appearance'
+import { tipOf } from '../../lib/cardLook'
+import { canRefract, refract } from '../../lib/refraction'
+import { useAuth } from '../../stores/auth'
 
 import { along, CARD_H, curve, declutter, pathOf, snap, utilisation, type ClientKind, type NodeKind, type TopoLink } from '../../lib/topology'
 import { Flow, POOL, TipChannel, type FlowMode } from './flow'
@@ -75,15 +80,23 @@ export const SUB_FONT = "400 11px 'Inter Variable', system-ui, sans-serif"
 export const LABEL_FONT = "500 10.5px 'JetBrains Mono Variable', ui-monospace, monospace"
 
 export function cardWidth(name: string, sub: string): number {
-  return Math.max(150, Math.ceil(Math.max(textWidth(name, NAME_FONT), textWidth(sub, SUB_FONT))) + 56 + 30)
+  // Icon and its gaps on the left, the status dot on the right, the border, and a little air.
+  return Math.max(150, Math.ceil(Math.max(textWidth(name, NAME_FONT), textWidth(sub, SUB_FONT))) + 56 + 40)
 }
 
 type Tip = { id: string; x: number; y: number } | null
 
 /**
  * The plan: device cards, the links between them, and the traffic as dots or
- * dashes along each link, one lane per direction. Cards and curves are React;
- * the moving parts belong to ``Flow``. Moving one card redraws its own links only.
+ * dashes along each link, one lane per direction. Links are SVG; the moving
+ * parts belong to ``Flow``. The device cards are nexdeck's own cards, HTML in a
+ * layer of their own above the links, so the look chosen under Appearance, the
+ * liquid glass and the tilt towards the pointer are theirs as on any board.
+ *
+ * ⚠️ That layer is zoomed with CSS ``zoom``, not with a scale transform. Under
+ * a transform the backdrop filter of the liquid glass is worked out in the
+ * card's own pixels while it is sized from the screen, and the bent edge
+ * would sit a third of the card off at a zoom of 0.6.
  */
 export function TopologyCanvas(props: Props) {
   const { nodes, links, editing, selected, lit, straight, flow, labels, onSelect, onMove, onMoveEnd, fitKey, minScale = 0.6, labelWidth } = props
@@ -91,7 +104,12 @@ export function TopologyCanvas(props: Props) {
   const host = useRef<HTMLDivElement>(null)
   const svg = useRef<SVGSVGElement>(null)
   const world = useRef<SVGGElement>(null)
+  const layer = useRef<HTMLDivElement>(null)
+  const zoomed = useRef<HTMLDivElement>(null)
   const view = useRef({ k: 1, x: 0, y: 0 })
+  // The zoom once it rests: the glass of every card is fitted again to it.
+  const [settled, setSettled] = useState(1)
+  const resting = useRef<number | undefined>(undefined)
   const [panning, setPanning] = useState(false)
   const [engine] = useState(() => new Flow())
   const [tips] = useState(() => new TipChannel())
@@ -106,6 +124,10 @@ export function TopologyCanvas(props: Props) {
   const apply = useCallback(() => {
     const { k, x, y } = view.current
     world.current?.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(4)})`)
+    if (layer.current) layer.current.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
+    if (zoomed.current) zoomed.current.style.zoom = k.toFixed(4)
+    window.clearTimeout(resting.current)
+    resting.current = window.setTimeout(() => setSettled(Math.round(k * 100) / 100), 250)
   }, [])
 
   const fit = useCallback(
@@ -160,7 +182,7 @@ export function TopologyCanvas(props: Props) {
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const pinch = useRef<null | { distance: number; k: number }>(null)
 
-  const down = (event: React.PointerEvent<SVGSVGElement>) => {
+  const down = (event: React.PointerEvent<HTMLDivElement>) => {
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
@@ -173,7 +195,7 @@ export function TopologyCanvas(props: Props) {
     const card = target.closest('[data-node]')
     const hit = target.closest('[data-link]')
     try {
-      svg.current?.setPointerCapture(event.pointerId)
+      host.current?.setPointerCapture(event.pointerId)
     } catch {
       /* the pointer is already gone */
     }
@@ -186,7 +208,7 @@ export function TopologyCanvas(props: Props) {
     else drag.current = { ...base, type: 'pan' }
   }
 
-  const move = (event: React.PointerEvent<SVGSVGElement>) => {
+  const move = (event: React.PointerEvent<HTMLDivElement>) => {
     if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pinch.current && pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
@@ -216,7 +238,7 @@ export function TopologyCanvas(props: Props) {
     }
   }
 
-  const lift = (event: React.PointerEvent<SVGSVGElement>) => {
+  const lift = (event: React.PointerEvent<HTMLDivElement>) => {
     pointers.current.delete(event.pointerId)
     if (pointers.current.size < 2) pinch.current = null
     const current = drag.current
@@ -256,23 +278,24 @@ export function TopologyCanvas(props: Props) {
   }, [links, byId, nodes, labels, labelWidth, straight])
 
   return (
-    <div ref={host} className="relative w-full h-full overflow-hidden" data-topology-canvas>
-      <svg
-        ref={svg}
-        className={`w-full h-full block select-none touch-none ${panning ? 'cursor-grabbing' : ''}`}
-        role="img"
-        aria-label={props.ariaLabel}
-        onPointerDown={down}
-        onPointerMove={move}
-        onPointerUp={lift}
-        onPointerCancel={(event) => {
-          pointers.current.delete(event.pointerId)
-          pinch.current = null
-          drag.current = null
-          setPanning(false)
-        }}
-        onPointerLeave={() => tips.show(null)}
-      >
+    <div
+      ref={host}
+      className={`relative w-full h-full overflow-hidden select-none touch-none ${panning ? 'cursor-grabbing' : ''}`}
+      data-topology-canvas
+      role="group"
+      aria-label={props.ariaLabel}
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={lift}
+      onPointerCancel={(event) => {
+        pointers.current.delete(event.pointerId)
+        pinch.current = null
+        drag.current = null
+        setPanning(false)
+      }}
+      onPointerLeave={() => tips.show(null)}
+    >
+      <svg ref={svg} className="absolute inset-0 w-full h-full block" aria-hidden="true">
         <defs>
           <pattern id="topo-dots" width="20" height="20" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="1" style={{ fill: 'var(--nd-border-strong)' }} opacity={editing ? 1 : 0.5} />
@@ -309,11 +332,6 @@ export function TopologyCanvas(props: Props) {
               )
             })}
           </g>
-          <g>
-            {nodes.map((node) => (
-              <NodeCard key={node.id} node={node} editing={editing} picked={selected?.type === 'node' && selected.id === node.id} dim={lit !== null && !lit.nodes.has(node.id)} />
-            ))}
-          </g>
           <g pointerEvents="none">
             {placedLabels.map((label) => {
               const link = links.find((one) => one.id === label.id)
@@ -335,6 +353,13 @@ export function TopologyCanvas(props: Props) {
           </g>
         </g>
       </svg>
+      <div ref={layer} className="absolute left-0 top-0 pointer-events-none" style={{ transformOrigin: '0 0' }}>
+        <div ref={zoomed} className="relative">
+          {nodes.map((node) => (
+            <NodeCard key={node.id} node={node} editing={editing} picked={selected?.type === 'node' && selected.id === node.id} dim={lit !== null && !lit.nodes.has(node.id)} zoom={settled} />
+          ))}
+        </div>
+      </div>
       <TipBox channel={tips} links={links} render={props.tooltip} host={host} />
       <div className="absolute right-3 bottom-3 flex gap-1.5 items-end" data-no-picture>
         {props.controls}
@@ -382,33 +407,85 @@ const LinkItem = memo(function LinkItem(props: { id: string; ax: number; ay: num
   )
 })
 
-const NodeCard = memo(function NodeCard({ node, editing, picked, dim }: { node: PlanNode; editing: boolean; picked: boolean; dim: boolean }) {
+const NodeCard = memo(function NodeCard({ node, editing, picked, dim, zoom }: { node: PlanNode; editing: boolean; picked: boolean; dim: boolean; zoom: number }) {
   const Icon = ICONS[node.kind === 'client' ? (node.clientKind ?? 'other') : node.kind] ?? Box
   const offline = node.status === 'offline'
   const client = node.kind === 'client'
+  const holder = useRef<HTMLDivElement>(null)
+  const card = useRef<HTMLElement>(null)
+  // The tilt and the glass of a board card, see ``WidgetCard``: not while arranging, not for less motion.
+  const tilts = useAuth((state) => state.user?.tilt !== false) && !editing
+  const liquid = useLook((state) => shownStyle(state) === 'liquid' && state.refraction)
+  const filterId = `nd-topo-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  useEffect(() => {
+    const element = card.current
+    if (!liquid || !element || !canRefract()) return
+    const radius = parseFloat(getComputedStyle(element).borderTopLeftRadius) || 16
+    return refract(element, filterId, radius)
+  }, [liquid, filterId, zoom, node.w])
+  useEffect(() => {
+    const box = holder.current
+    const element = card.current
+    if (!box || !element) return
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+    // Measured on the holder, which never tips, so the tilt cannot feed on itself (see ``followPointer``).
+    const follow = (event: PointerEvent) => {
+      const place = box.getBoundingClientRect()
+      const x = event.clientX - place.left
+      const y = event.clientY - place.top
+      element.style.setProperty('--nd-mx', `${((x / place.width) * 100).toFixed(1)}%`)
+      element.style.setProperty('--nd-my', `${((y / place.height) * 100).toFixed(1)}%`)
+      if (!tilts || still || event.pointerType !== 'mouse') return
+      element.classList.add('is-tipping')
+      element.style.transform = tipOf(place, x, y)
+    }
+    const leave = () => {
+      element.classList.remove('is-tipping')
+      element.style.transform = ''
+      element.style.removeProperty('--nd-mx')
+      element.style.removeProperty('--nd-my')
+    }
+    box.addEventListener('pointermove', follow)
+    box.addEventListener('pointerleave', leave)
+    return () => {
+      box.removeEventListener('pointermove', follow)
+      box.removeEventListener('pointerleave', leave)
+      leave()
+    }
+  }, [tilts])
   return (
-    <g data-node={node.id} transform={`translate(${node.x - node.w / 2} ${node.y - CARD_H / 2})`} className={editing ? 'cursor-grab' : 'cursor-pointer'} style={{ opacity: dim ? 0.4 : 1, transition: 'opacity .25s' }}>
-      <title>{node.name}</title>
-      <rect
-        width={node.w}
-        height={CARD_H}
-        rx={14}
-        style={{
-          fill: 'var(--nd-surface-strong)',
-          stroke: picked ? 'var(--nd-accent)' : offline ? 'color-mix(in srgb, var(--nd-bad) 55%, transparent)' : 'var(--nd-border-strong)',
-          strokeWidth: picked ? 2 : 1,
-        }}
-      />
-      <rect x={10} y={11} width={36} height={36} rx={10} style={{ fill: offline ? 'color-mix(in srgb, var(--nd-bad) 16%, transparent)' : client ? 'var(--nd-surface-hover)' : 'var(--nd-accent-soft)' }} />
-      <Icon x={17} y={18} width={22} height={22} strokeWidth={1.8} style={{ color: offline ? 'var(--nd-bad)' : client ? 'var(--nd-text-muted)' : 'var(--nd-accent)' }} />
-      <text x={56} y={26} style={{ font: NAME_FONT, fill: 'var(--nd-text)' }}>
-        {node.name}
-      </text>
-      <text x={56} y={43} style={{ font: SUB_FONT, fill: 'var(--nd-text-muted)' }}>
-        {node.sub}
-      </text>
-      {node.kind !== 'internet' && <circle cx={node.w - 14} cy={14} r={4} style={{ fill: offline ? 'var(--nd-bad)' : 'var(--nd-ok)' }} />}
-    </g>
+    <div
+      ref={holder}
+      data-node={node.id}
+      className={`absolute pointer-events-auto ${editing ? 'cursor-grab' : 'cursor-pointer'}`}
+      style={{ left: node.x - node.w / 2, top: node.y - CARD_H / 2, width: node.w, height: CARD_H, opacity: dim ? 0.4 : 1, transition: 'opacity .25s' }}
+      title={node.name}
+    >
+      <section
+        ref={card}
+        className={`card glass ${editing ? 'is-editing' : ''}`}
+        data-status={offline ? 'bad' : 'ok'}
+        style={picked ? { outline: '2px solid var(--nd-accent)', outlineOffset: 2 } : undefined}
+      >
+        <div className="flex items-center gap-2.5 h-full pl-2.5 pr-3">
+          <span
+            className="w-9 h-9 rounded-[10px] grid place-items-center shrink-0"
+            style={{ background: offline ? 'color-mix(in srgb, var(--nd-bad) 16%, transparent)' : client ? 'var(--nd-surface-hover)' : 'var(--nd-accent-soft)' }}
+          >
+            <Icon size={20} strokeWidth={1.8} style={{ color: offline ? 'var(--nd-bad)' : client ? 'var(--nd-text-muted)' : 'var(--nd-accent)' }} />
+          </span>
+          <span className="min-w-0 flex-1 grid gap-0.5">
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis" style={{ font: NAME_FONT, color: 'var(--nd-text)' }}>
+              {node.name}
+            </span>
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis" style={{ font: SUB_FONT, color: 'var(--nd-text-muted)' }}>
+              {node.sub}
+            </span>
+          </span>
+          {node.kind !== 'internet' && <span className="dot self-start mt-1.5 shrink-0" data-status={offline ? 'bad' : 'ok'} />}
+        </div>
+      </section>
+    </div>
   )
 })
 

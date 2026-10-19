@@ -179,11 +179,23 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
     return { nodes, links }
   }, [data, layout, nodeById, clientById, t])
 
+  // ⚠️ Measured with the page's own fonts: before they arrive the canvas measures a fallback
+  // that is narrower, and the second line of a card ended in "…".
+  const [fonts, setFonts] = useState(() => (typeof document === 'undefined' || !document.fonts ? true : document.fonts.status === 'loaded'))
+  useEffect(() => {
+    if (fonts || typeof document === 'undefined' || !document.fonts) return
+    let gone = false
+    void document.fonts.ready.then(() => !gone && setFonts(true))
+    return () => {
+      gone = true
+    }
+  }, [fonts])
   const widths = useMemo(() => {
     const out = new Map<string, number>()
     for (const node of shown.nodes) out.set(node.id, cardWidth(node.name, words.sub(node, wiredAt.get(node.id) ?? 0)))
     return out
-  }, [shown.nodes, words, wiredAt])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ``fonts`` is why it is measured again
+  }, [shown.nodes, words, wiredAt, fonts])
   const widthOf = useCallback((id: string) => widths.get(id) ?? 150, [widths])
 
   // Devices without a place get one: the whole tree on a new page, a free spot

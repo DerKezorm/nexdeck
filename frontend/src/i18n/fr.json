@@ -1400,7 +1400,7 @@
     "kindCards": "Cartes",
     "kindCardsHelp": "La page habituelle : des cartes sur une grille.",
     "kindTopology": "Topologie",
-    "kindTopologyHelp": "Votre réseau sous forme de plan, avec le trafic de chaque lien.",
+    "kindTopologyHelp": "Votre réseau UniFi sous forme de plan, avec le trafic de chaque lien.",
     "connection": "Connexion UniFi",
     "startAll": "Tous les appareils réseau, en arbre",
     "startAllHelp": "Passerelle, switches et points d'accès avec leurs liens. Les clients s'ajoutent un par un ensuite.",
@@ -1559,6 +1559,7 @@
       "days_one": "{{count}} jour",
       "days_other": "{{count}} jours"
     },
-    "defaultName": "Réseau"
+    "defaultName": "Réseau",
+    "readFrom": "Lu depuis la connexion UniFi « {{name}} »."
   }
 }

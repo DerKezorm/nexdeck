@@ -71,7 +71,7 @@ afterEach(() => {
 
 /** A card by its name: the name stands in its text and, for the hover, in its title. */
 async function card(name: string) {
-  const texts = await screen.findAllByText(name, { selector: '[data-node] text' })
+  const texts = await screen.findAllByText(name, { selector: '[data-node] span' })
   return texts[0].closest('[data-node]')!
 }
 
@@ -105,8 +105,8 @@ it('does not save for someone who may only look', async () => {
 it('opens a device with its links, its wired clients and its way out', async () => {
   show(ANSWER)
   const core = await card('Core switch')
-  fireEvent.pointerDown(core.querySelector('rect')!, { pointerId: 1 })
-  fireEvent.pointerUp(document.querySelector('[data-topology-canvas] svg')!, { pointerId: 1 })
+  fireEvent.pointerDown(core.querySelector('section')!, { pointerId: 1 })
+  fireEvent.pointerUp(document.querySelector('[data-topology-canvas]')!, { pointerId: 1 })
   const heading = await screen.findByRole('heading', { name: 'Core switch' })
   const panel = heading.closest('aside')!
   expect(within(panel).getByText('Links (2)')).toBeInTheDocument()

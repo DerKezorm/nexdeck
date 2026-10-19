@@ -1400,7 +1400,7 @@
     "kindCards": "Schede",
     "kindCardsHelp": "La pagina di sempre: schede su una griglia.",
     "kindTopology": "Topologia",
-    "kindTopologyHelp": "La tua rete come una mappa, con il traffico su ogni collegamento.",
+    "kindTopologyHelp": "La tua rete UniFi come una mappa, con il traffico su ogni collegamento.",
     "connection": "Connessione UniFi",
     "startAll": "Tutti i dispositivi di rete, ad albero",
     "startAllHelp": "Gateway, switch e access point con i loro collegamenti. I client si aggiungono uno alla volta dopo.",
@@ -1559,6 +1559,7 @@
       "days_one": "{{count}} giorno",
       "days_other": "{{count}} giorni"
     },
-    "defaultName": "Rete"
+    "defaultName": "Rete",
+    "readFrom": "Letto dalla connessione UniFi «{{name}}»."
   }
 }

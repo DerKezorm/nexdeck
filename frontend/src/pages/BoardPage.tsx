@@ -832,6 +832,7 @@ export function BoardPage() {
               </div>
               {newPageKind === 'topology' && (
                 <div className="grid gap-2">
+                  {unifis.length === 1 && <p className="text-xs text-muted">{t('topology.readFrom', { name: unifis[0].name })}</p>}
                   {unifis.length > 1 && (
                     <label className="grid gap-1 text-xs text-muted">
                       {t('topology.connection')}
