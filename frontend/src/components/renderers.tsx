@@ -26,7 +26,7 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
@@ -292,6 +292,13 @@ function statusOf(value: unknown): Status {
 // Value: one big number
 // ---------------------------------------------------------------------------
 
+/** How many figures wide the big number is, for its size: a unit counts half, it is drawn smaller. */
+export function valueWidth(value: unknown, unit?: unknown): number {
+  const figures = value === undefined || value === null ? 0 : String(value).length
+  const extra = unit ? String(unit).length / 2 + 0.5 : 0
+  return Math.max(3, figures + extra)
+}
+
 export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
   const { t } = useTranslation()
   const primary = data?.primary
@@ -308,7 +315,11 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
       )}
       <div className="flex-1 flex flex-col justify-center px-3 min-h-0 relative">
         {/* A number rolls to its new reading; a word rises in, as it always did. */}
-        <div className={`num text-[30px] leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`} key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}>
+        <div
+          className={`num value-number leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`}
+          style={{ '--chars': valueWidth(primary?.value, primary?.unit) } as CSSProperties}
+          key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}
+        >
           <Rolled value={primary?.value} />
           {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{tLabel(primary.unit)}</span>}
         </div>

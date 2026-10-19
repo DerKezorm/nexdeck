@@ -55,7 +55,7 @@ export function MobileTabBar({ boards, active, onBoard, onSearch, onNotices, onM
           <div className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] text-muted">
             <Files size={18} aria-hidden="true" />
             <select
-              className="bg-transparent text-[10px] max-w-16 truncate text-center outline-none"
+              className="bg-transparent text-[10px] max-w-16 truncate text-center outline-none rounded focus-visible:ring-2 focus-visible:ring-accent"
               value={activePage ?? ''}
               onChange={(event) => onPage(event.target.value)}
               aria-label={t('nav.pages')}

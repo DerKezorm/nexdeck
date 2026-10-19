@@ -806,9 +806,25 @@ body {
   transition: border-color 120ms ease;
 }
 
-.input:focus {
+/* ⚠️ And when the field sits inside. The search card and the player's library
+   put .input on the form or label around a bare field, and the wrapper never
+   takes the focus itself: a keyboard reached the field and nothing showed it. */
+.input:focus,
+.input:focus-within {
   border-color: var(--nd-accent);
   box-shadow: 0 0 0 3px var(--nd-accent-soft);
+}
+
+/* The big number of a value card stays on one line and shrinks only when it
+   has to. A value can arrive as one string with its unit, "535.7 KB/s", and the
+   browser broke it after the slash on a card two columns wide. ``--chars`` is
+   its width in figures (``valueWidth``), a figure about 0.62em, so a short
+   reading keeps its 30px on the same card and a long one gets down to 18px. */
+.value-number {
+  font-size: clamp(18px, calc((100cqi - 1.5rem) / (var(--chars, 6) * 0.62)), 30px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* A field with a symbol sitting in it.
