@@ -45,6 +45,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..services import icons
 from . import demo as fake
 from .base import (
     Action,
@@ -245,6 +246,7 @@ class WudAdapter(Adapter):
             kind = _kind(container)
             row: dict[str, Any] = {
                 "title": _name(container),
+                **icons.logo_fields(_image(container), _name(container)),
                 # ⚠️ The word goes in the subtitle, the versions in the value:
                 # only the subtitle is translated.
                 "subtitle": " · ".join(part for part in (word, _image(container)) if part),
@@ -261,6 +263,7 @@ class WudAdapter(Adapter):
         for container in sorted(unchecked, key=lambda one: _name(one).lower()):
             items.append({
                 "title": _name(container),
+                **icons.logo_fields(_image(container), _name(container)),
                 "subtitle": " · ".join(part for part in ("Not checked", (_failed(container) or "")[:160]) if part),
                 "status": "unknown",
             })

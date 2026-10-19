@@ -61,6 +61,7 @@ from typing import Any
 
 import httpx
 
+from ..services import icons
 from . import demo as fake
 from .base import (
     Action,
@@ -504,7 +505,8 @@ class ArcaneAdapter(Adapter):
                     else:
                         actions.append(_with(START, environment=env, id=identifier))
                 rows.append({"title": _name(container), "subtitle": " · ".join(part for part in parts if part),
-                             "status": _container_colour(container), "actions": actions})
+                             "status": _container_colour(container), "actions": actions,
+                             **icons.logo_fields(str(container.get("image") or ""), _name(container))})
         troubled = any(row["status"] == "bad" for row in rows)
         return WidgetData(
             status="bad" if troubled else "warn" if partial else "ok" if rows else "unknown",
@@ -532,7 +534,8 @@ class ArcaneAdapter(Adapter):
                 parts = [str(container.get("image") or "")]
                 if several:
                     parts.append(str(environment.get("name") or env))
-                row: dict[str, Any] = {"title": _name(container), "subtitle": " · ".join(part for part in parts if part), "status": "warn"}
+                row: dict[str, Any] = {"title": _name(container), "subtitle": " · ".join(part for part in parts if part), "status": "warn",
+                                       **icons.logo_fields(str(container.get("image") or ""), _name(container))}
                 if container.get("id"):
                     row["actions"] = [_with(UPDATE, environment=env, id=str(container["id"]))]
                 rows.append(row)

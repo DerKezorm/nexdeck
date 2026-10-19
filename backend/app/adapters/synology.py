@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..services import icons
 from . import containers as containers_one
 from . import demo as fake
 from .base import (
@@ -430,6 +431,7 @@ class SynologyAdapter(Adapter):
                 "id": container.get("id") or name,
                 "title": name,
                 "subtitle": subtitle,
+                **icons.logo_fields(str(container.get("image") or ""), name),
                 "status": ("warn" if unhealthy else "ok") if is_running else "unknown",
                 # The card sends an action's params back; the container's name rides along in them.
                 "actions": [Action(id="stop", label="Stop", icon="square", confirm=True, params={"name": name}), Action(id="restart", label="Restart", icon="rotate-cw", confirm=True, params={"name": name})] if is_running else [Action(id="start", label="Start", icon="play", params={"name": name})],
@@ -577,6 +579,8 @@ class SynologyAdapter(Adapter):
             items = []
             for name, image, up, status, cpu, memory, size in rows:
                 item: dict[str, Any] = {"id": name, "title": name, "subtitle": f"{image} · {up}" + (" · unhealthy" if status == "warn" else ""), "status": status, "value": size,
+                                        # The demo's names are all known logos; no index is asked for them.
+                                        **({"icon": {"paperless": "paperless-ngx"}.get(name, name), "icon_dot": True} if name != "backup" else {}),
                                         "actions": [Action(id="stop", label="Stop", icon="square", confirm=True, params={"name": name}), Action(id="restart", label="Restart", icon="rotate-cw", confirm=True, params={"name": name})] if status != "unknown" else [Action(id="start", label="Start", icon="play", params={"name": name})]}
                 if cpu is not None:
                     item["cpu"] = round(fake.walk(f"syno-c-{name}", tick, max(0.1, cpu - 1), cpu + 2), 1)

@@ -1,9 +1,9 @@
 import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
-import { useEffect, useId, useRef, type CSSProperties, type MouseEvent, type PointerEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { shownStyle, useLook } from '../lib/appearance'
-import { colourKind, lookOf, tipOf, useLogoColour } from '../lib/cardLook'
+import { colourKind, followPointer, lookOf, useLogoColour } from '../lib/cardLook'
 import { cardStatus } from '../lib/cardStatus'
 import { canRefract, refract } from '../lib/refraction'
 import { safeUrl } from '../lib/safeUrl'
@@ -122,24 +122,20 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // The card tips towards the pointer: not while the board is arranged, not on
   // a touch screen, not when the account or the system asks for less motion.
   const tilts = useAuth((state) => state.user?.tilt !== false) && !editing && !plain
-  const follow = (event: PointerEvent<HTMLElement>) => {
-    const element = event.currentTarget
-    const box = element.getBoundingClientRect()
-    const x = event.clientX - box.left
-    const y = event.clientY - box.top
-    element.style.setProperty('--nd-mx', `${((x / box.width) * 100).toFixed(1)}%`)
-    element.style.setProperty('--nd-my', `${((y / box.height) * 100).toFixed(1)}%`)
-    if (!tilts || event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    element.classList.add('is-tipping')
-    element.style.transform = tipOf(box, x, y)
-  }
-  const rest = (event: PointerEvent<HTMLElement>) => {
-    const element = event.currentTarget
-    element.classList.remove('is-tipping')
-    element.style.transform = ''
-    element.style.removeProperty('--nd-mx')
-    element.style.removeProperty('--nd-my')
-  }
+  const tiltsNow = useRef(tilts)
+  useEffect(() => {
+    tiltsNow.current = tilts
+    // Arranging the board starts: a tipped card goes back to lying flat.
+    if (!tilts && frame.current) {
+      frame.current.classList.remove('is-tipping')
+      frame.current.style.transform = ''
+    }
+  }, [tilts])
+  useEffect(() => {
+    const element = frame.current
+    if (plain || !element) return
+    return followPointer(element, () => tiltsNow.current)
+  }, [plain])
 
   return (
     <section
@@ -150,8 +146,6 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       data-widget={widget.id}
       aria-label={widget.title || widget.kind}
       onClick={clickable ? open : undefined}
-      onPointerMove={plain ? undefined : follow}
-      onPointerLeave={plain ? undefined : rest}
     >
       {!bare && (
         <header className="flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9">

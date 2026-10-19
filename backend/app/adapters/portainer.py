@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..services import icons
 from . import containers as containers_one
 from .base import (
     Adapter,
@@ -163,6 +164,7 @@ class PortainerAdapter(Adapter):
                 continue
             items.append({
                 "id": entry.get("Id", "")[:12], "title": name, "subtitle": entry.get("Status", ""), "image": entry.get("Image", ""),
+                **icons.logo_fields(entry.get("Image", ""), name, entry.get("Labels")),
                 "status": "ok" if state == "running" else ("warn" if state == "paused" else "bad"), "state": state,
                 "actions": DockerAdapter._actions_for(state, entry.get("Id", "")),
             })

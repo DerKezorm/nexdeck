@@ -291,6 +291,16 @@ def container_icon(image: str, name: str, labels: dict[str, Any] | None = None) 
     return ""
 
 
+def logo_fields(image: str, name: str, labels: dict[str, Any] | None = None) -> dict[str, Any]:
+    """What a container row carries for its logo: the logo, and the dot on its corner. Nothing when none fits.
+
+    Every list of containers uses this, whatever engine it reads: Docker,
+    Synology, Portainer, Komodo, Dockhand, Arcane, What's up Docker.
+    """
+    logo = container_icon(image, name, labels)
+    return {"icon": logo, "icon_dot": True} if logo else {}
+
+
 def guess_from_image(image: str) -> str:
     """``lscr.io/linuxserver/radarr:latest`` -> ``radarr``."""
     name = image.split("@")[0].split(":")[0].rsplit("/", 1)[-1].lower()

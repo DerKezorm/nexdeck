@@ -116,3 +116,17 @@ def test_the_proxy_serves_the_variant_and_falls_back(client: TestClient, known: 
     # The index says there is one and the collections have none: the plain logo, not a 404.
     assert client.get("/api/v1/icons/immich.svg?on=dark").content == b"immich"
     assert asked[-2:] == ["immich-light", "immich"]
+
+
+def test_every_container_list_takes_the_same_logo(known: set[str]) -> None:
+    """Docker, Synology, Portainer, Komodo, Dockhand, Arcane, What's up Docker: one rule for all."""
+    assert icons.logo_fields("lscr.io/linuxserver/qbittorrent", "qbittorrent") == {"icon": "qbittorrent", "icon_dot": True}
+    assert icons.logo_fields("example/backup:1", "nightly-backup") == {}, "a container nobody knows keeps its dot"
+
+
+def test_the_synology_demo_shows_logos_in_its_container_list() -> None:
+    from app.adapters.synology import SynologyAdapter
+
+    rows = SynologyAdapter().demo("containers", {}, 0).items
+    assert [row.get("icon") for row in rows] == ["nexview", "gotify", "paperless-ngx", None]
+    assert all(row.get("icon_dot") for row in rows if row.get("icon"))

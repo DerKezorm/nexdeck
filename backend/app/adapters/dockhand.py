@@ -47,6 +47,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from ..services import icons
 from . import demo as fake
 from .base import (
     Adapter,
@@ -363,7 +364,8 @@ class DockhandAdapter(Adapter):
                 if several:
                     parts.append(str(environment.get("name") or environment["id"]))
                 rows.append({"title": str(container.get("name") or str(container.get("id") or "?")[:12]),
-                             "subtitle": " · ".join(part for part in parts if part), "status": _container_colour(container)})
+                             "subtitle": " · ".join(part for part in parts if part), "status": _container_colour(container),
+                             **icons.logo_fields(str(container.get("image") or ""), str(container.get("name") or ""))})
         troubled = any(row["status"] == "bad" for row in rows)
         return WidgetData(
             status="bad" if troubled else "warn" if partial else "ok" if rows else "unknown",

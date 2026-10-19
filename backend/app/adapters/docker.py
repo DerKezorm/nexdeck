@@ -243,14 +243,13 @@ class DockerAdapter(Adapter):
             state = entry.get("State", "unknown")
             if state != "running" and not options.get("show_stopped", True):
                 continue
-            logo = icons.container_icon(entry.get("Image", ""), name, entry.get("Labels"))
             item: dict[str, Any] = {
                 "id": entry.get("Id", "")[:12],
                 "title": name,
                 "subtitle": entry.get("Status", ""),
                 "image": entry.get("Image", ""),
                 # The logo stands where the dot was; the dot moves onto its corner.
-                **({"icon": logo, "icon_dot": True} if logo else {}),
+                **icons.logo_fields(entry.get("Image", ""), name, entry.get("Labels")),
                 "status": {"running": "ok", "paused": "warn", "restarting": "warn"}.get(state, "bad"),
                 "state": state,
                 "actions": self._actions_for(state, entry.get("Id", "")),

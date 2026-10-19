@@ -41,6 +41,7 @@ import asyncio
 import re
 from typing import Any
 
+from ..services import icons
 from . import demo as fake
 from .base import (
     Action,
@@ -231,6 +232,7 @@ class KomodoAdapter(Adapter):
             state = str(info.get("state") or "unknown")
             rows.append({
                 "title": str(deployment.get("name") or "?"),
+                **icons.logo_fields(str(info.get("image") or ""), str(deployment.get("name") or "")),
                 "subtitle": " · ".join(part for part in (DEPLOYMENT_WORD.get(state, "Unknown"), str(info.get("image") or ""),
                                                          str(info.get("server_name") or "")) if part),
                 "status": _colour(state),

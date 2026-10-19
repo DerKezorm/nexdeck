@@ -156,3 +156,60 @@ export function tipOf(box: { width: number; height: number }, x: number, y: numb
   const down = Math.min(1, Math.max(0, y / box.height))
   return `perspective(700px) rotateX(${((0.5 - down) * 2 * most).toFixed(2)}deg) rotateY(${((across - 0.5) * 2 * most).toFixed(2)}deg) scale(${lift})`
 }
+
+/**
+ * Let a card follow the pointer: the glare always, the tilt when ``tilts``
+ * says so. Hands back what undoes it.
+ *
+ * ⚠️ Measured against the card's place, never against the card. A tipped and
+ * lifted card has another outline, and the tilt read from that outline gave
+ * another tilt, frame after frame: it shook, worst while crossing the lines
+ * of a card with history. At its edge the pointer even fell off the tipped
+ * card, it sprang back and caught the pointer again. The place (offsetLeft,
+ * offsetTop and the size before transforms) does not move, and the listener
+ * sits on the parent, which does not tip.
+ */
+export function followPointer(card: HTMLElement, tilts: () => boolean): () => void {
+  const holder = card.parentElement
+  if (!holder) return () => undefined
+  let frame = 0
+  let last: { x: number; y: number; mouse: boolean } | null = null
+  const place = () => {
+    const parent = card.offsetParent as HTMLElement | null
+    const base = parent ? parent.getBoundingClientRect() : { left: 0, top: 0 }
+    return { left: base.left + card.offsetLeft - (parent?.scrollLeft ?? 0), top: base.top + card.offsetTop - (parent?.scrollTop ?? 0), width: card.offsetWidth, height: card.offsetHeight }
+  }
+  const paint = () => {
+    frame = 0
+    if (!last) return
+    const box = place()
+    if (!box.width || !box.height) return
+    const x = last.x - box.left
+    const y = last.y - box.top
+    card.style.setProperty('--nd-mx', `${((x / box.width) * 100).toFixed(1)}%`)
+    card.style.setProperty('--nd-my', `${((y / box.height) * 100).toFixed(1)}%`)
+    if (!last.mouse || !tilts() || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return
+    card.classList.add('is-tipping')
+    card.style.transform = tipOf(box, x, y)
+  }
+  const move = (event: PointerEvent) => {
+    last = { x: event.clientX, y: event.clientY, mouse: event.pointerType === 'mouse' }
+    if (!frame) frame = requestAnimationFrame(paint)
+  }
+  const leave = () => {
+    last = null
+    if (frame) cancelAnimationFrame(frame)
+    frame = 0
+    card.classList.remove('is-tipping')
+    card.style.transform = ''
+    card.style.removeProperty('--nd-mx')
+    card.style.removeProperty('--nd-my')
+  }
+  holder.addEventListener('pointermove', move)
+  holder.addEventListener('pointerleave', leave)
+  return () => {
+    holder.removeEventListener('pointermove', move)
+    holder.removeEventListener('pointerleave', leave)
+    leave()
+  }
+}

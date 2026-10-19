@@ -10,7 +10,7 @@ import { CardLookFields } from '../components/CardLookFields'
 import { AppTile, renderWidget } from '../components/renderers'
 import { WidgetCard } from '../components/WidgetCard'
 import { applyAppearance, setBoardStyle, useLook } from './appearance'
-import { colourKind, inkOn, lookOf, mainColour, tipOf } from './cardLook'
+import { colourKind, followPointer, inkOn, lookOf, mainColour, tipOf } from './cardLook'
 import { iconUrl } from './format'
 import { vanishes } from './ground'
 import { shiftAt } from './refraction'
@@ -110,6 +110,60 @@ describe('the pointer', () => {
     expect(tipOf({ width: 200, height: 200 }, 0, 0)).toBe('perspective(700px) rotateX(10.00deg) rotateY(-10.00deg) scale(1.04)')
     expect(tipOf({ width: 600, height: 400 }, 0, 0)).toBe('perspective(700px) rotateX(3.00deg) rotateY(-3.00deg) scale(1.01)')
     expect(tipOf({ width: 200, height: 200 }, 900, -50)).toBe('perspective(700px) rotateX(10.00deg) rotateY(10.00deg) scale(1.04)')
+  })
+})
+
+describe('following the pointer', () => {
+  function cardIn(): { card: HTMLElement; holder: HTMLElement } {
+    const holder = document.createElement('div')
+    const card = document.createElement('section')
+    holder.append(card)
+    document.body.append(holder)
+    for (const [name, value] of Object.entries({ offsetWidth: 200, offsetHeight: 100, offsetLeft: 0, offsetTop: 0 })) Object.defineProperty(card, name, { value })
+    // A tipped card has another outline every time it is asked: that is what made it shake.
+    let wobble = 0
+    card.getBoundingClientRect = () => ({ left: (wobble += 7), top: wobble, width: 200 + wobble, height: 100 + wobble, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) })
+    return { card, holder }
+  }
+  const frames: FrameRequestCallback[] = []
+  beforeEach(() => {
+    frames.length = 0
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback))
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+  })
+  afterEach(() => vi.unstubAllGlobals())
+  const flush = () => frames.splice(0).forEach((callback) => callback(0))
+  const at = (holder: HTMLElement, x: number, y: number, pointerType = 'mouse') => holder.dispatchEvent(Object.assign(new Event('pointermove'), { clientX: x, clientY: y, pointerType }))
+
+  it('tips by the place of the card, so the same spot gives the same tilt every frame', () => {
+    const { card, holder } = cardIn()
+    const stop = followPointer(card, () => true)
+    const seen: string[] = []
+    for (let round = 0; round < 5; round += 1) {
+      at(holder, 180, 90)
+      flush()
+      seen.push(card.style.transform)
+    }
+    expect(new Set(seen).size).toBe(1)
+    expect(seen[0]).toBe(tipOf({ width: 200, height: 100 }, 180, 90))
+    holder.dispatchEvent(new Event('pointerleave'))
+    expect(card.style.transform).toBe('')
+    stop()
+  })
+
+  it('moves the glare but does not tip under a finger or with the switch off', () => {
+    const { card, holder } = cardIn()
+    let tilts = true
+    const stop = followPointer(card, () => tilts)
+    at(holder, 100, 50, 'touch')
+    flush()
+    expect(card.style.transform).toBe('')
+    expect(card.style.getPropertyValue('--nd-mx')).toBe('50.0%')
+    tilts = false
+    at(holder, 100, 50)
+    flush()
+    expect(card.style.transform).toBe('')
+    stop()
   })
 })
 
