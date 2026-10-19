@@ -309,3 +309,16 @@ def test_export_and_import_keep_the_plan_and_its_connection_by_name(client: Test
     plan = next(p for p in copy.json()["pages"] if p["kind"] == "topology")
     assert plan["topology"] == {"integration_id": unifi["id"]}
     assert client.get(f"/api/v1/pages/{plan['id']}/topology").json()["layout"]["positions"] == {"internet": [5.0, 6.0]}
+
+
+def test_two_pages_of_one_name_get_two_addresses(client: TestClient) -> None:
+    """A topology page is named "Network" for you; the demo board has a "Network" page of its own."""
+    setup_admin(client)
+    board = _board(client)
+    first = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Network"}, headers=CSRF).json()
+    second = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Network"}, headers=CSRF).json()
+    slugs = [page["slug"] for page in second["pages"] if page["name"] == "Network"]
+    assert slugs == ["network", "network-2"]
+    own = next(page for page in first["pages"] if page["slug"] == "network")
+    renamed = client.patch(f"/api/v1/pages/{own['id']}", json={"name": "Network"}, headers=CSRF).json()
+    assert sorted(page["slug"] for page in renamed["pages"] if page["name"] == "Network") == ["network", "network-2"], "renaming to its own name keeps its address"

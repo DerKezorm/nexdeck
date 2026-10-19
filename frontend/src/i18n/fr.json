@@ -637,6 +637,7 @@
     "edit": "Modifier le tableau",
     "confirmAction": "Exécuter cette action maintenant ?",
     "pageName": "Nom de la page",
+    "pageNameFirst": "Donnez d'abord un nom à la page.",
     "tabs": {
       "boards": "Tableaux",
       "look": "Apparence",
@@ -1557,6 +1558,7 @@
       "days": "{{count}} jours",
       "days_one": "{{count}} jour",
       "days_other": "{{count}} jours"
-    }
+    },
+    "defaultName": "Réseau"
   }
 }

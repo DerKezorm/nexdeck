@@ -637,6 +637,7 @@
     "edit": "Modifica bacheca",
     "confirmAction": "Eseguire ora questa azione?",
     "pageName": "Nome della pagina",
+    "pageNameFirst": "Prima dai un nome alla pagina.",
     "tabs": {
       "boards": "Bacheche",
       "look": "Aspetto",
@@ -1557,6 +1558,7 @@
       "days": "{{count}} giorni",
       "days_one": "{{count}} giorno",
       "days_other": "{{count}} giorni"
-    }
+    },
+    "defaultName": "Rete"
   }
 }

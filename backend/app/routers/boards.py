@@ -45,7 +45,14 @@ from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
 from ..services import grid, history
 from ..services import topology as topology_service
-from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
+from ..services.boards import (
+    COLUMNS,
+    ImportError_,
+    board_summary,
+    board_view,
+    unique_page_slug,
+    unique_slug,
+)
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
 from .auth import cookie_secure
@@ -281,7 +288,7 @@ def create_page(slug: str, body: PageCreate, user: CurrentUser, db: DbSession) -
             raise error("kind_mismatch", f"A topology page needs a UniFi connection, not {integration.kind}.")
         topology = topology_service.clean_layout({"start": body.start}, integration.id)
     position = (db.scalar(select(Page.position).where(Page.board_id == board.id).order_by(Page.position.desc())) or 0) + 1
-    page = Page(board_id=board.id, name=body.name.strip(), slug=slugify(body.name), icon=body.icon, position=position,
+    page = Page(board_id=board.id, name=body.name.strip(), slug=unique_page_slug(db, board.id, body.name), icon=body.icon, position=position,
                 layouts={key: [] for key in COLUMNS}, kind=body.kind, topology=topology)
     db.add(page)
     db.commit()
@@ -302,7 +309,7 @@ def patch_page(page_id: int, body: PagePatch, user: CurrentUser, db: DbSession) 
     page, board, permission = _page_for_edit(db, page_id, user)
     if body.name is not None:
         page.name = body.name.strip()
-        page.slug = slugify(body.name)
+        page.slug = unique_page_slug(db, board.id, body.name, ignore_id=page.id)
     if body.icon is not None:
         page.icon = body.icon
     if body.position is not None:

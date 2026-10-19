@@ -637,6 +637,7 @@
     "edit": "Board bearbeiten",
     "confirmAction": "Diese Aktion jetzt ausführen?",
     "pageName": "Name der Seite",
+    "pageNameFirst": "Gib der Seite zuerst einen Namen.",
     "tabs": {
       "boards": "Boards",
       "look": "Aussehen",
@@ -1557,6 +1558,7 @@
       "days": "{{count}} Tage",
       "days_one": "{{count}} Tag",
       "days_other": "{{count}} Tage"
-    }
+    },
+    "defaultName": "Netzwerk"
   }
 }

@@ -800,6 +800,8 @@ export function BoardPage() {
       >
         <div className="grid gap-3">
           <input className="input" autoFocus aria-label={t('board.pageName')} value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
+          {/* The button stays off without a name; say so instead of leaving a dead button. */}
+          {!newPageName.trim() && <p className="text-xs text-muted -mt-1">{t('board.pageNameFirst')}</p>}
           {/* ⚠️ Offered only with a UniFi connection this person may use: the plan reads the console's uplinks and port counters. */}
           {unifis.length > 0 && (
             <>
@@ -816,7 +818,11 @@ export function BoardPage() {
                     role="radio"
                     aria-checked={newPageKind === kind}
                     className={`text-left p-3 rounded-xl border grid gap-1 content-start ${newPageKind === kind ? 'border-[var(--nd-accent)] bg-accent-soft' : 'border-line-strong'}`}
-                    onClick={() => setNewPageKind(kind)}
+                    onClick={() => {
+                      setNewPageKind(kind)
+                      // A plan is usually just "Network"; written in, still changeable.
+                      if (kind === 'topology' && !newPageName.trim()) setNewPageName(t('topology.defaultName'))
+                    }}
                   >
                     <Icon size={20} className="text-accent" />
                     <b className="text-sm">{title}</b>

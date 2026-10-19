@@ -50,6 +50,23 @@ def unique_slug(db: Session, wanted: str, ignore_id: int | None = None) -> str:
         counter += 1
 
 
+def unique_page_slug(db: Session, board_id: int, wanted: str, ignore_id: int | None = None) -> str:
+    """A page address no other page of the board has.
+
+    ⚠️ Two pages called "Network" used to share one address, and the page
+    looked up by it was always the first: the second could not be opened at
+    all, not even right after it was made (measured 19.10.2026 on the demo
+    board, which has a "Network" page of its own).
+    """
+    base = slugify(wanted)
+    taken = {row[0] for row in db.execute(select(Page.slug).where(Page.board_id == board_id, Page.id != (ignore_id or 0)))}
+    slug, counter = base, 2
+    while slug in taken:
+        slug = f"{base}-{counter}"
+        counter += 1
+    return slug
+
+
 class Placer:
     """Bottom-left placement for one page, measured once instead of per card.
 
