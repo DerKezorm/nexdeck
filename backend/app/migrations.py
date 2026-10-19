@@ -164,6 +164,11 @@ def _language_pair_column(connection: Connection) -> None:
     _add_column(connection, "users", "language_pair", "VARCHAR(32) NOT NULL DEFAULT 'en,de'")
 
 
+def _tilt_column(connection: Connection) -> None:
+    """Everybody starts with the cards that tip towards the pointer; the profile switches it off."""
+    _add_column(connection, "users", "tilt", "BOOLEAN NOT NULL DEFAULT 1")
+
+
 def _check_since_column(connection: Connection) -> None:
     """A check from before knows nothing older than today: its long bars start here."""
     _add_column(connection, "health_checks", "created_at", "DATETIME")
@@ -223,6 +228,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (17, "A wall display can rest on a large clock", _rest_column),
     (18, "A reachability check knows since when it measures", _check_since_column),
     (19, "Sign-in providers become a list", _provider_list_columns),
+    (20, "Each account decides whether the cards tip towards the pointer", _tilt_column),
 ]
 
 

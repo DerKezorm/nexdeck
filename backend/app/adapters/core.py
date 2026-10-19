@@ -329,6 +329,11 @@ class CoreAdapter(Adapter):
             client_only=True,
             options=(
                 Field("description", "Description", placeholder="What this service does"),
+                Field("look", "Display", type="select", default="row",
+                      help="A big icon looks best on a square tile, two by two; a row on a wide one, three by one.",
+                      options=(("row", "A row: icon, name and bars"), ("icon", "A big icon under the name"))),
+                Field("corner", "Reachability shown as", type="select", default="dot", only_when=("look", "icon"),
+                      options=(("dot", "A dot in the corner"), ("bars", "Availability bars along the bottom"))),
                 Field("check", "Check reachability", type="bool", default=True),
                 Field(
                     "bars",

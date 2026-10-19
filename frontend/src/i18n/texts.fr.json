@@ -1921,7 +1921,14 @@
     "Chart shows": "Le graphique montre",
     "The last hour": "La dernière heure",
     "The last 6 hours": "Les 6 dernières heures",
-    "The last 24 hours": "Les 24 dernières heures"
+    "The last 24 hours": "Les 24 dernières heures",
+    "A big icon looks best on a square tile, two by two; a row on a wide one, three by one.": "Une grande icône rend le mieux sur une tuile carrée, deux sur deux ; une ligne sur une tuile large, trois sur un.",
+    "A row: icon, name and bars": "Ligne : icône, nom et barres",
+    "A big icon under the name": "Grande icône sous le nom",
+    "Reachability shown as": "Joignabilité affichée en",
+    "A dot in the corner": "Point dans le coin",
+    "Availability bars along the bottom": "Barres de disponibilité en bas",
+    "Display": "Présentation"
   },
   "labels": {
     "Private resources": "Ressources privées",

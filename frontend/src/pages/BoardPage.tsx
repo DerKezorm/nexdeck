@@ -24,6 +24,7 @@ import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { startingValue, unanswered } from '../lib/unanswered'
+import { useBoardCardStyle } from '../lib/appearance'
 import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
@@ -92,6 +93,7 @@ export function BoardPage() {
   const canEdit = data ? ['edit', 'act', 'owner'].includes(data.permission) && !data.provisioned : false
   const canAct = data ? ['act', 'owner'].includes(data.permission) : false
   const settings = previewSettings ?? data?.settings ?? {}
+  useBoardCardStyle(settings.card_style)
 
   // Snapshot and history into the live store.
   useEffect(() => {

@@ -9,6 +9,8 @@ export interface User {
   /** The two languages in the top bar; `locale` is always one of them. */
   language_pair: string[]
   theme: 'dark' | 'light' | 'system'
+  /** Whether a card tips towards the mouse pointer; off on the profile page. */
+  tilt?: boolean
   start_board_id: number | null
   disabled: boolean
   seen_version: string

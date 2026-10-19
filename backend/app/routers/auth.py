@@ -68,7 +68,7 @@ def clear_session_cookie(response: Response) -> None:
 def user_public(user: User, request: Request | None = None) -> UserPublic:
     return UserPublic(
         id=user.id, username=user.username, display_name=user.display_name or user.username, role=user.role,
-        locale=user.locale, theme=user.theme, start_board_id=user.start_board_id, disabled=user.disabled,
+        locale=user.locale, theme=user.theme, tilt=user.tilt is not False, start_board_id=user.start_board_id, disabled=user.disabled,
         language_pair=languages.read_pair(user.language_pair),
         seen_version=user.seen_version, has_password=has_usable_password(user.password_hash),
         auth_kind=getattr(request.state, "auth_kind", "session") if request is not None else "session",
@@ -243,6 +243,8 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
     languages.apply(user, body.locale, body.language_pair)
     if body.theme is not None:
         user.theme = body.theme
+    if body.tilt is not None:
+        user.tilt = body.tilt
     if body.start_board_id is not None:
         user.start_board_id = body.start_board_id or None
     if body.seen_version is not None:

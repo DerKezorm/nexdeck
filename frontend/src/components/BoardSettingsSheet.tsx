@@ -8,6 +8,7 @@ import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { useHomeBoardPath } from '../lib/homeBoard'
+import type { CardStyle } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
@@ -185,6 +186,17 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               </Field>
             </div>
           )}
+          <Field label={t('board.cardStyle')} htmlFor="b-cards" help={t('board.cardStyleHelp')}>
+            <Select
+              id="b-cards"
+              value={typeof settings.card_style === 'string' ? settings.card_style : ''}
+              onChange={(value) => setSettings(({ card_style: _old, ...current }) => (value ? { ...current, card_style: value } : current))}
+              options={[
+                { value: '', label: t('board.cardStyleInstallation') },
+                ...(['glass', 'liquid', 'flat', 'outline', 'neon'] as CardStyle[]).map((style) => ({ value: style, label: t(`settings.appearance.cardStyle.${style}`) })),
+              ]}
+            />
+          </Field>
           <Switch checked={Boolean(settings.compact)} onChange={(compact) => setSettings((current) => ({ ...current, compact }))} label={t('board.autoCompact')} description={t('board.autoCompactHelp')} />
           <h4 className="text-xs font-medium text-muted mt-4 mb-2">{t('board.gridTitle')}</h4>
           <div className="grid grid-cols-2 gap-3">

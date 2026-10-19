@@ -8,6 +8,7 @@
  * The accent is written into the four variables the whole interface builds
  * on, in both brightnesses, so a light board follows the same colour.
  */
+import { useEffect } from 'react'
 import { create } from 'zustand'
 
 export type Palette = Record<string, string>
@@ -39,18 +40,54 @@ export interface Appearance {
   radius?: number
   gap?: number
   card_styles?: CardStyle[]
+  /** Liquid glass: whether its rim bends the background (Chromium only). */
+  refraction?: boolean
 }
 
 /** How a card is drawn. Glass is nexdeck as it always looked. */
-export type CardStyle = 'glass' | 'flat' | 'outline' | 'neon'
+export type CardStyle = 'glass' | 'liquid' | 'flat' | 'outline' | 'neon'
 
 /**
- * The part of the look a component has to know as a number rather than as a
- * colour: the grid needs the gap to lay the cards out, not only to draw them.
+ * The part of the look a component has to know rather than only paint: the
+ * grid needs the gap to lay the cards out, a card needs to know whether it is
+ * liquid glass to bend the light. ``board`` is the style of the board on
+ * screen when it has one of its own; it wins over the installation's.
  */
-export const useLook = create<{ gap: number }>(() => ({ gap: 12 }))
+export const useLook = create<{ gap: number; cards: CardStyle; board: CardStyle | null; refraction: boolean }>(() => ({ gap: 12, cards: 'glass', board: null, refraction: true }))
+
+/** The style the cards on screen are drawn in. */
+export function shownStyle(look: { cards: CardStyle; board: CardStyle | null }): CardStyle {
+  return look.board ?? look.cards
+}
+
+/** The style onto the page: the board's own, else the installation's. Glass needs no mark. */
+function paintCards(): void {
+  const look = useLook.getState()
+  const style = shownStyle(look)
+  const root = document.documentElement
+  if (style !== 'glass') root.dataset.cards = style
+  else delete root.dataset.cards
+  root.dataset.refract = look.refraction ? 'on' : 'off'
+}
+useLook.subscribe(paintCards)
+
+/** A board's own card style while it is on screen; it hands back to the installation's when it goes. */
+export function setBoardStyle(style: unknown): void {
+  const known = STYLES.includes(style as CardStyle) ? (style as CardStyle) : null
+  if (useLook.getState().board !== known) useLook.setState({ board: known })
+}
+
+/** For a page that shows a board: its own card style while it stands, the installation's after. */
+export function useBoardCardStyle(style: unknown): void {
+  const known = STYLES.includes(style as CardStyle) ? (style as CardStyle) : null
+  useEffect(() => {
+    setBoardStyle(known)
+    return () => setBoardStyle(null)
+  }, [known])
+}
 
 const STYLE_ID = 'nexdeck-appearance'
+const STYLES: CardStyle[] = ['glass', 'liquid', 'flat', 'outline', 'neon']
 const THEME_ID = 'nexdeck-theme'
 const HEX = /^#[0-9a-f]{6}$/i
 
@@ -160,12 +197,15 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   tagFor(STYLE_ID, (look?.css ?? '').trim())
   // The cards: a style the sheet answers to, and two sizes. Glass is the
   // default and needs no mark, so a page without a stored look is unchanged.
-  const style = look?.card_style && look.card_style !== 'glass' ? look.card_style : ''
-  if (style) root.dataset.cards = style
-  else delete root.dataset.cards
+  // A board with a style of its own wins over this one (setBoardStyle).
   if (typeof look?.radius === 'number') root.style.setProperty('--nd-radius', `${look.radius}px`)
   else root.style.removeProperty('--nd-radius')
-  useLook.setState({ gap: typeof look?.gap === 'number' ? look.gap : 12 })
+  useLook.setState({
+    gap: typeof look?.gap === 'number' ? look.gap : 12,
+    cards: STYLES.includes(look?.card_style as CardStyle) ? (look?.card_style as CardStyle) : 'glass',
+    refraction: look?.refraction !== false,
+  })
+  paintCards()
 }
 
 /** The contrast ratio of two #rrggbb colours, from 1 to 21, the way WCAG counts it. */
@@ -225,8 +265,6 @@ export function themeFile(theme: Theme): string {
   return JSON.stringify({ nexdeck_theme: 1, name: theme.name, dark: theme.dark, light: theme.light }, null, 2)
 }
 
-const STYLES: CardStyle[] = ['glass', 'flat', 'outline', 'neon']
-
 /**
  * The whole look as the text it is shared as: the theme, a colour of one's
  * own, the cards. No style sheet: a sheet written for one installation can
@@ -238,6 +276,7 @@ export function lookFile(look: Appearance): string {
     theme: look.theme ? { name: look.theme.name, dark: look.theme.dark, light: look.theme.light } : null,
     accent: HEX.test(look.accent ?? '') ? look.accent : '',
     card_style: look.card_style ?? 'glass',
+    refraction: look.refraction !== false,
     radius: look.radius ?? 16,
     gap: look.gap ?? 12,
   })
@@ -270,6 +309,7 @@ export function readLook(text: string): { look: Partial<Appearance> } | { error:
   } else look.theme = null
   look.accent = typeof value.accent === 'string' && HEX.test(value.accent) ? value.accent : ''
   look.card_style = STYLES.includes(value.card_style as CardStyle) ? (value.card_style as CardStyle) : 'glass'
+  look.refraction = value.refraction !== false
   const within = (number: unknown, low: number, high: number, fallback: number) => (typeof number === 'number' && Number.isInteger(number) && number >= low && number <= high ? number : fallback)
   look.radius = within(value.radius, 0, 28, 16)
   look.gap = within(value.gap, 4, 28, 12)

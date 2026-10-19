@@ -206,7 +206,9 @@
       "signOut": "Esci da qui",
       "confirmPassword": "Ripeti la nuova password",
       "saveProfile": "Salva nome e indirizzo",
-      "unsaved": "Non ancora salvato"
+      "unsaved": "Non ancora salvato",
+      "tilt": "Le schede si inclinano verso il puntatore",
+      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento."
     },
     "integrations": {
       "title": "Integrazioni",
@@ -359,7 +361,8 @@
         "glass": "Vetro",
         "flat": "Piatta",
         "outline": "Contorno",
-        "neon": "Bordo neon"
+        "neon": "Bordo neon",
+        "liquid": "Vetro liquido"
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
@@ -380,7 +383,10 @@
       "lookCopy": "Copia lo stile",
       "lookCopied": "Copiato",
       "lookPasteLabel": "Uno stile da incollare",
-      "lookTake": "Usa questo stile"
+      "lookTake": "Usa questo stile",
+      "refraction": "Il bordo piega la luce",
+      "refractionHelp": "Il bordo del vetro piega ciò che sta dietro. Costa un po' di potenza grafica; spegnilo per un vecchio tablet a parete.",
+      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura."
     },
     "journal": {
       "title": "Livello di log",
@@ -729,14 +735,20 @@
       "none": "Nessuno",
       "flow": "Aurora in movimento",
       "stars": "Cielo stellato",
-      "daytime": "Segue l'ora del giorno"
+      "daytime": "Segue l'ora del giorno",
+      "prism": "Prisma",
+      "lagoon": "Laguna",
+      "sunset": "Tramonto"
     },
     "livingHelp": "Gli ultimi tre si muovono, lentamente. Se il sistema chiede meno movimento, restano fermi.",
     "kioskRest": "Riposo con orologio dopo",
     "kioskRestHelp": "Se nessuno lo tocca per questo tempo, lo schermo mostra l'ora, il meteo e ciò che non risponde, in grande su nero, e lo sposta un po' ogni minuto perché nulla si imprima. Un tocco riporta la bacheca.",
     "kioskRestNever": "Mai",
     "kioskRestMinutes_one": "{{count}} minuto",
-    "kioskRestMinutes_other": "{{count}} minuti"
+    "kioskRestMinutes_other": "{{count}} minuti",
+    "cardStyle": "Schede",
+    "cardStyleHelp": "Le schede di questa bacheca in uno stile proprio, per un display a parete o una bacheca con un'immagine dietro.",
+    "cardStyleInstallation": "Come in Aspetto"
   },
   "widget": {
     "remove": {
@@ -832,6 +844,31 @@
       "firstLabel": "Principale",
       "titleHelp": "Vuoto: il nome dell'app.",
       "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza."
+    },
+    "look": {
+      "title": "Colore",
+      "colour": "Colore della scheda",
+      "none": "Nessuno",
+      "fromIcon": "Dall'icona",
+      "own": "Un colore tuo",
+      "ownHex": "Un colore tuo come #rrggbb",
+      "help": "I colori dell'elenco seguono il tema e la modalità chiara o scura. Un colore tuo resta com'è. Una scheda non raggiungibile mantiene la cornice rossa.",
+      "effect": "Come appare il colore",
+      "effects": {
+        "frame": "Cornice",
+        "tint": "Tinta",
+        "fill": "Riempimento"
+      },
+      "colours": {
+        "accent": "Accento",
+        "blue": "Blu",
+        "violet": "Viola",
+        "pink": "Rosa",
+        "red": "Rosso",
+        "orange": "Arancione",
+        "yellow": "Giallo",
+        "green": "Verde"
+      }
     }
   },
   "library": {

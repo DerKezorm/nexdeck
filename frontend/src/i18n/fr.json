@@ -206,7 +206,9 @@
       "signOut": "Se déconnecter ici",
       "confirmPassword": "Répéter le nouveau mot de passe",
       "saveProfile": "Enregistrer le nom et l’adresse",
-      "unsaved": "Pas encore enregistré"
+      "unsaved": "Pas encore enregistré",
+      "tilt": "Les cartes s'inclinent vers le pointeur",
+      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement."
     },
     "integrations": {
       "title": "Intégrations",
@@ -359,7 +361,8 @@
         "glass": "Verre",
         "flat": "Plate",
         "outline": "Contour",
-        "neon": "Bord néon"
+        "neon": "Bord néon",
+        "liquid": "Verre liquide"
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
@@ -380,7 +383,10 @@
       "lookCopy": "Copier le style",
       "lookCopied": "Copié",
       "lookPasteLabel": "Un style à coller",
-      "lookTake": "Prendre ce style"
+      "lookTake": "Prendre ce style",
+      "refraction": "Le bord courbe la lumière",
+      "refractionHelp": "Le bord du verre courbe ce qui se trouve derrière. Cela coûte un peu de puissance graphique ; désactivez-le pour une vieille tablette murale.",
+      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure."
     },
     "journal": {
       "title": "Niveau de journalisation",
@@ -729,14 +735,20 @@
       "none": "Aucun",
       "flow": "Aurore mouvante",
       "stars": "Ciel étoilé",
-      "daytime": "Suit l'heure du jour"
+      "daytime": "Suit l'heure du jour",
+      "prism": "Prisme",
+      "lagoon": "Lagon",
+      "sunset": "Coucher de soleil"
     },
     "livingHelp": "Les trois derniers bougent, lentement. Si le système demande moins d'animations, ils restent immobiles.",
     "kioskRest": "Repos sur une horloge après",
     "kioskRestHelp": "Sans contact pendant ce temps, l'écran affiche l'heure, la météo et ce qui est en panne, en grand sur fond noir, et les déplace un peu chaque minute pour que rien ne marque l'écran. Un contact ramène le tableau.",
     "kioskRestNever": "Jamais",
     "kioskRestMinutes_one": "{{count}} minute",
-    "kioskRestMinutes_other": "{{count}} minutes"
+    "kioskRestMinutes_other": "{{count}} minutes",
+    "cardStyle": "Cartes",
+    "cardStyleHelp": "Les cartes de ce tableau dans un style à elles, pour un écran mural ou un tableau avec une image derrière.",
+    "cardStyleInstallation": "Comme sous Apparence"
   },
   "widget": {
     "remove": {
@@ -832,6 +844,31 @@
       "firstLabel": "Principale",
       "titleHelp": "Vide : le nom de l'app.",
       "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte."
+    },
+    "look": {
+      "title": "Couleur",
+      "colour": "Couleur de la carte",
+      "none": "Aucune",
+      "fromIcon": "De l'icône",
+      "own": "Une couleur à vous",
+      "ownHex": "Une couleur à vous en #rrggbb",
+      "help": "Les couleurs de la liste suivent le thème et le mode clair ou sombre. Une couleur à vous reste telle quelle. Une carte en panne garde son cadre rouge.",
+      "effect": "Comment la couleur s'affiche",
+      "effects": {
+        "frame": "Cadre",
+        "tint": "Teinte",
+        "fill": "Remplissage"
+      },
+      "colours": {
+        "accent": "Accent",
+        "blue": "Bleu",
+        "violet": "Violet",
+        "pink": "Rose",
+        "red": "Rouge",
+        "orange": "Orange",
+        "yellow": "Jaune",
+        "green": "Vert"
+      }
     }
   },
   "library": {

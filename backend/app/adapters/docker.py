@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from ..services import icons
 from . import containers as containers_one
 from . import demo as fake
 from .base import (
@@ -242,11 +243,14 @@ class DockerAdapter(Adapter):
             state = entry.get("State", "unknown")
             if state != "running" and not options.get("show_stopped", True):
                 continue
+            logo = icons.container_icon(entry.get("Image", ""), name, entry.get("Labels"))
             item: dict[str, Any] = {
                 "id": entry.get("Id", "")[:12],
                 "title": name,
                 "subtitle": entry.get("Status", ""),
                 "image": entry.get("Image", ""),
+                # The logo stands where the dot was; the dot moves onto its corner.
+                **({"icon": logo, "icon_dot": True} if logo else {}),
                 "status": {"running": "ok", "paused": "warn", "restarting": "warn"}.get(state, "bad"),
                 "state": state,
                 "actions": self._actions_for(state, entry.get("Id", "")),
@@ -389,6 +393,8 @@ class DockerAdapter(Adapter):
             items.append({
                 "id": f"{index:012x}", "title": name, "subtitle": "Up 3 days" if state == "running" else "Exited (1) 4 minutes ago",
                 "image": f"ghcr.io/example/{name}:latest", "status": "ok" if state == "running" else "bad", "state": state,
+                # The demo names are all known logos; no index is asked for them.
+                "icon": {"pihole": "pi-hole"}.get(name, name), "icon_dot": True,
                 "cpu": cpu if state == "running" else None, "memory": human_bytes(mem) if state == "running" else "",
                 "memory_percent": percent(mem, 4 * 1024 ** 3) if state == "running" else 0,
                 "value": f"{cpu:.0f}%" if state == "running" else "",

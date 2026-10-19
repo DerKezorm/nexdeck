@@ -466,6 +466,29 @@ def clean_cards(db: Session, page_id: int, own_id: int | None, kind: str, option
     return {**options, "cards": kept}
 
 
+#: The colours every card can wear: the first four follow the theme (accent, bad,
+#: warn, ok), the rest are nexdeck's own. ``icon`` takes the main colour of the
+#: card's logo, a ``#rrggbb`` is a colour of one's own.
+CARD_COLOURS = frozenset({"accent", "blue", "violet", "pink", "red", "orange", "yellow", "green", "icon"})
+#: How the colour shows: a frame, a tint over the glass, or the whole card.
+CARD_EFFECTS = frozenset({"frame", "tint", "fill"})
+_HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _check_look(options: dict) -> None:
+    """The colour of a card and how it shows, checked before it is stored.
+
+    ⚠️ The colour goes into the card's style. Anything but a name from the list
+    or ``#rrggbb`` is refused here, so nothing else ever reaches a style sheet.
+    """
+    colour = options.get("card_colour")
+    if colour not in (None, "") and not (isinstance(colour, str) and (colour in CARD_COLOURS or _HEX.match(colour))):
+        raise error("bad_card_colour", "A card's colour is one from the list or reads like #3b82f6.")
+    effect = options.get("card_effect")
+    if effect not in (None, "") and effect not in CARD_EFFECTS:
+        raise error("bad_card_effect", "A card's colour shows as a frame, a tint or a fill.")
+
+
 def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
     """Check every option that names a connection.
 
@@ -476,6 +499,7 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
     """
     if not options:
         return
+    _check_look(options)
     if kind == "core.app" and options.get("app_id") not in (None, ""):
         from ..models import App
 

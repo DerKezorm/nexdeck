@@ -66,6 +66,7 @@ import {
 import { useState, type ComponentType } from 'react'
 
 import { iconUrl } from '../lib/format'
+import { judge, useGround, verdictFor } from '../lib/ground'
 
 interface Props {
   icon?: string | null
@@ -151,6 +152,9 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   // Remember which address failed, not that one did: while a name is being
   // typed, "r" and "ra" fail and "radarr" must still get its chance.
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const ground = useGround((state) => state.mode)
+  // Set once a logo turned out to vanish on this ground; it then asks for its variant.
+  const [, looked] = useState(0)
   if (icon && icon.startsWith('lucide:')) {
     return <LucideByName name={icon.slice(7)} size={size} className={className} />
   }
@@ -159,7 +163,10 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   if (icon && icon in SYMBOLS) {
     return <LucideByName name={icon} size={size} className={className} />
   }
-  const url = iconUrl(icon)
+  // A name the server serves can have a variant for the ground; an address or an upload cannot.
+  const plain = iconUrl(icon)
+  const named = Boolean(plain && icon && !/^(https?:|\/|data:)/.test(icon))
+  const url = named && plain && verdictFor(plain, ground) ? iconUrl(icon, ground) : plain
   if (!url || failedUrl === url) {
     return <Box size={size} className={`${className} text-muted`} aria-hidden="true" />
   }
@@ -172,6 +179,9 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
       className={`${className} object-contain`}
       style={{ width: size, height: size }}
       loading="lazy"
+      onLoad={(event) => {
+        if (named && plain && url === plain && verdictFor(plain, ground) === undefined && judge(event.currentTarget, plain, ground)) looked((n) => n + 1)
+      }}
       onError={() => setFailedUrl(url)}
     />
   )

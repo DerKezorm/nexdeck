@@ -6,11 +6,13 @@ name indexes for the search are cached for a day.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
 import time
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -181,6 +183,66 @@ async def all_names() -> list[dict[str, str]]:
     return results
 
 
+#: Which variant a logo has for the ground it stands on: on a dark page the
+#: light one, on a light page the dark one. Both collections name them so.
+VARIANT_FOR = {"dark": "light", "light": "dark"}
+_loading: asyncio.Task[None] | None = None
+
+
+def _known_now() -> set[str] | None:
+    """The names both collections have, from what is cached, or None while nothing is.
+
+    ⚠️ Never a request from here. This runs for every logo on every board; a
+    fresh index is fetched once, in the background, and until it is there a
+    logo is served as it is.
+    """
+    known: set[str] = set()
+    found = False
+    for source, _pattern, _tree in SOURCES:
+        hit = _index.get(source)
+        if hit:
+            known.update(hit[1])
+            found = found or bool(hit[1])
+            continue
+        file = _cache_dir() / f"index-{source}.json"
+        if file.exists():
+            try:
+                names = json.loads(file.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            _index[source] = (time.monotonic() + INDEX_SECONDS, names)
+            known.update(names)
+            found = found or bool(names)
+    return known if found else None
+
+
+async def _load_index() -> None:
+    for source, _pattern, tree_url in SOURCES:
+        await _names(source, tree_url)
+
+
+def variant(name: str, ground: str) -> str:
+    """The name to serve on a dark or a light page: ``github`` on dark is ``github-light`` when there is one.
+
+    A name that already says which it is stays as it is, and so does every
+    logo while the index is not known yet.
+    """
+    global _loading
+    wanted = VARIANT_FOR.get(ground)
+    if not wanted or name.endswith(("-light", "-dark")) or (BUNDLED / f"{name}.svg").is_file():
+        return name
+    known = _known_now()
+    if known is None:
+        if _loading is None or _loading.done():
+            try:
+                _loading = asyncio.get_running_loop().create_task(_load_index())
+            except RuntimeError:
+                pass
+        return name
+    candidate = f"{name}-{wanted}"
+    return candidate if candidate in known else name
+
+
 def bundled_names() -> list[str]:
     return sorted(path.stem for path in BUNDLED.glob("*.svg")) if BUNDLED.is_dir() else []
 
@@ -198,6 +260,35 @@ async def search(query: str, limit: int = 30) -> list[dict[str, str]]:
                 results.append({"name": name, "source": source})
     results.sort(key=lambda r: (not r["name"].startswith(query), len(r["name"])))
     return results[:limit]
+
+
+#: The ends of an image or container name that are not part of the product's name.
+_TRAILING = re.compile(r"[-_](server|agent|app|web|ce|ee|oss|ml|worker|db|machine-learning|machine_learning)$")
+
+
+def container_icon(image: str, name: str, labels: dict[str, Any] | None = None) -> str:
+    """The logo of a container: its ``nexdeck.icon`` label, else what its image or name are known as.
+
+    ``lscr.io/linuxserver/qbittorrent`` is ``qbittorrent``, ``immich-server``
+    is ``immich``, ``immich_machine_learning`` too. Only a name one of the
+    collections carries is returned, so a row never shows the grey box; while
+    the index is not known, only the label counts. Empty when nothing fits.
+    """
+    own = str((labels or {}).get("nexdeck.icon") or "").strip()
+    if own and (own.startswith("lucide:") or valid_name(own.lower())):
+        return own if own.startswith("lucide:") else own.lower()
+    known = _known_now()
+    if not known:
+        return ""
+    candidates: list[str] = []
+    for raw in (guess_from_image(image), re.sub(r"[^a-z0-9_-]", "-", name.lower()).strip("-_")):
+        if not raw:
+            continue
+        candidates += [raw, _TRAILING.sub("", raw), re.split(r"[-_]", raw)[0]]
+    for candidate in candidates:
+        if candidate and candidate in known:
+            return candidate
+    return ""
 
 
 def guess_from_image(image: str) -> str:

@@ -46,6 +46,18 @@
   --nd-aurora-1: rgba(34, 211, 238, 0.16);
   --nd-aurora-2: rgba(99, 102, 241, 0.14);
   --nd-aurora-3: rgba(6, 182, 212, 0.1);
+  /* The colours a card can wear beyond the theme's own (accent, ok, warn, bad). */
+  --nd-c-blue: #60a5fa;
+  --nd-c-violet: #a78bfa;
+  --nd-c-pink: #f472b6;
+  --nd-c-orange: #fb923c;
+  /* Liquid glass: a light tint so small print stays readable over a loud
+     background, a rim lit from the top left, a glare under the pointer. */
+  --nd-lg-fill: rgba(12, 16, 26, 0.3);
+  --nd-lg-rim: rgba(255, 255, 255, 0.55);
+  --nd-lg-rim-far: rgba(255, 255, 255, 0.22);
+  --nd-lg-glare: rgba(255, 255, 255, 0.2);
+  --nd-lg-shadow: 0 18px 40px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
   color-scheme: dark;
 }
 
@@ -80,6 +92,15 @@
   --nd-aurora-1: rgba(8, 145, 178, 0.14);
   --nd-aurora-2: rgba(99, 102, 241, 0.1);
   --nd-aurora-3: rgba(14, 165, 233, 0.1);
+  --nd-c-blue: #2563eb;
+  --nd-c-violet: #7c3aed;
+  --nd-c-pink: #db2777;
+  --nd-c-orange: #c2410c;
+  --nd-lg-fill: rgba(255, 255, 255, 0.46);
+  --nd-lg-rim: rgba(255, 255, 255, 0.95);
+  --nd-lg-rim-far: rgba(255, 255, 255, 0.55);
+  --nd-lg-glare: rgba(255, 255, 255, 0.45);
+  --nd-lg-shadow: 0 18px 40px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.08);
   color-scheme: light;
 }
 }
@@ -278,6 +299,153 @@ body {
 :root[data-cards='outline'] .card.glass[data-status='warn'],
 :root[data-cards='neon'] .card.glass[data-status='warn'] {
   border-color: color-mix(in srgb, var(--nd-warn) 45%, var(--nd-border));
+}
+
+/* Liquid glass: thick glass with a rim the light catches and a glare that
+   follows the pointer (--nd-mx, --nd-my, set by the card). Its edge bends the
+   background through an SVG filter the card puts into its own backdrop-filter
+   (lib/refraction.ts), in Chromium only; elsewhere it is this glass without
+   the bend. The small print is lifted, because a loud background behind thin
+   glass took the muted grey with it. */
+:root[data-cards='liquid'] .card.glass:not(.card-plain) {
+  --nd-text-muted: color-mix(in srgb, var(--nd-text) 80%, transparent);
+  --nd-text-faint: color-mix(in srgb, var(--nd-text) 68%, transparent);
+  background: var(--nd-lg-fill);
+  border-color: transparent;
+  box-shadow:
+    var(--nd-lg-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 24px rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+}
+
+/* Rim and glare under the content: at z-index -1 inside the card, which its
+   backdrop-filter makes a stacking context, they paint over the glass and
+   under every word. */
+:root[data-cards='liquid'] .card.glass:not(.card-plain)::before,
+:root[data-cards='liquid'] .card.glass:not(.card-plain)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+:root[data-cards='liquid'] .card.glass:not(.card-plain)::before {
+  padding: 1.2px;
+  background: linear-gradient(140deg, var(--nd-lg-rim), rgba(255, 255, 255, 0.08) 30%, transparent 55%, var(--nd-lg-rim-far));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+:root[data-cards='liquid'] .card.glass:not(.card-plain)::after {
+  background:
+    radial-gradient(120% 70% at var(--nd-mx, 25%) var(--nd-my, -10%), var(--nd-lg-glare), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%);
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+:root[data-cards='liquid'] .card.glass:not(.card-plain):hover::after {
+  opacity: 1;
+}
+
+:root[data-cards='liquid'] .card.glass[data-status='bad']:not(.card-plain) {
+  border-color: color-mix(in srgb, var(--nd-bad) 55%, transparent);
+}
+
+:root[data-cards='liquid'] .card.glass[data-status='warn']:not(.card-plain) {
+  border-color: color-mix(in srgb, var(--nd-warn) 45%, transparent);
+}
+
+/* A colour of a card's own (the card's settings, Look): a frame, a tint over
+   the glass, or the whole card. --nd-tone is the colour, --nd-tone-ink the
+   text on a filled card. A red or amber frame still says how the card stands:
+   the colour never takes the border of a card that is down. */
+:root .card.glass.look-tint:not(.card-plain) {
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--nd-tone) 28%, transparent), color-mix(in srgb, var(--nd-tone) 8%, transparent) 70%),
+    var(--nd-surface);
+}
+
+:root .card.glass.look-fill:not(.card-plain) {
+  --nd-text: var(--nd-tone-ink, var(--nd-on-accent));
+  --nd-text-muted: color-mix(in srgb, var(--nd-tone-ink, var(--nd-on-accent)) 75%, transparent);
+  --nd-text-faint: color-mix(in srgb, var(--nd-tone-ink, var(--nd-on-accent)) 62%, transparent);
+  color: var(--nd-text);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--nd-tone) 92%, white 8%), color-mix(in srgb, var(--nd-tone) 80%, black 14%));
+}
+
+:root[data-cards='liquid'] .card.glass.look-tint:not(.card-plain) {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--nd-tone) 34%, transparent), color-mix(in srgb, var(--nd-tone) 10%, transparent) 75%);
+}
+
+:root[data-cards='liquid'] .card.glass.look-fill:not(.card-plain) {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--nd-tone) 72%, transparent), color-mix(in srgb, var(--nd-tone) 52%, transparent));
+}
+
+:root .card.glass.look-frame:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']) {
+  border-color: color-mix(in srgb, var(--nd-tone) 75%, transparent);
+  box-shadow:
+    var(--nd-shadow),
+    0 0 0 1px color-mix(in srgb, var(--nd-tone) 30%, transparent),
+    0 0 24px -6px color-mix(in srgb, var(--nd-tone) 55%, transparent);
+}
+
+:root .card.glass.look-tint:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']),
+:root .card.glass.look-fill:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']) {
+  border-color: color-mix(in srgb, var(--nd-tone) 45%, transparent);
+}
+
+:root[data-cards='neon'] .card.glass.look-frame:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']),
+:root[data-cards='neon'] .card.glass.look-tint:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']),
+:root[data-cards='neon'] .card.glass.look-fill:not(.card-plain):not(.is-editing):not([data-status='bad']):not([data-status='warn']) {
+  border-color: var(--nd-tone);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nd-tone) 40%, transparent),
+    0 0 26px -6px color-mix(in srgb, var(--nd-tone) 60%, transparent);
+}
+
+/* The rim of liquid glass in the card's colour, for a frame. */
+:root[data-cards='liquid'] .card.glass.look-frame:not(.card-plain):not([data-status='bad']):not([data-status='warn'])::before {
+  padding: 1.6px;
+  background: linear-gradient(140deg, var(--nd-tone), color-mix(in srgb, var(--nd-tone) 25%, transparent) 45%, var(--nd-tone));
+}
+
+/* The app tile as a big icon: the logo grows with the tile, by the smaller of
+   its width and height, so a square tile shows it large and a wide one still
+   whole. The card is a size container (container: card / size). */
+.app-big {
+  gap: 4px;
+}
+
+.app-big-icon > img,
+.app-big-icon > svg {
+  width: min(62cqw, 56cqh) !important;
+  height: min(62cqw, 56cqh) !important;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28));
+  transition: transform 0.25s ease;
+}
+
+.card:hover .app-big-icon > img,
+.card:hover .app-big-icon > svg {
+  transform: scale(1.05);
+}
+
+/* A card tips towards the pointer (the profile can switch it off), lifted a
+   little above its neighbours while it does. */
+.card.glass.is-tipping {
+  z-index: 3;
+  transition:
+    border-color 160ms ease,
+    transform 120ms ease-out,
+    box-shadow 160ms ease;
 }
 
 :root[data-cards] .card.glass.is-editing {
@@ -546,9 +714,15 @@ body {
   filter: blur(2px) saturate(1.15);
 }
 
+/* ⚠️ The variables too, not only the colour: the card's title is drawn with
+   the ink of the theme (text-ink), and on a light page that is dark, so over
+   the darkened picture the title of "Now playing" all but vanished. */
 .card:has(.nd-on-backdrop) {
   isolation: isolate;
   color: #f1f5f9;
+  --nd-text: #f1f5f9;
+  --nd-text-muted: rgba(226, 232, 240, 0.78);
+  --nd-text-faint: rgba(226, 232, 240, 0.66);
 }
 
 .card:has(.nd-on-backdrop) .text-muted,

@@ -27,6 +27,11 @@ export const BUNDLED: Record<string, string> = {
   forest: 'radial-gradient(1100px 600px at 0% 0%, rgba(34,197,94,0.24), transparent 60%), radial-gradient(900px 600px at 100% 90%, rgba(132,204,22,0.18), transparent 60%)',
   violet: 'radial-gradient(1100px 600px at 80% -10%, rgba(168,85,247,0.3), transparent 60%), radial-gradient(900px 600px at 10% 100%, rgba(99,102,241,0.24), transparent 60%)',
   mono: 'radial-gradient(1100px 600px at 50% -20%, rgba(148,163,184,0.12), transparent 60%)',
+  // Three loud ones, for liquid glass: thick glass over a quiet ground shows
+  // next to nothing, over these it shows its rim and its bend.
+  prism: 'radial-gradient(60vmax 60vmax at 5% -5%, rgba(31,182,217,0.7), transparent 60%), radial-gradient(50vmax 50vmax at 100% 20%, rgba(139,92,246,0.68), transparent 60%), radial-gradient(45vmax 45vmax at 40% 110%, rgba(249,115,22,0.6), transparent 60%), radial-gradient(30vmax 30vmax at 70% 55%, rgba(236,72,153,0.5), transparent 60%)',
+  lagoon: 'radial-gradient(60vmax 60vmax at 0% 0%, rgba(20,184,166,0.65), transparent 60%), radial-gradient(55vmax 55vmax at 100% 30%, rgba(37,99,235,0.65), transparent 60%), radial-gradient(45vmax 45vmax at 30% 105%, rgba(132,204,22,0.45), transparent 60%), radial-gradient(28vmax 28vmax at 65% 60%, rgba(56,189,248,0.5), transparent 60%)',
+  sunset: 'radial-gradient(60vmax 60vmax at 100% 0%, rgba(251,146,60,0.7), transparent 60%), radial-gradient(55vmax 55vmax at 0% 40%, rgba(219,39,119,0.6), transparent 60%), radial-gradient(50vmax 50vmax at 60% 110%, rgba(124,58,237,0.6), transparent 60%), radial-gradient(26vmax 26vmax at 45% 45%, rgba(250,204,21,0.35), transparent 60%)',
   none: 'none',
 }
 

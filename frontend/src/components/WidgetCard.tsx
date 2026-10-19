@@ -1,10 +1,14 @@
 import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
-import type { MouseEvent, ReactNode } from 'react'
+import { useEffect, useId, useRef, type CSSProperties, type MouseEvent, type PointerEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { shownStyle, useLook } from '../lib/appearance'
+import { colourKind, lookOf, tipOf, useLogoColour } from '../lib/cardLook'
 import { cardStatus } from '../lib/cardStatus'
+import { canRefract, refract } from '../lib/refraction'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
+import { useAuth } from '../stores/auth'
 
 import { tLabel } from '../i18n/texts'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -103,13 +107,51 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   )
   const showControls = editing ? Boolean(onSettings || onRemove || onArrange) : Boolean(onRefresh || link)
 
+  // A colour of the card's own; a heading has one of its kind already.
+  const logo = useLogoColour(widget.icon, !plain && colourKind(widget.options?.card_colour) === 'icon')
+  const look = plain ? { className: '', style: {} } : lookOf(widget.options, logo)
+  const frame = useRef<HTMLElement>(null)
+  const filterId = `nd-lg-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const liquid = useLook((state) => shownStyle(state) === 'liquid' && state.refraction)
+  useEffect(() => {
+    const element = frame.current
+    if (!liquid || plain || !element || !canRefract()) return
+    const radius = parseFloat(getComputedStyle(element).borderTopLeftRadius) || 16
+    return refract(element, filterId, radius)
+  }, [liquid, plain, filterId])
+  // The card tips towards the pointer: not while the board is arranged, not on
+  // a touch screen, not when the account or the system asks for less motion.
+  const tilts = useAuth((state) => state.user?.tilt !== false) && !editing && !plain
+  const follow = (event: PointerEvent<HTMLElement>) => {
+    const element = event.currentTarget
+    const box = element.getBoundingClientRect()
+    const x = event.clientX - box.left
+    const y = event.clientY - box.top
+    element.style.setProperty('--nd-mx', `${((x / box.width) * 100).toFixed(1)}%`)
+    element.style.setProperty('--nd-my', `${((y / box.height) * 100).toFixed(1)}%`)
+    if (!tilts || event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    element.classList.add('is-tipping')
+    element.style.transform = tipOf(box, x, y)
+  }
+  const rest = (event: PointerEvent<HTMLElement>) => {
+    const element = event.currentTarget
+    element.classList.remove('is-tipping')
+    element.style.transform = ''
+    element.style.removeProperty('--nd-mx')
+    element.style.removeProperty('--nd-my')
+  }
+
   return (
     <section
-      className={`card glass ${plain ? 'card-plain' : ''} ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''}`}
+      ref={frame}
+      className={`card glass ${plain ? 'card-plain' : ''} ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''} ${look.className}`}
+      style={look.style as CSSProperties}
       data-status={status}
       data-widget={widget.id}
       aria-label={widget.title || widget.kind}
       onClick={clickable ? open : undefined}
+      onPointerMove={plain ? undefined : follow}
+      onPointerLeave={plain ? undefined : rest}
     >
       {!bare && (
         <header className="flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9">

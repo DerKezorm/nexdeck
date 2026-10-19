@@ -8,6 +8,7 @@ import { tAdapter } from '../i18n/texts'
 import { shownField } from '../lib/fields'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
+import { CardLookFields } from './CardLookFields'
 import { FieldInput } from './FieldInput'
 import { IconPicker } from './IconPicker'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
@@ -369,6 +370,14 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       {/* Cards with server data can hand their alarm to a Findings card next to them. */}
       {!spec?.client_only && (
         <Switch checked={options.show_findings === true} onChange={(value) => setOptions((o) => ({ ...o, show_findings: value }))} label={t('widget.showFindings')} description={t('widget.showFindingsHelp')} />
+      )}
+      {/* A heading has a colour of its kind; every other card its look here. */}
+      {widget.kind !== 'core.heading' && (
+        <CardLookFields
+          options={options}
+          icon={icon || widget.icon}
+          onChange={(patch) => setOptions((o) => ({ ...o, ...patch }))}
+        />
       )}
       {isApp && (
         <div className="rounded-xl border border-line p-3 mb-3">

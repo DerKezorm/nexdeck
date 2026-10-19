@@ -44,6 +44,13 @@ def clean(settings: dict[str, Any] | None, cols: int) -> dict[str, Any]:
         result.pop("width", None)
     if "fit_height" in result and not isinstance(result["fit_height"], bool):
         result.pop("fit_height")
+    # A board may draw its cards in a style of its own; without one, or with
+    # one nexdeck does not know, it follows the installation.
+    if "card_style" in result:
+        from .appearance import CARD_STYLES
+
+        if result["card_style"] not in CARD_STYLES:
+            result.pop("card_style")
     if cols != BASE:
         result["columns"] = cols
     return result

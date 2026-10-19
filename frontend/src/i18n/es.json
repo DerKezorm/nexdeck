@@ -206,7 +206,9 @@
       "signOut": "Cerrar sesión aquí",
       "confirmPassword": "Repite la contraseña nueva",
       "saveProfile": "Guardar nombre y dirección",
-      "unsaved": "Aún no guardado"
+      "unsaved": "Aún no guardado",
+      "tilt": "Las tarjetas se inclinan hacia el puntero",
+      "tiltHelp": "Solo con ratón, y nunca si el sistema pide menos movimiento."
     },
     "integrations": {
       "title": "Integraciones",
@@ -359,7 +361,8 @@
         "glass": "Cristal",
         "flat": "Plana",
         "outline": "Contorno",
-        "neon": "Borde neón"
+        "neon": "Borde neón",
+        "liquid": "Cristal líquido"
       },
       "radius": "Esquinas",
       "gap": "Espacio entre tarjetas",
@@ -380,7 +383,10 @@
       "lookCopy": "Copiar el estilo",
       "lookCopied": "Copiado",
       "lookPasteLabel": "Un estilo para pegar",
-      "lookTake": "Usar este estilo"
+      "lookTake": "Usar este estilo",
+      "refraction": "El borde curva la luz",
+      "refractionHelp": "El borde del cristal curva lo que hay detrás. Cuesta algo de potencia gráfica; desactívalo en una tableta de pared antigua.",
+      "refractionNotHere": "Este navegador no puede: Chrome y Edge sí, Safari y Firefox muestran el cristal sin curvatura."
     },
     "journal": {
       "title": "Nivel de registro",
@@ -729,14 +735,20 @@
       "none": "Ninguno",
       "flow": "Aurora en movimiento",
       "stars": "Cielo estrellado",
-      "daytime": "Sigue la hora del día"
+      "daytime": "Sigue la hora del día",
+      "prism": "Prisma",
+      "lagoon": "Laguna",
+      "sunset": "Atardecer"
     },
     "livingHelp": "Los tres últimos se mueven, despacio. Si el sistema pide menos movimiento, se quedan quietos.",
     "kioskRest": "Reposo con reloj tras",
     "kioskRestHelp": "Si nadie la toca durante ese tiempo, la pantalla muestra la hora, el tiempo y lo que está caído, en grande sobre negro, y lo desplaza un poco cada minuto para que nada se queme. Un toque devuelve el tablero.",
     "kioskRestNever": "Nunca",
     "kioskRestMinutes_one": "{{count}} minuto",
-    "kioskRestMinutes_other": "{{count}} minutos"
+    "kioskRestMinutes_other": "{{count}} minutos",
+    "cardStyle": "Tarjetas",
+    "cardStyleHelp": "Las tarjetas de este tablero con un estilo propio, para una pantalla de pared o un tablero con una imagen detrás.",
+    "cardStyleInstallation": "Como en Apariencia"
   },
   "widget": {
     "remove": {
@@ -832,6 +844,31 @@
       "firstLabel": "Principal",
       "titleHelp": "Vacío: el nombre de la app.",
       "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad."
+    },
+    "look": {
+      "title": "Color",
+      "colour": "Color de la tarjeta",
+      "none": "Ninguno",
+      "fromIcon": "Del icono",
+      "own": "Un color propio",
+      "ownHex": "Un color propio como #rrggbb",
+      "help": "Los colores de la lista siguen el tema y el modo claro u oscuro. Un color propio se queda como está. Una tarjeta caída conserva su marco rojo.",
+      "effect": "Cómo se muestra el color",
+      "effects": {
+        "frame": "Marco",
+        "tint": "Tinte",
+        "fill": "Relleno"
+      },
+      "colours": {
+        "accent": "Acento",
+        "blue": "Azul",
+        "violet": "Violeta",
+        "pink": "Rosa",
+        "red": "Rojo",
+        "orange": "Naranja",
+        "yellow": "Amarillo",
+        "green": "Verde"
+      }
     }
   },
   "library": {

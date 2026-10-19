@@ -245,7 +245,8 @@ def test_a_wall_display_is_painted_with_the_look_of_the_installation(client: Tes
 def test_the_cards_are_drawn_the_way_the_administrator_chose(admin_client: TestClient) -> None:
     fresh = admin_client.get("/api/v1/settings/appearance").json()
     assert (fresh["card_style"], fresh["radius"], fresh["gap"]) == ("glass", 16, 12), "nexdeck as it always looked"
-    assert fresh["card_styles"] == ["glass", "flat", "outline", "neon"]
+    assert fresh["card_styles"] == ["glass", "liquid", "flat", "outline", "neon"]
+    assert fresh["refraction"] is True, "liquid glass bends the light unless switched off"
     stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "card_style": "neon", "radius": 4, "gap": 20})
     assert stored.status_code == 200, stored.text
     again = admin_client.get("/api/v1/settings/appearance").json()
@@ -261,6 +262,7 @@ def test_the_cards_are_drawn_the_way_the_administrator_chose(admin_client: TestC
     ({"radius": -1}, "bad_radius"),
     ({"gap": 3}, "bad_gap"),
     ({"gap": 100}, "bad_gap"),
+    ({"refraction": "yes"}, "bad_refraction"),
 ])
 def test_a_card_that_is_not_one_is_refused_in_words(body: dict, code: str, admin_client: TestClient) -> None:
     answer = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", **body})
@@ -274,3 +276,10 @@ def test_a_stored_card_out_of_bounds_reads_as_the_default() -> None:
     assert appearance._within(True, appearance.GAP) == 12
     assert appearance._within("8", appearance.GAP) == 12
     assert appearance._within(8, appearance.GAP) == 8
+
+
+def test_liquid_glass_and_its_light_are_stored(admin_client: TestClient) -> None:
+    stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "card_style": "liquid", "refraction": False})
+    assert stored.status_code == 200, stored.text
+    again = admin_client.get("/api/v1/settings/appearance").json()
+    assert (again["card_style"], again["refraction"]) == ("liquid", False)

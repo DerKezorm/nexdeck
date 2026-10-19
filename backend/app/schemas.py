@@ -20,6 +20,7 @@ class UserPublic(BaseModel):
     #: The two languages in the top bar; ``locale`` is always one of them.
     language_pair: list[str]
     theme: str
+    tilt: bool = True
     start_board_id: int | None
     disabled: bool
     seen_version: str
@@ -46,6 +47,7 @@ class MePatch(BaseModel):
     locale: Code | None = None
     language_pair: Pair | None = None
     theme: Literal["dark", "light", "system"] | None = None
+    tilt: bool | None = None
     start_board_id: int | None = None
     seen_version: str | None = Field(default=None, max_length=16)
 
@@ -433,11 +435,13 @@ class AppearanceBody(BaseModel):
     #: A theme, ``{"name", "dark": {colour: "#rrggbb"}, "light": {...}}``, or null for nexdeck's own look.
     #: Loosely typed so that a pasted theme gets a sentence back, not a 422.
     theme: dict[str, Any] | None = None
-    #: How a card is drawn: glass, flat, outline or neon.
+    #: How a card is drawn: glass, liquid, flat, outline or neon.
     card_style: str = Field(default="glass", max_length=20)
     #: The corners of a card and the room between two, in pixels. Loose for the same reason as the accent.
     radius: int | None = None
     gap: int | None = None
+    #: Liquid glass: whether its rim bends the background. Loose for the same reason as the accent.
+    refraction: Any = True
 
 
 class AppAddress(BaseModel):

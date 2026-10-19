@@ -101,7 +101,7 @@ describe('a look to share', () => {
     const text = lookFile(base)
     expect(text).not.toContain('secret')
     const read = readLook(text)
-    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', radius: 6, gap: 20 })
+    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20 })
   })
 
   it('takes a theme shared on its own, as before looks existed', () => {

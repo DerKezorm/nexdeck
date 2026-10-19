@@ -206,7 +206,9 @@
       "signOut": "Hier abmelden",
       "confirmPassword": "Neues Passwort wiederholen",
       "saveProfile": "Name und Adresse speichern",
-      "unsaved": "Noch nicht gespeichert"
+      "unsaved": "Noch nicht gespeichert",
+      "tilt": "Karten neigen sich zum Mauszeiger",
+      "tiltHelp": "Nur mit der Maus, und nie, wenn das System weniger Bewegung wünscht."
     },
     "integrations": {
       "title": "Anbindungen",
@@ -359,7 +361,8 @@
         "glass": "Glas",
         "flat": "Flach",
         "outline": "Umriss",
-        "neon": "Neonkante"
+        "neon": "Neonkante",
+        "liquid": "Liquid Glass"
       },
       "radius": "Ecken",
       "gap": "Abstand zwischen Karten",
@@ -380,7 +383,10 @@
       "lookCopy": "Look kopieren",
       "lookCopied": "Kopiert",
       "lookPasteLabel": "Ein Look zum Einfügen",
-      "lookTake": "Diesen Look übernehmen"
+      "lookTake": "Diesen Look übernehmen",
+      "refraction": "Rand bricht das Licht",
+      "refractionHelp": "Der Rand des Glases biegt, was dahinter liegt. Das kostet etwas Grafikleistung; für ein altes Wand-Tablet ausschalten.",
+      "refractionNotHere": "Dieser Browser kann das nicht: Chrome und Edge können es, Safari und Firefox zeigen das Glas ohne Biegung."
     },
     "journal": {
       "title": "Protokollstufe",
@@ -729,14 +735,20 @@
       "none": "Keiner",
       "flow": "Fließende Aurora",
       "stars": "Sternenhimmel",
-      "daytime": "Folgt der Tageszeit"
+      "daytime": "Folgt der Tageszeit",
+      "prism": "Prisma",
+      "lagoon": "Lagune",
+      "sunset": "Sonnenuntergang"
     },
     "livingHelp": "Die letzten drei bewegen sich, langsam. Ist im System weniger Bewegung eingestellt, stehen sie still.",
     "kioskRest": "Ruhebild nach",
     "kioskRestHelp": "Wird die Anzeige so lange nicht berührt, zeigt sie Uhrzeit, Wetter und was ausgefallen ist, groß auf Schwarz, und verschiebt das jede Minute ein wenig, damit nichts einbrennt. Eine Berührung holt das Board zurück.",
     "kioskRestNever": "Nie",
     "kioskRestMinutes_one": "{{count}} Minute",
-    "kioskRestMinutes_other": "{{count}} Minuten"
+    "kioskRestMinutes_other": "{{count}} Minuten",
+    "cardStyle": "Karten",
+    "cardStyleHelp": "Die Karten dieses Boards in einem eigenen Stil, für ein Wand-Display oder ein Board mit Bild dahinter.",
+    "cardStyleInstallation": "Wie unter Darstellung"
   },
   "widget": {
     "remove": {
@@ -832,6 +844,31 @@
       "firstLabel": "Haupt",
       "titleHelp": "Leer: der Name der App.",
       "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor."
+    },
+    "look": {
+      "title": "Farbe",
+      "colour": "Farbe der Karte",
+      "none": "Keine",
+      "fromIcon": "Aus dem Icon",
+      "own": "Eigene Farbe",
+      "ownHex": "Eigene Farbe als #rrggbb",
+      "help": "Die Farben aus der Liste folgen dem Theme und Hell oder Dunkel. Eine eigene Farbe bleibt, wie sie ist. Eine ausgefallene Karte behält ihren roten Rahmen.",
+      "effect": "Wie die Farbe wirkt",
+      "effects": {
+        "frame": "Rahmen",
+        "tint": "Tönung",
+        "fill": "Füllung"
+      },
+      "colours": {
+        "accent": "Akzent",
+        "blue": "Blau",
+        "violet": "Violett",
+        "pink": "Rosa",
+        "red": "Rot",
+        "orange": "Orange",
+        "yellow": "Gelb",
+        "green": "Grün"
+      }
     }
   },
   "library": {

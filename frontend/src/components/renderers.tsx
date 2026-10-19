@@ -785,6 +785,13 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${disguise.on && PICTURE_SHAPES.has(String(item.art_shape ?? '')) ? 'blur-md scale-110' : ''}`} />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>
+              ) : item.icon && item.icon_dot ? (
+                // A logo that stands for the row (a container), with the dot
+                // that says how it stands on its corner, as beside a cover.
+                <span className="relative shrink-0 grid place-items-center w-5 h-5">
+                  <ServiceIcon icon={String(item.icon)} size={20} />
+                  <span className="dot absolute -right-1 -bottom-1 ring-2 ring-[var(--nd-card)] !w-2 !h-2" data-status={status} />
+                </span>
               ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -2004,6 +2011,32 @@ export function AppTile({ widget, data, link }: RenderProps) {
           ? (health.last_latency_ms !== null ? `${health.last_latency_ms} ms` : '')
           : tLabel(health.last_error || '')
   const Tag = href ? 'a' : 'div'
+  const dotTitle = [t(`status.${dotStatus}`), reason].filter(Boolean).join(' · ')
+  const barsTitle = t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })
+  if (widget.options?.look === 'icon') {
+    // The big icon: the name on top, the logo filling the middle, how it
+    // stands in the corner or as bars along the bottom. Best on a square tile.
+    const asBars = widget.options?.corner === 'bars' && bars.length > 0
+    return (
+      <Tag
+        href={href}
+        target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
+        rel="noopener noreferrer"
+        className="app-big flex-1 flex flex-col items-center min-h-0 px-3 pt-2.5 pb-3 no-underline text-inherit relative"
+        data-testid="app-big"
+      >
+        <div className="text-[14px] font-semibold truncate max-w-full text-center">{widget.title}</div>
+        <div className="app-big-icon flex-1 min-h-0 w-full grid place-items-center">
+          <ServiceIcon icon={widget.icon} size={96} />
+        </div>
+        {asBars ? (
+          <AvailabilityBars bars={bars} title={barsTitle} className="w-full" />
+        ) : (
+          <span className="dot absolute right-3 bottom-3" data-status={dotStatus} title={dotTitle} />
+        )}
+      </Tag>
+    )
+  }
   return (
     <Tag
       href={href}
@@ -2018,11 +2051,11 @@ export function AppTile({ widget, data, link }: RenderProps) {
           {description && <div className="text-[11px] text-muted truncate">{description}</div>}
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="dot" data-status={dotStatus} title={[t(`status.${dotStatus}`), reason].filter(Boolean).join(' · ')} />
+          <span className="dot" data-status={dotStatus} title={dotTitle} />
           {health?.last_latency_ms !== null && health?.last_latency_ms !== undefined && <span className="num text-[10px] text-faint">{health.last_latency_ms} ms</span>}
         </div>
       </div>
-      {bars.length > 0 && <AvailabilityBars bars={bars} title={t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })} className="mt-2" />}
+      {bars.length > 0 && <AvailabilityBars bars={bars} title={barsTitle} className="mt-2" />}
     </Tag>
   )
 }

@@ -4,17 +4,24 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
-import { Field, Spinner, Toast } from '../../components/ui'
+import { Field, Spinner, Switch, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
+import { canRefract } from '../../lib/refraction'
 import { SettingsCard } from './SettingsCard'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
 
-const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12 }
+const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true }
 
 /** What each style looks like in its button, drawn with the same colours the card will use. */
 const SAMPLE: Record<CardStyle, React.CSSProperties> = {
   glass: { background: 'var(--nd-surface)', border: '1px solid var(--nd-border)', backdropFilter: 'blur(8px)' },
+  liquid: {
+    background: 'linear-gradient(140deg, rgba(255,255,255,0.28), rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.14)), var(--nd-lg-fill)',
+    border: '1px solid rgba(255,255,255,0.45)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 14px -6px rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(8px) saturate(180%)',
+  },
   flat: { background: 'var(--nd-bg-elev)', border: '1px solid var(--nd-border)' },
   outline: { background: 'transparent', border: '1.5px solid var(--nd-border-strong)' },
   neon: { background: 'var(--nd-surface)', border: '1px solid color-mix(in srgb, var(--nd-accent) 45%, transparent)', boxShadow: '0 0 14px -4px var(--nd-accent-glow)' },
@@ -50,7 +57,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12 })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -93,8 +100,8 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
-        <ul className="grid gap-2 grid-cols-2 sm:grid-cols-4" aria-label={t('settings.appearance.cardsTitle')}>
-          {(form.card_styles ?? ['glass', 'flat', 'outline', 'neon']).map((style) => {
+        <ul className="grid gap-2 grid-cols-2 sm:grid-cols-5" aria-label={t('settings.appearance.cardsTitle')}>
+          {(form.card_styles ?? ['glass', 'liquid', 'flat', 'outline', 'neon']).map((style) => {
             const chosen = (form.card_style ?? 'glass') === style
             return (
               <li key={style}>
@@ -119,6 +126,16 @@ export function AppearanceSettings() {
             )
           })}
         </ul>
+        {form.card_style === 'liquid' && (
+          <div className="mt-3">
+            <Switch
+              checked={form.refraction !== false}
+              onChange={(refraction) => setForm((current) => ({ ...current, refraction }))}
+              label={t('settings.appearance.refraction')}
+              description={canRefract() ? t('settings.appearance.refractionHelp') : `${t('settings.appearance.refractionHelp')} ${t('settings.appearance.refractionNotHere')}`}
+            />
+          </div>
+        )}
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
           <Field label={t('settings.appearance.radius')} htmlFor="a-radius">
             <div className="flex items-center gap-3">

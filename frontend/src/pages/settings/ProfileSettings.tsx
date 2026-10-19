@@ -6,7 +6,7 @@ import { ApiError, del, get, post, upload } from '../../api/client'
 import type { BoardSummary, User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
-import { Confirm, Field, PasswordInput, Select, Toast } from '../../components/ui'
+import { Confirm, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
 import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
@@ -149,6 +149,7 @@ export function ProfileSettings() {
             <Select id="p-start" value={user.start_board_id ? String(user.start_board_id) : ''} onChange={(value) => void update({ start_board_id: value ? Number(value) : 0 })} options={[{ value: '', label: t('settings.profile.firstBoard') }, ...(boards.data ?? []).map((b) => ({ value: String(b.id), label: b.name }))]} />
           </Field>
         </div>
+        <Switch checked={user.tilt !== false} onChange={(tilt) => void update({ tilt })} label={t('settings.profile.tilt')} description={t('settings.profile.tiltHelp')} />
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
             <div id="p-pair" className="flex gap-2">

@@ -52,12 +52,13 @@ PRESETS: dict[str, str] = {
 }
 #: How a card is drawn. Glass is what nexdeck has always been: see-through over
 #: the background. Flat is solid, outline is a frame on nothing, neon a frame
-#: that glows in the accent.
-CARD_STYLES: tuple[str, ...] = ("glass", "flat", "outline", "neon")
+#: that glows in the accent, liquid a thick glass with a lit rim whose edge
+#: bends what lies behind it.
+CARD_STYLES: tuple[str, ...] = ("glass", "liquid", "flat", "outline", "neon")
 #: Corners and gaps in pixels, with the bounds a board still reads well in.
 RADIUS = (0, 28, 16)
 GAP = (4, 28, 12)
-DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None, "card_style": "glass", "radius": RADIUS[2], "gap": GAP[2]}
+DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None, "card_style": "glass", "radius": RADIUS[2], "gap": GAP[2], "refraction": True}
 
 
 class AppearanceError(Exception):
@@ -78,6 +79,9 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         "card_style": value["card_style"] if value.get("card_style") in CARD_STYLES else "glass",
         "radius": _within(value.get("radius"), RADIUS),
         "gap": _within(value.get("gap"), GAP),
+        # Liquid glass only: whether the rim bends the background. A browser
+        # that cannot (Safari, Firefox) draws the glass without it either way.
+        "refraction": value.get("refraction") is not False,
         "card_styles": list(CARD_STYLES),
         "presets": PRESETS,
         "themes": themes.THEMES,
@@ -132,9 +136,12 @@ def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(number, int) or isinstance(number, bool) or not low <= number <= high:
             raise AppearanceError(f"The {'corners' if name == 'radius' else 'gap'} go from {low} to {high} pixels.", f"bad_{name}")
         sizes[name] = number
+    refraction = incoming.get("refraction", True)
+    if not isinstance(refraction, bool):
+        raise AppearanceError("Whether the glass bends the light is yes or no.", "bad_refraction")
     value = {
         "preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme,
-        "card_style": card_style, **sizes,
+        "card_style": card_style, **sizes, "refraction": refraction,
     }
     row = db.get(Setting, KEY)
     if row is None:

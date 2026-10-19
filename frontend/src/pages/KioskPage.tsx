@@ -9,7 +9,7 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
-import { applyAppearance, type Appearance } from '../lib/appearance'
+import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
@@ -107,6 +107,7 @@ export function KioskPage() {
   const board = useQuery({ queryKey: ['kiosk', token], queryFn: () => get<BoardWithLive>('/kiosk'), enabled: admitted || !token, refetchInterval: 5 * 60_000 })
   const history = useQuery({ queryKey: ['kiosk-history', token, board.data?.slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${board.data?.slug}/history`), enabled: Boolean(board.data) })
   const data = board.data
+  useBoardCardStyle(data?.settings?.card_style)
   useEffect(() => {
     if (data?.live) setSnapshot(data.live)
     // eslint-disable-next-line react-hooks/exhaustive-deps

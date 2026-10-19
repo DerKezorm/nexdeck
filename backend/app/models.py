@@ -89,6 +89,11 @@ class User(Base):
     #: The two languages in the top bar, as "en,de"; ``locale`` is one of them.
     language_pair: Mapped[str] = mapped_column(String(32), default="en,de")
     theme: Mapped[str] = mapped_column(String(8), default="dark")
+    #: Whether a card tips towards the mouse pointer. Some people feel unwell
+    #: with things moving under the pointer, so each account decides.
+    #: ⚠️ With a default the database knows: 0.42 does not know the column and
+    #: still has to create accounts on a database this version made.
+    tilt: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     start_board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     disabled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)

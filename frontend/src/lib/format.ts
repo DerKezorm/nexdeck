@@ -26,9 +26,10 @@ export function clamp(value: number, low: number, high: number): number {
 }
 
 /** Where service logos come from: the server proxies and caches them. */
-export function iconUrl(icon: string | undefined | null): string | null {
+export function iconUrl(icon: string | undefined | null, ground?: 'dark' | 'light'): string | null {
   if (!icon) return null
   if (icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:')) return icon
   const base = (globalThis as { __NEXDECK_ICON_BASE__?: string }).__NEXDECK_ICON_BASE__ ?? '/api/v1/icons/'
-  return `${base}${encodeURIComponent(icon)}.svg`
+  // The ground names the variant: a logo with a light one is served that on a dark page.
+  return `${base}${encodeURIComponent(icon)}.svg${ground ? `?on=${ground}` : ''}`
 }
