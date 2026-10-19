@@ -3,6 +3,37 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.43.0 (2026-10-19)
+
+### Added
+
+- **A page can be a network plan.** When a board gets a new page and there is a UniFi connection you may use, the page can be a topology instead of cards. It shows the gateway, the switches and the access points as a tree, each hung on the device and port it uplinks to, with the traffic of every link running in both directions, its load as colour and the age of each value. Wired clients join one by one from a list; devices the console reports later wait under "Found" and never move the plan by themselves. Cards can be dragged to a place of their own, the plan zooms and pans, and the display menu chooses curved or straight lines, dots, dashes or a still line, and when the values show. On a phone the plan is an indented list. Rates come from the port counters of the console's classic API; a switch reports about once a minute, the gateway every few seconds. UniFi only for now.
+- **Liquid glass.** A fifth card style under Appearance: thick glass with a rim the light catches and a glare that follows the pointer. In Chrome and Edge its edge bends the background behind it; Safari and Firefox show the glass without the bend. The bend can be switched off for an old wall tablet.
+- **A board can draw its cards in a style of its own** (Board settings > Look), over the one under Appearance: liquid glass on the wall display, flat on the desk.
+- **Three loud backgrounds**, Prism, Lagoon and Sunset, for a board in liquid glass.
+- **A colour for every card.** In a card's settings: none, one of eight (accent, red, yellow and green follow the theme), the main colour of the card's logo, or a colour of your own; shown as a frame, a tint or the whole card. A card that is down keeps its red frame.
+- **The app tile as a big icon.** Display: a row as before, or the name over a large logo, best on a square tile. Reachability as a dot in the corner or as the availability bars along the bottom.
+- **Logos in every container list**, from the image's name (`lscr.io/linuxserver/qbittorrent` is qBittorrent) or a `nexdeck.icon` label on the container: Docker, Synology, Portainer, Komodo, Dockhand, Arcane and What's up Docker. A container nobody knows keeps its dot.
+- **Cards tip towards the mouse pointer.** Each account can switch it off in its profile; never on a touch screen or when the system asks for less motion.
+
+### Fixed
+
+- **Two pages of one name shared one address**, so the second could not be opened. Every page now gets an address of its own.
+- **The add-page dialog says why its button is off** while the name is empty.
+- **A big number such as "535.7 KB/s" broke after the slash** on a narrow card. It stays on one line and shrinks only when its figures need it.
+- **The keyboard focus showed nowhere** in the field of the search card, the player's library and the page picker of the phone's bar.
+- **A logo that is nearly black on a dark page** (or white on a light one) is shown in its other variant when the collection has one.
+- **The title of the Now playing card** was nearly invisible in the light theme over the picture behind it.
+
+### Security
+
+- **Container log lines in the board stream** went to everybody who may look at the board, a view share or a kiosk display included, while the log routes ask for the right to act and for the Docker connection. Each line now goes only to a connection that may read that log.
+- **The sign-in limits counted the second step and the forgotten password** in the same buckets as the password, so a sign-in as "2fa:admin" filled the administrator's second step. Each kind of attempt has its own bucket now.
+
+### Upgrading
+
+Migrations 20 and 21 add a column to the accounts (`users.tilt`) and two to the pages (`pages.kind`, `pages.topology`). Nothing to do.
+
 ## 0.42.0 (2026-10-18)
 
 ### Added

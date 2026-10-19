@@ -1498,6 +1498,38 @@
         "Durchsucht werden wie bisher nur die Karten der offenen Seite.",
         "Danke an luiscarrasco2324 für die Idee (#46)."
       ]
+    },
+    "0.43.0": {
+      "lead": "Eine Seite, die dein UniFi-Netz mit dem Verkehr auf jeder Verbindung zeichnet, Liquid Glass und eine Farbe für jede Karte.",
+      "sections": [
+        {
+          "title": "Der Netzwerkplan",
+          "body": "Eine neue Art von Seite zeigt Gateway, Switches und Access Points als Baum, jedes Gerät an dem Port, an dem es hängt, mit dem Verkehr jeder Verbindung in beide Richtungen und ihrer Auslastung als Farbe. Server, NAS und andere Geräte am Kabel holst du aus einer Liste dazu; Neues wartet unter Neu entdeckt, bis du es platzierst. Karten lassen sich frei ziehen, Linien, Punkte oder Striche wählst du im Darstellungsmenü. Vorerst nur mit UniFi.",
+          "path": "Bearbeiten (Stift) > Seite hinzufügen > Topologie"
+        },
+        {
+          "title": "Liquid Glass",
+          "body": "Ein fünfter Kartenstil: dickes Glas mit einem Rand, der das Licht fängt, und einem Glanz, der dem Mauszeiger folgt. Ein Board kann einen eigenen Stil haben, und drei kräftige Hintergründe, Prism, Lagoon und Sunset, zeigen das Glas am schönsten.",
+          "path": "Einstellungen > Aussehen oder Board-Einstellungen > Aussehen"
+        },
+        {
+          "title": "Eine Farbe für jede Karte",
+          "body": "Gib einer Karte eine von acht Farben, die Hauptfarbe ihres Logos oder eine eigene, als Rahmen, Tönung oder ganze Karte. Eine Karte, die ausfällt, behält ihren roten Rahmen.",
+          "path": "Bearbeiten (Stift) > Einstellungen einer Karte > Farbe"
+        },
+        {
+          "title": "Große App-Kacheln und Container-Logos",
+          "body": "Eine App-Kachel kann ihren Namen über einem großen Logo zeigen, die Erreichbarkeit als Punkt oder als Balken. Container-Listen zeigen das Logo jedes Containers, aus seinem Abbild oder einem Label nexdeck.icon.",
+          "path": "Bearbeiten (Stift) > Einstellungen einer App-Kachel > Darstellung"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Karten neigen sich zum Mauszeiger; abschalten unter Einstellungen > Profil.",
+        "Zwei Seiten gleichen Namens haben wieder je eine eigene Adresse.",
+        "Log-Zeilen von Containern im Board-Stream erreichen nur, wer dieses Log lesen darf.",
+        "Der zweite Anmeldeschritt und das vergessene Passwort haben eigene Grenzen."
+      ]
     }
   }
 }

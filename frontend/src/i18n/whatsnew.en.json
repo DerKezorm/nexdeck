@@ -1498,6 +1498,38 @@
         "Only the cards of the page that is open are searched, as before.",
         "Thanks to luiscarrasco2324 for the idea (#46)."
       ]
+    },
+    "0.43.0": {
+      "lead": "A page that draws your UniFi network with the traffic on every link, liquid glass, and a colour for every card.",
+      "sections": [
+        {
+          "title": "The network plan",
+          "body": "A new kind of page shows your gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions and its load as colour. Add servers, NAS and other wired devices from a list; anything new waits under Found until you place it. Drag cards where you want them, and choose lines, dots or dashes in the display menu. UniFi only for now.",
+          "path": "Edit mode (pencil) > Add page > Topology"
+        },
+        {
+          "title": "Liquid glass",
+          "body": "A fifth card style: thick glass with a rim that catches the light and a glare that follows the pointer. A board can have a style of its own, and three bright backgrounds, Prism, Lagoon and Sunset, show the glass at its best.",
+          "path": "Settings > Appearance, or Board settings > Look"
+        },
+        {
+          "title": "A colour for every card",
+          "body": "Give a card one of eight colours, the main colour of its logo or a colour of your own, as a frame, a tint or the whole card. A card that is down keeps its red frame.",
+          "path": "Edit mode (pencil) > a card's settings > Colour"
+        },
+        {
+          "title": "Big app tiles and container logos",
+          "body": "An app tile can show its name over a large logo, with reachability as a dot or as bars. Container lists show the logo of each container, from its image or a nexdeck.icon label.",
+          "path": "Edit mode (pencil) > an app tile's settings > Display"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Cards tip towards the mouse pointer; switch it off under Settings > Profile.",
+        "Two pages of one name each have an address of their own again.",
+        "Container log lines in the board stream only reach whoever may read that log.",
+        "The second sign-in step and the forgotten password have limits of their own."
+      ]
     }
   }
 }
