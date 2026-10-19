@@ -48,6 +48,20 @@ def _log_widget(db: DbSession, widget_id: int, request: Request, user: OptionalU
     return widget, page.board_id, source
 
 
+def may_read_log(widget_id: int, request: Request) -> bool:
+    """Whether this request may read the lines of this log widget, asked in a session of its own.
+
+    The board stream carries the lines too, and it is open to anybody who may
+    look at the board; it asks this before it passes a line on.
+    """
+    try:
+        with db_session() as db:
+            _log_widget(db, widget_id, request, optional_user(request, db))
+    except HTTPException:
+        return False
+    return True
+
+
 @router.get("/{widget_id}/logs", summary="Read the recent lines of a container log")
 def logs(widget_id: int, request: Request, user: OptionalUser, db: DbSession, limit: int = 200) -> dict:
     widget, _board_id, source = _log_widget(db, widget_id, request, user)

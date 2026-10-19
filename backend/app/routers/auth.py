@@ -160,7 +160,7 @@ def second_step(body: SecondStepBody, request: Request, response: Response, db: 
         raise error("bad_ticket", "That sign-in took too long. Start again.", status.HTTP_401_UNAUTHORIZED)
 
     try:
-        login_guard.check(address, f"2fa:{user.username}", per_account=CODE_TRIES)
+        login_guard.check(address, user.username, per_account=CODE_TRIES, kind="2fa")
     except login_guard.TooManyAttempts:
         raise error(
             "too_many_attempts", "Too many wrong codes. Try again in a few minutes.",
@@ -174,11 +174,11 @@ def second_step(body: SecondStepBody, request: Request, response: Response, db: 
     else:
         ok = two_factor.check_code(db, user, body.code)
     if not ok:
-        login_guard.failed(address, f"2fa:{user.username}")
+        login_guard.failed(address, user.username, kind="2fa")
         logger.info("A wrong second factor for %s from %s.", user.username, address)
         raise error("bad_code", "That code is not right.", status.HTTP_401_UNAUTHORIZED)
 
-    login_guard.succeeded(address, f"2fa:{user.username}")
+    login_guard.succeeded(address, user.username, kind="2fa")
     open_session(db, user, request, response)
     left = two_factor.codes_left(user)
     logger.info("%s signed in from %s with %s.", user.username, address,
@@ -438,13 +438,13 @@ def forgot(body: ResetRequest, request: Request, db: DbSession) -> dict:
     try:
         # Counted like a sign-in: this sends mail, and somebody who can send
         # a hundred of them can fill an inbox.
-        login_guard.check(address, f"forgot:{body.username.lower()}")
+        login_guard.check(address, body.username, kind="forgot")
     except login_guard.TooManyAttempts:
         raise error(
             "too_many_attempts", "Too many attempts. Try again in a few minutes.",
             status.HTTP_429_TOO_MANY_REQUESTS,
         ) from None
-    login_guard.failed(address, f"forgot:{body.username.lower()}")
+    login_guard.failed(address, body.username, kind="forgot")
     password_reset.request(db, body.username)
     return {"sent": True}
 

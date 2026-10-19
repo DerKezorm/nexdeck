@@ -91,3 +91,31 @@ def test_stream_delivers_widget_events(live_server: str) -> None:
         with httpx.Client(base_url=live_server) as other:
             other.post("/api/v1/auth/login", json={"username": "admin", "password": "correct-horse-battery"})
             assert "event: widget" in _events(other, f"/api/v1/stream?board={board['slug']}", seconds=10)
+
+
+def test_container_log_lines_reach_only_those_who_may_read_the_log(live_server: str) -> None:
+    """⚠️ Log lines travel on the board's topic. The board stream handed them to
+    anybody who could look at the board, a view share included, while the log
+    routes ask for the right to act."""
+    csrf = {"X-Nexdeck-Request": "1"}
+    with httpx.Client(base_url=live_server) as client:
+        assert client.post("/api/v1/setup", json={"username": "admin", "password": "correct-horse-battery"}).status_code == 201
+        engine = client.post("/api/v1/integrations", json={"kind": "docker", "name": "Docker", "config": {}, "demo": True}, headers=csrf).json()
+        board = client.post("/api/v1/boards", json={"name": "Ops"}, headers=csrf).json()
+        made = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={
+            "kind": "docker.logs", "title": "Logs", "integration_id": engine["id"], "options": {"container": "radarr"},
+        }, headers=csrf).json()
+        widget_id = made.get("id") or made["widget"]["id"]
+        kim = client.post("/api/v1/users", json={"username": "kim", "password": "another-long-password", "role": "user"}, headers=csrf)
+        assert kim.status_code == 201, kim.text
+        shared = client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"user_id": kim.json()["id"], "level": "view"}]}, headers=csrf)
+        assert shared.status_code == 200, shared.text
+
+        assert client.get(f"/api/v1/widgets/{widget_id}/logs").status_code == 200, "starts the follower"
+        assert "event: log" in _events(client, f"/api/v1/stream?board={board['slug']}", wanted="event: log"), "the owner reads the lines"
+
+        with httpx.Client(base_url=live_server) as viewer:
+            assert viewer.post("/api/v1/auth/login", json={"username": "kim", "password": "another-long-password"}).status_code == 200
+            seen = _events(viewer, f"/api/v1/stream?board={board['slug']}", wanted="event: log", seconds=10)
+            assert seen and seen[0] == "event: hello"
+            assert "event: log" not in seen, seen

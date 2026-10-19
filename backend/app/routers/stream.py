@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, HTTPException, Request
@@ -11,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from ..db import db_session
 from ..deps import DbSession, OptionalUser, board_for_viewer, kiosk_from_request, optional_user
 from ..services.sse import Recheck, board_topic, hub, user_topic
+from .logs import may_read_log
 
 router = APIRouter(prefix="/api/v1", tags=["stream"])
 
@@ -32,6 +34,23 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
     if user is not None:
         topics.add(user_topic(user.id))
     subscriber = hub.subscribe(topics)
+    #: Log widget -> whether this connection may read its lines. Forgotten at every recheck.
+    log_rights: dict[int, bool] = {}
+
+    async def _passes(message: str) -> bool:
+        """⚠️ Container log lines travel on the board's topic, and this stream
+        is open to anybody who may look at the board: a guest, a view share, a
+        wall display. The log routes ask for the right to act on the board and
+        for the Docker connection itself, so a line goes on only to those."""
+        if not message.startswith("event: log\n"):
+            return True
+        try:
+            widget_id = int(json.loads(message.split("\ndata: ", 1)[1])["widget_id"])
+        except (IndexError, KeyError, TypeError, ValueError):
+            return False
+        if widget_id not in log_rights:
+            log_rights[widget_id] = await asyncio.to_thread(may_read_log, widget_id, request)
+        return log_rights[widget_id]
 
     def _still_allowed() -> bool:
         """Ask again whether this connection may still be here.
@@ -44,6 +63,7 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
         (see ``Recheck``), in a session of its own that lives for the length of
         one question.
         """
+        log_rights.clear()
         try:
             with db_session() as db_again:
                 who = optional_user(request, db_again)
@@ -70,7 +90,8 @@ async def stream(request: Request, user: OptionalUser, db: DbSession, board: str
                     message = ": ping\n\n"
                 if await recheck.denied():
                     break
-                yield message
+                if await _passes(message):
+                    yield message
         finally:
             hub.unsubscribe(subscriber)
 

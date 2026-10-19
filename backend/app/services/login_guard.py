@@ -41,19 +41,34 @@ def _recent(key: str, now: float) -> list[float]:
     return kept
 
 
-def check(address: str, username: str = "", per_account: int = MAX_PER_ACCOUNT) -> None:
+#: What an account's attempts are counted for: the password, the second step, a reset mail.
+#:
+#: ⚠️ Each one its own bucket, and the kind stands in front of the name. The
+#: second step used to count under the name "2fa:<name>" in the password's
+#: bucket, so a sign-in as "2fa:admin", from anywhere and without an account,
+#: filled the administrator's second step until a right code was refused.
+KINDS = ("u", "2fa", "forgot")
+
+
+def _account(kind: str, username: str) -> str:
+    if kind not in KINDS:
+        raise ValueError(f"no such attempt kind: {kind!r}")
+    return f"{kind}:{username.lower()}"
+
+
+def check(address: str, username: str = "", per_account: int = MAX_PER_ACCOUNT, *, kind: str = "u") -> None:
     now = time.monotonic()
     if len(_recent(f"a:{address}", now)) >= MAX_PER_ADDRESS:
         raise TooManyAttempts
-    if username and len(_recent(f"u:{username.lower()}", now)) >= per_account:
+    if username and len(_recent(_account(kind, username), now)) >= per_account:
         raise TooManyAttempts
 
 
-def failed(address: str, username: str = "") -> None:
+def failed(address: str, username: str = "", *, kind: str = "u") -> None:
     now = time.monotonic()
     _failures.setdefault(f"a:{address}", []).append(now)
     if username:
-        _failures.setdefault(f"u:{username.lower()}", []).append(now)
+        _failures.setdefault(_account(kind, username), []).append(now)
     _sweep(now)
 
 
@@ -75,10 +90,10 @@ def _sweep(now: float) -> None:
             _failures.pop(key, None)
 
 
-def succeeded(address: str, username: str = "") -> None:
+def succeeded(address: str, username: str = "", *, kind: str = "u") -> None:
     """Clear the account that just proved itself. The address ages out on its own."""
     if username:
-        _failures.pop(f"u:{username.lower()}", None)
+        _failures.pop(_account(kind, username), None)
 
 
 def reset() -> None:

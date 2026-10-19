@@ -415,3 +415,40 @@ def test_only_a_ticket_counts_as_a_ticket(client: TestClient) -> None:
         _step_key(), algorithm=ALGORITHM,
     )
     assert read_step_token(honest) is not None, "and the real one still works"
+
+
+def test_a_stranger_cannot_fill_the_second_step_by_signing_in_under_its_name(client: TestClient) -> None:
+    """⚠️ The second step counted under the name "2fa:<name>" in the same
+    buckets as the password. Signing in as "2fa:admin" a few times, without an
+    account and from anywhere, then refused the administrator's right code."""
+    from app.routers.auth import CODE_TRIES
+
+    setup_admin(client)
+    secret, _codes = _switch_on(client)
+    stranger = TestClient(client.app)
+    for _ in range(CODE_TRIES):
+        assert stranger.post("/api/v1/auth/login", json={"username": "2fa:admin", "password": "wrong"}).status_code == 401
+
+    fresh = TestClient(client.app)
+    ticket = fresh.post("/api/v1/auth/login", json=ADMIN).json()["detail"]["ticket"]
+    done = fresh.post("/api/v1/auth/login/second-step", json={"ticket": ticket, "code": _code(secret, 1)}, headers=CSRF)
+    assert done.status_code == 200, done.text
+
+
+def test_a_name_cannot_reach_the_bucket_of_another_kind() -> None:
+    """The kind stands in front of the name, so no name, colon or not, lands in another kind's bucket."""
+    from app.services import login_guard
+
+    login_guard.reset()
+    try:
+        for _ in range(login_guard.MAX_PER_ACCOUNT):
+            login_guard.failed(f"203.0.113.{_}", "forgot:admin")
+            login_guard.failed(f"198.51.100.{_}", "2fa:admin")
+        login_guard.check("192.0.2.1", "admin", kind="forgot")
+        login_guard.check("192.0.2.1", "admin", per_account=1, kind="2fa")
+        with pytest.raises(login_guard.TooManyAttempts):
+            login_guard.check("192.0.2.1", "forgot:admin")
+        with pytest.raises(ValueError):
+            login_guard.check("192.0.2.1", "admin", kind="nonsense")
+    finally:
+        login_guard.reset()
