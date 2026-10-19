@@ -130,3 +130,12 @@ def test_the_synology_demo_shows_logos_in_its_container_list() -> None:
     rows = SynologyAdapter().demo("containers", {}, 0).items
     assert [row.get("icon") for row in rows] == ["nexview", "gotify", "paperless-ngx", None]
     assert all(row.get("icon_dot") for row in rows if row.get("icon"))
+
+
+@pytest.mark.parametrize("index", [None, {"postgres"}])
+def test_the_family_wears_the_logos_nexdeck_ships(monkeypatch: pytest.MonkeyPatch, index: set[str] | None) -> None:
+    """⚠️ nexview, nexcrate and nexbeat are in no collection, and stood without a logo, index or not."""
+    monkeypatch.setattr(icons, "_known_now", lambda: index)
+    assert icons.container_icon("ghcr.io/derkezorm/nexcrate:latest", "nexcrate") == "nexcrate"
+    assert icons.container_icon("ghcr.io/derkezorm/nexview:latest", "nexview") == "nexview"
+    assert icons.container_icon("ghcr.io/derkezorm/nexbeat:latest", "nexbeat") == "nexbeat"

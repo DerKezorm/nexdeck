@@ -272,12 +272,17 @@ def container_icon(image: str, name: str, labels: dict[str, Any] | None = None) 
     ``lscr.io/linuxserver/qbittorrent`` is ``qbittorrent``, ``immich-server``
     is ``immich``, ``immich_machine_learning`` too. Only a name one of the
     collections carries is returned, so a row never shows the grey box; while
-    the index is not known, only the label counts. Empty when nothing fits.
+    the index is not known, only the label and the logos nexdeck ships count.
+    Empty when nothing fits.
+
+    ⚠️ The logos that ship with nexdeck first: the nexapps family is in no
+    collection, so nexview, nexcrate and nexbeat stood without one in their
+    own family's dashboard (seen on 19.10.2026).
     """
     own = str((labels or {}).get("nexdeck.icon") or "").strip()
     if own and (own.startswith("lucide:") or valid_name(own.lower())):
         return own if own.startswith("lucide:") else own.lower()
-    known = _known_now()
+    known = set(bundled_names()) | (_known_now() or set())
     if not known:
         return ""
     candidates: list[str] = []
