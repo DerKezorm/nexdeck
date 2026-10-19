@@ -208,6 +208,11 @@ def _provider_list_columns(connection: Connection) -> None:
     ))
 
 
+def _page_kind_columns(connection: Connection) -> None:
+    _add_column(connection, "pages", "kind", "VARCHAR(16) NOT NULL DEFAULT 'cards'")
+    _add_column(connection, "pages", "topology", "JSON NOT NULL DEFAULT '{}'")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -229,6 +234,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (18, "A reachability check knows since when it measures", _check_since_column),
     (19, "Sign-in providers become a list", _provider_list_columns),
     (20, "Each account decides whether the cards tip towards the pointer", _tilt_column),
+    (21, "A page can be a network plan", _page_kind_columns),
 ]
 
 

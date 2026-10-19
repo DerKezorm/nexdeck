@@ -123,6 +123,11 @@ class BoardOrder(BaseModel):
 class PageCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     icon: str = Field(default="", max_length=80)
+    #: "topology" is a network plan of one UniFi connection.
+    kind: Literal["cards", "topology"] = "cards"
+    integration_id: int | None = None
+    #: Topology only: every network device at once, or only the gateway.
+    start: Literal["all", "empty"] = "all"
 
 
 class PagePatch(BaseModel):
@@ -144,6 +149,17 @@ class GridBody(BaseModel):
     """The columns a board is arranged on; its pages are rescaled to them."""
 
     columns: Literal[12, 24, 36]
+
+
+class TopologyLayoutBody(BaseModel):
+    """Who stands where on a topology page; checked in detail by ``topology.clean_layout``."""
+
+    placed: list[str] = Field(default_factory=list, max_length=2000)
+    clients: list[str] = Field(default_factory=list, max_length=2000)
+    hidden: list[str] = Field(default_factory=list, max_length=2000)
+    positions: dict[str, list[float]] = Field(default_factory=dict)
+    #: The version the browser was looking at, as with the card layouts.
+    version: int | None = None
 
 
 class LayoutsBody(BaseModel):

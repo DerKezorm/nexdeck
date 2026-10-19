@@ -95,6 +95,8 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
     board, _ = require_board_id(db, page.board_id, user, "edit")
+    if page.kind == "topology":
+        raise error("topology_page", "A topology page holds a network plan, not cards. Add the card to another page.")
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_options(db, body.kind, body.options, user)
     adapter, widget_kind = split_widget_kind(body.kind)

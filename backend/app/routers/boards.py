@@ -23,6 +23,7 @@ from ..deps import (
     kiosk_from_request,
     require_board,
     require_board_id,
+    require_integration,
     usable_token,
 )
 from ..models import Board, BoardShare, KioskToken, Page, Role, User, Widget, utcnow
@@ -43,6 +44,7 @@ from ..schemas import (
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
 from ..services import grid, history
+from ..services import topology as topology_service
 from ..services.boards import COLUMNS, ImportError_, board_summary, board_view, slugify, unique_slug
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
@@ -268,8 +270,19 @@ def delete_board(slug: str, user: CurrentUser, db: DbSession) -> None:
 @router.post("/boards/{slug}/pages", status_code=status.HTTP_201_CREATED, summary="Add a page to a board")
 def create_page(slug: str, body: PageCreate, user: CurrentUser, db: DbSession) -> dict:
     board, permission = require_board(db, slug, user, "edit")
+    topology: dict = {}
+    if body.kind == "topology":
+        # Only on a connection this person may build on, and only on UniFi: the
+        # plan needs the port counters and uplinks of its classic API.
+        if body.integration_id is None:
+            raise error("integration_required", "A topology page needs a UniFi connection.")
+        integration = require_integration(db, body.integration_id, user)
+        if integration.kind != "unifi":
+            raise error("kind_mismatch", f"A topology page needs a UniFi connection, not {integration.kind}.")
+        topology = topology_service.clean_layout({"start": body.start}, integration.id)
     position = (db.scalar(select(Page.position).where(Page.board_id == board.id).order_by(Page.position.desc())) or 0) + 1
-    page = Page(board_id=board.id, name=body.name.strip(), slug=slugify(body.name), icon=body.icon, position=position, layouts={key: [] for key in COLUMNS})
+    page = Page(board_id=board.id, name=body.name.strip(), slug=slugify(body.name), icon=body.icon, position=position,
+                layouts={key: [] for key in COLUMNS}, kind=body.kind, topology=topology)
     db.add(page)
     db.commit()
     _announce(board.id)

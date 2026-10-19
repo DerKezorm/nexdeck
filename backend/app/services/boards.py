@@ -271,6 +271,8 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
             "sections": page.sections or [], "widgets": widgets,
             # What the browser has to send back when it saves an arrangement.
             "layout_version": page.layout_version or 0,
+            "kind": page.kind or "cards",
+            "topology": {"integration_id": (page.topology or {}).get("integration_id")} if page.kind == "topology" else None,
         })
     view = {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
@@ -336,6 +338,17 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
     }
     for page in pages:
         page_doc: dict[str, Any] = {**({"id": page.id} if with_ids else {}), "name": page.name, "slug": page.slug, "icon": page.icon, "widgets": []}
+        if page.kind == "topology":
+            # The connection by name, like a card's; the arrangement as it stands.
+            stored = page.topology or {}
+            connection = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+            if connection is not None:
+                integrations[connection.id] = connection
+            page_doc["kind"] = "topology"
+            page_doc["topology"] = {
+                "integration": connection.name if connection is not None else None,
+                **{key: stored.get(key) for key in ("start", "seeded", "placed", "clients", "hidden", "positions") if key in stored},
+            }
         # A holding card names its cards by place on the page, "#2" for the
         # third: the numbers of the cards are new after every import.
         place = {widget.id: index for index, widget in enumerate(page.widgets)}
@@ -755,13 +768,16 @@ def import_board(
         page_name = str(page_doc.get("name") or f"Page {position + 1}")
         page_slug = slugify(str(page_doc.get("slug") or page_doc.get("name") or f"page-{position + 1}"))
         page = old_pages.pop(_number(page_doc.get("id")), None)
+        page_kind, page_topology = _topology_of(page_doc, by_name)
         if page is not None:
             page.name, page.slug, page.icon, page.position = page_name, page_slug, str(page_doc.get("icon") or ""), position
+            page.kind, page.topology = page_kind, page_topology
             page.layouts = {key: [] for key in COLUMNS}
             # An open browser arranging this page is told it moved on (``put_layouts``).
             page.layout_version = (page.layout_version or 0) + 1
         else:
-            page = Page(board_id=board.id, name=page_name, slug=page_slug, icon=str(page_doc.get("icon") or ""), position=position, layouts={key: [] for key in COLUMNS})
+            page = Page(board_id=board.id, name=page_name, slug=page_slug, icon=str(page_doc.get("icon") or ""), position=position,
+                        layouts={key: [] for key in COLUMNS}, kind=page_kind, topology=page_topology)
             db.add(page)
         db.flush()
         placer = Placer(page, grid.columns(board.settings))
@@ -821,6 +837,22 @@ def import_board(
         db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))
     db.flush()
     return board
+
+
+def _topology_of(page_doc: dict, by_name: dict[str, Integration]) -> tuple[str, dict[str, Any]]:
+    """A page's kind and, for a network plan, its arrangement and connection.
+
+    A connection the file names but this installation lacks leaves the page
+    without one; it says so when opened instead of refusing the whole file.
+    """
+    if page_doc.get("kind") != "topology":
+        return "cards", {}
+    from . import topology as topology_service
+
+    raw = page_doc.get("topology") if isinstance(page_doc.get("topology"), dict) else {}
+    connection = by_name.get(str(raw.get("integration"))) if raw.get("integration") else None
+    connection_id = connection.id if connection is not None and connection.kind == "unifi" else None
+    return "topology", topology_service.clean_layout(raw, connection_id)
 
 
 def _number(value: Any) -> int | None:

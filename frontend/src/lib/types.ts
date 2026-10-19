@@ -168,6 +168,9 @@ export interface PageView {
   /** What the server counted up to. Sent back when an arrangement is saved. */
   layout_version?: number
   widgets: WidgetView[]
+  /** "topology": a network plan instead of cards (components/topology). */
+  kind?: 'cards' | 'topology'
+  topology?: { integration_id: number | null } | null
 }
 
 export interface BoardView {

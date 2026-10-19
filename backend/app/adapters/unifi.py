@@ -551,6 +551,48 @@ class UnifiAdapter(Adapter):
             raise AuthFailed("The UniFi controller rejected the user name or password.")
         ctx.cache["unifi_csrf"] = response.headers.get("x-csrf-token", "")
 
+    async def classic(self, config: dict[str, Any], ctx: Context, path: str) -> list[dict[str, Any]]:
+        """One list of the classic API, with whichever way in the connection has.
+
+        The topology page needs it: only the classic API has the port counters,
+        the uplink port and which port a wired client is on. A UniFi OS console
+        takes the API key for it as well (measured on Network 9, 19.10.2026).
+        """
+        if not self._uses_api_key(config):
+            self._require_account(config)
+            return await self._get(config, ctx, path)
+        client = self._client(config, ctx)
+        site = config.get("site") or "default"
+        headers = {"X-API-KEY": str(config.get("api_key", "")).strip(), "Accept": "application/json"}
+        try:
+            response = await client.get(f"{self._prefix(config)}/api/s/{site}{path}", headers=headers)
+        except httpx.HTTPError as error:
+            raise Unreachable(f"The UniFi console could not be reached: {error.__class__.__name__}.") from error
+        if response.status_code in (401, 403):
+            raise AuthFailed("The UniFi console rejected the API key.")
+        if response.status_code >= 400:
+            raise AdapterError(f"The UniFi console answered with HTTP {response.status_code}.", code="http_error")
+        try:
+            return response.json().get("data") or []
+        except ValueError as error:
+            raise AdapterError("The UniFi console did not answer with JSON.", code="not_json",
+                               hint="Use https:// and the console's own address, without a port.") from error
+
+    async def model_names(self, config: dict[str, Any], ctx: Context) -> dict[str, str]:
+        """MAC address to model name ("USW Pro Max 48"); the classic API only knows codes ("USPM48").
+
+        Empty without an API key, or when the Integration API does not answer:
+        the code is still a model, just a less friendly one.
+        """
+        if not self._uses_api_key(config):
+            return {}
+        try:
+            site = await self._site(config, ctx)
+            devices, _ = await self._pages(config, ctx, f"/sites/{site['id']}/devices")
+        except AdapterError:
+            return {}
+        return {str(d.get("macAddress") or "").lower(): str(d["model"]) for d in devices if d.get("model") and d.get("macAddress")}
+
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, retry: bool = True) -> list[dict[str, Any]]:
         client = self._client(config, ctx)
         site = config.get("site") or "default"

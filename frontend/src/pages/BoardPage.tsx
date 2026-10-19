@@ -1,11 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, FoldVertical, LayoutGrid, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
+import { Check, FoldVertical, LayoutGrid, Network, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, get, post, put } from '../api/client'
-import type { BoardSummary, BoardWithLive } from '../api/types'
+import type { BoardSummary, BoardWithLive, Integration } from '../api/types'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
@@ -36,6 +36,7 @@ import { domainsOf, useShowcase } from '../lib/showcase'
 import { useEditedPage } from '../lib/groups'
 import { usePicture } from '../lib/boardPicture'
 import { PictureDialog } from '../components/PictureDialog'
+import { TopologyPage } from '../components/topology/TopologyPage'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
@@ -79,6 +80,12 @@ export function BoardPage() {
   const [removing, setRemoving] = useState<number | null>(null)
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
+  const [newPageKind, setNewPageKind] = useState<'cards' | 'topology'>('cards')
+  const [newPageConnection, setNewPageConnection] = useState<number | null>(null)
+  const [newPageStart, setNewPageStart] = useState<'all' | 'empty'>('all')
+  // Only to offer a topology page when adding one: that needs a UniFi connection this person may use.
+  const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: newPage })
+  const unifis = useMemo(() => (integrations.data ?? []).filter((one) => one.kind === 'unifi' && one.enabled), [integrations.data])
   const [deletingPage, setDeletingPage] = useState(false)
   const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
   const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null)
@@ -522,6 +529,8 @@ export function BoardPage() {
     </div>
   )
 
+  const topology = activePage?.kind === 'topology'
+
   if (board.isLoading) {
     return (
       <div className="min-h-full">
@@ -558,9 +567,20 @@ export function BoardPage() {
     // edit bar takes, so the lowest card scrolls out from under it. With the
     // usual room the bar lay over that card's resize corner (issue #12).
     <>
-    <div className={`min-h-full ${editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
+    <div className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       {topBar}
+      {topology ? (
+        <TopologyPage
+          key={activePage.id}
+          pageId={activePage.id}
+          editing={editing}
+          canEdit={canEdit}
+          onAddPage={() => setNewPage(true)}
+          onSettings={() => setBoardSettings(true)}
+          onDone={() => setEditing(false)}
+        />
+      ) : (
       <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
         <div data-no-picture>
           <DemoNotice admin={user?.role === 'admin'} />
@@ -621,13 +641,14 @@ export function BoardPage() {
           onRemove={onRemove}
         />
       </main>
+      )}
 
       {/* ⚠️ Four buttons with their words in a row that cannot wrap: on a
           phone the bar was wider than the screen, so the Done button sat off
           the edge and there was no way out of edit mode. Below `sm` the words
           step aside and the icons carry the meaning, with the name on the
           button for anything that reads it out. */}
-      {editing && (
+      {editing && !topology && (
         <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
           <button className="btn btn-flat" onClick={() => setLibrary(true)} aria-label={t('board.addWidget')}>
             <Plus size={15} /> <span className="hidden sm:inline">{t('board.addWidget')}</span>
@@ -756,20 +777,86 @@ export function BoardPage() {
         footer={
           <button
             className="btn btn-accent"
-            disabled={!newPageName.trim()}
+            disabled={!newPageName.trim() || (newPageKind === 'topology' && unifis.length > 0 && !(newPageConnection ?? unifis[0]?.id))}
             onClick={() => {
-              void post(`/boards/${slug}/pages`, { name: newPageName.trim() }).then(() => {
-                setNewPage(false)
-                setNewPageName('')
-                void board.refetch()
-              })
+              const kind = unifis.length > 0 ? newPageKind : 'cards'
+              const body = kind === 'topology' ? { name: newPageName.trim(), kind, integration_id: newPageConnection ?? unifis[0]?.id, start: newPageStart } : { name: newPageName.trim() }
+              void post<BoardWithLive>(`/boards/${slug}/pages`, body)
+                .then((made) => {
+                  setNewPage(false)
+                  setNewPageName('')
+                  setNewPageKind('cards')
+                  void board.refetch()
+                  // A plan is something to look at straight away; a card page waits for its cards as before.
+                  const added = kind === 'topology' ? [...(made?.pages ?? [])].sort((p, q) => q.position - p.position)[0] : undefined
+                  if (added) navigate(`/b/${slug}/${added.slug}`)
+                })
+                .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
             }}
           >
             {t('common.create')}
           </button>
         }
       >
-        <input className="input" autoFocus aria-label={t('board.pageName')} value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
+        <div className="grid gap-3">
+          <input className="input" autoFocus aria-label={t('board.pageName')} value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
+          {/* ⚠️ Offered only with a UniFi connection this person may use: the plan reads the console's uplinks and port counters. */}
+          {unifis.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('topology.kind')}>
+                {(
+                  [
+                    ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp')],
+                    ['topology', Network, t('topology.kindTopology'), t('topology.kindTopologyHelp')],
+                  ] as const
+                ).map(([kind, Icon, title, help]) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    role="radio"
+                    aria-checked={newPageKind === kind}
+                    className={`text-left p-3 rounded-xl border grid gap-1 content-start ${newPageKind === kind ? 'border-[var(--nd-accent)] bg-accent-soft' : 'border-line-strong'}`}
+                    onClick={() => setNewPageKind(kind)}
+                  >
+                    <Icon size={20} className="text-accent" />
+                    <b className="text-sm">{title}</b>
+                    <span className="text-xs text-muted">{help}</span>
+                  </button>
+                ))}
+              </div>
+              {newPageKind === 'topology' && (
+                <div className="grid gap-2">
+                  {unifis.length > 1 && (
+                    <label className="grid gap-1 text-xs text-muted">
+                      {t('topology.connection')}
+                      <select className="input" value={String(newPageConnection ?? unifis[0].id)} onChange={(e) => setNewPageConnection(Number(e.target.value))}>
+                        {unifis.map((one) => (
+                          <option key={one.id} value={one.id}>
+                            {one.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {(
+                    [
+                      ['all', t('topology.startAll'), t('topology.startAllHelp')],
+                      ['empty', t('topology.startEmpty'), t('topology.startEmptyHelp')],
+                    ] as const
+                  ).map(([start, title, help]) => (
+                    <label key={start} className="flex gap-2.5 items-start p-2.5 rounded-xl border border-line-strong cursor-pointer text-sm">
+                      <input type="radio" name="topology-start" className="mt-1 accent-[var(--nd-accent)]" checked={newPageStart === start} onChange={() => setNewPageStart(start)} />
+                      <span>
+                        {title}
+                        <small className="block text-xs text-muted">{help}</small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </Dialog>
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>
