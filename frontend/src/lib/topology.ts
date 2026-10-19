@@ -62,6 +62,8 @@ export interface TopoData {
   links: TopoLink[]
   clients: TopoClient[]
   client_links: TopoLink[]
+  /** The console missed the last look: this is the plan from before, and why. */
+  stale?: { code: string; message: string; for_seconds: number } | null
 }
 
 export interface TopoLayout {

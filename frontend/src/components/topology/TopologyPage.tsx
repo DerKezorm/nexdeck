@@ -418,6 +418,8 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
           <h2 className="font-semibold">{t('topology.problemTitle')}</h2>
           <p className="text-sm text-muted">{t(`topology.problems.${code}`, { defaultValue: problem?.message ?? t('topology.problems.unexpected') })}</p>
           {problem?.hint && <p className="text-xs text-faint">{t(`topology.hints.${code}`, { defaultValue: problem.hint })}</p>}
+          {/* What the console said, word for word: "HTTP 429" tells more than any translation. */}
+          {problem?.message && <p className="text-[11px] text-faint font-mono">{problem.message}</p>}
           {editing && <EditBar found={0} onFound={() => undefined} onClients={() => undefined} onTree={() => undefined} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} plain />}
         </div>
       </div>
@@ -425,6 +427,7 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
   }
 
   const devices = data.nodes.filter((node) => node.kind !== 'internet')
+  const stale = data.stale ?? null
   const offline = devices.filter((node) => node.status === 'offline').length
   const wan = data.links.find((link) => link.kind === 'wan')
   const linkOf = (id: string) => [...data.links, ...data.client_links].find((link) => link.id === id)
@@ -474,6 +477,11 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
         {t('topology.devices')} <b className="text-[var(--nd-text)]">{devices.length - offline} / {devices.length}</b>
         {offline > 0 && <span className="text-bad"> · {t('topology.offlineCount', { count: offline })}</span>}
       </span>
+      {stale && (
+        <span className="glass-strong rounded-full px-2.5 py-1 text-[12.5px] text-bad whitespace-nowrap" title={stale.message} data-topology-stale>
+          {t('topology.stale', { age: words.ago(Math.max(0, (now - receivedAt) / 1000 + stale.for_seconds)) })}
+        </span>
+      )}
       {foundItems.found.length > 0 && (
         <button type="button" className="glass-strong rounded-full px-2.5 py-1 text-[12.5px] text-accent whitespace-nowrap border border-[var(--nd-accent-glow)]" onClick={() => setSelected({ type: 'found' })}>
           {t('topology.found')} <span className="ml-1 inline-grid place-items-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-on-accent text-[11px] font-semibold">{foundItems.found.length}</span>
@@ -572,7 +580,7 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
         fitKey={`${pageId}:${fitBump}:${planNodes.length > 0}`}
         ariaLabel={t('topology.plan')}
         controls={
-          <div className="relative">
+          <div className="relative" data-plan-controls>
             <button type="button" className="btn btn-icon glass-strong" onClick={() => setViewOpen((v) => !v)} aria-label={t('topology.view')} title={t('topology.view')} aria-expanded={viewOpen}>
               <SlidersHorizontal size={15} />
             </button>

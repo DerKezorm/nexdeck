@@ -26,6 +26,7 @@ measured at the access point that hangs on it.
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import statistics
 import time
@@ -37,6 +38,12 @@ from ..adapters.base import AdapterError
 
 #: How often a console is asked at most, however many browsers have the page open.
 POLL_SECONDS = 10.0
+#: Which client hangs on which port changes rarely; asked for less often, to spare the console.
+STATIONS_SECONDS = 60.0
+#: How long the last plan stands in for a console that missed a look.
+STALE_SECONDS = 300.0
+
+logger = logging.getLogger("nexdeck.topology")
 #: Rates kept per link for the little chart in the side panel.
 HISTORY = 60
 #: Bounds for what a browser may store on a page.
@@ -319,17 +326,30 @@ async def snapshot(adapter: Any, config: dict[str, Any], ctx: Any, *, demo: bool
             return hit[1]
         meter = ctx.cache.setdefault("topology:meter", Meter())
         now = time.time()
-        if demo:
-            devices, stations, health, models = demo_console(now)
-        else:
-            devices = await adapter.classic(config, ctx, "/stat/device")
-            stations = await adapter.classic(config, ctx, "/stat/sta")
-            health = await _kept(ctx, "topology:health", 60, lambda: adapter.classic(config, ctx, "/stat/health"))
-            models = await _kept(ctx, "topology:models", 600, lambda: adapter.model_names(config, ctx))
-        if not isinstance(devices, list) or not devices:
-            raise AdapterError("The console reported no devices.", code="no_devices", hint="Check the site of the connection.")
+        try:
+            if demo:
+                devices, stations, health, models = demo_console(now)
+            else:
+                devices = await adapter.classic(config, ctx, "/stat/device")
+                stations = await _kept(ctx, "topology:stations", STATIONS_SECONDS, lambda: adapter.classic(config, ctx, "/stat/sta"))
+                health = await _kept(ctx, "topology:health", 60, lambda: adapter.classic(config, ctx, "/stat/health"))
+                models = await _kept(ctx, "topology:models", 600, lambda: adapter.model_names(config, ctx))
+            if not isinstance(devices, list) or not devices:
+                raise AdapterError("The console reported no devices.", code="no_devices", hint="Check the site of the connection.")
+        except AdapterError as failure:
+            # ⚠️ One missed look is not a broken page. Reported on 19.10.2026: the
+            # page now and then showed "the console answered with an error" in
+            # place of the plan. The last plan stands in for a while and says so.
+            logger.warning("Reading the UniFi console for its plan failed: %s", failure.message)
+            last = ctx.cache.get("topology:last")
+            if last is None or now - last[0] > STALE_SECONDS:
+                raise
+            data = {**last[1], "stale": {"code": failure.code, "message": failure.message, "for_seconds": round(now - last[0])}}
+            ctx.cache["topology:snapshot"] = (time.monotonic() + POLL_SECONDS - 0.5, data)
+            return data
         data = build(devices, stations or [], health or [], models or {}, meter, now)
         ctx.cache["topology:snapshot"] = (time.monotonic() + POLL_SECONDS - 0.5, data)
+        ctx.cache["topology:last"] = (now, data)
         return data
 
 

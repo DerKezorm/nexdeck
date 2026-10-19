@@ -1560,6 +1560,7 @@
       "days_other": "{{count}} Tage"
     },
     "defaultName": "Netzwerk",
-    "readFrom": "Gelesen aus der UniFi-Anbindung „{{name}}“."
+    "readFrom": "Gelesen aus der UniFi-Anbindung „{{name}}“.",
+    "stale": "UniFi antwortet gerade nicht, Werte von {{age}}"
   }
 }

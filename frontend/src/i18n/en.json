@@ -1560,6 +1560,7 @@
       "days_other": "{{count}} days"
     },
     "defaultName": "Network",
-    "readFrom": "Read from the UniFi connection “{{name}}”."
+    "readFrom": "Read from the UniFi connection “{{name}}”.",
+    "stale": "UniFi did not answer, values from {{age}}"
   }
 }

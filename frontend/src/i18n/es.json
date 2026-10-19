@@ -1560,6 +1560,7 @@
       "days_other": "{{count}} días"
     },
     "defaultName": "Red",
-    "readFrom": "Se lee de la conexión UniFi «{{name}}»."
+    "readFrom": "Se lee de la conexión UniFi «{{name}}».",
+    "stale": "UniFi no responde, valores de {{age}}"
   }
 }

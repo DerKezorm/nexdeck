@@ -126,3 +126,25 @@ it('says what the console said instead of drawing nothing', async () => {
   show({ ...ANSWER, data: null, problem: { code: 'auth_failed', message: 'The UniFi console rejected the API key.', hint: '' } })
   expect(await screen.findByText('The UniFi console rejected the API key or the password.')).toBeInTheDocument()
 })
+
+it('lets the buttons on the plan be pressed instead of starting a pan', async () => {
+  // ⚠️ Catching the pointer for a pan swallowed the click of the display menu (19.10.2026).
+  const capture = vi.fn()
+  Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', { value: capture, configurable: true })
+  show(ANSWER)
+  await card('Core switch')
+  const display = screen.getByRole('button', { name: 'Display' })
+  fireEvent.pointerDown(display, { pointerId: 1 })
+  expect(capture).not.toHaveBeenCalled()
+  fireEvent.click(display)
+  expect(screen.getByRole('radiogroup', { name: 'Lines' })).toBeInTheDocument()
+  fireEvent.pointerDown(document.querySelector('[data-topology-canvas] svg')!, { pointerId: 2 })
+  expect(capture).toHaveBeenCalledTimes(1)
+  delete (HTMLElement.prototype as { setPointerCapture?: unknown }).setPointerCapture
+})
+
+it('keeps the last plan when the console misses a look, and says so', async () => {
+  show({ ...ANSWER, data: { ...ANSWER.data!, stale: { code: 'http_error', message: 'The UniFi console answered with HTTP 502.', for_seconds: 30 } } })
+  expect(await screen.findByText(/UniFi did not answer, values from 3\d s ago/)).toBeInTheDocument()
+  expect(await card('Core switch')).toBeInTheDocument()
+})

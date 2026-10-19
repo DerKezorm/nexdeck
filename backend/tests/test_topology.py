@@ -13,6 +13,7 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
+from app.adapters.base import Context
 from app.services import topology
 from app.services.topology import Meter, build
 
@@ -322,3 +323,56 @@ def test_two_pages_of_one_name_get_two_addresses(client: TestClient) -> None:
     own = next(page for page in first["pages"] if page["slug"] == "network")
     renamed = client.patch(f"/api/v1/pages/{own['id']}", json={"name": "Network"}, headers=CSRF).json()
     assert sorted(page["slug"] for page in renamed["pages"] if page["name"] == "Network") == ["network", "network-2"], "renaming to its own name keeps its address"
+
+
+class _Console:
+    """A connection whose console answers until it does not."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+        self.failing = False
+
+    async def classic(self, config, ctx, path):
+        from app.adapters.base import AdapterError
+
+        self.calls.append(path)
+        if self.failing:
+            raise AdapterError("The UniFi console answered with HTTP 502.", code="http_error")
+        return {"/stat/device": _console(1000, _core(1, 1)), "/stat/sta": STATIONS, "/stat/health": []}[path]
+
+    async def model_names(self, config, ctx):
+        return {}
+
+
+def test_a_console_that_misses_a_look_keeps_the_last_plan_for_a_while(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reported on 19.10.2026: the page showed "the console answered with an error" now and then."""
+    import asyncio
+
+    from app.adapters.base import AdapterError
+
+    clock = {"now": 10_000.0}
+    monkeypatch.setattr(topology.time, "time", lambda: clock["now"])
+    monkeypatch.setattr(topology.time, "monotonic", lambda: clock["now"])
+    console, ctx = _Console(), Context(httpx.AsyncClient(), integration_id=1, cache={})
+    first = asyncio.run(topology.snapshot(console, {}, ctx, demo=False))
+    assert "stale" not in first
+    console.failing = True
+    clock["now"] += 30
+    kept = asyncio.run(topology.snapshot(console, {}, ctx, demo=False))
+    assert kept["nodes"] == first["nodes"] and kept["stale"]["code"] == "http_error" and kept["stale"]["for_seconds"] == 30
+    clock["now"] += topology.STALE_SECONDS
+    with pytest.raises(AdapterError):
+        asyncio.run(topology.snapshot(console, {}, ctx, demo=False))
+
+
+def test_which_client_hangs_where_is_asked_for_less_often_than_the_counters(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    clock = {"now": 10_000.0}
+    monkeypatch.setattr(topology.time, "time", lambda: clock["now"])
+    monkeypatch.setattr(topology.time, "monotonic", lambda: clock["now"])
+    console, ctx = _Console(), Context(httpx.AsyncClient(), integration_id=1, cache={})
+    for _ in range(3):
+        asyncio.run(topology.snapshot(console, {}, ctx, demo=False))
+        clock["now"] += topology.POLL_SECONDS
+    assert console.calls.count("/stat/device") == 3 and console.calls.count("/stat/sta") == 1

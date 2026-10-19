@@ -1,10 +1,8 @@
 import { Box, Camera, Globe, HardDrive, Maximize2, Minus, Monitor, Network, Phone, Plus, Printer, Router, Server, Tv, Wifi, type LucideIcon } from 'lucide-react'
-import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { shownStyle, useLook } from '../../lib/appearance'
 import { tipOf } from '../../lib/cardLook'
-import { canRefract, refract } from '../../lib/refraction'
 import { useAuth } from '../../stores/auth'
 
 import { along, CARD_H, curve, declutter, pathOf, snap, utilisation, type ClientKind, type NodeKind, type TopoLink } from '../../lib/topology'
@@ -90,13 +88,14 @@ type Tip = { id: string; x: number; y: number } | null
  * The plan: device cards, the links between them, and the traffic as dots or
  * dashes along each link, one lane per direction. Links are SVG; the moving
  * parts belong to ``Flow``. The device cards are nexdeck's own cards, HTML in a
- * layer of their own above the links, so the look chosen under Appearance, the
- * liquid glass and the tilt towards the pointer are theirs as on any board.
+ * layer of their own above the links, so the card style chosen under
+ * Appearance and the tilt towards the pointer are theirs as on any board.
  *
- * ⚠️ That layer is zoomed with CSS ``zoom``, not with a scale transform. Under
- * a transform the backdrop filter of the liquid glass is worked out in the
- * card's own pixels while it is sized from the screen, and the bent edge
- * would sit a third of the card off at a zoom of 0.6.
+ * ⚠️ Without the frosted background of the glass styles, and without the bent
+ * edge of liquid glass. Behind every card the dots keep running, so the blur
+ * behind it had to be worked out again in every frame, standing still too:
+ * 41 to 44 ms a frame while zooming with eight cards, 17 to 21 without it
+ * (measured 19.10.2026). The plan juddered. A nearly solid card face instead.
  */
 export function TopologyCanvas(props: Props) {
   const { nodes, links, editing, selected, lit, straight, flow, labels, onSelect, onMove, onMoveEnd, fitKey, minScale = 0.6, labelWidth } = props
@@ -105,10 +104,7 @@ export function TopologyCanvas(props: Props) {
   const svg = useRef<SVGSVGElement>(null)
   const world = useRef<SVGGElement>(null)
   const layer = useRef<HTMLDivElement>(null)
-  const zoomed = useRef<HTMLDivElement>(null)
   const view = useRef({ k: 1, x: 0, y: 0 })
-  // The zoom once it rests: the glass of every card is fitted again to it.
-  const [settled, setSettled] = useState(1)
   const resting = useRef<number | undefined>(undefined)
   const [panning, setPanning] = useState(false)
   const [engine] = useState(() => new Flow())
@@ -124,10 +120,19 @@ export function TopologyCanvas(props: Props) {
   const apply = useCallback(() => {
     const { k, x, y } = view.current
     world.current?.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(4)})`)
-    if (layer.current) layer.current.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
-    if (zoomed.current) zoomed.current.style.zoom = k.toFixed(4)
+    const cards = layer.current
+    if (!cards) return
+    cards.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${k.toFixed(4)})`
+    // ⚠️ While the view moves, the cards are one finished picture the compositor
+    // only scales: painting their shadows and glare again at every step of the
+    // wheel took 24 to 31 ms a frame with liquid glass, 17 with this (measured
+    // 19.10.2026). Once it rests the hint goes, or Chrome would keep the text as
+    // blurred as the zoom it was painted at.
+    cards.style.willChange = 'transform'
     window.clearTimeout(resting.current)
-    resting.current = window.setTimeout(() => setSettled(Math.round(k * 100) / 100), 250)
+    resting.current = window.setTimeout(() => {
+      cards.style.willChange = ''
+    }, 250)
   }, [])
 
   const fit = useCallback(
@@ -183,6 +188,9 @@ export function TopologyCanvas(props: Props) {
   const pinch = useRef<null | { distance: number; k: number }>(null)
 
   const down = (event: React.PointerEvent<HTMLDivElement>) => {
+    // ⚠️ Not on the buttons and menus that stand on the plan: catching the
+    // pointer for a pan swallowed their click, and the display menu never opened.
+    if ((event.target as Element).closest?.('button, a, input, select, label, [data-plan-controls]')) return
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
@@ -354,14 +362,12 @@ export function TopologyCanvas(props: Props) {
         </g>
       </svg>
       <div ref={layer} className="absolute left-0 top-0 pointer-events-none" style={{ transformOrigin: '0 0' }}>
-        <div ref={zoomed} className="relative">
-          {nodes.map((node) => (
-            <NodeCard key={node.id} node={node} editing={editing} picked={selected?.type === 'node' && selected.id === node.id} dim={lit !== null && !lit.nodes.has(node.id)} zoom={settled} />
-          ))}
-        </div>
+        {nodes.map((node) => (
+          <NodeCard key={node.id} node={node} editing={editing} picked={selected?.type === 'node' && selected.id === node.id} dim={lit !== null && !lit.nodes.has(node.id)} />
+        ))}
       </div>
       <TipBox channel={tips} links={links} render={props.tooltip} host={host} />
-      <div className="absolute right-3 bottom-3 flex gap-1.5 items-end" data-no-picture>
+      <div className="absolute right-3 bottom-3 flex gap-1.5 items-end" data-no-picture data-plan-controls>
         {props.controls}
         <button type="button" className="btn btn-icon glass-strong" onClick={() => zoomMiddle(0.8)} aria-label={t('topology.zoomOut')} title={t('topology.zoomOut')}>
           <Minus size={15} />
@@ -407,7 +413,7 @@ const LinkItem = memo(function LinkItem(props: { id: string; ax: number; ay: num
   )
 })
 
-const NodeCard = memo(function NodeCard({ node, editing, picked, dim, zoom }: { node: PlanNode; editing: boolean; picked: boolean; dim: boolean; zoom: number }) {
+const NodeCard = memo(function NodeCard({ node, editing, picked, dim }: { node: PlanNode; editing: boolean; picked: boolean; dim: boolean }) {
   const Icon = ICONS[node.kind === 'client' ? (node.clientKind ?? 'other') : node.kind] ?? Box
   const offline = node.status === 'offline'
   const client = node.kind === 'client'
@@ -415,14 +421,6 @@ const NodeCard = memo(function NodeCard({ node, editing, picked, dim, zoom }: { 
   const card = useRef<HTMLElement>(null)
   // The tilt and the glass of a board card, see ``WidgetCard``: not while arranging, not for less motion.
   const tilts = useAuth((state) => state.user?.tilt !== false) && !editing
-  const liquid = useLook((state) => shownStyle(state) === 'liquid' && state.refraction)
-  const filterId = `nd-topo-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
-  useEffect(() => {
-    const element = card.current
-    if (!liquid || !element || !canRefract()) return
-    const radius = parseFloat(getComputedStyle(element).borderTopLeftRadius) || 16
-    return refract(element, filterId, radius)
-  }, [liquid, filterId, zoom, node.w])
   useEffect(() => {
     const box = holder.current
     const element = card.current
@@ -465,7 +463,13 @@ const NodeCard = memo(function NodeCard({ node, editing, picked, dim, zoom }: { 
         ref={card}
         className={`card glass ${editing ? 'is-editing' : ''}`}
         data-status={offline ? 'bad' : 'ok'}
-        style={picked ? { outline: '2px solid var(--nd-accent)', outlineOffset: 2 } : undefined}
+        style={{
+          // See the component's docstring: no blur behind the card on a plan that moves.
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          backgroundColor: 'var(--nd-surface-strong)',
+          ...(picked ? { outline: '2px solid var(--nd-accent)', outlineOffset: 2 } : {}),
+        }}
       >
         <div className="flex items-center gap-2.5 h-full pl-2.5 pr-3">
           <span
