@@ -14,6 +14,7 @@ switched here and for the one switched at the wall: the WebSocket listener
 from __future__ import annotations
 
 import asyncio
+import colorsys
 import time
 from typing import Any
 
@@ -25,27 +26,60 @@ from ..models import Page
 from . import hass_registry
 from .sse import board_topic, hub
 
-#: The only services a home page calls; anything else is refused before Home Assistant hears of it.
-SERVICES = frozenset({("light", "turn_on"), ("light", "turn_off")})
+#: The only services a home page calls, with the only data each may carry; anything else is
+#: refused before Home Assistant hears of it.
+SERVICES: dict[tuple[str, str], frozenset[str]] = {
+    ("light", "turn_on"): frozenset({"brightness_pct", "color_temp_kelvin", "hs_color"}),
+    ("light", "turn_off"): frozenset(),
+}
 #: The floor between two ``home`` events of one page; the last change always goes out.
 PUSH_INTERVAL = 0.25
 #: How long the map of lamps to pages is kept at most, for pages that came in by an import.
 MAP_SECONDS = 60
 
 
-def service_for(on: bool) -> tuple[str, str]:
-    return ("light", "turn_on") if on else ("light", "turn_off")
+def service_for(lamp: dict[str, Any], *, on: bool | None = None, brightness_pct: int | None = None,
+                kelvin: int | None = None, hs: tuple[float, float] | None = None) -> tuple[str, str, dict[str, Any]]:
+    """The service and its data for what was asked, or ``not_supported`` when the lamp cannot do it.
+
+    What a lamp can do is what Home Assistant says (``light_state``): a lamp that
+    only switches is not dimmed, a white lamp gets no colour. A white is kept
+    inside the lamp's own range rather than refused, since a slider's end and
+    the lamp's end are seldom the same number.
+    """
+    if on is False:
+        return "light", "turn_off", {}
+    data: dict[str, Any] = {}
+    if brightness_pct is not None:
+        if not lamp.get("dims"):
+            raise AdapterError(f"{lamp.get('name', 'This lamp')} only switches on and off.", code="not_supported")
+        data["brightness_pct"] = brightness_pct
+    if kelvin is not None:
+        if not lamp.get("temperature"):
+            raise AdapterError(f"{lamp.get('name', 'This lamp')} has no whites to choose from.", code="not_supported")
+        low, high = lamp.get("kelvin_min") or 2000, lamp.get("kelvin_max") or 6535
+        data["color_temp_kelvin"] = min(high, max(low, kelvin))
+    if hs is not None:
+        if not lamp.get("colour"):
+            raise AdapterError(f"{lamp.get('name', 'This lamp')} has no colours.", code="not_supported")
+        data["hs_color"] = [round(hs[0], 1), round(hs[1], 1)]
+    return "light", "turn_on", data
 
 
-async def call(config: dict[str, Any], ctx: Context, domain: str, service: str, entity_id: str) -> list[dict[str, Any]]:
+async def call(config: dict[str, Any], ctx: Context, domain: str, service: str, entity_id: str,
+               data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Call one of ``SERVICES`` for one entity of its domain; the states Home Assistant says changed."""
-    if (domain, service) not in SERVICES:
+    allowed = SERVICES.get((domain, service))
+    if allowed is None:
         raise AdapterError(f"A home page does not call {domain}.{service}.", code="service_refused")
     if not entity_id.startswith(f"{domain}.") or entity_id.count(".") != 1:
         raise AdapterError(f"{entity_id!r} is not a {domain}.", code="service_refused")
+    data = data or {}
+    if set(data) - allowed:
+        raise AdapterError(f"{domain}.{service} from a home page takes no {', '.join(sorted(set(data) - allowed))}.", code="service_refused")
     response = await ctx.request(
         "POST", f"{base_url(config)}/api/services/{domain}/{service}",
-        json_body={"entity_id": entity_id},
+        json_body={"entity_id": entity_id, **data},
         headers={"Authorization": f"Bearer {config.get('token', '')}", "Content-Type": "application/json"},
         verify=not config.get("insecure"),
     )
@@ -58,16 +92,29 @@ async def call(config: dict[str, Any], ctx: Context, domain: str, service: str, 
     return [state for state in changed if isinstance(state, dict)] if isinstance(changed, list) else []
 
 
-def switch_demo(cache: dict[str, Any], entity_id: str, on: bool) -> dict[str, Any] | None:
-    """The demo house's answer to a switch: the lamp changes, nothing leaves the server."""
+def switch_demo(cache: dict[str, Any], entity_id: str, service: str, data: dict[str, Any]) -> dict[str, Any] | None:
+    """The demo house's answer to a service: the lamp changes as a real one would, nothing leaves the server."""
     states = hass_registry.demo_states(cache)
     state = states.get(entity_id)
     if state is None or state.get("state") == "unavailable":
         return None
+    on = service == "turn_on"
     attributes = dict(state.get("attributes") or {})
     modes = set(attributes.get("supported_color_modes") or [])
     if on and modes - {"onoff"} and not attributes.get("brightness"):
         attributes["brightness"] = 255
+    if "brightness_pct" in data:
+        attributes["brightness"] = round(data["brightness_pct"] * 255 / 100)
+    if "color_temp_kelvin" in data:
+        # A white: Home Assistant drops the colour the lamp had.
+        attributes["color_temp_kelvin"] = data["color_temp_kelvin"]
+        for gone in ("rgb_color", "hs_color"):
+            attributes.pop(gone, None)
+    if "hs_color" in data:
+        hue, saturation = data["hs_color"]
+        attributes["hs_color"] = [hue, saturation]
+        attributes["rgb_color"] = [round(channel * 255) for channel in colorsys.hsv_to_rgb(hue / 360, saturation / 100, 1)]
+        attributes.pop("color_temp_kelvin", None)
     states[entity_id] = {**state, "state": "on" if on else "off", "attributes": attributes}
     return states[entity_id]
 

@@ -1,6 +1,7 @@
-"""Switching a lamp on a home page.
+"""Switching, dimming and colouring a lamp on a home page.
 
-The browser names an element and on or off; everything else is the server's:
+The browser names an element and what it wants (on or off, a brightness, a
+white, a colour); everything else is the server's:
 which entity that is today, which of the lamp's own two services, who may
 press it, and which open pages hear of it. The demo house of
 ``hass_registry`` stands in for a real one, and respx for its REST API.
@@ -34,6 +35,8 @@ LAMPS = [
     {"id": "bed", "type": "light", "x": 16, "y": 104, "rid": "r-bed", "entity_id": "light.bedside", "name": "Bedside lamp"},
     {"id": "gone", "type": "light", "x": 288, "y": 104, "rid": "r-unknown", "entity_id": "light.thrown_away", "name": "Thrown away"},
     {"id": "hidden", "type": "light", "x": 560, "y": 104, "rid": "r-hidden", "entity_id": "light.old_bulb", "name": "Old bulb"},
+    {"id": "strip", "type": "light", "x": 16, "y": 160, "rid": "r-tv", "entity_id": "light.tv_strip", "name": "LED strip"},
+    {"id": "path", "type": "light", "x": 288, "y": 160, "rid": "r-path", "entity_id": "light.garden_path", "name": "Garden path"},
     _heading("living", "Living room"),
 ]
 HA = "http://ha.example.com:8123"
@@ -101,6 +104,19 @@ def test_a_renamed_lamp_is_switched_under_its_name_of_today(client: TestClient) 
     {"on": "true"},
     {"on": 1},
     {},
+    {"on": False, "brightness_pct": 50},
+    {"kelvin": 2700, "hs": [10, 10]},
+    {"brightness_pct": 0},
+    {"brightness_pct": 101},
+    {"brightness_pct": 50.5},
+    {"brightness_pct": "50"},
+    {"kelvin": "2700"},
+    {"kelvin": 500},
+    {"hs": [361, 50]},
+    {"hs": [10, -1]},
+    {"hs": ["12", 80]},
+    {"hs": [10]},
+    {"hs": [10, 20], "rgb": [1, 2, 3]},
 ])
 def test_the_browser_names_neither_a_service_nor_an_entity(client: TestClient, body: object) -> None:
     setup_admin(client)
@@ -279,3 +295,100 @@ async def test_a_page_hears_of_a_lamp_at_most_every_quarter_second_and_always_of
     assert looked == [1, 1, 1], "a plug changing is not even looked up: a house sends dozens of changes a second"
     assert first["lights"]["ceiling"]["on"] is False
     assert last == {"page_id": 9, "lights": {"ceiling": {**hass_registry.light_state(on), "missing": False}}}, "only the last of those held back"
+
+
+# ---------------------------------------------------------------------------
+# Dimming, a white, a colour
+# ---------------------------------------------------------------------------
+
+
+def _light(client: TestClient, page: dict, element: str, body: dict) -> dict:
+    answer = _switch(client, page, element, body)
+    assert answer.status_code == 200, answer.text
+    return answer.json()["light"]
+
+
+def test_a_lamp_is_dimmed_and_an_off_one_comes_on_at_that_brightness(client: TestClient) -> None:
+    setup_admin(client)
+    _board, _hass, page = _lamps_page(client)
+    assert _light(client, page, "ceiling", {"brightness_pct": 30})["pct"] == 30
+    counter = _light(client, page, "counter", {"brightness_pct": 40})
+    assert counter["on"] is True and counter["pct"] == 40
+    assert [entry[1:] for entry in _logged()] == [
+        ("light.turn_on", {"entity_id": "light.ceiling", "page_id": page["id"], "brightness_pct": 30}, True),
+        ("light.turn_on", {"entity_id": "light.kitchen_counter", "page_id": page["id"], "brightness_pct": 40}, True),
+    ]
+
+
+def test_a_white_stays_inside_what_the_lamp_has(client: TestClient) -> None:
+    setup_admin(client)
+    _board, _hass, page = _lamps_page(client)
+    warm = _light(client, page, "ceiling", {"kelvin": 2000})
+    assert (warm["kelvin"], warm["kelvin_min"], warm["kelvin_max"]) == (2700, 2700, 5000)
+    assert _light(client, page, "ceiling", {"kelvin": 9000})["kelvin"] == 5000
+    assert [entry[2]["color_temp_kelvin"] for entry in _logged()] == [2700, 5000]
+
+
+def test_a_colour_and_a_white_take_each_others_place(client: TestClient) -> None:
+    setup_admin(client)
+    _board, _hass, page = _lamps_page(client)
+    blue = _light(client, page, "strip", {"hs": [240, 100], "brightness_pct": 50})
+    assert blue["rgb"] == [0, 0, 255] and blue["hs"] == [240.0, 100.0] and blue["pct"] == 50
+    floor = _light(client, page, "floor", {"kelvin": 4000})
+    assert floor["kelvin"] == 4000 and floor["rgb"] is None, "a white drops the colour the lamp had"
+    red = _light(client, page, "floor", {"hs": [0, 100]})
+    assert red["rgb"] == [255, 0, 0] and red["kelvin"] is None
+    assert _logged()[0][2] == {"entity_id": "light.tv_strip", "page_id": page["id"], "brightness_pct": 50, "hs_color": [240.0, 100.0]}
+
+
+def test_what_a_lamp_cannot_do_is_not_asked_of_it(client: TestClient) -> None:
+    setup_admin(client)
+    _board, _hass, page = _lamps_page(client)
+    for element, body in (
+        ("path", {"brightness_pct": 50}),
+        ("ceiling", {"hs": [120, 50]}),
+        ("counter", {"kelvin": 3000}),
+        ("strip", {"kelvin": 3000}),
+    ):
+        refused = _switch(client, page, element, body)
+        assert (refused.status_code, refused.json()["detail"]["code"]) == (409, "not_supported"), (element, body)
+    assert _logged() == []
+    assert _light(client, page, "path", {"on": True})["on"] is True, "a lamp that only switches still switches"
+
+
+@respx.mock
+def test_a_real_house_is_sent_the_brightness_and_the_white_and_nothing_else(client: TestClient, monkeypatch) -> None:
+    _board, page = _real_house(client, monkeypatch)
+    called = respx.post(f"{HA}/api/services/light/turn_on").mock(return_value=httpx.Response(200, json=[]))
+    _switch(client, page, "ceiling", {"brightness_pct": 30, "kelvin": 6000})
+    _switch(client, page, "strip", {"hs": [12.345, 67.891]})
+    assert [json.loads(call.request.content) for call in called.calls] == [
+        {"entity_id": "light.ceiling", "brightness_pct": 30, "color_temp_kelvin": 5000},
+        {"entity_id": "light.tv_strip", "hs_color": [12.3, 67.9]},
+    ]
+
+
+@pytest.mark.parametrize(("service", "data"), [
+    ("turn_on", {"effect": "colorloop"}),
+    ("turn_on", {"brightness_pct": 50, "flash": "long"}),
+    ("turn_off", {"brightness_pct": 5}),
+    ("turn_off", {"transition": 600}),
+])
+async def test_a_lamps_services_carry_nothing_but_their_own_data(service: str, data: dict) -> None:
+    ctx = _Recording()
+    with pytest.raises(AdapterError) as refused:
+        await home_control.call({"url": HA}, ctx, "light", service, "light.desk", data)  # type: ignore[arg-type]
+    assert refused.value.code == "service_refused" and ctx.calls == []
+
+
+def test_a_lamp_says_which_whites_it_has_and_its_colour() -> None:
+    def stands(**attributes: object) -> dict:
+        return hass_registry.light_state({"state": "on", "attributes": {"supported_color_modes": ["color_temp", "hs"], **attributes}})
+
+    named = stands(min_color_temp_kelvin=2202, max_color_temp_kelvin=6535, hs_color=[30.04, 65.55])
+    assert (named["kelvin_min"], named["kelvin_max"], named["hs"]) == (2202, 6535, [30.0, 65.5])
+    assert (stands()["kelvin_min"], stands()["kelvin_max"]) == hass_registry.DEFAULT_KELVIN, "Home Assistant's own when the lamp names none"
+    for odd in ("warm", True, 50, 99999):
+        assert stands(min_color_temp_kelvin=odd)["kelvin_min"] == hass_registry.DEFAULT_KELVIN[0], odd
+    white = hass_registry.light_state({"state": "on", "attributes": {"supported_color_modes": ["brightness"]}})
+    assert white["kelvin_min"] is None and white["hs"] is None

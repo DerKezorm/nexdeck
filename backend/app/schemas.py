@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    model_validator,
+)
 
 from .languages import Code, Pair
 
@@ -308,11 +316,34 @@ class WidgetPreview(BaseModel):
 
 
 class HomeSwitchBody(BaseModel):
-    """What a home page asks of a lamp. No service and no entity: the server finds both (``home_control``)."""
+    """What a home page asks of a lamp. No service and no entity: the server finds both (``home_control``).
+
+    Off is off and nothing else. A brightness, a white or a colour switches the
+    lamp on with it; a white and a colour at once is two wishes, and refused.
+    Whether the lamp can do what is asked, ``home_control.service_for`` decides.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    on: StrictBool
+    on: StrictBool | None = None
+    brightness_pct: StrictInt | None = Field(default=None, ge=1, le=100)
+    #: Bounded loosely here; the lamp's own range is applied in ``home_control``.
+    kelvin: StrictInt | None = Field(default=None, ge=1000, le=12000)
+    #: Hue in degrees and saturation in percent, as Home Assistant's ``hs_color``.
+    hs: tuple[StrictFloat, StrictFloat] | None = None
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeSwitchBody:
+        asked = [self.brightness_pct, self.kelvin, self.hs]
+        if self.on is None and all(value is None for value in asked):
+            raise ValueError("Say what the lamp should do.")
+        if self.on is False and any(value is not None for value in asked):
+            raise ValueError("Off takes nothing with it.")
+        if self.kelvin is not None and self.hs is not None:
+            raise ValueError("A white or a colour, not both.")
+        if self.hs is not None and not (0 <= self.hs[0] <= 360 and 0 <= self.hs[1] <= 100):
+            raise ValueError("Hue goes from 0 to 360, saturation from 0 to 100.")
+        return self
 
 
 class ActionBody(BaseModel):

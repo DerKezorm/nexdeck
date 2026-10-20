@@ -30,6 +30,8 @@ from ..adapters.base import AdapterError, AuthFailed, base_url
 REGISTRY_SECONDS = 60
 #: The colour modes a lamp mixes colours in; ``white`` comes with one of them.
 COLOUR_MODES = {"hs", "xy", "rgb", "rgbw", "rgbww"}
+#: The whites Home Assistant assumes for a lamp that names none (``DEFAULT_MIN_KELVIN``, ``DEFAULT_MAX_KELVIN``).
+DEFAULT_KELVIN = (2000, 6535)
 
 
 # ---------------------------------------------------------------------------
@@ -53,16 +55,26 @@ def light_state(state: dict[str, Any] | None) -> dict[str, Any]:
     pct = round(brightness / 255 * 100) if on and isinstance(brightness, (int, float)) else None
     rgb = attributes.get("rgb_color")
     kelvin = attributes.get("color_temp_kelvin")
+    hs = attributes.get("hs_color")
+    temperature = "color_temp" in modes
     return {
         "on": on,
         "unavailable": value in (None, "unavailable", "unknown"),
         "pct": max(1, pct) if pct is not None else None,
         "rgb": [int(channel) for channel in rgb][:3] if on and isinstance(rgb, (list, tuple)) and len(rgb) >= 3 else None,
         "kelvin": int(kelvin) if on and isinstance(kelvin, (int, float)) else None,
+        "hs": [round(float(hs[0]), 1), round(float(hs[1]), 1)] if on and isinstance(hs, (list, tuple)) and len(hs) >= 2 else None,
         "dims": bool(modes - {"onoff"}),
-        "temperature": "color_temp" in modes,
+        "temperature": temperature,
         "colour": bool(modes & COLOUR_MODES),
+        # The whites this lamp has; Home Assistant's own defaults when it does not say.
+        "kelvin_min": _kelvin(attributes.get("min_color_temp_kelvin"), DEFAULT_KELVIN[0]) if temperature else None,
+        "kelvin_max": _kelvin(attributes.get("max_color_temp_kelvin"), DEFAULT_KELVIN[1]) if temperature else None,
     }
+
+
+def _kelvin(value: Any, fallback: int) -> int:
+    return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and 1000 <= value <= 12000 else fallback
 
 
 def pick_lights(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
@@ -210,9 +222,11 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "supported_color_modes": modes, **attributes}}
 
     states = {
-        "light.floor_lamp": state("light.floor_lamp", "Floor lamp", "on", ["color_temp", "xy"], brightness=158, color_temp_kelvin=2400, rgb_color=[255, 167, 87]),
-        "light.ceiling": state("light.ceiling", "Ceiling light", "on", ["color_temp"], brightness=204, color_temp_kelvin=3000),
-        "light.tv_strip": state("light.tv_strip", "LED strip", "on", ["hs", "white"], brightness=178, rgb_color=[160, 90, 255]),
+        "light.floor_lamp": state("light.floor_lamp", "Floor lamp", "on", ["color_temp", "xy"], brightness=158, color_temp_kelvin=2400, rgb_color=[255, 167, 87],
+                                  min_color_temp_kelvin=2202, max_color_temp_kelvin=6535),
+        "light.ceiling": state("light.ceiling", "Ceiling light", "on", ["color_temp"], brightness=204, color_temp_kelvin=3000,
+                               min_color_temp_kelvin=2700, max_color_temp_kelvin=5000),
+        "light.tv_strip": state("light.tv_strip", "LED strip", "on", ["hs", "white"], brightness=178, rgb_color=[160, 90, 255], hs_color=[265.5, 64.7]),
         "light.kitchen_counter": state("light.kitchen_counter", "Kitchen counter", "off", ["brightness"]),
         "light.garden_path": state("light.garden_path", "Garden path", "off", ["onoff"]),
         "light.bedside": state("light.bedside", "Bedside lamp", "unavailable", ["color_temp", "xy"]),

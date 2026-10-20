@@ -2000,3 +2000,64 @@ body.has-player-bar main {
   border-right-width: 2px;
   border-bottom-width: 2px;
 }
+
+
+@layer components {
+  /* The sliders of a lamp's details: a thick track that shows what it sets
+     (dark to lit, warm to cool, the rainbow) and a round knob to hold. */
+  .lamp-range {
+    --track: color-mix(in srgb, var(--nd-text) 16%, transparent);
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .lamp-range::-webkit-slider-runnable-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .lamp-range::-moz-range-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .lamp-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    margin-top: -6px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    transition: transform 120ms ease;
+  }
+
+  .lamp-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  }
+
+  .lamp-range:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+
+  .lamp-range:focus-visible {
+    outline: 2px solid var(--nd-accent);
+    outline-offset: 4px;
+    border-radius: 999px;
+  }
+}

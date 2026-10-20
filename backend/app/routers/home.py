@@ -59,6 +59,10 @@ async def _offered(integration: Integration) -> list[dict[str, Any]]:
     return await hass_registry.lights(config, ctx.cache, demo=collector.is_demo(integration))
 
 
+def _said(data: dict[str, Any]) -> str:
+    return " with " + ", ".join(f"{key} {value}" for key, value in data.items()) if data else ""
+
+
 def _find(offered: list[dict[str, Any]], element: dict[str, Any]) -> dict[str, Any] | None:
     """The lamp an element stands for: by its registry id, else by the entity id it was placed with."""
     for light in offered:
@@ -151,23 +155,26 @@ async def switch_light(page_id: int, element_id: str, body: HomeSwitchBody, requ
     if lamp["unavailable"]:
         raise error("lamp_unavailable", f"Home Assistant cannot reach {lamp['name']} right now.", status.HTTP_409_CONFLICT)
 
-    domain, service = home_control.service_for(body.on)
+    try:
+        domain, service, data = home_control.service_for(lamp, on=body.on, brightness_pct=body.brightness_pct, kelvin=body.kelvin, hs=body.hs)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_409_CONFLICT) from failure
     entity_id = lamp["entity_id"]
     actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
     _adapter, config, ctx = await collector.resolve_integration(integration.id)
     ok, changed = True, []
     try:
         if collector.is_demo(integration):
-            switched = home_control.switch_demo(ctx.cache, entity_id, body.on)
+            switched = home_control.switch_demo(ctx.cache, entity_id, service, data)
             changed = [switched] if switched else []
-            message = f"Demo mode: {domain}.{service} for {entity_id}."
+            message = f"Demo mode: {domain}.{service} for {entity_id}{_said(data)}."
         else:
-            changed = await home_control.call(config, ctx, domain, service, entity_id)
-            message = f"{domain}.{service} called for {entity_id}."
+            changed = await home_control.call(config, ctx, domain, service, entity_id, data)
+            message = f"{domain}.{service} called for {entity_id}{_said(data)}."
     except AdapterError as failure:
         ok, message, code = False, failure.message, failure.code
     db.add(ActionLog(user_id=user.id if user else None, actor=actor, widget_id=None, integration_id=integration.id,
-                     action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id}, ok=ok, message=message[:400]))
+                     action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id, **data}, ok=ok, message=message[:400]))
     db.commit()
     title = f"{domain}.{service} on {lamp['name']}"
     if not ok:
@@ -179,7 +186,9 @@ async def switch_light(page_id: int, element_id: str, body: HomeSwitchBody, requ
     # that rang at every light switch would drown out what it is for. A failure does ring (above).
     state = next((item for item in changed if item.get("entity_id") == entity_id), None)
     if state is None:
-        # Home Assistant names only what changed; a lamp that was on already is not in the list.
+        # Home Assistant names only what changed: a lamp that was on already is not in the list, and
+        # neither is one that has not answered yet. The page shows what was asked a moment longer and
+        # then the lamp as the server knows it (``HomePage``).
         return {"ok": True, "confirmed": False, "light": {**lamp, "missing": False}}
     live = ctx.cache.get("hass_states")
     if isinstance(live, dict):

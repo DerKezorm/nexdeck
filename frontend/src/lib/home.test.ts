@@ -1,4 +1,6 @@
-import { freshId, nextSpot, readingOrder, snap, surfaceHeight, withLamps, type HomeAnswer, type HomeElement } from './home'
+import { vi } from 'vitest'
+
+import { freshId, hsToRgb, lampSender, rgbToHs, mergeWish, nextSpot, readingOrder, snap, surfaceHeight, withLamps, withWish, type HomeAnswer, type HomeElement, type LampWish } from './home'
 
 const heading = (id: string, x: number, y: number): HomeElement => ({ id, type: 'heading', x, y, text: id })
 
@@ -57,4 +59,81 @@ it('puts news of a lamp into the answer, keeping what the news does not say', ()
   expect(withLamps(next, { floor: { missing: true } }).lights?.floor).toEqual({ missing: true })
   // The answer it started from stays as it was: react-query compares by reference.
   expect(answer.lights?.floor).toMatchObject({ on: true })
+})
+
+// -- what is asked of a lamp ---------------------------------------------------
+
+it('merges wishes with the later one winning, off taking everything with it', () => {
+  expect(mergeWish({ brightness_pct: 30 }, { brightness_pct: 70 })).toEqual({ brightness_pct: 70 })
+  expect(mergeWish({ brightness_pct: 30, kelvin: 2700 }, { on: false })).toEqual({ on: false })
+  expect(mergeWish({ on: false }, { brightness_pct: 40 })).toEqual({ on: true, brightness_pct: 40 })
+  expect(mergeWish({ brightness_pct: 30, hs: [10, 10] }, { kelvin: 3000 })).toEqual({ brightness_pct: 30, kelvin: 3000 })
+  expect(mergeWish({ kelvin: 3000 }, { hs: [200, 50] })).toEqual({ hs: [200, 50] })
+})
+
+it('reckons a hue and saturation into a colour as Home Assistant does', () => {
+  expect(hsToRgb(0, 100)).toEqual([255, 0, 0])
+  expect(hsToRgb(120, 100)).toEqual([0, 255, 0])
+  expect(hsToRgb(240, 100)).toEqual([0, 0, 255])
+  expect(hsToRgb(360, 100)).toEqual([255, 0, 0])
+  expect(hsToRgb(30, 50)).toEqual([255, 191, 128])
+  expect(hsToRgb(200, 0)).toEqual([255, 255, 255])
+})
+
+it('reckons a colour back into hue and saturation', () => {
+  expect(rgbToHs([255, 0, 0])).toEqual([0, 100])
+  expect(rgbToHs([0, 0, 255])).toEqual([240, 100])
+  expect(rgbToHs([160, 90, 255])).toEqual([265.5, 64.7])
+  expect(rgbToHs([255, 0, 128])).toEqual([329.9, 100])
+  expect(rgbToHs([255, 255, 255])).toEqual([0, 0])
+  expect(rgbToHs([0, 0, 0])).toEqual([0, 0])
+  for (const [h, s] of [[30, 50], [200, 80], [300, 25]] as [number, number][]) {
+    const [back, sat] = rgbToHs(hsToRgb(h, s))
+    expect(Math.abs(back - h)).toBeLessThan(1.5)
+    expect(Math.abs(sat - s)).toBeLessThan(1.5)
+  }
+})
+
+it('shows a lamp as it will stand once the wish is done', () => {
+  const lamp = { rid: 'r', entity_id: 'light.a', name: 'A', area: '', device: '', group: false, on: false, unavailable: false, pct: null, rgb: null, kelvin: null, dims: true, temperature: true, colour: true }
+  expect(withWish(lamp, { on: true })).toMatchObject({ on: true, pct: 100 })
+  expect(withWish(lamp, { brightness_pct: 25 })).toMatchObject({ on: true, pct: 25 })
+  expect(withWish({ ...lamp, on: true, pct: 60, rgb: [1, 2, 3] }, { kelvin: 2700 })).toMatchObject({ on: true, pct: 60, kelvin: 2700, rgb: null })
+  expect(withWish({ ...lamp, on: true, pct: 60, kelvin: 2700 }, { hs: [240, 100] })).toMatchObject({ rgb: [0, 0, 255], kelvin: null, hs: [240, 100] })
+  expect(withWish({ ...lamp, on: true, pct: 60 }, { on: false })).toMatchObject({ on: false, pct: null })
+  expect(withWish(lamp, undefined)).toBe(lamp)
+})
+
+it('sends a lamp the newest wish, never two at once, and at most every gap', async () => {
+  vi.useFakeTimers()
+  try {
+    const sent: LampWish[] = []
+    const answers: (() => void)[] = []
+    const sender = lampSender((wish) => {
+      sent.push(wish)
+      return new Promise<void>((resolve) => answers.push(resolve))
+    }, 300)
+    sender.ask({ brightness_pct: 10 })
+    expect(sender.queued()).toBe(false)
+    sender.ask({ brightness_pct: 20 })
+    sender.ask({ brightness_pct: 30 })
+    expect(sent).toEqual([{ brightness_pct: 10 }])
+    expect(sender.busy()).toBe(true)
+    expect(sender.queued()).toBe(true)
+    await vi.advanceTimersByTimeAsync(400)
+    // The gap has passed, but the first is still on its way.
+    expect(sent).toHaveLength(1)
+    answers[0]()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toEqual([{ brightness_pct: 10 }, { brightness_pct: 30 }])
+    sender.ask({ kelvin: 3000 })
+    answers[1]()
+    await vi.advanceTimersByTimeAsync(400)
+    expect(sent.at(-1)).toEqual({ kelvin: 3000 })
+    answers[2]()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sender.busy()).toBe(false)
+  } finally {
+    vi.useRealTimers()
+  }
 })

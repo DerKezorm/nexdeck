@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Heading, House, Lightbulb, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  freshId, lampColour, lampSpots, MAX_TEXT, nextSpot, readingOrder, snap, surfaceHeight, withLamps,
-  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type SwitchAnswer,
+  freshId, lampColour, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, readingOrder, SETTLE_MS, snap, surfaceHeight, withLamps, withWish,
+  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
+import { LampDetails } from './LampDetails'
 import { LightPicker } from './LightPicker'
 
 interface Props {
@@ -178,52 +179,69 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   }
   const missing = (element: HomeLight) => answer.data?.lights?.[element.id]?.missing === true
 
-  // -- switching a lamp ------------------------------------------------------
+  // -- switching, dimming, colouring a lamp ---------------------------------------
 
   const queryClient = useQueryClient()
-  /** What a lamp was just told to be, shown until the server has answered. */
-  const [wanted, setWanted] = useState<Record<string, boolean>>({})
-  const taps = useRef<Record<string, number>>({})
-  // ⚠️ One switch of a lamp after the other, like the saves above: two taps in
-  // quick succession sent side by side could reach Home Assistant the wrong
-  // way round and leave the lamp as the first tap wanted.
-  const switching = useRef<Record<string, Promise<void>>>({})
-  const toggle = useCallback(
-    (element: HomeLight, info: LampInfo) => {
-      // ``info`` is the lamp as the pill shows it, a tap still waiting for its answer included.
-      const on = !info.on
-      const tap = (taps.current[element.id] ?? 0) + 1
-      taps.current[element.id] = tap
-      setWanted((now) => ({ ...now, [element.id]: on }))
-      const send = async () => {
+  /** What a lamp was just asked to do, shown until the server has answered (``withWish``). */
+  const [wanted, setWanted] = useState<Record<string, LampWish>>({})
+  const [details, setDetails] = useState<string | null>(null)
+  /** How often each lamp has been asked, so an answer to an older wish does not clear a newer one. */
+  const asks = useRef<Record<string, number>>({})
+  const names = useRef<Record<string, string>>({})
+  // ⚠️ One wish of a lamp after the other, and the newest winning (``lampSender``).
+  // Two taps sent side by side could reach Home Assistant the wrong way round,
+  // and dragging a slider would send a hundred calls a second.
+  const senders = useRef<Record<string, ReturnType<typeof lampSender>>>({})
+  const settle = useCallback((id: string, asked: number) => {
+    if (asks.current[id] !== asked) return
+    setWanted((now) => {
+      const rest = { ...now }
+      delete rest[id]
+      return rest
+    })
+  }, [])
+  const senderOf = useCallback(
+    (id: string) => {
+      const known = senders.current[id]
+      if (known) return known
+      const sender = lampSender(async (wish) => {
+        const asked = asks.current[id]
         try {
-          const answered = await post<SwitchAnswer>(`/pages/${pageId}/home/lights/${element.id}`, { on })
-          // Not confirmed: Home Assistant named nothing that changed, the lamp already was as asked.
-          const stands = answered.confirmed ? answered.light : { ...answered.light, on }
-          queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withLamps(old, { [element.id]: stands }) : old))
+          const answered = await post<SwitchAnswer>(`/pages/${pageId}/home/lights/${id}`, wish)
+          queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withLamps(old, { [id]: answered.light }) : old))
+          if (sender.queued()) return
+          // Not confirmed: Home Assistant named nothing that changed. The lamp may have been so
+          // already, or it has not answered yet. What was asked shows a moment longer, then the
+          // lamp as the server and the board's stream know it: taken back, if it never came.
+          if (answered.confirmed) settle(id, asked)
+          else window.setTimeout(() => settle(id, asked), SETTLE_MS)
         } catch (failure) {
           const code = failure instanceof ApiError ? failure.code : ''
-          setNote({ text: t(`homePage.switchProblems.${code}`, { name: info.name, defaultValue: t('homePage.switchFailed', { name: info.name }) }), level: 'error' })
-        } finally {
-          if (taps.current[element.id] === tap) {
-            setWanted((now) => {
-              const rest = { ...now }
-              delete rest[element.id]
-              return rest
-            })
-          }
+          const name = names.current[id] ?? ''
+          setNote({ text: t(`homePage.switchProblems.${code}`, { name, defaultValue: t('homePage.switchFailed', { name }) }), level: 'error' })
+          settle(id, asked)
         }
-      }
-      const run = (switching.current[element.id] ?? Promise.resolve()).then(send)
-      switching.current[element.id] = run
+      })
+      senders.current[id] = sender
+      return sender
     },
-    [pageId, queryClient, t],
+    [pageId, queryClient, settle, t],
+  )
+  const ask = useCallback(
+    (element: HomeLight, info: LampInfo, wish: LampWish) => {
+      asks.current[element.id] = (asks.current[element.id] ?? 0) + 1
+      names.current[element.id] = info.name
+      setWanted((now) => ({ ...now, [element.id]: now[element.id] ? mergeWish(now[element.id], wish) : wish }))
+      senderOf(element.id).ask(wish)
+    },
+    [senderOf],
   )
   const standing = (element: HomeLight): LampInfo | null => {
     const info = infoOf(element)
-    const asked = wanted[element.id]
-    return info && asked !== undefined ? { ...info, on: asked, pct: asked ? info.pct : null } : info
+    return info ? withWish(info, wanted[element.id]) : null
   }
+  const detailed = elements.find((element): element is HomeLight => element.type === 'light' && element.id === details) ?? null
+  const detailedInfo = detailed ? standing(detailed) : null
 
   const addHeading = useCallback(() => {
     if (!layout) return
@@ -288,7 +306,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const draw = (element: HomeElement) =>
     element.type === 'light' ? (
       <LampPill element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow} onRemove={() => remove(element.id)}
-        onToggle={canAct && !arranging ? (info) => toggle(element, info) : undefined} />
+        onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)} />
     ) : (
       <HeadingView element={element} arranging={arranging} renaming={renaming === element.id}
         onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
@@ -352,6 +370,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         </div>
       )}
       {arranging && <EditBar onLight={() => setPicking(true)} onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
+      {detailed && detailedInfo && canAct && (
+        <LampDetails info={detailedInfo} onWish={(wish) => ask(detailed, detailedInfo, wish)} onClose={() => setDetails(null)} />
+      )}
       {canEdit && <LightPicker open={picking} pageId={pageId} placed={placedLamps} onClose={() => setPicking(false)} onAdd={addLights} />}
       {note && (
         <div className={`fixed left-1/2 -translate-x-1/2 bottom-36 md:bottom-24 z-50 glass-strong rounded-xl px-4 py-2.5 text-sm shadow-xl ${note.level === 'error' ? 'text-bad' : ''}`} role="status">
@@ -362,12 +383,19 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   )
 }
 
+/** How long a finger rests on a pill before it opens the details. */
+const HOLD_MS = 500
+/** How far a pointer travels before a press becomes a drag. */
+const DRAG_PX = 6
+
 /**
  * A lamp as a pill, the first of the drawings on the board of sketches: its
- * light, its name, how bright. A tap switches it, for those who may act on
- * the board; a lamp Home Assistant cannot reach or no longer has stays still.
+ * light, its name, how bright. For those who may act on the board a tap
+ * switches it, a drag sideways dims it, holding it (or a right click) opens
+ * its details; arrow keys dim it too. A lamp Home Assistant cannot reach or
+ * no longer has stays still.
  */
-function LampPill({ element, info, missing, arranging, wide, onRemove, onToggle }: {
+function LampPill({ element, info, missing, arranging, wide, onRemove, onWish, onDetails }: {
   element: HomeLight
   info: LampInfo | null
   missing: boolean
@@ -375,7 +403,8 @@ function LampPill({ element, info, missing, arranging, wide, onRemove, onToggle 
   /** In the phone's list: as wide as the screen, a row to tap rather than a pill to aim at. */
   wide: boolean
   onRemove: () => void
-  onToggle?: (info: LampInfo) => void
+  onWish?: (info: LampInfo, wish: LampWish) => void
+  onDetails: () => void
 }) {
   const { t } = useTranslation()
   const colour = lampColour(info)
@@ -388,28 +417,101 @@ function LampPill({ element, info, missing, arranging, wide, onRemove, onToggle 
   const lit = colour
     ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
     : undefined
-  const shell = `glass flex items-center gap-2.5 ${wide ? 'w-full h-12' : 'h-10 max-w-[256px]'} pl-1.5 pr-4 rounded-full text-left ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`
-  const title = [name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')
+  const press = useRef<{ pointer: number; x: number; y: number; from: number; width: number; dragging: boolean; held: boolean; timer?: number; sent?: number } | null>(null)
+  /** Set when a press ended as a drag or a hold, so the click that follows it switches nothing. */
+  const swallow = useRef(false)
+  const [dimming, setDimming] = useState<number | null>(null)
+  useEffect(() => () => window.clearTimeout(press.current?.timer), [])
+
+  const shell = `glass relative overflow-hidden flex items-center gap-2.5 ${wide ? 'w-full h-12' : 'h-10 max-w-[256px]'} pl-1.5 pr-4 rounded-full text-left ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`
+  const title = [name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : onWish ? t('homePage.lampHint') : ''].filter(Boolean).join(' · ')
   const inside = (
     <>
-      <span className="grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
+      {dimming !== null && (
+        // While dragging, the pill fills to the brightness under the finger.
+        <span aria-hidden className="absolute inset-y-0 left-0 pointer-events-none" style={{ width: `${dimming}%`, background: `color-mix(in srgb, ${colour ?? 'rgb(255, 196, 120)'} 30%, transparent)` }} />
+      )}
+      <span className="relative grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
         <Lightbulb size={15} className={colour ? '' : 'text-muted'} />
       </span>
-      <span className="text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
-      {state && <span className={`num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
+      <span className="relative text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
+      {state && <span className={`relative num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
     </>
   )
-  // Only a lamp that can be switched is a button: one Home Assistant cannot reach would take the tap and do nothing.
-  if (onToggle && info && !missing && !info.unavailable) {
+  if (onWish && info && !missing && !info.unavailable) {
+    const down = (event: ReactPointerEvent<HTMLButtonElement>) => {
+      if (event.button !== 0) return
+      swallow.current = false
+      const width = event.currentTarget.getBoundingClientRect().width || 200
+      const held = { pointer: event.pointerId, x: event.clientX, y: event.clientY, from: info.on ? (info.pct ?? 100) : 0, width, dragging: false, held: false, timer: 0 }
+      held.timer = window.setTimeout(() => {
+        if (press.current !== held || held.dragging) return
+        held.held = true
+        swallow.current = true
+        onDetails()
+      }, HOLD_MS)
+      press.current = held
+    }
+    const move = (event: ReactPointerEvent<HTMLButtonElement>) => {
+      const held = press.current
+      if (!held || held.pointer !== event.pointerId || held.held || !info.dims) return
+      const dx = event.clientX - held.x
+      if (!held.dragging) {
+        if (Math.abs(dx) < DRAG_PX || Math.abs(dx) < Math.abs(event.clientY - held.y)) return
+        held.dragging = true
+        swallow.current = true
+        window.clearTimeout(held.timer)
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId)
+        } catch {
+          // A pointer that is already gone has nothing to capture.
+        }
+      }
+      const pct = Math.min(100, Math.max(1, Math.round(held.from + (dx / held.width) * 100)))
+      setDimming(pct)
+      // A finger resting past the end moves on and on; the lamp hears each brightness once.
+      if (pct === held.sent) return
+      held.sent = pct
+      onWish(info, { brightness_pct: pct })
+    }
+    const up = () => {
+      window.clearTimeout(press.current?.timer)
+      press.current = null
+      setDimming(null)
+    }
+    const key = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+      if (!info.dims) return
+      const step = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? 10 : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -10 : 0
+      if (!step) return
+      event.preventDefault()
+      onWish(info, { brightness_pct: Math.min(100, Math.max(1, (info.on ? (info.pct ?? 100) : 0) + step)) })
+    }
     return (
       <button
         type="button"
-        className={`${shell} cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-200 hover:brightness-[1.04] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[var(--nd-accent)]`}
+        className={`${shell} cursor-pointer touch-pan-y select-none transition-[background-color,border-color,box-shadow,transform] duration-200 hover:brightness-[1.04] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[var(--nd-accent)]`}
         style={lit}
         data-lamp={element.entity_id}
         title={title}
         aria-pressed={info.on}
-        onClick={() => onToggle(info)}
+        aria-haspopup="dialog"
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={up}
+        onKeyDown={key}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          up()
+          onDetails()
+        }}
+        onClick={() => {
+          if (swallow.current) {
+            swallow.current = false
+            return
+          }
+          onWish(info, { on: !info.on })
+        }}
       >
         {inside}
       </button>
@@ -419,7 +521,7 @@ function LampPill({ element, info, missing, arranging, wide, onRemove, onToggle 
     <div className={shell} style={lit} data-lamp={element.entity_id} title={title}>
       {inside}
       {arranging && (
-        <span className="flex items-center ml-1" data-element-tool>
+        <span className="relative flex items-center ml-1" data-element-tool>
           <button type="button" className="btn btn-icon btn-flat btn-danger h-6 w-6" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>
             <Trash2 size={13} />
           </button>

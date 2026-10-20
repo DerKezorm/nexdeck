@@ -2,13 +2,14 @@
  * The home page in the browser: headings stand where they were put, an
  * editor adds, renames, moves and removes them, each change is saved with
  * the version it started from, someone who may only look changes nothing,
- * a connection that went is said, and a lamp switches at a tap.
+ * a connection that went is said, and a lamp switches at a tap, dims when
+ * dragged and opens its details when held.
  */
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
-import type { HomeAnswer, LampInfo, LightOffer } from '../../lib/home'
+import { SETTLE_MS, type HomeAnswer, type LampInfo, type LightOffer } from '../../lib/home'
 import { HomePage } from './HomePage'
 
 const ANSWER: HomeAnswer = {
@@ -56,8 +57,11 @@ function serve(answer: HomeAnswer, sent: Sent[], offer: LightOffer = OFFER, swit
     if (method === 'POST' && url.includes('/home/lights/')) {
       const element = url.split('/home/lights/')[1]
       if (switcher) return switcher(element, body)
+      // As the server answers: the lamp as it stands after the wish.
       const before = answer.lights?.[element]
-      return json({ ok: true, confirmed: true, light: { ...(before && !before.missing ? before : {}), on: body.on, missing: false } })
+      const on = body.on ?? true
+      const pct = on ? body.brightness_pct ?? (before && !before.missing ? before.pct : null) : null
+      return json({ ok: true, confirmed: true, light: { ...(before && !before.missing ? before : {}), on, pct, missing: false } })
     }
     if (method === 'PUT') return json({ layout: { ...answer.layout, elements: body.elements }, version: answer.version + 1 })
     if (url.includes('/home/lights')) return json(offer)
@@ -317,7 +321,8 @@ it('moves a lamp but does not try to rename it', async () => {
 // -- switching ---------------------------------------------------------------
 
 const posts = (sent: Sent[]) => sent.filter((one) => one.method === 'POST')
-const pill = (name: string) => screen.getByText(name).closest('[data-lamp]') as HTMLElement
+// The pill, not the title of its details, which says the same name.
+const pill = (name: string) => [...document.querySelectorAll<HTMLElement>('[data-lamp]')].find((element) => element.textContent?.includes(name)) as HTMLElement
 
 /** A promise to answer a switch with, later. */
 function later() {
@@ -389,4 +394,125 @@ it('offers no switch to who may not act, while arranging, or on a lamp that went
   expect(screen.queryByRole('button', { name: /Old desk/ })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Garden path/ })).not.toBeInTheDocument()
   expect(pill('Garden path')).toHaveTextContent('offline')
+})
+
+// -- dimming and the details ---------------------------------------------------
+
+/** A floor lamp that has whites and colours, and a garden path that only switches. */
+const RICH: HomeAnswer = {
+  ...WITH_LAMPS,
+  lights: {
+    ...WITH_LAMPS.lights,
+    floor: { ...OFFER.lights[1], colour: true, kelvin_min: 2202, kelvin_max: 6535, missing: false },
+  },
+}
+
+it('dims a lamp dragged sideways, sending the newest brightness and switching nothing', async () => {
+  const replies = [later(), later()]
+  let asked = 0
+  const sent = show(RICH, { canAct: true, switcher: () => replies[asked++].promise })
+  const floor = await screen.findByRole('button', { name: /Floor lamp/ })
+  fireEvent.pointerDown(floor, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(floor, { pointerId: 1, clientX: 110, clientY: 21 })
+  fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140, clientY: 22 })
+  fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140.4, clientY: 23 })
+  expect(pill('Floor lamp')).toHaveTextContent('82 %')
+  fireEvent.pointerUp(floor, { pointerId: 1, clientX: 140, clientY: 22 })
+  fireEvent.click(floor)
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  await act(async () => replies[0].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 67 } })))
+  await waitFor(() => expect(posts(sent)).toHaveLength(2), { timeout: 1000 })
+  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 67 }, { brightness_pct: 82 }])
+  await act(async () => replies[1].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 82 } })))
+  expect(pill('Floor lamp')).toHaveTextContent('82 %')
+})
+
+it('dims a lamp by the arrow keys', async () => {
+  const sent = show(RICH, { canAct: true })
+  const floor = await screen.findByRole('button', { name: /Floor lamp/ })
+  fireEvent.keyDown(floor, { key: 'ArrowRight' })
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  expect(posts(sent)[0].body).toEqual({ brightness_pct: 72 })
+})
+
+it('opens the details when a lamp is held, and the press that opened them switches nothing', async () => {
+  const sent = show(RICH, { canAct: true })
+  const floor = await screen.findByRole('button', { name: /Floor lamp/ })
+  fireEvent.pointerDown(floor, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  const panel = await screen.findByRole('dialog', {}, { timeout: 1500 })
+  fireEvent.pointerUp(floor, { pointerId: 1, clientX: 100, clientY: 20 })
+  fireEvent.click(floor)
+  expect(panel).toHaveTextContent('Floor lamp')
+  expect(posts(sent)).toHaveLength(0)
+
+  fireEvent.change(screen.getByRole('slider', { name: /Brightness/ }), { target: { value: '40' } })
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  expect(posts(sent)[0].body).toEqual({ brightness_pct: 40 })
+  expect(pill('Floor lamp')).toHaveTextContent('40 %')
+
+  // Lit in a colour, so the details open on the colours.
+  expect(screen.getByRole('radio', { name: 'Colour' })).toHaveAttribute('aria-checked', 'true')
+  fireEvent.click(screen.getByRole('radio', { name: 'White' }))
+  expect(screen.queryByRole('slider', { name: /Hue/ })).not.toBeInTheDocument()
+  const white = screen.getByRole('slider', { name: /White/ })
+  // The lamp's own whites, on whole fifties.
+  expect(white).toHaveAttribute('min', '2250')
+  expect(white).toHaveAttribute('max', '6500')
+  fireEvent.click(screen.getByRole('radio', { name: 'Colour' }))
+  expect(screen.queryByRole('slider', { name: /White/ })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Colour at 235°' }))
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toContainEqual({ hs: [235, 85] }), { timeout: 1500 })
+  fireEvent.click(screen.getByRole('button', { name: 'Turn off' }))
+  await waitFor(() => expect(posts(sent).at(-1)?.body).toEqual({ on: false }), { timeout: 1500 })
+})
+
+it('opens the details by a right click, showing only what the lamp can do', async () => {
+  show(RICH, { canAct: true })
+  fireEvent.contextMenu(await screen.findByRole('button', { name: /Garden path/ }))
+  const panel = await screen.findByRole('dialog')
+  expect(panel).toHaveTextContent('Garden path')
+  expect(screen.queryByRole('slider')).not.toBeInTheDocument()
+  expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Turn on' })).toBeInTheDocument()
+})
+
+it('does not dim a lamp that only switches', async () => {
+  const sent = show(RICH, { canAct: true })
+  const path = await screen.findByRole('button', { name: /Garden path/ })
+  fireEvent.pointerDown(path, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(path, { pointerId: 1, clientX: 160, clientY: 20 })
+  fireEvent.pointerUp(path, { pointerId: 1, clientX: 160, clientY: 20 })
+  fireEvent.keyDown(path, { key: 'ArrowRight' })
+  await act(async () => new Promise((resolve) => window.setTimeout(resolve, 50)))
+  expect(posts(sent).filter((one) => 'brightness_pct' in (one.body ?? {}))).toEqual([])
+})
+
+it('takes back what Home Assistant never confirmed, a moment later', async () => {
+  // Asked on, but Home Assistant names nothing that changed and the server still knows it off.
+  show(WITH_LAMPS, { canAct: true, switcher: () => json({ ok: true, confirmed: false, light: { ...OFFER.lights[2], on: false, missing: false } }) })
+  fireEvent.click(await screen.findByRole('button', { name: /Garden path/ }))
+  await waitFor(() => expect(pill('Garden path')).toHaveTextContent('on'))
+  await waitFor(() => expect(pill('Garden path')).toHaveTextContent('off'), { timeout: SETTLE_MS + 1500 })
+}, SETTLE_MS + 5000)
+
+it('tells the lamp each brightness of a drag once, however long the finger rests', async () => {
+  const sent = show(RICH, { canAct: true })
+  const floor = await screen.findByRole('button', { name: /Floor lamp/ })
+  fireEvent.pointerDown(floor, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140, clientY: 20 })
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  await act(async () => new Promise((resolve) => window.setTimeout(resolve, 400)))
+  fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140.4, clientY: 21 })
+  await act(async () => new Promise((resolve) => window.setTimeout(resolve, 400)))
+  fireEvent.pointerUp(floor, { pointerId: 1, clientX: 140.4, clientY: 21 })
+  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 82 }])
+})
+
+it('sets the colour sliders from the colour a lamp names only in rgb', async () => {
+  show(RICH, { canAct: true })
+  fireEvent.contextMenu(await screen.findByRole('button', { name: /Floor lamp/ }))
+  await screen.findByRole('dialog')
+  // rgb(255, 167, 87) is a hue of 28.6° at 65.9 %, not the sliders' starting point.
+  expect(screen.getByRole('slider', { name: /Hue/ })).toHaveValue('29')
+  expect(screen.getByRole('slider', { name: /Saturation/ })).toHaveValue('66')
 })

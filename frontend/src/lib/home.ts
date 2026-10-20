@@ -53,9 +53,14 @@ export interface LampInfo {
   pct: number | null
   rgb: [number, number, number] | null
   kelvin: number | null
+  /** Hue in degrees and saturation in percent, while lit in a colour. */
+  hs?: [number, number] | null
   dims: boolean
   temperature: boolean
   colour: boolean
+  /** The whites this lamp has, when it has whites. */
+  kelvin_min?: number | null
+  kelvin_max?: number | null
 }
 
 export interface HomeAnswer {
@@ -95,6 +100,111 @@ export function withLamps(answer: HomeAnswer, news: Record<string, LampState>): 
 export interface LightOffer {
   lights: LampInfo[]
   problem: HomeProblem | null
+}
+
+// -- what is asked of a lamp ---------------------------------------------------
+
+/** What a lamp is asked to do, in the words the server takes (``HomeSwitchBody``). */
+export interface LampWish {
+  on?: boolean
+  brightness_pct?: number
+  kelvin?: number
+  hs?: [number, number]
+}
+
+/**
+ * Two wishes as one, the later one winning. Off is off and takes nothing
+ * with it; anything after an off switches on again. A white and a colour
+ * take each other's place, as they do in Home Assistant.
+ */
+export function mergeWish(before: LampWish, after: LampWish): LampWish {
+  if (after.on === false) return { on: false }
+  const merged: LampWish = before.on === false ? { ...after } : { ...before, ...after }
+  if (after.kelvin !== undefined) delete merged.hs
+  if (after.hs !== undefined) delete merged.kelvin
+  if (merged.on === undefined && before.on === false) merged.on = true
+  return merged
+}
+
+/** The colour of a hue and saturation at full value, as Home Assistant and Python's ``colorsys`` reckon it. */
+export function hsToRgb(hue: number, saturation: number): [number, number, number] {
+  const h = (((hue % 360) + 360) % 360) / 60
+  const s = Math.min(100, Math.max(0, saturation)) / 100
+  const sector = Math.floor(h)
+  const f = h - sector
+  const [p, q, t] = [1 - s, 1 - s * f, 1 - s * (1 - f)]
+  const [r, g, b] = [[1, t, p], [q, 1, p], [p, 1, t], [p, q, 1], [t, p, 1], [1, p, q]][sector % 6]
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]
+}
+
+/** Hue and saturation of a colour, the way back from ``hsToRgb``: for a lamp that names its colour only in rgb. */
+export function rgbToHs([red, green, blue]: [number, number, number]): [number, number] {
+  const [r, g, b] = [red / 255, green / 255, blue / 255]
+  const high = Math.max(r, g, b)
+  const span = high - Math.min(r, g, b)
+  if (high === 0 || span === 0) return [0, 0]
+  const sector = high === r ? ((g - b) / span + 6) % 6 : high === g ? (b - r) / span + 2 : (r - g) / span + 4
+  return [Math.round(sector * 60 * 10) / 10, Math.round((span / high) * 1000) / 10]
+}
+
+/** A lamp as it will stand once the wish is done: what the pill and the panel show while it travels. */
+export function withWish(info: LampInfo, wish: LampWish | undefined): LampInfo {
+  if (!wish) return info
+  const on = wish.on ?? (wish.brightness_pct !== undefined || wish.kelvin !== undefined || wish.hs !== undefined ? true : info.on)
+  if (!on) return { ...info, on: false, pct: null }
+  const shown: LampInfo = { ...info, on: true, pct: wish.brightness_pct ?? info.pct ?? (info.dims ? 100 : null) }
+  if (wish.kelvin !== undefined) return { ...shown, kelvin: wish.kelvin, rgb: null, hs: null }
+  if (wish.hs !== undefined) return { ...shown, hs: wish.hs, rgb: hsToRgb(wish.hs[0], wish.hs[1]), kelvin: null }
+  return shown
+}
+
+/**
+ * How long a lamp shows what was asked when Home Assistant has not named it
+ * among what changed, before it shows what the server knows: a lamp that
+ * never came is taken back, one that comes late arrives over the stream first.
+ */
+export const SETTLE_MS = 2500
+
+/**
+ * Sends one lamp's wishes, the newest winning: while one is on its way, what
+ * comes after is gathered into the next, and two leave at least ``gap``
+ * apart. Dragging a slider asks a hundred times a second; Home Assistant
+ * hears about three times, and always the last.
+ */
+export function lampSender(send: (wish: LampWish) => Promise<unknown>, gap = 300, now: () => number = () => Date.now()) {
+  let waiting: LampWish | null = null
+  let travelling = false
+  let last = -Infinity
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const pump = () => {
+    if (travelling || !waiting || timer !== undefined) return
+    const wait = last + gap - now()
+    if (wait > 0) {
+      timer = setTimeout(() => {
+        timer = undefined
+        pump()
+      }, wait)
+      return
+    }
+    const wish = waiting
+    waiting = null
+    travelling = true
+    last = now()
+    void send(wish).finally(() => {
+      travelling = false
+      pump()
+    })
+  }
+  return {
+    ask(wish: LampWish) {
+      waiting = waiting ? mergeWish(waiting, wish) : wish
+      pump()
+    },
+    /** Something is on its way or waiting to go. */
+    busy: () => travelling || waiting !== null,
+    /** A wish waits behind the one on its way; asked from inside ``send``, where that one still travels. */
+    queued: () => waiting !== null,
+  }
 }
 
 /** The colour a lit lamp gives off: its own colour, its white, or a warm white when it says neither. */
