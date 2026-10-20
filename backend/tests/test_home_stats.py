@@ -102,7 +102,7 @@ def test_the_sensors_are_offered_to_those_who_arrange_the_page_and_nobody_else(c
     board, _hass_, page = _cards_page(client)
     answer = client.get(f"/api/v1/pages/{page['id']}/home/sensors")
     assert answer.status_code == 200 and answer.json()["problem"] is None
-    assert len(answer.json()["sensors"]) == 5
+    assert len(answer.json()["sensors"]) == 9
     kim = create_user(client, "kim")
     client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"user_id": kim["id"], "level": "view"}]}, headers=CSRF)
     member = TestClient(client.app)

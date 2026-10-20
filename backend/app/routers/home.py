@@ -20,7 +20,7 @@ from ..deps import (
 )
 from ..models import ActionLog, Integration, Page
 from ..schemas import HomeClimateBody, HomeLayoutBody, HomeSwitchBody
-from ..services import hass_registry, hass_stats, home_control
+from ..services import hass_registry, hass_sensors, hass_stats, home_control
 from ..services import home as home_service
 from ..services.collector import collector
 from ..services.home_control import home_live
@@ -73,6 +73,40 @@ def _climate_of(element: dict[str, Any], thermostats: list[dict[str, Any]], sens
     return home_control.climate_view(found, _find(sensors, wanted) if wanted else None, wanted)
 
 
+async def _house_sensors(integration: Integration) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_sensors.offered(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+async def _placed_sensors(integration: Integration, elements: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """How each sensor the page's doors, windows and readings name stands, by the entity id it was placed with.
+
+    A temperature carries how much it rose or fell in the last hour where Home
+    Assistant keeps statistics of it; a trend that cannot be had is left out,
+    not the reading.
+    """
+    contacts, readings = await _house_sensors(integration)
+    found: dict[str, dict[str, Any]] = {}
+    for element in elements:
+        for sensor in home_control.sensors_of(element):
+            known = _find(contacts if sensor["entity_id"].startswith("binary_sensor.") else readings, sensor)
+            found[sensor["entity_id"]] = {**known, "missing": False} if known else {"missing": True}
+    temperatures = [one for one in found.values() if not one["missing"] and one.get("device_class") == "temperature"]
+    if temperatures:
+        _adapter, config, ctx = await collector.resolve_integration(integration.id)
+        try:
+            catalogue = await hass_stats.catalogue(config, ctx.cache, demo=collector.is_demo(integration))
+            wanted = [{**one, "kind": hass_stats.kind_of(catalogue.get(one["entity_id"])) or "", "source": "statistics" if catalogue.get(one["entity_id"]) else ""}
+                      for one in temperatures]
+            rose = await hass_stats.trends(config, ctx.cache, wanted, demo=collector.is_demo(integration))
+        except AdapterError:
+            rose = {}
+        for placed, one in found.items():
+            if not one["missing"] and one["entity_id"] in rose:
+                found[placed] = {**one, "trend": rose[one["entity_id"]]}
+    return found
+
+
 async def _sensors(integration: Integration) -> list[dict[str, Any]]:
     _adapter, config, ctx = await collector.resolve_integration(integration.id)
     return await hass_stats.sensors(config, ctx.cache, demo=collector.is_demo(integration))
@@ -116,16 +150,18 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     stored = page.home or {}
     layout = home_service.clean_layout(stored, stored.get("integration_id"))
-    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}}
+    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}, "sensors": {}}
     integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
     answer["problem"] = _connection_problem(integration)
     lamps = [element for element in layout["elements"] if element["type"] == "light"]
     heaters = [element for element in layout["elements"] if element["type"] == "climate"]
-    if answer["problem"] is not None or not (lamps or heaters) or integration is None:
+    watched = [element for element in layout["elements"] if element["type"] in home_control.SENSOR_KINDS]
+    if answer["problem"] is not None or not (lamps or heaters or watched) or integration is None:
         return answer
     try:
         offered = await _offered(integration) if lamps else []
         thermostats, sensors = await _thermostats(integration) if heaters else ([], [])
+        answer["sensors"] = await _placed_sensors(integration, watched) if watched else {}
     except AdapterError as failure:
         answer["problem"] = _problem(failure.code, failure.message, failure.hint)
         return answer
@@ -326,6 +362,44 @@ async def set_climate(page_id: int, element_id: str, body: HomeClimateBody, requ
     home_live.touched(integration.id, ctx.cache, entity_id, state)
     now = {**thermostat, **hass_registry.climate_state(state, thermostat.get("unit", "°C"))}
     return {"ok": True, "confirmed": True, "climate": home_control.climate_view(now, sensor, wanted)}
+
+
+@router.get("/pages/{page_id}/home/contacts", summary="The doors and windows a home page can show")
+async def offer_contacts(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every door, window and opening of the page's connection (``hass_sensors.pick_contacts``); for those who arrange the page."""
+    integration, problem = _arranged(db, page_id, user)
+    if problem is not None or integration is None:
+        return {"contacts": [], "problem": problem}
+    try:
+        contacts, _readings = await _house_sensors(integration)
+    except AdapterError as failure:
+        return {"contacts": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+    return {"contacts": contacts, "problem": None}
+
+
+@router.get("/pages/{page_id}/home/readings", summary="The temperature and humidity sensors a home page can show")
+async def offer_readings(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every temperature and humidity sensor of the page's connection, each with its device to pair them by."""
+    integration, problem = _arranged(db, page_id, user)
+    if problem is not None or integration is None:
+        return {"readings": [], "problem": problem}
+    try:
+        _contacts, readings = await _house_sensors(integration)
+    except AdapterError as failure:
+        return {"readings": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+    return {"readings": readings, "problem": None}
+
+
+def _arranged(db: DbSession, page_id: int, user) -> tuple[Integration | None, dict | None]:
+    """The connection of a page somebody arranges and may build on, or what keeps them from it."""
+    page = _home_page(db, page_id)
+    require_board_id(db, page.board_id, user, "edit")
+    stored = page.home or {}
+    integration = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+    problem = _connection_problem(integration)
+    if problem is None and integration is not None:
+        require_integration(db, integration.id, user)
+    return integration, problem
 
 
 @router.get("/pages/{page_id}/home/sensors", summary="The sensors a statistics card on a home page can show")

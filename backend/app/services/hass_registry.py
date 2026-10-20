@@ -21,6 +21,7 @@ where the entity id does not.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import time
 from typing import Any
@@ -311,7 +312,7 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
     """A made-up house, shaped like a real registry, for demo connections and tests."""
     areas = [{"area_id": "living", "name": "Living room"}, {"area_id": "kitchen", "name": "Kitchen"},
              {"area_id": "garden", "name": "Garden"}, {"area_id": "bedroom", "name": "Bedroom"},
-             {"area_id": "bathroom", "name": "Bathroom"}]
+             {"area_id": "bathroom", "name": "Bathroom"}, {"area_id": "hall", "name": "Hall"}, {"area_id": "cellar", "name": "Cellar"}]
     devices = [{"id": "d-floor", "name": "Floor lamp", "area_id": "living"}, {"id": "d-ceiling", "name": "Ceiling light", "area_id": "living"},
                {"id": "d-tv", "name": "LED strip", "area_id": "living"}, {"id": "d-counter", "name": "Counter light", "area_id": "kitchen"},
                {"id": "d-path", "name": "Path lights", "area_id": "garden"}, {"id": "d-bed", "name": "Bedside lamp", "area_id": "bedroom"},
@@ -323,7 +324,15 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
                {"id": "d-climate-bed", "name": "Bedroom climate sensor", "area_id": "bedroom"},
                {"id": "d-server", "name": "Home server", "area_id": None},
                {"id": "d-weather", "name": "Weather station", "area_id": "garden"},
-               {"id": "d-meter", "name": "Electricity meter", "area_id": None}]
+               {"id": "d-meter", "name": "Electricity meter", "area_id": None},
+               {"id": "d-climate-bath", "name": "Bathroom climate sensor", "area_id": "bathroom"},
+               {"id": "d-window-kitchen", "name": "Kitchen window contact", "area_id": "kitchen"},
+               {"id": "d-window-bath", "name": "Bathroom roof window contact", "area_id": "bathroom"},
+               {"id": "d-door-front", "name": "Front door contact", "area_id": "hall"},
+               {"id": "d-door-terrace", "name": "Terrace door contact", "area_id": "living"},
+               {"id": "d-window-bed", "name": "Bedroom window contact", "area_id": "bedroom"},
+               {"id": "d-window-cellar", "name": "Cellar window contact", "area_id": "cellar"},
+               {"id": "d-window-guest", "name": "Guest room window contact", "area_id": None}]
 
     def entry(rid: str, entity_id: str, device: str | None, **extra: Any) -> dict[str, Any]:
         return {"id": rid, "entity_id": entity_id, "device_id": device, "area_id": None, "entity_category": None,
@@ -355,12 +364,56 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         entry("r-energy", "sensor.house_energy", "d-meter"),
         # A text sensor: neither statistics nor a number, so no statistics card offers it.
         entry("r-washer", "sensor.washing_machine_programme", None),
+        entry("r-temp-bath", "sensor.bathroom_temperature", "d-climate-bath"),
+        entry("r-hum-bath", "sensor.bathroom_humidity", "d-climate-bath"),
+        entry("r-hum-bed", "sensor.bedroom_humidity", "d-climate-bed"),
+        entry("r-hum-outdoor", "sensor.outdoor_humidity", "d-weather"),
+        entry("r-win-kitchen", "binary_sensor.kitchen_window", "d-window-kitchen"),
+        entry("r-win-bath", "binary_sensor.bathroom_roof_window", "d-window-bath"),
+        entry("r-door-front", "binary_sensor.front_door", "d-door-front"),
+        entry("r-door-terrace", "binary_sensor.terrace_door", "d-door-terrace"),
+        entry("r-win-bed", "binary_sensor.bedroom_window", "d-window-bed"),
+        entry("r-win-cellar", "binary_sensor.cellar_window", "d-window-cellar"),
+        # A battery is a diagnostic, and still told with its window.
+        entry("r-bat-cellar", "sensor.cellar_window_battery", "d-window-cellar", entity_category="diagnostic"),
+        entry("r-win-guest", "binary_sensor.guest_room_window", "d-window-guest"),
+        # A motion sensor is no door: not offered.
+        entry("r-motion-hall", "binary_sensor.hall_motion", None, area_id="hall"),
+        entry("r-win-old", "binary_sensor.old_window", None, hidden_by="user"),
     ]
 
     def state(entity_id: str, name: str, value: str, modes: list[str], **attributes: Any) -> dict[str, Any]:
         return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "supported_color_modes": modes, **attributes}}
 
+    now = dt.datetime.now(dt.UTC)
+
+    def ago(minutes: float) -> str:
+        return (now - dt.timedelta(minutes=minutes)).isoformat()
+
+    def contact(entity_id: str, name: str, value: str, kind: str, minutes: float) -> dict[str, Any]:
+        return {"entity_id": entity_id, "state": value, "last_changed": ago(minutes), "attributes": {"friendly_name": name, "device_class": kind}}
+
+    def reading(entity_id: str, name: str, value: str, unit: str, kind: str) -> dict[str, Any]:
+        return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "unit_of_measurement": unit, "device_class": kind,
+                                                                         "state_class": "measurement"}}
+
     states = {
+        "sensor.bathroom_temperature": reading("sensor.bathroom_temperature", "Bathroom temperature", "23.1", "°C", "temperature"),
+        "sensor.bathroom_humidity": reading("sensor.bathroom_humidity", "Bathroom humidity", "71", "%", "humidity"),
+        "sensor.bedroom_humidity": reading("sensor.bedroom_humidity", "Bedroom humidity", "54", "%", "humidity"),
+        "sensor.outdoor_humidity": reading("sensor.outdoor_humidity", "Outdoor humidity", "91", "%", "humidity"),
+        "binary_sensor.kitchen_window": contact("binary_sensor.kitchen_window", "Kitchen window", "on", "window", 12),
+        "binary_sensor.bathroom_roof_window": contact("binary_sensor.bathroom_roof_window", "Bathroom roof window", "on", "window", 125),
+        "binary_sensor.front_door": contact("binary_sensor.front_door", "Front door", "off", "door", 900),
+        "binary_sensor.terrace_door": contact("binary_sensor.terrace_door", "Terrace door", "on", "door", 4),
+        "binary_sensor.bedroom_window": contact("binary_sensor.bedroom_window", "Bedroom window", "off", "window", 300),
+        "binary_sensor.cellar_window": contact("binary_sensor.cellar_window", "Cellar window", "off", "window", 4000),
+        "sensor.cellar_window_battery": {"entity_id": "sensor.cellar_window_battery", "state": "8", "attributes": {
+            "friendly_name": "Cellar window battery", "unit_of_measurement": "%", "device_class": "battery"}},
+        "binary_sensor.guest_room_window": {"entity_id": "binary_sensor.guest_room_window", "state": "unavailable", "attributes": {
+            "friendly_name": "Guest room window", "device_class": "window"}},
+        "binary_sensor.hall_motion": contact("binary_sensor.hall_motion", "Hall motion", "on", "motion", 1),
+        "binary_sensor.old_window": contact("binary_sensor.old_window", "Old window", "off", "window", 9000),
         "light.floor_lamp": state("light.floor_lamp", "Floor lamp", "on", ["color_temp", "xy"], brightness=158, color_temp_kelvin=2400, rgb_color=[255, 167, 87],
                                   min_color_temp_kelvin=2202, max_color_temp_kelvin=6535),
         "light.ceiling": state("light.ceiling", "Ceiling light", "on", ["color_temp"], brightness=204, color_temp_kelvin=3000,

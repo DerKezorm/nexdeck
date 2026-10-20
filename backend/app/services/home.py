@@ -11,6 +11,11 @@ id and name as they were when placed, for when Home Assistant cannot be asked.
 A thermostat may name a temperature sensor to read the room by, kept the same
 way. A statistics card names one to six sensors and is drawn from what Home
 Assistant remembers of them (``hass_stats``); it keeps a width and a height.
+
+Sensors are only shown (``hass_sensors``): a door or window (``contact``),
+several of them on one card (``contacts``), a temperature with the humidity
+of the same device (``reading``), a list of rooms (``readings``), and hints
+drawn from what else stands on the page (``hints``).
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ MAX_COORD = 20000
 #: How long a heading may be.
 MAX_TEXT = 60
 
-KINDS = ("heading", "light", "climate", "stat")
+KINDS = ("heading", "light", "climate", "stat", "contact", "contacts", "reading", "readings", "hints")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
@@ -40,6 +45,15 @@ MAX_SENSORS = 6
 #: The bounds of a statistics card's size, in pixels (``STAT_SIZES`` in the browser).
 STAT_WIDTHS = (150, 1200)
 STAT_HEIGHTS = (80, 800)
+#: How a door or window is drawn, and a card of several; a reading, and what a hints card looks for.
+#: The browser keeps the same lists (``CONTACT_STYLES`` and the others in ``lib/home.ts``).
+CONTACT_STYLES = ("pill", "chip", "tile", "window", "door")
+CONTACTS_STYLES = ("list", "house")
+READING_STYLES = ("pill", "tile", "thermometer", "ring")
+CHECKS = ("heating", "humid")
+#: How many contacts one card keeps, and rooms one list.
+MAX_CONTACTS = 60
+MAX_ROWS = 12
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 #: The bounds of a width dragged by hand, in pixels (``MIN_WIDTH``, ``MAX_WIDTH`` in the browser).
@@ -50,6 +64,7 @@ _REGISTRY_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 _LIGHT = re.compile(r"^light\.[a-z0-9_]{1,200}$")
 _CLIMATE = re.compile(r"^climate\.[a-z0-9_]{1,200}$")
 _SENSOR = re.compile(r"^sensor\.[a-z0-9_]{1,200}$")
+_BINARY = re.compile(r"^binary_sensor\.[a-z0-9_]{1,200}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 
@@ -68,14 +83,70 @@ def _text(value: Any, limit: int = MAX_TEXT) -> str:
     return _CONTROL.sub("", value).strip()[:limit]
 
 
-def _sensor(raw: Any) -> dict[str, Any] | None:
-    """The sensor a thermostat reads its room by, or None for the thermostat's own reading."""
+def _sensor(raw: Any, pattern: re.Pattern[str] = _SENSOR) -> dict[str, Any] | None:
+    """A sensor as an element names it: registry id, entity id and the name it had; None for anything else."""
     if not isinstance(raw, dict):
         return None
     rid, entity_id = raw.get("rid"), raw.get("entity_id")
-    if not (isinstance(rid, str) and _REGISTRY_ID.match(rid)) or not (isinstance(entity_id, str) and _SENSOR.match(entity_id)):
+    if not (isinstance(rid, str) and _REGISTRY_ID.match(rid)) or not (isinstance(entity_id, str) and pattern.match(entity_id)):
         return None
     return {"rid": rid, "entity_id": entity_id, "name": _text(raw.get("name"), MAX_NAME)}
+
+
+def _pair(raw: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """A temperature and a humidity sensor, either of them left out."""
+    raw = raw if isinstance(raw, dict) else {}
+    return _sensor(raw.get("temperature")), _sensor(raw.get("humidity"))
+
+
+def _sensors_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, Any]) -> dict[str, Any] | None:
+    """A door or window, a card of them, a reading, a list of rooms or a hints card; None when it names nothing."""
+    element: dict[str, Any] = {"id": element_id, "type": kind, "x": x, "y": y}
+    if kind == "contact":
+        contact = _sensor(raw, _BINARY)
+        if contact is None:
+            return None
+        element.update(rid=contact["rid"], entity_id=contact["entity_id"], name=contact["name"],
+                       style=raw.get("style") if raw.get("style") in CONTACT_STYLES else CONTACT_STYLES[0])
+    elif kind == "contacts":
+        given = raw.get("sensors")
+        sensors: list[dict[str, Any]] = []
+        for item in given if isinstance(given, list) else []:
+            sensor = _sensor(item, _BINARY)
+            if sensor is not None and all(one["entity_id"] != sensor["entity_id"] for one in sensors):
+                sensors.append(sensor)
+            if len(sensors) == MAX_CONTACTS:
+                break
+        if not sensors:
+            return None
+        element.update(style=raw.get("style") if raw.get("style") in CONTACTS_STYLES else CONTACTS_STYLES[0], sensors=sensors,
+                       title=_text(raw.get("title"), MAX_NAME))
+    elif kind == "reading":
+        temperature, humidity = _pair(raw)
+        if temperature is None and humidity is None:
+            return None
+        element.update(style=raw.get("style") if raw.get("style") in READING_STYLES else READING_STYLES[0], temperature=temperature,
+                       humidity=humidity, name=_text(raw.get("name"), MAX_NAME))
+    elif kind == "readings":
+        given = raw.get("rows")
+        rows: list[dict[str, Any]] = []
+        for item in given if isinstance(given, list) else []:
+            temperature, humidity = _pair(item)
+            if temperature is not None or humidity is not None:
+                rows.append({"name": _text(item.get("name"), MAX_NAME), "temperature": temperature, "humidity": humidity})
+            if len(rows) == MAX_ROWS:
+                break
+        if not rows:
+            return None
+        element.update(rows=rows, title=_text(raw.get("title"), MAX_NAME))
+    else:
+        given = raw.get("checks")
+        element.update(checks=[check for check in CHECKS if isinstance(given, list) and check in given] if isinstance(given, list) else list(CHECKS),
+                       title=_text(raw.get("title"), MAX_NAME))
+    width = _size(raw.get("width"), WIDTHS)
+    if width is not None:
+        element["width"] = width
+    return element
 
 
 def _size(value: Any, bounds: tuple[int, int]) -> int | None:
@@ -117,6 +188,8 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         return None
     if kind == "stat":
         return _stat(element_id, x, y, raw)
+    if kind in ("contact", "contacts", "reading", "readings", "hints"):
+        return _sensors_element(element_id, kind, x, y, raw)
     if kind in ("light", "climate"):
         rid, entity_id = raw.get("rid"), raw.get("entity_id")
         pattern, styles = (_LIGHT, STYLES) if kind == "light" else (_CLIMATE, CLIMATE_STYLES)

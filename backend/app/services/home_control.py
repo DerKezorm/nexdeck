@@ -24,7 +24,7 @@ from sqlalchemy import select
 from ..adapters.base import AdapterError, Context, base_url
 from ..db import db_session
 from ..models import Page
-from . import hass_registry
+from . import hass_registry, hass_sensors
 from .sse import board_topic, hub
 
 #: The only services a home page calls, with the only data each may carry; anything else is
@@ -189,7 +189,24 @@ def _demo_climate(states: dict[str, dict[str, Any]], state: dict[str, Any], serv
 #: (board, page, element, kind, for a thermostat: its entity and the sensor it names)
 Spot = tuple[int, int, str, str, dict[str, Any]]
 #: The domains whose changes a home page shows.
-WATCHED = ("light.", "climate.", "sensor.")
+WATCHED = ("light.", "climate.", "sensor.", "binary_sensor.")
+#: The elements that show sensors, and where in each the sensors stand.
+SENSOR_KINDS = ("contact", "contacts", "reading", "readings")
+
+
+def sensors_of(element: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every sensor an element of ``SENSOR_KINDS`` names, as it names them (registry id, entity id, name)."""
+    kind = element.get("type")
+    if kind == "contact":
+        return [element]
+    if kind == "contacts":
+        return [one for one in element.get("sensors") or [] if isinstance(one, dict)]
+    if kind == "reading":
+        return [one for one in (element.get("temperature"), element.get("humidity")) if isinstance(one, dict)]
+    if kind == "readings":
+        return [one for row in element.get("rows") or [] if isinstance(row, dict)
+                for one in (row.get("temperature"), row.get("humidity")) if isinstance(one, dict)]
+    return []
 
 
 class HomeLive:
@@ -242,6 +259,13 @@ class HomeLive:
                 if home.get("integration_id") != integration_id:
                     continue
                 for element in home.get("elements") or []:
+                    if isinstance(element, dict) and element.get("type") in SENSOR_KINDS:
+                        # A sensor is told by the entity id it was placed with: the page keeps its sensors by that.
+                        for shown in sensors_of(element):
+                            placed = str(shown.get("entity_id") or "")
+                            for entity_id in names(shown):
+                                found.setdefault(entity_id, []).append((page.board_id, page.id, placed, "sensors", {}))
+                        continue
                     if not isinstance(element, dict) or element.get("type") not in ("light", "climate"):
                         continue
                     if element["type"] == "light":
@@ -267,13 +291,20 @@ class HomeLive:
         spots = self._watchers(integration_id, cache).get(entity_id)
         if not spots:
             return
+        touched_pages: list[tuple[int, int]] = []
         for board_id, page_id, element_id, kind, extra in spots:
             if kind == "lights":
                 stands = {**hass_registry.light_state(state), "missing": False}
+            elif kind == "sensors":
+                stands = hass_sensors.live(entity_id, state)
             else:
                 stands = self._climate(cache, extra, entity_id, state)
             key = (board_id, page_id)
             self._pending.setdefault(key, {}).setdefault(kind, {})[element_id] = stands
+            if key not in touched_pages:
+                touched_pages.append(key)
+        # Once per page, after all its spots: a sensor on two cards of one page is one event, not two.
+        for key in touched_pages:
             self._schedule(key)
 
     @staticmethod

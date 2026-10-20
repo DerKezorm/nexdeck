@@ -386,6 +386,32 @@ async def series(config: dict[str, Any], cache: dict[str, Any], wanted: list[dic
     return result
 
 
+async def trends(config: dict[str, Any], cache: dict[str, Any], wanted: list[dict[str, Any]], *, demo: bool = False,
+                 now: dt.datetime | None = None) -> dict[str, float]:
+    """How much each sensor rose or fell over the last hour, from its five-minute statistics; kept five minutes.
+
+    Only measurements with statistics: a sensor without them has no trend
+    rather than one made up from two readings.
+    """
+    now = now or dt.datetime.now(dt.UTC)
+    ids = sorted({one["entity_id"] for one in wanted if one and one.get("source") == "statistics" and one.get("kind") == "mean"})
+    if not ids:
+        return {}
+    key = "hass_trends:" + ",".join(ids)
+    kept = cache.get(key)
+    if kept is not None and kept[0] > time.monotonic():
+        return kept[1]
+    command = _statistics_command(ids, now - dt.timedelta(minutes=70), now, "5minute", "mean")
+    answer = demo_answer(command, now) if demo else (await hass_registry._ask(config, [command]))[0] or {}
+    found: dict[str, float] = {}
+    for entity_id in ids:
+        points = from_statistics(answer.get(entity_id) or [], "mean")
+        if len(points) >= 2 and points[-1][0] - points[0][0] >= 45 * 60_000:
+            found[entity_id] = round(points[-1][1] - points[0][1], 1)
+    cache[key] = (time.monotonic() + 300, found)
+    return found
+
+
 # ---------------------------------------------------------------------------
 # A thermostat's history
 # ---------------------------------------------------------------------------
@@ -499,11 +525,16 @@ DEMO_SENSORS = {
     "sensor.living_room_humidity": (50.0, 5.0, 1.0),
     "sensor.outdoor_temperature": (9.0, 4.0, 0.6),
     "sensor.house_energy": (0.3, 0.25, 0.08),
+    "sensor.bathroom_temperature": (22.6, 0.6, 0.2),
+    "sensor.bathroom_humidity": (62.0, 8.0, 2.0),
+    "sensor.bedroom_humidity": (53.0, 3.0, 1.0),
+    "sensor.outdoor_humidity": (84.0, 8.0, 2.0),
 }
 
 
 def demo_catalogue() -> dict[str, dict[str, Any]]:
-    units = {"sensor.living_room_humidity": "%", "sensor.house_energy": "kWh"}
+    units = {"sensor.living_room_humidity": "%", "sensor.house_energy": "kWh", "sensor.bathroom_humidity": "%", "sensor.bedroom_humidity": "%",
+             "sensor.outdoor_humidity": "%"}
     return {entity_id: {"statistic_id": entity_id, "source": "recorder", "has_mean": entity_id != "sensor.house_energy",
                         "has_sum": entity_id == "sensor.house_energy", "statistics_unit_of_measurement": units.get(entity_id, "°C")}
             for entity_id in DEMO_SENSORS}
