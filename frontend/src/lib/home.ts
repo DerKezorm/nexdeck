@@ -25,6 +25,8 @@ export interface HomeLight {
   entity_id: string
   name: string
   style: LampStyle
+  /** A name of the page's own, shown instead of Home Assistant's; it stays when the lamp is renamed there. */
+  label?: string
   /** A width of its own, for the styles that have one (``RESIZABLE``); otherwise the style's (``DEFAULT_WIDTH``). */
   width?: number
 }
@@ -154,6 +156,8 @@ export interface HomeClimate {
   name: string
   style: ClimateStyle
   sensor: ClimateSensor | null
+  /** A name of the page's own, as a lamp has one. */
+  label?: string
   /** A width of its own; otherwise ``DEFAULT_WIDTH.climate``. */
   width?: number
 }
@@ -970,6 +974,8 @@ export interface HomeContact {
   entity_id: string
   name: string
   style: ContactStyle
+  /** A name of the page's own, as a lamp has one. */
+  label?: string
   width?: number
 }
 
@@ -1168,7 +1174,7 @@ export function pageHints(elements: HomeElement[], answer: HomeAnswer | undefine
       if (!sensor.entity_id.startsWith('binary_sensor.') || !said || said.missing || said.open !== true || !said.area || !heating.has(said.area)) continue
       if (seen.has(`heating:${sensor.entity_id}`)) continue
       seen.add(`heating:${sensor.entity_id}`)
-      found.push({ kind: 'heating', key: `heating:${sensor.entity_id}`, name: said.name ?? sensor.name, since: said.since ?? null, target: heating.get(said.area) ?? null })
+      found.push({ kind: 'heating', key: `heating:${sensor.entity_id}`, name: (sensor as { label?: string }).label || said.name || sensor.name, since: said.since ?? null, target: heating.get(said.area) ?? null })
     }
   }
   if (checks.includes('humid')) {

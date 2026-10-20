@@ -1856,7 +1856,11 @@
       "checks": {
         "heating": "Finestra aperta col riscaldamento acceso",
         "humid": "Arieggiare da 65 % di umidità"
-      }
-    }
+      },
+      "rowName": "Nome della riga"
+    },
+    "rename": "Nome proprio",
+    "renameHint": "Vuoto: «{{name}}» da Home Assistant",
+    "useHaName": "Nome da Home Assistant"
   }
 }

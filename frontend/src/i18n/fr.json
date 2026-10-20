@@ -1856,7 +1856,11 @@
       "checks": {
         "heating": "Fenêtre ouverte pendant le chauffage",
         "humid": "Aérer dès 65 % d’humidité"
-      }
-    }
+      },
+      "rowName": "Nom de la ligne"
+    },
+    "rename": "Nom personnalisé",
+    "renameHint": "Vide : « {{name}} » de Home Assistant",
+    "useHaName": "Nom de Home Assistant"
   }
 }

@@ -8,6 +8,8 @@ An element is a heading over a group, a lamp or a thermostat of the page's
 Home Assistant connection. Lamps and thermostats are kept by their registry
 id, which stays when the entity is renamed in Home Assistant, with the entity
 id and name as they were when placed, for when Home Assistant cannot be asked.
+A lamp, a thermostat or a door may carry a ``label`` of the page's own, shown
+instead of Home Assistant's name.
 A thermostat may name a temperature sensor to read the room by, kept the same
 way. A statistics card names one to six sensors and is drawn from what Home
 Assistant remembers of them (``hass_stats``); it keeps a width and a height.
@@ -93,6 +95,13 @@ def _sensor(raw: Any, pattern: re.Pattern[str] = _SENSOR) -> dict[str, Any] | No
     return {"rid": rid, "entity_id": entity_id, "name": _text(raw.get("name"), MAX_NAME)}
 
 
+def _label(element: dict[str, Any], raw: dict[str, Any]) -> None:
+    """A name of the page's own instead of Home Assistant's; kept only when there is one, so it stays when the device is renamed there."""
+    label = _text(raw.get("label"), MAX_NAME)
+    if label:
+        element["label"] = label
+
+
 def _pair(raw: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     """A temperature and a humidity sensor, either of them left out."""
     raw = raw if isinstance(raw, dict) else {}
@@ -108,6 +117,7 @@ def _sensors_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, 
             return None
         element.update(rid=contact["rid"], entity_id=contact["entity_id"], name=contact["name"],
                        style=raw.get("style") if raw.get("style") in CONTACT_STYLES else CONTACT_STYLES[0])
+        _label(element, raw)
     elif kind == "contacts":
         given = raw.get("sensors")
         sensors: list[dict[str, Any]] = []
@@ -198,6 +208,7 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         style = raw.get("style") if raw.get("style") in styles else styles[0]
         element = {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
                    "name": _text(raw.get("name"), MAX_NAME), "style": style}
+        _label(element, raw)
         width = _size(raw.get("width"), WIDTHS)
         if width is not None:
             element["width"] = width

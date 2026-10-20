@@ -1856,7 +1856,11 @@
       "checks": {
         "heating": "Ventana abierta con la calefacción encendida",
         "humid": "Ventilar desde 65 % de humedad"
-      }
-    }
+      },
+      "rowName": "Nombre de la fila"
+    },
+    "rename": "Nombre propio",
+    "renameHint": "Vacío: «{{name}}» de Home Assistant",
+    "useHaName": "Nombre de Home Assistant"
   }
 }

@@ -1856,7 +1856,11 @@
       "checks": {
         "heating": "A window open while the heating runs",
         "humid": "Airing from 65 % humidity"
-      }
-    }
+      },
+      "rowName": "Name of the row"
+    },
+    "rename": "A name of its own",
+    "renameHint": "Empty: “{{name}}” from Home Assistant",
+    "useHaName": "Home Assistant's name"
   }
 }

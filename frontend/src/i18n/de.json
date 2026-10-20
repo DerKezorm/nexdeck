@@ -1856,7 +1856,11 @@
       "checks": {
         "heating": "Fenster offen bei laufender Heizung",
         "humid": "Lüften ab 65 % Luftfeuchte"
-      }
-    }
+      },
+      "rowName": "Name der Zeile"
+    },
+    "rename": "Eigener Name",
+    "renameHint": "Leer: „{{name}}“ aus Home Assistant",
+    "useHaName": "Name aus Home Assistant"
   }
 }

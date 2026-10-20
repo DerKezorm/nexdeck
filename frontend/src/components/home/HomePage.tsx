@@ -17,6 +17,7 @@ import { ClimatePicker } from './ClimatePicker'
 import { LampDetails } from './LampDetails'
 import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
+import { Rename } from './Rename'
 import { StatCard } from './StatCard'
 import { StatPicker } from './StatPicker'
 import { ContactsCard, HintsCard, ReadingsCard } from './SensorCards'
@@ -174,7 +175,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const change = useCallback(
     (id: string, patch: {
       x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle | string; sensor?: ClimateSensor | null; width?: number
-      height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]
+      height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]; label?: string; name?: string
     }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
@@ -188,14 +189,16 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 ...(element.type === 'readings' && patch.rows ? { rows: patch.rows } : {}),
                 ...('title' in element && patch.title !== undefined ? { title: patch.title } : {}),
                 ...(element.type === 'hints' && patch.checks ? { checks: patch.checks } : {}),
+                ...(element.type === 'contact' && patch.label !== undefined ? { label: patch.label } : {}),
+                ...(element.type === 'reading' && patch.name !== undefined ? { name: patch.name } : {}),
               } as HomeElement)
           : element.type === 'stat'
             ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as StatStyle | undefined) ?? element.style, width: patch.width ?? element.width,
                 height: patch.height ?? element.height, sensors: patch.sensors ?? element.sensors, title: patch.title ?? element.title }
           : element.type === 'climate'
             ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width,
-                style: (patch.style as ClimateStyle | undefined) ?? element.style }
-            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as LampStyle | undefined) ?? element.style, width: patch.width ?? element.width }
+                style: (patch.style as ClimateStyle | undefined) ?? element.style, label: patch.label ?? element.label }
+            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as LampStyle | undefined) ?? element.style, width: patch.width ?? element.width, label: patch.label ?? element.label }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -294,7 +297,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   )
   const standing = (element: HomeLight): LampInfo | null => {
     const info = infoOf(element)
-    return info ? withWish(info, wanted[element.id]) : null
+    // The page's own name where it has one, in the drawing, the details and what is said when switching fails.
+    return info ? withWish(element.label ? { ...info, name: element.label } : info, wanted[element.id]) : null
   }
   const detailed = elements.find((element): element is HomeLight => element.type === 'light' && element.id === details) ?? null
   const detailedInfo = detailed ? standing(detailed) : null
@@ -319,11 +323,17 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     },
     [layout, save],
   )
-  const climateOf = (element: HomeClimate): ClimateView | null => {
+  /** A thermostat as Home Assistant has it. */
+  const climateFromHa = (element: HomeClimate): ClimateView | null => {
     const said = answer.data?.climates?.[element.id]
     if (said) return said.missing ? null : said
     const known = knownClimates[element.rid]
     return known ? { ...known, reading: known.current, sensor: null } : null
+  }
+  /** A thermostat as the page shows it: by the page's own name where it has one. */
+  const climateOf = (element: HomeClimate): ClimateView | null => {
+    const info = climateFromHa(element)
+    return info && element.label ? { ...info, name: element.label } : info
   }
   const climateMissing = (element: HomeClimate) => answer.data?.climates?.[element.id]?.missing === true
   const chooseSensor = useCallback(
@@ -563,15 +573,18 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const sized = (element: HomeElement) => ({ arranging, wide: narrow && element.type !== 'heading' && isWide(element), width: controlWidth(element), onRemove: () => remove(element.id) })
   const draw = (element: HomeElement) =>
     element.type === 'contact' ? (
-      <ContactControl element={element} said={said[element.entity_id]} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })} />
+      <ContactControl element={element} said={said[element.entity_id]} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
+        onLabel={(label) => change(element.id, { label })} />
     ) : element.type === 'reading' ? (
       <ReadingControl element={element} temperatureSaid={element.temperature ? said[element.temperature.entity_id] : undefined}
-        humiditySaid={element.humidity ? said[element.humidity.entity_id] : undefined} {...sized(element)} onStyle={(style) => change(element.id, { style })} />
+        humiditySaid={element.humidity ? said[element.humidity.entity_id] : undefined} {...sized(element)} onStyle={(style) => change(element.id, { style })}
+        onLabel={(name) => change(element.id, { name })} />
     ) : element.type === 'contacts' ? (
       <ContactsCard element={element} sensors={said} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
         onSensors={() => setSensorPicking({ mode: 'contacts', card: element.id })} />
     ) : element.type === 'readings' ? (
-      <ReadingsCard element={element} sensors={said} {...sized(element)} onSensors={() => setSensorPicking({ mode: 'readings', card: element.id })} />
+      <ReadingsCard element={element} sensors={said} {...sized(element)} onSensors={() => setSensorPicking({ mode: 'readings', card: element.id })}
+        onRows={(rows) => change(element.id, { rows })} />
     ) : element.type === 'hints' ? (
       <HintsCard element={element} hints={pageHints(elements, answer.data, element.checks)} now={now} {...sized(element)} onChecks={(checks) => change(element.id, { checks })} />
     ) : element.type === 'stat' ? (
@@ -583,11 +596,12 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         onStep={canAct ? (steps) => { const info = climateOf(element); if (info) stepClimate(element, info, steps) } : undefined}
         onAim={canAct ? (value, send) => { const info = climateOf(element); if (info) aimClimate(element, info, value, send ? 0 : null) } : undefined}
         onDetails={() => setClimateDetails(element.id)} onRemove={() => remove(element.id)} onSensor={(sensor) => chooseSensor(element, sensor)}
-        onStyle={(style) => change(element.id, { style })} />
+        onStyle={(style) => change(element.id, { style })} haName={climateFromHa(element)?.name || element.name} onLabel={(label) => change(element.id, { label })} />
     ) : element.type === 'light' ? (
       <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && isWide(element)} width={controlWidth(element)}
         onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })}
-        onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)} />
+        onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)}
+        haName={infoOf(element)?.name || element.name} onLabel={(label) => change(element.id, { label })} />
     ) : (
       <HeadingView element={element} arranging={arranging} renaming={renaming === element.id}
         onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
@@ -723,7 +737,7 @@ const DRAG_PX = 6
  * cannot reach or no longer has stays still. While the page is arranged it
  * carries two tools: its style, and taking it off the page.
  */
-function LampControl({ element, info, missing, arranging, wide, width, onRemove, onStyle, onWish, onDetails }: {
+function LampControl({ element, info, missing, arranging, wide, width, onRemove, onStyle, onWish, onDetails, haName, onLabel }: {
   element: HomeLight
   info: LampInfo | null
   missing: boolean
@@ -736,9 +750,12 @@ function LampControl({ element, info, missing, arranging, wide, width, onRemove,
   onStyle: (style: LampStyle) => void
   onWish?: (info: LampInfo, wish: LampWish) => void
   onDetails: () => void
+  /** Home Assistant's name, for the pencil's field. */
+  haName: string
+  onLabel: (label: string) => void
 }) {
   const { t } = useTranslation()
-  const name = info?.name || element.name || element.entity_id
+  const name = element.label || info?.name || element.name || element.entity_id
   const state = missing ? t('homePage.gone')
     : !info ? ''
     : info.unavailable ? t('homePage.offline')
@@ -868,6 +885,7 @@ function LampControl({ element, info, missing, arranging, wide, width, onRemove,
             aria-label={t('homePage.chooseStyle')} title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing}>
             <Palette size={12} />
           </button>
+          <Rename label={element.label ?? ''} fallback={haName} onLabel={onLabel} />
           <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>
             <Trash2 size={12} />
           </button>

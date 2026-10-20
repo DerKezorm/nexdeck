@@ -49,7 +49,7 @@ export function lampFace({ style, info, name, state, quiet, dimming, wide, width
     children: (
       <>
         {drawing}
-        <span className="lamp-cap">{dimming !== null ? shown : name}</span>
+        <span className="lamp-cap">{dimming !== null ? shown : <Marquee text={name} />}</span>
       </>
     ),
   })

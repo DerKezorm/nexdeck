@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next'
 
 import {
   CHECKS, CONTACTS_STYLES, reading, roomsOf, since, temperature,
-  type Check, type ContactsStyle, type Hint, type HomeContacts, type HomeHints, type HomeReadings, type SensorState,
+  type Check, type ContactsStyle, type Hint, type HomeContacts, type HomeHints, type HomeReadings, type ReadingRow, type SensorState,
 } from '../../lib/home'
+import { MAX_LABEL } from './Rename'
 import { DROP_ICON, WINDOW_ICON, contactWords, humidityColour, trendArrow } from './SensorControl'
 
 interface CardTools {
@@ -131,12 +132,18 @@ export function ContactsCard({ element, sensors, now, onStyle, ...tools }: Conta
 interface ReadingsProps extends CardTools {
   element: HomeReadings
   sensors: Record<string, SensorState>
+  /** The rows with names of the page's own, typed while arranging. */
+  onRows: (rows: ReadingRow[]) => void
 }
 
 /** L: rooms in rows, each with its temperature, the trend of the last hour, and its humidity. */
-export function ReadingsCard({ element, sensors, ...tools }: ReadingsProps) {
+export function ReadingsCard({ element, sensors, onRows, ...tools }: ReadingsProps) {
   const { t } = useTranslation()
   const size = tools.wide ? undefined : tools.width !== null ? { width: tools.width } : undefined
+  const roomOf = (row: ReadingRow) => {
+    const said = [row.temperature, row.humidity].map((one) => (one ? sensors[one.entity_id] : undefined)).find((one) => one && !one.missing)
+    return said && !said.missing ? said.area ?? '' : ''
+  }
   const cell = (ref: { entity_id: string } | null, shown: (said: SensorState & { missing: false }) => ReactNode) => {
     if (!ref) return ''
     const said = sensors[ref.entity_id]
@@ -153,7 +160,21 @@ export function ReadingsCard({ element, sensors, ...tools }: ReadingsProps) {
           <tbody>
             {element.rows.map((row, index) => (
               <tr key={index} className="border-t border-[var(--nd-border)]" data-row={index}>
-                <td className="py-1.5 pr-2 truncate max-w-0 w-full">{row.name || row.temperature?.name || row.humidity?.name}</td>
+                <td className="py-1.5 pr-2 truncate max-w-0 w-full">
+                  {tools.arranging ? (
+                    // While arranging each row's name can be the page's own; empty is the sensor's room.
+                    <input className="input h-7 text-[12.5px] w-full" defaultValue={row.name} maxLength={MAX_LABEL} aria-label={t('homePage.sensors.rowName')}
+                      placeholder={roomOf(row) || row.temperature?.name || row.humidity?.name} data-element-tool
+                      onKeyDown={(event) => {
+                        event.stopPropagation()
+                        if (event.key === 'Enter') event.currentTarget.blur()
+                      }}
+                      onBlur={(event) => {
+                        const name = event.currentTarget.value.trim()
+                        if (name !== row.name) onRows(element.rows.map((one, at) => (at === index ? { ...one, name } : one)))
+                      }} />
+                  ) : (row.name || roomOf(row) || row.temperature?.name || row.humidity?.name)}
+                </td>
                 <td className="py-1.5 text-right num whitespace-nowrap" data-temperature>
                   {cell(row.temperature, (said) => (
                     <>

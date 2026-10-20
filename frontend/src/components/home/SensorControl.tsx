@@ -2,6 +2,8 @@ import { Palette, Trash2 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Marquee } from './Marquee'
+import { Rename } from './Rename'
 import {
   COMFORT, CONTACT_STYLES, LOW_BATTERY, READING_STYLES, reading, since, temperature,
   type ContactStyle, type HomeContact, type HomeReading, type ReadingStyle, type SensorState,
@@ -110,10 +112,12 @@ interface ToolsProps {
   removeLabel: string
   width: number | null
   wide: boolean
+  /** The pencil: the page's own name, and Home Assistant's to fall back to. */
+  rename?: { label: string; fallback: string; onLabel: (label: string) => void }
 }
 
 /** The palette and the bin beside an element while arranging, and the grip for its width. */
-export function SensorTools({ styles, current, group, onStyle, onRemove, removeLabel, width, wide }: ToolsProps) {
+export function SensorTools({ styles, current, group, onStyle, onRemove, removeLabel, width, wide, rename }: ToolsProps) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState(false)
   return (
@@ -126,6 +130,7 @@ export function SensorTools({ styles, current, group, onStyle, onRemove, removeL
             <Palette size={12} />
           </button>
         )}
+        {rename && <Rename {...rename} />}
         <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={removeLabel} title={removeLabel}>
           <Trash2 size={12} />
         </button>
@@ -157,13 +162,15 @@ interface ContactProps {
   width: number | null
   onStyle: (style: ContactStyle) => void
   onRemove: () => void
+  onLabel: (label: string) => void
 }
 
 /** A door or window, in one of the five styles of its board of sketches; only shown, nothing to press. */
-export function ContactControl({ element, said, now, arranging, wide, width, onStyle, onRemove }: ContactProps) {
+export function ContactControl({ element, said, now, arranging, wide, width, onStyle, onRemove, onLabel }: ContactProps) {
   const { t, i18n } = useTranslation()
   const words = contactWords(said, now, t)
-  const name = said && !said.missing && said.name ? said.name : element.name
+  const haName = said && !said.missing && said.name ? said.name : element.name
+  const name = element.label || haName
   const door = isDoor(said)
   const state = `${words.open ? 'is-open' : ''} ${words.quiet && !words.missing ? 'is-offline' : ''} ${words.missing ? 'is-missing' : ''}`
   const sized = wide ? { width: '100%' } : width !== null ? { width } : undefined
@@ -172,14 +179,14 @@ export function ContactControl({ element, said, now, arranging, wide, width, onS
     face = element.style === 'pill' ? (
       <div className={`sensor-pill ${state}`} style={sized} title={name}>
         <span className="sensor-icon">{door ? DOOR_ICON : WINDOW_ICON}</span>
-        <b className="truncate flex-1 min-w-0">{name}</b>
+        <Marquee text={name} className="flex-1 font-medium" />
         <span className="sensor-state" data-state>{words.text}</span>
         <Battery said={said} />
       </div>
     ) : (
       <span className={`sensor-chip ${state}`} style={sized} title={`${name}: ${words.text}`}>
         <i aria-hidden />
-        <span className="truncate">{name}</span>
+        <Marquee text={name} />
         <span className="sr-only" data-state>{words.text}</span>
         <Battery said={said} />
       </span>
@@ -188,7 +195,7 @@ export function ContactControl({ element, said, now, arranging, wide, width, onS
     const changed = said && !said.missing ? said.since : null
     face = (
       <div className={`sensor-tile ${state}`} title={name}>
-        <span className="text-[11.5px] text-muted truncate">{name}</span>
+        <Marquee text={name} className="text-[11.5px] text-muted" />
         <span className="sensor-tile-value" data-state>{words.missing ? words.text : words.quiet ? t('homePage.offline') : words.open ? t('homePage.sensors.openWord') : t('homePage.sensors.closedWord')}</span>
         <span className="num text-[11px] text-faint">
           {!words.quiet && changed ? (words.open ? t('homePage.sensors.sinceTime', { time: clock(changed, now, t, i18n.language) }) : t('homePage.sensors.lastOpen', { time: clock(changed, now, t, i18n.language) })) : ''}
@@ -200,7 +207,7 @@ export function ContactControl({ element, said, now, arranging, wide, width, onS
     face = (
       <div className={`sensor-draw ${state}`} title={name}>
         {element.style === 'door' ? <DoorDrawing open={words.open} /> : <WindowDrawing open={words.open} />}
-        <div className="text-[12px] mt-1 truncate">{name}</div>
+        <Marquee text={name} className="text-[12px] mt-1" />
         <div className="sensor-state text-[11px]" data-state>{words.text}</div>
         <Battery said={said} />
       </div>
@@ -211,7 +218,7 @@ export function ContactControl({ element, said, now, arranging, wide, width, onS
       {face}
       {arranging && (
         <SensorTools styles={CONTACT_STYLES} current={element.style} group="contactStyles" onStyle={(style) => onStyle(style as ContactStyle)} onRemove={onRemove}
-          removeLabel={t('homePage.sensors.removeContact')} width={width} wide={wide} />
+          removeLabel={t('homePage.sensors.removeContact')} width={width} wide={wide} rename={{ label: element.label ?? '', fallback: haName, onLabel }} />
       )}
     </div>
   )
@@ -238,6 +245,8 @@ interface ReadingProps {
   width: number | null
   onStyle: (style: ReadingStyle) => void
   onRemove: () => void
+  /** The page's own name of the reading (its ``name``). */
+  onLabel: (label: string) => void
 }
 
 function value(said: SensorState | undefined): { value: number | null; missing: boolean; offline: boolean; unit: string; trend?: number } {
@@ -247,12 +256,13 @@ function value(said: SensorState | undefined): { value: number | null; missing: 
 }
 
 /** A temperature with the humidity of its device, in one of four styles. */
-export function ReadingControl({ element, temperatureSaid, humiditySaid, arranging, wide, width, onStyle, onRemove }: ReadingProps) {
+export function ReadingControl({ element, temperatureSaid, humiditySaid, arranging, wide, width, onStyle, onRemove, onLabel }: ReadingProps) {
   const { t } = useTranslation()
   const warm = value(temperatureSaid)
   const wet = value(humiditySaid)
   const fromSensor = (said: SensorState | undefined) => (said && !said.missing ? said.area || said.name : '')
-  const name = element.name || fromSensor(temperatureSaid) || fromSensor(humiditySaid) || element.temperature?.name || element.humidity?.name || ''
+  const haName = fromSensor(temperatureSaid) || fromSensor(humiditySaid) || element.temperature?.name || element.humidity?.name || ''
+  const name = element.name || haName
   const named = [element.temperature ? warm : null, element.humidity ? wet : null].filter((one): one is ReturnType<typeof value> => one !== null)
   const gone = named.length > 0 && named.every((one) => one.missing)
   const offline = !gone && named.length > 0 && named.every((one) => one.offline || one.missing)
@@ -266,7 +276,7 @@ export function ReadingControl({ element, temperatureSaid, humiditySaid, arrangi
     face = (
       <div className={`sensor-pill reading ${state}`} style={sized} title={name}>
         <span className="sensor-icon reading">{element.temperature ? THERMO_ICON : DROP_ICON}</span>
-        <b className="truncate flex-1 min-w-0">{name}</b>
+        <Marquee text={name} className="flex-1 font-medium" />
         {element.temperature && <span className="num text-[13px] font-semibold" data-temperature>{degrees}</span>}
         {element.humidity && <span className="num text-[12px] text-[rgb(56,189,248)] ml-2" data-humidity>{percent}</span>}
         {battery}
@@ -275,7 +285,7 @@ export function ReadingControl({ element, temperatureSaid, humiditySaid, arrangi
   } else if (element.style === 'tile') {
     face = (
       <div className={`sensor-tile reading ${state}`} title={name}>
-        <span className="text-[11.5px] text-muted truncate">{name}</span>
+        <Marquee text={name} className="text-[11.5px] text-muted" />
         <span className="num text-[28px] font-semibold leading-none mt-2 whitespace-nowrap" data-temperature>
           {element.temperature ? degrees : percent}
           {element.temperature && warm.trend !== undefined && Math.abs(warm.trend) >= 0.2 && (
@@ -313,7 +323,7 @@ export function ReadingControl({ element, temperatureSaid, humiditySaid, arrangi
             </g>
           ))}
         </svg>
-        <div className="text-[12px] truncate">{name}</div>
+        <Marquee text={name} className="text-[12px]" />
         <div className="num text-[15px] font-semibold" data-temperature>{element.temperature ? degrees : percent}</div>
         {element.temperature && element.humidity && <div className="num text-[11.5px] text-[rgb(56,189,248)]" data-humidity>{percent}</div>}
         {battery}
@@ -336,7 +346,7 @@ export function ReadingControl({ element, temperatureSaid, humiditySaid, arrangi
           <text x="60" y="58" textAnchor="middle" className="num" style={{ fontSize: 20, fontWeight: 600, fill: 'var(--nd-text)' }} data-humidity>{element.humidity ? percent : degrees}</text>
           {element.humidity && element.temperature && <text x="60" y="74" textAnchor="middle" className="stat-tick" data-temperature>{degrees}</text>}
         </svg>
-        <div className="text-[12px] truncate">{name}</div>
+        <Marquee text={name} className="text-[12px]" />
         {battery}
       </div>
     )
@@ -346,7 +356,7 @@ export function ReadingControl({ element, temperatureSaid, humiditySaid, arrangi
       {face}
       {arranging && (
         <SensorTools styles={READING_STYLES} current={element.style} group="readingStyles" onStyle={(style) => onStyle(style as ReadingStyle)} onRemove={onRemove}
-          removeLabel={t('homePage.sensors.removeReading')} width={width} wide={wide} />
+          removeLabel={t('homePage.sensors.removeReading')} width={width} wide={wide} rename={{ label: element.name, fallback: haName, onLabel }} />
       )}
     </div>
   )

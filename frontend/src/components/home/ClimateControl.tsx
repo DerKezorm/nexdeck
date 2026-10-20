@@ -7,6 +7,7 @@ import { get } from '../../api/client'
 import { byHand, CLIMATE_STYLES, STEP_PX, stepTarget, targetAt, temperature, type ClimateOffer, type ClimateSensor, type ClimateStyle, type ClimateView, type HomeClimate } from '../../lib/home'
 import { climateFace } from './ClimateFace'
 import { Marquee } from './Marquee'
+import { Rename } from './Rename'
 
 /** The colours of what a thermostat is doing, on the icon and the pill's edge. */
 export const HEATING = 'rgb(251, 146, 60)'
@@ -42,6 +43,9 @@ interface Props {
   onRemove: () => void
   onSensor: (sensor: ClimateSensor | null) => void
   onStyle: (style: ClimateStyle) => void
+  /** Home Assistant's name, for the pencil's field. */
+  haName: string
+  onLabel: (label: string) => void
 }
 
 /** How far a pointer travels before a press becomes a swipe. */
@@ -55,7 +59,7 @@ const SWIPE_PX = 6
  * than switching anything: a heating turned off by a brushed finger is not
  * noticed until it is cold.
  */
-export function ClimateControl({ element, info, missing, arranging, wide, width, pageId, target, setting, onStep, onAim, onDetails, onRemove, onSensor, onStyle }: Props) {
+export function ClimateControl({ element, info, missing, arranging, wide, width, pageId, target, setting, onStep, onAim, onDetails, onRemove, onSensor, onStyle, haName, onLabel }: Props) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState<'sensor' | 'style' | null>(null)
   const tools = useRef<HTMLDivElement>(null)
@@ -78,7 +82,7 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
     }
   }, [choosing])
 
-  const name = info?.name || element.name || element.entity_id
+  const name = element.label || info?.name || element.name || element.entity_id
   const quiet = missing || Boolean(info?.unavailable)
   const { colour, icon } = climateLook(info)
   const reading = info ? temperature(info.reading) : ''
@@ -238,6 +242,7 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
             aria-label={t('homePage.chooseSensor')} title={t('homePage.chooseSensor')} aria-haspopup="menu" aria-expanded={choosing === 'sensor'}>
             <Thermometer size={12} />
           </button>
+          <Rename label={element.label ?? ''} fallback={haName} onLabel={onLabel} />
           <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.removeClimate')} title={t('homePage.removeClimate')}>
             <Trash2 size={12} />
           </button>

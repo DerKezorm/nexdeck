@@ -212,3 +212,29 @@ def test_a_trend_is_the_change_over_the_last_hour_of_five_minute_statistics() ->
     rows = hass_stats.demo_answer(hass_stats._statistics_command(["sensor.bathroom_temperature"], now - dt.timedelta(minutes=70), now, "5minute", "mean"), now)
     points = hass_stats.from_statistics(rows["sensor.bathroom_temperature"], "mean")
     assert found["sensor.bathroom_temperature"] == round(points[-1][1] - points[0][1], 1)
+
+
+# ---------------------------------------------------------------------------
+# A name of the page's own
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("kind", ["light", "climate", "contact"])
+def test_a_lamp_a_thermostat_and_a_door_keep_a_name_of_their_own_and_none_when_it_is_empty(kind: str) -> None:
+    placed = {"light": {"rid": "r-floor", "entity_id": "light.floor_lamp", "name": "Floor lamp"},
+              "climate": {"rid": "r-heat-living", "entity_id": "climate.living_room", "name": "Living room"},
+              "contact": KITCHEN}[kind]
+    kept = home.clean_element({"id": "a", "type": kind, "x": 0, "y": 0, **placed, "label": "  Stairs\x07, ground floor  "})
+    assert kept is not None and kept["label"] == "Stairs, ground floor" and kept["name"] == placed["name"], "Home Assistant's name stays beside it"
+    for empty in ("", "   ", None, 7):
+        assert "label" not in home.clean_element({"id": "a", "type": kind, "x": 0, "y": 0, **placed, "label": empty})  # type: ignore[operator]
+    assert len(home.clean_element({"id": "a", "type": kind, "x": 0, "y": 0, **placed, "label": "x" * 200})["label"]) == home.MAX_NAME  # type: ignore[index]
+
+
+def test_a_name_of_its_own_is_saved_with_the_page(client: TestClient) -> None:
+    setup_admin(client)
+    _board_, _hass_, page = _demo_page(client)
+    door = {"id": "k", "type": "contact", "x": 16, "y": 16, **KITCHEN, "style": "door", "label": "Stairs, ground floor"}
+    saved = client.put(f"/api/v1/pages/{page['id']}/home", json={"elements": [door]}, headers=CSRF)
+    assert saved.status_code == 200
+    assert client.get(f"/api/v1/pages/{page['id']}/home").json()["layout"]["elements"][0]["label"] == "Stairs, ground floor"

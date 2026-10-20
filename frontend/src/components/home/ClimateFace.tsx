@@ -43,7 +43,7 @@ export function climateFace({ style, info, name, target, aim, quiet, colour, wor
   const lc = { '--lc': colour } as CSSProperties
   const mark = fallback ? <span aria-hidden> *</span> : null
   const range = info ?? { min: 7, max: 35 }
-  const caption = (width: number, drawing: ReactNode, below: ReactNode = name) => ({
+  const caption = (width: number, drawing: ReactNode, below: ReactNode = <Marquee text={name} />) => ({
     className: `climate-stack ${quiet ? 'lamp-quiet' : ''}`,
     style: { ...lc, width },
     round: false,
@@ -128,7 +128,7 @@ export function climateFace({ style, info, name, target, aim, quiet, colour, wor
           <span className="climate-valve-mark" style={{ transform: `translateX(-50%) rotate(${-135 + 270 * shareOf(range, target)}deg)` }} />
           <span className={`num climate-valve-num ${setting && on ? 'is-setting' : ''}`} data-target>{quiet ? '–' : !on ? '❄' : setting ? aim : level}</span>
         </span>
-      ), <>{name} · <span className="num" data-reading>{reading}{mark}</span></>), round: true }
+      ), <><Marquee text={name} /><span className="num" data-reading>{reading}{mark}</span></>), round: true }
     }
     case 'thermometer':
       return caption(100, (
@@ -137,7 +137,7 @@ export function climateFace({ style, info, name, target, aim, quiet, colour, wor
           <span className="climate-thermo-bulb" />
           {on && <span className="climate-thermo-aim" style={{ top: `${(1 - shareOf(range, target)) * 76}px` }} />}
         </span>
-      ), <>{name}<br /><span className="num"><span data-reading>{reading}{mark}</span>{on ? <> → <span data-target>{aim}</span></> : <> · <span data-target>{aim}</span></>}</span></>)
+      ), <><Marquee text={name} /><span className="num"><span data-reading>{reading}{mark}</span>{on ? <> → <span data-target>{aim}</span></> : <> · <span data-target>{aim}</span></>}</span></>)
     case 'radiator':
       return caption(96, (
         <span className={`climate-radiator ${working ? 'is-on' : ''}`}>
@@ -148,7 +148,7 @@ export function climateFace({ style, info, name, target, aim, quiet, colour, wor
           )}
           <span className="climate-ribs">{Array.from({ length: 6 }, (_, index) => <i key={index} />)}</span>
         </span>
-      ), <>{name}<br /><span className="num"><span data-reading>{reading}{mark}</span> · <span data-target>{aim}</span></span></>)
+      ), <><Marquee text={name} /><span className="num"><span data-reading>{reading}{mark}</span> · <span data-target>{aim}</span></span></>)
     case 'digits':
       return {
         className: `climate-digits ${working ? 'is-on' : ''} ${quiet ? 'lamp-quiet' : ''}`,
