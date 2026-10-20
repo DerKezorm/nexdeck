@@ -23,8 +23,9 @@ MAX_COORD = 20000
 MAX_TEXT = 60
 
 KINDS = ("heading", "light")
-#: How a lamp is drawn. The first is the default; more follow.
-STYLES = ("pill",)
+#: How a lamp is drawn, the ten of the board of sketches; the first is the default.
+#: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
+STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 

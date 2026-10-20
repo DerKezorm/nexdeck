@@ -1,6 +1,9 @@
 import { vi } from 'vitest'
 
-import { freshId, hsToRgb, lampSender, rgbToHs, mergeWish, nextSpot, readingOrder, snap, surfaceHeight, withLamps, withWish, type HomeAnswer, type HomeElement, type LampWish } from './home'
+import {
+  FOOTPRINT, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap, surfaceHeight, withLamps, withWish,
+  type HomeAnswer, type HomeElement, type LampStyle, type LampWish,
+} from './home'
 
 const heading = (id: string, x: number, y: number): HomeElement => ({ id, type: 'heading', x, y, text: id })
 
@@ -23,7 +26,8 @@ it('starts a new row once an element stands clearly lower', () => {
 
 it('puts a new element below the lowest one, or in the corner of an empty page', () => {
   expect(nextSpot([])).toEqual({ x: 16, y: 16 })
-  expect(nextSpot([heading('a', 300, 16), heading('b', 16, 120)])).toEqual({ x: 16, y: 176 })
+  // Below where the lowest one ends (a heading is 24 high), with a gap of 16.
+  expect(nextSpot([heading('a', 300, 16), heading('b', 16, 120)])).toEqual({ x: 16, y: 160 })
 })
 
 it('gives an id no element has, of the characters the server keeps', () => {
@@ -36,7 +40,7 @@ it('gives an id no element has, of the characters the server keeps', () => {
 
 it('leaves room below the lowest element', () => {
   expect(surfaceHeight([])).toBe(160)
-  expect(surfaceHeight([heading('a', 0, 400)])).toBe(560)
+  expect(surfaceHeight([heading('a', 0, 400)])).toBe(584)
 })
 
 it('puts news of a lamp into the answer, keeping what the news does not say', () => {
@@ -136,4 +140,54 @@ it('sends a lamp the newest wish, never two at once, and at most every gap', asy
   } finally {
     vi.useRealTimers()
   }
+})
+
+// -- styles and the phone ------------------------------------------------------
+
+const lampAt = (id: string, x: number, y: number, style: LampStyle = 'pill'): HomeElement => ({ id, type: 'light', x, y, rid: `r-${id}`, entity_id: `light.${id}`, name: id, style })
+
+it('places lamps of each style side by side without one covering the next', () => {
+  for (const style of LAMP_STYLES) {
+    const spots = lampSpots([], 30, style)
+    const { width, height } = FOOTPRINT[style]
+    for (const [index, a] of spots.entries()) {
+      for (const b of spots.slice(index + 1)) {
+        const apart = b.x >= a.x + width || a.x >= b.x + width || b.y >= a.y + height || a.y >= b.y + height
+        expect(apart, `${style} ${JSON.stringify(a)} ${JSON.stringify(b)}`).toBe(true)
+      }
+    }
+    expect(Math.max(...spots.map((spot) => spot.x + width))).toBeLessThanOrEqual(16 + ROW_WIDTH)
+  }
+  expect(lampSpots([], 13, 'round').filter((spot) => spot.y === 16)).toHaveLength(12)
+})
+
+it('places new lamps below where a tall one ends, not where it begins', () => {
+  const [spot] = lampSpots([lampAt('dots', 16, 16, 'dots')], 1, 'pill')
+  expect(spot.y).toBeGreaterThanOrEqual(16 + FOOTPRINT.dots.height)
+  expect(nextSpot([lampAt('bulb', 16, 16, 'bulb')]).y).toBeGreaterThanOrEqual(16 + FOOTPRINT.bulb.height)
+  expect(surfaceHeight([lampAt('dots', 0, 400, 'dots')])).toBe(400 + FOOTPRINT.dots.height + 160)
+})
+
+it('reads a phone page as each heading with the lamps standing under it', () => {
+  const groups = phoneGroups([
+    heading('living', 16, 16), heading('kitchen', 320, 16), heading('garden', 660, 20),
+    lampAt('early', 400, 0, 'round'),
+    lampAt('sofa', 16, 56), lampAt('stove', 330, 56, 'round'), lampAt('path', 660, 56, 'rocker'),
+    lampAt('reading', 16, 104),
+    heading('bed', 16, 200), lampAt('bedside', 40, 240, 'bulb'),
+    // Its middle (288 + 128) stands under the kitchen.
+    lampAt('counter', 288, 104),
+  ])
+  expect(groups.map((group) => [group.heading?.id ?? null, group.lamps.map((lamp) => lamp.id)])).toEqual([
+    [null, ['early']],
+    ['living', ['sofa', 'reading']],
+    ['kitchen', ['stove', 'counter']],
+    ['garden', ['path']],
+    ['bed', ['bedside']],
+  ])
+})
+
+it('keeps a heading on the phone that has no lamps yet, and leaves out an empty top', () => {
+  expect(phoneGroups([heading('a', 16, 16), lampAt('x', 16, 56)]).map((group) => group.heading?.id ?? null)).toEqual(['a'])
+  expect(phoneGroups([heading('a', 16, 16), heading('b', 320, 16)]).map((group) => group.lamps.length)).toEqual([0, 0])
 })

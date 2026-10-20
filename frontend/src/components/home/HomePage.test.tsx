@@ -5,11 +5,11 @@
  * a connection that went is said, and a lamp switches at a tap, dims when
  * dragged and opens its details when held.
  */
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
-import { SETTLE_MS, type HomeAnswer, type LampInfo, type LightOffer } from '../../lib/home'
+import { LAMP_STYLES, SETTLE_MS, type HomeAnswer, type LampInfo, type LightOffer } from '../../lib/home'
 import { HomePage } from './HomePage'
 
 const ANSWER: HomeAnswer = {
@@ -143,7 +143,7 @@ it('lets an editor add a heading, name it, and saves it with the version it star
   expect(first.url).toContain('/pages/9/home')
   expect(first.body!.version).toBe(4)
   const added = (puts(sent).at(-1)!.body!.elements as { id: string; x: number; y: number }[]).at(-1)!
-  expect(added).toMatchObject({ x: 16, y: 72 })
+  expect(added).toMatchObject({ x: 16, y: 56 })
   expect(added.id).toMatch(/^[A-Za-z0-9_-]{1,32}$/)
 })
 
@@ -416,15 +416,16 @@ it('dims a lamp dragged sideways, sending the newest brightness and switching no
   fireEvent.pointerMove(floor, { pointerId: 1, clientX: 110, clientY: 21 })
   fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140, clientY: 22 })
   fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140.4, clientY: 23 })
-  expect(pill('Floor lamp')).toHaveTextContent('82 %')
+  // jsdom measures nothing, so the drag runs over the least travel there is, 160 px: 40 px are 25 points.
+  expect(pill('Floor lamp')).toHaveTextContent('87 %')
   fireEvent.pointerUp(floor, { pointerId: 1, clientX: 140, clientY: 22 })
   fireEvent.click(floor)
   await waitFor(() => expect(posts(sent)).toHaveLength(1))
-  await act(async () => replies[0].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 67 } })))
+  await act(async () => replies[0].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 68 } })))
   await waitFor(() => expect(posts(sent)).toHaveLength(2), { timeout: 1000 })
-  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 67 }, { brightness_pct: 82 }])
-  await act(async () => replies[1].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 82 } })))
-  expect(pill('Floor lamp')).toHaveTextContent('82 %')
+  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 68 }, { brightness_pct: 87 }])
+  await act(async () => replies[1].answer(json({ ok: true, confirmed: true, light: { ...RICH.lights!.floor, pct: 87 } })))
+  expect(pill('Floor lamp')).toHaveTextContent('87 %')
 })
 
 it('dims a lamp by the arrow keys', async () => {
@@ -505,7 +506,7 @@ it('tells the lamp each brightness of a drag once, however long the finger rests
   fireEvent.pointerMove(floor, { pointerId: 1, clientX: 140.4, clientY: 21 })
   await act(async () => new Promise((resolve) => window.setTimeout(resolve, 400)))
   fireEvent.pointerUp(floor, { pointerId: 1, clientX: 140.4, clientY: 21 })
-  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 82 }])
+  expect(posts(sent).map((one) => one.body)).toEqual([{ brightness_pct: 87 }])
 })
 
 it('sets the colour sliders from the colour a lamp names only in rgb', async () => {
@@ -515,4 +516,116 @@ it('sets the colour sliders from the colour a lamp names only in rgb', async () 
   // rgb(255, 167, 87) is a hue of 28.6° at 65.9 %, not the sliders' starting point.
   expect(screen.getByRole('slider', { name: /Hue/ })).toHaveValue('29')
   expect(screen.getByRole('slider', { name: /Saturation/ })).toHaveValue('66')
+})
+
+// -- styles and the phone ------------------------------------------------------
+
+const EVERY_STYLE: HomeAnswer = {
+  ...WITH_LAMPS,
+  layout: {
+    integration_id: 1,
+    elements: LAMP_STYLES.map((style, index) => ({ id: `l${index}`, type: 'light' as const, x: 16 + index * 100, y: 16, rid: 'r-floor', entity_id: 'light.floor_lamp', name: 'Floor lamp', style })),
+  },
+  lights: Object.fromEntries(LAMP_STYLES.map((_, index) => [`l${index}`, { ...OFFER.lights[1], missing: false as const }])),
+}
+
+it('draws a lamp in each of the ten styles, each one a switch with its name', async () => {
+  show(EVERY_STYLE, { canAct: true })
+  await screen.findAllByRole('button', { name: /Floor lamp/ })
+  const drawn = screen.getAllByRole('button', { name: /Floor lamp/ })
+  expect(drawn.map((one) => one.getAttribute('data-style'))).toEqual([...LAMP_STYLES])
+  for (const one of drawn) expect(one).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('changes the style of a lamp while the page is arranged, and saves it', async () => {
+  const sent = show(WITH_LAMPS, { editing: true })
+  await screen.findByText('Floor lamp')
+  const tools = (document.querySelector('[data-element="floor"]') as HTMLElement)
+  const choose = within(tools).getByRole('button', { name: 'Choose a style' })
+  fireEvent.click(choose)
+  fireEvent.keyDown(window, { key: 'Escape' })
+  expect(within(tools).queryByRole('menu')).not.toBeInTheDocument()
+  fireEvent.click(choose)
+  fireEvent.pointerDown(document.body)
+  expect(within(tools).queryByRole('menu')).not.toBeInTheDocument()
+  fireEvent.click(choose)
+  fireEvent.click(within(tools).getByRole('menuitemradio', { name: 'Knob' }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(1))
+  const floor = (puts(sent)[0].body!.elements as Record<string, unknown>[]).find((element) => element.id === 'floor')
+  expect(floor).toMatchObject({ style: 'knob', x: 16, y: 56, rid: 'r-floor' })
+  expect(document.querySelector('[data-element="floor"] [data-style]')).toHaveAttribute('data-style', 'knob')
+})
+
+it('adds lamps in the style picked for them, spaced for that style', async () => {
+  const sent = show(ANSWER, { editing: true })
+  await screen.findByText('Living room')
+  fireEvent.click(screen.getAllByRole('button', { name: 'Light' })[0])
+  fireEvent.click(await screen.findByRole('checkbox', { name: 'Kitchen counter' }))
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Ceiling light' }))
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'tile' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Add (2)' }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(1))
+  const added = (puts(sent)[0].body!.elements as Record<string, unknown>[]).filter((element) => element.type === 'light')
+  expect(added.map((element) => [element.name, element.style, element.x, element.y])).toEqual([['Ceiling light', 'tile', 16, 56], ['Kitchen counter', 'tile', 120, 56]])
+})
+
+it('shows a phone each heading with the lamps that stand under it', async () => {
+  const wide = window.matchMedia
+  window.matchMedia = ((query: string) => ({ matches: true, media: query, addEventListener: () => undefined, removeEventListener: () => undefined })) as unknown as typeof window.matchMedia
+  try {
+    show({
+      ...WITH_LAMPS,
+      layout: {
+        integration_id: 1,
+        elements: [
+          ...ANSWER.layout.elements,
+          { id: 'floor', type: 'light', x: 16, y: 56, rid: 'r-floor', entity_id: 'light.floor_lamp', name: 'Floor lamp', style: 'round' },
+          { id: 'path', type: 'light', x: 330, y: 56, rid: 'r-path', entity_id: 'light.garden_path', name: 'Garden path', style: 'chip' },
+        ],
+      },
+    })
+    await screen.findByText('Floor lamp')
+    const garden = document.querySelector('[data-phone-group="garden"]') as HTMLElement
+    const living = document.querySelector('[data-phone-group="living"]') as HTMLElement
+    expect(within(garden).getByText('Garden path')).toBeInTheDocument()
+    expect(within(living).getByText('Floor lamp')).toBeInTheDocument()
+    expect(within(living).queryByText('Garden path')).not.toBeInTheDocument()
+    expect(pill('Garden path').parentElement).toHaveClass('w-full')
+    expect(pill('Floor lamp').parentElement).not.toHaveClass('w-full')
+    // A chip runs the width of the screen too, its own limit of 200 px lifted.
+    expect(pill('Garden path')).toHaveClass('w-full', 'max-w-none')
+  } finally {
+    window.matchMedia = wide
+  }
+})
+
+/** The part of each drawing that makes it that drawing (``lampFace`` and the ``lamp-*`` classes). */
+const DRAWING: Record<string, string> = {
+  pill: '.lamp-pill', round: '.lamp-round', chip: '.lamp-chip', tile: '.lamp-tile', slider: '.lamp-slide',
+  ring: '.lamp-ring', rocker: '.lamp-plate', dots: '.lamp-dots', bulb: '.lamp-bulb', knob: '.lamp-knob',
+}
+
+it('gives each style its own drawing, and shows in it how bright the lamp is', async () => {
+  show({
+    ...EVERY_STYLE,
+    layout: { ...EVERY_STYLE.layout, elements: [...EVERY_STYLE.layout.elements, { id: 'dark', type: 'light', x: 16, y: 200, rid: 'r-path', entity_id: 'light.garden_path', name: 'Garden path', style: 'slider' }] },
+    lights: { ...EVERY_STYLE.lights, dark: { ...OFFER.lights[2], missing: false } },
+  }, { canAct: true })
+  await screen.findAllByRole('button', { name: /Floor lamp/ })
+  for (const one of screen.getAllByRole('button', { name: /Floor lamp/ })) {
+    const style = one.getAttribute('data-style') ?? ''
+    const drawing = DRAWING[style]
+    expect(one.matches(drawing) || one.querySelector(drawing) !== null, style).toBe(true)
+    for (const [other, selector] of Object.entries(DRAWING)) {
+      if (other !== style) expect(one.matches(selector) || one.querySelector(selector) !== null, `${style} drawn as ${other}`).toBe(false)
+    }
+  }
+  const byStyle = (style: string) => document.querySelector(`[data-element] [data-style="${style}"][aria-label^="Floor lamp"]`) as HTMLElement
+  expect((byStyle('slider').querySelector('.lamp-fill') as HTMLElement).style.width).toBe('62%')
+  expect(byStyle('ring').querySelector('.lamp-arc-lit')).not.toBeNull()
+  expect(byStyle('knob').querySelectorAll('.lamp-led.is-on')).toHaveLength(9)
+  expect(byStyle('rocker').querySelector('.lamp-plate.is-on')).not.toBeNull()
+  const off = document.querySelector('[data-style="slider"][aria-label^="Garden path"]') as HTMLElement
+  expect(off.querySelector('.lamp-fill')).toBeNull()
+  expect(off).toHaveTextContent('off')
 })

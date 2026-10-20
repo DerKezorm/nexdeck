@@ -1,15 +1,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Heading, House, Lightbulb, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
+import { Check, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  freshId, lampColour, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, readingOrder, SETTLE_MS, snap, surfaceHeight, withLamps, withWish,
-  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type LampWish, type SwitchAnswer,
+  freshId, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, surfaceHeight, WIDE_STYLES, withLamps, withWish,
+  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
 import { LampDetails } from './LampDetails'
+import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
 
 interface Props {
@@ -136,10 +137,12 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: { x?: number; y?: number; text?: string }) => {
+    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
-        element.type === 'heading' ? { ...element, ...patch } : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y }
+        element.type === 'heading'
+          ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
+          : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -158,13 +161,13 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const [known, setKnown] = useState<Record<string, LampInfo>>({})
   const placedLamps = new Set(elements.filter((element): element is HomeLight => element.type === 'light').map((element) => element.rid))
   const addLights = useCallback(
-    (lights: LampInfo[]) => {
+    (lights: LampInfo[], style: LampStyle = 'pill') => {
       setPicking(false)
       if (!layout || lights.length === 0) return
-      const spots = lampSpots(layout.elements, lights.length)
+      const spots = lampSpots(layout.elements, lights.length, style)
       const added: HomeLight[] = []
       for (const [index, light] of lights.entries()) {
-        added.push({ id: freshId([...layout.elements, ...added]), type: 'light', ...spots[index], rid: light.rid, entity_id: light.entity_id, name: light.name, style: 'pill' })
+        added.push({ id: freshId([...layout.elements, ...added]), type: 'light', ...spots[index], rid: light.rid, entity_id: light.entity_id, name: light.name, style })
       }
       setKnown((now) => ({ ...now, ...Object.fromEntries(lights.map((light) => [light.rid, light])) }))
       askAgain.current = true
@@ -305,14 +308,14 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const placed = (element: HomeElement) => (dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y } : element)
   const draw = (element: HomeElement) =>
     element.type === 'light' ? (
-      <LampPill element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow} onRemove={() => remove(element.id)}
+      <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && WIDE_STYLES.has(element.style)}
+        onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })}
         onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)} />
     ) : (
       <HeadingView element={element} arranging={arranging} renaming={renaming === element.id}
         onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
         onStartRename={() => setRenaming(element.id)} onRemove={() => remove(element.id)} />
     )
-  const shown = narrow ? readingOrder(elements) : elements
 
   return (
     <div className="max-w-[1600px] mx-auto px-3 sm:px-4 pt-4" data-home-page>
@@ -339,9 +342,19 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           )}
         </div>
       ) : narrow ? (
-        <div className="grid gap-3 pb-6">
-          {shown.map((element) => (
-            <div key={element.id}>{draw(element)}</div>
+        // Each heading with the lamps that stand under it on the surface (``phoneGroups``).
+        <div className="grid gap-5 pb-6">
+          {phoneGroups(elements).map((group) => (
+            <section key={group.heading?.id ?? 'top'} className="grid gap-3" data-phone-group={group.heading?.id ?? ''}>
+              {group.heading && draw(group.heading)}
+              {group.lamps.length > 0 && (
+                <div className="flex flex-wrap items-start gap-3">
+                  {group.lamps.map((lamp) => (
+                    <div key={lamp.id} className={WIDE_STYLES.has(lamp.style) ? 'w-full' : ''}>{draw(lamp)}</div>
+                  ))}
+                </div>
+              )}
+            </section>
           ))}
         </div>
       ) : (
@@ -383,66 +396,72 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   )
 }
 
-/** How long a finger rests on a pill before it opens the details. */
+/** How long a finger rests on a lamp before it opens the details. */
 const HOLD_MS = 500
 /** How far a pointer travels before a press becomes a drag. */
 const DRAG_PX = 6
 
 /**
- * A lamp as a pill, the first of the drawings on the board of sketches: its
- * light, its name, how bright. For those who may act on the board a tap
- * switches it, a drag sideways dims it, holding it (or a right click) opens
- * its details; arrow keys dim it too. A lamp Home Assistant cannot reach or
- * no longer has stays still.
+ * A lamp, drawn in its style (``lampFace``). For those who may act on the
+ * board a tap switches it, a drag sideways dims it, holding it (or a right
+ * click) opens its details; arrow keys dim it too. A lamp Home Assistant
+ * cannot reach or no longer has stays still. While the page is arranged it
+ * carries two tools: its style, and taking it off the page.
  */
-function LampPill({ element, info, missing, arranging, wide, onRemove, onWish, onDetails }: {
+function LampControl({ element, info, missing, arranging, wide, onRemove, onStyle, onWish, onDetails }: {
   element: HomeLight
   info: LampInfo | null
   missing: boolean
   arranging: boolean
-  /** In the phone's list: as wide as the screen, a row to tap rather than a pill to aim at. */
+  /** In the phone's list a pill, a chip or a slider runs the width of the screen. */
   wide: boolean
   onRemove: () => void
+  onStyle: (style: LampStyle) => void
   onWish?: (info: LampInfo, wish: LampWish) => void
   onDetails: () => void
 }) {
   const { t } = useTranslation()
-  const colour = lampColour(info)
   const name = info?.name || element.name || element.entity_id
   const state = missing ? t('homePage.gone')
     : !info ? ''
     : info.unavailable ? t('homePage.offline')
     : info.on ? (info.dims && info.pct !== null ? `${info.pct} %` : t('homePage.on'))
     : t('homePage.off')
-  const lit = colour
-    ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
-    : undefined
   const press = useRef<{ pointer: number; x: number; y: number; from: number; width: number; dragging: boolean; held: boolean; timer?: number; sent?: number } | null>(null)
   /** Set when a press ended as a drag or a hold, so the click that follows it switches nothing. */
   const swallow = useRef(false)
   const [dimming, setDimming] = useState<number | null>(null)
+  const [choosing, setChoosing] = useState(false)
+  const tools = useRef<HTMLDivElement>(null)
   useEffect(() => () => window.clearTimeout(press.current?.timer), [])
+  // The style menu closes as menus do: Escape, or a press anywhere else.
+  useEffect(() => {
+    if (!choosing) return
+    const away = (event: PointerEvent) => {
+      if (!tools.current?.contains(event.target as Node)) setChoosing(false)
+    }
+    const key = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setChoosing(false)
+    }
+    window.addEventListener('pointerdown', away, true)
+    window.addEventListener('keydown', key)
+    return () => {
+      window.removeEventListener('pointerdown', away, true)
+      window.removeEventListener('keydown', key)
+    }
+  }, [choosing])
 
-  const shell = `glass relative overflow-hidden flex items-center gap-2.5 ${wide ? 'w-full h-12' : 'h-10 max-w-[256px]'} pl-1.5 pr-4 rounded-full text-left ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`
+  const quiet = missing || Boolean(info?.unavailable)
+  const face = lampFace({ style: element.style, info, name, state, quiet, dimming, wide })
   const title = [name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : onWish ? t('homePage.lampHint') : ''].filter(Boolean).join(' · ')
-  const inside = (
-    <>
-      {dimming !== null && (
-        // While dragging, the pill fills to the brightness under the finger.
-        <span aria-hidden className="absolute inset-y-0 left-0 pointer-events-none" style={{ width: `${dimming}%`, background: `color-mix(in srgb, ${colour ?? 'rgb(255, 196, 120)'} 30%, transparent)` }} />
-      )}
-      <span className="relative grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
-        <Lightbulb size={15} className={colour ? '' : 'text-muted'} />
-      </span>
-      <span className="relative text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
-      {state && <span className={`relative num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
-    </>
-  )
-  if (onWish && info && !missing && !info.unavailable) {
+  const label = [name, state].filter(Boolean).join(', ')
+
+  if (onWish && info && !quiet) {
     const down = (event: ReactPointerEvent<HTMLButtonElement>) => {
       if (event.button !== 0) return
       swallow.current = false
-      const width = event.currentTarget.getBoundingClientRect().width || 200
+      // A drag across the whole drawing is the whole range; a small drawing gets a pill's worth to travel.
+      const width = Math.max(160, event.currentTarget.getBoundingClientRect().width || 0)
       const held = { pointer: event.pointerId, x: event.clientX, y: event.clientY, from: info.on ? (info.pct ?? 100) : 0, width, dragging: false, held: false, timer: 0 }
       held.timer = window.setTimeout(() => {
         if (press.current !== held || held.dragging) return
@@ -489,10 +508,12 @@ function LampPill({ element, info, missing, arranging, wide, onRemove, onWish, o
     return (
       <button
         type="button"
-        className={`${shell} cursor-pointer touch-pan-y select-none transition-[background-color,border-color,box-shadow,transform] duration-200 hover:brightness-[1.04] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[var(--nd-accent)]`}
-        style={lit}
+        className={`lamp-control ${face.className} cursor-pointer touch-pan-y select-none`}
+        style={face.style}
         data-lamp={element.entity_id}
+        data-style={element.style}
         title={title}
+        aria-label={label}
         aria-pressed={info.on}
         aria-haspopup="dialog"
         onPointerDown={down}
@@ -513,19 +534,37 @@ function LampPill({ element, info, missing, arranging, wide, onRemove, onWish, o
           onWish(info, { on: !info.on })
         }}
       >
-        {inside}
+        {face.children}
       </button>
     )
   }
   return (
-    <div className={shell} style={lit} data-lamp={element.entity_id} title={title}>
-      {inside}
+    <div ref={tools} className={`lamp-control ${face.className}`} style={face.style} data-lamp={element.entity_id} data-style={element.style} title={title} aria-label={label}>
+      {face.children}
       {arranging && (
-        <span className="relative flex items-center ml-1" data-element-tool>
-          <button type="button" className="btn btn-icon btn-flat btn-danger h-6 w-6" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>
-            <Trash2 size={13} />
+        <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
+          <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}
+            aria-label={t('homePage.chooseStyle')} title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing}>
+            <Palette size={12} />
+          </button>
+          <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>
+            <Trash2 size={12} />
           </button>
         </span>
+      )}
+      {arranging && choosing && (
+        <div className="absolute left-0 top-full mt-2 z-30 glass-strong rounded-xl p-1.5 shadow-2xl grid grid-cols-2 gap-1 w-64" role="menu" aria-label={t('homePage.chooseStyle')} data-element-tool>
+          {LAMP_STYLES.map((style) => (
+            <button key={style} type="button" role="menuitemradio" aria-checked={element.style === style}
+              className={`text-left text-[13px] px-2.5 py-1.5 rounded-lg ${element.style === style ? 'bg-[var(--nd-accent-soft)] text-accent font-medium' : 'hover:bg-[var(--nd-surface-hover)]'}`}
+              onClick={() => {
+                setChoosing(false)
+                onStyle(style)
+              }}>
+              {t(`homePage.styles.${style}`)}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

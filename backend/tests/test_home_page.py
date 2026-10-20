@@ -329,3 +329,21 @@ async def test_the_registries_are_asked_once_a_minute_and_the_live_states_win(mo
     assert now_on["light.kitchen_counter"]["on"] is True and now_on["light.kitchen_counter"]["pct"] == 100
     await hass_registry.lights({}, cache, now=101.0 + hass_registry.REGISTRY_SECONDS)
     assert len(asked) == 2 and asked[1][-1] == "config/area_registry/list", "after a minute the registries again, but not the states the listener has"
+
+
+def test_every_style_of_the_board_of_sketches_is_kept_and_nothing_else() -> None:
+    raw = {"elements": [{"id": f"l{index}", "type": "light", "x": 0, "y": 0, "rid": "r1", "entity_id": "light.desk", "style": style}
+                        for index, style in enumerate([*home.STYLES, "neon", None, 3])]}
+    kept = [element["style"] for element in home.clean_layout(raw, None)["elements"]]
+    assert kept == [*home.STYLES, "pill", "pill", "pill"]
+    assert len(home.STYLES) == 10 and home.STYLES[0] == "pill"
+
+
+def test_the_browser_knows_the_same_styles_as_the_server() -> None:
+    import re
+    from pathlib import Path
+
+    source = (Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib" / "home.ts").read_text(encoding="utf-8")
+    found = re.search(r"export const LAMP_STYLES = \[([^\]]*)\] as const", source)
+    assert found, "LAMP_STYLES is no longer where this test reads it"
+    assert tuple(re.findall(r"'([a-z]+)'", found.group(1))) == home.STYLES

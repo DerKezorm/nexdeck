@@ -24,7 +24,53 @@ export interface HomeLight {
   rid: string
   entity_id: string
   name: string
-  style: 'pill'
+  style: LampStyle
+}
+
+/**
+ * How a lamp is drawn, the ten of the board of sketches (``knoepfe.html``,
+ * 19.10.2026): A pill, B round, C chip, D tile, E slider, F ring, G rocker,
+ * H dots, I bulb, J knob. The server keeps the same list (``home.STYLES``).
+ */
+export const LAMP_STYLES = ['pill', 'round', 'chip', 'tile', 'slider', 'ring', 'rocker', 'dots', 'bulb', 'knob'] as const
+export type LampStyle = (typeof LAMP_STYLES)[number]
+
+/**
+ * The room each style takes on the surface, caption included, in pixels; the
+ * sizes of the board of sketches, the pill and the chip at their longest.
+ * Placing, the phone and the space below all reckon with it.
+ */
+export const FOOTPRINT: Record<LampStyle, { width: number; height: number }> = {
+  pill: { width: 256, height: 40 },
+  round: { width: 72, height: 72 },
+  chip: { width: 200, height: 28 },
+  tile: { width: 84, height: 84 },
+  slider: { width: 176, height: 40 },
+  ring: { width: 72, height: 80 },
+  rocker: { width: 72, height: 82 },
+  dots: { width: 72, height: 96 },
+  bulb: { width: 72, height: 90 },
+  knob: { width: 72, height: 82 },
+}
+
+/** The styles that read as a row of their own on a phone; the others stand side by side. */
+export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'slider'])
+
+const HEADING_HEIGHT = 24
+
+/** How tall an element stands on the surface. */
+export function heightOf(element: HomeElement): number {
+  return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
+}
+
+/** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
+export function widthOf(element: HomeElement): number {
+  return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
+}
+
+/** Where the lowest element ends: new things go below it. */
+function bottomOf(elements: HomeElement[]): number {
+  return Math.max(...elements.map((element) => element.y + heightOf(element)))
 }
 
 export type HomeElement = HomeHeading | HomeLight
@@ -220,17 +266,23 @@ export function lampColour(info: Pick<LampInfo, 'on' | 'rgb' | 'kelvin'> | null 
   return 'rgb(255, 196, 120)'
 }
 
-/**
- * How far apart lamps added together stand, and how many share a row. A pill
- * is at most 256 pixels wide (``max-w`` in HomePage), so they never overlap.
- */
-export const LAMP_PITCH = 272
-export const LAMPS_PER_ROW = 4
+/** The room between two lamps placed together. */
+export const LAMP_GAP = 16
+/** How wide a row of lamps placed together may grow: four pills, a dozen rounds. */
+export const ROW_WIDTH = 1088
 
-/** Where lamps added together go: side by side in rows, below everything that stands already. */
-export function lampSpots(elements: HomeElement[], count: number): { x: number; y: number }[] {
-  const top = elements.length === 0 ? 16 : snap(Math.max(...elements.map((element) => element.y)) + 56)
-  return Array.from({ length: count }, (_, index) => ({ x: 16 + (index % LAMPS_PER_ROW) * LAMP_PITCH, y: top + Math.floor(index / LAMPS_PER_ROW) * 56 }))
+/**
+ * Where lamps added together go: side by side in rows, below everything that
+ * stands already, as far apart as their style is wide, so they never overlap.
+ */
+export function lampSpots(elements: HomeElement[], count: number, style: LampStyle = 'pill'): { x: number; y: number }[] {
+  const { width, height } = FOOTPRINT[style]
+  const top = elements.length === 0 ? 16 : snap(bottomOf(elements) + LAMP_GAP)
+  // Up to the next step, never down: a pitch rounded down would eat into the gap.
+  const pitchX = Math.ceil((width + LAMP_GAP) / STEP) * STEP
+  const pitchY = Math.ceil((height + LAMP_GAP) / STEP) * STEP
+  const across = Math.max(1, Math.floor((ROW_WIDTH - width) / pitchX) + 1)
+  return Array.from({ length: count }, (_, index) => ({ x: 16 + (index % across) * pitchX, y: top + Math.floor(index / across) * pitchY }))
 }
 
 /** Everything on the surface snaps to this many pixels, so rows line up by themselves. */
@@ -258,8 +310,7 @@ export function freshId(elements: HomeElement[], random: () => number = Math.ran
 /** Where a new element goes: on the left, a row below the lowest one, or in the corner of an empty page. */
 export function nextSpot(elements: HomeElement[]): { x: number; y: number } {
   if (elements.length === 0) return { x: 16, y: 16 }
-  const lowest = Math.max(...elements.map((element) => element.y))
-  return { x: 16, y: snap(lowest + 56) }
+  return { x: 16, y: snap(bottomOf(elements) + LAMP_GAP) }
 }
 
 /** How far apart two elements may stand and still be read as one row. */
@@ -270,9 +321,9 @@ export const ROW = 40
  * ⚠️ Rows, not pixels: three headings placed side by side by hand stand a few
  * pixels apart, and sorted by the pixel the one a little lower came last.
  */
-export function readingOrder(elements: HomeElement[]): HomeElement[] {
+export function readingOrder<T extends HomeElement>(elements: T[]): T[] {
   const sorted = [...elements].sort((a, b) => a.y - b.y || a.x - b.x)
-  const rows: HomeElement[][] = []
+  const rows: T[][] = []
   for (const element of sorted) {
     const row = rows.at(-1)
     if (row && element.y - row[0].y < ROW) row.push(element)
@@ -283,5 +334,38 @@ export function readingOrder(elements: HomeElement[]): HomeElement[] {
 
 /** How tall the surface has to be to hold everything with room to spare. */
 export function surfaceHeight(elements: HomeElement[]): number {
-  return Math.max(0, ...elements.map((element) => element.y)) + ROOM_BELOW
+  return Math.max(0, ...elements.map((element) => element.y + heightOf(element))) + ROOM_BELOW
+}
+
+/** A heading of the phone's list and the lamps under it; the first group has none, for lamps above every heading. */
+export interface PhoneGroup {
+  heading: HomeHeading | null
+  lamps: HomeLight[]
+}
+
+/**
+ * The page read on a phone: each heading with the lamps that stand under it
+ * on the surface. A lamp belongs to the lowest heading above it whose
+ * column it stands in, that is the heading furthest to the right that
+ * starts left of the lamp's middle. Lamps above every heading come first.
+ *
+ * ⚠️ Read row by row instead, three headings side by side came first and all
+ * their lamps after them, every room's lamps under the last room's name.
+ */
+export function phoneGroups(elements: HomeElement[]): PhoneGroup[] {
+  const headings = readingOrder(elements.filter((element): element is HomeHeading => element.type === 'heading'))
+  const lamps = readingOrder(elements.filter((element): element is HomeLight => element.type === 'light'))
+  const groups: PhoneGroup[] = [{ heading: null, lamps: [] }, ...headings.map((heading) => ({ heading, lamps: [] as HomeLight[] }))]
+  for (const lamp of lamps) {
+    const middle = lamp.x + widthOf(lamp) / 2
+    let owner: PhoneGroup = groups[0]
+    for (const group of groups.slice(1)) {
+      const heading = group.heading as HomeHeading
+      if (heading.y > lamp.y + STEP || heading.x > middle) continue
+      const best = owner.heading
+      if (!best || heading.y > best.y + ROW || (Math.abs(heading.y - best.y) <= ROW && heading.x > best.x)) owner = group
+    }
+    owner.lamps.push(lamp)
+  }
+  return groups.filter((group) => group.heading || group.lamps.length)
 }

@@ -2061,3 +2061,412 @@ body.has-player-bar main {
     border-radius: 999px;
   }
 }
+
+/* The lamps of a home page, the ten drawings of the board of sketches
+   (A pill to J knob, knoepfe.html of 19.10.2026) with its sizes. --lc is
+   the lamp's light; the board's fixed dark greys became the theme's own
+   text colour at low strength, so each drawing holds in the light theme too. */
+@layer components {
+  .lamp-control {
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 200ms ease, filter 200ms ease;
+  }
+
+  button.lamp-control:active {
+    transform: scale(0.96);
+  }
+
+  button.lamp-control:hover {
+    filter: brightness(1.05);
+  }
+
+  button.lamp-control:focus-visible {
+    outline: 2px solid var(--nd-accent);
+    outline-offset: 3px;
+  }
+
+  .lamp-quiet {
+    opacity: 0.5;
+  }
+
+  .lamp-pill {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 16px 0 6px;
+    border-radius: 999px;
+    text-align: left;
+  }
+
+  .lamp-p {
+    margin-left: auto;
+    flex: none;
+    font-size: 11.5px;
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+  }
+
+  /* Drawings with their name below. */
+  .lamp-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    width: 72px;
+    border-radius: 14px;
+  }
+
+  .lamp-cap {
+    font-size: 11.5px;
+    color: var(--nd-text-muted);
+    max-width: 72px;
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* B round, 48 x 48 */
+  .lamp-round {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    color: var(--nd-text-muted);
+    transition: background-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .lamp-round.is-on {
+    background: var(--lc);
+    color: #1b1206;
+    border-color: transparent;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--lc) 18%, transparent), 0 0 24px -4px var(--lc);
+  }
+
+  .lamp-round.is-quiet {
+    border-style: dashed;
+  }
+
+  /* C chip, about 110 x 28 */
+  .lamp-chip {
+    height: 28px;
+    max-width: 200px;
+    padding: 0 11px 0 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    border: 1px solid var(--nd-border);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .lamp-chip > i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--nd-text) 22%, transparent);
+  }
+
+  .lamp-chip .lamp-p {
+    font-size: 11px;
+  }
+
+  .lamp-chip.is-on {
+    border-color: color-mix(in srgb, var(--lc) 35%, transparent);
+  }
+
+  .lamp-chip.is-on > i {
+    background: var(--lc);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 25%, transparent), 0 0 8px var(--lc);
+  }
+
+  .lamp-chip.is-quiet {
+    opacity: 0.6;
+  }
+
+  .lamp-chip.is-quiet > i {
+    background: var(--nd-bad);
+  }
+
+  /* D tile, 84 x 84 */
+  .lamp-tile {
+    width: 84px;
+    height: 84px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-tile b {
+    color: var(--nd-text);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.15;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .lamp-tile .lamp-p {
+    position: absolute;
+    right: 9px;
+    top: 10px;
+    font-size: 10.5px;
+  }
+
+  .lamp-tile.is-on {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lc) 34%, var(--nd-surface)), color-mix(in srgb, var(--lc) 8%, var(--nd-surface)) 75%);
+    border-color: color-mix(in srgb, var(--lc) 45%, transparent);
+    color: var(--lc);
+    box-shadow: 0 10px 26px -14px var(--lc);
+  }
+
+  .lamp-tile.is-on .lamp-p {
+    color: var(--nd-text);
+  }
+
+  .lamp-tile.is-quiet {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  /* E slider, 176 x 40 */
+  .lamp-slide {
+    width: 176px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-slide > :not(.lamp-fill) {
+    position: relative;
+  }
+
+  .lamp-slide > span:not(.lamp-fill):not(.lamp-p) {
+    color: var(--nd-text);
+  }
+
+  .lamp-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: color-mix(in srgb, var(--lc) 38%, transparent);
+    border-right: 2px solid var(--lc);
+    transition: width 160ms ease;
+  }
+
+  .lamp-slide.is-on {
+    color: var(--lc);
+  }
+
+  .lamp-slide.is-on .lamp-p {
+    color: var(--nd-text);
+  }
+
+  /* F ring, 56 x 56 */
+  .lamp-ring {
+    width: 56px;
+    height: 56px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-ring.is-on {
+    color: var(--lc);
+  }
+
+  .lamp-arc {
+    position: absolute;
+    inset: 0;
+    width: 56px;
+    height: 56px;
+    transform: rotate(135deg);
+  }
+
+  .lamp-arc-track {
+    stroke: color-mix(in srgb, var(--nd-text) 9%, transparent);
+  }
+
+  .lamp-arc-lit {
+    stroke: var(--lc);
+    filter: drop-shadow(0 0 3px var(--lc));
+  }
+
+  /* G rocker, 42 x 58 */
+  .lamp-plate {
+    display: block;
+    width: 42px;
+    height: 58px;
+    border-radius: 11px;
+    border: 1px solid var(--nd-border-strong);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--nd-text) 7%, transparent), color-mix(in srgb, var(--nd-text) 2%, transparent));
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.3);
+    perspective: 200px;
+    position: relative;
+  }
+
+  .lamp-rk {
+    position: absolute;
+    inset: 7px;
+    border-radius: 7px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 5%, transparent), color-mix(in srgb, var(--nd-text) 14%, transparent));
+    transform: rotateX(14deg);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.25);
+    transition: transform 180ms ease;
+  }
+
+  .lamp-plate.is-on .lamp-rk {
+    transform: rotateX(-14deg);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 16%, transparent), color-mix(in srgb, var(--nd-text) 4%, transparent));
+  }
+
+  .lamp-sl {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: rgb(0 0 0 / 0.4);
+  }
+
+  .lamp-plate.is-on .lamp-sl {
+    background: var(--lc);
+    box-shadow: 0 0 8px 1px var(--lc);
+  }
+
+  /* H dots, 64 x 72 */
+  .lamp-dots {
+    display: grid;
+    grid-template-columns: repeat(9, 4px);
+    gap: 2px;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--nd-border);
+    background: var(--nd-surface);
+  }
+
+  .lamp-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+  }
+
+  .lamp-dots i.o {
+    background: color-mix(in srgb, var(--nd-text) 28%, transparent);
+  }
+
+  .lamp-dots.is-on i.o {
+    background: var(--lc);
+    box-shadow: 0 0 4px var(--lc);
+  }
+
+  .lamp-dots.is-on i.f {
+    background: color-mix(in srgb, var(--lc) 70%, transparent);
+  }
+
+  /* I bulb, 46 x 66 */
+  .lamp-bulb {
+    overflow: visible;
+  }
+
+  .lamp-bulb-cord {
+    stroke: var(--nd-text-faint);
+  }
+
+  .lamp-bulb-cap {
+    fill: color-mix(in srgb, var(--nd-text) 35%, var(--nd-surface));
+  }
+
+  .lamp-bulb-glass {
+    fill: color-mix(in srgb, var(--nd-text) 3%, transparent);
+    stroke: color-mix(in srgb, var(--nd-text) 30%, transparent);
+  }
+
+  .lamp-bulb-glass.is-on {
+    fill: rgb(255 190 120 / 0.16);
+  }
+
+  /* J knob, 58 x 58 */
+  .lamp-knob {
+    display: block;
+    width: 58px;
+    height: 58px;
+    position: relative;
+  }
+
+  .lamp-knob svg {
+    position: absolute;
+    inset: 0;
+    width: 58px;
+    height: 58px;
+  }
+
+  .lamp-led {
+    fill: color-mix(in srgb, var(--nd-text) 16%, transparent);
+  }
+
+  .lamp-led.is-on {
+    fill: var(--lc);
+    filter: drop-shadow(0 0 2px var(--lc));
+  }
+
+  .lamp-k {
+    position: absolute;
+    inset: 13px;
+    border-radius: 50%;
+    background: conic-gradient(from 20deg, #23272f, #464d59, #23272f, #464d59, #23272f, #464d59, #23272f);
+    box-shadow: 0 6px 12px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.2);
+    transition: transform 200ms ease;
+  }
+
+  .lamp-k::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    width: 2.5px;
+    height: 8px;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: var(--nd-text-faint);
+  }
+
+  .lamp-knob.is-on .lamp-k::after {
+    background: var(--lc);
+    box-shadow: 0 0 6px var(--lc);
+  }
+}

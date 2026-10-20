@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { get } from '../../api/client'
-import { lampColour, type LampInfo, type LightOffer } from '../../lib/home'
-import { Dialog, Spinner } from '../ui'
+import { LAMP_STYLES, lampColour, type LampInfo, type LampStyle, type LightOffer } from '../../lib/home'
+import { Dialog, Select, Spinner } from '../ui'
 
 interface Props {
   open: boolean
@@ -13,7 +13,19 @@ interface Props {
   /** Registry ids already on the page: shown, not offered twice. */
   placed: Set<string>
   onClose: () => void
-  onAdd: (lights: LampInfo[]) => void
+  onAdd: (lights: LampInfo[], style: LampStyle) => void
+}
+
+/** The style a browser last added lamps in, so the next ones match; a convenience, kept in the browser. */
+const LAST_STYLE = 'nexdeck.homeLampStyle'
+
+function lastStyle(): LampStyle {
+  try {
+    const kept = localStorage.getItem(LAST_STYLE)
+    return (LAMP_STYLES as readonly string[]).includes(kept ?? '') ? (kept as LampStyle) : 'pill'
+  } catch {
+    return 'pill'
+  }
 }
 
 /**
@@ -27,6 +39,7 @@ export function LightPicker({ open, pageId, placed, onClose, onAdd }: Props) {
   const offer = useQuery({ queryKey: ['home-lights', pageId], queryFn: () => get<LightOffer>(`/pages/${pageId}/home/lights`), enabled: open, staleTime: 30_000 })
   const [query, setQuery] = useState('')
   const [chosen, setChosen] = useState<string[]>([])
+  const [style, setStyle] = useState<LampStyle>(lastStyle)
   const lights = useMemo(() => offer.data?.lights ?? [], [offer.data])
   const shown = useMemo(() => {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -43,7 +56,12 @@ export function LightPicker({ open, pageId, placed, onClose, onAdd }: Props) {
     const picked = lights.filter((light) => chosen.includes(light.rid))
     setChosen([])
     setQuery('')
-    onAdd(picked)
+    try {
+      localStorage.setItem(LAST_STYLE, style)
+    } catch {
+      // Storage may be unavailable; the next pick starts from the pill again, which is fine.
+    }
+    onAdd(picked, style)
   }
 
   return (
@@ -52,9 +70,15 @@ export function LightPicker({ open, pageId, placed, onClose, onAdd }: Props) {
       onClose={close}
       title={t('homePage.pickTitle')}
       footer={
-        <button type="button" className="btn btn-accent" disabled={chosen.length === 0} onClick={add}>
-          {chosen.length === 0 ? t('homePage.pickNone') : t('homePage.pickAdd', { count: chosen.length })}
-        </button>
+        <>
+          <label className="flex items-center gap-2 mr-auto text-sm text-muted">
+            {t('homePage.style')}
+            <Select value={style} onChange={(value) => setStyle(value as LampStyle)} options={LAMP_STYLES.map((one) => ({ value: one, label: t(`homePage.styles.${one}`) }))} />
+          </label>
+          <button type="button" className="btn btn-accent" disabled={chosen.length === 0} onClick={add}>
+            {chosen.length === 0 ? t('homePage.pickNone') : t('homePage.pickAdd', { count: chosen.length })}
+          </button>
+        </>
       }
     >
       <div className="grid gap-3">
