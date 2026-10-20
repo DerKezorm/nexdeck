@@ -24,7 +24,7 @@ from sqlalchemy import select
 from ..adapters.base import AdapterError, Context, base_url
 from ..db import db_session
 from ..models import Page
-from . import hass_registry, hass_sensors
+from . import hass_covers, hass_registry, hass_sensors
 from .sse import board_topic, hub
 
 #: The only services a home page calls, with the only data each may carry; anything else is
@@ -35,6 +35,11 @@ SERVICES: dict[tuple[str, str], frozenset[str]] = {
     ("climate", "set_temperature"): frozenset({"temperature"}),
     ("climate", "set_hvac_mode"): frozenset({"hvac_mode"}),
     ("climate", "set_preset_mode"): frozenset({"preset_mode"}),
+    ("cover", "open_cover"): frozenset(),
+    ("cover", "close_cover"): frozenset(),
+    ("cover", "stop_cover"): frozenset(),
+    ("cover", "set_cover_position"): frozenset({"position"}),
+    ("cover", "set_cover_tilt_position"): frozenset({"tilt_position"}),
 }
 #: The floor between two ``home`` events of one page; the last change always goes out.
 PUSH_INTERVAL = 0.25
@@ -145,6 +150,8 @@ def switch_demo(cache: dict[str, Any], entity_id: str, service: str, data: dict[
         return None
     if entity_id.startswith("climate."):
         return _demo_climate(states, state, service, data)
+    if entity_id.startswith("cover."):
+        return hass_covers.switch_demo(states, state, service, data)
     on = service == "turn_on"
     attributes = dict(state.get("attributes") or {})
     modes = set(attributes.get("supported_color_modes") or [])
@@ -189,9 +196,20 @@ def _demo_climate(states: dict[str, dict[str, Any]], state: dict[str, Any], serv
 #: (board, page, element, kind, for a thermostat: its entity and the sensor it names)
 Spot = tuple[int, int, str, str, dict[str, Any]]
 #: The domains whose changes a home page shows.
-WATCHED = ("light.", "climate.", "sensor.", "binary_sensor.")
+WATCHED = ("light.", "climate.", "sensor.", "binary_sensor.", "cover.")
 #: The elements that show sensors, and where in each the sensors stand.
 SENSOR_KINDS = ("contact", "contacts", "reading", "readings")
+#: The elements that show covers: one, or a card of several.
+COVER_KINDS = ("cover", "covers")
+
+
+def covers_of(element: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every cover an element of ``COVER_KINDS`` names, as it names them."""
+    if element.get("type") == "cover":
+        return [element]
+    if element.get("type") == "covers":
+        return [one for one in element.get("sensors") or [] if isinstance(one, dict)]
+    return []
 
 
 def sensors_of(element: dict[str, Any]) -> list[dict[str, Any]]:
@@ -259,6 +277,13 @@ class HomeLive:
                 if home.get("integration_id") != integration_id:
                     continue
                 for element in home.get("elements") or []:
+                    if isinstance(element, dict) and element.get("type") in COVER_KINDS:
+                        # A cover is told by the entity id it was placed with, as a sensor is.
+                        for shown in covers_of(element):
+                            placed = str(shown.get("entity_id") or "")
+                            for entity_id in names(shown):
+                                found.setdefault(entity_id, []).append((page.board_id, page.id, placed, "covers", {}))
+                        continue
                     if isinstance(element, dict) and element.get("type") in SENSOR_KINDS:
                         # A sensor is told by the entity id it was placed with: the page keeps its sensors by that.
                         for shown in sensors_of(element):
@@ -297,6 +322,8 @@ class HomeLive:
                 stands = {**hass_registry.light_state(state), "missing": False}
             elif kind == "sensors":
                 stands = hass_sensors.live(entity_id, state)
+            elif kind == "covers":
+                stands = {**hass_covers.cover_state(state), "missing": False}
             else:
                 stands = self._climate(cache, extra, entity_id, state)
             key = (board_id, page_id)

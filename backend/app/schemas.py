@@ -362,6 +362,29 @@ class HomeClimateBody(BaseModel):
         return self
 
 
+class HomeCoverBody(BaseModel):
+    """What a home page asks of a cover or a card of covers: one thing, no service and no entity (``hass_covers``).
+
+    ``member`` picks one cover of a card by the entity id it was placed with;
+    without it the card's covers all go. ``scene`` is one of the card's
+    positions of its own, by its place.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["open", "close", "stop"] | None = None
+    position: StrictInt | None = Field(default=None, ge=0, le=100)
+    tilt: StrictInt | None = Field(default=None, ge=0, le=100)
+    scene: StrictInt | None = Field(default=None, ge=0, le=5)
+    member: str | None = Field(default=None, pattern=r"^cover\.[a-z0-9_]{1,200}$")
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeCoverBody:
+        if sum(value is not None for value in (self.action, self.position, self.tilt, self.scene)) != 1:
+            raise ValueError("Ask a cover one thing at a time: open, close, stop, a position, a slat angle or a position of the card.")
+        return self
+
+
 class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 

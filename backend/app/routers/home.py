@@ -1,4 +1,4 @@
-"""Home pages: a free surface of Home Assistant controls (lamps, thermostats, statistics), and what stands where on it."""
+"""Home pages: a free surface of Home Assistant controls (lamps, thermostats, covers, sensors, statistics), and what stands where on it."""
 
 from __future__ import annotations
 
@@ -19,8 +19,8 @@ from ..deps import (
     require_integration,
 )
 from ..models import ActionLog, Integration, Page
-from ..schemas import HomeClimateBody, HomeLayoutBody, HomeSwitchBody
-from ..services import hass_registry, hass_sensors, hass_stats, home_control
+from ..schemas import HomeClimateBody, HomeCoverBody, HomeLayoutBody, HomeSwitchBody
+from ..services import hass_covers, hass_registry, hass_sensors, hass_stats, home_control
 from ..services import home as home_service
 from ..services.collector import collector
 from ..services.home_control import home_live
@@ -71,6 +71,21 @@ def _climate_of(element: dict[str, Any], thermostats: list[dict[str, Any]], sens
         return {"missing": True}
     wanted = element.get("sensor")
     return home_control.climate_view(found, _find(sensors, wanted) if wanted else None, wanted)
+
+
+async def _covers(integration: Integration) -> list[dict[str, Any]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_covers.covers(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+def _placed_covers(offered: list[dict[str, Any]], elements: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """How each cover the page names stands, by the entity id it was placed with, or that it is gone."""
+    found: dict[str, dict[str, Any]] = {}
+    for element in elements:
+        for cover in home_control.covers_of(element):
+            known = _find(offered, cover)
+            found[cover["entity_id"]] = {**known, "missing": False} if known else {"missing": True}
+    return found
 
 
 async def _house_sensors(integration: Integration) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -150,18 +165,20 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     stored = page.home or {}
     layout = home_service.clean_layout(stored, stored.get("integration_id"))
-    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}, "sensors": {}}
+    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}, "sensors": {}, "covers": {}}
     integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
     answer["problem"] = _connection_problem(integration)
     lamps = [element for element in layout["elements"] if element["type"] == "light"]
     heaters = [element for element in layout["elements"] if element["type"] == "climate"]
     watched = [element for element in layout["elements"] if element["type"] in home_control.SENSOR_KINDS]
-    if answer["problem"] is not None or not (lamps or heaters or watched) or integration is None:
+    shutters = [element for element in layout["elements"] if element["type"] in home_control.COVER_KINDS]
+    if answer["problem"] is not None or not (lamps or heaters or watched or shutters) or integration is None:
         return answer
     try:
         offered = await _offered(integration) if lamps else []
         thermostats, sensors = await _thermostats(integration) if heaters else ([], [])
         answer["sensors"] = await _placed_sensors(integration, watched) if watched else {}
+        answer["covers"] = _placed_covers(await _covers(integration), shutters) if shutters else {}
     except AdapterError as failure:
         answer["problem"] = _problem(failure.code, failure.message, failure.hint)
         return answer
@@ -362,6 +379,112 @@ async def set_climate(page_id: int, element_id: str, body: HomeClimateBody, requ
     home_live.touched(integration.id, ctx.cache, entity_id, state)
     now = {**thermostat, **hass_registry.climate_state(state, thermostat.get("unit", "°C"))}
     return {"ok": True, "confirmed": True, "climate": home_control.climate_view(now, sensor, wanted)}
+
+
+@router.get("/pages/{page_id}/home/covers", summary="The covers a home page can offer")
+async def offer_covers(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every shutter, blind and awning of the page's connection (``hass_covers.pick_covers``); for those who arrange the page."""
+    integration, problem = _arranged(db, page_id, user)
+    if problem is not None or integration is None:
+        return {"covers": [], "problem": problem}
+    try:
+        return {"covers": await _covers(integration), "problem": None}
+    except AdapterError as failure:
+        return {"covers": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+
+
+@router.post("/pages/{page_id}/home/covers/{element_id}", summary="Move a cover, or the covers of a card, on a home page")
+async def move_covers(page_id: int, element_id: str, body: HomeCoverBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """The same rights and checks as a lamp; only the five cover services of ``home_control.SERVICES``.
+
+    A card of covers moves all of them, or the one ``member`` names; a
+    position of the card's own sends each to it. A cover that is gone or
+    cannot be reached is said and left, the others still go; each call is in
+    the action log.
+    """
+    page = _home_page(db, page_id)
+    kiosk = kiosk_from_request(request, db)
+    board, permission = board_for_viewer_id(db, page.board_id, user, kiosk)
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may look at this page, but not switch anything on it.", status.HTTP_403_FORBIDDEN)
+    stored = page.home or {}
+    layout = home_service.clean_layout(stored, stored.get("integration_id"))
+    element = next((item for item in layout["elements"] if item["id"] == element_id and item["type"] in home_control.COVER_KINDS), None)
+    if element is None:
+        raise error("not_found", "There is no such cover on this page.", status.HTTP_404_NOT_FOUND)
+    placed = home_control.covers_of(element)
+    if body.member is not None:
+        placed = [one for one in placed if one["entity_id"] == body.member]
+        if element["type"] != "covers" or not placed:
+            raise error("not_found", "There is no such cover on this card.", status.HTTP_404_NOT_FOUND)
+    position, action = body.position, body.action
+    if body.scene is not None:
+        scenes = element.get("scenes") or []
+        if element["type"] != "covers" or body.scene >= len(scenes):
+            raise error("not_found", "This card has no such position.", status.HTTP_404_NOT_FOUND)
+        position = scenes[body.scene]["position"]
+    integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        raise error(problem["code"] if problem else "no_integration", problem["message"] if problem else "", status.HTTP_409_CONFLICT)
+    try:
+        offered = await _covers(integration)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY) from failure
+    actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    answered: dict[str, dict[str, Any]] = {}
+    refused: list[dict[str, str]] = []
+    for one in placed:
+        cover = _find(offered, one)
+        if cover is None:
+            refused.append({"entity_id": one["entity_id"], "code": "cover_missing", "message": f"{one['name']} is no longer in Home Assistant, or it is hidden there."})
+            continue
+        if cover["unavailable"]:
+            refused.append({"entity_id": one["entity_id"], "code": "cover_unavailable", "message": f"Home Assistant cannot reach {cover['name']} right now."})
+            continue
+        try:
+            domain, service, data = hass_covers.service_for(cover, action=action, position=position, tilt=body.tilt)
+        except AdapterError as failure:
+            refused.append({"entity_id": one["entity_id"], "code": failure.code, "message": failure.message})
+            continue
+        entity_id = cover["entity_id"]
+        ok, changed = True, []
+        try:
+            if collector.is_demo(integration):
+                switched = home_control.switch_demo(ctx.cache, entity_id, service, data)
+                changed = [switched] if switched else []
+                message = f"Demo mode: {domain}.{service} for {entity_id}{_said(data)}."
+            else:
+                changed = await home_control.call(config, ctx, domain, service, entity_id, data)
+                message = f"{domain}.{service} called for {entity_id}{_said(data)}."
+        except AdapterError as failure:
+            ok, message = False, failure.message
+            refused.append({"entity_id": one["entity_id"], "code": failure.code, "message": failure.message})
+        db.add(ActionLog(user_id=user.id if user else None, actor=actor, widget_id=None, integration_id=integration.id,
+                         action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id, **data}, ok=ok, message=message[:400]))
+        if not ok:
+            emit("action_failed", f"{domain}.{service} on {cover['name']} failed", message, level="warn", user_ids=[user.id] if user else None,
+                 integration_id=integration.id)
+            logger.warning("Cover %s on home page %r of board %r could not be moved by %s: %s", entity_id, page.name, board.slug, actor, message)
+            continue
+        logger.info("Cover %s on home page %r of board %r moved by %s: %s", entity_id, page.name, board.slug, actor, message)
+        state = next((item for item in changed if item.get("entity_id") == entity_id), None)
+        if state is not None:
+            live = ctx.cache.get("hass_states")
+            if isinstance(live, dict):
+                live[entity_id] = state
+            home_live.touched(integration.id, ctx.cache, entity_id, state)
+            answered[one["entity_id"]] = {**cover, **hass_covers.cover_state(state), "missing": False}
+        else:
+            answered[one["entity_id"]] = {**cover, "missing": False}
+    db.commit()
+    if refused and not answered:
+        first = refused[0]
+        bad = status.HTTP_409_CONFLICT if first["code"] in ("cover_missing", "cover_unavailable", "not_supported") else status.HTTP_502_BAD_GATEWAY
+        raise error(first["code"], first["message"], bad)
+    # No bell on success, as with a lamp: the cover on the page is the answer.
+    return {"ok": True, "covers": answered, "refused": refused}
 
 
 @router.get("/pages/{page_id}/home/contacts", summary="The doors and windows a home page can show")

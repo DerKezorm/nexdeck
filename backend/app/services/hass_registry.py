@@ -332,7 +332,12 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
                {"id": "d-door-terrace", "name": "Terrace door contact", "area_id": "living"},
                {"id": "d-window-bed", "name": "Bedroom window contact", "area_id": "bedroom"},
                {"id": "d-window-cellar", "name": "Cellar window contact", "area_id": "cellar"},
-               {"id": "d-window-guest", "name": "Guest room window contact", "area_id": None}]
+               {"id": "d-window-guest", "name": "Guest room window contact", "area_id": None},
+               {"id": "d-cover-terrace", "name": "Terrace shutter", "area_id": "living"},
+               {"id": "d-cover-kitchen", "name": "Kitchen shutter", "area_id": "kitchen"},
+               {"id": "d-cover-bed", "name": "Bedroom shutter", "area_id": "bedroom"},
+               {"id": "d-cover-office", "name": "Office blind", "area_id": "hall"},
+               {"id": "d-cover-garage", "name": "Garage door", "area_id": "garden"}]
 
     def entry(rid: str, entity_id: str, device: str | None, **extra: Any) -> dict[str, Any]:
         return {"id": rid, "entity_id": entity_id, "device_id": device, "area_id": None, "entity_category": None,
@@ -380,6 +385,13 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         # A motion sensor is no door: not offered.
         entry("r-motion-hall", "binary_sensor.hall_motion", None, area_id="hall"),
         entry("r-win-old", "binary_sensor.old_window", None, hidden_by="user"),
+        entry("r-cover-terrace", "cover.living_room_terrace", "d-cover-terrace"),
+        entry("r-cover-kitchen", "cover.kitchen", "d-cover-kitchen"),
+        entry("r-cover-bed", "cover.bedroom", "d-cover-bed"),
+        entry("r-cover-office", "cover.office_blind", "d-cover-office"),
+        entry("r-cover-garage", "cover.garage_door", "d-cover-garage"),
+        entry("r-cover-guest", "cover.guest_room", None),
+        entry("r-cover-old", "cover.old_shutter", None, hidden_by="user"),
     ]
 
     def state(entity_id: str, name: str, value: str, modes: list[str], **attributes: Any) -> dict[str, Any]:
@@ -397,7 +409,18 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "unit_of_measurement": unit, "device_class": kind,
                                                                          "state_class": "measurement"}}
 
+    def cover(entity_id: str, name: str, value: str, kind: str, features: int, **attributes: Any) -> dict[str, Any]:
+        return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "device_class": kind, "supported_features": features, **attributes}}
+
     states = {
+        # Shutters as in the measured house: open, close, a position, stop (15); a blind with slats too (255); a door that only opens and closes (3).
+        "cover.living_room_terrace": cover("cover.living_room_terrace", "Living room terrace", "closed", "shutter", 15, current_position=0),
+        "cover.kitchen": cover("cover.kitchen", "Kitchen", "open", "shutter", 15, current_position=45),
+        "cover.bedroom": cover("cover.bedroom", "Bedroom", "closing", "shutter", 15, current_position=70),
+        "cover.office_blind": cover("cover.office_blind", "Office blind", "open", "blind", 255, current_position=100, current_tilt_position=45),
+        "cover.garage_door": cover("cover.garage_door", "Garage door", "closed", "garage", 3),
+        "cover.guest_room": {"entity_id": "cover.guest_room", "state": "unavailable", "attributes": {"friendly_name": "Guest room"}},
+        "cover.old_shutter": cover("cover.old_shutter", "Old shutter", "open", "shutter", 15, current_position=100),
         "sensor.bathroom_temperature": reading("sensor.bathroom_temperature", "Bathroom temperature", "23.1", "°C", "temperature"),
         "sensor.bathroom_humidity": reading("sensor.bathroom_humidity", "Bathroom humidity", "71", "%", "humidity"),
         "sensor.bedroom_humidity": reading("sensor.bedroom_humidity", "Bedroom humidity", "54", "%", "humidity"),

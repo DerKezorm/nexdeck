@@ -32,7 +32,7 @@ MAX_COORD = 20000
 #: How long a heading may be.
 MAX_TEXT = 60
 
-KINDS = ("heading", "light", "climate", "stat", "contact", "contacts", "reading", "readings", "hints")
+KINDS = ("heading", "light", "climate", "stat", "contact", "contacts", "reading", "readings", "hints", "cover", "covers")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
@@ -53,6 +53,13 @@ CONTACT_STYLES = ("pill", "chip", "tile", "window", "door")
 CONTACTS_STYLES = ("list", "house")
 READING_STYLES = ("pill", "tile", "thermometer", "ring")
 CHECKS = ("heating", "humid")
+#: How a cover is drawn, and a card of several; the browser keeps the same (``COVER_STYLES``, ``COVERS_STYLES``).
+COVER_STYLES = ("pill", "chip", "tile", "window", "slider", "tilt")
+COVERS_STYLES = ("group", "scenes")
+#: How many covers one card keeps, how many positions of its own a card of positions has, and their default.
+MAX_COVERS = 24
+MAX_SCENES = 6
+DEFAULT_SCENES = ({"name": "Morning", "position": 100}, {"name": "Shade", "position": 30}, {"name": "Night", "position": 0})
 #: How many contacts one card keeps, and rooms one list.
 MAX_CONTACTS = 60
 MAX_ROWS = 12
@@ -67,6 +74,7 @@ _LIGHT = re.compile(r"^light\.[a-z0-9_]{1,200}$")
 _CLIMATE = re.compile(r"^climate\.[a-z0-9_]{1,200}$")
 _SENSOR = re.compile(r"^sensor\.[a-z0-9_]{1,200}$")
 _BINARY = re.compile(r"^binary_sensor\.[a-z0-9_]{1,200}$")
+_COVER = re.compile(r"^cover\.[a-z0-9_]{1,200}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 
@@ -100,6 +108,52 @@ def _label(element: dict[str, Any], raw: dict[str, Any]) -> None:
     label = _text(raw.get("label"), MAX_NAME)
     if label:
         element["label"] = label
+
+
+def _scenes(raw: Any) -> list[dict[str, Any]]:
+    """A card's positions of its own: a name and a position each, the default three when it names none."""
+    found = []
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict):
+            continue
+        name, position = _text(item.get("name"), 40), item.get("position")
+        if not name or isinstance(position, bool) or not isinstance(position, (int, float)) or position != position:
+            continue
+        found.append({"name": name, "position": max(0, min(100, round(position)))})
+        if len(found) == MAX_SCENES:
+            break
+    return found or [dict(one) for one in DEFAULT_SCENES]
+
+
+def _cover_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, Any]) -> dict[str, Any] | None:
+    """A cover, or a card of several (a group, or positions of its own); None when it names none."""
+    element: dict[str, Any] = {"id": element_id, "type": kind, "x": x, "y": y}
+    if kind == "cover":
+        cover = _sensor(raw, _COVER)
+        if cover is None:
+            return None
+        element.update(rid=cover["rid"], entity_id=cover["entity_id"], name=cover["name"],
+                       style=raw.get("style") if raw.get("style") in COVER_STYLES else COVER_STYLES[0])
+        _label(element, raw)
+    else:
+        given = raw.get("sensors")
+        sensors: list[dict[str, Any]] = []
+        for item in given if isinstance(given, list) else []:
+            sensor = _sensor(item, _COVER)
+            if sensor is not None and all(one["entity_id"] != sensor["entity_id"] for one in sensors):
+                sensors.append(sensor)
+            if len(sensors) == MAX_COVERS:
+                break
+        if not sensors:
+            return None
+        style = raw.get("style") if raw.get("style") in COVERS_STYLES else COVERS_STYLES[0]
+        element.update(style=style, sensors=sensors, title=_text(raw.get("title"), MAX_NAME))
+        if style == "scenes":
+            element["scenes"] = _scenes(raw.get("scenes"))
+    width = _size(raw.get("width"), WIDTHS)
+    if width is not None:
+        element["width"] = width
+    return element
 
 
 def _pair(raw: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
@@ -200,6 +254,8 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         return _stat(element_id, x, y, raw)
     if kind in ("contact", "contacts", "reading", "readings", "hints"):
         return _sensors_element(element_id, kind, x, y, raw)
+    if kind in ("cover", "covers"):
+        return _cover_element(element_id, kind, x, y, raw)
     if kind in ("light", "climate"):
         rid, entity_id = raw.get("rid"), raw.get("entity_id")
         pattern, styles = (_LIGHT, STYLES) if kind == "light" else (_CLIMATE, CLIMATE_STYLES)
