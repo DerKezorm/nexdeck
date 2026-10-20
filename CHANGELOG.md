@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.44.0 (2026-10-20)
+
+### Added
+
+- **Pulse** (#47), as a beta. Three cards: an overview with the active alerts and what Pulse watches (nodes, VMs, LXC and Docker containers, how many resources are critical or need attention), **Needs a look** with the resources Pulse is not happy with, worst first and with the reason, and the **active alerts**, critical first, acknowledged ones on request. A token with Pulse's preset Kiosk / Monitoring (`monitoring:read` alone) is enough; the cards only read. Pulse 6.0 or newer, the Needs a look card 6.5 or newer. Run against a fresh Pulse 6.5.0 with a Docker agent, not yet against Proxmox.
+
+### Upgrading
+
+Nothing to do. No change to the database.
+
 ## 0.43.0 (2026-10-19)
 
 ### Added
