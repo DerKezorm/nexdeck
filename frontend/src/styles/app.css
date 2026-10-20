@@ -2592,6 +2592,34 @@ body.has-player-bar main {
     left: 0;
   }
 
+  /*
+   * While arranging, the tools and grips show only on the element pointed at,
+   * the one touched last, or one whose menu or name field is open: on every
+   * element at once they buried the page (seen 20.10.2026). They go after a
+   * short wait, so the pointer gets across to them; a margin round them
+   * bridges the gap to the drawing.
+   */
+  [data-arranging] .home-tools,
+  [data-arranging] .home-tools-inline,
+  [data-arranging] .home-grip {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease 0.3s, visibility 0s linear 0.45s;
+  }
+
+  [data-arranging] [data-element]:is(:hover, :focus-within, [data-chosen], :has([role="menu"], [data-rename])) :is(.home-tools, .home-tools-inline, .home-grip) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.1s ease, visibility 0s;
+  }
+
+  .home-tools::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    z-index: -1;
+  }
+
   /* Tools outside the drawing can stand nearer a neighbour: pointing at one shows whose they are. */
   [data-arranging] [data-element]:hover .home-tools .btn {
     box-shadow: 0 0 0 1px var(--nd-accent);

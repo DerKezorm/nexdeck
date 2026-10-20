@@ -116,3 +116,20 @@ it('splits the edit bar into what goes onto the page and the page and board them
   expect(within(add).queryByRole('button', { name: 'Done' })).toBeNull()
   expect(within(board).queryByRole('button', { name: 'Light' })).toBeNull()
 })
+
+it('shows the tools of the element touched last, until the page itself is touched', async () => {
+  show()
+  const cover = await waitFor(() => {
+    const found = document.querySelector('[data-element="c"]') as HTMLElement | null
+    if (!found) throw new Error('not drawn yet')
+    return found
+  })
+  expect(cover).not.toHaveAttribute('data-chosen')
+  // A mouse chooses nothing: it points, and the pointing shows them.
+  fireEvent.pointerDown(cover.firstElementChild as HTMLElement, { pointerType: 'mouse', button: 0 })
+  expect(cover).not.toHaveAttribute('data-chosen')
+  fireEvent.pointerDown(cover.firstElementChild as HTMLElement, { pointerType: 'touch', button: 0 })
+  expect(cover).toHaveAttribute('data-chosen')
+  fireEvent.pointerDown(document.querySelector('[data-home-surface]') as HTMLElement, { pointerType: 'touch', button: 0 })
+  expect(cover).not.toHaveAttribute('data-chosen')
+})

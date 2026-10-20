@@ -590,6 +590,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number; scale?: number } | null>(null)
   // Not while an element is dragged: it is placed anew once it is let go.
   useToolsOutside(surface, arranging && !dragged ? layout?.elements ?? null : null)
+  /** The element touched last, by finger or pen: its tools show until another is touched or the page itself. */
+  const [chosen, setChosen] = useState<string | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const grab = useRef<{
     id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean
@@ -613,6 +615,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     return { own, others }
   }
   const onPointerDown = (element: HomeElement) => (event: ReactPointerEvent<HTMLElement>) => {
+    // A finger has no pointer that rests on an element: the one touched last shows its tools.
+    if (arranging && event.pointerType !== 'mouse') setChosen(element.id)
     if (!arranging || narrow || event.button !== 0 || renaming === element.id) return
     const target = event.target as HTMLElement
     if (target.closest('[data-element-tool]')) return
@@ -845,6 +849,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           data-home-surface
           data-guides={arranging && guidesOn ? '' : undefined}
           data-arranging={arranging ? '' : undefined}
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setChosen(null)
+          }}
         >
           {guides.map((guide, index) => (
             <span key={index} className="home-guide" data-guide={guide.axis}
@@ -862,6 +869,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 onPointerUp={onPointerUp}
                 onPointerCancel={() => { grab.current = null; setDragged(null) }}
                 data-element={element.id}
+                data-chosen={arranging && chosen === element.id ? '' : undefined}
               >
                 <Scaled element={element}><Felt arranging={arranging} look={lookOf(element)}>{draw(element)}</Felt></Scaled>
                 {arranging && isScalable(element) && <span className="home-grip home-grip-corner" data-resize="scale" aria-hidden title={t('homePage.stats.dragSize')} />}
@@ -1143,7 +1151,7 @@ function HeadingView(props: {
         {element.text}
       </h2>
       {arranging && (
-        <span className="flex items-center" data-element-tool>
+        <span className="flex items-center home-tools-inline" data-element-tool>
           <button type="button" className="btn btn-icon btn-flat h-6 w-6" onClick={props.onStartRename} aria-label={t('homePage.renameHeading')} title={t('homePage.renameHeading')}>
             <Pencil size={13} />
           </button>
@@ -1307,8 +1315,8 @@ function overlap(a: Rect, b: Rect): number {
 }
 
 /**
- * The first side where the tools cover nothing (no element, no tools already
- * placed, nothing outside the page); where every side covers something, the
+ * The first side where the tools cover nothing (no element, nothing outside
+ * the page); where every side covers something, the
  * one that covers least.
  */
 export function pickToolSide(candidates: Record<ToolSide, Rect>, obstacles: Rect[], bounds: Rect): ToolSide {
@@ -1358,7 +1366,6 @@ export function useToolsOutside(box: React.RefObject<HTMLElement | null>, elemen
         }
         const side = pickToolSide(candidates, others, { left: bounds.left, top: bounds.top - 8, right: bounds.right, bottom: bounds.bottom + 8 })
         holder.dataset.tools = side
-        obstacles.push(candidates[side])
       })
     }
     const soon = () => {
