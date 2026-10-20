@@ -2632,7 +2632,8 @@ body.has-player-bar main {
   }
 
   /* The tools of a drawn element keep their size when it is grown or shrunk (Scaled in HomePage). */
-  [data-scaled] [data-element-tool], [data-scaled] .home-grip {
+  /* Only the outermost: the name button is a tool inside the tools, and shrank once more (seen 20.10.2026). */
+  [data-scaled] [data-element-tool]:not([data-element-tool] *), [data-scaled] .home-grip {
     zoom: calc(1 / var(--home-scale, 1));
   }
 

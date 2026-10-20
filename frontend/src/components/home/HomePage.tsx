@@ -1336,13 +1336,15 @@ export function pickToolSide(candidates: Record<ToolSide, Rect>, obstacles: Rect
 }
 
 /**
- * The style, name and remove buttons of an element stand outside its drawing,
- * where they cover neither it nor the elements beside it: each side is tried
- * on the page and measured, so zoomed drawings and nested cards need no sums.
+ * The style, name and remove buttons of an element stand above its corner,
+ * outside the drawing, and only where that leaves the page on another side:
+ * each side is tried on the page and measured, so zoomed drawings and nested
+ * cards need no sums.
  *
  * ⚠️ On the drawing itself they hid what a small one shows, a tile's "off"
- * among them (seen 20.10.2026). Plainly above every element would not do:
- * pills stacked closely would get them over the pill above.
+ * among them (seen 20.10.2026). Dodging the neighbours as well put them on
+ * every side by turns; since they show on one element at a time, above it
+ * is where they are looked for.
  */
 export function useToolsOutside(box: React.RefObject<HTMLElement | null>, elements: unknown) {
   useEffect(() => {
@@ -1353,18 +1355,16 @@ export function useToolsOutside(box: React.RefObject<HTMLElement | null>, elemen
       frame = 0
       const bounds = root.getBoundingClientRect()
       if (!bounds.width) return
-      const holders = [...root.querySelectorAll<HTMLElement>('[data-element]')]
-      const obstacles: Rect[] = holders.map((holder) => holder.getBoundingClientRect())
-      holders.forEach((holder, index) => {
+      root.querySelectorAll<HTMLElement>('[data-element]').forEach((holder) => {
         const tools = holder.querySelector<HTMLElement>('.home-tools')
         if (!tools) return
-        const others = obstacles.filter((_, at) => at !== index)
         const candidates = {} as Record<ToolSide, Rect>
         for (const side of TOOL_SIDES) {
           holder.dataset.tools = side
           candidates[side] = tools.getBoundingClientRect()
         }
-        const side = pickToolSide(candidates, others, { left: bounds.left, top: bounds.top - 8, right: bounds.right, bottom: bounds.bottom + 8 })
+        // Only the page bounds them: they show on one element at a time, over its neighbours if need be.
+        const side = pickToolSide(candidates, [], { left: bounds.left, top: bounds.top - 16, right: bounds.right, bottom: bounds.bottom + 8 })
         holder.dataset.tools = side
       })
     }
