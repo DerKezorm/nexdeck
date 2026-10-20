@@ -1865,6 +1865,18 @@
         "window": "Fenster gezeichnet",
         "slider": "Schieber senkrecht",
         "tilt": "Lamellen"
+      },
+      "sceneStyles": {
+        "pill": "Pille",
+        "tile": "Kachel"
+      },
+      "switchStyles": {
+        "pill": "Pille",
+        "outlet": "Steckdose gezeichnet",
+        "rocker": "Kippschalter",
+        "toggle": "Umschalter",
+        "chip": "Chip",
+        "tile": "Kachel"
       }
     },
     "rename": "Eigener Name",
@@ -1917,6 +1929,69 @@
       "raise": "{{name}} öffnen",
       "openingWord": "öffnet",
       "closingWord": "schließt"
+    },
+    "scenes": {
+      "add": "Szene",
+      "running": "läuft",
+      "fired": "ausgelöst",
+      "script": "Skript",
+      "tap": "antippen",
+      "stop": "{{name}} anhalten",
+      "remove": "Szene entfernen",
+      "colour": "Farbe der Kachel",
+      "notRunning": "Läuft gerade nicht.",
+      "lastAt": "Zuletzt ausgelöst um {{time}}.",
+      "never": "Noch nicht ausgelöst, soweit Home Assistant weiß.",
+      "run": "Starten",
+      "setOff": "Auslösen",
+      "stopWord": "Anhalten",
+      "scenes": "Szenen",
+      "pickTitle": "Szenen und Skripte",
+      "titleHint": "leer: der Raum der Szenen",
+      "cardStyles": {
+        "bar": "Szenen eines Raums",
+        "grid": "Szenen-Raster"
+      },
+      "colours": {
+        "sunset": "Sonnenuntergang",
+        "ocean": "Meer",
+        "forest": "Wald",
+        "focus": "Konzentration",
+        "night": "Nacht",
+        "rose": "Rose"
+      }
+    },
+    "switches": {
+      "add": "Schalter",
+      "switching": "schaltet …",
+      "helper": "Helfer",
+      "outlet": "Steckdose",
+      "onWord": "An",
+      "offWord": "Aus",
+      "remove": "Schalter entfernen",
+      "askFirst": "Vor dem Ausschalten fragen",
+      "askFirstLong": "Vor dem Ausschalten fragen (Kühlschrank, Server, Router)",
+      "confirmTitle": "{{name}} ausschalten?",
+      "confirmText": "Es bleibt aus, bis es jemand wieder einschaltet.",
+      "switchOff": "Ausschalten",
+      "now": "jetzt",
+      "today": "heute",
+      "onSince": "an seit",
+      "offSince": "aus seit",
+      "switch": "Schalter",
+      "group": "Schalter",
+      "total": "gesamt {{value}}",
+      "allOn": "Alle an",
+      "allOff": "Alle aus",
+      "pickTitle": "Schalter und Helfer",
+      "failed": "Es ließ sich nicht schalten.",
+      "cardStyles": {
+        "group": "Schalter-Gruppe"
+      },
+      "problems": {
+        "action_missing": "Das gibt es in Home Assistant nicht mehr.",
+        "action_unavailable": "Home Assistant erreicht es gerade nicht."
+      }
     }
   }
 }

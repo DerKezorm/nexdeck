@@ -1865,6 +1865,18 @@
         "window": "Finestra disegnata",
         "slider": "Cursore verticale",
         "tilt": "Lamelle"
+      },
+      "sceneStyles": {
+        "pill": "Pillola",
+        "tile": "Riquadro"
+      },
+      "switchStyles": {
+        "pill": "Pillola",
+        "outlet": "Presa disegnata",
+        "rocker": "Bilanciere",
+        "toggle": "Commutatore",
+        "chip": "Chip",
+        "tile": "Riquadro"
       }
     },
     "rename": "Nome proprio",
@@ -1917,6 +1929,69 @@
       "raise": "Apri {{name}}",
       "openingWord": "si apre",
       "closingWord": "si chiude"
+    },
+    "scenes": {
+      "add": "Scena",
+      "running": "in corso",
+      "fired": "avviata",
+      "script": "Script",
+      "tap": "tocca",
+      "stop": "Ferma {{name}}",
+      "remove": "Rimuovi scena",
+      "colour": "Colore del riquadro",
+      "notRunning": "Non in corso.",
+      "lastAt": "Avviata l’ultima volta alle {{time}}.",
+      "never": "Non ancora avviata, per quanto sa Home Assistant.",
+      "run": "Avvia",
+      "setOff": "Avvia",
+      "stopWord": "Ferma",
+      "scenes": "Scene",
+      "pickTitle": "Scene e script",
+      "titleHint": "vuoto: la stanza delle scene",
+      "cardStyles": {
+        "bar": "Scene di una stanza",
+        "grid": "Griglia di scene"
+      },
+      "colours": {
+        "sunset": "Tramonto",
+        "ocean": "Oceano",
+        "forest": "Bosco",
+        "focus": "Concentrazione",
+        "night": "Notte",
+        "rose": "Rosa"
+      }
+    },
+    "switches": {
+      "add": "Interruttore",
+      "switching": "commuta …",
+      "helper": "Aiutante",
+      "outlet": "Presa",
+      "onWord": "Acceso",
+      "offWord": "Spento",
+      "remove": "Rimuovi interruttore",
+      "askFirst": "Chiedere prima di spegnere",
+      "askFirstLong": "Chiedere prima di spegnere (frigo, server, router)",
+      "confirmTitle": "Spegnere {{name}}?",
+      "confirmText": "Resta spento finché qualcuno non lo riaccende.",
+      "switchOff": "Spegni",
+      "now": "ora",
+      "today": "oggi",
+      "onSince": "acceso dalle",
+      "offSince": "spento dalle",
+      "switch": "Interruttore",
+      "group": "Interruttori",
+      "total": "in tutto {{value}}",
+      "allOn": "Accendi tutto",
+      "allOff": "Spegni tutto",
+      "pickTitle": "Interruttori e aiutanti",
+      "failed": "Non è stato possibile commutare.",
+      "cardStyles": {
+        "group": "Gruppo di interruttori"
+      },
+      "problems": {
+        "action_missing": "Non è più in Home Assistant.",
+        "action_unavailable": "Home Assistant ora non lo raggiunge."
+      }
     }
   }
 }

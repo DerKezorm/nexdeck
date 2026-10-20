@@ -106,7 +106,7 @@ function DoorDrawing({ open }: { open: boolean }) {
 interface ToolsProps {
   styles: readonly string[]
   current: string
-  group: 'contactStyles' | 'readingStyles' | 'coverStyles'
+  group: 'contactStyles' | 'readingStyles' | 'coverStyles' | 'sceneStyles' | 'switchStyles'
   onStyle: (style: string) => void
   onRemove: () => void
   removeLabel: string
@@ -114,10 +114,12 @@ interface ToolsProps {
   wide: boolean
   /** The pencil: the page's own name, and Home Assistant's to fall back to. */
   rename?: { label: string; fallback: string; onLabel: (label: string) => void }
+  /** A tool of the element's own, beside the others. */
+  extra?: ReactNode
 }
 
 /** The palette and the bin beside an element while arranging, and the grip for its width. */
-export function SensorTools({ styles, current, group, onStyle, onRemove, removeLabel, width, wide, rename }: ToolsProps) {
+export function SensorTools({ styles, current, group, onStyle, onRemove, removeLabel, width, wide, rename, extra }: ToolsProps) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState(false)
   return (
@@ -130,6 +132,7 @@ export function SensorTools({ styles, current, group, onStyle, onRemove, removeL
             <Palette size={12} />
           </button>
         )}
+        {extra}
         {rename && <Rename {...rename} />}
         <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={removeLabel} title={removeLabel}>
           <Trash2 size={12} />

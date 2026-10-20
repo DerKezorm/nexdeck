@@ -70,6 +70,7 @@ export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'sli
 export const DEFAULT_WIDTH = {
   pill: 224, chip: 176, slider: 176, climate: 320, climateChip: 200, climateSlider: 230,
   contact: 264, contactChip: 150, reading: 250, contacts: 300, house: 380, readings: 400, hints: 330, cover: 300, coverChip: 160, covers: 330,
+  scene: 250, switch: 250, switchToggle: 260, switchChip: 150, scenes: 360, sceneGrid: 330, switches: 330,
 } as const
 /** The bounds of a width dragged by hand; the server keeps the same. */
 export const MIN_WIDTH = 96
@@ -77,7 +78,10 @@ export const MAX_WIDTH = 640
 
 /** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
 export function isResizable(element: HomeElement): element is Sized {
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return true
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers' || element.type === 'scenes' ||
+    element.type === 'switches') return true
+  if (element.type === 'scene') return element.style === 'pill'
+  if (element.type === 'switch') return element.style === 'pill' || element.style === 'chip' || element.style === 'toggle'
   if (element.type === 'cover') return element.style === 'pill' || element.style === 'chip' || element.style === 'tilt'
   if (element.type === 'contact') return element.style === 'pill' || element.style === 'chip'
   if (element.type === 'reading') return element.style === 'pill'
@@ -96,6 +100,10 @@ export function controlWidth(element: HomeElement): number | null {
     : element.type === 'readings' ? DEFAULT_WIDTH.readings
     : element.type === 'cover' ? (element.style === 'chip' ? DEFAULT_WIDTH.coverChip : DEFAULT_WIDTH.cover)
     : element.type === 'covers' ? DEFAULT_WIDTH.covers
+    : element.type === 'scene' ? DEFAULT_WIDTH.scene
+    : element.type === 'switch' ? (element.style === 'chip' ? DEFAULT_WIDTH.switchChip : element.style === 'toggle' ? DEFAULT_WIDTH.switchToggle : DEFAULT_WIDTH.switch)
+    : element.type === 'scenes' ? (element.style === 'grid' ? DEFAULT_WIDTH.sceneGrid : DEFAULT_WIDTH.scenes)
+    : element.type === 'switches' ? DEFAULT_WIDTH.switches
     : DEFAULT_WIDTH.hints
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, element.width ?? fallback))
 }
@@ -108,7 +116,10 @@ export const WIDE_CLIMATE_STYLES: ReadonlySet<string> = new Set(['pill', 'chip',
 /** Whether an element runs the width of a phone's screen: a thermostat and a lamp by their style, a card unless it is a small one. */
 export function isWide(element: HomeItem): boolean {
   if (element.type === 'stat') return element.style !== 'small'
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return true
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers' || element.type === 'scenes' ||
+    element.type === 'switches') return true
+  if (element.type === 'scene') return element.style === 'pill'
+  if (element.type === 'switch') return element.style === 'pill' || element.style === 'toggle'
   if (element.type === 'contact' || element.type === 'reading') return element.style === 'pill'
   if (element.type === 'cover') return element.style === 'pill' || element.style === 'tilt'
   return element.type === 'climate' ? WIDE_CLIMATE_STYLES.has(element.style) : WIDE_STYLES.has(element.style)
@@ -123,8 +134,9 @@ const HEADING_HEIGHT = 24
 export const SCALES = [0.75, 3] as const
 
 /** Whether an element is sized at its corner as a whole: every drawn style, all but those with a width of their own and the cards. */
-export function isScalable(element: HomeElement): element is HomeLight | HomeClimate | HomeContact | HomeReading | HomeCover {
-  return (element.type === 'light' || element.type === 'climate' || element.type === 'contact' || element.type === 'reading' || element.type === 'cover') && !isResizable(element)
+export function isScalable(element: HomeElement): element is HomeLight | HomeClimate | HomeContact | HomeReading | HomeCover | HomeScene | HomeSwitch {
+  return (element.type === 'light' || element.type === 'climate' || element.type === 'contact' || element.type === 'reading' || element.type === 'cover' ||
+    element.type === 'scene' || element.type === 'switch') && !isResizable(element)
 }
 
 /** How much an element is grown or shrunk, inside ``SCALES``. */
@@ -159,6 +171,10 @@ function baseHeight(element: HomeElement): number {
   if (element.type === 'hints') return 156
   if (element.type === 'cover') return (COVER_FOOTPRINTS[element.style] ?? COVER_FOOTPRINTS.pill).height
   if (element.type === 'covers') return element.style === 'scenes' ? 116 : 56 + 26 * element.sensors.length
+  if (element.type === 'scene') return (SCENE_FOOTPRINTS[element.style] ?? SCENE_FOOTPRINTS.pill).height
+  if (element.type === 'switch') return (SWITCH_FOOTPRINTS[element.style] ?? SWITCH_FOOTPRINTS.pill).height
+  if (element.type === 'scenes') return element.style === 'grid' ? 44 + 70 * Math.ceil(element.sensors.length / 4) : 76
+  if (element.type === 'switches') return 52 + 32 * element.sensors.length
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
@@ -167,7 +183,10 @@ function baseWidth(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).width
   if (element.type === 'contact') return controlWidth(element) ?? (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).width
   if (element.type === 'reading') return controlWidth(element) ?? (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).width
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return controlWidth(element) ?? DEFAULT_WIDTH.hints
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers' || element.type === 'scenes' ||
+    element.type === 'switches') return controlWidth(element) ?? DEFAULT_WIDTH.hints
+  if (element.type === 'scene') return controlWidth(element) ?? (SCENE_FOOTPRINTS[element.style] ?? SCENE_FOOTPRINTS.pill).width
+  if (element.type === 'switch') return controlWidth(element) ?? (SWITCH_FOOTPRINTS[element.style] ?? SWITCH_FOOTPRINTS.pill).width
   if (element.type === 'cover') return controlWidth(element) ?? (COVER_FOOTPRINTS[element.style] ?? COVER_FOOTPRINTS.pill).width
   if (isResizable(element) && element.width !== undefined) return controlWidth(element) ?? FOOTPRINT.pill.width
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).width
@@ -318,12 +337,12 @@ export function statSize(element: HomeStat): { width: number; height: number } {
 }
 
 /** Anything on the surface that is not a heading: what a phone lists under one. */
-export type HomeItem = HomeDevice | HomeStat | HomeSensorElement | HomeCover | HomeCovers
+export type HomeItem = HomeDevice | HomeStat | HomeSensorElement | HomeCover | HomeCovers | HomeActionElement
 
-export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat | HomeSensorElement | HomeCover | HomeCovers
+export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat | HomeSensorElement | HomeCover | HomeCovers | HomeActionElement
 
 /** What has a width to drag. */
-export type Sized = HomeDevice | HomeContact | HomeReading | HomeContacts | HomeReadings | HomeHints | HomeCover | HomeCovers
+export type Sized = HomeDevice | HomeContact | HomeReading | HomeContacts | HomeReadings | HomeHints | HomeCover | HomeCovers | HomeActionElement
 
 export interface HomeLayout {
   integration_id: number | null
@@ -423,6 +442,8 @@ export interface HomeAnswer {
   sensors?: Record<string, SensorState>
   /** How each cover of the page stands, by the entity id it was placed with. */
   covers?: Record<string, CoverState>
+  /** How each scene, script and switch of the page stands, by the entity id it was placed with. */
+  actions?: Record<string, ActionState>
 }
 
 /** How a thermostat stands, as an answer or the board's stream says it. */
@@ -445,6 +466,7 @@ export interface HomeNews {
   climates?: Record<string, ClimateState>
   sensors?: Record<string, SensorState>
   covers?: Record<string, CoverState>
+  actions?: Record<string, ActionState>
 }
 
 /** The page's answer with news of its thermostats put in, the way ``withLamps`` does for lamps. */
@@ -464,7 +486,8 @@ export function withNews(answer: HomeAnswer, news: HomeNews): HomeAnswer {
   const lit = news.lights ? withLamps(answer, news.lights) : answer
   const warm = news.climates ? withClimates(lit, news.climates) : lit
   const felt = news.sensors ? withSensors(warm, news.sensors) : warm
-  return news.covers ? withCovers(felt, news.covers) : felt
+  const moved = news.covers ? withCovers(felt, news.covers) : felt
+  return news.actions ? withActions(moved, news.actions) : moved
 }
 
 /**
@@ -1272,7 +1295,7 @@ export const MAX_SCENES = 6
 export const COVER_FOOTPRINTS: Record<CoverStyle, { width: number; height: number }> = {
   pill: { width: 300, height: 40 },
   chip: { width: 160, height: 28 },
-  tile: { width: 132, height: 118 },
+  tile: { width: 150, height: 118 },
   window: { width: 110, height: 140 },
   slider: { width: 104, height: 160 },
   tilt: { width: 300, height: 72 },
@@ -1372,4 +1395,193 @@ export function positionAt(share: number): number {
 export function sceneHolds(scene: CoverScene, covers: (CoverState | undefined)[]): boolean {
   const known = covers.filter((one): one is CoverState & { missing: false } => Boolean(one && !one.missing && !one.unavailable))
   return known.length > 0 && known.every((one) => one.position === scene.position)
+}
+
+// ---------------------------------------------------------------------------
+// Scenes, scripts and switches (``hass_switches``)
+// ---------------------------------------------------------------------------
+
+/**
+ * The styles of the board of sketches (``szenen-schalter.html``, 20.10.2026):
+ * a scene or script as A/E pill or B tile, several as C bar of a room or D
+ * grid; a switch as F pill, G outlet, H rocker, I toggle, J chip or tile; K
+ * a card of switches. The server keeps the same lists.
+ */
+export const SCENE_STYLES = ['pill', 'tile'] as const
+export type SceneStyle = (typeof SCENE_STYLES)[number]
+export const SCENES_STYLES = ['bar', 'grid'] as const
+export type ScenesStyle = (typeof SCENES_STYLES)[number]
+export const SWITCH_STYLES = ['pill', 'outlet', 'rocker', 'toggle', 'chip', 'tile'] as const
+export type SwitchStyle = (typeof SWITCH_STYLES)[number]
+export const SCENE_COLOURS = ['sunset', 'ocean', 'forest', 'focus', 'night', 'rose'] as const
+export type SceneColour = (typeof SCENE_COLOURS)[number]
+/** The two ends of each colour of a scene's tile. */
+export const SCENE_GRADIENTS: Record<SceneColour, [string, string]> = {
+  sunset: ['#fb923c', '#f472b6'],
+  ocean: ['#38bdf8', '#6366f1'],
+  forest: ['#4ade80', '#0d9488'],
+  focus: ['#7dd3fc', '#a78bfa'],
+  night: ['#6366f1', '#1e1b4b'],
+  rose: ['#f472b6', '#fb7185'],
+}
+export const MAX_ACTIONS = 24
+
+export const SCENE_FOOTPRINTS: Record<SceneStyle, { width: number; height: number }> = {
+  pill: { width: 250, height: 40 },
+  tile: { width: 150, height: 118 },
+}
+export const SWITCH_FOOTPRINTS: Record<SwitchStyle, { width: number; height: number }> = {
+  pill: { width: 250, height: 40 },
+  outlet: { width: 96, height: 128 },
+  rocker: { width: 96, height: 128 },
+  toggle: { width: 260, height: 48 },
+  chip: { width: 150, height: 28 },
+  tile: { width: 150, height: 118 },
+}
+
+export interface HomeScene {
+  id: string
+  type: 'scene'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: SceneStyle
+  colour?: SceneColour
+  label?: string
+  scale?: number
+  width?: number
+}
+
+export interface HomeScenes {
+  id: string
+  type: 'scenes'
+  x: number
+  y: number
+  style: ScenesStyle
+  sensors: ClimateSensor[]
+  title: string
+  width?: number
+}
+
+export interface HomeSwitch {
+  id: string
+  type: 'switch'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: SwitchStyle
+  /** Asked before switching off. */
+  confirm?: boolean
+  label?: string
+  scale?: number
+  width?: number
+}
+
+export interface HomeSwitches {
+  id: string
+  type: 'switches'
+  x: number
+  y: number
+  sensors: ClimateSensor[]
+  title: string
+  confirm?: boolean
+  width?: number
+}
+
+export type HomeActionElement = HomeScene | HomeScenes | HomeSwitch | HomeSwitches
+
+/** A scene, a script or a switch as Home Assistant reports it (``hass_switches.pick_actions``). */
+export interface ActionInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  kind: 'scene' | 'script' | 'switch'
+  unavailable: boolean
+  /** A scene: when it was last set off, in milliseconds. */
+  last?: number | null
+  /** A script: whether it runs. */
+  running?: boolean
+  /** A switch: on or off (null while it cannot be read), since when, and what its device draws in watts. */
+  on?: boolean | null
+  since?: number | null
+  power?: number | null
+  power_entity?: string | null
+  energy_entity?: string | null
+  device_class?: string
+}
+
+export type ActionState = (Partial<ActionInfo> & { missing: false }) | { missing: true }
+
+export interface ActionOffer {
+  scenes?: ActionInfo[]
+  switches?: ActionInfo[]
+  problem: HomeProblem | null
+}
+
+export interface ActionAnswer {
+  ok: true
+  actions: Record<string, ActionState>
+  refused: { entity_id: string; code: string; message: string }[]
+}
+
+/** The page's answer with news of its scenes and switches put in, as for sensors. */
+export function withActions(answer: HomeAnswer, news: Record<string, ActionState>): HomeAnswer {
+  const actions = { ...(answer.actions ?? {}) }
+  for (const [id, state] of Object.entries(news)) {
+    const before = actions[id]
+    actions[id] = state.missing ? state : ({ ...(before && !before.missing ? before : {}), ...state } as ActionState)
+  }
+  return { ...answer, actions }
+}
+
+/** Every scene, script or switch an element names (``home_control.actions_of``). */
+export function actionsOf(element: HomeElement): ClimateSensor[] {
+  if (element.type === 'scene' || element.type === 'switch') return [element]
+  if (element.type === 'scenes' || element.type === 'switches') return element.sensors
+  return []
+}
+
+/** The scene of a card set off last: it is lit. */
+export function latestScene(sensors: ClimateSensor[], actions: Record<string, ActionState>): string | null {
+  let best: string | null = null
+  let when = -Infinity
+  for (const sensor of sensors) {
+    const said = actions[sensor.entity_id]
+    const last = said && !said.missing ? said.last : null
+    if (typeof last === 'number' && last > when) {
+      best = sensor.entity_id
+      when = last
+    }
+  }
+  return best
+}
+
+/** What all the switches of a card draw together, or null when none of them measures it. */
+export function totalPower(sensors: ClimateSensor[], actions: Record<string, ActionState>): number | null {
+  const known = sensors.map((one) => actions[one.entity_id]).filter((one): one is ActionState & { missing: false } => Boolean(one && !one.missing && typeof one.power === 'number'))
+  return known.length ? Math.round(known.reduce((sum, one) => sum + (one.power ?? 0), 0)) : null
+}
+
+/** A sign for a scene by the words of its name, in the five languages of the page; a spark for the rest. */
+export const SCENE_SIGNS: [RegExp, string][] = [
+  [/kino|cinema|movie|film|cine/i, 'film'],
+  [/nacht|night|noche|nuit|notte|schlaf|sleep/i, 'moon'],
+  [/lesen|read|leer|lire|leggere|book/i, 'book'],
+  [/koch|cook|cocina|cuisine|cucina|essen|dinner|meal/i, 'chef'],
+  [/party|fiesta|fête|festa/i, 'party'],
+  [/aus\b|off\b|apag|éteind|spegn/i, 'power'],
+  [/abend|evening|sunset|sonnenunter|tarde|soir|sera/i, 'sunset'],
+  [/hell|bright|morgen|morning|día|matin|mattina|energ/i, 'sun'],
+  [/gemütlich|cozy|cosy|relax|entspann|acogedor|confort|rilass/i, 'sofa'],
+  [/konzentr|focus|concentr|arbeit|work/i, 'target'],
+]
+
+export function sceneSign(name: string): string {
+  return SCENE_SIGNS.find(([words]) => words.test(name))?.[1] ?? 'spark'
 }

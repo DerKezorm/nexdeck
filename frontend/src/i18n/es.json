@@ -1865,6 +1865,18 @@
         "window": "Ventana dibujada",
         "slider": "Deslizador vertical",
         "tilt": "Lamas"
+      },
+      "sceneStyles": {
+        "pill": "Píldora",
+        "tile": "Mosaico"
+      },
+      "switchStyles": {
+        "pill": "Píldora",
+        "outlet": "Enchufe dibujado",
+        "rocker": "Basculante",
+        "toggle": "Conmutador",
+        "chip": "Chip",
+        "tile": "Mosaico"
       }
     },
     "rename": "Nombre propio",
@@ -1917,6 +1929,69 @@
       "raise": "Abrir {{name}}",
       "openingWord": "abriendo",
       "closingWord": "cerrando"
+    },
+    "scenes": {
+      "add": "Escena",
+      "running": "en marcha",
+      "fired": "activada",
+      "script": "Script",
+      "tap": "tocar",
+      "stop": "Detener {{name}}",
+      "remove": "Quitar escena",
+      "colour": "Color del mosaico",
+      "notRunning": "No está en marcha.",
+      "lastAt": "Activada por última vez a las {{time}}.",
+      "never": "Aún no activada, según Home Assistant.",
+      "run": "Iniciar",
+      "setOff": "Activar",
+      "stopWord": "Detener",
+      "scenes": "Escenas",
+      "pickTitle": "Escenas y scripts",
+      "titleHint": "vacío: la habitación de las escenas",
+      "cardStyles": {
+        "bar": "Escenas de una habitación",
+        "grid": "Cuadrícula de escenas"
+      },
+      "colours": {
+        "sunset": "Atardecer",
+        "ocean": "Océano",
+        "forest": "Bosque",
+        "focus": "Concentración",
+        "night": "Noche",
+        "rose": "Rosa"
+      }
+    },
+    "switches": {
+      "add": "Interruptor",
+      "switching": "cambiando …",
+      "helper": "Ayudante",
+      "outlet": "Enchufe",
+      "onWord": "Encendido",
+      "offWord": "Apagado",
+      "remove": "Quitar interruptor",
+      "askFirst": "Preguntar antes de apagar",
+      "askFirstLong": "Preguntar antes de apagar (nevera, servidor, router)",
+      "confirmTitle": "¿Apagar {{name}}?",
+      "confirmText": "Seguirá apagado hasta que alguien lo encienda.",
+      "switchOff": "Apagar",
+      "now": "ahora",
+      "today": "hoy",
+      "onSince": "encendido desde",
+      "offSince": "apagado desde",
+      "switch": "Interruptor",
+      "group": "Interruptores",
+      "total": "en total {{value}}",
+      "allOn": "Encender todo",
+      "allOff": "Apagar todo",
+      "pickTitle": "Interruptores y ayudantes",
+      "failed": "No se pudo cambiar.",
+      "cardStyles": {
+        "group": "Grupo de interruptores"
+      },
+      "problems": {
+        "action_missing": "Ya no está en Home Assistant.",
+        "action_unavailable": "Home Assistant no llega a él ahora."
+      }
     }
   }
 }

@@ -1865,6 +1865,18 @@
         "window": "Fenêtre dessinée",
         "slider": "Curseur vertical",
         "tilt": "Lamelles"
+      },
+      "sceneStyles": {
+        "pill": "Pilule",
+        "tile": "Tuile"
+      },
+      "switchStyles": {
+        "pill": "Pilule",
+        "outlet": "Prise dessinée",
+        "rocker": "Basculeur",
+        "toggle": "Commutateur",
+        "chip": "Puce",
+        "tile": "Tuile"
       }
     },
     "rename": "Nom personnalisé",
@@ -1917,6 +1929,69 @@
       "raise": "Ouvrir {{name}}",
       "openingWord": "s’ouvre",
       "closingWord": "se ferme"
+    },
+    "scenes": {
+      "add": "Scène",
+      "running": "en cours",
+      "fired": "lancée",
+      "script": "Script",
+      "tap": "toucher",
+      "stop": "Arrêter {{name}}",
+      "remove": "Retirer la scène",
+      "colour": "Couleur de la tuile",
+      "notRunning": "Ne tourne pas.",
+      "lastAt": "Lancée pour la dernière fois à {{time}}.",
+      "never": "Pas encore lancée, selon Home Assistant.",
+      "run": "Lancer",
+      "setOff": "Lancer",
+      "stopWord": "Arrêter",
+      "scenes": "Scènes",
+      "pickTitle": "Scènes et scripts",
+      "titleHint": "vide : la pièce des scènes",
+      "cardStyles": {
+        "bar": "Scènes d’une pièce",
+        "grid": "Grille de scènes"
+      },
+      "colours": {
+        "sunset": "Coucher de soleil",
+        "ocean": "Océan",
+        "forest": "Forêt",
+        "focus": "Concentration",
+        "night": "Nuit",
+        "rose": "Rose"
+      }
+    },
+    "switches": {
+      "add": "Interrupteur",
+      "switching": "bascule …",
+      "helper": "Assistant",
+      "outlet": "Prise",
+      "onWord": "Allumé",
+      "offWord": "Éteint",
+      "remove": "Retirer l’interrupteur",
+      "askFirst": "Demander avant d’éteindre",
+      "askFirstLong": "Demander avant d’éteindre (frigo, serveur, routeur)",
+      "confirmTitle": "Éteindre {{name}} ?",
+      "confirmText": "Il reste éteint jusqu’à ce que quelqu’un le rallume.",
+      "switchOff": "Éteindre",
+      "now": "maintenant",
+      "today": "aujourd’hui",
+      "onSince": "allumé depuis",
+      "offSince": "éteint depuis",
+      "switch": "Interrupteur",
+      "group": "Interrupteurs",
+      "total": "en tout {{value}}",
+      "allOn": "Tout allumer",
+      "allOff": "Tout éteindre",
+      "pickTitle": "Interrupteurs et assistants",
+      "failed": "Impossible de basculer.",
+      "cardStyles": {
+        "group": "Groupe d’interrupteurs"
+      },
+      "problems": {
+        "action_missing": "Ce n’est plus dans Home Assistant.",
+        "action_unavailable": "Home Assistant ne l’atteint pas pour l’instant."
+      }
     }
   }
 }

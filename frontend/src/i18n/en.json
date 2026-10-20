@@ -1865,6 +1865,18 @@
         "window": "Window drawn",
         "slider": "Upright slider",
         "tilt": "Slats"
+      },
+      "sceneStyles": {
+        "pill": "Pill",
+        "tile": "Tile"
+      },
+      "switchStyles": {
+        "pill": "Pill",
+        "outlet": "Outlet drawn",
+        "rocker": "Rocker",
+        "toggle": "Toggle",
+        "chip": "Chip",
+        "tile": "Tile"
       }
     },
     "rename": "A name of its own",
@@ -1917,6 +1929,69 @@
       "raise": "Open {{name}}",
       "openingWord": "opening",
       "closingWord": "closing"
+    },
+    "scenes": {
+      "add": "Scene",
+      "running": "running",
+      "fired": "set off",
+      "script": "Script",
+      "tap": "tap",
+      "stop": "Stop {{name}}",
+      "remove": "Remove scene",
+      "colour": "Colour of the tile",
+      "notRunning": "Not running.",
+      "lastAt": "Last set off at {{time}}.",
+      "never": "Not set off yet, as far as Home Assistant knows.",
+      "run": "Run",
+      "setOff": "Set off",
+      "stopWord": "Stop",
+      "scenes": "Scenes",
+      "pickTitle": "Scenes and scripts",
+      "titleHint": "empty: the room of the scenes",
+      "cardStyles": {
+        "bar": "Scenes of a room",
+        "grid": "Grid of scenes"
+      },
+      "colours": {
+        "sunset": "Sunset",
+        "ocean": "Ocean",
+        "forest": "Forest",
+        "focus": "Focus",
+        "night": "Night",
+        "rose": "Rose"
+      }
+    },
+    "switches": {
+      "add": "Switch",
+      "switching": "switching …",
+      "helper": "Helper",
+      "outlet": "Outlet",
+      "onWord": "On",
+      "offWord": "Off",
+      "remove": "Remove switch",
+      "askFirst": "Ask before switching off",
+      "askFirstLong": "Ask before switching off (a fridge, a server, the router)",
+      "confirmTitle": "Switch off {{name}}?",
+      "confirmText": "It stays off until somebody switches it on again.",
+      "switchOff": "Switch off",
+      "now": "now",
+      "today": "today",
+      "onSince": "on since",
+      "offSince": "off since",
+      "switch": "Switch",
+      "group": "Switches",
+      "total": "together {{value}}",
+      "allOn": "All on",
+      "allOff": "All off",
+      "pickTitle": "Switches and helpers",
+      "failed": "It could not be switched.",
+      "cardStyles": {
+        "group": "Card of switches"
+      },
+      "problems": {
+        "action_missing": "This is no longer in Home Assistant.",
+        "action_unavailable": "Home Assistant cannot reach it right now."
+      }
     }
   }
 }

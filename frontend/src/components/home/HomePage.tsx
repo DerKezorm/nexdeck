@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Blinds, ChartLine, Check, DoorOpen, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
+import { Blinds, ChartLine, Check, DoorOpen, Sparkles, ToggleRight, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
   alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, STAT_HEIGHTS, STAT_WIDTHS, statSize, statSpots, stepTarget,
-  surfaceHeight, withClimates, withCovers, isScalable, scaleOf, scaleTo, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
+  surfaceHeight, withActions, withClimates, withCovers, isScalable, scaleOf, scaleTo,
+  type ActionAnswer, type HomeScene, type HomeScenes, type HomeSwitch, type HomeSwitches, type SceneColour, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
   type CoverAnswer, type CoverScene, type CoverWish, type HomeCover, type HomeCovers,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
@@ -22,12 +23,15 @@ import { Felt } from './Felt'
 import { Rename } from './Rename'
 import { StatCard } from './StatCard'
 import { StatPicker } from './StatPicker'
+import { ActionPicker, type FreshAction } from './ActionPicker'
 import { CoverControl, CoverDetails } from './CoverControl'
 import { CoverPicker, defaultScenes, type FreshCover } from './CoverPicker'
 import { CoversCard } from './CoversCard'
+import { SceneControl, ScenesCard } from './SceneControl'
 import { ContactsCard, HintsCard, ReadingsCard } from './SensorCards'
 import { ContactControl, ReadingControl, useNow } from './SensorControl'
 import { SensorPicker, type FreshSensor } from './SensorPicker'
+import { SwitchControl, SwitchesCard } from './SwitchControl'
 
 interface Props {
   pageId: number
@@ -181,24 +185,28 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     (id: string, patch: {
       x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle | string; sensor?: ClimateSensor | null; width?: number
       height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]; label?: string; name?: string
-      scenes?: CoverScene[]; scale?: number
+      scenes?: CoverScene[]; scale?: number; colour?: SceneColour; confirm?: boolean
     }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
           : element.type === 'contact' || element.type === 'contacts' || element.type === 'reading' || element.type === 'readings' || element.type === 'hints' ||
-            element.type === 'cover' || element.type === 'covers'
+            element.type === 'cover' || element.type === 'covers' || element.type === 'scene' || element.type === 'scenes' || element.type === 'switch' ||
+            element.type === 'switches'
             ? ({
                 ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, width: patch.width ?? element.width,
                 ...('style' in element && patch.style ? { style: patch.style } : {}),
-                ...((element.type === 'contacts' || element.type === 'covers') && patch.sensors ? { sensors: patch.sensors } : {}),
+                ...((element.type === 'contacts' || element.type === 'covers' || element.type === 'scenes' || element.type === 'switches') && patch.sensors ? { sensors: patch.sensors } : {}),
+                ...(element.type === 'scene' && patch.colour ? { colour: patch.colour } : {}),
+                ...((element.type === 'switch' || element.type === 'switches') && patch.confirm !== undefined ? { confirm: patch.confirm } : {}),
                 ...(element.type === 'covers' && patch.scenes ? { scenes: patch.scenes } : {}),
-                ...(patch.scale !== undefined && element.type !== 'contacts' && element.type !== 'readings' && element.type !== 'hints' && element.type !== 'covers' ? { scale: patch.scale } : {}),
+                ...(patch.scale !== undefined && (element.type === 'contact' || element.type === 'reading' || element.type === 'cover' || element.type === 'scene' ||
+                  element.type === 'switch') ? { scale: patch.scale } : {}),
                 ...(element.type === 'readings' && patch.rows ? { rows: patch.rows } : {}),
                 ...('title' in element && patch.title !== undefined ? { title: patch.title } : {}),
                 ...(element.type === 'hints' && patch.checks ? { checks: patch.checks } : {}),
-                ...((element.type === 'contact' || element.type === 'cover') && patch.label !== undefined ? { label: patch.label } : {}),
+                ...((element.type === 'contact' || element.type === 'cover' || element.type === 'scene' || element.type === 'switch') && patch.label !== undefined ? { label: patch.label } : {}),
                 ...(element.type === 'reading' && patch.name !== undefined ? { name: patch.name } : {}),
               } as HomeElement)
           : element.type === 'stat'
@@ -514,6 +522,54 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     [aimCover, pageId, queryClient, t],
   )
   const coverStates = answer.data?.covers ?? {}
+
+  // -- scenes, scripts and switches ---------------------------------------------
+
+  const [actionPicking, setActionPicking] = useState<{ mode: 'scenes' | 'switches'; card: string | null } | null>(null)
+  const actionCard = elements.find((element): element is HomeScenes | HomeSwitches => (element.type === 'scenes' || element.type === 'switches') && element.id === actionPicking?.card) ?? null
+  const addActions = useCallback(
+    (fresh: FreshAction[]) => {
+      setActionPicking(null)
+      if (!layout || fresh.length === 0) return
+      const sample = { ...fresh[0], id: 'new', x: 0, y: 0 } as HomeElement
+      const spots = sensorSpots(layout.elements, fresh.length, { width: widthOf(sample), height: heightOf(sample) })
+      const added: HomeElement[] = []
+      for (const [index, one] of fresh.entries()) added.push({ ...one, id: freshId([...layout.elements, ...added]), ...spots[index] } as HomeElement)
+      askAgain.current = true
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  /** On or off asked of switches and not yet answered, by entity id: "switching …" meanwhile. */
+  const [switchWanted, setSwitchWanted] = useState<Record<string, boolean>>({})
+  const tellAction = useCallback(
+    async (element: HomeScene | HomeScenes | HomeSwitch | HomeSwitches, body: { on?: boolean; member?: string; stop?: boolean }) => {
+      const switching = element.type === 'switch' || element.type === 'switches'
+      const targets = element.type === 'scene' || element.type === 'switch' ? [element.entity_id] : body.member ? [body.member] : element.sensors.map((one) => one.entity_id)
+      if (switching && body.on !== undefined) setSwitchWanted((now) => ({ ...now, ...Object.fromEntries(targets.map((entity) => [entity, body.on as boolean])) }))
+      try {
+        const answered = await post<ActionAnswer>(`/pages/${pageId}/home/${switching ? 'switches' : 'scenes'}/${element.id}`, body)
+        queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withActions(old, answered.actions) : old))
+        if (answered.refused.length) {
+          const first = answered.refused[0]
+          setNote({ text: t(`homePage.switches.problems.${first.code}`, { defaultValue: first.message }), level: 'error' })
+        }
+      } catch (failure) {
+        const code = failure instanceof ApiError ? failure.code : ''
+        setNote({ text: t(`homePage.switches.problems.${code}`, { defaultValue: failure instanceof ApiError ? failure.message : t('homePage.switches.failed') }), level: 'error' })
+      } finally {
+        if (switching) {
+          setSwitchWanted((now) => {
+            const rest = { ...now }
+            for (const entity of targets) delete rest[entity]
+            return rest
+          })
+        }
+      }
+    },
+    [pageId, queryClient, t],
+  )
+  const actionStates = answer.data?.actions ?? {}
   const detailedCoverElement = elements.find((element): element is HomeCover | HomeCovers => (element.type === 'cover' || element.type === 'covers') && element.id === coverDetails?.element) ?? null
   const said = answer.data?.sensors ?? {}
 
@@ -647,8 +703,26 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   /** What the surface of an element is, so its glass and its tilt are made again when its style changes. */
   const lookOf = (element: HomeElement) => `${element.type}:${'style' in element ? element.style : ''}:${narrow ? 'phone' : 'surface'}`
   const sized = (element: HomeElement) => ({ arranging, wide: narrow && element.type !== 'heading' && isWide(element), width: controlWidth(element), onRemove: () => remove(element.id) })
+  const actionHaName = (element: HomeScene | HomeSwitch) => {
+    const said = actionStates[element.entity_id]
+    return said && !said.missing && said.name ? said.name : element.name
+  }
   const draw = (element: HomeElement) =>
-    element.type === 'cover' ? (
+    element.type === 'scene' ? (
+      <SceneControl element={element} said={actionStates[element.entity_id]} {...sized(element)} onSetOff={canAct ? (stop) => void tellAction(element, stop ? { stop: true } : {}) : null}
+        onStyle={(style) => change(element.id, { style })} onColour={(colour) => change(element.id, { colour })} haName={actionHaName(element)} onLabel={(label) => change(element.id, { label })} />
+    ) : element.type === 'scenes' ? (
+      <ScenesCard element={element} actions={actionStates} {...sized(element)} onSetOff={canAct ? (member) => void tellAction(element, { member }) : null}
+        onStyle={(style) => change(element.id, { style })} onSensors={() => setActionPicking({ mode: 'scenes', card: element.id })} />
+    ) : element.type === 'switch' ? (
+      <SwitchControl element={element} said={actionStates[element.entity_id]} wanted={switchWanted[element.entity_id]} {...sized(element)} pageId={pageId}
+        onSwitch={canAct ? (on) => void tellAction(element, { on }) : null} onStyle={(style) => change(element.id, { style })} onConfirm={(confirm) => change(element.id, { confirm })}
+        haName={actionHaName(element)} onLabel={(label) => change(element.id, { label })} />
+    ) : element.type === 'switches' ? (
+      <SwitchesCard element={element} actions={actionStates} wanted={switchWanted} {...sized(element)} pageId={pageId}
+        onSwitch={canAct ? (on, member) => void tellAction(element, member ? { on, member } : { on }) : null} onConfirm={(confirm) => change(element.id, { confirm })}
+        onSensors={() => setActionPicking({ mode: 'switches', card: element.id })} />
+    ) : element.type === 'cover' ? (
       <CoverControl element={element} said={coverStates[element.entity_id]} aim={coverAims[element.entity_id]} {...sized(element)}
         onWish={canAct ? (wish) => void tellCover(element, wish) : null} onAim={(position) => aimCover(element.entity_id, position)}
         onDetails={() => setCoverDetails({ element: element.id, entity: element.entity_id })} onStyle={(style) => change(element.id, { style })}
@@ -719,6 +793,12 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
               <button type="button" className="btn" onClick={() => setStatPicking('new')}>
                 <ChartLine size={15} /> {t('homePage.stats.add')}
               </button>
+              <button type="button" className="btn" onClick={() => setActionPicking({ mode: 'scenes', card: null })}>
+                <Sparkles size={15} /> {t('homePage.scenes.add')}
+              </button>
+              <button type="button" className="btn" onClick={() => setActionPicking({ mode: 'switches', card: null })}>
+                <ToggleRight size={15} /> {t('homePage.switches.add')}
+              </button>
               <button type="button" className="btn" onClick={() => setCoverPicking('new')}>
                 <Blinds size={15} /> {t('homePage.covers.add')}
               </button>
@@ -784,6 +864,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         </div>
       )}
       {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')} onCover={() => setCoverPicking('new')}
+        onScene={() => setActionPicking({ mode: 'scenes', card: null })} onSwitch={() => setActionPicking({ mode: 'switches', card: null })}
         onSensor={(kind) => (kind === 'hints' ? addHints() : setSensorPicking({ mode: kind, card: null }))} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
         onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
@@ -805,6 +886,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           onWish={canAct ? (wish) => void tellCover(detailedCoverElement, detailedCoverElement.type === 'covers' ? { ...wish, member: coverDetails.entity } : wish) : null}
           onClose={() => setCoverDetails(null)} />
       )}
+      {canEdit && <ActionPicker mode={actionPicking?.mode ?? null} pageId={pageId} card={actionCard} onClose={() => setActionPicking(null)} onAdd={addActions}
+        onChange={(id, patch) => { setActionPicking(null); askAgain.current = true; change(id, patch) }} />}
       {canEdit && <CoverPicker open={coverPicking !== null} pageId={pageId} card={coverCard} onClose={() => setCoverPicking(null)} onAdd={addCovers}
         onChange={(id, patch) => { setCoverPicking(null); askAgain.current = true; change(id, patch) }} />}
       {canEdit && (
@@ -1066,7 +1149,7 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onCover: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onCover: () => void; onScene: () => void; onSwitch: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
@@ -1080,7 +1163,13 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
         <ChartLine size={15} /> <span className="hidden sm:inline">{t('homePage.stats.add')}</span>
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onCover} aria-label={t('homePage.covers.add')}>
-        <Blinds size={15} /> <span className="hidden sm:inline">{t('homePage.covers.add')}</span>
+        <Blinds size={15} /> <span className="hidden xl:inline">{t('homePage.covers.add')}</span>
+      </button>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onScene} aria-label={t('homePage.scenes.add')}>
+        <Sparkles size={15} /> <span className="hidden xl:inline">{t('homePage.scenes.add')}</span>
+      </button>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onSwitch} aria-label={t('homePage.switches.add')}>
+        <ToggleRight size={15} /> <span className="hidden xl:inline">{t('homePage.switches.add')}</span>
       </button>
       <SensorMenu onSensor={props.onSensor} />
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
