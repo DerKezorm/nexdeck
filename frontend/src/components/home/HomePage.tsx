@@ -1156,7 +1156,10 @@ function HeadingView(props: {
 function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onCover: () => void; onScene: () => void; onSwitch: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
-    <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture data-edit-bar>
+    // Two bars side by side: what goes onto the page, and the page and the board themselves.
+    // As wide as the window, so the two wrap onto two rows where side by side they do not fit; clicks go through between them.
+    <div className="fixed bottom-20 md:bottom-6 inset-x-2 z-40 flex flex-wrap items-center justify-center gap-2 pointer-events-none" data-no-picture data-edit-bar>
+      <div className="glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl pointer-events-auto" role="toolbar" aria-label={t('homePage.barAdd')} data-bar="add">
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onLight} aria-label={t('homePage.addLight')}>
         <Lightbulb size={15} /> <span className="hidden sm:inline">{t('homePage.addLight')}</span>
       </button>
@@ -1179,11 +1182,12 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>
       </button>
+      </div>
+      <div className="glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl pointer-events-auto" role="toolbar" aria-label={t('homePage.barBoard')} data-bar="board">
       <button type="button" className={`btn btn-flat whitespace-nowrap ${props.guides ? 'text-accent' : ''}`} onClick={props.onGuides} aria-pressed={props.guides}
         aria-label={t('homePage.guides')} title={t('homePage.guidesHelp')}>
         <Grid3x3 size={15} /> <span className="hidden xl:inline">{t('homePage.guides')}</span>
       </button>
-      <span className="w-px h-5 bg-line mx-0.5" aria-hidden="true" />
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onAddPage} aria-label={t('board.addPage')}>
         <Plus size={15} /> <span className="hidden lg:inline">{t('board.addPage')}</span>
       </button>
@@ -1193,6 +1197,7 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
       <button type="button" className="btn btn-accent rounded-full" onClick={props.onDone}>
         <Check size={15} /> {t('common.done')}
       </button>
+      </div>
     </div>
   )
 }

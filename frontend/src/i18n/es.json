@@ -1561,11 +1561,12 @@
     },
     "defaultName": "Red",
     "readFrom": "Se lee de la conexión UniFi «{{name}}».",
-    "stale": "UniFi no responde, valores de {{age}}"
+    "stale": "UniFi no responde, valores de {{age}}",
+    "kindNeeds": "Para UniFi"
   },
   "homePage": {
     "kindHome": "Casa",
-    "kindHomeHelp": "Lámparas y termostatos de Home Assistant, colocados libremente.",
+    "kindHomeHelp": "Luces, calefacción, persianas, escenas, interruptores, sensores y estadísticas, colocados libremente.",
     "defaultName": "Casa",
     "readFrom": "Leído de la conexión de Home Assistant «{{name}}».",
     "connection": "Conexión de Home Assistant",
@@ -1992,6 +1993,10 @@
         "action_missing": "Ya no está en Home Assistant.",
         "action_unavailable": "Home Assistant no llega a él ahora."
       }
-    }
+    },
+    "kindNeeds": "Para Home Assistant",
+    "barAdd": "Añadir a la página",
+    "barBoard": "Página y tablero",
+    "kindBetaHelp": "Nuevo y aún en crecimiento: dinos qué falta o no funciona."
   }
 }

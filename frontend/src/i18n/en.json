@@ -1561,11 +1561,12 @@
     },
     "defaultName": "Network",
     "readFrom": "Read from the UniFi connection “{{name}}”.",
-    "stale": "UniFi did not answer, values from {{age}}"
+    "stale": "UniFi did not answer, values from {{age}}",
+    "kindNeeds": "For UniFi"
   },
   "homePage": {
     "kindHome": "Home",
-    "kindHomeHelp": "Lamps and thermostats from Home Assistant, placed freely.",
+    "kindHomeHelp": "Lamps, heating, covers, scenes, switches, sensors and statistics, placed freely.",
     "defaultName": "Home",
     "readFrom": "Read from the Home Assistant connection “{{name}}”.",
     "connection": "Home Assistant connection",
@@ -1992,6 +1993,10 @@
         "action_missing": "This is no longer in Home Assistant.",
         "action_unavailable": "Home Assistant cannot reach it right now."
       }
-    }
+    },
+    "kindNeeds": "For Home Assistant",
+    "barAdd": "Add to the page",
+    "barBoard": "Page and board",
+    "kindBetaHelp": "New and still growing: tell us what is missing or does not work."
   }
 }

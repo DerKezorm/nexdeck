@@ -103,3 +103,16 @@ it('leaves a menu below where it fits, and where there is no room above it eithe
   expect(tall).not.toHaveAttribute('data-up')
   expect(tall.style.bottom).toBe('')
 })
+
+it('splits the edit bar into what goes onto the page and the page and board themselves', async () => {
+  show()
+  const add = await screen.findByRole('toolbar', { name: 'Add to the page' })
+  const board = screen.getByRole('toolbar', { name: 'Page and board' })
+  for (const name of ['Light', 'Heating', 'Cover', 'Scene', 'Switch', 'Heading']) expect(within(add).getByRole('button', { name })).toBeInTheDocument()
+  for (const name of ['Guides', 'Done']) {
+    expect(within(board).getByRole('button', { name })).toBeInTheDocument()
+    expect(within(add).queryByRole('button', { name })).toBeNull()
+  }
+  expect(within(add).queryByRole('button', { name: 'Done' })).toBeNull()
+  expect(within(board).queryByRole('button', { name: 'Light' })).toBeNull()
+})

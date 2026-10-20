@@ -1561,11 +1561,12 @@
     },
     "defaultName": "Rete",
     "readFrom": "Letto dalla connessione UniFi «{{name}}».",
-    "stale": "UniFi non risponde, valori di {{age}}"
+    "stale": "UniFi non risponde, valori di {{age}}",
+    "kindNeeds": "Per UniFi"
   },
   "homePage": {
     "kindHome": "Casa",
-    "kindHomeHelp": "Lampade e termostati di Home Assistant, disposti liberamente.",
+    "kindHomeHelp": "Luci, riscaldamento, tapparelle, scene, interruttori, sensori e statistiche, disposti liberamente.",
     "defaultName": "Casa",
     "readFrom": "Letto dalla connessione Home Assistant «{{name}}».",
     "connection": "Connessione Home Assistant",
@@ -1992,6 +1993,10 @@
         "action_missing": "Non è più in Home Assistant.",
         "action_unavailable": "Home Assistant ora non lo raggiunge."
       }
-    }
+    },
+    "kindNeeds": "Per Home Assistant",
+    "barAdd": "Aggiungi alla pagina",
+    "barBoard": "Pagina e bacheca",
+    "kindBetaHelp": "Nuovo e ancora in crescita: dicci cosa manca o non funziona."
   }
 }

@@ -1561,11 +1561,12 @@
     },
     "defaultName": "Netzwerk",
     "readFrom": "Gelesen aus der UniFi-Anbindung „{{name}}“.",
-    "stale": "UniFi antwortet gerade nicht, Werte von {{age}}"
+    "stale": "UniFi antwortet gerade nicht, Werte von {{age}}",
+    "kindNeeds": "Für UniFi"
   },
   "homePage": {
     "kindHome": "Zuhause",
-    "kindHomeHelp": "Lampen und Thermostate aus Home Assistant, frei angeordnet.",
+    "kindHomeHelp": "Lampen, Heizung, Rollläden, Szenen, Schalter, Sensoren und Statistik, frei angeordnet.",
     "defaultName": "Zuhause",
     "readFrom": "Gelesen aus der Home-Assistant-Anbindung „{{name}}“.",
     "connection": "Home-Assistant-Anbindung",
@@ -1992,6 +1993,10 @@
         "action_missing": "Das gibt es in Home Assistant nicht mehr.",
         "action_unavailable": "Home Assistant erreicht es gerade nicht."
       }
-    }
+    },
+    "kindNeeds": "Für Home Assistant",
+    "barAdd": "Auf die Seite",
+    "barBoard": "Seite und Board",
+    "kindBetaHelp": "Neu und noch im Wachsen: sag uns, was fehlt oder nicht geht."
   }
 }

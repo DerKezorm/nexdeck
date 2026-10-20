@@ -836,11 +836,11 @@ export function BoardPage() {
               <div className={`grid gap-2 ${unifis.length > 0 && hasses.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`} role="radiogroup" aria-label={t('topology.kind')}>
                 {(
                   [
-                    ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp'), true],
-                    ['topology', Network, t('topology.kindTopology'), t('topology.kindTopologyHelp'), unifis.length > 0],
-                    ['home', House, t('homePage.kindHome'), t('homePage.kindHomeHelp'), hasses.length > 0],
+                    ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp'), true, ''],
+                    ['topology', Network, t('topology.kindTopology'), t('topology.kindTopologyHelp'), unifis.length > 0, t('topology.kindNeeds')],
+                    ['home', House, t('homePage.kindHome'), t('homePage.kindHomeHelp'), hasses.length > 0, t('homePage.kindNeeds')],
                   ] as const
-                ).filter((offer) => offer[4]).map(([kind, Icon, title, help]) => (
+                ).filter((offer) => offer[4]).map(([kind, Icon, title, help, , needs]) => (
                   <button
                     key={kind}
                     type="button"
@@ -856,7 +856,13 @@ export function BoardPage() {
                     }}
                   >
                     <Icon size={20} className="text-accent" />
-                    <b className="text-sm">{title}</b>
+                    <b className="text-sm flex items-center gap-1.5">
+                      {title}
+                      {/* The home page is new and grows: marked as the integrations in beta are. */}
+                      {kind === 'home' && <span className="chip !py-0 text-[10px] cursor-help" title={t('homePage.kindBetaHelp')} data-beta>beta</span>}
+                    </b>
+                    {/* What the kind works with: a home page only with Home Assistant, a plan only with UniFi. */}
+                    {needs && <span className="text-[10.5px] font-medium text-accent justify-self-start rounded-full bg-accent-soft px-2 py-0.5" data-needs>{needs}</span>}
                     <span className="text-xs text-muted">{help}</span>
                   </button>
                 ))}

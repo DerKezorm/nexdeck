@@ -1561,11 +1561,12 @@
     },
     "defaultName": "Réseau",
     "readFrom": "Lu depuis la connexion UniFi « {{name}} ».",
-    "stale": "UniFi ne répond pas, valeurs d'{{age}}"
+    "stale": "UniFi ne répond pas, valeurs d'{{age}}",
+    "kindNeeds": "Pour UniFi"
   },
   "homePage": {
     "kindHome": "Maison",
-    "kindHomeHelp": "Lampes et thermostats de Home Assistant, placés librement.",
+    "kindHomeHelp": "Lampes, chauffage, volets, scènes, interrupteurs, capteurs et statistiques, placés librement.",
     "defaultName": "Maison",
     "readFrom": "Lu depuis la connexion Home Assistant « {{name}} ».",
     "connection": "Connexion Home Assistant",
@@ -1992,6 +1993,10 @@
         "action_missing": "Ce n’est plus dans Home Assistant.",
         "action_unavailable": "Home Assistant ne l’atteint pas pour l’instant."
       }
-    }
+    },
+    "kindNeeds": "Pour Home Assistant",
+    "barAdd": "Ajouter à la page",
+    "barBoard": "Page et tableau",
+    "kindBetaHelp": "Nouveau et encore en chantier : dites-nous ce qui manque ou ne marche pas."
   }
 }
