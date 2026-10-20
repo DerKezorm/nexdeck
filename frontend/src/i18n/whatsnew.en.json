@@ -1530,6 +1530,21 @@
         "Container log lines in the board stream only reach whoever may read that log.",
         "The second sign-in step and the forgotten password have limits of their own."
       ]
+    },
+    "0.44.0": {
+      "lead": "Pulse on the board: what it watches on Proxmox and Docker, and what needs a look.",
+      "sections": [
+        {
+          "title": "Pulse",
+          "body": "Three cards. The overview counts the active alerts and what Pulse watches: nodes, VMs, LXC and Docker containers, and how many resources are critical or need attention. Needs a look lists the resources Pulse is not happy with, worst first, with the reason, such as offline, a critical alert or an old backup. Active alerts shows critical alerts first and how long each has been open. A token with the preset Kiosk / Monitoring is enough; the cards only read.",
+          "path": "Edit mode (pencil) > Add widget > Pulse"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Pulse starts as beta. Needs a look needs Pulse 6.5 or newer, the other cards 6.0.",
+        "Thanks to C0NN0RAD0 for the idea (#47)."
+      ]
     }
   }
 }

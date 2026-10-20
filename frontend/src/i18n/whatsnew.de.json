@@ -1530,6 +1530,21 @@
         "Log-Zeilen von Containern im Board-Stream erreichen nur, wer dieses Log lesen darf.",
         "Der zweite Anmeldeschritt und das vergessene Passwort haben eigene Grenzen."
       ]
+    },
+    "0.44.0": {
+      "lead": "Pulse auf dem Board: was es auf Proxmox und Docker beobachtet, und was einen Blick braucht.",
+      "sections": [
+        {
+          "title": "Pulse",
+          "body": "Drei Karten. Der Überblick zählt die aktiven Alarme und was Pulse beobachtet: Nodes, VMs, LXC- und Docker-Container, und wie viele Ressourcen kritisch sind oder einen Blick brauchen. Braucht einen Blick listet die Ressourcen, mit denen Pulse nicht zufrieden ist, die schlimmsten zuerst, mit Grund, etwa offline, ein kritischer Alarm oder eine alte Sicherung. Aktive Alarme zeigt kritische zuerst und wie lange jeder schon offen ist. Ein Token mit der Voreinstellung Kiosk / Monitoring genügt; die Karten lesen nur.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Pulse"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Pulse beginnt als Beta. Braucht einen Blick braucht Pulse 6.5 oder neuer, die anderen Karten 6.0.",
+        "Danke an C0NN0RAD0 für die Idee (#47)."
+      ]
     }
   }
 }
