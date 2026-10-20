@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { Check, Heading, House, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
+import { Check, Heading, House, Lightbulb, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
-import { freshId, MAX_TEXT, nextSpot, readingOrder, snap, surfaceHeight, type HomeAnswer, type HomeElement, type HomeLayout } from '../../lib/home'
+import {
+  freshId, lampColour, lampSpots, MAX_TEXT, nextSpot, readingOrder, snap, surfaceHeight,
+  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo,
+} from '../../lib/home'
 import { Spinner } from '../ui'
+import { LightPicker } from './LightPicker'
 
 interface Props {
   pageId: number
@@ -77,6 +81,7 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   // server took the first and refused the second as somebody else's, and the
   // page threw away the name it had just been given.
   const inflight = useRef<Promise<void>>(Promise.resolve())
+  const askAgain = useRef(false)
   const flush = useCallback(() => {
     const run = inflight.current.then(async () => {
       const next = waiting.current
@@ -86,6 +91,10 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
         const saved = await put<{ layout: HomeLayout; version: number }>(`/pages/${pageId}/home`, { elements: next.elements, version: version.current })
         if (waiting.current === next) waiting.current = null
         version.current = saved.version
+        if (askAgain.current) {
+          askAgain.current = false
+          void refetch()
+        }
       } catch (failure) {
         waiting.current = null
         if (failure instanceof ApiError && failure.status === 409) {
@@ -124,9 +133,11 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: Partial<HomeElement>) => {
+    (id: string, patch: { x?: number; y?: number; text?: string }) => {
       if (!layout) return
-      save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? { ...element, ...patch } : element)) })
+      const changed = (element: HomeElement): HomeElement =>
+        element.type === 'heading' ? { ...element, ...patch } : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y }
+      save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
   )
@@ -137,6 +148,34 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
     },
     [layout, save],
   )
+  // -- lamps from Home Assistant -------------------------------------------------
+
+  const [picking, setPicking] = useState(false)
+  /** What the picker knew of lamps just added, until the page has been asked about them. */
+  const [known, setKnown] = useState<Record<string, LampInfo>>({})
+  const placedLamps = new Set(elements.filter((element): element is HomeLight => element.type === 'light').map((element) => element.rid))
+  const addLights = useCallback(
+    (lights: LampInfo[]) => {
+      setPicking(false)
+      if (!layout || lights.length === 0) return
+      const spots = lampSpots(layout.elements, lights.length)
+      const added: HomeLight[] = []
+      for (const [index, light] of lights.entries()) {
+        added.push({ id: freshId([...layout.elements, ...added]), type: 'light', ...spots[index], rid: light.rid, entity_id: light.entity_id, name: light.name, style: 'pill' })
+      }
+      setKnown((now) => ({ ...now, ...Object.fromEntries(lights.map((light) => [light.rid, light])) }))
+      askAgain.current = true
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  const infoOf = (element: HomeLight): LampInfo | null => {
+    const said = answer.data?.lights?.[element.id]
+    if (said) return said.missing ? null : said
+    return known[element.rid] ?? null
+  }
+  const missing = (element: HomeLight) => answer.data?.lights?.[element.id]?.missing === true
+
   const addHeading = useCallback(() => {
     if (!layout) return
     const id = freshId(layout.elements)
@@ -173,7 +212,7 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
     if (!held || held.pointer !== event.pointerId) return
     grab.current = null
     if (held.moved && dragged && dragged.id === held.id) change(held.id, { x: dragged.x, y: dragged.y })
-    else if (!held.moved) setRenaming(held.id)
+    else if (!held.moved && elements.find((element) => element.id === held.id)?.type === 'heading') setRenaming(held.id)
     setDragged(null)
   }
 
@@ -197,6 +236,14 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   }
 
   const placed = (element: HomeElement) => (dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y } : element)
+  const draw = (element: HomeElement) =>
+    element.type === 'light' ? (
+      <LampPill element={element} info={infoOf(element)} missing={missing(element)} arranging={arranging} onRemove={() => remove(element.id)} />
+    ) : (
+      <HeadingView element={element} arranging={arranging} renaming={renaming === element.id}
+        onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
+        onStartRename={() => setRenaming(element.id)} onRemove={() => remove(element.id)} />
+    )
   const shown = narrow ? readingOrder(elements) : elements
 
   return (
@@ -213,17 +260,20 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
           <h2 className="font-semibold mt-3">{t('homePage.emptyTitle')}</h2>
           <p className="text-sm text-muted mt-1">{canEdit ? t('homePage.emptyText') : t('homePage.emptyViewer')}</p>
           {arranging && (
-            <button type="button" className="btn btn-accent mt-4" onClick={addHeading}>
-              <Heading size={15} /> {t('homePage.addHeading')}
-            </button>
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              <button type="button" className="btn btn-accent" onClick={() => setPicking(true)}>
+                <Lightbulb size={15} /> {t('homePage.addLight')}
+              </button>
+              <button type="button" className="btn" onClick={addHeading}>
+                <Heading size={15} /> {t('homePage.addHeading')}
+              </button>
+            </div>
           )}
         </div>
       ) : narrow ? (
         <div className="grid gap-3 pb-6">
           {shown.map((element) => (
-            <ElementView key={element.id} element={element} arranging={arranging} renaming={renaming === element.id}
-              onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
-              onStartRename={() => setRenaming(element.id)} onRemove={() => remove(element.id)} />
+            <div key={element.id}>{draw(element)}</div>
           ))}
         </div>
       ) : (
@@ -245,15 +295,14 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
                 onPointerCancel={() => { grab.current = null; setDragged(null) }}
                 data-element={element.id}
               >
-                <ElementView element={element} arranging={arranging} renaming={renaming === element.id}
-                  onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
-                  onStartRename={() => setRenaming(element.id)} onRemove={() => remove(element.id)} />
+                {draw(element)}
               </div>
             )
           })}
         </div>
       )}
-      {arranging && <EditBar onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
+      {arranging && <EditBar onLight={() => setPicking(true)} onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
+      {canEdit && <LightPicker open={picking} pageId={pageId} placed={placedLamps} onClose={() => setPicking(false)} onAdd={addLights} />}
       {note && (
         <div className={`fixed left-1/2 -translate-x-1/2 bottom-36 md:bottom-24 z-50 glass-strong rounded-xl px-4 py-2.5 text-sm shadow-xl ${note.level === 'error' ? 'text-bad' : ''}`} role="status">
           {note.text}
@@ -263,8 +312,48 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   )
 }
 
-function ElementView(props: {
-  element: HomeElement
+/**
+ * A lamp as a pill, the first of the drawings on the board of sketches:
+ * its light, its name, how bright. Switching it follows in the next step;
+ * for now it shows how the lamp stands.
+ */
+function LampPill({ element, info, missing, arranging, onRemove }: { element: HomeLight; info: LampInfo | null; missing: boolean; arranging: boolean; onRemove: () => void }) {
+  const { t } = useTranslation()
+  const colour = lampColour(info)
+  const name = info?.name || element.name || element.entity_id
+  const state = missing ? t('homePage.gone')
+    : !info ? ''
+    : info.unavailable ? t('homePage.offline')
+    : info.on ? (info.dims && info.pct !== null ? `${info.pct} %` : t('homePage.on'))
+    : t('homePage.off')
+  const lit = colour
+    ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
+    : undefined
+  return (
+    <div
+      className={`glass flex items-center gap-2.5 h-10 max-w-[256px] pl-1.5 pr-4 rounded-full ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`}
+      style={lit}
+      data-lamp={element.entity_id}
+      title={[name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')}
+    >
+      <span className="grid place-items-center w-7 h-7 rounded-full flex-none" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
+        <Lightbulb size={15} className={colour ? '' : 'text-muted'} />
+      </span>
+      <span className="text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
+      {state && <span className={`num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
+      {arranging && (
+        <span className="flex items-center ml-1" data-element-tool>
+          <button type="button" className="btn btn-icon btn-flat btn-danger h-6 w-6" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>
+            <Trash2 size={13} />
+          </button>
+        </span>
+      )}
+    </div>
+  )
+}
+
+function HeadingView(props: {
+  element: HomeHeading
   arranging: boolean
   renaming: boolean
   onRename: (text: string) => void
@@ -318,10 +407,13 @@ function ElementView(props: {
   )
 }
 
-function EditBar(props: { onHeading: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onHeading: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onLight} aria-label={t('homePage.addLight')}>
+        <Lightbulb size={15} /> <span className="hidden sm:inline">{t('homePage.addLight')}</span>
+      </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>
       </button>

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, Request, status
 
+from ..adapters.base import AdapterError
 from ..deps import (
     CurrentUser,
     DbSession,
@@ -14,10 +16,13 @@ from ..deps import (
     error,
     kiosk_from_request,
     require_board_id,
+    require_integration,
 )
 from ..models import Integration, Page
 from ..schemas import HomeLayoutBody
+from ..services import hass_registry
 from ..services import home as home_service
+from ..services.collector import collector
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1", tags=["home"])
@@ -36,26 +41,74 @@ def _problem(code: str, message: str, hint: str = "") -> dict:
     return {"code": code, "message": message, "hint": hint}
 
 
-@router.get("/pages/{page_id}/home", summary="Read what stands on a home page")
-def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
-    """The arrangement, and what is wrong with the connection if anything.
+def _connection_problem(integration: Integration | None) -> dict | None:
+    """What keeps a page from its connection, or None when it may ask it."""
+    if integration is None or integration.kind != "homeassistant":
+        return _problem("no_integration", "The Home Assistant connection of this page is gone.",
+                        "Delete the page and add it again with another connection.")
+    if not integration.enabled:
+        return _problem("integration_disabled", f"The connection {integration.name!r} is switched off.",
+                        "Switch it on under Settings, Connections.")
+    return None
 
-    A connection that is gone or switched off is an answer, not an error: the
-    page keeps what stands on it and says why its controls are quiet.
+
+async def _offered(integration: Integration) -> list[dict[str, Any]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_registry.lights(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+@router.get("/pages/{page_id}/home", summary="Read what stands on a home page")
+async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """The arrangement, how its lamps stand, and what is wrong with the connection if anything.
+
+    A connection that is gone, switched off or not answering is an answer, not
+    an error: the page keeps what stands on it and says why its controls are
+    quiet. A lamp is found by its registry id first, so renaming it in Home
+    Assistant does not take it off the page.
     """
     page = _home_page(db, page_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     stored = page.home or {}
     layout = home_service.clean_layout(stored, stored.get("integration_id"))
-    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None}
+    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}}
     integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
-    if integration is None or integration.kind != "homeassistant":
-        answer["problem"] = _problem("no_integration", "The Home Assistant connection of this page is gone.",
-                                     "Delete the page and add it again with another connection.")
-    elif not integration.enabled:
-        answer["problem"] = _problem("integration_disabled", f"The connection {integration.name!r} is switched off.",
-                                     "Switch it on under Settings, Connections.")
+    answer["problem"] = _connection_problem(integration)
+    lamps = [element for element in layout["elements"] if element["type"] == "light"]
+    if answer["problem"] is not None or not lamps or integration is None:
+        return answer
+    try:
+        offered = await _offered(integration)
+    except AdapterError as failure:
+        answer["problem"] = _problem(failure.code, failure.message, failure.hint)
+        return answer
+    by_rid = {light["rid"]: light for light in offered if light["rid"]}
+    by_entity = {light["entity_id"]: light for light in offered}
+    for element in lamps:
+        found = by_rid.get(element["rid"]) or by_entity.get(element["entity_id"])
+        # Gone, hidden or disabled in Home Assistant since it was placed: the page says so.
+        answer["lights"][element["id"]] = {**found, "missing": False} if found else {"missing": True}
     return answer
+
+
+@router.get("/pages/{page_id}/home/lights", summary="The lamps a home page can offer")
+async def offer_lights(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every lamp of the page's connection worth putting on a wall (``hass_registry.pick_lights``).
+
+    For those who arrange the page only, and only on a connection they may
+    build on: the list names every lamp in the house.
+    """
+    page = _home_page(db, page_id)
+    require_board_id(db, page.board_id, user, "edit")
+    stored = page.home or {}
+    integration = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        return {"lights": [], "problem": problem}
+    require_integration(db, integration.id, user)
+    try:
+        return {"lights": await _offered(integration), "problem": None}
+    except AdapterError as failure:
+        return {"lights": [], "problem": _problem(failure.code, failure.message, failure.hint)}
 
 
 @router.put("/pages/{page_id}/home", summary="Save what stands where on a home page")

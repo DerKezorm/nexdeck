@@ -8,7 +8,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
-import type { HomeAnswer } from '../../lib/home'
+import type { HomeAnswer, LampInfo, LightOffer } from '../../lib/home'
 import { HomePage } from './HomePage'
 
 const ANSWER: HomeAnswer = {
@@ -25,7 +25,24 @@ const ANSWER: HomeAnswer = {
 
 type Sent = { url: string; method: string; body: Record<string, unknown> | null }
 
-function serve(answer: HomeAnswer, sent: Sent[]) {
+function lamp(rid: string, entity_id: string, name: string, extra: Partial<LampInfo> = {}): LampInfo {
+  return {
+    rid, entity_id, name, area: 'Living room', device: name, group: false, on: false, unavailable: false, pct: null, rgb: null, kelvin: null,
+    dims: true, temperature: true, colour: false, ...extra,
+  }
+}
+
+const OFFER: LightOffer = {
+  problem: null,
+  lights: [
+    lamp('r-ceiling', 'light.ceiling', 'Ceiling light', { on: true, pct: 80, kelvin: 3000 }),
+    lamp('r-floor', 'light.floor_lamp', 'Floor lamp', { on: true, pct: 62, rgb: [255, 167, 87] }),
+    lamp('r-path', 'light.garden_path', 'Garden path', { area: 'Garden', dims: false, temperature: false }),
+    lamp('r-counter', 'light.kitchen_counter', 'Kitchen counter', { area: 'Kitchen' }),
+  ],
+}
+
+function serve(answer: HomeAnswer, sent: Sent[], offer: LightOffer = OFFER) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     const method = init?.method ?? 'GET'
@@ -33,13 +50,14 @@ function serve(answer: HomeAnswer, sent: Sent[]) {
     sent.push({ url, method, body })
     const json = (value: unknown) => new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } })
     if (method === 'PUT') return json({ layout: { ...answer.layout, elements: body.elements }, version: answer.version + 1 })
+    if (url.includes('/home/lights')) return json(offer)
     return json(answer)
   })
 }
 
-function show(answer: HomeAnswer, { canEdit = true, editing = false } = {}) {
+function show(answer: HomeAnswer, { canEdit = true, editing = false, offer = OFFER } = {}) {
   const sent: Sent[] = []
-  vi.stubGlobal('fetch', serve(answer, sent))
+  vi.stubGlobal('fetch', serve(answer, sent, offer))
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
@@ -202,4 +220,86 @@ it('invites an empty page to be filled, and only an editor to fill it', async ()
   show({ ...ANSWER, layout: { integration_id: 1, elements: [] } }, { editing: true })
   expect(await screen.findByText('Nothing on this page yet')).toBeInTheDocument()
   expect(screen.getAllByRole('button', { name: 'Heading' }).length).toBeGreaterThan(0)
+  expect(screen.getAllByRole('button', { name: 'Light' }).length).toBeGreaterThan(0)
+})
+
+// -- lamps --------------------------------------------------------------------
+
+const WITH_LAMPS: HomeAnswer = {
+  ...ANSWER,
+  layout: {
+    integration_id: 1,
+    elements: [
+      ...ANSWER.layout.elements,
+      { id: 'floor', type: 'light', x: 16, y: 56, rid: 'r-floor', entity_id: 'light.floor_lamp', name: 'Floor lamp', style: 'pill' },
+      { id: 'path', type: 'light', x: 216, y: 56, rid: 'r-path', entity_id: 'light.garden_path', name: 'Garden path', style: 'pill' },
+      { id: 'gone', type: 'light', x: 416, y: 56, rid: 'r-gone', entity_id: 'light.old_desk', name: 'Old desk', style: 'pill' },
+    ],
+  },
+  lights: {
+    floor: { ...OFFER.lights[1], missing: false },
+    path: { ...OFFER.lights[2], missing: false },
+    gone: { missing: true },
+  },
+}
+
+it('shows each lamp as Home Assistant reports it, and one that went by the name it had', async () => {
+  show(WITH_LAMPS)
+  const floor = (await screen.findByText('Floor lamp')).closest('[data-lamp]') as HTMLElement
+  expect(floor).toHaveTextContent('62 %')
+  expect(floor.getAttribute('style') ?? '').toContain('rgb(255, 167, 87)')
+  expect((screen.getByText('Garden path').closest('[data-lamp]') as HTMLElement)).toHaveTextContent('off')
+  const gone = screen.getByText('Old desk').closest('[data-lamp]') as HTMLElement
+  expect(gone).toHaveTextContent('gone')
+  expect(gone.title).toContain('no longer in Home Assistant')
+})
+
+it('lets an editor pick lamps, offers none twice, and places the new ones side by side below the rest', async () => {
+  const sent = show(WITH_LAMPS, { editing: true })
+  await screen.findByText('Floor lamp')
+  fireEvent.click(screen.getAllByRole('button', { name: 'Light' })[0])
+  expect(await screen.findByRole('checkbox', { name: 'Kitchen counter' })).toBeInTheDocument()
+  expect(screen.getByRole('checkbox', { name: 'Floor lamp' })).toBeDisabled()
+  const search = screen.getByRole('textbox', { name: 'Search by name, room or entity id' })
+  fireEvent.change(search, { target: { value: 'kitchen' } })
+  expect(screen.queryByRole('checkbox', { name: 'Ceiling light' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Kitchen counter' }))
+  fireEvent.change(search, { target: { value: '' } })
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Ceiling light' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Add (2)' }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(1))
+  const added = (puts(sent)[0].body!.elements as Record<string, unknown>[]).filter((element) => !['living', 'garden', 'floor', 'path', 'gone'].includes(String(element.id)))
+  expect(added).toEqual([
+    expect.objectContaining({ type: 'light', rid: 'r-ceiling', entity_id: 'light.ceiling', name: 'Ceiling light', style: 'pill', x: 16, y: 112 }),
+    expect.objectContaining({ type: 'light', rid: 'r-counter', entity_id: 'light.kitchen_counter', name: 'Kitchen counter', style: 'pill', x: 288, y: 112 }),
+  ])
+  // The page is asked again, so the new lamps show how they stand.
+  await waitFor(() => expect(sent.filter((one) => one.method === 'GET' && one.url.endsWith('/pages/9/home')).length).toBeGreaterThan(1))
+  expect(screen.getByText('Ceiling light').closest('[data-lamp]')).toHaveTextContent('80 %')
+})
+
+it('says why no lamps can be offered', async () => {
+  show(WITH_LAMPS, {
+    editing: true,
+    offer: { lights: [], problem: { code: 'not_admin', message: 'Home Assistant lets only an administrator read which lamps there are.', hint: 'Use a long-lived token of an administrator for this connection.' } },
+  })
+  await screen.findByText('Floor lamp')
+  fireEvent.click(screen.getAllByRole('button', { name: 'Light' })[0])
+  expect(await screen.findByText('Only an administrator of Home Assistant may read which lights there are.')).toBeInTheDocument()
+  expect(screen.getByText('Use a long-lived token of an administrator for this connection.')).toBeInTheDocument()
+})
+
+it('moves a lamp but does not try to rename it', async () => {
+  const sent = show(WITH_LAMPS, { editing: true })
+  const spot = (await screen.findByText('Floor lamp')).closest('[data-element]') as HTMLElement
+  fireEvent.pointerDown(spot, { pointerId: 1, button: 0, clientX: 50, clientY: 50 })
+  fireEvent.pointerUp(spot, { pointerId: 1, clientX: 50, clientY: 50 })
+  expect(screen.queryByRole('textbox', { name: 'Name of the heading' })).not.toBeInTheDocument()
+  fireEvent.pointerDown(spot, { pointerId: 2, button: 0, clientX: 50, clientY: 50 })
+  fireEvent.pointerMove(spot, { pointerId: 2, clientX: 90, clientY: 50 })
+  fireEvent.pointerUp(spot, { pointerId: 2, clientX: 90, clientY: 50 })
+  await waitFor(() => expect(puts(sent)).toHaveLength(1))
+  const floor = (puts(sent)[0].body!.elements as Record<string, unknown>[]).find((element) => element.id === 'floor')
+  expect(floor).toMatchObject({ x: 56, y: 56, rid: 'r-floor', entity_id: 'light.floor_lamp', type: 'light' })
+  expect(floor).not.toHaveProperty('text')
 })

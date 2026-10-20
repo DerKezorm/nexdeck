@@ -12,7 +12,22 @@ export interface HomeHeading {
   text: string
 }
 
-export type HomeElement = HomeHeading
+/**
+ * A lamp, kept by its registry id; the entity id and name are as they were
+ * when it was placed, for when Home Assistant cannot be asked.
+ */
+export interface HomeLight {
+  id: string
+  type: 'light'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: 'pill'
+}
+
+export type HomeElement = HomeHeading | HomeLight
 
 export interface HomeLayout {
   integration_id: number | null
@@ -25,10 +40,59 @@ export interface HomeProblem {
   hint: string
 }
 
+/** A lamp as Home Assistant reports it (``hass_registry.pick_lights``). */
+export interface LampInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  group: boolean
+  on: boolean
+  unavailable: boolean
+  pct: number | null
+  rgb: [number, number, number] | null
+  kelvin: number | null
+  dims: boolean
+  temperature: boolean
+  colour: boolean
+}
+
 export interface HomeAnswer {
   layout: HomeLayout
   version: number
   problem: HomeProblem | null
+  /** How each placed lamp stands, by element id; ``missing`` when Home Assistant no longer offers it. */
+  lights?: Record<string, (LampInfo & { missing: false }) | { missing: true }>
+}
+
+export interface LightOffer {
+  lights: LampInfo[]
+  problem: HomeProblem | null
+}
+
+/** The colour a lit lamp gives off: its own colour, its white, or a warm white when it says neither. */
+export function lampColour(info: Pick<LampInfo, 'on' | 'rgb' | 'kelvin'> | null | undefined): string | null {
+  if (!info?.on) return null
+  if (info.rgb) return `rgb(${info.rgb[0]}, ${info.rgb[1]}, ${info.rgb[2]})`
+  if (info.kelvin) {
+    const t = Math.min(1, Math.max(0, (info.kelvin - 2200) / (6500 - 2200)))
+    const warm = [255, 176, 96]
+    const cool = [226, 236, 255]
+    return `rgb(${warm.map((channel, index) => Math.round(channel + (cool[index] - channel) * t)).join(', ')})`
+  }
+  return 'rgb(255, 196, 120)'
+}
+
+/** How far apart lamps added together stand, and how many share a row. */
+/** A pill is at most 256 pixels wide (``max-w`` in HomePage), so lamps placed together never overlap. */
+export const LAMP_PITCH = 272
+export const LAMPS_PER_ROW = 4
+
+/** Where lamps added together go: side by side in rows, below everything that stands already. */
+export function lampSpots(elements: HomeElement[], count: number): { x: number; y: number }[] {
+  const top = elements.length === 0 ? 16 : snap(Math.max(...elements.map((element) => element.y)) + 56)
+  return Array.from({ length: count }, (_, index) => ({ x: 16 + (index % LAMPS_PER_ROW) * LAMP_PITCH, y: top + Math.floor(index / LAMPS_PER_ROW) * 56 }))
 }
 
 /** Everything on the surface snaps to this many pixels, so rows line up by themselves. */

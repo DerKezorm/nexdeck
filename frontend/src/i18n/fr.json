@@ -1582,11 +1582,33 @@
     "removeHeading": "Retirer",
     "problems": {
       "no_integration": "La connexion Home Assistant de cette page n'existe plus.",
-      "integration_disabled": "La connexion Home Assistant de cette page est désactivée."
+      "integration_disabled": "La connexion Home Assistant de cette page est désactivée.",
+      "unreachable": "Home Assistant est injoignable.",
+      "not_admin": "Seul un administrateur de Home Assistant peut lire quelles lumières existent.",
+      "auth_failed": "Home Assistant a refusé le jeton.",
+      "refused": "Home Assistant a refusé de dire quelles lumières existent."
     },
     "hints": {
       "no_integration": "Supprimez la page et ajoutez-la de nouveau avec une autre connexion.",
-      "integration_disabled": "Activez-la dans Réglages, Connexions."
-    }
+      "integration_disabled": "Activez-la dans Réglages, Connexions.",
+      "unreachable": "Vérifiez l'adresse de la connexion.",
+      "not_admin": "Utilisez pour cette connexion un jeton longue durée d'un administrateur.",
+      "auth_failed": "Créez un nouveau jeton longue durée et saisissez-le dans Réglages, Connexions."
+    },
+    "addLight": "Lumière",
+    "pickTitle": "Ajouter des lumières",
+    "pickSearch": "Chercher par nom, pièce ou entity id",
+    "pickNone": "Choisissez des lumières",
+    "pickAdd": "Ajouter ({{count}})",
+    "pickEmpty": "Aucune lumière trouvée.",
+    "pickHelp": "Seulement de vraies lampes de Home Assistant. Si une lampe est branchée sur un interrupteur, transformez-le en lumière là-bas avec « Changer le type d'appareil d'un interrupteur ».",
+    "placed": "sur la page",
+    "unavailable": "injoignable",
+    "missing": "n'est plus dans Home Assistant",
+    "gone": "absente",
+    "offline": "hors ligne",
+    "on": "allumée",
+    "off": "éteinte",
+    "removeLight": "Retirer"
   }
 }

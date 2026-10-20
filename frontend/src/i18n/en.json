@@ -1582,11 +1582,33 @@
     "removeHeading": "Remove",
     "problems": {
       "no_integration": "The Home Assistant connection of this page is gone.",
-      "integration_disabled": "The Home Assistant connection of this page is switched off."
+      "integration_disabled": "The Home Assistant connection of this page is switched off.",
+      "unreachable": "Home Assistant could not be reached.",
+      "not_admin": "Only an administrator of Home Assistant may read which lights there are.",
+      "auth_failed": "Home Assistant rejected the token.",
+      "refused": "Home Assistant refused to say which lights there are."
     },
     "hints": {
       "no_integration": "Delete the page and add it again with another connection.",
-      "integration_disabled": "Switch it on under Settings, Connections."
-    }
+      "integration_disabled": "Switch it on under Settings, Connections.",
+      "unreachable": "Check the address of the connection.",
+      "not_admin": "Use a long-lived token of an administrator for this connection.",
+      "auth_failed": "Create a new long-lived token and enter it under Settings, Connections."
+    },
+    "addLight": "Light",
+    "pickTitle": "Add lights",
+    "pickSearch": "Search by name, room or entity id",
+    "pickNone": "Pick lights",
+    "pickAdd": "Add ({{count}})",
+    "pickEmpty": "No light found.",
+    "pickHelp": "Only real lamps from Home Assistant. If a lamp hangs on a switch, turn the switch into a light there with “Change device type of a switch”.",
+    "placed": "on the page",
+    "unavailable": "unreachable",
+    "missing": "no longer in Home Assistant",
+    "gone": "gone",
+    "offline": "offline",
+    "on": "on",
+    "off": "off",
+    "removeLight": "Remove"
   }
 }

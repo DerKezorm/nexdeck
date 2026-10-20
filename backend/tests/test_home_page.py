@@ -1,15 +1,16 @@
 """Home pages: a free surface of Home Assistant controls.
 
-So far a home page holds headings only; the controls follow. The page itself
-is checked here: who may make one, what a browser may store on it, that it
-travels with its board, and that cards stay off it.
+Checked here: who may make one, what a browser may store on it, that it
+travels with its board, that cards stay off it, and which lamps of the house
+it offers and finds again. The demo house of ``hass_registry`` stands in for
+a real one; it is shaped after a registry measured on 20.10.2026.
 """
 
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from app.services import home
+from app.services import hass_registry, home
 
 from .conftest import CSRF, create_user, login, setup_admin
 
@@ -200,3 +201,131 @@ def test_cards_stay_off_a_home_page_and_off_a_network_plan_however_they_come(cli
         assert carried.status_code == 400 and carried.json()["detail"]["code"] == code
     stays = next(p for p in client.get(f"/api/v1/boards/{board['slug']}").json()["pages"] if p["id"] == cards_page["id"])
     assert [widget["id"] for widget in stays["widgets"]] == [card_id]
+
+
+# ---------------------------------------------------------------------------
+# Lamps from Home Assistant
+# ---------------------------------------------------------------------------
+
+
+def test_only_lamps_worth_a_wall_are_offered() -> None:
+    """Settings, hidden and disabled entities, other domains and entries without a state stay out."""
+    offered = hass_registry.pick_lights(*hass_registry.demo_registry())
+    assert [light["entity_id"] for light in offered] == [
+        "light.bedside", "light.ceiling", "light.dining_table", "light.floor_lamp", "light.garden_path", "light.kitchen_counter", "light.tv_strip",
+    ]
+    by_id = {light["entity_id"]: light for light in offered}
+    floor = by_id["light.floor_lamp"]
+    assert floor["rid"] == "r-floor" and floor["name"] == "Floor lamp" and floor["area"] == "Living room" and floor["device"] == "Floor lamp"
+    assert by_id["light.dining_table"]["area"] == "Living room" and by_id["light.dining_table"]["group"] is True
+
+
+def test_what_a_lamp_can_do_follows_its_colour_modes() -> None:
+    offered = {light["entity_id"]: light for light in hass_registry.pick_lights(*hass_registry.demo_registry())}
+    can = {entity_id: (light["dims"], light["temperature"], light["colour"]) for entity_id, light in offered.items()}
+    assert can["light.garden_path"] == (False, False, False)
+    assert can["light.kitchen_counter"] == (True, False, False)
+    assert can["light.ceiling"] == (True, True, False)
+    assert can["light.tv_strip"] == (True, False, True) and can["light.floor_lamp"] == (True, True, True)
+    floor = offered["light.floor_lamp"]
+    assert floor["on"] is True and floor["pct"] == 62 and floor["kelvin"] == 2400 and floor["rgb"] == [255, 167, 87]
+    assert offered["light.kitchen_counter"]["on"] is False and offered["light.kitchen_counter"]["pct"] is None
+    assert offered["light.bedside"]["unavailable"] is True and offered["light.bedside"]["on"] is False
+
+
+def test_a_lamp_is_kept_by_registry_id_entity_id_and_name() -> None:
+    raw = {"elements": [
+        {"id": "a", "type": "light", "x": 8, "y": 8, "rid": "0123abcd", "entity_id": "light.floor_lamp", "name": "Floor lamp", "style": "pill"},
+        {"id": "b", "type": "light", "x": 8, "y": 8, "rid": "0123abcd", "entity_id": "light.desk", "style": "neon"},
+        {"id": "c", "type": "light", "x": 8, "y": 8, "rid": "0123abcd", "entity_id": "switch.floor_plug"},
+        {"id": "d", "type": "light", "x": 8, "y": 8, "rid": "0123abcd", "entity_id": "light.Upper"},
+        {"id": "e", "type": "light", "x": 8, "y": 8, "rid": "not an id!", "entity_id": "light.desk"},
+        {"id": "f", "type": "light", "x": 8, "y": 8, "entity_id": "light.desk"},
+    ]}
+    elements = home.clean_layout(raw, None)["elements"]
+    assert [element["id"] for element in elements] == ["a", "b"]
+    assert elements[0] == {"id": "a", "type": "light", "x": 8, "y": 8, "rid": "0123abcd", "entity_id": "light.floor_lamp", "name": "Floor lamp", "style": "pill"}
+    assert elements[1]["style"] == "pill" and elements[1]["name"] == ""
+
+
+def _demo_page(client: TestClient, **extra: object) -> tuple[dict, dict, dict]:
+    board = _board(client)
+    hass = _hass(client, demo=True, **extra)
+    return board, hass, _made(client, board, hass["id"])
+
+
+def test_those_who_arrange_the_page_are_offered_its_lamps_and_nobody_else(client: TestClient) -> None:
+    setup_admin(client)
+    board, _connection, page = _demo_page(client)
+    answer = client.get(f"/api/v1/pages/{page['id']}/home/lights")
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["problem"] is None
+    assert len(answer.json()["lights"]) == 7
+    client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"role": "user", "level": "view"}]}, headers=CSRF)
+    create_user(client, "viewer")
+    login(client, "viewer", "another-long-password")
+    assert client.get(f"/api/v1/pages/{page['id']}/home/lights").status_code == 403
+
+
+def test_a_connection_reserved_for_administrators_offers_no_lamps_to_a_member(client: TestClient) -> None:
+    setup_admin(client)
+    board, _connection, page = _demo_page(client, admin_only=True)
+    client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"role": "user", "level": "edit"}]}, headers=CSRF)
+    create_user(client, "kim")
+    login(client, "kim", "another-long-password")
+    refused = client.get(f"/api/v1/pages/{page['id']}/home/lights")
+    assert refused.status_code == 403 and refused.json()["detail"]["code"] == "integration_locked"
+
+
+def test_a_placed_lamp_is_found_again_after_it_was_renamed_and_a_gone_one_says_so(client: TestClient) -> None:
+    setup_admin(client)
+    _view, _connection, page = _demo_page(client)
+    url = f"/api/v1/pages/{page['id']}/home"
+    client.put(url, json={"elements": [
+        {"id": "lamp", "type": "light", "x": 16, "y": 48, "rid": "r-floor", "entity_id": "light.renamed_since", "name": "Old name"},
+        {"id": "gone", "type": "light", "x": 216, "y": 48, "rid": "r-unknown", "entity_id": "light.thrown_away", "name": "Thrown away"},
+        {"id": "hidden", "type": "light", "x": 416, "y": 48, "rid": "r-hidden", "entity_id": "light.old_bulb", "name": "Old bulb"},
+    ]}, headers=CSRF)
+    answer = client.get(url).json()
+    assert answer["problem"] is None
+    lamp = answer["lights"]["lamp"]
+    assert lamp["missing"] is False and lamp["entity_id"] == "light.floor_lamp" and lamp["name"] == "Floor lamp" and lamp["on"] is True
+    assert answer["lights"]["gone"] == {"missing": True}
+    assert answer["lights"]["hidden"] == {"missing": True}, "hidden in Home Assistant is gone from the page"
+
+
+def test_a_house_that_cannot_be_reached_is_said_on_the_page_and_in_the_offer(client: TestClient) -> None:
+    setup_admin(client)
+    board = _board(client)
+    hass = client.post("/api/v1/integrations", json={"kind": "homeassistant", "name": "Away", "config": {"url": "http://127.0.0.1:9", "token": "t"}}, headers=CSRF).json()
+    page = _made(client, board, hass["id"])
+    offer = client.get(f"/api/v1/pages/{page['id']}/home/lights").json()
+    assert offer["lights"] == [] and offer["problem"]["code"] == "unreachable"
+    client.put(f"/api/v1/pages/{page['id']}/home", json={"elements": [{"id": "lamp", "type": "light", "x": 0, "y": 0, "rid": "r1", "entity_id": "light.desk", "name": "Desk"}]}, headers=CSRF)
+    answer = client.get(f"/api/v1/pages/{page['id']}/home").json()
+    assert answer["problem"]["code"] == "unreachable" and answer["layout"]["elements"][0]["name"] == "Desk"
+
+
+async def test_the_registries_are_asked_once_a_minute_and_the_live_states_win(monkeypatch) -> None:
+    entities, devices, areas, states = hass_registry.demo_registry()
+    asked: list[list[str]] = []
+
+    async def ask(config, commands):
+        asked.append([command["type"] for command in commands])
+        answers = [entities, devices, areas]
+        return answers + ([list(states.values())] if len(commands) > 3 else [])
+
+    monkeypatch.setattr(hass_registry, "_ask", ask)
+    cache: dict = {}
+    first = await hass_registry.lights({}, cache, now=100.0)
+    assert asked == [["config/entity_registry/list", "config/device_registry/list", "config/area_registry/list", "get_states"]]
+    await hass_registry.lights({}, cache, now=150.0)
+    assert len(asked) == 1, "kept for a minute"
+    assert {light["entity_id"]: light["on"] for light in first}["light.kitchen_counter"] is False
+    counter = states["light.kitchen_counter"]
+    cache["hass_states"] = {**states, "light.kitchen_counter": {**counter, "state": "on", "attributes": {**counter["attributes"], "brightness": 255}}}
+    now_on = {light["entity_id"]: light for light in await hass_registry.lights({}, cache, now=155.0)}
+    assert len(asked) == 1, "a lamp switched a moment ago shows without asking the registries again"
+    assert now_on["light.kitchen_counter"]["on"] is True and now_on["light.kitchen_counter"]["pct"] == 100
+    await hass_registry.lights({}, cache, now=101.0 + hass_registry.REGISTRY_SECONDS)
+    assert len(asked) == 2 and asked[1][-1] == "config/area_registry/list", "after a minute the registries again, but not the states the listener has"

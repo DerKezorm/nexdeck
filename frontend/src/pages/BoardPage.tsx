@@ -296,9 +296,11 @@ export function BoardPage() {
     return () => usePlayer.getState().setBarHidden(false)
   }, [editing])
 
-  // The first time edit mode opens, say how moving and resizing work.
+  // The first time edit mode opens on cards, say how moving and resizing work.
+  // A network plan and a home page have no corner to resize, so not there.
+  const cardPage = (activePage?.kind ?? 'cards') === 'cards'
   useEffect(() => {
-    if (!editing) return
+    if (!editing || !cardPage) return
     try {
       if (localStorage.getItem(EDIT_HINT_SEEN)) return
       localStorage.setItem(EDIT_HINT_SEEN, '1')
@@ -306,7 +308,7 @@ export function BoardPage() {
       // storage may be unavailable; the hint then shows every time, which is fine
     }
     setToast({ text: t('board.editHint'), level: 'info' })
-  }, [editing, t])
+  }, [editing, cardPage, t])
 
   const widgets: WidgetView[] = useMemo(
     () =>

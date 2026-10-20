@@ -1582,11 +1582,33 @@
     "removeHeading": "Entfernen",
     "problems": {
       "no_integration": "Die Home-Assistant-Anbindung dieser Seite gibt es nicht mehr.",
-      "integration_disabled": "Die Home-Assistant-Anbindung dieser Seite ist ausgeschaltet."
+      "integration_disabled": "Die Home-Assistant-Anbindung dieser Seite ist ausgeschaltet.",
+      "unreachable": "Home Assistant ist nicht erreichbar.",
+      "not_admin": "Welche Lampen es gibt, darf nur ein Administrator von Home Assistant lesen.",
+      "auth_failed": "Home Assistant hat den Token abgelehnt.",
+      "refused": "Home Assistant hat die Liste der Lampen verweigert."
     },
     "hints": {
       "no_integration": "Lösche die Seite und lege sie mit einer anderen Anbindung neu an.",
-      "integration_disabled": "Schalte sie unter Einstellungen, Anbindungen ein."
-    }
+      "integration_disabled": "Schalte sie unter Einstellungen, Anbindungen ein.",
+      "unreachable": "Prüfe die Adresse der Anbindung.",
+      "not_admin": "Nimm für diese Anbindung einen langlebigen Token eines Administrators.",
+      "auth_failed": "Lege einen neuen langlebigen Token an und trag ihn unter Einstellungen, Anbindungen ein."
+    },
+    "addLight": "Licht",
+    "pickTitle": "Lampen hinzufügen",
+    "pickSearch": "Suchen nach Name, Raum oder Entity-ID",
+    "pickNone": "Lampen wählen",
+    "pickAdd": "Hinzufügen ({{count}})",
+    "pickEmpty": "Keine Lampe gefunden.",
+    "pickHelp": "Nur echte Lampen aus Home Assistant. Hängt eine Lampe an einem Schalter, mach den Schalter dort mit „Gerätetyp eines Schalters ändern“ zu einem Licht.",
+    "placed": "auf der Seite",
+    "unavailable": "nicht erreichbar",
+    "missing": "nicht mehr in Home Assistant",
+    "gone": "weg",
+    "offline": "offline",
+    "on": "an",
+    "off": "aus",
+    "removeLight": "Entfernen"
   }
 }

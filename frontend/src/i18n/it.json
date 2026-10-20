@@ -1582,11 +1582,33 @@
     "removeHeading": "Rimuovi",
     "problems": {
       "no_integration": "La connessione Home Assistant di questa pagina non esiste più.",
-      "integration_disabled": "La connessione Home Assistant di questa pagina è disattivata."
+      "integration_disabled": "La connessione Home Assistant di questa pagina è disattivata.",
+      "unreachable": "Home Assistant non è raggiungibile.",
+      "not_admin": "Solo un amministratore di Home Assistant può leggere quali luci ci sono.",
+      "auth_failed": "Home Assistant ha rifiutato il token.",
+      "refused": "Home Assistant si è rifiutato di dire quali luci ci sono."
     },
     "hints": {
       "no_integration": "Elimina la pagina e aggiungila di nuovo con un'altra connessione.",
-      "integration_disabled": "Attivala in Impostazioni, Connessioni."
-    }
+      "integration_disabled": "Attivala in Impostazioni, Connessioni.",
+      "unreachable": "Controlla l'indirizzo della connessione.",
+      "not_admin": "Usa per questa connessione un token di lunga durata di un amministratore.",
+      "auth_failed": "Crea un nuovo token di lunga durata e inseriscilo in Impostazioni, Connessioni."
+    },
+    "addLight": "Luce",
+    "pickTitle": "Aggiungi luci",
+    "pickSearch": "Cerca per nome, stanza o entity id",
+    "pickNone": "Scegli le luci",
+    "pickAdd": "Aggiungi ({{count}})",
+    "pickEmpty": "Nessuna luce trovata.",
+    "pickHelp": "Solo vere lampade di Home Assistant. Se una lampada è collegata a un interruttore, trasformalo lì in luce con «Cambia il tipo di dispositivo di un interruttore».",
+    "placed": "sulla pagina",
+    "unavailable": "non raggiungibile",
+    "missing": "non è più in Home Assistant",
+    "gone": "assente",
+    "offline": "offline",
+    "on": "accesa",
+    "off": "spenta",
+    "removeLight": "Rimuovi"
   }
 }
