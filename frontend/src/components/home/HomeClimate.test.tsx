@@ -5,11 +5,11 @@
  * details; nothing to press for who may only look; the sensor chosen while
  * arranging; thermostats added like lamps.
  */
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 
-import type { ClimateOffer, ClimateView, HomeAnswer } from '../../lib/home'
+import { CLIMATE_STYLES, type ClimateOffer, type ClimateView, type HomeAnswer } from '../../lib/home'
 import { HomePage } from './HomePage'
 
 type Sent = { url: string; method: string; body: Record<string, unknown> | null }
@@ -237,4 +237,136 @@ it('shows a phone each thermostat under its heading, the width of the screen', a
   } finally {
     window.matchMedia = wide
   }
+})
+
+// -- swiping, turning and the ten styles -------------------------------------------
+
+const main = (entity: string) => (pill(entity).matches('button') ? pill(entity) : (pill(entity).querySelector('[data-main]') as HTMLElement))
+
+it('sets the target by a swipe sideways, shown as the finger moves and sent once it lets go', async () => {
+  const sent = show()
+  await findPill('climate.living_room')
+  const surface = main('climate.living_room')
+  fireEvent.pointerDown(surface, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(surface, { pointerId: 1, clientX: 118, clientY: 21 })
+  fireEvent.pointerMove(surface, { pointerId: 1, clientX: 137, clientY: 22 })
+  // 37 px are three steps of 12: 21.5 and one and a half.
+  expect(pill('climate.living_room').querySelector('[data-target]')).toHaveTextContent('23°')
+  await wait(50)
+  expect(posts(sent)).toEqual([])
+  fireEvent.pointerUp(surface, { pointerId: 1, clientX: 137, clientY: 22 })
+  fireEvent.click(surface)
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 23 }]))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})
+
+it('lets a swipe up and down scroll the page rather than set anything', async () => {
+  const sent = show()
+  await findPill('climate.living_room')
+  const surface = main('climate.living_room')
+  fireEvent.pointerDown(surface, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(surface, { pointerId: 1, clientX: 104, clientY: 80 })
+  fireEvent.pointerUp(surface, { pointerId: 1, clientX: 104, clientY: 80 })
+  await wait(1200)
+  expect(posts(sent)).toEqual([])
+  expect(pill('climate.living_room').querySelector('[data-target]')).toHaveTextContent('21.5°')
+})
+
+const STYLED = (style: string): HomeAnswer => ({
+  ...ANSWER,
+  layout: { ...ANSWER.layout, elements: ANSWER.layout.elements.map((element) => (element.id === 'living' ? { ...element, style } : element)) as HomeAnswer['layout']['elements'] },
+})
+
+it('turns a dial, the place of the finger on the circle being the target', async () => {
+  const measured = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 124, right: 100, bottom: 124, x: 0, y: 0, toJSON: () => ({}) } as DOMRect)
+  try {
+    const sent = show({ answer: STYLED('dial') })
+    await findPill('climate.living_room')
+    const dial = main('climate.living_room')
+    expect(dial).toHaveAttribute('data-style', 'dial')
+    fireEvent.pointerDown(dial, { pointerId: 1, button: 0, clientX: 50, clientY: 10 })
+    // Straight right of the middle is five sixths of the way round: 7 + 23 * 5/6 is 26.2, on the half degree 26.
+    fireEvent.pointerMove(dial, { pointerId: 1, clientX: 100, clientY: 50 })
+    expect(dial.querySelector('[data-target]')).toHaveTextContent('26°')
+    // Past the end at the bottom right stays at the end.
+    fireEvent.pointerMove(dial, { pointerId: 1, clientX: 80, clientY: 95 })
+    expect(dial.querySelector('[data-target]')).toHaveTextContent('30°')
+    fireEvent.pointerUp(dial, { pointerId: 1, clientX: 80, clientY: 95 })
+    await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 30 }]))
+  } finally {
+    measured.mockRestore()
+  }
+})
+
+it('moves the target by the arrow keys, gathered as taps are', async () => {
+  const sent = show({ answer: STYLED('round') })
+  await findPill('climate.living_room')
+  const round = main('climate.living_room')
+  fireEvent.keyDown(round, { key: 'ArrowUp' })
+  fireEvent.keyDown(round, { key: 'ArrowRight' })
+  fireEvent.keyDown(round, { key: 'ArrowDown' })
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 22 }]), { timeout: 2500 })
+})
+
+it('sets the target by the slider in the details, gathered as taps are', async () => {
+  const sent = show()
+  await findPill('climate.living_room')
+  fireEvent.click(main('climate.living_room'))
+  const panel = await screen.findByRole('dialog')
+  const slider = within(panel).getByRole('slider', { name: 'Target' })
+  expect(slider).toHaveAttribute('min', '7')
+  expect(slider).toHaveAttribute('max', '30')
+  expect(slider).toHaveAttribute('step', '0.5')
+  fireEvent.change(slider, { target: { value: '19' } })
+  fireEvent.change(slider, { target: { value: '19.5' } })
+  expect(panel.querySelector('[data-target]')).toHaveTextContent('19.5°')
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 19.5 }]), { timeout: 2500 })
+})
+
+it('draws a thermostat in each of the ten styles, each with its room and its target', async () => {
+  for (const style of CLIMATE_STYLES) {
+    cleanup()
+    show({ answer: STYLED(style) })
+    const living = await findPill('climate.living_room')
+    expect(living, style).toHaveAttribute('data-style', style)
+    expect(living.querySelector('[data-reading]'), style).toHaveTextContent('21.3°')
+    // The valve head says the mark of its scale: 21.5 degrees are about a 3.
+    expect(living.querySelector('[data-target]'), style).toHaveTextContent(style === 'valve' ? '3' : '21.5°')
+    expect(main('climate.living_room').getAttribute('aria-label'), style).toContain('21.5°')
+    // Who may act can swipe every style; the tile and the pill have plus and minus besides.
+    const steps = within(living.parentElement as HTMLElement).queryAllByRole('button', { name: /Warmer|Colder/ })
+    expect(steps.length, style).toBe(style === 'pill' || style === 'tile' ? 2 : 0)
+    for (const step of steps) expect(main('climate.living_room').contains(step), `${style}: a button in a button`).toBe(false)
+  }
+})
+
+it('changes the style of a thermostat while arranging, and adds new ones in the style picked', async () => {
+  const sent = show({ editing: true })
+  await findPill('climate.bedroom')
+  const tools = pill('climate.bedroom').parentElement as HTMLElement
+  fireEvent.click(within(tools).getByRole('button', { name: 'Choose a style' }))
+  fireEvent.click(within(tools).getByRole('menuitemradio', { name: 'Dial' }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(1))
+  expect((puts(sent)[0].body!.elements as Record<string, unknown>[]).find((element) => element.id === 'bed')).toMatchObject({ style: 'dial' })
+
+  fireEvent.click(screen.getByRole('button', { name: 'Heating' }))
+  fireEvent.click(await screen.findByRole('checkbox', { name: 'Kids room' }))
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Hall' }))
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'digits' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Add (2)' }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(2))
+  const added = (puts(sent)[1].body!.elements as Record<string, unknown>[]).filter((element) => ['r-heat-kids', 'r-heat-hall'].includes(String(element.rid)))
+  // Spaced for big digits (150 and a gap).
+  expect(added.map((element) => [element.style, element.x])).toEqual([['digits', 16], ['digits', 184]])
+})
+
+it('says the degrees on a valve head while it is turned, and its mark otherwise', async () => {
+  show({ answer: STYLED('valve') })
+  const valve = main(await findPill('climate.living_room').then(() => 'climate.living_room'))
+  expect(valve.querySelector('[data-target]')).toHaveTextContent('3')
+  fireEvent.keyDown(valve, { key: 'ArrowUp' })
+  fireEvent.keyDown(valve, { key: 'ArrowUp' })
+  fireEvent.keyDown(valve, { key: 'ArrowUp' })
+  expect(valve.querySelector('[data-target]')).toHaveTextContent('23°')
+  await waitFor(() => expect(valve.querySelector('[data-target]')).toHaveTextContent(/^4$/), { timeout: 2500 })
 })

@@ -344,9 +344,10 @@ def test_the_browser_knows_the_same_styles_as_the_server() -> None:
     from pathlib import Path
 
     source = (Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib" / "home.ts").read_text(encoding="utf-8")
-    found = re.search(r"export const LAMP_STYLES = \[([^\]]*)\] as const", source)
-    assert found, "LAMP_STYLES is no longer where this test reads it"
-    assert tuple(re.findall(r"'([a-z]+)'", found.group(1))) == home.STYLES
+    for name, server in (("LAMP_STYLES", home.STYLES), ("CLIMATE_STYLES", home.CLIMATE_STYLES)):
+        found = re.search(rf"export const {name} = \[([^\]]*)\] as const", source)
+        assert found, f"{name} is no longer where this test reads it"
+        assert tuple(re.findall(r"'([a-z]+)'", found.group(1))) == server, name
 
 
 def test_a_width_dragged_by_hand_is_kept_inside_its_bounds_and_nonsense_is_left_out() -> None:

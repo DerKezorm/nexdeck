@@ -1,9 +1,10 @@
 import { Minus, Plus } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { temperature, type ClimateView, type ClimateWish } from '../../lib/home'
 import { Dialog } from '../ui'
-import { climateLook } from './ClimateControl'
+import { climateLook, COOLING, HEATING } from './ClimateControl'
 
 interface Props {
   info: ClimateView
@@ -12,6 +13,8 @@ interface Props {
   setting: boolean
   /** Null for those who may look and nothing more. */
   onStep: ((steps: number) => void) | null
+  /** A target from the slider, gathered like the taps. */
+  onSlide: ((value: number) => void) | null
   onWish: ((wish: ClimateWish) => void) | null
   onClose: () => void
 }
@@ -21,7 +24,7 @@ interface Props {
  * target, and the modes and presets the device names. Nothing is offered
  * that Home Assistant does not say it has.
  */
-export function ClimateDetails({ info, target, setting, onStep, onWish, onClose }: Props) {
+export function ClimateDetails({ info, target, setting, onStep, onSlide, onWish, onClose }: Props) {
   const { t } = useTranslation()
   const { colour, icon } = climateLook(info)
   const steppable = Boolean(onStep) && info.on && info.settable && !info.unavailable
@@ -63,6 +66,12 @@ export function ClimateDetails({ info, target, setting, onStep, onWish, onClose 
               </button>
             )}
           </div>
+          {steppable && onSlide && (
+            <input type="range" className="lamp-range mt-1" min={info.min} max={info.max} step={info.step} value={target ?? info.min}
+              aria-label={t('homePage.target')} aria-valuetext={temperature(target)}
+              style={{ '--track': `linear-gradient(to right, ${COOLING}, color-mix(in srgb, var(--nd-text) 20%, transparent) 45%, ${HEATING})` } as CSSProperties}
+              onChange={(event) => onSlide(Number(event.target.value))} />
+          )}
           <p className="text-center text-[11.5px] text-faint">{setting ? t('homePage.setting') : t('homePage.bounds', { min: temperature(info.min), max: temperature(info.max) })}</p>
         </div>
 

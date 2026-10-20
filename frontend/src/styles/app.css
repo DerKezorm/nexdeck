@@ -2556,3 +2556,357 @@ body.has-player-bar main {
     border-color: var(--nd-accent);
   }
 }
+
+/* The thermostats of a home page, the drawings of their board of sketches
+   (heizung.html of 20.10.2026) with its sizes; --lc is heating, cooling,
+   idle or off. The pill and the chip share their shells with the lamps'. */
+@layer components {
+  .climate-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    border-radius: 14px;
+  }
+
+  .climate-stack .lamp-cap {
+    max-width: none;
+  }
+
+  /* B round, 68 x 68 */
+  .climate-round {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    position: relative;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+  }
+
+  .climate-round-v {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .climate-round-s {
+    position: absolute;
+    bottom: 9px;
+    font-size: 9.5px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-round.is-on {
+    border-color: color-mix(in srgb, var(--lc) 60%, transparent);
+  }
+
+  .climate-round.is-working {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 70%, transparent), 0 0 26px -4px var(--lc);
+  }
+
+  /* C chip */
+  .climate-chip {
+    max-width: none;
+  }
+
+  .climate-chip.is-lit > i {
+    background: var(--lc);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 25%, transparent), 0 0 8px var(--lc);
+  }
+
+  /* D tile, 96 x 96 */
+  .climate-tile {
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .climate-tile-v {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .climate-tile b {
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .climate-tile-s {
+    align-self: center;
+    font-size: 11px;
+  }
+
+  .climate-tile-s.is-off {
+    align-self: flex-start;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-tile.is-on {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lc) 34%, var(--nd-surface)), color-mix(in srgb, var(--lc) 8%, var(--nd-surface)) 75%);
+    border-color: color-mix(in srgb, var(--lc) 45%, transparent);
+    box-shadow: 0 10px 26px -14px var(--lc);
+  }
+
+  .climate-tile.is-quiet {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  /* E slider: min to max, the target filled, the room as a tick */
+  .climate-slide {
+    width: 230px;
+  }
+
+  .climate-now {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--nd-text) 70%, transparent);
+  }
+
+  /* The numbers stay readable where the edge of the fill runs under them. */
+  .climate-slide .lamp-p {
+    position: relative;
+    z-index: 1;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--nd-surface) 82%, transparent);
+  }
+
+  .climate-slide-icon {
+    display: grid;
+    color: var(--lc);
+  }
+
+  /* F dial, 100 x 100 */
+  .climate-dial {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .climate-arc {
+    position: absolute;
+    inset: 0;
+    width: 100px;
+    height: 100px;
+  }
+
+  .climate-arc-now {
+    fill: #fff;
+    stroke: rgb(0 0 0 / 0.4);
+  }
+
+  .climate-dial-in {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .climate-dial-v {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .climate-dial-v.is-off {
+    font-size: 14px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-dial-s {
+    font-size: 10px;
+    color: var(--nd-text-muted);
+    margin-top: 3px;
+  }
+
+  /* G valve head, 70 x 70 */
+  .climate-valve {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    position: relative;
+    display: block;
+    background: radial-gradient(circle at 35% 30%, #f4f6fa, #c9ced8 60%, #9aa1ad);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.35), inset 0 -3px 6px rgb(0 0 0 / 0.25);
+  }
+
+  .climate-valve-ribs {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgb(0 0 0 / 0.08) 0 4deg, transparent 4deg 12deg);
+  }
+
+  .climate-valve-mark {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    width: 3px;
+    height: 31px;
+    transform-origin: 50% 31px;
+    background: linear-gradient(#2a2f38 0 11px, transparent 11px);
+    border-radius: 2px;
+    transition: transform 200ms ease;
+  }
+
+  .climate-valve-num {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2a2f38;
+  }
+
+  .climate-valve-num.is-setting {
+    font-size: 12px;
+  }
+
+  .climate-valve.is-on {
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.35), 0 0 0 3px color-mix(in srgb, var(--lc) 70%, transparent), 0 0 22px -2px var(--lc);
+  }
+
+  /* H thermometer, 30 x 96 */
+  .climate-thermo {
+    display: block;
+    width: 30px;
+    height: 96px;
+    position: relative;
+  }
+
+  .climate-thermo-tube {
+    position: absolute;
+    left: 9px;
+    top: 0;
+    width: 12px;
+    height: 76px;
+    border-radius: 6px;
+    border: 1px solid var(--nd-border-strong);
+    background: color-mix(in srgb, var(--nd-text) 9%, transparent);
+    overflow: hidden;
+  }
+
+  .climate-thermo-fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--lc);
+    transition: height 200ms ease;
+  }
+
+  .climate-thermo-bulb {
+    position: absolute;
+    left: 4px;
+    bottom: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--lc);
+  }
+
+  .climate-thermo-aim {
+    position: absolute;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--nd-text);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--nd-text) 60%, transparent);
+  }
+
+  /* I radiator, 84 x 70 */
+  .climate-radiator {
+    display: block;
+    width: 84px;
+    height: 70px;
+    position: relative;
+  }
+
+  .climate-ribs {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    height: 44px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .climate-ribs i {
+    flex: 1;
+    border-radius: 5px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 18%, transparent), color-mix(in srgb, var(--nd-text) 6%, transparent));
+    border: 1px solid var(--nd-border-strong);
+  }
+
+  .climate-radiator.is-on .climate-ribs i {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--lc) 80%, white 10%), color-mix(in srgb, var(--lc) 35%, transparent));
+    border-color: color-mix(in srgb, var(--lc) 60%, transparent);
+    box-shadow: 0 0 12px -2px var(--lc);
+  }
+
+  .climate-waves {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 20px;
+    stroke: var(--lc);
+    opacity: 0.8;
+  }
+
+  /* J big digits, 150 x 84 */
+  .climate-digits {
+    width: 150px;
+    height: 84px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border);
+    background: var(--nd-surface);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .climate-digits-v {
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .climate-digits-s {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-digits.is-on .climate-digits-v {
+    color: var(--lc);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--lc) 50%, transparent);
+  }
+}

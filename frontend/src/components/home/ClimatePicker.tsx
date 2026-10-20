@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { get } from '../../api/client'
-import { temperature, type ClimateInfo, type ClimateOffer } from '../../lib/home'
-import { Dialog, Spinner } from '../ui'
+import { CLIMATE_STYLES, temperature, type ClimateInfo, type ClimateOffer, type ClimateStyle } from '../../lib/home'
+import { Dialog, Select, Spinner } from '../ui'
 import { climateLook } from './ClimateControl'
 
 interface Props {
@@ -14,7 +14,19 @@ interface Props {
   /** Registry ids already on the page: shown, not offered twice. */
   placed: Set<string>
   onClose: () => void
-  onAdd: (climates: ClimateInfo[]) => void
+  onAdd: (climates: ClimateInfo[], style: ClimateStyle) => void
+}
+
+/** The style a browser last added thermostats in, so the next ones match; a convenience, kept in the browser. */
+const LAST_STYLE = 'nexdeck.homeClimateStyle'
+
+function lastStyle(): ClimateStyle {
+  try {
+    const kept = localStorage.getItem(LAST_STYLE)
+    return (CLIMATE_STYLES as readonly string[]).includes(kept ?? '') ? (kept as ClimateStyle) : 'pill'
+  } catch {
+    return 'pill'
+  }
 }
 
 /**
@@ -27,6 +39,7 @@ export function ClimatePicker({ open, pageId, placed, onClose, onAdd }: Props) {
   const offer = useQuery({ queryKey: ['home-climates', pageId], queryFn: () => get<ClimateOffer>(`/pages/${pageId}/home/climates`), enabled: open, staleTime: 30_000 })
   const [query, setQuery] = useState('')
   const [chosen, setChosen] = useState<string[]>([])
+  const [style, setStyle] = useState<ClimateStyle>(lastStyle)
   const climates = useMemo(() => offer.data?.climates ?? [], [offer.data])
   const shown = useMemo(() => {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -43,7 +56,12 @@ export function ClimatePicker({ open, pageId, placed, onClose, onAdd }: Props) {
     const picked = climates.filter((one) => chosen.includes(one.rid))
     setChosen([])
     setQuery('')
-    onAdd(picked)
+    try {
+      localStorage.setItem(LAST_STYLE, style)
+    } catch {
+      // Storage may be unavailable; the next pick starts from the pill again, which is fine.
+    }
+    onAdd(picked, style)
   }
 
   return (
@@ -52,9 +70,15 @@ export function ClimatePicker({ open, pageId, placed, onClose, onAdd }: Props) {
       onClose={close}
       title={t('homePage.pickClimateTitle')}
       footer={
-        <button type="button" className="btn btn-accent" disabled={chosen.length === 0} onClick={add}>
-          {chosen.length === 0 ? t('homePage.pickClimateNone') : t('homePage.pickAdd', { count: chosen.length })}
-        </button>
+        <>
+          <label className="flex items-center gap-2 mr-auto text-sm text-muted">
+            {t('homePage.style')}
+            <Select value={style} onChange={(value) => setStyle(value as ClimateStyle)} options={CLIMATE_STYLES.map((one) => ({ value: one, label: t(`homePage.climateStyles.${one}`) }))} />
+          </label>
+          <button type="button" className="btn btn-accent" disabled={chosen.length === 0} onClick={add}>
+            {chosen.length === 0 ? t('homePage.pickClimateNone') : t('homePage.pickAdd', { count: chosen.length })}
+          </button>
+        </>
       }
     >
       <div className="grid gap-3">

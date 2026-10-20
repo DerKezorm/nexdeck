@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { Flame, Minus, Plus, Power, Snowflake, Thermometer, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Flame, Minus, Palette, Plus, Power, Snowflake, Thermometer, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { get } from '../../api/client'
-import { temperature, type ClimateOffer, type ClimateSensor, type ClimateView, type HomeClimate } from '../../lib/home'
+import { CLIMATE_STYLES, STEP_PX, stepTarget, targetAt, temperature, type ClimateOffer, type ClimateSensor, type ClimateStyle, type ClimateView, type HomeClimate } from '../../lib/home'
+import { climateFace } from './ClimateFace'
 import { Marquee } from './Marquee'
 
 /** The colours of what a thermostat is doing, on the icon and the pill's edge. */
@@ -26,7 +27,7 @@ interface Props {
   missing: boolean
   arranging: boolean
   wide: boolean
-  /** Its width on the surface (``controlWidth``), the same for every thermostat unless one was given its own. */
+  /** Its width on the surface (``controlWidth``), for the pill, the chip and the slider; null for the others. */
   width: number | null
   pageId: number
   /** The target shown: what was just asked, or what the thermostat says. */
@@ -35,28 +36,39 @@ interface Props {
   setting: boolean
   /** Plus and minus, for those who may act on the board, while the thermostat takes a target. */
   onStep?: (steps: number) => void
+  /** A target from a swipe: shown while the finger moves, sent when it lets go. */
+  onAim?: (value: number, send: boolean) => void
   onDetails: () => void
   onRemove: () => void
   onSensor: (sensor: ClimateSensor | null) => void
+  onStyle: (style: ClimateStyle) => void
 }
 
+/** How far a pointer travels before a press becomes a swipe. */
+const SWIPE_PX = 6
+
 /**
- * A thermostat as a pill in the look of the lamps: what it does, its name,
- * the room's temperature, and its target between minus and plus. A tap on
- * the pill opens its details (mode, presets) rather than switching anything:
- * a heating turned off by a brushed finger is not noticed until it is cold.
+ * A thermostat, drawn in its style: what it does, the room's temperature,
+ * and its target. Swiping sideways sets the target (the dial and the valve
+ * head are turned, the finger's place on the circle is the target); plus,
+ * minus and the arrow keys move it a step. A tap opens its details rather
+ * than switching anything: a heating turned off by a brushed finger is not
+ * noticed until it is cold.
  */
-export function ClimateControl({ element, info, missing, arranging, wide, width, pageId, target, setting, onStep, onDetails, onRemove, onSensor }: Props) {
+export function ClimateControl({ element, info, missing, arranging, wide, width, pageId, target, setting, onStep, onAim, onDetails, onRemove, onSensor, onStyle }: Props) {
   const { t } = useTranslation()
-  const [choosing, setChoosing] = useState(false)
+  const [choosing, setChoosing] = useState<'sensor' | 'style' | null>(null)
   const tools = useRef<HTMLDivElement>(null)
+  const press = useRef<{ pointer: number; x: number; y: number; from: number; centre: [number, number]; swiping: boolean; last: number } | null>(null)
+  /** Set when a press ended as a swipe, so the click that follows it opens nothing. */
+  const swallow = useRef(false)
   useEffect(() => {
     if (!choosing) return
     const away = (event: PointerEvent) => {
-      if (!tools.current?.contains(event.target as Node)) setChoosing(false)
+      if (!tools.current?.contains(event.target as Node)) setChoosing(null)
     }
     const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setChoosing(false)
+      if (event.key === 'Escape') setChoosing(null)
     }
     window.addEventListener('pointerdown', away, true)
     window.addEventListener('keydown', key)
@@ -77,61 +89,153 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
     ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 12%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
     : undefined
   const label = [name, reading && t('homePage.reading', { value: reading }), state && t('homePage.targetIs', { value: state }), setting ? t('homePage.setting') : ''].filter(Boolean).join(', ')
-  const steppable = Boolean(onStep) && !quiet && info?.on && info.settable && !arranging
+  const steppable = Boolean(onStep) && !quiet && Boolean(info?.on) && Boolean(info?.settable) && !arranging
+  const pill = element.style === 'pill' || !CLIMATE_STYLES.includes(element.style)
+  const face = pill ? null : climateFace({
+    style: element.style, info, name, target, aim: state, quiet, icon, fallback: Boolean(fallback), setting,
+    colour: colour ?? (info?.on && !quiet ? 'var(--nd-accent)' : 'var(--nd-text-faint)'), working: Boolean(colour),
+  })
+  const round = face?.round ?? false
+  const sized: CSSProperties = !wide && width ? { width, maxWidth: 'none' } : {}
+
+  // -- swiping ---------------------------------------------------------------
+
+  const down = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!steppable || !info || event.button !== 0) return
+    swallow.current = false
+    const rect = event.currentTarget.getBoundingClientRect()
+    const from = target ?? info.target ?? info.reading ?? (info.min + info.max) / 2
+    press.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY, from, centre: [rect.left + rect.width / 2, rect.top + Math.min(rect.width, rect.height) / 2], swiping: false, last: from }
+  }
+  const move = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const held = press.current
+    if (!held || held.pointer !== event.pointerId || !info) return
+    const dx = event.clientX - held.x
+    const dy = event.clientY - held.y
+    if (!held.swiping) {
+      if (round ? Math.hypot(dx, dy) < SWIPE_PX : Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy)) return
+      held.swiping = true
+      swallow.current = true
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId)
+      } catch {
+        // A pointer that is already gone has nothing to capture.
+      }
+    }
+    let value: number
+    if (round) {
+      // Turned like a dial: the angle on its three quarters of a circle, from bottom left round to bottom right.
+      const angle = (Math.atan2(event.clientY - held.centre[1], event.clientX - held.centre[0]) * 180) / Math.PI
+      const turned = (((angle - 135) % 360) + 360) % 360
+      value = targetAt(info, turned > 270 ? (turned > 315 ? 0 : 1) : turned / 270)
+    } else {
+      value = stepTarget(info, held.from, Math.round(dx / STEP_PX))
+    }
+    if (value === held.last) return
+    held.last = value
+    onAim?.(value, false)
+  }
+  const up = () => {
+    const held = press.current
+    press.current = null
+    if (held?.swiping) onAim?.(held.last, true)
+  }
+  const key = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (!steppable) return
+    const steps = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 0
+    if (!steps) return
+    event.preventDefault()
+    onStep?.(steps)
+  }
+  const mainProps = {
+    type: 'button' as const,
+    disabled: !info || arranging,
+    'aria-label': label,
+    'aria-haspopup': 'dialog' as const,
+    'data-main': '',
+    onPointerDown: down,
+    onPointerMove: move,
+    onPointerUp: up,
+    onPointerCancel: up,
+    onKeyDown: key,
+    onClick: () => {
+      if (swallow.current) {
+        swallow.current = false
+        return
+      }
+      onDetails()
+    },
+  }
+  const title = [name, info?.area, fallback, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : steppable ? t('homePage.swipeHint') : ''].filter(Boolean).join(' · ')
+  const stepButton = (steps: number, extra = '') => (
+    <button type="button" className={`btn btn-icon btn-flat h-7 w-7 rounded-full ${extra}`} onClick={() => onStep?.(steps)}
+      aria-label={t(steps > 0 ? 'homePage.warmer' : 'homePage.colder', { name })} title={t(steps > 0 ? 'homePage.warmer' : 'homePage.colder', { name })}
+      disabled={target !== null && info !== null && (steps > 0 ? target >= info.max : target <= info.min)}>
+      {steps > 0 ? <Plus size={14} /> : <Minus size={14} />}
+    </button>
+  )
 
   return (
-    // ⚠️ The tools stand beside the pill, not in it: the pill clips what reaches past its edge.
+    // ⚠️ The tools stand beside the drawing, not in it: a pill clips what reaches past its edge.
     <div ref={tools} className={`relative ${wide ? 'w-full' : 'w-fit'}`}>
-      <div
-        className={`glass lamp-pill lamp-control ${wide ? 'w-full h-12' : 'h-10'} ${quiet ? 'lamp-quiet' : ''} !pr-1.5`}
-        style={{ ...(!wide && width ? { width } : {}), ...lit }}
-        data-climate={element.entity_id}
-        title={[name, info?.area, fallback, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')}
-      >
-        <button
-          type="button"
-          className="flex items-center gap-2.5 min-w-0 flex-1 h-full text-left cursor-pointer disabled:cursor-default"
-          disabled={!info || arranging}
-          onClick={onDetails}
-          aria-label={label}
-          aria-haspopup="dialog"
+      {pill ? (
+        <div
+          className={`glass lamp-pill lamp-control ${wide ? 'w-full h-12' : 'h-10'} ${quiet ? 'lamp-quiet' : ''} !pr-1.5`}
+          style={{ ...sized, ...lit }}
+          data-climate={element.entity_id}
+          data-style="pill"
+          title={title}
         >
-          <span className="relative grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200"
-            style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
-            {icon}
-          </span>
-          <Marquee text={name} className="flex-1 text-[13px] font-medium" />
-          {reading && (
-            <span className={`num text-[12px] whitespace-nowrap flex-none ${fallback ? 'text-warn' : 'text-muted'}`} data-reading>
-              {reading}
-              {fallback && <span aria-hidden> *</span>}
+          <button {...mainProps} className={`flex items-center gap-2.5 min-w-0 flex-1 h-full text-left cursor-pointer disabled:cursor-default ${steppable ? 'touch-pan-y select-none' : ''}`}>
+            <span className="relative grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200"
+              style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
+              {icon}
             </span>
-          )}
-        </button>
-        <span className="flex items-center gap-0.5 flex-none ml-auto">
-          {steppable && (
-            <button type="button" className="btn btn-icon btn-flat h-7 w-7 rounded-full" onClick={() => onStep?.(-1)} aria-label={t('homePage.colder', { name })} title={t('homePage.colder', { name })}
-              disabled={target !== null && info !== null && target <= info.min}>
-              <Minus size={14} />
-            </button>
-          )}
-          <span className={`num text-[13px] font-semibold whitespace-nowrap min-w-[3.25rem] text-center ${setting ? 'animate-pulse' : ''} ${info?.on && !quiet ? '' : 'text-muted font-medium'}`}
-            data-target aria-live="polite" title={setting ? t('homePage.setting') : undefined}>
-            {state}
+            <Marquee text={name} className="flex-1 text-[13px] font-medium" />
+            {reading && (
+              <span className={`num text-[12px] whitespace-nowrap flex-none ${fallback ? 'text-warn' : 'text-muted'}`} data-reading>
+                {reading}
+                {fallback && <span aria-hidden> *</span>}
+              </span>
+            )}
+          </button>
+          <span className="flex items-center gap-0.5 flex-none ml-auto">
+            {steppable && stepButton(-1)}
+            <span className={`num text-[13px] font-semibold whitespace-nowrap min-w-[3.25rem] text-center ${setting ? 'animate-pulse' : ''} ${info?.on && !quiet ? '' : 'text-muted font-medium'}`}
+              data-target aria-live="polite" title={setting ? t('homePage.setting') : undefined}>
+              {state}
+            </span>
+            {steppable && stepButton(1)}
           </span>
-          {steppable && (
-            <button type="button" className="btn btn-icon btn-flat h-7 w-7 rounded-full" onClick={() => onStep?.(1)} aria-label={t('homePage.warmer', { name })} title={t('homePage.warmer', { name })}
-              disabled={target !== null && info !== null && target >= info.max}>
-              <Plus size={14} />
-            </button>
-          )}
-        </span>
-      </div>
+        </div>
+      ) : (
+        <button
+          {...mainProps}
+          className={`lamp-control ${face!.className} ${steppable ? 'cursor-pointer select-none' : ''} ${round ? 'touch-none' : 'touch-pan-y'} ${setting ? 'is-setting' : ''}`}
+          style={{ ...face!.style, ...sized }}
+          data-climate={element.entity_id}
+          data-style={element.style}
+          title={title}
+        >
+          {face!.children}
+        </button>
+      )}
+      {!pill && element.style === 'tile' && steppable && (
+        // The tile's plus and minus, beside its drawing: a button holds no buttons.
+        <>
+          {stepButton(-1, 'absolute left-1 bottom-1 h-6 w-6')}
+          {stepButton(1, 'absolute right-1 bottom-1 h-6 w-6')}
+        </>
+      )}
       {arranging && width !== null && !wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
       {arranging && (
         <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
-          <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}
-            aria-label={t('homePage.chooseSensor')} title={t('homePage.chooseSensor')} aria-haspopup="menu" aria-expanded={choosing}>
+          <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => (open === 'style' ? null : 'style'))}
+            aria-label={t('homePage.chooseStyle')} title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing === 'style'}>
+            <Palette size={12} />
+          </button>
+          <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => (open === 'sensor' ? null : 'sensor'))}
+            aria-label={t('homePage.chooseSensor')} title={t('homePage.chooseSensor')} aria-haspopup="menu" aria-expanded={choosing === 'sensor'}>
             <Thermometer size={12} />
           </button>
           <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.removeClimate')} title={t('homePage.removeClimate')}>
@@ -139,7 +243,21 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
           </button>
         </span>
       )}
-      {arranging && choosing && <SensorMenu pageId={pageId} chosen={element.sensor} onChoose={(sensor) => { setChoosing(false); onSensor(sensor) }} />}
+      {arranging && choosing === 'sensor' && <SensorMenu pageId={pageId} chosen={element.sensor} onChoose={(sensor) => { setChoosing(null); onSensor(sensor) }} />}
+      {arranging && choosing === 'style' && (
+        <div className="absolute left-0 top-full mt-2 z-30 glass-strong rounded-xl p-1.5 shadow-2xl grid grid-cols-2 gap-1 w-64" role="menu" aria-label={t('homePage.chooseStyle')} data-element-tool>
+          {CLIMATE_STYLES.map((style) => (
+            <button key={style} type="button" role="menuitemradio" aria-checked={element.style === style}
+              className={`text-left text-[13px] px-2.5 py-1.5 rounded-lg ${element.style === style ? 'bg-[var(--nd-accent-soft)] text-accent font-medium' : 'hover:bg-[var(--nd-surface-hover)]'}`}
+              onClick={() => {
+                setChoosing(null)
+                onStyle(style)
+              }}>
+              {t(`homePage.climateStyles.${style}`)}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 
 import {
-  alignTo, CLIMATE_FOOTPRINT, climateSpots, controlWidth, DEFAULT_WIDTH, FOOTPRINT, isResizable, MAX_WIDTH, MIN_WIDTH, resizeTo, widthOf, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
+  alignTo, CLIMATE_FOOTPRINT, CLIMATE_FOOTPRINTS, climateSpots, controlWidth, heightOf, isWide, shareOf, targetAt, DEFAULT_WIDTH, FOOTPRINT, isResizable, MAX_WIDTH, MIN_WIDTH, resizeTo, widthOf, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
   stepTarget, surfaceHeight, temperature, withLamps, withNews, withWish,
-  type HomeAnswer, type HomeElement, type HomeLight, type LampStyle, type LampWish,
+  type HomeAnswer, type HomeClimate, type HomeElement, type HomeLight, type LampStyle, type LampWish,
 } from './home'
 
 const heading = (id: string, x: number, y: number): HomeElement => ({ id, type: 'heading', x, y, text: id })
@@ -281,4 +281,36 @@ it('gives every pill, chip, slider and thermostat a width of its style unless it
   expect(controlWidth({ id: 't', type: 'climate', x: 0, y: 0, rid: 'r', entity_id: 'climate.a', name: 'A', style: 'pill', sensor: null })).toBe(DEFAULT_WIDTH.climate)
   expect(isResizable(lampAt('d', 0, 0, 'knob'))).toBe(false)
   expect(widthOf({ ...pill, width: 400 })).toBe(400)
+})
+
+// -- thermostat styles -----------------------------------------------------------
+
+it('finds the target at a share of a thermostat\'s range, on its step', () => {
+  const thermostat = { step: 0.5, min: 7, max: 30 }
+  expect(targetAt(thermostat, 0)).toBe(7)
+  expect(targetAt(thermostat, 1)).toBe(30)
+  expect(targetAt(thermostat, 0.5)).toBe(18.5)
+  expect(targetAt(thermostat, 5 / 6)).toBe(26)
+  expect(targetAt(thermostat, -1)).toBe(7)
+  expect(targetAt(thermostat, 2)).toBe(30)
+  expect(shareOf(thermostat, 18.5)).toBe(0.5)
+  expect(shareOf(thermostat, 40)).toBe(1)
+  expect(shareOf(thermostat, null)).toBe(0)
+  expect(shareOf({ min: 20, max: 20 }, 20)).toBe(0)
+})
+
+it('gives each thermostat style its room, and a width only to those with a name in a row', () => {
+  const heater = (style: string): HomeElement => ({ id: style, type: 'climate', x: 0, y: 0, rid: 'r', entity_id: 'climate.a', name: 'A', style: style as never, sensor: null })
+  for (const style of ['pill', 'round', 'chip', 'tile', 'slider', 'dial', 'valve', 'thermometer', 'radiator', 'digits'] as const) {
+    expect(heightOf(heater(style)), style).toBe(CLIMATE_FOOTPRINTS[style].height)
+    expect(widthOf(heater(style)), style).toBe(CLIMATE_FOOTPRINTS[style].width)
+    const spots = climateSpots([], 8, style)
+    const { width, height } = CLIMATE_FOOTPRINTS[style]
+    for (const [index, a] of spots.entries()) for (const b of spots.slice(index + 1)) expect(b.x >= a.x + width || b.y >= a.y + height, style).toBe(true)
+  }
+  expect(controlWidth(heater('chip') as HomeClimate)).toBe(DEFAULT_WIDTH.climateChip)
+  expect(controlWidth(heater('slider') as HomeClimate)).toBe(DEFAULT_WIDTH.climateSlider)
+  expect(controlWidth(heater('dial') as HomeClimate)).toBeNull()
+  expect(isWide(heater('pill') as HomeClimate)).toBe(true)
+  expect(isWide(heater('dial') as HomeClimate)).toBe(false)
 })

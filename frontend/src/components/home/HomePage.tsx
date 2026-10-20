@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, get, post, put } from '../../api/client'
 import {
   alignTo, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
-  type Box, type ClimateAnswer, type ClimateInfo, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
+  type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
@@ -166,14 +166,15 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle; sensor?: ClimateSensor | null; width?: number }) => {
+    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle; sensor?: ClimateSensor | null; width?: number }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
           : element.type === 'climate'
-            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width }
-            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style, width: patch.width ?? element.width }
+            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width,
+                style: (patch.style as ClimateStyle | undefined) ?? element.style }
+            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as LampStyle | undefined) ?? element.style, width: patch.width ?? element.width }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -283,13 +284,13 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const [knownClimates, setKnownClimates] = useState<Record<string, ClimateInfo>>({})
   const placedClimates = new Set(elements.filter((element): element is HomeClimate => element.type === 'climate').map((element) => element.rid))
   const addClimates = useCallback(
-    (climates: ClimateInfo[]) => {
+    (climates: ClimateInfo[], style: ClimateStyle = 'pill') => {
       setPickingClimates(false)
       if (!layout || climates.length === 0) return
-      const spots = climateSpots(layout.elements, climates.length)
+      const spots = climateSpots(layout.elements, climates.length, style)
       const added: HomeClimate[] = []
       for (const [index, climate] of climates.entries()) {
-        added.push({ id: freshId([...layout.elements, ...added]), type: 'climate', ...spots[index], rid: climate.rid, entity_id: climate.entity_id, name: climate.name, style: 'pill', sensor: null })
+        added.push({ id: freshId([...layout.elements, ...added]), type: 'climate', ...spots[index], rid: climate.rid, entity_id: climate.entity_id, name: climate.name, style, sensor: null })
       }
       setKnownClimates((now) => ({ ...now, ...Object.fromEntries(climates.map((climate) => [climate.rid, climate])) }))
       askAgain.current = true
@@ -344,22 +345,32 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     },
     [pageId, queryClient, t],
   )
-  const stepClimate = useCallback(
-    (element: HomeClimate, info: ClimateView, steps: number) => {
-      const from = targets[element.id] ?? info.target ?? info.reading ?? (info.min + info.max) / 2
-      const next = stepTarget(info, from, steps)
+  /**
+   * A new target for a thermostat, shown at once and sent after ``after``
+   * milliseconds of quiet, or not yet (null) while a finger still moves it.
+   */
+  const aimClimate = useCallback(
+    (element: HomeClimate, info: ClimateView, next: number, after: number | null) => {
       const asked = (climateAsks.current[element.id] ?? 0) + 1
       climateAsks.current[element.id] = asked
       setTargets((now) => ({ ...now, [element.id]: next }))
       window.clearTimeout(targetTimers.current[element.id])
+      if (after === null) return
       targetTimers.current[element.id] = window.setTimeout(() => {
         tell(element.id, info.name, { target: next }, (answered) => {
           if (!answered || answered.confirmed) settleTarget(element.id, asked)
           else window.setTimeout(() => settleTarget(element.id, asked), SETTLE_MS)
         })
-      }, GATHER_MS)
+      }, after)
     },
-    [targets, tell, settleTarget],
+    [tell, settleTarget],
+  )
+  const stepClimate = useCallback(
+    (element: HomeClimate, info: ClimateView, steps: number) => {
+      const from = targets[element.id] ?? info.target ?? info.reading ?? (info.min + info.max) / 2
+      aimClimate(element, info, stepTarget(info, from, steps), GATHER_MS)
+    },
+    [targets, aimClimate],
   )
   useEffect(() => () => Object.values(targetTimers.current).forEach((timer) => window.clearTimeout(timer)), [])
   const [climateDetails, setClimateDetails] = useState<string | null>(null)
@@ -476,7 +487,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
       <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId} width={controlWidth(element)}
         target={targets[element.id] ?? climateOf(element)?.target ?? null} setting={targets[element.id] !== undefined}
         onStep={canAct ? (steps) => { const info = climateOf(element); if (info) stepClimate(element, info, steps) } : undefined}
-        onDetails={() => setClimateDetails(element.id)} onRemove={() => remove(element.id)} onSensor={(sensor) => chooseSensor(element, sensor)} />
+        onAim={canAct ? (value, send) => { const info = climateOf(element); if (info) aimClimate(element, info, value, send ? 0 : null) } : undefined}
+        onDetails={() => setClimateDetails(element.id)} onRemove={() => remove(element.id)} onSensor={(sensor) => chooseSensor(element, sensor)}
+        onStyle={(style) => change(element.id, { style })} />
     ) : element.type === 'light' ? (
       <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && isWide(element)} width={controlWidth(element)}
         onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })}
@@ -569,6 +582,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
       {detailedClimate && detailedClimateInfo && (
         <ClimateDetails info={detailedClimateInfo} target={targets[detailedClimate.id] ?? detailedClimateInfo.target} setting={targets[detailedClimate.id] !== undefined}
           onStep={canAct ? (steps) => stepClimate(detailedClimate, detailedClimateInfo, steps) : null}
+          onSlide={canAct ? (value) => aimClimate(detailedClimate, detailedClimateInfo, value, GATHER_MS) : null}
           onWish={canAct ? (wish) => tell(detailedClimate.id, detailedClimateInfo.name, wish) : null}
           onClose={() => setClimateDetails(null)} />
       )}

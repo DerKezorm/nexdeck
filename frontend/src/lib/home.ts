@@ -63,43 +63,47 @@ export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'sli
  * same for every pill, chip or slider, whatever its name, so a row of them
  * lines up. A name too long for it runs as a ticker (``Marquee``).
  */
-export const DEFAULT_WIDTH = { pill: 224, chip: 176, slider: 176, climate: 320 } as const
+export const DEFAULT_WIDTH = { pill: 224, chip: 176, slider: 176, climate: 320, climateChip: 200, climateSlider: 230 } as const
 /** The bounds of a width dragged by hand; the server keeps the same. */
 export const MIN_WIDTH = 96
 export const MAX_WIDTH = 640
 
 /** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
 export function isResizable(element: HomeElement): element is HomeDevice {
-  return element.type === 'climate' || (element.type === 'light' && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider'))
+  return element.type !== 'heading' && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider')
 }
 
 /** The width a control is drawn at on the surface, or null for a style whose size is its drawing. */
 export function controlWidth(element: HomeDevice): number | null {
   if (!isResizable(element)) return null
-  const fallback = element.type === 'climate' ? DEFAULT_WIDTH.climate : DEFAULT_WIDTH[element.style as 'pill' | 'chip' | 'slider']
+  const fallback = element.type === 'climate'
+    ? { pill: DEFAULT_WIDTH.climate, chip: DEFAULT_WIDTH.climateChip, slider: DEFAULT_WIDTH.climateSlider }[element.style as 'pill' | 'chip' | 'slider']
+    : DEFAULT_WIDTH[element.style as 'pill' | 'chip' | 'slider']
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, element.width ?? fallback))
 }
 
 /** The room a thermostat's pill takes: name, reading, minus, target, plus. */
 export const CLIMATE_FOOTPRINT = { width: 320, height: 40 }
+/** The thermostat styles that read as a row of their own on a phone. */
+export const WIDE_CLIMATE_STYLES: ReadonlySet<string> = new Set(['pill', 'chip', 'slider'])
 
 /** Whether an element runs the width of a phone's screen: a thermostat always, a lamp by its style. */
 export function isWide(element: HomeDevice): boolean {
-  return element.type === 'climate' || WIDE_STYLES.has(element.style)
+  return element.type === 'climate' ? WIDE_CLIMATE_STYLES.has(element.style) : WIDE_STYLES.has(element.style)
 }
 
 const HEADING_HEIGHT = 24
 
 /** How tall an element stands on the surface. */
 export function heightOf(element: HomeElement): number {
-  if (element.type === 'climate') return CLIMATE_FOOTPRINT.height
+  if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
 
 /** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
 export function widthOf(element: HomeElement): number {
   if (element.type !== 'heading' && element.width !== undefined && isResizable(element)) return controlWidth(element) ?? FOOTPRINT.pill.width
-  if (element.type === 'climate') return CLIMATE_FOOTPRINT.width
+  if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
 }
 
@@ -124,10 +128,49 @@ export interface HomeClimate {
   rid: string
   entity_id: string
   name: string
-  style: 'pill'
+  style: ClimateStyle
   sensor: ClimateSensor | null
   /** A width of its own; otherwise ``DEFAULT_WIDTH.climate``. */
   width?: number
+}
+
+/**
+ * How a thermostat is drawn, the ten of its board of sketches (``heizung.html``,
+ * 20.10.2026): A pill, B round, C chip, D tile, E slider, F dial, G valve head,
+ * H thermometer, I radiator, J big digits. The server keeps the same list.
+ */
+export const CLIMATE_STYLES = ['pill', 'round', 'chip', 'tile', 'slider', 'dial', 'valve', 'thermometer', 'radiator', 'digits'] as const
+export type ClimateStyle = (typeof CLIMATE_STYLES)[number]
+
+/** The room each thermostat style takes on the surface, caption included. */
+export const CLIMATE_FOOTPRINTS: Record<ClimateStyle, { width: number; height: number }> = {
+  pill: { width: 320, height: 40 },
+  round: { width: 84, height: 104 },
+  chip: { width: 200, height: 28 },
+  tile: { width: 96, height: 96 },
+  slider: { width: 230, height: 40 },
+  dial: { width: 100, height: 124 },
+  valve: { width: 84, height: 104 },
+  thermometer: { width: 100, height: 132 },
+  radiator: { width: 96, height: 112 },
+  digits: { width: 150, height: 84 },
+}
+
+/** How many pixels a finger travels sideways for one step of a thermostat's target. */
+export const STEP_PX = 12
+
+/**
+ * The target at a share of a thermostat's range, for a dial turned by a
+ * finger: on its step and inside its bounds, as ``stepTarget``.
+ */
+export function targetAt(info: Pick<ClimateInfo, 'step' | 'min' | 'max'>, share: number): number {
+  return stepTarget(info, info.min + Math.min(1, Math.max(0, share)) * (info.max - info.min), 0)
+}
+
+/** Where a value stands in a thermostat's range, from 0 at its minimum to 1 at its maximum. */
+export function shareOf(info: Pick<ClimateInfo, 'min' | 'max'>, value: number | null | undefined): number {
+  if (value === null || value === undefined || info.max <= info.min) return 0
+  return Math.min(1, Math.max(0, (value - info.min) / (info.max - info.min)))
 }
 
 /** What stands on a page and is switched or set: a lamp or a thermostat. */
@@ -449,8 +492,8 @@ export function lampSpots(elements: HomeElement[], count: number, style: LampSty
 }
 
 /** Where thermostats added together go, as lamps do. */
-export function climateSpots(elements: HomeElement[], count: number): { x: number; y: number }[] {
-  return spotsFor(elements, count, CLIMATE_FOOTPRINT)
+export function climateSpots(elements: HomeElement[], count: number, style: ClimateStyle = 'pill'): { x: number; y: number }[] {
+  return spotsFor(elements, count, CLIMATE_FOOTPRINTS[style])
 }
 
 function spotsFor(elements: HomeElement[], count: number, { width, height }: { width: number; height: number }): { x: number; y: number }[] {

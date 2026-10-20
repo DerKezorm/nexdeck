@@ -28,8 +28,9 @@ KINDS = ("heading", "light", "climate")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
-#: How a thermostat is drawn; one so far, in the look of the pill.
-CLIMATE_STYLES = ("pill",)
+#: How a thermostat is drawn, the ten of its board of sketches; the first is the default.
+#: The browser keeps the same list (``CLIMATE_STYLES`` in ``lib/home.ts``).
+CLIMATE_STYLES = ("pill", "round", "chip", "tile", "slider", "dial", "valve", "thermometer", "radiator", "digits")
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 #: The bounds of a width dragged by hand, in pixels (``MIN_WIDTH``, ``MAX_WIDTH`` in the browser).
