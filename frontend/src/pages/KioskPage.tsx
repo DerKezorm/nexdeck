@@ -12,7 +12,7 @@ import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
-import { withLamps, type HomeAnswer } from '../lib/home'
+import { withNews, type HomeAnswer } from '../lib/home'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
@@ -134,7 +134,7 @@ export function KioskPage() {
     onBoardChanged: () => void board.refetch(),
     onConnected: () => void board.refetch(),
     // A lamp on a home page changed, here or at the wall: the display shows it as the board does.
-    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withLamps(old, payload.lights) : old)),
+    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withNews(old, payload) : old)),
   })
 
   const cycle = data?.kiosk?.cycle_seconds ?? 0

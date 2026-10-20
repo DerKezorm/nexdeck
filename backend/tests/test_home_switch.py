@@ -202,7 +202,7 @@ def _real_house(client: TestClient, monkeypatch) -> tuple[dict, dict]:
     entities, devices, areas, states = hass_registry.demo_registry()
 
     async def ask(config, commands):
-        return [entities, devices, areas] + ([list(states.values())] if len(commands) > 3 else [])
+        return [entities, devices, areas, {"unit_system": {"temperature": "°C"}}] + ([list(states.values())] if len(commands) > 4 else [])
 
     monkeypatch.setattr(hass_registry, "_ask", ask)
     setup_admin(client)
@@ -277,7 +277,7 @@ async def test_a_page_hears_of_a_lamp_at_most_every_quarter_second_and_always_of
 
     def watchers(integration_id, cache):
         looked.append(integration_id)
-        return {"light.ceiling": [(5, 9, "ceiling")]}
+        return {"light.ceiling": [(5, 9, "ceiling", "lights", {})]}
 
     monkeypatch.setattr(live, "_watchers", watchers)
     on = hass_registry.demo_registry()[3]["light.ceiling"]

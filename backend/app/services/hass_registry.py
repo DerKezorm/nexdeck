@@ -1,11 +1,12 @@
-"""What Home Assistant has to offer a home page: its lights, as a person would pick them.
+"""What Home Assistant has to offer a home page: its lights and thermostats, as a person would pick them.
 
 Home Assistant knows thousands of entities; a house of 232 lamps had 6262 in
 its entity registry (measured 20.10.2026, Home Assistant 2026.10). A home page
 offers only what makes sense to put on a wall, and decides that here, on the
 server, before anything reaches a browser:
 
-* lights only, so far; the other domains follow one at a time,
+* lights and thermostats (``climate``), and temperature sensors to read a room by;
+  the other domains follow one at a time,
 * no settings and no diagnostics (``entity_category``): the brightness of a
   switch's status LED is not a lamp,
 * nothing hidden or disabled in Home Assistant: hidden is how Home Assistant
@@ -32,6 +33,12 @@ REGISTRY_SECONDS = 60
 COLOUR_MODES = {"hs", "xy", "rgb", "rgbw", "rgbww"}
 #: The whites Home Assistant assumes for a lamp that names none (``DEFAULT_MIN_KELVIN``, ``DEFAULT_MAX_KELVIN``).
 DEFAULT_KELVIN = (2000, 6535)
+#: ``ClimateEntityFeature``: one target temperature, a range of two, presets.
+CLIMATE_TARGET = 1
+CLIMATE_RANGE = 2
+CLIMATE_PRESET = 16
+#: What Home Assistant assumes for a thermostat that names no bounds (``DEFAULT_MIN_TEMP``, ``DEFAULT_MAX_TEMP``).
+DEFAULT_TEMPERATURES = (7.0, 35.0)
 
 
 # ---------------------------------------------------------------------------
@@ -77,15 +84,60 @@ def _kelvin(value: Any, fallback: int) -> int:
     return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and 1000 <= value <= 12000 else fallback
 
 
-def pick_lights(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
-                states: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
-    """The lamps worth offering, with their name, room and device, sorted by name."""
+def _number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number == number and number not in (float("inf"), float("-inf")) else None
+
+
+def climate_state(state: dict[str, Any] | None, unit: str = "°C") -> dict[str, Any]:
+    """How a thermostat stands and what it lets one set, in the words the page uses.
+
+    Only what Home Assistant says: modes from ``hvac_modes``, presets only with
+    the preset feature, ``action`` only when the device reports one. A target
+    is ``settable`` with the single-target feature; one with a range of two
+    (heat and cool at once) is shown, not set, so far.
+    """
+    state = state or {}
+    attributes = state.get("attributes") or {}
+    value = state.get("state")
+    unavailable = value in (None, "unavailable", "unknown")
+    features = int(_number(attributes.get("supported_features")) or 0)
+    presets = [str(preset) for preset in attributes.get("preset_modes") or []] if features & CLIMATE_PRESET else []
+    low, high = _number(attributes.get("min_temp")), _number(attributes.get("max_temp"))
+    return {
+        "unavailable": unavailable,
+        "on": not unavailable and value != "off",
+        "mode": None if unavailable else str(value),
+        "modes": [str(mode) for mode in attributes.get("hvac_modes") or []],
+        "action": str(attributes["hvac_action"]) if attributes.get("hvac_action") else None,
+        "current": _number(attributes.get("current_temperature")),
+        "target": _number(attributes.get("temperature")),
+        "target_low": _number(attributes.get("target_temp_low")),
+        "target_high": _number(attributes.get("target_temp_high")),
+        "settable": bool(features & CLIMATE_TARGET),
+        "min": low if low is not None else DEFAULT_TEMPERATURES[0],
+        "max": high if high is not None else DEFAULT_TEMPERATURES[1],
+        # Home Assistant's own step when the device names none: a degree in Fahrenheit, half of one in Celsius.
+        "step": _number(attributes.get("target_temp_step")) or (1.0 if unit == "°F" else 0.5),
+        "preset": str(attributes["preset_mode"]) if presets and attributes.get("preset_mode") else None,
+        "presets": presets,
+        "unit": unit,
+    }
+
+
+def _offered(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
+             states: dict[str, dict[str, Any]], domain: str):
+    """Each entity of one domain worth offering, with what every offer says about it: name, room, device."""
     area_names = {area.get("area_id"): area.get("name") or "" for area in areas}
     by_device = {device.get("id"): device for device in devices}
-    lights: list[dict[str, Any]] = []
     for entry in entities:
         entity_id = str(entry.get("entity_id") or "")
-        if not entity_id.startswith("light.") or entry.get("entity_category") or entry.get("hidden_by") or entry.get("disabled_by"):
+        if not entity_id.startswith(f"{domain}.") or entry.get("entity_category") or entry.get("hidden_by") or entry.get("disabled_by"):
             continue
         state = states.get(entity_id)
         if state is None:
@@ -94,16 +146,59 @@ def pick_lights(entities: list[dict[str, Any]], devices: list[dict[str, Any]], a
         area_id = entry.get("area_id") or device.get("area_id")
         attributes = state.get("attributes") or {}
         name = attributes.get("friendly_name") or entry.get("name") or entry.get("original_name") or entity_id
-        lights.append({
+        yield entry, state, {
             "rid": str(entry.get("id") or ""),
             "entity_id": entity_id,
             "name": str(name),
             "area": area_names.get(area_id, "") if area_id else "",
             "device": str(device.get("name_by_user") or device.get("name") or ""),
-            "group": entry.get("platform") == "group",
-            **light_state(state),
-        })
-    return sorted(lights, key=lambda light: (light["name"].casefold(), light["entity_id"]))
+        }
+
+
+def _by_name(found: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(found, key=lambda one: (one["name"].casefold(), one["entity_id"]))
+
+
+def pick_lights(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
+                states: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """The lamps worth offering, with their name, room and device, sorted by name."""
+    return _by_name([{**named, "group": entry.get("platform") == "group", **light_state(state)}
+                     for entry, state, named in _offered(entities, devices, areas, states, "light")])
+
+
+def pick_climates(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
+                  states: dict[str, dict[str, Any]], unit: str = "°C") -> list[dict[str, Any]]:
+    """The thermostats worth offering, sorted by name."""
+    return _by_name([{**named, **climate_state(state, unit)} for _entry, state, named in _offered(entities, devices, areas, states, "climate")])
+
+
+def pick_temperature_sensors(entities: list[dict[str, Any]], devices: list[dict[str, Any]], areas: list[dict[str, Any]],
+                             states: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """The sensors that measure a temperature, to read a room by instead of its thermostat.
+
+    By device class, from the state or the registry; a humidity or a power
+    sensor is not one, and a device's own temperature (diagnostic) is left out
+    with every other diagnostic entity.
+    """
+    found = []
+    for entry, state, named in _offered(entities, devices, areas, states, "sensor"):
+        attributes = state.get("attributes") or {}
+        kind = attributes.get("device_class") or entry.get("device_class") or entry.get("original_device_class")
+        if kind != "temperature":
+            continue
+        found.append({**named, **sensor_state(state)})
+    return _by_name(found)
+
+
+def sensor_state(state: dict[str, Any] | None) -> dict[str, Any]:
+    """What a temperature sensor reads now."""
+    state = state or {}
+    value = state.get("state")
+    return {
+        "current": _number(value),
+        "unit": str((state.get("attributes") or {}).get("unit_of_measurement") or ""),
+        "unavailable": value in (None, "unavailable", "unknown") or _number(value) is None,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -149,16 +244,17 @@ async def _ask(config: dict[str, Any], commands: list[dict[str, Any]]) -> list[A
                            hint="Check the address of the connection.") from failure
 
 
-async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = False, now: float | None = None) -> list[dict[str, Any]]:
-    """The lamps of one connection, as ``pick_lights`` offers them.
+async def house(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = False,
+                now: float | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], dict[str, dict[str, Any]], str]:
+    """The registries, the states and the unit of temperature of one connection.
 
-    The registries are kept for a minute in the connection's cache. The states
-    come from the live listener when it has them, so a lamp switched a moment
-    ago shows how it stands now.
+    The registries and the configuration are kept for a minute in the
+    connection's cache. The states come from the live listener when it has
+    them, so a lamp switched a moment ago shows how it stands now.
     """
     if demo:
         entities, devices, areas, _states = demo_registry()
-        return pick_lights(entities, devices, areas, demo_states(cache))
+        return entities, devices, areas, demo_states(cache), "°C"
     now = time.monotonic() if now is None else now
     kept = cache.get("hass_registry")
     live = cache.get("hass_states")
@@ -167,16 +263,31 @@ async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = 
             {"type": "config/entity_registry/list"},
             {"type": "config/device_registry/list"},
             {"type": "config/area_registry/list"},
+            {"type": "get_config"},
         ]
         if not isinstance(live, dict) or not live:
             commands.append({"type": "get_states"})
         answers = await _ask(config, commands)
-        fetched = {state["entity_id"]: state for state in answers[3] or []} if len(answers) > 3 else {}
-        kept = (now + REGISTRY_SECONDS, answers[0] or [], answers[1] or [], answers[2] or [], fetched)
+        fetched = {state["entity_id"]: state for state in answers[4] or []} if len(answers) > 4 else {}
+        unit = str(((answers[3] or {}).get("unit_system") or {}).get("temperature") or "°C")
+        kept = (now + REGISTRY_SECONDS, answers[0] or [], answers[1] or [], answers[2] or [], fetched, unit)
         cache["hass_registry"] = kept
-    _until, entities, devices, areas, fetched = kept
+    _until, entities, devices, areas, fetched, unit = kept
     states = live if isinstance(live, dict) and live else fetched
+    return entities, devices, areas, states, unit
+
+
+async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = False, now: float | None = None) -> list[dict[str, Any]]:
+    """The lamps of one connection, as ``pick_lights`` offers them."""
+    entities, devices, areas, states, _unit = await house(config, cache, demo=demo, now=now)
     return pick_lights(entities, devices, areas, states)
+
+
+async def climates(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = False,
+                   now: float | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """The thermostats of one connection and the temperature sensors to read a room by."""
+    entities, devices, areas, states, unit = await house(config, cache, demo=demo, now=now)
+    return pick_climates(entities, devices, areas, states, unit), pick_temperature_sensors(entities, devices, areas, states)
 
 
 # ---------------------------------------------------------------------------
@@ -192,11 +303,18 @@ def demo_states(cache: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], dict[str, dict[str, Any]]]:
     """A made-up house, shaped like a real registry, for demo connections and tests."""
     areas = [{"area_id": "living", "name": "Living room"}, {"area_id": "kitchen", "name": "Kitchen"},
-             {"area_id": "garden", "name": "Garden"}, {"area_id": "bedroom", "name": "Bedroom"}]
+             {"area_id": "garden", "name": "Garden"}, {"area_id": "bedroom", "name": "Bedroom"},
+             {"area_id": "bathroom", "name": "Bathroom"}]
     devices = [{"id": "d-floor", "name": "Floor lamp", "area_id": "living"}, {"id": "d-ceiling", "name": "Ceiling light", "area_id": "living"},
                {"id": "d-tv", "name": "LED strip", "area_id": "living"}, {"id": "d-counter", "name": "Counter light", "area_id": "kitchen"},
                {"id": "d-path", "name": "Path lights", "area_id": "garden"}, {"id": "d-bed", "name": "Bedside lamp", "area_id": "bedroom"},
-               {"id": "d-switch", "name": "Wall dimmer", "area_id": "kitchen"}]
+               {"id": "d-switch", "name": "Wall dimmer", "area_id": "kitchen"},
+               {"id": "d-heat-living", "name": "Living room thermostat", "area_id": "living"},
+               {"id": "d-heat-bed", "name": "Bedroom radiator", "area_id": "bedroom"},
+               {"id": "d-heat-bath", "name": "Bathroom radiator", "area_id": "bathroom"},
+               {"id": "d-climate-living", "name": "Living room climate sensor", "area_id": "living"},
+               {"id": "d-climate-bed", "name": "Bedroom climate sensor", "area_id": "bedroom"},
+               {"id": "d-server", "name": "Home server", "area_id": None}]
 
     def entry(rid: str, entity_id: str, device: str | None, **extra: Any) -> dict[str, Any]:
         return {"id": rid, "entity_id": entity_id, "device_id": device, "area_id": None, "entity_category": None,
@@ -216,6 +334,14 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         # In the registry, but its device is gone: no state, so not offered.
         entry("r-orphan", "light.cellar", None),
         entry("r-plug", "switch.floor_plug", "d-floor"),
+        entry("r-heat-living", "climate.living_room", "d-heat-living"),
+        entry("r-heat-bed", "climate.bedroom", "d-heat-bed"),
+        entry("r-heat-bath", "climate.bathroom", "d-heat-bath"),
+        entry("r-heat-old", "climate.old_valve", None, hidden_by="user"),
+        entry("r-temp-living", "sensor.living_room_temperature", "d-climate-living"),
+        entry("r-temp-bed", "sensor.bedroom_temperature", "d-climate-bed", original_device_class="temperature"),
+        entry("r-hum-living", "sensor.living_room_humidity", "d-climate-living"),
+        entry("r-cpu", "sensor.home_server_cpu_temperature", "d-server", entity_category="diagnostic"),
     ]
 
     def state(entity_id: str, name: str, value: str, modes: list[str], **attributes: Any) -> dict[str, Any]:
@@ -234,5 +360,23 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         "light.wall_dimmer_status_led": state("light.wall_dimmer_status_led", "Wall dimmer status LED", "on", ["brightness"], brightness=20),
         "light.old_bulb": state("light.old_bulb", "Old bulb", "off", ["onoff"]),
         "switch.floor_plug": {"entity_id": "switch.floor_plug", "state": "on", "attributes": {"friendly_name": "Floor plug"}},
+        "climate.living_room": {"entity_id": "climate.living_room", "state": "heat", "attributes": {
+            "friendly_name": "Living room", "hvac_modes": ["off", "heat", "auto"], "current_temperature": 20.5, "temperature": 21.5,
+            "min_temp": 7, "max_temp": 30, "target_temp_step": 0.5, "hvac_action": "heating",
+            "preset_mode": "comfort", "preset_modes": ["comfort", "eco", "away"], "supported_features": CLIMATE_TARGET | CLIMATE_PRESET}},
+        "climate.bedroom": {"entity_id": "climate.bedroom", "state": "off", "attributes": {
+            "friendly_name": "Bedroom", "hvac_modes": ["off", "heat"], "current_temperature": 18.2, "temperature": 17,
+            "min_temp": 5, "max_temp": 25, "hvac_action": "off", "supported_features": CLIMATE_TARGET}},
+        "climate.bathroom": {"entity_id": "climate.bathroom", "state": "unavailable", "attributes": {"friendly_name": "Bathroom"}},
+        "climate.old_valve": {"entity_id": "climate.old_valve", "state": "off", "attributes": {"friendly_name": "Old valve"}},
+        "sensor.living_room_temperature": {"entity_id": "sensor.living_room_temperature", "state": "21.3", "attributes": {
+            "friendly_name": "Living room temperature", "unit_of_measurement": "°C", "device_class": "temperature"}},
+        # The device class only in the registry, as some integrations leave it.
+        "sensor.bedroom_temperature": {"entity_id": "sensor.bedroom_temperature", "state": "18.9", "attributes": {
+            "friendly_name": "Bedroom temperature", "unit_of_measurement": "°C"}},
+        "sensor.living_room_humidity": {"entity_id": "sensor.living_room_humidity", "state": "48", "attributes": {
+            "friendly_name": "Living room humidity", "unit_of_measurement": "%", "device_class": "humidity"}},
+        "sensor.home_server_cpu_temperature": {"entity_id": "sensor.home_server_cpu_temperature", "state": "52", "attributes": {
+            "friendly_name": "Home server CPU temperature", "unit_of_measurement": "°C", "device_class": "temperature"}},
     }
     return entities, devices, areas, states

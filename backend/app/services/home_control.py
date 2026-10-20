@@ -1,14 +1,15 @@
 """Switching what stands on a home page, and telling open pages when it changed.
 
 The browser names an element of a page and what it wants, never a service and
-never an entity. The server reads the element from the page, finds the lamp in
-Home Assistant by its registry id, and calls one of ``SERVICES`` for exactly
-that entity. Whatever else Home Assistant offers (a script, an alarm panel, a
+never an entity. The server reads the element from the page, finds the lamp
+or the thermostat in Home Assistant by its registry id, and calls one of
+``SERVICES`` for exactly that entity. Whatever else Home Assistant offers (a script, an alarm panel, a
 lock) cannot be reached through a home page, whatever a browser sends.
 
 Changes travel back as a ``home`` event on the board's stream, for the lamp
-switched here and for the one switched at the wall: the WebSocket listener
-(``hass_ws``) hands every state change to ``touched``.
+switched here and for the one switched at the wall, and for a thermostat and
+the sensor it reads its room by: the WebSocket listener (``hass_ws``) hands
+every state change to ``touched``.
 """
 
 from __future__ import annotations
@@ -31,6 +32,9 @@ from .sse import board_topic, hub
 SERVICES: dict[tuple[str, str], frozenset[str]] = {
     ("light", "turn_on"): frozenset({"brightness_pct", "color_temp_kelvin", "hs_color"}),
     ("light", "turn_off"): frozenset(),
+    ("climate", "set_temperature"): frozenset({"temperature"}),
+    ("climate", "set_hvac_mode"): frozenset({"hvac_mode"}),
+    ("climate", "set_preset_mode"): frozenset({"preset_mode"}),
 }
 #: The floor between two ``home`` events of one page; the last change always goes out.
 PUSH_INTERVAL = 0.25
@@ -66,6 +70,47 @@ def service_for(lamp: dict[str, Any], *, on: bool | None = None, brightness_pct:
     return "light", "turn_on", data
 
 
+def climate_service_for(thermostat: dict[str, Any], *, target: float | None = None, mode: str | None = None,
+                        preset: str | None = None) -> tuple[str, str, dict[str, Any]]:
+    """The service and its data for what was asked of a thermostat, or ``not_supported``.
+
+    A target is put on the thermostat's own step and kept inside its bounds,
+    as its own buttons would; a mode or a preset has to be one it names.
+    """
+    name = thermostat.get("name", "This thermostat")
+    if target is not None:
+        if not thermostat.get("settable"):
+            raise AdapterError(f"{name} takes no single target temperature.", code="not_supported")
+        step = thermostat.get("step") or 0.5
+        low, high = thermostat.get("min", 7.0), thermostat.get("max", 35.0)
+        stepped = round(round(target / step) * step, 2)
+        return "climate", "set_temperature", {"temperature": min(high, max(low, stepped))}
+    if mode is not None:
+        if mode not in (thermostat.get("modes") or []):
+            raise AdapterError(f"{name} has no mode {mode!r}.", code="not_supported")
+        return "climate", "set_hvac_mode", {"hvac_mode": mode}
+    if preset is None or preset not in (thermostat.get("presets") or []):
+        raise AdapterError(f"{name} has no preset {preset!r}.", code="not_supported")
+    return "climate", "set_preset_mode", {"preset_mode": preset}
+
+
+def climate_view(thermostat: dict[str, Any], sensor: dict[str, Any] | None, wanted: dict[str, Any] | None) -> dict[str, Any]:
+    """What a page shows of a thermostat: its own state, the room read by the sensor it names when that one answers.
+
+    A sensor that is gone or not answering does not leave the page without a
+    reading: the thermostat's own is shown, and ``sensor.state`` says why.
+    """
+    view = {**thermostat, "missing": False, "reading": thermostat.get("current"), "sensor": None}
+    if wanted:
+        named = (sensor or {}).get("name") or wanted.get("name") or wanted.get("entity_id", "")
+        if sensor is not None and not sensor.get("unavailable") and sensor.get("current") is not None:
+            view["reading"] = sensor["current"]
+            view["sensor"] = {"name": named, "state": "ok"}
+        else:
+            view["sensor"] = {"name": named, "state": "missing" if sensor is None else "unavailable"}
+    return view
+
+
 async def call(config: dict[str, Any], ctx: Context, domain: str, service: str, entity_id: str,
                data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Call one of ``SERVICES`` for one entity of its domain; the states Home Assistant says changed."""
@@ -98,6 +143,8 @@ def switch_demo(cache: dict[str, Any], entity_id: str, service: str, data: dict[
     state = states.get(entity_id)
     if state is None or state.get("state") == "unavailable":
         return None
+    if entity_id.startswith("climate."):
+        return _demo_climate(states, state, service, data)
     on = service == "turn_on"
     attributes = dict(state.get("attributes") or {})
     modes = set(attributes.get("supported_color_modes") or [])
@@ -119,19 +166,40 @@ def switch_demo(cache: dict[str, Any], entity_id: str, service: str, data: dict[
     return states[entity_id]
 
 
+def _demo_climate(states: dict[str, dict[str, Any]], state: dict[str, Any], service: str, data: dict[str, Any]) -> dict[str, Any]:
+    """A demo thermostat: it takes the target, the mode or the preset, and heats while the room is colder."""
+    attributes = dict(state.get("attributes") or {})
+    mode = data.get("hvac_mode", state.get("state"))
+    if "temperature" in data:
+        attributes["temperature"] = data["temperature"]
+    if "preset_mode" in data:
+        attributes["preset_mode"] = data["preset_mode"]
+    current, target = attributes.get("current_temperature"), attributes.get("temperature")
+    colder = isinstance(current, (int, float)) and isinstance(target, (int, float)) and current < target
+    attributes["hvac_action"] = "off" if mode == "off" else "heating" if mode in ("heat", "auto") and colder else "idle"
+    states[state["entity_id"]] = {**state, "state": mode, "attributes": attributes}
+    return states[state["entity_id"]]
+
+
 # ---------------------------------------------------------------------------
 # Telling open pages
 # ---------------------------------------------------------------------------
 
 
+#: (board, page, element, kind, for a thermostat: its entity and the sensor it names)
+Spot = tuple[int, int, str, str, dict[str, Any]]
+#: The domains whose changes a home page shows.
+WATCHED = ("light.", "climate.", "sensor.")
+
+
 class HomeLive:
-    """Which lamp stands on which home page, and a ``home`` event when one of them changes."""
+    """Which lamp and thermostat stands on which home page, and a ``home`` event when one of them changes."""
 
     def __init__(self) -> None:
-        #: integration -> (registry it was built with, when, entity -> [(board, page, element)])
-        self._map: dict[int, tuple[Any, float, dict[str, list[tuple[int, int, str]]]]] = {}
-        #: (board, page) -> element -> how it stands, waiting to go out
-        self._pending: dict[tuple[int, int], dict[str, dict[str, Any]]] = {}
+        #: integration -> (registry it was built with, when, entity -> spots)
+        self._map: dict[int, tuple[Any, float, dict[str, list[Spot]]]] = {}
+        #: (board, page) -> kind ("lights", "climates") -> element -> how it stands, waiting to go out
+        self._pending: dict[tuple[int, int], dict[str, dict[str, dict[str, Any]]]] = {}
         self._last: dict[tuple[int, int], float] = {}
         self._scheduled: set[tuple[int, int]] = set()
 
@@ -149,12 +217,13 @@ class HomeLive:
         self._last.clear()
         self._scheduled.clear()
 
-    def _watchers(self, integration_id: int, cache: dict[str, Any]) -> dict[str, list[tuple[int, int, str]]]:
+    def _watchers(self, integration_id: int, cache: dict[str, Any]) -> dict[str, list[Spot]]:
         """Read once per integration and kept until a page or the registry changes.
 
-        A lamp is listed under the entity id it was placed with and under the
-        one its registry id has now, so a lamp renamed in Home Assistant keeps
-        its page current.
+        An entity is listed under the id it was placed with and under the one
+        its registry id has now, so one renamed in Home Assistant keeps its
+        page current. A thermostat is listed under its own entity and under
+        the sensor it reads its room by.
         """
         registry = cache.get("hass_registry")
         kept = self._map.get(integration_id)
@@ -162,33 +231,64 @@ class HomeLive:
         if kept is not None and kept[0] is registry and now - kept[1] < MAP_SECONDS:
             return kept[2]
         renamed = {str(entry.get("id")): str(entry.get("entity_id")) for entry in (registry[1] if registry else []) if entry.get("id")}
-        found: dict[str, list[tuple[int, int, str]]] = {}
+
+        def names(thing: dict[str, Any]) -> set[str]:
+            return {str(thing.get("entity_id") or ""), renamed.get(str(thing.get("rid")), "")} - {""}
+
+        found: dict[str, list[Spot]] = {}
         with db_session() as db:
             for page in db.scalars(select(Page).where(Page.kind == "home")):
                 home = page.home or {}
                 if home.get("integration_id") != integration_id:
                     continue
                 for element in home.get("elements") or []:
-                    if not isinstance(element, dict) or element.get("type") != "light":
+                    if not isinstance(element, dict) or element.get("type") not in ("light", "climate"):
                         continue
-                    spot = (page.board_id, page.id, str(element.get("id")))
-                    for entity_id in {str(element.get("entity_id") or ""), renamed.get(str(element.get("rid")), "")} - {""}:
+                    if element["type"] == "light":
+                        for entity_id in names(element):
+                            found.setdefault(entity_id, []).append((page.board_id, page.id, str(element.get("id")), "lights", {}))
+                        continue
+                    climate = renamed.get(str(element.get("rid")), "") or str(element.get("entity_id") or "")
+                    sensor = element.get("sensor") if isinstance(element.get("sensor"), dict) else None
+                    reading = {**sensor, "entity_id": renamed.get(str(sensor.get("rid")), "") or str(sensor.get("entity_id") or "")} if sensor else None
+                    spot = (page.board_id, page.id, str(element.get("id")), "climates", {"climate": climate, "sensor": reading})
+                    for entity_id in names(element) | (names(sensor) if sensor else set()):
                         found.setdefault(entity_id, []).append(spot)
         self._map[integration_id] = (registry, now, found)
         return found
 
     def touched(self, integration_id: int, cache: dict[str, Any], entity_id: str, state: dict[str, Any]) -> None:
-        """A lamp changed: the pages it stands on hear of it, at most every ``PUSH_INTERVAL``."""
-        if not entity_id.startswith("light."):
+        """A lamp, a thermostat or its sensor changed: the pages hear of it, at most every ``PUSH_INTERVAL``.
+
+        Anything else is not even looked up: a house sends dozens of changes a second.
+        """
+        if not entity_id.startswith(WATCHED):
             return
         spots = self._watchers(integration_id, cache).get(entity_id)
         if not spots:
             return
-        stands = {**hass_registry.light_state(state), "missing": False}
-        for board_id, page_id, element_id in spots:
+        for board_id, page_id, element_id, kind, extra in spots:
+            if kind == "lights":
+                stands = {**hass_registry.light_state(state), "missing": False}
+            else:
+                stands = self._climate(cache, extra, entity_id, state)
             key = (board_id, page_id)
-            self._pending.setdefault(key, {})[element_id] = stands
+            self._pending.setdefault(key, {}).setdefault(kind, {})[element_id] = stands
             self._schedule(key)
+
+    @staticmethod
+    def _climate(cache: dict[str, Any], extra: dict[str, Any], entity_id: str, state: dict[str, Any]) -> dict[str, Any]:
+        """A thermostat as its page shows it, from the live states: the one that changed, and its partner."""
+        states = cache.get("hass_states") or cache.get("hass_demo_states") or {}
+        registry = cache.get("hass_registry")
+        unit = registry[5] if registry and len(registry) > 5 else "°C"
+        climate = state if entity_id == extra["climate"] else states.get(extra["climate"])
+        wanted = extra.get("sensor")
+        sensor_state = None
+        if wanted:
+            found = state if entity_id == wanted.get("entity_id") else states.get(wanted.get("entity_id", ""))
+            sensor_state = hass_registry.sensor_state(found) if found is not None else None
+        return climate_view(hass_registry.climate_state(climate, unit), sensor_state, wanted)
 
     def _schedule(self, key: tuple[int, int]) -> None:
         if key in self._scheduled:
@@ -206,12 +306,12 @@ class HomeLive:
 
     def _flush(self, key: tuple[int, int]) -> None:
         self._scheduled.discard(key)
-        lights = self._pending.pop(key, None)
-        if not lights:
+        news = self._pending.pop(key, None)
+        if not news:
             return
         self._last[key] = time.monotonic()
         board_id, page_id = key
-        hub.publish(board_topic(board_id), "home", {"page_id": page_id, "lights": lights})
+        hub.publish(board_topic(board_id), "home", {"page_id": page_id, **news})
 
 
 home_live = HomeLive()

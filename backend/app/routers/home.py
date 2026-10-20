@@ -1,4 +1,4 @@
-"""Home pages: a free surface of Home Assistant controls, and what stands where on it."""
+"""Home pages: a free surface of Home Assistant controls (lamps, thermostats), and what stands where on it."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from ..deps import (
     require_integration,
 )
 from ..models import ActionLog, Integration, Page
-from ..schemas import HomeLayoutBody, HomeSwitchBody
+from ..schemas import HomeClimateBody, HomeLayoutBody, HomeSwitchBody
 from ..services import hass_registry, home_control
 from ..services import home as home_service
 from ..services.collector import collector
@@ -59,6 +59,20 @@ async def _offered(integration: Integration) -> list[dict[str, Any]]:
     return await hass_registry.lights(config, ctx.cache, demo=collector.is_demo(integration))
 
 
+async def _thermostats(integration: Integration) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_registry.climates(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+def _climate_of(element: dict[str, Any], thermostats: list[dict[str, Any]], sensors: list[dict[str, Any]]) -> dict[str, Any]:
+    """How a placed thermostat stands, read by its sensor where it names one, or that it is gone."""
+    found = _find(thermostats, element)
+    if found is None:
+        return {"missing": True}
+    wanted = element.get("sensor")
+    return home_control.climate_view(found, _find(sensors, wanted) if wanted else None, wanted)
+
+
 def _said(data: dict[str, Any]) -> str:
     return " with " + ", ".join(f"{key} {value}" for key, value in data.items()) if data else ""
 
@@ -84,14 +98,16 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     stored = page.home or {}
     layout = home_service.clean_layout(stored, stored.get("integration_id"))
-    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}}
+    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}}
     integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
     answer["problem"] = _connection_problem(integration)
     lamps = [element for element in layout["elements"] if element["type"] == "light"]
-    if answer["problem"] is not None or not lamps or integration is None:
+    heaters = [element for element in layout["elements"] if element["type"] == "climate"]
+    if answer["problem"] is not None or not (lamps or heaters) or integration is None:
         return answer
     try:
-        offered = await _offered(integration)
+        offered = await _offered(integration) if lamps else []
+        thermostats, sensors = await _thermostats(integration) if heaters else ([], [])
     except AdapterError as failure:
         answer["problem"] = _problem(failure.code, failure.message, failure.hint)
         return answer
@@ -99,6 +115,8 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
         found = _find(offered, element)
         # Gone, hidden or disabled in Home Assistant since it was placed: the page says so.
         answer["lights"][element["id"]] = {**found, "missing": False} if found else {"missing": True}
+    for element in heaters:
+        answer["climates"][element["id"]] = _climate_of(element, thermostats, sensors)
     return answer
 
 
@@ -196,6 +214,100 @@ async def switch_light(page_id: int, element_id: str, body: HomeSwitchBody, requ
     # Every other page this lamp stands on, open in another browser, hears of it too.
     home_live.touched(integration.id, ctx.cache, entity_id, state)
     return {"ok": True, "confirmed": True, "light": {**lamp, **hass_registry.light_state(state), "missing": False}}
+
+
+@router.get("/pages/{page_id}/home/climates", summary="The thermostats and temperature sensors a home page can offer")
+async def offer_climates(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every thermostat of the page's connection, and the temperature sensors to read a room by.
+
+    Like the lamps: for those who arrange the page, on a connection they may build on.
+    """
+    page = _home_page(db, page_id)
+    require_board_id(db, page.board_id, user, "edit")
+    stored = page.home or {}
+    integration = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        return {"climates": [], "sensors": [], "problem": problem}
+    require_integration(db, integration.id, user)
+    try:
+        thermostats, sensors = await _thermostats(integration)
+    except AdapterError as failure:
+        return {"climates": [], "sensors": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+    return {"climates": thermostats, "sensors": sensors, "problem": None}
+
+
+@router.post("/pages/{page_id}/home/climates/{element_id}", summary="Set a thermostat on a home page")
+async def set_climate(page_id: int, element_id: str, body: HomeClimateBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """A target, a mode or a preset for a thermostat on the page; the same rights and checks as a lamp.
+
+    Only ``set_temperature``, ``set_hvac_mode`` and ``set_preset_mode`` are
+    called, with what the thermostat itself says it takes
+    (``home_control.climate_service_for``).
+    """
+    page = _home_page(db, page_id)
+    kiosk = kiosk_from_request(request, db)
+    board, permission = board_for_viewer_id(db, page.board_id, user, kiosk)
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may look at this page, but not switch anything on it.", status.HTTP_403_FORBIDDEN)
+    stored = page.home or {}
+    layout = home_service.clean_layout(stored, stored.get("integration_id"))
+    element = next((item for item in layout["elements"] if item["id"] == element_id and item["type"] == "climate"), None)
+    if element is None:
+        raise error("not_found", "There is no such thermostat on this page.", status.HTTP_404_NOT_FOUND)
+    integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        raise error(problem["code"] if problem else "no_integration", problem["message"] if problem else "", status.HTTP_409_CONFLICT)
+    try:
+        thermostats, sensors = await _thermostats(integration)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY) from failure
+    thermostat = _find(thermostats, element)
+    if thermostat is None:
+        raise error("climate_missing", "This thermostat is no longer in Home Assistant, or it is hidden there.", status.HTTP_409_CONFLICT)
+    if thermostat["unavailable"]:
+        raise error("climate_unavailable", f"Home Assistant cannot reach {thermostat['name']} right now.", status.HTTP_409_CONFLICT)
+    try:
+        domain, service, data = home_control.climate_service_for(thermostat, target=body.target, mode=body.mode, preset=body.preset)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_409_CONFLICT) from failure
+
+    entity_id = thermostat["entity_id"]
+    actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    ok, changed = True, []
+    try:
+        if collector.is_demo(integration):
+            switched = home_control.switch_demo(ctx.cache, entity_id, service, data)
+            changed = [switched] if switched else []
+            message = f"Demo mode: {domain}.{service} for {entity_id}{_said(data)}."
+        else:
+            changed = await home_control.call(config, ctx, domain, service, entity_id, data)
+            message = f"{domain}.{service} called for {entity_id}{_said(data)}."
+    except AdapterError as failure:
+        ok, message, code = False, failure.message, failure.code
+    db.add(ActionLog(user_id=user.id if user else None, actor=actor, widget_id=None, integration_id=integration.id,
+                     action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id, **data}, ok=ok, message=message[:400]))
+    db.commit()
+    if not ok:
+        emit("action_failed", f"{domain}.{service} on {thermostat['name']} failed", message, level="warn",
+             user_ids=[user.id] if user else None, integration_id=integration.id)
+        logger.warning("Thermostat %s on home page %r of board %r could not be set by %s: %s", entity_id, page.name, board.slug, actor, message)
+        raise error(code, message, status.HTTP_502_BAD_GATEWAY)
+    # No bell, as with a lamp: the thermostat on the page is the answer.
+    logger.info("Thermostat %s on home page %r of board %r set by %s: %s", entity_id, page.name, board.slug, actor, message)
+    state = next((item for item in changed if item.get("entity_id") == entity_id), None)
+    wanted = element.get("sensor")
+    sensor = _find(sensors, wanted) if wanted else None
+    if state is None:
+        return {"ok": True, "confirmed": False, "climate": home_control.climate_view(thermostat, sensor, wanted)}
+    live = ctx.cache.get("hass_states")
+    if isinstance(live, dict):
+        live[entity_id] = state
+    home_live.touched(integration.id, ctx.cache, entity_id, state)
+    now = {**thermostat, **hass_registry.climate_state(state, thermostat.get("unit", "°C"))}
+    return {"ok": True, "confirmed": True, "climate": home_control.climate_view(now, sensor, wanted)}
 
 
 @router.put("/pages/{page_id}/home", summary="Save what stands where on a home page")

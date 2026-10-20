@@ -346,6 +346,22 @@ class HomeSwitchBody(BaseModel):
         return self
 
 
+class HomeClimateBody(BaseModel):
+    """What a home page asks of a thermostat: one thing at a time, no service and no entity (``home_control``)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target: StrictFloat | None = Field(default=None, ge=-50, le=100)
+    mode: str | None = Field(default=None, pattern=r"^[a-z_]{1,40}$")
+    preset: str | None = Field(default=None, min_length=1, max_length=60, pattern=r"^[A-Za-z0-9_ .-]+$")
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeClimateBody:
+        if sum(value is not None for value in (self.target, self.mode, self.preset)) != 1:
+            raise ValueError("Ask a thermostat one thing at a time: a target, a mode or a preset.")
+        return self
+
+
 class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 

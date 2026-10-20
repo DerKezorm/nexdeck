@@ -312,13 +312,13 @@ async def test_the_registries_are_asked_once_a_minute_and_the_live_states_win(mo
 
     async def ask(config, commands):
         asked.append([command["type"] for command in commands])
-        answers = [entities, devices, areas]
-        return answers + ([list(states.values())] if len(commands) > 3 else [])
+        answers = [entities, devices, areas, {"unit_system": {"temperature": "°C"}}]
+        return answers + ([list(states.values())] if len(commands) > 4 else [])
 
     monkeypatch.setattr(hass_registry, "_ask", ask)
     cache: dict = {}
     first = await hass_registry.lights({}, cache, now=100.0)
-    assert asked == [["config/entity_registry/list", "config/device_registry/list", "config/area_registry/list", "get_states"]]
+    assert asked == [["config/entity_registry/list", "config/device_registry/list", "config/area_registry/list", "get_config", "get_states"]]
     await hass_registry.lights({}, cache, now=150.0)
     assert len(asked) == 1, "kept for a minute"
     assert {light["entity_id"]: light["on"] for light in first}["light.kitchen_counter"] is False
@@ -328,7 +328,7 @@ async def test_the_registries_are_asked_once_a_minute_and_the_live_states_win(mo
     assert len(asked) == 1, "a lamp switched a moment ago shows without asking the registries again"
     assert now_on["light.kitchen_counter"]["on"] is True and now_on["light.kitchen_counter"]["pct"] == 100
     await hass_registry.lights({}, cache, now=101.0 + hass_registry.REGISTRY_SECONDS)
-    assert len(asked) == 2 and asked[1][-1] == "config/area_registry/list", "after a minute the registries again, but not the states the listener has"
+    assert len(asked) == 2 and asked[1][-1] == "get_config", "after a minute the registries again, but not the states the listener has"
 
 
 def test_every_style_of_the_board_of_sketches_is_kept_and_nothing_else() -> None:

@@ -29,7 +29,7 @@ import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
-import { withLamps, type HomeAnswer } from '../lib/home'
+import { withNews, type HomeAnswer } from '../lib/home'
 import { homeBoardPath } from '../lib/homeBoard'
 import { useAuth } from '../stores/auth'
 import { anyCardDown } from '../lib/cardStatus'
@@ -143,7 +143,7 @@ export function BoardPage() {
     enabled: Boolean(data),
     onBoardChanged: () => void board.refetch(),
     onConnected: () => void board.refetch(),
-    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withLamps(old, payload.lights) : old)),
+    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withNews(old, payload) : old)),
     onLayout: (payload) => {
       // Somebody else saved this page. Take their version along, so the next
       // save from this browser starts from where the page really is.

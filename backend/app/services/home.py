@@ -4,10 +4,12 @@ A home page is not arranged on the card grid. What stands on it, and where,
 is a short list of elements with a position in pixels. The browser writes the
 list; this module decides what of it is kept.
 
-An element is a heading over a group, or a lamp of the page's Home Assistant
-connection. A lamp is kept by its registry id, which stays when the entity is
-renamed in Home Assistant, with its entity id and name as they were when it
-was placed, for when Home Assistant cannot be asked.
+An element is a heading over a group, a lamp or a thermostat of the page's
+Home Assistant connection. Lamps and thermostats are kept by their registry
+id, which stays when the entity is renamed in Home Assistant, with the entity
+id and name as they were when placed, for when Home Assistant cannot be asked.
+A thermostat may name a temperature sensor to read the room by, kept the same
+way.
 """
 
 from __future__ import annotations
@@ -22,16 +24,20 @@ MAX_COORD = 20000
 #: How long a heading may be.
 MAX_TEXT = 60
 
-KINDS = ("heading", "light")
+KINDS = ("heading", "light", "climate")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
+#: How a thermostat is drawn; one so far, in the look of the pill.
+CLIMATE_STYLES = ("pill",)
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 
 _ID = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 _REGISTRY_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 _LIGHT = re.compile(r"^light\.[a-z0-9_]{1,200}$")
+_CLIMATE = re.compile(r"^climate\.[a-z0-9_]{1,200}$")
+_SENSOR = re.compile(r"^sensor\.[a-z0-9_]{1,200}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 
@@ -50,6 +56,16 @@ def _text(value: Any, limit: int = MAX_TEXT) -> str:
     return _CONTROL.sub("", value).strip()[:limit]
 
 
+def _sensor(raw: Any) -> dict[str, Any] | None:
+    """The sensor a thermostat reads its room by, or None for the thermostat's own reading."""
+    if not isinstance(raw, dict):
+        return None
+    rid, entity_id = raw.get("rid"), raw.get("entity_id")
+    if not (isinstance(rid, str) and _REGISTRY_ID.match(rid)) or not (isinstance(entity_id, str) and _SENSOR.match(entity_id)):
+        return None
+    return {"rid": rid, "entity_id": entity_id, "name": _text(raw.get("name"), MAX_NAME)}
+
+
 def clean_element(raw: Any) -> dict[str, Any] | None:
     """One element as it is kept, or None when it is not one this page knows."""
     if not isinstance(raw, dict):
@@ -60,13 +76,17 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
     x, y = _coordinate(raw.get("x")), _coordinate(raw.get("y"))
     if x is None or y is None:
         return None
-    if kind == "light":
+    if kind in ("light", "climate"):
         rid, entity_id = raw.get("rid"), raw.get("entity_id")
-        if not (isinstance(rid, str) and _REGISTRY_ID.match(rid)) or not (isinstance(entity_id, str) and _LIGHT.match(entity_id)):
+        pattern, styles = (_LIGHT, STYLES) if kind == "light" else (_CLIMATE, CLIMATE_STYLES)
+        if not (isinstance(rid, str) and _REGISTRY_ID.match(rid)) or not (isinstance(entity_id, str) and pattern.match(entity_id)):
             return None
-        style = raw.get("style") if raw.get("style") in STYLES else STYLES[0]
-        return {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
-                "name": _text(raw.get("name"), MAX_NAME), "style": style}
+        style = raw.get("style") if raw.get("style") in styles else styles[0]
+        element = {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
+                   "name": _text(raw.get("name"), MAX_NAME), "style": style}
+        if kind == "climate":
+            element["sensor"] = _sensor(raw.get("sensor"))
+        return element
     text = _text(raw.get("text"))
     if not text:
         return None

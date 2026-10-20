@@ -1,14 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
+import { Check, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  freshId, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, surfaceHeight, WIDE_STYLES, withLamps, withWish,
-  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
+  climateSpots, freshId, isWide, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
+  type ClimateAnswer, type ClimateInfo, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
+  type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
+import { ClimateControl } from './ClimateControl'
+import { ClimateDetails } from './ClimateDetails'
+import { ClimatePicker } from './ClimatePicker'
 import { LampDetails } from './LampDetails'
 import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
@@ -137,12 +141,14 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle }) => {
+    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle; sensor?: ClimateSensor | null }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
-          : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style }
+          : element.type === 'climate'
+            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor }
+            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -246,6 +252,95 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const detailed = elements.find((element): element is HomeLight => element.type === 'light' && element.id === details) ?? null
   const detailedInfo = detailed ? standing(detailed) : null
 
+  // -- thermostats from Home Assistant -----------------------------------------
+
+  const [pickingClimates, setPickingClimates] = useState(false)
+  const [knownClimates, setKnownClimates] = useState<Record<string, ClimateInfo>>({})
+  const placedClimates = new Set(elements.filter((element): element is HomeClimate => element.type === 'climate').map((element) => element.rid))
+  const addClimates = useCallback(
+    (climates: ClimateInfo[]) => {
+      setPickingClimates(false)
+      if (!layout || climates.length === 0) return
+      const spots = climateSpots(layout.elements, climates.length)
+      const added: HomeClimate[] = []
+      for (const [index, climate] of climates.entries()) {
+        added.push({ id: freshId([...layout.elements, ...added]), type: 'climate', ...spots[index], rid: climate.rid, entity_id: climate.entity_id, name: climate.name, style: 'pill', sensor: null })
+      }
+      setKnownClimates((now) => ({ ...now, ...Object.fromEntries(climates.map((climate) => [climate.rid, climate])) }))
+      askAgain.current = true
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  const climateOf = (element: HomeClimate): ClimateView | null => {
+    const said = answer.data?.climates?.[element.id]
+    if (said) return said.missing ? null : said
+    const known = knownClimates[element.rid]
+    return known ? { ...known, reading: known.current, sensor: null } : null
+  }
+  const climateMissing = (element: HomeClimate) => answer.data?.climates?.[element.id]?.missing === true
+  const chooseSensor = useCallback(
+    (element: HomeClimate, sensor: ClimateSensor | null) => {
+      // The reading comes from the server: ask the page again once the choice is saved.
+      askAgain.current = true
+      change(element.id, { sensor })
+    },
+    [change],
+  )
+
+  // A target is gathered: each tap moves it a step, and one second after the
+  // last one it goes out, so five taps are one call (``set_temperature``).
+  const [targets, setTargets] = useState<Record<string, number>>({})
+  const targetTimers = useRef<Record<string, number>>({})
+  const climateAsks = useRef<Record<string, number>>({})
+  const climateChain = useRef<Record<string, Promise<void>>>({})
+  const settleTarget = useCallback((id: string, asked: number) => {
+    if (climateAsks.current[id] !== asked) return
+    setTargets((now) => {
+      const rest = { ...now }
+      delete rest[id]
+      return rest
+    })
+  }, [])
+  const tell = useCallback(
+    (id: string, name: string, wish: ClimateWish, after?: (answered: ClimateAnswer | null) => void) => {
+      const run = (climateChain.current[id] ?? Promise.resolve()).then(async () => {
+        try {
+          const answered = await post<ClimateAnswer>(`/pages/${pageId}/home/climates/${id}`, wish)
+          queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withClimates(old, { [id]: answered.climate }) : old))
+          after?.(answered)
+        } catch (failure) {
+          const code = failure instanceof ApiError ? failure.code : ''
+          setNote({ text: t(`homePage.climateProblems.${code}`, { name, defaultValue: t('homePage.climateFailed', { name }) }), level: 'error' })
+          after?.(null)
+        }
+      })
+      climateChain.current[id] = run
+    },
+    [pageId, queryClient, t],
+  )
+  const stepClimate = useCallback(
+    (element: HomeClimate, info: ClimateView, steps: number) => {
+      const from = targets[element.id] ?? info.target ?? info.reading ?? (info.min + info.max) / 2
+      const next = stepTarget(info, from, steps)
+      const asked = (climateAsks.current[element.id] ?? 0) + 1
+      climateAsks.current[element.id] = asked
+      setTargets((now) => ({ ...now, [element.id]: next }))
+      window.clearTimeout(targetTimers.current[element.id])
+      targetTimers.current[element.id] = window.setTimeout(() => {
+        tell(element.id, info.name, { target: next }, (answered) => {
+          if (!answered || answered.confirmed) settleTarget(element.id, asked)
+          else window.setTimeout(() => settleTarget(element.id, asked), SETTLE_MS)
+        })
+      }, GATHER_MS)
+    },
+    [targets, tell, settleTarget],
+  )
+  useEffect(() => () => Object.values(targetTimers.current).forEach((timer) => window.clearTimeout(timer)), [])
+  const [climateDetails, setClimateDetails] = useState<string | null>(null)
+  const detailedClimate = elements.find((element): element is HomeClimate => element.type === 'climate' && element.id === climateDetails) ?? null
+  const detailedClimateInfo = detailedClimate ? climateOf(detailedClimate) : null
+
   const addHeading = useCallback(() => {
     if (!layout) return
     const id = freshId(layout.elements)
@@ -307,8 +402,13 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   const placed = (element: HomeElement) => (dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y } : element)
   const draw = (element: HomeElement) =>
-    element.type === 'light' ? (
-      <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && WIDE_STYLES.has(element.style)}
+    element.type === 'climate' ? (
+      <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId}
+        target={targets[element.id] ?? climateOf(element)?.target ?? null} setting={targets[element.id] !== undefined}
+        onStep={canAct ? (steps) => { const info = climateOf(element); if (info) stepClimate(element, info, steps) } : undefined}
+        onDetails={() => setClimateDetails(element.id)} onRemove={() => remove(element.id)} onSensor={(sensor) => chooseSensor(element, sensor)} />
+    ) : element.type === 'light' ? (
+      <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && isWide(element)}
         onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })}
         onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)} />
     ) : (
@@ -335,6 +435,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
               <button type="button" className="btn btn-accent" onClick={() => setPicking(true)}>
                 <Lightbulb size={15} /> {t('homePage.addLight')}
               </button>
+              <button type="button" className="btn" onClick={() => setPickingClimates(true)}>
+                <Thermometer size={15} /> {t('homePage.addClimate')}
+              </button>
               <button type="button" className="btn" onClick={addHeading}>
                 <Heading size={15} /> {t('homePage.addHeading')}
               </button>
@@ -347,10 +450,10 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           {phoneGroups(elements).map((group) => (
             <section key={group.heading?.id ?? 'top'} className="grid gap-3" data-phone-group={group.heading?.id ?? ''}>
               {group.heading && draw(group.heading)}
-              {group.lamps.length > 0 && (
+              {group.devices.length > 0 && (
                 <div className="flex flex-wrap items-start gap-3">
-                  {group.lamps.map((lamp) => (
-                    <div key={lamp.id} className={WIDE_STYLES.has(lamp.style) ? 'w-full' : ''}>{draw(lamp)}</div>
+                  {group.devices.map((device) => (
+                    <div key={device.id} className={isWide(device) ? 'w-full' : ''}>{draw(device)}</div>
                   ))}
                 </div>
               )}
@@ -382,10 +485,17 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           })}
         </div>
       )}
-      {arranging && <EditBar onLight={() => setPicking(true)} onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
+      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
         <LampDetails info={detailedInfo} onWish={(wish) => ask(detailed, detailedInfo, wish)} onClose={() => setDetails(null)} />
       )}
+      {detailedClimate && detailedClimateInfo && (
+        <ClimateDetails info={detailedClimateInfo} target={targets[detailedClimate.id] ?? detailedClimateInfo.target} setting={targets[detailedClimate.id] !== undefined}
+          onStep={canAct ? (steps) => stepClimate(detailedClimate, detailedClimateInfo, steps) : null}
+          onWish={canAct ? (wish) => tell(detailedClimate.id, detailedClimateInfo.name, wish) : null}
+          onClose={() => setClimateDetails(null)} />
+      )}
+      {canEdit && <ClimatePicker open={pickingClimates} pageId={pageId} placed={placedClimates} onClose={() => setPickingClimates(false)} onAdd={addClimates} />}
       {canEdit && <LightPicker open={picking} pageId={pageId} placed={placedLamps} onClose={() => setPicking(false)} onAdd={addLights} />}
       {note && (
         <div className={`fixed left-1/2 -translate-x-1/2 bottom-36 md:bottom-24 z-50 glass-strong rounded-xl px-4 py-2.5 text-sm shadow-xl ${note.level === 'error' ? 'text-bad' : ''}`} role="status">
@@ -395,6 +505,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     </div>
   )
 }
+
+/** How long the taps on a thermostat's plus and minus are gathered before the target goes out. */
+const GATHER_MS = 1000
 
 /** How long a finger rests on a lamp before it opens the details. */
 const HOLD_MS = 500
@@ -539,8 +652,11 @@ function LampControl({ element, info, missing, arranging, wide, onRemove, onStyl
     )
   }
   return (
-    <div ref={tools} className={`lamp-control ${face.className}`} style={face.style} data-lamp={element.entity_id} data-style={element.style} title={title} aria-label={label}>
-      {face.children}
+    // ⚠️ The tools stand beside the drawing, not in it: a pill and a slider clip what reaches past their edge.
+    <div ref={tools} className={`relative ${wide ? 'w-full' : 'w-fit'}`}>
+      <div className={`lamp-control ${face.className}`} style={face.style} data-lamp={element.entity_id} data-style={element.style} title={title} aria-label={label}>
+        {face.children}
+      </div>
       {arranging && (
         <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
           <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}
@@ -625,12 +741,15 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onHeading: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onLight} aria-label={t('homePage.addLight')}>
         <Lightbulb size={15} /> <span className="hidden sm:inline">{t('homePage.addLight')}</span>
+      </button>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onClimate} aria-label={t('homePage.addClimate')}>
+        <Thermometer size={15} /> <span className="hidden sm:inline">{t('homePage.addClimate')}</span>
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>

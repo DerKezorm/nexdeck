@@ -1,7 +1,8 @@
 import { vi } from 'vitest'
 
 import {
-  FOOTPRINT, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap, surfaceHeight, withLamps, withWish,
+  CLIMATE_FOOTPRINT, climateSpots, FOOTPRINT, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
+  stepTarget, surfaceHeight, temperature, withLamps, withNews, withWish,
   type HomeAnswer, type HomeElement, type LampStyle, type LampWish,
 } from './home'
 
@@ -178,7 +179,7 @@ it('reads a phone page as each heading with the lamps standing under it', () => 
     // Its middle (288 + 128) stands under the kitchen.
     lampAt('counter', 288, 104),
   ])
-  expect(groups.map((group) => [group.heading?.id ?? null, group.lamps.map((lamp) => lamp.id)])).toEqual([
+  expect(groups.map((group) => [group.heading?.id ?? null, group.devices.map((lamp) => lamp.id)])).toEqual([
     [null, ['early']],
     ['living', ['sofa', 'reading']],
     ['kitchen', ['stove', 'counter']],
@@ -189,5 +190,48 @@ it('reads a phone page as each heading with the lamps standing under it', () => 
 
 it('keeps a heading on the phone that has no lamps yet, and leaves out an empty top', () => {
   expect(phoneGroups([heading('a', 16, 16), lampAt('x', 16, 56)]).map((group) => group.heading?.id ?? null)).toEqual(['a'])
-  expect(phoneGroups([heading('a', 16, 16), heading('b', 320, 16)]).map((group) => group.lamps.length)).toEqual([0, 0])
+  expect(phoneGroups([heading('a', 16, 16), heading('b', 320, 16)]).map((group) => group.devices.length)).toEqual([0, 0])
+})
+
+// -- thermostats ---------------------------------------------------------------
+
+it('moves a target on the thermostat\'s own step and keeps it inside its bounds', () => {
+  const thermostat = { step: 0.5, min: 7, max: 30 }
+  expect(stepTarget(thermostat, 21.5, 1)).toBe(22)
+  expect(stepTarget(thermostat, 21.5, -3)).toBe(20)
+  expect(stepTarget(thermostat, 21.3, 0)).toBe(21.5)
+  expect(stepTarget(thermostat, 29.5, 4)).toBe(30)
+  expect(stepTarget(thermostat, 7.5, -4)).toBe(7)
+  expect(stepTarget({ step: 0.1, min: 5, max: 25 }, 20, 3)).toBe(20.3)
+  expect(stepTarget({ step: 1, min: 45, max: 90 }, 68, 1)).toBe(69)
+  expect(stepTarget({ step: 0, min: 7, max: 30 }, 20, 1)).toBe(20.5)
+})
+
+it('writes a temperature with a decimal only where it has one', () => {
+  expect(temperature(21)).toBe('21°')
+  expect(temperature(21.5)).toBe('21.5°')
+  expect(temperature(21.25)).toBe('21.3°')
+  expect(temperature(null)).toBe('–')
+})
+
+it('puts news of a thermostat into the answer, keeping its name and leaving strangers out', () => {
+  const answer: HomeAnswer = {
+    version: 1,
+    problem: null,
+    layout: { integration_id: 1, elements: [{ id: 'heat', type: 'climate', x: 0, y: 0, rid: 'r', entity_id: 'climate.a', name: 'A', style: 'pill', sensor: null }] },
+    climates: { heat: { name: 'Living room', area: 'Living room', reading: 20, target: 21, missing: false } as never },
+  }
+  const next = withNews(answer, { page_id: 1, climates: { heat: { reading: 22, missing: false }, stranger: { reading: 1, missing: false } } })
+  expect(next.climates?.heat).toMatchObject({ name: 'Living room', reading: 22, target: 21 })
+  expect(next.climates).not.toHaveProperty('stranger')
+  expect(withNews(next, { page_id: 1, climates: { heat: { missing: true } } }).climates?.heat).toEqual({ missing: true })
+  expect(withNews(answer, { page_id: 1 })).toBe(answer)
+})
+
+it('reads a thermostat on a phone under its heading, as a lamp', () => {
+  const climate = (id: string, x: number, y: number): HomeElement => ({ id, type: 'climate', x, y, rid: `r-${id}`, entity_id: `climate.${id}`, name: id, style: 'pill', sensor: null })
+  const groups = phoneGroups([heading('down', 16, 16), heading('up', 400, 16), climate('living', 16, 56), climate('bed', 400, 56), lampAt('lamp', 16, 104)])
+  expect(groups.map((group) => [group.heading?.id, group.devices.map((device) => device.id)])).toEqual([['down', ['living', 'lamp']], ['up', ['bed']]])
+  const spots = climateSpots([], 6)
+  for (const [index, a] of spots.entries()) for (const b of spots.slice(index + 1)) expect(b.x >= a.x + CLIMATE_FOOTPRINT.width || b.y >= a.y + CLIMATE_FOOTPRINT.height).toBe(true)
 })

@@ -56,15 +56,25 @@ export const FOOTPRINT: Record<LampStyle, { width: number; height: number }> = {
 /** The styles that read as a row of their own on a phone; the others stand side by side. */
 export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'slider'])
 
+/** The room a thermostat's pill takes: name, reading, minus, target, plus. */
+export const CLIMATE_FOOTPRINT = { width: 320, height: 40 }
+
+/** Whether an element runs the width of a phone's screen: a thermostat always, a lamp by its style. */
+export function isWide(element: HomeDevice): boolean {
+  return element.type === 'climate' || WIDE_STYLES.has(element.style)
+}
+
 const HEADING_HEIGHT = 24
 
 /** How tall an element stands on the surface. */
 export function heightOf(element: HomeElement): number {
+  if (element.type === 'climate') return CLIMATE_FOOTPRINT.height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
 
 /** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
 export function widthOf(element: HomeElement): number {
+  if (element.type === 'climate') return CLIMATE_FOOTPRINT.width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
 }
 
@@ -73,7 +83,30 @@ function bottomOf(elements: HomeElement[]): number {
   return Math.max(...elements.map((element) => element.y + heightOf(element)))
 }
 
-export type HomeElement = HomeHeading | HomeLight
+/** The sensor a thermostat reads its room by, kept as a lamp is: by registry id, with the name it had. */
+export interface ClimateSensor {
+  rid: string
+  entity_id: string
+  name: string
+}
+
+/** A thermostat, kept like a lamp; ``sensor`` null reads the room by the thermostat itself. */
+export interface HomeClimate {
+  id: string
+  type: 'climate'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: 'pill'
+  sensor: ClimateSensor | null
+}
+
+/** What stands on a page and is switched or set: a lamp or a thermostat. */
+export type HomeDevice = HomeLight | HomeClimate
+
+export type HomeElement = HomeHeading | HomeLight | HomeClimate
 
 export interface HomeLayout {
   integration_id: number | null
@@ -109,12 +142,121 @@ export interface LampInfo {
   kelvin_max?: number | null
 }
 
+/** A thermostat as Home Assistant reports it (``hass_registry.climate_state``). */
+export interface ClimateInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  unavailable: boolean
+  on: boolean
+  mode: string | null
+  modes: string[]
+  /** What it is doing, only when the device says: heating, cooling, idle, off. */
+  action: string | null
+  current: number | null
+  target: number | null
+  target_low: number | null
+  target_high: number | null
+  /** It takes a single target temperature. */
+  settable: boolean
+  min: number
+  max: number
+  step: number
+  preset: string | null
+  presets: string[]
+  unit: string
+}
+
+/** A placed thermostat as the page shows it: the room read by its sensor where that one answers (``climate_view``). */
+export interface ClimateView extends ClimateInfo {
+  reading: number | null
+  /** The sensor it reads its room by: ``ok``, or ``missing``/``unavailable`` while the thermostat's own reading stands in. */
+  sensor: { name: string; state: 'ok' | 'missing' | 'unavailable' } | null
+}
+
+/** A temperature sensor a thermostat may read its room by (``pick_temperature_sensors``). */
+export interface SensorInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  current: number | null
+  unit: string
+  unavailable: boolean
+}
+
+export interface ClimateOffer {
+  climates: ClimateInfo[]
+  sensors: SensorInfo[]
+  problem: HomeProblem | null
+}
+
 export interface HomeAnswer {
   layout: HomeLayout
   version: number
   problem: HomeProblem | null
   /** How each placed lamp stands, by element id; ``missing`` when Home Assistant no longer offers it. */
   lights?: Record<string, (LampInfo & { missing: false }) | { missing: true }>
+  /** How each placed thermostat stands, by element id. */
+  climates?: Record<string, (ClimateView & { missing: false }) | { missing: true }>
+}
+
+/** How a thermostat stands, as an answer or the board's stream says it. */
+export type ClimateState = (Partial<ClimateView> & { missing: false }) | { missing: true }
+
+/** The server's answer to a thermostat being set; ``confirmed`` as with a lamp. */
+export interface ClimateAnswer {
+  ok: true
+  confirmed: boolean
+  climate: ClimateView & { missing: false }
+}
+
+/** What a thermostat is asked: one thing at a time (``HomeClimateBody``). */
+export type ClimateWish = { target: number } | { mode: string } | { preset: string }
+
+/** The news the board's stream brings of a home page (``home_control.HomeLive``). */
+export interface HomeNews {
+  page_id: number
+  lights?: Record<string, LampState>
+  climates?: Record<string, ClimateState>
+}
+
+/** The page's answer with news of its thermostats put in, the way ``withLamps`` does for lamps. */
+export function withClimates(answer: HomeAnswer, news: Record<string, ClimateState>): HomeAnswer {
+  const known = new Set(answer.layout.elements.map((element) => element.id))
+  const climates = { ...(answer.climates ?? {}) }
+  for (const [id, state] of Object.entries(news)) {
+    if (!known.has(id)) continue
+    const before = climates[id]
+    climates[id] = state.missing ? state : ({ ...(before && !before.missing ? before : {}), ...state } as ClimateView & { missing: false })
+  }
+  return { ...answer, climates }
+}
+
+/** Everything the stream says of a page, put into its answer. */
+export function withNews(answer: HomeAnswer, news: HomeNews): HomeAnswer {
+  const lit = news.lights ? withLamps(answer, news.lights) : answer
+  return news.climates ? withClimates(lit, news.climates) : lit
+}
+
+/**
+ * A thermostat's target moved by some steps of its own, on its step and
+ * inside its bounds, as its own buttons move it; the server does the same.
+ */
+export function stepTarget(info: Pick<ClimateInfo, 'step' | 'min' | 'max'>, from: number, steps: number): number {
+  const step = info.step > 0 ? info.step : 0.5
+  const moved = Math.round((from + steps * step) / step) * step
+  return Math.round(Math.min(info.max, Math.max(info.min, moved)) * 100) / 100
+}
+
+/** A temperature as a page writes it: one decimal where it has one, the unit's degree sign. */
+export function temperature(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '–'
+  const shown = Number.isInteger(value) ? String(value) : value.toFixed(1)
+  return `${shown}°`
 }
 
 /** How a lamp stands, as a switch answers it or the board's stream says it (``home_control``). */
@@ -276,7 +418,15 @@ export const ROW_WIDTH = 1088
  * stands already, as far apart as their style is wide, so they never overlap.
  */
 export function lampSpots(elements: HomeElement[], count: number, style: LampStyle = 'pill'): { x: number; y: number }[] {
-  const { width, height } = FOOTPRINT[style]
+  return spotsFor(elements, count, FOOTPRINT[style])
+}
+
+/** Where thermostats added together go, as lamps do. */
+export function climateSpots(elements: HomeElement[], count: number): { x: number; y: number }[] {
+  return spotsFor(elements, count, CLIMATE_FOOTPRINT)
+}
+
+function spotsFor(elements: HomeElement[], count: number, { width, height }: { width: number; height: number }): { x: number; y: number }[] {
   const top = elements.length === 0 ? 16 : snap(bottomOf(elements) + LAMP_GAP)
   // Up to the next step, never down: a pitch rounded down would eat into the gap.
   const pitchX = Math.ceil((width + LAMP_GAP) / STEP) * STEP
@@ -337,10 +487,10 @@ export function surfaceHeight(elements: HomeElement[]): number {
   return Math.max(0, ...elements.map((element) => element.y + heightOf(element))) + ROOM_BELOW
 }
 
-/** A heading of the phone's list and the lamps under it; the first group has none, for lamps above every heading. */
+/** A heading of the phone's list and the lamps and thermostats under it; the first group has none, for those above every heading. */
 export interface PhoneGroup {
   heading: HomeHeading | null
-  lamps: HomeLight[]
+  devices: HomeDevice[]
 }
 
 /**
@@ -354,8 +504,8 @@ export interface PhoneGroup {
  */
 export function phoneGroups(elements: HomeElement[]): PhoneGroup[] {
   const headings = readingOrder(elements.filter((element): element is HomeHeading => element.type === 'heading'))
-  const lamps = readingOrder(elements.filter((element): element is HomeLight => element.type === 'light'))
-  const groups: PhoneGroup[] = [{ heading: null, lamps: [] }, ...headings.map((heading) => ({ heading, lamps: [] as HomeLight[] }))]
+  const lamps = readingOrder(elements.filter((element): element is HomeDevice => element.type !== 'heading'))
+  const groups: PhoneGroup[] = [{ heading: null, devices: [] }, ...headings.map((heading) => ({ heading, devices: [] as HomeDevice[] }))]
   for (const lamp of lamps) {
     const middle = lamp.x + widthOf(lamp) / 2
     let owner: PhoneGroup = groups[0]
@@ -365,7 +515,7 @@ export function phoneGroups(elements: HomeElement[]): PhoneGroup[] {
       const best = owner.heading
       if (!best || heading.y > best.y + ROW || (Math.abs(heading.y - best.y) <= ROW && heading.x > best.x)) owner = group
     }
-    owner.lamps.push(lamp)
+    owner.devices.push(lamp)
   }
-  return groups.filter((group) => group.heading || group.lamps.length)
+  return groups.filter((group) => group.heading || group.devices.length)
 }

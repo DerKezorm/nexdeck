@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { ApiError, get, streamUrl } from '../api/client'
-import type { LampState } from '../lib/home'
+import type { HomeNews } from '../lib/home'
 import type { WidgetData } from '../lib/types'
 import { forgetEverything } from '../stores/auth'
 import { useLive } from '../stores/live'
@@ -11,8 +11,8 @@ interface Options {
   board?: string
   onBoardChanged?: () => void
   onLayout?: (payload: { page_id: number; layouts: Record<string, unknown[]> }) => void
-  /** A lamp on a home page changed, here or at the wall (``home_control``). */
-  onHome?: (payload: { page_id: number; lights: Record<string, LampState> }) => void
+  /** A lamp or a thermostat on a home page changed, here or at the wall (``home_control``). */
+  onHome?: (payload: HomeNews) => void
   /** Called whenever the stream (re)connects: reload the snapshot, so nothing
    *  that changed between the board request and the subscription is missed. */
   onConnected?: () => void

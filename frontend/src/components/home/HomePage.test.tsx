@@ -542,6 +542,8 @@ it('changes the style of a lamp while the page is arranged, and saves it', async
   await screen.findByText('Floor lamp')
   const tools = (document.querySelector('[data-element="floor"]') as HTMLElement)
   const choose = within(tools).getByRole('button', { name: 'Choose a style' })
+  // Beside the drawing, not in it: a pill clips what reaches past its edge.
+  expect(tools.querySelector('[data-lamp]')?.contains(choose)).toBe(false)
   fireEvent.click(choose)
   fireEvent.keyDown(window, { key: 'Escape' })
   expect(within(tools).queryByRole('menu')).not.toBeInTheDocument()
