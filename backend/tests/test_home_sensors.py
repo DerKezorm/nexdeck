@@ -238,3 +238,28 @@ def test_a_name_of_its_own_is_saved_with_the_page(client: TestClient) -> None:
     saved = client.put(f"/api/v1/pages/{page['id']}/home", json={"elements": [door]}, headers=CSRF)
     assert saved.status_code == 200
     assert client.get(f"/api/v1/pages/{page['id']}/home").json()["layout"]["elements"][0]["label"] == "Stairs, ground floor"
+
+
+# ---------------------------------------------------------------------------
+# A size of its own
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("kind", ["light", "climate", "contact", "reading", "cover"])
+def test_a_drawn_element_keeps_a_size_of_its_own_inside_its_bounds(kind: str) -> None:
+    placed = {"light": {"rid": "r-floor", "entity_id": "light.floor_lamp", "name": "Floor lamp", "style": "round"},
+              "climate": {"rid": "r-heat-living", "entity_id": "climate.living_room", "name": "Living room", "style": "dial"},
+              "contact": {**KITCHEN, "style": "door"},
+              "reading": {"style": "thermometer", "temperature": LIVING_T},
+              "cover": {"rid": "r-cover-kitchen", "entity_id": "cover.kitchen", "name": "Kitchen", "style": "window"}}[kind]
+
+    def kept(scale: object) -> object:
+        element = home.clean_element({"id": "a", "type": kind, "x": 0, "y": 0, **placed, "scale": scale})
+        assert element is not None
+        return element.get("scale")
+
+    assert kept(1.53) == 1.55, "on a twentieth"
+    assert kept(0.2) == home.SCALES[0], "not so small that it cannot be read"
+    assert kept(40) == home.SCALES[1]
+    for left_out in (1, 1.01, True, "2", float("nan"), None):
+        assert kept(left_out) is None, left_out

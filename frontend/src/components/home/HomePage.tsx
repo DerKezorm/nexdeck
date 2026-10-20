@@ -1,12 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Blinds, ChartLine, Check, DoorOpen, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
   alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, STAT_HEIGHTS, STAT_WIDTHS, statSize, statSpots, stepTarget,
-  surfaceHeight, withClimates, withCovers, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
+  surfaceHeight, withClimates, withCovers, isScalable, scaleOf, scaleTo, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
   type CoverAnswer, type CoverScene, type CoverWish, type HomeCover, type HomeCovers,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
@@ -181,7 +181,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     (id: string, patch: {
       x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle | string; sensor?: ClimateSensor | null; width?: number
       height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]; label?: string; name?: string
-      scenes?: CoverScene[]
+      scenes?: CoverScene[]; scale?: number
     }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
@@ -194,6 +194,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 ...('style' in element && patch.style ? { style: patch.style } : {}),
                 ...((element.type === 'contacts' || element.type === 'covers') && patch.sensors ? { sensors: patch.sensors } : {}),
                 ...(element.type === 'covers' && patch.scenes ? { scenes: patch.scenes } : {}),
+                ...(patch.scale !== undefined && element.type !== 'contacts' && element.type !== 'readings' && element.type !== 'hints' && element.type !== 'covers' ? { scale: patch.scale } : {}),
                 ...(element.type === 'readings' && patch.rows ? { rows: patch.rows } : {}),
                 ...('title' in element && patch.title !== undefined ? { title: patch.title } : {}),
                 ...(element.type === 'hints' && patch.checks ? { checks: patch.checks } : {}),
@@ -205,8 +206,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 height: patch.height ?? element.height, sensors: patch.sensors ?? element.sensors, title: patch.title ?? element.title }
           : element.type === 'climate'
             ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width,
-                style: (patch.style as ClimateStyle | undefined) ?? element.style, label: patch.label ?? element.label }
-            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as LampStyle | undefined) ?? element.style, width: patch.width ?? element.width, label: patch.label ?? element.label }
+                style: (patch.style as ClimateStyle | undefined) ?? element.style, label: patch.label ?? element.label, scale: patch.scale ?? element.scale }
+            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as LampStyle | undefined) ?? element.style, width: patch.width ?? element.width, label: patch.label ?? element.label,
+                scale: patch.scale ?? element.scale }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -526,7 +528,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   const [guidesOn, setGuidesOn] = useGuides()
   const surface = useRef<HTMLDivElement>(null)
-  const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number } | null>(null)
+  const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number; scale?: number } | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const grab = useRef<{
     id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean
@@ -553,7 +555,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     if (!arranging || narrow || event.button !== 0 || renaming === element.id) return
     const target = event.target as HTMLElement
     if (target.closest('[data-element-tool]')) return
-    const resizing = Boolean(target.closest('[data-resize]')) && (isResizable(element) || element.type === 'stat')
+    const resizing = Boolean(target.closest('[data-resize]')) && (isResizable(element) || element.type === 'stat' || isScalable(element))
     grab.current = { id: element.id, pointer: event.pointerId, startX: event.clientX, startY: event.clientY, fromX: element.x, fromY: element.y, moved: false, resizing, ...boxes(element.id) }
     try {
       event.currentTarget.setPointerCapture(event.pointerId)
@@ -570,6 +572,13 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     held.moved = true
     if (held.resizing) {
       const element = elements.find((one) => one.id === held.id)
+      if (element && isScalable(element)) {
+        // A drawing grows and shrinks as a whole, by the farther of the two ways the corner is dragged.
+        const scale = scaleTo(scaleOf(element), held.own.width, Math.abs(dx) > Math.abs(dy) ? dx : dy * (held.own.width / (held.own.height || 1)))
+        setDragged({ id: held.id, x: held.fromX, y: held.fromY, scale })
+        setGuides([])
+        return
+      }
       if (element?.type === 'stat') {
         // A card is dragged at its corner: width and height, on the step, inside their bounds; its right edge lines up with others.
         const from = statSize(element)
@@ -603,7 +612,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     if (!held || held.pointer !== event.pointerId) return
     grab.current = null
     if (held.moved && dragged && dragged.id === held.id) {
-      change(held.id, held.resizing && dragged.width !== undefined ? { width: dragged.width, ...(dragged.height !== undefined ? { height: dragged.height } : {}) } : { x: dragged.x, y: dragged.y })
+      change(held.id, held.resizing && dragged.scale !== undefined ? { scale: dragged.scale }
+        : held.resizing && dragged.width !== undefined ? { width: dragged.width, ...(dragged.height !== undefined ? { height: dragged.height } : {}) } : { x: dragged.x, y: dragged.y })
     } else if (!held.moved && !held.resizing && elements.find((element) => element.id === held.id)?.type === 'heading') setRenaming(held.id)
     setDragged(null)
     setGuides([])
@@ -631,7 +641,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const placed = (element: HomeElement): HomeElement =>
     dragged && dragged.id === element.id
       ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}),
-          ...(dragged.height !== undefined && element.type === 'stat' ? { height: dragged.height } : {}) }
+          ...(dragged.height !== undefined && element.type === 'stat' ? { height: dragged.height } : {}),
+          ...(dragged.scale !== undefined && isScalable(element) ? { scale: dragged.scale } : {}) }
       : element
   /** What the surface of an element is, so its glass and its tilt are made again when its style changes. */
   const lookOf = (element: HomeElement) => `${element.type}:${'style' in element ? element.style : ''}:${narrow ? 'phone' : 'surface'}`
@@ -733,7 +744,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 <div className="flex flex-wrap items-start gap-3">
                   {group.devices.map((device) => (
                     // ``min-w-0``: a chart drawn at the card's own width must not push the card past the screen.
-                    <div key={device.id} className={isWide(device) ? 'w-full min-w-0' : ''}><Felt arranging={arranging} look={lookOf(device)}>{draw(device)}</Felt></div>
+                    <div key={device.id} className={isWide(device) ? 'w-full min-w-0' : ''}><Scaled element={device}><Felt arranging={arranging} look={lookOf(device)}>{draw(device)}</Felt></Scaled></div>
                   ))}
                 </div>
               )}
@@ -765,7 +776,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 onPointerCancel={() => { grab.current = null; setDragged(null) }}
                 data-element={element.id}
               >
-                <Felt arranging={arranging} look={lookOf(element)}>{draw(element)}</Felt>
+                <Scaled element={element}><Felt arranging={arranging} look={lookOf(element)}>{draw(element)}</Felt></Scaled>
+                {arranging && isScalable(element) && <span className="home-grip home-grip-corner" data-resize="scale" aria-hidden title={t('homePage.stats.dragSize')} />}
               </div>
             )
           })}
@@ -1121,4 +1133,15 @@ function SensorMenu({ onSensor }: { onSensor: (kind: 'contacts' | 'readings' | '
       )}
     </span>
   )
+}
+
+/**
+ * A drawn element at its own size: zoomed as a whole, so its footprint on the
+ * surface grows with it and the guides measure what the eye sees. Its tools
+ * keep their size (``[data-scaled] [data-element-tool]`` in app.css).
+ */
+function Scaled({ element, children }: { element: HomeElement; children: ReactNode }) {
+  const scale = scaleOf(element)
+  if (scale === 1) return <>{children}</>
+  return <div style={{ zoom: scale, '--home-scale': scale } as CSSProperties} data-scaled={scale}>{children}</div>
 }

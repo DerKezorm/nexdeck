@@ -27,6 +27,8 @@ export interface HomeLight {
   style: LampStyle
   /** A name of the page's own, shown instead of Home Assistant's; it stays when the lamp is renamed there. */
   label?: string
+  /** How much a drawn style is grown or shrunk (``SCALES``); 1 when it is not. */
+  scale?: number
   /** A width of its own, for the styles that have one (``RESIZABLE``); otherwise the style's (``DEFAULT_WIDTH``). */
   width?: number
 }
@@ -114,8 +116,41 @@ export function isWide(element: HomeItem): boolean {
 
 const HEADING_HEIGHT = 24
 
+/**
+ * How much a drawn style may grow or shrink at its corner: not so small that
+ * it cannot be read or pressed. The server keeps the same (``SCALES``).
+ */
+export const SCALES = [0.75, 3] as const
+
+/** Whether an element is sized at its corner as a whole: every drawn style, all but those with a width of their own and the cards. */
+export function isScalable(element: HomeElement): element is HomeLight | HomeClimate | HomeContact | HomeReading | HomeCover {
+  return (element.type === 'light' || element.type === 'climate' || element.type === 'contact' || element.type === 'reading' || element.type === 'cover') && !isResizable(element)
+}
+
+/** How much an element is grown or shrunk, inside ``SCALES``. */
+export function scaleOf(element: HomeElement): number {
+  if (!isScalable(element) || element.scale === undefined) return 1
+  return Math.min(SCALES[1], Math.max(SCALES[0], element.scale))
+}
+
+/** A size dragged at the corner, on a twentieth and inside ``SCALES``. */
+export function scaleTo(from: number, size: number, dragged: number): number {
+  const raw = from * ((size + dragged) / (size || 1))
+  return Math.round(Math.min(SCALES[1], Math.max(SCALES[0], raw)) * 20) / 20
+}
+
 /** How tall an element stands on the surface. */
 export function heightOf(element: HomeElement): number {
+  return baseHeight(element) * scaleOf(element)
+}
+
+/** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
+export function widthOf(element: HomeElement): number {
+  return baseWidth(element) * scaleOf(element)
+}
+
+/** How tall an element is drawn before it is grown or shrunk. */
+function baseHeight(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).height
   if (element.type === 'contact') return (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).height
   if (element.type === 'reading') return (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).height
@@ -128,8 +163,7 @@ export function heightOf(element: HomeElement): number {
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
 
-/** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
-export function widthOf(element: HomeElement): number {
+function baseWidth(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).width
   if (element.type === 'contact') return controlWidth(element) ?? (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).width
   if (element.type === 'reading') return controlWidth(element) ?? (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).width
@@ -165,6 +199,7 @@ export interface HomeClimate {
   sensor: ClimateSensor | null
   /** A name of the page's own, as a lamp has one. */
   label?: string
+  scale?: number
   /** A width of its own; otherwise ``DEFAULT_WIDTH.climate``. */
   width?: number
 }
@@ -987,6 +1022,7 @@ export interface HomeContact {
   style: ContactStyle
   /** A name of the page's own, as a lamp has one. */
   label?: string
+  scale?: number
   width?: number
 }
 
@@ -1012,6 +1048,7 @@ export interface HomeReading {
   name: string
   temperature: ClimateSensor | null
   humidity: ClimateSensor | null
+  scale?: number
   width?: number
 }
 
@@ -1251,6 +1288,7 @@ export interface HomeCover {
   name: string
   style: CoverStyle
   label?: string
+  scale?: number
   width?: number
 }
 

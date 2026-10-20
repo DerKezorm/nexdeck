@@ -63,6 +63,8 @@ DEFAULT_SCENES = ({"name": "Morning", "position": 100}, {"name": "Shade", "posit
 #: How many contacts one card keeps, and rooms one list.
 MAX_CONTACTS = 60
 MAX_ROWS = 12
+#: How much a drawn style may grow or shrink, dragged at its corner: not so small that it cannot be read or pressed.
+SCALES = (0.75, 3.0)
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 #: The bounds of a width dragged by hand, in pixels (``MIN_WIDTH``, ``MAX_WIDTH`` in the browser).
@@ -135,6 +137,7 @@ def _cover_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, An
         element.update(rid=cover["rid"], entity_id=cover["entity_id"], name=cover["name"],
                        style=raw.get("style") if raw.get("style") in COVER_STYLES else COVER_STYLES[0])
         _label(element, raw)
+        _scale(element, raw)
     else:
         given = raw.get("sensors")
         sensors: list[dict[str, Any]] = []
@@ -156,6 +159,16 @@ def _cover_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, An
     return element
 
 
+def _scale(element: dict[str, Any], raw: dict[str, Any]) -> None:
+    """A size of its own for a drawn style, as a factor on a twentieth; kept inside ``SCALES`` and left out at 1."""
+    value = raw.get("scale")
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or abs(value) > 1e6:
+        return
+    scale = round(min(SCALES[1], max(SCALES[0], value)) * 20) / 20
+    if scale != 1:
+        element["scale"] = scale
+
+
 def _pair(raw: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     """A temperature and a humidity sensor, either of them left out."""
     raw = raw if isinstance(raw, dict) else {}
@@ -172,6 +185,7 @@ def _sensors_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, 
         element.update(rid=contact["rid"], entity_id=contact["entity_id"], name=contact["name"],
                        style=raw.get("style") if raw.get("style") in CONTACT_STYLES else CONTACT_STYLES[0])
         _label(element, raw)
+        _scale(element, raw)
     elif kind == "contacts":
         given = raw.get("sensors")
         sensors: list[dict[str, Any]] = []
@@ -191,6 +205,7 @@ def _sensors_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, 
             return None
         element.update(style=raw.get("style") if raw.get("style") in READING_STYLES else READING_STYLES[0], temperature=temperature,
                        humidity=humidity, name=_text(raw.get("name"), MAX_NAME))
+        _scale(element, raw)
     elif kind == "readings":
         given = raw.get("rows")
         rows: list[dict[str, Any]] = []
@@ -265,6 +280,7 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         element = {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
                    "name": _text(raw.get("name"), MAX_NAME), "style": style}
         _label(element, raw)
+        _scale(element, raw)
         width = _size(raw.get("width"), WIDTHS)
         if width is not None:
             element["width"] = width
