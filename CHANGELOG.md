@@ -14,6 +14,10 @@ project uses semantic versioning.
 
 - **Proxmox cards stayed empty when the token was short of rights** (#48). With Privilege Separation on, Proxmox still lists the node to a token without `Sys.Audit`, but without CPU, memory or disk, and gives a token without `VM.Audit` an empty guest list. Both are an ordinary answer, so the node card read CPU 0 % and the guest list showed nothing. The node card and the guest cards now say which right is missing, the map shows such a node as online instead of 0 %, and the connection test names the missing rights, read from the token's own permissions. A cluster that really has no guests still shows an empty list.
 
+### Security
+
+- **certifi 2026.10.19** (was 2026.7.22). The older bundle of certificate authorities still trusted emSign roots whose intermediate keys were compromised (GHSA-6q48-6c7w-9gw2). It decides which servers nexdeck trusts when it reads a service over HTTPS.
+
 ### Upgrading
 
 Nothing to do. The database gets one column for home pages (migration 22) when nexdeck starts; 0.44.0 runs on it as well.

@@ -26,6 +26,9 @@ apprise==1.13.1
 # advisories (GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv), both on the server
 # side apprise never uses; pinned so no build falls back to 3.3.1.
 oauthlib==4.0.0
+# httpx pulls it in. Below 2026.10.19 it trusts emSign roots whose intermediate
+# keys were compromised (GHSA-6q48-6c7w-9gw2); pinned so no build falls back.
+certifi==2026.10.19
 # RSS and Atom parsing for the feed widget.
 feedparser==6.0.12
 python-multipart==0.0.31
