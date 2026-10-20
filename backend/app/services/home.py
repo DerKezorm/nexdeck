@@ -32,7 +32,7 @@ MAX_COORD = 20000
 #: How long a heading may be.
 MAX_TEXT = 60
 
-KINDS = ("heading", "light", "climate", "stat", "contact", "contacts", "reading", "readings", "hints", "cover", "covers")
+KINDS = ("heading", "light", "climate", "stat", "contact", "contacts", "reading", "readings", "hints", "cover", "covers", "scene", "scenes", "switch", "switches")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
@@ -60,6 +60,13 @@ COVERS_STYLES = ("group", "scenes")
 MAX_COVERS = 24
 MAX_SCENES = 6
 DEFAULT_SCENES = ({"name": "Morning", "position": 100}, {"name": "Shade", "position": 30}, {"name": "Night", "position": 0})
+#: How a scene, a card of scenes, a switch are drawn; the colours a scene's tile may have. The browser keeps the same.
+SCENE_STYLES = ("pill", "tile")
+SCENES_STYLES = ("bar", "grid")
+SWITCH_STYLES = ("pill", "outlet", "rocker", "toggle", "chip", "tile")
+SCENE_COLOURS = ("sunset", "ocean", "forest", "focus", "night", "rose")
+#: How many scenes or switches one card keeps.
+MAX_ACTIONS = 24
 #: How many contacts one card keeps, and rooms one list.
 MAX_CONTACTS = 60
 MAX_ROWS = 12
@@ -77,6 +84,8 @@ _CLIMATE = re.compile(r"^climate\.[a-z0-9_]{1,200}$")
 _SENSOR = re.compile(r"^sensor\.[a-z0-9_]{1,200}$")
 _BINARY = re.compile(r"^binary_sensor\.[a-z0-9_]{1,200}$")
 _COVER = re.compile(r"^cover\.[a-z0-9_]{1,200}$")
+_TRIGGER = re.compile(r"^(scene|script)\.[a-z0-9_]{1,200}$")
+_SWITCH = re.compile(r"^(switch|input_boolean)\.[a-z0-9_]{1,200}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 
@@ -167,6 +176,43 @@ def _scale(element: dict[str, Any], raw: dict[str, Any]) -> None:
     scale = round(min(SCALES[1], max(SCALES[0], value)) * 20) / 20
     if scale != 1:
         element["scale"] = scale
+
+
+def _action_element(element_id: str, kind: str, x: int, y: int, raw: dict[str, Any]) -> dict[str, Any] | None:
+    """A scene or script, a card of them, a switch or a card of switches; None when it names none of its kind."""
+    pattern = _TRIGGER if kind in ("scene", "scenes") else _SWITCH
+    element: dict[str, Any] = {"id": element_id, "type": kind, "x": x, "y": y}
+    if kind in ("scene", "switch"):
+        one = _sensor(raw, pattern)
+        if one is None:
+            return None
+        styles = SCENE_STYLES if kind == "scene" else SWITCH_STYLES
+        element.update(rid=one["rid"], entity_id=one["entity_id"], name=one["name"], style=raw.get("style") if raw.get("style") in styles else styles[0])
+        _label(element, raw)
+        _scale(element, raw)
+        if kind == "scene" and raw.get("colour") in SCENE_COLOURS:
+            element["colour"] = raw["colour"]
+    else:
+        given = raw.get("sensors")
+        sensors: list[dict[str, Any]] = []
+        for item in given if isinstance(given, list) else []:
+            sensor = _sensor(item, pattern)
+            if sensor is not None and all(other["entity_id"] != sensor["entity_id"] for other in sensors):
+                sensors.append(sensor)
+            if len(sensors) == MAX_ACTIONS:
+                break
+        if not sensors:
+            return None
+        element.update(sensors=sensors, title=_text(raw.get("title"), MAX_NAME))
+        if kind == "scenes":
+            element["style"] = raw.get("style") if raw.get("style") in SCENES_STYLES else SCENES_STYLES[0]
+    if kind in ("switch", "switches") and raw.get("confirm") is True:
+        # Asked before switching off: a fridge, a server, the router this page comes through.
+        element["confirm"] = True
+    width = _size(raw.get("width"), WIDTHS)
+    if width is not None:
+        element["width"] = width
+    return element
 
 
 def _pair(raw: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
@@ -271,6 +317,8 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         return _sensors_element(element_id, kind, x, y, raw)
     if kind in ("cover", "covers"):
         return _cover_element(element_id, kind, x, y, raw)
+    if kind in ("scene", "scenes", "switch", "switches"):
+        return _action_element(element_id, kind, x, y, raw)
     if kind in ("light", "climate"):
         rid, entity_id = raw.get("rid"), raw.get("entity_id")
         pattern, styles = (_LIGHT, STYLES) if kind == "light" else (_CLIMATE, CLIMATE_STYLES)

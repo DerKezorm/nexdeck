@@ -529,14 +529,15 @@ DEMO_SENSORS = {
     "sensor.bathroom_humidity": (62.0, 8.0, 2.0),
     "sensor.bedroom_humidity": (53.0, 3.0, 1.0),
     "sensor.outdoor_humidity": (84.0, 8.0, 2.0),
+    "sensor.coffee_machine_energy": (0.02, 0.08, 0.02),
 }
 
 
 def demo_catalogue() -> dict[str, dict[str, Any]]:
     units = {"sensor.living_room_humidity": "%", "sensor.house_energy": "kWh", "sensor.bathroom_humidity": "%", "sensor.bedroom_humidity": "%",
              "sensor.outdoor_humidity": "%"}
-    return {entity_id: {"statistic_id": entity_id, "source": "recorder", "has_mean": entity_id != "sensor.house_energy",
-                        "has_sum": entity_id == "sensor.house_energy", "statistics_unit_of_measurement": units.get(entity_id, "°C")}
+    return {entity_id: {"statistic_id": entity_id, "source": "recorder", "has_mean": not entity_id.endswith("_energy"),
+                        "has_sum": entity_id.endswith("_energy"), "statistics_unit_of_measurement": units.get(entity_id, "kWh" if entity_id.endswith("_energy") else "°C")}
             for entity_id in DEMO_SENSORS}
 
 
@@ -548,7 +549,7 @@ def _wobble(entity_id: str, moment: dt.datetime) -> float:
 
 def demo_value(entity_id: str, moment: dt.datetime, now: dt.datetime | None = None) -> float:
     """A demo sensor's value at a moment; with ``now``, moved so that it ends where the sensor's state stands."""
-    if now is not None and entity_id != "sensor.house_energy":
+    if now is not None and not entity_id.endswith("_energy"):
         state = hass_registry.demo_registry()[3].get(entity_id) or {}
         stands = _number(state.get("state"))
         if stands is not None:
@@ -556,7 +557,7 @@ def demo_value(entity_id: str, moment: dt.datetime, now: dt.datetime | None = No
     middle, swing, noise = DEMO_SENSORS.get(entity_id, (20.0, 1.0, 0.2))
     local = moment.astimezone(tz("Europe/Berlin"))
     hour = local.hour + local.minute / 60
-    if entity_id == "sensor.house_energy":
+    if entity_id.endswith("_energy"):
         # Morning and evening, little at night.
         shape = math.exp(-((hour - 7.5) ** 2) / 3) + 1.4 * math.exp(-((hour - 19) ** 2) / 5)
         return max(0.05, middle * 0.4 + swing * shape + noise * _wobble(entity_id, moment))

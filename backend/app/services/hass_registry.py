@@ -303,6 +303,11 @@ async def climates(config: dict[str, Any], cache: dict[str, Any], *, demo: bool 
 # ---------------------------------------------------------------------------
 
 
+#: The demo outlets that measure their power: the sensor, and what it reads while the outlet is on.
+DEMO_POWER = {"switch.coffee_machine": ("sensor.coffee_machine_power", 1240), "switch.washing_machine": ("sensor.washing_machine_power", 520),
+              "switch.router": ("sensor.router_power", 9), "switch.tv": ("sensor.tv_power", 85)}
+
+
 def demo_states(cache: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """The demo house's lamps as they stand now, kept with the connection so switching them sticks."""
     return cache.setdefault("hass_demo_states", demo_registry()[3])
@@ -337,7 +342,12 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
                {"id": "d-cover-kitchen", "name": "Kitchen shutter", "area_id": "kitchen"},
                {"id": "d-cover-bed", "name": "Bedroom shutter", "area_id": "bedroom"},
                {"id": "d-cover-office", "name": "Office blind", "area_id": "hall"},
-               {"id": "d-cover-garage", "name": "Garage door", "area_id": "garden"}]
+               {"id": "d-cover-garage", "name": "Garage door", "area_id": "garden"},
+               {"id": "d-plug-coffee", "name": "Coffee machine plug", "area_id": "kitchen"},
+               {"id": "d-plug-washer", "name": "Washing machine plug", "area_id": "cellar"},
+               {"id": "d-plug-router", "name": "Router plug", "area_id": "hall"},
+               {"id": "d-plug-tv", "name": "TV plug", "area_id": "living"},
+               {"id": "d-pump", "name": "Garden pump", "area_id": "garden"}]
 
     def entry(rid: str, entity_id: str, device: str | None, **extra: Any) -> dict[str, Any]:
         return {"id": rid, "entity_id": entity_id, "device_id": device, "area_id": None, "entity_category": None,
@@ -392,6 +402,27 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         entry("r-cover-garage", "cover.garage_door", "d-cover-garage"),
         entry("r-cover-guest", "cover.guest_room", None),
         entry("r-cover-old", "cover.old_shutter", None, hidden_by="user"),
+        entry("r-scene-cozy", "scene.living_room_cozy", None, platform="hue"),
+        entry("r-scene-bright", "scene.living_room_bright", None, platform="hue"),
+        entry("r-scene-cinema", "scene.living_room_cinema", None, platform="hue"),
+        entry("r-scene-cooking", "scene.kitchen_cooking", None, platform="hue"),
+        entry("r-scene-night", "scene.goodnight", None, platform="homeassistant"),
+        entry("r-script-evening", "script.evening_shutters", None),
+        entry("r-script-night", "script.goodnight_routine", None),
+        entry("r-plug-coffee", "switch.coffee_machine", "d-plug-coffee"),
+        entry("r-power-coffee", "sensor.coffee_machine_power", "d-plug-coffee"),
+        entry("r-energy-coffee", "sensor.coffee_machine_energy", "d-plug-coffee"),
+        entry("r-plug-washer", "switch.washing_machine", "d-plug-washer"),
+        entry("r-power-washer", "sensor.washing_machine_power", "d-plug-washer"),
+        entry("r-plug-router", "switch.router", "d-plug-router"),
+        entry("r-power-router", "sensor.router_power", "d-plug-router"),
+        entry("r-plug-tv", "switch.tv", "d-plug-tv"),
+        entry("r-power-tv", "sensor.tv_power", "d-plug-tv"),
+        entry("r-pump", "switch.garden_pump", "d-pump"),
+        entry("r-garden-light", "switch.garden_light", None),
+        entry("r-holiday", "input_boolean.holiday_mode", None),
+        entry("r-guests", "input_boolean.guests", None),
+        entry("r-switch-old", "switch.old_plug", None, hidden_by="user"),
     ]
 
     def state(entity_id: str, name: str, value: str, modes: list[str], **attributes: Any) -> dict[str, Any]:
@@ -412,7 +443,43 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
     def cover(entity_id: str, name: str, value: str, kind: str, features: int, **attributes: Any) -> dict[str, Any]:
         return {"entity_id": entity_id, "state": value, "attributes": {"friendly_name": name, "device_class": kind, "supported_features": features, **attributes}}
 
+    def scene(entity_id: str, name: str, room: str | None, minutes: float | None) -> dict[str, Any]:
+        attributes: dict[str, Any] = {"friendly_name": name}
+        if room:
+            attributes.update(group_name=room, group_type="room")
+        return {"entity_id": entity_id, "state": ago(minutes) if minutes is not None else "unknown", "attributes": attributes}
+
+    def switch(entity_id: str, name: str, value: str, kind: str | None = None) -> dict[str, Any]:
+        return {"entity_id": entity_id, "state": value, "last_changed": ago(95), "attributes": {"friendly_name": name, **({"device_class": kind} if kind else {})}}
+
+    def watts(entity_id: str, name: str, value: float) -> dict[str, Any]:
+        return {"entity_id": entity_id, "state": str(value), "attributes": {"friendly_name": name, "unit_of_measurement": "W", "device_class": "power",
+                                                                            "state_class": "measurement"}}
+
     states = {
+        # Hue scenes name their room themselves; a scene of Home Assistant has none.
+        "scene.living_room_cozy": scene("scene.living_room_cozy", "Cozy", "Living room", 10),
+        "scene.living_room_bright": scene("scene.living_room_bright", "Bright", "Living room", 600),
+        "scene.living_room_cinema": scene("scene.living_room_cinema", "Cinema", "Living room", None),
+        "scene.kitchen_cooking": scene("scene.kitchen_cooking", "Cooking", "Kitchen", 90),
+        "scene.goodnight": scene("scene.goodnight", "Good night", None, 1400),
+        "script.evening_shutters": {"entity_id": "script.evening_shutters", "state": "off", "attributes": {"friendly_name": "Shutters in the evening"}},
+        "script.goodnight_routine": {"entity_id": "script.goodnight_routine", "state": "on", "attributes": {"friendly_name": "Good night routine"}},
+        "switch.coffee_machine": switch("switch.coffee_machine", "Coffee machine", "on", "outlet"),
+        "sensor.coffee_machine_power": watts("sensor.coffee_machine_power", "Coffee machine power", 1240),
+        "sensor.coffee_machine_energy": {"entity_id": "sensor.coffee_machine_energy", "state": "412.6", "attributes": {
+            "friendly_name": "Coffee machine energy", "unit_of_measurement": "kWh", "device_class": "energy", "state_class": "total_increasing"}},
+        "switch.washing_machine": switch("switch.washing_machine", "Washing machine", "on", "outlet"),
+        "sensor.washing_machine_power": watts("sensor.washing_machine_power", "Washing machine power", 520),
+        "switch.router": switch("switch.router", "Router", "on", "outlet"),
+        "sensor.router_power": watts("sensor.router_power", "Router power", 9),
+        "switch.tv": switch("switch.tv", "TV", "off", "outlet"),
+        "sensor.tv_power": watts("sensor.tv_power", "TV power", 0),
+        "switch.garden_pump": switch("switch.garden_pump", "Garden pump", "on"),
+        "switch.garden_light": {"entity_id": "switch.garden_light", "state": "unavailable", "attributes": {"friendly_name": "Garden light"}},
+        "input_boolean.holiday_mode": switch("input_boolean.holiday_mode", "Holiday mode", "off"),
+        "input_boolean.guests": switch("input_boolean.guests", "Guests here", "on"),
+        "switch.old_plug": switch("switch.old_plug", "Old plug", "off"),
         # Shutters as in the measured house: open, close, a position, stop (15); a blind with slats too (255); a door that only opens and closes (3).
         "cover.living_room_terrace": cover("cover.living_room_terrace", "Living room terrace", "closed", "shutter", 15, current_position=0),
         "cover.kitchen": cover("cover.kitchen", "Kitchen", "open", "shutter", 15, current_position=45),

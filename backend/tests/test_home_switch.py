@@ -256,7 +256,7 @@ class _Recording:
 
 @pytest.mark.parametrize(("domain", "service", "entity_id"), [
     ("lock", "unlock", "lock.front_door"),
-    ("script", "turn_on", "script.everything_off"),
+    ("automation", "trigger", "automation.everything_off"),
     ("light", "toggle", "light.desk"),
     ("light", "turn_on", "switch.heater"),
     ("light", "turn_on", "light.desk.extra"),
@@ -286,13 +286,13 @@ async def test_a_page_hears_of_a_lamp_at_most_every_quarter_second_and_always_of
         live.touched(1, {}, "light.ceiling", {**on, "state": "off"})
         live.touched(1, {}, "light.ceiling", {**on, "attributes": {**on["attributes"], "brightness": 100}})
         live.touched(1, {}, "light.ceiling", on)
-        live.touched(1, {}, "switch.floor_plug", on)
+        live.touched(1, {}, "lock.front_door", on)
         assert listener.queue.qsize() == 1, "the first at once, the rest held back"
         await asyncio.sleep(home_control.PUSH_INTERVAL + 0.15)
         first, last = _drain(listener)
     finally:
         hub.unsubscribe(listener)
-    assert looked == [1, 1, 1], "a plug changing is not even looked up: a house sends dozens of changes a second"
+    assert looked == [1, 1, 1], "a lock changing is not even looked up: a house sends dozens of changes a second"
     assert first["lights"]["ceiling"]["on"] is False
     assert last == {"page_id": 9, "lights": {"ceiling": {**hass_registry.light_state(on), "missing": False}}}, "only the last of those held back"
 

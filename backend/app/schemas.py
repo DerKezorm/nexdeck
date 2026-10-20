@@ -385,6 +385,24 @@ class HomeCoverBody(BaseModel):
         return self
 
 
+class HomeSceneBody(BaseModel):
+    """A scene or script set off from a home page, one of a card by ``member``; ``stop`` stops a script that runs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    member: str | None = Field(default=None, pattern=r"^(scene|script)\.[a-z0-9_]{1,200}$")
+    stop: StrictBool = False
+
+
+class HomeToggleBody(BaseModel):
+    """A switch or helper switched from a home page, one of a card by ``member``, or all of the card."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    on: StrictBool
+    member: str | None = Field(default=None, pattern=r"^(switch|input_boolean)\.[a-z0-9_]{1,200}$")
+
+
 class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 

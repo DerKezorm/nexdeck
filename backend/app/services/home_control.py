@@ -24,7 +24,7 @@ from sqlalchemy import select
 from ..adapters.base import AdapterError, Context, base_url
 from ..db import db_session
 from ..models import Page
-from . import hass_covers, hass_registry, hass_sensors
+from . import hass_covers, hass_registry, hass_sensors, hass_switches
 from .sse import board_topic, hub
 
 #: The only services a home page calls, with the only data each may carry; anything else is
@@ -40,6 +40,13 @@ SERVICES: dict[tuple[str, str], frozenset[str]] = {
     ("cover", "stop_cover"): frozenset(),
     ("cover", "set_cover_position"): frozenset({"position"}),
     ("cover", "set_cover_tilt_position"): frozenset({"tilt_position"}),
+    ("scene", "turn_on"): frozenset(),
+    ("script", "turn_on"): frozenset(),
+    ("script", "turn_off"): frozenset(),
+    ("switch", "turn_on"): frozenset(),
+    ("switch", "turn_off"): frozenset(),
+    ("input_boolean", "turn_on"): frozenset(),
+    ("input_boolean", "turn_off"): frozenset(),
 }
 #: The floor between two ``home`` events of one page; the last change always goes out.
 PUSH_INTERVAL = 0.25
@@ -152,6 +159,13 @@ def switch_demo(cache: dict[str, Any], entity_id: str, service: str, data: dict[
         return _demo_climate(states, state, service, data)
     if entity_id.startswith("cover."):
         return hass_covers.switch_demo(states, state, service, data)
+    if entity_id.split(".", 1)[0] in hass_switches.TRIGGERS + hass_switches.SWITCHES:
+        switched = hass_switches.switch_demo(states, state, service, time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime()))
+        # A demo outlet draws nothing while it is off, and its own while it is on.
+        meter = hass_registry.DEMO_POWER.get(entity_id)
+        if meter and meter[0] in states:
+            states[meter[0]] = {**states[meter[0]], "state": str(meter[1] if switched["state"] == "on" else 0)}
+        return switched
     on = service == "turn_on"
     attributes = dict(state.get("attributes") or {})
     modes = set(attributes.get("supported_color_modes") or [])
@@ -196,9 +210,22 @@ def _demo_climate(states: dict[str, dict[str, Any]], state: dict[str, Any], serv
 #: (board, page, element, kind, for a thermostat: its entity and the sensor it names)
 Spot = tuple[int, int, str, str, dict[str, Any]]
 #: The domains whose changes a home page shows.
-WATCHED = ("light.", "climate.", "sensor.", "binary_sensor.", "cover.")
+WATCHED = ("light.", "climate.", "sensor.", "binary_sensor.", "cover.", "scene.", "script.", "switch.", "input_boolean.")
 #: The elements that show sensors, and where in each the sensors stand.
 SENSOR_KINDS = ("contact", "contacts", "reading", "readings")
+#: The elements that set off scenes and scripts or switch switches: one, or a card of several.
+ACTION_KINDS = ("scene", "scenes", "switch", "switches")
+
+
+def actions_of(element: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every scene, script or switch an element of ``ACTION_KINDS`` names, as it names them."""
+    if element.get("type") in ("scene", "switch"):
+        return [element]
+    if element.get("type") in ("scenes", "switches"):
+        return [one for one in element.get("sensors") or [] if isinstance(one, dict)]
+    return []
+
+
 #: The elements that show covers: one, or a card of several.
 COVER_KINDS = ("cover", "covers")
 
@@ -271,12 +298,27 @@ class HomeLive:
             return {str(thing.get("entity_id") or ""), renamed.get(str(thing.get("rid")), "")} - {""}
 
         found: dict[str, list[Spot]] = {}
+        # Which power sensor belongs to which switch, by their device.
+        states_now = cache.get("hass_states") or cache.get("hass_demo_states") or {}
+        watts = hass_switches.powers(registry[1] if registry else hass_registry.demo_registry()[0], states_now) if states_now else {}
+        device_of = {str(entry.get("entity_id")): str(entry.get("device_id") or "") for entry in (registry[1] if registry else hass_registry.demo_registry()[0])}
+        metered = {entity_id: watts[device] for entity_id, device in device_of.items() if device and device in watts and entity_id.split(".", 1)[0] in hass_switches.SWITCHES}
         with db_session() as db:
             for page in db.scalars(select(Page).where(Page.kind == "home")):
                 home = page.home or {}
                 if home.get("integration_id") != integration_id:
                     continue
                 for element in home.get("elements") or []:
+                    if isinstance(element, dict) and element.get("type") in ACTION_KINDS:
+                        # Told by the entity id it was placed with; a switch also when its device's power changes.
+                        for shown in actions_of(element):
+                            placed = str(shown.get("entity_id") or "")
+                            for entity_id in names(shown):
+                                found.setdefault(entity_id, []).append((page.board_id, page.id, placed, "actions", {}))
+                                meter = metered.get(entity_id)
+                                if meter:
+                                    found.setdefault(meter, []).append((page.board_id, page.id, placed, "actions", {"power": True}))
+                        continue
                     if isinstance(element, dict) and element.get("type") in COVER_KINDS:
                         # A cover is told by the entity id it was placed with, as a sensor is.
                         for shown in covers_of(element):
@@ -324,6 +366,10 @@ class HomeLive:
                 stands = hass_sensors.live(entity_id, state)
             elif kind == "covers":
                 stands = {**hass_covers.cover_state(state), "missing": False}
+            elif kind == "actions" and extra.get("power"):
+                stands = {"power": hass_switches._power_of(entity_id, {entity_id: state}), "missing": False}
+            elif kind == "actions":
+                stands = {**hass_switches.action_state(entity_id, state), "missing": False}
             else:
                 stands = self._climate(cache, extra, entity_id, state)
             key = (board_id, page_id)

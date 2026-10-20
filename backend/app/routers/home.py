@@ -19,8 +19,22 @@ from ..deps import (
     require_integration,
 )
 from ..models import ActionLog, Integration, Page
-from ..schemas import HomeClimateBody, HomeCoverBody, HomeLayoutBody, HomeSwitchBody
-from ..services import hass_covers, hass_registry, hass_sensors, hass_stats, home_control
+from ..schemas import (
+    HomeClimateBody,
+    HomeCoverBody,
+    HomeLayoutBody,
+    HomeSceneBody,
+    HomeSwitchBody,
+    HomeToggleBody,
+)
+from ..services import (
+    hass_covers,
+    hass_registry,
+    hass_sensors,
+    hass_stats,
+    hass_switches,
+    home_control,
+)
 from ..services import home as home_service
 from ..services.collector import collector
 from ..services.home_control import home_live
@@ -76,6 +90,21 @@ def _climate_of(element: dict[str, Any], thermostats: list[dict[str, Any]], sens
 async def _covers(integration: Integration) -> list[dict[str, Any]]:
     _adapter, config, ctx = await collector.resolve_integration(integration.id)
     return await hass_covers.covers(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+async def _actions(integration: Integration, domains: tuple[str, ...]) -> list[dict[str, Any]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_switches.offered(config, ctx.cache, domains, demo=collector.is_demo(integration))
+
+
+def _placed_actions(offered: list[dict[str, Any]], elements: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """How each scene, script and switch the page names stands, by the entity id it was placed with, or that it is gone."""
+    found: dict[str, dict[str, Any]] = {}
+    for element in elements:
+        for one in home_control.actions_of(element):
+            known = _find(offered, one)
+            found[one["entity_id"]] = {**known, "missing": False} if known else {"missing": True}
+    return found
 
 
 def _placed_covers(offered: list[dict[str, Any]], elements: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -165,20 +194,22 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     stored = page.home or {}
     layout = home_service.clean_layout(stored, stored.get("integration_id"))
-    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}, "sensors": {}, "covers": {}}
+    answer: dict = {"layout": layout, "version": page.layout_version or 0, "problem": None, "lights": {}, "climates": {}, "sensors": {}, "covers": {}, "actions": {}}
     integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
     answer["problem"] = _connection_problem(integration)
     lamps = [element for element in layout["elements"] if element["type"] == "light"]
     heaters = [element for element in layout["elements"] if element["type"] == "climate"]
     watched = [element for element in layout["elements"] if element["type"] in home_control.SENSOR_KINDS]
     shutters = [element for element in layout["elements"] if element["type"] in home_control.COVER_KINDS]
-    if answer["problem"] is not None or not (lamps or heaters or watched or shutters) or integration is None:
+    doings = [element for element in layout["elements"] if element["type"] in home_control.ACTION_KINDS]
+    if answer["problem"] is not None or not (lamps or heaters or watched or shutters or doings) or integration is None:
         return answer
     try:
         offered = await _offered(integration) if lamps else []
         thermostats, sensors = await _thermostats(integration) if heaters else ([], [])
         answer["sensors"] = await _placed_sensors(integration, watched) if watched else {}
         answer["covers"] = _placed_covers(await _covers(integration), shutters) if shutters else {}
+        answer["actions"] = _placed_actions(await _actions(integration, hass_switches.TRIGGERS + hass_switches.SWITCHES), doings) if doings else {}
     except AdapterError as failure:
         answer["problem"] = _problem(failure.code, failure.message, failure.hint)
         return answer
@@ -379,6 +410,150 @@ async def set_climate(page_id: int, element_id: str, body: HomeClimateBody, requ
     home_live.touched(integration.id, ctx.cache, entity_id, state)
     now = {**thermostat, **hass_registry.climate_state(state, thermostat.get("unit", "°C"))}
     return {"ok": True, "confirmed": True, "climate": home_control.climate_view(now, sensor, wanted)}
+
+
+@router.get("/pages/{page_id}/home/scenes", summary="The scenes and scripts a home page can offer")
+async def offer_scenes(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every scene and script of the page's connection (``hass_switches.pick_actions``); for those who arrange the page."""
+    integration, problem = _arranged(db, page_id, user)
+    if problem is not None or integration is None:
+        return {"scenes": [], "problem": problem}
+    try:
+        return {"scenes": await _actions(integration, hass_switches.TRIGGERS), "problem": None}
+    except AdapterError as failure:
+        return {"scenes": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+
+
+@router.get("/pages/{page_id}/home/switches", summary="The switches and helpers a home page can offer")
+async def offer_switches(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every switch and ``input_boolean`` of the page's connection, with what its device draws; for those who arrange the page."""
+    integration, problem = _arranged(db, page_id, user)
+    if problem is not None or integration is None:
+        return {"switches": [], "problem": problem}
+    try:
+        return {"switches": await _actions(integration, hass_switches.SWITCHES), "problem": None}
+    except AdapterError as failure:
+        return {"switches": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+
+
+async def _set_off(db: DbSession, page: Page, element_id: str, kinds: tuple[str, str], member: str | None, request: Request, user, wish: dict[str, Any]) -> dict:
+    """Set off scenes or switch switches of an element, or the one of a card ``member`` names, as covers are moved."""
+    kiosk = kiosk_from_request(request, db)
+    board, permission = board_for_viewer_id(db, page.board_id, user, kiosk)
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may look at this page, but not switch anything on it.", status.HTTP_403_FORBIDDEN)
+    stored = page.home or {}
+    layout = home_service.clean_layout(stored, stored.get("integration_id"))
+    element = next((item for item in layout["elements"] if item["id"] == element_id and item["type"] in kinds), None)
+    if element is None:
+        raise error("not_found", "There is no such element on this page.", status.HTTP_404_NOT_FOUND)
+    placed = home_control.actions_of(element)
+    if member is not None:
+        placed = [one for one in placed if one["entity_id"] == member]
+        if element["type"] != kinds[1] or not placed:
+            raise error("not_found", "There is no such one on this card.", status.HTTP_404_NOT_FOUND)
+    elif element["type"] == "scenes":
+        # A card of scenes sets off the one it is asked for, never all of them at once.
+        raise error("not_found", "Name the scene of the card to set off.", status.HTTP_404_NOT_FOUND)
+    integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        raise error(problem["code"] if problem else "no_integration", problem["message"] if problem else "", status.HTTP_409_CONFLICT)
+    domains = hass_switches.TRIGGERS if kinds[0] == "scene" else hass_switches.SWITCHES
+    try:
+        offered = await _actions(integration, domains)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY) from failure
+    actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    answered: dict[str, dict[str, Any]] = {}
+    refused: list[dict[str, str]] = []
+    for one in placed:
+        thing = _find(offered, one)
+        if thing is None:
+            refused.append({"entity_id": one["entity_id"], "code": "action_missing", "message": f"{one['name']} is no longer in Home Assistant, or it is hidden there."})
+            continue
+        if thing["unavailable"]:
+            refused.append({"entity_id": one["entity_id"], "code": "action_unavailable", "message": f"Home Assistant cannot reach {thing['name']} right now."})
+            continue
+        domain, service, data = hass_switches.service_for(thing, **wish)
+        entity_id = thing["entity_id"]
+        ok, changed = True, []
+        try:
+            if collector.is_demo(integration):
+                switched = home_control.switch_demo(ctx.cache, entity_id, service, data)
+                changed = [switched] if switched else []
+                message = f"Demo mode: {domain}.{service} for {entity_id}."
+            else:
+                changed = await home_control.call(config, ctx, domain, service, entity_id, data)
+                message = f"{domain}.{service} called for {entity_id}."
+        except AdapterError as failure:
+            ok, message = False, failure.message
+            refused.append({"entity_id": one["entity_id"], "code": failure.code, "message": failure.message})
+        db.add(ActionLog(user_id=user.id if user else None, actor=actor, widget_id=None, integration_id=integration.id,
+                         action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id}, ok=ok, message=message[:400]))
+        if not ok:
+            emit("action_failed", f"{domain}.{service} on {thing['name']} failed", message, level="warn", user_ids=[user.id] if user else None,
+                 integration_id=integration.id)
+            logger.warning("%s on home page %r of board %r failed for %s: %s", entity_id, page.name, board.slug, actor, message)
+            continue
+        logger.info("%s on home page %r of board %r: %s by %s", entity_id, page.name, board.slug, message, actor)
+        state = next((item for item in changed if item.get("entity_id") == entity_id), None)
+        if state is not None:
+            live = ctx.cache.get("hass_states")
+            if isinstance(live, dict):
+                live[entity_id] = state
+            home_live.touched(integration.id, ctx.cache, entity_id, state)
+            states = ctx.cache.get("hass_states") or ctx.cache.get("hass_demo_states") or {}
+            answered[one["entity_id"]] = {**thing, **hass_switches.action_state(entity_id, state),
+                                          "power": hass_switches._power_of(thing.get("power_entity"), states), "missing": False}
+        else:
+            answered[one["entity_id"]] = {**thing, "missing": False}
+    db.commit()
+    if refused and not answered:
+        first = refused[0]
+        bad = status.HTTP_409_CONFLICT if first["code"] in ("action_missing", "action_unavailable") else status.HTTP_502_BAD_GATEWAY
+        raise error(first["code"], first["message"], bad)
+    return {"ok": True, "actions": answered, "refused": refused}
+
+
+@router.post("/pages/{page_id}/home/scenes/{element_id}", summary="Set off a scene or a script on a home page")
+async def set_off_scene(page_id: int, element_id: str, body: HomeSceneBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """Only ``scene.turn_on``, ``script.turn_on`` and ``script.turn_off`` (``stop``); a card sets off the one ``member`` names."""
+    return await _set_off(db, _home_page(db, page_id), element_id, ("scene", "scenes"), body.member, request, user, {"stop": body.stop})
+
+
+@router.post("/pages/{page_id}/home/switches/{element_id}", summary="Switch a switch, or the switches of a card, on a home page")
+async def switch_switches(page_id: int, element_id: str, body: HomeToggleBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """Only ``turn_on`` and ``turn_off`` of ``switch`` and ``input_boolean``; a card switches all of them, or the one ``member`` names."""
+    return await _set_off(db, _home_page(db, page_id), element_id, ("switch", "switches"), body.member, request, user, {"on": body.on})
+
+
+@router.get("/pages/{page_id}/home/switches/{element_id}/energy", summary="What a switch's device used today")
+async def switch_energy(page_id: int, element_id: str, request: Request, user: OptionalUser, db: DbSession,
+                        member: str | None = Query(None, pattern=r"^(switch|input_boolean)\.[a-z0-9_]{1,200}$")) -> dict:
+    """The energy the device of a switch used since midnight, from the statistics of its energy sensor; None where it has none."""
+    element, integration, problem = _viewed(db, page_id, request, user, "switch", element_id) if member is None else _viewed(db, page_id, request, user, "switches", element_id)
+    placed = [one for one in home_control.actions_of(element) if member is None or one["entity_id"] == member]
+    if not placed:
+        raise error("not_found", "There is no such one on this card.", status.HTTP_404_NOT_FOUND)
+    if problem is not None or integration is None:
+        return {"today": None, "problem": problem}
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    try:
+        thing = _find(await _actions(integration, hass_switches.SWITCHES), placed[0])
+        meter = (thing or {}).get("energy_entity")
+        if not meter:
+            return {"today": None, "problem": None}
+        catalogue = await hass_stats.catalogue(config, ctx.cache, demo=collector.is_demo(integration))
+        if hass_stats.kind_of(catalogue.get(meter)) != "sum":
+            return {"today": None, "problem": None}
+        wanted = {"rid": "", "entity_id": meter, "name": meter, "unit": "kWh", "kind": "sum", "source": "statistics", "current": None, "unavailable": False}
+        answer = await hass_stats.series(config, ctx.cache, [wanted], "day", demo=collector.is_demo(integration))
+    except AdapterError as failure:
+        return {"today": None, "problem": _problem(failure.code, failure.message, failure.hint)}
+    line = answer["series"][0]
+    return {"today": None if line.get("missing") else line.get("total"), "problem": None}
 
 
 @router.get("/pages/{page_id}/home/covers", summary="The covers a home page can offer")
