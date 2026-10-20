@@ -132,5 +132,6 @@ it('reckons with the size when placing and keeps the tools at theirs', () => {
   expect(scaleTo(1, 100, 33)).toBe(1.35)
   expect(scaleTo(2, 200, -1000)).toBe(SCALES[0])
   const css = readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8')
-  expect(css).toMatch(/\[data-scaled\] \[data-element-tool\], \[data-scaled\] \.home-grip \{\s*zoom: calc\(1 \/ var\(--home-scale, 1\)\);/)
+  // Only the outermost tool: the name button sits in the tools and shrank twice (seen 20.10.2026).
+  expect(css).toMatch(/\[data-scaled\] \[data-element-tool\]:not\(\[data-element-tool\] \*\), \[data-scaled\] \.home-grip \{\s*zoom: calc\(1 \/ var\(--home-scale, 1\)\);/)
 })
