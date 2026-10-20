@@ -528,6 +528,62 @@ async def test_proxmox_says_when_it_answers_with_no_node_at_all(ctx: Context) ->
     assert "Privilege Separation" in empty.value.hint
 
 
+PVE = "https://proxmox.example.com:8006"
+PVE_CONFIG = {"url": PVE, "token_id": "n@pve!x", "token_secret": "s"}
+#: What Proxmox lists for a node the token may not audit: the name, no figures.
+BARE_NODE = {"node": "pve", "status": "online", "type": "node", "id": "node/pve"}
+
+
+def _pve(nodes: list, guests: list, granted: dict) -> None:
+    respx.get(f"{PVE}/api2/json/version").mock(return_value=httpx.Response(200, json={"data": {"version": "8.4.13"}}))
+    respx.get(f"{PVE}/api2/json/nodes").mock(return_value=httpx.Response(200, json={"data": nodes}))
+    respx.get(f"{PVE}/api2/json/cluster/resources").mock(return_value=httpx.Response(200, json={"data": guests}))
+    respx.get(f"{PVE}/api2/json/access/permissions").mock(return_value=httpx.Response(200, json={"data": granted}))
+
+
+@respx.mock
+async def test_proxmox_says_when_a_node_is_listed_without_figures(ctx: Context) -> None:
+    """⚠️ Issue #48: one node found, and the node card read CPU 0 %. Proxmox
+    names the node to a token without Sys.Audit and leaves out the figures."""
+    _pve([BARE_NODE], [], {})
+    with pytest.raises(AdapterError) as bare:
+        await get_adapter("proxmox").fetch("node", PVE_CONFIG, {"node": "pve"}, ctx)
+    assert bare.value.code == "no_node_figures"
+    assert "Sys.Audit" in bare.value.hint
+
+
+@respx.mock
+async def test_proxmox_says_when_the_token_may_not_see_the_guests(ctx: Context) -> None:
+    """⚠️ Issue #48: the guest list came back empty and the card showed nothing."""
+    _pve([BARE_NODE], [], {"/nodes": {"Sys.Audit": 1}})
+    with pytest.raises(AdapterError) as hidden:
+        await get_adapter("proxmox").fetch("guests", PVE_CONFIG, {}, ctx)
+    assert hidden.value.code == "no_guests"
+    assert "VM.Audit" in hidden.value.hint
+
+
+@respx.mock
+async def test_proxmox_without_guests_is_simply_empty_when_the_token_may_see_them(ctx: Context) -> None:
+    _pve([BARE_NODE], [], {"/nodes": {"Sys.Audit": 1}, "/vms": {"VM.Audit": 1}})
+    data = await get_adapter("proxmox").fetch("guests", PVE_CONFIG, {}, ctx)
+    assert data.items == []
+
+
+@respx.mock
+async def test_proxmox_connection_test_names_the_missing_rights(ctx: Context) -> None:
+    _pve([BARE_NODE], [], {"/nodes": {"Sys.Audit": 1}})
+    said = await get_adapter("proxmox").test(PVE_CONFIG, ctx)
+    assert "1 node(s)" in said and "VM.Audit on /vms" in said and "Sys.Audit" not in said
+
+
+@respx.mock
+async def test_proxmox_connection_test_stays_quiet_when_permissions_cannot_be_read(ctx: Context) -> None:
+    _pve([BARE_NODE], [], {})
+    respx.get(f"{PVE}/api2/json/access/permissions").mock(return_value=httpx.Response(403, json={}))
+    said = await get_adapter("proxmox").test(PVE_CONFIG, ctx)
+    assert said == "Proxmox VE 8.4.13 with 1 node(s)."
+
+
 async def test_the_machine_list_measures_the_same_way_as_the_single_card(monkeypatch) -> None:
     """⚠️ The list card had the same wrong denominator and the raw per-mille
     figure: it showed 162% CPU and capped memory at 100 with a comment that

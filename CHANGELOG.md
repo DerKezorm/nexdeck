@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **Proxmox cards stayed empty when the token was short of rights** (#48). With Privilege Separation on, Proxmox still lists the node to a token without `Sys.Audit`, but without CPU, memory or disk, and gives a token without `VM.Audit` an empty guest list. Both are an ordinary answer, so the node card read CPU 0 % and the guest list showed nothing. The node card and the guest cards now say which right is missing, the map shows such a node as online instead of 0 %, and the connection test names the missing rights, read from the token's own permissions. A cluster that really has no guests still shows an empty list.
+
 ## 0.44.0 (2026-10-20)
 
 ### Added

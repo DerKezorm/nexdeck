@@ -33,3 +33,9 @@ def test_stopped_guests_can_be_left_out() -> None:
 def test_the_demo_is_a_cluster_of_two() -> None:
     places = get_adapter("proxmox").demo("map", {"show_stopped": True}, 0).meta["topology"]["places"]
     assert [place["name"] for place in places if place["kind"] == "host"] == ["pve", "pve2"]
+
+
+def test_a_node_listed_without_figures_says_online_not_nought() -> None:
+    """⚠️ Issue #48: a token without Sys.Audit sees the node but no figures."""
+    places = {place["id"]: place for place in map_of([{"node": "pve", "status": "online"}], [], True).meta["topology"]["places"]}
+    assert places["node/pve"]["detail"] == "online"

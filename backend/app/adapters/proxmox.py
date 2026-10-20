@@ -99,8 +99,32 @@ class ProxmoxAdapter(Adapter):
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         version = await self._get(config, ctx, "/version", cache=0)
-        nodes = await self._get(config, ctx, "/nodes", cache=0)
-        return f"Proxmox VE {version.get('version', '?')} with {len(nodes or [])} node(s)."
+        nodes = await self._get(config, ctx, "/nodes", cache=0) or []
+        said = f"Proxmox VE {version.get('version', '?')} with {len(nodes)} node(s)."
+        # ⚠️ The connection can be perfectly fine and every card still empty:
+        # a token without Sys.Audit sees its node listed with no figures, and
+        # one without VM.Audit gets an empty guest list. Both are HTTP 200, so
+        # only the token's own permissions tell them apart from an idle cluster.
+        lacking = await self._lacking(config, ctx, cache=0)
+        if lacking:
+            said += f" The token lacks {' and '.join(lacking)}, so the cards will stay empty."
+        return said
+
+    async def _lacking(self, config: dict[str, Any], ctx: Context, cache: float = 60) -> list[str]:
+        """The rights the cards read with that this token does not have.
+
+        Read from ``/access/permissions``, which every token may ask about
+        itself and which already holds what is inherited from ``/``. Empty
+        when Proxmox will not say, so a doubt never turns into an error.
+        """
+        try:
+            granted = await self._get(config, ctx, "/access/permissions", cache=cache) or {}
+        except AdapterError:
+            return []
+        if not isinstance(granted, dict):
+            return []
+        return [f"{right} on {path}" for path, right in (("/nodes", "Sys.Audit"), ("/vms", "VM.Audit"))
+                if not (granted.get(path) or {}).get(right)]
 
     async def choices(self, field: str, config: dict[str, Any], ctx: Context) -> list[tuple[str, str]]:
         """Every guest of the cluster, for the field that picks one."""
@@ -174,6 +198,16 @@ class ProxmoxAdapter(Adapter):
             node = next((n for n in nodes if not wanted or n.get("node") == wanted), None)
             if node is None:
                 raise AdapterError(f"There is no node named {wanted!r}.", code="no_such_node")
+            # ⚠️ Listed, but without a single figure. Proxmox names every node
+            # to anyone who may log in and leaves out CPU, memory and disk
+            # where the token lacks Sys.Audit on it; the card read CPU 0 %.
+            if node.get("status") == "online" and "maxmem" not in node:
+                raise AdapterError(
+                    f"Proxmox lists the node {node.get('node')!r}, but gives this token no figures for it.",
+                    code="no_node_figures",
+                    hint="The token needs Sys.Audit on /nodes. With Privilege Separation on, "
+                         "grant it to the token itself, not only to its user.",
+                )
             cpu = round(float(node.get("cpu") or 0) * 100, 1)
             memory = percent(node.get("mem"), node.get("maxmem"))
             disk = percent(node.get("disk"), node.get("maxdisk"))
@@ -189,6 +223,15 @@ class ProxmoxAdapter(Adapter):
                 meta={"node": node.get("node")},
             )
         guests = await self._get(config, ctx, "/cluster/resources?type=vm") or []
+        # ⚠️ An empty guest list is what a cluster without guests answers,
+        # and also what a token without VM.Audit gets. Only the second is a
+        # fault, and only the token's permissions say which one this is.
+        if not guests and "VM.Audit on /vms" in await self._lacking(config, ctx):
+            raise AdapterError(
+                "Proxmox answers, but this token sees no virtual machine or container.", code="no_guests",
+                hint="The token needs VM.Audit on /vms. With Privilege Separation on, "
+                     "grant it to the token itself, not only to its user.",
+            )
         running = [g for g in guests if g.get("status") == "running"]
         if widget_kind == "map":
             return map_of(nodes, guests, bool(options.get("show_stopped", True)))
@@ -289,7 +332,12 @@ def map_of(nodes: list[dict[str, Any]], guests: list[dict[str, Any]], show_stopp
         name = str(node.get("node") or "?")
         online = node.get("status") == "online"
         down_nodes += not online
-        detail = f"CPU {round(float(node.get('cpu') or 0) * 100)}% · RAM {round(percent(node.get('mem'), node.get('maxmem')) or 0)}%" if online else "offline"
+        if not online:
+            detail = "offline"
+        elif "maxmem" not in node:
+            detail = "online"  # listed without figures: no Sys.Audit, and nought would be a lie
+        else:
+            detail = f"CPU {round(float(node.get('cpu') or 0) * 100)}% · RAM {round(percent(node.get('mem'), node.get('maxmem')) or 0)}%"
         places.append({"id": f"node/{name}", "name": name, "kind": "host", "parent": "cluster", "status": "ok" if online else "bad", "detail": detail})
     known = {place["id"] for place in places}
     running = 0
