@@ -17,6 +17,7 @@ import { ClimatePicker } from './ClimatePicker'
 import { LampDetails } from './LampDetails'
 import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
+import { Felt } from './Felt'
 import { Rename } from './Rename'
 import { StatCard } from './StatCard'
 import { StatPicker } from './StatPicker'
@@ -570,6 +571,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
       ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}),
           ...(dragged.height !== undefined && element.type === 'stat' ? { height: dragged.height } : {}) }
       : element
+  /** What the surface of an element is, so its glass and its tilt are made again when its style changes. */
+  const lookOf = (element: HomeElement) => `${element.type}:${'style' in element ? element.style : ''}:${narrow ? 'phone' : 'surface'}`
   const sized = (element: HomeElement) => ({ arranging, wide: narrow && element.type !== 'heading' && isWide(element), width: controlWidth(element), onRemove: () => remove(element.id) })
   const draw = (element: HomeElement) =>
     element.type === 'contact' ? (
@@ -654,7 +657,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 <div className="flex flex-wrap items-start gap-3">
                   {group.devices.map((device) => (
                     // ``min-w-0``: a chart drawn at the card's own width must not push the card past the screen.
-                    <div key={device.id} className={isWide(device) ? 'w-full min-w-0' : ''}>{draw(device)}</div>
+                    <div key={device.id} className={isWide(device) ? 'w-full min-w-0' : ''}><Felt arranging={arranging} look={lookOf(device)}>{draw(device)}</Felt></div>
                   ))}
                 </div>
               )}
@@ -686,7 +689,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
                 onPointerCancel={() => { grab.current = null; setDragged(null) }}
                 data-element={element.id}
               >
-                {draw(element)}
+                <Felt arranging={arranging} look={lookOf(element)}>{draw(element)}</Felt>
               </div>
             )
           })}

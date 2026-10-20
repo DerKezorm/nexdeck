@@ -2590,6 +2590,88 @@ body.has-player-bar main {
     padding: 10px 12px;
   }
 
+  /* The card style of Appearance on a home page too, as on the board's cards
+     (.card.glass above): the surfaces of the pills, chips, tiles and cards.
+     A lamp that is on, a window that is open and a thermostat that heats keep
+     their colour in every style; the drawn styles stay pictures. Felt.tsx
+     names the same list for the bent edge and the tilt. */
+  :root[data-cards='flat'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: var(--nd-bg-elev);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  :root[data-cards='outline'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: color-mix(in srgb, var(--nd-bg) 35%, transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    border-width: 1.5px;
+    border-color: var(--nd-border-strong);
+  }
+
+  :root[data-cards='neon'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open):not(.is-quiet):not(.lamp-quiet):not(.is-missing) {
+    border-color: color-mix(in srgb, var(--nd-accent) 45%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--nd-accent) 18%, transparent),
+      0 0 28px -8px var(--nd-accent-glow);
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile) {
+    --nd-text-muted: color-mix(in srgb, var(--nd-text) 80%, transparent);
+    --nd-text-faint: color-mix(in srgb, var(--nd-text) 68%, transparent);
+    position: relative;
+    isolation: isolate;
+    box-shadow:
+      var(--nd-lg-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 0 24px rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+    -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: var(--nd-lg-fill);
+    border-color: transparent;
+  }
+
+  /* Rim and glare under the content, as on a card. */
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::before,
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::before {
+    padding: 1.2px;
+    background: linear-gradient(140deg, var(--nd-lg-rim), rgba(255, 255, 255, 0.08) 30%, transparent 55%, var(--nd-lg-rim-far));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::after {
+    background:
+      radial-gradient(120% 70% at var(--nd-mx, 25%) var(--nd-my, -10%), var(--nd-lg-glare), transparent 55%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%);
+    opacity: 0.75;
+  }
+
+  /* Tipping towards the pointer (followPointer), quick to follow and above its neighbours. */
+  [data-home-page] .is-tipping {
+    position: relative;
+    z-index: 3;
+    transition: transform 120ms ease-out;
+  }
+
   .stat-tick {
     font: 500 10px var(--font-mono);
     fill: var(--nd-text-faint);
