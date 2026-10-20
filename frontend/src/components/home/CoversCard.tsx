@@ -87,7 +87,7 @@ export function CoversCard({ element, covers, aims, arranging, wide, width, onWi
       {arranging && (
         <>
           {!wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
-          <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
+          <span className="home-tools" data-element-tool>
             <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)} aria-label={t('homePage.chooseStyle')}
               title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing}>
               <Palette size={12} />

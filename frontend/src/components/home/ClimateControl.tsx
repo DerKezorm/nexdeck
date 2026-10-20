@@ -233,7 +233,7 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
       )}
       {arranging && width !== null && !wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
       {arranging && (
-        <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
+        <span className="home-tools" data-element-tool>
           <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => (open === 'style' ? null : 'style'))}
             aria-label={t('homePage.chooseStyle')} title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing === 'style'}>
             <Palette size={12} />

@@ -588,6 +588,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   // Not before the page is drawn: while it loads, there is nothing to watch yet.
   useMenusInView(pageBox, arranging && Boolean(layout))
   const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number; scale?: number } | null>(null)
+  // Not while an element is dragged: it is placed anew once it is let go.
+  useToolsOutside(surface, arranging && !dragged ? layout?.elements ?? null : null)
   const [guides, setGuides] = useState<Guide[]>([])
   const grab = useRef<{
     id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean
@@ -842,6 +844,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           style={{ height: surfaceHeight(elements.map(placed)), ...(arranging ? (guidesOn ? SURFACE_DOTS : SURFACE_PLAIN) : {}) }}
           data-home-surface
           data-guides={arranging && guidesOn ? '' : undefined}
+          data-arranging={arranging ? '' : undefined}
         >
           {guides.map((guide, index) => (
             <span key={index} className="home-guide" data-guide={guide.axis}
@@ -1069,7 +1072,7 @@ function LampControl({ element, info, missing, arranging, wide, width, onRemove,
       </div>
       {arranging && width !== null && !wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
       {arranging && (
-        <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
+        <span className="home-tools" data-element-tool>
           <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}
             aria-label={t('homePage.chooseStyle')} title={t('homePage.chooseStyle')} aria-haspopup="menu" aria-expanded={choosing}>
             <Palette size={12} />
@@ -1290,4 +1293,86 @@ export function useMenusInView(box: React.RefObject<HTMLElement | null>, active:
     watch.observe(root, { childList: true, subtree: true })
     return () => watch.disconnect()
   }, [box, active])
+}
+
+/** Where the tools of an element can stand, in the order they are tried: above its corner first. */
+export const TOOL_SIDES = ['above', 'corner', 'right', 'below', 'left'] as const
+export type ToolSide = (typeof TOOL_SIDES)[number]
+type Rect = { left: number; top: number; right: number; bottom: number }
+
+function overlap(a: Rect, b: Rect): number {
+  const width = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+  const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+  return width > 0 && height > 0 ? width * height : 0
+}
+
+/**
+ * The first side where the tools cover nothing (no element, no tools already
+ * placed, nothing outside the page); where every side covers something, the
+ * one that covers least.
+ */
+export function pickToolSide(candidates: Record<ToolSide, Rect>, obstacles: Rect[], bounds: Rect): ToolSide {
+  let best: ToolSide = TOOL_SIDES[0]
+  let least = Infinity
+  for (const side of TOOL_SIDES) {
+    const box = candidates[side]
+    const outside = (box.right - box.left) * (box.bottom - box.top) - overlap(box, bounds)
+    const covered = outside + obstacles.reduce((sum, other) => sum + overlap(box, other), 0)
+    if (covered === 0) return side
+    if (covered < least) {
+      least = covered
+      best = side
+    }
+  }
+  return best
+}
+
+/**
+ * The style, name and remove buttons of an element stand outside its drawing,
+ * where they cover neither it nor the elements beside it: each side is tried
+ * on the page and measured, so zoomed drawings and nested cards need no sums.
+ *
+ * ⚠️ On the drawing itself they hid what a small one shows, a tile's "off"
+ * among them (seen 20.10.2026). Plainly above every element would not do:
+ * pills stacked closely would get them over the pill above.
+ */
+export function useToolsOutside(box: React.RefObject<HTMLElement | null>, elements: unknown) {
+  useEffect(() => {
+    const root = box.current
+    if (!root || !elements) return
+    let frame = 0
+    const place = () => {
+      frame = 0
+      const bounds = root.getBoundingClientRect()
+      if (!bounds.width) return
+      const holders = [...root.querySelectorAll<HTMLElement>('[data-element]')]
+      const obstacles: Rect[] = holders.map((holder) => holder.getBoundingClientRect())
+      holders.forEach((holder, index) => {
+        const tools = holder.querySelector<HTMLElement>('.home-tools')
+        if (!tools) return
+        const others = obstacles.filter((_, at) => at !== index)
+        const candidates = {} as Record<ToolSide, Rect>
+        for (const side of TOOL_SIDES) {
+          holder.dataset.tools = side
+          candidates[side] = tools.getBoundingClientRect()
+        }
+        const side = pickToolSide(candidates, others, { left: bounds.left, top: bounds.top - 8, right: bounds.right, bottom: bounds.bottom + 8 })
+        holder.dataset.tools = side
+        obstacles.push(candidates[side])
+      })
+    }
+    const soon = () => {
+      if (!frame) frame = requestAnimationFrame(place)
+    }
+    soon()
+    // Drawings change size when their state arrives, a name gets longer, a style is chosen.
+    const sizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(soon)
+    root.querySelectorAll('[data-element]').forEach((holder) => sizes?.observe(holder))
+    window.addEventListener('resize', soon)
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      sizes?.disconnect()
+      window.removeEventListener('resize', soon)
+    }
+  }, [box, elements])
 }

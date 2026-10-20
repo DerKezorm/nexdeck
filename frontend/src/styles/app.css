@@ -2554,6 +2554,55 @@ body.has-player-bar main {
     border-color: var(--nd-accent);
   }
 
+  /* The tools of an element stand outside its drawing; useToolsOutside (HomePage) picks the side that is free. */
+  .home-tools {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    bottom: calc(100% + 4px);
+    right: 0;
+  }
+
+  [data-tools="corner"] .home-tools {
+    right: auto;
+    left: calc(100% - 10px);
+  }
+
+  [data-tools="right"] .home-tools,
+  [data-tools="left"] .home-tools {
+    flex-direction: column;
+    bottom: auto;
+    top: 0;
+  }
+
+  [data-tools="right"] .home-tools {
+    right: auto;
+    left: calc(100% + 4px);
+  }
+
+  [data-tools="left"] .home-tools {
+    right: calc(100% + 4px);
+  }
+
+  [data-tools="below"] .home-tools {
+    bottom: auto;
+    right: auto;
+    top: calc(100% + 4px);
+    left: 0;
+  }
+
+  /* Tools outside the drawing can stand nearer a neighbour: pointing at one shows whose they are. */
+  [data-arranging] [data-element]:hover .home-tools .btn {
+    box-shadow: 0 0 0 1px var(--nd-accent);
+  }
+
+  [data-arranging] [data-element]:hover {
+    outline: 1px dashed var(--nd-accent);
+    outline-offset: 3px;
+    border-radius: 14px;
+  }
+
   /* The tools of a drawn element keep their size when it is grown or shrunk (Scaled in HomePage). */
   [data-scaled] [data-element-tool], [data-scaled] .home-grip {
     zoom: calc(1 / var(--home-scale, 1));
