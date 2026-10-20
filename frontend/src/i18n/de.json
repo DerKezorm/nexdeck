@@ -1857,10 +1857,66 @@
         "heating": "Fenster offen bei laufender Heizung",
         "humid": "Lüften ab 65 % Luftfeuchte"
       },
-      "rowName": "Name der Zeile"
+      "rowName": "Name der Zeile",
+      "coverStyles": {
+        "pill": "Pille",
+        "chip": "Chip",
+        "tile": "Kachel",
+        "window": "Fenster gezeichnet",
+        "slider": "Schieber senkrecht",
+        "tilt": "Lamellen"
+      }
     },
     "rename": "Eigener Name",
     "renameHint": "Leer: „{{name}}“ aus Home Assistant",
-    "useHaName": "Name aus Home Assistant"
+    "useHaName": "Name aus Home Assistant",
+    "covers": {
+      "opening": "öffnet · {{pct}} %",
+      "closing": "schließt · {{pct}} %",
+      "closed": "zu",
+      "open": "offen",
+      "closedWord": "Zu",
+      "openWord": "Offen",
+      "stop": "{{name}} anhalten",
+      "lower": "{{name}} schließen",
+      "noSlats": "Keine Lamellen",
+      "slats": "Lamellen",
+      "slatsOf": "Lamellen von {{name}}",
+      "position": "Position",
+      "raiseWord": "Öffnen",
+      "stopWord": "Stopp",
+      "lowerWord": "Schließen",
+      "noSlatsHere": "Lamellen-Winkel nur, wenn das Gerät ihn meldet.",
+      "allCovers": "Alle Rollläden",
+      "group": "Rollläden",
+      "raiseAll": "Alle öffnen",
+      "stopAll": "Alle anhalten",
+      "lowerAll": "Alle schließen",
+      "remove": "Rollladen entfernen",
+      "morning": "Morgens",
+      "shade": "Beschatten",
+      "night": "Nacht",
+      "pickTitle": "Rollläden und Jalousien",
+      "positions": "Stellungen",
+      "positionName": "Name der Stellung",
+      "positionValue": "Position in Prozent",
+      "removePosition": "Stellung entfernen",
+      "addPosition": "Stellung hinzufügen",
+      "pickEmpty": "Keine Rollläden gefunden.",
+      "add": "Rollladen",
+      "failed": "Der Rollladen ließ sich nicht bewegen.",
+      "cardStyles": {
+        "group": "Gruppe",
+        "scenes": "Stellungen"
+      },
+      "problems": {
+        "cover_missing": "Dieser Rollladen ist nicht mehr in Home Assistant.",
+        "cover_unavailable": "Home Assistant erreicht diesen Rollladen gerade nicht.",
+        "not_supported": "Das kann dieser Rollladen nicht."
+      },
+      "raise": "{{name}} öffnen",
+      "openingWord": "öffnet",
+      "closingWord": "schließt"
+    }
   }
 }

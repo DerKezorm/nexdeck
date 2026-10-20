@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChartLine, Check, DoorOpen, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
+import { Blinds, ChartLine, Check, DoorOpen, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
   alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, STAT_HEIGHTS, STAT_WIDTHS, statSize, statSpots, stepTarget,
-  surfaceHeight, withClimates, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
+  surfaceHeight, withClimates, withCovers, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
+  type CoverAnswer, type CoverScene, type CoverWish, type HomeCover, type HomeCovers,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
 } from '../../lib/home'
@@ -21,6 +22,9 @@ import { Felt } from './Felt'
 import { Rename } from './Rename'
 import { StatCard } from './StatCard'
 import { StatPicker } from './StatPicker'
+import { CoverControl, CoverDetails } from './CoverControl'
+import { CoverPicker, defaultScenes, type FreshCover } from './CoverPicker'
+import { CoversCard } from './CoversCard'
 import { ContactsCard, HintsCard, ReadingsCard } from './SensorCards'
 import { ContactControl, ReadingControl, useNow } from './SensorControl'
 import { SensorPicker, type FreshSensor } from './SensorPicker'
@@ -177,20 +181,23 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     (id: string, patch: {
       x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle | string; sensor?: ClimateSensor | null; width?: number
       height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]; label?: string; name?: string
+      scenes?: CoverScene[]
     }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
-          : element.type === 'contact' || element.type === 'contacts' || element.type === 'reading' || element.type === 'readings' || element.type === 'hints'
+          : element.type === 'contact' || element.type === 'contacts' || element.type === 'reading' || element.type === 'readings' || element.type === 'hints' ||
+            element.type === 'cover' || element.type === 'covers'
             ? ({
                 ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, width: patch.width ?? element.width,
                 ...('style' in element && patch.style ? { style: patch.style } : {}),
-                ...(element.type === 'contacts' && patch.sensors ? { sensors: patch.sensors } : {}),
+                ...((element.type === 'contacts' || element.type === 'covers') && patch.sensors ? { sensors: patch.sensors } : {}),
+                ...(element.type === 'covers' && patch.scenes ? { scenes: patch.scenes } : {}),
                 ...(element.type === 'readings' && patch.rows ? { rows: patch.rows } : {}),
                 ...('title' in element && patch.title !== undefined ? { title: patch.title } : {}),
                 ...(element.type === 'hints' && patch.checks ? { checks: patch.checks } : {}),
-                ...(element.type === 'contact' && patch.label !== undefined ? { label: patch.label } : {}),
+                ...((element.type === 'contact' || element.type === 'cover') && patch.label !== undefined ? { label: patch.label } : {}),
                 ...(element.type === 'reading' && patch.name !== undefined ? { name: patch.name } : {}),
               } as HomeElement)
           : element.type === 'stat'
@@ -451,6 +458,61 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     save({ ...layout, elements: [...layout.elements, { id: freshId(layout.elements), type: 'hints', ...nextSpot(layout.elements), title: '', checks: ['heating', 'humid'] }] }, 0)
   }, [layout, save])
   const sensorCard = elements.find((element) => (element.type === 'contacts' || element.type === 'readings') && element.id === sensorPicking?.card) ?? null
+
+  // -- shutters and blinds ------------------------------------------------------
+
+  /** The cover picker: null closed, 'new' to add, or the id of the card whose covers change. */
+  const [coverPicking, setCoverPicking] = useState<string | null>(null)
+  const coverCard = elements.find((element): element is HomeCovers => element.type === 'covers' && element.id === coverPicking) ?? null
+  const addCovers = useCallback(
+    (fresh: FreshCover[]) => {
+      setCoverPicking(null)
+      if (!layout || fresh.length === 0) return
+      const sample = { ...fresh[0], id: 'new', x: 0, y: 0 } as HomeElement
+      const spots = sensorSpots(layout.elements, fresh.length, { width: widthOf(sample), height: heightOf(sample) })
+      const added: HomeElement[] = []
+      for (const [index, one] of fresh.entries()) added.push({ ...one, id: freshId([...layout.elements, ...added]), ...spots[index] } as HomeElement)
+      askAgain.current = true
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  /** Positions asked of covers and not yet answered, by entity id: shown at once, as a lamp shows a wish. */
+  const [coverAims, setCoverAims] = useState<Record<string, number>>({})
+  const aimCover = useCallback((entity: string, position: number | undefined) => {
+    setCoverAims((now) => {
+      const rest = { ...now }
+      if (position === undefined) delete rest[entity]
+      else rest[entity] = position
+      return rest
+    })
+  }, [])
+  const [coverDetails, setCoverDetails] = useState<{ element: string; entity: string } | null>(null)
+  const tellCover = useCallback(
+    async (element: HomeCover | HomeCovers, wish: CoverWish) => {
+      const targets = element.type === 'cover' ? [element.entity_id] : wish.member ? [wish.member] : element.sensors.map((one) => one.entity_id)
+      const scene = 'scene' in wish && element.type === 'covers' ? element.scenes?.[wish.scene]?.position : undefined
+      const going = 'position' in wish ? wish.position : 'action' in wish && wish.action !== 'stop' ? (wish.action === 'open' ? 100 : 0) : scene
+      if (going !== undefined) for (const entity of targets) aimCover(entity, going)
+      try {
+        const answered = await post<CoverAnswer>(`/pages/${pageId}/home/covers/${element.id}`, wish)
+        queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withCovers(old, answered.covers) : old))
+        if (answered.refused.length) {
+          const first = answered.refused[0]
+          setNote({ text: t(`homePage.covers.problems.${first.code}`, { defaultValue: first.message }), level: 'error' })
+        }
+      } catch (failure) {
+        const code = failure instanceof ApiError ? failure.code : ''
+        setNote({ text: t(`homePage.covers.problems.${code}`, { defaultValue: failure instanceof ApiError ? failure.message : t('homePage.covers.failed') }), level: 'error' })
+      } finally {
+        // A real cover takes its time: the stream tells where it goes from here.
+        window.setTimeout(() => targets.forEach((entity) => aimCover(entity, undefined)), going !== undefined ? SETTLE_MS : 0)
+      }
+    },
+    [aimCover, pageId, queryClient, t],
+  )
+  const coverStates = answer.data?.covers ?? {}
+  const detailedCoverElement = elements.find((element): element is HomeCover | HomeCovers => (element.type === 'cover' || element.type === 'covers') && element.id === coverDetails?.element) ?? null
   const said = answer.data?.sensors ?? {}
 
   const addHeading = useCallback(() => {
@@ -575,7 +637,18 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const lookOf = (element: HomeElement) => `${element.type}:${'style' in element ? element.style : ''}:${narrow ? 'phone' : 'surface'}`
   const sized = (element: HomeElement) => ({ arranging, wide: narrow && element.type !== 'heading' && isWide(element), width: controlWidth(element), onRemove: () => remove(element.id) })
   const draw = (element: HomeElement) =>
-    element.type === 'contact' ? (
+    element.type === 'cover' ? (
+      <CoverControl element={element} said={coverStates[element.entity_id]} aim={coverAims[element.entity_id]} {...sized(element)}
+        onWish={canAct ? (wish) => void tellCover(element, wish) : null} onAim={(position) => aimCover(element.entity_id, position)}
+        onDetails={() => setCoverDetails({ element: element.id, entity: element.entity_id })} onStyle={(style) => change(element.id, { style })}
+        haName={(() => { const said = coverStates[element.entity_id]; return said && !said.missing && said.name ? said.name : element.name })()}
+        onLabel={(label) => change(element.id, { label })} />
+    ) : element.type === 'covers' ? (
+      <CoversCard element={element} covers={coverStates} aims={coverAims} {...sized(element)} onWish={canAct ? (wish) => void tellCover(element, wish) : null}
+        onDetails={(entity) => setCoverDetails({ element: element.id, entity })}
+        onStyle={(style) => change(element.id, { style, ...(style === 'scenes' && !element.scenes ? { scenes: defaultScenes(t) } : {}) })}
+        onSensors={() => setCoverPicking(element.id)} />
+    ) : element.type === 'contact' ? (
       <ContactControl element={element} said={said[element.entity_id]} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
         onLabel={(label) => change(element.id, { label })} />
     ) : element.type === 'reading' ? (
@@ -634,6 +707,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
               </button>
               <button type="button" className="btn" onClick={() => setStatPicking('new')}>
                 <ChartLine size={15} /> {t('homePage.stats.add')}
+              </button>
+              <button type="button" className="btn" onClick={() => setCoverPicking('new')}>
+                <Blinds size={15} /> {t('homePage.covers.add')}
               </button>
               <button type="button" className="btn" onClick={() => setSensorPicking({ mode: 'contacts', card: null })}>
                 <DoorOpen size={15} /> {t('homePage.sensors.addContacts')}
@@ -695,7 +771,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           })}
         </div>
       )}
-      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')}
+      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')} onCover={() => setCoverPicking('new')}
         onSensor={(kind) => (kind === 'hints' ? addHints() : setSensorPicking({ mode: kind, card: null }))} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
         onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
@@ -708,6 +784,17 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           onWish={canAct ? (wish) => tell(detailedClimate.id, detailedClimateInfo.name, wish) : null}
           onClose={() => setClimateDetails(null)} history={{ pageId, elementId: detailedClimate.id }} />
       )}
+      {detailedCoverElement && coverDetails && (
+        <CoverDetails name={(() => {
+          const said = coverStates[coverDetails.entity]
+          const own = detailedCoverElement.type === 'cover' ? detailedCoverElement.label : ''
+          return own || (said && !said.missing && said.name) || coverDetails.entity
+        })()} said={coverStates[coverDetails.entity]} aim={coverAims[coverDetails.entity]}
+          onWish={canAct ? (wish) => void tellCover(detailedCoverElement, detailedCoverElement.type === 'covers' ? { ...wish, member: coverDetails.entity } : wish) : null}
+          onClose={() => setCoverDetails(null)} />
+      )}
+      {canEdit && <CoverPicker open={coverPicking !== null} pageId={pageId} card={coverCard} onClose={() => setCoverPicking(null)} onAdd={addCovers}
+        onChange={(id, patch) => { setCoverPicking(null); askAgain.current = true; change(id, patch) }} />}
       {canEdit && (
         <SensorPicker mode={sensorPicking?.mode ?? null} pageId={pageId} card={sensorCard as Parameters<typeof SensorPicker>[0]['card']} onClose={() => setSensorPicking(null)} onAdd={addSensors}
           onChange={(id, patch) => { setSensorPicking(null); askAgain.current = true; change(id, patch) }} />
@@ -967,7 +1054,7 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onCover: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
@@ -979,6 +1066,9 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onStat} aria-label={t('homePage.stats.add')}>
         <ChartLine size={15} /> <span className="hidden sm:inline">{t('homePage.stats.add')}</span>
+      </button>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onCover} aria-label={t('homePage.covers.add')}>
+        <Blinds size={15} /> <span className="hidden sm:inline">{t('homePage.covers.add')}</span>
       </button>
       <SensorMenu onSensor={props.onSensor} />
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>

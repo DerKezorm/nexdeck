@@ -106,7 +106,7 @@ function DoorDrawing({ open }: { open: boolean }) {
 interface ToolsProps {
   styles: readonly string[]
   current: string
-  group: 'contactStyles' | 'readingStyles'
+  group: 'contactStyles' | 'readingStyles' | 'coverStyles'
   onStyle: (style: string) => void
   onRemove: () => void
   removeLabel: string

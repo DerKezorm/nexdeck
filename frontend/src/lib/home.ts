@@ -67,7 +67,7 @@ export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'sli
  */
 export const DEFAULT_WIDTH = {
   pill: 224, chip: 176, slider: 176, climate: 320, climateChip: 200, climateSlider: 230,
-  contact: 264, contactChip: 150, reading: 250, contacts: 300, house: 380, readings: 400, hints: 330,
+  contact: 264, contactChip: 150, reading: 250, contacts: 300, house: 380, readings: 400, hints: 330, cover: 300, coverChip: 160, covers: 330,
 } as const
 /** The bounds of a width dragged by hand; the server keeps the same. */
 export const MIN_WIDTH = 96
@@ -75,7 +75,8 @@ export const MAX_WIDTH = 640
 
 /** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
 export function isResizable(element: HomeElement): element is Sized {
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return true
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return true
+  if (element.type === 'cover') return element.style === 'pill' || element.style === 'chip' || element.style === 'tilt'
   if (element.type === 'contact') return element.style === 'pill' || element.style === 'chip'
   if (element.type === 'reading') return element.style === 'pill'
   return (element.type === 'light' || element.type === 'climate') && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider')
@@ -91,6 +92,8 @@ export function controlWidth(element: HomeElement): number | null {
     : element.type === 'reading' ? DEFAULT_WIDTH.reading
     : element.type === 'contacts' ? (element.style === 'house' ? DEFAULT_WIDTH.house : DEFAULT_WIDTH.contacts)
     : element.type === 'readings' ? DEFAULT_WIDTH.readings
+    : element.type === 'cover' ? (element.style === 'chip' ? DEFAULT_WIDTH.coverChip : DEFAULT_WIDTH.cover)
+    : element.type === 'covers' ? DEFAULT_WIDTH.covers
     : DEFAULT_WIDTH.hints
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, element.width ?? fallback))
 }
@@ -103,8 +106,9 @@ export const WIDE_CLIMATE_STYLES: ReadonlySet<string> = new Set(['pill', 'chip',
 /** Whether an element runs the width of a phone's screen: a thermostat and a lamp by their style, a card unless it is a small one. */
 export function isWide(element: HomeItem): boolean {
   if (element.type === 'stat') return element.style !== 'small'
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return true
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return true
   if (element.type === 'contact' || element.type === 'reading') return element.style === 'pill'
+  if (element.type === 'cover') return element.style === 'pill' || element.style === 'tilt'
   return element.type === 'climate' ? WIDE_CLIMATE_STYLES.has(element.style) : WIDE_STYLES.has(element.style)
 }
 
@@ -118,6 +122,8 @@ export function heightOf(element: HomeElement): number {
   if (element.type === 'contacts') return element.style === 'house' ? 48 + Math.ceil(roomsOf(element).length / 4) * 56 : 44 + 26 * Math.min(6, element.sensors.length)
   if (element.type === 'readings') return 52 + 33 * element.rows.length
   if (element.type === 'hints') return 156
+  if (element.type === 'cover') return (COVER_FOOTPRINTS[element.style] ?? COVER_FOOTPRINTS.pill).height
+  if (element.type === 'covers') return element.style === 'scenes' ? 116 : 56 + 26 * element.sensors.length
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
@@ -127,7 +133,8 @@ export function widthOf(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).width
   if (element.type === 'contact') return controlWidth(element) ?? (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).width
   if (element.type === 'reading') return controlWidth(element) ?? (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).width
-  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return controlWidth(element) ?? DEFAULT_WIDTH.hints
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints' || element.type === 'covers') return controlWidth(element) ?? DEFAULT_WIDTH.hints
+  if (element.type === 'cover') return controlWidth(element) ?? (COVER_FOOTPRINTS[element.style] ?? COVER_FOOTPRINTS.pill).width
   if (isResizable(element) && element.width !== undefined) return controlWidth(element) ?? FOOTPRINT.pill.width
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
@@ -276,12 +283,12 @@ export function statSize(element: HomeStat): { width: number; height: number } {
 }
 
 /** Anything on the surface that is not a heading: what a phone lists under one. */
-export type HomeItem = HomeDevice | HomeStat | HomeSensorElement
+export type HomeItem = HomeDevice | HomeStat | HomeSensorElement | HomeCover | HomeCovers
 
-export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat | HomeSensorElement
+export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat | HomeSensorElement | HomeCover | HomeCovers
 
 /** What has a width to drag. */
-export type Sized = HomeDevice | HomeContact | HomeReading | HomeContacts | HomeReadings | HomeHints
+export type Sized = HomeDevice | HomeContact | HomeReading | HomeContacts | HomeReadings | HomeHints | HomeCover | HomeCovers
 
 export interface HomeLayout {
   integration_id: number | null
@@ -379,6 +386,8 @@ export interface HomeAnswer {
   climates?: Record<string, (ClimateView & { missing: false }) | { missing: true }>
   /** How each sensor of the page's doors, windows and readings stands, by the entity id it was placed with. */
   sensors?: Record<string, SensorState>
+  /** How each cover of the page stands, by the entity id it was placed with. */
+  covers?: Record<string, CoverState>
 }
 
 /** How a thermostat stands, as an answer or the board's stream says it. */
@@ -400,6 +409,7 @@ export interface HomeNews {
   lights?: Record<string, LampState>
   climates?: Record<string, ClimateState>
   sensors?: Record<string, SensorState>
+  covers?: Record<string, CoverState>
 }
 
 /** The page's answer with news of its thermostats put in, the way ``withLamps`` does for lamps. */
@@ -418,7 +428,8 @@ export function withClimates(answer: HomeAnswer, news: Record<string, ClimateSta
 export function withNews(answer: HomeAnswer, news: HomeNews): HomeAnswer {
   const lit = news.lights ? withLamps(answer, news.lights) : answer
   const warm = news.climates ? withClimates(lit, news.climates) : lit
-  return news.sensors ? withSensors(warm, news.sensors) : warm
+  const felt = news.sensors ? withSensors(warm, news.sensors) : warm
+  return news.covers ? withCovers(felt, news.covers) : felt
 }
 
 /**
@@ -1202,4 +1213,125 @@ export function sensorsOf(element: HomeElement): ClimateSensor[] {
 /** Where new sensor elements go: below everything, side by side. */
 export function sensorSpots(elements: HomeElement[], count: number, size: { width: number; height: number }): { x: number; y: number }[] {
   return spotsFor(elements, count, size)
+}
+
+// ---------------------------------------------------------------------------
+// Covers: shutters, blinds, awnings (``hass_covers``)
+// ---------------------------------------------------------------------------
+
+/**
+ * The styles of the board of sketches (``jalousien.html``, 20.10.2026): A pill,
+ * B chip, C tile, D window, E slider, H slats under a pill; F a group, G
+ * positions of their own. The server keeps the same lists.
+ */
+export const COVER_STYLES = ['pill', 'chip', 'tile', 'window', 'slider', 'tilt'] as const
+export type CoverStyle = (typeof COVER_STYLES)[number]
+export const COVERS_STYLES = ['group', 'scenes'] as const
+export type CoversStyle = (typeof COVERS_STYLES)[number]
+/** How many covers one card keeps, and positions of its own (``MAX_COVERS``, ``MAX_SCENES``). */
+export const MAX_COVERS = 24
+export const MAX_SCENES = 6
+
+export const COVER_FOOTPRINTS: Record<CoverStyle, { width: number; height: number }> = {
+  pill: { width: 300, height: 40 },
+  chip: { width: 160, height: 28 },
+  tile: { width: 132, height: 118 },
+  window: { width: 110, height: 140 },
+  slider: { width: 104, height: 160 },
+  tilt: { width: 300, height: 72 },
+}
+
+export interface HomeCover {
+  id: string
+  type: 'cover'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: CoverStyle
+  label?: string
+  width?: number
+}
+
+export interface CoverScene {
+  name: string
+  position: number
+}
+
+/** Several covers on one card: a group to move together, or positions of the card's own. */
+export interface HomeCovers {
+  id: string
+  type: 'covers'
+  x: number
+  y: number
+  style: CoversStyle
+  sensors: ClimateSensor[]
+  title: string
+  scenes?: CoverScene[]
+  width?: number
+}
+
+/** A cover as Home Assistant reports it (``hass_covers.cover_state``); 0 is closed, 100 open. */
+export interface CoverInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  device_class: string
+  unavailable: boolean
+  position: number | null
+  tilt: number | null
+  /** ``up`` while it opens, ``down`` while it closes. */
+  moving: 'up' | 'down' | null
+  can_open: boolean
+  can_close: boolean
+  settable: boolean
+  stoppable: boolean
+  tiltable: boolean
+}
+
+export type CoverState = (Partial<CoverInfo> & { missing: false }) | { missing: true }
+
+export interface CoverOffer {
+  covers: CoverInfo[]
+  problem: HomeProblem | null
+}
+
+/** What a cover or a card of them is asked (``HomeCoverBody``): one thing, perhaps for one cover of a card. */
+export type CoverWish = ({ action: 'open' | 'close' | 'stop' } | { position: number } | { tilt: number } | { scene: number }) & { member?: string }
+
+export interface CoverAnswer {
+  ok: true
+  covers: Record<string, CoverState>
+  refused: { entity_id: string; code: string; message: string }[]
+}
+
+/** The page's answer with news of its covers put in, as for sensors. */
+export function withCovers(answer: HomeAnswer, news: Record<string, CoverState>): HomeAnswer {
+  const covers = { ...(answer.covers ?? {}) }
+  for (const [id, state] of Object.entries(news)) {
+    const before = covers[id]
+    covers[id] = state.missing ? state : ({ ...(before && !before.missing ? before : {}), ...state } as CoverState)
+  }
+  return { ...answer, covers }
+}
+
+/** Every cover an element names (``home_control.covers_of`` on the server). */
+export function coversOf(element: HomeElement): ClimateSensor[] {
+  if (element.type === 'cover') return [element]
+  if (element.type === 'covers') return element.sensors
+  return []
+}
+
+/** A position as a share of a drag: along the pill to the right, up the window and the slider; on whole steps of five. */
+export function positionAt(share: number): number {
+  return Math.round(Math.min(1, Math.max(0, share)) * 20) * 5
+}
+
+/** Whether every cover of a card stands at a position of the card's own: that one is lit. */
+export function sceneHolds(scene: CoverScene, covers: (CoverState | undefined)[]): boolean {
+  const known = covers.filter((one): one is CoverState & { missing: false } => Boolean(one && !one.missing && !one.unavailable))
+  return known.length > 0 && known.every((one) => one.position === scene.position)
 }

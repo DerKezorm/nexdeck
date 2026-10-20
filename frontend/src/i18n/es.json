@@ -1857,10 +1857,66 @@
         "heating": "Ventana abierta con la calefacción encendida",
         "humid": "Ventilar desde 65 % de humedad"
       },
-      "rowName": "Nombre de la fila"
+      "rowName": "Nombre de la fila",
+      "coverStyles": {
+        "pill": "Píldora",
+        "chip": "Chip",
+        "tile": "Mosaico",
+        "window": "Ventana dibujada",
+        "slider": "Deslizador vertical",
+        "tilt": "Lamas"
+      }
     },
     "rename": "Nombre propio",
     "renameHint": "Vacío: «{{name}}» de Home Assistant",
-    "useHaName": "Nombre de Home Assistant"
+    "useHaName": "Nombre de Home Assistant",
+    "covers": {
+      "opening": "abriendo · {{pct}} %",
+      "closing": "cerrando · {{pct}} %",
+      "closed": "cerrada",
+      "open": "abierta",
+      "closedWord": "Cerrada",
+      "openWord": "Abierta",
+      "stop": "Detener {{name}}",
+      "lower": "Cerrar {{name}}",
+      "noSlats": "Sin lamas",
+      "slats": "Lamas",
+      "slatsOf": "Lamas de {{name}}",
+      "position": "Posición",
+      "raiseWord": "Abrir",
+      "stopWord": "Detener",
+      "lowerWord": "Cerrar",
+      "noSlatsHere": "Ángulo de las lamas solo si el dispositivo lo indica.",
+      "allCovers": "Todas las persianas",
+      "group": "Persianas",
+      "raiseAll": "Abrir todas",
+      "stopAll": "Detener todas",
+      "lowerAll": "Cerrar todas",
+      "remove": "Quitar persiana",
+      "morning": "Mañana",
+      "shade": "Sombra",
+      "night": "Noche",
+      "pickTitle": "Persianas y estores",
+      "positions": "Posiciones",
+      "positionName": "Nombre de la posición",
+      "positionValue": "Posición en porcentaje",
+      "removePosition": "Quitar posición",
+      "addPosition": "Añadir posición",
+      "pickEmpty": "No se encontraron persianas.",
+      "add": "Persiana",
+      "failed": "No se pudo mover la persiana.",
+      "cardStyles": {
+        "group": "Grupo",
+        "scenes": "Posiciones"
+      },
+      "problems": {
+        "cover_missing": "Esta persiana ya no está en Home Assistant.",
+        "cover_unavailable": "Home Assistant no llega a esta persiana ahora.",
+        "not_supported": "Esta persiana no puede hacer eso."
+      },
+      "raise": "Abrir {{name}}",
+      "openingWord": "abriendo",
+      "closingWord": "cerrando"
+    }
   }
 }

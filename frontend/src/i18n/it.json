@@ -1857,10 +1857,66 @@
         "heating": "Finestra aperta col riscaldamento acceso",
         "humid": "Arieggiare da 65 % di umidità"
       },
-      "rowName": "Nome della riga"
+      "rowName": "Nome della riga",
+      "coverStyles": {
+        "pill": "Pillola",
+        "chip": "Chip",
+        "tile": "Riquadro",
+        "window": "Finestra disegnata",
+        "slider": "Cursore verticale",
+        "tilt": "Lamelle"
+      }
     },
     "rename": "Nome proprio",
     "renameHint": "Vuoto: «{{name}}» da Home Assistant",
-    "useHaName": "Nome da Home Assistant"
+    "useHaName": "Nome da Home Assistant",
+    "covers": {
+      "opening": "si apre · {{pct}} %",
+      "closing": "si chiude · {{pct}} %",
+      "closed": "chiusa",
+      "open": "aperta",
+      "closedWord": "Chiusa",
+      "openWord": "Aperta",
+      "stop": "Ferma {{name}}",
+      "lower": "Chiudi {{name}}",
+      "noSlats": "Senza lamelle",
+      "slats": "Lamelle",
+      "slatsOf": "Lamelle di {{name}}",
+      "position": "Posizione",
+      "raiseWord": "Apri",
+      "stopWord": "Ferma",
+      "lowerWord": "Chiudi",
+      "noSlatsHere": "Angolo delle lamelle solo se il dispositivo lo indica.",
+      "allCovers": "Tutte le tapparelle",
+      "group": "Tapparelle",
+      "raiseAll": "Apri tutte",
+      "stopAll": "Ferma tutte",
+      "lowerAll": "Chiudi tutte",
+      "remove": "Rimuovi tapparella",
+      "morning": "Mattina",
+      "shade": "Ombra",
+      "night": "Notte",
+      "pickTitle": "Tapparelle e veneziane",
+      "positions": "Posizioni",
+      "positionName": "Nome della posizione",
+      "positionValue": "Posizione in percentuale",
+      "removePosition": "Rimuovi posizione",
+      "addPosition": "Aggiungi posizione",
+      "pickEmpty": "Nessuna tapparella trovata.",
+      "add": "Tapparella",
+      "failed": "Non è stato possibile muovere la tapparella.",
+      "cardStyles": {
+        "group": "Gruppo",
+        "scenes": "Posizioni"
+      },
+      "problems": {
+        "cover_missing": "Questa tapparella non è più in Home Assistant.",
+        "cover_unavailable": "Home Assistant ora non raggiunge questa tapparella.",
+        "not_supported": "Questa tapparella non può farlo."
+      },
+      "raise": "Apri {{name}}",
+      "openingWord": "si apre",
+      "closingWord": "si chiude"
+    }
   }
 }

@@ -1857,10 +1857,66 @@
         "heating": "A window open while the heating runs",
         "humid": "Airing from 65 % humidity"
       },
-      "rowName": "Name of the row"
+      "rowName": "Name of the row",
+      "coverStyles": {
+        "pill": "Pill",
+        "chip": "Chip",
+        "tile": "Tile",
+        "window": "Window drawn",
+        "slider": "Upright slider",
+        "tilt": "Slats"
+      }
     },
     "rename": "A name of its own",
     "renameHint": "Empty: “{{name}}” from Home Assistant",
-    "useHaName": "Home Assistant's name"
+    "useHaName": "Home Assistant's name",
+    "covers": {
+      "opening": "opening · {{pct}} %",
+      "closing": "closing · {{pct}} %",
+      "closed": "closed",
+      "open": "open",
+      "closedWord": "Closed",
+      "openWord": "Open",
+      "stop": "Stop {{name}}",
+      "lower": "Close {{name}}",
+      "noSlats": "No slats",
+      "slats": "Slats",
+      "slatsOf": "Slats of {{name}}",
+      "position": "Position",
+      "raiseWord": "Open",
+      "stopWord": "Stop",
+      "lowerWord": "Close",
+      "noSlatsHere": "An angle for the slats only where the device reports one.",
+      "allCovers": "All covers",
+      "group": "Covers",
+      "raiseAll": "Open all",
+      "stopAll": "Stop all",
+      "lowerAll": "Close all",
+      "remove": "Remove cover",
+      "morning": "Morning",
+      "shade": "Shade",
+      "night": "Night",
+      "pickTitle": "Shutters and blinds",
+      "positions": "Positions",
+      "positionName": "Name of the position",
+      "positionValue": "Position in percent",
+      "removePosition": "Remove position",
+      "addPosition": "Add a position",
+      "pickEmpty": "No covers found.",
+      "add": "Cover",
+      "failed": "The cover could not be moved.",
+      "cardStyles": {
+        "group": "Group",
+        "scenes": "Positions"
+      },
+      "problems": {
+        "cover_missing": "This cover is no longer in Home Assistant.",
+        "cover_unavailable": "Home Assistant cannot reach this cover right now.",
+        "not_supported": "This cover cannot do that."
+      },
+      "raise": "Open {{name}}",
+      "openingWord": "opening",
+      "closingWord": "closing"
+    }
   }
 }

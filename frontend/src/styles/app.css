@@ -2869,6 +2869,155 @@ body.has-player-bar main {
     color: var(--so);
   }
 
+  /* Shutters and blinds (jalousien.html of 20.10.2026); --sm is moving. */
+  .cover {
+    --sm: rgb(167, 139, 250);
+  }
+
+  .sensor-pill.cover {
+    position: relative;
+    overflow: hidden;
+    padding-right: 6px;
+    gap: 8px;
+  }
+
+  .cover-icon {
+    background: rgba(125, 211, 252, 0.16);
+    color: rgb(125, 211, 252);
+  }
+
+  .cover-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    color: var(--nd-text);
+    transition: background 120ms ease;
+  }
+
+  .cover-button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nd-text) 14%, transparent);
+  }
+
+  .cover-button:disabled {
+    opacity: 0.35;
+  }
+
+  .cover-button.is-stop {
+    background: color-mix(in srgb, var(--nd-accent) 20%, transparent);
+    color: var(--nd-accent);
+  }
+
+  .cover-bar {
+    position: absolute;
+    left: 40px;
+    right: 72px;
+    bottom: 5px;
+    height: 3px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cover-bar > i, .cover-track-row > i {
+    display: block;
+    height: 100%;
+    border-radius: 9px;
+    background: rgb(125, 211, 252);
+  }
+
+  .cover.is-moving {
+    border-color: color-mix(in srgb, var(--sm) 55%, transparent);
+    box-shadow: 0 0 20px -8px var(--sm);
+  }
+
+  .cover.is-moving .sensor-state, .cover-moving-text {
+    color: rgb(167, 139, 250);
+    font-weight: 600;
+  }
+
+  .cover-mini {
+    position: relative;
+    flex: none;
+    width: 22px;
+    height: 9px;
+    border-radius: 3px;
+    border: 1px solid rgba(203, 213, 225, 0.5);
+    overflow: hidden;
+  }
+
+  .cover-mini > i {
+    position: absolute;
+    inset: 0 0 auto 0;
+    background: rgba(203, 213, 225, 0.85);
+  }
+
+  .cover-slider {
+    width: 104px;
+  }
+
+  .cover-window {
+    width: 110px;
+  }
+
+  .cover-track {
+    position: relative;
+    width: 30px;
+    height: 112px;
+    margin: 6px auto 0;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--nd-text) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    overflow: hidden;
+  }
+
+  .cover-track-down {
+    position: absolute;
+    inset: 0 0 auto 0;
+    background: rgba(203, 213, 225, 0.8);
+  }
+
+  .cover-track-handle {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  .cover-track-row {
+    flex: none;
+    width: 96px;
+    height: 4px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    overflow: hidden;
+  }
+
+  .cover-scene {
+    text-align: left;
+    border-radius: 12px;
+    padding: 9px 10px;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--nd-text) 5%, transparent);
+    transition: background 120ms ease;
+  }
+
+  .cover-scene:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .cover-scene.is-on {
+    background: color-mix(in srgb, var(--nd-accent) 16%, transparent);
+    color: var(--nd-accent);
+  }
+
   .sensor-hint-wet {
     background: rgba(56, 189, 248, 0.16);
     color: rgb(56, 189, 248);

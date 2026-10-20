@@ -1857,10 +1857,66 @@
         "heating": "Fenêtre ouverte pendant le chauffage",
         "humid": "Aérer dès 65 % d’humidité"
       },
-      "rowName": "Nom de la ligne"
+      "rowName": "Nom de la ligne",
+      "coverStyles": {
+        "pill": "Pilule",
+        "chip": "Puce",
+        "tile": "Tuile",
+        "window": "Fenêtre dessinée",
+        "slider": "Curseur vertical",
+        "tilt": "Lamelles"
+      }
     },
     "rename": "Nom personnalisé",
     "renameHint": "Vide : « {{name}} » de Home Assistant",
-    "useHaName": "Nom de Home Assistant"
+    "useHaName": "Nom de Home Assistant",
+    "covers": {
+      "opening": "s’ouvre · {{pct}} %",
+      "closing": "se ferme · {{pct}} %",
+      "closed": "fermé",
+      "open": "ouvert",
+      "closedWord": "Fermé",
+      "openWord": "Ouvert",
+      "stop": "Arrêter {{name}}",
+      "lower": "Fermer {{name}}",
+      "noSlats": "Pas de lamelles",
+      "slats": "Lamelles",
+      "slatsOf": "Lamelles de {{name}}",
+      "position": "Position",
+      "raiseWord": "Ouvrir",
+      "stopWord": "Arrêter",
+      "lowerWord": "Fermer",
+      "noSlatsHere": "Angle des lamelles seulement si l’appareil l’indique.",
+      "allCovers": "Tous les volets",
+      "group": "Volets",
+      "raiseAll": "Tout ouvrir",
+      "stopAll": "Tout arrêter",
+      "lowerAll": "Tout fermer",
+      "remove": "Retirer le volet",
+      "morning": "Matin",
+      "shade": "Ombre",
+      "night": "Nuit",
+      "pickTitle": "Volets et stores",
+      "positions": "Positions",
+      "positionName": "Nom de la position",
+      "positionValue": "Position en pourcentage",
+      "removePosition": "Retirer la position",
+      "addPosition": "Ajouter une position",
+      "pickEmpty": "Aucun volet trouvé.",
+      "add": "Volet",
+      "failed": "Le volet n’a pas pu bouger.",
+      "cardStyles": {
+        "group": "Groupe",
+        "scenes": "Positions"
+      },
+      "problems": {
+        "cover_missing": "Ce volet n’est plus dans Home Assistant.",
+        "cover_unavailable": "Home Assistant n’atteint pas ce volet pour l’instant.",
+        "not_supported": "Ce volet ne sait pas faire cela."
+      },
+      "raise": "Ouvrir {{name}}",
+      "openingWord": "s’ouvre",
+      "closingWord": "se ferme"
+    }
   }
 }
