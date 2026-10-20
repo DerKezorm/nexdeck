@@ -1545,6 +1545,38 @@
         "Pulse beginnt als Beta. Braucht einen Blick braucht Pulse 6.5 oder neuer, die anderen Karten 6.0.",
         "Danke an C0NN0RAD0 für die Idee (#47)."
       ]
+    },
+    "0.45.0": {
+      "lead": "Eine Seite für dein Zuhause, als Beta: Lampen, Heizung, Rollläden, Szenen, Schalter, Sensoren und Statistik aus Home Assistant, frei angeordnet.",
+      "sections": [
+        {
+          "title": "Eine Seite für dein Zuhause",
+          "body": "Eine neue Art von Seite hält die Bedienelemente aus Home Assistant auf einer freien Fläche statt im Kartenraster, damit ein Lichtschalter so viel Platz braucht wie ein Lichtschalter. Setz Überschriften über deine Räume, stell alles hin, wo du es haben willst, und zieh eine Zeichnung an der Ecke größer oder kleiner. Jedes Element kann einen eigenen Namen tragen. Die Auswahl lässt Einstellungen, Diagnosewerte und alles weg, was in Home Assistant versteckt ist.",
+          "path": "Bearbeiten (Stift) > Seite hinzufügen > Zuhause"
+        },
+        {
+          "title": "Lampen und Thermostate",
+          "body": "Je zehn Stile, von der Pille über die Glühbirne bis zum Drehknopf und Heizkörper, auf einer Seite gemischt. Tippen schaltet eine Lampe, seitlich ziehen dimmt, halten öffnet Helligkeit, Weißton und Farbe. Ein Thermostat stellt sein Soll per Wischen oder am Drehknopf; Antippen öffnet Betriebsart, Voreinstellungen und den Verlauf.",
+          "path": "Bearbeiten (Stift) > Licht oder Heizung"
+        },
+        {
+          "title": "Rollläden, Szenen und Schalter",
+          "body": "Rollläden als Fenster, Lamellen, Schieber oder Pille, mit Auf, Zu, Stopp und Stellung, oder mehrere auf einer Karte mit eigenen Stellungen wie Morgen. Szenen und Skripte als Pillen, Kacheln, Leiste oder Raster. Schalter und Steckdosen als Steckdose, Wippe oder Kippschalter, mit dem, was das Gerät zieht; ein Schalter kann vor dem Ausschalten fragen.",
+          "path": "Bearbeiten (Stift) > Rollladen, Szene oder Schalter"
+        },
+        {
+          "title": "Sensoren und Statistik",
+          "body": "Türen und Fenster, gezeichnet oder auf einer Karte, Temperatur und Luftfeuchte je Raum, und Hinweise wie ein offenes Fenster, wo die Heizung läuft. Statistik-Karten zeichnen die Langzeitstatistik von Home Assistant über 24 Stunden, 7 oder 30 Tage, mit jetzt, tief, hoch und Mittel.",
+          "path": "Bearbeiten (Stift) > Sensor oder Statistik"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Zuhause-Seiten folgen dem Kartenstil unter Aussehen, Liquid Glass und Neigen eingeschlossen.",
+        "Auf dem Handy behält jede Überschrift ihre Elemente unter sich, und eine Wandanzeige schaltet sie, wenn ihr Link Aktionen erlaubt.",
+        "Eine Zuhause-Seite ruft nur die Dienste ihrer eigenen Bedienelemente auf, und nur für das, was auf ihr steht. Die Auswahl braucht ein Token eines Administrators von Home Assistant.",
+        "Proxmox-Karten sagen, welches Recht dem Token fehlt, statt leer zu bleiben (#48)."
+      ]
     }
   }
 }

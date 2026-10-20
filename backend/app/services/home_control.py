@@ -1,10 +1,11 @@
 """Switching what stands on a home page, and telling open pages when it changed.
 
 The browser names an element of a page and what it wants, never a service and
-never an entity. The server reads the element from the page, finds the lamp
-or the thermostat in Home Assistant by its registry id, and calls one of
-``SERVICES`` for exactly that entity. Whatever else Home Assistant offers (a script, an alarm panel, a
-lock) cannot be reached through a home page, whatever a browser sends.
+never an entity. The server reads the element from the page, finds the lamp,
+thermostat, cover, scene, script or switch in Home Assistant by its registry
+id, and calls one of ``SERVICES`` for exactly that entity. Whatever else Home
+Assistant offers (an alarm panel, a lock, a service of another domain) cannot
+be reached through a home page, whatever a browser sends.
 
 Changes travel back as a ``home`` event on the board's stream, for the lamp
 switched here and for the one switched at the wall, and for a thermostat and

@@ -1545,6 +1545,38 @@
         "Pulse starts as beta. Needs a look needs Pulse 6.5 or newer, the other cards 6.0.",
         "Thanks to C0NN0RAD0 for the idea (#47)."
       ]
+    },
+    "0.45.0": {
+      "lead": "A page for your home, as a beta: lamps, heating, covers, scenes, switches, sensors and statistics from Home Assistant, placed freely.",
+      "sections": [
+        {
+          "title": "A page for your home",
+          "body": "A new kind of page holds the controls of Home Assistant on a free surface instead of the card grid, so a light switch takes the room of a light switch. Put headings over your rooms, place everything where you like it and grow or shrink a drawing by its corner. Every element can carry a name of your own. The lists to pick from leave out settings, diagnostics and anything hidden in Home Assistant.",
+          "path": "Edit mode (pencil) > Add page > Home"
+        },
+        {
+          "title": "Lamps and thermostats",
+          "body": "Ten styles each, from a pill to a bulb, a dial or a radiator, mixed on one page. A tap switches a lamp, a drag sideways dims it, holding it opens brightness, white and colour. Swipe a thermostat to set the target or turn its dial; a tap opens mode, presets and its recent history.",
+          "path": "Edit mode (pencil) > Light or Heating"
+        },
+        {
+          "title": "Covers, scenes and switches",
+          "body": "Covers as a window, slats, slider or pill, with open, close, stop and a position, or several on one card with positions of your own such as Morning. Scenes and scripts as pills, tiles, a bar or a grid. Switches and plugs as an outlet, rocker or toggle, with what the device draws; a switch can ask before it turns off.",
+          "path": "Edit mode (pencil) > Cover, Scene or Switch"
+        },
+        {
+          "title": "Sensors and statistics",
+          "body": "Doors and windows, drawn or on one card, temperature and humidity per room, and hints such as a window open where the heating runs. Statistics cards draw Home Assistant's long-term statistics over 24 hours, 7 or 30 days, with now, low, high and mean.",
+          "path": "Edit mode (pencil) > Sensor or Statistics"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Home pages follow the card style under Appearance, liquid glass and tilt included.",
+        "On a phone each heading keeps its elements under it, and a wall display switches them when its link allows actions.",
+        "A home page only ever calls the services of its own controls, and only for what stands on it. The lists need a token of a Home Assistant administrator.",
+        "Proxmox cards say which right the token is missing instead of staying empty (#48)."
+      ]
     }
   }
 }

@@ -3,11 +3,20 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.45.0 (2026-10-20)
+
+### Added
+
+- **A page for your home**, as a beta. A third kind of page, next to cards and the network plan, for Home Assistant: its controls on a free surface instead of the card grid, under headings of your own, each drawing grown or shrunk by its corner. Lamps (ten styles; tap, drag to dim, hold for brightness, white and colour), thermostats (ten styles; swipe or turn to set the target, a tap for mode, presets and recent history; the room read by the thermostat or a sensor you choose), covers (six styles, open, close, stop, position and slats; several on one card with positions of your own), scenes and scripts (pill or tile, several as a bar or a grid; when a scene last ran, whether a script runs), switches and plugs (six styles, with the power of the device, a question before switching off if wanted, several on one card with their total), doors and windows (five styles, many on one card or a house), temperature and humidity (four styles, rooms in a list), a card of hints (a window open where the heating runs, humidity from 65 %), and statistics cards from the long-term statistics (six styles, 24 hours, 7 or 30 days). The lists to pick from leave out settings, diagnostics and whatever Home Assistant hides. Every element can carry a name of its own, keeps its place when it is renamed in Home Assistant and follows the card style under Appearance. On a phone every heading keeps its elements under it; a wall display switches them when its kiosk link allows actions. The server calls only the services of these controls and only for elements on the page, with their values bounded. The lists come from Home Assistant's registry, which needs a token of an administrator.
+- While arranging a home page, guides line elements up with each other, the bar at the foot splits what goes onto the page from the page and the board, and the tools of an element show where the pointer is.
 
 ### Fixed
 
 - **Proxmox cards stayed empty when the token was short of rights** (#48). With Privilege Separation on, Proxmox still lists the node to a token without `Sys.Audit`, but without CPU, memory or disk, and gives a token without `VM.Audit` an empty guest list. Both are an ordinary answer, so the node card read CPU 0 % and the guest list showed nothing. The node card and the guest cards now say which right is missing, the map shows such a node as online instead of 0 %, and the connection test names the missing rights, read from the token's own permissions. A cluster that really has no guests still shows an empty list.
+
+### Upgrading
+
+Nothing to do. The database gets one column for home pages (migration 22) when nexdeck starts; 0.44.0 runs on it as well.
 
 ## 0.44.0 (2026-10-20)
 
