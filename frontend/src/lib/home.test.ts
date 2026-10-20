@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 import {
-  alignTo, CLIMATE_FOOTPRINT, CLIMATE_FOOTPRINTS, climateSpots, controlWidth, heightOf, isWide, shareOf, targetAt, DEFAULT_WIDTH, FOOTPRINT, isResizable, MAX_WIDTH, MIN_WIDTH, resizeTo, widthOf, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
+  alignTo, byHand, CLIMATE_FOOTPRINT, handStep, CLIMATE_FOOTPRINTS, climateSpots, controlWidth, heightOf, isWide, shareOf, targetAt, DEFAULT_WIDTH, FOOTPRINT, isResizable, MAX_WIDTH, MIN_WIDTH, resizeTo, widthOf, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
   stepTarget, surfaceHeight, temperature, withLamps, withNews, withWish,
   type HomeAnswer, type HomeClimate, type HomeElement, type HomeLight, type LampStyle, type LampWish,
 } from './home'
@@ -313,4 +313,17 @@ it('gives each thermostat style its room, and a width only to those with a name 
   expect(controlWidth(heater('dial') as HomeClimate)).toBeNull()
   expect(isWide(heater('pill') as HomeClimate)).toBe(true)
   expect(isWide(heater('dial') as HomeClimate)).toBe(false)
+})
+
+it('moves a target by hand at least half a degree, a degree in Fahrenheit, but keeps a coarser step', () => {
+  expect(handStep({ step: 0.1, unit: '°C' })).toBe(0.5)
+  expect(handStep({ step: 0.5, unit: '°C' })).toBe(0.5)
+  expect(handStep({ step: 1, unit: '°C' })).toBe(1)
+  expect(handStep({ step: 0.5, unit: '°F' })).toBe(1)
+  expect(handStep({ step: 0, unit: '°C' })).toBe(0.5)
+  const tenths = { step: 0.1, unit: '°C', min: 5, max: 30 }
+  expect(stepTarget(byHand(tenths), 21.3, 1)).toBe(21.5)
+  expect(stepTarget(byHand(tenths), 21.3, 2)).toBe(22)
+  expect(stepTarget(byHand(tenths), 21.3, -1)).toBe(21)
+  expect(stepTarget(byHand(tenths), 21.3, -2)).toBe(20.5)
 })

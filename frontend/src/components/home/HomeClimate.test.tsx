@@ -370,3 +370,21 @@ it('says the degrees on a valve head while it is turned, and its mark otherwise'
   expect(valve.querySelector('[data-target]')).toHaveTextContent('23°')
   await waitFor(() => expect(valve.querySelector('[data-target]')).toHaveTextContent(/^4$/), { timeout: 2500 })
 })
+
+it('moves a thermostat that steps in tenths by half a degree at a tap and a swipe', async () => {
+  const tenths: HomeAnswer = { ...ANSWER, climates: { ...ANSWER.climates, living: { ...LIVING, step: 0.1, target: 21.3, missing: false } } }
+  const sent = show({ answer: tenths })
+  await findPill('climate.living_room')
+  const living = pill('climate.living_room')
+  fireEvent.click(within(living).getByRole('button', { name: 'Warmer: Living room' }))
+  // To the next half degree, not to 21.4.
+  expect(living.querySelector('[data-target]')).toHaveTextContent('21.5°')
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 21.5 }]), { timeout: 2500 })
+  const surface = main('climate.living_room')
+  fireEvent.pointerDown(surface, { pointerId: 1, button: 0, clientX: 100, clientY: 20 })
+  fireEvent.pointerMove(surface, { pointerId: 1, clientX: 125, clientY: 20 })
+  // Two steps of 12 px are a whole degree, not two tenths.
+  expect(living.querySelector('[data-target]')).toHaveTextContent('22.5°')
+  fireEvent.pointerUp(surface, { pointerId: 1, clientX: 125, clientY: 20 })
+  await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 21.5 }, { target: 22.5 }]))
+})

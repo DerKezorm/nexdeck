@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as 
 import { useTranslation } from 'react-i18next'
 
 import { get } from '../../api/client'
-import { CLIMATE_STYLES, STEP_PX, stepTarget, targetAt, temperature, type ClimateOffer, type ClimateSensor, type ClimateStyle, type ClimateView, type HomeClimate } from '../../lib/home'
+import { byHand, CLIMATE_STYLES, STEP_PX, stepTarget, targetAt, temperature, type ClimateOffer, type ClimateSensor, type ClimateStyle, type ClimateView, type HomeClimate } from '../../lib/home'
 import { climateFace } from './ClimateFace'
 import { Marquee } from './Marquee'
 
@@ -127,9 +127,9 @@ export function ClimateControl({ element, info, missing, arranging, wide, width,
       // Turned like a dial: the angle on its three quarters of a circle, from bottom left round to bottom right.
       const angle = (Math.atan2(event.clientY - held.centre[1], event.clientX - held.centre[0]) * 180) / Math.PI
       const turned = (((angle - 135) % 360) + 360) % 360
-      value = targetAt(info, turned > 270 ? (turned > 315 ? 0 : 1) : turned / 270)
+      value = targetAt(byHand(info), turned > 270 ? (turned > 315 ? 0 : 1) : turned / 270)
     } else {
-      value = stepTarget(info, held.from, Math.round(dx / STEP_PX))
+      value = stepTarget(byHand(info), held.from, Math.round(dx / STEP_PX))
     }
     if (value === held.last) return
     held.last = value

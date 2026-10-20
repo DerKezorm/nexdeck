@@ -156,6 +156,21 @@ export const CLIMATE_FOOTPRINTS: Record<ClimateStyle, { width: number; height: n
   digits: { width: 150, height: 84 },
 }
 
+/**
+ * The step a tap, a swipe or an arrow key moves a target by: the device's own,
+ * but at least half a degree (a degree in Fahrenheit). Nine of 26 thermostats
+ * measured on 20.10.2026 step in tenths, and a degree warmer was ten taps.
+ * The slider in the details keeps the device's own step for the fine tuning.
+ */
+export function handStep(info: Pick<ClimateInfo, 'step' | 'unit'>): number {
+  return Math.max(info.step > 0 ? info.step : 0.5, info.unit === '°F' ? 1 : 0.5)
+}
+
+/** The thermostat as a hand sets it: with ``handStep`` instead of its own step. */
+export function byHand<T extends Pick<ClimateInfo, 'step' | 'unit'>>(info: T): T {
+  return { ...info, step: handStep(info) }
+}
+
 /** How many pixels a finger travels sideways for one step of a thermostat's target. */
 export const STEP_PX = 12
 
@@ -318,7 +333,12 @@ export function withNews(answer: HomeAnswer, news: HomeNews): HomeAnswer {
  */
 export function stepTarget(info: Pick<ClimateInfo, 'step' | 'min' | 'max'>, from: number, steps: number): number {
   const step = info.step > 0 ? info.step : 0.5
-  const moved = Math.round((from + steps * step) / step) * step
+  const places = from / step
+  const onStep = Math.abs(places - Math.round(places)) < 1e-6
+  // Off the step (21.3 on halves), the first step goes to the next mark in its direction: 21.5 up, 21 down.
+  const moved = onStep || steps === 0
+    ? Math.round((from + steps * step) / step) * step
+    : (steps > 0 ? Math.ceil(places) + steps - 1 : Math.floor(places) + steps + 1) * step
   return Math.round(Math.min(info.max, Math.max(info.min, moved)) * 100) / 100
 }
 

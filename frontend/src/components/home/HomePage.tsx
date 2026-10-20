@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  alignTo, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
+  alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
@@ -368,7 +368,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const stepClimate = useCallback(
     (element: HomeClimate, info: ClimateView, steps: number) => {
       const from = targets[element.id] ?? info.target ?? info.reading ?? (info.min + info.max) / 2
-      aimClimate(element, info, stepTarget(info, from, steps), GATHER_MS)
+      aimClimate(element, info, stepTarget(byHand(info), from, steps), GATHER_MS)
     },
     [targets, aimClimate],
   )
