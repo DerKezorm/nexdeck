@@ -2555,6 +2555,47 @@ body.has-player-bar main {
   .home-grip:hover {
     border-color: var(--nd-accent);
   }
+
+  /* A statistics card is sized at its corner, in both directions. */
+  .home-grip-corner {
+    top: auto;
+    right: -6px;
+    bottom: -6px;
+    width: 16px;
+    height: 16px;
+    transform: none;
+    border-radius: 5px;
+    cursor: nwse-resize;
+  }
+
+  .home-grip-corner::after {
+    inset: 4px;
+    border: 0;
+    border-right: 1.5px solid var(--nd-text-faint);
+    border-bottom: 1.5px solid var(--nd-text-faint);
+    border-radius: 0 0 2px 0;
+  }
+
+  /* The statistics cards of a home page (statistik.html of 20.10.2026). */
+  .stat-card {
+    position: relative;
+    overflow: hidden;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: var(--nd-surface);
+    border: 1px solid var(--nd-border-strong);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .stat-small {
+    padding: 10px 12px;
+  }
+
+  .stat-tick {
+    font: 500 10px var(--font-mono);
+    fill: var(--nd-text-faint);
+  }
 }
 
 /* The thermostats of a home page, the drawings of their board of sketches

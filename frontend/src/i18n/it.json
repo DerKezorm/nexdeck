@@ -1714,6 +1714,86 @@
     },
     "on": "accesa",
     "off": "spenta",
-    "removeLight": "Rimuovi"
+    "removeLight": "Rimuovi",
+    "stats": {
+      "add": "Statistica",
+      "now": "ora",
+      "failed": "Non è stato possibile caricare i valori.",
+      "missing": "{{name}} non c’è più in Home Assistant",
+      "noStatsTitle": "Nessuna statistica",
+      "noStats": "Home Assistant non tiene statistiche a lungo termine per «{{name}}» (senza classe di stato). Solo gli ultimi giorni dello storico.",
+      "noDataTitle": "Ancora nessun valore",
+      "noData": "Home Assistant non ha ancora nulla per questo periodo.",
+      "total": "totale",
+      "perStep": {
+        "hour": "all’ora",
+        "day": "al giorno",
+        "month": "al mese"
+      },
+      "latest": {
+        "hour": "quest’ora",
+        "day": "oggi finora",
+        "month": "questo mese"
+      },
+      "mean": "media",
+      "low": "min.",
+      "high": "max.",
+      "lowest": "minima",
+      "highest": "massima",
+      "on": "{{value}} il {{date}}",
+      "today": "oggi",
+      "yesterday": "ieri",
+      "thisWeek": "questa settimana",
+      "lastWeek": "la settimana scorsa",
+      "meanOf": "{{label}}, media {{value}}",
+      "totalOf": "{{label}}, {{value}}",
+      "dragSize": "Trascina per cambiare la dimensione",
+      "chooseSensors": "Scegli i sensori",
+      "remove": "Rimuovi la scheda",
+      "styles": {
+        "line": "Linea",
+        "rooms": "Più stanze",
+        "band": "Banda",
+        "bars": "Barre",
+        "small": "Piccola",
+        "compare": "Oggi e ieri"
+      },
+      "period": "Periodo",
+      "periods": {
+        "24h": "24 h",
+        "7d": "7 g",
+        "30d": "30 g",
+        "1y": "1 a",
+        "day": "Giorno",
+        "week": "Settimana"
+      },
+      "fromHistory": "dallo storico",
+      "pickTitle": "Scheda statistica",
+      "pickEditTitle": "Sensori della scheda",
+      "pickNone": "Scegli i sensori",
+      "pickSave": "Applica",
+      "pickOne": "Aggiungi scheda",
+      "pickMany": "Aggiungi {{count}} schede",
+      "cardTitle": "Nome della scheda",
+      "cardTitleHint": "vuoto: il nome del sensore",
+      "upTo": "Fino a {{count}} sensori su una scheda.",
+      "pickEmpty": "Nessun sensore con valori.",
+      "onlyHistory": "solo storico",
+      "counter": "contatore",
+      "statistics": "statistica"
+    },
+    "history": {
+      "title": "Storico",
+      "room": "Stanza",
+      "target": "Obiettivo (tratteggiato)",
+      "heats": "riscalda",
+      "todayLow": "oggi min.",
+      "todayHigh": "max.",
+      "heated": "riscaldato",
+      "yesterdayHeated": "ieri",
+      "noHeating": "Mancano i tempi di riscaldamento.",
+      "noHeatingText": "Questo termostato non dice quando riscalda. Stanza e obiettivo restano comunque nello storico.",
+      "empty": "Home Assistant non ha storico per questo periodo."
+    }
   }
 }

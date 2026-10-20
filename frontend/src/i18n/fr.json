@@ -1714,6 +1714,86 @@
     },
     "on": "allumée",
     "off": "éteinte",
-    "removeLight": "Retirer"
+    "removeLight": "Retirer",
+    "stats": {
+      "add": "Statistique",
+      "now": "maint.",
+      "failed": "Les valeurs n’ont pas pu être chargées.",
+      "missing": "{{name}} n’est plus dans Home Assistant",
+      "noStatsTitle": "Pas de statistiques",
+      "noStats": "Home Assistant ne garde pas de statistiques à long terme pour « {{name}} » (sans classe d’état). Seulement les derniers jours de l’historique.",
+      "noDataTitle": "Pas encore de valeurs",
+      "noData": "Home Assistant n’a encore rien pour cette période.",
+      "total": "total",
+      "perStep": {
+        "hour": "par heure",
+        "day": "par jour",
+        "month": "par mois"
+      },
+      "latest": {
+        "hour": "cette heure",
+        "day": "aujourd’hui",
+        "month": "ce mois"
+      },
+      "mean": "moyenne",
+      "low": "min.",
+      "high": "max.",
+      "lowest": "minimum",
+      "highest": "maximum",
+      "on": "{{value}} le {{date}}",
+      "today": "aujourd’hui",
+      "yesterday": "hier",
+      "thisWeek": "cette semaine",
+      "lastWeek": "la semaine dernière",
+      "meanOf": "{{label}}, moyenne {{value}}",
+      "totalOf": "{{label}}, {{value}}",
+      "dragSize": "Faire glisser pour changer la taille",
+      "chooseSensors": "Choisir les capteurs",
+      "remove": "Retirer la carte",
+      "styles": {
+        "line": "Courbe",
+        "rooms": "Plusieurs pièces",
+        "band": "Bande",
+        "bars": "Barres",
+        "small": "Petite",
+        "compare": "Aujourd’hui et hier"
+      },
+      "period": "Période",
+      "periods": {
+        "24h": "24 h",
+        "7d": "7 j",
+        "30d": "30 j",
+        "1y": "1 an",
+        "day": "Jour",
+        "week": "Semaine"
+      },
+      "fromHistory": "de l’historique",
+      "pickTitle": "Carte de statistique",
+      "pickEditTitle": "Capteurs de la carte",
+      "pickNone": "Choisir les capteurs",
+      "pickSave": "Appliquer",
+      "pickOne": "Ajouter la carte",
+      "pickMany": "Ajouter {{count}} cartes",
+      "cardTitle": "Nom de la carte",
+      "cardTitleHint": "vide : le nom du capteur",
+      "upTo": "Jusqu’à {{count}} capteurs sur une carte.",
+      "pickEmpty": "Aucun capteur avec des valeurs.",
+      "onlyHistory": "historique seul",
+      "counter": "compteur",
+      "statistics": "statistique"
+    },
+    "history": {
+      "title": "Historique",
+      "room": "Pièce",
+      "target": "Consigne (pointillés)",
+      "heats": "chauffe",
+      "todayLow": "aujourd’hui min.",
+      "todayHigh": "max.",
+      "heated": "chauffé",
+      "yesterdayHeated": "hier",
+      "noHeating": "Temps de chauffe absents.",
+      "noHeatingText": "Ce thermostat ne dit pas quand il chauffe. La pièce et la consigne restent dans l’historique.",
+      "empty": "Home Assistant n’a pas d’historique pour cette période."
+    }
   }
 }

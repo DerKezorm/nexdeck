@@ -1714,6 +1714,86 @@
     },
     "on": "an",
     "off": "aus",
-    "removeLight": "Entfernen"
+    "removeLight": "Entfernen",
+    "stats": {
+      "add": "Statistik",
+      "now": "jetzt",
+      "failed": "Die Werte ließen sich nicht laden.",
+      "missing": "{{name}} fehlt in Home Assistant",
+      "noStatsTitle": "Keine Statistik",
+      "noStats": "Home Assistant führt für „{{name}}“ keine Langzeit-Statistik (ohne Zustandsklasse). Nur die letzten Tage aus dem Verlauf.",
+      "noDataTitle": "Noch keine Werte",
+      "noData": "Home Assistant hat für diesen Zeitraum noch nichts.",
+      "total": "gesamt",
+      "perStep": {
+        "hour": "pro Stunde",
+        "day": "am Tag",
+        "month": "im Monat"
+      },
+      "latest": {
+        "hour": "diese Stunde",
+        "day": "heute bisher",
+        "month": "diesen Monat"
+      },
+      "mean": "Mittel",
+      "low": "tief",
+      "high": "hoch",
+      "lowest": "tiefster",
+      "highest": "höchster",
+      "on": "{{value}} am {{date}}",
+      "today": "heute",
+      "yesterday": "gestern",
+      "thisWeek": "diese Woche",
+      "lastWeek": "letzte Woche",
+      "meanOf": "{{label}}, Mittel {{value}}",
+      "totalOf": "{{label}}, {{value}}",
+      "dragSize": "Ziehen ändert die Größe",
+      "chooseSensors": "Sensoren wählen",
+      "remove": "Karte entfernen",
+      "styles": {
+        "line": "Verlauf",
+        "rooms": "Mehrere Räume",
+        "band": "Band",
+        "bars": "Balken",
+        "small": "Klein",
+        "compare": "Heute und gestern"
+      },
+      "period": "Zeitraum",
+      "periods": {
+        "24h": "24 h",
+        "7d": "7 T",
+        "30d": "30 T",
+        "1y": "1 J",
+        "day": "Tag",
+        "week": "Woche"
+      },
+      "fromHistory": "aus dem Verlauf",
+      "pickTitle": "Statistik-Karte",
+      "pickEditTitle": "Sensoren der Karte",
+      "pickNone": "Sensoren wählen",
+      "pickSave": "Übernehmen",
+      "pickOne": "Karte hinzufügen",
+      "pickMany": "{{count}} Karten hinzufügen",
+      "cardTitle": "Name der Karte",
+      "cardTitleHint": "leer: Name des Sensors",
+      "upTo": "Bis zu {{count}} Sensoren auf einer Karte.",
+      "pickEmpty": "Keine Sensoren mit Werten gefunden.",
+      "onlyHistory": "nur Verlauf",
+      "counter": "Zähler",
+      "statistics": "Statistik"
+    },
+    "history": {
+      "title": "Verlauf",
+      "room": "Raum",
+      "target": "Soll (gestrichelt)",
+      "heats": "heizt",
+      "todayLow": "heute tief",
+      "todayHigh": "hoch",
+      "heated": "geheizt",
+      "yesterdayHeated": "gestern",
+      "noHeating": "Heizzeiten fehlen.",
+      "noHeatingText": "Dieses Thermostat meldet nicht, wann es heizt. Raum und Soll stehen trotzdem im Verlauf.",
+      "empty": "Home Assistant hat für diesen Zeitraum keinen Verlauf."
+    }
   }
 }

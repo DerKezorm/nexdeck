@@ -1,13 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Grid3x3, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
+import { ChartLine, Check, Grid3x3, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
+  alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, STAT_HEIGHTS, STAT_WIDTHS, statSize, statSpots, stepTarget,
+  surfaceHeight, withClimates, withLamps, withWish,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
-  type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
+  type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
 import { ClimateControl } from './ClimateControl'
@@ -16,6 +17,8 @@ import { ClimatePicker } from './ClimatePicker'
 import { LampDetails } from './LampDetails'
 import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
+import { StatCard } from './StatCard'
+import { StatPicker } from './StatPicker'
 
 interface Props {
   pageId: number
@@ -166,11 +169,17 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle; sensor?: ClimateSensor | null; width?: number }) => {
+    (id: string, patch: {
+      x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle; sensor?: ClimateSensor | null; width?: number
+      height?: number; sensors?: ClimateSensor[]; title?: string
+    }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
+          : element.type === 'stat'
+            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as StatStyle | undefined) ?? element.style, width: patch.width ?? element.width,
+                height: patch.height ?? element.height, sensors: patch.sensors ?? element.sensors, title: patch.title ?? element.title }
           : element.type === 'climate'
             ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width,
                 style: (patch.style as ClimateStyle | undefined) ?? element.style }
@@ -377,6 +386,25 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const detailedClimate = elements.find((element): element is HomeClimate => element.type === 'climate' && element.id === climateDetails) ?? null
   const detailedClimateInfo = detailedClimate ? climateOf(detailedClimate) : null
 
+  // -- statistics cards ------------------------------------------------------
+
+  /** The picker: null closed, 'new' to add cards, or the id of the card whose sensors are changed. */
+  const [statPicking, setStatPicking] = useState<string | null>(null)
+  const addStats = useCallback(
+    (cards: { style: StatStyle; sensors: ClimateSensor[]; title: string }[]) => {
+      setStatPicking(null)
+      if (!layout || cards.length === 0) return
+      const spots = statSpots(layout.elements, cards.length, cards[0].style)
+      const added: HomeStat[] = []
+      for (const [index, card] of cards.entries()) {
+        added.push({ id: freshId([...layout.elements, ...added]), type: 'stat', ...spots[index], style: card.style, sensors: card.sensors, title: card.title })
+      }
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  const statCard = elements.find((element): element is HomeStat => element.type === 'stat' && element.id === statPicking) ?? null
+
   const addHeading = useCallback(() => {
     if (!layout) return
     const id = freshId(layout.elements)
@@ -388,7 +416,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   const [guidesOn, setGuidesOn] = useGuides()
   const surface = useRef<HTMLDivElement>(null)
-  const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number } | null>(null)
+  const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number } | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const grab = useRef<{
     id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean
@@ -415,7 +443,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     if (!arranging || narrow || event.button !== 0 || renaming === element.id) return
     const target = event.target as HTMLElement
     if (target.closest('[data-element-tool]')) return
-    const resizing = Boolean(target.closest('[data-resize]')) && isResizable(element)
+    const resizing = Boolean(target.closest('[data-resize]')) && (isResizable(element) || element.type === 'stat')
     grab.current = { id: element.id, pointer: event.pointerId, startX: event.clientX, startY: event.clientY, fromX: element.x, fromY: element.y, moved: false, resizing, ...boxes(element.id) }
     try {
       event.currentTarget.setPointerCapture(event.pointerId)
@@ -432,6 +460,16 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     held.moved = true
     if (held.resizing) {
       const element = elements.find((one) => one.id === held.id)
+      if (element?.type === 'stat') {
+        // A card is dragged at its corner: width and height, on the step, inside their bounds; its right edge lines up with others.
+        const from = statSize(element)
+        const sized = guidesOn ? resizeTo({ ...held.own, width: from.width }, from.width + dx, held.others) : { width: snap(from.width + dx), guides: [] }
+        const width = Math.min(STAT_WIDTHS[1], Math.max(STAT_WIDTHS[0], Math.round(sized.width)))
+        const height = Math.min(STAT_HEIGHTS[1], Math.max(STAT_HEIGHTS[0], snap(from.height + dy)))
+        setDragged({ id: held.id, x: held.fromX, y: held.fromY, width, height })
+        setGuides(width === Math.round(sized.width) ? sized.guides : [])
+        return
+      }
       const from = element && element.type !== 'heading' ? (controlWidth(element) ?? held.own.width) : held.own.width
       const sized = guidesOn ? resizeTo({ ...held.own, width: from }, from + dx, held.others) : resizeTo({ ...held.own, width: from }, from + dx, [])
       setDragged({ id: held.id, x: held.fromX, y: held.fromY, width: sized.width })
@@ -455,7 +493,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     if (!held || held.pointer !== event.pointerId) return
     grab.current = null
     if (held.moved && dragged && dragged.id === held.id) {
-      change(held.id, held.resizing && dragged.width !== undefined ? { width: dragged.width } : { x: dragged.x, y: dragged.y })
+      change(held.id, held.resizing && dragged.width !== undefined ? { width: dragged.width, ...(dragged.height !== undefined ? { height: dragged.height } : {}) } : { x: dragged.x, y: dragged.y })
     } else if (!held.moved && !held.resizing && elements.find((element) => element.id === held.id)?.type === 'heading') setRenaming(held.id)
     setDragged(null)
     setGuides([])
@@ -481,9 +519,15 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   }
 
   const placed = (element: HomeElement): HomeElement =>
-    dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}) } : element
+    dragged && dragged.id === element.id
+      ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}),
+          ...(dragged.height !== undefined && element.type === 'stat' ? { height: dragged.height } : {}) }
+      : element
   const draw = (element: HomeElement) =>
-    element.type === 'climate' ? (
+    element.type === 'stat' ? (
+      <StatCard element={element} pageId={pageId} arranging={arranging} wide={narrow && isWide(element)} size={statSize(element)}
+        onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })} onSensors={() => setStatPicking(element.id)} />
+    ) : element.type === 'climate' ? (
       <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId} width={controlWidth(element)}
         target={targets[element.id] ?? climateOf(element)?.target ?? null} setting={targets[element.id] !== undefined}
         onStep={canAct ? (steps) => { const info = climateOf(element); if (info) stepClimate(element, info, steps) } : undefined}
@@ -521,6 +565,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
               <button type="button" className="btn" onClick={() => setPickingClimates(true)}>
                 <Thermometer size={15} /> {t('homePage.addClimate')}
               </button>
+              <button type="button" className="btn" onClick={() => setStatPicking('new')}>
+                <ChartLine size={15} /> {t('homePage.stats.add')}
+              </button>
               <button type="button" className="btn" onClick={addHeading}>
                 <Heading size={15} /> {t('homePage.addHeading')}
               </button>
@@ -529,14 +576,15 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         </div>
       ) : narrow ? (
         // Each heading with the lamps that stand under it on the surface (``phoneGroups``).
-        <div className="grid gap-5 pb-6">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 pb-6">
           {phoneGroups(elements).map((group) => (
-            <section key={group.heading?.id ?? 'top'} className="grid gap-3" data-phone-group={group.heading?.id ?? ''}>
+            <section key={group.heading?.id ?? 'top'} className="grid grid-cols-[minmax(0,1fr)] gap-3" data-phone-group={group.heading?.id ?? ''}>
               {group.heading && draw(group.heading)}
               {group.devices.length > 0 && (
                 <div className="flex flex-wrap items-start gap-3">
                   {group.devices.map((device) => (
-                    <div key={device.id} className={isWide(device) ? 'w-full' : ''}>{draw(device)}</div>
+                    // ``min-w-0``: a chart drawn at the card's own width must not push the card past the screen.
+                    <div key={device.id} className={isWide(device) ? 'w-full min-w-0' : ''}>{draw(device)}</div>
                   ))}
                 </div>
               )}
@@ -574,7 +622,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           })}
         </div>
       )}
-      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
+      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
         onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
         <LampDetails info={detailedInfo} onWish={(wish) => ask(detailed, detailedInfo, wish)} onClose={() => setDetails(null)} />
@@ -584,8 +632,10 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           onStep={canAct ? (steps) => stepClimate(detailedClimate, detailedClimateInfo, steps) : null}
           onSlide={canAct ? (value) => aimClimate(detailedClimate, detailedClimateInfo, value, GATHER_MS) : null}
           onWish={canAct ? (wish) => tell(detailedClimate.id, detailedClimateInfo.name, wish) : null}
-          onClose={() => setClimateDetails(null)} />
+          onClose={() => setClimateDetails(null)} history={{ pageId, elementId: detailedClimate.id }} />
       )}
+      {canEdit && <StatPicker open={statPicking !== null} pageId={pageId} card={statCard} onClose={() => setStatPicking(null)} onAdd={addStats}
+        onChange={(id, patch) => { setStatPicking(null); change(id, patch) }} />}
       {canEdit && <ClimatePicker open={pickingClimates} pageId={pageId} placed={placedClimates} onClose={() => setPickingClimates(false)} onAdd={addClimates} />}
       {canEdit && <LightPicker open={picking} pageId={pageId} placed={placedLamps} onClose={() => setPicking(false)} onAdd={addLights} />}
       {note && (
@@ -835,7 +885,7 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
@@ -844,6 +894,9 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading:
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onClimate} aria-label={t('homePage.addClimate')}>
         <Thermometer size={15} /> <span className="hidden sm:inline">{t('homePage.addClimate')}</span>
+      </button>
+      <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onStat} aria-label={t('homePage.stats.add')}>
+        <ChartLine size={15} /> <span className="hidden sm:inline">{t('homePage.stats.add')}</span>
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>

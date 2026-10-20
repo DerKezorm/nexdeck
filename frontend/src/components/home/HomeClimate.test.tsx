@@ -9,7 +9,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 
-import { CLIMATE_STYLES, type ClimateOffer, type ClimateView, type HomeAnswer } from '../../lib/home'
+import { CLIMATE_STYLES, type ClimateHistory, type ClimateOffer, type ClimateView, type HomeAnswer } from '../../lib/home'
 import { HomePage } from './HomePage'
 
 type Sent = { url: string; method: string; body: Record<string, unknown> | null }
@@ -58,12 +58,23 @@ const OFFER: ClimateOffer = {
   ],
 }
 
+const HOUR = 3_600_000
+const START = Date.UTC(2026, 9, 19, 10)
+/** A day of the living room: 18 at night, 21.5 from six, heating twice. */
+const HISTORY: ClimateHistory = {
+  period: '24h', start: START, end: START + 24 * HOUR, zone: 'Europe/Berlin', step: '5minute', sensor: 'sensor.living_room_temperature', problem: null,
+  room: Array.from({ length: 24 }, (_, hour) => [START + hour * HOUR, 19 + hour / 10, 18.8 + hour / 10, 19.2 + hour / 10] as [number, number, number, number]),
+  target: [[START, 21.5], [START + 12 * HOUR, 18], [START + 20 * HOUR, 21.5]],
+  heating: [[START + 20 * HOUR, START + 21 * HOUR + 20 * 60_000], [START + 23 * HOUR, START + 23.5 * HOUR]],
+  today: { low: 18.2, high: 21.6, heated: 3 * HOUR / 1000 + 20 * 60 }, yesterday: { heated: 4 * HOUR / 1000 + 5 * 60 },
+}
+
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } })
 
 /** Answers a thermostat being set the way the server does, unless a test answers itself. */
 type Setter = (element: string, body: Record<string, unknown>) => Promise<Response> | Response
 
-function show({ canAct = true, canEdit = true, editing = false, setter = undefined as Setter | undefined, answer = ANSWER } = {}) {
+function show({ canAct = true, canEdit = true, editing = false, setter = undefined as Setter | undefined, answer = ANSWER, history = HISTORY as ClimateHistory } = {}) {
   const sent: Sent[] = []
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
@@ -81,6 +92,7 @@ function show({ canAct = true, canEdit = true, editing = false, setter = undefin
       return json({ ok: true, confirmed: true, climate: { ...view, missing: false } })
     }
     if (method === 'PUT') return json({ layout: { ...answer.layout, elements: body.elements }, version: answer.version + 1 })
+    if (url.includes('/history')) return json(history)
     if (url.includes('/home/climates')) return json(OFFER)
     if (url.includes('/home/lights')) return json({ lights: [], problem: null })
     return json(answer)
@@ -185,7 +197,9 @@ it('gives who may only look no plus, no minus and no mode to press', async () =>
   fireEvent.click(within(living).getByRole('button', { name: /^Living room/ }))
   const panel = await screen.findByRole('dialog')
   expect(within(panel).queryByRole('button', { name: /Warmer/ })).not.toBeInTheDocument()
-  for (const mode of within(panel).getAllByRole('radio')) expect(mode).toBeDisabled()
+  // The modes are not theirs to press; the period of the history is only what they look at.
+  for (const mode of within(within(panel).getByRole('radiogroup', { name: 'Mode' })).getAllByRole('radio')) expect(mode).toBeDisabled()
+  expect(within(panel).getByRole('radio', { name: '7 d' })).toBeEnabled()
   expect(posts(sent)).toEqual([])
 })
 
@@ -387,4 +401,31 @@ it('moves a thermostat that steps in tenths by half a degree at a tap and a swip
   expect(living.querySelector('[data-target]')).toHaveTextContent('22.5°')
   fireEvent.pointerUp(surface, { pointerId: 1, clientX: 125, clientY: 20 })
   await waitFor(() => expect(posts(sent).map((one) => one.body)).toEqual([{ target: 21.5 }, { target: 22.5 }]))
+})
+
+it('shows in the details what the thermostat did, and asks for the week when the week is chosen', async () => {
+  const sent = show()
+  fireEvent.click(within(await findPill('climate.living_room')).getByRole('button', { name: /^Living room/ }))
+  const details = await screen.findByRole('dialog')
+  const history = await waitFor(() => {
+    const found = details.querySelector('[data-history-stats]')
+    if (!found) throw new Error('no history yet')
+    return found as HTMLElement
+  })
+  expect(sent.some((one) => one.url.endsWith('/pages/9/home/climates/living/history?period=24h'))).toBe(true)
+  expect(within(history).getByText('3 h 20')).toBeInTheDocument()
+  expect(within(history).getByText('4 h 05')).toBeInTheDocument()
+  expect(details.querySelectorAll('[data-span]')).toHaveLength(2)
+  expect(details.querySelector('[data-steps]')).not.toBeNull()
+  fireEvent.click(within(details).getByRole('radio', { name: '7 d' }))
+  await waitFor(() => expect(sent.some((one) => one.url.endsWith('/climates/living/history?period=7d'))).toBe(true))
+})
+
+it('says so when a thermostat never tells when it heats, rather than drawing a day without heating', async () => {
+  show({ history: { ...HISTORY, heating: null, today: { ...HISTORY.today, heated: null }, yesterday: { heated: null } } })
+  fireEvent.click(within(await findPill('climate.living_room')).getByRole('button', { name: /^Living room/ }))
+  const details = await screen.findByRole('dialog')
+  await waitFor(() => expect(details.querySelector('[data-no-heating]')).not.toBeNull())
+  expect(details.querySelector('[data-heated]')).toBeNull()
+  expect(details.querySelectorAll('[data-span]')).toHaveLength(0)
 })

@@ -1714,6 +1714,86 @@
     },
     "on": "on",
     "off": "off",
-    "removeLight": "Remove"
+    "removeLight": "Remove",
+    "stats": {
+      "add": "Statistics",
+      "now": "now",
+      "failed": "The values could not be loaded.",
+      "missing": "{{name}} is gone from Home Assistant",
+      "noStatsTitle": "No statistics",
+      "noStats": "Home Assistant keeps no long-term statistics for “{{name}}” (it has no state class). Only the last days from its history.",
+      "noDataTitle": "No values yet",
+      "noData": "Home Assistant has nothing for this period yet.",
+      "total": "total",
+      "perStep": {
+        "hour": "per hour",
+        "day": "per day",
+        "month": "per month"
+      },
+      "latest": {
+        "hour": "this hour",
+        "day": "today so far",
+        "month": "this month"
+      },
+      "mean": "mean",
+      "low": "low",
+      "high": "high",
+      "lowest": "lowest",
+      "highest": "highest",
+      "on": "{{value}} on {{date}}",
+      "today": "today",
+      "yesterday": "yesterday",
+      "thisWeek": "this week",
+      "lastWeek": "last week",
+      "meanOf": "{{label}}, mean {{value}}",
+      "totalOf": "{{label}}, {{value}}",
+      "dragSize": "Drag to change the size",
+      "chooseSensors": "Choose sensors",
+      "remove": "Remove card",
+      "styles": {
+        "line": "Line",
+        "rooms": "Several rooms",
+        "band": "Band",
+        "bars": "Bars",
+        "small": "Small",
+        "compare": "Today and yesterday"
+      },
+      "period": "Period",
+      "periods": {
+        "24h": "24 h",
+        "7d": "7 d",
+        "30d": "30 d",
+        "1y": "1 y",
+        "day": "Day",
+        "week": "Week"
+      },
+      "fromHistory": "from the history",
+      "pickTitle": "Statistics card",
+      "pickEditTitle": "Sensors of the card",
+      "pickNone": "Choose sensors",
+      "pickSave": "Apply",
+      "pickOne": "Add card",
+      "pickMany": "Add {{count}} cards",
+      "cardTitle": "Name of the card",
+      "cardTitleHint": "empty: the sensor's name",
+      "upTo": "Up to {{count}} sensors on one card.",
+      "pickEmpty": "No sensors with values found.",
+      "onlyHistory": "history only",
+      "counter": "counter",
+      "statistics": "statistics"
+    },
+    "history": {
+      "title": "History",
+      "room": "Room",
+      "target": "Target (dashed)",
+      "heats": "heating",
+      "todayLow": "today low",
+      "todayHigh": "high",
+      "heated": "heated",
+      "yesterdayHeated": "yesterday",
+      "noHeating": "No heating times.",
+      "noHeatingText": "This thermostat does not say when it heats. Room and target are in the history all the same.",
+      "empty": "Home Assistant has no history for this period."
+    }
   }
 }

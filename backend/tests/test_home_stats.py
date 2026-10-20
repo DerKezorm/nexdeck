@@ -191,6 +191,9 @@ def test_a_card_shows_its_sensors_points_and_says_which_one_is_gone(client: Test
     assert living["current"] == 21.3 and answer.json()["zone"] == "Europe/Berlin"
     energy = client.get(f"/api/v1/pages/{page['id']}/home/stats/bars", params={"period": "1y"}).json()["series"][0]
     assert energy["kind"] == "sum" and energy["step"] == "month" and energy["total"] == pytest.approx(sum(point[1] for point in energy["points"]), abs=0.01)
+    assert len(energy["points"]) == 12, "twelve months, this one so far the last"
+    week = client.get(f"/api/v1/pages/{page['id']}/home/stats/bars", params={"period": "7d"}).json()["series"][0]
+    assert len(week["points"]) in (6, 7) and week["latest"] == week["points"][-1][1], "seven days, today's so far the last (none yet just after midnight)"
 
 
 def test_a_comparison_brings_the_day_before_laid_over_this_one(client: TestClient) -> None:

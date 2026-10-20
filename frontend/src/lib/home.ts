@@ -70,7 +70,7 @@ export const MAX_WIDTH = 640
 
 /** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
 export function isResizable(element: HomeElement): element is HomeDevice {
-  return element.type !== 'heading' && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider')
+  return (element.type === 'light' || element.type === 'climate') && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider')
 }
 
 /** The width a control is drawn at on the surface, or null for a style whose size is its drawing. */
@@ -87,8 +87,9 @@ export const CLIMATE_FOOTPRINT = { width: 320, height: 40 }
 /** The thermostat styles that read as a row of their own on a phone. */
 export const WIDE_CLIMATE_STYLES: ReadonlySet<string> = new Set(['pill', 'chip', 'slider'])
 
-/** Whether an element runs the width of a phone's screen: a thermostat always, a lamp by its style. */
-export function isWide(element: HomeDevice): boolean {
+/** Whether an element runs the width of a phone's screen: a thermostat and a lamp by their style, a card unless it is a small one. */
+export function isWide(element: HomeItem): boolean {
+  if (element.type === 'stat') return element.style !== 'small'
   return element.type === 'climate' ? WIDE_CLIMATE_STYLES.has(element.style) : WIDE_STYLES.has(element.style)
 }
 
@@ -96,13 +97,15 @@ const HEADING_HEIGHT = 24
 
 /** How tall an element stands on the surface. */
 export function heightOf(element: HomeElement): number {
+  if (element.type === 'stat') return statSize(element).height
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
 
 /** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
 export function widthOf(element: HomeElement): number {
-  if (element.type !== 'heading' && element.width !== undefined && isResizable(element)) return controlWidth(element) ?? FOOTPRINT.pill.width
+  if (element.type === 'stat') return statSize(element).width
+  if (isResizable(element) && element.width !== undefined) return controlWidth(element) ?? FOOTPRINT.pill.width
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
 }
@@ -191,7 +194,66 @@ export function shareOf(info: Pick<ClimateInfo, 'min' | 'max'>, value: number | 
 /** What stands on a page and is switched or set: a lamp or a thermostat. */
 export type HomeDevice = HomeLight | HomeClimate
 
-export type HomeElement = HomeHeading | HomeLight | HomeClimate
+/**
+ * A statistics card: one to six sensors, drawn from what Home Assistant
+ * remembers of them (``hass_stats``), in a style of its board of sketches
+ * (``statistik.html``, 20.10.2026). Its size is its own, dragged at the corner.
+ */
+export interface HomeStat {
+  id: string
+  type: 'stat'
+  x: number
+  y: number
+  style: StatStyle
+  sensors: ClimateSensor[]
+  /** What the card is called; empty for the first sensor's name. */
+  title: string
+  width?: number
+  height?: number
+}
+
+/** A: one sensor as a line, B: rooms on one axis, C: a band of low to high, D: bars of a counter, E: small, F: today over yesterday. */
+export const STAT_STYLES = ['line', 'rooms', 'band', 'bars', 'small', 'compare'] as const
+export type StatStyle = (typeof STAT_STYLES)[number]
+/** The periods a card switches between, by style; the first is where it starts. The server keeps the same (``hass_stats``). */
+export type StatPeriod = '24h' | '7d' | '30d' | '1y' | 'day' | 'week'
+export const STAT_PERIODS: Record<StatStyle, StatPeriod[]> = {
+  line: ['24h', '7d', '30d'],
+  rooms: ['24h', '7d', '30d'],
+  band: ['7d', '30d', '1y'],
+  bars: ['7d', '30d', '1y'],
+  small: ['24h'],
+  compare: ['day', 'week'],
+}
+/** The period a card starts in, as on the board of sketches: a day of one room, a week of several, a month of a band. */
+export const STAT_START: Record<StatStyle, StatPeriod> = { line: '24h', rooms: '7d', band: '30d', bars: '7d', small: '24h', compare: 'day' }
+/** The size of each style unless it was given one, as on the board of sketches. */
+export const STAT_SIZES: Record<StatStyle, { width: number; height: number }> = {
+  line: { width: 360, height: 190 },
+  rooms: { width: 520, height: 210 },
+  band: { width: 360, height: 190 },
+  bars: { width: 360, height: 190 },
+  small: { width: 170, height: 104 },
+  compare: { width: 360, height: 190 },
+}
+/** The bounds of a card's size; the server keeps the same (``STAT_WIDTHS``, ``STAT_HEIGHTS``). */
+export const STAT_WIDTHS = [150, 1200] as const
+export const STAT_HEIGHTS = [80, 800] as const
+/** How many sensors a card shows at most, and the styles that show one. */
+export const MAX_SENSORS = 6
+export const ONE_SENSOR: ReadonlySet<StatStyle> = new Set(['line', 'band', 'bars', 'small', 'compare'])
+
+/** The size a card is drawn at. */
+export function statSize(element: HomeStat): { width: number; height: number } {
+  const fallback = STAT_SIZES[element.style] ?? STAT_SIZES.line
+  const clamp = (value: number | undefined, [low, high]: readonly [number, number], or: number) => Math.min(high, Math.max(low, value ?? or))
+  return { width: clamp(element.width, STAT_WIDTHS, fallback.width), height: clamp(element.height, STAT_HEIGHTS, fallback.height) }
+}
+
+/** Anything on the surface that is not a heading: what a phone lists under one. */
+export type HomeItem = HomeDevice | HomeStat
+
+export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat
 
 export interface HomeLayout {
   integration_id: number | null
@@ -674,7 +736,7 @@ export function surfaceHeight(elements: HomeElement[]): number {
 /** A heading of the phone's list and the lamps and thermostats under it; the first group has none, for those above every heading. */
 export interface PhoneGroup {
   heading: HomeHeading | null
-  devices: HomeDevice[]
+  devices: HomeItem[]
 }
 
 /**
@@ -688,8 +750,8 @@ export interface PhoneGroup {
  */
 export function phoneGroups(elements: HomeElement[]): PhoneGroup[] {
   const headings = readingOrder(elements.filter((element): element is HomeHeading => element.type === 'heading'))
-  const lamps = readingOrder(elements.filter((element): element is HomeDevice => element.type !== 'heading'))
-  const groups: PhoneGroup[] = [{ heading: null, devices: [] }, ...headings.map((heading) => ({ heading, devices: [] as HomeDevice[] }))]
+  const lamps = readingOrder(elements.filter((element): element is HomeItem => element.type !== 'heading'))
+  const groups: PhoneGroup[] = [{ heading: null, devices: [] }, ...headings.map((heading) => ({ heading, devices: [] as HomeItem[] }))]
   for (const lamp of lamps) {
     const middle = lamp.x + widthOf(lamp) / 2
     let owner: PhoneGroup = groups[0]
@@ -702,4 +764,118 @@ export function phoneGroups(elements: HomeElement[]): PhoneGroup[] {
     owner.devices.push(lamp)
   }
   return groups.filter((group) => group.heading || group.devices.length)
+}
+
+// ---------------------------------------------------------------------------
+// Statistics
+// ---------------------------------------------------------------------------
+
+/** A sensor a statistics card can show (``hass_stats.pick_sensors``). */
+export interface StatSensorInfo extends SensorInfo {
+  device_class: string
+  /** ``sum`` for a counter (its change per step), ``mean`` for a measurement. */
+  kind: 'mean' | 'sum'
+  /** Long-term statistics reach back as far as Home Assistant keeps them; a history only its ten days or so. */
+  source: 'statistics' | 'history'
+}
+
+export interface StatOffer {
+  sensors: StatSensorInfo[]
+  problem: HomeProblem | null
+}
+
+/** ``[start, mean, low, high]`` of a measurement, ``[start, change]`` of a counter; times in milliseconds. */
+export type StatPoint = [number, number, number, number] | [number, number]
+
+export interface StatSummary {
+  low: [number, number] | null
+  high: [number, number] | null
+  mean: number | null
+  total: number | null
+}
+
+export type StatLine = {
+  missing: false
+  rid: string
+  entity_id: string
+  name: string
+  unit: string
+  kind: 'mean' | 'sum'
+  source: 'statistics' | 'history'
+  current: number | null
+  unavailable: boolean
+  step: string
+  points: StatPoint[]
+  /** A comparison's period before, its times moved onto this one. */
+  previous?: StatPoint[]
+  previous_summary?: StatSummary
+  /** A counter's last step, today's so far. */
+  latest?: number
+} & StatSummary
+
+export type StatSeries = StatLine | { missing: true }
+
+export interface StatAnswer {
+  period: StatPeriod
+  start: number
+  end: number
+  now: number
+  zone: string
+  series: StatSeries[]
+  problem: HomeProblem | null
+}
+
+/** A thermostat's day or week (``hass_stats.climate_history``). */
+export interface ClimateHistory {
+  period: '24h' | '7d'
+  start: number
+  end: number
+  zone: string
+  step: string
+  room: StatPoint[]
+  /** Its target as it changed, null while it was off. */
+  target: [number, number | null][]
+  /** When it heated; null for a thermostat that never says. */
+  heating: [number, number][] | null
+  today: { low: number | null; high: number | null; heated: number | null }
+  yesterday: { heated: number | null }
+  sensor: string | null
+  problem: HomeProblem | null
+}
+
+/** A value as a card writes it: a degree with one decimal, anything else with its unit. */
+export function reading(value: number | null | undefined, unit: string): string {
+  if (value === null || value === undefined) return '–'
+  if (unit === '°C' || unit === '°F' || unit === '°') return temperature(Math.round(value * 10) / 10)
+  const rounded = Math.abs(value) >= 100 ? Math.round(value) : Math.round(value * 10) / 10
+  return unit === '%' ? `${rounded} %` : unit ? `${rounded} ${unit}` : String(rounded)
+}
+
+/** How long, as a card writes heating times: "3 h 20", "45 min". */
+export function duration(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined) return '–'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} min`
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`
+}
+
+/**
+ * The range a chart's axis spans: the values with a little room, on whole
+ * numbers, never flat. A counter's bars stand on zero.
+ */
+export function axisRange(values: number[], fromZero = false): [number, number] {
+  const finite = values.filter((value) => Number.isFinite(value))
+  if (finite.length === 0) return [0, 1]
+  let low = Math.min(...finite)
+  let high = Math.max(...finite)
+  if (fromZero) low = Math.min(0, low)
+  const room = Math.max((high - low) * 0.12, 0.5)
+  low = fromZero && low >= 0 ? 0 : Math.floor(low - room)
+  high = Math.ceil(high + room)
+  return high > low ? [low, high] : [low, low + 1]
+}
+
+/** Where new cards go: below everything, side by side as lamps are. */
+export function statSpots(elements: HomeElement[], count: number, style: StatStyle): { x: number; y: number }[] {
+  return spotsFor(elements, count, STAT_SIZES[style])
 }

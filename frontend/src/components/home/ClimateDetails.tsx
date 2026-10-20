@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { temperature, type ClimateView, type ClimateWish } from '../../lib/home'
 import { Dialog } from '../ui'
 import { climateLook, COOLING, HEATING } from './ClimateControl'
+import { ClimateHistory } from './ClimateHistory'
 
 interface Props {
   info: ClimateView
@@ -17,6 +18,8 @@ interface Props {
   onSlide: ((value: number) => void) | null
   onWish: ((wish: ClimateWish) => void) | null
   onClose: () => void
+  /** Where its history is asked: the page and the element. */
+  history?: { pageId: number; elementId: string }
 }
 
 /**
@@ -24,7 +27,7 @@ interface Props {
  * target, and the modes and presets the device names. Nothing is offered
  * that Home Assistant does not say it has.
  */
-export function ClimateDetails({ info, target, setting, onStep, onSlide, onWish, onClose }: Props) {
+export function ClimateDetails({ info, target, setting, onStep, onSlide, onWish, onClose, history }: Props) {
   const { t } = useTranslation()
   const { colour, icon } = climateLook(info)
   const steppable = Boolean(onStep) && info.on && info.settable && !info.unavailable
@@ -34,7 +37,7 @@ export function ClimateDetails({ info, target, setting, onStep, onSlide, onWish,
     : t('homePage.sensorFallback', { name: info.sensor.name })
 
   return (
-    <Dialog open onClose={onClose} title={info.name} size="sm">
+    <Dialog open onClose={onClose} title={info.name} size={history ? "md" : "sm"}>
       <div className="grid gap-5" data-climate-details>
         <div className="flex items-center gap-3">
           <span className="grid place-items-center w-12 h-12 rounded-full flex-none"
@@ -48,6 +51,8 @@ export function ClimateDetails({ info, target, setting, onStep, onSlide, onWish,
           </div>
           {info.action && <span className="text-xs font-medium px-2.5 py-1 rounded-full glass" data-action>{words('actions', info.action)}</span>}
         </div>
+
+        {history && <ClimateHistory pageId={history.pageId} elementId={history.elementId} />}
 
         <div className="grid gap-1.5">
           <span className="text-sm font-medium">{t('homePage.target')}</span>

@@ -372,7 +372,10 @@ async def series(config: dict[str, Any], cache: dict[str, Any], wanted: list[dic
             line.update(points=now_points, previous=then, previous_summary=summary(then, kind))
             points = now_points
         else:
-            points = [point for point in points if point[0] >= _ms(floor(start, step, zone))]
+            # A counter counts whole steps, today's so far the last of them: seven bars for seven days, not eight
+            # with a part of the first. A measurement runs from where the period begins.
+            first = following(floor(start, step, zone), step, zone) if kind == "sum" else floor(start, step, zone)
+            points = [point for point in points if point[0] >= _ms(first)]
             line["points"] = points
         line.update(summary(points, kind))
         if kind == "sum" and points:
@@ -512,7 +515,13 @@ def _wobble(entity_id: str, moment: dt.datetime) -> float:
     return digest[0] / 127.5 - 1
 
 
-def demo_value(entity_id: str, moment: dt.datetime) -> float:
+def demo_value(entity_id: str, moment: dt.datetime, now: dt.datetime | None = None) -> float:
+    """A demo sensor's value at a moment; with ``now``, moved so that it ends where the sensor's state stands."""
+    if now is not None and entity_id != "sensor.house_energy":
+        state = hass_registry.demo_registry()[3].get(entity_id) or {}
+        stands = _number(state.get("state"))
+        if stands is not None:
+            return demo_value(entity_id, moment) + stands - demo_value(entity_id, now)
     middle, swing, noise = DEMO_SENSORS.get(entity_id, (20.0, 1.0, 0.2))
     local = moment.astimezone(tz("Europe/Berlin"))
     hour = local.hour + local.minute / 60
@@ -543,10 +552,12 @@ def demo_answer(command: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
             rows: list[dict[str, Any]] = []
             for at in steps(start, end, step, zone):
                 until = following(at, step, zone)
-                # A step is in the statistics once it is over, as in Home Assistant.
+                # An hour is in the statistics once it is over; a day, a week or a month so far is made of its hours, as in Home Assistant.
                 if until > now:
-                    break
-                samples = [demo_value(entity_id, at + (until - at) * (k / 6)) for k in range(6)]
+                    until = floor(now, "hour", zone) if step in ("day", "week", "month") else at
+                    if until <= at:
+                        break
+                samples = [demo_value(entity_id, at + (until - at) * (k / 6), now) for k in range(6)]
                 if "change" in command["types"]:
                     hours = (until - at).total_seconds() / 3600
                     rows.append({"start": _ms(at), "end": _ms(until), "change": round(sum(samples) / len(samples) * hours, 3)})
@@ -578,7 +589,7 @@ def demo_answer(command: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
                 at += dt.timedelta(hours=1)
         else:
             while at <= end:
-                rows.append({"s": f"{demo_value(entity_id, at):.1f}", "lu": at.timestamp()})
+                rows.append({"s": f"{demo_value(entity_id, at, now):.1f}", "lu": at.timestamp()})
                 at += dt.timedelta(minutes=10)
         answer[entity_id] = rows
     return answer

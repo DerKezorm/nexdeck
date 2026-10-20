@@ -1714,6 +1714,86 @@
     },
     "on": "encendida",
     "off": "apagada",
-    "removeLight": "Quitar"
+    "removeLight": "Quitar",
+    "stats": {
+      "add": "Estadística",
+      "now": "ahora",
+      "failed": "No se pudieron cargar los valores.",
+      "missing": "{{name}} ya no está en Home Assistant",
+      "noStatsTitle": "Sin estadísticas",
+      "noStats": "Home Assistant no guarda estadísticas a largo plazo de «{{name}}» (no tiene clase de estado). Solo los últimos días del historial.",
+      "noDataTitle": "Aún sin valores",
+      "noData": "Home Assistant aún no tiene nada para este periodo.",
+      "total": "total",
+      "perStep": {
+        "hour": "por hora",
+        "day": "al día",
+        "month": "al mes"
+      },
+      "latest": {
+        "hour": "esta hora",
+        "day": "hoy hasta ahora",
+        "month": "este mes"
+      },
+      "mean": "media",
+      "low": "mín.",
+      "high": "máx.",
+      "lowest": "mínima",
+      "highest": "máxima",
+      "on": "{{value}} el {{date}}",
+      "today": "hoy",
+      "yesterday": "ayer",
+      "thisWeek": "esta semana",
+      "lastWeek": "la semana pasada",
+      "meanOf": "{{label}}, media {{value}}",
+      "totalOf": "{{label}}, {{value}}",
+      "dragSize": "Arrastra para cambiar el tamaño",
+      "chooseSensors": "Elegir sensores",
+      "remove": "Quitar tarjeta",
+      "styles": {
+        "line": "Línea",
+        "rooms": "Varias habitaciones",
+        "band": "Banda",
+        "bars": "Barras",
+        "small": "Pequeña",
+        "compare": "Hoy y ayer"
+      },
+      "period": "Periodo",
+      "periods": {
+        "24h": "24 h",
+        "7d": "7 d",
+        "30d": "30 d",
+        "1y": "1 a",
+        "day": "Día",
+        "week": "Semana"
+      },
+      "fromHistory": "del historial",
+      "pickTitle": "Tarjeta de estadística",
+      "pickEditTitle": "Sensores de la tarjeta",
+      "pickNone": "Elegir sensores",
+      "pickSave": "Aplicar",
+      "pickOne": "Añadir tarjeta",
+      "pickMany": "Añadir {{count}} tarjetas",
+      "cardTitle": "Nombre de la tarjeta",
+      "cardTitleHint": "vacío: el nombre del sensor",
+      "upTo": "Hasta {{count}} sensores en una tarjeta.",
+      "pickEmpty": "No se encontraron sensores con valores.",
+      "onlyHistory": "solo historial",
+      "counter": "contador",
+      "statistics": "estadística"
+    },
+    "history": {
+      "title": "Historial",
+      "room": "Habitación",
+      "target": "Objetivo (discontinuo)",
+      "heats": "calienta",
+      "todayLow": "hoy mín.",
+      "todayHigh": "máx.",
+      "heated": "calentado",
+      "yesterdayHeated": "ayer",
+      "noHeating": "Faltan los tiempos de calefacción.",
+      "noHeatingText": "Este termostato no indica cuándo calienta. La habitación y el objetivo siguen en el historial.",
+      "empty": "Home Assistant no tiene historial para este periodo."
+    }
   }
 }
