@@ -102,7 +102,10 @@ async def test_the_checks_of_a_round_do_not_start_in_one_instant(client: TestCli
 
     monkeypatch.setattr(health, "run_check", probe)
     monkeypatch.setattr(health, "STAGGER_SECONDS", 0.05)
+    begun = time.monotonic()
     await health.health.run_due(force=True)
     assert len(started) == 3
     started.sort()
-    assert all(later - earlier >= 0.04 for earlier, later in zip(started, started[1:], strict=False))
+    # Measured from the start of the round, not from one check to the next: a timer can wake late,
+    # never early, and a late second one left the third 0.03 s after it (4 rounds in 300 on Windows).
+    assert all(at - begun >= place * 0.05 for place, at in enumerate(started))
