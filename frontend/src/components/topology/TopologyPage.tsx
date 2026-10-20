@@ -109,25 +109,33 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
 
   // Stable for the life of the query, so ``flush`` stays the same function.
   const refetch = answer.refetch
-  const flush = useCallback(async () => {
-    const next = waiting.current
-    if (!next) return
-    window.clearTimeout(timer.current)
-    try {
-      const saved = await put<{ layout: TopoLayout; version: number }>(`/pages/${pageId}/topology`, {
-        placed: next.placed, clients: next.clients, hidden: next.hidden, positions: next.positions, version: version.current,
-      })
-      if (waiting.current === next) waiting.current = null
-      version.current = saved.version
-    } catch (failure) {
-      waiting.current = null
-      if (failure instanceof ApiError && failure.status === 409) {
-        setNote({ text: t('topology.movedOn') })
-        version.current = 0
-        setLayout(null)
-        void refetch()
-      } else setNote({ text: t('topology.saveFailed'), level: 'error' })
-    }
+  // ⚠️ One save at a time: a second change while the first save was still on
+  // its way carried the same version, was refused as somebody else's, and the
+  // page dropped the change it had just made (found on the home page first).
+  const inflight = useRef<Promise<void>>(Promise.resolve())
+  const flush = useCallback(() => {
+    const run = inflight.current.then(async () => {
+      const next = waiting.current
+      if (!next) return
+      window.clearTimeout(timer.current)
+      try {
+        const saved = await put<{ layout: TopoLayout; version: number }>(`/pages/${pageId}/topology`, {
+          placed: next.placed, clients: next.clients, hidden: next.hidden, positions: next.positions, version: version.current,
+        })
+        if (waiting.current === next) waiting.current = null
+        version.current = saved.version
+      } catch (failure) {
+        waiting.current = null
+        if (failure instanceof ApiError && failure.status === 409) {
+          setNote({ text: t('topology.movedOn') })
+          version.current = 0
+          setLayout(null)
+          void refetch()
+        } else setNote({ text: t('topology.saveFailed'), level: 'error' })
+      }
+    })
+    inflight.current = run
+    return run
   }, [pageId, t, refetch])
 
   const save = useCallback(

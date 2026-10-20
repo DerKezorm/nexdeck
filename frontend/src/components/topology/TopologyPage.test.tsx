@@ -143,6 +143,37 @@ it('lets the buttons on the plan be pressed instead of starting a pan', async ()
   delete (HTMLElement.prototype as { setPointerCapture?: unknown }).setPointerCapture
 })
 
+it('saves a second change after the first, with the version the first got back', async () => {
+  // A slow server: the plan saves its first arrangement, and "Arrange as a
+  // tree" is pressed while that save is still on its way.
+  const sent: Sent[] = []
+  let version = ANSWER.version
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const method = init?.method ?? 'GET'
+    const body = init?.body ? JSON.parse(String(init.body)) : null
+    sent.push({ url: String(input), method, body })
+    const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } })
+    if (method !== 'PUT') return json(ANSWER)
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    if (body.version !== version) return json({ detail: { code: 'layout_moved_on', message: 'moved on' } }, 409)
+    version += 1
+    return json({ layout: { ...ANSWER.layout, ...body }, version })
+  }))
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <TopologyPage pageId={7} editing canEdit onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+    </QueryClientProvider>,
+  )
+  const puts = () => sent.filter((one) => one.method === 'PUT')
+  await waitFor(() => expect(puts()).toHaveLength(1), { timeout: 4000 })
+  fireEvent.click(screen.getByRole('button', { name: 'Arrange as a tree' }))
+  await waitFor(() => expect(puts()).toHaveLength(2), { timeout: 4000 })
+  await waitFor(() => expect(version).toBe(ANSWER.version + 2), { timeout: 4000 })
+  expect(puts().map((one) => one.body!.version)).toEqual([ANSWER.version, ANSWER.version + 1])
+  expect(screen.queryByText(/Somebody else changed this page/)).not.toBeInTheDocument()
+}, 15000)
+
 it('keeps the last plan when the console misses a look, and says so', async () => {
   show({ ...ANSWER, data: { ...ANSWER.data!, stale: { code: 'http_error', message: 'The UniFi console answered with HTTP 502.', for_seconds: 30 } } })
   expect(await screen.findByText(/UniFi did not answer, values from 3\d s ago/)).toBeInTheDocument()
