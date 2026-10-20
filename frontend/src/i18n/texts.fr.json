@@ -1928,7 +1928,19 @@
     "Reachability shown as": "Joignabilité affichée en",
     "A dot in the corner": "Point dans le coin",
     "Availability bars along the bottom": "Barres de disponibilité en bas",
-    "Display": "Présentation"
+    "Display": "Présentation",
+    "What Pulse watches on Proxmox, Docker and the rest, and what needs a look.": "Ce que Pulse surveille sur Proxmox, Docker et le reste, et ce qui mérite un coup d'œil.",
+    "In Pulse under Settings, API Access, with the scope monitoring:read.": "Dans Pulse, sous Settings, API Access, avec la portée monitoring:read.",
+    "In Pulse, open Settings, then API Access, and create a token.": "Dans Pulse, ouvrez Settings, puis API Access, et créez un jeton.",
+    "Copy the token right away: Pulse shows it only once.": "Copiez le jeton tout de suite : Pulse ne l'affiche qu'une fois.",
+    "Pulse overview": "Aperçu de Pulse",
+    "Active alerts, nodes, VMs and containers, and how many resources need a look.": "Alertes actives, nœuds, VM et conteneurs, et combien de ressources méritent un coup d'œil.",
+    "Needs a look": "À regarder",
+    "The resources Pulse is not happy with, worst first, with the reason. Pulse 6.5 or newer.": "Les ressources dont Pulse n'est pas satisfait, les pires d'abord, avec la raison. Pulse 6.5 ou plus récent.",
+    "Active alerts": "Alertes actives",
+    "Critical alerts and warnings, critical first, with how long each has been open.": "Alertes critiques et avertissements, les critiques d'abord, avec leur durée.",
+    "Show acknowledged alerts": "Afficher les alertes acquittées",
+    "Pick the preset Kiosk / Monitoring, which gives it monitoring:read alone. The cards write nothing.": "Choisissez le préréglage Kiosk / Monitoring, qui ne donne que monitoring:read. Les cartes n'écrivent rien."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3107,6 +3119,24 @@
     "Sessions": "Sessions",
     "Configuration": "Configuration",
     "in sync": "synchronisée",
-    "out of sync": "désynchronisée"
+    "out of sync": "désynchronisée",
+    "No fresh data": "Pas de données récentes",
+    "Critical alert": "Alerte critique",
+    "Check failed": "Vérification échouée",
+    "Incident": "Incident",
+    "At risk": "À risque",
+    "Backup is old": "Sauvegarde ancienne",
+    "No data": "Pas de données",
+    "Powered off": "Éteint",
+    "State unknown": "État inconnu",
+    "Docker service": "Service Docker",
+    "Backup server": "Serveur de sauvegarde",
+    "Mail gateway": "Passerelle de messagerie",
+    "Kubernetes cluster": "Cluster Kubernetes",
+    "Kubernetes node": "Nœud Kubernetes",
+    "This card needs Pulse 6.5 or newer.": "Cette carte nécessite Pulse 6.5 ou plus récent.",
+    "Nothing needs a look.": "Rien à regarder.",
+    "LXC containers": "Conteneurs LXC",
+    "Docker containers": "Conteneurs Docker"
   }
 }
