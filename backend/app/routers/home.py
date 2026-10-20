@@ -1,11 +1,11 @@
-"""Home pages: a free surface of Home Assistant controls (lamps, thermostats), and what stands where on it."""
+"""Home pages: a free surface of Home Assistant controls (lamps, thermostats, statistics), and what stands where on it."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Query, Request, status
 
 from ..adapters.base import AdapterError
 from ..deps import (
@@ -20,7 +20,7 @@ from ..deps import (
 )
 from ..models import ActionLog, Integration, Page
 from ..schemas import HomeClimateBody, HomeLayoutBody, HomeSwitchBody
-from ..services import hass_registry, home_control
+from ..services import hass_registry, hass_stats, home_control
 from ..services import home as home_service
 from ..services.collector import collector
 from ..services.home_control import home_live
@@ -71,6 +71,24 @@ def _climate_of(element: dict[str, Any], thermostats: list[dict[str, Any]], sens
         return {"missing": True}
     wanted = element.get("sensor")
     return home_control.climate_view(found, _find(sensors, wanted) if wanted else None, wanted)
+
+
+async def _sensors(integration: Integration) -> list[dict[str, Any]]:
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    return await hass_stats.sensors(config, ctx.cache, demo=collector.is_demo(integration))
+
+
+def _viewed(db: DbSession, page_id: int, request: Request, user, kind: str, element_id: str) -> tuple[dict[str, Any], Integration | None, dict | None]:
+    """An element of a page somebody may look at, its connection, and what keeps it from that if anything."""
+    page = _home_page(db, page_id)
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    stored = page.home or {}
+    layout = home_service.clean_layout(stored, stored.get("integration_id"))
+    element = next((item for item in layout["elements"] if item["id"] == element_id and item["type"] == kind), None)
+    if element is None:
+        raise error("not_found", "There is no such element on this page.", status.HTTP_404_NOT_FOUND)
+    integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
+    return element, integration, _connection_problem(integration)
 
 
 def _said(data: dict[str, Any]) -> str:
@@ -308,6 +326,69 @@ async def set_climate(page_id: int, element_id: str, body: HomeClimateBody, requ
     home_live.touched(integration.id, ctx.cache, entity_id, state)
     now = {**thermostat, **hass_registry.climate_state(state, thermostat.get("unit", "°C"))}
     return {"ok": True, "confirmed": True, "climate": home_control.climate_view(now, sensor, wanted)}
+
+
+@router.get("/pages/{page_id}/home/sensors", summary="The sensors a statistics card on a home page can show")
+async def offer_sensors(page_id: int, user: CurrentUser, db: DbSession) -> dict:
+    """Every sensor of the page's connection with statistics or a number (``hass_stats.pick_sensors``); for those who arrange the page."""
+    page = _home_page(db, page_id)
+    require_board_id(db, page.board_id, user, "edit")
+    stored = page.home or {}
+    integration = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        return {"sensors": [], "problem": problem}
+    require_integration(db, integration.id, user)
+    try:
+        return {"sensors": await _sensors(integration), "problem": None}
+    except AdapterError as failure:
+        return {"sensors": [], "problem": _problem(failure.code, failure.message, failure.hint)}
+
+
+@router.get("/pages/{page_id}/home/stats/{element_id}", summary="What a statistics card on a home page shows")
+async def read_stats(page_id: int, element_id: str, request: Request, user: OptionalUser, db: DbSession,
+                     period: str = Query("24h", pattern=r"^(24h|7d|30d|1y|day|week)$")) -> dict:
+    """The points of the card's sensors over one period, from Home Assistant's statistics or history.
+
+    For everyone who may look at the page, a display too, and only for the
+    sensors the card names: nobody asks for another sensor through it. A
+    connection that is gone or not answering is an answer, as on the page.
+    """
+    element, integration, problem = _viewed(db, page_id, request, user, "stat", element_id)
+    empty: dict[str, Any] = {"period": period, "series": [], "problem": problem}
+    if (period in hass_stats.COMPARE) != (element["style"] == "compare"):
+        raise error("bad_period", "This card does not show that period.", status.HTTP_422_UNPROCESSABLE_CONTENT)
+    if problem is not None or integration is None:
+        return empty
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    try:
+        offered = await _sensors(integration)
+        wanted = [_find(offered, sensor) for sensor in element["sensors"]]
+        answer = await hass_stats.series(config, ctx.cache, wanted, period, demo=collector.is_demo(integration))
+    except AdapterError as failure:
+        return {**empty, "problem": _problem(failure.code, failure.message, failure.hint)}
+    return {**answer, "problem": None}
+
+
+@router.get("/pages/{page_id}/home/climates/{element_id}/history", summary="What a thermostat on a home page did")
+async def read_climate_history(page_id: int, element_id: str, request: Request, user: OptionalUser, db: DbSession,
+                               period: str = Query("24h", pattern=r"^(24h|7d)$")) -> dict:
+    """Room, target and heating times over 24 hours or a week, read by the sensor the page names for it."""
+    element, integration, problem = _viewed(db, page_id, request, user, "climate", element_id)
+    if problem is not None or integration is None:
+        return {"period": period, "problem": problem}
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    try:
+        thermostats, _temperatures = await _thermostats(integration)
+        thermostat = _find(thermostats, element)
+        if thermostat is None:
+            return {"period": period, "problem": _problem("climate_missing", "This thermostat is no longer in Home Assistant, or it is hidden there.")}
+        wanted = element.get("sensor")
+        sensor = _find(await _sensors(integration), wanted) if wanted else None
+        answer = await hass_stats.climate_history(config, ctx.cache, thermostat, sensor, period, demo=collector.is_demo(integration))
+    except AdapterError as failure:
+        return {"period": period, "problem": _problem(failure.code, failure.message, failure.hint)}
+    return {**answer, "problem": None}
 
 
 @router.put("/pages/{page_id}/home", summary="Save what stands where on a home page")

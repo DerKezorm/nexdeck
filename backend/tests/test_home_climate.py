@@ -66,7 +66,7 @@ def test_only_thermostats_and_real_room_temperatures_are_offered() -> None:
     thermostats = hass_registry.pick_climates(entities, devices, areas, states)
     assert [one["entity_id"] for one in thermostats] == ["climate.bathroom", "climate.bedroom", "climate.living_room"], "hidden stays out"
     sensors = hass_registry.pick_temperature_sensors(entities, devices, areas, states)
-    assert [one["entity_id"] for one in sensors] == ["sensor.bedroom_temperature", "sensor.living_room_temperature"], \
+    assert [one["entity_id"] for one in sensors] == ["sensor.bedroom_temperature", "sensor.living_room_temperature", "sensor.outdoor_temperature"], \
         "a humidity sensor is no temperature, a server's own one is a diagnostic"
     assert sensors[1]["current"] == 21.3 and sensors[1]["area"] == "Living room"
 
@@ -125,7 +125,7 @@ def test_the_thermostats_and_sensors_are_offered_to_those_who_arrange_the_page(c
     offer = client.get(f"/api/v1/pages/{page['id']}/home/climates").json()
     assert offer["problem"] is None
     assert [one["name"] for one in offer["climates"]] == ["Bathroom", "Bedroom", "Living room"]
-    assert [one["entity_id"] for one in offer["sensors"]] == ["sensor.bedroom_temperature", "sensor.living_room_temperature"]
+    assert [one["entity_id"] for one in offer["sensors"]] == ["sensor.bedroom_temperature", "sensor.living_room_temperature", "sensor.outdoor_temperature"]
     client.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"role": "user", "level": "view"}]}, headers=CSRF)
     create_user(client, "kim")
     login(client, "kim", "another-long-password")

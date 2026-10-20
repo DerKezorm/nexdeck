@@ -9,7 +9,8 @@ Home Assistant connection. Lamps and thermostats are kept by their registry
 id, which stays when the entity is renamed in Home Assistant, with the entity
 id and name as they were when placed, for when Home Assistant cannot be asked.
 A thermostat may name a temperature sensor to read the room by, kept the same
-way.
+way. A statistics card names one to six sensors and is drawn from what Home
+Assistant remembers of them (``hass_stats``); it keeps a width and a height.
 """
 
 from __future__ import annotations
@@ -24,13 +25,21 @@ MAX_COORD = 20000
 #: How long a heading may be.
 MAX_TEXT = 60
 
-KINDS = ("heading", "light", "climate")
+KINDS = ("heading", "light", "climate", "stat")
 #: How a lamp is drawn, the ten of the board of sketches; the first is the default.
 #: The browser keeps the same list (``LAMP_STYLES`` in ``lib/home.ts``).
 STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "bulb", "knob")
 #: How a thermostat is drawn, the ten of its board of sketches; the first is the default.
 #: The browser keeps the same list (``CLIMATE_STYLES`` in ``lib/home.ts``).
 CLIMATE_STYLES = ("pill", "round", "chip", "tile", "slider", "dial", "valve", "thermometer", "radiator", "digits")
+#: How a statistics card is drawn, the six of its board of sketches; the first is the default.
+#: The browser keeps the same list (``STAT_STYLES`` in ``lib/home.ts``).
+STAT_STYLES = ("line", "rooms", "band", "bars", "small", "compare")
+#: How many sensors one statistics card shows at most.
+MAX_SENSORS = 6
+#: The bounds of a statistics card's size, in pixels (``STAT_SIZES`` in the browser).
+STAT_WIDTHS = (150, 1200)
+STAT_HEIGHTS = (80, 800)
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
 #: The bounds of a width dragged by hand, in pixels (``MIN_WIDTH``, ``MAX_WIDTH`` in the browser).
@@ -69,6 +78,33 @@ def _sensor(raw: Any) -> dict[str, Any] | None:
     return {"rid": rid, "entity_id": entity_id, "name": _text(raw.get("name"), MAX_NAME)}
 
 
+def _size(value: Any, bounds: tuple[int, int]) -> int | None:
+    """A size dragged by hand, kept inside its bounds rather than dropped: an edge dragged a little too far is still a size."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and value == value and abs(value) < 1e6:
+        return min(bounds[1], max(bounds[0], round(value)))
+    return None
+
+
+def _stat(element_id: str, x: int, y: int, raw: dict[str, Any]) -> dict[str, Any] | None:
+    sensors: list[dict[str, Any]] = []
+    given = raw.get("sensors")
+    for item in given if isinstance(given, list) else []:
+        sensor = _sensor(item)
+        if sensor is not None and all(one["entity_id"] != sensor["entity_id"] for one in sensors):
+            sensors.append(sensor)
+        if len(sensors) == MAX_SENSORS:
+            break
+    if not sensors:
+        return None
+    element = {"id": element_id, "type": "stat", "x": x, "y": y, "style": raw.get("style") if raw.get("style") in STAT_STYLES else STAT_STYLES[0],
+               "sensors": sensors, "title": _text(raw.get("title"), MAX_NAME)}
+    for key, bounds in (("width", STAT_WIDTHS), ("height", STAT_HEIGHTS)):
+        size = _size(raw.get(key), bounds)
+        if size is not None:
+            element[key] = size
+    return element
+
+
 def clean_element(raw: Any) -> dict[str, Any] | None:
     """One element as it is kept, or None when it is not one this page knows."""
     if not isinstance(raw, dict):
@@ -79,6 +115,8 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
     x, y = _coordinate(raw.get("x")), _coordinate(raw.get("y"))
     if x is None or y is None:
         return None
+    if kind == "stat":
+        return _stat(element_id, x, y, raw)
     if kind in ("light", "climate"):
         rid, entity_id = raw.get("rid"), raw.get("entity_id")
         pattern, styles = (_LIGHT, STYLES) if kind == "light" else (_CLIMATE, CLIMATE_STYLES)
@@ -87,10 +125,9 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         style = raw.get("style") if raw.get("style") in styles else styles[0]
         element = {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
                    "name": _text(raw.get("name"), MAX_NAME), "style": style}
-        width = raw.get("width")
-        if isinstance(width, (int, float)) and not isinstance(width, bool) and width == width and abs(width) < 1e6:
-            # Kept inside the bounds rather than dropped: an edge dragged a little too far is still a width.
-            element["width"] = min(WIDTHS[1], max(WIDTHS[0], round(width)))
+        width = _size(raw.get("width"), WIDTHS)
+        if width is not None:
+            element["width"] = width
         if kind == "climate":
             element["sensor"] = _sensor(raw.get("sensor"))
         return element

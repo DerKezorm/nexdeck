@@ -270,11 +270,18 @@ async def house(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = F
         answers = await _ask(config, commands)
         fetched = {state["entity_id"]: state for state in answers[4] or []} if len(answers) > 4 else {}
         unit = str(((answers[3] or {}).get("unit_system") or {}).get("temperature") or "°C")
-        kept = (now + REGISTRY_SECONDS, answers[0] or [], answers[1] or [], answers[2] or [], fetched, unit)
+        zone = str((answers[3] or {}).get("time_zone") or "UTC")
+        kept = (now + REGISTRY_SECONDS, answers[0] or [], answers[1] or [], answers[2] or [], fetched, unit, zone)
         cache["hass_registry"] = kept
-    _until, entities, devices, areas, fetched, unit = kept
+    _until, entities, devices, areas, fetched, unit = kept[:6]
     states = live if isinstance(live, dict) and live else fetched
     return entities, devices, areas, states, unit
+
+
+def zone(cache: dict[str, Any]) -> str:
+    """The time zone of the house, as its configuration names it; a day of statistics begins at its midnight."""
+    kept = cache.get("hass_registry")
+    return str(kept[6]) if kept and len(kept) > 6 and kept[6] else "UTC"
 
 
 async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = False, now: float | None = None) -> list[dict[str, Any]]:
@@ -314,7 +321,9 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
                {"id": "d-heat-bath", "name": "Bathroom radiator", "area_id": "bathroom"},
                {"id": "d-climate-living", "name": "Living room climate sensor", "area_id": "living"},
                {"id": "d-climate-bed", "name": "Bedroom climate sensor", "area_id": "bedroom"},
-               {"id": "d-server", "name": "Home server", "area_id": None}]
+               {"id": "d-server", "name": "Home server", "area_id": None},
+               {"id": "d-weather", "name": "Weather station", "area_id": "garden"},
+               {"id": "d-meter", "name": "Electricity meter", "area_id": None}]
 
     def entry(rid: str, entity_id: str, device: str | None, **extra: Any) -> dict[str, Any]:
         return {"id": rid, "entity_id": entity_id, "device_id": device, "area_id": None, "entity_category": None,
@@ -342,6 +351,10 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         entry("r-temp-bed", "sensor.bedroom_temperature", "d-climate-bed", original_device_class="temperature"),
         entry("r-hum-living", "sensor.living_room_humidity", "d-climate-living"),
         entry("r-cpu", "sensor.home_server_cpu_temperature", "d-server", entity_category="diagnostic"),
+        entry("r-outdoor", "sensor.outdoor_temperature", "d-weather"),
+        entry("r-energy", "sensor.house_energy", "d-meter"),
+        # A text sensor: neither statistics nor a number, so no statistics card offers it.
+        entry("r-washer", "sensor.washing_machine_programme", None),
     ]
 
     def state(entity_id: str, name: str, value: str, modes: list[str], **attributes: Any) -> dict[str, Any]:
@@ -370,12 +383,18 @@ def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[di
         "climate.bathroom": {"entity_id": "climate.bathroom", "state": "unavailable", "attributes": {"friendly_name": "Bathroom"}},
         "climate.old_valve": {"entity_id": "climate.old_valve", "state": "off", "attributes": {"friendly_name": "Old valve"}},
         "sensor.living_room_temperature": {"entity_id": "sensor.living_room_temperature", "state": "21.3", "attributes": {
-            "friendly_name": "Living room temperature", "unit_of_measurement": "°C", "device_class": "temperature"}},
+            "friendly_name": "Living room temperature", "unit_of_measurement": "°C", "device_class": "temperature", "state_class": "measurement"}},
         # The device class only in the registry, as some integrations leave it.
         "sensor.bedroom_temperature": {"entity_id": "sensor.bedroom_temperature", "state": "18.9", "attributes": {
-            "friendly_name": "Bedroom temperature", "unit_of_measurement": "°C"}},
+            "friendly_name": "Bedroom temperature", "unit_of_measurement": "°C", "state_class": "measurement"}},
         "sensor.living_room_humidity": {"entity_id": "sensor.living_room_humidity", "state": "48", "attributes": {
-            "friendly_name": "Living room humidity", "unit_of_measurement": "%", "device_class": "humidity"}},
+            "friendly_name": "Living room humidity", "unit_of_measurement": "%", "device_class": "humidity", "state_class": "measurement"}},
+        "sensor.outdoor_temperature": {"entity_id": "sensor.outdoor_temperature", "state": "6.8", "attributes": {
+            "friendly_name": "Outdoor temperature", "unit_of_measurement": "°C", "device_class": "temperature", "state_class": "measurement"}},
+        "sensor.house_energy": {"entity_id": "sensor.house_energy", "state": "18342.6", "attributes": {
+            "friendly_name": "House energy", "unit_of_measurement": "kWh", "device_class": "energy", "state_class": "total_increasing"}},
+        "sensor.washing_machine_programme": {"entity_id": "sensor.washing_machine_programme", "state": "Cotton 40", "attributes": {
+            "friendly_name": "Washing machine programme"}},
         "sensor.home_server_cpu_temperature": {"entity_id": "sensor.home_server_cpu_temperature", "state": "52", "attributes": {
             "friendly_name": "Home server CPU temperature", "unit_of_measurement": "°C", "device_class": "temperature"}},
     }
