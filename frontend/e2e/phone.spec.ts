@@ -57,6 +57,29 @@ async function fitted(page: Page): Promise<void> {
   })).toBe(true)
 }
 
+/**
+ * Wait until the grid has left the phone's stacking: some row holds more than
+ * two cards again.
+ *
+ * ⚠️ fitted() only proves a board that got narrower. Going back from the phone
+ * to the tablet, the stacked cards already lie inside the wider board, so it
+ * passes at once; two equal readings before the grid redrew then measured the
+ * phone's arrangement on the tablet (Weather at half the width instead of a
+ * quarter, 1 run of 8 on 20.10.2026).
+ */
+async function unstacked(page: Page): Promise<void> {
+  await expect.poll(() => page.evaluate(() => {
+    const grid = document.querySelector('.board')
+    if (!grid) return 0
+    const rows = new Map<number, number>()
+    for (const element of grid.querySelectorAll(':scope > .react-grid-item')) {
+      const top = Math.round(element.getBoundingClientRect().top)
+      rows.set(top, (rows.get(top) ?? 0) + 1)
+    }
+    return Math.max(0, ...rows.values())
+  })).toBeGreaterThan(2)
+}
+
 /** Every card in the order a reader meets them, read once nothing moves any more. */
 async function cards(page: Page): Promise<Board> {
   const measure = () =>
@@ -112,6 +135,7 @@ test('a phone stacks the board in the order of the wide one, a tablet shows it a
   await page.setViewportSize({ width: 820, height: 1180 })
   await expect.poll(() => gridWidth(page)).toBeGreaterThan(700)
   await fitted(page)
+  await unstacked(page)
   const tablet = await cards(page)
   expect(tablet.cards.map((card) => card.name), 'the tablet does not show the wide arrangement').toEqual(order)
   // The same arrangement, only narrower: every card starts at the same share of the width.
