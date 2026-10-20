@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { get } from '../../api/client'
 import { temperature, type ClimateOffer, type ClimateSensor, type ClimateView, type HomeClimate } from '../../lib/home'
+import { Marquee } from './Marquee'
 
 /** The colours of what a thermostat is doing, on the icon and the pill's edge. */
 export const HEATING = 'rgb(251, 146, 60)'
@@ -25,6 +26,8 @@ interface Props {
   missing: boolean
   arranging: boolean
   wide: boolean
+  /** Its width on the surface (``controlWidth``), the same for every thermostat unless one was given its own. */
+  width: number | null
   pageId: number
   /** The target shown: what was just asked, or what the thermostat says. */
   target: number | null
@@ -43,7 +46,7 @@ interface Props {
  * the pill opens its details (mode, presets) rather than switching anything:
  * a heating turned off by a brushed finger is not noticed until it is cold.
  */
-export function ClimateControl({ element, info, missing, arranging, wide, pageId, target, setting, onStep, onDetails, onRemove, onSensor }: Props) {
+export function ClimateControl({ element, info, missing, arranging, wide, width, pageId, target, setting, onStep, onDetails, onRemove, onSensor }: Props) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState(false)
   const tools = useRef<HTMLDivElement>(null)
@@ -80,8 +83,8 @@ export function ClimateControl({ element, info, missing, arranging, wide, pageId
     // ⚠️ The tools stand beside the pill, not in it: the pill clips what reaches past its edge.
     <div ref={tools} className={`relative ${wide ? 'w-full' : 'w-fit'}`}>
       <div
-        className={`glass lamp-pill lamp-control ${wide ? 'w-full h-12' : 'h-10 max-w-[320px]'} ${quiet ? 'lamp-quiet' : ''} !pr-1.5`}
-        style={lit}
+        className={`glass lamp-pill lamp-control ${wide ? 'w-full h-12' : 'h-10'} ${quiet ? 'lamp-quiet' : ''} !pr-1.5`}
+        style={{ ...(!wide && width ? { width } : {}), ...lit }}
         data-climate={element.entity_id}
         title={[name, info?.area, fallback, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')}
       >
@@ -97,7 +100,7 @@ export function ClimateControl({ element, info, missing, arranging, wide, pageId
             style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
             {icon}
           </span>
-          <span className="text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
+          <Marquee text={name} className="flex-1 text-[13px] font-medium" />
           {reading && (
             <span className={`num text-[12px] whitespace-nowrap flex-none ${fallback ? 'text-warn' : 'text-muted'}`} data-reading>
               {reading}
@@ -124,6 +127,7 @@ export function ClimateControl({ element, info, missing, arranging, wide, pageId
           )}
         </span>
       </div>
+      {arranging && width !== null && !wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
       {arranging && (
         <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
           <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}

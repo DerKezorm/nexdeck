@@ -347,3 +347,16 @@ def test_the_browser_knows_the_same_styles_as_the_server() -> None:
     found = re.search(r"export const LAMP_STYLES = \[([^\]]*)\] as const", source)
     assert found, "LAMP_STYLES is no longer where this test reads it"
     assert tuple(re.findall(r"'([a-z]+)'", found.group(1))) == home.STYLES
+
+
+def test_a_width_dragged_by_hand_is_kept_inside_its_bounds_and_nonsense_is_left_out() -> None:
+    def kept(width: object) -> object:
+        raw = {"elements": [{"id": "a", "type": "light", "x": 0, "y": 0, "rid": "r1", "entity_id": "light.desk", "style": "pill", "width": width}]}
+        return home.clean_layout(raw, None)["elements"][0].get("width", "none")
+
+    assert kept(240) == 240 and kept(239.6) == 240
+    assert kept(10) == home.WIDTHS[0] and kept(5000) == home.WIDTHS[1]
+    for nonsense in (True, "240", None, float("nan"), float("inf"), [240]):
+        assert kept(nonsense) == "none", nonsense
+    heater = {"id": "h", "type": "climate", "x": 0, "y": 0, "rid": "r2", "entity_id": "climate.hall", "width": 360}
+    assert home.clean_layout({"elements": [heater]}, None)["elements"][0]["width"] == 360

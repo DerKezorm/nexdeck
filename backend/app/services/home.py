@@ -32,6 +32,8 @@ STYLES = ("pill", "round", "chip", "tile", "slider", "ring", "rocker", "dots", "
 CLIMATE_STYLES = ("pill",)
 #: How long a lamp's remembered name may be.
 MAX_NAME = 80
+#: The bounds of a width dragged by hand, in pixels (``MIN_WIDTH``, ``MAX_WIDTH`` in the browser).
+WIDTHS = (96, 640)
 
 _ID = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 _REGISTRY_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -84,6 +86,10 @@ def clean_element(raw: Any) -> dict[str, Any] | None:
         style = raw.get("style") if raw.get("style") in styles else styles[0]
         element = {"id": element_id, "type": kind, "x": x, "y": y, "rid": rid, "entity_id": entity_id,
                    "name": _text(raw.get("name"), MAX_NAME), "style": style}
+        width = raw.get("width")
+        if isinstance(width, (int, float)) and not isinstance(width, bool) and width == width and abs(width) < 1e6:
+            # Kept inside the bounds rather than dropped: an edge dragged a little too far is still a width.
+            element["width"] = min(WIDTHS[1], max(WIDTHS[0], round(width)))
         if kind == "climate":
             element["sensor"] = _sensor(raw.get("sensor"))
         return element

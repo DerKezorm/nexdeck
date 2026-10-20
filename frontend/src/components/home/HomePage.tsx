@@ -1,12 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
+import { Check, Grid3x3, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
-  climateSpots, freshId, isWide, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
-  type ClimateAnswer, type ClimateInfo, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
+  alignTo, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, stepTarget, surfaceHeight, withClimates, withLamps, withWish,
+  type Box, type ClimateAnswer, type ClimateInfo, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type LampInfo, type LampStyle, type LampWish, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
@@ -28,6 +28,9 @@ interface Props {
   onDone: () => void
 }
 
+/** While arranging without guides, the surface only shows its edge. */
+const SURFACE_PLAIN = { outline: '1px dashed var(--nd-border-strong)', outlineOffset: '4px' } as const
+
 /** While arranging, the surface shows its step as faint dots, so things can be lined up by eye. */
 const SURFACE_DOTS = {
   backgroundImage: 'radial-gradient(color-mix(in srgb, var(--nd-text) 12%, transparent) 1px, transparent 1px)',
@@ -35,6 +38,28 @@ const SURFACE_DOTS = {
   outline: '1px dashed var(--nd-border-strong)',
   outlineOffset: '4px',
 } as const
+
+/** Whether guides are on while arranging, kept in the browser: a convenience of whoever arranges. */
+const GUIDES = 'nexdeck.homeGuides'
+
+function useGuides(): [boolean, (on: boolean) => void] {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem(GUIDES) !== 'off'
+    } catch {
+      return true
+    }
+  })
+  const change = (next: boolean) => {
+    setOn(next)
+    try {
+      localStorage.setItem(GUIDES, next ? 'on' : 'off')
+    } catch {
+      // Storage may be unavailable; the choice then lasts as long as the page.
+    }
+  }
+  return [on, change]
+}
 
 /** Below this width the surface is read as a list, top to bottom; nothing is dragged there. */
 const NARROW = '(max-width: 639px)'
@@ -141,14 +166,14 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   const elements = layout?.elements ?? []
 
   const change = useCallback(
-    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle; sensor?: ClimateSensor | null }) => {
+    (id: string, patch: { x?: number; y?: number; text?: string; style?: LampStyle; sensor?: ClimateSensor | null; width?: number }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
           : element.type === 'climate'
-            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor }
-            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style }
+            ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, sensor: patch.sensor !== undefined ? patch.sensor : element.sensor, width: patch.width ?? element.width }
+            : { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: patch.style ?? element.style, width: patch.width ?? element.width }
       save({ ...layout, elements: layout.elements.map((element) => (element.id === id ? changed(element) : element)) })
     },
     [layout, save],
@@ -350,13 +375,37 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   // -- moving an element, by the pointer --------------------------------------
 
-  const [dragged, setDragged] = useState<{ id: string; x: number; y: number } | null>(null)
-  const grab = useRef<{ id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean } | null>(null)
+  const [guidesOn, setGuidesOn] = useGuides()
+  const surface = useRef<HTMLDivElement>(null)
+  const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number } | null>(null)
+  const [guides, setGuides] = useState<Guide[]>([])
+  const grab = useRef<{
+    id: string; pointer: number; startX: number; startY: number; fromX: number; fromY: number; moved: boolean
+    /** Moving the element, or dragging its width at the grip. */
+    resizing: boolean
+    own: Box
+    others: Box[]
+  } | null>(null)
 
+  /** Every element's box as it is drawn, measured when a drag begins: the guides line up with what the eye sees. */
+  const boxes = (id: string): { own: Box; others: Box[] } => {
+    const origin = surface.current?.getBoundingClientRect()
+    let own: Box = { x: 0, y: 0, width: 0, height: 0 }
+    const others: Box[] = []
+    for (const node of surface.current?.querySelectorAll<HTMLElement>('[data-element]') ?? []) {
+      const rect = node.getBoundingClientRect()
+      const box = { x: rect.left - (origin?.left ?? 0), y: rect.top - (origin?.top ?? 0), width: rect.width, height: rect.height }
+      if (node.dataset.element === id) own = box
+      else others.push(box)
+    }
+    return { own, others }
+  }
   const onPointerDown = (element: HomeElement) => (event: ReactPointerEvent<HTMLElement>) => {
     if (!arranging || narrow || event.button !== 0 || renaming === element.id) return
-    if ((event.target as HTMLElement).closest('[data-element-tool]')) return
-    grab.current = { id: element.id, pointer: event.pointerId, startX: event.clientX, startY: event.clientY, fromX: element.x, fromY: element.y, moved: false }
+    const target = event.target as HTMLElement
+    if (target.closest('[data-element-tool]')) return
+    const resizing = Boolean(target.closest('[data-resize]')) && isResizable(element)
+    grab.current = { id: element.id, pointer: event.pointerId, startX: event.clientX, startY: event.clientY, fromX: element.x, fromY: element.y, moved: false, resizing, ...boxes(element.id) }
     try {
       event.currentTarget.setPointerCapture(event.pointerId)
     } catch {
@@ -370,15 +419,35 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     const dy = event.clientY - held.startY
     if (!held.moved && Math.hypot(dx, dy) < 4) return
     held.moved = true
-    setDragged({ id: held.id, x: snap(held.fromX + dx), y: snap(held.fromY + dy) })
+    if (held.resizing) {
+      const element = elements.find((one) => one.id === held.id)
+      const from = element && element.type !== 'heading' ? (controlWidth(element) ?? held.own.width) : held.own.width
+      const sized = guidesOn ? resizeTo({ ...held.own, width: from }, from + dx, held.others) : resizeTo({ ...held.own, width: from }, from + dx, [])
+      setDragged({ id: held.id, x: held.fromX, y: held.fromY, width: sized.width })
+      setGuides(sized.guides)
+      return
+    }
+    const raw = { ...held.own, x: held.fromX + dx, y: held.fromY + dy }
+    const stepped = { x: snap(raw.x), y: snap(raw.y) }
+    if (!guidesOn) {
+      setDragged({ id: held.id, ...stepped })
+      return
+    }
+    // The box as drawn moves by the same amount as the element's corner.
+    const drawn = { ...raw, x: held.own.x + dx, y: held.own.y + dy }
+    const lined = alignTo(drawn, { x: stepped.x + held.own.x - held.fromX, y: stepped.y + held.own.y - held.fromY }, held.others)
+    setDragged({ id: held.id, x: Math.max(0, lined.x - (held.own.x - held.fromX)), y: Math.max(0, lined.y - (held.own.y - held.fromY)) })
+    setGuides(lined.guides)
   }
   const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     const held = grab.current
     if (!held || held.pointer !== event.pointerId) return
     grab.current = null
-    if (held.moved && dragged && dragged.id === held.id) change(held.id, { x: dragged.x, y: dragged.y })
-    else if (!held.moved && elements.find((element) => element.id === held.id)?.type === 'heading') setRenaming(held.id)
+    if (held.moved && dragged && dragged.id === held.id) {
+      change(held.id, held.resizing && dragged.width !== undefined ? { width: dragged.width } : { x: dragged.x, y: dragged.y })
+    } else if (!held.moved && !held.resizing && elements.find((element) => element.id === held.id)?.type === 'heading') setRenaming(held.id)
     setDragged(null)
+    setGuides([])
   }
 
   // -- drawing ---------------------------------------------------------------
@@ -400,15 +469,16 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     )
   }
 
-  const placed = (element: HomeElement) => (dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y } : element)
+  const placed = (element: HomeElement): HomeElement =>
+    dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}) } : element
   const draw = (element: HomeElement) =>
     element.type === 'climate' ? (
-      <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId}
+      <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId} width={controlWidth(element)}
         target={targets[element.id] ?? climateOf(element)?.target ?? null} setting={targets[element.id] !== undefined}
         onStep={canAct ? (steps) => { const info = climateOf(element); if (info) stepClimate(element, info, steps) } : undefined}
         onDetails={() => setClimateDetails(element.id)} onRemove={() => remove(element.id)} onSensor={(sensor) => chooseSensor(element, sensor)} />
     ) : element.type === 'light' ? (
-      <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && isWide(element)}
+      <LampControl element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow && isWide(element)} width={controlWidth(element)}
         onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })}
         onWish={canAct && !arranging ? (info, wish) => ask(element, info, wish) : undefined} onDetails={() => setDetails(element.id)} />
     ) : (
@@ -462,10 +532,16 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         </div>
       ) : (
         <div
+          ref={surface}
           className={`relative ${arranging ? 'rounded-2xl' : ''}`}
-          style={{ height: surfaceHeight(elements.map(placed)), ...(arranging ? SURFACE_DOTS : {}) }}
+          style={{ height: surfaceHeight(elements.map(placed)), ...(arranging ? (guidesOn ? SURFACE_DOTS : SURFACE_PLAIN) : {}) }}
           data-home-surface
+          data-guides={arranging && guidesOn ? '' : undefined}
         >
+          {guides.map((guide, index) => (
+            <span key={index} className="home-guide" data-guide={guide.axis}
+              style={guide.axis === 'x' ? { left: guide.at, top: guide.from - 8, width: 1, height: guide.to - guide.from + 16 } : { top: guide.at, left: guide.from - 8, height: 1, width: guide.to - guide.from + 16 }} />
+          ))}
           {elements.map((raw) => {
             const element = placed(raw)
             return (
@@ -485,7 +561,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           })}
         </div>
       )}
-      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onHeading={addHeading} onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
+      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
+        onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
         <LampDetails info={detailedInfo} onWish={(wish) => ask(detailed, detailedInfo, wish)} onClose={() => setDetails(null)} />
       )}
@@ -521,13 +598,15 @@ const DRAG_PX = 6
  * cannot reach or no longer has stays still. While the page is arranged it
  * carries two tools: its style, and taking it off the page.
  */
-function LampControl({ element, info, missing, arranging, wide, onRemove, onStyle, onWish, onDetails }: {
+function LampControl({ element, info, missing, arranging, wide, width, onRemove, onStyle, onWish, onDetails }: {
   element: HomeLight
   info: LampInfo | null
   missing: boolean
   arranging: boolean
   /** In the phone's list a pill, a chip or a slider runs the width of the screen. */
   wide: boolean
+  /** The width of a pill, a chip or a slider (``controlWidth``). */
+  width: number | null
   onRemove: () => void
   onStyle: (style: LampStyle) => void
   onWish?: (info: LampInfo, wish: LampWish) => void
@@ -565,7 +644,7 @@ function LampControl({ element, info, missing, arranging, wide, onRemove, onStyl
   }, [choosing])
 
   const quiet = missing || Boolean(info?.unavailable)
-  const face = lampFace({ style: element.style, info, name, state, quiet, dimming, wide })
+  const face = lampFace({ style: element.style, info, name, state, quiet, dimming, wide, width })
   const title = [name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : onWish ? t('homePage.lampHint') : ''].filter(Boolean).join(' · ')
   const label = [name, state].filter(Boolean).join(', ')
 
@@ -657,6 +736,7 @@ function LampControl({ element, info, missing, arranging, wide, onRemove, onStyl
       <div className={`lamp-control ${face.className}`} style={face.style} data-lamp={element.entity_id} data-style={element.style} title={title} aria-label={label}>
         {face.children}
       </div>
+      {arranging && width !== null && !wide && <span className="home-grip" data-resize aria-hidden title={t('homePage.dragWidth')} />}
       {arranging && (
         <span className="absolute -top-3 -right-3 z-10 flex gap-1" data-element-tool>
           <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={() => setChoosing((open) => !open)}
@@ -741,7 +821,7 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
@@ -753,6 +833,10 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onHeading:
       </button>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>
+      </button>
+      <button type="button" className={`btn btn-flat whitespace-nowrap ${props.guides ? 'text-accent' : ''}`} onClick={props.onGuides} aria-pressed={props.guides}
+        aria-label={t('homePage.guides')} title={t('homePage.guidesHelp')}>
+        <Grid3x3 size={15} /> <span className="hidden xl:inline">{t('homePage.guides')}</span>
       </button>
       <span className="w-px h-5 bg-line mx-0.5" aria-hidden="true" />
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onAddPage} aria-label={t('board.addPage')}>

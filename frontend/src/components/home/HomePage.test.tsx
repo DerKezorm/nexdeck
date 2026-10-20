@@ -386,8 +386,8 @@ it('offers no switch to who may not act, while arranging, or on a lamp that went
   cleanup()
   show(WITH_LAMPS, { canAct: true, editing: true })
   await screen.findByText('Floor lamp')
-  expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { pressed: false })).not.toBeInTheDocument()
+  // No lamp is a switch while the page is arranged (the guides' toggle in the bar is pressed, and no lamp).
+  expect(document.querySelectorAll('button[data-lamp]')).toHaveLength(0)
   cleanup()
   show({ ...WITH_LAMPS, lights: { ...WITH_LAMPS.lights, path: { ...OFFER.lights[2], unavailable: true, missing: false } } }, { canAct: true })
   await screen.findByRole('button', { name: /Floor lamp/ })

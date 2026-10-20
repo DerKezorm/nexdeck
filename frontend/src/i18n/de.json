@@ -1565,7 +1565,7 @@
   },
   "homePage": {
     "kindHome": "Zuhause",
-    "kindHomeHelp": "Licht und mehr aus Home Assistant, frei angeordnet.",
+    "kindHomeHelp": "Lampen und Thermostate aus Home Assistant, frei angeordnet.",
     "defaultName": "Zuhause",
     "readFrom": "Gelesen aus der Home-Assistant-Anbindung „{{name}}“.",
     "connection": "Home-Assistant-Anbindung",
@@ -1607,6 +1607,9 @@
     "missing": "nicht mehr in Home Assistant",
     "gone": "weg",
     "offline": "offline",
+    "guides": "Hilfslinien",
+    "guidesHelp": "Hilfslinien und Punktraster beim Anordnen: Elemente rasten an Kanten und Mitten der anderen ein.",
+    "dragWidth": "Ziehen ändert die Breite",
     "addClimate": "Heizung",
     "removeClimate": "Thermostat entfernen",
     "chooseSensor": "Raum messen mit",

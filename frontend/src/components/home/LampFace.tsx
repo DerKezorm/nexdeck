@@ -2,6 +2,7 @@ import { Lightbulb } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import { lampColour, type LampInfo, type LampStyle } from '../../lib/home'
+import { Marquee } from './Marquee'
 
 /** A warm white, for the parts of a drawing that show the lamp's light while it is off. */
 export const WARM = 'rgb(255, 176, 96)'
@@ -18,6 +19,8 @@ export interface FaceInput {
   dimming: number | null
   /** In the phone's list, where a pill, a chip or a slider runs the width of the screen. */
   wide: boolean
+  /** The width of a pill, a chip or a slider on the surface (``controlWidth``); null for the other styles. */
+  width?: number | null
 }
 
 /** What the control around a drawing wears, and what is inside it. */
@@ -32,12 +35,14 @@ export interface Face {
  * 19.10.2026), with its sizes. The control that wears a face (a button for
  * those who may act, a box otherwise) does the switching; a face only draws.
  */
-export function lampFace({ style, info, name, state, quiet, dimming, wide }: FaceInput): Face {
+export function lampFace({ style, info, name, state, quiet, dimming, wide, width = null }: FaceInput): Face {
   const colour = lampColour(info)
   const on = Boolean(colour)
   const lc = { '--lc': colour ?? WARM } as CSSProperties
   const pct = dimming ?? (info?.on ? (info.pct ?? 100) : 0)
   const shown = dimming !== null ? `${dimming} %` : state
+  // Every pill, chip and slider of a style as wide as the next, whatever its name (``DEFAULT_WIDTH``).
+  const sized: CSSProperties = !wide && width ? { width, maxWidth: 'none' } : {}
   const caption = (drawing: ReactNode) => ({
     className: `lamp-stack ${quiet ? 'lamp-quiet' : ''}`,
     style: lc,
@@ -55,11 +60,11 @@ export function lampFace({ style, info, name, state, quiet, dimming, wide }: Fac
     case 'chip':
       return {
         className: `lamp-chip ${on ? 'is-on' : ''} ${quiet ? 'is-quiet' : ''} ${wide ? 'w-full max-w-none h-11' : ''}`,
-        style: lc,
+        style: { ...lc, ...sized },
         children: (
           <>
             <i aria-hidden />
-            <span className="min-w-0 truncate">{name}</span>
+            <Marquee text={name} className="flex-1" />
             <span className="lamp-p num">{shown}</span>
           </>
         ),
@@ -79,12 +84,12 @@ export function lampFace({ style, info, name, state, quiet, dimming, wide }: Fac
     case 'slider':
       return {
         className: `lamp-slide ${on || dimming !== null ? 'is-on' : ''} ${quiet ? 'lamp-quiet' : ''} ${wide ? 'w-full h-12' : ''}`,
-        style: lc,
+        style: { ...lc, ...sized },
         children: (
           <>
             {(on || dimming !== null) && <span className="lamp-fill" style={{ width: `${pct}%` }} />}
             <Lightbulb size={18} />
-            <span className="min-w-0 truncate">{name}</span>
+            <Marquee text={name} className="flex-1 lamp-slide-name" />
             <span className="lamp-p num">{shown}</span>
           </>
         ),
@@ -112,10 +117,11 @@ export function lampFace({ style, info, name, state, quiet, dimming, wide }: Fac
       return caption(<Knob on={on || dimming !== null} pct={pct} />)
     default:
       return {
-        className: `glass lamp-pill ${wide ? 'w-full h-12' : 'h-10 max-w-[256px]'} ${quiet ? 'lamp-quiet' : ''}`,
-        style: colour
-          ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
-          : undefined,
+        className: `glass lamp-pill ${wide ? 'w-full h-12' : 'h-10'} ${quiet ? 'lamp-quiet' : ''}`,
+        style: {
+          ...sized,
+          ...(colour ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` } : {}),
+        },
         children: (
           <>
             {dimming !== null && (
@@ -125,7 +131,7 @@ export function lampFace({ style, info, name, state, quiet, dimming, wide }: Fac
             <span className="relative grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
               <Lightbulb size={15} className={colour ? '' : 'text-muted'} />
             </span>
-            <span className="relative text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
+            <Marquee text={name} className="relative flex-1 text-[13px] font-medium" />
             {state && <span className={`relative num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
           </>
         ),

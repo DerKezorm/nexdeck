@@ -25,6 +25,8 @@ export interface HomeLight {
   entity_id: string
   name: string
   style: LampStyle
+  /** A width of its own, for the styles that have one (``RESIZABLE``); otherwise the style's (``DEFAULT_WIDTH``). */
+  width?: number
 }
 
 /**
@@ -56,6 +58,28 @@ export const FOOTPRINT: Record<LampStyle, { width: number; height: number }> = {
 /** The styles that read as a row of their own on a phone; the others stand side by side. */
 export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'slider'])
 
+/**
+ * The width a control with a name in it has unless it was given one: the
+ * same for every pill, chip or slider, whatever its name, so a row of them
+ * lines up. A name too long for it runs as a ticker (``Marquee``).
+ */
+export const DEFAULT_WIDTH = { pill: 224, chip: 176, slider: 176, climate: 320 } as const
+/** The bounds of a width dragged by hand; the server keeps the same. */
+export const MIN_WIDTH = 96
+export const MAX_WIDTH = 640
+
+/** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
+export function isResizable(element: HomeElement): element is HomeDevice {
+  return element.type === 'climate' || (element.type === 'light' && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider'))
+}
+
+/** The width a control is drawn at on the surface, or null for a style whose size is its drawing. */
+export function controlWidth(element: HomeDevice): number | null {
+  if (!isResizable(element)) return null
+  const fallback = element.type === 'climate' ? DEFAULT_WIDTH.climate : DEFAULT_WIDTH[element.style as 'pill' | 'chip' | 'slider']
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, element.width ?? fallback))
+}
+
 /** The room a thermostat's pill takes: name, reading, minus, target, plus. */
 export const CLIMATE_FOOTPRINT = { width: 320, height: 40 }
 
@@ -74,6 +98,7 @@ export function heightOf(element: HomeElement): number {
 
 /** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
 export function widthOf(element: HomeElement): number {
+  if (element.type !== 'heading' && element.width !== undefined && isResizable(element)) return controlWidth(element) ?? FOOTPRINT.pill.width
   if (element.type === 'climate') return CLIMATE_FOOTPRINT.width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
 }
@@ -101,6 +126,8 @@ export interface HomeClimate {
   name: string
   style: 'pill'
   sensor: ClimateSensor | null
+  /** A width of its own; otherwise ``DEFAULT_WIDTH.climate``. */
+  width?: number
 }
 
 /** What stands on a page and is switched or set: a lamp or a thermostat. */
@@ -461,6 +488,100 @@ export function freshId(elements: HomeElement[], random: () => number = Math.ran
 export function nextSpot(elements: HomeElement[]): { x: number; y: number } {
   if (elements.length === 0) return { x: 16, y: 16 }
   return { x: 16, y: snap(bottomOf(elements) + LAMP_GAP) }
+}
+
+/** A box on the surface: where it stands and how big it is drawn. */
+export interface Box {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/** A guide line while dragging: along x (a vertical line) or y (a horizontal one), from where to where. */
+export interface Guide {
+  axis: 'x' | 'y'
+  at: number
+  from: number
+  to: number
+}
+
+/** How close an edge or a middle has to come to another's before it snaps there, in pixels. */
+export const ALIGN_PX = 6
+
+/**
+ * Where a dragged box goes when it comes close to lining up with another:
+ * its left edge, middle or right edge onto another's left edge, middle or
+ * right edge, and the same for top, middle and bottom. Each axis takes the
+ * nearest match within ``ALIGN_PX`` of where the pointer put it; without one,
+ * that axis stays where the step of the surface put it. The lines say what
+ * lines up, for the page to draw.
+ */
+export function alignTo(raw: Box, stepped: { x: number; y: number }, others: Box[], near = ALIGN_PX): { x: number; y: number; guides: Guide[] } {
+  const marks = (box: Box, axis: 'x' | 'y') =>
+    axis === 'x' ? [box.x, box.x + box.width / 2, box.x + box.width] : [box.y, box.y + box.height / 2, box.y + box.height]
+  const settle = (axis: 'x' | 'y'): { at: number | null; line: number | null; with: Box[] } => {
+    let best: { shift: number; line: number } | null = null
+    const own = marks(raw, axis)
+    for (const other of others) {
+      for (const theirs of marks(other, axis)) {
+        for (const mine of own) {
+          const shift = theirs - mine
+          if (Math.abs(shift) <= near && (best === null || Math.abs(shift) < Math.abs(best.shift))) best = { shift, line: theirs }
+        }
+      }
+    }
+    if (best === null) return { at: null, line: null, with: [] }
+    const line = best.line
+    const placed = { ...raw, [axis]: raw[axis] + best.shift }
+    // Every other box on that line, so the guide runs from the first to the last of them.
+    const lined = others.filter((other) => marks(other, axis).some((mark) => Math.abs(mark - line) < 0.5))
+    return { at: Math.round(placed[axis]), line, with: [placed, ...lined] }
+  }
+  const across = settle('x')
+  const down = settle('y')
+  const x = across.at ?? stepped.x
+  const y = down.at ?? stepped.y
+  const guides: Guide[] = []
+  if (across.line !== null) {
+    const boxes = across.with.map((box, index) => (index === 0 ? { ...box, y } : box))
+    guides.push({ axis: 'x', at: across.line, from: Math.min(...boxes.map((box) => box.y)), to: Math.max(...boxes.map((box) => box.y + box.height)) })
+  }
+  if (down.line !== null) {
+    const boxes = down.with.map((box, index) => (index === 0 ? { ...box, x } : box))
+    guides.push({ axis: 'y', at: down.line, from: Math.min(...boxes.map((box) => box.x)), to: Math.max(...boxes.map((box) => box.x + box.width)) })
+  }
+  return { x: Math.max(0, x), y: Math.max(0, y), guides }
+}
+
+/**
+ * The width a control dragged at its edge settles on: on the step of the
+ * surface, inside ``MIN_WIDTH`` and ``MAX_WIDTH``, and, near enough, as wide
+ * as another one or ending where another one ends or begins.
+ */
+export function resizeTo(box: Box, raw: number, others: Box[], near = ALIGN_PX): { width: number; guides: Guide[] } {
+  const bounded = (width: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(width)))
+  let best: { width: number; edge: number | null; same: Box | null } | null = null
+  for (const other of others) {
+    const candidates: { width: number; edge: number | null; same: Box | null }[] = [
+      { width: other.width, edge: null, same: other },
+      ...[other.x, other.x + other.width / 2, other.x + other.width].map((edge) => ({ width: edge - box.x, edge, same: null })),
+    ]
+    for (const candidate of candidates) {
+      if (candidate.width < MIN_WIDTH || Math.abs(candidate.width - raw) > near) continue
+      if (best === null || Math.abs(candidate.width - raw) < Math.abs(best.width - raw)) best = candidate
+    }
+  }
+  if (best === null) return { width: bounded(snap(raw)), guides: [] }
+  const width = bounded(best.width)
+  if (best.same) {
+    // As wide as another: a line under each of the two.
+    const mark = (target: Box, size: number): Guide => ({ axis: 'y', at: target.y + target.height + 4, from: target.x, to: target.x + size })
+    return { width, guides: [mark(box, width), mark(best.same, best.same.width)] }
+  }
+  const lined = others.filter((other) => [other.x, other.x + other.width / 2, other.x + other.width].some((mark) => Math.abs(mark - (box.x + width)) < 0.5))
+  const all = [box, ...lined]
+  return { width, guides: [{ axis: 'x', at: box.x + width, from: Math.min(...all.map((one) => one.y)), to: Math.max(...all.map((one) => one.y + one.height)) }] }
 }
 
 /** How far apart two elements may stand and still be read as one row. */

@@ -12,7 +12,7 @@ itself, not in its browser history.
 |---|---|
 | Cycle pages | Switches to the next page every so many seconds. `0` stays on one page. |
 | Dim from / until | Darkens the display during that window, e.g. 23:00 to 06:30. |
-| Allow actions | Buttons on the cards work on the display. Off by default: anyone at the display could restart containers otherwise. |
+| Allow actions | Buttons on the cards work on the display, and so do the lamps and thermostats of a home page. Off by default: anyone at the display could restart containers otherwise. |
 
 The token carries no session. It can read the board, its live stream, its
 icons and uploaded pictures, and nothing else. Revoke it in the same menu; the display then shows

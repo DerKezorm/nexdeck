@@ -303,3 +303,70 @@ def test_a_sensor_that_is_there_but_not_answering_leaves_the_thermostats_reading
         assert view["reading"] == 19.5 and view["sensor"] == {"name": "Hall temperature", "state": "unavailable"}, reads
     answering = home_control.climate_view(thermostat, {**hass_registry.sensor_state({"state": "22.1"}), "name": "Hall temperature"}, wanted)
     assert answering["reading"] == 22.1 and answering["sensor"]["state"] == "ok"
+
+
+# ---------------------------------------------------------------------------
+# Export, import and the board as YAML
+# ---------------------------------------------------------------------------
+
+FURNISHED = [
+    {"id": "down", "type": "heading", "x": 16, "y": 16, "text": "Downstairs"},
+    {"id": "floor", "type": "light", "x": 16, "y": 56, "rid": "r-floor", "entity_id": "light.floor_lamp", "name": "Floor lamp", "style": "knob"},
+    {"id": "strip", "type": "light", "x": 120, "y": 56, "rid": "r-tv", "entity_id": "light.tv_strip", "name": "LED strip", "style": "pill"},
+    HEATERS[0],
+    {**HEATERS[2], "y": 200},
+]
+
+
+def test_a_furnished_home_page_travels_with_its_board_and_works_where_it_lands(client: TestClient) -> None:
+    import yaml
+
+    setup_admin(client)
+    board, _hass, page = _demo_page(client)
+    client.put(f"/api/v1/pages/{page['id']}/home", json={"elements": FURNISHED}, headers=CSRF)
+    text = client.get(f"/api/v1/boards/{board['slug']}/export").text
+    assert "a-token" not in text
+    document = yaml.safe_load(text)
+    exported = next(one for one in document["pages"] if one.get("kind") == "home")["home"]
+    assert exported["integration"] == "Home Assistant" and [element["id"] for element in exported["elements"]] == ["down", "floor", "strip", "living", "bath"]
+
+    # Another house names its lamps the same, under registry ids of its own: the entity id finds them.
+    for element in exported["elements"]:
+        if "rid" in element:
+            element["rid"] = "elsewhere-" + element["rid"]
+    copy = client.post("/api/v1/boards/import", json={"yaml_text": yaml.safe_dump(document), "slug": "house-copy"}, headers=CSRF)
+    assert copy.status_code == 201, copy.text
+    copied = next(one for one in copy.json()["pages"] if one["kind"] == "home")
+    answer = client.get(f"/api/v1/pages/{copied['id']}/home").json()
+    elements = {element["id"]: element for element in answer["layout"]["elements"]}
+    assert elements["floor"]["style"] == "knob" and elements["living"]["sensor"]["entity_id"] == "sensor.living_room_temperature"
+    assert answer["lights"]["floor"]["missing"] is False and answer["lights"]["floor"]["on"] is True
+    assert answer["climates"]["living"]["reading"] == 21.3, "its sensor found again by its entity id"
+    assert answer["climates"]["living"]["sensor"]["state"] == "ok"
+    assert _set(client, copied, "living", {"target": 20}).status_code == 200
+
+
+def test_editing_the_board_as_yaml_keeps_what_stands_on_a_home_page(client: TestClient) -> None:
+    import yaml
+
+    setup_admin(client)
+    board, _hass, page = _demo_page(client)
+    client.put(f"/api/v1/pages/{page['id']}/home", json={"elements": FURNISHED}, headers=CSRF)
+    document = yaml.safe_load(client.get(f"/api/v1/boards/{board['slug']}/export?ids=true").text)
+    home_doc = next(one for one in document["pages"] if one.get("kind") == "home")["home"]
+    home_doc["elements"][1]["style"] = "ring"
+    home_doc["elements"].append({"id": "sneaky", "type": "light", "x": 0, "y": 0, "rid": "r-x", "entity_id": "lock.front_door"})
+    saved = client.put(f"/api/v1/boards/{board['slug']}/yaml", json={"yaml_text": yaml.safe_dump(document, sort_keys=False)}, headers=CSRF)
+    assert saved.status_code == 200, saved.text
+    pages = client.get(f"/api/v1/boards/{board['slug']}").json()["pages"]
+    home_page = next(one for one in pages if one["kind"] == "home")
+    elements = client.get(f"/api/v1/pages/{home_page['id']}/home").json()["layout"]["elements"]
+    assert [element["id"] for element in elements] == ["down", "floor", "strip", "living", "bath"], "a lock passed off as a lamp stays out"
+    assert elements[1]["style"] == "ring"
+    assert elements[3]["sensor"]["rid"] == "r-temp-living"
+    # Checked on the way in, not only when read: the live map reads what is stored.
+    from app.models import Page
+
+    with db_session() as db:
+        stored = db.get(Page, home_page["id"]).home
+    assert [element["id"] for element in stored["elements"]] == ["down", "floor", "strip", "living", "bath"]

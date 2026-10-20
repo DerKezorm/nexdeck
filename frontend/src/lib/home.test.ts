@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 
 import {
-  CLIMATE_FOOTPRINT, climateSpots, FOOTPRINT, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
+  alignTo, CLIMATE_FOOTPRINT, climateSpots, controlWidth, DEFAULT_WIDTH, FOOTPRINT, isResizable, MAX_WIDTH, MIN_WIDTH, resizeTo, widthOf, freshId, hsToRgb, LAMP_STYLES, lampSender, lampSpots, mergeWish, nextSpot, phoneGroups, readingOrder, rgbToHs, ROW_WIDTH, snap,
   stepTarget, surfaceHeight, temperature, withLamps, withNews, withWish,
-  type HomeAnswer, type HomeElement, type LampStyle, type LampWish,
+  type HomeAnswer, type HomeElement, type HomeLight, type LampStyle, type LampWish,
 } from './home'
 
 const heading = (id: string, x: number, y: number): HomeElement => ({ id, type: 'heading', x, y, text: id })
@@ -234,4 +234,51 @@ it('reads a thermostat on a phone under its heading, as a lamp', () => {
   expect(groups.map((group) => [group.heading?.id, group.devices.map((device) => device.id)])).toEqual([['down', ['living', 'lamp']], ['up', ['bed']]])
   const spots = climateSpots([], 6)
   for (const [index, a] of spots.entries()) for (const b of spots.slice(index + 1)) expect(b.x >= a.x + CLIMATE_FOOTPRINT.width || b.y >= a.y + CLIMATE_FOOTPRINT.height).toBe(true)
+})
+
+// -- guides and widths -----------------------------------------------------------
+
+const box = (x: number, y: number, width = 100, height = 40) => ({ x, y, width, height })
+
+it('snaps a dragged box onto the edges and middles of the others, the nearest one winning', () => {
+  const others = [box(100, 20), box(400, 300, 200)]
+  // Its left edge 4 px from the other's: onto it, with a line from the top of one to the bottom of the other.
+  const left = alignTo(box(104, 180), { x: 104, y: 184 }, others)
+  expect(left.x).toBe(100)
+  expect(left.y).toBe(184)
+  expect(left.guides).toEqual([{ axis: 'x', at: 100, from: 20, to: 224 }])
+  // Its middle onto the other's middle (450 + 50 = 500).
+  expect(alignTo(box(447, 120), { x: 448, y: 120 }, others).x).toBe(450)
+  // Its top onto the other's bottom: 60, from 63.
+  const below = alignTo(box(240, 63), { x: 240, y: 64 }, others)
+  expect(below.y).toBe(60)
+  expect(below.guides).toEqual([{ axis: 'y', at: 60, from: 100, to: 340 }])
+  // Nothing near: where the step put it, and no lines.
+  expect(alignTo(box(250, 150), { x: 248, y: 152 }, others)).toEqual({ x: 248, y: 152, guides: [] })
+  // Two near at once: the nearer of them.
+  expect(alignTo(box(98, 0), { x: 96, y: 0 }, [box(103, 200), box(99, 400)]).x).toBe(99)
+  expect(alignTo(box(2, 0), { x: 0, y: 0 }, [box(-3, 200)]).x).toBe(0)
+})
+
+it('settles a dragged width on the step, as wide as another, or ending where another ends', () => {
+  const others = [box(0, 100, 224), box(400, 0, 176)]
+  expect(resizeTo(box(0, 0, 200), 230, others)).toEqual({ width: 224, guides: [{ axis: 'y', at: 44, from: 0, to: 224 }, { axis: 'y', at: 144, from: 0, to: 224 }] })
+  const edge = resizeTo(box(200, 0, 100), 197, others)
+  expect(edge.width).toBe(200)
+  expect(edge.guides).toEqual([{ axis: 'x', at: 400, from: 0, to: 40 }])
+  expect(resizeTo(box(0, 0, 200), 263, others)).toEqual({ width: 264, guides: [] })
+  expect(resizeTo(box(0, 0, 200), 20, others).width).toBe(MIN_WIDTH)
+  expect(resizeTo(box(0, 0, 200), 2000, []).width).toBe(MAX_WIDTH)
+})
+
+it('gives every pill, chip, slider and thermostat a width of its style unless it has its own', () => {
+  const pill = lampAt('a', 0, 0, 'pill') as HomeLight
+  expect(controlWidth(pill)).toBe(DEFAULT_WIDTH.pill)
+  expect(controlWidth({ ...pill, width: 300 })).toBe(300)
+  expect(controlWidth({ ...pill, width: 10 })).toBe(MIN_WIDTH)
+  expect(controlWidth(lampAt('b', 0, 0, 'chip') as HomeLight)).toBe(DEFAULT_WIDTH.chip)
+  expect(controlWidth(lampAt('c', 0, 0, 'round') as HomeLight)).toBeNull()
+  expect(controlWidth({ id: 't', type: 'climate', x: 0, y: 0, rid: 'r', entity_id: 'climate.a', name: 'A', style: 'pill', sensor: null })).toBe(DEFAULT_WIDTH.climate)
+  expect(isResizable(lampAt('d', 0, 0, 'knob'))).toBe(false)
+  expect(widthOf({ ...pill, width: 400 })).toBe(400)
 })

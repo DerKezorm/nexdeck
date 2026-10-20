@@ -1565,7 +1565,7 @@
   },
   "homePage": {
     "kindHome": "Maison",
-    "kindHomeHelp": "Lumières et plus depuis Home Assistant, placées librement.",
+    "kindHomeHelp": "Lampes et thermostats de Home Assistant, placés librement.",
     "defaultName": "Maison",
     "readFrom": "Lu depuis la connexion Home Assistant « {{name}} ».",
     "connection": "Connexion Home Assistant",
@@ -1607,6 +1607,9 @@
     "missing": "n'est plus dans Home Assistant",
     "gone": "absente",
     "offline": "hors ligne",
+    "guides": "Repères",
+    "guidesHelp": "Repères et grille de points pendant la disposition : les éléments s'alignent sur les bords et milieux des autres.",
+    "dragWidth": "Faites glisser pour changer la largeur",
     "addClimate": "Chauffage",
     "removeClimate": "Retirer le thermostat",
     "chooseSensor": "Mesurer la pièce avec",

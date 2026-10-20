@@ -131,7 +131,7 @@ that one of twenty-one renderers draws.
 | MeTube | fetch a video, downloads, download count | fetch an address you type in, save the file to your own machine, remove, try again | none; MeTube has no login of its own, so whoever reaches it may queue and delete |
 | Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
 | Tube Archivist | download queue, latest videos, video archive | start downloads | API token from Settings > Application, sent as Token |
-| Home Assistant | entity, entity list | turn on/off, scenes, scripts, covers, locks | long-lived token; live over WebSocket |
+| Home Assistant | entity, entity list; home pages with lamps and thermostats | turn on/off, scenes, scripts, covers, locks; on home pages only the services of lamps and thermostats | long-lived token; live over WebSocket |
 | Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
 | Healthchecks | checks, checks up | | API key from the project settings; the read-only one is enough, and healthchecks.io works too |
 | ChangeDetection.io | recent changes, watches | check all now | API key from Settings > API |

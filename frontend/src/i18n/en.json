@@ -1565,7 +1565,7 @@
   },
   "homePage": {
     "kindHome": "Home",
-    "kindHomeHelp": "Lights and more from Home Assistant, placed freely.",
+    "kindHomeHelp": "Lamps and thermostats from Home Assistant, placed freely.",
     "defaultName": "Home",
     "readFrom": "Read from the Home Assistant connection “{{name}}”.",
     "connection": "Home Assistant connection",
@@ -1607,6 +1607,9 @@
     "missing": "no longer in Home Assistant",
     "gone": "gone",
     "offline": "offline",
+    "guides": "Guides",
+    "guidesHelp": "Guides and the dot grid while arranging: things snap to each other's edges and middles.",
+    "dragWidth": "Drag to change the width",
     "addClimate": "Heating",
     "removeClimate": "Remove thermostat",
     "chooseSensor": "Read the room by",

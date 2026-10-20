@@ -2470,3 +2470,89 @@ body.has-player-bar main {
     box-shadow: 0 0 6px var(--lc);
   }
 }
+
+/* A name too long for its control runs as a ticker, back and forth with a
+   rest at either end (Marquee.tsx); faded at the edges while it runs. With
+   reduced motion it stands and ends in an ellipsis. Guides and the width
+   grip belong to arranging a home page. */
+@layer components {
+  .lamp-marquee {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .lamp-marquee > span {
+    display: inline-block;
+  }
+
+  .lamp-marquee[data-marquee] {
+    text-overflow: clip;
+    mask-image: linear-gradient(to right, transparent, #000 6px, #000 calc(100% - 6px), transparent);
+  }
+
+  .lamp-marquee[data-marquee] > span {
+    animation: lamp-marquee var(--marquee-time, 6s) ease-in-out infinite alternate;
+  }
+
+  @keyframes lamp-marquee {
+    0%,
+    18% {
+      transform: translateX(0);
+    }
+
+    82%,
+    100% {
+      transform: translateX(var(--shift, 0));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lamp-marquee[data-marquee] {
+      text-overflow: ellipsis;
+      mask-image: none;
+    }
+
+    .lamp-marquee[data-marquee] > span {
+      display: inline;
+      animation: none;
+    }
+  }
+
+  .home-guide {
+    position: absolute;
+    pointer-events: none;
+    background: var(--nd-accent);
+    box-shadow: 0 0 6px var(--nd-accent);
+    z-index: 20;
+  }
+
+  .home-grip {
+    position: absolute;
+    top: 50%;
+    right: -7px;
+    width: 10px;
+    height: 24px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: var(--nd-surface-strong);
+    border: 1px solid var(--nd-border-strong);
+    cursor: ew-resize;
+    touch-action: none;
+    z-index: 15;
+  }
+
+  .home-grip::after {
+    content: "";
+    position: absolute;
+    inset: 6px 3px;
+    border-left: 1px solid var(--nd-text-faint);
+    border-right: 1px solid var(--nd-text-faint);
+  }
+
+  .home-grip:hover {
+    border-color: var(--nd-accent);
+  }
+}

@@ -1565,7 +1565,7 @@
   },
   "homePage": {
     "kindHome": "Casa",
-    "kindHomeHelp": "Luci e altro da Home Assistant, disposte liberamente.",
+    "kindHomeHelp": "Lampade e termostati di Home Assistant, disposti liberamente.",
     "defaultName": "Casa",
     "readFrom": "Letto dalla connessione Home Assistant «{{name}}».",
     "connection": "Connessione Home Assistant",
@@ -1607,6 +1607,9 @@
     "missing": "non è più in Home Assistant",
     "gone": "assente",
     "offline": "offline",
+    "guides": "Guide",
+    "guidesHelp": "Guide e griglia di punti durante la disposizione: gli elementi si agganciano a bordi e centri degli altri.",
+    "dragWidth": "Trascina per cambiare la larghezza",
     "addClimate": "Riscaldamento",
     "removeClimate": "Rimuovi termostato",
     "chooseSensor": "Misura la stanza con",

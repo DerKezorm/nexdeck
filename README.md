@@ -16,6 +16,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
 - **173 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **A map of your network.** A page can be a live plan of your UniFi network: gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions. You pick which servers and devices join it, and nothing moves by itself.
+- **Your home, switched from the board.** A page can hold the lamps and thermostats of Home Assistant on a free surface, as small as a light switch, in ten styles from a pill to a rocker switch or a turning knob. nexdeck calls nothing but their own services, and only for what stands on the page.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Yours to look at.** Thirteen colour themes besides nexdeck's own, Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine among them, cards drawn as glass, liquid glass with an edge that bends the light, flat, outline or with a neon edge, each card in a colour of its own if you like, and backgrounds that drift, show the stars or follow the time of day. Numbers roll to each new reading, and a card that goes down glows red while the room behind it turns a little red too.
@@ -48,6 +49,12 @@ The same grid, a different question. Hosts, containers, pools, disks, certificat
 A page of its own kind: the plan of a UniFi network, read from the console you already connected. Each link carries its traffic as dots or dashes in both directions, coloured by load, with the age of the value beside it. Click a device to light up its way to the internet and see its ports. Servers, the NAS and other wired devices join from a list; whatever the console finds later waits under Found until you place it. On a phone the plan becomes an indented list. UniFi only for now; SNMP is next.
 
 ![A network plan: internet, gateway, core switch, servers, two more switches, access points and clients, with the traffic running along every link](docs/screenshot-topology.png)
+
+### Your home
+
+A third kind of page, for Home Assistant: lamps and thermostats on a free surface instead of the card grid, so a light switch takes the room of a light switch. Pick them from a list that leaves out what does not belong on a wall (settings, diagnostics, anything hidden in Home Assistant), and draw each lamp in one of ten styles: pill, round, chip, tile, slider, ring, rocker, dots, bulb or knob, mixed as you like. A tap switches a lamp, a drag sideways dims it, and holding it opens its brightness, white and colour, as far as the lamp has them. A thermostat shows the room, read by itself or by a temperature sensor you choose, and takes its target in its own steps and bounds; taps are gathered and sent once, a second after the last. Lamps keep their place when they are renamed in Home Assistant. On a phone every heading keeps its lamps under it, and on a wall display the page switches when its kiosk link allows actions.
+
+![A home page: three lamps of the living room as pills, a bulb and a round lamp in the kitchen, a rocker switch for the garden path, and two thermostats, the living room heating to 21.5 degrees](docs/screenshot-home.png)
 
 ### On the wall
 
