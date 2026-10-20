@@ -2000,3 +2000,1641 @@ body.has-player-bar main {
   border-right-width: 2px;
   border-bottom-width: 2px;
 }
+
+
+@layer components {
+  /* The sliders of a lamp's details: a thick track that shows what it sets
+     (dark to lit, warm to cool, the rainbow) and a round knob to hold. */
+  .lamp-range {
+    --track: color-mix(in srgb, var(--nd-text) 16%, transparent);
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .lamp-range::-webkit-slider-runnable-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .lamp-range::-moz-range-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .lamp-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    margin-top: -6px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    transition: transform 120ms ease;
+  }
+
+  .lamp-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  }
+
+  .lamp-range:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+
+  .lamp-range:focus-visible {
+    outline: 2px solid var(--nd-accent);
+    outline-offset: 4px;
+    border-radius: 999px;
+  }
+}
+
+/* The lamps of a home page, the ten drawings of the board of sketches
+   (A pill to J knob, knoepfe.html of 19.10.2026) with its sizes. --lc is
+   the lamp's light; the board's fixed dark greys became the theme's own
+   text colour at low strength, so each drawing holds in the light theme too. */
+@layer components {
+  .lamp-control {
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 200ms ease, filter 200ms ease;
+  }
+
+  button.lamp-control:active {
+    transform: scale(0.96);
+  }
+
+  button.lamp-control:hover {
+    filter: brightness(1.05);
+  }
+
+  button.lamp-control:focus-visible {
+    outline: 2px solid var(--nd-accent);
+    outline-offset: 3px;
+  }
+
+  .lamp-quiet {
+    opacity: 0.5;
+  }
+
+  .lamp-pill {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 16px 0 6px;
+    border-radius: 999px;
+    text-align: left;
+  }
+
+  .lamp-p {
+    margin-left: auto;
+    flex: none;
+    font-size: 11.5px;
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+  }
+
+  /* Drawings with their name below. */
+  .lamp-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    width: 72px;
+    border-radius: 14px;
+  }
+
+  /* A long name runs as a ticker (``Marquee``), one line, as in the pills. */
+  .lamp-cap {
+    display: block;
+    font-size: 11.5px;
+    color: var(--nd-text-muted);
+    max-width: 72px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* B round, 48 x 48 */
+  .lamp-round {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    color: var(--nd-text-muted);
+    transition: background-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .lamp-round.is-on {
+    background: var(--lc);
+    color: #1b1206;
+    border-color: transparent;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--lc) 18%, transparent), 0 0 24px -4px var(--lc);
+  }
+
+  .lamp-round.is-quiet {
+    border-style: dashed;
+  }
+
+  /* C chip, about 110 x 28 */
+  .lamp-chip {
+    height: 28px;
+    max-width: 200px;
+    padding: 0 11px 0 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    border: 1px solid var(--nd-border);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .lamp-chip > i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--nd-text) 22%, transparent);
+  }
+
+  .lamp-chip .lamp-p {
+    font-size: 11px;
+  }
+
+  .lamp-chip.is-on {
+    border-color: color-mix(in srgb, var(--lc) 35%, transparent);
+  }
+
+  .lamp-chip.is-on > i {
+    background: var(--lc);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 25%, transparent), 0 0 8px var(--lc);
+  }
+
+  .lamp-chip.is-quiet {
+    opacity: 0.6;
+  }
+
+  .lamp-chip.is-quiet > i {
+    background: var(--nd-bad);
+  }
+
+  /* D tile, 84 x 84 */
+  .lamp-tile {
+    width: 84px;
+    height: 84px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-tile b {
+    color: var(--nd-text);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.15;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .lamp-tile .lamp-p {
+    position: absolute;
+    right: 9px;
+    top: 10px;
+    font-size: 10.5px;
+  }
+
+  .lamp-tile.is-on {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lc) 34%, var(--nd-surface)), color-mix(in srgb, var(--lc) 8%, var(--nd-surface)) 75%);
+    border-color: color-mix(in srgb, var(--lc) 45%, transparent);
+    color: var(--lc);
+    box-shadow: 0 10px 26px -14px var(--lc);
+  }
+
+  .lamp-tile.is-on .lamp-p {
+    color: var(--nd-text);
+  }
+
+  .lamp-tile.is-quiet {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  /* E slider, 176 x 40 */
+  .lamp-slide {
+    width: 176px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-slide > :not(.lamp-fill) {
+    position: relative;
+  }
+
+  .lamp-slide > span:not(.lamp-fill):not(.lamp-p) {
+    color: var(--nd-text);
+  }
+
+  .lamp-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: color-mix(in srgb, var(--lc) 38%, transparent);
+    border-right: 2px solid var(--lc);
+    transition: width 160ms ease;
+  }
+
+  .lamp-slide.is-on {
+    color: var(--lc);
+  }
+
+  .lamp-slide.is-on .lamp-p {
+    color: var(--nd-text);
+  }
+
+  /* F ring, 56 x 56 */
+  .lamp-ring {
+    width: 56px;
+    height: 56px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: var(--nd-text-muted);
+  }
+
+  .lamp-ring.is-on {
+    color: var(--lc);
+  }
+
+  .lamp-arc {
+    position: absolute;
+    inset: 0;
+    width: 56px;
+    height: 56px;
+    transform: rotate(135deg);
+  }
+
+  .lamp-arc-track {
+    stroke: color-mix(in srgb, var(--nd-text) 9%, transparent);
+  }
+
+  .lamp-arc-lit {
+    stroke: var(--lc);
+    filter: drop-shadow(0 0 3px var(--lc));
+  }
+
+  /* G rocker, 42 x 58 */
+  .lamp-plate {
+    display: block;
+    width: 42px;
+    height: 58px;
+    border-radius: 11px;
+    border: 1px solid var(--nd-border-strong);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--nd-text) 7%, transparent), color-mix(in srgb, var(--nd-text) 2%, transparent));
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.3);
+    perspective: 200px;
+    position: relative;
+  }
+
+  .lamp-rk {
+    position: absolute;
+    inset: 7px;
+    border-radius: 7px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 5%, transparent), color-mix(in srgb, var(--nd-text) 14%, transparent));
+    transform: rotateX(14deg);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.25);
+    transition: transform 180ms ease;
+  }
+
+  .lamp-plate.is-on .lamp-rk {
+    transform: rotateX(-14deg);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 16%, transparent), color-mix(in srgb, var(--nd-text) 4%, transparent));
+  }
+
+  .lamp-sl {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: rgb(0 0 0 / 0.4);
+  }
+
+  .lamp-plate.is-on .lamp-sl {
+    background: var(--lc);
+    box-shadow: 0 0 8px 1px var(--lc);
+  }
+
+  /* H dots, 64 x 72 */
+  .lamp-dots {
+    display: grid;
+    grid-template-columns: repeat(9, 4px);
+    gap: 2px;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--nd-border);
+    background: var(--nd-surface);
+  }
+
+  .lamp-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+  }
+
+  .lamp-dots i.o {
+    background: color-mix(in srgb, var(--nd-text) 28%, transparent);
+  }
+
+  .lamp-dots.is-on i.o {
+    background: var(--lc);
+    box-shadow: 0 0 4px var(--lc);
+  }
+
+  .lamp-dots.is-on i.f {
+    background: color-mix(in srgb, var(--lc) 70%, transparent);
+  }
+
+  /* I bulb, 46 x 66 */
+  .lamp-bulb {
+    overflow: visible;
+  }
+
+  .lamp-bulb-cord {
+    stroke: var(--nd-text-faint);
+  }
+
+  .lamp-bulb-cap {
+    fill: color-mix(in srgb, var(--nd-text) 35%, var(--nd-surface));
+  }
+
+  .lamp-bulb-glass {
+    fill: color-mix(in srgb, var(--nd-text) 3%, transparent);
+    stroke: color-mix(in srgb, var(--nd-text) 30%, transparent);
+  }
+
+  .lamp-bulb-glass.is-on {
+    fill: rgb(255 190 120 / 0.16);
+  }
+
+  /* J knob, 58 x 58 */
+  .lamp-knob {
+    display: block;
+    width: 58px;
+    height: 58px;
+    position: relative;
+  }
+
+  .lamp-knob svg {
+    position: absolute;
+    inset: 0;
+    width: 58px;
+    height: 58px;
+  }
+
+  .lamp-led {
+    fill: color-mix(in srgb, var(--nd-text) 16%, transparent);
+  }
+
+  .lamp-led.is-on {
+    fill: var(--lc);
+    filter: drop-shadow(0 0 2px var(--lc));
+  }
+
+  .lamp-k {
+    position: absolute;
+    inset: 13px;
+    border-radius: 50%;
+    background: conic-gradient(from 20deg, #23272f, #464d59, #23272f, #464d59, #23272f, #464d59, #23272f);
+    box-shadow: 0 6px 12px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.2);
+    transition: transform 200ms ease;
+  }
+
+  .lamp-k::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    width: 2.5px;
+    height: 8px;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: var(--nd-text-faint);
+  }
+
+  .lamp-knob.is-on .lamp-k::after {
+    background: var(--lc);
+    box-shadow: 0 0 6px var(--lc);
+  }
+}
+
+/* A name too long for its control runs as a ticker, back and forth with a
+   rest at either end (Marquee.tsx); faded at the edges while it runs. With
+   reduced motion it stands and ends in an ellipsis. Guides and the width
+   grip belong to arranging a home page. */
+@layer components {
+  .lamp-marquee {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .lamp-marquee > span {
+    display: inline-block;
+  }
+
+  .lamp-marquee[data-marquee] {
+    text-overflow: clip;
+    mask-image: linear-gradient(to right, transparent, #000 6px, #000 calc(100% - 6px), transparent);
+  }
+
+  .lamp-marquee[data-marquee] > span {
+    animation: lamp-marquee var(--marquee-time, 6s) ease-in-out infinite alternate;
+  }
+
+  @keyframes lamp-marquee {
+    0%,
+    18% {
+      transform: translateX(0);
+    }
+
+    82%,
+    100% {
+      transform: translateX(var(--shift, 0));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lamp-marquee[data-marquee] {
+      text-overflow: ellipsis;
+      mask-image: none;
+    }
+
+    .lamp-marquee[data-marquee] > span {
+      display: inline;
+      animation: none;
+    }
+  }
+
+  .home-guide {
+    position: absolute;
+    pointer-events: none;
+    background: var(--nd-accent);
+    box-shadow: 0 0 6px var(--nd-accent);
+    z-index: 20;
+  }
+
+  .home-grip {
+    position: absolute;
+    top: 50%;
+    right: -7px;
+    width: 10px;
+    height: 24px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: var(--nd-surface-strong);
+    border: 1px solid var(--nd-border-strong);
+    cursor: ew-resize;
+    touch-action: none;
+    z-index: 15;
+  }
+
+  .home-grip::after {
+    content: "";
+    position: absolute;
+    inset: 6px 3px;
+    border-left: 1px solid var(--nd-text-faint);
+    border-right: 1px solid var(--nd-text-faint);
+  }
+
+  .home-grip:hover {
+    border-color: var(--nd-accent);
+  }
+
+  /* The tools of an element stand outside its drawing; useToolsOutside (HomePage) picks the side that is free. */
+  .home-tools {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    bottom: calc(100% + 4px);
+    right: 0;
+  }
+
+  [data-tools="corner"] .home-tools {
+    right: auto;
+    left: calc(100% - 10px);
+  }
+
+  [data-tools="right"] .home-tools,
+  [data-tools="left"] .home-tools {
+    flex-direction: column;
+    bottom: auto;
+    top: 0;
+  }
+
+  [data-tools="right"] .home-tools {
+    right: auto;
+    left: calc(100% + 4px);
+  }
+
+  [data-tools="left"] .home-tools {
+    right: calc(100% + 4px);
+  }
+
+  [data-tools="below"] .home-tools {
+    bottom: auto;
+    right: auto;
+    top: calc(100% + 4px);
+    left: 0;
+  }
+
+  /*
+   * While arranging, the tools and grips show only on the element pointed at,
+   * the one touched last, or one whose menu or name field is open: on every
+   * element at once they buried the page (seen 20.10.2026). They go after a
+   * short wait, so the pointer gets across to them; a margin round them
+   * bridges the gap to the drawing.
+   */
+  [data-arranging] .home-tools,
+  [data-arranging] .home-tools-inline,
+  [data-arranging] .home-grip {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease 0.3s, visibility 0s linear 0.45s;
+  }
+
+  [data-arranging] [data-element]:is(:hover, :focus-within, [data-chosen], :has([role="menu"], [data-rename])) :is(.home-tools, .home-tools-inline, .home-grip) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.1s ease, visibility 0s;
+  }
+
+  .home-tools::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    z-index: -1;
+  }
+
+  /* Tools outside the drawing can stand nearer a neighbour: pointing at one shows whose they are. */
+  [data-arranging] [data-element]:hover .home-tools .btn {
+    box-shadow: 0 0 0 1px var(--nd-accent);
+  }
+
+  [data-arranging] [data-element]:hover {
+    outline: 1px dashed var(--nd-accent);
+    outline-offset: 3px;
+    border-radius: 14px;
+  }
+
+  /* The tools of a drawn element keep their size when it is grown or shrunk (Scaled in HomePage). */
+  /* Only the outermost: the name button is a tool inside the tools, and shrank once more (seen 20.10.2026). */
+  [data-scaled] [data-element-tool]:not([data-element-tool] *), [data-scaled] .home-grip {
+    zoom: calc(1 / var(--home-scale, 1));
+  }
+
+  /* A statistics card is sized at its corner, in both directions. */
+  .home-grip-corner {
+    top: auto;
+    right: -6px;
+    bottom: -6px;
+    width: 16px;
+    height: 16px;
+    transform: none;
+    border-radius: 5px;
+    cursor: nwse-resize;
+  }
+
+  .home-grip-corner::after {
+    inset: 4px;
+    border: 0;
+    border-right: 1.5px solid var(--nd-text-faint);
+    border-bottom: 1.5px solid var(--nd-text-faint);
+    border-radius: 0 0 2px 0;
+  }
+
+  /* The statistics cards of a home page (statistik.html of 20.10.2026). */
+  .stat-card {
+    position: relative;
+    overflow: hidden;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: var(--nd-surface);
+    border: 1px solid var(--nd-border-strong);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .stat-small {
+    padding: 10px 12px;
+  }
+
+  /* The card style of Appearance on a home page too, as on the board's cards
+     (.card.glass above): the surfaces of the pills, chips, tiles and cards.
+     A lamp that is on, a window that is open and a thermostat that heats keep
+     their colour in every style; the drawn styles stay pictures. Felt.tsx
+     names the same list for the bent edge and the tilt. */
+  :root[data-cards='flat'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: var(--nd-bg-elev);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  :root[data-cards='outline'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: color-mix(in srgb, var(--nd-bg) 35%, transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    border-width: 1.5px;
+    border-color: var(--nd-border-strong);
+  }
+
+  :root[data-cards='neon'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open):not(.is-quiet):not(.lamp-quiet):not(.is-missing) {
+    border-color: color-mix(in srgb, var(--nd-accent) 45%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--nd-accent) 18%, transparent),
+      0 0 28px -8px var(--nd-accent-glow);
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile) {
+    --nd-text-muted: color-mix(in srgb, var(--nd-text) 80%, transparent);
+    --nd-text-faint: color-mix(in srgb, var(--nd-text) 68%, transparent);
+    position: relative;
+    isolation: isolate;
+    box-shadow:
+      var(--nd-lg-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 0 24px rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+    -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: var(--nd-lg-fill);
+    border-color: transparent;
+  }
+
+  /* Rim and glare under the content, as on a card. */
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::before,
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::before {
+    padding: 1.2px;
+    background: linear-gradient(140deg, var(--nd-lg-rim), rgba(255, 255, 255, 0.08) 30%, transparent 55%, var(--nd-lg-rim-far));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  :root[data-cards='liquid'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)::after {
+    background:
+      radial-gradient(120% 70% at var(--nd-mx, 25%) var(--nd-my, -10%), var(--nd-lg-glare), transparent 55%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%);
+    opacity: 0.75;
+  }
+
+  /* Tipping towards the pointer (followPointer), quick to follow and above its neighbours. */
+  [data-home-page] .is-tipping {
+    position: relative;
+    z-index: 3;
+    transition: transform 120ms ease-out;
+  }
+
+  .stat-tick {
+    font: 500 10px var(--font-mono);
+    fill: var(--nd-text-faint);
+  }
+  /* Doors, windows and readings of a home page (sensoren.html of 20.10.2026); --so is open. */
+  .sensor-pill, .sensor-chip, .sensor-tile, .sensor-draw, .sensor-square, .sensor-dot, .sensor-open-text, .sensor-hint-open {
+    --so: rgb(251, 191, 36);
+  }
+
+  .sensor-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 14px 0 6px;
+    border-radius: 999px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    font-size: 13px;
+  }
+
+  .sensor-pill b {
+    font-weight: 500;
+  }
+
+  .sensor-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+  }
+
+  .sensor-icon.reading {
+    background: color-mix(in srgb, var(--nd-accent) 14%, transparent);
+    color: var(--nd-accent);
+  }
+
+  .sensor-state {
+    font-size: 12px;
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+  }
+
+  .sensor-pill.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+    box-shadow: 0 0 22px -8px var(--so);
+  }
+
+  .sensor-pill.is-open .sensor-icon {
+    background: var(--so);
+    color: #1b1206;
+  }
+
+  .is-open .sensor-state, .sensor-tile.is-open .sensor-tile-value, .sensor-open-text {
+    color: var(--so);
+    font-weight: 600;
+  }
+
+  .sensor-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    max-width: 100%;
+    padding: 0 11px 0 8px;
+    border-radius: 999px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    font-size: 12px;
+  }
+
+  .sensor-chip > i {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    flex: none;
+    background: rgb(74, 222, 128);
+  }
+
+  .sensor-chip.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+  }
+
+  .sensor-chip.is-open > i, .sensor-dot {
+    background: var(--so);
+    box-shadow: 0 0 8px var(--so);
+  }
+
+  .sensor-chip.is-offline > i {
+    background: transparent;
+    border: 1px dashed var(--nd-text-faint);
+  }
+
+  .sensor-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 120px;
+    height: 104px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .sensor-tile.reading {
+    width: 150px;
+    height: 118px;
+    padding: 11px 13px;
+  }
+
+  .sensor-tile-value {
+    margin-top: auto;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .sensor-tile.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+    box-shadow: 0 0 26px -10px var(--so);
+  }
+
+  .sensor-draw {
+    position: relative;
+    width: 96px;
+    text-align: center;
+  }
+
+  .sensor-draw.sensor-ring {
+    width: 120px;
+  }
+
+  .sensor-draw.is-open svg {
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--so) 45%, transparent));
+  }
+
+  .is-offline {
+    opacity: 0.55;
+  }
+
+  .sensor-pill.is-missing, .sensor-chip.is-missing, .sensor-tile.is-missing {
+    border-style: dashed;
+  }
+
+  .is-missing .sensor-state, .is-missing .sensor-tile-value {
+    color: var(--nd-bad);
+  }
+
+  .sensor-battery {
+    font-size: 11px;
+    color: var(--nd-bad);
+    white-space: nowrap;
+  }
+
+  .sensor-tile .sensor-battery, .sensor-draw .sensor-battery {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+  }
+
+  .sensor-square {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: rgba(74, 222, 128, 0.75);
+  }
+
+  .sensor-square.is-open {
+    background: var(--so);
+    box-shadow: 0 0 6px var(--so);
+    opacity: 1;
+  }
+
+  .sensor-square.is-offline {
+    background: transparent;
+    border: 1px dashed var(--nd-text-faint);
+    opacity: 1;
+  }
+
+  .sensor-square.is-missing {
+    background: transparent;
+    border: 1px dashed var(--nd-bad);
+  }
+
+  .sensor-hint-open {
+    background: color-mix(in srgb, var(--so) 18%, transparent);
+    color: var(--so);
+  }
+
+  /* Scenes, scripts and switches (szenen-schalter.html of 20.10.2026); --sc is a scene set off, --sw a switch that is on. */
+  .scene, .scene-bar, .scene-square {
+    --sc: rgb(244, 114, 182);
+  }
+
+  .switch, .switch-toggle {
+    --sw: rgb(74, 222, 128);
+  }
+
+  .scene-icon {
+    background: color-mix(in srgb, var(--sc) 18%, transparent);
+    color: var(--sc);
+  }
+
+  .scene.is-fired {
+    border-color: color-mix(in srgb, var(--sc) 60%, transparent);
+    box-shadow: 0 0 22px -8px var(--sc);
+  }
+
+  .scene.is-fired .sensor-state, .scene.is-fired [data-state] {
+    color: var(--sc);
+    font-weight: 600;
+  }
+
+  .scene-bar {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+    overflow-x: auto;
+  }
+
+  .scene-segment {
+    flex: 1 0 auto;
+    font-size: 12px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+    transition: background 120ms ease;
+  }
+
+  .scene-segment:hover:not(:disabled), .scene-square:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nd-text) 8%, transparent);
+  }
+
+  .scene-segment.is-on, .scene-square.is-on {
+    background: color-mix(in srgb, var(--sc) 18%, transparent);
+    color: var(--sc);
+    font-weight: 600;
+  }
+
+  .scene-square {
+    border-radius: 12px;
+    padding: 10px 6px;
+    font-size: 12px;
+    text-align: center;
+    background: color-mix(in srgb, var(--nd-text) 5%, transparent);
+    min-width: 0;
+  }
+
+  .switch-icon {
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+  }
+
+  .sensor-pill.switch.is-on {
+    border-color: color-mix(in srgb, var(--sw) 50%, transparent);
+    box-shadow: 0 0 22px -10px var(--sw);
+  }
+
+  .sensor-pill.switch.is-on .switch-icon {
+    background: var(--sw);
+    color: #062012;
+  }
+
+  .switch.is-on .sensor-state {
+    color: var(--sw);
+    font-weight: 600;
+  }
+
+  .sensor-chip.switch > i {
+    background: color-mix(in srgb, var(--nd-text) 25%, transparent);
+  }
+
+  .sensor-chip.switch.is-on {
+    border-color: color-mix(in srgb, var(--sw) 50%, transparent);
+  }
+
+  .sensor-chip.switch.is-on > i {
+    background: var(--sw);
+    box-shadow: 0 0 8px var(--sw);
+  }
+
+  .sensor-tile.switch.is-on {
+    border-color: color-mix(in srgb, var(--sw) 50%, transparent);
+  }
+
+  .switch.is-pending {
+    opacity: 0.8;
+  }
+
+  .switch.is-pending .sensor-state, .switch.is-pending [data-state] {
+    color: var(--nd-text-muted);
+    font-weight: 400;
+  }
+
+  .sensor-tile.switch-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: 260px;
+    height: 48px;
+    padding: 8px 14px;
+  }
+
+  .switch-toggle {
+    position: relative;
+    flex: none;
+    width: 46px;
+    height: 26px;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--nd-text) 14%, transparent);
+    transition: background 160ms ease;
+  }
+
+  .switch-toggle > i {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 99px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    transition: left 160ms ease;
+  }
+
+  .switch-toggle.is-on {
+    background: var(--sw);
+  }
+
+  .switch-toggle.is-on > i {
+    left: 23px;
+  }
+
+  .switch-toggle.is-small {
+    width: 34px;
+    height: 20px;
+  }
+
+  .switch-toggle.is-small > i {
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .switch-toggle.is-small.is-on > i {
+    left: 16px;
+  }
+
+  .switch-toggle:disabled {
+    opacity: 0.45;
+  }
+
+  .switch-all {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    white-space: nowrap;
+  }
+
+  .switch-all:hover {
+    background: color-mix(in srgb, var(--nd-text) 14%, transparent);
+  }
+
+  /* Shutters and blinds (jalousien.html of 20.10.2026); --sm is moving. */
+  .cover {
+    --sm: rgb(167, 139, 250);
+  }
+
+  .sensor-pill.cover {
+    position: relative;
+    overflow: hidden;
+    padding-right: 6px;
+    gap: 8px;
+  }
+
+  .cover-icon {
+    background: rgba(125, 211, 252, 0.16);
+    color: rgb(125, 211, 252);
+  }
+
+  .cover-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    color: var(--nd-text);
+    transition: background 120ms ease;
+  }
+
+  .cover-button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nd-text) 14%, transparent);
+  }
+
+  .cover-button:disabled {
+    opacity: 0.35;
+  }
+
+  .cover-button.is-stop {
+    background: color-mix(in srgb, var(--nd-accent) 20%, transparent);
+    color: var(--nd-accent);
+  }
+
+  .cover-bar {
+    position: absolute;
+    left: 40px;
+    right: 72px;
+    bottom: 5px;
+    height: 3px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cover-bar > i, .cover-track-row > i {
+    display: block;
+    height: 100%;
+    border-radius: 9px;
+    background: rgb(125, 211, 252);
+  }
+
+  .cover.is-moving {
+    border-color: color-mix(in srgb, var(--sm) 55%, transparent);
+    box-shadow: 0 0 20px -8px var(--sm);
+  }
+
+  .cover.is-moving .sensor-state, .cover-moving-text {
+    color: rgb(167, 139, 250);
+    font-weight: 600;
+  }
+
+  .cover-mini {
+    position: relative;
+    flex: none;
+    width: 22px;
+    height: 9px;
+    border-radius: 3px;
+    border: 1px solid rgba(203, 213, 225, 0.5);
+    overflow: hidden;
+  }
+
+  .cover-mini > i {
+    position: absolute;
+    inset: 0 0 auto 0;
+    background: rgba(203, 213, 225, 0.85);
+  }
+
+  .cover-slider {
+    width: 104px;
+  }
+
+  .cover-window {
+    width: 110px;
+  }
+
+  .cover-track {
+    position: relative;
+    width: 30px;
+    height: 112px;
+    margin: 6px auto 0;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--nd-text) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--nd-text) 20%, transparent);
+    overflow: hidden;
+  }
+
+  .cover-track-down {
+    position: absolute;
+    inset: 0 0 auto 0;
+    background: rgba(203, 213, 225, 0.8);
+  }
+
+  .cover-track-handle {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  .cover-track-row {
+    flex: none;
+    width: 96px;
+    height: 4px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+    overflow: hidden;
+  }
+
+  .cover-scene {
+    text-align: left;
+    border-radius: 12px;
+    padding: 9px 10px;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--nd-text) 5%, transparent);
+    transition: background 120ms ease;
+  }
+
+  .cover-scene:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+  }
+
+  .cover-scene.is-on {
+    background: color-mix(in srgb, var(--nd-accent) 16%, transparent);
+    color: var(--nd-accent);
+  }
+
+  .sensor-hint-wet {
+    background: rgba(56, 189, 248, 0.16);
+    color: rgb(56, 189, 248);
+  }
+}
+
+/* The thermostats of a home page, the drawings of their board of sketches
+   (heizung.html of 20.10.2026) with its sizes; --lc is heating, cooling,
+   idle or off. The pill and the chip share their shells with the lamps'. */
+@layer components {
+  .climate-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    border-radius: 14px;
+  }
+
+  .climate-stack .lamp-cap {
+    max-width: none;
+  }
+
+  /* B round, 68 x 68 */
+  .climate-round {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    position: relative;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+  }
+
+  .climate-round-v {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .climate-round-s {
+    position: absolute;
+    bottom: 9px;
+    font-size: 9.5px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-round.is-on {
+    border-color: color-mix(in srgb, var(--lc) 60%, transparent);
+  }
+
+  .climate-round.is-working {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 70%, transparent), 0 0 26px -4px var(--lc);
+  }
+
+  /* C chip */
+  .climate-chip {
+    max-width: none;
+  }
+
+  .climate-chip.is-lit > i {
+    background: var(--lc);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 25%, transparent), 0 0 8px var(--lc);
+  }
+
+  /* D tile, 96 x 96 */
+  .climate-tile {
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .climate-tile-v {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .climate-tile b {
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .climate-tile-s {
+    align-self: center;
+    font-size: 11px;
+  }
+
+  .climate-tile-s.is-off {
+    align-self: flex-start;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-tile.is-on {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lc) 34%, var(--nd-surface)), color-mix(in srgb, var(--lc) 8%, var(--nd-surface)) 75%);
+    border-color: color-mix(in srgb, var(--lc) 45%, transparent);
+    box-shadow: 0 10px 26px -14px var(--lc);
+  }
+
+  .climate-tile.is-quiet {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  /* E slider: min to max, the target filled, the room as a tick */
+  .climate-slide {
+    width: 230px;
+  }
+
+  .climate-now {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--nd-text) 70%, transparent);
+  }
+
+  /* The numbers stay readable where the edge of the fill runs under them. */
+  .climate-slide .lamp-p {
+    position: relative;
+    z-index: 1;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--nd-surface) 82%, transparent);
+  }
+
+  .climate-slide-icon {
+    display: grid;
+    color: var(--lc);
+  }
+
+  /* F dial, 100 x 100 */
+  .climate-dial {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .climate-arc {
+    position: absolute;
+    inset: 0;
+    width: 100px;
+    height: 100px;
+  }
+
+  .climate-arc-now {
+    fill: #fff;
+    stroke: rgb(0 0 0 / 0.4);
+  }
+
+  .climate-dial-in {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .climate-dial-v {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .climate-dial-v.is-off {
+    font-size: 14px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-dial-s {
+    font-size: 10px;
+    color: var(--nd-text-muted);
+    margin-top: 3px;
+  }
+
+  /* G valve head, 70 x 70 */
+  .climate-valve {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    position: relative;
+    display: block;
+    background: radial-gradient(circle at 35% 30%, #f4f6fa, #c9ced8 60%, #9aa1ad);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.35), inset 0 -3px 6px rgb(0 0 0 / 0.25);
+  }
+
+  .climate-valve-ribs {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgb(0 0 0 / 0.08) 0 4deg, transparent 4deg 12deg);
+  }
+
+  .climate-valve-mark {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    width: 3px;
+    height: 31px;
+    transform-origin: 50% 31px;
+    background: linear-gradient(#2a2f38 0 11px, transparent 11px);
+    border-radius: 2px;
+    transition: transform 200ms ease;
+  }
+
+  .climate-valve-num {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2a2f38;
+  }
+
+  .climate-valve-num.is-setting {
+    font-size: 12px;
+  }
+
+  .climate-valve.is-on {
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.35), 0 0 0 3px color-mix(in srgb, var(--lc) 70%, transparent), 0 0 22px -2px var(--lc);
+  }
+
+  /* H thermometer, 30 x 96 */
+  .climate-thermo {
+    display: block;
+    width: 30px;
+    height: 96px;
+    position: relative;
+  }
+
+  .climate-thermo-tube {
+    position: absolute;
+    left: 9px;
+    top: 0;
+    width: 12px;
+    height: 76px;
+    border-radius: 6px;
+    border: 1px solid var(--nd-border-strong);
+    background: color-mix(in srgb, var(--nd-text) 9%, transparent);
+    overflow: hidden;
+  }
+
+  .climate-thermo-fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--lc);
+    transition: height 200ms ease;
+  }
+
+  .climate-thermo-bulb {
+    position: absolute;
+    left: 4px;
+    bottom: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--lc);
+  }
+
+  .climate-thermo-aim {
+    position: absolute;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--nd-text);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--nd-text) 60%, transparent);
+  }
+
+  /* I radiator, 84 x 70 */
+  .climate-radiator {
+    display: block;
+    width: 84px;
+    height: 70px;
+    position: relative;
+  }
+
+  .climate-ribs {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    height: 44px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .climate-ribs i {
+    flex: 1;
+    border-radius: 5px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--nd-text) 18%, transparent), color-mix(in srgb, var(--nd-text) 6%, transparent));
+    border: 1px solid var(--nd-border-strong);
+  }
+
+  .climate-radiator.is-on .climate-ribs i {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--lc) 80%, white 10%), color-mix(in srgb, var(--lc) 35%, transparent));
+    border-color: color-mix(in srgb, var(--lc) 60%, transparent);
+    box-shadow: 0 0 12px -2px var(--lc);
+  }
+
+  .climate-waves {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 20px;
+    stroke: var(--lc);
+    opacity: 0.8;
+  }
+
+  /* J big digits, 150 x 84 */
+  .climate-digits {
+    width: 150px;
+    height: 84px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border);
+    background: var(--nd-surface);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .climate-digits-v {
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .climate-digits-s {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--nd-text-muted);
+  }
+
+  .climate-digits.is-on .climate-digits-v {
+    color: var(--lc);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--lc) 50%, transparent);
+  }
+}

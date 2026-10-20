@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { ApiError, get, streamUrl } from '../api/client'
+import type { HomeNews } from '../lib/home'
 import type { WidgetData } from '../lib/types'
 import { forgetEverything } from '../stores/auth'
 import { useLive } from '../stores/live'
@@ -10,6 +11,8 @@ interface Options {
   board?: string
   onBoardChanged?: () => void
   onLayout?: (payload: { page_id: number; layouts: Record<string, unknown[]> }) => void
+  /** A lamp or a thermostat on a home page changed, here or at the wall (``home_control``). */
+  onHome?: (payload: HomeNews) => void
   /** Called whenever the stream (re)connects: reload the snapshot, so nothing
    *  that changed between the board request and the subscription is missed. */
   onConnected?: () => void
@@ -20,10 +23,10 @@ interface Options {
  * Keeps one EventSource open for the board and feeds the live store.
  * Reconnects with a small backoff; the browser does most of that itself.
  */
-export function useStream({ board, onBoardChanged, onLayout, onConnected, enabled = true }: Options) {
-  const callbacks = useRef({ onBoardChanged, onLayout, onConnected })
+export function useStream({ board, onBoardChanged, onLayout, onHome, onConnected, enabled = true }: Options) {
+  const callbacks = useRef({ onBoardChanged, onLayout, onHome, onConnected })
   useEffect(() => {
-    callbacks.current = { onBoardChanged, onLayout, onConnected }
+    callbacks.current = { onBoardChanged, onLayout, onHome, onConnected }
   })
   const applyWidget = useLive((s) => s.applyWidget)
   const applyHealth = useLive((s) => s.applyHealth)
@@ -54,6 +57,7 @@ export function useStream({ board, onBoardChanged, onLayout, onConnected, enable
       })
       source.addEventListener('board', () => callbacks.current.onBoardChanged?.())
       source.addEventListener('layout', (event) => callbacks.current.onLayout?.(JSON.parse((event as MessageEvent).data)))
+      source.addEventListener('home', (event) => callbacks.current.onHome?.(JSON.parse((event as MessageEvent).data)))
       source.addEventListener('log', (event) => {
         const payload = JSON.parse((event as MessageEvent).data) as { widget_id: number; line: string; ts: number }
         appendLog(payload.widget_id, { ts: payload.ts, line: payload.line }, 400)

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, FoldVertical, LayoutGrid, Network, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
+import { Check, FoldVertical, House, LayoutGrid, Network, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -29,6 +29,7 @@ import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
+import { withNews, type HomeAnswer } from '../lib/home'
 import { homeBoardPath } from '../lib/homeBoard'
 import { useAuth } from '../stores/auth'
 import { anyCardDown } from '../lib/cardStatus'
@@ -36,6 +37,7 @@ import { domainsOf, useShowcase } from '../lib/showcase'
 import { useEditedPage } from '../lib/groups'
 import { usePicture } from '../lib/boardPicture'
 import { PictureDialog } from '../components/PictureDialog'
+import { HomePage } from '../components/home/HomePage'
 import { TopologyPage } from '../components/topology/TopologyPage'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
@@ -80,12 +82,16 @@ export function BoardPage() {
   const [removing, setRemoving] = useState<number | null>(null)
   const [newPage, setNewPage] = useState(false)
   const [newPageName, setNewPageName] = useState('')
-  const [newPageKind, setNewPageKind] = useState<'cards' | 'topology'>('cards')
+  const [newPageKind, setNewPageKind] = useState<'cards' | 'topology' | 'home'>('cards')
   const [newPageConnection, setNewPageConnection] = useState<number | null>(null)
   const [newPageStart, setNewPageStart] = useState<'all' | 'empty'>('all')
   // Only to offer a topology page when adding one: that needs a UniFi connection this person may use.
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: newPage })
   const unifis = useMemo(() => (integrations.data ?? []).filter((one) => one.kind === 'unifi' && one.enabled), [integrations.data])
+  // And a home page a Home Assistant connection.
+  const hasses = useMemo(() => (integrations.data ?? []).filter((one) => one.kind === 'homeassistant' && one.enabled), [integrations.data])
+  /** The connections the kind picked in the dialog can be made from, none for a page of cards. */
+  const newPageSources = newPageKind === 'topology' ? unifis : newPageKind === 'home' ? hasses : []
   const [deletingPage, setDeletingPage] = useState(false)
   const [previewBackground, setPreviewBackground] = useState<BoardWithLive['background'] | null>(null)
   const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null)
@@ -137,6 +143,7 @@ export function BoardPage() {
     enabled: Boolean(data),
     onBoardChanged: () => void board.refetch(),
     onConnected: () => void board.refetch(),
+    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withNews(old, payload) : old)),
     onLayout: (payload) => {
       // Somebody else saved this page. Take their version along, so the next
       // save from this browser starts from where the page really is.
@@ -291,9 +298,11 @@ export function BoardPage() {
     return () => usePlayer.getState().setBarHidden(false)
   }, [editing])
 
-  // The first time edit mode opens, say how moving and resizing work.
+  // The first time edit mode opens on cards, say how moving and resizing work.
+  // A network plan and a home page have no corner to resize, so not there.
+  const cardPage = (activePage?.kind ?? 'cards') === 'cards'
   useEffect(() => {
-    if (!editing) return
+    if (!editing || !cardPage) return
     try {
       if (localStorage.getItem(EDIT_HINT_SEEN)) return
       localStorage.setItem(EDIT_HINT_SEEN, '1')
@@ -301,7 +310,7 @@ export function BoardPage() {
       // storage may be unavailable; the hint then shows every time, which is fine
     }
     setToast({ text: t('board.editHint'), level: 'info' })
-  }, [editing, t])
+  }, [editing, cardPage, t])
 
   const widgets: WidgetView[] = useMemo(
     () =>
@@ -406,7 +415,8 @@ export function BoardPage() {
   /** Where a card may go: the other pages of this board first, then every page of a board this person may change. */
   const moveTargets = useMemo<MoveTarget[]>(() => {
     if (!data || !activePage) return []
-    const here: MoveTarget = { boardName: data.name, current: true, pages: pages.filter((p) => p.id !== activePage.id).map((p) => ({ id: p.id, name: p.name })) }
+    // A network plan or a home page holds no cards; the server refuses them there too.
+    const here: MoveTarget = { boardName: data.name, current: true, pages: pages.filter((p) => p.id !== activePage.id && (p.kind ?? 'cards') === 'cards').map((p) => ({ id: p.id, name: p.name })) }
     const elsewhere = (boards.data ?? [])
       .filter((entry) => entry.id !== data.id && !entry.provisioned && ['edit', 'act', 'owner'].includes(entry.permission))
       .map((entry) => ({ boardName: entry.name, current: false, pages: entry.pages.map((p) => ({ id: p.id, name: p.name })) }))
@@ -530,6 +540,7 @@ export function BoardPage() {
   )
 
   const topology = activePage?.kind === 'topology'
+  const homePage = activePage?.kind === 'home'
 
   if (board.isLoading) {
     return (
@@ -570,7 +581,18 @@ export function BoardPage() {
     <div className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       {topBar}
-      {topology ? (
+      {homePage ? (
+        <HomePage
+          key={activePage.id}
+          pageId={activePage.id}
+          editing={editing}
+          canEdit={canEdit}
+          canAct={canAct}
+          onAddPage={() => setNewPage(true)}
+          onSettings={() => setBoardSettings(true)}
+          onDone={() => setEditing(false)}
+        />
+      ) : topology ? (
         <TopologyPage
           key={activePage.id}
           pageId={activePage.id}
@@ -648,7 +670,7 @@ export function BoardPage() {
           the edge and there was no way out of edit mode. Below `sm` the words
           step aside and the icons carry the meaning, with the name on the
           button for anything that reads it out. */}
-      {editing && !topology && (
+      {editing && !topology && !homePage && (
         <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl">
           <button className="btn btn-flat" onClick={() => setLibrary(true)} aria-label={t('board.addWidget')}>
             <Plus size={15} /> <span className="hidden sm:inline">{t('board.addWidget')}</span>
@@ -777,18 +799,23 @@ export function BoardPage() {
         footer={
           <button
             className="btn btn-accent"
-            disabled={!newPageName.trim() || (newPageKind === 'topology' && unifis.length > 0 && !(newPageConnection ?? unifis[0]?.id))}
+            disabled={!newPageName.trim() || (newPageKind !== 'cards' && newPageSources.length > 0 && !(newPageConnection ?? newPageSources[0]?.id))}
             onClick={() => {
-              const kind = unifis.length > 0 ? newPageKind : 'cards'
-              const body = kind === 'topology' ? { name: newPageName.trim(), kind, integration_id: newPageConnection ?? unifis[0]?.id, start: newPageStart } : { name: newPageName.trim() }
+              const kind = newPageSources.length > 0 ? newPageKind : 'cards'
+              const connection = newPageConnection ?? newPageSources[0]?.id
+              const body =
+                kind === 'topology' ? { name: newPageName.trim(), kind, integration_id: connection, start: newPageStart }
+                : kind === 'home' ? { name: newPageName.trim(), kind, integration_id: connection }
+                : { name: newPageName.trim() }
               void post<BoardWithLive>(`/boards/${slug}/pages`, body)
                 .then((made) => {
                   setNewPage(false)
                   setNewPageName('')
                   setNewPageKind('cards')
+                  setNewPageConnection(null)
                   void board.refetch()
-                  // A plan is something to look at straight away; a card page waits for its cards as before.
-                  const added = kind === 'topology' ? [...(made?.pages ?? [])].sort((p, q) => q.position - p.position)[0] : undefined
+                  // A plan or a home page is something to look at straight away; a card page waits for its cards as before.
+                  const added = kind !== 'cards' ? [...(made?.pages ?? [])].sort((p, q) => q.position - p.position)[0] : undefined
                   if (added) navigate(`/b/${slug}/${added.slug}`)
                 })
                 .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
@@ -802,16 +829,18 @@ export function BoardPage() {
           <input className="input" autoFocus aria-label={t('board.pageName')} value={newPageName} placeholder={t('board.pageName')} onChange={(e) => setNewPageName(e.target.value)} />
           {/* The button stays off without a name; say so instead of leaving a dead button. */}
           {!newPageName.trim() && <p className="text-xs text-muted -mt-1">{t('board.pageNameFirst')}</p>}
-          {/* ⚠️ Offered only with a UniFi connection this person may use: the plan reads the console's uplinks and port counters. */}
-          {unifis.length > 0 && (
+          {/* ⚠️ Each kind is offered only with a connection of its own this person may use:
+              a plan reads a UniFi console's uplinks and port counters, a home page a Home Assistant. */}
+          {(unifis.length > 0 || hasses.length > 0) && (
             <>
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('topology.kind')}>
+              <div className={`grid gap-2 ${unifis.length > 0 && hasses.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`} role="radiogroup" aria-label={t('topology.kind')}>
                 {(
                   [
-                    ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp')],
-                    ['topology', Network, t('topology.kindTopology'), t('topology.kindTopologyHelp')],
+                    ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp'), true, ''],
+                    ['topology', Network, t('topology.kindTopology'), t('topology.kindTopologyHelp'), unifis.length > 0, t('topology.kindNeeds')],
+                    ['home', House, t('homePage.kindHome'), t('homePage.kindHomeHelp'), hasses.length > 0, t('homePage.kindNeeds')],
                   ] as const
-                ).map(([kind, Icon, title, help]) => (
+                ).filter((offer) => offer[4]).map(([kind, Icon, title, help, , needs]) => (
                   <button
                     key={kind}
                     type="button"
@@ -820,16 +849,41 @@ export function BoardPage() {
                     className={`text-left p-3 rounded-xl border grid gap-1 content-start ${newPageKind === kind ? 'border-[var(--nd-accent)] bg-accent-soft' : 'border-line-strong'}`}
                     onClick={() => {
                       setNewPageKind(kind)
-                      // A plan is usually just "Network"; written in, still changeable.
+                      setNewPageConnection(null)
+                      // A plan is usually just "Network", a home page "Home"; written in, still changeable.
                       if (kind === 'topology' && !newPageName.trim()) setNewPageName(t('topology.defaultName'))
+                      if (kind === 'home' && !newPageName.trim()) setNewPageName(t('homePage.defaultName'))
                     }}
                   >
                     <Icon size={20} className="text-accent" />
-                    <b className="text-sm">{title}</b>
+                    <b className="text-sm flex items-center gap-1.5">
+                      {title}
+                      {/* The home page is new and grows: marked as the integrations in beta are. */}
+                      {kind === 'home' && <span className="chip !py-0 text-[10px] cursor-help" title={t('homePage.kindBetaHelp')} data-beta>beta</span>}
+                    </b>
+                    {/* What the kind works with: a home page only with Home Assistant, a plan only with UniFi. */}
+                    {needs && <span className="text-[10.5px] font-medium text-accent justify-self-start rounded-full bg-accent-soft px-2 py-0.5" data-needs>{needs}</span>}
                     <span className="text-xs text-muted">{help}</span>
                   </button>
                 ))}
               </div>
+              {newPageKind === 'home' && (
+                <div className="grid gap-2">
+                  {hasses.length === 1 && <p className="text-xs text-muted">{t('homePage.readFrom', { name: hasses[0].name })}</p>}
+                  {hasses.length > 1 && (
+                    <label className="grid gap-1 text-xs text-muted">
+                      {t('homePage.connection')}
+                      <select className="input" value={String(newPageConnection ?? hasses[0].id)} onChange={(e) => setNewPageConnection(Number(e.target.value))}>
+                        {hasses.map((one) => (
+                          <option key={one.id} value={one.id}>
+                            {one.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              )}
               {newPageKind === 'topology' && (
                 <div className="grid gap-2">
                   {unifis.length === 1 && <p className="text-xs text-muted">{t('topology.readFrom', { name: unifis[0].name })}</p>}

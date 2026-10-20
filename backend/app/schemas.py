@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    model_validator,
+)
 
 from .languages import Code, Pair
 
@@ -123,8 +131,9 @@ class BoardOrder(BaseModel):
 class PageCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     icon: str = Field(default="", max_length=80)
-    #: "topology" is a network plan of one UniFi connection.
-    kind: Literal["cards", "topology"] = "cards"
+    #: "topology" is a network plan of one UniFi connection, "home" a surface
+    #: of controls of one Home Assistant connection.
+    kind: Literal["cards", "topology", "home"] = "cards"
     integration_id: int | None = None
     #: Topology only: every network device at once, or only the gateway.
     start: Literal["all", "empty"] = "all"
@@ -158,6 +167,14 @@ class TopologyLayoutBody(BaseModel):
     clients: list[str] = Field(default_factory=list, max_length=2000)
     hidden: list[str] = Field(default_factory=list, max_length=2000)
     positions: dict[str, list[float]] = Field(default_factory=dict)
+    #: The version the browser was looking at, as with the card layouts.
+    version: int | None = None
+
+
+class HomeLayoutBody(BaseModel):
+    """What stands where on a home page; checked in detail by ``home.clean_layout``."""
+
+    elements: list[Any] = Field(default_factory=list, max_length=500)
     #: The version the browser was looking at, as with the card layouts.
     version: int | None = None
 
@@ -296,6 +313,94 @@ class WidgetPreview(BaseModel):
     options: dict[str, Any] = Field(default_factory=dict)
     integration_id: int | None = None
     clear_integration: bool = False
+
+
+class HomeSwitchBody(BaseModel):
+    """What a home page asks of a lamp. No service and no entity: the server finds both (``home_control``).
+
+    Off is off and nothing else. A brightness, a white or a colour switches the
+    lamp on with it; a white and a colour at once is two wishes, and refused.
+    Whether the lamp can do what is asked, ``home_control.service_for`` decides.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    on: StrictBool | None = None
+    brightness_pct: StrictInt | None = Field(default=None, ge=1, le=100)
+    #: Bounded loosely here; the lamp's own range is applied in ``home_control``.
+    kelvin: StrictInt | None = Field(default=None, ge=1000, le=12000)
+    #: Hue in degrees and saturation in percent, as Home Assistant's ``hs_color``.
+    hs: tuple[StrictFloat, StrictFloat] | None = None
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeSwitchBody:
+        asked = [self.brightness_pct, self.kelvin, self.hs]
+        if self.on is None and all(value is None for value in asked):
+            raise ValueError("Say what the lamp should do.")
+        if self.on is False and any(value is not None for value in asked):
+            raise ValueError("Off takes nothing with it.")
+        if self.kelvin is not None and self.hs is not None:
+            raise ValueError("A white or a colour, not both.")
+        if self.hs is not None and not (0 <= self.hs[0] <= 360 and 0 <= self.hs[1] <= 100):
+            raise ValueError("Hue goes from 0 to 360, saturation from 0 to 100.")
+        return self
+
+
+class HomeClimateBody(BaseModel):
+    """What a home page asks of a thermostat: one thing at a time, no service and no entity (``home_control``)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target: StrictFloat | None = Field(default=None, ge=-50, le=100)
+    mode: str | None = Field(default=None, pattern=r"^[a-z_]{1,40}$")
+    preset: str | None = Field(default=None, min_length=1, max_length=60, pattern=r"^[A-Za-z0-9_ .-]+$")
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeClimateBody:
+        if sum(value is not None for value in (self.target, self.mode, self.preset)) != 1:
+            raise ValueError("Ask a thermostat one thing at a time: a target, a mode or a preset.")
+        return self
+
+
+class HomeCoverBody(BaseModel):
+    """What a home page asks of a cover or a card of covers: one thing, no service and no entity (``hass_covers``).
+
+    ``member`` picks one cover of a card by the entity id it was placed with;
+    without it the card's covers all go. ``scene`` is one of the card's
+    positions of its own, by its place.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["open", "close", "stop"] | None = None
+    position: StrictInt | None = Field(default=None, ge=0, le=100)
+    tilt: StrictInt | None = Field(default=None, ge=0, le=100)
+    scene: StrictInt | None = Field(default=None, ge=0, le=5)
+    member: str | None = Field(default=None, pattern=r"^cover\.[a-z0-9_]{1,200}$")
+
+    @model_validator(mode="after")
+    def _one_wish(self) -> HomeCoverBody:
+        if sum(value is not None for value in (self.action, self.position, self.tilt, self.scene)) != 1:
+            raise ValueError("Ask a cover one thing at a time: open, close, stop, a position, a slat angle or a position of the card.")
+        return self
+
+
+class HomeSceneBody(BaseModel):
+    """A scene or script set off from a home page, one of a card by ``member``; ``stop`` stops a script that runs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    member: str | None = Field(default=None, pattern=r"^(scene|script)\.[a-z0-9_]{1,200}$")
+    stop: StrictBool = False
+
+
+class HomeToggleBody(BaseModel):
+    """A switch or helper switched from a home page, one of a card by ``member``, or all of the card."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    on: StrictBool
+    member: str | None = Field(default=None, pattern=r"^(switch|input_boolean)\.[a-z0-9_]{1,200}$")
 
 
 class ActionBody(BaseModel):

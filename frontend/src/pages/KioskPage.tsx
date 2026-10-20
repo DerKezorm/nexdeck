@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -7,10 +7,12 @@ import { get, openKioskSession, post } from '../api/client'
 import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
+import { HomePage } from '../components/home/HomePage'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
+import { withNews, type HomeAnswer } from '../lib/home'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
@@ -53,6 +55,7 @@ function keepToken(token: string): void {
 
 export function KioskPage() {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { token: fromAddress = '' } = useParams()
   const [token, setToken] = useState(() => fromAddress || keptToken())
@@ -125,7 +128,14 @@ export function KioskPage() {
   useEffect(() => {
     if (look.data) applyAppearance(look.data)
   }, [look.data])
-  useStream({ board: data?.slug, enabled: Boolean(data), onBoardChanged: () => void board.refetch(), onConnected: () => void board.refetch() })
+  useStream({
+    board: data?.slug,
+    enabled: Boolean(data),
+    onBoardChanged: () => void board.refetch(),
+    onConnected: () => void board.refetch(),
+    // A lamp on a home page changed, here or at the wall: the display shows it as the board does.
+    onHome: (payload) => queryClient.setQueryData<HomeAnswer>(['home', payload.page_id], (old) => (old ? withNews(old, payload) : old)),
+  })
 
   const cycle = data?.kiosk?.cycle_seconds ?? 0
   useEffect(() => {
@@ -223,26 +233,31 @@ export function KioskPage() {
         </nav>
       )}
       <main className={`${boardWidth(data.settings) === 'normal' ? 'max-w-[1800px]' : WIDTH_CLASS[boardWidth(data.settings)]} mx-auto px-4 pt-4 pb-6`}>
-        <BoardGrid
-          key={page.id}
-          widgets={widgets}
-          layouts={page.layouts}
-          data={liveData}
-          series={liveSeries}
-          autoCompact={Boolean(data.settings?.compact)}
-          columns={gridColumns(data.settings)}
-          fitHeight={Boolean(data.settings?.fit_height)}
-          bottomSpace={24}
-          canAct={canAct}
-          onAction={(widgetId, action) => {
-            // The same rule as on the board: a blank nobody filled in opens
-            // the sheet, or the wall display sends the press out half empty.
-            const open = unanswered(action)
-            if (action.confirm || open.length) {
-              setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
-            } else run(widgetId, action)
-          }}
-        />
+        {page.kind === 'home' ? (
+          // A wall tablet is what a home page is for: its lamps, switched when the display may act.
+          <HomePage key={page.id} pageId={page.id} editing={false} canEdit={false} canAct={canAct} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+        ) : (
+          <BoardGrid
+            key={page.id}
+            widgets={widgets}
+            layouts={page.layouts}
+            data={liveData}
+            series={liveSeries}
+            autoCompact={Boolean(data.settings?.compact)}
+            columns={gridColumns(data.settings)}
+            fitHeight={Boolean(data.settings?.fit_height)}
+            bottomSpace={24}
+            canAct={canAct}
+            onAction={(widgetId, action) => {
+              // The same rule as on the board: a blank nobody filled in opens
+              // the sheet, or the wall display sends the press out half empty.
+              const open = unanswered(action)
+              if (action.confirm || open.length) {
+                setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
+              } else run(widgetId, action)
+            }}
+          />
+        )}
       </main>
       {resting && <WallRest rest={rest} onWake={() => setResting(false)} />}
       {/* ⚠️ The board's own sheet, not a copy of it. The title is translated
