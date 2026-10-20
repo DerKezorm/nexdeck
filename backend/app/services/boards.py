@@ -290,6 +290,7 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
             "layout_version": page.layout_version or 0,
             "kind": page.kind or "cards",
             "topology": {"integration_id": (page.topology or {}).get("integration_id")} if page.kind == "topology" else None,
+            "home": {"integration_id": (page.home or {}).get("integration_id")} if page.kind == "home" else None,
         })
     view = {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
@@ -366,6 +367,14 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
                 "integration": connection.name if connection is not None else None,
                 **{key: stored.get(key) for key in ("start", "seeded", "placed", "clients", "hidden", "positions") if key in stored},
             }
+        elif page.kind == "home":
+            # The same for a home page: its connection by name, what stands where as it stands.
+            stored = page.home or {}
+            connection = db.get(Integration, stored["integration_id"]) if stored.get("integration_id") else None
+            if connection is not None:
+                integrations[connection.id] = connection
+            page_doc["kind"] = "home"
+            page_doc["home"] = {"integration": connection.name if connection is not None else None, "elements": stored.get("elements") or []}
         # A holding card names its cards by place on the page, "#2" for the
         # third: the numbers of the cards are new after every import.
         place = {widget.id: index for index, widget in enumerate(page.widgets)}
@@ -786,15 +795,18 @@ def import_board(
         page_slug = slugify(str(page_doc.get("slug") or page_doc.get("name") or f"page-{position + 1}"))
         page = old_pages.pop(_number(page_doc.get("id")), None)
         page_kind, page_topology = _topology_of(page_doc, by_name)
+        page_home: dict[str, Any] = {}
+        if page_kind == "cards":
+            page_kind, page_home = _home_of(page_doc, by_name)
         if page is not None:
             page.name, page.slug, page.icon, page.position = page_name, page_slug, str(page_doc.get("icon") or ""), position
-            page.kind, page.topology = page_kind, page_topology
+            page.kind, page.topology, page.home = page_kind, page_topology, page_home
             page.layouts = {key: [] for key in COLUMNS}
             # An open browser arranging this page is told it moved on (``put_layouts``).
             page.layout_version = (page.layout_version or 0) + 1
         else:
             page = Page(board_id=board.id, name=page_name, slug=page_slug, icon=str(page_doc.get("icon") or ""), position=position,
-                        layouts={key: [] for key in COLUMNS}, kind=page_kind, topology=page_topology)
+                        layouts={key: [] for key in COLUMNS}, kind=page_kind, topology=page_topology, home=page_home)
             db.add(page)
         db.flush()
         placer = Placer(page, grid.columns(board.settings))
@@ -870,6 +882,22 @@ def _topology_of(page_doc: dict, by_name: dict[str, Integration]) -> tuple[str, 
     connection = by_name.get(str(raw.get("integration"))) if raw.get("integration") else None
     connection_id = connection.id if connection is not None and connection.kind == "unifi" else None
     return "topology", topology_service.clean_layout(raw, connection_id)
+
+
+def _home_of(page_doc: dict, by_name: dict[str, Integration]) -> tuple[str, dict[str, Any]]:
+    """A page's kind and, for a home page, what stands on it and its connection.
+
+    As with a network plan, a connection the file names but this installation
+    lacks leaves the page without one, and the page says so when opened.
+    """
+    if page_doc.get("kind") != "home":
+        return "cards", {}
+    from . import home as home_service
+
+    raw = page_doc.get("home") if isinstance(page_doc.get("home"), dict) else {}
+    connection = by_name.get(str(raw.get("integration"))) if raw.get("integration") else None
+    connection_id = connection.id if connection is not None and connection.kind == "homeassistant" else None
+    return "home", home_service.clean_layout(raw, connection_id)
 
 
 def _number(value: Any) -> int | None:

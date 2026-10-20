@@ -1562,5 +1562,31 @@
     "defaultName": "Netzwerk",
     "readFrom": "Gelesen aus der UniFi-Anbindung „{{name}}“.",
     "stale": "UniFi antwortet gerade nicht, Werte von {{age}}"
+  },
+  "homePage": {
+    "kindHome": "Zuhause",
+    "kindHomeHelp": "Licht und mehr aus Home Assistant, frei angeordnet.",
+    "defaultName": "Zuhause",
+    "readFrom": "Gelesen aus der Home-Assistant-Anbindung „{{name}}“.",
+    "connection": "Home-Assistant-Anbindung",
+    "loadFailed": "Die Seite ließ sich nicht laden.",
+    "saveFailed": "Die Anordnung ließ sich nicht speichern.",
+    "movedOn": "Jemand anderes hat die Seite inzwischen geändert. Du siehst jetzt diese Fassung.",
+    "newHeading": "Neue Gruppe",
+    "emptyTitle": "Noch nichts auf dieser Seite",
+    "emptyText": "Unter „Bearbeiten“ setzt du Überschriften für Räume und Gruppen, wohin du willst.",
+    "emptyViewer": "Auf dieser Seite steht noch nichts.",
+    "addHeading": "Überschrift",
+    "headingName": "Name der Überschrift",
+    "renameHeading": "Umbenennen",
+    "removeHeading": "Entfernen",
+    "problems": {
+      "no_integration": "Die Home-Assistant-Anbindung dieser Seite gibt es nicht mehr.",
+      "integration_disabled": "Die Home-Assistant-Anbindung dieser Seite ist ausgeschaltet."
+    },
+    "hints": {
+      "no_integration": "Lösche die Seite und lege sie mit einer anderen Anbindung neu an.",
+      "integration_disabled": "Schalte sie unter Einstellungen, Anbindungen ein."
+    }
   }
 }

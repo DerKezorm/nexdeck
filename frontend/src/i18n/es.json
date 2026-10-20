@@ -1562,5 +1562,31 @@
     "defaultName": "Red",
     "readFrom": "Se lee de la conexión UniFi «{{name}}».",
     "stale": "UniFi no responde, valores de {{age}}"
+  },
+  "homePage": {
+    "kindHome": "Casa",
+    "kindHomeHelp": "Luces y más de Home Assistant, colocadas libremente.",
+    "defaultName": "Casa",
+    "readFrom": "Leído de la conexión de Home Assistant «{{name}}».",
+    "connection": "Conexión de Home Assistant",
+    "loadFailed": "No se pudo cargar la página.",
+    "saveFailed": "No se pudo guardar la disposición.",
+    "movedOn": "Otra persona cambió esta página mientras tanto. Ahora ves su versión.",
+    "newHeading": "Nuevo grupo",
+    "emptyTitle": "Aún no hay nada en esta página",
+    "emptyText": "En Editar colocas encabezados para habitaciones y grupos donde quieras.",
+    "emptyViewer": "Todavía no hay nada en esta página.",
+    "addHeading": "Encabezado",
+    "headingName": "Nombre del encabezado",
+    "renameHeading": "Renombrar",
+    "removeHeading": "Quitar",
+    "problems": {
+      "no_integration": "La conexión de Home Assistant de esta página ya no existe.",
+      "integration_disabled": "La conexión de Home Assistant de esta página está desactivada."
+    },
+    "hints": {
+      "no_integration": "Borra la página y vuelve a añadirla con otra conexión.",
+      "integration_disabled": "Actívala en Ajustes, Conexiones."
+    }
   }
 }

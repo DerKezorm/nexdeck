@@ -44,6 +44,7 @@ from ..schemas import (
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
 from ..services import grid, history
+from ..services import home as home_service
 from ..services import topology as topology_service
 from ..services.boards import (
     COLUMNS,
@@ -287,9 +288,18 @@ def create_page(slug: str, body: PageCreate, user: CurrentUser, db: DbSession) -
         if integration.kind != "unifi":
             raise error("kind_mismatch", f"A topology page needs a UniFi connection, not {integration.kind}.")
         topology = topology_service.clean_layout({"start": body.start}, integration.id)
+    home: dict = {}
+    if body.kind == "home":
+        # The same rule as a card on the connection: one this person may build on.
+        if body.integration_id is None:
+            raise error("integration_required", "A home page needs a Home Assistant connection.")
+        integration = require_integration(db, body.integration_id, user)
+        if integration.kind != "homeassistant":
+            raise error("kind_mismatch", f"A home page needs a Home Assistant connection, not {integration.kind}.")
+        home = home_service.clean_layout({}, integration.id)
     position = (db.scalar(select(Page.position).where(Page.board_id == board.id).order_by(Page.position.desc())) or 0) + 1
     page = Page(board_id=board.id, name=body.name.strip(), slug=unique_page_slug(db, board.id, body.name), icon=body.icon, position=position,
-                layouts={key: [] for key in COLUMNS}, kind=body.kind, topology=topology)
+                layouts={key: [] for key in COLUMNS}, kind=body.kind, topology=topology, home=home)
     db.add(page)
     db.commit()
     _announce(board.id)

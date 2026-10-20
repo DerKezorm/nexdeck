@@ -123,8 +123,9 @@ class BoardOrder(BaseModel):
 class PageCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     icon: str = Field(default="", max_length=80)
-    #: "topology" is a network plan of one UniFi connection.
-    kind: Literal["cards", "topology"] = "cards"
+    #: "topology" is a network plan of one UniFi connection, "home" a surface
+    #: of controls of one Home Assistant connection.
+    kind: Literal["cards", "topology", "home"] = "cards"
     integration_id: int | None = None
     #: Topology only: every network device at once, or only the gateway.
     start: Literal["all", "empty"] = "all"
@@ -158,6 +159,14 @@ class TopologyLayoutBody(BaseModel):
     clients: list[str] = Field(default_factory=list, max_length=2000)
     hidden: list[str] = Field(default_factory=list, max_length=2000)
     positions: dict[str, list[float]] = Field(default_factory=dict)
+    #: The version the browser was looking at, as with the card layouts.
+    version: int | None = None
+
+
+class HomeLayoutBody(BaseModel):
+    """What stands where on a home page; checked in detail by ``home.clean_layout``."""
+
+    elements: list[Any] = Field(default_factory=list, max_length=500)
     #: The version the browser was looking at, as with the card layouts.
     version: int | None = None
 

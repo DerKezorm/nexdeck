@@ -1562,5 +1562,31 @@
     "defaultName": "Rete",
     "readFrom": "Letto dalla connessione UniFi «{{name}}».",
     "stale": "UniFi non risponde, valori di {{age}}"
+  },
+  "homePage": {
+    "kindHome": "Casa",
+    "kindHomeHelp": "Luci e altro da Home Assistant, disposte liberamente.",
+    "defaultName": "Casa",
+    "readFrom": "Letto dalla connessione Home Assistant «{{name}}».",
+    "connection": "Connessione Home Assistant",
+    "loadFailed": "Impossibile caricare la pagina.",
+    "saveFailed": "Impossibile salvare la disposizione.",
+    "movedOn": "Qualcun altro ha modificato questa pagina nel frattempo. Ora vedi la sua versione.",
+    "newHeading": "Nuovo gruppo",
+    "emptyTitle": "Ancora niente su questa pagina",
+    "emptyText": "In Modifica metti titoli per stanze e gruppi dove vuoi.",
+    "emptyViewer": "Su questa pagina non c'è ancora niente.",
+    "addHeading": "Titolo",
+    "headingName": "Nome del titolo",
+    "renameHeading": "Rinomina",
+    "removeHeading": "Rimuovi",
+    "problems": {
+      "no_integration": "La connessione Home Assistant di questa pagina non esiste più.",
+      "integration_disabled": "La connessione Home Assistant di questa pagina è disattivata."
+    },
+    "hints": {
+      "no_integration": "Elimina la pagina e aggiungila di nuovo con un'altra connessione.",
+      "integration_disabled": "Attivala in Impostazioni, Connessioni."
+    }
   }
 }

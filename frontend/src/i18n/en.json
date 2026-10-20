@@ -1562,5 +1562,31 @@
     "defaultName": "Network",
     "readFrom": "Read from the UniFi connection “{{name}}”.",
     "stale": "UniFi did not answer, values from {{age}}"
+  },
+  "homePage": {
+    "kindHome": "Home",
+    "kindHomeHelp": "Lights and more from Home Assistant, placed freely.",
+    "defaultName": "Home",
+    "readFrom": "Read from the Home Assistant connection “{{name}}”.",
+    "connection": "Home Assistant connection",
+    "loadFailed": "The page could not be loaded.",
+    "saveFailed": "The arrangement could not be saved.",
+    "movedOn": "Somebody else changed this page meanwhile. Their version is shown now.",
+    "newHeading": "New group",
+    "emptyTitle": "Nothing on this page yet",
+    "emptyText": "Under Edit you place headings for rooms and groups wherever you like.",
+    "emptyViewer": "Nothing has been placed on this page yet.",
+    "addHeading": "Heading",
+    "headingName": "Name of the heading",
+    "renameHeading": "Rename",
+    "removeHeading": "Remove",
+    "problems": {
+      "no_integration": "The Home Assistant connection of this page is gone.",
+      "integration_disabled": "The Home Assistant connection of this page is switched off."
+    },
+    "hints": {
+      "no_integration": "Delete the page and add it again with another connection.",
+      "integration_disabled": "Switch it on under Settings, Connections."
+    }
   }
 }

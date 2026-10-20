@@ -89,14 +89,26 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None, user: U
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
 
 
+def _refuse_unless_cards(page: Page) -> None:
+    """Cards stand on card pages only: a network plan or a home page has no grid to hold them.
+
+    ⚠️ Checked wherever a card arrives, not only where one is made: moving a
+    card onto a network plan used to work and left it on a page that never
+    shows it.
+    """
+    if page.kind == "topology":
+        raise error("topology_page", "A topology page holds a network plan, not cards. Add the card to another page.")
+    if page.kind == "home":
+        raise error("home_page", "A home page holds controls, not cards. Add the card to another page.")
+
+
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")
 def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSession) -> dict:
     page = db.get(Page, page_id)
     if page is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
     board, _ = require_board_id(db, page.board_id, user, "edit")
-    if page.kind == "topology":
-        raise error("topology_page", "A topology page holds a network plan, not cards. Add the card to another page.")
+    _refuse_unless_cards(page)
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_options(db, body.kind, body.options, user)
     adapter, widget_kind = split_widget_kind(body.kind)
@@ -145,6 +157,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         target = db.get(Page, body.page_id)
         if target is None or target.board_id != board.id:
             raise error("bad_page", "Widgets move between pages of the same board only.")
+        _refuse_unless_cards(target)
         remove_from_layouts(page, widget.id)
         widget.page_id = target.id
         adapter, kind = split_widget_kind(widget.kind)
@@ -228,6 +241,7 @@ def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
     if target is None:
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
     to_board, _ = require_board_id(db, target.board_id, user, "edit")
+    _refuse_unless_cards(target)
     if to_board.provisioned:
         raise error("provisioned", "That board comes from a file on the server; change the file instead.", status.HTTP_409_CONFLICT)
     moving: list[tuple[Widget, Page]] = []

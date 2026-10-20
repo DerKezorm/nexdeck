@@ -1562,5 +1562,31 @@
     "defaultName": "Réseau",
     "readFrom": "Lu depuis la connexion UniFi « {{name}} ».",
     "stale": "UniFi ne répond pas, valeurs d'{{age}}"
+  },
+  "homePage": {
+    "kindHome": "Maison",
+    "kindHomeHelp": "Lumières et plus depuis Home Assistant, placées librement.",
+    "defaultName": "Maison",
+    "readFrom": "Lu depuis la connexion Home Assistant « {{name}} ».",
+    "connection": "Connexion Home Assistant",
+    "loadFailed": "La page n'a pas pu être chargée.",
+    "saveFailed": "La disposition n'a pas pu être enregistrée.",
+    "movedOn": "Quelqu'un d'autre a modifié cette page entre-temps. Sa version s'affiche maintenant.",
+    "newHeading": "Nouveau groupe",
+    "emptyTitle": "Rien sur cette page pour l'instant",
+    "emptyText": "Sous Modifier, vous placez des titres pour les pièces et les groupes où vous voulez.",
+    "emptyViewer": "Rien n'a encore été placé sur cette page.",
+    "addHeading": "Titre",
+    "headingName": "Nom du titre",
+    "renameHeading": "Renommer",
+    "removeHeading": "Retirer",
+    "problems": {
+      "no_integration": "La connexion Home Assistant de cette page n'existe plus.",
+      "integration_disabled": "La connexion Home Assistant de cette page est désactivée."
+    },
+    "hints": {
+      "no_integration": "Supprimez la page et ajoutez-la de nouveau avec une autre connexion.",
+      "integration_disabled": "Activez-la dans Réglages, Connexions."
+    }
   }
 }

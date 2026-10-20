@@ -326,11 +326,14 @@ class Page(Base):
     layout_version: Mapped[int] = mapped_column(Integer, default=0)
     #: Optional named sections: ``[{"id", "title", "y"}]``
     sections: Mapped[list[Any]] = mapped_column(JSON, default=list)
-    #: "cards", the grid of cards, or "topology", a network plan (``services/topology.py``).
+    #: "cards", the grid of cards, "topology", a network plan (``services/topology.py``),
+    #: or "home", a free surface of Home Assistant controls (``services/home.py``).
     #: The server default lets an older version still add pages to this database.
     kind: Mapped[str] = mapped_column(String(16), default="cards", server_default="cards")
     #: Topology pages only: the connection, and who stands where (``topology.clean_layout``).
     topology: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
+    #: Home pages only: the connection, and what stands where (``home.clean_layout``).
+    home: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
 
     board: Mapped[Board] = relationship(back_populates="pages")
     widgets: Mapped[list[Widget]] = relationship(
