@@ -1607,6 +1607,12 @@
     "missing": "ya no está en Home Assistant",
     "gone": "no está",
     "offline": "sin conexión",
+    "switchFailed": "No se pudo cambiar {{name}}.",
+    "switchProblems": {
+      "lamp_unavailable": "Home Assistant no llega a {{name}} ahora mismo.",
+      "lamp_missing": "{{name}} ya no está en Home Assistant.",
+      "forbidden": "Puedes ver esta página, pero no cambiar nada en ella."
+    },
     "on": "encendida",
     "off": "apagada",
     "removeLight": "Quitar"

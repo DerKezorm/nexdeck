@@ -66,6 +66,32 @@ export interface HomeAnswer {
   lights?: Record<string, (LampInfo & { missing: false }) | { missing: true }>
 }
 
+/** How a lamp stands, as a switch answers it or the board's stream says it (``home_control``). */
+export type LampState = (Partial<LampInfo> & { missing: false }) | { missing: true }
+
+/** The server's answer to a switch: ``confirmed`` when Home Assistant named the lamp among what changed. */
+export interface SwitchAnswer {
+  ok: true
+  confirmed: boolean
+  light: LampInfo & { missing: false }
+}
+
+/**
+ * The page's answer with news of some of its lamps put in. What the news does
+ * not say (a name, a room) stays as the page last heard it; a lamp the page
+ * does not know is left out, it belongs to a layout this browser has not seen.
+ */
+export function withLamps(answer: HomeAnswer, news: Record<string, LampState>): HomeAnswer {
+  const known = new Set(answer.layout.elements.map((element) => element.id))
+  const lights = { ...(answer.lights ?? {}) }
+  for (const [id, state] of Object.entries(news)) {
+    if (!known.has(id)) continue
+    const before = lights[id]
+    lights[id] = state.missing ? state : ({ ...(before && !before.missing ? before : {}), ...state } as LampInfo & { missing: false })
+  }
+  return { ...answer, lights }
+}
+
 export interface LightOffer {
   lights: LampInfo[]
   problem: HomeProblem | null
@@ -84,8 +110,10 @@ export function lampColour(info: Pick<LampInfo, 'on' | 'rgb' | 'kelvin'> | null 
   return 'rgb(255, 196, 120)'
 }
 
-/** How far apart lamps added together stand, and how many share a row. */
-/** A pill is at most 256 pixels wide (``max-w`` in HomePage), so lamps placed together never overlap. */
+/**
+ * How far apart lamps added together stand, and how many share a row. A pill
+ * is at most 256 pixels wide (``max-w`` in HomePage), so they never overlap.
+ */
 export const LAMP_PITCH = 272
 export const LAMPS_PER_ROW = 4
 

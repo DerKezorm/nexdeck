@@ -1,4 +1,4 @@
-import { freshId, nextSpot, readingOrder, snap, surfaceHeight, type HomeElement } from './home'
+import { freshId, nextSpot, readingOrder, snap, surfaceHeight, withLamps, type HomeAnswer, type HomeElement } from './home'
 
 const heading = (id: string, x: number, y: number): HomeElement => ({ id, type: 'heading', x, y, text: id })
 
@@ -35,4 +35,26 @@ it('gives an id no element has, of the characters the server keeps', () => {
 it('leaves room below the lowest element', () => {
   expect(surfaceHeight([])).toBe(160)
   expect(surfaceHeight([heading('a', 0, 400)])).toBe(560)
+})
+
+it('puts news of a lamp into the answer, keeping what the news does not say', () => {
+  const answer: HomeAnswer = {
+    version: 1,
+    problem: null,
+    layout: { integration_id: 1, elements: [
+      { id: 'floor', type: 'light', x: 0, y: 0, rid: 'r-floor', entity_id: 'light.floor_lamp', name: 'Floor lamp', style: 'pill' },
+      { id: 'desk', type: 'light', x: 0, y: 0, rid: 'r-desk', entity_id: 'light.desk', name: 'Desk', style: 'pill' },
+    ] },
+    lights: {
+      floor: { rid: 'r-floor', entity_id: 'light.floor_lamp', name: 'Floor lamp', area: 'Living room', device: '', group: false, on: true, unavailable: false, pct: 62, rgb: null, kelvin: 2400, dims: true, temperature: true, colour: true, missing: false },
+      desk: { missing: true },
+    },
+  }
+  const next = withLamps(answer, { floor: { on: false, pct: null, kelvin: null, missing: false }, desk: { on: true, missing: false }, stranger: { on: true, missing: false } })
+  expect(next.lights?.floor).toMatchObject({ name: 'Floor lamp', area: 'Living room', on: false, pct: null, missing: false })
+  expect(next.lights?.desk).toEqual({ on: true, missing: false })
+  expect(next.lights).not.toHaveProperty('stranger')
+  expect(withLamps(next, { floor: { missing: true } }).lights?.floor).toEqual({ missing: true })
+  // The answer it started from stays as it was: react-query compares by reference.
+  expect(answer.lights?.floor).toMatchObject({ on: true })
 })

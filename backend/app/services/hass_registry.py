@@ -145,7 +145,8 @@ async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = 
     ago shows how it stands now.
     """
     if demo:
-        return pick_lights(*demo_registry())
+        entities, devices, areas, _states = demo_registry()
+        return pick_lights(entities, devices, areas, demo_states(cache))
     now = time.monotonic() if now is None else now
     kept = cache.get("hass_registry")
     live = cache.get("hass_states")
@@ -169,6 +170,11 @@ async def lights(config: dict[str, Any], cache: dict[str, Any], *, demo: bool = 
 # ---------------------------------------------------------------------------
 # The demo house
 # ---------------------------------------------------------------------------
+
+
+def demo_states(cache: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The demo house's lamps as they stand now, kept with the connection so switching them sticks."""
+    return cache.setdefault("hass_demo_states", demo_registry()[3])
 
 
 def demo_registry() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], dict[str, dict[str, Any]]]:

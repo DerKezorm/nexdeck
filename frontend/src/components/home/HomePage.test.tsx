@@ -2,9 +2,9 @@
  * The home page in the browser: headings stand where they were put, an
  * editor adds, renames, moves and removes them, each change is saved with
  * the version it started from, someone who may only look changes nothing,
- * and a connection that went is said.
+ * a connection that went is said, and a lamp switches at a tap.
  */
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
@@ -42,26 +42,36 @@ const OFFER: LightOffer = {
   ],
 }
 
-function serve(answer: HomeAnswer, sent: Sent[], offer: LightOffer = OFFER) {
+/** What a switch is answered with; by default the lamp as asked, confirmed. */
+type Switcher = (element: string, body: { on: boolean }) => Promise<Response> | Response
+
+const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } })
+
+function serve(answer: HomeAnswer, sent: Sent[], offer: LightOffer = OFFER, switcher?: Switcher) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     const method = init?.method ?? 'GET'
     const body = init?.body ? JSON.parse(String(init.body)) : null
     sent.push({ url, method, body })
-    const json = (value: unknown) => new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } })
+    if (method === 'POST' && url.includes('/home/lights/')) {
+      const element = url.split('/home/lights/')[1]
+      if (switcher) return switcher(element, body)
+      const before = answer.lights?.[element]
+      return json({ ok: true, confirmed: true, light: { ...(before && !before.missing ? before : {}), on: body.on, missing: false } })
+    }
     if (method === 'PUT') return json({ layout: { ...answer.layout, elements: body.elements }, version: answer.version + 1 })
     if (url.includes('/home/lights')) return json(offer)
     return json(answer)
   })
 }
 
-function show(answer: HomeAnswer, { canEdit = true, editing = false, offer = OFFER } = {}) {
+function show(answer: HomeAnswer, { canEdit = true, canAct = false, editing = false, offer = OFFER, switcher = undefined as Switcher | undefined } = {}) {
   const sent: Sent[] = []
-  vi.stubGlobal('fetch', serve(answer, sent, offer))
+  vi.stubGlobal('fetch', serve(answer, sent, offer, switcher))
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <HomePage pageId={9} editing={editing} canEdit={canEdit} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+      <HomePage pageId={9} editing={editing} canEdit={canEdit} canAct={canAct} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
     </QueryClientProvider>,
   )
   return sent
@@ -173,7 +183,7 @@ it('saves one change after the other, each with the version the one before it go
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <HomePage pageId={9} editing canEdit onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+      <HomePage pageId={9} editing canEdit canAct={false} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
     </QueryClientProvider>,
   )
   await screen.findByText('Garden')
@@ -302,4 +312,81 @@ it('moves a lamp but does not try to rename it', async () => {
   const floor = (puts(sent)[0].body!.elements as Record<string, unknown>[]).find((element) => element.id === 'floor')
   expect(floor).toMatchObject({ x: 56, y: 56, rid: 'r-floor', entity_id: 'light.floor_lamp', type: 'light' })
   expect(floor).not.toHaveProperty('text')
+})
+
+// -- switching ---------------------------------------------------------------
+
+const posts = (sent: Sent[]) => sent.filter((one) => one.method === 'POST')
+const pill = (name: string) => screen.getByText(name).closest('[data-lamp]') as HTMLElement
+
+/** A promise to answer a switch with, later. */
+function later() {
+  let answer: (response: Response) => void = () => undefined
+  const promise = new Promise<Response>((resolve) => { answer = resolve })
+  return { promise, answer }
+}
+
+it('switches a lamp at a tap, shows it at once, then as the server says', async () => {
+  const reply = later()
+  const sent = show(WITH_LAMPS, { canAct: true, switcher: () => reply.promise })
+  fireEvent.click(await screen.findByRole('button', { name: /Floor lamp/ }))
+  expect(pill('Floor lamp')).toHaveTextContent('off')
+  expect(pill('Floor lamp')).toHaveAttribute('aria-pressed', 'false')
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  expect(posts(sent)[0]).toMatchObject({ url: '/api/v1/pages/9/home/lights/floor', body: { on: false } })
+  await act(async () => reply.answer(json({ ok: true, confirmed: true, light: { ...OFFER.lights[1], on: false, pct: null, rgb: null, missing: false } })))
+  expect(pill('Floor lamp')).toHaveTextContent('off')
+})
+
+it('keeps a lamp as asked when Home Assistant names nothing that changed', async () => {
+  // A lamp already on is not in Home Assistant's list of what changed; the server says so with ``confirmed``.
+  const sent = show(WITH_LAMPS, { canAct: true, switcher: () => json({ ok: true, confirmed: false, light: { ...OFFER.lights[2], on: false, missing: false } }) })
+  fireEvent.click(await screen.findByRole('button', { name: /Garden path/ }))
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  expect(posts(sent)[0].body).toEqual({ on: true })
+  await waitFor(() => expect(pill('Garden path')).toHaveTextContent('on'))
+  await act(async () => new Promise((resolve) => window.setTimeout(resolve, 20)))
+  expect(pill('Garden path')).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('takes a refused switch back and says why', async () => {
+  show(WITH_LAMPS, { canAct: true, switcher: () => json({ detail: { code: 'lamp_unavailable', message: 'Home Assistant cannot reach Floor lamp right now.' } }, 409) })
+  fireEvent.click(await screen.findByRole('button', { name: /Floor lamp/ }))
+  expect(await screen.findByText('Home Assistant cannot reach Floor lamp right now.')).toBeInTheDocument()
+  expect(pill('Floor lamp')).toHaveTextContent('62 %')
+  expect(pill('Floor lamp')).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('sends two quick taps one after the other, and the lamp ends as the last one asked', async () => {
+  const replies = [later(), later()]
+  let asked = 0
+  const sent = show(WITH_LAMPS, { canAct: true, switcher: () => replies[asked++].promise })
+  const floor = await screen.findByRole('button', { name: /Floor lamp/ })
+  fireEvent.click(floor)
+  fireEvent.click(floor)
+  expect(pill('Floor lamp')).toHaveTextContent('62 %')
+  await waitFor(() => expect(posts(sent)).toHaveLength(1))
+  await act(async () => replies[0].answer(json({ ok: true, confirmed: true, light: { ...OFFER.lights[1], on: false, pct: null, missing: false } })))
+  await waitFor(() => expect(posts(sent)).toHaveLength(2))
+  expect(posts(sent).map((one) => one.body)).toEqual([{ on: false }, { on: true }])
+  expect(pill('Floor lamp')).toHaveAttribute('aria-pressed', 'true')
+  await act(async () => replies[1].answer(json({ ok: true, confirmed: true, light: { ...OFFER.lights[1], missing: false } })))
+  expect(pill('Floor lamp')).toHaveTextContent('62 %')
+})
+
+it('offers no switch to who may not act, while arranging, or on a lamp that went', async () => {
+  show(WITH_LAMPS, { canAct: false })
+  await screen.findByText('Floor lamp')
+  expect(screen.queryByRole('button', { name: /Floor lamp/ })).not.toBeInTheDocument()
+  cleanup()
+  show(WITH_LAMPS, { canAct: true, editing: true })
+  await screen.findByText('Floor lamp')
+  expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { pressed: false })).not.toBeInTheDocument()
+  cleanup()
+  show({ ...WITH_LAMPS, lights: { ...WITH_LAMPS.lights, path: { ...OFFER.lights[2], unavailable: true, missing: false } } }, { canAct: true })
+  await screen.findByRole('button', { name: /Floor lamp/ })
+  expect(screen.queryByRole('button', { name: /Old desk/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Garden path/ })).not.toBeInTheDocument()
+  expect(pill('Garden path')).toHaveTextContent('offline')
 })

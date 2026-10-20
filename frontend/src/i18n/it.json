@@ -1607,6 +1607,12 @@
     "missing": "non è più in Home Assistant",
     "gone": "assente",
     "offline": "offline",
+    "switchFailed": "Non è stato possibile commutare {{name}}.",
+    "switchProblems": {
+      "lamp_unavailable": "Home Assistant non raggiunge {{name}} in questo momento.",
+      "lamp_missing": "{{name}} non è più in Home Assistant.",
+      "forbidden": "Puoi guardare questa pagina, ma non commutare nulla."
+    },
     "on": "accesa",
     "off": "spenta",
     "removeLight": "Rimuovi"

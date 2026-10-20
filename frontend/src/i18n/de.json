@@ -1607,6 +1607,12 @@
     "missing": "nicht mehr in Home Assistant",
     "gone": "weg",
     "offline": "offline",
+    "switchFailed": "{{name}} ließ sich nicht schalten.",
+    "switchProblems": {
+      "lamp_unavailable": "Home Assistant erreicht {{name}} gerade nicht.",
+      "lamp_missing": "{{name}} gibt es in Home Assistant nicht mehr.",
+      "forbidden": "Du darfst diese Seite ansehen, aber nichts darauf schalten."
+    },
     "on": "an",
     "off": "aus",
     "removeLight": "Entfernen"

@@ -18,11 +18,13 @@ from ..deps import (
     require_board_id,
     require_integration,
 )
-from ..models import Integration, Page
-from ..schemas import HomeLayoutBody
-from ..services import hass_registry
+from ..models import ActionLog, Integration, Page
+from ..schemas import HomeLayoutBody, HomeSwitchBody
+from ..services import hass_registry, home_control
 from ..services import home as home_service
 from ..services.collector import collector
+from ..services.home_control import home_live
+from ..services.notify import emit
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1", tags=["home"])
@@ -57,6 +59,14 @@ async def _offered(integration: Integration) -> list[dict[str, Any]]:
     return await hass_registry.lights(config, ctx.cache, demo=collector.is_demo(integration))
 
 
+def _find(offered: list[dict[str, Any]], element: dict[str, Any]) -> dict[str, Any] | None:
+    """The lamp an element stands for: by its registry id, else by the entity id it was placed with."""
+    for light in offered:
+        if light["rid"] and light["rid"] == element["rid"]:
+            return light
+    return next((light for light in offered if light["entity_id"] == element["entity_id"]), None)
+
+
 @router.get("/pages/{page_id}/home", summary="Read what stands on a home page")
 async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSession) -> dict:
     """The arrangement, how its lamps stand, and what is wrong with the connection if anything.
@@ -81,10 +91,8 @@ async def read_home(page_id: int, request: Request, user: OptionalUser, db: DbSe
     except AdapterError as failure:
         answer["problem"] = _problem(failure.code, failure.message, failure.hint)
         return answer
-    by_rid = {light["rid"]: light for light in offered if light["rid"]}
-    by_entity = {light["entity_id"]: light for light in offered}
     for element in lamps:
-        found = by_rid.get(element["rid"]) or by_entity.get(element["entity_id"])
+        found = _find(offered, element)
         # Gone, hidden or disabled in Home Assistant since it was placed: the page says so.
         answer["lights"][element["id"]] = {**found, "missing": False} if found else {"missing": True}
     return answer
@@ -111,6 +119,76 @@ async def offer_lights(page_id: int, user: CurrentUser, db: DbSession) -> dict:
         return {"lights": [], "problem": _problem(failure.code, failure.message, failure.hint)}
 
 
+@router.post("/pages/{page_id}/home/lights/{element_id}", summary="Switch a lamp on a home page")
+async def switch_light(page_id: int, element_id: str, body: HomeSwitchBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """Needs the act permission on the board, or a display that allows actions, like the actions of a card.
+
+    The browser names the element and on or off. Which entity that is, and
+    which service, the server decides from the page and Home Assistant's
+    registry; only ``home_control.SERVICES`` are ever called. Every call that
+    reaches Home Assistant goes into the action log, a failed one too.
+    """
+    page = _home_page(db, page_id)
+    kiosk = kiosk_from_request(request, db)
+    board, permission = board_for_viewer_id(db, page.board_id, user, kiosk)
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may look at this page, but not switch anything on it.", status.HTTP_403_FORBIDDEN)
+    stored = page.home or {}
+    layout = home_service.clean_layout(stored, stored.get("integration_id"))
+    element = next((item for item in layout["elements"] if item["id"] == element_id and item["type"] == "light"), None)
+    if element is None:
+        raise error("not_found", "There is no such lamp on this page.", status.HTTP_404_NOT_FOUND)
+    integration = db.get(Integration, layout["integration_id"]) if layout["integration_id"] else None
+    problem = _connection_problem(integration)
+    if problem is not None or integration is None:
+        raise error(problem["code"] if problem else "no_integration", problem["message"] if problem else "", status.HTTP_409_CONFLICT)
+    try:
+        lamp = _find(await _offered(integration), element)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message, status.HTTP_502_BAD_GATEWAY) from failure
+    if lamp is None:
+        raise error("lamp_missing", "This lamp is no longer in Home Assistant, or it is hidden there.", status.HTTP_409_CONFLICT)
+    if lamp["unavailable"]:
+        raise error("lamp_unavailable", f"Home Assistant cannot reach {lamp['name']} right now.", status.HTTP_409_CONFLICT)
+
+    domain, service = home_control.service_for(body.on)
+    entity_id = lamp["entity_id"]
+    actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
+    _adapter, config, ctx = await collector.resolve_integration(integration.id)
+    ok, changed = True, []
+    try:
+        if collector.is_demo(integration):
+            switched = home_control.switch_demo(ctx.cache, entity_id, body.on)
+            changed = [switched] if switched else []
+            message = f"Demo mode: {domain}.{service} for {entity_id}."
+        else:
+            changed = await home_control.call(config, ctx, domain, service, entity_id)
+            message = f"{domain}.{service} called for {entity_id}."
+    except AdapterError as failure:
+        ok, message, code = False, failure.message, failure.code
+    db.add(ActionLog(user_id=user.id if user else None, actor=actor, widget_id=None, integration_id=integration.id,
+                     action=f"{domain}.{service}", params={"entity_id": entity_id, "page_id": page.id}, ok=ok, message=message[:400]))
+    db.commit()
+    title = f"{domain}.{service} on {lamp['name']}"
+    if not ok:
+        emit("action_failed", f"{title} failed", message, level="warn", user_ids=[user.id] if user else None, integration_id=integration.id)
+        logger.warning("Lamp %s on home page %r of board %r could not be switched by %s: %s", entity_id, page.name, board.slug, actor, message)
+        raise error(code, message, status.HTTP_502_BAD_GATEWAY)
+    logger.info("Lamp %s on home page %r of board %r switched by %s: %s", entity_id, page.name, board.slug, actor, message)
+    # No "action_done" notice, unlike a card's action: the lamp on the page is the answer, and a bell
+    # that rang at every light switch would drown out what it is for. A failure does ring (above).
+    state = next((item for item in changed if item.get("entity_id") == entity_id), None)
+    if state is None:
+        # Home Assistant names only what changed; a lamp that was on already is not in the list.
+        return {"ok": True, "confirmed": False, "light": {**lamp, "missing": False}}
+    live = ctx.cache.get("hass_states")
+    if isinstance(live, dict):
+        live[entity_id] = state
+    # Every other page this lamp stands on, open in another browser, hears of it too.
+    home_live.touched(integration.id, ctx.cache, entity_id, state)
+    return {"ok": True, "confirmed": True, "light": {**lamp, **hass_registry.light_state(state), "missing": False}}
+
+
 @router.put("/pages/{page_id}/home", summary="Save what stands where on a home page")
 def save_home(page_id: int, body: HomeLayoutBody, user: CurrentUser, db: DbSession) -> dict:
     """Refused when it started from an older version, like the card layouts (``put_layouts``)."""
@@ -128,6 +206,7 @@ def save_home(page_id: int, body: HomeLayoutBody, user: CurrentUser, db: DbSessi
     page.home = layout
     page.layout_version = (page.layout_version or 0) + 1
     db.commit()
+    home_live.forget(stored.get("integration_id"))
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
     logger.info("Home page %r of board %r arranged by %s: %d element(s).", page.name, board.slug, user.username, len(layout["elements"]))
     return {"layout": layout, "version": page.layout_version}

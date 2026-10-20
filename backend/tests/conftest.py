@@ -55,6 +55,10 @@ def client(data_dir: Path) -> Iterator[TestClient]:
     # sent "T1" to the camera instead of the token its own login got. Only
     # when the planting test ran first, which the full run never does.
     collector._caches.clear()
+    # The same holds for which lamp stands on which home page.
+    from app.services.home_control import home_live
+
+    home_live.reset()
     with TestClient(app) as test_client:
         yield test_client
     from app import db

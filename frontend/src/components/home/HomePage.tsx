@@ -1,12 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Heading, House, Lightbulb, Pencil, Plus, Settings2, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, get, put } from '../../api/client'
+import { ApiError, get, post, put } from '../../api/client'
 import {
-  freshId, lampColour, lampSpots, MAX_TEXT, nextSpot, readingOrder, snap, surfaceHeight,
-  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo,
+  freshId, lampColour, lampSpots, MAX_TEXT, nextSpot, readingOrder, snap, surfaceHeight, withLamps,
+  type HomeAnswer, type HomeElement, type HomeHeading, type HomeLayout, type HomeLight, type LampInfo, type SwitchAnswer,
 } from '../../lib/home'
 import { Spinner } from '../ui'
 import { LightPicker } from './LightPicker'
@@ -15,6 +15,8 @@ interface Props {
   pageId: number
   editing: boolean
   canEdit: boolean
+  /** May press what stands on the page: switch a lamp. */
+  canAct: boolean
   onAddPage: () => void
   onSettings: () => void
   onDone: () => void
@@ -49,7 +51,7 @@ function useNarrow(): boolean {
  * stands where belongs to the page and is saved for everyone, a moment after
  * the last change, the way a topology page saves its plan.
  */
-export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDone }: Props) {
+export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettings, onDone }: Props) {
   const { t } = useTranslation()
   const narrow = useNarrow()
   const answer = useQuery({ queryKey: ['home', pageId], queryFn: () => get<HomeAnswer>(`/pages/${pageId}/home`) })
@@ -176,6 +178,53 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   }
   const missing = (element: HomeLight) => answer.data?.lights?.[element.id]?.missing === true
 
+  // -- switching a lamp ------------------------------------------------------
+
+  const queryClient = useQueryClient()
+  /** What a lamp was just told to be, shown until the server has answered. */
+  const [wanted, setWanted] = useState<Record<string, boolean>>({})
+  const taps = useRef<Record<string, number>>({})
+  // ⚠️ One switch of a lamp after the other, like the saves above: two taps in
+  // quick succession sent side by side could reach Home Assistant the wrong
+  // way round and leave the lamp as the first tap wanted.
+  const switching = useRef<Record<string, Promise<void>>>({})
+  const toggle = useCallback(
+    (element: HomeLight, info: LampInfo) => {
+      // ``info`` is the lamp as the pill shows it, a tap still waiting for its answer included.
+      const on = !info.on
+      const tap = (taps.current[element.id] ?? 0) + 1
+      taps.current[element.id] = tap
+      setWanted((now) => ({ ...now, [element.id]: on }))
+      const send = async () => {
+        try {
+          const answered = await post<SwitchAnswer>(`/pages/${pageId}/home/lights/${element.id}`, { on })
+          // Not confirmed: Home Assistant named nothing that changed, the lamp already was as asked.
+          const stands = answered.confirmed ? answered.light : { ...answered.light, on }
+          queryClient.setQueryData<HomeAnswer>(['home', pageId], (old) => (old ? withLamps(old, { [element.id]: stands }) : old))
+        } catch (failure) {
+          const code = failure instanceof ApiError ? failure.code : ''
+          setNote({ text: t(`homePage.switchProblems.${code}`, { name: info.name, defaultValue: t('homePage.switchFailed', { name: info.name }) }), level: 'error' })
+        } finally {
+          if (taps.current[element.id] === tap) {
+            setWanted((now) => {
+              const rest = { ...now }
+              delete rest[element.id]
+              return rest
+            })
+          }
+        }
+      }
+      const run = (switching.current[element.id] ?? Promise.resolve()).then(send)
+      switching.current[element.id] = run
+    },
+    [pageId, queryClient, t],
+  )
+  const standing = (element: HomeLight): LampInfo | null => {
+    const info = infoOf(element)
+    const asked = wanted[element.id]
+    return info && asked !== undefined ? { ...info, on: asked, pct: asked ? info.pct : null } : info
+  }
+
   const addHeading = useCallback(() => {
     if (!layout) return
     const id = freshId(layout.elements)
@@ -238,7 +287,8 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
   const placed = (element: HomeElement) => (dragged && dragged.id === element.id ? { ...element, x: dragged.x, y: dragged.y } : element)
   const draw = (element: HomeElement) =>
     element.type === 'light' ? (
-      <LampPill element={element} info={infoOf(element)} missing={missing(element)} arranging={arranging} onRemove={() => remove(element.id)} />
+      <LampPill element={element} info={standing(element)} missing={missing(element)} arranging={arranging} wide={narrow} onRemove={() => remove(element.id)}
+        onToggle={canAct && !arranging ? (info) => toggle(element, info) : undefined} />
     ) : (
       <HeadingView element={element} arranging={arranging} renaming={renaming === element.id}
         onRename={(text) => { change(element.id, { text }); setRenaming(null) }} onCancel={() => setRenaming(null)}
@@ -313,11 +363,20 @@ export function HomePage({ pageId, editing, canEdit, onAddPage, onSettings, onDo
 }
 
 /**
- * A lamp as a pill, the first of the drawings on the board of sketches:
- * its light, its name, how bright. Switching it follows in the next step;
- * for now it shows how the lamp stands.
+ * A lamp as a pill, the first of the drawings on the board of sketches: its
+ * light, its name, how bright. A tap switches it, for those who may act on
+ * the board; a lamp Home Assistant cannot reach or no longer has stays still.
  */
-function LampPill({ element, info, missing, arranging, onRemove }: { element: HomeLight; info: LampInfo | null; missing: boolean; arranging: boolean; onRemove: () => void }) {
+function LampPill({ element, info, missing, arranging, wide, onRemove, onToggle }: {
+  element: HomeLight
+  info: LampInfo | null
+  missing: boolean
+  arranging: boolean
+  /** In the phone's list: as wide as the screen, a row to tap rather than a pill to aim at. */
+  wide: boolean
+  onRemove: () => void
+  onToggle?: (info: LampInfo) => void
+}) {
   const { t } = useTranslation()
   const colour = lampColour(info)
   const name = info?.name || element.name || element.entity_id
@@ -329,18 +388,36 @@ function LampPill({ element, info, missing, arranging, onRemove }: { element: Ho
   const lit = colour
     ? { borderColor: `color-mix(in srgb, ${colour} 50%, transparent)`, background: `color-mix(in srgb, ${colour} 14%, var(--nd-surface))`, boxShadow: `0 0 22px -8px ${colour}` }
     : undefined
-  return (
-    <div
-      className={`glass flex items-center gap-2.5 h-10 max-w-[256px] pl-1.5 pr-4 rounded-full ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`}
-      style={lit}
-      data-lamp={element.entity_id}
-      title={[name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')}
-    >
-      <span className="grid place-items-center w-7 h-7 rounded-full flex-none" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
+  const shell = `glass flex items-center gap-2.5 ${wide ? 'w-full h-12' : 'h-10 max-w-[256px]'} pl-1.5 pr-4 rounded-full text-left ${missing ? 'border-dashed opacity-60' : info?.unavailable ? 'opacity-55' : ''} ${arranging ? 'pr-1.5' : ''}`
+  const title = [name, info?.area, missing ? t('homePage.missing') : info?.unavailable ? t('homePage.unavailable') : ''].filter(Boolean).join(' · ')
+  const inside = (
+    <>
+      <span className="grid place-items-center w-7 h-7 rounded-full flex-none transition-colors duration-200" style={colour ? { background: colour, color: '#1b1206' } : { background: 'color-mix(in srgb, var(--nd-text) 9%, transparent)' }}>
         <Lightbulb size={15} className={colour ? '' : 'text-muted'} />
       </span>
       <span className="text-[13px] font-medium whitespace-nowrap min-w-0 truncate">{name}</span>
       {state && <span className={`num text-[11.5px] whitespace-nowrap flex-none ${colour ? '' : 'text-muted'}`}>{state}</span>}
+    </>
+  )
+  // Only a lamp that can be switched is a button: one Home Assistant cannot reach would take the tap and do nothing.
+  if (onToggle && info && !missing && !info.unavailable) {
+    return (
+      <button
+        type="button"
+        className={`${shell} cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-200 hover:brightness-[1.04] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[var(--nd-accent)]`}
+        style={lit}
+        data-lamp={element.entity_id}
+        title={title}
+        aria-pressed={info.on}
+        onClick={() => onToggle(info)}
+      >
+        {inside}
+      </button>
+    )
+  }
+  return (
+    <div className={shell} style={lit} data-lamp={element.entity_id} title={title}>
+      {inside}
       {arranging && (
         <span className="flex items-center ml-1" data-element-tool>
           <button type="button" className="btn btn-icon btn-flat btn-danger h-6 w-6" onClick={onRemove} aria-label={t('homePage.removeLight')} title={t('homePage.removeLight')}>

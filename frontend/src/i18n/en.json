@@ -1607,6 +1607,12 @@
     "missing": "no longer in Home Assistant",
     "gone": "gone",
     "offline": "offline",
+    "switchFailed": "{{name}} could not be switched.",
+    "switchProblems": {
+      "lamp_unavailable": "Home Assistant cannot reach {{name}} right now.",
+      "lamp_missing": "{{name}} is no longer in Home Assistant.",
+      "forbidden": "You may look at this page, but not switch anything on it."
+    },
     "on": "on",
     "off": "off",
     "removeLight": "Remove"

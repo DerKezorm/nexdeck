@@ -3,7 +3,7 @@
 One task per Home Assistant integration. It authenticates, loads all states
 once, subscribes to ``state_changed`` and keeps ``ctx.cache["hass_states"]``
 current. Whenever an entity that a widget shows changes, the widget is
-refreshed right away.
+refreshed right away; a lamp on a home page goes to its page (``home_control``).
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from sqlalchemy import select
 from ..adapters.base import base_url
 from ..db import db_session
 from ..models import Integration, Widget
+from .home_control import home_live
 from .integrations import resolve_config
 from .loop import run_on_loop, spawn
 
@@ -130,6 +131,10 @@ class HassListener:
                             if entity_id and new_state:
                                 states[entity_id] = new_state
                                 self._touch(integration_id, entity_id)
+                                try:
+                                    home_live.touched(integration_id, cache, entity_id, new_state)
+                                except Exception as failure:  # noqa: BLE001 - a page, not the listener
+                                    logger.warning("Home Assistant %s: a home page missed %s (%s).", integration_id, entity_id, failure.__class__.__name__)
             except asyncio.CancelledError:
                 raise
             except Exception as error:  # noqa: BLE001

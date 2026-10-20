@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 from .languages import Code, Pair
 
@@ -305,6 +305,14 @@ class WidgetPreview(BaseModel):
     options: dict[str, Any] = Field(default_factory=dict)
     integration_id: int | None = None
     clear_integration: bool = False
+
+
+class HomeSwitchBody(BaseModel):
+    """What a home page asks of a lamp. No service and no entity: the server finds both (``home_control``)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    on: StrictBool
 
 
 class ActionBody(BaseModel):
