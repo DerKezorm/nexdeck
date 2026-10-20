@@ -1,12 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChartLine, Check, Grid3x3, Heading, House, Lightbulb, Palette, Pencil, Plus, Settings2, Thermometer, Trash2 } from 'lucide-react'
+import { ChartLine, Check, DoorOpen, Droplets, Grid3x3, Heading, House, Lightbulb, MessageSquareWarning, Palette, Pencil, Plus, Radar, Settings2, Thermometer, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
 import {
   alignTo, byHand, climateSpots, controlWidth, freshId, isResizable, isWide, resizeTo, LAMP_STYLES, lampSender, lampSpots, MAX_TEXT, mergeWish, nextSpot, phoneGroups, SETTLE_MS, snap, STAT_HEIGHTS, STAT_WIDTHS, statSize, statSpots, stepTarget,
-  surfaceHeight, withClimates, withLamps, withWish,
+  surfaceHeight, withClimates, withLamps, withWish, heightOf, widthOf, pageHints, sensorSpots, type Check as HintCheck, type ReadingRow,
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
 } from '../../lib/home'
@@ -19,6 +19,9 @@ import { lampFace } from './LampFace'
 import { LightPicker } from './LightPicker'
 import { StatCard } from './StatCard'
 import { StatPicker } from './StatPicker'
+import { ContactsCard, HintsCard, ReadingsCard } from './SensorCards'
+import { ContactControl, ReadingControl, useNow } from './SensorControl'
+import { SensorPicker, type FreshSensor } from './SensorPicker'
 
 interface Props {
   pageId: number
@@ -170,13 +173,22 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   const change = useCallback(
     (id: string, patch: {
-      x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle; sensor?: ClimateSensor | null; width?: number
-      height?: number; sensors?: ClimateSensor[]; title?: string
+      x?: number; y?: number; text?: string; style?: LampStyle | ClimateStyle | StatStyle | string; sensor?: ClimateSensor | null; width?: number
+      height?: number; sensors?: ClimateSensor[]; title?: string; rows?: ReadingRow[]; checks?: HintCheck[]
     }) => {
       if (!layout) return
       const changed = (element: HomeElement): HomeElement =>
         element.type === 'heading'
           ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, text: patch.text ?? element.text }
+          : element.type === 'contact' || element.type === 'contacts' || element.type === 'reading' || element.type === 'readings' || element.type === 'hints'
+            ? ({
+                ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, width: patch.width ?? element.width,
+                ...('style' in element && patch.style ? { style: patch.style } : {}),
+                ...(element.type === 'contacts' && patch.sensors ? { sensors: patch.sensors } : {}),
+                ...(element.type === 'readings' && patch.rows ? { rows: patch.rows } : {}),
+                ...('title' in element && patch.title !== undefined ? { title: patch.title } : {}),
+                ...(element.type === 'hints' && patch.checks ? { checks: patch.checks } : {}),
+              } as HomeElement)
           : element.type === 'stat'
             ? { ...element, x: patch.x ?? element.x, y: patch.y ?? element.y, style: (patch.style as StatStyle | undefined) ?? element.style, width: patch.width ?? element.width,
                 height: patch.height ?? element.height, sensors: patch.sensors ?? element.sensors, title: patch.title ?? element.title }
@@ -405,6 +417,31 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
   )
   const statCard = elements.find((element): element is HomeStat => element.type === 'stat' && element.id === statPicking) ?? null
 
+  // -- doors, windows, temperature and humidity ------------------------------
+
+  const now = useNow()
+  /** The sensor picker: what it picks, and the card whose sensors are changed, if one is. */
+  const [sensorPicking, setSensorPicking] = useState<{ mode: 'contacts' | 'readings'; card: string | null } | null>(null)
+  const addSensors = useCallback(
+    (fresh: FreshSensor[]) => {
+      setSensorPicking(null)
+      if (!layout || fresh.length === 0) return
+      const sample = { ...fresh[0], id: 'new', x: 0, y: 0 } as HomeElement
+      const spots = sensorSpots(layout.elements, fresh.length, { width: widthOf(sample), height: heightOf(sample) })
+      const added: HomeElement[] = []
+      for (const [index, one] of fresh.entries()) added.push({ ...one, id: freshId([...layout.elements, ...added]), ...spots[index] } as HomeElement)
+      askAgain.current = true
+      save({ ...layout, elements: [...layout.elements, ...added] }, 0)
+    },
+    [layout, save],
+  )
+  const addHints = useCallback(() => {
+    if (!layout) return
+    save({ ...layout, elements: [...layout.elements, { id: freshId(layout.elements), type: 'hints', ...nextSpot(layout.elements), title: '', checks: ['heating', 'humid'] }] }, 0)
+  }, [layout, save])
+  const sensorCard = elements.find((element) => (element.type === 'contacts' || element.type === 'readings') && element.id === sensorPicking?.card) ?? null
+  const said = answer.data?.sensors ?? {}
+
   const addHeading = useCallback(() => {
     if (!layout) return
     const id = freshId(layout.elements)
@@ -523,8 +560,21 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
       ? { ...element, x: dragged.x, y: dragged.y, ...(dragged.width !== undefined && element.type !== 'heading' ? { width: dragged.width } : {}),
           ...(dragged.height !== undefined && element.type === 'stat' ? { height: dragged.height } : {}) }
       : element
+  const sized = (element: HomeElement) => ({ arranging, wide: narrow && element.type !== 'heading' && isWide(element), width: controlWidth(element), onRemove: () => remove(element.id) })
   const draw = (element: HomeElement) =>
-    element.type === 'stat' ? (
+    element.type === 'contact' ? (
+      <ContactControl element={element} said={said[element.entity_id]} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })} />
+    ) : element.type === 'reading' ? (
+      <ReadingControl element={element} temperatureSaid={element.temperature ? said[element.temperature.entity_id] : undefined}
+        humiditySaid={element.humidity ? said[element.humidity.entity_id] : undefined} {...sized(element)} onStyle={(style) => change(element.id, { style })} />
+    ) : element.type === 'contacts' ? (
+      <ContactsCard element={element} sensors={said} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
+        onSensors={() => setSensorPicking({ mode: 'contacts', card: element.id })} />
+    ) : element.type === 'readings' ? (
+      <ReadingsCard element={element} sensors={said} {...sized(element)} onSensors={() => setSensorPicking({ mode: 'readings', card: element.id })} />
+    ) : element.type === 'hints' ? (
+      <HintsCard element={element} hints={pageHints(elements, answer.data, element.checks)} now={now} {...sized(element)} onChecks={(checks) => change(element.id, { checks })} />
+    ) : element.type === 'stat' ? (
       <StatCard element={element} pageId={pageId} arranging={arranging} wide={narrow && isWide(element)} size={statSize(element)}
         onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })} onSensors={() => setStatPicking(element.id)} />
     ) : element.type === 'climate' ? (
@@ -567,6 +617,12 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
               </button>
               <button type="button" className="btn" onClick={() => setStatPicking('new')}>
                 <ChartLine size={15} /> {t('homePage.stats.add')}
+              </button>
+              <button type="button" className="btn" onClick={() => setSensorPicking({ mode: 'contacts', card: null })}>
+                <DoorOpen size={15} /> {t('homePage.sensors.addContacts')}
+              </button>
+              <button type="button" className="btn" onClick={() => setSensorPicking({ mode: 'readings', card: null })}>
+                <Droplets size={15} /> {t('homePage.sensors.addReadings')}
               </button>
               <button type="button" className="btn" onClick={addHeading}>
                 <Heading size={15} /> {t('homePage.addHeading')}
@@ -622,7 +678,8 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           })}
         </div>
       )}
-      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
+      {arranging && <EditBar onLight={() => setPicking(true)} onClimate={() => setPickingClimates(true)} onStat={() => setStatPicking('new')}
+        onSensor={(kind) => (kind === 'hints' ? addHints() : setSensorPicking({ mode: kind, card: null }))} onHeading={addHeading} guides={guidesOn} onGuides={() => setGuidesOn(!guidesOn)}
         onAddPage={onAddPage} onSettings={onSettings} onDone={onDone} />}
       {detailed && detailedInfo && canAct && (
         <LampDetails info={detailedInfo} onWish={(wish) => ask(detailed, detailedInfo, wish)} onClose={() => setDetails(null)} />
@@ -633,6 +690,10 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
           onSlide={canAct ? (value) => aimClimate(detailedClimate, detailedClimateInfo, value, GATHER_MS) : null}
           onWish={canAct ? (wish) => tell(detailedClimate.id, detailedClimateInfo.name, wish) : null}
           onClose={() => setClimateDetails(null)} history={{ pageId, elementId: detailedClimate.id }} />
+      )}
+      {canEdit && (
+        <SensorPicker mode={sensorPicking?.mode ?? null} pageId={pageId} card={sensorCard as Parameters<typeof SensorPicker>[0]['card']} onClose={() => setSensorPicking(null)} onAdd={addSensors}
+          onChange={(id, patch) => { setSensorPicking(null); askAgain.current = true; change(id, patch) }} />
       )}
       {canEdit && <StatPicker open={statPicking !== null} pageId={pageId} card={statCard} onClose={() => setStatPicking(null)} onAdd={addStats}
         onChange={(id, patch) => { setStatPicking(null); change(id, patch) }} />}
@@ -885,7 +946,7 @@ function HeadingView(props: {
   )
 }
 
-function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
+function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
@@ -898,6 +959,7 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onStat} aria-label={t('homePage.stats.add')}>
         <ChartLine size={15} /> <span className="hidden sm:inline">{t('homePage.stats.add')}</span>
       </button>
+      <SensorMenu onSensor={props.onSensor} />
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onHeading} aria-label={t('homePage.addHeading')}>
         <Heading size={15} /> <span className="hidden sm:inline">{t('homePage.addHeading')}</span>
       </button>
@@ -916,5 +978,36 @@ function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: ()
         <Check size={15} /> {t('common.done')}
       </button>
     </div>
+  )
+}
+
+/** The bar's sensor button: doors and windows, temperature and humidity, or a hints card. */
+function SensorMenu({ onSensor }: { onSensor: (kind: 'contacts' | 'readings' | 'hints') => void }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const pick = (kind: 'contacts' | 'readings' | 'hints') => {
+    setOpen(false)
+    onSensor(kind)
+  }
+  return (
+    <span className="relative">
+      <button type="button" className={`btn btn-flat whitespace-nowrap ${open ? 'text-accent' : ''}`} onClick={() => setOpen((now) => !now)} aria-label={t('homePage.sensors.add')}
+        aria-haspopup="menu" aria-expanded={open}>
+        <Radar size={15} /> <span className="hidden sm:inline">{t('homePage.sensors.add')}</span>
+      </button>
+      {open && (
+        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 glass-strong rounded-xl p-1.5 shadow-2xl grid gap-0.5 w-56" role="menu" aria-label={t('homePage.sensors.add')}>
+          <button type="button" role="menuitem" className="flex items-center gap-2 text-left text-[13px] px-2.5 py-1.5 rounded-lg hover:bg-[var(--nd-surface-hover)]" onClick={() => pick('contacts')}>
+            <DoorOpen size={14} /> {t('homePage.sensors.addContacts')}
+          </button>
+          <button type="button" role="menuitem" className="flex items-center gap-2 text-left text-[13px] px-2.5 py-1.5 rounded-lg hover:bg-[var(--nd-surface-hover)]" onClick={() => pick('readings')}>
+            <Droplets size={14} /> {t('homePage.sensors.addReadings')}
+          </button>
+          <button type="button" role="menuitem" className="flex items-center gap-2 text-left text-[13px] px-2.5 py-1.5 rounded-lg hover:bg-[var(--nd-surface-hover)]" onClick={() => pick('hints')}>
+            <MessageSquareWarning size={14} /> {t('homePage.sensors.addHints')}
+          </button>
+        </span>
+      )}
+    </span>
   )
 }

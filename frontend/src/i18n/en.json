@@ -1794,6 +1794,69 @@
       "noHeating": "No heating times.",
       "noHeatingText": "This thermostat does not say when it heats. Room and target are in the history all the same.",
       "empty": "Home Assistant has no history for this period."
+    },
+    "sensors": {
+      "missing": "gone",
+      "openFor": "open · {{time}}",
+      "closed": "closed",
+      "battery": "Battery {{pct}} %",
+      "yesterdayAt": "yesterday {{time}}",
+      "openWord": "Open",
+      "closedWord": "Closed",
+      "sinceTime": "since {{time}}",
+      "lastOpen": "last open {{time}}",
+      "removeContact": "Remove door or window",
+      "removeReading": "Remove reading",
+      "removeCard": "Remove card",
+      "windows": "Windows",
+      "doors": "Doors",
+      "windowsAndDoors": "Windows and doors",
+      "allClosed": "all closed",
+      "someOpen": "{{count}} open",
+      "openOf": "{{count}} of {{total}} open",
+      "noRoom": "No room",
+      "rooms": "Rooms",
+      "hints": "Hints",
+      "openWhileHeating": "{{name}} open, heating on",
+      "airing": "{{name}}: let some air in",
+      "forTime": "for {{time}}",
+      "targetIs": "target {{value}}",
+      "humidityIs": "{{value}} humidity",
+      "nothingChecked": "Nothing chosen to look for",
+      "allQuiet": "All quiet",
+      "chooseChecks": "What to look for",
+      "add": "Sensor",
+      "addContacts": "Door and window",
+      "addReadings": "Temperature and humidity",
+      "addHints": "Hints",
+      "pickContacts": "Doors and windows",
+      "pickReadings": "Temperature and humidity",
+      "addOne": "Add",
+      "addMany": "Add {{count}}",
+      "contactsTitleHint": "empty: windows, doors or both",
+      "pickEmpty": "No matching sensors found.",
+      "contactStyles": {
+        "pill": "Pill",
+        "chip": "Chip",
+        "tile": "Tile",
+        "window": "Window drawn",
+        "door": "Door drawn"
+      },
+      "contactsStyles": {
+        "list": "Card of several",
+        "house": "The house at a glance"
+      },
+      "readingStyles": {
+        "pill": "Pill",
+        "tile": "Climate tile",
+        "thermometer": "Thermometer",
+        "ring": "Humidity ring",
+        "rooms": "List of rooms"
+      },
+      "checks": {
+        "heating": "A window open while the heating runs",
+        "humid": "Airing from 65 % humidity"
+      }
     }
   }
 }

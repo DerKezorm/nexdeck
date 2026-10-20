@@ -63,22 +63,33 @@ export const WIDE_STYLES: ReadonlySet<LampStyle> = new Set(['pill', 'chip', 'sli
  * same for every pill, chip or slider, whatever its name, so a row of them
  * lines up. A name too long for it runs as a ticker (``Marquee``).
  */
-export const DEFAULT_WIDTH = { pill: 224, chip: 176, slider: 176, climate: 320, climateChip: 200, climateSlider: 230 } as const
+export const DEFAULT_WIDTH = {
+  pill: 224, chip: 176, slider: 176, climate: 320, climateChip: 200, climateSlider: 230,
+  contact: 264, contactChip: 150, reading: 250, contacts: 300, house: 380, readings: 400, hints: 330,
+} as const
 /** The bounds of a width dragged by hand; the server keeps the same. */
 export const MIN_WIDTH = 96
 export const MAX_WIDTH = 640
 
 /** Whether an element has a width to drag: the pill, the chip, the slider and a thermostat. */
-export function isResizable(element: HomeElement): element is HomeDevice {
+export function isResizable(element: HomeElement): element is Sized {
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return true
+  if (element.type === 'contact') return element.style === 'pill' || element.style === 'chip'
+  if (element.type === 'reading') return element.style === 'pill'
   return (element.type === 'light' || element.type === 'climate') && (element.style === 'pill' || element.style === 'chip' || element.style === 'slider')
 }
 
 /** The width a control is drawn at on the surface, or null for a style whose size is its drawing. */
-export function controlWidth(element: HomeDevice): number | null {
+export function controlWidth(element: HomeElement): number | null {
   if (!isResizable(element)) return null
   const fallback = element.type === 'climate'
     ? { pill: DEFAULT_WIDTH.climate, chip: DEFAULT_WIDTH.climateChip, slider: DEFAULT_WIDTH.climateSlider }[element.style as 'pill' | 'chip' | 'slider']
-    : DEFAULT_WIDTH[element.style as 'pill' | 'chip' | 'slider']
+    : element.type === 'light' ? DEFAULT_WIDTH[element.style as 'pill' | 'chip' | 'slider']
+    : element.type === 'contact' ? (element.style === 'chip' ? DEFAULT_WIDTH.contactChip : DEFAULT_WIDTH.contact)
+    : element.type === 'reading' ? DEFAULT_WIDTH.reading
+    : element.type === 'contacts' ? (element.style === 'house' ? DEFAULT_WIDTH.house : DEFAULT_WIDTH.contacts)
+    : element.type === 'readings' ? DEFAULT_WIDTH.readings
+    : DEFAULT_WIDTH.hints
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, element.width ?? fallback))
 }
 
@@ -90,6 +101,8 @@ export const WIDE_CLIMATE_STYLES: ReadonlySet<string> = new Set(['pill', 'chip',
 /** Whether an element runs the width of a phone's screen: a thermostat and a lamp by their style, a card unless it is a small one. */
 export function isWide(element: HomeItem): boolean {
   if (element.type === 'stat') return element.style !== 'small'
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return true
+  if (element.type === 'contact' || element.type === 'reading') return element.style === 'pill'
   return element.type === 'climate' ? WIDE_CLIMATE_STYLES.has(element.style) : WIDE_STYLES.has(element.style)
 }
 
@@ -98,6 +111,11 @@ const HEADING_HEIGHT = 24
 /** How tall an element stands on the surface. */
 export function heightOf(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).height
+  if (element.type === 'contact') return (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).height
+  if (element.type === 'reading') return (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).height
+  if (element.type === 'contacts') return element.style === 'house' ? 48 + Math.ceil(roomsOf(element).length / 4) * 56 : 44 + 26 * Math.min(6, element.sensors.length)
+  if (element.type === 'readings') return 52 + 33 * element.rows.length
+  if (element.type === 'hints') return 156
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).height
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).height : HEADING_HEIGHT
 }
@@ -105,6 +123,9 @@ export function heightOf(element: HomeElement): number {
 /** How wide an element stands, as far as placing is concerned; a heading reaches as far as a pill. */
 export function widthOf(element: HomeElement): number {
   if (element.type === 'stat') return statSize(element).width
+  if (element.type === 'contact') return controlWidth(element) ?? (CONTACT_FOOTPRINTS[element.style] ?? CONTACT_FOOTPRINTS.pill).width
+  if (element.type === 'reading') return controlWidth(element) ?? (READING_FOOTPRINTS[element.style] ?? READING_FOOTPRINTS.pill).width
+  if (element.type === 'contacts' || element.type === 'readings' || element.type === 'hints') return controlWidth(element) ?? DEFAULT_WIDTH.hints
   if (isResizable(element) && element.width !== undefined) return controlWidth(element) ?? FOOTPRINT.pill.width
   if (element.type === 'climate') return (CLIMATE_FOOTPRINTS[element.style] ?? CLIMATE_FOOTPRINT).width
   return element.type === 'light' ? (FOOTPRINT[element.style] ?? FOOTPRINT.pill).width : FOOTPRINT.pill.width
@@ -251,9 +272,12 @@ export function statSize(element: HomeStat): { width: number; height: number } {
 }
 
 /** Anything on the surface that is not a heading: what a phone lists under one. */
-export type HomeItem = HomeDevice | HomeStat
+export type HomeItem = HomeDevice | HomeStat | HomeSensorElement
 
-export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat
+export type HomeElement = HomeHeading | HomeLight | HomeClimate | HomeStat | HomeSensorElement
+
+/** What has a width to drag. */
+export type Sized = HomeDevice | HomeContact | HomeReading | HomeContacts | HomeReadings | HomeHints
 
 export interface HomeLayout {
   integration_id: number | null
@@ -349,6 +373,8 @@ export interface HomeAnswer {
   lights?: Record<string, (LampInfo & { missing: false }) | { missing: true }>
   /** How each placed thermostat stands, by element id. */
   climates?: Record<string, (ClimateView & { missing: false }) | { missing: true }>
+  /** How each sensor of the page's doors, windows and readings stands, by the entity id it was placed with. */
+  sensors?: Record<string, SensorState>
 }
 
 /** How a thermostat stands, as an answer or the board's stream says it. */
@@ -369,6 +395,7 @@ export interface HomeNews {
   page_id: number
   lights?: Record<string, LampState>
   climates?: Record<string, ClimateState>
+  sensors?: Record<string, SensorState>
 }
 
 /** The page's answer with news of its thermostats put in, the way ``withLamps`` does for lamps. */
@@ -386,7 +413,8 @@ export function withClimates(answer: HomeAnswer, news: Record<string, ClimateSta
 /** Everything the stream says of a page, put into its answer. */
 export function withNews(answer: HomeAnswer, news: HomeNews): HomeAnswer {
   const lit = news.lights ? withLamps(answer, news.lights) : answer
-  return news.climates ? withClimates(lit, news.climates) : lit
+  const warm = news.climates ? withClimates(lit, news.climates) : lit
+  return news.sensors ? withSensors(warm, news.sensors) : warm
 }
 
 /**
@@ -878,4 +906,294 @@ export function axisRange(values: number[], fromZero = false): [number, number] 
 /** Where new cards go: below everything, side by side as lamps are. */
 export function statSpots(elements: HomeElement[], count: number, style: StatStyle): { x: number; y: number }[] {
   return spotsFor(elements, count, STAT_SIZES[style])
+}
+
+// ---------------------------------------------------------------------------
+// Sensors: doors and windows, temperature and humidity (``hass_sensors``)
+// ---------------------------------------------------------------------------
+
+/**
+ * The styles of the board of sketches (``sensoren.html``, 20.10.2026): a
+ * door or window as A pill, B chip, C tile, D window, E door; several on one
+ * card as F list or G house; a reading as H pill, I tile, J thermometer,
+ * K ring; L a list of rooms; M hints. The server keeps the same lists.
+ */
+export const CONTACT_STYLES = ['pill', 'chip', 'tile', 'window', 'door'] as const
+export type ContactStyle = (typeof CONTACT_STYLES)[number]
+export const CONTACTS_STYLES = ['list', 'house'] as const
+export type ContactsStyle = (typeof CONTACTS_STYLES)[number]
+export const READING_STYLES = ['pill', 'tile', 'thermometer', 'ring'] as const
+export type ReadingStyle = (typeof READING_STYLES)[number]
+/** What a hints card looks for: a window open while the heating of its room runs, a room that wants airing. */
+export const CHECKS = ['heating', 'humid'] as const
+export type Check = (typeof CHECKS)[number]
+/** From how much humidity a room wants airing, and the band that feels right. */
+export const HUMID_PCT = 65
+export const COMFORT = [40, 60] as const
+/**
+ * Words that put a sensor outdoors, in the five languages of the page: an
+ * outdoor humidity of 91 % is weather, not a room that wants airing.
+ */
+export const OUTDOORS = ['outdoor', 'outside', 'exterior', 'garden', 'balcony', 'terrace', 'patio', 'weather', 'außen', 'aussen', 'draußen', 'draussen', 'garten',
+  'balkon', 'terrasse', 'wetter', 'jardín', 'jardin', 'balcón', 'terraza', 'extérieur', 'exterieur', 'balcon', 'météo', 'esterno', 'giardino', 'balcone',
+  'terrazza', 'meteo']
+
+/** Whether a sensor stands outdoors, by its name, its room or its entity id. */
+export function outdoors(...names: (string | undefined)[]): boolean {
+  const text = names.filter(Boolean).join(' ').toLowerCase().replace(/_/g, ' ')
+  return OUTDOORS.some((word) => text.includes(word))
+}
+/** Below this a device's battery is said beside it. */
+export const LOW_BATTERY = 15
+
+export const CONTACT_FOOTPRINTS: Record<ContactStyle, { width: number; height: number }> = {
+  pill: { width: 264, height: 40 },
+  chip: { width: 150, height: 28 },
+  tile: { width: 120, height: 104 },
+  window: { width: 96, height: 128 },
+  door: { width: 96, height: 128 },
+}
+export const READING_FOOTPRINTS: Record<ReadingStyle, { width: number; height: number }> = {
+  pill: { width: 250, height: 40 },
+  tile: { width: 150, height: 118 },
+  thermometer: { width: 88, height: 156 },
+  ring: { width: 120, height: 124 },
+}
+
+/** A door or window, kept like a lamp. */
+export interface HomeContact {
+  id: string
+  type: 'contact'
+  x: number
+  y: number
+  rid: string
+  entity_id: string
+  name: string
+  style: ContactStyle
+  width?: number
+}
+
+/** Several doors and windows on one card. */
+export interface HomeContacts {
+  id: string
+  type: 'contacts'
+  x: number
+  y: number
+  style: ContactsStyle
+  sensors: ClimateSensor[]
+  title: string
+  width?: number
+}
+
+/** A temperature with the humidity of the same device, either of them left out. */
+export interface HomeReading {
+  id: string
+  type: 'reading'
+  x: number
+  y: number
+  style: ReadingStyle
+  name: string
+  temperature: ClimateSensor | null
+  humidity: ClimateSensor | null
+  width?: number
+}
+
+export interface ReadingRow {
+  name: string
+  temperature: ClimateSensor | null
+  humidity: ClimateSensor | null
+}
+
+/** A list of rooms, each with its temperature and humidity. */
+export interface HomeReadings {
+  id: string
+  type: 'readings'
+  x: number
+  y: number
+  title: string
+  rows: ReadingRow[]
+  width?: number
+}
+
+/** Hints drawn from what else stands on the page. */
+export interface HomeHints {
+  id: string
+  type: 'hints'
+  x: number
+  y: number
+  title: string
+  checks: Check[]
+  width?: number
+}
+
+export type HomeSensorElement = HomeContact | HomeContacts | HomeReading | HomeReadings | HomeHints
+
+/** A door or window as Home Assistant reports it (``hass_sensors.pick_contacts``); ``open`` null while it cannot be read. */
+export interface ContactInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  device_id: string
+  device_class: string
+  battery: number | null
+  open: boolean | null
+  /** When it last changed, in milliseconds. */
+  since: number | null
+  unavailable: boolean
+}
+
+/** A temperature or humidity sensor (``hass_sensors.pick_readings``); ``trend`` is the change of the last hour, where there is one. */
+export interface ReadingInfo {
+  rid: string
+  entity_id: string
+  name: string
+  area: string
+  device: string
+  device_id: string
+  device_class: string
+  battery: number | null
+  current: number | null
+  unit: string
+  unavailable: boolean
+  trend?: number
+}
+
+/** How a placed sensor stands, by the entity id it was placed with. */
+export type SensorState = (Partial<ContactInfo> & Partial<ReadingInfo> & { missing: false }) | { missing: true }
+
+export interface ContactOffer {
+  contacts: ContactInfo[]
+  problem: HomeProblem | null
+}
+
+export interface ReadingOffer {
+  readings: ReadingInfo[]
+  problem: HomeProblem | null
+}
+
+/** The page's answer with news of its sensors put in; what only the registry knows (name, room, battery) stays. */
+export function withSensors(answer: HomeAnswer, news: Record<string, SensorState>): HomeAnswer {
+  const sensors = { ...(answer.sensors ?? {}) }
+  for (const [id, state] of Object.entries(news)) {
+    const before = sensors[id]
+    sensors[id] = state.missing ? state : ({ ...(before && !before.missing ? before : {}), ...state } as SensorState)
+  }
+  return { ...answer, sensors }
+}
+
+/** The rooms of a card of contacts, in the order its contacts come, those without a room last. */
+export function roomsOf(element: HomeContacts, sensors: Record<string, SensorState> = {}): { area: string; contacts: ClimateSensor[] }[] {
+  const rooms = new Map<string, ClimateSensor[]>()
+  for (const contact of element.sensors) {
+    const said = sensors[contact.entity_id]
+    const area = said && !said.missing ? (said.area ?? '') : ''
+    rooms.set(area, [...(rooms.get(area) ?? []), contact])
+  }
+  return [...rooms.entries()].sort(([a], [b]) => Number(a === '') - Number(b === '')).map(([area, contacts]) => ({ area, contacts }))
+}
+
+/** A temperature and a humidity of one device, as the picker offers them. */
+export interface ReadingPair {
+  key: string
+  name: string
+  area: string
+  temperature: ReadingInfo | null
+  humidity: ReadingInfo | null
+}
+
+/**
+ * The readings of a house, two of one device as one: 20 devices in a house
+ * of 55 temperature and 21 humidity sensors had both. A sensor without a
+ * device stands alone.
+ */
+export function pairReadings(readings: ReadingInfo[]): ReadingPair[] {
+  const pairs = new Map<string, ReadingPair>()
+  for (const reading of readings) {
+    const key = reading.device_id || reading.entity_id
+    const pair = pairs.get(key) ?? { key, name: reading.device || reading.name, area: reading.area, temperature: null, humidity: null }
+    if (reading.device_class === 'temperature' && !pair.temperature) pair.temperature = reading
+    else if (reading.device_class === 'humidity' && !pair.humidity) pair.humidity = reading
+    else {
+      // A second temperature of one device stands as its own.
+      pairs.set(reading.entity_id, { key: reading.entity_id, name: reading.name, area: reading.area, temperature: reading.device_class === 'temperature' ? reading : null,
+        humidity: reading.device_class === 'humidity' ? reading : null })
+      continue
+    }
+    pairs.set(key, pair)
+  }
+  return [...pairs.values()].sort((a, b) => (a.area || a.name).localeCompare(b.area || b.name) || a.name.localeCompare(b.name))
+}
+
+/** How long ago, as a page writes "open for": "12 min", "2 h 05", "3 d". */
+export function since(from: number | null | undefined, now: number): string {
+  if (from === null || from === undefined) return ''
+  const seconds = Math.max(0, (now - from) / 1000)
+  if (seconds >= 2 * 86_400) return `${Math.floor(seconds / 86_400)} d`
+  return duration(seconds < 60 ? 60 : seconds)
+}
+
+export interface Hint {
+  kind: Check
+  /** What it is about: the window, or the room that wants airing. */
+  name: string
+  /** For a window: since when it is open, and the target of the heating; for a room: its humidity. */
+  since?: number | null
+  target?: number | null
+  value?: number
+  key: string
+}
+
+/**
+ * What a hints card says, from what stands on the same page: a door or
+ * window open in a room whose thermostat heats (room from Home Assistant's
+ * areas), and a humidity of ``HUMID_PCT`` or more. Nothing is asked of Home
+ * Assistant for it; a page without thermostats has no heating hints.
+ */
+export function pageHints(elements: HomeElement[], answer: HomeAnswer | undefined, checks: readonly Check[]): Hint[] {
+  const sensors = answer?.sensors ?? {}
+  const found: Hint[] = []
+  const seen = new Set<string>()
+  const placed = elements.flatMap((element) => sensorsOf(element))
+  if (checks.includes('heating')) {
+    const heating = new Map<string, number | null>()
+    for (const element of elements) {
+      if (element.type !== 'climate') continue
+      const info = answer?.climates?.[element.id]
+      if (info && !info.missing && info.area && (info.action === 'heating' || info.action === 'preheating')) heating.set(info.area, info.target ?? null)
+    }
+    for (const sensor of placed) {
+      const said = sensors[sensor.entity_id]
+      if (!sensor.entity_id.startsWith('binary_sensor.') || !said || said.missing || said.open !== true || !said.area || !heating.has(said.area)) continue
+      if (seen.has(`heating:${sensor.entity_id}`)) continue
+      seen.add(`heating:${sensor.entity_id}`)
+      found.push({ kind: 'heating', key: `heating:${sensor.entity_id}`, name: said.name ?? sensor.name, since: said.since ?? null, target: heating.get(said.area) ?? null })
+    }
+  }
+  if (checks.includes('humid')) {
+    for (const sensor of placed) {
+      const said = sensors[sensor.entity_id]
+      if (!said || said.missing || said.device_class !== 'humidity' || said.current === null || said.current === undefined || said.current < HUMID_PCT) continue
+      if (outdoors(said.name, said.area, said.device, said.entity_id)) continue
+      if (seen.has(`humid:${sensor.entity_id}`)) continue
+      seen.add(`humid:${sensor.entity_id}`)
+      found.push({ kind: 'humid', key: `humid:${sensor.entity_id}`, name: said.area || said.name || sensor.name, value: said.current })
+    }
+  }
+  return found
+}
+
+/** Every sensor an element names (``home_control.sensors_of`` on the server). */
+export function sensorsOf(element: HomeElement): ClimateSensor[] {
+  if (element.type === 'contact') return [element]
+  if (element.type === 'contacts') return element.sensors
+  if (element.type === 'reading') return [element.temperature, element.humidity].filter((one): one is ClimateSensor => Boolean(one))
+  if (element.type === 'readings') return element.rows.flatMap((row) => [row.temperature, row.humidity].filter((one): one is ClimateSensor => Boolean(one)))
+  return []
+}
+
+/** Where new sensor elements go: below everything, side by side. */
+export function sensorSpots(elements: HomeElement[], count: number, size: { width: number; height: number }): { x: number; y: number }[] {
+  return spotsFor(elements, count, size)
 }

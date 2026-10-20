@@ -1794,6 +1794,69 @@
       "noHeating": "Faltan los tiempos de calefacción.",
       "noHeatingText": "Este termostato no indica cuándo calienta. La habitación y el objetivo siguen en el historial.",
       "empty": "Home Assistant no tiene historial para este periodo."
+    },
+    "sensors": {
+      "missing": "falta",
+      "openFor": "abierta · {{time}}",
+      "closed": "cerrada",
+      "battery": "Batería {{pct}} %",
+      "yesterdayAt": "ayer {{time}}",
+      "openWord": "Abierta",
+      "closedWord": "Cerrada",
+      "sinceTime": "desde las {{time}}",
+      "lastOpen": "abierta por última vez {{time}}",
+      "removeContact": "Quitar puerta o ventana",
+      "removeReading": "Quitar medición",
+      "removeCard": "Quitar tarjeta",
+      "windows": "Ventanas",
+      "doors": "Puertas",
+      "windowsAndDoors": "Ventanas y puertas",
+      "allClosed": "todo cerrado",
+      "someOpen": "{{count}} abiertas",
+      "openOf": "{{count}} de {{total}} abiertas",
+      "noRoom": "Sin habitación",
+      "rooms": "Habitaciones",
+      "hints": "Avisos",
+      "openWhileHeating": "{{name}} abierta, calefacción encendida",
+      "airing": "{{name}}: ventilar",
+      "forTime": "desde hace {{time}}",
+      "targetIs": "objetivo {{value}}",
+      "humidityIs": "{{value}} de humedad",
+      "nothingChecked": "Nada elegido que vigilar",
+      "allQuiet": "Todo en calma",
+      "chooseChecks": "Qué vigilar",
+      "add": "Sensor",
+      "addContacts": "Puerta y ventana",
+      "addReadings": "Temperatura y humedad",
+      "addHints": "Avisos",
+      "pickContacts": "Puertas y ventanas",
+      "pickReadings": "Temperatura y humedad",
+      "addOne": "Añadir",
+      "addMany": "Añadir {{count}}",
+      "contactsTitleHint": "vacío: ventanas, puertas o ambas",
+      "pickEmpty": "No se encontraron sensores.",
+      "contactStyles": {
+        "pill": "Píldora",
+        "chip": "Chip",
+        "tile": "Mosaico",
+        "window": "Ventana dibujada",
+        "door": "Puerta dibujada"
+      },
+      "contactsStyles": {
+        "list": "Tarjeta de varias",
+        "house": "La casa de un vistazo"
+      },
+      "readingStyles": {
+        "pill": "Píldora",
+        "tile": "Mosaico de clima",
+        "thermometer": "Termómetro",
+        "ring": "Anillo de humedad",
+        "rooms": "Lista de habitaciones"
+      },
+      "checks": {
+        "heating": "Ventana abierta con la calefacción encendida",
+        "humid": "Ventilar desde 65 % de humedad"
+      }
     }
   }
 }

@@ -1794,6 +1794,69 @@
       "noHeating": "Temps de chauffe absents.",
       "noHeatingText": "Ce thermostat ne dit pas quand il chauffe. La pièce et la consigne restent dans l’historique.",
       "empty": "Home Assistant n’a pas d’historique pour cette période."
+    },
+    "sensors": {
+      "missing": "absent",
+      "openFor": "ouvert · {{time}}",
+      "closed": "fermé",
+      "battery": "Pile {{pct}} %",
+      "yesterdayAt": "hier {{time}}",
+      "openWord": "Ouvert",
+      "closedWord": "Fermé",
+      "sinceTime": "depuis {{time}}",
+      "lastOpen": "ouvert pour la dernière fois {{time}}",
+      "removeContact": "Retirer la porte ou la fenêtre",
+      "removeReading": "Retirer la mesure",
+      "removeCard": "Retirer la carte",
+      "windows": "Fenêtres",
+      "doors": "Portes",
+      "windowsAndDoors": "Fenêtres et portes",
+      "allClosed": "tout est fermé",
+      "someOpen": "{{count}} ouvertes",
+      "openOf": "{{count}} sur {{total}} ouvertes",
+      "noRoom": "Sans pièce",
+      "rooms": "Pièces",
+      "hints": "Conseils",
+      "openWhileHeating": "{{name}} ouvert, chauffage en marche",
+      "airing": "{{name}} : aérer",
+      "forTime": "depuis {{time}}",
+      "targetIs": "consigne {{value}}",
+      "humidityIs": "{{value}} d’humidité",
+      "nothingChecked": "Rien à surveiller",
+      "allQuiet": "Tout est calme",
+      "chooseChecks": "Que surveiller",
+      "add": "Capteur",
+      "addContacts": "Porte et fenêtre",
+      "addReadings": "Température et humidité",
+      "addHints": "Conseils",
+      "pickContacts": "Portes et fenêtres",
+      "pickReadings": "Température et humidité",
+      "addOne": "Ajouter",
+      "addMany": "Ajouter {{count}}",
+      "contactsTitleHint": "vide : fenêtres, portes ou les deux",
+      "pickEmpty": "Aucun capteur correspondant.",
+      "contactStyles": {
+        "pill": "Pilule",
+        "chip": "Puce",
+        "tile": "Tuile",
+        "window": "Fenêtre dessinée",
+        "door": "Porte dessinée"
+      },
+      "contactsStyles": {
+        "list": "Carte de plusieurs",
+        "house": "La maison d’un coup d’œil"
+      },
+      "readingStyles": {
+        "pill": "Pilule",
+        "tile": "Tuile climat",
+        "thermometer": "Thermomètre",
+        "ring": "Anneau d’humidité",
+        "rooms": "Liste des pièces"
+      },
+      "checks": {
+        "heating": "Fenêtre ouverte pendant le chauffage",
+        "humid": "Aérer dès 65 % d’humidité"
+      }
     }
   }
 }

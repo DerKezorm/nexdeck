@@ -1794,6 +1794,69 @@
       "noHeating": "Mancano i tempi di riscaldamento.",
       "noHeatingText": "Questo termostato non dice quando riscalda. Stanza e obiettivo restano comunque nello storico.",
       "empty": "Home Assistant non ha storico per questo periodo."
+    },
+    "sensors": {
+      "missing": "manca",
+      "openFor": "aperta · {{time}}",
+      "closed": "chiusa",
+      "battery": "Batteria {{pct}} %",
+      "yesterdayAt": "ieri {{time}}",
+      "openWord": "Aperta",
+      "closedWord": "Chiusa",
+      "sinceTime": "dalle {{time}}",
+      "lastOpen": "aperta l’ultima volta {{time}}",
+      "removeContact": "Rimuovi porta o finestra",
+      "removeReading": "Rimuovi misura",
+      "removeCard": "Rimuovi scheda",
+      "windows": "Finestre",
+      "doors": "Porte",
+      "windowsAndDoors": "Finestre e porte",
+      "allClosed": "tutto chiuso",
+      "someOpen": "{{count}} aperte",
+      "openOf": "{{count}} su {{total}} aperte",
+      "noRoom": "Senza stanza",
+      "rooms": "Stanze",
+      "hints": "Avvisi",
+      "openWhileHeating": "{{name}} aperta, riscaldamento acceso",
+      "airing": "{{name}}: arieggiare",
+      "forTime": "da {{time}}",
+      "targetIs": "obiettivo {{value}}",
+      "humidityIs": "{{value}} di umidità",
+      "nothingChecked": "Niente da controllare",
+      "allQuiet": "Tutto tranquillo",
+      "chooseChecks": "Cosa controllare",
+      "add": "Sensore",
+      "addContacts": "Porta e finestra",
+      "addReadings": "Temperatura e umidità",
+      "addHints": "Avvisi",
+      "pickContacts": "Porte e finestre",
+      "pickReadings": "Temperatura e umidità",
+      "addOne": "Aggiungi",
+      "addMany": "Aggiungi {{count}}",
+      "contactsTitleHint": "vuoto: finestre, porte o entrambe",
+      "pickEmpty": "Nessun sensore trovato.",
+      "contactStyles": {
+        "pill": "Pillola",
+        "chip": "Chip",
+        "tile": "Riquadro",
+        "window": "Finestra disegnata",
+        "door": "Porta disegnata"
+      },
+      "contactsStyles": {
+        "list": "Scheda di più",
+        "house": "La casa a colpo d’occhio"
+      },
+      "readingStyles": {
+        "pill": "Pillola",
+        "tile": "Riquadro clima",
+        "thermometer": "Termometro",
+        "ring": "Anello umidità",
+        "rooms": "Elenco stanze"
+      },
+      "checks": {
+        "heating": "Finestra aperta col riscaldamento acceso",
+        "humid": "Arieggiare da 65 % di umidità"
+      }
     }
   }
 }

@@ -2596,6 +2596,203 @@ body.has-player-bar main {
     font: 500 10px var(--font-mono);
     fill: var(--nd-text-faint);
   }
+  /* Doors, windows and readings of a home page (sensoren.html of 20.10.2026); --so is open. */
+  .sensor-pill, .sensor-chip, .sensor-tile, .sensor-draw, .sensor-square, .sensor-dot, .sensor-open-text, .sensor-hint-open {
+    --so: rgb(251, 191, 36);
+  }
+
+  .sensor-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 14px 0 6px;
+    border-radius: 999px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    font-size: 13px;
+  }
+
+  .sensor-pill b {
+    font-weight: 500;
+  }
+
+  .sensor-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    background: color-mix(in srgb, var(--nd-text) 7%, transparent);
+  }
+
+  .sensor-icon.reading {
+    background: color-mix(in srgb, var(--nd-accent) 14%, transparent);
+    color: var(--nd-accent);
+  }
+
+  .sensor-state {
+    font-size: 12px;
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+  }
+
+  .sensor-pill.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+    box-shadow: 0 0 22px -8px var(--so);
+  }
+
+  .sensor-pill.is-open .sensor-icon {
+    background: var(--so);
+    color: #1b1206;
+  }
+
+  .is-open .sensor-state, .sensor-tile.is-open .sensor-tile-value, .sensor-open-text {
+    color: var(--so);
+    font-weight: 600;
+  }
+
+  .sensor-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    max-width: 100%;
+    padding: 0 11px 0 8px;
+    border-radius: 999px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    font-size: 12px;
+  }
+
+  .sensor-chip > i {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    flex: none;
+    background: rgb(74, 222, 128);
+  }
+
+  .sensor-chip.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+  }
+
+  .sensor-chip.is-open > i, .sensor-dot {
+    background: var(--so);
+    box-shadow: 0 0 8px var(--so);
+  }
+
+  .sensor-chip.is-offline > i {
+    background: transparent;
+    border: 1px dashed var(--nd-text-faint);
+  }
+
+  .sensor-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 120px;
+    height: 104px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--nd-border-strong);
+    background: var(--nd-surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .sensor-tile.reading {
+    width: 150px;
+    height: 118px;
+    padding: 11px 13px;
+  }
+
+  .sensor-tile-value {
+    margin-top: auto;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .sensor-tile.is-open {
+    border-color: color-mix(in srgb, var(--so) 55%, transparent);
+    box-shadow: 0 0 26px -10px var(--so);
+  }
+
+  .sensor-draw {
+    position: relative;
+    width: 96px;
+    text-align: center;
+  }
+
+  .sensor-draw.sensor-ring {
+    width: 120px;
+  }
+
+  .sensor-draw.is-open svg {
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--so) 45%, transparent));
+  }
+
+  .is-offline {
+    opacity: 0.55;
+  }
+
+  .sensor-pill.is-missing, .sensor-chip.is-missing, .sensor-tile.is-missing {
+    border-style: dashed;
+  }
+
+  .is-missing .sensor-state, .is-missing .sensor-tile-value {
+    color: var(--nd-bad);
+  }
+
+  .sensor-battery {
+    font-size: 11px;
+    color: var(--nd-bad);
+    white-space: nowrap;
+  }
+
+  .sensor-tile .sensor-battery, .sensor-draw .sensor-battery {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+  }
+
+  .sensor-square {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: rgba(74, 222, 128, 0.75);
+  }
+
+  .sensor-square.is-open {
+    background: var(--so);
+    box-shadow: 0 0 6px var(--so);
+    opacity: 1;
+  }
+
+  .sensor-square.is-offline {
+    background: transparent;
+    border: 1px dashed var(--nd-text-faint);
+    opacity: 1;
+  }
+
+  .sensor-square.is-missing {
+    background: transparent;
+    border: 1px dashed var(--nd-bad);
+  }
+
+  .sensor-hint-open {
+    background: color-mix(in srgb, var(--so) 18%, transparent);
+    color: var(--so);
+  }
+
+  .sensor-hint-wet {
+    background: rgba(56, 189, 248, 0.16);
+    color: rgb(56, 189, 248);
+  }
 }
 
 /* The thermostats of a home page, the drawings of their board of sketches

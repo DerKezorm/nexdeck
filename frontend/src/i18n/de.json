@@ -1794,6 +1794,69 @@
       "noHeating": "Heizzeiten fehlen.",
       "noHeatingText": "Dieses Thermostat meldet nicht, wann es heizt. Raum und Soll stehen trotzdem im Verlauf.",
       "empty": "Home Assistant hat für diesen Zeitraum keinen Verlauf."
+    },
+    "sensors": {
+      "missing": "fehlt",
+      "openFor": "offen · {{time}}",
+      "closed": "zu",
+      "battery": "Batterie {{pct}} %",
+      "yesterdayAt": "gestern {{time}}",
+      "openWord": "Offen",
+      "closedWord": "Zu",
+      "sinceTime": "seit {{time}}",
+      "lastOpen": "zuletzt offen {{time}}",
+      "removeContact": "Tür oder Fenster entfernen",
+      "removeReading": "Messwert entfernen",
+      "removeCard": "Karte entfernen",
+      "windows": "Fenster",
+      "doors": "Türen",
+      "windowsAndDoors": "Fenster und Türen",
+      "allClosed": "alle zu",
+      "someOpen": "{{count}} offen",
+      "openOf": "{{count}} von {{total}} offen",
+      "noRoom": "Ohne Raum",
+      "rooms": "Räume",
+      "hints": "Hinweise",
+      "openWhileHeating": "{{name}} offen, Heizung läuft",
+      "airing": "{{name}}: Lüften",
+      "forTime": "seit {{time}}",
+      "targetIs": "Soll {{value}}",
+      "humidityIs": "{{value}} Luftfeuchte",
+      "nothingChecked": "Nichts zum Prüfen gewählt",
+      "allQuiet": "Alles ruhig",
+      "chooseChecks": "Was geprüft wird",
+      "add": "Sensor",
+      "addContacts": "Tür und Fenster",
+      "addReadings": "Temperatur und Feuchte",
+      "addHints": "Hinweise",
+      "pickContacts": "Türen und Fenster",
+      "pickReadings": "Temperatur und Luftfeuchte",
+      "addOne": "Hinzufügen",
+      "addMany": "{{count}} hinzufügen",
+      "contactsTitleHint": "leer: Fenster, Türen oder beides",
+      "pickEmpty": "Keine passenden Sensoren gefunden.",
+      "contactStyles": {
+        "pill": "Pille",
+        "chip": "Chip",
+        "tile": "Kachel",
+        "window": "Fenster gezeichnet",
+        "door": "Tür gezeichnet"
+      },
+      "contactsStyles": {
+        "list": "Sammelkarte",
+        "house": "Haus auf einen Blick"
+      },
+      "readingStyles": {
+        "pill": "Pille",
+        "tile": "Klima-Kachel",
+        "thermometer": "Thermometer",
+        "ring": "Feuchte-Ring",
+        "rooms": "Raumliste"
+      },
+      "checks": {
+        "heating": "Fenster offen bei laufender Heizung",
+        "humid": "Lüften ab 65 % Luftfeuchte"
+      }
     }
   }
 }
