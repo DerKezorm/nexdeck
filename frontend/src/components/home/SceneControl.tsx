@@ -8,6 +8,7 @@ import {
 } from '../../lib/home'
 import { Dialog } from '../ui'
 import { Marquee } from './Marquee'
+import { Rename } from './Rename'
 import { SensorTools } from './SensorControl'
 
 /** How long a scene says it was set off. */
@@ -178,10 +179,11 @@ interface CardProps {
   onStyle: (style: ScenesStyle) => void
   onSensors: () => void
   onRemove: () => void
+  onTitle: (title: string) => void
 }
 
 /** C: the scenes of a room as one bar, the one set off last lit; D: a grid of scenes with a sign each. */
-export function ScenesCard({ element, actions, arranging, wide, width, onSetOff, onStyle, onSensors, onRemove }: CardProps) {
+export function ScenesCard({ element, actions, arranging, wide, width, onSetOff, onStyle, onSensors, onRemove, onTitle }: CardProps) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState(false)
   const lit = latestScene(element.sensors, actions)
@@ -237,6 +239,7 @@ export function ScenesCard({ element, actions, arranging, wide, width, onSetOff,
             <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={onSensors} aria-label={t('homePage.stats.chooseSensors')} title={t('homePage.stats.chooseSensors')}>
               <Activity size={12} />
             </button>
+            <Rename label={element.title} fallback={room || t('homePage.scenes.scenes')} onLabel={onTitle} />
             <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.sensors.removeCard')} title={t('homePage.sensors.removeCard')}>
               <Trash2 size={12} />
             </button>

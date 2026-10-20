@@ -8,6 +8,7 @@ import {
   reading, STAT_PERIODS, STAT_START, STAT_STYLES, type HomeStat, type StatAnswer, type StatLine, type StatPeriod, type StatPoint, type StatStyle,
 } from '../../lib/home'
 import { HEATING } from './ClimateControl'
+import { Rename } from './Rename'
 import { StatChart, timeLabels, useWidth, type ChartLine } from './StatChart'
 
 /** The colours of a card's lines, the first for one sensor alone; heat, violet, the accent, then three more. */
@@ -37,6 +38,8 @@ interface Props {
   onRemove: () => void
   onStyle: (style: StatStyle) => void
   onSensors: () => void
+  /** The card's name of its own; empty for its first sensor's. */
+  onTitle: (title: string) => void
 }
 
 /**
@@ -44,7 +47,7 @@ interface Props {
  * points come from Home Assistant through the server and are asked again
  * every minute; the period is the viewer's to switch and is not kept.
  */
-export function StatCard({ element, pageId, arranging, wide, size, onRemove, onStyle, onSensors }: Props) {
+export function StatCard({ element, pageId, arranging, wide, size, onRemove, onStyle, onSensors, onTitle }: Props) {
   const { t, i18n } = useTranslation()
   const periods = STAT_PERIODS[element.style] ?? STAT_PERIODS.line
   const [period, setPeriod] = useState<StatPeriod>(STAT_START[element.style] ?? periods[0])
@@ -162,6 +165,7 @@ export function StatCard({ element, pageId, arranging, wide, size, onRemove, onS
         <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={onSensors} aria-label={t('homePage.stats.chooseSensors')} title={t('homePage.stats.chooseSensors')}>
           <Activity size={12} />
         </button>
+        <Rename label={element.title} fallback={line?.name || element.sensors[0]?.name || ''} onLabel={onTitle} />
         <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.stats.remove')} title={t('homePage.stats.remove')}>
           <Trash2 size={12} />
         </button>

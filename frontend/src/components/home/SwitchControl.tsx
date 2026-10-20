@@ -7,6 +7,7 @@ import { get } from '../../api/client'
 import { SWITCH_STYLES, totalPower, type ActionState, type HomeSwitch, type HomeSwitches, type SwitchStyle } from '../../lib/home'
 import { Dialog } from '../ui'
 import { Marquee } from './Marquee'
+import { Rename } from './Rename'
 import { SensorTools } from './SensorControl'
 
 type Said = ActionState | undefined
@@ -269,10 +270,11 @@ interface CardProps {
   onConfirm: (confirm: boolean) => void
   onSensors: () => void
   onRemove: () => void
+  onTitle: (title: string) => void
 }
 
 /** K: switches together, all on or all off, what they draw together, each with its own toggle and details. */
-export function SwitchesCard({ element, actions, wanted, arranging, wide, width, pageId, onSwitch, onConfirm, onSensors, onRemove }: CardProps) {
+export function SwitchesCard({ element, actions, wanted, arranging, wide, width, pageId, onSwitch, onConfirm, onSensors, onRemove, onTitle }: CardProps) {
   const { t } = useTranslation()
   const [asking, setAsking] = useState<{ member?: string; name: string } | null>(null)
   const [details, setDetails] = useState<string | null>(null)
@@ -330,6 +332,7 @@ export function SwitchesCard({ element, actions, wanted, arranging, wide, width,
             <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={onSensors} aria-label={t('homePage.stats.chooseSensors')} title={t('homePage.stats.chooseSensors')}>
               <Activity size={12} />
             </button>
+            <Rename label={element.title} fallback={t('homePage.switches.group')} onLabel={onTitle} />
             <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.sensors.removeCard')} title={t('homePage.sensors.removeCard')}>
               <Trash2 size={12} />
             </button>

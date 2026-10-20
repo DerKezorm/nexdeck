@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { COVERS_STYLES, sceneHolds, type CoverState, type CoversStyle, type CoverWish, type HomeCovers } from '../../lib/home'
 import { coverWords } from './CoverControl'
+import { Rename } from './Rename'
 
 interface Props {
   element: HomeCovers
@@ -20,6 +21,7 @@ interface Props {
   onStyle: (style: CoversStyle) => void
   onSensors: () => void
   onRemove: () => void
+  onTitle: (title: string) => void
 }
 
 /**
@@ -27,7 +29,7 @@ interface Props {
  * stands and its details at a tap; G: positions of the card's own, a tap sends
  * every cover of the card there, and the one they all stand at is lit.
  */
-export function CoversCard({ element, covers, aims, arranging, wide, width, onWish, onDetails, onStyle, onSensors, onRemove }: Props) {
+export function CoversCard({ element, covers, aims, arranging, wide, width, onWish, onDetails, onStyle, onSensors, onRemove, onTitle }: Props) {
   const { t } = useTranslation()
   const [choosing, setChoosing] = useState(false)
   const live = Boolean(onWish) && !arranging
@@ -93,6 +95,7 @@ export function CoversCard({ element, covers, aims, arranging, wide, width, onWi
             <button type="button" className="btn btn-icon h-6 w-6 rounded-full glass-strong" onClick={onSensors} aria-label={t('homePage.stats.chooseSensors')} title={t('homePage.stats.chooseSensors')}>
               <Activity size={12} />
             </button>
+            <Rename label={element.title} fallback={element.style === 'scenes' ? t('homePage.covers.allCovers') : t('homePage.covers.group')} onLabel={onTitle} />
             <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={t('homePage.sensors.removeCard')} title={t('homePage.sensors.removeCard')}>
               <Trash2 size={12} />
             </button>

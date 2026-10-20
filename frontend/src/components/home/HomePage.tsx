@@ -584,6 +584,9 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
 
   const [guidesOn, setGuidesOn] = useGuides()
   const surface = useRef<HTMLDivElement>(null)
+  const pageBox = useRef<HTMLDivElement>(null)
+  // Not before the page is drawn: while it loads, there is nothing to watch yet.
+  useMenusInView(pageBox, arranging && Boolean(layout))
   const [dragged, setDragged] = useState<{ id: string; x: number; y: number; width?: number; height?: number; scale?: number } | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const grab = useRef<{
@@ -713,7 +716,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         onStyle={(style) => change(element.id, { style })} onColour={(colour) => change(element.id, { colour })} haName={actionHaName(element)} onLabel={(label) => change(element.id, { label })} />
     ) : element.type === 'scenes' ? (
       <ScenesCard element={element} actions={actionStates} {...sized(element)} onSetOff={canAct ? (member) => void tellAction(element, { member }) : null}
-        onStyle={(style) => change(element.id, { style })} onSensors={() => setActionPicking({ mode: 'scenes', card: element.id })} />
+        onStyle={(style) => change(element.id, { style })} onSensors={() => setActionPicking({ mode: 'scenes', card: element.id })} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'switch' ? (
       <SwitchControl element={element} said={actionStates[element.entity_id]} wanted={switchWanted[element.entity_id]} {...sized(element)} pageId={pageId}
         onSwitch={canAct ? (on) => void tellAction(element, { on }) : null} onStyle={(style) => change(element.id, { style })} onConfirm={(confirm) => change(element.id, { confirm })}
@@ -721,7 +724,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     ) : element.type === 'switches' ? (
       <SwitchesCard element={element} actions={actionStates} wanted={switchWanted} {...sized(element)} pageId={pageId}
         onSwitch={canAct ? (on, member) => void tellAction(element, member ? { on, member } : { on }) : null} onConfirm={(confirm) => change(element.id, { confirm })}
-        onSensors={() => setActionPicking({ mode: 'switches', card: element.id })} />
+        onSensors={() => setActionPicking({ mode: 'switches', card: element.id })} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'cover' ? (
       <CoverControl element={element} said={coverStates[element.entity_id]} aim={coverAims[element.entity_id]} {...sized(element)}
         onWish={canAct ? (wish) => void tellCover(element, wish) : null} onAim={(position) => aimCover(element.entity_id, position)}
@@ -732,7 +735,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
       <CoversCard element={element} covers={coverStates} aims={coverAims} {...sized(element)} onWish={canAct ? (wish) => void tellCover(element, wish) : null}
         onDetails={(entity) => setCoverDetails({ element: element.id, entity })}
         onStyle={(style) => change(element.id, { style, ...(style === 'scenes' && !element.scenes ? { scenes: defaultScenes(t) } : {}) })}
-        onSensors={() => setCoverPicking(element.id)} />
+        onSensors={() => setCoverPicking(element.id)} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'contact' ? (
       <ContactControl element={element} said={said[element.entity_id]} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
         onLabel={(label) => change(element.id, { label })} />
@@ -742,15 +745,16 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
         onLabel={(name) => change(element.id, { name })} />
     ) : element.type === 'contacts' ? (
       <ContactsCard element={element} sensors={said} now={now} {...sized(element)} onStyle={(style) => change(element.id, { style })}
-        onSensors={() => setSensorPicking({ mode: 'contacts', card: element.id })} />
+        onSensors={() => setSensorPicking({ mode: 'contacts', card: element.id })} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'readings' ? (
       <ReadingsCard element={element} sensors={said} {...sized(element)} onSensors={() => setSensorPicking({ mode: 'readings', card: element.id })}
-        onRows={(rows) => change(element.id, { rows })} />
+        onRows={(rows) => change(element.id, { rows })} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'hints' ? (
-      <HintsCard element={element} hints={pageHints(elements, answer.data, element.checks)} now={now} {...sized(element)} onChecks={(checks) => change(element.id, { checks })} />
+      <HintsCard element={element} hints={pageHints(elements, answer.data, element.checks)} now={now} {...sized(element)} onChecks={(checks) => change(element.id, { checks })}
+        onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'stat' ? (
       <StatCard element={element} pageId={pageId} arranging={arranging} wide={narrow && isWide(element)} size={statSize(element)}
-        onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })} onSensors={() => setStatPicking(element.id)} />
+        onRemove={() => remove(element.id)} onStyle={(style) => change(element.id, { style })} onSensors={() => setStatPicking(element.id)} onTitle={(title) => change(element.id, { title })} />
     ) : element.type === 'climate' ? (
       <ClimateControl element={element} info={climateOf(element)} missing={climateMissing(element)} arranging={arranging} wide={narrow} pageId={pageId} width={controlWidth(element)}
         target={targets[element.id] ?? climateOf(element)?.target ?? null} setting={targets[element.id] !== undefined}
@@ -770,7 +774,7 @@ export function HomePage({ pageId, editing, canEdit, canAct, onAddPage, onSettin
     )
 
   return (
-    <div className="max-w-[1600px] mx-auto px-3 sm:px-4 pt-4" data-home-page>
+    <div ref={pageBox} className="max-w-[1600px] mx-auto px-3 sm:px-4 pt-4" data-home-page>
       {problem && (
         <div className="glass rounded-2xl px-4 py-3 mb-4 border border-[color-mix(in_srgb,var(--nd-warn)_40%,transparent)] max-w-2xl" role="status" data-no-picture>
           <p className="text-sm font-medium">{t(`homePage.problems.${problem.code}`, { defaultValue: problem.message })}</p>
@@ -1152,7 +1156,7 @@ function HeadingView(props: {
 function EditBar(props: { onLight: () => void; onClimate: () => void; onStat: () => void; onCover: () => void; onScene: () => void; onSwitch: () => void; onSensor: (kind: 'contacts' | 'readings' | 'hints') => void; onHeading: () => void; guides: boolean; onGuides: () => void; onAddPage: () => void; onSettings: () => void; onDone: () => void }) {
   const { t } = useTranslation()
   return (
-    <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture>
+    <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1rem)] glass-strong rounded-full px-2 py-1.5 flex items-center gap-1 shadow-2xl" data-no-picture data-edit-bar>
       <button type="button" className="btn btn-flat whitespace-nowrap" onClick={props.onLight} aria-label={t('homePage.addLight')}>
         <Lightbulb size={15} /> <span className="hidden sm:inline">{t('homePage.addLight')}</span>
       </button>
@@ -1233,4 +1237,52 @@ function Scaled({ element, children }: { element: HomeElement; children: ReactNo
   const scale = scaleOf(element)
   if (scale === 1) return <>{children}</>
   return <div style={{ zoom: scale, '--home-scale': scale } as CSSProperties} data-scaled={scale}>{children}</div>
+}
+
+/** The menus and fields that open beside an element while arranging: its style, its sensor, its colour, its name. */
+export const MENUS = '[role="menu"], [data-rename]'
+/** Room kept above a menu turned upwards, for the bar at the top of the page. */
+const TOP_ROOM = 56
+
+/**
+ * Every menu of an element opens where it can be read: below the element,
+ * and above it where below it would run under the bar at the foot of the
+ * screen or out of the window; always over the bar.
+ *
+ * ⚠️ Without it the style menu of a cover near the foot of the page opened
+ * under the bar and could not be chosen from (seen 20.10.2026). One place
+ * for all of them rather than each menu on its own: there are a dozen.
+ */
+export function useMenusInView(box: React.RefObject<HTMLElement | null>, active: boolean) {
+  useEffect(() => {
+    const root = box.current
+    if (!root || !active || typeof MutationObserver === 'undefined') return
+    const place = (menu: HTMLElement) => {
+      menu.style.zIndex = '45'
+      const rect = menu.getBoundingClientRect()
+      if (!rect.height) return
+      const bar = document.querySelector('[data-edit-bar]')?.getBoundingClientRect()
+      const floor = Math.min(window.innerHeight, bar && bar.height ? bar.top : window.innerHeight) - 8
+      const anchor = (menu.offsetParent as HTMLElement | null)?.getBoundingClientRect()
+      const upTop = (anchor?.top ?? rect.top) - rect.height - 8
+      if (rect.bottom > floor && upTop >= TOP_ROOM) {
+        menu.style.top = 'auto'
+        menu.style.bottom = '100%'
+        menu.style.marginTop = '0'
+        menu.style.marginBottom = '8px'
+        menu.dataset.up = ''
+      }
+    }
+    const watch = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (!(node instanceof HTMLElement)) continue
+          if (node.matches(MENUS)) place(node)
+          node.querySelectorAll<HTMLElement>(MENUS).forEach(place)
+        }
+      }
+    })
+    watch.observe(root, { childList: true, subtree: true })
+    return () => watch.disconnect()
+  }, [box, active])
 }

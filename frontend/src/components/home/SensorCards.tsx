@@ -6,7 +6,7 @@ import {
   CHECKS, CONTACTS_STYLES, reading, roomsOf, since, temperature,
   type Check, type ContactsStyle, type Hint, type HomeContacts, type HomeHints, type HomeReadings, type ReadingRow, type SensorState,
 } from '../../lib/home'
-import { MAX_LABEL } from './Rename'
+import { MAX_LABEL, Rename } from './Rename'
 import { DROP_ICON, WINDOW_ICON, contactWords, humidityColour, trendArrow } from './SensorControl'
 
 interface CardTools {
@@ -16,10 +16,17 @@ interface CardTools {
   onRemove: () => void
   /** Opens the picker with this card's sensors. */
   onSensors?: () => void
+  /** The card's name of its own. */
+  onTitle: (title: string) => void
 }
 
 /** A card's tools while arranging: a menu of its own (styles, checks), the sensors, the bin, and the grip for its width. */
-function Tools({ arranging, wide, width, onRemove, onSensors, menu, menuLabel, menuIcon, removeLabel }: CardTools & { menu?: ReactNode; menuLabel?: string; menuIcon?: ReactNode; removeLabel: string }) {
+function Tools({ arranging, wide, width, onRemove, onSensors, onTitle, menu, menuLabel, menuIcon, removeLabel, title, fallback }: CardTools & {
+  menu?: ReactNode; menuLabel?: string; menuIcon?: ReactNode; removeLabel: string
+  /** The card's name of its own, and what it is called without one. */
+  title: string
+  fallback: string
+}) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   if (!arranging) return null
@@ -37,6 +44,7 @@ function Tools({ arranging, wide, width, onRemove, onSensors, menu, menuLabel, m
             <Activity size={12} />
           </button>
         )}
+        <Rename label={title} fallback={fallback} onLabel={onTitle} />
         <button type="button" className="btn btn-icon btn-danger h-6 w-6 rounded-full glass-strong" onClick={onRemove} aria-label={removeLabel} title={removeLabel}>
           <Trash2 size={12} />
         </button>
@@ -119,7 +127,7 @@ export function ContactsCard({ element, sensors, now, onStyle, ...tools }: Conta
           )
         )}
       </div>
-      <Tools {...tools} removeLabel={t('homePage.sensors.removeCard')} menuLabel={t('homePage.chooseStyle')} menuIcon={<Palette size={12} />}
+      <Tools {...tools} title={element.title} fallback={contactsTitle({ ...element, title: '' }, sensors, t)} removeLabel={t('homePage.sensors.removeCard')} menuLabel={t('homePage.chooseStyle')} menuIcon={<Palette size={12} />}
         menu={CONTACTS_STYLES.map((style) => (
           <button key={style} type="button" role="menuitemradio" aria-checked={element.style === style} className={item(element.style === style)} onClick={() => onStyle(style)}>
             {t(`homePage.sensors.contactsStyles.${style}`)}
@@ -191,7 +199,7 @@ export function ReadingsCard({ element, sensors, onRows, ...tools }: ReadingsPro
           </tbody>
         </table>
       </div>
-      <Tools {...tools} removeLabel={t('homePage.sensors.removeCard')} />
+      <Tools {...tools} title={element.title} fallback={t('homePage.sensors.rooms')} removeLabel={t('homePage.sensors.removeCard')} />
     </div>
   )
 }
@@ -233,7 +241,7 @@ export function HintsCard({ element, hints, now, onChecks, ...tools }: HintsProp
           </div>
         )}
       </div>
-      <Tools {...tools} removeLabel={t('homePage.sensors.removeCard')} menuLabel={t('homePage.sensors.chooseChecks')} menuIcon={<ListChecks size={12} />}
+      <Tools {...tools} title={element.title} fallback={t('homePage.sensors.hints')} removeLabel={t('homePage.sensors.removeCard')} menuLabel={t('homePage.sensors.chooseChecks')} menuIcon={<ListChecks size={12} />}
         menu={CHECKS.map((check) => {
           const on = element.checks.includes(check)
           return (

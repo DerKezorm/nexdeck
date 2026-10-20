@@ -66,6 +66,7 @@ function show(answer: HomeAnswer, { editing = false, canEdit = true } = {}) {
       current = { ...current, layout: { ...current.layout, elements: body.elements }, version: current.version + 1 }
       return json({ layout: current.layout, version: current.version })
     }
+    if (String(input).includes('/home/stats/')) return json({ period: '24h', start: 0, end: 1, now: 1, zone: 'UTC', series: [{ missing: true }], problem: null })
     return json(current)
   }))
   render(
@@ -163,3 +164,30 @@ it('names a thermostat Home Assistant no longer has by the name the page gave it
   show({ ...page([gone]), climates: { old: { missing: true } } })
   expect(await spot('old')).toHaveTextContent('Attic')
 })
+
+it('names every card with the pencil, the statistics card too, and falls back to its own name when emptied', async () => {
+  const cover = { rid: 'r-c', entity_id: 'cover.kitchen', name: 'Kitchen' }
+  const cards: HomeElement[] = [
+    { id: 'stat', type: 'stat', x: 16, y: 16, style: 'line', sensors: [BATH], title: '' },
+    { id: 'contacts', type: 'contacts', x: 400, y: 16, style: 'list', sensors: [DOOR], title: '' },
+    { id: 'rooms', type: 'readings', x: 16, y: 300, title: '', rows: [{ name: '', temperature: null, humidity: BATH }] },
+    { id: 'hints', type: 'hints', x: 400, y: 300, title: '', checks: ['humid'] },
+    { id: 'covers', type: 'covers', x: 16, y: 600, style: 'group', sensors: [cover], title: 'Downstairs' },
+    { id: 'scenes', type: 'scenes', x: 400, y: 600, style: 'grid', sensors: [{ rid: 'r-s', entity_id: 'scene.cozy', name: 'Cozy' }], title: '' },
+    { id: 'switches', type: 'switches', x: 16, y: 900, sensors: [{ rid: 'r-w', entity_id: 'switch.tv', name: 'TV' }], title: '' },
+  ]
+  const sent = show(page(cards), { editing: true })
+  let count = 0
+  for (const card of cards) {
+    rename(await spot(card.id), `Card ${card.id}`)
+    count += 1
+    await waitFor(() => expect(puts(sent)).toHaveLength(count))
+    expect(saved(sent, card.id)).toMatchObject({ title: `Card ${card.id}` })
+  }
+  const covers = await spot('covers')
+  fireEvent.click(within(covers).getByRole('button', { name: 'A name of its own' }))
+  expect(within(covers).getByRole('textbox', { name: 'A name of its own' })).toHaveAttribute('placeholder', 'Covers')
+  fireEvent.click(within(covers).getByRole('button', { name: "Home Assistant's name" }))
+  await waitFor(() => expect(puts(sent)).toHaveLength(count + 1))
+  expect(saved(sent, 'covers')).toMatchObject({ title: '' })
+}, 20_000)
