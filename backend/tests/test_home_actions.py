@@ -27,6 +27,7 @@ from app.services.collector import collector
 from app.services.home_control import home_live
 from app.services.sse import board_topic, hub
 
+from .clock import midday  # noqa: F401 - a fixture, used by name
 from .conftest import CSRF, create_user, login, setup_admin
 from .test_home_page import _board, _demo_page, _hass, _made
 from .test_home_switch import HA, _drain, _Recording
@@ -217,6 +218,7 @@ def test_only_who_may_act_on_the_board_sets_anything_off(client: TestClient) -> 
     assert len(client.get(f"/api/v1/pages/{page['id']}/home/scenes").json()["scenes"]) == 7
 
 
+@pytest.mark.usefixtures("midday")
 def test_what_a_switchs_device_used_today_comes_from_its_energy_statistics(client: TestClient) -> None:
     setup_admin(client)
     _board_, _hass_, page = _page(client)

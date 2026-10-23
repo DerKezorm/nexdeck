@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 
 from app.services import hass_registry, hass_stats, home
 
+from .clock import midday  # noqa: F401 - a fixture, used by name
 from .conftest import CSRF, create_user, login, setup_admin
 from .test_home_page import _board, _demo_page, _hass, _made
 
@@ -282,6 +283,7 @@ def test_a_house_that_does_not_answer_is_an_answer_on_the_card(client: TestClien
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("midday")
 def test_a_thermostats_history_has_its_room_its_target_and_when_it_heated(client: TestClient) -> None:
     setup_admin(client)
     _board_, _hass_, page = _cards_page(client)
