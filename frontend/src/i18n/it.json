@@ -249,7 +249,9 @@
         "current": "Aggiornato",
         "noRelease": "Ultima non nota",
         "noProject": "Nessuna release pubblica",
-        "unread": "Versione non letta"
+        "unread": "Versione non letta",
+        "notAsked": "Ultima non richiesta",
+        "notAskedHelp": "Attiva Cerca aggiornamenti in Sistema, Informazioni per confrontare con l’ultima release su GitHub."
       }
     },
     "users": {
@@ -289,7 +291,7 @@
       "demoHelp": "Ogni widget mostra dati fittizi. Disattivala quando colleghi servizi reali.",
       "demoForced": "Impostata da NEXDECK_DEMO sul container. Rimuovi la variabile e riavvia per disattivarla.",
       "updateCheck": "Cerca aggiornamenti",
-      "updateCheckHelp": "Chiede a GitHub una volta al giorno se esiste una versione più recente. Disattivato per impostazione predefinita."
+      "updateCheckHelp": "Chiede a GitHub una volta al giorno se esiste un nexdeck più recente, e ogni sei ore le ultime release dei tuoi servizi collegati. Disattivato di fabbrica."
     },
     "search": {
       "title": "Ricerca che esce di casa",
@@ -973,7 +975,7 @@
     "website": "Sito web",
     "license": "Licenza",
     "whatsNewOpen": "Rileggi",
-    "updateCheckLabel": "Chiedi a GitHub una volta al giorno",
+    "updateCheckLabel": "Chiedi a GitHub le versioni più recenti",
     "checkNow": "Controlla ora",
     "checked": "GitHub interpellato.",
     "lastChecked": "Ultima richiesta {{when}}",

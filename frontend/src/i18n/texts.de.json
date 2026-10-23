@@ -1965,10 +1965,10 @@
     "An update is waiting on a server": "Auf einem Server wartet ein Update",
     "One list of what has a newer version: your connected services, containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.": "Eine Liste von allem, wofür es eine neuere Version gibt: deine verbundenen Dienste, Container aus What's Up Docker und Cup, ein Watchtower-Lauf, der nicht alles geschafft hat, die Projekte, denen du auf GitHub folgst, und nexdeck selbst.",
     "Connected services": "Verbundene Dienste",
-    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "Die Version, die jeder Dienst von sich nennt, verglichen mit dem neuesten Release seines Projekts auf GitHub, alle sechs Stunden nachgesehen. Ein Dienst, der seine Version nicht nennt oder dessen Projekt nicht auf GitHub liegt, fehlt hier und steht unter System, Anbindungen.",
     "Every connection that names its version": "Jede Anbindung, die ihre Version nennt",
     "Only the ones picked": "Nur die ausgewählten",
-    "Also show what is up to date": "Auch zeigen, was aktuell ist"
+    "Also show what is up to date": "Auch zeigen, was aktuell ist",
+    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours while Check for updates is on under System, About. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "Die Version, die jeder Dienst von sich nennt, verglichen mit dem neuesten Release seines Projekts auf GitHub, alle sechs Stunden nachgesehen, solange unter System, Über „Nach Updates suchen“ eingeschaltet ist. Ein Dienst, der seine Version nicht nennt oder dessen Projekt nicht auf GitHub liegt, fehlt hier und steht unter System, Anbindungen."
   },
   "labels": {
     "Private resources": "Private Ressourcen",

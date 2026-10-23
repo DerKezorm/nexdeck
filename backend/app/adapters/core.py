@@ -295,7 +295,7 @@ class CoreAdapter(Adapter):
             refresh_seconds=900,
             options=(
                 Field("services", "Connected services", type="select", default="all",
-                      help="The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.",
+                      help="The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours while Check for updates is on under System, About. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.",
                       options=(("all", "Every connection that names its version"), ("pick", "Only the ones picked"), ("none", "None"))),
                 Field("picked", "Services", type="integrations", default=[], only_when=("services", "pick"),
                       # Kinds only, to narrow the picker; it shows the connections' own names.
@@ -507,8 +507,13 @@ class CoreAdapter(Adapter):
 
         if ctx.resolve_integration is None:
             return []
+        from ..routers import system
+
         wanted = {int(one) for one in picked if str(one).isdigit()} if services == "pick" else None
         with db_session() as db:
+            # Without the operator's switch nothing newer is known, and so nothing is asked at all.
+            if not system.update_check_on(db):
+                return []
             found = [
                 (one.id, one.kind, one.name)
                 for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))

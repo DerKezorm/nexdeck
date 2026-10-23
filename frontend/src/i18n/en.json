@@ -249,7 +249,9 @@
         "current": "Up to date",
         "noRelease": "Newest not known",
         "noProject": "No public releases",
-        "unread": "Version not read"
+        "unread": "Version not read",
+        "notAsked": "Newest not asked",
+        "notAskedHelp": "Switch on Check for updates under System, About to compare with the newest release on GitHub."
       }
     },
     "users": {
@@ -289,7 +291,7 @@
       "demoHelp": "Every widget shows fake data. Switch it off when you connect real services.",
       "demoForced": "Set by NEXDECK_DEMO on the container. Remove the variable and restart to switch it off.",
       "updateCheck": "Check for updates",
-      "updateCheckHelp": "Asks GitHub once a day whether a newer version exists. Off by default."
+      "updateCheckHelp": "Asks GitHub once a day whether a newer nexdeck exists, and every six hours for the newest releases of your connected services. Off by default."
     },
     "search": {
       "title": "Search that leaves the house",
@@ -973,7 +975,7 @@
     "website": "Website",
     "license": "License",
     "whatsNewOpen": "Read it again",
-    "updateCheckLabel": "Ask GitHub once a day",
+    "updateCheckLabel": "Ask GitHub for newer versions",
     "checkNow": "Check now",
     "checked": "Asked GitHub.",
     "lastChecked": "Last asked {{when}}",

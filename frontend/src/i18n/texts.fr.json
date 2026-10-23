@@ -1965,10 +1965,10 @@
     "An update is waiting on a server": "Une mise à jour attend sur un serveur",
     "One list of what has a newer version: your connected services, containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.": "Une liste de tout ce qui a une version plus récente : vos services connectés, les conteneurs de What's Up Docker et Cup, une exécution de Watchtower qui a échoué, les projets que vous suivez sur GitHub et nexdeck lui-même.",
     "Connected services": "Services connectés",
-    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "La version que chaque service déclare utiliser, comparée à la dernière publication de son projet sur GitHub, vérifiée toutes les six heures. Un service qui n’indique pas sa version, ou dont le projet n’est pas sur GitHub, n’apparaît pas ici et figure sous Système, Intégrations.",
     "Every connection that names its version": "Chaque connexion qui indique sa version",
     "Only the ones picked": "Seulement celles choisies",
-    "Also show what is up to date": "Afficher aussi ce qui est à jour"
+    "Also show what is up to date": "Afficher aussi ce qui est à jour",
+    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours while Check for updates is on under System, About. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "La version que chaque service déclare utiliser, comparée à la dernière publication de son projet sur GitHub, vérifiée toutes les six heures tant que Rechercher des mises à jour est activé sous Système, À propos. Un service qui n’indique pas sa version, ou dont le projet n’est pas sur GitHub, n’apparaît pas ici et figure sous Système, Intégrations."
   },
   "labels": {
     "Private resources": "Ressources privées",

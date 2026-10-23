@@ -26,6 +26,8 @@ interface VersionReading {
   upstream: string
   /** The service could not be asked at all. */
   unread: boolean
+  /** Whether GitHub may be asked: the switch Check for updates under System, About. */
+  asked: boolean
 }
 
 /** The version a connection runs and how it stands against its project's newest release. */
@@ -50,7 +52,11 @@ function VersionColumn({ reading, loading }: { reading?: VersionReading; loading
         </a>
       )}
       {reading.state === 'current' && <span className="text-ok">{t('settings.integrations.version.current')}</span>}
-      {reading.state === 'unknown' && reading.running && <span className="text-faint truncate">{reading.upstream ? t('settings.integrations.version.noRelease') : t('settings.integrations.version.noProject')}</span>}
+      {reading.state === 'unknown' && reading.running && (
+        <span className="text-faint truncate" title={reading.upstream && !reading.asked ? t('settings.integrations.version.notAskedHelp') : undefined}>
+          {!reading.upstream ? t('settings.integrations.version.noProject') : reading.asked ? t('settings.integrations.version.noRelease') : t('settings.integrations.version.notAsked')}
+        </span>
+      )}
     </span>
   )
 }

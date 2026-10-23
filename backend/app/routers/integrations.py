@@ -83,8 +83,10 @@ async def connection_versions(user: AdminUser, db: DbSession) -> dict[str, dict]
         for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
         if get_adapter(one.kind).needs_integration and one.kind != "core"
     ]
+    from .system import update_check_on
+
     ctx = Context(collector.client, cache={})
-    readings = await versions.read_many(connections, collector.resolve_integration, ctx)
+    readings = await versions.read_many(connections, collector.resolve_integration, ctx, allowed=update_check_on(db))
     kinds = dict(connections)
     return {str(number): {**reading.public(), "upstream": versions.UPSTREAM.get(kinds[number], "")} for number, reading in readings.items()}
 

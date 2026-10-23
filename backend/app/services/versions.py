@@ -10,6 +10,12 @@ it runs and "not known" for the newest.
 Both are kept for six hours and shared by every card and the System page, so
 a board with three update cards costs a service one look per six hours, and
 GitHub one request per project.
+
+⚠️ GitHub is asked only while the operator lets nexdeck ask it, the switch
+"Check for updates" under System, About that already decides it for nexdeck
+itself, off by default. Which projects are asked about says which services an
+installation runs, and that leaves the house. The running version does not:
+it is asked of the operator's own services.
 """
 
 from __future__ import annotations
@@ -89,6 +95,8 @@ class Reading:
     #: Why the running version is not known, in a sentence, or empty.
     problem: str = ""
     checked: float = 0.0
+    #: Whether GitHub could be asked at all; with the switch off the newest stays unknown.
+    asked: bool = True
 
     @property
     def state(self) -> str:
@@ -137,7 +145,7 @@ async def newest_release(repo: str, ctx: Context) -> dict[str, Any] | None:
     return release
 
 
-async def read(integration_id: int, kind: str, resolve: Any, ctx: Context) -> Reading:
+async def read(integration_id: int, kind: str, resolve: Any, ctx: Context, *, allowed: bool = True) -> Reading:
     """The running and the newest version of one connection, from memory while it is fresh."""
     kept = _running.get(integration_id)
     now = time.time()
@@ -162,7 +170,10 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context) -> Re
             reading.problem = f"The answer of the service could not be read ({failure.__class__.__name__})."
         _running[integration_id] = reading
     repo = UPSTREAM.get(kind)
-    if repo:
+    # A reading is shared, so what the last caller was allowed to learn is set again each time.
+    reading.asked = allowed
+    reading.newest, reading.url, reading.published = None, "", None
+    if repo and allowed:
         release = await newest_release(repo, ctx)
         if release is not None:
             reading.newest = version_in(release["tag"])
@@ -171,13 +182,13 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context) -> Re
     return reading
 
 
-async def read_many(connections: list[tuple[int, str]], resolve: Any, ctx: Context) -> dict[int, Reading]:
-    """Several connections, a few at a time."""
+async def read_many(connections: list[tuple[int, str]], resolve: Any, ctx: Context, *, allowed: bool = True) -> dict[int, Reading]:
+    """Several connections, a few at a time; GitHub only when ``allowed``."""
     gate = asyncio.Semaphore(PARALLEL)
 
     async def one(integration_id: int, kind: str) -> tuple[int, Reading]:
         async with gate:
-            return integration_id, await read(integration_id, kind, resolve, ctx)
+            return integration_id, await read(integration_id, kind, resolve, ctx, allowed=allowed)
 
     async with _lock:
         pairs = await asyncio.gather(*(one(number, kind) for number, kind in connections))

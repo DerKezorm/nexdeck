@@ -143,6 +143,11 @@ def test_every_upstream_kind_is_a_real_adapter() -> None:
     assert all(repo.count("/") == 1 for repo in versions.UPSTREAM.values())
 
 
+def _asking(client: TestClient) -> None:
+    """The operator's switch under System, About: without it GitHub is never asked."""
+    assert client.patch("/api/v1/settings", json={"update_check": True}, headers=CSRF).status_code == 200
+
+
 def _connection(client: TestClient, kind: str, name: str, admin_only: bool = False) -> int:
     made = client.post("/api/v1/integrations", json={"kind": kind, "name": name, "config": {"url": f"http://{kind}", "api_key": "k"}, "admin_only": admin_only}, headers=CSRF)
     assert made.status_code == 201, made.text
@@ -164,6 +169,7 @@ def services(monkeypatch: pytest.MonkeyPatch, release: dict[str, Any]) -> dict[s
 
 def test_the_system_page_lists_the_version_of_every_connection(client: TestClient, services: dict[str, str]) -> None:
     setup_admin(client)
+    _asking(client)
     sonarr = _connection(client, "sonarr", "Series")
     radarr = _connection(client, "radarr", "Movies")
     answer = client.get("/api/v1/integrations/versions")
@@ -202,6 +208,7 @@ def _card(options: dict[str, Any]) -> Any:
 
 def test_the_updates_card_names_the_services_behind(client: TestClient, services: dict[str, str]) -> None:
     setup_admin(client)
+    _asking(client)
     _connection(client, "sonarr", "Series")
     _connection(client, "radarr", "Movies")
     card = _card({})
@@ -214,6 +221,7 @@ def test_the_updates_card_names_the_services_behind(client: TestClient, services
 
 def test_the_card_takes_only_the_services_picked(client: TestClient, services: dict[str, str]) -> None:
     setup_admin(client)
+    _asking(client)
     _connection(client, "sonarr", "Series")
     movies = _connection(client, "radarr", "Movies")
     card = _card({"services": "pick", "picked": [str(movies)], "show_current": True})
@@ -225,6 +233,7 @@ def test_the_card_takes_only_the_services_picked(client: TestClient, services: d
 def test_a_connection_for_administrators_stays_off_a_card_nobody_admin_owns(client: TestClient, services: dict[str, str]) -> None:
     """⚠️ The card is read once for everyone who sees it. Without a board, as here, there is no administrator behind it."""
     setup_admin(client)
+    _asking(client)
     _connection(client, "sonarr", "Series", admin_only=True)
     assert _card({}).items == []
 
@@ -244,3 +253,16 @@ def test_one_service_with_an_odd_answer_does_not_take_the_others_down(release: d
     readings = asyncio.run(versions.read_many([(1, "sonarr"), (2, "sonarr")], resolve, Context(None)))  # type: ignore[arg-type]
     assert readings[2].running == "4.0.9"
     assert readings[1].running is None and "KeyError" in readings[1].problem
+
+
+def test_nothing_goes_to_github_while_the_operator_has_not_switched_it_on(client: TestClient, services: dict[str, str], release: dict[str, Any]) -> None:
+    """⚠️ Which projects are asked about tells GitHub which services run here. The switch is off by default."""
+    setup_admin(client)
+    sonarr = _connection(client, "sonarr", "Series")
+    body = client.get("/api/v1/integrations/versions").json()[str(sonarr)]
+    assert body["running"] == "4.0.9", "the service's own version is read all the same"
+    assert body["newest"] is None and body["asked"] is False and body["state"] == "unknown"
+    assert _card({}).items == []
+    assert "asked" not in release, "GitHub was never asked"
+    _asking(client)
+    assert client.get("/api/v1/integrations/versions").json()[str(sonarr)]["state"] == "behind"
