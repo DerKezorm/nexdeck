@@ -16,6 +16,7 @@ from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
+from ..services import versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
@@ -69,6 +70,23 @@ def list_integrations(user: CurrentUser, db: DbSession) -> list[dict]:
     rows = db.scalars(select(Integration).order_by(Integration.name))
     admin = user.role == Role.admin.value
     return [_public(db, i) for i in rows if admin or not i.admin_only]
+
+
+@router.get("/integrations/versions", summary="Which version each connection runs, and the newest release of its project")
+async def connection_versions(user: AdminUser, db: DbSession) -> dict[str, dict]:
+    """By connection number. Read at most every six hours; the first call after a start asks every service once.
+
+    A connection switched off, or one in the demo, is left out: it is not asked anything.
+    """
+    connections = [
+        (one.id, one.kind)
+        for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
+        if get_adapter(one.kind).needs_integration and one.kind != "core"
+    ]
+    ctx = Context(collector.client, cache={})
+    readings = await versions.read_many(connections, collector.resolve_integration, ctx)
+    kinds = dict(connections)
+    return {str(number): {**reading.public(), "upstream": versions.UPSTREAM.get(kinds[number], "")} for number, reading in readings.items()}
 
 
 @router.post("/integrations", status_code=status.HTTP_201_CREATED, summary="Add an integration")
@@ -146,6 +164,8 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
     if only_the_bell:
         return _public(db, integration)
     collector.reschedule_integration(integration.id, farewell)
+    # Another address or another key may be another installation, with a version of its own.
+    versions.forget_one(integration.id)
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
     return _public(db, integration)
@@ -202,6 +222,7 @@ def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> N
     # to sit in memory until the next restart, holding open sockets to a
     # service nobody asked about any more.
     collector.forget_integration(integration_id, farewell)
+    versions.forget_one(integration_id)
     logger.info("Connection %r (%s) deleted by %s; %d card(s) lose their service, %d option(s) cleared.",
                 name, kind, user.username, len(widget_ids), forgotten)
     hass_listener.unwatch(integration_id)

@@ -239,7 +239,18 @@
       "enabled": "Activada",
       "search": "Buscar",
       "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nada coincide con “{{query}}”."
+      "noMatch": "Nada coincide con “{{query}}”.",
+      "version": {
+        "checking": "Consultando la versión…",
+        "runs": "En uso: {{version}}",
+        "notSaid": "Versión no indicada",
+        "newer": "Más nueva: {{version}}",
+        "newerMajor": "Más nueva: {{version}} (principal)",
+        "current": "Al día",
+        "noRelease": "Última no conocida",
+        "noProject": "Sin publicaciones públicas",
+        "unread": "Versión no leída"
+      }
     },
     "users": {
       "title": "Usuarios",

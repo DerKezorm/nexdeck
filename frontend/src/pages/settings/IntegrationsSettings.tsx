@@ -15,6 +15,43 @@ import { shownField } from '../../lib/fields'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from './SettingsCard'
 
+/** What ``GET /integrations/versions`` says about one connection. */
+interface VersionReading {
+  running: string | null
+  newest: string | null
+  url: string
+  problem: string
+  state: 'behind' | 'current' | 'unknown'
+  major: boolean
+  upstream: string
+  /** The service could not be asked at all. */
+  unread: boolean
+}
+
+/** The version a connection runs and how it stands against its project's newest release. */
+function VersionColumn({ reading }: { reading?: VersionReading }) {
+  const { t } = useTranslation()
+  if (!reading) return <span className="w-32 shrink-0 text-[11px] text-faint max-sm:hidden">{t('settings.integrations.version.checking')}</span>
+  return (
+    <span className="w-32 shrink-0 grid text-[11px] leading-tight max-sm:hidden" data-version={reading.state}>
+      <span className="num truncate" title={reading.problem || undefined}>
+        {reading.running ? (
+          t('settings.integrations.version.runs', { version: reading.running })
+        ) : (
+          <span className="text-faint">{t(reading.unread ? 'settings.integrations.version.unread' : 'settings.integrations.version.notSaid')}</span>
+        )}
+      </span>
+      {reading.state === 'behind' && (
+        <a className="num text-warn truncate hover:underline" href={reading.url} target="_blank" rel="noreferrer noopener">
+          {t(reading.major ? 'settings.integrations.version.newerMajor' : 'settings.integrations.version.newer', { version: reading.newest })}
+        </a>
+      )}
+      {reading.state === 'current' && <span className="text-ok">{t('settings.integrations.version.current')}</span>}
+      {reading.state === 'unknown' && reading.running && <span className="text-faint truncate">{reading.upstream ? t('settings.integrations.version.noRelease') : t('settings.integrations.version.noProject')}</span>}
+    </span>
+  )
+}
+
 /** Configured connections, and a sheet to add or edit one with a live test. */
 export function IntegrationsSettings() {
   const { t } = useTranslation()
@@ -24,6 +61,8 @@ export function IntegrationsSettings() {
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
   const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about') })
+  // Read every six hours on the server; the first look after a start asks every service once and may take a moment.
+  const versions = useQuery({ queryKey: ['integration-versions'], queryFn: () => get<Record<string, VersionReading>>('/integrations/versions'), enabled: admin, staleTime: 600_000 })
   const [editing, setEditing] = useState<Integration | null>(null)
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
@@ -107,8 +146,13 @@ export function IntegrationsSettings() {
                 <div className="text-[11px] text-muted truncate">
                   {integration.label} · {t('settings.integrations.widgets', { count: integration.widget_count })}
                   {integration.last_error && <span className="text-bad"> · {integration.last_error}</span>}
+                  {/* On a phone the version column has no room; a newer version still says so here. */}
+                  {versions.data?.[String(integration.id)]?.state === 'behind' && (
+                    <span className="text-warn sm:hidden"> · {t('settings.integrations.version.newer', { version: versions.data[String(integration.id)].newest })}</span>
+                  )}
                 </div>
               </div>
+              {admin && integration.enabled && !integration.demo && <VersionColumn reading={versions.data?.[String(integration.id)]} />}
               <span className="dot" data-status={!integration.enabled ? 'unknown' : integration.last_error ? 'bad' : integration.last_ok_at || integration.demo ? 'ok' : 'unknown'} />
               {admin && (
                 <>

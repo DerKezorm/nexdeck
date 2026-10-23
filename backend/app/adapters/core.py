@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ..services.upstream import UPSTREAM
 from . import demo as fake
 from .base import (
     Action,
@@ -287,12 +288,18 @@ class CoreAdapter(Adapter):
         WidgetType(
             kind="updates",
             label="Updates",
-            description="One list of what has a newer version: containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.",
+            description="One list of what has a newer version: your connected services, containers from What's Up Docker and Cup, a Watchtower run that failed, the projects you follow on GitHub, and nexdeck itself.",
             renderer="list",
             default_size=(4, 3),
             min_size=(2, 2),
             refresh_seconds=900,
             options=(
+                Field("services", "Connected services", type="select", default="all",
+                      help="The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.",
+                      options=(("all", "Every connection that names its version"), ("pick", "Only the ones picked"), ("none", "None"))),
+                Field("picked", "Services", type="integrations", default=[], only_when=("services", "pick"),
+                      # Kinds only, to narrow the picker; it shows the connections' own names.
+                      options=tuple((kind, "") for kind in sorted(UPSTREAM))),
                 Field("sources", "Container sources", type="integrations", default=[],
                       options=(("wud", "What's Up Docker"), ("cup", "Cup"), ("watchtower", "Watchtower")),
                       help="Watchtower updates by itself; it shows up only when its last run could not update everything."),
@@ -300,6 +307,7 @@ class CoreAdapter(Adapter):
                       help="One per line, as owner/name, up to ten. Each shows its newest release; one from the last seven days stands out."),
                 Field("nexdeck", "nexdeck itself", type="bool", default=True,
                       help="Through the update check in System. With that switched off, the card shows what a check by hand found and asks nothing itself."),
+                Field("show_current", "Also show what is up to date", type="bool", default=False),
                 Field("limit", "Entries", type="number", default=12),
             ),
         ),
@@ -445,9 +453,13 @@ class CoreAdapter(Adapter):
             sources = [one for one in sources.split(",") if one.strip()]
         repos = [line.strip().strip("/") for line in str(options.get("repos") or "").splitlines() if line.strip()][:10]
         ask_nexdeck = options.get("nexdeck", True)
-        if not sources and not repos and not ask_nexdeck:
+        services = str(options.get("services") or "all")
+        show_current = bool(options.get("show_current"))
+        if not sources and not repos and not ask_nexdeck and services == "none":
             raise AdapterError("Nothing is chosen to look at.", code="missing_sources",
                                hint="Open the card's settings and pick a source, a project or nexdeck itself.")
+        if services != "none":
+            rows.extend(await self._services(ctx, services, options.get("picked") or [], show_current))
         for source in sources:
             try:
                 if ctx.resolve_integration is None:
@@ -475,6 +487,52 @@ class CoreAdapter(Adapter):
             error="; ".join(failures) if failures and not rows else None,
             meta={"empty": "Everything is up to date.", "notice": "; ".join(failures) if rows else ""},
         )
+
+    @classmethod
+    async def _services(cls, ctx: Context, services: str, picked: Any, show_current: bool) -> list[dict[str, Any]]:
+        """A row for each connected service behind its project's newest release, or every one with ``show_current``.
+
+        ⚠️ The connections of whoever put the card there: one reserved for
+        administrators shows only on a board an administrator owns. The card is
+        read once for everyone who sees it, so the viewer cannot decide this.
+        """
+        import time
+
+        from sqlalchemy import select
+
+        from ..db import db_session
+        from ..models import Integration, User
+        from ..services import versions
+
+        if ctx.resolve_integration is None:
+            return []
+        wanted = {int(one) for one in picked if str(one).isdigit()} if services == "pick" else None
+        with db_session() as db:
+            board = cls._board_of(db, ctx.widget_id)
+            owner = db.get(User, board.owner_id) if board is not None and board.owner_id is not None else None
+            admin = owner is not None and owner.role == "admin"
+            found = [
+                (one.id, one.kind, one.name)
+                for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
+                if one.kind in versions.UPSTREAM and (admin or not one.admin_only) and (wanted is None or one.id in wanted)
+            ]
+        readings = await versions.read_many([(number, kind) for number, kind, _name in found], ctx.resolve_integration, ctx)
+        rows: list[dict[str, Any]] = []
+        for number, _kind, name in found:
+            reading = readings[number]
+            if reading.state == "behind":
+                fresh = bool(reading.published) and time.time() - reading.published < 7 * 86400
+                rows.append({
+                    "title": name,
+                    "subtitle": " · ".join(part for part in (f"Runs {reading.running}", "major version" if versions.major_jump(reading.running, reading.newest) else "") if part),
+                    "status": "warn",
+                    "value": reading.newest,
+                    "url": reading.url,
+                    "emphasis": fresh,
+                })
+            elif reading.state == "current" and show_current:
+                rows.append({"title": name, "subtitle": "Up to date", "status": "ok", "value": reading.running})
+        return rows
 
     @staticmethod
     async def _releases(repos: list[str], ctx: Context, failures: list[str]) -> list[dict[str, Any]]:

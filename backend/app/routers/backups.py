@@ -176,5 +176,9 @@ async def restore_archive(
     except backup.BackupError as failure:
         logger.warning("The restore by %s did not happen: %s", admin.username, failure.message)
         raise error(failure.code, failure.message) from failure
+    # The connections of the backup are other ones under the same numbers: their versions are read again.
+    from ..services import versions
+
+    versions.forget()
     logger.warning("Restore finished. Every session on this installation has ended.")
     return _verdict(verdict)

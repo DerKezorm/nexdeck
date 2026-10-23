@@ -1542,6 +1542,17 @@ class Adapter:
         """Check the connection; return a short human-readable result."""
         raise NotImplementedError
 
+    async def running_version(self, config: dict[str, Any], ctx: Context) -> str | None:
+        """The version the service runs, or None when it does not say.
+
+        Read from what the test says, "Sonarr 4.0.11.2680 answers", because
+        nearly every test already asks the service for it. An adapter whose
+        test sentence carries some other number first overrides this.
+        """
+        from ..services.versions import version_in
+
+        return version_in(await self.test(config, ctx))
+
     async def fetch(
         self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context
     ) -> WidgetData:

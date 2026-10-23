@@ -8,6 +8,7 @@ project uses semantic versioning.
 ### Added
 
 - **Name and logo** under System, Appearance: the installation's own name and logo stand where nexdeck's do, in the browser tab, the bar, the sign-in page, the installed app and on wall displays. The logo is an SVG, PNG or WebP; the icons of the installed app are drawn from it in the browser. The tab can keep nexdeck's icon, and the board's name can stand in front of the installation's. "About nexdeck" keeps saying nexdeck. The sign-in page shows both, so they are public. The logo goes into every backup.
+- **Versions of your services.** The Updates card has a new source, connected services: each service whose version is behind the newest release of its project on GitHub gets a row, with the version it runs and the newer one, linked to its release notes. Every connection, only the ones picked, or none; a switch shows the ones up to date as well. Under System, Integrations every connection shows the version it runs and how it stands. The running version is what the service already says when its connection is tested; both are looked at every six hours. 65 services are compared, among them the *arr apps, Jellyfin, Home Assistant, Immich, Traefik, Grafana and the nexapps; services that publish no releases on GitHub (Plex, Synology, UniFi, Proxmox) show the version they run.
 
 ### Fixed
 

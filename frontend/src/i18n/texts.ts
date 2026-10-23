@@ -168,6 +168,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) of (\d+) up$/, '$1 von $2 aktiv'],
     [/^priority (\d+)$/, 'Priorität $1'],
     [/^(.+) failed\.$/, '$1 fehlgeschlagen.'],
+    [/^Runs (\S+)$/, 'Läuft mit $1'],
   ],
   es: spanish,
   fr: french,
