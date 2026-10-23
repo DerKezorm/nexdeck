@@ -145,14 +145,22 @@ def test_versions_compare_as_numbers() -> None:
 async def test_a_card_that_asks_for_nothing_says_so(client: TestClient) -> None:
     setup_admin(client)
     with pytest.raises(AdapterError) as nothing:
-        await get_adapter("core").fetch("updates", {}, {"nexdeck": False}, _ctx({}))
+        await get_adapter("core").fetch("updates", {}, {"nexdeck": False, "services": "none"}, _ctx({}))
     assert nothing.value.code == "missing_sources"
+
+
+async def test_a_card_asks_the_connected_services_unless_told_not_to(client: TestClient) -> None:
+    """Since the card reads versions, every connection that names its version is a source by default; without any it is up to date."""
+    setup_admin(client)
+    card = await get_adapter("core").fetch("updates", {}, {"nexdeck": False}, _ctx({}))
+    assert card.items == []
+    assert card.meta["empty"] == "Everything is up to date."
 
 
 def test_the_card_can_be_put_on_a_board(client: TestClient) -> None:
     # Asking for nothing on purpose: the collector reads a new card at once, and nothing may go out from a test.
     setup_admin(client)
     board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
-    created = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.updates", "options": {"nexdeck": False}}, headers=CSRF)
+    created = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.updates", "options": {"nexdeck": False, "services": "none"}}, headers=CSRF)
     assert created.status_code == 201, created.text
     assert get_adapter("core").demo("updates", {}, 0).items
