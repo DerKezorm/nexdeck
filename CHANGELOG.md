@@ -3,6 +3,25 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Six new TrueNAS cards** (#49), as a beta, for TrueNAS 25.04 and later over https:
+  - **Interfaces**: every interface with its link, address, link speed and live traffic. The traffic comes from the realtime figures the System card already reads, so TrueNAS is asked for nothing new.
+  - **Apps**: every app with its state and version, crashed ones first, then those with a newer version or newer images waiting. A row links to the app's web page where it has one.
+  - **Disks**: every disk with its temperature, model, pool and size, yellow and red from 50 and 60 °C for spinning disks and 70 and 80 °C for flash, or earlier where the disk names a lower limit of its own. Read at most every five minutes, because every reading reaches the disk; on 25.04 a sleeping disk is left asleep.
+  - **Data protection**: snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run, failed ones first and with TrueNAS' reason. Each kind can be switched off, and then it is not read.
+  - **Services**: the services set to start with TrueNAS, such as SMB, NFS and SSH; red when one of them is stopped.
+  - **VMs and containers**: virtual machines and Incus containers with their state, CPUs and memory.
+- The **System** card shows a waiting TrueNAS update or a pending reboot. TrueNAS asks its update server for that, so it is checked every six hours, and not at all when the row is hidden.
+- The **Pools** card shows each pool's last scrub or a running resilver, and turns a pool yellow when its last scrub found errors.
+- Three new kinds of notification: a disk running hot, a backup task that failed and an update waiting on a server (TrueNAS itself or one of its apps). A failed task and an update are told when they appear, not about what was already there when the card was added.
+
+### Security
+
+- **DOMPurify 3.4.17** (was 3.4.16), for GHSA-c6gr-qvv4-5v3f, GHSA-cg2g-xh64-v4q7 and GHSA-mrv2-3pqr-j5jr. It cleans what a note card makes of its Markdown before the card shows it.
+
 ## 0.45.0 (2026-10-20)
 
 ### Added
