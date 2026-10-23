@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.46.0 (2026-10-23)
 
 ### Added
 
@@ -21,6 +21,10 @@ project uses semantic versioning.
 ### Security
 
 - **DOMPurify 3.4.17** (was 3.4.16), for GHSA-c6gr-qvv4-5v3f, GHSA-cg2g-xh64-v4q7 and GHSA-mrv2-3pqr-j5jr. It cleans what a note card makes of its Markdown before the card shows it.
+
+### Upgrading
+
+Nothing to do. The new cards need TrueNAS 25.04 or later, reached over https, and a key with the Read-Only Administrator role.
 
 ## 0.45.0 (2026-10-20)
 

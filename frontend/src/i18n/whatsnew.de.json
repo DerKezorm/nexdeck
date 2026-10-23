@@ -1577,6 +1577,40 @@
         "Eine Zuhause-Seite ruft nur die Dienste ihrer eigenen Bedienelemente auf, und nur für das, was auf ihr steht. Die Auswahl braucht ein Token eines Administrators von Home Assistant.",
         "Proxmox-Karten sagen, welches Recht dem Token fehlt, statt leer zu bleiben (#48)."
       ]
+    },
+    "0.46.0": {
+      "lead": "TrueNAS zeigt viel mehr: Schnittstellen, Apps, Platten, Sicherungen, Dienste und VMs, jeweils als eigene Karte.",
+      "sections": [
+        {
+          "title": "Netzwerk und Apps",
+          "body": "Schnittstellen zeigt jede Netzwerkschnittstelle mit Verbindung, Adresse, Geschwindigkeit und aktuellem Durchsatz und zeichnet Download und Upload über die Zeit. Apps listet jede App mit Zustand und Version: abgestürzte zuerst, dann die, für die eine neue Version oder neue Images warten, jede mit einem Link auf ihre Weboberfläche.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > TrueNAS > Schnittstellen oder Apps"
+        },
+        {
+          "title": "Platten",
+          "body": "Jede Platte mit Temperatur, Modell, Pool und Größe. Gelb und rot wird sie ab 50 und 60 °C bei Festplatten und ab 70 und 80 °C bei SSDs, oder früher, wenn die Platte selbst eine niedrigere Grenze nennt. Gelesen wird höchstens alle fünf Minuten, weil jede Messung die Platte erreicht; auf TrueNAS 25.04 darf eine schlafende Platte weiterschlafen.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > TrueNAS > Platten"
+        },
+        {
+          "title": "Datensicherung",
+          "body": "Snapshot-, Replikations-, Cloud-Sync-, Rsync- und Cloud-Backup-Aufgaben mit ihrem letzten Lauf. Fehlgeschlagene stehen oben und sagen, warum. Jede Art lässt sich in den Einstellungen der Karte abschalten und wird dann gar nicht erst gelesen.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > TrueNAS > Datensicherung"
+        },
+        {
+          "title": "Dienste, VMs und Container",
+          "body": "Dienste zeigt SMB, NFS, SSH und die anderen Dienste, die mit TrueNAS starten sollen, rot, wenn einer davon steht. VMs und Container listet virtuelle Maschinen und Incus-Container mit Zustand, CPUs und Arbeitsspeicher.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > TrueNAS > Dienste oder VMs und Container"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Systemkarte zeigt ein wartendes TrueNAS-Update oder einen ausstehenden Neustart, geprüft alle sechs Stunden.",
+        "Die Pool-Karte zeigt den letzten Scrub jedes Pools und wird gelb, wenn er Fehler gefunden hat.",
+        "Drei neue Arten von Benachrichtigungen: eine zu warme Platte, eine fehlgeschlagene Sicherung und ein wartendes Update auf einem Server.",
+        "Die neuen Karten sind eine Beta und brauchen TrueNAS 25.04 oder neuer über https. Ein Schlüssel mit der Rolle Read-Only Administrator genügt.",
+        "DOMPurify 3.4.17, das reinigt, was Notizkarten zeigen.",
+        "Danke an AlexT59 für die Idee und die Vorarbeit in der API (#49)."
+      ]
     }
   }
 }

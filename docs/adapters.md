@@ -28,7 +28,7 @@ that one of twenty-one renderers draws.
 | Synology DSM | system, volumes, disks, containers, vms | start, stop, restart; power on, shut down, reboot | user and password; containers and VM details through DSM's own interface calls |
 | Unraid | system, array, guests | | API key (GraphQL) |
 | Nextcloud | overview, active users, free space | | serverinfo token, or an administrator account |
-| TrueNAS | system, pools, alerts | | API key; use https, where a Read-Only Administrator is enough; over http only a TrueNAS before 25.04 is read, with a full administrator's key, because later versions deprecate the REST API that http is limited to |
+| TrueNAS | system (with a waiting update), pools (with the last scrub), alerts; from 25.04 also interfaces, apps, disks, data protection, services, VMs and containers | | API key; use https, where a Read-Only Administrator is enough; over http only a TrueNAS before 25.04 is read, with a full administrator's key, because later versions deprecate the REST API that http is limited to |
 | openmediavault | system, file systems, disks | | admin, or a user in the group openmediavault-admin; other users may sign in but read nothing. Three wrong passwords in five minutes lock the account in openmediavault until faillock resets it, so a refused password is tried again only every 15 minutes |
 | Proxmox Backup Server | datastores, host, tasks | | API token; DatastoreAudit on /datastore and Sys.Audit on /system |
 | Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
