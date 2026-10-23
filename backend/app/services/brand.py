@@ -40,6 +40,8 @@ SOURCES = ("logo", "nexdeck")
 DEFAULTS: dict[str, Any] = {"name": "", "logo": "", "stamp": "", "favicon": "logo", "app_icon": "logo", "board_in_title": True}
 #: Control characters and line breaks have no place in a title.
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+#: The names a logo is kept under.
+_LOGO_NAME = re.compile(r"^logo\.(svg|png|webp)$")
 
 
 class BrandError(Exception):
@@ -59,6 +61,9 @@ def stored(db: DbSessionType) -> dict[str, Any]:
     row = db.get(Setting, KEY)
     value = {**DEFAULTS, **(dict(row.value) if row is not None else {})}
     logo = str(value.get("logo") or "")
+    # Only a name this module writes: a restored or edited setting cannot point elsewhere.
+    if not _LOGO_NAME.match(logo):
+        logo = ""
     # A file the setting names but the disk lost (a restore from before the
     # folder was backed up) is no logo, rather than a broken picture everywhere.
     if logo and not (folder() / logo).is_file():

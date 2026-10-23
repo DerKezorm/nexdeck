@@ -507,6 +507,17 @@ def clean_cards(db: Session, page_id: int, own_id: int | None, kind: str, option
             wanted.append(number)
     present = {row.id: row.kind for row in db.scalars(select(Widget).where(Widget.page_id == page_id, Widget.id.in_(wanted or [-1])))}
     kept = [number for number in wanted if number in present and present[number] not in GROUP_KINDS][:MOST_TUCKED]
+    # ⚠️ A card stands in one place. Picked here, it leaves the other holders of
+    # the page and its side bar; it used to be drawn twice, in both.
+    page = db.get(Page, page_id)
+    if page is not None and kept:
+        for holder in page.widgets:
+            cards = (holder.options or {}).get("cards")
+            if holder.id != own_id and holder.kind in GROUP_KINDS and isinstance(cards, list) and any(number in cards for number in kept):
+                holder.options = {**holder.options, "cards": [one for one in cards if one not in kept]}
+        side = holders.side_of(page)
+        if any(number in side["cards"] for number in kept):
+            page.side = {**side, "cards": [one for one in side["cards"] if one not in kept]}
     return {**options, "cards": kept}
 
 

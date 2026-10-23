@@ -492,29 +492,27 @@ class CoreAdapter(Adapter):
     async def _services(cls, ctx: Context, services: str, picked: Any, show_current: bool) -> list[dict[str, Any]]:
         """A row for each connected service behind its project's newest release, or every one with ``show_current``.
 
-        ⚠️ The connections of whoever put the card there: one reserved for
-        administrators shows only on a board an administrator owns. The card is
-        read once for everyone who sees it, so the viewer cannot decide this.
+        ⚠️ Never a connection reserved for administrators. The card is read once
+        for everyone who sees it, and on a board an administrator shares with
+        edit rights anybody may add one, so neither the viewer nor the owner
+        decides this. Its version stands under System, Integrations.
         """
         import time
 
         from sqlalchemy import select
 
         from ..db import db_session
-        from ..models import Integration, User
+        from ..models import Integration
         from ..services import versions
 
         if ctx.resolve_integration is None:
             return []
         wanted = {int(one) for one in picked if str(one).isdigit()} if services == "pick" else None
         with db_session() as db:
-            board = cls._board_of(db, ctx.widget_id)
-            owner = db.get(User, board.owner_id) if board is not None and board.owner_id is not None else None
-            admin = owner is not None and owner.role == "admin"
             found = [
                 (one.id, one.kind, one.name)
                 for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
-                if one.kind in versions.UPSTREAM and (admin or not one.admin_only) and (wanted is None or one.id in wanted)
+                if one.kind in versions.UPSTREAM and not one.admin_only and (wanted is None or one.id in wanted)
             ]
         readings = await versions.read_many([(number, kind) for number, kind, _name in found], ctx.resolve_integration, ctx)
         rows: list[dict[str, Any]] = []

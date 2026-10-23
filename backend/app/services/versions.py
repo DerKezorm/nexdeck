@@ -15,6 +15,7 @@ GitHub one request per project.
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 import time
 from dataclasses import asdict, dataclass
@@ -22,6 +23,8 @@ from typing import Any
 
 from ..adapters.base import AdapterError, Context
 from .upstream import UPSTREAM
+
+logger = logging.getLogger("nexdeck.versions")
 
 #: Six hours. Releases come every few weeks; a service changes version when someone updates it.
 TTL = 6 * 3600
@@ -59,11 +62,18 @@ def compare(running: str | None, newest: str | None) -> str:
     mine, theirs = _numbers(running), _numbers(newest)
     width = max(len(mine), len(theirs))
     mine, theirs = mine + (0,) * (width - len(mine)), theirs + (0,) * (width - len(theirs))
+    if mine == theirs:
+        # A beta of the version that is now out is behind it.
+        return "behind" if "-" in running and "-" not in newest else "current"
     return "behind" if mine < theirs else "current"
 
 
 def major_jump(running: str | None, newest: str | None) -> bool:
-    return compare(running, newest) == "behind" and _numbers(str(running))[0] != _numbers(str(newest))[0]
+    """A new first number, except for versions named by the year (Home Assistant 2026.1): that is only January."""
+    if compare(running, newest) != "behind":
+        return False
+    first, last = _numbers(str(running))[0], _numbers(str(newest))[0]
+    return first != last and first < 1000
 
 
 #: What a service that answers but names no version is told.
@@ -144,6 +154,12 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context) -> Re
             reading.problem = failure.message
         except TimeoutError:
             reading.problem = "The service did not answer within twenty seconds."
+        except Exception as failure:  # noqa: BLE001 - one odd answer must not take every other service down with it
+            # ⚠️ A test that reads a field the service did not send raises
+            # KeyError, and a secret that cannot be read its own error. Neither
+            # was caught, and one such service failed the whole list.
+            logger.warning("The version of connection %s could not be read: %s", integration_id, failure.__class__.__name__)
+            reading.problem = f"The answer of the service could not be read ({failure.__class__.__name__})."
         _running[integration_id] = reading
     repo = UPSTREAM.get(kind)
     if repo:

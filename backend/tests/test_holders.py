@@ -46,8 +46,13 @@ def test_a_card_goes_into_a_group_with_its_size(client: TestClient) -> None:
     assert _widget(shown, group["id"])["options"]["cards"] == [note["id"], clock["id"]]
 
 
+def _side_on(client: TestClient, page: int) -> None:
+    assert client.patch(f"/api/v1/pages/{page}", json={"side_place": "left"}, headers=CSRF).status_code == 200
+
+
 def test_a_card_moves_from_a_group_into_the_side_bar_and_back_onto_the_board(client: TestClient) -> None:
     board, page, clock, _note, group = _setup(client)
+    _side_on(client, page)
     _place(client, page, widget_id=clock["id"], into="group", group_id=group["id"])
     answer = _place(client, page, widget_id=clock["id"], into="side", held_w=12, held_h=2)
     shown = _page(answer.json(), page)
@@ -124,6 +129,7 @@ def test_a_held_size_outside_the_twelve_is_refused(client: TestClient) -> None:
 
 def test_a_card_moved_to_another_page_leaves_the_side_bar(client: TestClient) -> None:
     board, page, clock, *_ = _setup(client)
+    _side_on(client, page)
     _place(client, page, widget_id=clock["id"], into="side")
     grown = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Other"}, headers=CSRF).json()
     other_page = next(one["id"] for one in grown["pages"] if one["name"] == "Other")
@@ -148,3 +154,64 @@ def test_the_side_bar_and_held_sizes_survive_export_and_import(client: TestClien
     assert widgets["Clock"]["options"]["held_size"] == {"w": 12, "h": 3}
     assert widgets["Media"]["options"]["cards"] == [widgets["Notes"]["id"]]
     assert widgets["Notes"]["options"]["held_size"] == {"w": 8, "h": 2}
+
+
+def test_nothing_goes_into_a_side_bar_that_is_off_and_switching_it_off_lets_its_cards_go(client: TestClient) -> None:
+    board, page, clock, *_ = _setup(client)
+    refused = _place(client, page, widget_id=clock["id"], into="side")
+    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "side_off"
+    _side_on(client, page)
+    _place(client, page, widget_id=clock["id"], into="side")
+    answer = client.patch(f"/api/v1/pages/{page}", json={"side_place": "off"}, headers=CSRF)
+    assert _page(answer.json(), page)["side"]["cards"] == [], "back on the grid for good, not pulled off it when the bar returns"
+    again = client.patch(f"/api/v1/pages/{page}", json={"side_place": "left"}, headers=CSRF)
+    assert _page(again.json(), page)["side"]["cards"] == []
+
+
+def test_a_card_picked_into_a_group_leaves_the_side_bar_and_the_other_group(client: TestClient) -> None:
+    """⚠️ Found in review: the picker in a group's settings offers every card, and the card was drawn twice."""
+    board, page, clock, note, group = _setup(client)
+    other = _card(client, page, "core.group", title="Other")
+    _side_on(client, page)
+    _place(client, page, widget_id=clock["id"], into="side")
+    _place(client, page, widget_id=note["id"], into="group", group_id=other["id"])
+    answer = client.patch(f"/api/v1/widgets/{group['id']}", json={"options": {"cards": [clock["id"], note["id"]]}}, headers=CSRF)
+    assert answer.status_code == 200, answer.text
+    shown = _page(client.get(f"/api/v1/boards/{board['slug']}").json(), page)
+    assert _widget(shown, group["id"])["options"]["cards"] == [clock["id"], note["id"]]
+    assert shown["side"]["cards"] == []
+    assert _widget(shown, other["id"])["options"]["cards"] == []
+
+
+def test_a_deleted_card_leaves_the_side_bar_and_its_group(client: TestClient) -> None:
+    """⚠️ Found in review: SQLite hands the last number out again, and the next new card turned up in the side bar."""
+    board, page, clock, note, group = _setup(client)
+    _side_on(client, page)
+    _place(client, page, widget_id=clock["id"], into="side")
+    _place(client, page, widget_id=note["id"], into="group", group_id=group["id"])
+    assert client.delete(f"/api/v1/widgets/{clock['id']}", headers=CSRF).status_code == 204
+    assert client.delete(f"/api/v1/widgets/{note['id']}", headers=CSRF).status_code == 204
+    shown = _page(client.get(f"/api/v1/boards/{board['slug']}").json(), page)
+    from app.db import db_session
+    from app.models import Page, Widget
+
+    with db_session() as db:
+        stored = db.get(Page, page)
+        assert stored.side.get("cards") == []
+        assert db.get(Widget, group["id"]).options["cards"] == []
+    assert shown["side"]["cards"] == []
+
+
+def test_cards_moved_to_another_page_together_leave_the_side_bar(client: TestClient) -> None:
+    board, page, clock, *_ = _setup(client)
+    _side_on(client, page)
+    _place(client, page, widget_id=clock["id"], into="side")
+    grown = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Other"}, headers=CSRF).json()
+    other_page = next(one["id"] for one in grown["pages"] if one["name"] == "Other")
+    moved = client.post("/api/v1/widgets/move", json={"ids": [clock["id"]], "page_id": other_page}, headers=CSRF)
+    assert moved.status_code == 200, moved.text
+    from app.db import db_session
+    from app.models import Page
+
+    with db_session() as db:
+        assert db.get(Page, page).side.get("cards") == []

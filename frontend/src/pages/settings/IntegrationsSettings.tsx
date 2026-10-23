@@ -29,9 +29,12 @@ interface VersionReading {
 }
 
 /** The version a connection runs and how it stands against its project's newest release. */
-function VersionColumn({ reading }: { reading?: VersionReading }) {
+function VersionColumn({ reading, loading }: { reading?: VersionReading; loading: boolean }) {
   const { t } = useTranslation()
-  if (!reading) return <span className="w-32 shrink-0 text-[11px] text-faint max-sm:hidden">{t('settings.integrations.version.checking')}</span>
+  if (!reading) {
+    // Only while the server is looking: a connection it does not read, or a look that failed, says nothing.
+    return <span className="w-32 shrink-0 text-[11px] text-faint max-sm:hidden">{loading ? t('settings.integrations.version.checking') : ''}</span>
+  }
   return (
     <span className="w-32 shrink-0 grid text-[11px] leading-tight max-sm:hidden" data-version={reading.state}>
       <span className="num truncate" title={reading.problem || undefined}>
@@ -152,7 +155,7 @@ export function IntegrationsSettings() {
                   )}
                 </div>
               </div>
-              {admin && integration.enabled && !integration.demo && <VersionColumn reading={versions.data?.[String(integration.id)]} />}
+              {admin && integration.enabled && !integration.demo && <VersionColumn reading={versions.data?.[String(integration.id)]} loading={versions.isLoading} />}
               <span className="dot" data-status={!integration.enabled ? 'unknown' : integration.last_error ? 'bad' : integration.last_ok_at || integration.demo ? 'ok' : 'unknown'} />
               {admin && (
                 <>

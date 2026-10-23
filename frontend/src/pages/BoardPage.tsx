@@ -225,11 +225,11 @@ export function BoardPage() {
   // Bumped when an arrangement is put back from here, so the grid draws it fresh.
   const [epoch, setEpoch] = useState(0)
   const onLayoutChange = useCallback(
-    (breakpoint: Breakpoint, layout: LayoutItem[]) => {
+    (breakpoint: Breakpoint, layout: LayoutItem[], quiet?: boolean) => {
       if (!activePage) return
       const pageId = activePage.id
       if (breakpoint === 'lg') {
-        stepsOf(pageId).record(shown(pageId))
+        if (!quiet) stepsOf(pageId).record(shown(pageId))
         show(pageId, layout)
         note(pageId)
       }

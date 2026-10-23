@@ -48,6 +48,10 @@ def set_side(page: Page, place: Any = None, width: Any = None) -> None:
         if place not in PLACES:
             raise error("bad_side", "The side bar stands left, right or nowhere.")
         current["place"] = place
+        # Switched off, its cards go back onto the grid for good, rather than
+        # being pulled off it again whenever the bar comes back.
+        if place == "off":
+            current["cards"] = []
     if width is not None:
         if width not in WIDTHS:
             raise error("bad_side", "The side bar is narrow or wide.")
@@ -101,6 +105,8 @@ def place(db: Session, page: Page, widget: Widget, into: str, *, group: Widget |
         if len(held) >= MOST_TUCKED:
             raise error("group_full", f"A group holds at most {MOST_TUCKED} cards.")
     elif into == "side":
+        if side_of(page)["place"] == "off":
+            raise error("side_off", "This page has no side bar. Switch it on above the board first.")
         if len([number for number in side_of(page)["cards"] if number != widget.id]) >= MOST_SIDE:
             raise error("side_full", f"A side bar holds at most {MOST_SIDE} cards.")
     elif into == "board":

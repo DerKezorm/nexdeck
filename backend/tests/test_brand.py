@@ -188,3 +188,17 @@ def test_the_logo_travels_with_a_backup(client: TestClient) -> None:
     files = _inside(_archive(client, entry["name"]))
     assert files.get("brand/logo.svg") == SVG
     assert "brand/icon-512.png" in files
+
+
+def test_a_stored_logo_name_from_elsewhere_is_no_logo(client: TestClient, data_dir: Path) -> None:
+    """A restored or edited setting cannot point outside the logo files."""
+    from app.db import db_session
+    from app.models import Setting
+
+    setup_admin(client)
+    (data_dir / "secret.txt").write_text("nothing for the public")
+    with db_session() as db:
+        db.add(Setting(key="brand", value={"logo": "../secret.txt", "stamp": "x"}))
+        db.commit()
+    assert client.get("/api/v1/brand").json()["logo"] is None
+    assert client.get("/api/v1/brand/logo").status_code == 404

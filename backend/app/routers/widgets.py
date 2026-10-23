@@ -216,6 +216,9 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     board, _ = require_board_id(db, page.board_id, user, "edit")
     integration_id = widget.integration_id
     remove_from_layouts(page, widget.id)
+    # ⚠️ Out of its group and the side bar as well: SQLite hands the number of
+    # the last card out again, and the next new card turned up inside them.
+    holders.take_out(page, widget.id)
     history.forget_widget(db, widget.id)
     db.delete(widget)
     db.commit()
@@ -285,6 +288,7 @@ def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
 
     for widget, page in moving:
         remove_from_layouts(page, widget.id)
+        holders.take_out(page, widget.id)
         widget.page_id = target.id
         adapter, widget_kind = split_widget_kind(widget.kind)
         widget_type = adapter.widget(widget_kind)

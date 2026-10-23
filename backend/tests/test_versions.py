@@ -48,7 +48,9 @@ def test_the_version_is_read_from_a_sentence_or_a_tag(text: str, found: str | No
         ("30.0.1", "30.0.1.2", "behind"),
         ("2026.10.3", "2026.10.4", "behind"),
         ("1.5.0", "1.4.9", "current"),
-        ("6.2-beta", "6.2", "current"),
+        ("6.2-beta", "6.2", "behind"),
+        ("6.2", "6.2-beta", "current"),
+        ("6.3-beta", "6.2", "current"),
         (None, "1.0", "unknown"),
         ("1.0", None, "unknown"),
     ],
@@ -61,6 +63,7 @@ def test_a_jump_of_the_first_number_is_a_major_version() -> None:
     assert versions.major_jump("8.4.13", "9.0.10")
     assert not versions.major_jump("8.4.13", "8.4.14")
     assert not versions.major_jump("9.0.0", "9.0.0")
+    assert not versions.major_jump("2025.12.4", "2026.1.0"), "a version named by the year turns over every January"
 
 
 class _Fake:
@@ -224,3 +227,20 @@ def test_a_connection_for_administrators_stays_off_a_card_nobody_admin_owns(clie
     setup_admin(client)
     _connection(client, "sonarr", "Series", admin_only=True)
     assert _card({}).items == []
+
+
+def test_one_service_with_an_odd_answer_does_not_take_the_others_down(release: dict[str, Any]) -> None:
+    """⚠️ Found in review: a test that reads a missing field raises KeyError, and the whole list failed."""
+
+    class Odd(_Fake):
+        async def running_version(self, config: dict[str, Any], ctx: Context) -> str | None:
+            raise KeyError("version")
+
+    services = {1: Odd(), 2: _Fake("4.0.9")}
+
+    async def resolve(integration_id: int) -> tuple[Any, dict[str, Any], Context]:
+        return services[integration_id], {}, Context(None)  # type: ignore[arg-type]
+
+    readings = asyncio.run(versions.read_many([(1, "sonarr"), (2, "sonarr")], resolve, Context(None)))  # type: ignore[arg-type]
+    assert readings[2].running == "4.0.9"
+    assert readings[1].running is None and "KeyError" in readings[1].problem

@@ -49,7 +49,8 @@ interface Props {
   canAct?: boolean
   /** May change the board: a note card is written from the card itself. */
   canWrite?: boolean
-  onLayoutChange?: (breakpoint: Breakpoint, layout: LayoutItem[]) => void
+  /** ``quiet``: an arrangement the board makes itself, a group grown to its cards, not a step to take back. */
+  onLayoutChange?: (breakpoint: Breakpoint, layout: LayoutItem[], quiet?: boolean) => void
   onAction?: (widgetId: number, action: Action) => void
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
@@ -176,7 +177,9 @@ export function BoardGrid(props: Props) {
       const held = cardsOf(widget, everyCard)
       if (!freeGroup(held)) continue
       const sizes = held.map((card) => heldSizeOf(card, String(widget.options?.columns ?? 'auto')))
-      grownUp = grown(grownUp as LayoutItem[], String(widget.id), boardRowsFor(rowsOf(pack(sizes)), ROW_HEIGHT, GAP)) as Layout[]
+      const need = boardRowsFor(rowsOf(pack(sizes)), ROW_HEIGHT, GAP)
+      // Its height is its cards': the handle changes the width only.
+      grownUp = (grown(grownUp as LayoutItem[], String(widget.id), need) as Layout[]).map((item) => (item.i === String(widget.id) ? { ...item, minH: need, maxH: need } : item))
     }
     return [placed, grownUp]
   }, [layouts.lg, widgets, everyCard, columns])
@@ -184,11 +187,12 @@ export function BoardGrid(props: Props) {
     if (editing || !folded.length) return fitted
     return fitted.map((item) => (folded.includes(Number(item.i)) && widgets.some((one) => one.id === Number(item.i) && one.kind === 'core.group') ? { ...item, h: 1, minH: 1 } : item))
   }, [fitted, widgets, editing, folded])
-  // While arranging, a group that grew or shrank is saved at its new height.
+  // While arranging, a group that grew or shrank is saved at its new height,
+  // quietly: undo takes back what was done, not what followed from it.
   useEffect(() => {
     if (!editing || !onLayoutChange) return
     if (fitted.every((item, index) => item.h === laid[index]?.h && item.y === laid[index]?.y)) return
-    onLayoutChange('lg', fitted.map(plain))
+    onLayoutChange('lg', fitted.map(plain), true)
   }, [editing, onLayoutChange, fitted, laid])
   const gridLayouts: Layouts = useMemo(() => ({ lg: wide, sm: stackedFor(wide, COLUMNS.sm, columns) }), [wide, columns])
   const cols = useMemo(() => ({ lg: columns, sm: COLUMNS.sm }), [columns])
@@ -315,7 +319,9 @@ export function BoardGrid(props: Props) {
     finish.current = (widget, from, target, x, y) => {
       if (!onPlace) return
       if (target.before === widget.id && target.zone === from) return
-      const size = heldSizeOf(widget)
+      // The width the group drew it at, which for a card without one of its own is the group's even share.
+      const source = from.startsWith('group:') ? everyCard.find((one) => one.id === Number(from.split(':')[1])) : undefined
+      const size = heldSizeOf(widget, String(source?.options?.columns ?? 'auto'))
       if (target.zone === 'board') {
         const box = host.current?.getBoundingClientRect()
         if (!box) return

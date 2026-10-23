@@ -1951,6 +1951,12 @@ textarea.input {
   pointer-events: auto;
 }
 
+/* ⚠️ On a touch screen a finger on a held card would scroll the page, and the
+   browser cancels the drag the moment it does. While arranging it drags. */
+.nd-held-editing {
+  touch-action: none;
+}
+
 /* Room under the last row of cards while the floating player sits at the bottom.
    The kiosk's own `pb-6` on <main> must not take it back. */
 body.has-player-bar main {
