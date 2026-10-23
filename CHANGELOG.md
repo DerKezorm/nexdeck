@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.47.0 (2026-10-23)
 
 ### Added
 
@@ -16,6 +16,14 @@ project uses semantic versioning.
 
 - A kiosk link showed a **topology page** as an empty page. The wall display now draws the network plan, read-only.
 - The **Add page** dialog lists the kinds of page one under the other. Three side by side broke every line after two words, and the "For Home Assistant" label over two lines.
+
+### Changed
+
+- A network plan is loaded when its page opens, not with every board: the first load is 15 kB lighter.
+
+### Upgrading
+
+Nothing to do. The database gains a column for the side bar; 0.46.0 still starts on it. Updates cards that are already on a board take the connected services as a source as well, and show them once Check for updates is switched on under System, About; a card set to "None" under Connected services stays as it was.
 
 ## 0.46.0 (2026-10-23)
 

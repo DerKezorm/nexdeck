@@ -1611,6 +1611,37 @@
         "DOMPurify 3.4.17, which cleans what note cards show.",
         "Thanks to AlexT59 for the idea and the digging into the API (#49)."
       ]
+    },
+    "0.47.0": {
+      "lead": "Your own name and logo, the versions of your services, groups you drag cards into, and a side bar that stays in place.",
+      "sections": [
+        {
+          "title": "Name and logo",
+          "body": "Give the installation a name and a logo of your own. They stand where nexdeck's do: in the browser tab, in the bar, on the sign-in page, under the icon of the installed app and on wall displays. The board's name can stand in front in the tab. The sign-in page shows both, so anyone who reaches the address sees them.",
+          "path": "System > Appearance > Name and logo"
+        },
+        {
+          "title": "Versions of your services",
+          "body": "The Updates card lists every connected service whose version is behind the newest release of its project on GitHub, with the newer version linked to its release notes. Under System, Integrations each connection shows the version it runs. GitHub is only asked while Check for updates is on, which it is not by default.",
+          "path": "System > About > Check for updates, then Edit mode (pencil) > Updates card > Connected services"
+        },
+        {
+          "title": "Groups you drag cards into",
+          "body": "While arranging, drag a card onto a group to put it inside, and drag it out again onto the board. Inside, every card gets a width and a height of its own from the two buttons at its foot, so a wide card can stand beside two small ones. The group grows with what it holds.",
+          "path": "Edit mode (pencil) > drag a card onto a group"
+        },
+        {
+          "title": "A side bar per page",
+          "body": "Left or right of the board, narrow or wide. Drag cards into it like into a group and give each its height. It stays where it is while the page scrolls, stands above the board on a phone and shows on wall displays.",
+          "path": "Edit mode (pencil) > Side bar above the board"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A kiosk link shows a network plan instead of an empty page.",
+        "The Add page dialog lists the kinds of page one under the other, readable at last.",
+        "A network plan is loaded when its page opens: the first load of every board is lighter."
+      ]
     }
   }
 }

@@ -1611,6 +1611,37 @@
         "DOMPurify 3.4.17, das reinigt, was Notizkarten zeigen.",
         "Danke an AlexT59 für die Idee und die Vorarbeit in der API (#49)."
       ]
+    },
+    "0.47.0": {
+      "lead": "Dein eigener Name und dein Logo, die Versionen deiner Dienste, Gruppen zum Hineinziehen und eine Seitenleiste, die stehen bleibt.",
+      "sections": [
+        {
+          "title": "Name und Logo",
+          "body": "Gib der Installation einen eigenen Namen und ein Logo. Beides steht, wo sonst nexdeck steht: im Browser-Tab, in der Leiste, auf der Anmeldeseite, unter dem Symbol der installierten App und auf Wanddisplays. Im Tab kann der Name des Boards davorstehen. Die Anmeldeseite zeigt beides, also sieht es jeder, der die Adresse erreicht.",
+          "path": "System > Aussehen > Name und Logo"
+        },
+        {
+          "title": "Versionen deiner Dienste",
+          "body": "Die Update-Karte nennt jeden verbundenen Dienst, dessen Version hinter dem neuesten Release seines Projekts auf GitHub liegt, die neuere Version verlinkt auf ihre Release-Notizen. Unter System, Anbindungen zeigt jede Anbindung, mit welcher Version sie läuft. GitHub wird nur gefragt, solange „Nach Updates suchen“ eingeschaltet ist, und ab Werk ist es aus.",
+          "path": "System > Über > Nach Updates suchen, dann Bearbeiten (Stift) > Update-Karte > Verbundene Dienste"
+        },
+        {
+          "title": "Gruppen zum Hineinziehen",
+          "body": "Beim Anordnen ziehst du eine Karte auf eine Gruppe, um sie hineinzulegen, und wieder heraus aufs Board. Drinnen bekommt jede Karte über die zwei Knöpfe an ihrem Fuß eine eigene Breite und Höhe, so steht eine breite Karte neben zwei kleinen. Die Gruppe wächst mit ihrem Inhalt.",
+          "path": "Bearbeiten (Stift) > Karte auf eine Gruppe ziehen"
+        },
+        {
+          "title": "Eine Seitenleiste je Seite",
+          "body": "Links oder rechts vom Board, schmal oder breit. Karten ziehst du hinein wie in eine Gruppe und gibst jeder ihre Höhe. Sie bleibt stehen, während die Seite scrollt, steht auf dem Handy über dem Board und erscheint auf Wanddisplays.",
+          "path": "Bearbeiten (Stift) > Seitenleiste über dem Board"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein Kiosk-Link zeigt einen Netzwerkplan statt einer leeren Seite.",
+        "Der Dialog „Seite hinzufügen“ führt die Seitenarten untereinander auf und ist endlich lesbar.",
+        "Ein Netzwerkplan wird erst geladen, wenn seine Seite aufgeht: Jedes Board lädt beim ersten Aufruf leichter."
+      ]
     }
   }
 }
