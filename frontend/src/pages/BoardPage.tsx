@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, FoldVertical, House, LayoutGrid, Network, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -38,12 +38,15 @@ import { useEditedPage } from '../lib/groups'
 import { usePicture } from '../lib/boardPicture'
 import { PictureDialog } from '../components/PictureDialog'
 import { HomePage } from '../components/home/HomePage'
-import { TopologyPage } from '../components/topology/TopologyPage'
 import { useTabTitle } from '../lib/brand'
 import { NO_SIDE, type HeldSize, type Side } from '../lib/holding'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
+
+// A network plan is loaded when a page of that kind opens: most boards have none,
+// and the first load has a limit (tools/weight-check.mjs).
+const TopologyPage = lazy(() => import('../components/topology/TopologyPage').then((module) => ({ default: module.TopologyPage })))
 
 const EDIT_HINT_SEEN = 'nexdeck.editHintSeen'
 
@@ -647,15 +650,17 @@ export function BoardPage() {
           onDone={() => setEditing(false)}
         />
       ) : topology ? (
-        <TopologyPage
-          key={activePage.id}
-          pageId={activePage.id}
-          editing={editing}
-          canEdit={canEdit}
-          onAddPage={() => setNewPage(true)}
-          onSettings={() => setBoardSettings(true)}
-          onDone={() => setEditing(false)}
-        />
+        <Suspense fallback={<div className="flex items-center justify-center py-32"><Spinner /></div>}>
+          <TopologyPage
+            key={activePage.id}
+            pageId={activePage.id}
+            editing={editing}
+            canEdit={canEdit}
+            onAddPage={() => setNewPage(true)}
+            onSettings={() => setBoardSettings(true)}
+            onDone={() => setEditing(false)}
+          />
+        </Suspense>
       ) : (
       <main className={`${WIDTH_CLASS[boardWidth(settings)]} mx-auto px-3 sm:px-4 pt-4`}>
         <div data-no-picture>

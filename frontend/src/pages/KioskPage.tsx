@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -8,7 +8,6 @@ import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { HomePage } from '../components/home/HomePage'
-import { TopologyPage } from '../components/topology/TopologyPage'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
@@ -21,6 +20,9 @@ import { anyCardDown, cardStatus } from '../lib/cardStatus'
 import { WallRest, type Rest } from '../components/WallRest'
 import { useTabTitle } from '../lib/brand'
 import { useLive } from '../stores/live'
+
+// Loaded when a plan is on the wall, as on the board (pages/BoardPage.tsx).
+const TopologyPage = lazy(() => import('../components/topology/TopologyPage').then((module) => ({ default: module.TopologyPage })))
 
 function withinWindow(from: string, to: string, now: Date): boolean {
   if (!from || !to) return false
@@ -241,7 +243,9 @@ export function KioskPage() {
           <HomePage key={page.id} pageId={page.id} editing={false} canEdit={false} canAct={canAct} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
         ) : page.kind === 'topology' ? (
           // ⚠️ A plan has no cards: handed to the grid, it was an empty page on the wall.
-          <TopologyPage key={page.id} pageId={page.id} editing={false} canEdit={false} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+          <Suspense fallback={null}>
+            <TopologyPage key={page.id} pageId={page.id} editing={false} canEdit={false} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+          </Suspense>
         ) : (
           <BoardGrid
             key={page.id}
