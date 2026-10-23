@@ -833,7 +833,8 @@ export function BoardPage() {
               a plan reads a UniFi console's uplinks and port counters, a home page a Home Assistant. */}
           {(unifis.length > 0 || hasses.length > 0) && (
             <>
-              <div className={`grid gap-2 ${unifis.length > 0 && hasses.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`} role="radiogroup" aria-label={t('topology.kind')}>
+              {/* One kind per row: three side by side in a dialog this wide broke every line after two words. */}
+              <div className="grid gap-2" role="radiogroup" aria-label={t('topology.kind')}>
                 {(
                   [
                     ['cards', LayoutGrid, t('topology.kindCards'), t('topology.kindCardsHelp'), true, ''],
@@ -846,7 +847,7 @@ export function BoardPage() {
                     type="button"
                     role="radio"
                     aria-checked={newPageKind === kind}
-                    className={`text-left p-3 rounded-xl border grid gap-1 content-start ${newPageKind === kind ? 'border-[var(--nd-accent)] bg-accent-soft' : 'border-line-strong'}`}
+                    className={`text-left px-3 py-2.5 rounded-xl border flex items-start gap-3 ${newPageKind === kind ? 'border-[var(--nd-accent)] bg-accent-soft' : 'border-line-strong'}`}
                     onClick={() => {
                       setNewPageKind(kind)
                       setNewPageConnection(null)
@@ -855,15 +856,17 @@ export function BoardPage() {
                       if (kind === 'home' && !newPageName.trim()) setNewPageName(t('homePage.defaultName'))
                     }}
                   >
-                    <Icon size={20} className="text-accent" />
-                    <b className="text-sm flex items-center gap-1.5">
-                      {title}
-                      {/* The home page is new and grows: marked as the integrations in beta are. */}
-                      {kind === 'home' && <span className="chip !py-0 text-[10px] cursor-help" title={t('homePage.kindBetaHelp')} data-beta>beta</span>}
-                    </b>
-                    {/* What the kind works with: a home page only with Home Assistant, a plan only with UniFi. */}
-                    {needs && <span className="text-[10.5px] font-medium text-accent justify-self-start rounded-full bg-accent-soft px-2 py-0.5" data-needs>{needs}</span>}
-                    <span className="text-xs text-muted">{help}</span>
+                    <Icon size={20} className="text-accent shrink-0 mt-0.5" />
+                    <span className="grid gap-0.5 min-w-0">
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <b className="text-sm">{title}</b>
+                        {/* What the kind works with: a home page only with Home Assistant, a plan only with UniFi. */}
+                        {needs && <span className="text-[10.5px] font-medium text-accent whitespace-nowrap rounded-full bg-accent-soft px-2 py-0.5" data-needs>{needs}</span>}
+                        {/* The home page is new and grows: marked as the integrations in beta are. */}
+                        {kind === 'home' && <span className="chip !py-0 text-[10px] cursor-help" title={t('homePage.kindBetaHelp')} data-beta>beta</span>}
+                      </span>
+                      <span className="text-xs text-muted">{help}</span>
+                    </span>
                   </button>
                 ))}
               </div>

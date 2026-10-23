@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- A kiosk link showed a **topology page** as an empty page. The wall display now draws the network plan, read-only.
+- The **Add page** dialog lists the kinds of page one under the other. Three side by side broke every line after two words, and the "For Home Assistant" label over two lines.
+
 ## 0.46.0 (2026-10-23)
 
 ### Added
