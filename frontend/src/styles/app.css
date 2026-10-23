@@ -1944,6 +1944,13 @@ textarea.input {
   pointer-events: none;
 }
 
+/* The cards inside a group are the exception: each is taken hold of on its
+   own, to be dragged out or to another place, and its size buttons are pressed.
+   Without this the group swallowed every press on them. */
+.card.is-editing [data-held] {
+  pointer-events: auto;
+}
+
 /* Room under the last row of cards while the floating player sits at the bottom.
    The kiosk's own `pb-6` on <main> must not take it back. */
 body.has-player-bar main {

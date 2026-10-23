@@ -37,7 +37,7 @@ from ..schemas import (
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import grid, history
+from ..services import grid, history, holders
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
@@ -159,6 +159,8 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
             raise error("bad_page", "Widgets move between pages of the same board only.")
         _refuse_unless_cards(target)
         remove_from_layouts(page, widget.id)
+        # Out of a group or the side bar of the page it leaves: there it would be drawn nowhere.
+        holders.take_out(page, widget.id)
         widget.page_id = target.id
         adapter, kind = split_widget_kind(widget.kind)
         place_widget(target, widget.id, adapter.widget(kind).default_size, adapter.widget(kind).min_size, grid.columns(board.settings))

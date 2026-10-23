@@ -2035,5 +2035,20 @@
   },
   "brand": {
     "withNexdeck": "avec nexdeck"
+  },
+  "holding": {
+    "width": "Largeur {{part}}",
+    "whole": "entière",
+    "height": "Hauteur {{rows}}",
+    "widthOf": "Changer la largeur de {{name}}",
+    "heightOf": "Changer la hauteur de {{name}}",
+    "side": "Barre latérale",
+    "place_off": "Désactivée",
+    "place_left": "À gauche",
+    "place_right": "À droite",
+    "width_narrow": "Étroite",
+    "width_wide": "Large",
+    "sideEmpty": "Glissez des cartes ici. Elles restent visibles pendant que la page défile.",
+    "dropInGroup": "Glissez des cartes ici, ou de nouveau sur le tableau."
   }
 }

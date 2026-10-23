@@ -2035,5 +2035,20 @@
   },
   "brand": {
     "withNexdeck": "con nexdeck"
+  },
+  "holding": {
+    "width": "Larghezza {{part}}",
+    "whole": "intera",
+    "height": "Altezza {{rows}}",
+    "widthOf": "Cambia la larghezza di {{name}}",
+    "heightOf": "Cambia l’altezza di {{name}}",
+    "side": "Barra laterale",
+    "place_off": "Spenta",
+    "place_left": "A sinistra",
+    "place_right": "A destra",
+    "width_narrow": "Stretta",
+    "width_wide": "Larga",
+    "sideEmpty": "Trascina qui le schede. Restano in vista mentre la pagina scorre.",
+    "dropInGroup": "Trascina qui le schede, o di nuovo sulla bacheca."
   }
 }

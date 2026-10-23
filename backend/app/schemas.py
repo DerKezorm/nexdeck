@@ -144,6 +144,32 @@ class PagePatch(BaseModel):
     icon: str | None = Field(default=None, max_length=80)
     position: int | None = None
     sections: list[Any] | None = None
+    #: Where the side bar stands (off, left, right) and how wide it is (narrow, wide).
+    #: Its cards come and go with ``POST /pages/{id}/place``.
+    side_place: str | None = Field(default=None, max_length=10)
+    side_width: str | None = Field(default=None, max_length=10)
+
+
+class PlaceSpot(BaseModel):
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    w: int = Field(ge=1, le=36)
+    h: int = Field(ge=1, le=40)
+
+
+class PlaceBody(BaseModel):
+    """One card to the board, into a group or into the side bar, in one step."""
+
+    widget_id: int
+    into: Literal["board", "group", "side"]
+    group_id: int | None = None
+    #: The card it goes in front of, inside a group or the side bar; last without one.
+    before: int | None = None
+    #: On the board: where.
+    spot: PlaceSpot | None = None
+    #: Inside a group or the side bar: its size there, columns of twelve and rows.
+    held_w: int | None = Field(default=None, ge=1, le=12)
+    held_h: int | None = Field(default=None, ge=1, le=12)
 
 
 class LayoutItem(BaseModel):

@@ -39,11 +39,12 @@ from ..schemas import (
     LayoutsBody,
     PageCreate,
     PagePatch,
+    PlaceBody,
     SharesBody,
 )
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
 from ..services import boards as board_service
-from ..services import grid, history
+from ..services import grid, history, holders
 from ..services import home as home_service
 from ..services import topology as topology_service
 from ..services.boards import (
@@ -326,6 +327,33 @@ def patch_page(page_id: int, body: PagePatch, user: CurrentUser, db: DbSession) 
         page.position = body.position
     if body.sections is not None:
         page.sections = body.sections
+    if body.side_place is not None or body.side_width is not None:
+        if (page.kind or "cards") != "cards":
+            raise error("bad_side", "Only a page of cards has a side bar.")
+        holders.set_side(page, body.side_place, body.side_width)
+    db.commit()
+    _announce(board.id)
+    return board_view(db, board, permission)
+
+
+@router.post("/pages/{page_id}/place", summary="Put a card on the board, into a group or into the side bar")
+def place_card(page_id: int, body: PlaceBody, user: CurrentUser, db: DbSession) -> dict:
+    """One card, taken out of wherever it stood and put where it was dropped, in one step.
+
+    ⚠️ One request, not three. A drag from the board into a group used to
+    mean: change the group, change the card, save the arrangement; a failure
+    in the middle left the card in the group and on the board at once.
+    """
+    page, board, permission = _page_for_edit(db, page_id, user)
+    widget = db.get(Widget, body.widget_id)
+    if widget is None or widget.page_id != page.id:
+        raise error("not_found", "There is no such card on this page.", status.HTTP_404_NOT_FOUND)
+    group = db.get(Widget, body.group_id) if body.group_id is not None else None
+    size = {"w": body.held_w or 12, "h": body.held_h or 2} if body.into != "board" and (body.held_w or body.held_h) else None
+    holders.place(
+        db, page, widget, body.into, group=group, before=body.before,
+        spot=body.spot.model_dump() if body.spot is not None else None, size=size, columns=grid.columns(board.settings),
+    )
     db.commit()
     _announce(board.id)
     return board_view(db, board, permission)

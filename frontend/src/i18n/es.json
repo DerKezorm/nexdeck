@@ -2035,5 +2035,20 @@
   },
   "brand": {
     "withNexdeck": "con nexdeck"
+  },
+  "holding": {
+    "width": "Ancho {{part}}",
+    "whole": "completo",
+    "height": "Alto {{rows}}",
+    "widthOf": "Cambiar el ancho de {{name}}",
+    "heightOf": "Cambiar el alto de {{name}}",
+    "side": "Barra lateral",
+    "place_off": "Desactivada",
+    "place_left": "Izquierda",
+    "place_right": "Derecha",
+    "width_narrow": "Estrecha",
+    "width_wide": "Ancha",
+    "sideEmpty": "Arrastra tarjetas aquí. Se quedan a la vista mientras la página se desplaza.",
+    "dropInGroup": "Arrastra tarjetas aquí o de vuelta al tablero."
   }
 }

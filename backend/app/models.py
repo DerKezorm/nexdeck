@@ -334,6 +334,9 @@ class Page(Base):
     topology: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
     #: Home pages only: the connection, and what stands where (``home.clean_layout``).
     home: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
+    #: Card pages: a column beside the grid that stays put while the page scrolls
+    #: (``services/holders.py``): ``{"place", "width", "cards"}``.
+    side: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
 
     board: Mapped[Board] = relationship(back_populates="pages")
     widgets: Mapped[list[Widget]] = relationship(

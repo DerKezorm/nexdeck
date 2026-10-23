@@ -2035,5 +2035,20 @@
   },
   "brand": {
     "withNexdeck": "with nexdeck"
+  },
+  "holding": {
+    "width": "Width {{part}}",
+    "whole": "whole",
+    "height": "Height {{rows}}",
+    "widthOf": "Change the width of {{name}}",
+    "heightOf": "Change the height of {{name}}",
+    "side": "Side bar",
+    "place_off": "Off",
+    "place_left": "Left",
+    "place_right": "Right",
+    "width_narrow": "Narrow",
+    "width_wide": "Wide",
+    "sideEmpty": "Drag cards here. They stay in view while the page scrolls.",
+    "dropInGroup": "Drag cards in here, or out onto the board."
   }
 }

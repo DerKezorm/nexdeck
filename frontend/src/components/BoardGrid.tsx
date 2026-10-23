@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
@@ -6,10 +6,12 @@ import 'react-resizable/css/styles.css'
 
 import { namedSizes, resized, shiftGroup } from '../lib/arranging'
 import { useLook } from '../lib/appearance'
-import { PageCardsContext, tucked, useFolded } from '../lib/groups'
+import { cardsOf, GROUP_KINDS, PageCardsContext, tucked, useFolded, type Holding } from '../lib/groups'
+import { boardRowsFor, cellAt, freeGroup, freeSpot, grown, heldSizeOf, NO_SIDE, pack, rowsOf, sizeFromBoard, sizeOnBoard, type HeldSize, type Side } from '../lib/holding'
 import { fittingRow, perTwelfth } from '../lib/grid'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { CardMenu, type MoveTarget } from './CardMenu'
+import { SideBar } from './Held'
 import { WidgetCard } from './WidgetCard'
 
 const ResponsiveGrid = WidthProvider(Responsive)
@@ -66,6 +68,54 @@ interface Props {
   onMove?: (widgetIds: number[], pageId: number) => void
   /** Counted up by the page when it puts an arrangement back itself, so the grid draws it fresh. */
   epoch?: number
+  /** The page's side bar: where it stands and the cards in it. */
+  side?: Side
+  /** A card dropped onto the board, into a group or into the side bar: one request to the server. */
+  onPlace?: (place: Place) => void
+  /** A size chosen for a card inside a group or the side bar. */
+  onHeldSize?: (widget: WidgetView, size: HeldSize) => void
+  /** Where the side bar stands and how wide it is. */
+  onSide?: (place: Side['place'], width: Side['width']) => void
+}
+
+/** What ``POST /pages/{id}/place`` takes. */
+export interface Place {
+  widget_id: number
+  into: 'board' | 'group' | 'side'
+  group_id?: number
+  before?: number
+  spot?: { x: number; y: number; w: number; h: number }
+  held_w?: number
+  held_h?: number
+}
+
+/**
+ * The drop target under a point: a group's inside, the side bar or the board,
+ * and the held card it lands in front of. What lies inside ``skip``, the card
+ * being dragged, does not count.
+ *
+ * ⚠️ By the boxes, not by what the browser hits: while the board is arranged
+ * the inside of a card takes no pointer events, so a group's inside was never
+ * hit and nothing could be dropped into it.
+ */
+export function dropAt(x: number, y: number, skip?: Element | null): { zone: string; before?: number } | null {
+  const inside = (element: Element) => {
+    if (skip && skip.contains(element)) return false
+    const box = element.getBoundingClientRect()
+    return box.width > 0 && x >= box.left && x <= box.right && y >= box.top && y <= box.bottom
+  }
+  // The innermost: a group's inside lies within the board.
+  const zones = [...document.querySelectorAll<HTMLElement>('[data-drop]')].filter((zone) => !zone.closest('.nd-ghost') && inside(zone))
+  let zone = zones.find((one) => !zones.some((other) => other !== one && one.contains(other)))
+  if (!zone) {
+    // Under the last card is still the board: there is where a new row starts.
+    const board = document.querySelector<HTMLElement>('[data-drop="board"]')
+    const box = board?.getBoundingClientRect()
+    if (board && box && x >= box.left && x <= box.right && y >= box.top) zone = board
+  }
+  if (!zone?.dataset.drop) return null
+  const held = [...zone.querySelectorAll<HTMLElement>('[data-held]')].find(inside)
+  return { zone: zone.dataset.drop, before: held ? Number(held.dataset.held) : undefined }
 }
 
 const STEP: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
@@ -92,12 +142,16 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove } = props
-  // Cards that live inside a tabs card or a group are not on the grid; the
-  // holder draws them, from the whole page handed down below.
-  const inside = useMemo(() => tucked(everyCard), [everyCard])
+  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, side = NO_SIDE, onPlace, onHeldSize, onSide } = props
+  // Cards that live inside a tabs card or a group, or in the side bar, are
+  // not on the grid; the holder draws them, from the whole page handed down below.
+  const sideIds = useMemo(() => (side.place === 'off' ? [] : side.cards), [side])
+  const inside = useMemo(() => tucked(everyCard, sideIds), [everyCard, sideIds])
   const widgets = useMemo(() => everyCard.filter((widget) => !inside.has(widget.id)), [everyCard, inside])
-  const pageCards = useMemo(() => ({ widgets: everyCard, canAct, editing, onAction }), [everyCard, canAct, editing, onAction])
+  const sideCards = useMemo(
+    () => sideIds.map((id) => everyCard.find((widget) => widget.id === id)).filter((widget): widget is WidgetView => Boolean(widget) && !GROUP_KINDS.has(widget!.kind)),
+    [sideIds, everyCard],
+  )
   const folded = useFolded((state) => state.folded)
   const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
@@ -110,11 +164,32 @@ export function BoardGrid(props: Props) {
   // ⚠️ A folded group is one row high while the board is looked at, and as
   // tall as it was saved while it is arranged: a fold is somebody's view and
   // must never be what edit mode saves.
+  //
+  // A group that lays out its cards on a grid of its own is as tall as they
+  // need, worked out at the usual row height so a fitted page cannot set row
+  // height and group height chasing each other. Cards under it move down.
+  const [laid, fitted] = useMemo(() => {
+    const placed = layoutFor(layouts.lg, widgets, columns)
+    let grownUp: Layout[] = placed
+    for (const widget of widgets) {
+      if (widget.kind !== 'core.group') continue
+      const held = cardsOf(widget, everyCard)
+      if (!freeGroup(held)) continue
+      const sizes = held.map((card) => heldSizeOf(card, String(widget.options?.columns ?? 'auto')))
+      grownUp = grown(grownUp as LayoutItem[], String(widget.id), boardRowsFor(rowsOf(pack(sizes)), ROW_HEIGHT, GAP)) as Layout[]
+    }
+    return [placed, grownUp]
+  }, [layouts.lg, widgets, everyCard, columns])
   const wide = useMemo(() => {
-    const laid = layoutFor(layouts.lg, widgets, columns)
-    if (editing || !folded.length) return laid
-    return laid.map((item) => (folded.includes(Number(item.i)) && widgets.some((one) => one.id === Number(item.i) && one.kind === 'core.group') ? { ...item, h: 1, minH: 1 } : item))
-  }, [layouts.lg, widgets, columns, editing, folded])
+    if (editing || !folded.length) return fitted
+    return fitted.map((item) => (folded.includes(Number(item.i)) && widgets.some((one) => one.id === Number(item.i) && one.kind === 'core.group') ? { ...item, h: 1, minH: 1 } : item))
+  }, [fitted, widgets, editing, folded])
+  // While arranging, a group that grew or shrank is saved at its new height.
+  useEffect(() => {
+    if (!editing || !onLayoutChange) return
+    if (fitted.every((item, index) => item.h === laid[index]?.h && item.y === laid[index]?.y)) return
+    onLayoutChange('lg', fitted.map(plain))
+  }, [editing, onLayoutChange, fitted, laid])
   const gridLayouts: Layouts = useMemo(() => ({ lg: wide, sm: stackedFor(wide, COLUMNS.sm, columns) }), [wide, columns])
   const cols = useMemo(() => ({ lg: columns, sm: COLUMNS.sm }), [columns])
   const host = useRef<HTMLDivElement>(null)
@@ -163,7 +238,18 @@ export function BoardGrid(props: Props) {
    * go and then jumped, which looked as if the selection had not taken.
    */
   const [follow, setFollow] = useState<{ dragged: string; dx: number; dy: number; fits: boolean; column: number } | null>(null)
-  const drag = (_layout: Layout[], before: Layout, after: Layout) => {
+  // The group or the side bar a card is over while it is dragged, for the
+  // highlight; the ref is what the drop reads.
+  const [over, setOver] = useState<string | null>(null)
+  const overRef = useRef<{ zone: string; before?: number } | null>(null)
+  const canHold = Boolean(editing && onPlace && screen === 'lg')
+  const drag = (_layout: Layout[], before: Layout, after: Layout, _placeholder?: Layout, event?: globalThis.MouseEvent, element?: HTMLElement) => {
+    if (canHold && event && selected.size <= 1) {
+      const card = widgets.find((one) => String(one.id) === after.i)
+      const found = card && !GROUP_KINDS.has(card.kind) ? dropAt(event.clientX, event.clientY, element) : null
+      overRef.current = found && found.zone !== 'board' ? found : null
+      if ((overRef.current?.zone ?? null) !== over) setOver(overRef.current?.zone ?? null)
+    }
     if (!group(after.i)) return
     const dx = after.x - before.x
     const dy = after.y - before.y
@@ -184,6 +270,21 @@ export function BoardGrid(props: Props) {
   }
   const dragStop = (_layout: Layout[], before: Layout, after: Layout) => {
     setFollow(null)
+    const target = overRef.current
+    overRef.current = null
+    setOver(null)
+    // Into a group or the side bar: one request, and the grid put back where it was.
+    if (target && onPlace) {
+      const size = sizeFromBoard(before, columns)
+      const into = target.zone === 'side' ? 'side' : 'group'
+      const groupId = into === 'group' ? Number(target.zone.split(':')[1]) : undefined
+      if (groupId !== Number(after.i)) {
+        handled.current = true
+        setRedraw((n) => n + 1)
+        onPlace({ widget_id: Number(after.i), into, group_id: groupId, before: target.before, held_w: size.w, held_h: size.h })
+        return
+      }
+    }
     if (!onLayoutChange || !group(after.i)) return
     // A card put back where it was makes no second report to swallow.
     if (after.x === before.x && after.y === before.y) return
@@ -192,6 +293,107 @@ export function BoardGrid(props: Props) {
     if (moved) onLayoutChange('lg', moved)
     else setRedraw((n) => n + 1)
   }
+
+  /**
+   * A card inside a group or the side bar, taken hold of and dragged. The
+   * grid knows nothing of these cards, so the drag is ours: a copy follows
+   * the pointer, the target under it lights up, and the drop is one request.
+   */
+  const [dragging, setDragging] = useState<number | null>(null)
+  const held = useRef<{ widget: WidgetView; x: number; y: number; source: HTMLElement; ghost: HTMLElement | null; from: string } | null>(null)
+  const startDrag = useCallback((event: ReactPointerEvent<HTMLElement>, widget: WidgetView) => {
+    if (event.button !== 0) return
+    // The card's own buttons and the size buttons stay buttons.
+    if ((event.target as HTMLElement).closest('.card-controls, .nd-held-sizes, button, a, input, select, textarea')) return
+    event.stopPropagation()
+    const from = event.currentTarget.closest<HTMLElement>('[data-drop]')?.dataset.drop ?? ''
+    held.current = { widget, x: event.clientX, y: event.clientY, source: event.currentTarget, ghost: null, from }
+  }, [])
+  // The drop, read with what the board looks like at the moment it happens.
+  const finish = useRef<(widget: WidgetView, from: string, target: { zone: string; before?: number }, x: number, y: number) => void>(() => undefined)
+  useEffect(() => {
+    finish.current = (widget, from, target, x, y) => {
+      if (!onPlace) return
+      if (target.before === widget.id && target.zone === from) return
+      const size = heldSizeOf(widget)
+      if (target.zone === 'board') {
+        const box = host.current?.getBoundingClientRect()
+        if (!box) return
+        const cell = cellAt(x - box.left, y - box.top, box.width, columns, rowHeight, gap)
+        const [floorW, floorH] = floorOf(widget, columns)
+        // Out of the side bar a card takes its usual width; out of a group its share of it.
+        const onBoard = from === 'side' ? { w: sizeOf(widget, columns)[0], h: size.h } : sizeOnBoard(size, columns)
+        const w = Math.max(floorW, onBoard.w)
+        const h = Math.max(floorH, onBoard.h)
+        const spot = freeSpot(wide.filter((one) => one.i !== String(widget.id)).map(plain), w, h, cell.x, cell.y, columns)
+        onPlace({ widget_id: widget.id, into: 'board', spot: { ...spot, w: Math.min(columns, w), h } })
+        return
+      }
+      if (target.zone === 'side') {
+        onPlace({ widget_id: widget.id, into: 'side', before: target.before, held_w: size.w, held_h: size.h })
+        return
+      }
+      if (target.zone.startsWith('group:')) {
+        onPlace({ widget_id: widget.id, into: 'group', group_id: Number(target.zone.split(':')[1]), before: target.before, held_w: size.w, held_h: size.h })
+      }
+    }
+  })
+  useEffect(() => {
+    if (!canHold) return
+    const move = (event: PointerEvent) => {
+      const current = held.current
+      if (!current) return
+      if (!current.ghost) {
+        if (Math.hypot(event.clientX - current.x, event.clientY - current.y) < 6) return
+        const box = current.source.getBoundingClientRect()
+        const ghost = current.source.cloneNode(true) as HTMLElement
+        ghost.classList.add('nd-ghost')
+        Object.assign(ghost.style, { position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, zIndex: '60', pointerEvents: 'none', opacity: '0.9', transform: 'rotate(1deg)' })
+        ghost.dataset.dx = String(current.x - box.left)
+        ghost.dataset.dy = String(current.y - box.top)
+        document.body.appendChild(ghost)
+        current.ghost = ghost
+        setDragging(current.widget.id)
+      }
+      const ghost = current.ghost
+      ghost.style.left = `${event.clientX - Number(ghost.dataset.dx)}px`
+      ghost.style.top = `${event.clientY - Number(ghost.dataset.dy)}px`
+      // The card itself counts: let go over its own place and nothing moves.
+      const found = dropAt(event.clientX, event.clientY)
+      setOver(found && found.zone !== 'board' ? found.zone : null)
+      // Near the top or the bottom of the window the page scrolls along.
+      if (event.clientY < 70) window.scrollBy(0, -14)
+      else if (event.clientY > window.innerHeight - 70) window.scrollBy(0, 14)
+    }
+    const stop = (event: PointerEvent, drop: boolean) => {
+      const current = held.current
+      held.current = null
+      if (!current?.ghost) return
+      current.ghost.remove()
+      setDragging(null)
+      setOver(null)
+      const found = drop ? dropAt(event.clientX, event.clientY) : null
+      if (found) finish.current(current.widget, current.from, found, event.clientX, event.clientY)
+    }
+    const up = (event: PointerEvent) => stop(event, true)
+    const cancel = (event: PointerEvent) => stop(event, false)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', cancel)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', cancel)
+      held.current?.ghost?.remove()
+      held.current = null
+    }
+  }, [canHold])
+
+  const holding: Holding | undefined = useMemo(
+    () => (canHold ? { rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove } : undefined),
+    [canHold, rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove],
+  )
+  const pageCards = useMemo(() => ({ widgets: everyCard, canAct, editing, onAction, rowHeight, gap, holding }), [everyCard, canAct, editing, onAction, rowHeight, gap, holding])
 
   /**
    * Move or resize the focused card with the arrow keys.
@@ -236,7 +438,14 @@ export function BoardGrid(props: Props) {
           {t('board.stackedHint')}
         </p>
       )}
-      <div ref={host}>
+      {editing && onSide && screen === 'lg' && (
+        <SideSwitches side={side} onSide={onSide} />
+      )}
+      {/* On a phone the side bar stands over the board. */}
+      {screen === 'sm' && side.place !== 'off' && sideCards.length > 0 && <SideBar side={side} cards={sideCards} stacked />}
+      <div className={`flex items-start ${side.place === 'right' ? 'flex-row-reverse' : ''}`} style={{ gap }}>
+      {screen === 'lg' && side.place !== 'off' && (sideCards.length > 0 || canHold) && <SideBar side={side} cards={sideCards} />}
+      <div ref={host} className="flex-1 min-w-0" data-drop={canHold ? 'board' : undefined}>
       <ResponsiveGrid
         // ⚠️ A new grid when the columns change. The responsive wrapper takes
         // the layouts from its props at once but its columns a render later,
@@ -262,7 +471,8 @@ export function BoardGrid(props: Props) {
         // left to drag was the two millimetres of padding at the edge. Nothing
         // in the body does anything in edit mode anyway; the stylesheet takes
         // its pointer events away, which is what makes this safe.
-        draggableCancel={editing ? '.card-controls' : "button, a, input, select, textarea, [role='button'], .no-drag"}
+        // The cards inside a group are dragged by the group's own hand, not the grid's.
+        draggableCancel={editing ? '.card-controls, [data-held]' : "button, a, input, select, textarea, [role='button'], .no-drag"}
         compactType={autoCompact ? 'vertical' : null}
         // Without compaction, other cards must never move on their own: a card
         // dragged across the board used to push everything aside, and nothing
@@ -325,6 +535,7 @@ export function BoardGrid(props: Props) {
         ))}
       </ResponsiveGrid>
       </div>
+      </div>
       {editing && selected.size > 1 && (
         <p role="status" className="text-xs text-muted px-1 pt-3">
           {t('arrange.selected', { count: selected.size })}
@@ -350,6 +561,32 @@ export function BoardGrid(props: Props) {
         />
       )}
     </PageCardsContext.Provider>
+  )
+}
+
+/** Where the side bar stands and how wide it is, above the board while it is arranged. */
+function SideSwitches({ side, onSide }: { side: Side; onSide: (place: Side['place'], width: Side['width']) => void }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pb-3 text-xs" role="group" aria-label={t('holding.side')}>
+      <span className="text-muted">{t('holding.side')}</span>
+      <span className="inline-flex rounded-lg bg-surface p-0.5 gap-0.5">
+        {(['off', 'left', 'right'] as const).map((place) => (
+          <button key={place} type="button" className={`px-2.5 py-1 rounded-md ${side.place === place ? 'bg-accent-soft text-ink' : 'text-muted'}`} aria-pressed={side.place === place} onClick={() => onSide(place, side.width)}>
+            {t(`holding.place_${place}`)}
+          </button>
+        ))}
+      </span>
+      {side.place !== 'off' && (
+        <span className="inline-flex rounded-lg bg-surface p-0.5 gap-0.5">
+          {(['narrow', 'wide'] as const).map((width) => (
+            <button key={width} type="button" className={`px-2.5 py-1 rounded-md ${side.width === width ? 'bg-accent-soft text-ink' : 'text-muted'}`} aria-pressed={side.width === width} onClick={() => onSide(side.place, width)}>
+              {t(`holding.width_${width}`)}
+            </button>
+          ))}
+        </span>
+      )}
+    </div>
   )
 }
 

@@ -14,7 +14,7 @@ from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
 from ..deps import error, require_integration
 from ..models import Board, Integration, Page, User, Widget
-from . import grid
+from . import grid, holders
 from . import health as health_service
 from .integrations import export_config, store_config
 from .state import live
@@ -291,6 +291,7 @@ def board_view(db: Session, board: Board, permission: str, *, include_live: bool
             "kind": page.kind or "cards",
             "topology": {"integration_id": (page.topology or {}).get("integration_id")} if page.kind == "topology" else None,
             "home": {"integration_id": (page.home or {}).get("integration_id")} if page.kind == "home" else None,
+            "side": holders.side_of(page, {w.id for w in page.widgets}),
         })
     view = {
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
@@ -378,6 +379,10 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
         # A holding card names its cards by place on the page, "#2" for the
         # third: the numbers of the cards are new after every import.
         place = {widget.id: index for index, widget in enumerate(page.widgets)}
+        # The side bar the same way.
+        side = holders.side_of(page, set(place))
+        if side["place"] != "off" or side["cards"]:
+            page_doc["side"] = {"place": side["place"], "width": side["width"], "cards": [f"#{place[number]}" for number in side["cards"]]}
         for widget in page.widgets:
             if widget.integration is not None:
                 integrations[widget.integration.id] = widget.integration
@@ -514,6 +519,12 @@ CARD_EFFECTS = frozenset({"frame", "tint", "fill"})
 _HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
+def _check_held(options: dict) -> None:
+    """A size inside a group or a side bar: columns of twelve and rows, each from 1 to 12."""
+    if "held_size" in options and options["held_size"] is not None and holders.held_size(options["held_size"]) is None:
+        raise error("bad_held_size", "A size inside a group goes from 1 to 12 columns and 1 to 12 rows.")
+
+
 def _check_look(options: dict) -> None:
     """The colour of a card and how it shows, checked before it is stored.
 
@@ -539,6 +550,7 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
     if not options:
         return
     _check_look(options)
+    _check_held(options)
     if kind == "core.app" and options.get("app_id") not in (None, ""):
         from ..models import App
 
@@ -583,6 +595,23 @@ def _by_number(made: list[Widget]) -> None:
                 if target.kind not in GROUP_KINDS and target.id != widget.id:
                     numbers.append(target.id)
         widget.options = {**widget.options, "cards": numbers[:MOST_TUCKED]}
+
+
+def _side_by_number(side: Any, made: list[Widget]) -> dict:
+    """The side bar of a page in a file, its places turned back into the numbers of the cards just made."""
+    if not isinstance(side, dict):
+        return {}
+    numbers: list[int] = []
+    for entry in side.get("cards") or []:
+        if isinstance(entry, str) and entry.startswith("#") and entry[1:].isdigit() and int(entry[1:]) < len(made):
+            target = made[int(entry[1:])]
+            if target.kind not in GROUP_KINDS and target.id not in numbers:
+                numbers.append(target.id)
+    return {
+        "place": side.get("place") if side.get("place") in holders.PLACES else "off",
+        "width": side.get("width") if side.get("width") in holders.WIDTHS else "narrow",
+        "cards": numbers[: holders.MOST_SIDE],
+    }
 
 
 def _user_of(db: Session, owner_id: int | None) -> User | None:
@@ -854,6 +883,7 @@ def import_board(
                 placer.add(widget.id, widget_type.default_size, widget_type.min_size)
             health_service.ensure_check_for_widget(db, widget)
         _by_number(made)
+        page.side = _side_by_number(page_doc.get("side"), made)
         placer.finish()
     # What the text no longer names. The cards first: one that moved to another page is no longer in its old
     # page's list, so deleting that page cannot take it along.

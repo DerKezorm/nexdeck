@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { ApiError, get, post, put } from '../api/client'
+import { ApiError, get, patch, post, put } from '../api/client'
 import type { BoardSummary, BoardWithLive, Integration } from '../api/types'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { BackgroundLayer } from '../components/BackgroundLayer'
-import { BoardGrid } from '../components/BoardGrid'
+import { BoardGrid, type Place } from '../components/BoardGrid'
 import { BoardSettingsSheet } from '../components/BoardSettingsSheet'
 import type { MoveTarget } from '../components/CardMenu'
 import { CommandPalette } from '../components/CommandPalette'
@@ -40,6 +40,7 @@ import { PictureDialog } from '../components/PictureDialog'
 import { HomePage } from '../components/home/HomePage'
 import { TopologyPage } from '../components/topology/TopologyPage'
 import { useTabTitle } from '../lib/brand'
+import { NO_SIDE, type HeldSize, type Side } from '../lib/holding'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
@@ -169,11 +170,11 @@ export function BoardPage() {
   // is the fix, and switching away flushes what is pending rather than
   // dropping it.
   const save = useCallback(
-    (pageId: number) => {
+    (pageId: number): Promise<void> => {
       const body = draft.current[pageId]
-      if (!body) return
+      if (!body) return Promise.resolve()
       delete draft.current[pageId]
-      void put<{ version?: number }>(`/pages/${pageId}/layouts`, { ...body, version: versions.current[pageId] })
+      return put<{ version?: number }>(`/pages/${pageId}/layouts`, { ...body, version: versions.current[pageId] })
         .then((answer) => {
           if (typeof answer?.version === 'number') versions.current[pageId] = answer.version
         })
@@ -261,13 +262,19 @@ export function BoardPage() {
     [activePage, shown, show, queue],
   )
   // Leaving a page, or the board, writes what is still waiting.
-  const flush = useCallback(() => {
+  /** What is waiting to be saved, saved now; the promise settles once the server has it. */
+  const flushNow = useCallback((): Promise<unknown> => {
+    const waiting: Promise<void>[] = []
     for (const [pageId, timer] of Object.entries(timers.current)) {
       window.clearTimeout(timer)
-      save(Number(pageId))
+      waiting.push(save(Number(pageId)))
     }
     timers.current = {}
+    return Promise.all(waiting)
   }, [save])
+  const flush = useCallback(() => {
+    void flushNow()
+  }, [flushNow])
   useEffect(() => flush, [flush, activePage?.id])
 
   useEffect(() => {
@@ -413,6 +420,51 @@ export function BoardPage() {
   const onRefresh = useCallback((id: number) => void post(`/widgets/${id}/refresh`), [])
   const onSettings = useCallback((id: number) => setSettingsFor(id), [])
   const onRemove = useCallback((id: number) => setRemoving(id), [])
+
+  /**
+   * A card dropped into a group, into the side bar or out onto the board.
+   *
+   * ⚠️ What is still waiting to be saved goes first and is waited for: the
+   * drop moves the page on, and an arrangement saved after it would be
+   * refused as somebody else's.
+   */
+  const onPlace = useCallback(
+    (place: Place) => {
+      if (!activePage) return
+      const pageId = activePage.id
+      void flushNow()
+        .then(() => post<BoardWithLive>(`/pages/${pageId}/place`, place))
+        .then((answer) => {
+          const page = answer?.pages?.find((one) => one.id === pageId)
+          if (typeof page?.layout_version === 'number') versions.current[pageId] = Math.max(versions.current[pageId] ?? 0, page.layout_version)
+          return board.refetch()
+        })
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePage, flushNow, t],
+  )
+  /** A size chosen for a card inside a group or the side bar. */
+  const onHeldSize = useCallback(
+    (widget: WidgetView, size: HeldSize) => {
+      void patch(`/widgets/${widget.id}`, { options: { ...(widget.options ?? {}), held_size: size } })
+        .then(() => board.refetch())
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t],
+  )
+  /** Where the side bar of the page stands, and how wide it is. */
+  const onSide = useCallback(
+    (place: Side['place'], width: Side['width']) => {
+      if (!activePage) return
+      void patch(`/pages/${activePage.id}`, { side_place: place, side_width: width })
+        .then(() => board.refetch())
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePage, t],
+  )
 
   /** Where a card may go: the other pages of this board first, then every page of a board this person may change. */
   const moveTargets = useMemo<MoveTarget[]>(() => {
@@ -657,6 +709,10 @@ export function BoardPage() {
           fitHeight={Boolean(settings.fit_height)}
           onLayoutChange={onLayoutChange}
           epoch={epoch}
+          side={activePage.side ?? NO_SIDE}
+          onPlace={canEdit ? onPlace : undefined}
+          onHeldSize={canEdit ? onHeldSize : undefined}
+          onSide={canEdit ? onSide : undefined}
           moveTargets={moveTargets}
           onMove={onMove}
           onAction={onAction}

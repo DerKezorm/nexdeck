@@ -2035,5 +2035,20 @@
   },
   "brand": {
     "withNexdeck": "mit nexdeck"
+  },
+  "holding": {
+    "width": "Breite {{part}}",
+    "whole": "ganz",
+    "height": "Höhe {{rows}}",
+    "widthOf": "Breite von {{name}} ändern",
+    "heightOf": "Höhe von {{name}} ändern",
+    "side": "Seitenleiste",
+    "place_off": "Aus",
+    "place_left": "Links",
+    "place_right": "Rechts",
+    "width_narrow": "Schmal",
+    "width_wide": "Breit",
+    "sideEmpty": "Karten hierher ziehen. Sie bleiben stehen, während die Seite scrollt.",
+    "dropInGroup": "Karten hierher ziehen oder wieder aufs Board."
   }
 }

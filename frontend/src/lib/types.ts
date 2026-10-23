@@ -1,3 +1,5 @@
+import type { Side } from './holding'
+
 /** Mirrors ``WidgetData`` on the server. */
 export type Status = 'ok' | 'warn' | 'bad' | 'unknown'
 
@@ -172,6 +174,8 @@ export interface PageView {
   kind?: 'cards' | 'topology' | 'home'
   topology?: { integration_id: number | null } | null
   home?: { integration_id: number | null } | null
+  /** Card pages: the column beside the grid (lib/holding). */
+  side?: Side
 }
 
 export interface BoardView {

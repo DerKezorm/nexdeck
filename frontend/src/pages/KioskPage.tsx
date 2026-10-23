@@ -253,6 +253,7 @@ export function KioskPage() {
             columns={gridColumns(data.settings)}
             fitHeight={Boolean(data.settings?.fit_height)}
             bottomSpace={24}
+            side={page.side}
             canAct={canAct}
             onAction={(widgetId, action) => {
               // The same rule as on the board: a blank nobody filled in opens

@@ -4,9 +4,10 @@
  * the grid and are drawn inside it. Their data keeps coming as it did, they
  * are only drawn somewhere else. Removing the holder brings them back.
  */
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type PointerEvent as ReactPointerEvent } from 'react'
 import { create } from 'zustand'
 
+import type { HeldSize } from './holding'
 import type { Action, WidgetView } from './types'
 
 export const GROUP_KINDS = new Set(['core.tabs', 'core.group'])
@@ -18,11 +19,12 @@ export function heldBy(widget: WidgetView): number[] {
   return Array.isArray(cards) ? cards.map(Number).filter((one) => Number.isInteger(one)) : []
 }
 
-/** Every card on a page that lives inside a holder, and so not on the grid. */
-export function tucked(widgets: WidgetView[]): Set<number> {
+/** Every card on a page that lives inside a holder or in the side bar, and so not on the grid. */
+export function tucked(widgets: WidgetView[], side: number[] = []): Set<number> {
   const present = new Set(widgets.map((widget) => widget.id))
   const inside = new Set<number>()
   for (const widget of widgets) for (const id of heldBy(widget)) if (present.has(id) && id !== widget.id) inside.add(id)
+  for (const id of side) if (present.has(id) && !GROUP_KINDS.has(widgets.find((widget) => widget.id === id)?.kind ?? '')) inside.add(id)
   return inside
 }
 
@@ -34,12 +36,33 @@ export function cardsOf(holder: WidgetView, widgets: WidgetView[]): WidgetView[]
     .filter((widget): widget is WidgetView => Boolean(widget) && !GROUP_KINDS.has(widget!.kind) && widget!.id !== holder.id)
 }
 
+/**
+ * What a held card needs while the board is arranged: the rows to draw on,
+ * where a drag starts, and how a size is changed. Only while editing.
+ */
+export interface Holding {
+  rowHeight: number
+  gap: number
+  /** The drop target the pointer is over during a drag: ``group:12``, ``side`` or ``board``. */
+  over: string | null
+  /** The card being dragged, which its holder draws faded. */
+  dragging: number | null
+  startDrag?: (event: ReactPointerEvent<HTMLElement>, widget: WidgetView) => void
+  onHeldSize?: (widget: WidgetView, size: HeldSize) => void
+  onSettings?: (widgetId: number) => void
+  onRemove?: (widgetId: number) => void
+}
+
 /** What a holder needs from the page it stands on: the other cards, and the way to act on them. */
 export interface PageCards {
   widgets: WidgetView[]
   canAct?: boolean
   editing?: boolean
   onAction?: (widgetId: number, action: Action) => void
+  /** The board's rows and gap, for a group that lays its cards out on rows of its own. */
+  rowHeight?: number
+  gap?: number
+  holding?: Holding
 }
 
 export const PageCardsContext = createContext<PageCards>({ widgets: [] })

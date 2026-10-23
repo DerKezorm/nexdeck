@@ -5,11 +5,13 @@ import { useTranslation } from 'react-i18next'
 import { tLabel } from '../i18n/texts'
 import { cardStatus } from '../lib/cardStatus'
 import { cardsOf, useFolded, usePageCards } from '../lib/groups'
+import { freeGroup, heldSizeOf, pack } from '../lib/holding'
 import { useDisguise } from '../lib/showcase'
 import type { WidgetView } from '../lib/types'
 import { useLive } from '../stores/live'
 import type { RenderProps } from './renderers'
 import { renderWidget } from './renderers'
+import { HeldCard } from './Held'
 import { ServiceIcon } from './ServiceIcon'
 import { WidgetCard } from './WidgetCard'
 
@@ -109,8 +111,15 @@ export function GroupCard({ widget }: RenderProps) {
   const cards = cardsOf(widget, page.widgets)
   const down = cards.filter((card) => cardStatus(card, live[card.id]) === 'bad').length
   const columns = String(widget.options?.columns ?? 'auto')
+  // A card dropped in, or a size chosen inside, gives the group a grid of its own:
+  // twelve columns, the board's rows, each card as wide and as tall as it says.
+  const free = freeGroup(cards)
+  const arranging = Boolean(page.editing && page.holding)
+  const over = page.holding?.over === `group:${widget.id}`
+  const sizes = cards.map((card) => heldSizeOf(card, columns))
+  const spots = pack(sizes)
   return (
-    <div className="flex-1 min-h-0 flex flex-col" data-testid="group">
+    <div className={`flex-1 min-h-0 flex flex-col ${over ? 'bg-accent-soft' : ''}`} data-testid="group">
       <button
         type="button"
         className="flex items-center gap-2 px-3 py-2 text-left w-full"
@@ -126,7 +135,31 @@ export function GroupCard({ widget }: RenderProps) {
           {down ? <b className="text-bad">· {t('groups.down', { count: down })}</b> : null}
         </span>
       </button>
-      {!folded &&
+      {!folded && (free || arranging) ? (
+        <div
+          className={`flex-1 min-h-0 px-3 pb-3 overflow-y-auto ${arranging ? 'nd-group-drop' : ''}`}
+          data-drop={arranging ? `group:${widget.id}` : undefined}
+        >
+          {cards.length ? (
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gridAutoRows: `${page.rowHeight ?? 68}px`, gap: page.gap ?? 12 }}
+            >
+              {cards.map((card, index) => (
+                <HeldCard
+                  key={card.id}
+                  widget={card}
+                  size={sizes[index]}
+                  style={{ gridColumn: `${spots[index].x + 1} / span ${spots[index].w}`, gridRow: `${spots[index].y + 1} / span ${spots[index].h}` }}
+                />
+              ))}
+            </div>
+          ) : (
+            <Waiting editing={page.editing} />
+          )}
+          {arranging && <p className="text-[11px] text-faint pt-2">{t('holding.dropInGroup')}</p>}
+        </div>
+      ) : !folded &&
         (cards.length ? (
           // ⚠️ Every row keeps a floor (rowFloor) and the box scrolls past it.
           // On a phone the cards wrap to one a row inside a box no taller than
