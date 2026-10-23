@@ -6,8 +6,9 @@ Kept apart and free of imports, so the adapters can name it in their options.
 #: The GitHub project of each kind whose releases name its versions.
 #:
 #: ⚠️ Only projects that publish GitHub releases with the version the service
-#: reports, checked one by one. A wrong entry here says "newer version out"
-#: forever, which is worse than saying nothing.
+#: reports, each one's latest release looked at on 23.10.2026. A wrong entry
+#: here says "newer version out" forever, which is worse than saying nothing.
+#: Readarr is not here: its project is archived and has no release left.
 UPSTREAM: dict[str, str] = {
     "adguard": "AdguardTeam/AdGuardHome",
     "alertmanager": "prometheus/alertmanager",
@@ -28,7 +29,8 @@ UPSTREAM: dict[str, str] = {
     "homebox": "sysadminsmedia/homebox",
     "immich": "immich-app/immich",
     "jellyfin": "jellyfin/jellyfin",
-    "jellyseerr": "Fallenbagel/jellyseerr",
+    # Jellyseerr went into Seerr; the old project only points there.
+    "jellyseerr": "seerr-team/seerr",
     "kimai": "kimai/kimai",
     "komodo": "moghtech/komodo",
     "kubernetes": "kubernetes/kubernetes",
@@ -60,7 +62,6 @@ UPSTREAM: dict[str, str] = {
     "pocketid": "pocket-id/pocket-id",
     "prowlarr": "Prowlarr/Prowlarr",
     "radarr": "Radarr/Radarr",
-    "readarr": "Readarr/Readarr",
     "romm": "rommapp/romm",
     "rtorrent": "rakshasa/rtorrent",
     "seerr": "seerr-team/seerr",
