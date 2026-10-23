@@ -54,9 +54,16 @@ test("a board from Homepage's services.yaml", async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Infrastructure', level: 2 })).toBeVisible()
   await expect(page.locator('section[aria-label="Sonarr"]')).toBeVisible()
   // The heading lies above its group, and has no ground of its own.
-  const media = await page.locator('section[aria-label="Media"]').boundingBox()
-  const sonarr = await page.locator('section[aria-label="Sonarr"]').boundingBox()
-  expect(media && sonarr && media.y + media.height <= sonarr.y).toBe(true)
+  // ⚠️ Read until it holds: the grid first draws at the width it assumes and
+  // then slides every card to the measured one, and a box read during that
+  // slide is half way. Red on 23.10.2026 under load, green three times alone.
+  await expect
+    .poll(async () => {
+      const media = await page.locator('section[aria-label="Media"]').boundingBox()
+      const sonarr = await page.locator('section[aria-label="Sonarr"]').boundingBox()
+      return Boolean(media && sonarr && media.y + media.height <= sonarr.y)
+    })
+    .toBe(true)
   const ground = await page.locator('section[aria-label="Media"]').evaluate((element) => getComputedStyle(element).backgroundColor)
   expect(ground).toBe('rgba(0, 0, 0, 0)')
   const connections = await (await page.request.get('/api/v1/integrations')).json()
