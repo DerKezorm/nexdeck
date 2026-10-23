@@ -114,6 +114,9 @@ describe('an app tile and the catalog', () => {
 })
 
 describe('System, Apps', () => {
+  // ⚠️ Types some 80 characters key by key, and every key draws the form
+  // again: 1.6 s alone, but past the 5 s default in the full run on a busy
+  // machine, three times in a row on 23.10.2026.
   it('lists the apps and adds one with its addresses', async () => {
     const sent: Sent[] = []
     vi.stubGlobal('fetch', server(sent))
@@ -135,7 +138,7 @@ describe('System, Apps', () => {
       addresses: [{ label: 'Proxy', url: 'https://films.example' }, { label: 'Direct', url: 'http://10.0.0.5:7878' }],
       home: 'Direct', away: '',
     })
-  })
+  }, 15_000)
 
   it('says what becomes of the tiles before an app is deleted', async () => {
     const sent: Sent[] = []
