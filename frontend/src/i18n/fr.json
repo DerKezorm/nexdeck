@@ -510,6 +510,29 @@
         "factor_required": "Sur cette installation, chaque compte doit avoir un second facteur.",
         "home": "À la maison."
       }
+    },
+    "brand": {
+      "title": "Nom et logo",
+      "help": "Votre propre nom et votre logo là où figure nexdeck : l’onglet du navigateur, la barre, la page de connexion, l’app installée et les écrans muraux. « À propos de nexdeck » continue d’indiquer nexdeck. La page de connexion affiche les deux, donc toute personne qui atteint cette adresse les voit.",
+      "name": "Nom",
+      "nameHelp": "Jusqu’à 40 caractères. Vide signifie nexdeck.",
+      "logo": "Logo",
+      "logoHelp": "SVG, PNG ou WebP jusqu’à 512 Ko. Un SVG contenant du script est refusé. Les icônes de l’app installée en sont tirées.",
+      "choose": "Choisir un fichier",
+      "remove": "Retirer le logo",
+      "uploaded": "Le logo est en place.",
+      "removed": "Le logo est retiré ; le symbole de nexdeck revient.",
+      "unreadable": "Ce navigateur ne peut pas dessiner ce fichier. Essayez un PNG.",
+      "favicon": "Icône dans l’onglet du navigateur",
+      "favicon_logo": "À partir du logo",
+      "favicon_nexdeck": "Garder l’icône de nexdeck",
+      "appIcon": "Icône de l’app installée",
+      "appIcon_logo": "À partir du logo, sur fond sombre",
+      "appIcon_nexdeck": "Garder l’icône de nexdeck",
+      "appIconHelp": "Un téléphone qui a déjà l’app garde l’ancienne icône jusqu’à ce que l’app soit ajoutée de nouveau.",
+      "boardInTitle": "Mettre le nom du tableau en tête dans l’onglet",
+      "preview": "Aperçu",
+      "sampleBoard": "Maison"
     }
   },
   "menu": {
@@ -1998,5 +2021,8 @@
     "barAdd": "Ajouter à la page",
     "barBoard": "Page et tableau",
     "kindBetaHelp": "Nouveau et encore en chantier : dites-nous ce qui manque ou ne marche pas."
+  },
+  "brand": {
+    "withNexdeck": "avec nexdeck"
   }
 }

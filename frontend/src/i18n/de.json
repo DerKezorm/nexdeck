@@ -510,6 +510,29 @@
         "factor_required": "Auf dieser Installation braucht jedes Konto einen zweiten Faktor.",
         "home": "Zu Hause."
       }
+    },
+    "brand": {
+      "title": "Name und Logo",
+      "help": "Dein eigener Name und dein Logo, wo sonst nexdeck steht: im Browser-Tab, in der Leiste, auf der Anmeldeseite, in der installierten App und auf Wanddisplays. „Über nexdeck“ nennt weiter nexdeck. Die Anmeldeseite zeigt beides, also sieht es jeder, der diese Adresse erreicht.",
+      "name": "Name",
+      "nameHelp": "Bis zu 40 Zeichen. Leer heißt nexdeck.",
+      "logo": "Logo",
+      "logoHelp": "SVG, PNG oder WebP bis 512 KB. Ein SVG mit Skript wird abgelehnt. Die Symbole der installierten App entstehen daraus.",
+      "choose": "Datei wählen",
+      "remove": "Logo entfernen",
+      "uploaded": "Das Logo ist da.",
+      "removed": "Das Logo ist weg, das nexdeck-Symbol ist zurück.",
+      "unreadable": "Dieser Browser kann die Datei nicht zeichnen. Versuch es mit einem PNG.",
+      "favicon": "Symbol im Browser-Tab",
+      "favicon_logo": "Aus dem Logo",
+      "favicon_nexdeck": "nexdeck-Symbol behalten",
+      "appIcon": "Symbol der installierten App",
+      "appIcon_logo": "Aus dem Logo, auf dunklem Grund",
+      "appIcon_nexdeck": "nexdeck-Symbol behalten",
+      "appIconHelp": "Ein Handy, auf dem die App schon liegt, behält das alte Symbol, bis die App neu hinzugefügt wird.",
+      "boardInTitle": "Im Tab den Namen des Boards voranstellen",
+      "preview": "Vorschau",
+      "sampleBoard": "Zuhause"
     }
   },
   "menu": {
@@ -1998,5 +2021,8 @@
     "barAdd": "Auf die Seite",
     "barBoard": "Seite und Board",
     "kindBetaHelp": "Neu und noch im Wachsen: sag uns, was fehlt oder nicht geht."
+  },
+  "brand": {
+    "withNexdeck": "mit nexdeck"
   }
 }

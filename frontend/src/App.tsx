@@ -10,6 +10,7 @@ import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
 import { applyAppearance, type Appearance } from './lib/appearance'
+import { loadBrand } from './lib/brand'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
@@ -71,6 +72,8 @@ export function App() {
   const refresh = useAuth((s) => s.refresh)
   useEffect(() => {
     void setLanguage(storedLanguage()).then(() => refresh())
+    // Signed in or not: the sign-in page and the tab carry the installation's name.
+    void loadBrand()
   }, [refresh])
   return (
     <QueryClientProvider client={queryClient}>

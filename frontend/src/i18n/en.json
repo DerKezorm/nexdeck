@@ -510,6 +510,29 @@
         "factor_required": "Every account owes a second factor on this installation.",
         "home": "At home."
       }
+    },
+    "brand": {
+      "title": "Name and logo",
+      "help": "Your own name and logo where nexdeck's stand: the browser tab, the bar, the sign-in page, the installed app and wall displays. \"About nexdeck\" keeps saying nexdeck. The sign-in page shows both, so anyone who reaches this address sees them.",
+      "name": "Name",
+      "nameHelp": "Up to 40 characters. Empty means nexdeck.",
+      "logo": "Logo",
+      "logoHelp": "SVG, PNG or WebP up to 512 KB. An SVG that carries script is refused. The icons of the installed app are drawn from it.",
+      "choose": "Choose a file",
+      "remove": "Remove logo",
+      "uploaded": "The logo is in place.",
+      "removed": "The logo is gone; nexdeck's mark is back.",
+      "unreadable": "This browser cannot draw that file. Try a PNG.",
+      "favicon": "Icon in the browser tab",
+      "favicon_logo": "From the logo",
+      "favicon_nexdeck": "Keep nexdeck's icon",
+      "appIcon": "Icon of the installed app",
+      "appIcon_logo": "From the logo, on a dark ground",
+      "appIcon_nexdeck": "Keep nexdeck's icon",
+      "appIconHelp": "A phone that already has the app keeps the old icon until the app is added again.",
+      "boardInTitle": "Put the board's name in front in the tab",
+      "preview": "Preview",
+      "sampleBoard": "Home"
     }
   },
   "menu": {
@@ -1998,5 +2021,8 @@
     "barAdd": "Add to the page",
     "barBoard": "Page and board",
     "kindBetaHelp": "New and still growing: tell us what is missing or does not work."
+  },
+  "brand": {
+    "withNexdeck": "with nexdeck"
   }
 }

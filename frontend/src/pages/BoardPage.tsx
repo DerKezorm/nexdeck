@@ -39,6 +39,7 @@ import { usePicture } from '../lib/boardPicture'
 import { PictureDialog } from '../components/PictureDialog'
 import { HomePage } from '../components/home/HomePage'
 import { TopologyPage } from '../components/topology/TopologyPage'
+import { useTabTitle } from '../lib/brand'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 import { usePlayer } from '../stores/player'
@@ -107,6 +108,7 @@ export function BoardPage() {
   const canAct = data ? ['act', 'owner'].includes(data.permission) : false
   const settings = previewSettings ?? data?.settings ?? {}
   useBoardCardStyle(settings.card_style)
+  useTabTitle(data?.name)
 
   // Snapshot and history into the live store.
   useEffect(() => {

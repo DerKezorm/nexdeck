@@ -544,6 +544,16 @@ class SearchBody(BaseModel):
     targets: list[SearchTargetBody] = Field(default_factory=list, max_length=20)
 
 
+class BrandBody(BaseModel):
+    """The name of the installation and where its logo stands in for nexdeck's."""
+
+    #: Roomier than the 40 characters on purpose: a longer one gets a sentence back, not a 422.
+    name: str = Field(default="", max_length=200)
+    favicon: str = Field(default="logo", max_length=20)
+    app_icon: str = Field(default="logo", max_length=20)
+    board_in_title: Any = True
+
+
 class AppearanceBody(BaseModel):
     """The accent colour of the installation, and a style sheet of its own."""
 

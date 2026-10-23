@@ -19,6 +19,7 @@ import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
 import { anyCardDown, cardStatus } from '../lib/cardStatus'
 import { WallRest, type Rest } from '../components/WallRest'
+import { useTabTitle } from '../lib/brand'
 import { useLive } from '../stores/live'
 
 function withinWindow(from: string, to: string, now: Date): boolean {
@@ -112,6 +113,7 @@ export function KioskPage() {
   const history = useQuery({ queryKey: ['kiosk-history', token, board.data?.slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${board.data?.slug}/history`), enabled: Boolean(board.data) })
   const data = board.data
   useBoardCardStyle(data?.settings?.card_style)
+  useTabTitle(data?.name)
   useEffect(() => {
     if (data?.live) setSnapshot(data.live)
     // eslint-disable-next-line react-hooks/exhaustive-deps

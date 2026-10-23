@@ -510,6 +510,29 @@
         "factor_required": "In questa installazione ogni account deve avere un secondo fattore.",
         "home": "A casa."
       }
+    },
+    "brand": {
+      "title": "Nome e logo",
+      "help": "Il tuo nome e il tuo logo dove compare nexdeck: la scheda del browser, la barra, la pagina di accesso, l’app installata e i display a parete. «Informazioni su nexdeck» continua a dire nexdeck. La pagina di accesso li mostra entrambi, quindi li vede chiunque raggiunga questo indirizzo.",
+      "name": "Nome",
+      "nameHelp": "Fino a 40 caratteri. Vuoto significa nexdeck.",
+      "logo": "Logo",
+      "logoHelp": "SVG, PNG o WebP fino a 512 KB. Un SVG con script viene rifiutato. Le icone dell’app installata vengono disegnate da esso.",
+      "choose": "Scegli un file",
+      "remove": "Rimuovi il logo",
+      "uploaded": "Il logo è al suo posto.",
+      "removed": "Il logo è stato rimosso; torna il simbolo di nexdeck.",
+      "unreadable": "Questo browser non riesce a disegnare quel file. Prova con un PNG.",
+      "favicon": "Icona nella scheda del browser",
+      "favicon_logo": "Dal logo",
+      "favicon_nexdeck": "Mantieni l’icona di nexdeck",
+      "appIcon": "Icona dell’app installata",
+      "appIcon_logo": "Dal logo, su sfondo scuro",
+      "appIcon_nexdeck": "Mantieni l’icona di nexdeck",
+      "appIconHelp": "Un telefono che ha già l’app mantiene la vecchia icona finché l’app non viene aggiunta di nuovo.",
+      "boardInTitle": "Metti il nome della bacheca davanti nella scheda",
+      "preview": "Anteprima",
+      "sampleBoard": "Casa"
     }
   },
   "menu": {
@@ -1998,5 +2021,8 @@
     "barAdd": "Aggiungi alla pagina",
     "barBoard": "Pagina e bacheca",
     "kindBetaHelp": "Nuovo e ancora in crescita: dicci cosa manca o non funziona."
+  },
+  "brand": {
+    "withNexdeck": "con nexdeck"
   }
 }

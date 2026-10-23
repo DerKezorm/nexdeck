@@ -7,6 +7,7 @@ import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Switch, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
+import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
@@ -89,6 +90,7 @@ export function AppearanceSettings() {
   const presets = Object.entries(form.presets ?? {})
   return (
     <>
+      <BrandSettings />
       <SettingsCard title={t('settings.appearance.themeTitle')} description={t('settings.appearance.themeHelp')}>
         <ThemeChooser
           value={form.theme ?? null}

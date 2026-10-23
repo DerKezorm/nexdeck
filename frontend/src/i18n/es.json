@@ -510,6 +510,29 @@
         "factor_required": "En esta instalación todas las cuentas deben tener un segundo factor.",
         "home": "En casa."
       }
+    },
+    "brand": {
+      "title": "Nombre y logotipo",
+      "help": "Tu propio nombre y logotipo donde aparece nexdeck: la pestaña del navegador, la barra, la página de inicio de sesión, la app instalada y las pantallas de pared. «Acerca de nexdeck» sigue diciendo nexdeck. La página de inicio de sesión muestra ambos, así que los ve cualquiera que llegue a esta dirección.",
+      "name": "Nombre",
+      "nameHelp": "Hasta 40 caracteres. Vacío significa nexdeck.",
+      "logo": "Logotipo",
+      "logoHelp": "SVG, PNG o WebP de hasta 512 KB. Un SVG con script se rechaza. Los iconos de la app instalada se dibujan a partir de él.",
+      "choose": "Elegir un archivo",
+      "remove": "Quitar el logotipo",
+      "uploaded": "El logotipo está puesto.",
+      "removed": "El logotipo ya no está; vuelve el símbolo de nexdeck.",
+      "unreadable": "Este navegador no puede dibujar ese archivo. Prueba con un PNG.",
+      "favicon": "Icono en la pestaña del navegador",
+      "favicon_logo": "A partir del logotipo",
+      "favicon_nexdeck": "Mantener el icono de nexdeck",
+      "appIcon": "Icono de la app instalada",
+      "appIcon_logo": "A partir del logotipo, sobre fondo oscuro",
+      "appIcon_nexdeck": "Mantener el icono de nexdeck",
+      "appIconHelp": "Un móvil que ya tiene la app conserva el icono antiguo hasta que se vuelva a añadir.",
+      "boardInTitle": "Poner el nombre del tablero delante en la pestaña",
+      "preview": "Vista previa",
+      "sampleBoard": "Casa"
     }
   },
   "menu": {
@@ -1998,5 +2021,8 @@
     "barAdd": "Añadir a la página",
     "barBoard": "Página y tablero",
     "kindBetaHelp": "Nuevo y aún en crecimiento: dinos qué falta o no funciona."
+  },
+  "brand": {
+    "withNexdeck": "con nexdeck"
   }
 }

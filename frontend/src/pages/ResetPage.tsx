@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, get, post } from '../api/client'
 import { BackgroundLayer } from '../components/BackgroundLayer'
-import { Logo } from '../components/Logo'
+import { BrandLogo } from '../components/Brand'
 import { Field, PasswordInput } from '../components/ui'
 
 const SHORTEST = 8
@@ -63,7 +63,7 @@ export function ResetPage() {
       <BackgroundLayer />
       <div className="glass rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-center mb-6">
-          <Logo size={34} />
+          <BrandLogo size={34} />
         </div>
         {state === 'checking' && <p className="text-sm text-muted">{t('common.loading')}</p>}
         {state === 'stale' && (

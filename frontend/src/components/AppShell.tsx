@@ -13,7 +13,7 @@ import { useNotices } from '../stores/notices'
 import { BackgroundLayer } from './BackgroundLayer'
 import { CommandPalette } from './CommandPalette'
 import { HeaderTools } from './HeaderTools'
-import { LogoMark } from './Logo'
+import { BrandMark } from './Brand'
 import { MobileTabBar } from './MobileTabBar'
 import { NoticeDrawer } from './NoticeDrawer'
 
@@ -44,7 +44,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <Link to={home} className="btn btn-icon btn-flat" aria-label={t('common.back')}>
           <ArrowLeft size={16} />
         </Link>
-        <LogoMark size={24} />
+        <BrandMark size={24} />
         <span className="font-semibold text-[15px] truncate">{title}</span>
         <span className="flex-1" />
         <HeaderTools user={user} unread={unread} onNotices={() => setOpen(true)} />

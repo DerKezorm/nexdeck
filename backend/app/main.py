@@ -20,6 +20,7 @@ from . import __version__
 from .adapters.base import close_relaxed_client
 from .config import get_settings
 from .db import db_session, get_engine
+from .deps import DbSession
 from .migrations import migrate
 from .routers import (
     appearance,
@@ -29,6 +30,7 @@ from .routers import (
     avatars,
     backups,
     boards,
+    brand,
     channels,
     discovery,
     home,
@@ -215,7 +217,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, templates, imports, nexcrate, home_network, topology, home):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 
 
@@ -360,6 +362,25 @@ def _index() -> Response:
 _static = _static_dir()
 if _static is not None and (_static / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=_static / "assets"), name="assets")
+
+
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def app_manifest(db: DbSession) -> Response:
+    """The manifest the build wrote, carrying the installation's own name and icons.
+
+    An installed app takes its name and icon from here, so a logo set under
+    Appearance would otherwise stop at the browser tab.
+    """
+    import json
+
+    from .services import brand as brand_service
+
+    directory = _static_dir()
+    built = directory / "manifest.webmanifest" if directory is not None else None
+    if built is None or not built.is_file():
+        return JSONResponse({"code": "not_found", "message": "There is no such address."}, status_code=404)
+    body = brand_service.manifest(db, json.loads(built.read_text(encoding="utf-8")))
+    return Response(json.dumps(body), media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/{path:path}", include_in_schema=False)

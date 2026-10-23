@@ -15,7 +15,7 @@ import { ApiError, get, post, serverUrl } from '../api/client'
 import { Bar } from '../components/AppBar'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { LanguagePill } from '../components/HeaderTools'
-import { Logo } from '../components/Logo'
+import { BrandLogo } from '../components/Brand'
 import { Field, PasswordInput } from '../components/ui'
 import { useAuth } from '../stores/auth'
 import { oidcErrorKey } from '../vendor/nexoidc/oidc'
@@ -140,7 +140,7 @@ export function LoginPage() {
       </Bar>
       <div className="glass rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-center mb-6">
-          <Logo size={34} />
+          <BrandLogo size={34} />
         </div>
         {children}
       </div>

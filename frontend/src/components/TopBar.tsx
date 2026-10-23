@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom'
 import { useDisguise } from '../lib/showcase'
 import { Bar } from './AppBar'
 import { HeaderTools, type HeaderUser } from './HeaderTools'
-import { LogoMark } from './Logo'
+import { BrandMark, BrandName } from './Brand'
+import { shownName, useBrand } from '../lib/brand'
 
 interface Page {
   id: number
@@ -52,6 +53,7 @@ export function TopBar(props: Props) {
   const { boardName, pages, activePage, onPage, editing, onEdit, canEdit, unread, onNotices, onSearch, onBoards, user, boards = [], onSwitchBoard, home = '/' } = props
   // A board or a page may carry a name or an address, as "Anna's room" or "nas.lan" does.
   const disguise = useDisguise()
+  const brand = useBrand()
   const { t } = useTranslation()
   const [menu, setMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -93,11 +95,9 @@ export function TopBar(props: Props) {
   }, [menu])
   return (
     <Bar>
-      <Link to={home} className="flex items-center gap-2 mr-1" aria-label="nexdeck">
-        <LogoMark size={26} />
-        <span className="font-semibold tracking-tight hidden lg:inline">
-          nex<span className="text-accent">deck</span>
-        </span>
+      <Link to={home} className="flex items-center gap-2 mr-1 min-w-0" aria-label={shownName(brand)}>
+        <BrandMark size={26} />
+        <BrandName className="hidden lg:inline" />
       </Link>
       <span className="w-px h-5 bg-line-strong hidden lg:block" />
       <div className="relative" ref={menuRef}>

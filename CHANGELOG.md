@@ -5,6 +5,10 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Name and logo** under System, Appearance: the installation's own name and logo stand where nexdeck's do, in the browser tab, the bar, the sign-in page, the installed app and on wall displays. The logo is an SVG, PNG or WebP; the icons of the installed app are drawn from it in the browser. The tab can keep nexdeck's icon, and the board's name can stand in front of the installation's. "About nexdeck" keeps saying nexdeck. The sign-in page shows both, so they are public. The logo goes into every backup.
+
 ### Fixed
 
 - A kiosk link showed a **topology page** as an empty page. The wall display now draws the network plan, read-only.

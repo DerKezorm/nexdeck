@@ -58,7 +58,7 @@ KEEP_AUTOMATIC = 5
 #: holds their names. Without them an installation comes back with everybody's
 #: picture gone, and nobody connects that to the restore, because "the backup
 #: was complete".
-EXTRAS = ("avatars", "uploads")
+EXTRAS = ("avatars", "uploads", "brand")
 
 #: Thrown out of the copy. Hours of work to refill, nothing to lose.
 #:
