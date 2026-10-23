@@ -8,6 +8,7 @@ import type { BoardWithLive } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { HomePage } from '../components/home/HomePage'
+import { TopologyPage } from '../components/topology/TopologyPage'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner } from '../components/ui'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
@@ -236,6 +237,9 @@ export function KioskPage() {
         {page.kind === 'home' ? (
           // A wall tablet is what a home page is for: its lamps, switched when the display may act.
           <HomePage key={page.id} pageId={page.id} editing={false} canEdit={false} canAct={canAct} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
+        ) : page.kind === 'topology' ? (
+          // ⚠️ A plan has no cards: handed to the grid, it was an empty page on the wall.
+          <TopologyPage key={page.id} pageId={page.id} editing={false} canEdit={false} onAddPage={() => undefined} onSettings={() => undefined} onDone={() => undefined} />
         ) : (
           <BoardGrid
             key={page.id}

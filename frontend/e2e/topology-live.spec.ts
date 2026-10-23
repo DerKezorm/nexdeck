@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test'
 
 const ACCOUNT = { username: 'e2e-admin', password: 'A-long-enough-password-1' }
 
-test('a topology page is offered with a UniFi connection, named for you, and shows the network', async ({ page }) => {
+test('a topology page is offered with a UniFi connection, named for you, and shows the network', async ({ page, browser }) => {
   const trouble: string[] = []
   page.on('pageerror', (error) => trouble.push(String(error)))
 
@@ -53,5 +53,19 @@ test('a topology page is offered with a UniFi connection, named for you, and sho
   await expect(plan.locator('[data-node] section', { hasText: 'Core switch' })).toBeVisible({ timeout: 15_000 })
   await expect(plan.locator('[data-node]')).toHaveCount(8)
   await expect(page.getByRole('button', { name: /Found/ })).toHaveCount(1)
+
+  // ⚠️ Reported on 23.10.2026: on a kiosk link the plan was an empty page,
+  // because the wall display drew every page that was not a home page as cards.
+  const slug = new URL(page.url()).pathname.split('/')[2]
+  const created = await page.request.post(`/api/v1/boards/${slug}/kiosk-tokens`, { data: { name: 'e2e plan' }, headers: { 'X-Nexdeck-Request': '1' } })
+  expect(created.ok()).toBeTruthy()
+  const { url } = (await created.json()) as { url: string }
+  const display = await browser.newContext()
+  const wall = await display.newPage()
+  wall.on('pageerror', (error) => trouble.push(String(error)))
+  await wall.goto(url)
+  await wall.getByRole('navigation').getByRole('button', { name: 'Network' }).last().click()
+  await expect(wall.locator('[data-topology-canvas] [data-node] section', { hasText: 'Core switch' })).toBeVisible({ timeout: 15_000 })
+  await display.close()
   expect(trouble).toEqual([])
 })
