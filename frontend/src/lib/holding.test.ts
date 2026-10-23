@@ -14,7 +14,8 @@ describe('the size of a held card', () => {
     expect(heldSizeOf(card(), '3')).toEqual({ w: 4, h: 2 })
     expect(heldSizeOf(card(), '2')).toEqual({ w: 6, h: 2 })
     expect(heldSizeOf(card(), 'auto')).toEqual({ w: 4, h: 2 })
-    expect(heldSizeOf(card({ held_size: { w: 20, h: 3 } }), '6')).toEqual({ w: 2, h: 2 }, 'nothing outside the twelve')
+    // Nothing outside the twelve.
+    expect(heldSizeOf(card({ held_size: { w: 20, h: 3 } }), '6')).toEqual({ w: 2, h: 2 })
   })
 
   it('goes from the board into the group by its share of the width, and back', () => {

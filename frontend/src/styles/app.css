@@ -1944,19 +1944,6 @@ textarea.input {
   pointer-events: none;
 }
 
-/* The cards inside a group are the exception: each is taken hold of on its
-   own, to be dragged out or to another place, and its size buttons are pressed.
-   Without this the group swallowed every press on them. */
-.card.is-editing [data-held] {
-  pointer-events: auto;
-}
-
-/* ⚠️ On a touch screen a finger on a held card would scroll the page, and the
-   browser cancels the drag the moment it does. While arranging it drags. */
-.nd-held-editing {
-  touch-action: none;
-}
-
 /* Room under the last row of cards while the floating player sits at the bottom.
    The kiosk's own `pb-6` on <main> must not take it back. */
 body.has-player-bar main {
@@ -3302,6 +3289,21 @@ body.has-player-bar main {
    (heizung.html of 20.10.2026) with its sizes; --lc is heating, cooling,
    idle or off. The pill and the chip share their shells with the lamps'. */
 @layer components {
+/* Not in `overrides`: these touch other elements than the rule there that takes
+   the pointer away from the inside of an editing card, so no layer has to win. */
+/* The cards inside a group are the exception: each is taken hold of on its
+   own, to be dragged out or to another place, and its size buttons are pressed.
+   Without this the group swallowed every press on them. */
+.card.is-editing [data-held] {
+  pointer-events: auto;
+}
+
+/* ⚠️ On a touch screen a finger on a held card would scroll the page, and the
+   browser cancels the drag the moment it does. While arranging it drags. */
+.nd-held-editing {
+  touch-action: none;
+}
+
   .climate-stack {
     display: flex;
     flex-direction: column;

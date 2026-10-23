@@ -308,7 +308,7 @@ export function BoardGrid(props: Props) {
   const startDrag = useCallback((event: ReactPointerEvent<HTMLElement>, widget: WidgetView) => {
     if (event.button !== 0) return
     // The card's own buttons and the size buttons stay buttons.
-    if ((event.target as HTMLElement).closest('.card-controls, .nd-held-sizes, button, a, input, select, textarea')) return
+    if ((event.target as HTMLElement).closest('.card-controls, [data-held-sizes], button, a, input, select, textarea')) return
     event.stopPropagation()
     const from = event.currentTarget.closest<HTMLElement>('[data-drop]')?.dataset.drop ?? ''
     held.current = { widget, x: event.clientX, y: event.clientY, source: event.currentTarget, ghost: null, from }

@@ -62,7 +62,7 @@ export function HeldCard({ widget, size, heightOnly, style }: HeldProps) {
         onRemove={remove ? () => remove(widget.id) : undefined}
       />
       {holding?.onHeldSize && (
-        <span className="absolute right-1.5 bottom-1.5 z-10 flex gap-1 nd-held-sizes">
+        <span className="absolute right-1.5 bottom-1.5 z-10 flex gap-1" data-held-sizes>
           {!heightOnly && (
             <button
               type="button"

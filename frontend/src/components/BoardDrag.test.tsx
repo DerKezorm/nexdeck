@@ -53,10 +53,11 @@ function board(editing: boolean) {
 }
 
 describe('what a drag is allowed to start on', () => {
-  it('leaves only the card buttons out while editing', () => {
-    // The settings and delete buttons of the card, and nothing else. Written
-    // out rather than matched loosely: this is the whole rule.
-    expect(board(true)).toBe('.card-controls')
+  it('leaves only the card buttons and the cards inside a group out while editing', () => {
+    // The settings and delete buttons of the card, and the cards a group or the
+    // side bar holds, which are dragged by a hand of their own (lib/holding).
+    // Written out rather than matched loosely: this is the whole rule.
+    expect(board(true)).toBe('.card-controls, [data-held]')
   })
 
   it('still leaves buttons and links alone when not editing', () => {
