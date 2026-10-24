@@ -26,6 +26,7 @@ interactive documentation lives at `/api/docs` on every installation.
 | `GET /api/v1/adapters` | Every adapter with its fields and widgets. |
 | `GET /api/v1/apps` | The app catalog: apps with their addresses (`label`, `url`), the labels for `home` and `away`, and how many `tiles` follow each. Every member may read it. |
 | `POST /api/v1/apps` | Add an app. `PATCH /api/v1/apps/{id}` changes one, and every tile that follows it changes with it; `DELETE` turns its tiles into tiles of their own first. Administrators only. |
+| `POST /api/v1/maintenance` | Put a connection (`integration_id`) or an app tile (`widget_id`) into maintenance, for `minutes` or until `ends_at`, a week at most. Again for the same one moves its end. Until then nothing about it is told except rejected credentials, no outage is opened, and the availability bars draw the time grey. `GET` lists the running and recent ones, `DELETE /api/v1/maintenance/{id}` ends one now. Administrators only. |
 | `GET /api/v1/boards/{slug}/export` | The board as YAML. |
 | `POST /api/v1/boards/import` | Create a board from YAML. |
 | `POST /api/v1/auth/me/avatar` | Upload the own profile picture as `multipart/form-data` with the field `file`. |

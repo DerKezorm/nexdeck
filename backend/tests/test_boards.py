@@ -251,7 +251,9 @@ async def test_problems_widget_lists_the_yellow_and_red_cards_of_its_board(clien
     live.set(radarr["id"], WidgetData(status="unknown", error="The service could not be reached.", meta={"code": "unreachable"}))
     live.set(fine["id"], WidgetData(status="ok"))
     ctx = Context(httpx.AsyncClient(), widget_id=problems["id"], cache={})
-    data = await get_adapter("core").fetch("problems", {}, {}, ctx)
+    # Only this board: the answer a problems card made before 0.49 keeps (migration 24).
+    alone = {"scope": "board", "bell": False, "updates": False}
+    data = await get_adapter("core").fetch("problems", {}, alone, ctx)
     assert data.status == "bad"
     assert [(item["title"], item["status"], item["subtitle"], item["value"]) for item in data.items] == [
         ("Radarr", "bad", "The service could not be reached.", "Media"),
@@ -260,7 +262,7 @@ async def test_problems_widget_lists_the_yellow_and_red_cards_of_its_board(clien
     assert data.items[0]["error_code"] == "unreachable"
     live.set(unifi["id"], WidgetData(status="ok"))
     live.set(radarr["id"], WidgetData(status="ok"))
-    calm = await get_adapter("core").fetch("problems", {}, {}, ctx)
+    calm = await get_adapter("core").fetch("problems", {}, alone, ctx)
     assert calm.status == "ok" and calm.items == [] and calm.meta["empty"] == "Everything is fine"
 
 

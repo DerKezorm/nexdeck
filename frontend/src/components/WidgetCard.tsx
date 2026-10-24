@@ -1,10 +1,11 @@
-import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2 } from 'lucide-react'
-import { useEffect, useId, useRef, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2, Wrench } from 'lucide-react'
+import { lazy, Suspense, useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { shownStyle, useLook } from '../lib/appearance'
 import { colourKind, followPointer, lookOf, useLogoColour } from '../lib/cardLook'
 import { cardStatus } from '../lib/cardStatus'
+import { maintenanceTarget } from '../lib/maintenance'
 import { canRefract, refract } from '../lib/refraction'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
@@ -31,6 +32,9 @@ interface Props {
 }
 
 const INTERACTIVE = 'a, button, input, select, textarea, [role="button"], .no-click'
+
+/** The maintenance dialog loads when an administrator opens it, not with every board. */
+const MaintenanceDialog = lazy(() => import('./MaintenanceDialog').then((module) => ({ default: module.MaintenanceDialog })))
 
 /** The frame every widget shares: header, floating controls, body, error strip. */
 export function WidgetCard({ widget, data, series, editing, canAct, canWrite, onAction, onRefresh, onSettings, onRemove, onArrange }: Props) {
@@ -76,8 +80,34 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
     window.open(link, '_blank', 'noopener,noreferrer')
   }
 
+  // Maintenance: an administrator sets it from the card; everyone sees until when.
+  const admin = useAuth((state) => state.user?.role === 'admin')
+  const [maintaining, setMaintaining] = useState(false)
+  const mayMaintain = admin && maintenanceTarget(widget) != null
+  const away = widget.maintenance ?? null
+  const awayLabel = away ? t('maintenance.chip', { time: new Date(away.until).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }) }) : ''
+  const awayChip = away ? (
+    mayMaintain ? (
+      <button type="button" className="nd-away max-w-[50%]" onClick={() => setMaintaining(true)} title={awayLabel} aria-label={awayLabel} data-testid="card-maintenance">
+        <Wrench size={10} aria-hidden="true" />
+        {/* A narrow card keeps its title; the wrench alone says it, the words are in the tooltip. */}
+        <span className="truncate hidden @min-[300px]:inline">{awayLabel}</span>
+      </button>
+    ) : (
+      <span className="nd-away max-w-[50%]" title={awayLabel} aria-label={awayLabel} role="img" data-testid="card-maintenance">
+        <Wrench size={10} aria-hidden="true" />
+        <span className="truncate hidden @min-[300px]:inline">{awayLabel}</span>
+      </span>
+    )
+  ) : null
+
   const controls = (
     <>
+      {mayMaintain && !editing && !away && (
+        <button className="btn btn-icon h-6 w-6 btn-flat" onClick={() => setMaintaining(true)} aria-label={t('maintenance.button')} title={t('maintenance.button')}>
+          <Wrench size={13} />
+        </button>
+      )}
       {onRefresh && !editing && (
         <button className="btn btn-icon h-6 w-6 btn-flat" onClick={onRefresh} aria-label={t('widget.refreshNow')} title={t('widget.refreshNow')}>
           <RefreshCw size={13} />
@@ -105,11 +135,15 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       )}
     </>
   )
-  const showControls = editing ? Boolean(onSettings || onRemove || onArrange) : Boolean(onRefresh || link)
+  const showControls = editing ? Boolean(onSettings || onRemove || onArrange) : Boolean(onRefresh || link || (mayMaintain && !away))
 
   // A colour of the card's own; a heading has one of its kind already.
   const logo = useLogoColour(widget.icon, !plain && colourKind(widget.options?.card_colour) === 'icon')
-  const look = plain ? { className: '', style: {} } : lookOf(widget.options, logo)
+  // The attention card takes the colour of the worst it lists, unless it has one of its own.
+  const tinted = widget.renderer === 'attention' && (status === 'bad' || status === 'warn') && colourKind(widget.options?.card_colour) === 'none'
+    ? { ...widget.options, card_colour: status === 'bad' ? 'red' : 'yellow', card_effect: 'tint' }
+    : widget.options
+  const look = plain ? { className: '', style: {} } : lookOf(tinted, logo)
   const frame = useRef<HTMLElement>(null)
   const filterId = `nd-lg-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const liquid = useLook((state) => shownStyle(state) === 'liquid' && state.refraction)
@@ -138,6 +172,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   }, [plain])
 
   return (
+    <>
     <section
       ref={frame}
       className={`card glass ${plain ? 'card-plain' : ''} ${editing ? 'is-editing' : ''} ${clickable ? 'has-link' : ''} ${failed ? 'has-error' : ''} ${look.className}`}
@@ -159,6 +194,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
               {reasons[0]}
             </span>
           )}
+          {awayChip}
           {/* In the head, beside the dot and the beta mark rather than over them. */}
           {showControls && <div className="card-controls in-head">{controls}</div>}
           <span className="dot" data-status={status} role="img" aria-label={statusTitle} title={statusTitle} />
@@ -171,6 +207,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       )}
       {/* A card without a head: the controls float over the corner, always while editing, on hover otherwise. */}
       {showControls && bare && <div className="card-controls glass">{controls}</div>}
+      {bare && awayChip ? <div className="nd-away-corner">{awayChip}</div> : null}
       <div className={`flex-1 min-h-0 flex flex-col ${veiled ? 'nd-veiled' : ''}`} aria-hidden={veiled || undefined}>
         {renderWidget({ widget, data, series, canAct, canWrite, onAction, link, editing })}
       </div>
@@ -189,6 +226,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
         </div>
       )}
     </section>
+    {/* Beside the card, not in it: a click in the dialog must not reach the card's own link. */}
+    {maintaining ? <Suspense fallback={null}><MaintenanceDialog widget={widget} open onClose={() => setMaintaining(false)} /></Suspense> : null}
+    </>
   )
 }
 

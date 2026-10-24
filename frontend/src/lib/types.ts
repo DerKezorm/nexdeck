@@ -140,6 +140,8 @@ export interface WidgetView {
   default_size?: [number, number]
   min_size?: [number, number]
   health?: HealthView | null
+  /** The running maintenance of the card's connection, or of the app tile itself; `until` is ISO. */
+  maintenance?: { id: number; until: string } | null
 }
 
 export interface HealthView {

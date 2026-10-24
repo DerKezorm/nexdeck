@@ -72,9 +72,10 @@ test('the buttons of a hovered card leave the dot and the beta mark in sight', a
     await expect(section.getByText('beta', { exact: true })).toBeVisible()
 
     await section.hover()
-    // Both buttons in sight once the card is hovered, and the transition run.
+    // All three buttons in sight once the card is hovered, and the transition run:
+    // maintenance (an administrator looks), refresh and the link.
     await expect(section.getByRole('button', { name: 'Refresh now' })).toBeVisible()
-    await expect.poll(async () => (await overlaps(page, 'Nomad jobs')).buttons).toBe(2)
+    await expect.poll(async () => (await overlaps(page, 'Nomad jobs')).buttons).toBe(3)
     await page.waitForTimeout(300)
     const seen = await overlaps(page, 'Nomad jobs')
     expect(seen.marks, 'the card shows no dot or no beta mark').toBe(2)

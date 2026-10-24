@@ -2009,7 +2009,19 @@
     "A tinted tile": "Un riquadro colorato",
     "A coloured edge": "Un bordo colorato",
     "History behind the number": "Andamento dietro il numero",
-    "The last hours as a faint line, as the card itself records them.": "Le ultime ore come una linea tenue, come la scheda stessa le registra."
+    "The last hours as a faint line, as the card itself records them.": "Le ultime ore come una linea tenue, come la scheda stessa le registra.",
+    "Needs attention": "Da controllare",
+    "What needs a look, from every board of this board's owner: cards that are yellow or red, services that do not answer and unread warnings from the bell. Otherwise it says that everything is fine.": "Ciò che richiede un’occhiata, da tutte le bacheche del proprietario di questa bacheca: schede gialle o rosse, servizi che non rispondono e avvisi non letti della campanella. Altrimenti dice che va tutto bene.",
+    "From where": "Da dove",
+    "Only this board": "Solo questa bacheca",
+    "The card is read once for everyone who sees it, so it shows what the owner of the board sees.": "La scheda viene letta una volta per tutti quelli che la vedono, quindi mostra ciò che vede il proprietario della bacheca.",
+    "Unread warnings from the bell": "Avvisi non letti della campanella",
+    "Warnings and errors the owner has not read yet. Plain news like a finished download is left out.": "Avvisi ed errori che il proprietario non ha ancora letto. Le semplici notizie, come un download completato, restano fuori.",
+    "Waiting updates as a quiet line": "Aggiornamenti in attesa come riga discreta",
+    "Updates never colour the card. They need Check for updates under System, About.": "Gli aggiornamenti non colorano mai la scheda. Serve Cerca aggiornamenti in Sistema, Informazioni.",
+    "Tapping a row opens": "Toccare una riga apre",
+    "The card, on its board": "La scheda, nella sua bacheca",
+    "The service": "Il servizio"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3220,6 +3232,7 @@
     "Rsync": "Rsync",
     "Cloud backup": "Backup cloud",
     "Reboot required": "Riavvio necessario",
-    "major version": "versione principale"
+    "major version": "versione principale",
+    "Task Photos": "Attività Foto"
   }
 }

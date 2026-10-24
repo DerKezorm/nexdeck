@@ -6,27 +6,53 @@ Nothing in this module touches the database.
 
 from __future__ import annotations
 
+import time
+
 from ..adapters.base import WidgetData
+
+
+def level_of(data: WidgetData) -> str:
+    """Red, yellow or neither, the way a card shows it: a failed fetch is red."""
+    if data.error:
+        return "bad"
+    return data.status if data.status in ("warn", "bad") else "ok"
 
 
 class LiveState:
     def __init__(self) -> None:
         self._data: dict[int, WidgetData] = {}
+        self._since: dict[int, float | None] = {}
 
     def get(self, widget_id: int) -> WidgetData | None:
         return self._data.get(widget_id)
 
     def set(self, widget_id: int, data: WidgetData) -> None:
+        before = self._data.get(widget_id)
+        level = level_of(data)
+        if before is None:
+            # ⚠️ A card that is already yellow or red the first time it is seen
+            # turned so before anybody looked, after a restart for one. Its
+            # "since" is unknown, not now: the attention card would otherwise
+            # call a disk that filled up last week new after every update.
+            self._since[widget_id] = time.time() if level == "ok" else None
+        elif level_of(before) != level:
+            self._since[widget_id] = time.time()
         self._data[widget_id] = data
+
+    def since(self, widget_id: int) -> float | None:
+        """When the card last changed between green, yellow and red, if that was seen."""
+        return self._since.get(widget_id)
 
     def forget(self, widget_id: int) -> None:
         self._data.pop(widget_id, None)
+        self._since.pop(widget_id, None)
 
     def snapshot(self, widget_ids: list[int]) -> dict[int, WidgetData]:
         return {i: self._data[i] for i in widget_ids if i in self._data}
 
     def clear(self) -> None:
         self._data.clear()
+        self._since.clear()
 
 
 live = LiveState()

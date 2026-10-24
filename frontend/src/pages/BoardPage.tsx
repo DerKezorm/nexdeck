@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, FoldVertical, House, LayoutGrid, Network, Plus, Redo2, Settings2, Undo2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, get, patch, post, put } from '../api/client'
 import type { BoardSummary, BoardWithLive, Integration } from '../api/types'
@@ -18,6 +18,7 @@ import { NoticeDrawer } from '../components/NoticeDrawer'
 import { TopBar } from '../components/TopBar'
 import { Confirm, Dialog, Spinner, Toast } from '../components/ui'
 import { WhatsNewDialog } from '../components/WhatsNewDialog'
+import { focusCard } from '../lib/focusCard'
 import { WidgetLibrary } from '../components/WidgetLibrary'
 import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
 import { useStream } from '../hooks/useStream'
@@ -115,6 +116,23 @@ export function BoardPage() {
   const settings = previewSettings ?? data?.settings ?? {}
   useBoardCardStyle(settings.card_style)
   useTabTitle(data?.name)
+
+  // A row of the attention card on another board leads here with the card to show.
+  const location = useLocation()
+  const focus = (location.state as { focus?: number } | null)?.focus
+  useEffect(() => {
+    if (!focus || !activePage) return
+    let tries = 0
+    // The page draws its cards a moment after the board has arrived.
+    const timer = window.setInterval(() => {
+      tries += 1
+      if (focusCard(focus) || tries > 20) {
+        window.clearInterval(timer)
+        navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+      }
+    }, 100)
+    return () => window.clearInterval(timer)
+  }, [focus, activePage, navigate, location.pathname, location.search])
 
   // Snapshot and history into the live store.
   useEffect(() => {

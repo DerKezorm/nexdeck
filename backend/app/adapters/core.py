@@ -294,12 +294,25 @@ class CoreAdapter(Adapter):
         ),
         WidgetType(
             kind="problems",
-            label="Problems",
-            description="Every card on this board that is yellow or red, with its reason.",
-            renderer="list",
-            default_size=(3, 2),
+            label="Needs attention",
+            description="What needs a look, from every board of this board's owner: cards that are yellow or red, services that do not answer and unread warnings from the bell. Otherwise it says that everything is fine.",
+            renderer="attention",
+            default_size=(4, 4),
             min_size=(2, 1),
             refresh_seconds=15,
+            options=(
+                # ⚠️ The boards of the owner, not of whoever looks. The card is
+                # read once for everyone who sees it, like the status page.
+                Field("scope", "From where", type="select", default="all",
+                      options=(("all", "Every board of this board's owner"), ("board", "Only this board")),
+                      help="The card is read once for everyone who sees it, so it shows what the owner of the board sees."),
+                Field("bell", "Unread warnings from the bell", type="bool", default=True,
+                      help="Warnings and errors the owner has not read yet. Plain news like a finished download is left out."),
+                Field("updates", "Waiting updates as a quiet line", type="bool", default=True,
+                      help="Updates never colour the card. They need Check for updates under System, About."),
+                Field("opens", "Tapping a row opens", type="select", default="card",
+                      options=(("card", "The card, on its board"), ("service", "The service"))),
+            ),
         ),
         WidgetType(
             kind="status",
@@ -473,7 +486,7 @@ class CoreAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         if widget_kind == "problems":
-            return self._problems(ctx)
+            return await self._problems(ctx, options)
         if widget_kind == "status":
             return self._status(ctx, options)
         if widget_kind == "notices":
@@ -758,72 +771,124 @@ class CoreAdapter(Adapter):
             meta={"empty": "No notices.", "headline": bool(unread)},
         )
 
-    @staticmethod
-    def _problems(ctx: Context) -> WidgetData:
-        """Every other card of the same board that is yellow, red or failing, with its reason.
+    @classmethod
+    async def _problems(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """What needs a look: yellow and red cards, failing checks, unread warnings.
 
-        A yellow dot says that something is wrong; this card says what. It reads
-        the live state the collector already holds, so it costs no request.
+        A yellow dot says that something is wrong; this card says what, where
+        and since when. It reads the live state the collector already holds,
+        the checks and the bell, so it costs no request of any service.
+
+        ⚠️ From the boards of the board's owner, never of whoever looks: the
+        card is read once for everyone who sees it (see ``_status``). A card
+        in maintenance is left out and named on a quiet line instead, and so
+        is another card of this kind, or two of them would list each other.
         """
         from sqlalchemy import select
 
         from ..db import db_session
-        from ..models import HealthCheck, Page, Widget
+        from ..models import Board, HealthCheck, Notice, Page, Widget
+        from ..services import maintenance
         from ..services.boards import service_link
         from ..services.state import live
 
         fine = WidgetData(status="ok", items=[], meta={"empty": "Everything is fine"})
         if ctx.widget_id is None:
             return fine
+        whole = options.get("scope", "all") != "board"
         with db_session() as db:
-            me = db.get(Widget, ctx.widget_id)
-            page = db.get(Page, me.page_id) if me is not None else None
-            if me is None or page is None:
+            board = cls._board_of(db, ctx.widget_id)
+            if board is None:
                 return fine
-            pages = list(db.scalars(select(Page).where(Page.board_id == page.board_id).order_by(Page.position)))
+            boards = [board]
+            if whole and board.owner_id is not None:
+                boards = list(db.scalars(select(Board).where(Board.owner_id == board.owner_id).order_by(Board.position, Board.id)))
+            board_of = {one.id: one for one in boards}
+            pages = list(db.scalars(select(Page).where(Page.board_id.in_(list(board_of))).order_by(Page.position, Page.id)))
+            page_of = {page.id: page for page in pages}
+            widgets = [
+                widget for widget in db.scalars(select(Widget).where(Widget.page_id.in_(list(page_of))))
+                if widget.id != ctx.widget_id and widget.kind != "core.problems"
+            ]
+            away = maintenance.until_by_card(db, widgets)
+            # ⚠️ The checks of the cards count as well. An app tile draws itself
+            # in the browser and has no live state, so a failing check turned it
+            # red and this card beside it said everything was fine (07.09.2026).
+            checks = {
+                check.widget_id: (check.last_ok, check.last_error, check.down_since)
+                for check in db.scalars(select(HealthCheck).where(
+                    HealthCheck.widget_id.in_([widget.id for widget in widgets]), HealthCheck.enabled.is_(True)))
+            }
+            several_pages = len(pages) > 1
+            several_boards = len(boards) > 1
             # The row leads where the card itself leads: its own link, then the
             # one in its live state, then the service's (WidgetCard's order).
-            rows = [
-                (other.name, widget.id, widget.title or widget.kind, widget.link, service_link(widget))
-                for other in pages
-                for widget in db.scalars(select(Widget).where(Widget.page_id == other.id))
-                if widget.id != me.id
-            ]
-            several_pages = len(pages) > 1
-            # ⚠️ The checks of the cards on this board count as well. An app tile
-            # draws itself in the browser and has no live state, so a failing
-            # check turned it red and this card beside it said everything was
-            # fine. Found on 07.09.2026.
-            failing = {
-                check.widget_id: check.last_error
-                for check in db.scalars(select(HealthCheck).where(
-                    HealthCheck.widget_id.in_([row[1] for row in rows]),
-                    HealthCheck.enabled.is_(True),
-                    HealthCheck.last_ok.is_(False),
-                ))
-            }
+            rows = []
+            quiet: dict[str, Any] = {}
+            for widget in widgets:
+                page = page_of[widget.page_id]
+                home = board_of[page.board_id]
+                if widget.id in away:
+                    name = widget.integration.name if widget.integration is not None else (widget.title or "App tile")
+                    quiet[name] = max(away[widget.id].ends_at, quiet.get(name, away[widget.id].ends_at))
+                    continue
+                where = home.name if several_boards else page.name if several_pages else ""
+                rows.append((widget.id, widget.title or widget.kind, widget.icon, widget.link, service_link(widget), home, page, where))
+            notices = []
+            if options.get("bell", True) and board.owner_id is not None:
+                notices = [
+                    (notice.id, notice.title, notice.body, notice.level, notice.link, notice.created_at)
+                    for notice in db.scalars(
+                        select(Notice).where(Notice.user_id == board.owner_id, Notice.read_at.is_(None),
+                                             Notice.level.in_(("warn", "error", "bad")))
+                        .order_by(Notice.created_at.desc(), Notice.id.desc()).limit(50))
+                ]
+            counted = {"cards": len(widgets), "checks": len(checks), "boards": len(boards)}
+            owner = board.owner_id
+        updates = await cls._services(ctx, "all", [], False) if options.get("updates", True) else []
+
         items: list[dict[str, Any]] = []
-        for page_name, widget_id, title, own, service in rows:
+        for widget_id, title, icon, own, service, home, page, where in rows:
             data = live.get(widget_id)
-            where = page_name if several_pages else ""
+            last_ok, last_error, down_since = checks.get(widget_id, (None, "", None))
             item: dict[str, Any]
+            since: float | None = live.since(widget_id)
             if data is not None and data.error:
-                item = {"title": title, "subtitle": data.error, "error_code": str(data.meta.get("code") or ""), "status": "bad", "value": where}
-            elif widget_id in failing:
-                item = {"title": title, "subtitle": failing[widget_id] or "Error", "status": "bad", "value": where}
-            elif data is None:
+                item = {"title": title, "subtitle": data.error, "error_code": str(data.meta.get("code") or ""), "status": "bad", "source": "card"}
+            elif last_ok is False:
+                item = {"title": title, "subtitle": last_error or "Error", "status": "bad", "source": "check"}
+                since = down_since.timestamp() if down_since is not None else None
+            elif data is None or data.status not in ("warn", "bad"):
                 continue
-            elif data.status in ("warn", "bad"):
-                item = {"title": title, "status": data.status, "value": where, **CoreAdapter._findings_of(data)}
             else:
-                continue
+                item = {"title": title, "status": data.status, "source": "card", **CoreAdapter._findings_of(data)}
+            item.update(value=where, board=home.name, page=page.name, icon=icon,
+                        target={"board": home.slug, "page": page.slug, "widget": widget_id})
+            if since is not None:
+                item["since"] = since
             link = own or (data.link if data is not None else "") or service
             if link:
                 item["url"] = link
             items.append(item)
-        items.sort(key=lambda item: (item["status"] != "bad", item["title"].lower()))
+        for number, title, body, level, link, created_at in notices:
+            item = {"title": title, "subtitle": body, "status": "bad" if level in ("error", "bad") else "warn",
+                    "source": "bell", "notice": number, "value": ""}
+            if created_at is not None:
+                item["since"] = created_at.timestamp()
+            if link:
+                item["url"] = link
+            items.append(item)
+        # Red before yellow, the newest first; what turned before anybody looked comes last.
+        items.sort(key=lambda item: (item["status"] != "bad", -float(item.get("since") or 0), str(item["title"]).lower()))
         status = "bad" if any(item["status"] == "bad" for item in items) else ("warn" if items else "ok")
-        return WidgetData(status=status, items=items, meta={"empty": "Everything is fine"})
+        return WidgetData(status=status, items=items, meta={
+            "empty": "Everything is fine",
+            "counted": counted,
+            "owner": owner,
+            "opens": "service" if options.get("opens") == "service" else "card",
+            "updates": [{"title": row["title"], "value": row["value"]} for row in updates],
+            "maintenance": [{"title": name, "until": until.isoformat()} for name, until in sorted(quiet.items())],
+        })
 
     #: How many of a card's own yellow or red rows the problems card names.
     FINDINGS_SHOWN = 2
@@ -943,18 +1008,29 @@ class CoreAdapter(Adapter):
         if widget_kind == "iframe":
             return WidgetData(meta={"url": options.get("url") or "", "refresh": int(options.get("refresh") or 0)})
         if widget_kind == "problems":
+            import time
+
+            now = time.time()
             return WidgetData(
                 status="bad",
                 items=[
-                    {"title": "Radarr", "subtitle": "The service could not be reached.", "error_code": "unreachable", "status": "bad", "value": ""},
-                    {"title": "Jellyfin", "status": "warn", "value": "", **self._findings_of(WidgetData(status="warn", items=[
-                        {"title": "Jellyfin", "subtitle": "A restart is pending", "status": "warn"},
-                        {"title": "Sign-in", "subtitle": "6 failed sign-ins in 24 h", "status": "warn"},
-                        {"title": "Activity log", "subtitle": "2 error(s) in 24 h", "status": "warn"},
-                    ]))},
-                    {"title": "UniFi Network", "subtitle": "1 device(s) offline", "status": "warn", "value": ""},
+                    {"title": "Paperless", "subtitle": "The service could not be reached.", "error_code": "unreachable", "status": "bad",
+                     "source": "check", "value": "Infrastructure", "board": "Infrastructure", "since": now - 12 * 60},
+                    {"title": "Jellyfin", "status": "warn", "source": "card", "value": "Media", "board": "Media", "since": now - 40 * 60,
+                     **self._findings_of(WidgetData(status="warn", items=[
+                         {"title": "Jellyfin", "subtitle": "A restart is pending", "status": "warn"},
+                         {"title": "Sign-in", "subtitle": "6 failed sign-ins in 24 h", "status": "warn"},
+                         {"title": "Activity log", "subtitle": "2 error(s) in 24 h", "status": "warn"},
+                     ]))},
+                    {"title": "Backup failed", "subtitle": "Task Photos", "status": "warn", "source": "bell", "value": "", "since": now - 2 * 3600},
+                    {"title": "Synology", "subtitle": "Volume 1 is 91 % full", "status": "warn", "source": "card", "value": "Infrastructure", "board": "Infrastructure"},
                 ],
-                meta={"empty": "Everything is fine"},
+                meta={
+                    "empty": "Everything is fine", "counted": {"cards": 31, "checks": 12, "boards": 3}, "owner": None,
+                    "opens": "service" if options.get("opens") == "service" else "card",
+                    "updates": [{"title": "Sonarr", "value": "4.0.16"}, {"title": "Immich", "value": "2.2.0"}] if options.get("updates", True) else [],
+                    "maintenance": [],
+                },
             )
         if widget_kind == "status":
             day = [1.0] * 40 + [0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

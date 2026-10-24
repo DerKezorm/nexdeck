@@ -516,6 +516,28 @@ class Outage(Base):
     check: Mapped[HealthCheck] = relationship(back_populates="outages")
 
 
+class Maintenance(Base):
+    """A stretch in which a connection or one app tile is expected to be away.
+
+    Kept after it ends: the availability bars of the last 30 days draw the
+    time grey instead of as an outage, and they can only do that while the
+    stretch is still written down.
+    """
+
+    __tablename__ = "maintenance"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    #: One of the two: a whole connection with every card on it, or one app tile.
+    integration_id: Mapped[int | None] = mapped_column(
+        ForeignKey("integrations.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    widget_id: Mapped[int | None] = mapped_column(ForeignKey("widgets.id", ondelete="CASCADE"), nullable=True, index=True)
+    starts_at: Mapped[datetime] = mapped_column(Utc())
+    ends_at: Mapped[datetime] = mapped_column(Utc(), index=True)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class LogLine(Base):
     __tablename__ = "log_lines"
     __table_args__ = (Index("ix_log_lines_source_ts", "source", "ts"),)

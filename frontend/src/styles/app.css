@@ -3949,3 +3949,93 @@ body.has-player-bar main {
     color: var(--nd-text-faint);
   }
 }
+
+/* The attention card and maintenance (roadmap M1, 24.10.2026). */
+@layer components {
+  .nd-att-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    border-radius: 9px;
+  }
+  .nd-att-row:hover {
+    background: var(--nd-surface-hover);
+  }
+  .nd-att-open {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 6px;
+    text-align: left;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .nd-att-read {
+    visibility: hidden;
+    margin-top: 3px;
+  }
+  .nd-att-row:hover .nd-att-read,
+  .nd-att-row:focus-within .nd-att-read {
+    visibility: visible;
+  }
+  .nd-att-more {
+    align-self: flex-start;
+    padding: 1px 0;
+    font-size: 12px;
+    color: var(--nd-accent);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .nd-att-quiet {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 11.5px;
+    color: var(--nd-text-muted);
+  }
+  .nd-att-check {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--nd-ok);
+    background: color-mix(in srgb, var(--nd-ok) 18%, transparent);
+  }
+  /* Where a row of the attention card leads: the card lights up for a moment. */
+  .card.nd-focus {
+    outline: 3px solid color-mix(in srgb, var(--nd-accent) 75%, transparent);
+    outline-offset: 2px;
+  }
+  /* A card whose connection is in maintenance says so, quietly and grey. */
+  .nd-away {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    white-space: nowrap;
+    color: var(--nd-text-muted);
+    background: var(--nd-surface);
+    border: 1px solid var(--nd-border);
+  }
+  button.nd-away {
+    cursor: pointer;
+  }
+  .nd-away-corner {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    z-index: 2;
+  }
+}

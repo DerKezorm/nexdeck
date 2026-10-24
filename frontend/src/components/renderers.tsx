@@ -100,6 +100,17 @@ function FiguresCard(props: RenderProps) {
   )
 }
 
+/** The attention card measures its rows and opens a list; loaded only when a board has one. */
+const LazyAttentionCard = lazy(() => import('./AttentionCard').then((module) => ({ default: module.AttentionCard })))
+
+function AttentionCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyAttentionCard {...props} />
+    </Suspense>
+  )
+}
+
 function TimerCard(props: RenderProps) {
   return (
     <Suspense fallback={<div className="flex-1" />}>
@@ -151,6 +162,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   tabs: (props: RenderProps) => <TabsCard {...props} />,
   group: (props: RenderProps) => <GroupCard {...props} />,
   figures: FiguresCard,
+  attention: AttentionCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -761,29 +773,34 @@ function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>
   return [disguise.free(title), disguise.free(subtitle)]
 }
 
+/**
+ * A row's subtitle in the reader's language. A row that carries an error code
+ * is translated by the code; other subtitles by wording.
+ */
+export function wordedSubtitle(item: Record<string, unknown>, t: (key: string, options?: Record<string, unknown>) => string, language: string): string {
+  const text = String(item.subtitle ?? '')
+  if (item.error_code && language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text })
+  // The attention card names the rows of the card it stands for; each part is
+  // translated on its own, a name stays a name.
+  if (Array.isArray(item.findings)) {
+    const parts = (item.findings as Record<string, unknown>[]).map((finding) => {
+      const name = finding.worded ? tLabel(String(finding.title ?? '')) : String(finding.title ?? '')
+      const said = tLabel(String(finding.subtitle ?? ''))
+      return name && said ? `${name}: ${said}` : name || said
+    })
+    const more = Number(item.more) || 0
+    if (more > 0) parts.push(t('card.problemsMore', { count: more }))
+    return parts.filter(Boolean).join(' · ')
+  }
+  return tLabel(text)
+}
+
 export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
   const disguise = useDisguise()
   const items = data?.items ?? []
   if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
-  // A row that carries an error code is translated by the code; other subtitles by wording.
-  const subtitleOf = (item: Record<string, unknown>): string => {
-    const text = String(item.subtitle ?? '')
-    if (item.error_code && i18n.language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text })
-    // The problems card names the rows of the card it stands for; each part is
-    // translated on its own, a name stays a name.
-    if (Array.isArray(item.findings)) {
-      const parts = (item.findings as Record<string, unknown>[]).map((finding) => {
-        const name = finding.worded ? tLabel(String(finding.title ?? '')) : String(finding.title ?? '')
-        const said = tLabel(String(finding.subtitle ?? ''))
-        return name && said ? `${name}: ${said}` : name || said
-      })
-      const more = Number(item.more) || 0
-      if (more > 0) parts.push(t('card.problemsMore', { count: more }))
-      return parts.filter(Boolean).join(' · ')
-    }
-    return tLabel(text)
-  }
+  const subtitleOf = (item: Record<string, unknown>): string => wordedSubtitle(item, t, i18n.language)
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {data?.meta?.headline && data.primary ? (

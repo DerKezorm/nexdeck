@@ -167,7 +167,7 @@ def test_the_board_speaks_the_language_of_whoever_made_it(client: TestClient) ->
     }, headers=CSRF).json()
     assert made["name"] == "Wandanzeige"
     assert made["pages"][0]["name"] == "Übersicht"
-    assert {w["title"] for w in made["pages"][0]["widgets"]} == {"Uhr", "Wetter", "Problems"}
+    assert {w["title"] for w in made["pages"][0]["widgets"]} == {"Uhr", "Wetter", "Needs attention"}
     assert made["settings"] == {"columns": 24, "width": "full", "fit_height": True}
 
 

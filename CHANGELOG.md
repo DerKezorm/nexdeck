@@ -3,6 +3,21 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Needs attention**: the Problems card grew into a card that says what needs a look, from every board of the board's owner. It lists the cards that are yellow or red with their reason, the services whose check fails, and the warnings of the bell the owner has not read yet, red before yellow and the newest first, each with its board and since when. A row leads to the card on its board, or to the service if the card is told to. What does not fit becomes "Show 16 more" and opens the whole list. The card takes the colour of the worst it lists; when nothing is wrong it says so, and how many cards and checks it looked at. Waiting updates stand on a quiet line below and never colour it. The owner can mark a warning of the bell as read right on the card. On a wall display behind a kiosk link a row leads to a card on the same board only.
+- **Maintenance**: an administrator puts a connection, or a single app tile, into maintenance for one to eight hours or until a time, from the wrench on the card. Until then nothing about it is told, in the bell or on any channel, and no outage is opened; a service that rejects its credentials is still told. The cards keep showing what they read and say "Maintenance until 22:00". The availability bars draw the time grey and leave it out of the share of time a service was up, and an outage that outlasts the maintenance counts from its end. The attention card leaves what is in maintenance out and names it on a quiet line. `POST /api/v1/maintenance`.
+
+### Changed
+
+- Problems cards that exist keep doing what they did: only their own board, no bell, no updates, and a row opens the service. Each of these is a setting of the card now. New cards start with every board, the bell, the updates and the card on its board.
+
+### Upgrading
+
+The database gets a table for maintenance and its version 24, which writes the old answers into the existing Problems cards. Going back to 0.48 works; the table stays unused.
+
 ## 0.48.0 (2026-10-24)
 
 ### Added

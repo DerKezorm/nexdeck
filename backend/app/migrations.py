@@ -221,6 +221,34 @@ def _page_side_column(connection: Connection) -> None:
     _add_column(connection, "pages", "side", "JSON NOT NULL DEFAULT '{}'")
 
 
+def _problems_cards_stay_as_they_were(connection: Connection) -> None:
+    """The problems card becomes the attention card; the ones that exist keep their old answers.
+
+    ⚠️ Same reason as ``_findings_stay_on_for_existing_widgets``: a default is
+    retroactive. The new card looks at every board of the owner, counts the
+    bell and opens the card a row is about. A problems card made before read
+    only its own board and opened the service, and it goes on doing that
+    until somebody changes it. New cards start with the new answers.
+    """
+    import json
+
+    rows = connection.execute(text("SELECT id, options FROM widgets WHERE kind = 'core.problems'")).fetchall()
+    for widget_id, raw in rows:
+        try:
+            options = json.loads(raw) if isinstance(raw, str) else (raw or {})
+        except (TypeError, ValueError):
+            options = {}
+        if not isinstance(options, dict):
+            options = {}
+        for key, old in (("scope", "board"), ("bell", False), ("updates", False), ("opens", "service")):
+            options.setdefault(key, old)
+        connection.execute(
+            text("UPDATE widgets SET options = :o WHERE id = :i"),
+            {"o": json.dumps(options, ensure_ascii=False), "i": widget_id},
+        )
+    logger.info("%d problems card(s) keep looking at their own board only.", len(rows))
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -245,6 +273,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (21, "A page can be a network plan", _page_kind_columns),
     (22, "A page can be a surface of Home Assistant controls", _home_page_column),
     (23, "A card page can have a side bar", _page_side_column),
+    (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
 ]
 
 

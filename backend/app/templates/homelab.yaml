@@ -14,7 +14,7 @@ pages:
   - name: Overview
     cards:
       - {kind: core.clock, title: Clock, at: [0, 0, 6, 2], options: {date: true}}
-      - {kind: core.problems, title: Problems, at: [6, 0, 6, 2]}
+      - {kind: core.problems, title: Needs attention, at: [6, 0, 6, 2]}
       - {slot: Uptime, widget: summary, title: Uptime, at: [12, 0, 4, 2]}
       - {slot: Containers, widget: summary, title: Containers, at: [16, 0, 4, 2]}
       - {slot: DNS filter, widget: summary, title: DNS filter, at: [20, 0, 4, 2]}

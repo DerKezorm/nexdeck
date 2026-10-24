@@ -118,6 +118,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     # Digits and nothing else; one row holds them.
     "segments": (2, 1),
     "list": (2, 2),
+    # One row holds the sentence ("3 things need attention"); the rows come with the height.
+    "attention": (2, 1),
     "bookmarks": (2, 2),
     "camera": (2, 2),
     "iframe": (2, 2),

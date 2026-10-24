@@ -2009,7 +2009,19 @@
     "A tinted tile": "Un mosaico teñido",
     "A coloured edge": "Un borde de color",
     "History behind the number": "Historial detrás del número",
-    "The last hours as a faint line, as the card itself records them.": "Las últimas horas como una línea tenue, tal como la tarjeta las registra."
+    "The last hours as a faint line, as the card itself records them.": "Las últimas horas como una línea tenue, tal como la tarjeta las registra.",
+    "Needs attention": "Requiere atención",
+    "What needs a look, from every board of this board's owner: cards that are yellow or red, services that do not answer and unread warnings from the bell. Otherwise it says that everything is fine.": "Lo que necesita un vistazo, de todos los tableros del propietario de este tablero: tarjetas en amarillo o rojo, servicios que no responden y avisos sin leer de la campana. Si no hay nada, dice que todo está bien.",
+    "From where": "De dónde",
+    "Only this board": "Solo este tablero",
+    "The card is read once for everyone who sees it, so it shows what the owner of the board sees.": "La tarjeta se lee una sola vez para todos los que la ven, así que muestra lo que ve el propietario del tablero.",
+    "Unread warnings from the bell": "Avisos sin leer de la campana",
+    "Warnings and errors the owner has not read yet. Plain news like a finished download is left out.": "Avisos y errores que el propietario aún no ha leído. Las noticias simples, como una descarga terminada, quedan fuera.",
+    "Waiting updates as a quiet line": "Actualizaciones pendientes como línea discreta",
+    "Updates never colour the card. They need Check for updates under System, About.": "Las actualizaciones nunca colorean la tarjeta. Necesitan Buscar actualizaciones en Sistema, Acerca de.",
+    "Tapping a row opens": "Al tocar una fila se abre",
+    "The card, on its board": "La tarjeta, en su tablero",
+    "The service": "El servicio"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3220,6 +3232,7 @@
     "Rsync": "Rsync",
     "Cloud backup": "Copia en la nube",
     "Reboot required": "Reinicio necesario",
-    "major version": "versión principal"
+    "major version": "versión principal",
+    "Task Photos": "Tarea Fotos"
   }
 }

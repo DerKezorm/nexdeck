@@ -25,7 +25,7 @@ from ..adapters.base import AdapterError, guard_member_target, outbound_client
 from ..config import get_settings
 from ..db import db_session
 from ..models import HealthCheck, Outage, Page, Widget, utcnow
-from . import history, notify
+from . import history, maintenance, notify
 from .sse import board_topic, hub
 
 logger = logging.getLogger("nexdeck.health")
@@ -360,10 +360,16 @@ class HealthService:
             # A check on a card of a muted connection is as quiet as the card.
             integration_id = check.widget.integration_id if check.widget else None
             board_id = None
+            # In maintenance the check goes on and the tile shows what it finds,
+            # but nothing is told and no outage is opened. The bars get no
+            # sample either, so they draw the stretch grey instead of red.
+            quiet = check.widget is not None and maintenance.covering(
+                db, integration_id=integration_id, widget_id=check.widget.id, now=now) is not None
             if check.widget is not None:
                 page = db.get(Page, check.widget.page_id)
                 board_id = page.board_id if page else None
-                history.record(db, check.widget.id, {"latency": float(latency), "up": 1.0 if ok else 0.0})
+                if not quiet:
+                    history.record(db, check.widget.id, {"latency": float(latency), "up": 1.0 if ok else 0.0})
             announce: tuple[str, str, str, str, int | None] | None = None
             if ok:
                 if check.down_since is not None:
@@ -372,21 +378,25 @@ class HealthService:
                     )
                     if open_outage is not None:
                         open_outage.ended_at = now
-                        if open_outage.announced:
+                        if open_outage.announced and not quiet:
                             length = int((now - open_outage.started_at).total_seconds())
                             announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info", integration_id)
                 check.down_since = None
             else:
                 if check.down_since is None:
                     check.down_since = now
-                    db.add(Outage(check_id=check.id, started_at=now))
-                else:
-                    down_for = (now - check.down_since).total_seconds()
-                    if down_for >= settings.outage_threshold_seconds:
-                        open_outage = db.scalar(
-                            select(Outage).where(Outage.check_id == check.id, Outage.ended_at.is_(None))
-                        )
-                        if open_outage is not None and not open_outage.announced:
+                if not quiet:
+                    open_outage = db.scalar(
+                        select(Outage).where(Outage.check_id == check.id, Outage.ended_at.is_(None))
+                    )
+                    if open_outage is None:
+                        # The first failure, or one that outlasted a maintenance:
+                        # the outage counts from here, not from the quiet hour.
+                        check.down_since = now
+                        db.add(Outage(check_id=check.id, started_at=now))
+                    else:
+                        down_for = (now - check.down_since).total_seconds()
+                        if down_for >= settings.outage_threshold_seconds and not open_outage.announced:
                             open_outage.announced = True
                             announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error", integration_id)
             payload = {
@@ -504,13 +514,17 @@ def outage_bars_for(db, widget_ids: list[int], window: str, now: float | None = 
 
     A slice before the check was made is unknown, and one it covers only in
     part is measured over that part. An outage still open runs until now.
+    Maintenance is taken out the same way: it is neither up nor down, and a
+    slice that was all maintenance is unknown, drawn grey.
     """
     hours, bars = BAR_WINDOWS[window]
     end = time.time() if now is None else now
     start = end - hours * 3600
     width = hours * 3600 / bars
     checks = {row.widget_id: row for row in db.execute(
-        select(HealthCheck.id, HealthCheck.widget_id, HealthCheck.created_at).where(HealthCheck.widget_id.in_(widget_ids)))}
+        select(HealthCheck.id, HealthCheck.widget_id, HealthCheck.created_at, Widget.integration_id)
+        .join(Widget, Widget.id == HealthCheck.widget_id).where(HealthCheck.widget_id.in_(widget_ids)))}
+    quiet = maintenance.spans_by_widget(db, {row.widget_id: row.integration_id for row in checks.values()}, start, end)
     spans: dict[int, list[tuple[float, float]]] = {}
     if checks:
         for check_id, began, ended in db.execute(
@@ -531,11 +545,19 @@ def outage_bars_for(db, widget_ids: list[int], window: str, now: float | None = 
         for index in range(bars):
             left = max(start + index * width, since)
             right = start + (index + 1) * width
-            if right - left < 1:
+            away = maintenance.overlap(quiet.get(widget_id, []), left, right)
+            measured = right - left - away
+            if measured < 1:
                 row.append(None)
                 continue
-            down = sum(max(0.0, min(right, until) - max(left, began)) for began, until in spans.get(check.id, []))
-            row.append(round(max(0.0, 1 - down / (right - left)), 4))
+            down = 0.0
+            for began, until in spans.get(check.id, []):
+                inside = max(0.0, min(right, until) - max(left, began))
+                if inside:
+                    # Down during maintenance is not down.
+                    inside -= maintenance.overlap(quiet.get(widget_id, []), max(left, began), min(right, until))
+                down += inside
+            row.append(round(max(0.0, 1 - down / measured), 4))
         out[widget_id] = row
     return out
 

@@ -2009,7 +2009,19 @@
     "A tinted tile": "Une tuile teintée",
     "A coloured edge": "Un bord coloré",
     "History behind the number": "Historique derrière le nombre",
-    "The last hours as a faint line, as the card itself records them.": "Les dernières heures en ligne pâle, telles que la carte les enregistre."
+    "The last hours as a faint line, as the card itself records them.": "Les dernières heures en ligne pâle, telles que la carte les enregistre.",
+    "Needs attention": "À surveiller",
+    "What needs a look, from every board of this board's owner: cards that are yellow or red, services that do not answer and unread warnings from the bell. Otherwise it says that everything is fine.": "Ce qui demande un coup d’œil, sur tous les tableaux du propriétaire de ce tableau : cartes en jaune ou en rouge, services qui ne répondent pas et avertissements non lus de la cloche. Sinon, elle indique que tout va bien.",
+    "From where": "D’où",
+    "Only this board": "Seulement ce tableau",
+    "The card is read once for everyone who sees it, so it shows what the owner of the board sees.": "La carte est lue une seule fois pour tous ceux qui la voient ; elle montre donc ce que voit le propriétaire du tableau.",
+    "Unread warnings from the bell": "Avertissements non lus de la cloche",
+    "Warnings and errors the owner has not read yet. Plain news like a finished download is left out.": "Avertissements et erreurs que le propriétaire n’a pas encore lus. Les simples nouvelles, comme un téléchargement terminé, sont laissées de côté.",
+    "Waiting updates as a quiet line": "Mises à jour en attente sur une ligne discrète",
+    "Updates never colour the card. They need Check for updates under System, About.": "Les mises à jour ne colorent jamais la carte. Elles ont besoin de Rechercher des mises à jour sous Système, À propos.",
+    "Tapping a row opens": "Toucher une ligne ouvre",
+    "The card, on its board": "La carte, sur son tableau",
+    "The service": "Le service"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3220,6 +3232,7 @@
     "Rsync": "Rsync",
     "Cloud backup": "Sauvegarde cloud",
     "Reboot required": "Redémarrage requis",
-    "major version": "version majeure"
+    "major version": "version majeure",
+    "Task Photos": "Tâche Photos"
   }
 }

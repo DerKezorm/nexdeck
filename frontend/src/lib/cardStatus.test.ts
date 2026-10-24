@@ -34,3 +34,16 @@ describe('the background behind the board', () => {
     expect(anyCardDown(widgets, { 1: answer('ok', 'refused'), 2: undefined })).toBe(true)
   })
 })
+
+describe('the attention card', () => {
+  const attention = { ...card(9), kind: 'core.problems', renderer: 'attention' } as WidgetView
+
+  it('always shows its colour: saying what is yellow and red is all it is for', () => {
+    expect(cardStatus(attention, answer('bad'))).toBe('bad')
+    expect(cardStatus(attention, answer('warn'))).toBe('warn')
+  })
+
+  it('never turns the room red on its own; the cards it repeats do that', () => {
+    expect(anyCardDown([attention, card(1)], { 9: answer('bad'), 1: answer('bad') })).toBe(false)
+  })
+})

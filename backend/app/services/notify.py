@@ -63,9 +63,12 @@ def emit(event: str, title: str, body: str = "", *, level: str = "info", link: s
     """Create notices and dispatch channels. Safe to call from anywhere in the loop.
 
     ``integration_id`` names the connection the news is about. A muted one is
-    told nowhere: not in the bell, not on a channel. One check here instead of
-    one at every caller, so a new kind of news cannot forget it.
+    told nowhere: not in the bell, not on a channel. Neither is one in
+    maintenance, except for what ``maintenance.STAYS_LOUD`` names. One check
+    here instead of one at every caller, so a new kind of news cannot forget it.
     """
+    from . import maintenance
+
     message = Message(event=event, title=title[:200], body=body, level=level, link=link)
     targets: list[int] = []
     with db_session() as db:
@@ -73,6 +76,9 @@ def emit(event: str, title: str, body: str = "", *, level: str = "info", link: s
             integration = db.get(Integration, integration_id)
             if integration is not None and integration.muted:
                 logger.debug("%s about muted connection %r not told: %s", event, integration.name, message.title)
+                return
+            if integration is not None and maintenance.is_quiet(db, event, integration_id=integration_id):
+                logger.info("%s about %r held back, it is in maintenance: %s", event, integration.name, message.title)
                 return
         if user_ids is None:
             targets = list(db.scalars(select(User.id).where(User.role == Role.admin.value, User.disabled.is_(False))))

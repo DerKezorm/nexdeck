@@ -19,7 +19,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
-from ..models import ActionLog, Asset, Notice, Outage, utcnow
+from ..models import ActionLog, Asset, Maintenance, Notice, Outage, utcnow
 from . import password_reset
 
 logger = logging.getLogger("nexdeck.retention")
@@ -45,6 +45,9 @@ def prune_old_records(db: Session) -> dict[str, int]:
         gone["outages"] = db.execute(
             delete(Outage).where(Outage.ended_at.is_not(None), Outage.ended_at < cutoff)
         ).rowcount or 0
+        # Maintenance as long as the outages: the 30-day bars draw it grey,
+        # and nothing reads it after that.
+        gone["maintenance"] = db.execute(delete(Maintenance).where(Maintenance.ends_at < cutoff)).rowcount or 0
 
     if any(gone.values()):
         db.commit()
