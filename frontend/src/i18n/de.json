@@ -2052,5 +2052,40 @@
     "width_wide": "Breit",
     "sideEmpty": "Karten hierher ziehen. Sie bleiben stehen, während die Seite scrollt.",
     "dropInGroup": "Karten hierher ziehen oder wieder aufs Board."
+  },
+  "countdown": {
+    "unset": "Datum in den Einstellungen der Karte wählen.",
+    "until": "bis {{event}}",
+    "today": "Heute",
+    "here": "Es ist so weit",
+    "days_one": "Tag",
+    "days_other": "Tage",
+    "unit": {
+      "d": "T",
+      "h": "h",
+      "min": "min",
+      "s": "s"
+    },
+    "ago_one": "vor {{count}} Tag",
+    "ago_other": "vor {{count}} Tagen"
+  },
+  "timer": {
+    "start": "Start",
+    "pause": "Anhalten",
+    "resume": "Weiter",
+    "stop": "Aus",
+    "reset": "Zurücksetzen",
+    "oneMore": "Eine Minute mehr",
+    "done": "Die Zeit ist um",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "figures": {
+    "add": "Kachel",
+    "library": "Eine Kachel für die Kennzahlen",
+    "empty": "Noch keine Kacheln. In den Einstellungen der Karte Karten mit einer Zahl wählen.",
+    "emptyEditing": "Eine Karte mit einer Zahl hierher ziehen oder in den Einstellungen Karten wählen."
   }
 }

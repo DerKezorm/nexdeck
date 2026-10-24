@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { ApiError, get, post } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration, WidgetTypeSpec } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
+import { isNumberCard } from '../lib/figures'
 import { ServiceIcon } from './ServiceIcon'
 import { Select, Sheet } from './ui'
 
@@ -15,6 +16,8 @@ interface Props {
   onClose: () => void
   pageId: number
   onCreated: (widgetId: number) => void
+  /** For a tile of key figures: only the cards that show a number, and no apps. */
+  numbersOnly?: boolean
 }
 
 /**
@@ -66,7 +69,7 @@ export function haystack(adapter: AdapterSpec, widget: WidgetTypeSpec): string {
 }
 
 /** The widget library: every adapter's widgets, searchable, one click to add. */
-export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
+export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = false }: Props) {
   const { t } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), enabled: open, staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: open })
@@ -84,17 +87,18 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
     for (const adapter of adapters.data ?? []) {
       for (const widget of adapter.widgets) {
         if (needle && !haystack(adapter, widget).includes(needle)) continue
+        if (numbersOnly && !isNumberCard(widget)) continue
         ;(result[adapter.category] ??= []).push({ adapter, widget })
       }
     }
     return Object.entries(result).sort(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
-  }, [adapters.data, query])
+  }, [adapters.data, query, numbersOnly])
 
   const catalog = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const list = Array.isArray(apps.data) ? apps.data : []
+    const list = Array.isArray(apps.data) && !numbersOnly ? apps.data : []
     return list.filter((app) => !needle || `${app.name} ${app.description ?? ''}`.toLowerCase().includes(needle))
-  }, [apps.data, query])
+  }, [apps.data, query, numbersOnly])
 
   /** An app tile that follows ``app``: its name and icon stay empty, so the app's show and follow a rename. */
   const placeApp = async (app: AppEntry) => {
@@ -163,7 +167,7 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated }: Props) {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={t('library.title')} wide>
+    <Sheet open={open} onClose={onClose} title={numbersOnly ? t('figures.library') : t('library.title')} wide>
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input className="input input-icon" aria-label={t('library.search')} placeholder={t('library.search')} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />

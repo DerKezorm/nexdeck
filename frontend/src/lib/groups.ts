@@ -1,5 +1,5 @@
 /**
- * Cards that hold other cards: the tabs card and the group. A holder keeps
+ * Cards that hold other cards: the tabs card, the group and key figures. A holder keeps
  * the numbers of cards of its own page in `options.cards`; those cards leave
  * the grid and are drawn inside it. Their data keeps coming as it did, they
  * are only drawn somewhere else. Removing the holder brings them back.
@@ -10,7 +10,7 @@ import { create } from 'zustand'
 import type { HeldSize } from './holding'
 import type { Action, WidgetView } from './types'
 
-export const GROUP_KINDS = new Set(['core.tabs', 'core.group'])
+export const GROUP_KINDS = new Set(['core.tabs', 'core.group', 'core.figures'])
 
 /** The numbers a holder keeps, as numbers, whatever came in. */
 export function heldBy(widget: WidgetView): number[] {
@@ -51,6 +51,8 @@ export interface Holding {
   onHeldSize?: (widget: WidgetView, size: HeldSize) => void
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void
+  /** A new card straight into a holder: the library opens, and what is added lands there. */
+  onAddInto?: (holderId: number) => void
 }
 
 /** What a holder needs from the page it stands on: the other cards, and the way to act on them. */

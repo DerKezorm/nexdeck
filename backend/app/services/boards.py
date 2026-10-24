@@ -484,7 +484,7 @@ def _follow_app(fields: dict[str, Any], widget_doc: dict[str, Any], found: dict[
 
 
 #: Cards that hold other cards of their page, by number in ``options["cards"]``.
-GROUP_KINDS = frozenset({"core.tabs", "core.group"})
+GROUP_KINDS = holders.HOLDER_KINDS
 #: More than this in one card is a page, not a group.
 MOST_TUCKED = 12
 
@@ -507,6 +507,9 @@ def clean_cards(db: Session, page_id: int, own_id: int | None, kind: str, option
             wanted.append(number)
     present = {row.id: row.kind for row in db.scalars(select(Widget).where(Widget.page_id == page_id, Widget.id.in_(wanted or [-1])))}
     kept = [number for number in wanted if number in present and present[number] not in GROUP_KINDS][:MOST_TUCKED]
+    # Key figures hold numbers: a list or a clock picked for them is left where it is.
+    if kind == "core.figures":
+        kept = [number for number in kept if holders.is_number_card(present[number])]
     # ⚠️ A card stands in one place. Picked here, it leaves the other holders of
     # the page and its side bar; it used to be drawn twice, in both.
     page = db.get(Page, page_id)

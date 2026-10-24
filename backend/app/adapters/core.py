@@ -1,8 +1,10 @@
-"""Widgets that need no service: clock, notes, bookmarks, search, iframe."""
+"""Widgets that need no service: clock, countdown, timer, notes, bookmarks, search, iframe."""
 
 from __future__ import annotations
 
+import datetime
 import math
+import re
 from typing import Any
 
 from ..services.upstream import UPSTREAM
@@ -51,6 +53,43 @@ class CoreAdapter(Adapter):
                 Field("label", "Subtitle", placeholder="Home", help="A small line under the date, such as the place."),
                 Field("colour", "Colour", type="colour", default="",
                       help="Empty takes the board's own. It applies to the digits and to the hands."),
+            ),
+        ),
+        WidgetType(
+            kind="countdown",
+            label="Countdown",
+            description="The days until a date, such as a holiday or a birthday, and the hours and minutes once it is close.",
+            renderer="countdown",
+            default_size=(3, 2),
+            min_size=(2, 1),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("event", "What it counts to", placeholder="Holiday", help="Stands under the number: 12 days until Holiday."),
+                Field("date", "Date", type="date", required=True),
+                Field("time", "Time", type="time", help="Empty counts to the start of the day, and the card counts in days."),
+                Field("yearly", "Every year", type="bool", default=False, help="For a birthday: once the day is past, it counts to the next one."),
+                Field("show", "Shows", type="select", default="auto",
+                      options=(("auto", "Days, and hours and minutes in the last two days"), ("days", "Days only"), ("all", "Days, hours and minutes"))),
+                Field("after", "Once it is past", type="select", default="since",
+                      options=(("since", "Count the days since"), ("here", "Say that it is here"))),
+            ),
+        ),
+        WidgetType(
+            kind="timer",
+            label="Timer",
+            description="A timer to start, pause and reset, such as a kitchen timer on a wall tablet. Each browser runs its own, and it rings or flashes when it is done.",
+            renderer="timer",
+            default_size=(3, 3),
+            min_size=(2, 2),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                Field("minutes", "Starts at (minutes)", type="number", default=10),
+                Field("presets", "Quick picks (minutes)", default="3, 5, 10, 15, 30",
+                      help="A button each, separated by commas. Empty leaves the row out."),
+                Field("end", "When it is done", type="select", default="sound",
+                      options=(("sound", "Ring and flash"), ("flash", "Flash only"))),
             ),
         ),
         WidgetType(
@@ -209,6 +248,29 @@ class CoreAdapter(Adapter):
                       help="Cards of this page. They leave the board and live in this box until it is removed."),
                 Field("columns", "Cards side by side", type="select", default="auto",
                       options=(("auto", "As many as fit"), ("2", "Two"), ("3", "Three"), ("4", "Four"), ("6", "Six"))),
+            ),
+        ),
+        WidgetType(
+            kind="figures",
+            label="Key figures",
+            description="Numbers from several connections in one grid, each a tile with its value, unit and colour: the processor of the NAS beside the downloads and the blocked queries. Made for wall displays.",
+            renderer="figures",
+            default_size=(6, 3),
+            min_size=(2, 2),
+            refresh_seconds=3600,
+            client_only=True,
+            options=(
+                # The picker offers the number cards of the page only.
+                Field("cards", "Tiles", type="cards", default=[], helper="numbers",
+                      help="Cards of this page that show a number. They leave the board and show here as tiles, each with its own settings, until they are dragged out or this card is removed."),
+                Field("columns", "Grid", type="select", default="auto",
+                      options=(("auto", "Automatic, as large as possible"), ("1", "One across"), ("2", "Two across"),
+                               ("3", "Three across"), ("4", "Four across"), ("6", "Six across")),
+                      help="Automatic works out the rows from the number of tiles and the shape of the card: a row on a wide card, a column on a tall one."),
+                Field("tone", "Shows yellow and red as", type="select", default="fill",
+                      options=(("fill", "A tinted tile"), ("border", "A coloured edge"), ("dot", "A dot in the corner"))),
+                Field("history", "History behind the number", type="bool", default=False,
+                      help="The last hours as a faint line, as the card itself records them."),
             ),
         ),
         WidgetType(
@@ -806,6 +868,10 @@ class CoreAdapter(Adapter):
                 "label": options.get("label") or "",
                 "colour": str(options.get("colour") or ""),
             })
+        if widget_kind == "countdown":
+            return WidgetData(meta=countdown_meta(options))
+        if widget_kind == "timer":
+            return WidgetData(meta=timer_meta(options))
         if widget_kind == "markdown":
             return WidgetData(meta={"markdown": options.get("content") or ""})
         if widget_kind == "heading":
@@ -818,6 +884,17 @@ class CoreAdapter(Adapter):
             cards = options.get("cards") if isinstance(options.get("cards"), list) else []
             own = {"turn": str(options.get("turn") or "0")} if widget_kind == "tabs" else {"columns": str(options.get("columns") or "auto")}
             return WidgetData(meta={"holder": widget_kind, "holds": len(cards), **own})
+        if widget_kind == "figures":
+            cards = options.get("cards") if isinstance(options.get("cards"), list) else []
+            columns = str(options.get("columns") or "auto")
+            tone = str(options.get("tone") or "fill")
+            return WidgetData(meta={
+                "holder": "figures",
+                "holds": len(cards),
+                "columns": columns if columns in ("auto", "1", "2", "3", "4", "6") else "auto",
+                "tone": tone if tone in ("fill", "border", "dot") else "fill",
+                "history": bool(options.get("history")),
+            })
         if widget_kind == "image":
             return WidgetData(items=parse_pictures(options.get("pictures")), meta={
                 "every": max(0, int(options.get("every") or 0)),
@@ -1042,6 +1119,67 @@ def parse_pictures(written: Any) -> list[dict[str, str]]:
         if url:
             pictures.append({"url": url, "title": caption.strip()})
     return pictures
+
+
+#: A time of day as the time field writes it.
+CLOCK_TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+#: The longest a timer may run, and the most quick picks it shows.
+LONGEST_TIMER_MINUTES = 24 * 60
+MOST_PRESETS = 8
+
+
+def countdown_meta(options: dict[str, Any]) -> dict[str, Any]:
+    """What the countdown draws, each option checked once here.
+
+    The browser counts, in its own time zone: a date means the start of
+    that day where the screen is, which is what a holiday on a wall means.
+    A date that is not one comes out empty, and the card asks for one.
+    """
+    raw_date = str(options.get("date") or "").strip()
+    try:
+        date = datetime.date.fromisoformat(raw_date).isoformat() if raw_date else ""
+    except ValueError:
+        date = ""
+    raw_time = str(options.get("time") or "").strip()
+    show = str(options.get("show") or "auto")
+    after = str(options.get("after") or "since")
+    return {
+        "event": str(options.get("event") or "").strip()[:80],
+        "date": date,
+        "time": raw_time if CLOCK_TIME.match(raw_time) else "",
+        "yearly": bool(options.get("yearly")),
+        "show": show if show in ("auto", "days", "all") else "auto",
+        "after": after if after in ("since", "here") else "since",
+    }
+
+
+def timer_meta(options: dict[str, Any]) -> dict[str, Any]:
+    """What the timer offers: where it starts, its quick picks, and how it ends.
+
+    Minutes, and parts of one (0.5 is thirty seconds); nothing under a
+    second and nothing over a day. A quick pick that is no number is left
+    out rather than refused: the row is a convenience.
+    """
+    def minutes(raw: Any) -> float | None:
+        try:
+            value = float(str(raw).strip().replace(",", "."))
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(value) or value * 60 < 1 or value > LONGEST_TIMER_MINUTES:
+            return None
+        return round(value, 2)
+
+    presets: list[float] = []
+    for part in re.split(r"[;,\s]+", str(options.get("presets") or "")):
+        value = minutes(part) if part else None
+        if value is not None and value not in presets:
+            presets.append(value)
+    start = minutes(options.get("minutes"))
+    return {
+        "minutes": start if start is not None else 10,
+        "presets": presets[:MOST_PRESETS],
+        "end": "flash" if options.get("end") == "flash" else "sound",
+    }
 
 
 def parse_links(text: str) -> list[dict[str, str]]:

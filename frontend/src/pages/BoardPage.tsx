@@ -77,6 +77,8 @@ export function BoardPage() {
 
   const [editing, setEditing] = useState(false)
   const [library, setLibrary] = useState(false)
+  // The key figures a card added from the library goes into, or none.
+  const [libraryInto, setLibraryInto] = useState<number | null>(null)
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   const [boardSettings, setBoardSettings] = useState(false)
   const [palette, setPalette] = useState(false)
@@ -447,6 +449,11 @@ export function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activePage, flushNow, t],
   )
+  /** The tile that adds a card to key figures: the library, showing number cards only. */
+  const onAddInto = useCallback((holderId: number) => {
+    setLibraryInto(holderId)
+    setLibrary(true)
+  }, [])
   /** A size chosen for a card inside a group or the side bar. */
   const onHeldSize = useCallback(
     (widget: WidgetView, size: HeldSize) => {
@@ -717,6 +724,7 @@ export function BoardPage() {
           side={activePage.side ?? NO_SIDE}
           onPlace={canEdit ? onPlace : undefined}
           onHeldSize={canEdit ? onHeldSize : undefined}
+          onAddInto={canEdit ? onAddInto : undefined}
           onSide={canEdit ? onSide : undefined}
           moveTargets={moveTargets}
           onMove={onMove}
@@ -765,11 +773,18 @@ export function BoardPage() {
 
       <WidgetLibrary
         open={library}
-        onClose={() => setLibrary(false)}
+        onClose={() => {
+          setLibrary(false)
+          setLibraryInto(null)
+        }}
         pageId={activePage.id}
+        numbersOnly={libraryInto !== null}
         onCreated={(widgetId) => {
           setLibrary(false)
-          void board.refetch()
+          setLibraryInto(null)
+          // Added from key figures, it becomes a tile there at once.
+          if (libraryInto !== null) onPlace({ widget_id: widgetId, into: 'group', group_id: libraryInto })
+          else void board.refetch()
           setSettingsFor(widgetId)
         }}
       />

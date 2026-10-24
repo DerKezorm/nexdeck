@@ -77,6 +77,37 @@ function PlayerCard(props: RenderProps) {
   )
 }
 
+/** The countdown and the timer count in the browser and load only when a board has one. */
+const LazyCountdownCard = lazy(() => import('./TimeCards').then((module) => ({ default: module.CountdownCard })))
+const LazyTimerCard = lazy(() => import('./TimeCards').then((module) => ({ default: module.TimerCard })))
+
+function CountdownCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyCountdownCard {...props} />
+    </Suspense>
+  )
+}
+
+/** Key figures draw the number cards they hold; loaded only when a board has them. */
+const LazyFiguresCard = lazy(() => import('./FiguresCard').then((module) => ({ default: module.FiguresCard })))
+
+function FiguresCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyFiguresCard {...props} />
+    </Suspense>
+  )
+}
+
+function TimerCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyTimerCard {...props} />
+    </Suspense>
+  )
+}
+
 const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   value: ValueCard,
   gauge: GaugeCard,
@@ -88,6 +119,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   bookmarks: BookmarksCard,
   iframe: IframeCard,
   clock: ClockCard,
+  countdown: CountdownCard,
+  timer: TimerCard,
   weather: WeatherCard,
   feed: FeedCard,
   log: LogCard,
@@ -117,6 +150,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   // a module that is still loading would hand over its names as undefined.
   tabs: (props: RenderProps) => <TabsCard {...props} />,
   group: (props: RenderProps) => <GroupCard {...props} />,
+  figures: FiguresCard,
 }
 
 export function renderWidget(props: RenderProps) {

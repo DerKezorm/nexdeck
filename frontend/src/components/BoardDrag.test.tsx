@@ -53,11 +53,12 @@ function board(editing: boolean) {
 }
 
 describe('what a drag is allowed to start on', () => {
-  it('leaves only the card buttons and the cards inside a group out while editing', () => {
+  it('leaves only the card buttons, the cards inside a group and the tile that adds one out while editing', () => {
     // The settings and delete buttons of the card, and the cards a group or the
-    // side bar holds, which are dragged by a hand of their own (lib/holding).
+    // side bar holds, which are dragged by a hand of their own (lib/holding),
+    // and the last tile of key figures, pressed to add a card there.
     // Written out rather than matched loosely: this is the whole rule.
-    expect(board(true)).toBe('.card-controls, [data-held]')
+    expect(board(true)).toBe('.card-controls, [data-held], .nd-tile-add')
   })
 
   it('still leaves buttons and links alone when not editing', () => {

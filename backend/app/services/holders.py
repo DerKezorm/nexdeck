@@ -29,7 +29,26 @@ MOST_SIDE = 12
 #: A size inside a holder: up to twelve columns, up to twelve rows.
 MOST_HELD = 12
 #: Cards that hold others. A holder goes on the grid only, never into another.
-HOLDER_KINDS = frozenset({"core.tabs", "core.group"})
+HOLDER_KINDS = frozenset({"core.tabs", "core.group", "core.figures"})
+#: The holders a card is dropped into: a group, and key figures, which take number cards only.
+DROP_KINDS = frozenset({"core.group", "core.figures"})
+
+
+def is_number_card(kind: str) -> bool:
+    """Whether a card's big number is a measured number, and so can be a tile of key figures.
+
+    The same rule that offers a dial, LEDs and digits for a card (issue #39):
+    a number renderer and a metric it records, refreshed by the server.
+    """
+    from ..adapters import split_widget_kind
+    from ..adapters.base import NUMBER_RENDERERS
+
+    try:
+        adapter, short = split_widget_kind(kind)
+        widget = adapter.widget(short)
+    except KeyError:
+        return False
+    return widget.renderer in NUMBER_RENDERERS and bool(widget.metrics) and not widget.client_only
 
 
 def side_of(page: Page, present: set[int] | None = None) -> dict[str, Any]:
@@ -93,14 +112,16 @@ def _insert(cards: list[int], widget_id: int, before: int | None) -> list[int]:
 
 def place(db: Session, page: Page, widget: Widget, into: str, *, group: Widget | None = None, before: int | None = None,
           spot: dict[str, int] | None = None, size: dict[str, int] | None = None, columns: int = 12) -> None:
-    """Put ``widget`` on the grid at ``spot``, into ``group``, or into the side bar, before ``before``."""
+    """Put ``widget`` on the grid at ``spot``, into ``group`` (a group or key figures), or into the side bar, before ``before``."""
     from .boards import MOST_TUCKED
 
     if widget.kind in HOLDER_KINDS and into != "board":
         raise error("bad_place", "A group or a tabs card stands on the board, not inside another.")
     if into == "group":
-        if group is None or group.page_id != page.id or group.kind != "core.group" or group.id == widget.id:
+        if group is None or group.page_id != page.id or group.kind not in DROP_KINDS or group.id == widget.id:
             raise error("bad_place", "That is not a group on this page.")
+        if group.kind == "core.figures" and not is_number_card(widget.kind):
+            raise error("not_a_number", "Only a card that shows a number can be a tile of key figures.")
         held = [number for number in (group.options or {}).get("cards") or [] if number != widget.id]
         if len(held) >= MOST_TUCKED:
             raise error("group_full", f"A group holds at most {MOST_TUCKED} cards.")

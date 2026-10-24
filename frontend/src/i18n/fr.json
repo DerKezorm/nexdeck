@@ -2052,5 +2052,40 @@
     "width_wide": "Large",
     "sideEmpty": "Glissez des cartes ici. Elles restent visibles pendant que la page défile.",
     "dropInGroup": "Glissez des cartes ici, ou de nouveau sur le tableau."
+  },
+  "countdown": {
+    "unset": "Choisissez une date dans les réglages de la carte.",
+    "until": "avant {{event}}",
+    "today": "Aujourd’hui",
+    "here": "C’est le jour J",
+    "days_one": "jour",
+    "days_other": "jours",
+    "unit": {
+      "d": "j",
+      "h": "h",
+      "min": "min",
+      "s": "s"
+    },
+    "ago_one": "il y a {{count}} jour",
+    "ago_other": "il y a {{count}} jours"
+  },
+  "timer": {
+    "start": "Démarrer",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "stop": "Arrêter",
+    "reset": "Réinitialiser",
+    "oneMore": "Une minute de plus",
+    "done": "Le temps est écoulé",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "figures": {
+    "add": "Tuile",
+    "library": "Une tuile pour les chiffres clés",
+    "empty": "Pas encore de tuiles. Ouvrez les réglages de la carte et choisissez des cartes qui affichent un nombre.",
+    "emptyEditing": "Glissez ici une carte avec un nombre, ou choisissez des cartes dans les réglages."
   }
 }

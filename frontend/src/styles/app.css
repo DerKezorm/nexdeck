@@ -3653,3 +3653,299 @@ body.has-player-bar main {
     text-shadow: 0 0 18px color-mix(in srgb, var(--lc) 50%, transparent);
   }
 }
+
+/* The countdown and the timer (TimeCards.tsx). The digits grow with the card,
+   by its smaller side, so a wall tablet reads them across the kitchen. */
+@layer components {
+  .nd-countdown {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4px 16px 12px;
+    container-type: size;
+  }
+
+  .nd-countdown-big {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.3em;
+    font-size: clamp(22px, 40cqmin, 112px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .nd-countdown-big small {
+    font-size: 0.36em;
+    font-weight: 600;
+    color: var(--nd-text-muted);
+    margin-left: 0.15em;
+  }
+
+  /* "1 d 9 h 54 min": a number stays with its unit when the line breaks. */
+  .nd-countdown-big .nd-part {
+    white-space: nowrap;
+  }
+
+  .nd-countdown-big .nd-before {
+    margin: 0 0.15em 0 0;
+  }
+
+  .nd-countdown[data-state='today'] .nd-countdown-big,
+  .nd-countdown[data-state='here'] .nd-countdown-big {
+    font-size: clamp(20px, 26cqmin, 80px);
+    color: var(--nd-accent);
+  }
+
+  .nd-countdown-line {
+    margin-top: 6px;
+    font-size: clamp(11px, 9cqmin, 18px);
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nd-timer {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 12px 12px;
+    container-type: size;
+  }
+
+  .nd-timer-time {
+    font-size: clamp(24px, 30cqmin, 120px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .nd-timer[data-state='ringing'] .nd-timer-time {
+    color: var(--nd-bad);
+  }
+
+  .nd-timer-track {
+    width: 100%;
+    max-width: 22rem;
+    height: 5px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--nd-text) 10%, transparent);
+    overflow: hidden;
+  }
+
+  .nd-timer-track > i {
+    display: block;
+    height: 100%;
+    background: var(--nd-accent);
+    transition: width 250ms linear;
+  }
+
+  .nd-timer-done {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nd-bad);
+  }
+
+  .nd-timer-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  /* A small card keeps the buttons and leaves the quick picks out. */
+  @container (max-height: 170px) {
+    .nd-timer-picks {
+      display: none;
+    }
+  }
+
+  /* Done: the card flashes until somebody stops it. */
+  .card.nd-ringing {
+    animation: nd-ringing 1s steps(1) infinite;
+    border-color: var(--nd-bad);
+  }
+
+  @keyframes nd-ringing {
+    50% {
+      background: color-mix(in srgb, var(--nd-bad) 38%, var(--nd-surface));
+    }
+  }
+
+  /* Without movement it stays red rather than flashing. */
+  @media (prefers-reduced-motion: reduce) {
+    .card.nd-ringing {
+      animation: none;
+      background: color-mix(in srgb, var(--nd-bad) 30%, var(--nd-surface));
+    }
+  }
+}
+
+/* Key figures (FiguresCard.tsx): tiles of one grid, each a number card of the
+   page. The numbers grow with the tile, by its smaller side, for a wall. The
+   card's own look (`data-look`) says how a yellow or red tile shows. */
+@layer components {
+  .nd-figures {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 8px;
+    padding: 2px 10px 10px;
+    grid-template-columns: repeat(var(--across, 3), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--down, 1), minmax(0, 1fr));
+  }
+
+  .nd-tile {
+    position: relative;
+    container-type: size;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--nd-border);
+    background: color-mix(in srgb, var(--nd-text) 4%, transparent);
+    color: inherit;
+    text-decoration: none;
+    overflow: hidden;
+  }
+
+  a.nd-tile:hover {
+    border-color: var(--nd-border-strong);
+  }
+
+  .nd-tile-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: clamp(10px, 11cqmin, 15px);
+    color: var(--nd-text-muted);
+  }
+
+  .nd-tile-dot {
+    margin-left: auto;
+    flex: none;
+  }
+
+  .nd-figures:not([data-look='dot']) .nd-tile-dot {
+    display: none;
+  }
+
+  .nd-tile-value {
+    position: relative;
+    font-weight: 700;
+    line-height: 1.05;
+    font-size: clamp(16px, 34cqmin, 88px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nd-tile-value small {
+    font-size: 0.45em;
+    font-weight: 600;
+    color: var(--nd-text-muted);
+    margin-left: 0.2em;
+  }
+
+  .nd-tile-why {
+    position: relative;
+    font-size: clamp(10px, 9cqmin, 13px);
+    color: var(--nd-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* A flat tile (a card three rows high on a phone holds three of them
+     down) keeps its name and its number and leaves the line under them out. */
+  @container (max-height: 74px) {
+    .nd-tile-why {
+      display: none;
+    }
+  }
+
+  .nd-tile-history {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 45%;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .nd-tile-settings {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+
+  .nd-figures[data-look='fill'] .nd-tile[data-tone='warn'] {
+    background: color-mix(in srgb, var(--nd-warn) 16%, transparent);
+    border-color: color-mix(in srgb, var(--nd-warn) 45%, transparent);
+  }
+
+  .nd-figures[data-look='fill'] .nd-tile[data-tone='bad'] {
+    background: color-mix(in srgb, var(--nd-bad) 20%, transparent);
+    border-color: color-mix(in srgb, var(--nd-bad) 55%, transparent);
+  }
+
+  .nd-figures[data-look='border'] .nd-tile {
+    border-left: 4px solid var(--nd-ok);
+  }
+
+  .nd-figures[data-look='border'] .nd-tile[data-tone='warn'] {
+    border-left-color: var(--nd-warn);
+  }
+
+  .nd-figures[data-look='border'] .nd-tile[data-tone='bad'] {
+    border-left-color: var(--nd-bad);
+  }
+
+  .nd-figures[data-look='border'] .nd-tile[data-tone='unknown'] {
+    border-left-color: var(--nd-border-strong);
+  }
+
+  .nd-figures:not([data-look='dot']) .nd-tile[data-tone='bad'] .nd-tile-value {
+    color: var(--nd-bad);
+  }
+
+  /* While arranging, the inside of a card takes no presses (it is what one
+     takes hold of); the tile that adds a card is pressed, like a held card. */
+  .card.is-editing .nd-tile-add {
+    pointer-events: auto;
+  }
+
+  .nd-tile-add {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-style: dashed;
+    font-size: 13px;
+    color: var(--nd-text-muted);
+    cursor: pointer;
+  }
+
+  .nd-figures-empty {
+    grid-column: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding: 0 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--nd-text-faint);
+  }
+}

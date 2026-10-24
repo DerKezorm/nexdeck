@@ -32,13 +32,15 @@ logger = logging.getLogger("nexdeck.adapters")
 #: kinds that may be picked; the server checks both the kind and whether the
 #: person editing may build on that connection at all.
 FieldType = Literal["text", "password", "url", "number", "bool", "select", "integrations",
-                    "textarea", "timezone", "items", "choices", "colour", "board", "pictures", "cards"]
+                    "textarea", "timezone", "items", "choices", "colour", "board", "pictures", "cards", "date", "time"]
 #: ``items`` picks among the rows a card is showing; ``choices`` picks among
 #: values the service itself hands out, through ``Adapter.choices``;
 #: ``board`` picks one of this installation's own boards, which no service
 #: knows about; ``pictures`` is a list somebody builds by uploading files
 #: or naming addresses, not a text field with a syntax. ``cards`` picks other
-#: cards of the same page, for a card that holds them.
+#: cards of the same page, for a card that holds them. ``date`` and ``time``
+#: are a day (2026-12-24) and a time of day (18:30), as the browser's own
+#: pickers write them.
 Status = Literal["ok", "warn", "bad", "unknown"]
 
 
@@ -103,6 +105,10 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     # A title or a line; one row high, and a column wide over a single column of cards.
     "heading": (1, 1),
     "clock": (2, 1),
+    # Days in large, a line under them.
+    "countdown": (2, 1),
+    # The time, the buttons under it.
+    "timer": (2, 2),
     "text": (2, 1),
     "search": (2, 1),
     "value": (2, 2),
@@ -142,6 +148,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "tabs": (2, 2),
     # A title and at least one row of cards inside.
     "group": (3, 2),
+    # A tile with its number at least, two side by side.
+    "figures": (2, 2),
     # A tree needs room to branch: three levels and a few boxes side by side.
     "topology": (4, 3),
 }

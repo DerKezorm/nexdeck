@@ -2052,5 +2052,40 @@
     "width_wide": "Wide",
     "sideEmpty": "Drag cards here. They stay in view while the page scrolls.",
     "dropInGroup": "Drag cards in here, or out onto the board."
+  },
+  "countdown": {
+    "unset": "Pick a date in the card's settings.",
+    "until": "until {{event}}",
+    "today": "Today",
+    "here": "It is here",
+    "days_one": "day",
+    "days_other": "days",
+    "unit": {
+      "d": "d",
+      "h": "h",
+      "min": "min",
+      "s": "s"
+    },
+    "ago_one": "{{count}} day ago",
+    "ago_other": "{{count}} days ago"
+  },
+  "timer": {
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Go on",
+    "stop": "Stop",
+    "reset": "Reset",
+    "oneMore": "One minute more",
+    "done": "Time is up",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "figures": {
+    "add": "Tile",
+    "library": "A tile for key figures",
+    "empty": "No tiles yet. Open the card's settings and pick cards that show a number.",
+    "emptyEditing": "Drag a card with a number in here, or pick cards in the settings."
   }
 }

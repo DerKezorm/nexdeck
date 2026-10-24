@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { get } from '../api/client'
 import type { BoardSummary, FieldSpec, Integration } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
+import { isNumberCard } from '../lib/figures'
 import { GROUP_KINDS, useEditedPage } from '../lib/groups'
 import { PicturePicker } from './PicturePicker'
 import { NexcratePairing } from './NexcratePairing'
@@ -261,13 +262,13 @@ function RemoteChoice({ spec, value, onChange, label, help, integrationId }: {
 /**
  * Other cards of the page, for a card that holds them: ticked ones move in,
  * in the order they were ticked. A holder is never offered, so nothing ends
- * up inside itself.
+ * up inside itself. Key figures are offered the number cards only.
  */
-function CardsPicker({ value, onChange, label, help }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string }) {
+function CardsPicker({ value, onChange, label, help, numbers }: { value: unknown; onChange: (value: unknown) => void; label: string; help?: string; numbers?: boolean }) {
   const { t } = useTranslation()
   const page = useEditedPage((state) => state.widgets)
   const chosen = Array.isArray(value) ? value.map(Number) : []
-  const offered = page.filter((widget) => !GROUP_KINDS.has(widget.kind))
+  const offered = page.filter((widget) => !GROUP_KINDS.has(widget.kind) && (!numbers || isNumberCard(widget)))
   if (!offered.length) {
     return (
       <Field label={label} help={help}>
@@ -388,7 +389,7 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
     return <PicturePicker value={value} onChange={onChange} label={label} help={help} />
   }
   if (spec.type === 'cards') {
-    return <CardsPicker value={value} onChange={onChange} label={label} help={help} />
+    return <CardsPicker value={value} onChange={onChange} label={label} help={help} numbers={spec.helper === 'numbers'} />
   }
   if (spec.type === 'board') {
     return <BoardPicker value={value} onChange={onChange} label={label} help={help} />
@@ -447,7 +448,7 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
       </Field>
     )
   }
-  const inputType = spec.type === 'password' ? 'password' : spec.type === 'number' ? 'number' : spec.type === 'url' ? 'url' : 'text'
+  const inputType = spec.type === 'password' ? 'password' : spec.type === 'number' ? 'number' : spec.type === 'url' ? 'url' : spec.type === 'date' || spec.type === 'time' ? spec.type : 'text'
   return (
     <Field label={label} help={help} htmlFor={id} required={spec.required}>
       <input

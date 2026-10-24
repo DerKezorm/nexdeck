@@ -75,6 +75,8 @@ interface Props {
   onPlace?: (place: Place) => void
   /** A size chosen for a card inside a group or the side bar. */
   onHeldSize?: (widget: WidgetView, size: HeldSize) => void
+  /** A new card straight into a holder, from the tile that adds one to key figures. */
+  onAddInto?: (holderId: number) => void
   /** Where the side bar stands and how wide it is. */
   onSide?: (place: Side['place'], width: Side['width']) => void
 }
@@ -143,7 +145,7 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, side = NO_SIDE, onPlace, onHeldSize, onSide } = props
+  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, side = NO_SIDE, onPlace, onHeldSize, onAddInto, onSide } = props
   // Cards that live inside a tabs card or a group, or in the side bar, are
   // not on the grid; the holder draws them, from the whole page handed down below.
   const sideIds = useMemo(() => (side.place === 'off' ? [] : side.cards), [side])
@@ -396,8 +398,8 @@ export function BoardGrid(props: Props) {
   }, [canHold])
 
   const holding: Holding | undefined = useMemo(
-    () => (canHold ? { rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove } : undefined),
-    [canHold, rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove],
+    () => (canHold ? { rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove, onAddInto } : undefined),
+    [canHold, rowHeight, gap, over, dragging, startDrag, onHeldSize, onSettings, onRemove, onAddInto],
   )
   const pageCards = useMemo(() => ({ widgets: everyCard, canAct, editing, onAction, rowHeight, gap, holding }), [everyCard, canAct, editing, onAction, rowHeight, gap, holding])
 
@@ -478,7 +480,7 @@ export function BoardGrid(props: Props) {
         // in the body does anything in edit mode anyway; the stylesheet takes
         // its pointer events away, which is what makes this safe.
         // The cards inside a group are dragged by the group's own hand, not the grid's.
-        draggableCancel={editing ? '.card-controls, [data-held]' : "button, a, input, select, textarea, [role='button'], .no-drag"}
+        draggableCancel={editing ? '.card-controls, [data-held], .nd-tile-add' : "button, a, input, select, textarea, [role='button'], .no-drag"}
         compactType={autoCompact ? 'vertical' : null}
         // Without compaction, other cards must never move on their own: a card
         // dragged across the board used to push everything aside, and nothing

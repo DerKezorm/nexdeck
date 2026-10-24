@@ -165,7 +165,7 @@ that one of twenty-one renderers draws.
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
 | OctoPrint | printer, print job | | application key from User Settings > Application Keys; its user needs the permission Status (groups Users or Read-only) |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
-| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, notes, bookmarks, iframe, app tile, heading, group, tabs, status page, notices, updates (containers, GitHub projects, the versions of the connected services), this machine | | none; the versions of the connected services ask GitHub only while Check for updates is on |
+| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, countdown, timer, notes, bookmarks, iframe, app tile, heading, group, tabs, key figures, status page, notices, updates (containers, GitHub projects, the versions of the connected services), this machine | | none; the versions of the connected services ask GitHub only while Check for updates is on |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | FreshRSS | feed reader, unread, unread by feed | | user name and the API password from Settings > Profile, not the sign-in password; API access allowed under Administration > Authentication |
@@ -228,6 +228,15 @@ a tight spot.
 `bookmarks`, `iframe`, `clock`, `weather`, `feed`, `log`, `chart`, `app`, `posters`,
 `counters`, `camera`, `bars`, `ring`, `timeline`, `heading`, `meter`, `segments`. A fetch may pick another renderer for its data through
 `meta["renderer"]`; the media library card uses that for its icon row.
+
+Key figures (`core.figures`, renderer `figures`) hold number cards of their
+page in `options.cards`, as a group does, and draw each as a tile with its
+value, unit and colour. A number card is one drawn by `value`, `stats` or
+`gauge` that records a metric and is refreshed by the server
+(`holders.is_number_card`); anything else is left out when picked and refused
+when dropped. The countdown and the timer (`countdown`, `timer`) count in the
+browser; a field of type `date` or `time` is the browser's own picker. A
+timer's state is kept in the browser that runs it.
 
 Every card drawn by `value`, `stats` or `gauge` that records at least one
 metric gets the drawings of a number by itself: a dial, LED bars, seven

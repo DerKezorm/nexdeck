@@ -2052,5 +2052,40 @@
     "width_wide": "Ancha",
     "sideEmpty": "Arrastra tarjetas aquí. Se quedan a la vista mientras la página se desplaza.",
     "dropInGroup": "Arrastra tarjetas aquí o de vuelta al tablero."
+  },
+  "countdown": {
+    "unset": "Elige una fecha en los ajustes de la tarjeta.",
+    "until": "hasta {{event}}",
+    "today": "Hoy",
+    "here": "Ya ha llegado",
+    "days_one": "día",
+    "days_other": "días",
+    "unit": {
+      "d": "d",
+      "h": "h",
+      "min": "min",
+      "s": "s"
+    },
+    "ago_one": "hace {{count}} día",
+    "ago_other": "hace {{count}} días"
+  },
+  "timer": {
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "resume": "Seguir",
+    "stop": "Parar",
+    "reset": "Reiniciar",
+    "oneMore": "Un minuto más",
+    "done": "Se acabó el tiempo",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "figures": {
+    "add": "Mosaico",
+    "library": "Un mosaico para las cifras clave",
+    "empty": "Aún no hay mosaicos. Abre los ajustes de la tarjeta y elige tarjetas que muestren un número.",
+    "emptyEditing": "Arrastra aquí una tarjeta con un número o elige tarjetas en los ajustes."
   }
 }
