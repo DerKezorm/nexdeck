@@ -4,6 +4,7 @@
  * and its own data, and the grid only draws them.
  */
 import { cardStatus } from './cardStatus'
+import { heldBy } from './groups'
 import { recordedMetrics } from './recorded'
 import type { Status, WidgetData, WidgetView } from './types'
 
@@ -70,4 +71,12 @@ export function tileMetric(data: WidgetData | undefined): string | undefined {
   const own = data?.primary?.metric
   const recorded = Object.keys(recordedMetrics(data))
   return own && recorded.includes(own) ? own : recorded[0]
+}
+
+/** The two lines that colour a tile, which a card in key figures offers whatever its view. */
+export const TILE_LINES = new Set(['level_warn', 'level_bad'])
+
+/** Whether a card of the page is a tile of key figures. */
+export function inFigures(widgetId: number | undefined, widgets: WidgetView[]): boolean {
+  return widgetId !== undefined && widgets.some((one) => one.kind === 'core.figures' && heldBy(one).includes(widgetId))
 }

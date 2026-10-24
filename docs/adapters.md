@@ -234,7 +234,9 @@ page in `options.cards`, as a group does, and draw each as a tile with its
 value, unit and colour. A number card is one drawn by `value`, `stats` or
 `gauge` that records a metric and is refreshed by the server
 (`holders.is_number_card`); anything else is left out when picked and refused
-when dropped. The countdown and the timer (`countdown`, `timer`) count in the
+when dropped. "Yellow from" and "Red from" set `meta.level` in every
+view; the dial, the LEDs, the digits and a tile read it, and a card's
+settings offer the two while it is a tile. The countdown and the timer (`countdown`, `timer`) count in the
 browser; a field of type `date` or `time` is the browser's own picker. A
 timer's state is kept in the browser that runs it.
 

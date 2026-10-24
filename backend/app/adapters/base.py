@@ -669,7 +669,7 @@ def drawing_fields(options: tuple[Field, ...], own_dial: bool) -> tuple[Field, .
                       options=(("across", "Across"), ("upright", "Upright")),
                       only_when=("view", "meter")))
     made.append(Field("level_warn", "Yellow from", type="number",
-                      help="In the unit of the number. Empty leaves the colour to the card.",
+                      help="In the unit of the number. It colours the dial, the LEDs, the digits and a tile of key figures. Empty leaves the colour to the card.",
                       only_when=("view", "|".join(SINGLE_NUMBER_VIEWS))))
     made.append(Field("level_bad", "Red from", type="number",
                       help="Below Yellow from means low numbers are the bad ones, as with free space.",
@@ -833,15 +833,19 @@ def low_is_bad(options: dict[str, Any]) -> bool:
 
 
 def apply_level(data: WidgetData, options: dict[str, Any]) -> WidgetData:
-    """Colour one number by the lines the operator drew, when asked to show one number.
+    """Colour one number by the lines the operator drew.
 
     ⚠️ Only the colour of the drawing, under ``meta.level``. The card's own
     status stays what the service said: the problems card, the notices and the
     red glow of a card that went down all read ``status``, and a yellow line
     somebody drew for the look of an LED row is not a fault of the service.
+
+    Worked out in every view, not only in the dial, the LEDs and the digits.
+    A tile of key figures draws the card's number whatever its view, and
+    until 24.10.2026 a tile took its colour from the lines only once the card
+    was set to seven segments, a view the tile never shows. The plain number
+    and the rows do not read ``meta.level``, so for them nothing changes.
     """
-    if not single_number_view(options):
-        return data
     value = (data.primary or {}).get("value")
     warn, bad = level_lines(options)
     if (warn is None and bad is None) or isinstance(value, bool) or not isinstance(value, (int, float)):

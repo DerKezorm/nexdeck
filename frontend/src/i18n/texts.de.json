@@ -1912,7 +1912,7 @@
     "Seven segments": "Siebensegment",
     "Yellow from": "Gelb ab",
     "Red from": "Rot ab",
-    "In the unit of the number. Empty leaves the colour to the card.": "In der Einheit der Zahl. Leer überlässt die Farbe der Karte.",
+    "In the unit of the number. It colours the dial, the LEDs, the digits and a tile of key figures. Empty leaves the colour to the card.": "In der Einheit der Zahl. Färbt den Zeiger, die LEDs, die Ziffern und eine Kachel der Kennzahlen. Leer überlässt die Farbe der Karte.",
     "Below Yellow from means low numbers are the bad ones, as with free space.": "Unter Gelb ab heißt: niedrige Zahlen sind die schlechten, wie bei freiem Platz.",
     "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Was als voll gilt, in der Einheit der Zahl. Bei Prozent nicht nötig. Leer lassen und die Karte bleibt eine Zahl.",
     "Empty at": "Leer bei",

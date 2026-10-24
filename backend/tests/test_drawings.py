@@ -456,6 +456,16 @@ def test_the_lines_colour_the_drawing_and_leave_the_status_alone() -> None:
         assert data.status == "ok"
 
 
+def test_the_lines_colour_the_number_in_every_view_for_a_tile_of_key_figures() -> None:
+    """A tile draws the card's number whatever its view; the plain number and
+    the rows never read the level, and the status stays the service's."""
+    for view in ("value", "number", "chart", None):
+        options = {"level_warn": 25, "level_bad": 40, **({"view": view} if view else {})}
+        data = apply_level(_speed(30.0), options)
+        assert data.meta["level"] == "warn", view
+        assert data.status == "ok"
+
+
 def test_red_below_yellow_means_low_numbers_are_the_bad_ones() -> None:
     options = {"view": "meter", "level_warn": 20, "level_bad": 10}
     assert [apply_level(_speed(v), options).meta["level"] for v in (50.0, 20.0, 10.0, 3.0)] == ["ok", "warn", "bad", "bad"]
@@ -463,7 +473,6 @@ def test_red_below_yellow_means_low_numbers_are_the_bad_ones() -> None:
 
 def test_no_lines_or_no_number_leave_the_colour_to_the_card() -> None:
     assert "level" not in apply_level(_speed(99.0), {"view": "meter"}).meta
-    assert "level" not in apply_level(_speed(99.0), {"view": "value", "level_bad": 1}).meta
     word = WidgetData(primary={"label": "State", "value": "online"})
     assert "level" not in apply_level(word, {"view": "segments", "level_bad": 1}).meta
 

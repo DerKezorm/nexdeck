@@ -1912,7 +1912,7 @@
     "Seven segments": "Sept segments",
     "Yellow from": "Jaune à partir de",
     "Red from": "Rouge à partir de",
-    "In the unit of the number. Empty leaves the colour to the card.": "Dans l'unité du nombre. Vide laisse la couleur à la carte.",
+    "In the unit of the number. It colours the dial, the LEDs, the digits and a tile of key figures. Empty leaves the colour to the card.": "Dans l'unité du nombre. Colore l'aiguille, les LED, les chiffres et une tuile des chiffres clés. Vide laisse la couleur à la carte.",
     "Below Yellow from means low numbers are the bad ones, as with free space.": "En dessous de Jaune à partir de, les petits nombres sont les mauvais, comme pour l'espace libre.",
     "What counts as full, in the unit of the number. Not needed for a percentage. Leave empty and the card stays a number.": "Ce qui compte comme plein, dans l'unité du nombre. Inutile pour un pourcentage. Laissé vide, la carte reste un nombre.",
     "Empty at": "Vide à",

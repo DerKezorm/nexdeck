@@ -6,6 +6,8 @@ import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
 import { shownField } from '../lib/fields'
+import { inFigures, TILE_LINES } from '../lib/figures'
+import { useEditedPage } from '../lib/groups'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { useAuth } from '../stores/auth'
 import { CardLookFields } from './CardLookFields'
@@ -50,6 +52,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const apps = useQuery({ queryKey: ['apps'], queryFn: () => get<AppEntry[]>('/apps'), enabled: appTile, staleTime: 60_000 })
   // A list or nothing: an answer of another shape must not take the whole sheet down.
   const catalog = Array.isArray(apps.data) ? apps.data : NO_APPS
+  // A tile of key figures offers the lines that colour it, whatever its view.
+  const tile = useEditedPage((state) => inFigures(widget?.id, state.widgets))
   const [title, setTitle] = useState('')
   const [icon, setIcon] = useState('')
   const [link, setLink] = useState('')
@@ -347,6 +351,8 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           // check under it. From the list it was a second switch of the same
           // name for the same option, one screen apart. Seen in issue #17.
           if (isApp && option.name === 'check') return false
+          // A tile of key figures draws the number whatever the view, coloured by these lines.
+          if (tile && TILE_LINES.has(option.name)) return true
           return shownField(option, spec.options, options)
         })
         .map((option) => (

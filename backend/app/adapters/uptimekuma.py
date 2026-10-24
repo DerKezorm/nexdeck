@@ -63,6 +63,8 @@ class UptimeKumaAdapter(Adapter):
     kind = "uptimekuma"
     label = "Uptime Kuma"
     category = "monitoring"
+    # Seen against a real instance (1.23.17) on 24.10.2026, the status pages against 1.23.17 and 2.x.
+    beta = False
     description = "Every monitor with state and response time."
     icon = "uptime-kuma"
     docs_url = "https://github.com/louislam/uptime-kuma/wiki/API-Keys"

@@ -598,6 +598,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     Mailpit, Real-Debrid and ReadMeABook 2026-10-06, each by the people who asked for them in #28, #29 and #19, on their own instances;
     nexlore 1.5.1 and nexsift 0.10.0 the same night, every card and every button; Reclaimerr the same day by the one who asked for it in #31; M3U Editor 2026-10-07 the same way in #32);
     nginx ignition 2.47.0 on 2026-10-08, on a production instance;
+    Uptime Kuma 2026-10-24 on a real instance, 1.23.17, the status pages against 1.23.17 and 2.x;
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta.
@@ -608,7 +609,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
         "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix", "truenas", "nexmail", "nexpulse", "netbird", "nextrmnl", "arcane", "dockhand", "elasticsearch", "urbackup", "openwrt", "kubernetes",
         "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault", "patchmon", "imap", "nexbeat",
-        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition"}
+        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition", "uptimekuma"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.
