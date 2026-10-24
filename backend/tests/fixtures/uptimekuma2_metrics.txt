@@ -1,0 +1,16 @@
+# HELP monitor_response_time_seconds Average response time in seconds calculated over sliding window specified by the 'window' label
+# TYPE monitor_response_time_seconds gauge
+# HELP monitor_response_time Monitor Response Time (ms)
+# TYPE monitor_response_time gauge
+monitor_response_time{monitor_id="1",monitor_name="Home lab",monitor_type="group",monitor_url="null",monitor_hostname="null",monitor_port="null"} -1
+monitor_response_time{monitor_id="2",monitor_name="Kuma itself",monitor_type="http",monitor_url="http://127.0.0.1:3001",monitor_hostname="null",monitor_port="null"} 2
+monitor_response_time{monitor_id="3",monitor_name="Nothing here",monitor_type="http",monitor_url="http://127.0.0.1:9",monitor_hostname="null",monitor_port="null"} -1
+monitor_response_time{monitor_id="4",monitor_name="Kuma again",monitor_type="http",monitor_url="http://localhost:3001",monitor_hostname="null",monitor_port="null"} 3
+monitor_response_time{monitor_id="5",monitor_name="Public site",monitor_type="http",monitor_url="http://127.0.0.1:3001/api/entry-page",monitor_hostname="null",monitor_port="null"} 1
+# HELP monitor_status Monitor Status (1 = UP, 0= DOWN, 2= PENDING, 3= MAINTENANCE)
+# TYPE monitor_status gauge
+monitor_status{monitor_id="1",monitor_name="Home lab",monitor_type="group",monitor_url="null",monitor_hostname="null",monitor_port="null"} 0
+monitor_status{monitor_id="2",monitor_name="Kuma itself",monitor_type="http",monitor_url="http://127.0.0.1:3001",monitor_hostname="null",monitor_port="null"} 1
+monitor_status{monitor_id="3",monitor_name="Nothing here",monitor_type="http",monitor_url="http://127.0.0.1:9",monitor_hostname="null",monitor_port="null"} 0
+monitor_status{monitor_id="4",monitor_name="Kuma again",monitor_type="http",monitor_url="http://localhost:3001",monitor_hostname="null",monitor_port="null"} 1
+monitor_status{monitor_id="5",monitor_name="Public site",monitor_type="http",monitor_url="http://127.0.0.1:3001/api/entry-page",monitor_hostname="null",monitor_port="null"} 1

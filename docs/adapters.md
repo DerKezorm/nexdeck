@@ -132,7 +132,7 @@ that one of twenty-one renderers draws.
 | Sportarr | upcoming, missing events, events | | API key from Settings > General > Security |
 | Tube Archivist | download queue, latest videos, video archive | start downloads | API token from Settings > Application, sent as Token |
 | Home Assistant | entity, entity list; home pages (beta) with lamps, thermostats, covers, scenes, scripts, switches, sensors and statistics | turn on/off, scenes, scripts, covers, locks; on home pages only the services of lamps, thermostats, covers, scenes, scripts, switches and input booleans | long-lived token, of an administrator for home pages; live over WebSocket |
-| Uptime Kuma | monitors, summary | | API key (metrics endpoint) |
+| Uptime Kuma | monitors, summary (both by name or by status page) | | API key (metrics endpoint); a status page is read without one |
 | Healthchecks | checks, checks up | | API key from the project settings; the read-only one is enough, and healthchecks.io works too |
 | ChangeDetection.io | recent changes, watches | check all now | API key from Settings > API |
 | n8n | workflows, last runs, summary | publish, unpublish | API key from Settings > n8n API |

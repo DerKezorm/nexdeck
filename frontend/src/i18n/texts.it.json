@@ -328,7 +328,7 @@
     "How many devices there are, how many are reachable, and how many need an update.": "Quanti dispositivi ci sono, quanti sono raggiungibili e quanti hanno bisogno di un aggiornamento.",
     "How many disks are fine, how many are not, and how warm the warmest is.": "Quanti dischi stanno bene, quanti no, e quanto è caldo il più caldo.",
     "How many documents there are, and how many are still in the inbox.": "Quanti documenti ci sono, e quanti sono ancora nella posta in arrivo.",
-    "How many monitors are up and down.": "Quanti monitor sono attivi e quanti non raggiungibili.",
+    "How many monitors are up and down, and which ones are down.": "Quanti monitor sono attivi e quanti fuori servizio, e quali sono fuori servizio.",
     "How many routers and services there are, and how many are broken.": "Quanti router e servizi ci sono, e quanti sono guasti.",
     "How much has arrived, and how much of it was loud.": "Quanto è arrivato, e quanto di questo era ad alta priorità.",
     "How much is collected for deletion, over how many collections.": "Quanto è stato raccolto per l'eliminazione, su quante raccolte.",
@@ -1968,7 +1968,8 @@
     "Every connection that names its version": "Ogni connessione che indica la propria versione",
     "Only the ones picked": "Solo quelle scelte",
     "Also show what is up to date": "Mostra anche ciò che è aggiornato",
-    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours while Check for updates is on under System, About. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "La versione che ogni servizio dichiara di usare, confrontata con l’ultima release del suo progetto su GitHub, controllata ogni sei ore finché Cerca aggiornamenti è attivo in Sistema, Informazioni. Un servizio che non indica la propria versione, o il cui progetto non è su GitHub, non compare qui ed è elencato in Sistema, Integrazioni."
+    "The version each service says it runs, held against the newest release of its project on GitHub, looked at every six hours while Check for updates is on under System, About. A service that does not name its version, or whose project is not on GitHub, is left out here and listed under System, Integrations.": "La versione che ogni servizio dichiara di usare, confrontata con l’ultima release del suo progetto su GitHub, controllata ogni sei ore finché Cerca aggiornamenti è attivo in Sistema, Informazioni. Un servizio che non indica la propria versione, o il cui progetto non è su GitHub, non compare qui ed è elencato in Sistema, Integrazioni.",
+    "Only the monitors of one status page: the last part of its address, as in /status/home. Empty means every monitor.": "Solo i monitor di una pagina di stato: l'ultima parte del suo indirizzo, come in /status/home. Vuoto significa tutti i monitor."
   },
   "labels": {
     "Private resources": "Risorse private",

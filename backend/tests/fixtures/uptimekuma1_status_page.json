@@ -1,0 +1,39 @@
+{
+  "config": {
+    "slug": "home",
+    "title": "Home",
+    "description": "",
+    "icon": "/icon.svg",
+    "theme": "auto",
+    "published": true,
+    "showTags": false,
+    "customCSS": "",
+    "footerText": null,
+    "showPoweredBy": true,
+    "googleAnalyticsId": null,
+    "showCertificateExpiry": false
+  },
+  "incident": null,
+  "publicGroupList": [
+    {
+      "id": 1,
+      "name": "Services",
+      "weight": 1,
+      "monitorList": [
+        {
+          "id": 2,
+          "name": "Kuma itself",
+          "sendUrl": 0,
+          "type": "http"
+        },
+        {
+          "id": 3,
+          "name": "Nothing here",
+          "sendUrl": 0,
+          "type": "http"
+        }
+      ]
+    }
+  ],
+  "maintenanceList": []
+}

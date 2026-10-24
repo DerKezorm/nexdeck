@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Uptime Kuma by status page.** The Monitors card and the Up and down card can keep to the monitors of one status page: its slug, the last part of its address, as in `/status/home`. The card then leads to that status page. Uptime Kuma lists its status pages only to a signed-in user, so the slug is typed, and one it does not know is said as such. Works with Uptime Kuma 1.23 and 2.x.
+- The **Up and down** card names the monitors that are down, and takes a name filter like the list.
+
+### Fixed
+
+- **Uptime Kuma**: groups and push monitors showed "-1 ms"; they now show no time. Node's own lines in the metrics (its version, among others) counted as one more monitor, called "?", that was always up. With a name filter, the card still went red, and counted up and down, over monitors the filter left out. A monitor that is pending turns the card yellow.
+
 ## 0.47.0 (2026-10-23)
 
 ### Added

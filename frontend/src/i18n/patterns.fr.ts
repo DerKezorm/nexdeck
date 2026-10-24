@@ -139,4 +139,5 @@ export const patterns: Pattern[] = [
   [/^priority (\d+)$/, 'priorité $1'],
   [/^(.+) failed\.$/, '$1 a échoué.'],
   [/^Runs (\S+)$/, 'En service : $1'],
+  [/^Down: (.+)$/, 'En panne : $1'],
 ]
