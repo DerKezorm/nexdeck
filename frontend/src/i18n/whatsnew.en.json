@@ -1642,6 +1642,38 @@
         "The Add page dialog lists the kinds of page one under the other, readable at last.",
         "A network plan is loaded when its page opens: the first load of every board is lighter."
       ]
+    },
+    "0.48.0": {
+      "lead": "Numbers from several services in one grid for the wall, a countdown and a kitchen timer, Uptime Kuma by status page, and pages you put in your own order.",
+      "sections": [
+        {
+          "title": "Key figures",
+          "body": "A new card that shows numbers from several services side by side, such as the processor of the NAS, the downloads and the blocked queries. Each tile is a number card of the page and keeps its own settings, its yellow and red lines included. The grid works out its rows by itself, or keeps to the columns you choose, and the numbers grow with the card.",
+          "path": "Edit mode (pencil) > Add widget > Key figures, then drag number cards onto it"
+        },
+        {
+          "title": "Countdown and timer",
+          "body": "The countdown shows the days until a date, and hours and minutes once it is close; every year for a birthday. The timer starts, pauses and resets, with quick picks that start at once. When it is done the card flashes until somebody taps it and rings for a minute. Each browser runs its own timer.",
+          "path": "Edit mode (pencil) > Add widget > Countdown or Timer"
+        },
+        {
+          "title": "Uptime Kuma by status page",
+          "body": "The Monitors card and the Up and down card can keep to the monitors of one status page; type its slug, the last part of its address. The summary names the monitors that are down. Uptime Kuma is no longer a beta.",
+          "path": "Uptime Kuma card > Settings > Status page"
+        },
+        {
+          "title": "Pages in your order",
+          "body": "Every page has a handle in the board settings. Drag it, or press the arrow keys on it, and the tabs follow.",
+          "path": "Edit mode (pencil) > Board settings > Pages"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Uptime Kuma no longer shows \"-1 ms\" for groups and push monitors, and no longer counts a monitor called \"?\".",
+        "With a name filter, the Uptime Kuma card counts and colours only the monitors it shows.",
+        "undici 7.30.1 and serialize-javascript 7.1.4 in the test and build tools.",
+        "Thanks to mplok1 for asking for the order of pages (#50)."
+      ]
     }
   }
 }

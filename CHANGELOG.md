@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.48.0 (2026-10-24)
 
 ### Added
 
@@ -18,6 +18,18 @@ project uses semantic versioning.
 ### Fixed
 
 - **Uptime Kuma**: groups and push monitors showed "-1 ms"; they now show no time. Node's own lines in the metrics (its version, among others) counted as one more monitor, called "?", that was always up. With a name filter, the card still went red, and counted up and down, over monitors the filter left out. A monitor that is pending turns the card yellow.
+
+### Changed
+
+- "Yellow from" and "Red from" of a number card are worked out in every view, not only for the dial, the LEDs and the digits. Only those drawings and a tile of key figures show them, so a card on the board looks as it did.
+
+### Security
+
+- **undici 7.30.1** and **serialize-javascript 7.1.4** in the test and build tools, for advisories published after 0.47.0. Neither is part of the image.
+
+### Upgrading
+
+Nothing to do. The database does not change.
 
 ## 0.47.0 (2026-10-23)
 

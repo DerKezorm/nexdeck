@@ -1642,6 +1642,38 @@
         "Der Dialog „Seite hinzufügen“ führt die Seitenarten untereinander auf und ist endlich lesbar.",
         "Ein Netzwerkplan wird erst geladen, wenn seine Seite aufgeht: Jedes Board lädt beim ersten Aufruf leichter."
       ]
+    },
+    "0.48.0": {
+      "lead": "Zahlen aus mehreren Diensten in einem Raster für die Wand, ein Countdown und ein Küchentimer, Uptime Kuma nach Statusseite und Seiten in deiner eigenen Reihenfolge.",
+      "sections": [
+        {
+          "title": "Kennzahlen",
+          "body": "Eine neue Karte zeigt Zahlen aus mehreren Diensten nebeneinander, etwa den Prozessor des NAS, die Downloads und die blockierten Anfragen. Jede Kachel ist eine Zahlkarte der Seite und behält ihre Einstellungen, auch „Gelb ab“ und „Rot ab“. Das Raster rechnet seine Reihen selbst aus oder hält sich an die gewählten Spalten, und die Zahlen wachsen mit der Karte.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Kennzahlen, dann Zahlkarten hineinziehen"
+        },
+        {
+          "title": "Countdown und Timer",
+          "body": "Der Countdown zeigt die Tage bis zu einem Datum und kurz davor Stunden und Minuten, für einen Geburtstag jedes Jahr wieder. Der Timer startet, hält an und setzt zurück, mit einer Schnellwahl, die sofort losläuft. Ist die Zeit um, blinkt die Karte, bis jemand tippt, und klingelt eine Minute lang. Jeder Browser hat seinen eigenen Timer.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Countdown oder Timer"
+        },
+        {
+          "title": "Uptime Kuma nach Statusseite",
+          "body": "Die Karten „Monitors“ und „Up and down“ können sich auf die Monitore einer Statusseite beschränken; du tippst ihren Kurznamen, den letzten Teil ihrer Adresse. Die Zusammenfassung nennt die ausgefallenen Monitore. Uptime Kuma ist keine Beta mehr.",
+          "path": "Uptime-Kuma-Karte > Einstellungen > Statusseite"
+        },
+        {
+          "title": "Seiten in deiner Reihenfolge",
+          "body": "In den Board-Einstellungen hat jede Seite einen Griff. Zieh daran oder drück darauf die Pfeiltasten, und die Reiter folgen.",
+          "path": "Bearbeiten (Stift) > Board-Einstellungen > Seiten"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Uptime Kuma zeigt bei Gruppen und Push-Monitoren kein „-1 ms“ mehr und zählt keinen Monitor „?“ mehr.",
+        "Mit Namensfilter zählt und färbt die Uptime-Kuma-Karte nur die Monitore, die sie zeigt.",
+        "undici 7.30.1 und serialize-javascript 7.1.4 in den Test- und Bauwerkzeugen.",
+        "Danke an mplok1 für den Wunsch nach der Reihenfolge der Seiten (#50)."
+      ]
     }
   }
 }
