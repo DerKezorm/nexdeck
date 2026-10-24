@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Copy, Trash2 } from 'lucide-react'
+import { Copy, Menu, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,7 @@ import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { useHomeBoardPath } from '../lib/homeBoard'
+import { useHandleReorder } from '../lib/useHandleReorder'
 import type { CardStyle } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
 import { BoardYamlDialog } from './BoardYamlDialog'
@@ -36,6 +37,12 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [background, setBackground] = useState(board.background)
   const [settings, setSettings] = useState<Record<string, unknown>>(board.settings ?? {})
   const [error, setError] = useState('')
+  // The order of the pages, by a handle as in the list of boards (issue #50): the whole order in one call.
+  const pageOrder = useHandleReorder(board.pages, (page) => String(page.id), (order) =>
+    put(`/boards/${board.slug}/pages/order`, { ids: order.map((page) => page.id) })
+      .then(onChanged)
+      .catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network'))),
+  )
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deletingPage, setDeletingPage] = useState<{ id: number; name: string; widgets: number } | null>(null)
@@ -228,8 +235,23 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
 
       {tab === 'pages' && (
         <ul className="space-y-2">
-          {board.pages.map((page) => (
-            <li key={page.id} className="flex items-center gap-2">
+          {pageOrder.rows.map((page) => (
+            <li
+              key={page.id}
+              ref={pageOrder.rowRef(String(page.id))}
+              className={`flex items-center gap-2 rounded-xl ${pageOrder.holding === String(page.id) ? 'bg-surface-hover' : ''}`}
+            >
+              {/* ⚠️ `touch-none`, or a finger's first millimetre scrolls the sheet and the drag is gone. */}
+              <button
+                type="button"
+                className="btn btn-icon h-8 w-8 btn-flat cursor-grab touch-none active:cursor-grabbing shrink-0"
+                disabled={board.pages.length <= 1}
+                aria-label={t('board.moveWithHandle', { name: page.name })}
+                title={t('board.moveWithHandle', { name: page.name })}
+                {...pageOrder.handleProps(String(page.id))}
+              >
+                <Menu size={15} />
+              </button>
               <input
                 className="input"
                 aria-label={t('board.pageName')}

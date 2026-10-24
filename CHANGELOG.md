@@ -13,6 +13,7 @@ project uses semantic versioning.
 - **Uptime Kuma by status page.** The Monitors card and the Up and down card can keep to the monitors of one status page: its slug, the last part of its address, as in `/status/home`. The card then leads to that status page. Uptime Kuma lists its status pages only to a signed-in user, so the slug is typed, and one it does not know is said as such. Works with Uptime Kuma 1.23 and 2.x.
 - The **Up and down** card names the monitors that are down, and takes a name filter like the list.
 - **Uptime Kuma** is no longer a beta: its cards were seen against a real instance.
+- **Pages in a new order** (#50): under Board settings, Pages, every page has a handle; drag it, or press the arrow keys on it, as in the list of boards. The tabs follow at once.
 
 ### Fixed
 

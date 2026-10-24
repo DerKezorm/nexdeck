@@ -38,6 +38,7 @@ from ..schemas import (
     KioskSession,
     LayoutsBody,
     PageCreate,
+    PageOrder,
     PagePatch,
     PlaceBody,
     SharesBody,
@@ -303,6 +304,26 @@ def create_page(slug: str, body: PageCreate, user: CurrentUser, db: DbSession) -
                 layouts={key: [] for key in COLUMNS}, kind=body.kind, topology=topology, home=home)
     db.add(page)
     db.commit()
+    _announce(board.id)
+    return board_view(db, board, permission)
+
+
+@router.put("/boards/{slug}/pages/order", summary="Put the pages of a board in the order its tabs should show them")
+def order_pages(slug: str, body: PageOrder, user: CurrentUser, db: DbSession) -> dict:
+    """The whole order in one call, as for the boards (issue #50).
+
+    Every page of the board, each once, and nothing else: a list that leaves
+    one out would leave it at a position somewhere among the others, which is
+    an order nobody asked for. Renumbered from zero.
+    """
+    board, permission = require_board(db, slug, user, "edit")
+    pages = {page.id: page for page in board.pages}
+    if len(set(body.ids)) != len(body.ids) or set(body.ids) != set(pages):
+        raise error("bad_page_order", "Name every page of this board once, and no other.")
+    for index, page_id in enumerate(body.ids):
+        pages[page_id].position = index
+    db.commit()
+    db.refresh(board)
     _announce(board.id)
     return board_view(db, board, permission)
 

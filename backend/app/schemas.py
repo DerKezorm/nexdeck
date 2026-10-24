@@ -128,6 +128,12 @@ class BoardOrder(BaseModel):
     slugs: list[str] = Field(default_factory=list, max_length=200)
 
 
+class PageOrder(BaseModel):
+    """Every page of a board, by number, in the order its tabs should show them."""
+
+    ids: list[int] = Field(default_factory=list, max_length=200)
+
+
 class PageCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     icon: str = Field(default="", max_length=80)
