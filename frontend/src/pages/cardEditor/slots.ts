@@ -158,6 +158,16 @@ export function assign(doc: Document, slot: Slot, path: string, list?: string): 
   }
 }
 
+/** What a place reads from instead of a path, which a path put on it takes away: a formula, a text with fields or a total. */
+export type Replaced = 'formula' | 'template' | 'total'
+
+export function replacedAt(card: CardDoc | null, slot: Slot): Replaced | null {
+  const now = card ? readAt(card, slot.path) : undefined
+  if (!now || typeof now !== 'object' || Array.isArray(now)) return null
+  const own = now as Record<string, unknown>
+  return (['formula', 'template', 'total'] as const).find((kind) => own[kind] !== undefined) ?? null
+}
+
 /** What a change of form would take away: the parts of the card the new form has no room for. */
 export function lostByForm(card: CardDoc, to: CardForm): CardPath[] {
   const from = readAt(card, ['form'])

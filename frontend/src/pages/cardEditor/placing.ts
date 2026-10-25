@@ -5,7 +5,7 @@
 import { readAt, setAt } from '../../lib/cardDocument'
 import type { CardForm } from '../../lib/customCards'
 import { enclosingList, nodeAt, rowFieldsOf, type ProbeNode } from './probe'
-import { assign, cardPath, changeForm, insideRow, lostByForm, type Slot } from './slots'
+import { assign, cardPath, changeForm, insideRow, lostByForm, replacedAt, type Slot } from './slots'
 import { useCardEditor } from './store'
 
 /** What a dragged field carries: the request whose answer it is in, and its path there. */
@@ -34,17 +34,24 @@ export function place(requestId: string, node: ProbeNode, slot: Slot): boolean {
   const tree = treeOf(requestId)
   if (!editor.card || !tree) return false
   const before = editor.text
+  const replaced = replacedAt(editor.card, slot)
+  let put: string
   if (slot.row) {
     const list = enclosingList(tree, node)
     const inner = list ? insideRow(list.path, node.path) : null
     if (!list || inner === null) return false
     const rows = cardPath(editor.card, requestId, list.path)
+    put = inner
     editor.change((doc) => assign(doc, slot, inner, rows))
   } else {
     const path = cardPath(editor.card, requestId, node.path)
+    put = path
     editor.change((doc) => assign(doc, slot, path))
   }
-  return useCardEditor.getState().text !== before
+  const changed = useCardEditor.getState().text !== before
+  // ⚠️ The formula, text or total on the place is gone from the card: say so, and the way back is one click.
+  if (changed && replaced) useCardEditor.setState({ replaced: { place: slot.label, what: replaced, path: put } })
+  return changed
 }
 
 /** A dropped field, looked up in its answer. */

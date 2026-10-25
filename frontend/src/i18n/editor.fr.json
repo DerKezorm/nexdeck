@@ -66,6 +66,16 @@
       "restore": "Restaurer les modifications non enregistrées",
       "discard": "Les abandonner"
     },
+    "replaced": {
+      "text": "{{place}} venait {{what}} et lit maintenant {{path}}.",
+      "what": {
+        "formula": "d’une formule",
+        "template": "d’un texte avec des champs",
+        "total": "d’un total sur les lignes"
+      },
+      "undo": "Annuler",
+      "dismiss": "Fermer"
+    },
     "leave": {
       "title": "Quitter sans enregistrer ?",
       "body": "Vos modifications de cette carte ne sont pas encore enregistrées. Elles sont perdues si vous quittez.",

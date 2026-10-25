@@ -58,7 +58,7 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const editor = useCardEditor()
-  const { text, card, lastValid, problems, view, step, slug, base } = editor
+  const { text, card, lastValid, problems, view, step, slug, base, replaced } = editor
   const dirty = isDirty(editor)
   const guard = useLeaveGuard(dirty)
   const { save, busy, trouble, clear } = useSaveCard()
@@ -196,6 +196,20 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
             </button>
             <button type="button" className="btn btn-flat" onClick={discard}>
               {t('editor.restore.discard')}
+            </button>
+          </div>
+        )}
+
+        {replaced && (
+          <div className="rounded-lg border border-warn/40 px-3 py-2 text-sm flex flex-wrap items-center gap-2" role="status" data-testid="card-replaced">
+            <span className="min-w-0 flex-1 basis-60 break-words hyphens-auto">
+              {t('editor.replaced.text', { place: t(replaced.place.key, { number: replaced.place.number }), what: t(`editor.replaced.what.${replaced.what}`), path: replaced.path })}
+            </span>
+            <button type="button" className="btn" onClick={() => useCardEditor.getState().undo()}>
+              {t('editor.replaced.undo')}
+            </button>
+            <button type="button" className="btn btn-flat" onClick={() => useCardEditor.setState({ replaced: null })}>
+              {t('editor.replaced.dismiss')}
             </button>
           </div>
         )}

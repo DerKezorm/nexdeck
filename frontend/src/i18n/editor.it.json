@@ -66,6 +66,16 @@
       "restore": "Ripristina le modifiche non salvate",
       "discard": "Scartale"
     },
+    "replaced": {
+      "text": "{{place}} derivava da {{what}} e ora legge {{path}}.",
+      "what": {
+        "formula": "una formula",
+        "template": "un testo con campi",
+        "total": "un totale sulle righe"
+      },
+      "undo": "Annulla",
+      "dismiss": "Chiudi"
+    },
     "leave": {
       "title": "Uscire senza salvare?",
       "body": "Le tue modifiche a questa scheda non sono ancora salvate. Se esci, vanno perse.",

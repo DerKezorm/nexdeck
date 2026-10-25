@@ -201,6 +201,27 @@ describe('karten9: from the tree onto the card', () => {
     expect(within(screen.getByTestId('card-place-value')).getByText('records[0].sizeleft')).toBeInTheDocument()
   })
 
+  it('karten9 AC-4: a field put on a place that read a formula says so and can be taken back with one click', async () => {
+    stub(CARD.replace('value: totalRecords', 'value: {formula: "{totalRecords} * 2", label: Double}'), probed)
+    await probe()
+    fireEvent.click(item(/^sizeleft, number, 1024/))
+    await userEvent.click(within(screen.getByRole('menu', { name: 'Use sizeleft as' })).getByRole('menuitem', { name: 'Use as Value' }))
+    expect(editor().text).not.toContain('formula')
+    expect(readAt(editor().card!, ['value'])).toEqual({ label: 'Double', path: 'records[0].sizeleft' })
+    const note = screen.getByTestId('card-replaced')
+    expect(note).toHaveTextContent('Value came from a formula and now reads records[0].sizeleft.')
+    await userEvent.click(within(note).getByRole('button', { name: 'Undo' }))
+    expect(readAt(editor().card!, ['value'])).toEqual({ formula: '{totalRecords} * 2', label: 'Double' })
+    expect(screen.queryByTestId('card-replaced')).toBeNull()
+  })
+
+  it('karten9 AC-4: a field put on a place that read a plain path says nothing of the kind', async () => {
+    await probe()
+    fireEvent.click(item(/^sizeleft, number, 1024/))
+    await userEvent.click(within(screen.getByRole('menu', { name: 'Use sizeleft as' })).getByRole('menuitem', { name: 'Use as Value' }))
+    expect(screen.queryByTestId('card-replaced')).toBeNull()
+  })
+
   it('karten9 AC-4: a field dragged onto a place of the card goes there', async () => {
     await probe()
     const carried = dataTransfer()

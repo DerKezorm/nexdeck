@@ -60,6 +60,11 @@ export interface CardEditorState {
   integrationId: number | null
   /** The probes of this visit by request id. ⚠️ The service's own data: kept in memory only, never in a draft (EC-4). */
   probes: Record<string, ProbeState>
+  /**
+   * A field put on a place that read from a formula, a text with fields or a total instead (KARTEN-9 AC-4): said to the
+   * author with a way back, until the next change or step back.
+   */
+  replaced: { place: { key: string; number?: number }; what: 'formula' | 'template' | 'total'; path: string } | null
 
   /** Start over with a card: a saved one (`saved`), a new one, or a draft brought back. */
   open: (input: { slug: string | null; text: string; base: string | null; saved: string | null; view?: EditorView }) => void
@@ -108,6 +113,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
       ...next,
       past: more ? state.past : [...state.past, state.text].slice(-HISTORY),
       future: [],
+      replaced: null,
       typing: group === undefined ? null : { group, at },
     })
   }
@@ -132,6 +138,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     now: () => Date.now(),
     integrationId: null,
     probes: {},
+    replaced: null,
 
     open: ({ slug, text: given, base, saved: savedGiven, view }) => {
       const text = lineFeeds(given)
@@ -153,6 +160,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         focusLine: null,
         integrationId: null,
         probes: {},
+        replaced: null,
       })
     },
 
@@ -184,6 +192,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         past: state.past.slice(0, -1),
         future: [...state.future, state.text],
         typing: null,
+        replaced: null,
       })
     },
 
@@ -196,6 +205,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         future: state.future.slice(0, -1),
         past: [...state.past, state.text].slice(-HISTORY),
         typing: null,
+        replaced: null,
       })
     },
 

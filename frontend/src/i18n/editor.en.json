@@ -66,6 +66,16 @@
       "restore": "Restore unsaved changes",
       "discard": "Discard them"
     },
+    "replaced": {
+      "text": "{{place}} came from {{what}} and now reads {{path}}.",
+      "what": {
+        "formula": "a formula",
+        "template": "a text with fields",
+        "total": "a total over rows"
+      },
+      "undo": "Undo",
+      "dismiss": "Dismiss"
+    },
     "leave": {
       "title": "Leave without saving?",
       "body": "Your changes to this card are not saved yet. They are lost when you leave.",

@@ -66,6 +66,16 @@
       "restore": "Ungespeicherte Änderungen wiederherstellen",
       "discard": "Verwerfen"
     },
+    "replaced": {
+      "text": "{{place}} kam aus {{what}} und liest jetzt {{path}}.",
+      "what": {
+        "formula": "einer Formel",
+        "template": "einem Text mit Feldern",
+        "total": "einer Summe über Zeilen"
+      },
+      "undo": "Rückgängig",
+      "dismiss": "Schließen"
+    },
     "leave": {
       "title": "Ohne Speichern verlassen?",
       "body": "Deine Änderungen an dieser Karte sind noch nicht gespeichert. Wenn du gehst, sind sie weg.",

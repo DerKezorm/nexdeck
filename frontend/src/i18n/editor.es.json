@@ -66,6 +66,16 @@
       "restore": "Recuperar los cambios sin guardar",
       "discard": "Descartarlos"
     },
+    "replaced": {
+      "text": "{{place}} venía de {{what}} y ahora lee {{path}}.",
+      "what": {
+        "formula": "una fórmula",
+        "template": "un texto con campos",
+        "total": "un total de filas"
+      },
+      "undo": "Deshacer",
+      "dismiss": "Cerrar"
+    },
     "leave": {
       "title": "¿Salir sin guardar?",
       "body": "Tus cambios en esta tarjeta todavía no están guardados. Si sales, se pierden.",
