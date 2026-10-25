@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Copy, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -148,9 +148,15 @@ export function CustomCardsSettings() {
       <div className="glass rounded-2xl p-5 mb-4">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h2 className="font-semibold text-[15px]">{t('cards.title')}</h2>
-          <button className="btn btn-accent" onClick={openNew}>
-            <Plus size={15} /> {t('cards.build')}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Importing a card comes with the shop (KARTEN-12); the button stands here already, closed, and says so (KARTEN-11 AC-10). */}
+            <button className="btn" disabled title={t('cards.importLater')} aria-label={`${t('cards.import')}. ${t('cards.importLater')}`}>
+              <Upload size={15} /> {t('cards.import')}
+            </button>
+            <button className="btn btn-accent" onClick={openNew}>
+              <Plus size={15} /> {t('cards.build')}
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-4" role="tablist" aria-label={t('cards.title')}>
           {TABS.map((one) => (

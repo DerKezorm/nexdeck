@@ -2352,6 +2352,8 @@
     "title": "Cartes personnalisées",
     "lead": "Une carte personnalisée montre ce que vous choisissez dans les réponses d'un service : un chiffre, quelques chiffres, une liste ou un mur d'images. Créez-en une vous-même ou prenez-en une dans la boutique de cartes.",
     "build": "Créer une carte",
+    "import": "Importer",
+    "importLater": "L'import d'une carte arrivera avec une version ultérieure de nexdeck.",
     "openShop": "Ouvrir la boutique de cartes",
     "tabs": {
       "cards": "Cartes",

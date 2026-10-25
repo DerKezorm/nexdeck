@@ -2352,6 +2352,8 @@
     "title": "Schede personali",
     "lead": "Una scheda personale mostra ciò che scegli dalle risposte di un servizio: un numero, alcuni numeri, un elenco o un muro di immagini. Creane una tu stesso o prendine una dal negozio di schede.",
     "build": "Crea una scheda",
+    "import": "Importa",
+    "importLater": "L'importazione di una scheda arriverà con una versione successiva di nexdeck.",
     "openShop": "Apri il negozio di schede",
     "tabs": {
       "cards": "Schede",
