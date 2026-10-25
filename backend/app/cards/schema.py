@@ -246,8 +246,14 @@ def stays_underneath(path: str) -> bool:
     """
     if not path.startswith("/") or path.startswith("//") or "\\" in path or any(c.isspace() or ord(c) < 32 for c in path):
         return False
-    segments = path.split("?", 1)[0].split("/")
-    return not any(segment.lower().replace("%2e", ".") == ".." for segment in segments)
+    before_query = path.split("?", 1)[0]
+    # ⚠️ ``;`` starts a path parameter (``/a/..;/b`` is ``..`` behind Tomcat), an encoded slash or backslash is a slash
+    # behind nginx or Tomcat, and ``%25`` is a percent sign that is decoded twice (``%252e%252e``). None of them names a
+    # real path of a service (found in the review of KARTEN-2, 25.10.2026).
+    lowered = before_query.lower()
+    if ";" in lowered or any(coded in lowered for coded in ("%2f", "%5c", "%25")):
+        return False
+    return not any(segment.replace("%2e", ".") == ".." for segment in lowered.split("/"))
 
 
 class Request(Part):

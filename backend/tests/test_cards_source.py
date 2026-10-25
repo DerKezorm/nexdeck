@@ -161,6 +161,18 @@ def test_karten2_ac4_a_path_that_names_a_host_or_climbs_is_refused_on_saving(pat
         Request(id="queue", path=path)
 
 
+@pytest.mark.parametrize("path", ["/a/..;/b", "/a/;x=1/b", "/%2f../b", "/a%2Fb", "/a%5cb", "/%252e%252e/b", "/a/%2525", "/a/%2F..%2Fb"])
+def test_karten2_ac4_semicolon_encoded_slash_and_double_encoding_are_refused_as_well(path: str) -> None:
+    """``..;`` and ``%2f..%2f`` become ``..`` behind Tomcat or nginx; ``%252e`` is decoded twice (found in the review, 25.10.2026)."""
+    with pytest.raises(ValidationError):
+        Request(id="queue", path=path)
+
+
+@pytest.mark.parametrize("path", ["/api/v3/series/lookup?term=a%20b", "/api/v3/queue?page=1&sort=a;b", "/a/b.json", "/search?q=100%25"])
+def test_karten2_ac4_an_ordinary_path_with_a_query_still_passes(path: str) -> None:
+    assert Request(id="queue", path=path).path == path
+
+
 def test_karten2_ac4_the_same_refusal_reaches_a_saved_card() -> None:
     with pytest.raises(Exception) as failure:
         from app.cards import load
