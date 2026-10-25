@@ -80,9 +80,11 @@ interface Store {
   open: boolean
   /** A question handed over from Ctrl K, sent as soon as the panel is there. */
   asking: string
+  /** The service the question is about, when it comes from its diagnosis page (roadmap M6). */
+  about: string
   load: () => Promise<void>
   setOpen: (open: boolean) => void
-  ask: (question: string) => void
+  ask: (question: string, about?: string) => void
   taken: () => void
 }
 
@@ -90,6 +92,7 @@ export const useAssistant = create<Store>((set) => ({
   state: null,
   open: false,
   asking: '',
+  about: '',
   load: async () => {
     try {
       set({ state: await get<AssistantState>('/assistant') })
@@ -98,8 +101,8 @@ export const useAssistant = create<Store>((set) => ({
     }
   },
   setOpen: (open) => set({ open }),
-  ask: (question) => set({ open: true, asking: question }),
-  taken: () => set({ asking: '' }),
+  ask: (question, about = '') => set({ open: true, asking: question, about }),
+  taken: () => set({ asking: '', about: '' }),
 }))
 
 /** One fact about a button, as a sentence in the reader's language. */

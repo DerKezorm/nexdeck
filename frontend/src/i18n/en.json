@@ -2409,5 +2409,9 @@
   },
   "dependencies": {
     "because": "because {{name}} is down"
+  },
+  "diagnosis": {
+    "why": "Why?",
+    "whyOf": "Why is {{name}} red or yellow?"
   }
 }

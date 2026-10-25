@@ -19,6 +19,8 @@ export interface ChronicleLine {
   board: string
   user?: string
   target?: { board: string; page: string; widget: number }
+  /** Whom "Why?" asks about (roadmap M6), on lines about a service. */
+  subject?: string
 }
 
 type Translate = (key: string, options?: Record<string, unknown>) => string

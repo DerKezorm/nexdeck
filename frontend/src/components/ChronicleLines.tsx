@@ -9,6 +9,10 @@ import { clockOf, lineDetail, lineStatus, lineText, type ChronicleLine } from '.
 import { focusCard } from '../lib/focusCard'
 import { useDisguise } from '../lib/showcase'
 import { useAuth } from '../stores/auth'
+import { WhyLink } from './WhyLink'
+
+/** Lines after which a service can be asked why. */
+const TROUBLE = ['card', 'outage', 'recovery', 'forecast']
 
 export function ChronicleRow({ line, compact = false }: { line: ChronicleLine; compact?: boolean }) {
   const { t, i18n } = useTranslation()
@@ -37,9 +41,12 @@ export function ChronicleRow({ line, compact = false }: { line: ChronicleLine; c
       </span>
     </>
   )
-  return target ? (
+  // Roadmap M6: a line about a service that went wrong or came back leads to its diagnosis, at that moment.
+  const why = !compact && TROUBLE.includes(line.kind) && line.level !== 'info' ? <WhyLink subject={line.subject} name={line.name} at={line.when} className="self-center px-1" /> : null
+  const row = target ? (
     <button type="button" className="nd-chron-row" onClick={go} data-kind={line.kind}>{body}</button>
   ) : (
     <div className="nd-chron-row" data-kind={line.kind}>{body}</div>
   )
+  return why ? <div className="flex items-start">{row}{why}</div> : row
 }

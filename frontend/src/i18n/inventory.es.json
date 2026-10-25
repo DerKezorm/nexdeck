@@ -30,7 +30,17 @@
     "runsOnHelp": "Lo que esto necesita para funcionar. Si cae, esto no se avisa por separado; su tarjeta dice por qué.",
     "pick": "Añadir …",
     "nothing": "Nada aún",
-    "mapHelp": "Arrastra para ordenar; el orden se guarda. Rojo está caído, una línea discontinua solo está propuesta.",
-    "arrange": "Ordenar de nuevo"
+    "mapHelp": "Una columna por máquina, debajo sus contenedores e invitados y al lado lo que funciona en cada uno. Un nombre lleva a su diagnóstico; rojo está caído, discontinuo solo propuesto.",
+    "diagnose": "Diagnóstico",
+    "suggestionContainer": "{{child}} probablemente funciona en el contenedor {{name}} en {{host}}",
+    "suggestionGuest": "{{child}} probablemente funciona en {{name}} en {{host}}",
+    "tileOf": "{{name}} (mosaico de app)",
+    "proposedMark": "propuesto",
+    "withTile": "+ mosaico de app",
+    "showAll": "Mostrar todos los contenedores ({{count}} sin nada dentro)",
+    "onlyUsed": "Solo contenedores con un servicio",
+    "direct": "Directamente en la máquina",
+    "loose": "Sin ubicar",
+    "nothingKnown": "{{count}} contenedores o invitados, sin nada conocido dentro"
   }
 }

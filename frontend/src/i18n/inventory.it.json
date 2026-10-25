@@ -30,7 +30,17 @@
     "runsOnHelp": "Ciò di cui questo ha bisogno per funzionare. Se cade, questo non viene segnalato a parte; la sua scheda dice perché.",
     "pick": "Aggiungi …",
     "nothing": "Ancora niente",
-    "mapHelp": "Trascina per disporre; la disposizione resta. Rosso è giù, una linea tratteggiata è solo proposta.",
-    "arrange": "Ridisponi"
+    "mapHelp": "Una colonna per macchina, sotto i suoi container e ospiti, accanto cosa gira in ciascuno. Un nome porta alla sua diagnosi; rosso è fuori servizio, tratteggiato solo proposto.",
+    "diagnose": "Diagnosi",
+    "suggestionContainer": "{{child}} probabilmente gira nel container {{name}} su {{host}}",
+    "suggestionGuest": "{{child}} probabilmente gira in {{name}} su {{host}}",
+    "tileOf": "{{name}} (riquadro app)",
+    "proposedMark": "proposto",
+    "withTile": "+ riquadro app",
+    "showAll": "Mostra tutti i container ({{count}} senza nulla dentro)",
+    "onlyUsed": "Solo container con un servizio",
+    "direct": "Direttamente sulla macchina",
+    "loose": "Senza posto",
+    "nothingKnown": "{{count}} container o ospiti, nulla di noto gira dentro"
   }
 }

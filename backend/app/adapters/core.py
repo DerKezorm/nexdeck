@@ -871,7 +871,11 @@ class CoreAdapter(Adapter):
                     quiet[name] = max(away[widget.id].ends_at, quiet.get(name, away[widget.id].ends_at))
                     continue
                 where = home.name if several_boards else page.name if several_pages else ""
-                rows.append((widget.id, widget.title or widget.kind, widget.icon, widget.link, service_link(widget), home, page, where))
+                # Whom "Why?" asks about (roadmap M6): the connection, or an app tile itself.
+                # A card of nexdeck's own, such as a calendar, has no service to look into.
+                subject = (f"integration:{widget.integration_id}" if widget.integration_id
+                           else f"tile:{widget.id}" if widget.kind == "core.app" else "")
+                rows.append((widget.id, widget.title or widget.kind, widget.icon, widget.link, service_link(widget), home, page, where, subject))
             notices = []
             if options.get("bell", True) and board.owner_id is not None:
                 notices = [
@@ -886,7 +890,7 @@ class CoreAdapter(Adapter):
         updates = await cls._services(ctx, "all", [], False) if options.get("updates", True) else []
 
         items: list[dict[str, Any]] = []
-        for widget_id, title, icon, own, service, home, page, where in rows:
+        for widget_id, title, icon, own, service, home, page, where, subject in rows:
             data = live.get(widget_id)
             last_ok, last_error, down_since = checks.get(widget_id, (None, "", None))
             item: dict[str, Any]
@@ -902,6 +906,8 @@ class CoreAdapter(Adapter):
                 item = {"title": title, "status": data.status, "source": "card", **CoreAdapter._findings_of(data)}
             item.update(value=where, board=home.name, page=page.name, icon=icon,
                         target={"board": home.slug, "page": page.slug, "widget": widget_id})
+            if subject:
+                item["subject"] = subject
             if since is not None:
                 item["since"] = since
             link = own or (data.link if data is not None else "") or service

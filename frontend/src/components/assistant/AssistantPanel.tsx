@@ -181,14 +181,14 @@ function Panel({ open }: { open: boolean }) {
   }, [open, setOpen])
 
   const send = useCallback(
-    async (text: string, into: number | null = conversation) => {
+    async (text: string, into: number | null = conversation, about = '') => {
       const question = text.trim()
       if (!question || waiting) return
       setFailure('')
       setTurns((current) => [...current, { me: true, text: question }])
       setWaiting(true)
       try {
-        const reply = await post<Reply & { conversation_id: number }>('/assistant/chat', { text: question, conversation_id: into })
+        const reply = await post<Reply & { conversation_id: number }>('/assistant/chat', { text: question, conversation_id: into, ...(about ? { about } : {}) })
         setConversation(reply.conversation_id)
         setTurns((current) => [...current, { me: false, ...reply }])
       } catch (error) {
@@ -206,13 +206,13 @@ function Panel({ open }: { open: boolean }) {
   // was sent twice when the effect ran twice, and the second came back busy.
   useEffect(() => {
     if (!open || !asking || waiting) return
-    const question = useAssistant.getState().asking
+    const { asking: question, about } = useAssistant.getState()
     if (!question) return
     taken()
     setView('chat')
     setConversation(null)
     setTurns([])
-    void send(question, null)
+    void send(question, null, about)
   }, [open, asking, waiting, taken, send])
 
   const fresh = () => {

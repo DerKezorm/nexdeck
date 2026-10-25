@@ -2409,5 +2409,9 @@
   },
   "dependencies": {
     "because": "weil {{name}} ausgefallen ist"
+  },
+  "diagnosis": {
+    "why": "Warum?",
+    "whyOf": "Warum ist {{name}} rot oder gelb?"
   }
 }

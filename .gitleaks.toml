@@ -30,4 +30,12 @@ regexes = [
   '''demo-password-123''',
   # The Elasticsearch API key the tests use: base64 for "test-key-for-the-cards".
   '''dGVzdC1rZXktZm9yLXRoZS1jYXJkcw==''',
+  # Made-up secrets in log lines the masking tests feed to the assistant and the
+  # diagnosis page; each test checks that the value is gone afterwards. The token
+  # is jwt.io's own example.
+  '''sk-abcdef123456''',
+  '''9f8e7d6c5b4a''',
+  '''ghp_abcdef123456''',
+  '''abc123def456''',
+  '''eyJhbGciOiJIUzI1NiJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U''',
 ]

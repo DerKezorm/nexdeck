@@ -249,6 +249,14 @@ describe('the chat', () => {
     expect(useAssistant.getState().asking).toBe('')
   })
 
+  it('sends a question from a diagnosis page with the service it is about (roadmap M6)', async () => {
+    replies.push(reply('The container stopped.'))
+    useAssistant.getState().ask('Why is Plex in trouble?', 'integration:3')
+    panel()
+    await waitFor(() => expect(sent.find((one) => one.path === '/assistant/chat')?.body).toEqual({ text: 'Why is Plex in trouble?', conversation_id: null, about: 'integration:3' }))
+    expect(useAssistant.getState().about).toBe('')
+  })
+
   it('says so when nothing is set up, and leads to the setting', () => {
     useAssistant.setState({ state: { ...STATE, ready: false, provider: 'off' } })
     panel()

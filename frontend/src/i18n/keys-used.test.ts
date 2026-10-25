@@ -10,14 +10,15 @@ import { fileURLToPath } from 'node:url'
 
 import oidcEn from '../vendor/nexoidc/oidc.en.json'
 import assistantEn from './assistant.en.json'
+import diagnosisEn from './diagnosis.en.json'
 import inventoryEn from './inventory.en.json'
 import enOwn from './en.json'
 import { withOidc } from './index'
 
 // The sign-in words of the shared module are merged into English at start (`withOidc`), so they count as present.
 const en = withOidc(enOwn, oidcEn)
-// The chat's and the inventory's words come in files of their own (`lib/lazyTexts.ts`), and count as English too.
-for (const [name, branch] of [...Object.entries(assistantEn), ...Object.entries(inventoryEn)]) {
+// The words of the chat, the inventory and the diagnosis come in files of their own (`lib/lazyTexts.ts`), and count as English too.
+for (const [name, branch] of [...Object.entries(assistantEn), ...Object.entries(inventoryEn), ...Object.entries(diagnosisEn)]) {
   ;(en as Record<string, unknown>)[name] = { ...((en as Record<string, Record<string, unknown>>)[name] ?? {}), ...branch }
 }
 

@@ -1,6 +1,6 @@
 /**
  * The inventory (roadmap M5): what runs on what, as the server lists it, laid
- * out as a tree for the list and in rows for the map.
+ * out as a tree for the list and in columns, one per machine, for the map.
  */
 
 export interface InventoryNode {
@@ -17,6 +17,8 @@ export interface InventoryNode {
   down: boolean
   /** The engine or hypervisor a container or a guest belongs to. */
   parent?: string
+  /** For a connection that is a machine: what the machine is called (docker-live), not what the connection is called (Portainer). */
+  machine?: string
   demo?: boolean
 }
 
@@ -72,58 +74,78 @@ export function tree(inventory: Inventory): { roots: Branch[]; unplaced: Invento
   return { roots: roots.sort((a, b) => a.node.name.localeCompare(b.node.name)), unplaced: unplaced.sort((a, b) => a.name.localeCompare(b.name)) }
 }
 
-export const NODE_WIDTH = 168
-export const NODE_HEIGHT = 44
-const ROW = 110
-const GAP = 24
-/** Boxes in one line of the map before it wraps. */
-const PER_ROW = 7
+/** A service on the map: what hangs on a container, a guest or a host, and whether only proposed. */
+export interface Placed {
+  node: InventoryNode
+  proposed: boolean
+  /** App tiles that hang on this connection and need no box of their own. */
+  tiles: number
+}
 
-/** Rows by how far down the chain each thing sits; what stands alone goes to the last row. */
-export function layered(inventory: Inventory): Record<string, [number, number]> {
-  const depth = new Map<string, number>()
-  const walk = (ref: string, level: number, path: Set<string>) => {
-    if (path.has(ref)) return
-    if ((depth.get(ref) ?? -1) >= level) return
-    depth.set(ref, level)
-    for (const child of childrenOf(inventory, ref)) walk(child.node.ref, level + 1, new Set([...path, ref]))
-  }
-  const { roots, unplaced } = tree(inventory)
-  for (const root of roots) walk(root.node.ref, 0, new Set())
-  const deepest = Math.max(0, ...depth.values())
-  for (const node of unplaced) depth.set(node.ref, deepest + 1)
-  const rows = new Map<number, string[]>()
-  for (const node of inventory.nodes) {
-    const level = depth.get(node.ref)
-    if (level === undefined) continue
-    rows.set(level, [...(rows.get(level) ?? []), node.ref])
-  }
-  // Row by row from the top, each box under the middle of what it runs on, so
-  // the lines do not cross; a long row wraps onto a second line of its own.
-  const out: Record<string, [number, number]> = {}
-  let y = GAP
-  for (const level of [...rows.keys()].sort((a, b) => a - b)) {
-    const under = (ref: string) => {
-      const xs = parentsOf(inventory, ref).map((one) => out[one]?.[0]).filter((x): x is number => x !== undefined)
-      return xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : Number.MAX_SAFE_INTEGER
-    }
-    const refs = (rows.get(level) ?? []).sort((a, b) => under(a) - under(b))
-    const placed = refs.filter((ref) => under(ref) !== Number.MAX_SAFE_INTEGER)
-    const loose = refs.filter((ref) => under(ref) === Number.MAX_SAFE_INTEGER)
-    if (placed.length) {
-      // Under the middle of its parents, pushed right only as far as the box before it needs.
-      let next = GAP
-      for (const ref of placed) {
-        const x = Math.max(next, under(ref))
-        out[ref] = [x, y]
-        next = x + NODE_WIDTH + GAP
-      }
-      y += ROW
-    }
-    for (let at = 0; at < loose.length; at += PER_ROW) {
-      loose.slice(at, at + PER_ROW).forEach((ref, index) => (out[ref] = [GAP + index * (NODE_WIDTH + GAP), y]))
-      y += ROW
+/** One container or guest in a column, with what runs in it. */
+export interface Slot {
+  node: InventoryNode
+  services: Placed[]
+}
+
+/** One machine: an engine or a hypervisor, with its containers and guests. */
+export interface Column {
+  host: InventoryNode
+  /** What runs straight on the machine, without a container. */
+  direct: Placed[]
+  slots: Slot[]
+  /** Containers and guests nothing is known to run in, left out unless asked for. */
+  empty: Slot[]
+}
+
+/**
+ * The map (agreed on 25.10.2026): one column per machine, its containers and
+ * guests below it, and beside each what runs in it. An app tile that hangs on
+ * its connection is folded into it; what runs on nothing known stands apart.
+ *
+ * ⚠️ Measured on a real homelab the day before: 95 boxes in rows, lines from
+ * Portainer across all of them, most of the map out of sight.
+ */
+export function columns(inventory: Inventory): { columns: Column[]; loose: Placed[] } {
+  const byRef = new Map(inventory.nodes.map((node) => [node.ref, node]))
+  const live = inventory.relations.filter((one) => one.state !== 'rejected' && byRef.has(one.child) && byRef.has(one.parent))
+  // A tile on its connection is part of it, not a service of its own.
+  const folded = new Map<string, number>()
+  const tileOn = new Set<string>()
+  for (const one of live) {
+    if (one.state === 'on' && byRef.get(one.child)?.kind === 'tile' && byRef.get(one.parent)?.kind === 'integration') {
+      folded.set(one.parent, (folded.get(one.parent) ?? 0) + 1)
+      tileOn.add(one.child)
     }
   }
-  return out
+  const services = (ref: string): Placed[] =>
+    live
+      .filter((one) => one.parent === ref && !tileOn.has(one.child))
+      .map((one) => ({ node: byRef.get(one.child) as InventoryNode, proposed: one.state === 'suggested', tiles: folded.get(one.child) ?? 0 }))
+      .sort((a, b) => Number(a.proposed) - Number(b.proposed) || a.node.name.localeCompare(b.node.name))
+
+  const out: Column[] = []
+  const shown = new Set<string>()
+  for (const host of inventory.nodes.filter((node) => node.kind === 'integration')) {
+    const things = inventory.nodes.filter((node) => node.parent === host.ref)
+    const direct = services(host.ref)
+    if (things.length === 0 && direct.length === 0) continue
+    const slots: Slot[] = []
+    const empty: Slot[] = []
+    for (const node of things.sort((a, b) => a.name.localeCompare(b.name))) {
+      const slot = { node, services: services(node.ref) }
+      ;(slot.services.length ? slots : empty).push(slot)
+      // A proposal stands where it is proposed, dashed, and not once more among the loose ones.
+      for (const one of slot.services) shown.add(one.node.ref)
+    }
+    for (const one of direct) shown.add(one.node.ref)
+    shown.add(host.ref)
+    out.push({ host, direct, slots, empty })
+  }
+  out.sort((a, b) => (a.host.machine || a.host.name).localeCompare(b.host.machine || b.host.name))
+  const loose = inventory.nodes
+    .filter((node) => (node.kind === 'integration' || node.kind === 'tile') && !shown.has(node.ref) && !tileOn.has(node.ref))
+    .map((node) => ({ node, proposed: false, tiles: folded.get(node.ref) ?? 0 }))
+    .sort((a, b) => a.node.name.localeCompare(b.node.name))
+  return { columns: out, loose }
 }

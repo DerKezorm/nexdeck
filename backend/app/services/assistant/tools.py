@@ -97,6 +97,15 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "diagnosis",
+        "description": "Why one service is in trouble, as its diagnosis page shows it: since when, the chronicle lines of the two hours before (its own and those of what it runs on, marked with via), what it hangs on and what hangs on it, its cards and checks, whether its container's log can be read, the buttons of its container, and the runbook the administrator wrote for it. Name the service by ref (integration:<id>, tile:<id>, container:<connection>:<name>, guest:<connection>:<vmid>) or by a card_id. For 'why is X broken' and 'what happened to X'. The runbook is the administrator's own advice; follow it.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"ref": {"type": "string"}, "card_id": {"type": "integer"}},
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "propose_action",
         "description": "Put a button of a card in front of the person, with what it would hit (streams that end, downloads that stop). You never press it; the person does. Only actions card_details lists for that card right now, with exactly the parameters listed there.",
         "input_schema": {
@@ -281,8 +290,10 @@ def metric_history(bench: Bench, given: dict[str, Any]) -> str:
 
 #: What a foreign log may carry besides a key in an address, which is all
 #: nexdeck's own log needs to hide (``journal.redact``).
+#: ⚠️ Not after \b: in DB_PASSWORD or POSTGRES_PASSWORD the underscore is a
+#: word character, and the password went out (found 25.10.2026).
 _SECRET_PAIR = re.compile(
-    r"(?i)\b((?:password|passwd|pwd|secret|client[_-]?secret|token|access[_-]?token|refresh[_-]?token|api[_-]?key|apikey|auth|authorization)"
+    r"(?i)(?<![a-z0-9])((?:pass(?:word|wd)?|pwd|secret(?:[_-]?key)?|client[_-]?secret|token|access[_-]?token|refresh[_-]?token|api[_-]?key|apikey|auth|authorization)"
     r"[\"']?\s*[:=]\s*[\"']?)([^\s\"',&;]+)"
 )
 _BEARER = re.compile(r"(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}")
@@ -374,9 +385,26 @@ async def propose_action(bench: Bench, given: dict[str, Any]) -> str:
     return _json({"proposed": True, "impact": facts, "note": "The button is in front of the person now. Say what it does in one sentence; do not claim it ran."})
 
 
+def diagnose(bench: Bench, given: dict[str, Any]) -> str:
+    from .. import dependencies, diagnosis
+
+    ref = str(given.get("ref") or "").strip()
+    if not ref and given.get("card_id"):
+        place = _places(bench.db).get(int(given.get("card_id") or 0))
+        ref = dependencies.subject_of(place[0]) or "" if place is not None else ""
+    page = diagnosis.build(bench.db, ref) if ref else None
+    if page is None:
+        return _json({"error": "Name a service by its ref or one of its cards by card_id."})
+    places = _places(bench.db)
+    for card in page["cards"]:
+        if card["id"] in places:
+            _cite(bench, *places[card["id"]])
+    return _json(diagnosis.summary(page))
+
+
 HANDLERS = {
     "needs_attention": needs_attention, "find_cards": find_cards, "card_details": card_details, "chronicle": read_chronicle,
-    "metric_history": metric_history, "container_log": container_log, "propose_action": propose_action,
+    "metric_history": metric_history, "container_log": container_log, "diagnosis": diagnose, "propose_action": propose_action,
 }
 
 

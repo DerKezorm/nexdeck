@@ -1674,6 +1674,53 @@
         "undici 7.30.1 and serialize-javascript 7.1.4 in the test and build tools.",
         "Thanks to mplok1 for asking for the order of pages (#50)."
       ]
+    },
+    "0.49.0": {
+      "lead": "nexdeck starts to understand your homelab: a card that says what needs a look, a chronicle of what changed and since when, a chat you can ask, history over months, what runs on what, and a page that says why something broke.",
+      "sections": [
+        {
+          "title": "Needs attention",
+          "body": "The Problems card grew into a card that says what needs a look, from every board: cards that are yellow or red with their reason and since when, services whose check fails, and the warnings of the bell you have not read. A row leads to the card. What does not fit becomes \"Show 16 more\". Cards you already have keep doing what they did.",
+          "path": "Edit mode (pencil) > Add widget > Needs attention"
+        },
+        {
+          "title": "Maintenance",
+          "body": "Put a connection or an app tile into maintenance for a few hours or until a time. Until then nothing about it is told, no outage is opened, and the availability bars draw the time grey. The card says until when. Administrators only.",
+          "path": "The wrench on a card"
+        },
+        {
+          "title": "Chronicle and daily report",
+          "body": "One page with what changed, newest first: cards that turned yellow, red or green, outages, new versions, containers that restarted, and changes made in nexdeck. A yellow or red card now says since when. The cards What happened and Daily report show it on a board, and the daily report can arrive as a message every morning. Backrest, Kopia and Duplicati turn yellow when the last good backup is too old.",
+          "path": "Account menu > Chronicle; Settings > Notifications > Daily report"
+        },
+        {
+          "title": "Ask nexdeck",
+          "body": "A chat for administrators next to the bell. It answers from your cards, the chronicle and the history, and shows where it looked. It never presses a button: it shows the button with what it would hit, such as the streams that end when Plex restarts, and you press it. It reads a container's log only after you allow it. Off until you choose Claude or a model on your own network, such as Ollama.",
+          "path": "System > Assistant, then the sparkle next to the bell"
+        },
+        {
+          "title": "History over months and forecasts",
+          "body": "nexdeck keeps hour averages for 90 days and day averages for two years of every number. A chart card has buttons for 24 hours, 7 days, 30 days and a year, with the lowest to the highest as a band. A quiet line at the foot of a card says when a volume is full or a number reaches its red line, and under 14 days you get a message.",
+          "path": "The buttons on a chart card"
+        },
+        {
+          "title": "What runs on what",
+          "body": "nexdeck asks Docker, Portainer, a Synology and Proxmox which containers and guests they run, and works out which service runs in which, through Nginx Proxy Manager too. What it only guesses waits for your yes. When a host goes down, you get one message that names what it took with it, and their cards say why.",
+          "path": "System > Inventory"
+        },
+        {
+          "title": "Why is it broken?",
+          "body": "A red or yellow card has a \"Why?\" that opens a page of its service: since when, what happened in the two hours before, what it runs on, its check and cards, the log of its container when you ask for it, and a runbook you write once for next time. \"Explain it\" hands the page to the chat.",
+          "path": "\"Why?\" on a red or yellow card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The question before a button says what it would hit: streams that end, downloads that stop, the lights a scene switches, what runs in a container or a guest.",
+        "The Updates card takes Arcane and Dockhand as container sources. Thanks to mplok1 for the idea (#51).",
+        "A page the browser translated no longer goes blank when something on it changes.",
+        "The Updates card says how old a newer release is."
+      ]
     }
   }
 }

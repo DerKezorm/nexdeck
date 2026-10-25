@@ -1,0 +1,101 @@
+{
+  "diagnosis": {
+    "title": "Diagnóstico",
+    "back": "Volver",
+    "notFound": "Ese servicio, contenedor o invitado ya no existe.",
+    "kind": {
+      "integration": "Conexión",
+      "tile": "Mosaico de app",
+      "container": "Contenedor",
+      "guest": "Invitado"
+    },
+    "state": {
+      "now_bad": "En rojo desde {{when}}",
+      "now_warn": "En amarillo desde {{when}}",
+      "nowOpen_bad": "En rojo",
+      "nowOpen_warn": "En amarillo",
+      "past_bad": "Estuvo en rojo de {{from}} a {{to}}",
+      "past_warn": "Estuvo en amarillo de {{from}} a {{to}}",
+      "pastOpen_bad": "Estuvo en rojo desde {{from}}",
+      "pastOpen_warn": "Estuvo en amarillo desde {{from}}",
+      "ok": "Nada en los últimos 30 días"
+    },
+    "length": {
+      "minutes": "{{minutes}} min",
+      "hours": "{{hours}} h {{minutes}} min",
+      "days": "{{days}} d {{hours}} h"
+    },
+    "cause": {
+      "now": "Probablemente por {{name}}",
+      "past": "Fue por {{name}}",
+      "note": "{{name}} depende de ello, por eso no se avisó por separado.",
+      "open": "Ver"
+    },
+    "happened": "Qué pasó",
+    "windowNow": "dos horas antes hasta ahora",
+    "windowPast": "dos horas antes hasta el final",
+    "windowOk": "las últimas dos horas",
+    "nothingHappened": "No se anotó nada en ese tiempo.",
+    "via": "depende de: {{name}}",
+    "began": "{{time}} · empezó",
+    "ended": "{{time}} · terminó",
+    "readOn": "Seguir leyendo en la crónica",
+    "checksTitle": "Comprobación y tarjetas",
+    "checkOk": "responde",
+    "checkUnknown": "aún sin comprobar",
+    "checkDown": "caído desde {{when}}",
+    "checkOff": "desactivada",
+    "noCards": "Ninguna tarjeta lo muestra.",
+    "log": {
+      "title": "Registro",
+      "show": "Ver el registro",
+      "help": "Lee las últimas 100 líneas de {{container}} en {{engine}}. Las contraseñas, tokens y claves se ocultan.",
+      "from": "{{container}} en {{engine}} · {{count}} líneas · leído a las {{time}}",
+      "again": "Leer de nuevo",
+      "hide": "Ocultar",
+      "empty": "El registro está vacío.",
+      "why": {
+        "no_container": "No se conoce ningún contenedor para esto, así que no hay registro. Los registros vienen de contenedores de Docker, Portainer y un Synology.",
+        "no_logs": "{{engine}} no ofrece registros de contenedores.",
+        "demo": "{{engine}} está en la demo y no tiene un registro real."
+      }
+    },
+    "ask": {
+      "title": "Pregunta a nexdeck",
+      "help": "El chat recibe esta página como punto de partida.",
+      "button": "Explícamelo",
+      "off": "Activa el asistente en Sistema, Asistente para preguntar sobre esta página.",
+      "question_now": "¿Por qué tiene problemas {{name}}?",
+      "question_past": "¿Qué le pasó a {{name}}?",
+      "question_ok": "¿Está bien {{name}}?"
+    },
+    "hangs": {
+      "title": "Depende de",
+      "nothing": "De nada que nexdeck conozca.",
+      "this": "este servicio",
+      "carries": "Depende de él",
+      "open": "Diagnóstico",
+      "down": "caído",
+      "up": "en marcha"
+    },
+    "runbook": {
+      "title": "Runbook",
+      "empty": "Aún no hay runbook. Anota lo que ayude la próxima vez o enlaza una guía.",
+      "write": "Escribir un runbook",
+      "edit": "Editar",
+      "text": "Qué hacer",
+      "link": "Enlace a una guía más larga (opcional)",
+      "hint": "Markdown: listas con 1. o -, **negrita**, `código`.",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "by": "{{user}}, {{when}}",
+      "badLink": "Un enlace empieza por http:// o https://."
+    },
+    "buttons": {
+      "title": "Botones",
+      "none": "Sin botones: nexdeck no puede reiniciar esto por sí mismo.",
+      "from": "De la tarjeta {{card}}. Cada uno pregunta antes y dice a qué afectaría.",
+      "done": "{{label}}: hecho."
+    }
+  }
+}

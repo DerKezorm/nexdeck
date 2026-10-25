@@ -4061,3 +4061,31 @@ body.has-player-bar main {
     background: var(--nd-surface-hover);
   }
 }
+
+/* "Why?" (roadmap M6): from a card, a row or a line to the diagnosis page. */
+@layer components {
+  .nd-why {
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--nd-accent);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .nd-why:hover {
+    text-decoration: underline;
+  }
+  /* A runbook is steps: numbers and dots, which the reset takes off every list. */
+  .nd-runbook ol {
+    list-style: decimal;
+    padding-left: 20px;
+    margin: 0 0 8px;
+  }
+  .nd-runbook ul {
+    list-style: disc;
+  }
+  .nd-runbook li {
+    margin: 2px 0;
+  }
+}

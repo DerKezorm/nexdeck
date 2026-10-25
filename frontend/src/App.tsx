@@ -25,6 +25,7 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m)
 const SystemPage = lazy(() => import('./pages/settings/SystemPage').then((m) => ({ default: m.SystemPage })))
 const NoticesPage = lazy(() => import('./pages/NoticesPage').then((m) => ({ default: m.NoticesPage })))
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ default: m.ChroniclePage })))
+const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 5000 } } })
@@ -143,6 +144,14 @@ export function App() {
               element={
                 <Guard>
                   <ChroniclePage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/diagnosis"
+              element={
+                <Guard>
+                  <DiagnosisPage />
                 </Guard>
               }
             />
