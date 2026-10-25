@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Bell, BellOff, Pencil, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 
@@ -13,6 +13,8 @@ import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/u
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
 import { useAuth } from '../../stores/auth'
+
+const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
 import { SettingsCard } from './SettingsCard'
 
 /** What ``GET /integrations/versions`` says about one connection. */
@@ -260,6 +262,7 @@ export function IntegrationsSettings() {
 }
 
 function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; onClose: () => void; onSaved: () => void }) {
+  const admin = useAuth((s) => s.user?.role === 'admin')
   const { t } = useTranslation()
   const adapter = adapters.find((a) => a.kind === kind)
   const [name, setName] = useState(integration?.name ?? adapter?.label ?? '')
@@ -363,6 +366,14 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
         <p className="text-sm text-bad mt-2" role="alert">
           {error}
         </p>
+      )}
+      {/* Roadmap M5: what this connection runs on; only once it exists. */}
+      {integration && admin && (
+        <div className="mt-4">
+          <Suspense fallback={null}>
+            <DependsOn subject={`integration:${integration.id}`} />
+          </Suspense>
+        </div>
       )}
     </Sheet>
   )

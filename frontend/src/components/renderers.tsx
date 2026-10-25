@@ -2154,7 +2154,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
         ? tLabel(health.last_error || 'Not checked yet.')
         : health.last_ok
           ? (health.last_latency_ms !== null ? `${health.last_latency_ms} ms` : '')
-          : tLabel(health.last_error || '')
+          : [tLabel(health.last_error || ''), health.cause ? t('dependencies.because', { name: health.cause }) : ''].filter(Boolean).join(' · ')
   const Tag = href ? 'a' : 'div'
   const dotTitle = [t(`status.${dotStatus}`), reason].filter(Boolean).join(' · ')
   const barsTitle = t(`card.bars.${window}`, { defaultValue: t('card.bars.24h') })

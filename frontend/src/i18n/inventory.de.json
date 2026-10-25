@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "title": "Inventar",
+    "help": "Was worauf läuft: Hosts, ihre Container und Gäste und die Dienste darauf. Etwa stündlich aus den Adressen gefunden; was nexdeck nur aus einem Namen errät, wartet auf dein Ja. Fällt etwas aus, kommt für alles darauf eine Meldung, und die Karten sagen warum.",
+    "refresh": "Jetzt nachsehen",
+    "refreshing": "Sehe nach …",
+    "list": "Liste",
+    "map": "Karte",
+    "suggestions": "Vorgeschlagen",
+    "suggestion": "{{child}} läuft vermutlich auf {{parent}}",
+    "yes": "Ja",
+    "no": "Nein",
+    "unplaced": "Ohne Zuordnung",
+    "unplacedHelp": "Diese laufen auf nichts, das nexdeck kennt. Wähl aus, wo sie laufen, oder lass sie so.",
+    "origin": {
+      "auto": "gefunden",
+      "manual": "von Hand",
+      "suggested": "bestätigt"
+    },
+    "down": "ausgefallen",
+    "remove": "{{name}} entfernen",
+    "empty": "Noch nichts gefunden. Leg eine Docker-, Portainer-, Synology- oder Proxmox-Anbindung an und sieh dann noch einmal nach.",
+    "kind": {
+      "integration": "Anbindung",
+      "tile": "App-Kachel",
+      "container": "Container",
+      "guest": "VM oder LXC"
+    },
+    "runsOn": "Läuft auf / braucht",
+    "runsOnHelp": "Was das hier zum Laufen braucht. Fällt das aus, wird das hier nicht einzeln gemeldet; seine Karte sagt warum.",
+    "pick": "Hinzufügen …",
+    "nothing": "Noch nichts",
+    "mapHelp": "Zum Anordnen ziehen; die Anordnung bleibt. Rot ist ausgefallen, gestrichelt nur vorgeschlagen.",
+    "arrange": "Neu anordnen"
+  }
+}

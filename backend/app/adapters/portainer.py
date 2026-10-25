@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 from ..services import icons
 from . import containers as containers_one
@@ -21,6 +22,7 @@ from .docker import (
     CONTAINER_ACTIONS,
     DockerAdapter,
     container_name,
+    container_thing,
     cpu_percent,
     log_lines,
     memory_used,
@@ -237,6 +239,17 @@ class PortainerAdapter(Adapter):
             history=bool(options.get("history", True)), cpu_per_core=True,
             actions=DockerAdapter._actions_for(state, entry.get("Id", "")),
         )
+
+    async def things(self, config: dict[str, Any], ctx: Context) -> dict[str, Any] | None:
+        endpoint = await self._endpoint(config, ctx)
+        verify = not config.get("insecure", True)
+        rows = await ctx.get_json(f"{base_url(config)}/api/endpoints/{endpoint}/docker/containers/json", params={"all": 1},
+                                  headers=self._headers(config), verify=verify, cache_seconds=60)
+        environments = await ctx.get_json(f"{base_url(config)}/api/endpoints", headers=self._headers(config), verify=verify, cache_seconds=300)
+        reach = next((str(one.get("URL") or "") for one in environments if isinstance(one, dict) and str(one.get("Id")) == str(endpoint)), "")
+        # An environment on Portainer's own socket runs where Portainer runs.
+        host = urlsplit(reach.replace("tcp://", "http://", 1)).hostname if reach.startswith("tcp://") else urlsplit(base_url(config)).hostname
+        return {"host": [host] if host else [], "things": [container_thing(row) for row in rows if isinstance(row, dict)]}
 
     async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
         """Through Portainer's own copy of the Docker interface, as the cards read it."""

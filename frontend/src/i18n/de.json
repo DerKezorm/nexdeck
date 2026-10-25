@@ -151,7 +151,8 @@
       "player": "Musik-Player",
       "homeNetwork": "Heimnetz",
       "apps": "Apps",
-      "assistant": "Assistent"
+      "assistant": "Assistent",
+      "inventory": "Inventar"
     },
     "mail": {
       "title": "Mailserver",
@@ -2239,7 +2240,11 @@
       "downloads_other": "{{count}} Downloads halten an",
       "devices_one": "Schaltet {{count}} Gerät: {{names}}",
       "devices_other": "Schaltet {{count}} Geräte: {{names}}",
-      "lastRun": "Zuletzt gelaufen {{when}}"
+      "lastRun": "Zuletzt gelaufen {{when}}",
+      "depends_one": "Läuft darauf: {{names}}",
+      "depends_other": "{{count}} laufen darauf: {{names}}",
+      "containers_one": "{{count}} Container hält mit an",
+      "containers_other": "{{count}} Container halten mit an"
     }
   },
   "forecast": {
@@ -2256,5 +2261,8 @@
     "reachesOn": "erreicht um den {{date}}",
     "told": "gemeldet",
     "basis": "Fortgeschrieben aus den letzten 30 Tagen"
+  },
+  "dependencies": {
+    "because": "weil {{name}} ausgefallen ist"
   }
 }

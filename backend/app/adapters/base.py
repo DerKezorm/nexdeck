@@ -484,6 +484,8 @@ class WidgetData(BaseModel):
     since: float | None = None
     #: When a volume is full, a number reaches its red, a backup gets slower (roadmap M4, ``services/forecast.py``).
     forecast: dict[str, Any] | None = None
+    #: What this card's service hangs on that is down right now (roadmap M5, ``services/dependencies.py``).
+    cause: str | None = None
 
 
 class Detected(BaseModel):
@@ -1602,6 +1604,16 @@ class Adapter:
         what a button would do must never do it.
         """
         return []
+
+    async def things(self, config: dict[str, Any], ctx: Context) -> dict[str, Any] | None:
+        """What runs here (roadmap M5): ``{"host": [addresses of this engine], "things": [...]}``, or None.
+
+        Each thing: ``kind`` (``container``, ``guest``), ``key``, ``name``,
+        ``image``, ``state``, ``addresses``, ``ports`` (published on the
+        host) and ``host_network``. Read only, about once an hour
+        (``services/dependencies.py``).
+        """
+        return None
 
     async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
         """The last lines of one container's log, oldest first; ``None`` where this service gives none.

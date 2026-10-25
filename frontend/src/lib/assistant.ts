@@ -32,6 +32,7 @@ export type Fact =
   | { fact: 'downloads'; count: number }
   | { fact: 'devices'; count: number; names: string[] }
   | { fact: 'last_run'; at: string }
+  | { fact: 'depends'; count: number; names: string[]; containers: number }
 
 export interface Proposal {
   card_id: number
@@ -114,5 +115,8 @@ export function factText(t: TFunction, fact: Fact): string {
       return t('assistant.fact.devices', { count: fact.count, names: fact.names.join(', ') })
     case 'last_run':
       return t('assistant.fact.lastRun', { when: new Date(fact.at).toLocaleString() })
+    case 'depends':
+      return [fact.count ? t('assistant.fact.depends', { count: fact.count, names: fact.names.join(', ') }) : '',
+        fact.containers ? t('assistant.fact.containers', { count: fact.containers }) : ''].filter(Boolean).join(' · ')
   }
 }

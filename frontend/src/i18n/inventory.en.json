@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "title": "Inventory",
+    "help": "What runs on what: hosts, their containers and guests, and the services on them. Found from addresses about once an hour; what nexdeck only guesses from a name waits for your yes. When something goes down, what runs on it is told in one message, and its cards say why.",
+    "refresh": "Look now",
+    "refreshing": "Looking …",
+    "list": "List",
+    "map": "Map",
+    "suggestions": "Proposed",
+    "suggestion": "{{child}} probably runs on {{parent}}",
+    "yes": "Yes",
+    "no": "No",
+    "unplaced": "Not placed",
+    "unplacedHelp": "These run on nothing nexdeck knows of. Pick where they run, or leave them.",
+    "origin": {
+      "auto": "found",
+      "manual": "by hand",
+      "suggested": "confirmed"
+    },
+    "down": "down",
+    "remove": "Remove {{name}}",
+    "empty": "Nothing found yet. Add a Docker, Portainer, Synology or Proxmox connection, then look again.",
+    "kind": {
+      "integration": "Connection",
+      "tile": "App tile",
+      "container": "Container",
+      "guest": "VM or LXC"
+    },
+    "runsOn": "Runs on / needs",
+    "runsOnHelp": "What this needs to work. When that is down, this one is not told on its own; its card says why.",
+    "pick": "Add …",
+    "nothing": "Nothing yet",
+    "mapHelp": "Drag to arrange; the arrangement is kept. Red is down, a dashed line is only proposed.",
+    "arrange": "Arrange again"
+  }
+}

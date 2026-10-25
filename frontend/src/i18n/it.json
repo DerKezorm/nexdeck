@@ -151,7 +151,8 @@
       "player": "Lettore musicale",
       "homeNetwork": "Rete domestica",
       "apps": "App",
-      "assistant": "Assistente"
+      "assistant": "Assistente",
+      "inventory": "Inventario"
     },
     "mail": {
       "title": "Server di posta",
@@ -2239,7 +2240,11 @@
       "downloads_other": "Si fermano {{count}} download",
       "devices_one": "Comanda {{count}} dispositivo: {{names}}",
       "devices_other": "Comanda {{count}} dispositivi: {{names}}",
-      "lastRun": "Ultima esecuzione {{when}}"
+      "lastRun": "Ultima esecuzione {{when}}",
+      "depends_one": "Ci gira sopra: {{names}}",
+      "depends_other": "{{count}} ci girano sopra: {{names}}",
+      "containers_one": "{{count}} container si ferma con esso",
+      "containers_other": "{{count}} container si fermano con esso"
     }
   },
   "forecast": {
@@ -2256,5 +2261,8 @@
     "reachesOn": "raggiunto verso il {{date}}",
     "told": "segnalato",
     "basis": "Proiettato dagli ultimi 30 giorni"
+  },
+  "dependencies": {
+    "because": "perché {{name}} non risponde"
   }
 }

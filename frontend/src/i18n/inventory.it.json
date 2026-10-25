@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "title": "Inventario",
+    "help": "Cosa gira su cosa: host, i loro container e ospiti e i servizi sopra. Trovato dagli indirizzi circa ogni ora; ciò che nexdeck indovina solo da un nome aspetta il tuo sì. Quando qualcosa cade, ciò che ci gira sopra è segnalato in un solo messaggio e le sue schede dicono perché.",
+    "refresh": "Guarda ora",
+    "refreshing": "Cerco …",
+    "list": "Elenco",
+    "map": "Mappa",
+    "suggestions": "Proposto",
+    "suggestion": "{{child}} probabilmente gira su {{parent}}",
+    "yes": "Sì",
+    "no": "No",
+    "unplaced": "Senza posto",
+    "unplacedHelp": "Questi non girano su nulla che nexdeck conosca. Scegli dove girano o lasciali così.",
+    "origin": {
+      "auto": "trovato",
+      "manual": "a mano",
+      "suggested": "confermato"
+    },
+    "down": "giù",
+    "remove": "Rimuovi {{name}}",
+    "empty": "Ancora niente. Aggiungi una connessione Docker, Portainer, Synology o Proxmox e guarda di nuovo.",
+    "kind": {
+      "integration": "Connessione",
+      "tile": "Riquadro app",
+      "container": "Container",
+      "guest": "VM o LXC"
+    },
+    "runsOn": "Gira su / ha bisogno di",
+    "runsOnHelp": "Ciò di cui questo ha bisogno per funzionare. Se cade, questo non viene segnalato a parte; la sua scheda dice perché.",
+    "pick": "Aggiungi …",
+    "nothing": "Ancora niente",
+    "mapHelp": "Trascina per disporre; la disposizione resta. Rosso è giù, una linea tratteggiata è solo proposta.",
+    "arrange": "Ridisponi"
+  }
+}

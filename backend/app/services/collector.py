@@ -39,7 +39,7 @@ from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
 from ..models import ActionLog, Integration, Widget, utcnow
-from . import chronicle, forecast, history
+from . import chronicle, dependencies, forecast, history
 from .integrations import resolve_config
 from .loop import run_on_loop, spawn
 from .notify import emit
@@ -382,6 +382,10 @@ class Collector:
             with db_session() as db:
                 history.record(db, widget_id, kept)
         data.forecast = forecast.of(widget_id)
+        if integration_id and (data.error or level_of(data) == "bad"):
+            # What it hangs on that is down, said on the card (roadmap M5).
+            with db_session() as db:
+                data.cause = dependencies.cause(db, f"integration:{integration_id}") or None
         hub.publish(board_topic(board_id), "widget", {"id": widget_id, "data": data.model_dump()})
 
         failures = self._failures.get(widget_id, 0)
@@ -557,7 +561,8 @@ class Collector:
             emit("auth_rejected", f"{title}: the service rejected its credentials",
                  data.error or "", level="warn", integration_id=integration_id)
         else:
-            emit("widget_broken", f"{title} stopped working", data.error or "", level="warn", integration_id=integration_id)
+            emit("widget_broken", f"{title} stopped working", data.error or "", level="warn", integration_id=integration_id,
+                 subject=f"integration:{integration_id}" if integration_id else None)
 
     def _forget_old_keys(self, now: float) -> None:
         """⚠️ Without this the note of what was already told grows for the life
