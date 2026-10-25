@@ -146,6 +146,32 @@ def test_karten1_ac7_a_key_in_the_query_of_a_path_is_refused_but_a_placeholder_i
     load.load_definition(changed("path: /api/v3/queue", "path: /api/v3/queue?apikey={api_key}&page=1"))
 
 
+def test_karten1_ac7_a_long_slug_and_a_long_path_are_no_keys() -> None:
+    """A 33-character name with a digit and a path of words were refused as keys (found in the review, 25.10.2026)."""
+    for harmless in ("my-awesome-card-name-with-v2-1", "downloads_waiting_in_the_queue_by_day_2", "/api/v3/series/lookup/term/something/long"):
+        load.load_definition(changed("author: Example Author", f"author: {json.dumps(harmless)}"))
+    load.load_definition(changed("path: /api/v3/queue", "path: /api/v3/series/lookup/term/something/long"))
+
+
+def test_karten1_ac7_real_keys_in_other_shapes_are_still_caught() -> None:
+    for secret in ("sk3J8dK2lQ9xPzT4vB7nM1cR6wY0aHf5", "Zm9v-YmFy_YmF6cXV4MTIzNDU2Nzg5MDEyMzQ1Ng", "Zm9vYmFy/YmF6cXV4MTIzNDU2Nzg5MDEyMzQ1Ng+="):
+        text = changed("author: Example Author", f"author: {json.dumps(secret)}")
+        assert refused(text).problems[0].code == "card_secret_value", secret
+
+
+def test_karten1_ac7_every_common_name_of_a_key_in_a_query_is_refused() -> None:
+    for name in ("key", "sid", "jwt", "X-Api-Key", "x-api-key", "API_KEY", "ApiKey", "refreshToken", "access_token", "client_secret", "db_password", "Authorization", "sessionid"):
+        problem = refused(changed("path: /api/v3/queue", f"path: /api/v3/queue?page=1&{name}=abc123")).problems[0]
+        assert (problem.code, problem.path) == ("card_secret_value", "requests[0].path"), name
+        load.load_definition(changed("path: /api/v3/queue", f"path: /api/v3/queue?{name}={{api_key}}"))
+
+
+def test_karten1_ac7_a_name_that_contains_token_secret_or_password_is_a_field_for_a_credential() -> None:
+    for field in ("X-Api-Key: x", "refresh_token: x", "dbPassword: x", "client-secret: x", "myApiKey: x", "tokenValue: x", "SECRET_THING: x"):
+        text = changed("category: media", f"category: media\n{field}")
+        problem = refused(text).problems[0]
+        assert problem.code == "card_secret_field", field
+
 def test_karten1_ac7_a_field_for_headers_or_a_credential_is_refused() -> None:
     for field in ("headers: {X-Thing: 1}", "Authorization: x", "api_token: x", "password: x", "cookie: x"):
         text = changed("category: media", f"category: media\n{field}")

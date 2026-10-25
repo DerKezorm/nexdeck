@@ -26,7 +26,9 @@ _BAD_NAMES = frozenset(
         "token", "accesstoken", "apikey", "password", "passwd", "secret", "clientsecret", "privatekey",
     }
 )  # fmt: skip
-_BAD_ENDINGS = ("token", "password", "passwd", "secret", "apikey", "cookie")
+_BAD_ENDINGS = ("cookie",)
+#: Parts of a name that make it a credential wherever they stand in it: ``X-Api-Key``, ``refresh_token``, ``db_password``.
+_BAD_PARTS = ("token", "password", "passwd", "secret", "apikey")
 
 #: Shapes that are a credential wherever they stand.
 _STRONG = (
@@ -45,7 +47,10 @@ _STRUCTURE = (
     ("hex_key", re.compile(r"(?<![0-9A-Za-z])(?=[0-9a-fA-F]*\d)[0-9a-fA-F]{32,}(?![0-9A-Za-z])")),
     (
         "query_secret",
-        re.compile(r"[?&;](?:api[_-]?key|apikey|access[_-]?token|token|password|passwd|secret|auth|authorization)=(?!\{)[^&\s]+", re.IGNORECASE),
+        re.compile(
+            r"[?&;](?:[\w-]*(?:token|secret|passw(?:or)?d|pwd|api[_-]?key)[\w-]*|key|sid|sessionid|jwt|auth|authorization)=(?!\{)[^&\s]+",
+            re.IGNORECASE,
+        ),
     ),
 )  # fmt: skip
 _RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")
@@ -66,12 +71,23 @@ def _name(key: str) -> str:
 
 def bad_name(key: str) -> bool:
     name = _name(key)
-    return name in _BAD_NAMES or name.endswith(_BAD_ENDINGS)
+    return name in _BAD_NAMES or name.endswith(_BAD_ENDINGS) or any(part in name for part in _BAD_PARTS)
+
+
+def _word_like(part: str) -> bool:
+    return 2 <= len(part) <= 15 and part.isalpha() and part.islower()
 
 
 def _looks_like_a_key(text: str) -> bool:
-    """A whole value of one run of key characters with letters and digits in it; a word or a path is not."""
-    return bool(_RUN.fullmatch(text)) and any(c.isdigit() for c in text) and any(c.isalpha() for c in text)
+    """A whole value of one run of key characters with letters and digits in it, which does not read as words.
+
+    ⚠️ A slug (``my-long-card-name-for-the-queue-2``) and a path (``/api/v3/series/lookup/term/something/long``) are
+    made of words between separators, a key is not: when most of the parts are lower-case words it is not a key.
+    """
+    if not (_RUN.fullmatch(text) and any(c.isdigit() for c in text) and any(c.isalpha() for c in text)):
+        return False
+    parts = [part for part in re.split(r"[-_/]", text) if part]
+    return len(parts) < 3 or sum(_word_like(part) for part in parts) * 2 < len(parts)
 
 
 def _value(text: str, *, structure: bool) -> str | None:
