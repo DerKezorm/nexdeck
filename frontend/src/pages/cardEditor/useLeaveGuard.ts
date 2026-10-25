@@ -100,8 +100,10 @@ export function useLeaveGuard(when: boolean): LeaveGuard {
     if (whenRef.current && !state[MARK]) window.history.pushState({ ...state, [MARK]: true }, '', window.location.href)
   }, [])
 
+  // ⚠️ Only while something is held: once the question is off (a save made the card clean) the next navigation goes
+  // through unheld and would never use the flag up, and the next real change would leave without asking.
   const allow = useCallback(() => {
-    allowed.current = true
+    if (whenRef.current) allowed.current = true
   }, [])
 
   return { asking: pending !== null, leave, stay, allow }

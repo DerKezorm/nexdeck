@@ -425,6 +425,20 @@ describe('leaving, drafts and steps back', () => {
     expect(await screen.findByText('The list of cards')).toBeInTheDocument()
   })
 
+  it('karten9 AC-11: after the first save of a new card a later change asks again before leaving', async () => {
+    show('/system/custom-cards/new')
+    await userEvent.type(await screen.findByLabelText('Name'), 'Next episodes')
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: 'Next episodes', level: 1 })
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(editor().slug).toBe('next-episodes'))
+    await screen.findByText('Saved. Every board shows the new version.')
+    act(() => editor().set(['description'], 'changed after the save'))
+    await userEvent.click(screen.getByRole('link', { name: 'Back to Custom cards' }))
+    expect(await screen.findByRole('dialog', { name: 'Leave without saving?' })).toBeInTheDocument()
+    expect(screen.queryByText('The list of cards')).toBeNull()
+  })
+
   it('karten9 EC-7: unsaved changes are kept in this browser and offered on opening again', async () => {
     const first = await (async () => {
       await openQueue()
