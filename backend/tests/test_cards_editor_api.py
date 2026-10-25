@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import threading
+import time
 from typing import Any
 
 import httpx
@@ -814,3 +816,30 @@ def test_karten9_ec4_a_probe_that_failed_stands_in_the_chronicle_with_its_reason
         everything = json.dumps([[getattr(one, column.name) for column in Event.__table__.columns] for one in db.scalars(select(Event))], default=str)
     assert lines == [("warn", sonarr, "[http_error] /api/v3/queue"), ("warn", None, "[no_integration] /api/v3/queue")]
     assert "Private Film" not in everything and "Private Film" not in caplog.text
+
+
+def test_karten9_ec3_two_saves_at_the_same_moment_cannot_both_win(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The comparison and the write are one step (``store.saving``); a slow write makes the race certain."""
+    add(admin)
+    opened = read(admin)["updated_at"]
+    real = store.update
+
+    def slow(*args: Any, **more: Any) -> Any:
+        time.sleep(0.4)
+        return real(*args, **more)
+
+    monkeypatch.setattr(store, "update", slow)
+    out: list[int] = []
+    barrier = threading.Barrier(2)
+
+    def go(version: str) -> None:
+        barrier.wait()
+        saved = admin.put(f"{API}/queue-size", json={"yaml": changed('version: "1.0.0"', f'version: "{version}"'), "base": opened}, headers=CSRF)
+        out.append(saved.status_code)
+
+    threads = [threading.Thread(target=go, args=(version,)) for version in ("2.0.0", "3.0.0")]
+    for one in threads:
+        one.start()
+    for one in threads:
+        one.join()
+    assert sorted(out) == [200, 409]
