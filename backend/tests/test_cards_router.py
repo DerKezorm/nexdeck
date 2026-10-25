@@ -100,6 +100,10 @@ def test_karten11_ac1_a_text_with_problems_is_refused_with_all_of_them(admin: Te
     assert admin.get("/api/v1/cards").json()["cards"] == []
 
 
+def test_karten11_ac1_a_number_of_thousands_of_digits_is_refused_and_is_no_server_error(admin: TestClient) -> None:
+    answer = add(admin, changed("author: Example Author", "author: " + "9" * 5000))
+    assert answer.status_code == 400 and answer.json()["detail"]["problems"][0]["code"] == "card_yaml"
+
 def test_karten11_ac1_a_short_name_the_addresses_use_is_not_a_card(admin: TestClient) -> None:
     answer = add(admin, text_of("library"))
     assert answer.status_code == 400 and answer.json()["detail"]["first"] == "card_slug_reserved"

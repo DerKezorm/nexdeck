@@ -146,6 +146,11 @@ def test_karten1_ac7_a_key_in_the_query_of_a_path_is_refused_but_a_placeholder_i
     load.load_definition(changed("path: /api/v3/queue", "path: /api/v3/queue?apikey={api_key}&page=1"))
 
 
+def test_karten1_yaml_a_whole_number_of_thousands_of_digits_is_a_problem_and_no_crash() -> None:
+    """Python refuses an integer of more than 4300 digits with a ValueError, which reached the person as a 500."""
+    problem = refused(changed("author: Example Author", "author: " + "9" * 5000)).problems[0]
+    assert problem.code == "card_yaml" and "too many digits" in problem.message
+
 def test_karten1_ac7_a_long_slug_and_a_long_path_are_no_keys() -> None:
     """A 33-character name with a digit and a path of words were refused as keys (found in the review, 25.10.2026)."""
     for harmless in ("my-awesome-card-name-with-v2-1", "downloads_waiting_in_the_queue_by_day_2", "/api/v3/series/lookup/term/something/long"):

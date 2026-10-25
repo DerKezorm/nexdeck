@@ -174,6 +174,12 @@ def parse(text: str) -> tuple[dict[str, Any], dict[Path, int]]:
         raise CardInvalid([Problem("card_yaml", f"The YAML cannot be read: {reason}.", "", line, {"reason": reason})]) from failure
     except RecursionError as failure:
         raise CardInvalid([Problem("card_too_deep", "The definition is nested too deeply.")]) from failure
+    except CardInvalid:
+        raise
+    except ValueError as failure:
+        # ⚠️ A whole number of more than 4300 digits is refused by Python itself with a ValueError, which was a 500.
+        reason = "a number in the definition has too many digits"
+        raise CardInvalid([Problem("card_yaml", f"The YAML cannot be read: {reason}.", params={"reason": reason})]) from failure
     except yaml.YAMLError as failure:
         raise CardInvalid([Problem("card_yaml", "The YAML cannot be read.", params={"reason": str(failure)})]) from failure
     if not isinstance(data, dict):
