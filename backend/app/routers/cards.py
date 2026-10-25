@@ -63,23 +63,23 @@ def _requirement(kind: str) -> dict[str, str]:
     return {"kind": kind, "label": adapter.label, "icon": adapter.icon}
 
 
-def _placed(db: Session) -> dict[str, dict[int, str]]:
+def _placed(db: Session) -> dict[str, dict[int, tuple[str, str]]]:
     """Where each card stands: the boards that hold a widget of it, by the short name in the widget's options."""
-    found: dict[str, dict[int, str]] = {}
+    found: dict[str, dict[int, tuple[str, str]]] = {}
     query = (
-        select(Widget.options, Board.id, Board.name)
+        select(Widget.options, Board.id, Board.name, Board.slug)
         .join(Page, Page.id == Widget.page_id)
         .join(Board, Board.id == Page.board_id)
         .where(Widget.kind.like("custom.%"))
     )
-    for options, board_id, board_name in db.execute(query):
+    for options, board_id, board_name, board_slug in db.execute(query):
         slug = str((options or {}).get("card") or "")
         if slug:
-            found.setdefault(slug, {})[board_id] = board_name
+            found.setdefault(slug, {})[board_id] = (board_slug, board_name)
     return found
 
 
-def _view(row: CardRecord, placed: dict[str, dict[int, str]]) -> dict[str, Any]:
+def _view(row: CardRecord, placed: dict[str, dict[int, tuple[str, str]]]) -> dict[str, Any]:
     data = row.definition or {}
     boards = placed.get(row.slug, {})
     requires = [str(kind) for kind in data.get("requires", [])]
@@ -93,7 +93,7 @@ def _view(row: CardRecord, placed: dict[str, dict[int, str]]) -> dict[str, Any]:
         "requires": [_requirement(kind) for kind in requires],
         "origin": row.origin,
         "shop_version": row.shop_version,
-        "boards": [{"id": number, "name": name} for number, name in sorted(boards.items(), key=lambda one: one[1].lower())],
+        "boards": [{"id": number, "slug": at, "name": name} for number, (at, name) in sorted(boards.items(), key=lambda one: one[1][1].lower())],
         "users_may_place": row.users_may_place,
         "updated_at": row.updated_at,
     }

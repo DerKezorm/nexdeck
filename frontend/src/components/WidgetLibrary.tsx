@@ -7,7 +7,10 @@ import { Link } from 'react-router-dom'
 import { ApiError, get, post } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration, WidgetTypeSpec } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
+import { pickText } from '../lib/cardText'
+import { sourceLine, type LibraryCard } from '../lib/customCards'
 import { isNumberCard } from '../lib/figures'
+import { useAuth } from '../stores/auth'
 import { ServiceIcon } from './ServiceIcon'
 import { Select, Sheet } from './ui'
 
@@ -70,12 +73,17 @@ export function haystack(adapter: AdapterSpec, widget: WidgetTypeSpec): string {
 
 /** The widget library: every adapter's widgets, searchable, one click to add. */
 export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = false }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), enabled: open, staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: open })
   // The app catalog (issue #37): an app is placed straight from here, already following it.
   const apps = useQuery({ queryKey: ['apps'], queryFn: () => get<AppEntry[]>('/apps'), enabled: open, staleTime: 60_000 })
+  // The custom cards this account may place (KARTEN-11): every one for an administrator, the released ones for anybody else.
+  const cardLibrary = useQuery({ queryKey: ['cards-library'], queryFn: () => get<{ cards: LibraryCard[] }>('/cards/library'), enabled: open, staleTime: 30_000 })
+  const admin = useAuth((state) => state.user?.role === 'admin')
   const [query, setQuery] = useState('')
+  const [pickingCard, setPickingCard] = useState<LibraryCard | null>(null)
+  const [cardConnection, setCardConnection] = useState('')
   const [picking, setPicking] = useState<{ adapter: AdapterSpec; widget: WidgetTypeSpec } | null>(null)
   const [integrationId, setIntegrationId] = useState<string>('')
   const [error, setError] = useState('')
@@ -85,6 +93,8 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
     const needle = query.trim().toLowerCase()
     const result: Record<string, { adapter: AdapterSpec; widget: WidgetTypeSpec }[]> = {}
     for (const adapter of adapters.data ?? []) {
+      // ⚠️ A custom card is placed from its own section, by the name of the card. Its four forms have no name of their own.
+      if (adapter.kind === 'custom') continue
       for (const widget of adapter.widgets) {
         if (needle && !haystack(adapter, widget).includes(needle)) continue
         if (numbersOnly && !isNumberCard(widget)) continue
@@ -93,6 +103,16 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
     }
     return Object.entries(result).sort(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
   }, [adapters.data, query, numbersOnly])
+
+  /** The custom cards that match the search, split into the ones with a connection that fits and the ones without. */
+  const customCards = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const list = (cardLibrary.data?.cards ?? []).filter((card) => {
+      if (numbersOnly && card.form !== 'value' && card.form !== 'stats') return false
+      return !needle || `${pickText(card.name, i18n.language)} ${pickText(card.description, i18n.language)} ${card.slug} ${sourceLine(card)}`.toLowerCase().includes(needle)
+    })
+    return { ready: list.filter((card) => card.fits.length > 0), waiting: list.filter((card) => card.fits.length === 0) }
+  }, [cardLibrary.data, query, numbersOnly, i18n.language])
 
   const catalog = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -149,6 +169,35 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
     }
   }
 
+  /** A custom card sits on a connection of a kind it names; its form and short name travel as the kind and the `card` option. */
+  const placeCard = async (card: LibraryCard, chosen: number) => {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
+        kind: `custom.${card.form}`,
+        title: '',
+        integration_id: chosen,
+        options: { card: card.slug },
+      })
+      setPickingCard(null)
+      onCreated(result.widget.id)
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const chooseCard = (card: LibraryCard) => {
+    if (card.fits.length === 1) {
+      void placeCard(card, card.fits[0].id)
+      return
+    }
+    setCardConnection(String(card.fits[0].id))
+    setPickingCard(card)
+  }
+
   const choose = (adapter: AdapterSpec, widget: WidgetTypeSpec) => {
     if (!adapter.needs_integration) {
       // A card that can do without a connection still takes the first there
@@ -199,6 +248,61 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
             </button>
           </div>
         </div>
+      )}
+      {pickingCard && (
+        <div className="glass rounded-xl p-3 mb-3">
+          <div className="text-sm font-medium mb-2">{t('library.pickCard', { name: pickText(pickingCard.name, i18n.language) })}</div>
+          <Select value={cardConnection} onChange={setCardConnection} options={pickingCard.fits.map((one) => ({ value: String(one.id), label: one.name }))} />
+          <div className="flex justify-end gap-2 mt-3">
+            <button className="btn" onClick={() => setPickingCard(null)}>
+              {t('common.cancel')}
+            </button>
+            <button className="btn btn-accent" disabled={!cardConnection || busy} onClick={() => void placeCard(pickingCard, Number(cardConnection))}>
+              {t('common.add')}
+            </button>
+          </div>
+        </div>
+      )}
+      {customCards.ready.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('library.customCards')}</h3>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {customCards.ready.map((card) => (
+              <li key={card.slug}>
+                <button className="w-full text-left flex items-start gap-3 p-2.5 rounded-xl border border-line hover:border-line-strong hover:bg-surface-hover transition-colors" onClick={() => chooseCard(card)} disabled={busy}>
+                  <ServiceIcon icon={card.requires[0]?.icon ?? ''} size={22} className="mt-0.5" />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium">{pickText(card.name, i18n.language)}</span>
+                    <span className="block text-[11px] text-muted leading-snug">{pickText(card.description, i18n.language) || sourceLine(card)}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {customCards.waiting.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('library.needIntegration')}</h3>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {customCards.waiting.map((card) => (
+              <li key={card.slug} className="flex items-start gap-3 p-2.5 rounded-xl border border-line">
+                <ServiceIcon icon={card.requires[0]?.icon ?? ''} size={22} className="mt-0.5" />
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-medium">{pickText(card.name, i18n.language)}</span>
+                  <span className="block text-[11px] text-muted leading-snug">{sourceLine(card)}</span>
+                  {admin ? (
+                    <Link to={`/system/integrations?add=${card.requires[0]?.kind ?? ''}`} className="text-[12px] text-accent">
+                      {t('library.addTheIntegration')}
+                    </Link>
+                  ) : (
+                    <span className="block text-[11px] text-faint">{t('library.askAdmin', { name: card.requires[0]?.label ?? '' })}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {catalog.length > 0 && (
         <section className="mb-4">

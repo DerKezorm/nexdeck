@@ -298,6 +298,25 @@ describe('the frame of a card', () => {
     expect(screen.getByTestId('card-error')).toHaveTextContent('Keine Demo-Daten')
   })
 
+  it('says the connection is missing, not just that a connection is needed, in the language of the viewer (KARTEN-2 EC-2)', async () => {
+    const widget = view('custom.value', 'value')
+    const data = { status: 'unknown', error: 'Connection missing. The connection of this card was deleted.', meta: { code: 'connection_missing', hint: "Pick a connection in the card's settings." } } as WidgetData
+    const first = render(
+      <MemoryRouter>
+        <WidgetCard widget={widget} data={data} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('card-error')).toHaveTextContent('Connection missing')
+    first.unmount()
+    await i18next.changeLanguage('de')
+    render(
+      <MemoryRouter>
+        <WidgetCard widget={widget} data={data} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('card-error')).toHaveTextContent('Anbindung fehlt')
+  })
+
   it('draws a custom card inside the frame without running its texts through the table of translations', async () => {
     await i18next.changeLanguage('de')
     render(

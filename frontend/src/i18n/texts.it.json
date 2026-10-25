@@ -2050,7 +2050,7 @@
     "Custom pictures": "Immagini personalizzate",
     "One value from the answers of a connection, with unit, history and colour.": "Un valore dalle risposte di una connessione, con unità, storico e colore.",
     "Rows from a list in the answers of a connection, with title, value, status and link.": "Righe da un elenco nelle risposte di una connessione, con titolo, valore, stato e link.",
-    "The short name of the card, as saved under System > Cards.": "Il nome breve della scheda, come salvato in Sistema > Schede.",
+    "The card this one shows, as saved under System > Custom cards.": "La scheda che questa mostra, come salvata in Sistema > Schede personali.",
     "Two to six values from the answers of a connection, side by side.": "Da due a sei valori dalle risposte di una connessione, affiancati.",
     "Something is full or reaches its red line soon": "Qualcosa sarà presto pieno o raggiungerà la sua linea rossa"
   },

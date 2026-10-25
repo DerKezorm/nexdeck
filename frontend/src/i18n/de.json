@@ -67,7 +67,8 @@
       "no_demo_data": "Keine Demo-Daten. Die Karte hat keine Beispielantworten.",
       "redirected": "Weitergeleitet, nicht gefolgt. Der Dienst hat mit einer Weiterleitung geantwortet, der eine eigene Karte nicht folgt.",
       "answer_too_large": "Antwort zu groß. Der Dienst hat mehr geliefert, als eine eigene Karte liest.",
-      "bad_param": "Ein Wert der Antwort ist kein einfacher Name; die Abfrage wurde nicht gestellt."
+      "bad_param": "Ein Wert der Antwort ist kein einfacher Name; die Abfrage wurde nicht gestellt.",
+      "connection_missing": "Anbindung fehlt. Die Anbindung dieser Karte wurde gelöscht."
     },
     "card": {
       "card_invalid": "Diese Karte kann nicht gespeichert werden.",
@@ -225,7 +226,8 @@
       "player": "Musik-Player",
       "homeNetwork": "Heimnetz",
       "apps": "Apps",
-      "assistant": "Assistent"
+      "assistant": "Assistent",
+      "cards": "Eigene Karten"
     },
     "mail": {
       "title": "Mailserver",
@@ -1009,7 +1011,12 @@
       "monitoring": "Überwachung und Haus",
       "other": "Sonstiges"
     },
-    "apps": "Apps aus dem Katalog"
+    "apps": "Apps aus dem Katalog",
+    "customCards": "Eigene Karten",
+    "needIntegration": "Brauchen eine Anbindung, die du nicht hast",
+    "addTheIntegration": "Anbindung anlegen",
+    "askAdmin": "Bitte einen Administrator, eine {{name}}-Anbindung anzulegen.",
+    "pickCard": "Welche Anbindung soll {{name}} lesen?"
   },
   "notices": {
     "title": "Hinweise",
@@ -2331,5 +2338,76 @@
     "reachesOn": "erreicht um den {{date}}",
     "told": "gemeldet",
     "basis": "Fortgeschrieben aus den letzten 30 Tagen"
+  },
+  "cards": {
+    "title": "Eigene Karten",
+    "lead": "Eine eigene Karte zeigt, was du aus den Antworten eines Dienstes herausholst: eine Zahl, ein paar Zahlen, eine Liste oder eine Bilderwand. Bau selbst eine oder nimm eine aus dem Kartenladen.",
+    "build": "Karte bauen",
+    "openShop": "Kartenladen öffnen",
+    "tabs": {
+      "cards": "Karten",
+      "integrations": "Anbindungen",
+      "shop": "Kartenladen",
+      "submissions": "Meine Einreichungen"
+    },
+    "later": "Dieser Teil der eigenen Karten kommt mit einer späteren Version von nexdeck.",
+    "search": "Nach Name oder Quelle suchen",
+    "col": {
+      "card": "Karte",
+      "source": "Quelle",
+      "from": "Von",
+      "placed": "Platziert auf",
+      "users": "Nutzer dürfen platzieren"
+    },
+    "form": {
+      "value": "Zahl",
+      "stats": "Zahlen",
+      "list": "Liste",
+      "posters": "Bilder"
+    },
+    "local": "Lokal",
+    "fromShop": "Kartenladen · {{version}}",
+    "boards_one": "{{count}} Board",
+    "boards_other": "{{count}} Boards",
+    "notPlaced": "Nicht platziert",
+    "boardsOf": "Boards mit {{name}}",
+    "usersMayPlace": "Nutzer dürfen platzieren",
+    "usersMayPlaceNamed": "Nutzer dürfen {{name}} platzieren",
+    "edit": "Bearbeiten",
+    "editNamed": "{{name}} bearbeiten",
+    "copy": "Duplizieren",
+    "copyNamed": "{{name}} duplizieren",
+    "delete": "Löschen",
+    "deleteNamed": "{{name}} löschen",
+    "footer": "{{count}} von {{limit}} eigenen Karten. Eine Änderung an einer Karte gilt sofort auf jedem Board.",
+    "deleteTitle": "{{name}} löschen?",
+    "deleteBody_one": "Sie steht auf {{count}} Board. Dort steht dann, dass die Definition fehlt, und eine Karte mit demselben Kurznamen bringt sie zurück.",
+    "deleteBody_other": "Sie steht auf {{count}} Boards. Dort steht dann, dass die Definition fehlt, und eine Karte mit demselben Kurznamen bringt sie zurück.",
+    "deleteBodyNone": "Kein Board zeigt sie. Sie ist sofort weg.",
+    "newTitle": "Karte bauen",
+    "editTitle": "{{name}} bearbeiten",
+    "yaml": "Text der Karte (YAML)",
+    "yamlHelp": "Die ganze Karte als Text. Der Editor mit Schritten kommt mit einer späteren Version von nexdeck.",
+    "deletedMeanwhile": "Zwischendurch gelöscht",
+    "deletedBody": "Diese Karte wurde gelöscht, während du sie offen hattest. Speichere sie als neue Karte, damit dein Text bleibt.",
+    "saveAsNew": "Als neu speichern",
+    "problems": "Das lässt sich noch nicht speichern",
+    "line": "Zeile {{line}}",
+    "failed": "Die Karte konnte nicht gespeichert werden.",
+    "problem": {
+      "card_yaml": "Der Text lässt sich nicht als YAML lesen: {{reason}}.",
+      "card_empty": "Der Text ist leer.",
+      "card_missing_field": "Das Feld {{field}} ist nötig.",
+      "card_unknown_field": "{{field}} ist kein Feld einer Karte.",
+      "card_slug_taken": "Eine Karte mit dem Kurznamen {{slug}} gibt es schon.",
+      "card_slug_reserved": "Der Kurzname {{slug}} ist für nexdeck selbst reserviert.",
+      "card_slug_changed": "Der Kurzname einer gespeicherten Karte lässt sich nicht ändern. Er lautet {{slug}}.",
+      "card_bad_slug": "Der Kurzname darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten.",
+      "card_unknown_kind": "nexdeck kennt keine Anbindung der Art {{kind}}.",
+      "card_not_allowed": "Hier ist nur eines von {{expected}} erlaubt.",
+      "card_needs_newer": "Diese Karte braucht nexdeck {{need}} oder neuer. Hier läuft {{have}}.",
+      "card_wrong_type": "Das ist die falsche Art von Wert."
+    },
+    "tooMany": "Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine."
   }
 }

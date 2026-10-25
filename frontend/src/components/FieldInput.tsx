@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { get } from '../api/client'
 import type { BoardSummary, FieldSpec, Integration } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
+import { pickText } from '../lib/cardText'
+import type { LibraryCard } from '../lib/customCards'
 import { isNumberCard } from '../lib/figures'
 import { GROUP_KINDS, useEditedPage } from '../lib/groups'
 import { PicturePicker } from './PicturePicker'
@@ -82,6 +84,33 @@ function IntegrationPicker({ spec, value, onChange, label, help }: { spec: Field
           )
         })}
       </div>
+    </Field>
+  )
+}
+
+/**
+ * The card a custom card shows (KARTEN-11): its name, not the short name it is saved under.
+ *
+ * The short name is what the widget stores and it does not change, so it is shown beside the name and not edited. A
+ * card that is no longer saved says so; the card on the board says the same.
+ */
+function CustomCardName({ value, label, help }: { value: unknown; label: string; help?: string }) {
+  const { i18n } = useTranslation()
+  const library = useQuery({ queryKey: ['cards-library'], queryFn: () => get<{ cards: LibraryCard[] }>('/cards/library'), staleTime: 30_000 })
+  const slug = String(value ?? '')
+  const found = (library.data?.cards ?? []).find((card) => card.slug === slug)
+  return (
+    <Field label={label} help={help}>
+      <p className="input flex items-center gap-2 !h-auto min-h-9" data-testid="custom-card-name">
+        {found ? (
+          <>
+            <span className="font-medium">{pickText(found.name, i18n.language)}</span>
+            <span className="text-[11px] text-muted font-mono">{slug}</span>
+          </>
+        ) : (
+          <span className="font-mono text-[12px]">{slug}</span>
+        )}
+      </p>
     </Field>
   )
 }
@@ -393,6 +422,9 @@ export function FieldInput({ spec, value, onChange, labelOverride, onFill, items
   }
   if (spec.type === 'board') {
     return <BoardPicker value={value} onChange={onChange} label={label} help={help} />
+  }
+  if (spec.helper === 'custom-card') {
+    return <CustomCardName value={value} label={label} help={help} />
   }
   if (spec.type === 'colour') {
     return <ColourPicker value={value} onChange={onChange} label={label} help={help} />

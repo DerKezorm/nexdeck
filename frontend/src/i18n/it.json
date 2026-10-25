@@ -67,7 +67,8 @@
       "no_demo_data": "Nessun dato dimostrativo. La scheda non ha risposte di esempio.",
       "redirected": "Reindirizzato, non seguito. Il servizio ha risposto con un reindirizzamento, che una scheda personalizzata non segue.",
       "answer_too_large": "Risposta troppo grande. Il servizio ha risposto con più di quanto legga una scheda personalizzata.",
-      "bad_param": "Un valore della risposta non è un nome semplice; la richiesta non è stata fatta."
+      "bad_param": "Un valore della risposta non è un nome semplice; la richiesta non è stata fatta.",
+      "connection_missing": "Connessione mancante. La connessione di questa scheda è stata eliminata."
     },
     "card": {
       "card_invalid": "Questa scheda non può essere salvata.",
@@ -225,7 +226,8 @@
       "player": "Lettore musicale",
       "homeNetwork": "Rete domestica",
       "apps": "App",
-      "assistant": "Assistente"
+      "assistant": "Assistente",
+      "cards": "Schede personali"
     },
     "mail": {
       "title": "Server di posta",
@@ -1009,7 +1011,12 @@
       "monitoring": "Monitoraggio e casa",
       "other": "Altro"
     },
-    "apps": "App dal catalogo"
+    "apps": "App dal catalogo",
+    "customCards": "Schede personali",
+    "needIntegration": "Richiedono un'integrazione che non hai",
+    "addTheIntegration": "Aggiungi l'integrazione",
+    "askAdmin": "Chiedi a un amministratore di aggiungere un'integrazione {{name}}.",
+    "pickCard": "Quale connessione deve leggere {{name}}?"
   },
   "notices": {
     "title": "Avvisi",
@@ -2331,5 +2338,76 @@
     "reachesOn": "raggiunto verso il {{date}}",
     "told": "segnalato",
     "basis": "Proiettato dagli ultimi 30 giorni"
+  },
+  "cards": {
+    "title": "Schede personali",
+    "lead": "Una scheda personale mostra ciò che scegli dalle risposte di un servizio: un numero, alcuni numeri, un elenco o un muro di immagini. Creane una tu stesso o prendine una dal negozio di schede.",
+    "build": "Crea una scheda",
+    "openShop": "Apri il negozio di schede",
+    "tabs": {
+      "cards": "Schede",
+      "integrations": "Integrazioni",
+      "shop": "Negozio di schede",
+      "submissions": "I miei invii"
+    },
+    "later": "Questa parte delle schede personali arriverà con una versione successiva di nexdeck.",
+    "search": "Cerca per nome o fonte",
+    "col": {
+      "card": "Scheda",
+      "source": "Fonte",
+      "from": "Origine",
+      "placed": "Posizionata su",
+      "users": "Gli utenti possono posizionarla"
+    },
+    "form": {
+      "value": "Numero",
+      "stats": "Numeri",
+      "list": "Elenco",
+      "posters": "Immagini"
+    },
+    "local": "Locale",
+    "fromShop": "Negozio di schede · {{version}}",
+    "boards_one": "{{count}} board",
+    "boards_other": "{{count}} board",
+    "notPlaced": "Non posizionata",
+    "boardsOf": "Board con {{name}}",
+    "usersMayPlace": "Gli utenti possono posizionarla",
+    "usersMayPlaceNamed": "Gli utenti possono posizionare {{name}}",
+    "edit": "Modifica",
+    "editNamed": "Modifica {{name}}",
+    "copy": "Duplica",
+    "copyNamed": "Duplica {{name}}",
+    "delete": "Elimina",
+    "deleteNamed": "Elimina {{name}}",
+    "footer": "{{count}} di {{limit}} schede personali. Una modifica a una scheda vale subito su ogni board.",
+    "deleteTitle": "Eliminare {{name}}?",
+    "deleteBody_one": "È su {{count}} board. Lì dirà che la definizione manca, e una scheda con lo stesso nome breve la riporta.",
+    "deleteBody_other": "È su {{count}} board. Lì dirà che la definizione manca, e una scheda con lo stesso nome breve la riporta.",
+    "deleteBodyNone": "Nessuna board la mostra. Sparisce subito.",
+    "newTitle": "Crea una scheda",
+    "editTitle": "Modifica {{name}}",
+    "yaml": "Testo della scheda (YAML)",
+    "yamlHelp": "L'intera scheda come testo. L'editor a passi arriverà con una versione successiva di nexdeck.",
+    "deletedMeanwhile": "Eliminata nel frattempo",
+    "deletedBody": "Questa scheda è stata eliminata mentre la tenevi aperta. Salvala come scheda nuova per conservare il tuo testo.",
+    "saveAsNew": "Salva come nuova",
+    "problems": "Per ora non si può salvare",
+    "line": "Riga {{line}}",
+    "failed": "Non è stato possibile salvare la scheda.",
+    "problem": {
+      "card_yaml": "Il testo non si legge come YAML: {{reason}}.",
+      "card_empty": "Il testo è vuoto.",
+      "card_missing_field": "Il campo {{field}} è obbligatorio.",
+      "card_unknown_field": "{{field}} non è un campo di una scheda.",
+      "card_slug_taken": "Esiste già una scheda con il nome breve {{slug}}.",
+      "card_slug_reserved": "Il nome breve {{slug}} è riservato a nexdeck.",
+      "card_slug_changed": "Il nome breve di una scheda salvata non può cambiare. È {{slug}}.",
+      "card_bad_slug": "Il nome breve può avere solo lettere minuscole, cifre e trattini.",
+      "card_unknown_kind": "nexdeck non ha connessioni del tipo {{kind}}.",
+      "card_not_allowed": "Qui è permesso solo uno tra {{expected}}.",
+      "card_needs_newer": "Questa scheda richiede nexdeck {{need}} o più recente. Questa è la {{have}}.",
+      "card_wrong_type": "Questo è il tipo di valore sbagliato."
+    },
+    "tooMany": "Ci sono già 200 schede personali, il massimo che nexdeck conserva. Eliminane prima una."
   }
 }

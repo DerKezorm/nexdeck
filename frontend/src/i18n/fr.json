@@ -67,7 +67,8 @@
       "no_demo_data": "Pas de données de démonstration. La carte n'a pas de réponses d'exemple.",
       "redirected": "Redirigé, non suivi. Le service a répondu par une redirection, qu'une carte personnalisée ne suit pas.",
       "answer_too_large": "Réponse trop volumineuse. Le service a répondu avec plus qu'une carte personnalisée ne lit.",
-      "bad_param": "Une valeur de la réponse n'est pas un nom simple ; la requête n'a pas été faite."
+      "bad_param": "Une valeur de la réponse n'est pas un nom simple ; la requête n'a pas été faite.",
+      "connection_missing": "Connexion manquante. La connexion de cette carte a été supprimée."
     },
     "card": {
       "card_invalid": "Cette carte ne peut pas être enregistrée.",
@@ -225,7 +226,8 @@
       "player": "Lecteur de musique",
       "homeNetwork": "Réseau domestique",
       "apps": "Apps",
-      "assistant": "Assistant"
+      "assistant": "Assistant",
+      "cards": "Cartes personnalisées"
     },
     "mail": {
       "title": "Serveur de messagerie",
@@ -1009,7 +1011,12 @@
       "monitoring": "Supervision et maison",
       "other": "Autres"
     },
-    "apps": "Apps du catalogue"
+    "apps": "Apps du catalogue",
+    "customCards": "Cartes personnalisées",
+    "needIntegration": "Demandent une intégration que vous n'avez pas",
+    "addTheIntegration": "Ajouter l'intégration",
+    "askAdmin": "Demandez à un administrateur d'ajouter une intégration {{name}}.",
+    "pickCard": "Quelle connexion {{name}} doit-elle lire ?"
   },
   "notices": {
     "title": "Notifications",
@@ -2331,5 +2338,76 @@
     "reachesOn": "atteint vers le {{date}}",
     "told": "signalé",
     "basis": "Prolongé à partir des 30 derniers jours"
+  },
+  "cards": {
+    "title": "Cartes personnalisées",
+    "lead": "Une carte personnalisée montre ce que vous choisissez dans les réponses d'un service : un chiffre, quelques chiffres, une liste ou un mur d'images. Créez-en une vous-même ou prenez-en une dans la boutique de cartes.",
+    "build": "Créer une carte",
+    "openShop": "Ouvrir la boutique de cartes",
+    "tabs": {
+      "cards": "Cartes",
+      "integrations": "Intégrations",
+      "shop": "Boutique de cartes",
+      "submissions": "Mes envois"
+    },
+    "later": "Cette partie des cartes personnalisées arrivera avec une version ultérieure de nexdeck.",
+    "search": "Rechercher par nom ou source",
+    "col": {
+      "card": "Carte",
+      "source": "Source",
+      "from": "Origine",
+      "placed": "Placée sur",
+      "users": "Les utilisateurs peuvent la placer"
+    },
+    "form": {
+      "value": "Chiffre",
+      "stats": "Chiffres",
+      "list": "Liste",
+      "posters": "Images"
+    },
+    "local": "Locale",
+    "fromShop": "Boutique de cartes · {{version}}",
+    "boards_one": "{{count}} tableau",
+    "boards_other": "{{count}} tableaux",
+    "notPlaced": "Non placée",
+    "boardsOf": "Tableaux avec {{name}}",
+    "usersMayPlace": "Les utilisateurs peuvent la placer",
+    "usersMayPlaceNamed": "Les utilisateurs peuvent placer {{name}}",
+    "edit": "Modifier",
+    "editNamed": "Modifier {{name}}",
+    "copy": "Dupliquer",
+    "copyNamed": "Dupliquer {{name}}",
+    "delete": "Supprimer",
+    "deleteNamed": "Supprimer {{name}}",
+    "footer": "{{count}} cartes personnalisées sur {{limit}}. Une modification d'une carte apparaît tout de suite sur chaque tableau.",
+    "deleteTitle": "Supprimer {{name}} ?",
+    "deleteBody_one": "Elle se trouve sur {{count}} tableau. Elle y indiquera que la définition manque, et une carte portant le même nom court la ramène.",
+    "deleteBody_other": "Elle se trouve sur {{count}} tableaux. Elle y indiquera que la définition manque, et une carte portant le même nom court la ramène.",
+    "deleteBodyNone": "Aucun tableau ne la montre. Elle disparaît tout de suite.",
+    "newTitle": "Créer une carte",
+    "editTitle": "Modifier {{name}}",
+    "yaml": "Texte de la carte (YAML)",
+    "yamlHelp": "La carte entière sous forme de texte. L'éditeur par étapes arrivera avec une version ultérieure de nexdeck.",
+    "deletedMeanwhile": "Supprimée entre-temps",
+    "deletedBody": "Cette carte a été supprimée pendant que vous l'aviez ouverte. Enregistrez-la comme nouvelle carte pour garder votre texte.",
+    "saveAsNew": "Enregistrer comme nouvelle",
+    "problems": "Impossible d'enregistrer pour l'instant",
+    "line": "Ligne {{line}}",
+    "failed": "La carte n'a pas pu être enregistrée.",
+    "problem": {
+      "card_yaml": "Le texte ne se lit pas comme du YAML : {{reason}}.",
+      "card_empty": "Le texte est vide.",
+      "card_missing_field": "Le champ {{field}} est obligatoire.",
+      "card_unknown_field": "{{field}} n'est pas un champ d'une carte.",
+      "card_slug_taken": "Une carte au nom court {{slug}} existe déjà.",
+      "card_slug_reserved": "Le nom court {{slug}} est réservé à nexdeck.",
+      "card_slug_changed": "Le nom court d'une carte enregistrée ne peut pas changer. C'est {{slug}}.",
+      "card_bad_slug": "Le nom court ne peut contenir que des minuscules, des chiffres et des tirets.",
+      "card_unknown_kind": "nexdeck n'a pas de connexion de type {{kind}}.",
+      "card_not_allowed": "Seul l'un de {{expected}} est permis ici.",
+      "card_needs_newer": "Cette carte demande nexdeck {{need}} ou plus récent. Ici c'est la {{have}}.",
+      "card_wrong_type": "Ce n'est pas le bon type de valeur."
+    },
+    "tooMany": "Il y a déjà 200 cartes personnalisées, le maximum que nexdeck garde. Supprimez-en une d'abord."
   }
 }

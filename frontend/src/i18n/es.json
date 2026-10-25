@@ -67,7 +67,8 @@
       "no_demo_data": "Sin datos de demostración. La tarjeta no tiene respuestas de ejemplo.",
       "redirected": "Redirigido, no seguido. El servicio respondió con una redirección, que una tarjeta propia no sigue.",
       "answer_too_large": "Respuesta demasiado grande. El servicio respondió con más de lo que lee una tarjeta propia.",
-      "bad_param": "Un valor de la respuesta no es un nombre simple; no se hizo la consulta."
+      "bad_param": "Un valor de la respuesta no es un nombre simple; no se hizo la consulta.",
+      "connection_missing": "Falta la conexión. Se eliminó la conexión de esta tarjeta."
     },
     "card": {
       "card_invalid": "No se puede guardar esta tarjeta.",
@@ -225,7 +226,8 @@
       "player": "Reproductor de música",
       "homeNetwork": "Red doméstica",
       "apps": "Apps",
-      "assistant": "Asistente"
+      "assistant": "Asistente",
+      "cards": "Tarjetas propias"
     },
     "mail": {
       "title": "Servidor de correo",
@@ -1009,7 +1011,12 @@
       "monitoring": "Monitorización y hogar",
       "other": "Otros"
     },
-    "apps": "Apps del catálogo"
+    "apps": "Apps del catálogo",
+    "customCards": "Tarjetas propias",
+    "needIntegration": "Necesitan una integración que no tienes",
+    "addTheIntegration": "Añadir la integración",
+    "askAdmin": "Pide a un administrador que añada una integración de {{name}}.",
+    "pickCard": "¿Qué conexión debe leer {{name}}?"
   },
   "notices": {
     "title": "Avisos",
@@ -2331,5 +2338,76 @@
     "reachesOn": "se alcanza hacia el {{date}}",
     "told": "avisado",
     "basis": "Proyectado a partir de los últimos 30 días"
+  },
+  "cards": {
+    "title": "Tarjetas propias",
+    "lead": "Una tarjeta propia muestra lo que eliges de las respuestas de un servicio: un número, varios números, una lista o un muro de imágenes. Crea una tú mismo o toma una de la tienda de tarjetas.",
+    "build": "Crear una tarjeta",
+    "openShop": "Abrir la tienda de tarjetas",
+    "tabs": {
+      "cards": "Tarjetas",
+      "integrations": "Integraciones",
+      "shop": "Tienda de tarjetas",
+      "submissions": "Mis envíos"
+    },
+    "later": "Esta parte de las tarjetas propias llegará con una versión posterior de nexdeck.",
+    "search": "Buscar por nombre o fuente",
+    "col": {
+      "card": "Tarjeta",
+      "source": "Fuente",
+      "from": "Origen",
+      "placed": "Colocada en",
+      "users": "Los usuarios pueden colocarla"
+    },
+    "form": {
+      "value": "Número",
+      "stats": "Números",
+      "list": "Lista",
+      "posters": "Imágenes"
+    },
+    "local": "Local",
+    "fromShop": "Tienda de tarjetas · {{version}}",
+    "boards_one": "{{count}} tablero",
+    "boards_other": "{{count}} tableros",
+    "notPlaced": "Sin colocar",
+    "boardsOf": "Tableros con {{name}}",
+    "usersMayPlace": "Los usuarios pueden colocarla",
+    "usersMayPlaceNamed": "Los usuarios pueden colocar {{name}}",
+    "edit": "Editar",
+    "editNamed": "Editar {{name}}",
+    "copy": "Duplicar",
+    "copyNamed": "Duplicar {{name}}",
+    "delete": "Eliminar",
+    "deleteNamed": "Eliminar {{name}}",
+    "footer": "{{count}} de {{limit}} tarjetas propias. Un cambio en una tarjeta se ve a la vez en todos los tableros.",
+    "deleteTitle": "¿Eliminar {{name}}?",
+    "deleteBody_one": "Está en {{count}} tablero. Allí dirá que falta la definición, y una tarjeta con el mismo nombre corto la devuelve.",
+    "deleteBody_other": "Está en {{count}} tableros. Allí dirá que falta la definición, y una tarjeta con el mismo nombre corto la devuelve.",
+    "deleteBodyNone": "Ningún tablero la muestra. Desaparece al instante.",
+    "newTitle": "Crear una tarjeta",
+    "editTitle": "Editar {{name}}",
+    "yaml": "Texto de la tarjeta (YAML)",
+    "yamlHelp": "La tarjeta entera como texto. El editor con pasos llegará con una versión posterior de nexdeck.",
+    "deletedMeanwhile": "Eliminada mientras tanto",
+    "deletedBody": "Esta tarjeta se eliminó mientras la tenías abierta. Guárdala como tarjeta nueva para conservar tu texto.",
+    "saveAsNew": "Guardar como nueva",
+    "problems": "Todavía no se puede guardar",
+    "line": "Línea {{line}}",
+    "failed": "No se pudo guardar la tarjeta.",
+    "problem": {
+      "card_yaml": "El texto no se puede leer como YAML: {{reason}}.",
+      "card_empty": "El texto está vacío.",
+      "card_missing_field": "El campo {{field}} es obligatorio.",
+      "card_unknown_field": "{{field}} no es un campo de una tarjeta.",
+      "card_slug_taken": "Ya existe una tarjeta con el nombre corto {{slug}}.",
+      "card_slug_reserved": "El nombre corto {{slug}} está reservado para nexdeck.",
+      "card_slug_changed": "El nombre corto de una tarjeta guardada no puede cambiar. Es {{slug}}.",
+      "card_bad_slug": "El nombre corto solo puede tener letras minúsculas, cifras y guiones.",
+      "card_unknown_kind": "nexdeck no tiene ninguna conexión del tipo {{kind}}.",
+      "card_not_allowed": "Aquí solo se permite uno de {{expected}}.",
+      "card_needs_newer": "Esta tarjeta necesita nexdeck {{need}} o posterior. Esta es la {{have}}.",
+      "card_wrong_type": "Este es un tipo de valor equivocado."
+    },
+    "tooMany": "Ya hay 200 tarjetas propias, el máximo que guarda nexdeck. Elimina una primero."
   }
 }

@@ -26,7 +26,9 @@ CARD = Field(
     "Card",
     required=True,
     placeholder="queue-size",
-    help="The short name of the card, as saved under System > Cards.",
+    help="The card this one shows, as saved under System > Custom cards.",
+    # The settings sheet shows the name of the card instead of a text field.
+    helper="custom-card",
 )
 
 
