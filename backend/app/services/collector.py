@@ -65,6 +65,13 @@ REFRESH_NOW_GAP = 5.0
 REPEATING_CARDS = frozenset({"core.problems", "core.chronicle", "core.report", "core.status", "core.notices"})
 
 
+def _no_connection(adapter: Any, hint: str) -> AdapterError:
+    """What a card says when the connection it stood on is gone. A custom card names it (KARTEN-2 EC-2); the rest keep the old word."""
+    if adapter.kind == "custom":
+        return AdapterError("Connection missing. The connection of this card was deleted.", code="connection_missing", hint="Pick a connection in the card's settings.")
+    return AdapterError("This widget needs a connection to a service.", code="no_integration", hint=hint)
+
+
 class Collector:
     def __init__(self) -> None:
         self._tasks: dict[int, asyncio.Task[None]] = {}
@@ -330,10 +337,7 @@ class Collector:
                 data = adapter.demo(widget_kind, options, self.tick)
             else:
                 if adapter.needs_integration and integration_id is None:
-                    raise AdapterError(
-                        "This widget needs a connection to a service.", code="no_integration",
-                        hint="Open the widget settings and pick an integration.",
-                    )
+                    raise _no_connection(adapter, "Open the widget settings and pick an integration.")
                 ctx = Context(
                     self.client, integration_id=integration_id, widget_id=widget_id,
                     cache=self._caches.setdefault(integration_id or 0, {}),
@@ -482,10 +486,7 @@ class Collector:
             if demo:
                 return shape_for_display(adapter.demo(widget_kind, options, self.tick), adapter, widget_kind, options, for_settings=True)
             if adapter.needs_integration and integration is None:
-                raise AdapterError(
-                    "This widget needs a connection to a service.", code="no_integration",
-                    hint="Pick an integration first.",
-                )
+                raise _no_connection(adapter, "Pick an integration first.")
             ctx = Context(
                 self.client, integration_id=integration_id, widget_id=widget_id,
                 cache=self._caches.setdefault(integration_id or 0, {}),

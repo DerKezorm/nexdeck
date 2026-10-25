@@ -14,13 +14,22 @@ from datetime import datetime
 from typing import Any
 from weakref import WeakKeyDictionary
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import CardRecord, utcnow
 from . import load
+
+#: How many cards of its own an installation keeps (KARTEN-11 AC-8).
+MAX_CARDS = 200
+#: Short names the address ``/api/v1/cards/<name>`` has for other things. A card called so could not be opened.
+RESERVED_SLUGS = frozenset({"library", "sources", "schema"})
+
+
+class TooManyCards(Exception):
+    """The installation keeps ``MAX_CARDS`` cards already."""
 
 
 @dataclass(frozen=True)
@@ -72,7 +81,11 @@ def get(db: Session, slug: str) -> Entry | None:
 
 
 def listing(db: Session) -> list[CardRecord]:
-    return list(db.scalars(select(CardRecord).order_by(CardRecord.slug)))
+    return list(db.scalars(select(CardRecord).where(CardRecord.kind == "card").order_by(CardRecord.slug)))
+
+
+def count(db: Session) -> int:
+    return int(db.scalar(select(func.count(CardRecord.id)).where(CardRecord.kind == "card")) or 0)
 
 
 def _slug_taken(loaded: load.Loaded) -> load.CardInvalid:
@@ -99,8 +112,22 @@ def create(
     shop_ref: str = "",
     shop_version: str = "",
 ) -> CardRecord:
-    """Check the text and keep it. Raises ``load.CardInvalid``; nothing is written then."""
+    """Check the text and keep it. Raises ``load.CardInvalid`` (or ``TooManyCards``); nothing is written then."""
     loaded = load.load_definition(text)
+    if loaded.definition.slug in RESERVED_SLUGS:
+        raise load.CardInvalid(
+            [
+                load.Problem(
+                    "card_slug_reserved",
+                    f"The short name {loaded.definition.slug} is kept for nexdeck itself.",
+                    "slug",
+                    loaded.lines.get(("slug",)),
+                    {"slug": loaded.definition.slug},
+                )
+            ]
+        )
+    if count(db) >= MAX_CARDS:
+        raise TooManyCards
     if db.scalar(select(CardRecord.id).where(CardRecord.slug == loaded.definition.slug)) is not None:
         raise _slug_taken(loaded)
     row = CardRecord(

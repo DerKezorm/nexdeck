@@ -184,7 +184,9 @@ class CustomAdapter(Adapter):
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         definition = definition_of(options)
         if ctx.resolve_integration is None or ctx.integration_id is None:
-            raise AdapterError("The connection of this card is missing.", code="no_integration", hint="Pick a connection in the card's settings.")
+            raise AdapterError(
+                "Connection missing. The connection of this card was deleted.", code="connection_missing", hint="Pick a connection in the card's settings."
+            )
         real, real_config, real_ctx = await ctx.resolve_integration(ctx.integration_id)
         if definition.form != widget_kind:
             raise AdapterError(

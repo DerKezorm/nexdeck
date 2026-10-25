@@ -48,6 +48,7 @@ from ..services.boards import (
     card_sizes,
     clean_cards,
     place_widget,
+    refuse_unshared_card,
     remove_from_layouts,
     widget_view,
 )
@@ -121,6 +122,12 @@ def _validate_custom(db: DbSession, kind: str, integration_id: int | None, optio
         raise error("no_raw_access", f"A custom card cannot read through a {get_adapter(integration.kind).label} connection yet.")
 
 
+def _refuse_other_card(db: DbSession, widget: Widget, options: dict | None, user: User) -> None:
+    """Pointing a placed custom card at another definition is placing that card, so it needs the same release."""
+    if options is not None and str(options.get("card") or "") != str((widget.options or {}).get("card") or ""):
+        refuse_unshared_card(db, widget.kind, options, user)
+
+
 def _refuse_unless_cards(page: Page) -> None:
     """Cards stand on card pages only: a network plan or a home page has no grid to hold them.
 
@@ -141,6 +148,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
         raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
     board, _ = require_board_id(db, page.board_id, user, "edit")
     _refuse_unless_cards(page)
+    refuse_unshared_card(db, body.kind, body.options, user)
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_custom(db, body.kind, body.integration_id, body.options, body.refresh_seconds)
     _validate_options(db, body.kind, body.options, user)
@@ -177,6 +185,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
 def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSession) -> dict:
     widget, page = _widget(db, widget_id)
     board, _ = require_board_id(db, page.board_id, user, "edit")
+    _refuse_other_card(db, widget, body.options, user)
     if body.integration_id is not None or body.clear_integration:
         _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id, user)
     # What the card will be once this change is in, which is what a custom card is held to.
@@ -364,6 +373,7 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
     """The settings sheet shows what a change would look like before it is saved."""
     widget, page = _widget(db, widget_id)
     require_board_id(db, page.board_id, user, "edit")
+    _refuse_other_card(db, widget, body.options, user)
     if body.integration_id is not None:
         _validate_kind(db, widget.kind, body.integration_id, user)
         _validate_custom(db, widget.kind, body.integration_id, body.options, None)

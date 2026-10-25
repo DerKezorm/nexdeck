@@ -197,7 +197,7 @@ async def test_karten2_ec2_a_card_whose_connection_was_deleted_says_so(stand: tu
     widget = place(client, page, sonarr).json()["widget"]["id"]
     assert client.delete(f"/api/v1/integrations/{sonarr}", headers=CSRF).status_code in (200, 204)
     data = await refreshed(client, widget)
-    assert data is not None and data.meta["code"] == "no_integration" and data.error
+    assert data is not None and data.meta["code"] == "connection_missing" and data.error
 
 
 @respx.mock

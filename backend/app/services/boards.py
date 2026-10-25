@@ -12,8 +12,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
+from ..cards import store as card_store
 from ..deps import error, require_integration
-from ..models import Board, Integration, Page, User, Widget
+from ..models import Board, Integration, Page, Role, User, Widget
 from . import grid, holders
 from . import health as health_service
 from .integrations import export_config, store_config
@@ -572,6 +573,21 @@ def _check_look(options: dict) -> None:
         raise error("bad_card_effect", "A card's colour shows as a frame, a tint or a fill.")
 
 
+def refuse_unshared_card(db: Session, kind: str, options: dict | None, user: User | None) -> None:
+    """Only an administrator puts a custom card on a board, unless he released that card for users (KARTEN-11 AC-3, AC-4).
+
+    ⚠️ Asked where a card is **placed**, never where an already placed one is changed or moved: taking the release back
+    leaves the cards that stand on boards where they are (EC-1). A card that is not released answers like one that does
+    not exist, so nobody learns the short names of the cards he cannot see.
+    """
+    if not kind.startswith("custom.") or user is None or user.role == Role.admin.value:
+        return
+    slug = str((options or {}).get("card") or "").strip()
+    entry = card_store.get(db, slug) if slug else None
+    if entry is None or not entry.users_may_place:
+        raise error("unknown_card", "There is no card with that short name.")
+
+
 def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
     """Check every option that names a connection.
 
@@ -666,7 +682,7 @@ MAX_PAGES = 50
 MAX_WIDGETS = 300
 
 
-def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, allow_locked: bool) -> None:
+def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, allow_locked: bool, standing: frozenset[str] = frozenset()) -> None:
     """Every objection raised before anything is touched.
 
     ⚠️ The order used to be the other way round. Replacing a board deleted all
@@ -730,6 +746,9 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
                     raise ImportError_(f"The layout of {where} has to give lg an x, y, w and h as whole numbers.")
             if not allow_locked:
                 try:
+                    # A card that stands on the board being edited keeps its place whether or not users may still place it (KARTEN-11 EC-1).
+                    if str((options or {}).get("card") or "").strip() not in standing:
+                        refuse_unshared_card(db, kind, options, user)
                     _validate_options(db, kind, options, user)
                 except HTTPException as refused:
                     detail = refused.detail if isinstance(refused.detail, dict) else {}
@@ -790,7 +809,11 @@ def import_board(
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
     _refuse_if_oversized(document)
-    _read_the_whole_thing_first(db, document, _user_of(db, owner_id), allow_locked)
+    standing = frozenset(
+        str((one.options or {}).get("card") or "").strip()
+        for one in (db.scalars(select(Widget).join(Page).where(Page.board_id == replace.id, Widget.kind.like("custom.%"))) if replace is not None else [])
+    )
+    _read_the_whole_thing_first(db, document, _user_of(db, owner_id), allow_locked, standing)
     meta = document.get("board") or {}
     name = str(meta.get("name") or "Imported board")
     # Integrations: matched by name, created when missing.
