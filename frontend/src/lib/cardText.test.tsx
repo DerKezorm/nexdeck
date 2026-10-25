@@ -85,6 +85,10 @@ describe('numbers and times in the format of the viewer (KARTEN-5 EC-10)', () =>
     expect(formatShown(moment, 'de', { zone: 'Europe/Berlin' })).toMatch(/25\.10\.2026.*02:58/)
     expect(formatShown(moment, 'en', { zone: 'America/New_York' })).toMatch(/Oct 24, 2026.*8:58/)
     expect(formatShown({ ...moment, format: 'time' }, 'de', { zone: 'Europe/Berlin' })).toBe('02:58')
+    // a time of day is only the time, written the way the language writes it
+    expect(formatShown({ ...moment, format: 'time' }, 'en', { zone: 'America/New_York' })).toMatch(/^8:58\sPM$/)
+    expect(formatShown({ ...moment, format: 'time' }, 'en', { zone: 'America/New_York' })).not.toMatch(/Oct|2026/)
+    expect(formatShown({ ...moment, format: 'date' }, 'en', { zone: 'America/New_York' })).toBe('Oct 24, 2026')
   })
 
   it('says how long ago in the words of the language', () => {

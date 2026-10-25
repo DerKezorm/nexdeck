@@ -118,6 +118,25 @@ describe('several numbers', () => {
     expect(container.querySelectorAll('.bar')).toHaveLength(3)
   })
 
+  it('shows the unit of the second to the last number as well, in the language of the viewer', async () => {
+    const withUnits = custom({
+      primary: { label: 'Used', value: 71, unit: '%', format: 'percent', text: '71%', metric: 'stat1' } as never,
+      secondary: [
+        { label: 'Answer', value: 12, unit: { en: 'milliseconds', de: 'Millisekunden' }, format: 'number', text: '12', metric: 'stat2' },
+        { label: 'Waiting', value: 3, unit: 'items', format: 'number', text: '3', metric: 'stat3' },
+      ] as never,
+      metrics: {},
+    })
+    const first = draw(view('custom.stats', 'stats'), withUnits)
+    expect(screen.getByText(/^12\s*milliseconds$/)).toBeInTheDocument()
+    expect(screen.getByText(/^3\s*items$/)).toBeInTheDocument()
+    first.unmount()
+    await i18next.changeLanguage('de')
+    draw(view('custom.stats', 'stats'), withUnits)
+    expect(screen.getByText(/^12\s*Millisekunden$/)).toBeInTheDocument()
+    expect(screen.getByText(/^3\s*items$/)).toBeInTheDocument()
+  })
+
   it('does not translate the labels of the author', async () => {
     await i18next.changeLanguage('de')
     draw(view('custom.stats', 'stats'), custom({ ...data, secondary: [{ ...data.secondary![0], label: 'Free' }] }))
@@ -201,6 +220,18 @@ describe('a wall of pictures', () => {
       { title: 'Harbour', subtitle: 'Season 1', value: '', status: 'ok', art: 'proxy:/_external?u=x&s=y', url: 'https://example.com/h' },
       { title: 'Orbital', subtitle: '', value: '', status: 'ok' },
     ],
+  })
+
+  it('says what the author wrote when there are no pictures, and “Nothing here” where the author said nothing (KARTEN-6 EC-1)', async () => {
+    const own = draw(view('custom.posters', 'posters'), custom({ items: [], meta: { custom: true, empty: { en: 'No covers yet', de: 'Noch keine Cover' } } }))
+    expect(screen.getByText('No covers yet')).toBeInTheDocument()
+    own.unmount()
+    const none = draw(view('custom.posters', 'posters'), custom({ items: [], meta: { custom: true, empty: null } }))
+    expect(screen.getByText('Nothing here')).toBeInTheDocument()
+    none.unmount()
+    await i18next.changeLanguage('de')
+    draw(view('custom.posters', 'posters'), custom({ items: [], meta: { custom: true, empty: { en: 'No covers yet', de: 'Noch keine Cover' } } }))
+    expect(screen.getByText('Noch keine Cover')).toBeInTheDocument()
   })
 
   it('shows a picture, a title and a link; a cover without a picture shows its first letters (KARTEN-6 EC-7)', () => {
