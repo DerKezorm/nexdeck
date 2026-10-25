@@ -13,8 +13,11 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
-from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context, outbound_client
+from ..adapters import get_adapter, split_widget_kind
+from ..adapters.base import AdapterError, Context, MediaSource, member_client, outbound_client
+from ..adapters.custom import MIN_REFRESH_SECONDS, sizes_of
+from ..cards import images as card_images
+from ..cards import store as card_store
 from ..db import db_session
 from ..deps import (
     AdminUser,
@@ -85,8 +88,36 @@ def _validate_kind(db: DbSession, kind: str, integration_id: int | None, user: U
         if integration.admin_only and user is not None and user.role != Role.admin.value:
             raise error("integration_locked", "This connection is reserved for administrators.", status.HTTP_403_FORBIDDEN)
         # An app tile may follow any service; every other widget needs its own kind.
-        if integration.kind != adapter.kind and kind != "core.app":
+        # A custom card sits on the kind its definition names; ``_validate_custom`` holds it to that.
+        if integration.kind != adapter.kind and kind != "core.app" and adapter.kind != "custom":
             raise error("kind_mismatch", f"A {kind} widget needs a {adapter.label} integration, not {integration.kind}.")
+
+
+def _validate_custom(db: DbSession, kind: str, integration_id: int | None, options: dict | None, refresh_seconds: int | None) -> None:
+    """What a custom card must be placed on: its definition, a kind of connection the definition names, a pace of ten seconds.
+
+    ⚠️ Checked wherever a card is made or changed (KARTEN-2 AC-9, AC-10). The definition says which kinds it works with,
+    and the adapter of each kind says whether a card may read through it at all; the browser only offers what passes.
+    """
+    if not kind.startswith("custom."):
+        return
+    slug = str((options or {}).get("card") or "").strip()
+    entry = card_store.get(db, slug) if slug else None
+    if entry is None:
+        raise error("unknown_card", "There is no card with that short name.")
+    if entry.definition.form != kind.partition(".")[2]:
+        raise error("form_mismatch", f"The card {slug} is a {entry.definition.form} card, not a {kind.partition('.')[2]} one.")
+    if refresh_seconds is not None and refresh_seconds < MIN_REFRESH_SECONDS:
+        raise error("too_fast", f"A custom card asks its connection at most every {MIN_REFRESH_SECONDS} seconds.")
+    if integration_id is None:
+        return
+    integration = db.get(Integration, integration_id)
+    if integration is None:
+        return
+    if integration.kind not in entry.definition.requires:
+        raise error("kind_mismatch", f"The card {slug} works with {', '.join(entry.definition.requires)}, not {integration.kind}.")
+    if not get_adapter(integration.kind).raw_access:
+        raise error("no_raw_access", f"A custom card cannot read through a {get_adapter(integration.kind).label} connection yet.")
 
 
 def _refuse_unless_cards(page: Page) -> None:
@@ -110,6 +141,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     board, _ = require_board_id(db, page.board_id, user, "edit")
     _refuse_unless_cards(page)
     _validate_kind(db, body.kind, body.integration_id, user)
+    _validate_custom(db, body.kind, body.integration_id, body.options, body.refresh_seconds)
     _validate_options(db, body.kind, body.options, user)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
@@ -120,8 +152,11 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     db.add(widget)
     db.flush()
     widget.options = clean_cards(db, page.id, widget.id, body.kind, body.options)
-    size = (body.w or widget_type.default_size[0], body.h or widget_type.default_size[1])
-    place_widget(page, widget.id, size, widget_type.min_size, grid.columns(board.settings))
+    default_size, min_size = widget_type.default_size, widget_type.min_size
+    if adapter.kind == "custom":
+        default_size, min_size = sizes_of(widget.options or {}, default_size, min_size)
+    size = (body.w or default_size[0], body.h or default_size[1])
+    place_widget(page, widget.id, size, min_size, grid.columns(board.settings))
     health_service.ensure_check_for_widget(db, widget)
     chronicle.record("card_added", widget_id=widget.id, integration_id=widget.integration_id, board_id=board.id,
                      user_id=user.id, name=widget.title or body.kind, after=board.name, db=db)
@@ -141,6 +176,16 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     board, _ = require_board_id(db, page.board_id, user, "edit")
     if body.integration_id is not None or body.clear_integration:
         _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id, user)
+    # What the card will be once this change is in, which is what a custom card is held to.
+    # A title or an icon changes none of that, so a card whose definition moved on can still be renamed.
+    if body.integration_id is not None or body.clear_integration or body.options is not None or body.refresh_seconds is not None:
+        _validate_custom(
+            db, widget.kind,
+            None if body.clear_integration else (body.integration_id if body.integration_id is not None else widget.integration_id),
+            body.options if body.options is not None else widget.options,
+            body.refresh_seconds if body.refresh_seconds is not None else (None if body.clear_refresh else widget.refresh_seconds),
+        )
+    if body.integration_id is not None or body.clear_integration:
         widget.integration_id = None if body.clear_integration else body.integration_id
     if body.title is not None:
         widget.title = body.title.strip()
@@ -318,6 +363,7 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
     require_board_id(db, page.board_id, user, "edit")
     if body.integration_id is not None:
         _validate_kind(db, widget.kind, body.integration_id, user)
+        _validate_custom(db, widget.kind, body.integration_id, body.options, None)
     # A preview reaches the adapter with unsaved options, so it needs the
     # same check; otherwise the sheet is the way around it.
     _validate_options(db, widget.kind, body.options, user)
@@ -472,14 +518,26 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     hit = _images.get((widget_id, path))
     if hit and hit[0] > time.monotonic():
         return Response(content=hit[1], media_type=hit[2], headers=_image_headers(hit[2], "private, max-age=3600"))
-    adapter, config, ctx = await _service_of(widget)
+    # ⚠️ A picture of a custom card that lives on another host: fetched without the connection's credentials, and by the
+    # client that holds every hop to the rule for addresses a member typed (KARTEN-6 EC-3). Only an address the server
+    # itself read out of a card's answers, which its signature proves.
+    foreign = card_images.external_address(path) if widget.kind.startswith("custom.") else None
+    if path.startswith(card_images.EXTERNAL) and foreign is None:
+        raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
+    if foreign is not None:
+        source, client = MediaSource(url=foreign, headers={}), member_client(True)
+    else:
+        adapter, config, ctx = await _service_of(widget)
+        try:
+            source = await adapter.image_source(config, path, ctx)
+        except AdapterError as failure:
+            code = getattr(failure, "code", "") or "no_image"
+            raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
+        client = _image_client(bool(config.get("insecure")))
     try:
-        source = await adapter.image_source(config, path, ctx)
+        response = await client.get(source.url, headers=source.headers, params=source.params or None)
     except AdapterError as failure:
-        code = getattr(failure, "code", "") or "no_image"
-        raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
-    try:
-        response = await _image_client(bool(config.get("insecure"))).get(source.url, headers=source.headers, params=source.params or None)
+        raise error(failure.code, failure.message, status.HTTP_404_NOT_FOUND) from failure
     except httpx.HTTPError as failure:
         raise error("unreachable", f"The service did not deliver the image: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
     content_type = response.headers.get("content-type", "") or source.media_type

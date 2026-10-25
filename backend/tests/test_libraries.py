@@ -247,6 +247,9 @@ def test_no_demo_answers_with_another_cards_data() -> None:
     doubles: list[str] = []
     checked = 0
     for adapter in all_adapters():
+        # A custom card's demo is the example answers of the definition it points at, not a branch of this adapter.
+        if adapter.kind == "custom":
+            continue
         seen: dict[tuple[str, str], str] = {}
         for widget in adapter.widgets:
             try:

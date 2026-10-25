@@ -58,6 +58,7 @@ def _count(counts: dict[str, Any], key: str) -> int:
 
 class PhotoPrismAdapter(Adapter):
     kind = "photoprism"
+    raw_access = True
     label = "PhotoPrism"
     category = "media"
     description = "How many photos and videos the library holds, what came in last, and a button that indexes the originals."

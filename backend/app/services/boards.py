@@ -208,6 +208,12 @@ def card_sizes(widget: Widget, columns: int = grid.BASE) -> tuple[list[int], lis
         floor = RENDERER_MIN.get(shown, DEFAULT_MIN)
         min_size = [min(min_size[0], floor[0]), min(min_size[1], floor[1])]
         default_size = [max(default_size[0], min_size[0]), max(default_size[1], min_size[1])]
+    if adapter.kind == "custom":
+        # What the card's definition asks for, never below the floor of what is drawn (KARTEN-6 AC-10).
+        from ..adapters.custom import sizes_of
+
+        asked, least = sizes_of(widget.options or {}, (default_size[0], default_size[1]), (min_size[0], min_size[1]))
+        default_size, min_size = list(asked), list(least)
     return [grid.widen(default_size[0], columns), default_size[1]], [grid.widen(min_size[0], columns), min_size[1]]
 
 

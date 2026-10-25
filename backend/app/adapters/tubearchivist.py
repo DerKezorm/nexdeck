@@ -86,6 +86,7 @@ def _running(notes: Any) -> int | None:
 
 class TubeArchivistAdapter(Adapter):
     kind = "tubearchivist"
+    raw_access = True
     label = "Tube Archivist"
     category = "media"
     description = "What waits in the download queue, which videos came in last, and how big the archive is."

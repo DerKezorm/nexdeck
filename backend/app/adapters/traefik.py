@@ -16,6 +16,7 @@ from .base import Adapter, Context, Field, WidgetData, WidgetType, base_url
 
 class TraefikAdapter(Adapter):
     kind = "traefik"
+    raw_access = True
     label = "Traefik"
     category = "network"
     description = "Routers, services and middlewares, and which of them Traefik marks as broken."

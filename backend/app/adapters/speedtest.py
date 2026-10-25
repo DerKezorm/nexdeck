@@ -68,6 +68,7 @@ def _mbps(data: dict[str, Any], what: str) -> float | None:
 
 class SpeedtestAdapter(Adapter):
     kind = "speedtest"
+    raw_access = True
     #: Confirmed against a live Speedtest Tracker on 2026-09-08: the
     #: connection test, the latest result and the history card. ⚠️ Only two
     #: measurements were in it, so the history was proved to page and to

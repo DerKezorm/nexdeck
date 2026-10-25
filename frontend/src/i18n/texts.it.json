@@ -2036,7 +2036,19 @@
     "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Le ultime righe della cronaca da tutte le bacheche del proprietario di questa bacheca: schede diventate gialle, rosse o di nuovo verdi, guasti, manutenzione, nuove versioni e container riavviati.",
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Cosa è successo nelle ultime 24 ore e cosa è ancora rosso, da tutte le bacheche del proprietario di questa bacheca.",
     "A backup is too old": "Un backup è troppo vecchio",
-    "The daily report": "Il rapporto giornaliero"
+    "The daily report": "Il rapporto giornaliero",
+    "A card described as data: which requests to ask a connection, which values to show, and when to turn yellow or red.": "Una scheda descritta come dati: quali richieste fare a una connessione, quali valori mostrare e quando diventare gialla o rossa.",
+    "A wall of pictures with titles from a list in the answers of a connection.": "Una parete di immagini con titoli presi da un elenco nelle risposte di una connessione.",
+    "Card": "Scheda",
+    "Custom card": "Scheda personalizzata",
+    "Custom list": "Elenco personalizzato",
+    "Custom number": "Numero personalizzato",
+    "Custom numbers": "Numeri personalizzati",
+    "Custom pictures": "Immagini personalizzate",
+    "One value from the answers of a connection, with unit, history and colour.": "Un valore dalle risposte di una connessione, con unità, storico e colore.",
+    "Rows from a list in the answers of a connection, with title, value, status and link.": "Righe da un elenco nelle risposte di una connessione, con titolo, valore, stato e link.",
+    "The short name of the card, as saved under System > Cards.": "Il nome breve della scheda, come salvato in Sistema > Schede.",
+    "Two to six values from the answers of a connection, side by side.": "Da due a sei valori dalle risposte di una connessione, affiancati."
   },
   "labels": {
     "Private resources": "Risorse private",

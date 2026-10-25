@@ -101,6 +101,8 @@ export function IntegrationsSettings() {
     const groups: Record<string, AdapterSpec[]> = {}
     for (const adapter of adapters.data ?? []) {
       if (!adapter.needs_integration && !adapter.optional_integration) continue
+      // A custom card sits on a connection of another kind; it is not one to add.
+      if (adapter.kind === 'custom') continue
       // The technical name counts: somebody types "wol", "pbs" or "npm",
       // which none of the written-out names contain.
       // The vendors count as well: nobody searches for "SNMP", they search

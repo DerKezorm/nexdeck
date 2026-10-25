@@ -59,7 +59,15 @@
       "nginxignition_stats_disabled": "Le statistiche di traffico sono disattivate nelle impostazioni.",
       "nginxignition_stats_stopped": "Le statistiche di traffico richiedono che nginx sia in esecuzione.",
       "nginxignition_stats_unavailable": "nginx ignition non ha potuto leggere le statistiche di traffico di nginx.",
-      "too_slow": "Il calcolo ha richiesto troppo tempo."
+      "too_slow": "Il calcolo ha richiesto troppo tempo.",
+      "definition_missing": "Definizione mancante. La scheda non è più salvata.",
+      "form_changed": "La scheda ha cambiato forma da quando è stata posizionata.",
+      "kind_mismatch": "Questa scheda non legge tramite questo tipo di connessione.",
+      "no_raw_access": "Una scheda personalizzata non può ancora leggere tramite questo tipo di connessione.",
+      "no_demo_data": "Nessun dato dimostrativo. La scheda non ha risposte di esempio.",
+      "redirected": "Reindirizzato, non seguito. Il servizio ha risposto con un reindirizzamento, che una scheda personalizzata non segue.",
+      "answer_too_large": "Risposta troppo grande. Il servizio ha risposto con più di quanto legga una scheda personalizzata.",
+      "bad_param": "Un valore della risposta non è un nome semplice; la richiesta non è stata fatta."
     },
     "card": {
       "card_invalid": "Questa scheda non può essere salvata.",

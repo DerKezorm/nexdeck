@@ -1327,6 +1327,7 @@ class Context:
         cache_seconds: float = 0,
         auth_errors: bool = True,
         member: bool = False,
+        follow_redirects: bool | None = None,
     ) -> httpx.Response:
         """Fetch, with 401 and 403 turned into a readable refusal.
 
@@ -1338,15 +1339,21 @@ class Context:
         ``member=True`` is for an address a member typed into a card. It goes
         through a client with the member rule on every hop of a redirect, not
         through the shared one that serves the administrator's connections.
+
+        ``follow_redirects`` overrides what the client does for this one request;
+        ``None`` leaves it to the client. A custom card asks with ``False``: httpx
+        drops ``Authorization`` when a redirect changes the host, but not ``X-Api-Key``.
         """
         if member:
             guard_member_target(url)
         else:
             guard_outbound(url)
+        # Only when it was asked for, so the cache keys of every other request stay what they were.
+        redirects = {} if follow_redirects is None else {"follow_redirects": follow_redirects}
         key = ""
         if method.upper() == "GET" and cache_seconds > 0:
             key = CACHE_PREFIX + hashlib.sha1(
-                json.dumps([url, params, headers], sort_keys=True, default=str).encode()
+                json.dumps([url, params, headers, *([follow_redirects] if redirects else [])], sort_keys=True, default=str).encode()
             ).hexdigest()
             hit = self.cache.get(key)
             if hit and hit[0] > time.monotonic():
@@ -1355,17 +1362,17 @@ class Context:
             if member:
                 response = await member_client(verify).request(
                     method, url, headers=headers, params=params, json=json_body,
-                    data=data, content=content, timeout=timeout, auth=auth,
+                    data=data, content=content, timeout=timeout, auth=auth, **redirects,
                 )
             elif verify:
                 response = await self.client.request(
                     method, url, headers=headers, params=params, json=json_body,
-                    data=data, content=content, timeout=timeout, auth=auth,
+                    data=data, content=content, timeout=timeout, auth=auth, **redirects,
                 )
             else:
                 response = await _relaxed_client().request(
                     method, url, headers=headers, params=params, json=json_body,
-                    data=data, content=content, timeout=timeout, auth=auth,
+                    data=data, content=content, timeout=timeout, auth=auth, **redirects,
                 )
         except httpx.TimeoutException as error:
             raise Unreachable("The service did not answer in time.") from error
@@ -1697,6 +1704,71 @@ class Adapter:
 
     def secret_field_names(self) -> set[str]:
         return {f.name for f in self.fields if f.secret}
+
+    # -- custom cards read through a connection (KARTEN-2) ----------------------
+
+    #: True for a connection kind a custom card may read through. ⚠️ Switched on per kind, only after
+    #: ``tests/test_cards_source.py`` has asked a recorded answer through it, and the list of kinds is a test:
+    #: a kind that signs in with a session (qBittorrent, Pi-hole) stays off until it can renew the session itself.
+    raw_access: bool = False
+
+    def raw_base(self, config: dict[str, Any]) -> str:
+        """The address a card's path is put underneath; an adapter whose address is not ``url`` overrides it."""
+        found = base_url(config)
+        if found:
+            return found
+        # ntfy offers its public server when the address is left empty.
+        return str(next((one.default for one in self.fields if one.name == "url" and one.default), "")).rstrip("/")
+
+    def raw_headers(self, config: dict[str, Any]) -> dict[str, str]:
+        """What the connection sends with every request, from the helper the adapter already has."""
+        found = getattr(self, "_headers", None)
+        return dict(found(config) or {}) if callable(found) else {}
+
+    def raw_auth(self, config: dict[str, Any]) -> tuple[str, str] | None:
+        found = getattr(self, "_auth", None)
+        return found(config) if callable(found) else None
+
+    def raw_verify(self, config: dict[str, Any]) -> bool:
+        """TLS errors are ignored when the connection says so (KARTEN-2 EC-5), with the adapter's own default."""
+        default = next((one.default for one in self.fields if one.name == "insecure"), False)
+        return not bool(config.get("insecure", default))
+
+    async def raw_request(
+        self,
+        method: str,
+        path: str,
+        config: dict[str, Any],
+        ctx: Context,
+        *,
+        params: dict[str, Any] | None = None,
+        json_body: Any = None,
+        cache_seconds: float = 0,
+    ) -> httpx.Response:
+        """One request a custom card makes, with this connection's own credentials.
+
+        ⚠️ Never follows a redirect: the answer comes back as it is and the caller refuses a 3xx. The credentials
+        belong to the address of the connection and go nowhere else, whatever the service answers.
+        """
+        if not self.raw_access:
+            raise AdapterError(
+                f"{self.label} cannot be read by a custom card yet.",
+                code="no_raw_access",
+                hint="Pick a connection of another kind.",
+            )
+        from .jsonapi import join_path
+
+        return await ctx.request(
+            method.upper(),
+            join_path(self.raw_base(config), path),
+            headers=self.raw_headers(config) or None,
+            params=params,
+            json_body=json_body,
+            verify=self.raw_verify(config),
+            auth=self.raw_auth(config),
+            cache_seconds=cache_seconds,
+            follow_redirects=False,
+        )
 
 
 async def hand_back(adapter: Adapter, config: dict[str, Any], ctx: Context) -> None:

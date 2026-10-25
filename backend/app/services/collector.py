@@ -50,6 +50,7 @@ logger = logging.getLogger("nexdeck.collector")
 
 MAX_BACKOFF = 300
 MIN_INTERVAL = 5
+CUSTOM_MIN_INTERVAL = 10
 #: How long to wait before trying a card again that could not even be set up.
 RECOVERY_INTERVAL = 60.0
 
@@ -315,7 +316,8 @@ class Collector:
             live.set(widget_id, WidgetData(status="unknown", error=str(error)))
             return None
         widget_type = adapter.widget(widget_kind)
-        interval = max(MIN_INTERVAL, refresh_seconds or widget_type.refresh_seconds)
+        # A custom card asks its connection at most every ten seconds, whatever was saved or imported (KARTEN-2 AC-9).
+        interval = max(CUSTOM_MIN_INTERVAL if adapter.kind == "custom" else MIN_INTERVAL, refresh_seconds or widget_type.refresh_seconds)
         # Which settings this answer belongs to. Read after the options, so a
         # change between the two counts as "changed" rather than being missed.
         mine = self._generation.get(widget_id, 0)

@@ -238,6 +238,18 @@ class Size(Part):
     h: int = Field(ge=1, le=24)
 
 
+def stays_underneath(path: str) -> bool:
+    """A path that begins with a single /, names no host and climbs nowhere (KARTEN-2 AC-4).
+
+    ⚠️ A segment ``..`` is refused in every spelling: the service would resolve it above the path the author wrote,
+    and the connection's credentials go with it.
+    """
+    if not path.startswith("/") or path.startswith("//") or "\\" in path or any(c.isspace() or ord(c) < 32 for c in path):
+        return False
+    segments = path.split("?", 1)[0].split("/")
+    return not any(segment.lower().replace("%2e", ".") == ".." for segment in segments)
+
+
 class Request(Part):
     """One request to the service, always a GET underneath the address of the connection."""
 
@@ -252,7 +264,7 @@ class Request(Part):
     def _path_stays_underneath_the_connection(cls, path: str) -> str:
         # ⚠️ Same rule as the JSON API card (``join_path``): a path that names a host would send the connection's
         # credentials to a server of the author's choosing, and a card can come from the shop.
-        if not path.startswith("/") or path.startswith("//") or "\\" in path or any(c.isspace() or ord(c) < 32 for c in path):
+        if not stays_underneath(path):
             raise PydanticCustomError(
                 "card_bad_path", "The path must start with a single / and name no host; it is always underneath the connection's address."
             )
@@ -333,6 +345,7 @@ class ListCard(CardBase):
     form: Literal["list"]
     rows: Rows
     item: ListItem
+    empty: Label | None = Field(default=None, description="What the card says when there are no rows. Left out, it says Nothing here.")
 
 
 class PosterItem(Part):
@@ -346,6 +359,7 @@ class PostersCard(CardBase):
     form: Literal["posters"]
     rows: Rows
     item: PosterItem
+    empty: Label | None = Field(default=None, description="What the card says when there are no rows. Left out, it says Nothing here.")
 
 
 CardDefinition = Annotated[ValueCard | StatsCard | ListCard | PostersCard, Field(discriminator="form")]

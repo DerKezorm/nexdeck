@@ -41,6 +41,7 @@ FLAGS = {
 
 class PeanutAdapter(Adapter):
     kind = "peanut"
+    raw_access = True
     label = "UPS (PeaNUT)"
     category = "monitoring"
     description = "Charge, load and the runtime left, from a NUT server through PeaNUT."

@@ -11,6 +11,7 @@ STATUS_LABELS = {1: "pending", 2: "approved", 3: "declined"}
 
 class SeerrAdapter(Adapter):
     kind = "seerr"
+    raw_access = True
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
     label = "Seerr"

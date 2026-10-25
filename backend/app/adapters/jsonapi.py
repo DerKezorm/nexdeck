@@ -115,12 +115,19 @@ class JsonApiAdapter(Adapter):
         kind = "list" if isinstance(payload, list) else "object"
         return f"Reachable, the base URL answers with a JSON {kind}."
 
-    async def _get(self, config: dict[str, Any], path: str, ctx: Context) -> Any:
-        url = join_path(base_url(config), path)
+    #: A custom card reads through a JSON API connection with its token and its extra headers (KARTEN-2 AC-3).
+    raw_access = True
+
+    @staticmethod
+    def _headers(config: dict[str, Any]) -> dict[str, str]:
         headers = parse_headers(config.get("headers") or "")
         if config.get("token"):
             headers["Authorization"] = f"Bearer {config['token']}"
-        return await ctx.get_json(url, headers=headers, verify=not config.get("insecure"), cache_seconds=5)
+        return headers
+
+    async def _get(self, config: dict[str, Any], path: str, ctx: Context) -> Any:
+        url = join_path(base_url(config), path)
+        return await ctx.get_json(url, headers=self._headers(config), verify=not config.get("insecure"), cache_seconds=5)
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         payload = await self._get(config, str(options.get("path") or ""), ctx)

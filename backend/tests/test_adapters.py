@@ -42,6 +42,9 @@ def test_every_widget_has_demo_data() -> None:
             full = f"{adapter.kind}.{widget.kind}"
             assert full not in seen, f"duplicate widget kind {full}"
             seen.add(full)
+            # A custom card shows the example answers of the definition it points at (tests/test_cards_forms.py).
+            if adapter.kind == "custom":
+                continue
             options = {f.name: f.default for f in widget.options}
             for tick in (0, 42, 900):
                 data = adapter.demo(widget.kind, options, tick)

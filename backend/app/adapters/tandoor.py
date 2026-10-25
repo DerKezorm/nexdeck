@@ -52,6 +52,7 @@ def _clock(value: Any) -> str:
 
 class TandoorAdapter(Adapter):
     kind = "tandoor"
+    raw_access = True
     label = "Tandoor Recipes"
     category = "other"
     description = "What is planned to eat, and what is still on the shopping list."

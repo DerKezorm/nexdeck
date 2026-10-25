@@ -789,7 +789,7 @@ def test_every_document_is_reachable_from_the_readme() -> None:
 
 #: Adapters that hang on no service. They are building blocks, and neither the
 #: README nor the project page counts them.
-NO_SERVICE = ("core", "jsonapi", "calendar")
+NO_SERVICE = ("core", "jsonapi", "calendar", "custom")
 
 #: Where the README names a service in other words than its label.
 README_NAMES = {"rss": "RSS", "ical": "iCal", "peanut": "UPS through PeaNUT", "technitium": "Technitium", "unifi": "UniFi"}
@@ -854,7 +854,7 @@ def test_the_version_is_the_same_in_every_place_it_is_written() -> None:
 
 #: Adapters that are not a service anybody connects to: the built-in cards,
 #: the generic JSON reader and the calendar that merges other people's.
-NOT_A_SERVICE = {"core", "jsonapi", "calendar"}
+NOT_A_SERVICE = {"core", "jsonapi", "calendar", "custom"}
 
 
 def test_the_readme_counts_the_services_it_has() -> None:
@@ -913,6 +913,9 @@ def test_bars_are_offered_where_they_can_be_drawn() -> None:
     offered_in_vain, could_but_does_not = [], []
     lists = 0
     for adapter in all_adapters():
+        # A custom list has no demo of its own: it is the demo answers of whichever definition it is pointed at.
+        if adapter.kind == "custom":
+            continue
         for widget in adapter.widgets:
             if widget.renderer != "list":
                 continue

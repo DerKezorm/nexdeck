@@ -57,6 +57,7 @@ def week_start(today: date, first_weekday: str) -> date:
 
 class KimaiAdapter(Adapter):
     kind = "kimai"
+    raw_access = True
     label = "Kimai"
     category = "other"
     description = "How much time was booked this week and today, and which timer is running."

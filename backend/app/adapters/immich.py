@@ -27,6 +27,7 @@ from .base import (
 
 class ImmichAdapter(Adapter):
     kind = "immich"
+    raw_access = True
     #: Confirmed against a live instance on 2026-09-08.
     beta = False
     label = "Immich"

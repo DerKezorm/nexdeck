@@ -26,6 +26,7 @@ WATCHED_TYPES = (("Movie", "Movies"), ("Series", "Shows"), ("Audio", "Music"))
 
 class JellystatAdapter(Adapter):
     kind = "jellystat"
+    raw_access = True
     label = "Jellystat"
     category = "media"
     description = "Libraries, playbacks and the most watched titles beside Jellyfin."

@@ -28,6 +28,7 @@ from .base import (
 
 class ArrAdapter(Adapter):
     api_version = "v3"
+    raw_access = True
     #: The noun the service manages, e.g. "movie", and its list endpoint.
     noun = "item"
     list_path = "item"

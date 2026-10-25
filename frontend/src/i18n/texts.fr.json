@@ -2036,7 +2036,19 @@
     "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Les dernières lignes de la chronique de tous les tableaux du propriétaire de ce tableau : cartes passées au jaune, au rouge ou de nouveau au vert, pannes, maintenance, nouvelles versions et conteneurs redémarrés.",
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge, sur tous les tableaux du propriétaire de ce tableau.",
     "A backup is too old": "Une sauvegarde est trop ancienne",
-    "The daily report": "Le rapport quotidien"
+    "The daily report": "Le rapport quotidien",
+    "A card described as data: which requests to ask a connection, which values to show, and when to turn yellow or red.": "Une carte décrite comme des données : quelles requêtes envoyer à une connexion, quelles valeurs afficher et quand passer au jaune ou au rouge.",
+    "A wall of pictures with titles from a list in the answers of a connection.": "Un mur d'images avec des titres tirés d'une liste dans les réponses d'une connexion.",
+    "Card": "Carte",
+    "Custom card": "Carte personnalisée",
+    "Custom list": "Liste personnalisée",
+    "Custom number": "Nombre personnalisé",
+    "Custom numbers": "Nombres personnalisés",
+    "Custom pictures": "Images personnalisées",
+    "One value from the answers of a connection, with unit, history and colour.": "Une valeur tirée des réponses d'une connexion, avec unité, historique et couleur.",
+    "Rows from a list in the answers of a connection, with title, value, status and link.": "Des lignes d'une liste dans les réponses d'une connexion, avec titre, valeur, état et lien.",
+    "The short name of the card, as saved under System > Cards.": "Le nom court de la carte, tel qu'il est enregistré sous Système > Cartes.",
+    "Two to six values from the answers of a connection, side by side.": "De deux à six valeurs tirées des réponses d'une connexion, côte à côte."
   },
   "labels": {
     "Private resources": "Ressources privées",

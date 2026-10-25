@@ -59,7 +59,15 @@
       "nginxignition_stats_disabled": "Las estadísticas de tráfico están desactivadas en los ajustes.",
       "nginxignition_stats_stopped": "Las estadísticas de tráfico necesitan que nginx esté en marcha.",
       "nginxignition_stats_unavailable": "nginx ignition no pudo leer las estadísticas de tráfico de nginx.",
-      "too_slow": "El cálculo tardó demasiado."
+      "too_slow": "El cálculo tardó demasiado.",
+      "definition_missing": "Falta la definición. La tarjeta ya no está guardada.",
+      "form_changed": "La tarjeta cambió de forma desde que se colocó.",
+      "kind_mismatch": "Esta tarjeta no lee a través de este tipo de conexión.",
+      "no_raw_access": "Una tarjeta propia aún no puede leer a través de este tipo de conexión.",
+      "no_demo_data": "Sin datos de demostración. La tarjeta no tiene respuestas de ejemplo.",
+      "redirected": "Redirigido, no seguido. El servicio respondió con una redirección, que una tarjeta propia no sigue.",
+      "answer_too_large": "Respuesta demasiado grande. El servicio respondió con más de lo que lee una tarjeta propia.",
+      "bad_param": "Un valor de la respuesta no es un nombre simple; no se hizo la consulta."
     },
     "card": {
       "card_invalid": "No se puede guardar esta tarjeta.",

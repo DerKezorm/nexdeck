@@ -138,6 +138,7 @@ def _message_row(message: dict[str, Any], base: str, several: bool) -> dict[str,
 
 class NexmailAdapter(Adapter):
     kind = "nexmail"
+    raw_access = True
     label = "nexmail"
     category = "other"
     description = "Unread mail and the latest senders and subjects from nexmail, through a read-only API key."

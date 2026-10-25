@@ -59,7 +59,15 @@
       "nginxignition_stats_disabled": "Traffic statistics are disabled in settings.",
       "nginxignition_stats_stopped": "Traffic statistics require nginx to be running.",
       "nginxignition_stats_unavailable": "nginx ignition could not read the traffic statistics of nginx.",
-      "too_slow": "The calculation took too long."
+      "too_slow": "The calculation took too long.",
+      "definition_missing": "Definition missing. The card is no longer saved.",
+      "form_changed": "The card was changed to another form since it was placed.",
+      "kind_mismatch": "This card does not read through this kind of connection.",
+      "no_raw_access": "A custom card cannot read through this kind of connection yet.",
+      "no_demo_data": "No demo data. The card has no example answers.",
+      "redirected": "Redirected, not followed. The service answered with a redirect, which a custom card does not follow.",
+      "answer_too_large": "Answer too large. The service answered with more than a custom card reads.",
+      "bad_param": "A value of the answer is not a plain name; the request was not made."
     },
     "card": {
       "card_invalid": "This card cannot be saved.",

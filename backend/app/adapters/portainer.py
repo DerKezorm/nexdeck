@@ -29,6 +29,7 @@ from .docker import (
 
 class PortainerAdapter(Adapter):
     kind = "portainer"
+    raw_access = True
     label = "Portainer"
     category = "hosts"
     description = "Containers of a Portainer environment with start, stop and restart."

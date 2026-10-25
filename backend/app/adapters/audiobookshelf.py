@@ -23,6 +23,7 @@ from .base import (
 
 class AudiobookshelfAdapter(Adapter):
     kind = "audiobookshelf"
+    raw_access = True
     label = "Audiobookshelf"
     category = "media"
     description = "Libraries, listeners and what is playing right now."

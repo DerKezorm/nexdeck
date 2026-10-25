@@ -59,7 +59,15 @@
       "nginxignition_stats_disabled": "Les statistiques de trafic sont désactivées dans les réglages.",
       "nginxignition_stats_stopped": "Les statistiques de trafic demandent que nginx tourne.",
       "nginxignition_stats_unavailable": "nginx ignition n'a pas pu lire les statistiques de trafic de nginx.",
-      "too_slow": "Le calcul a pris trop de temps."
+      "too_slow": "Le calcul a pris trop de temps.",
+      "definition_missing": "Définition manquante. La carte n'est plus enregistrée.",
+      "form_changed": "La carte a changé de forme depuis qu'elle a été placée.",
+      "kind_mismatch": "Cette carte ne lit pas à travers ce type de connexion.",
+      "no_raw_access": "Une carte personnalisée ne peut pas encore lire à travers ce type de connexion.",
+      "no_demo_data": "Pas de données de démonstration. La carte n'a pas de réponses d'exemple.",
+      "redirected": "Redirigé, non suivi. Le service a répondu par une redirection, qu'une carte personnalisée ne suit pas.",
+      "answer_too_large": "Réponse trop volumineuse. Le service a répondu avec plus qu'une carte personnalisée ne lit.",
+      "bad_param": "Une valeur de la réponse n'est pas un nom simple ; la requête n'a pas été faite."
     },
     "card": {
       "card_invalid": "Cette carte ne peut pas être enregistrée.",

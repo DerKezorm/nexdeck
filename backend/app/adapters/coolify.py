@@ -32,6 +32,7 @@ DEPLOYMENTS = {"finished": "ok", "in_progress": "warn", "queued": "unknown", "fa
 
 class CoolifyAdapter(Adapter):
     kind = "coolify"
+    raw_access = True
     label = "Coolify"
     category = "hosts"
     description = "Applications with their state, the servers behind them, and what is deploying."

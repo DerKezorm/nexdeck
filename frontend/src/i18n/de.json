@@ -59,7 +59,15 @@
       "nginxignition_stats_disabled": "Die Verkehrsstatistiken sind in den Einstellungen abgeschaltet.",
       "nginxignition_stats_stopped": "Verkehrsstatistiken brauchen ein laufendes nginx.",
       "nginxignition_stats_unavailable": "nginx ignition konnte die Verkehrsstatistiken von nginx nicht lesen.",
-      "too_slow": "Das Berechnen hat zu lange gedauert."
+      "too_slow": "Das Berechnen hat zu lange gedauert.",
+      "definition_missing": "Definition fehlt. Die Karte ist nicht mehr gespeichert.",
+      "form_changed": "Die Karte hat seit dem Platzieren eine andere Form bekommen.",
+      "kind_mismatch": "Diese Karte liest nicht über diese Art von Verbindung.",
+      "no_raw_access": "Eine eigene Karte kann über diese Art von Verbindung noch nicht lesen.",
+      "no_demo_data": "Keine Demo-Daten. Die Karte hat keine Beispielantworten.",
+      "redirected": "Weitergeleitet, nicht gefolgt. Der Dienst hat mit einer Weiterleitung geantwortet, der eine eigene Karte nicht folgt.",
+      "answer_too_large": "Antwort zu groß. Der Dienst hat mehr geliefert, als eine eigene Karte liest.",
+      "bad_param": "Ein Wert der Antwort ist kein einfacher Name; die Abfrage wurde nicht gestellt."
     },
     "card": {
       "card_invalid": "Diese Karte kann nicht gespeichert werden.",

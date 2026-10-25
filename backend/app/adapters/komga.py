@@ -14,6 +14,7 @@ from .base import Adapter, Context, Field, WidgetData, WidgetType, base_url
 
 class KomgaAdapter(Adapter):
     kind = "komga"
+    raw_access = True
     label = "Komga"
     category = "media"
     description = "Libraries, series and books, and what was added last."

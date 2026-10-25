@@ -23,6 +23,7 @@ from .base import (
 
 class AdguardAdapter(Adapter):
     kind = "adguard"
+    raw_access = True
     label = "AdGuard Home"
     category = "network"
     description = "Queries, blocked share, top blocked domains, protection on or off."

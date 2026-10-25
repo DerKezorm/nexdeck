@@ -161,6 +161,7 @@ def _limit(options: dict[str, Any], default: int = 8) -> int:
 
 class M3uEditorAdapter(Adapter):
     kind = "m3ueditor"
+    raw_access = True
     label = "M3U Editor"
     category = "media"
     description = "M3U Editor's playlists and guides with their last sync, what its stream proxy carries right now, and its recordings."

@@ -44,6 +44,7 @@ def actions_for(entity_id: str, state: str) -> list[Action]:
 
 class HomeAssistantAdapter(Adapter):
     kind = "homeassistant"
+    raw_access = True
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
     label = "Home Assistant"

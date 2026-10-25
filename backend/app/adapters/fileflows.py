@@ -10,6 +10,7 @@ from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType,
 
 class FileFlowsAdapter(Adapter):
     kind = "fileflows"
+    raw_access = True
     label = "FileFlows"
     category = "media"
     description = "What is queued, what is running and what came out of it."

@@ -97,6 +97,8 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
         get_adapter(body.kind)
     except KeyError as failure:
         raise error("unknown_kind", f"There is no adapter {body.kind!r}.") from failure
+    if body.kind == "custom":
+        raise error("not_a_connection", "A custom card sits on a connection of another kind; it is not a connection itself.")
     config = store_config(body.kind, body.config)
     if not body.demo:
         missing = validate_required(body.kind, config)
