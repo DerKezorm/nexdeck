@@ -15,6 +15,7 @@ A value that is not there, or is not a number, makes the whole result
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from collections.abc import Callable
@@ -100,15 +101,40 @@ def compile_path(expression: str) -> Ref:
     return compile_ref(expression, 0)
 
 
+PLAIN_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def path_of(*parts: str | int) -> str:
+    """The path to a place in an answer, from the names and positions on the way (what the editor writes when a field is picked).
+
+    A name that is not a plain identifier (spaces, umlauts, hyphens, dots) goes in double quotes, which is how JMESPath
+    reaches it (KARTEN-5 EC-7).
+    """
+    out = ""
+    for part in parts:
+        if isinstance(part, int):
+            out += f"[{part}]"
+        else:
+            name = part if PLAIN_NAME.match(part) else json.dumps(part, ensure_ascii=False)
+            out += f".{name}" if out else name
+    return out
+
+
 def as_number(value: Any) -> float | None:
     """A number, or ``None``. A text counts when all of it is one, with a point (KARTEN-5 EC-3)."""
-    if isinstance(value, bool):
+    kind = type(value)
+    if kind is float:
+        return value if math.isfinite(value) else None
+    if kind is int:
+        return float(value)
+    if kind is str:
+        text = value.strip()
+        if _NUMBER_TEXT.match(text):
+            number = float(text)
+            return number if math.isfinite(number) else None
         return None
-    if isinstance(value, int | float):
+    if kind is not bool and isinstance(value, int | float):
         return float(value) if math.isfinite(value) else None
-    if isinstance(value, str) and _NUMBER_TEXT.match(value.strip()):
-        number = float(value.strip())
-        return number if math.isfinite(number) else None
     return None
 
 

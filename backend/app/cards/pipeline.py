@@ -12,6 +12,7 @@ mapping a ``Result`` onto what a card draws belongs to whoever draws the form.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, tzinfo
 from functools import lru_cache
@@ -70,8 +71,12 @@ class Result:
     missing: list[str] = field(default_factory=list)
     millis: float = 0.0
 
-    def as_dict(self) -> dict[str, Any]:
-        return asdict(self)
+    def as_dict(self, *, for_the_editor: bool = False) -> dict[str, Any]:
+        """The result as plain data. ``missing`` quotes expressions of the card, so only the editor's preview gets it."""
+        data = asdict(self)
+        if not for_the_editor:
+            del data["missing"]
+        return data
 
 
 # -- compiling, once ------------------------------------------------------------------
@@ -90,6 +95,18 @@ def _formula(text: str) -> calc.Formula:
 @lru_cache(maxsize=1024)
 def _template(text: str) -> calc.Template:
     return calc.compile_template(text)
+
+
+@lru_cache(maxsize=1024)
+def _getter(field: str) -> Callable[[Any], Any]:
+    """How to read one field out of a row.
+
+    A plain name is a dictionary lookup, which is what almost every field is and what keeps ten thousand rows inside
+    the time a card has. Anything else (a path, a quoted name, a function) goes through JMESPath.
+    """
+    if calc.PLAIN_NAME.match(field):
+        return lambda row: row.get(field) if isinstance(row, dict) else None
+    return _ref(field).search
 
 
 def _models(node: Any, path: tuple[str | int, ...] = ()) -> list[tuple[tuple[str | int, ...], BaseModel]]:
@@ -245,8 +262,12 @@ def _format(run: _Run, raw: Any, shape: str | None, digits: int | None) -> tuple
     return number, f"{text}%" if shape == "percent" else text, shape
 
 
-def _compare(op: str, left: Any, right: Any) -> bool:
-    """The relation of two values. Numbers compare as numbers, also from text; everything else as text."""
+def _compare(op: str, left: Any, right: Any, right_number: float | None = None) -> bool:
+    """The relation of two values. Numbers compare as numbers, also from text; everything else as text.
+
+    ``right_number`` is the right side read as a number, for a caller that compares many rows with one value and
+    would otherwise read it again every time.
+    """
     if isinstance(left, bool) or isinstance(right, bool):
         one = str(left).lower() if isinstance(left, bool) else str(left)
         two = str(right).lower() if isinstance(right, bool) else str(right)
@@ -255,9 +276,12 @@ def _compare(op: str, left: Any, right: Any) -> bool:
         if isinstance(left, list):
             return any(str(item) == str(right) for item in left)
         return left is not None and str(right) in str(left)
-    one, two = calc.as_number(left), calc.as_number(right)
-    if one is not None and two is not None:
-        pair: tuple[Any, Any] = (one, two)
+    if right_number is None:
+        right_number = calc.as_number(right)
+    # Only a right side that is a number can make the left one count as a number; a word is compared as a word.
+    left_number = calc.as_number(left) if right_number is not None else None
+    if left_number is not None and right_number is not None:
+        pair: tuple[Any, Any] = (left_number, right_number)
     elif op in ("==", "!="):
         pair = (left, right) if left is None or right is None else (str(left), str(right))
     else:
@@ -290,16 +314,20 @@ def _status(run: _Run, rules: list[Rule], own: Any, row: Any = None, inside_row:
     return _worst(hits)
 
 
-def _row_matches(row: Any, filters: list[Filter]) -> bool:
-    for one in filters:
-        left = _ref(one.field).search(row)
+def _row_matches(row: Any, filters: list[Filter], numbers: list[float | None]) -> bool:
+    for one, number in zip(filters, numbers, strict=True):
+        left = _getter(one.field)(row)
         if isinstance(left, list | dict):
             return False
         if left is None:
             # A row without the field is "not equal" to anything and fails every other test.
             if one.op != "!=" or one.value is None:
                 return False
-        elif not _compare(one.op, left, one.value):
+        elif number is None and type(left) is str and type(one.value) is str and one.op in ("==", "!="):
+            # The common case, a word against a word, without the detour through numbers.
+            if (left == one.value) != (one.op == "=="):
+                return False
+        elif not _compare(one.op, left, one.value, number):
             return False
     return True
 
@@ -311,21 +339,22 @@ def _rows_of(run: _Run, rows: Rows) -> list[Any]:
         run.note_missing(rows.select)
         return []
     kept: list[Any] = []
+    numbers = [calc.as_number(one.value) for one in rows.filter]
     for index, row in enumerate(raw):
         if index % CHECK_EVERY == 0:
             run.budget.check()
-        if _row_matches(row, rows.filter):
+        if _row_matches(row, rows.filter, numbers):
             kept.append(row)
     if rows.sort is None:
         return kept
-    field = _ref(rows.sort.field)
+    field = _getter(rows.sort.field)
     keyed: dict[int, tuple[int, Any]] = {}
     present: list[Any] = []
     absent: list[Any] = []
     for index, row in enumerate(kept):
         if index % CHECK_EVERY == 0:
             run.budget.check()
-        value = field.search(row)
+        value = field(row)
         number = calc.as_number(value)
         if number is not None:
             keyed[id(row)] = (0, number)
@@ -341,16 +370,16 @@ def _rows_of(run: _Run, rows: Rows) -> list[Any]:
 
 def _total(run: _Run, total: Total) -> Any:
     rows = _rows_of(run, total.rows)
-    column = _ref(total.field) if total.field else None
+    column = _getter(total.field) if total.field else None
     if total.fn == "count":
         if column is None:
             return len(rows)
-        return sum(1 for row in rows if column.search(row) is not None)
+        return sum(1 for row in rows if column(row) is not None)
     numbers: list[float] = []
     for index, row in enumerate(rows):
         if index % CHECK_EVERY == 0:
             run.budget.check()
-        number = calc.as_number(column.search(row)) if column else None
+        number = calc.as_number(column(row)) if column else None
         if number is not None:
             numbers.append(number)
     if total.fn == "sum":
