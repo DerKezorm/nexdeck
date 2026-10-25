@@ -385,3 +385,10 @@ def test_karten6_the_text_of_the_author_is_never_looked_up_in_the_table_of_trans
     """The label travels as the author wrote it, language by language, for the browser to pick; nothing here translates it."""
     data = made(VALUE_CARD, {"totalRecords": 1})
     assert data.primary["label"] == {"en": "Waiting", "de": "Wartend"} and data.meta["custom"] is True
+
+
+def test_karten6_the_assistant_reads_a_custom_card_as_text_not_as_a_dictionary() -> None:
+    from app.services.assistant.tools import _headline
+
+    assert _headline(made(VALUE_CARD, {"totalRecords": 12})) == "Waiting: 12 items"
+    assert _headline(made(STATS, {"used": 71, "free": 1, "name": "nas"})) == "Used: 71%"

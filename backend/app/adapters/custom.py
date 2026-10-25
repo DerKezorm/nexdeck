@@ -48,13 +48,20 @@ def definition_of(options: dict[str, Any]) -> Any:
     return entry.definition
 
 
+def plain(text: Any) -> str:
+    """A text of the author as one string, English first, for a place that has no language of its own to pick."""
+    if isinstance(text, dict):
+        return str(text.get("en") or next(iter(text.values()), ""))
+    return "" if text is None else str(text)
+
+
 def name_of(options: dict[str, Any]) -> str:
     """The name the author gave the card, English first: what a card is called until somebody renames it."""
     try:
         name = definition_of(options).name
     except AdapterError:
         return ""
-    return name if isinstance(name, str) else (name.get("en") or next(iter(name.values()), ""))
+    return plain(name)
 
 
 def sizes_of(options: dict[str, Any], default: tuple[int, int], smallest: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:

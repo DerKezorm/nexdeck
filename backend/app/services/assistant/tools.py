@@ -144,6 +144,12 @@ def _headline(data: Any) -> str:
     if data is None or not data.primary:
         return ""
     primary = data.primary
+    if (data.meta or {}).get("custom"):
+        # A custom card keeps its texts language by language, and says its value as the server worked it out.
+        from ...adapters.custom import plain
+
+        unit = "" if primary.get("format") == "percent" else plain(primary.get("unit"))  # the text of a percentage has its % already
+        return f"{plain(primary.get('label'))}: {primary.get('text', '')} {unit}".strip(": ").strip()
     return f"{primary.get('label', '')}: {primary.get('value', '')} {primary.get('unit', '')}".strip(": ").strip()
 
 
