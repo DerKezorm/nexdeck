@@ -109,6 +109,7 @@
       "card_secret_value": "Esto parece {{what}}. Una tarjeta no guarda secretos: la conexión los conserva y los añade a la consulta.",
       "card_secret_field": "Una tarjeta no puede tener {{what}}. La conexión envía sus propias credenciales y cabeceras.",
       "card_slug_taken": "Ya existe una tarjeta con el nombre corto {{slug}}.",
+      "card_slug_reserved": "El nombre corto {{slug}} está reservado para nexdeck.",
       "card_slug_changed": "El nombre corto de una tarjeta guardada no puede cambiar (es {{slug}}).",
       "card_needs_demo": "Una tarjeta para la tienda necesita datos de demostración.",
       "card_needs_english": "Un texto en varios idiomas necesita la versión en inglés."
@@ -2394,20 +2395,6 @@
     "problems": "Todavía no se puede guardar",
     "line": "Línea {{line}}",
     "failed": "No se pudo guardar la tarjeta.",
-    "problem": {
-      "card_yaml": "El texto no se puede leer como YAML: {{reason}}.",
-      "card_empty": "El texto está vacío.",
-      "card_missing_field": "El campo {{field}} es obligatorio.",
-      "card_unknown_field": "{{field}} no es un campo de una tarjeta.",
-      "card_slug_taken": "Ya existe una tarjeta con el nombre corto {{slug}}.",
-      "card_slug_reserved": "El nombre corto {{slug}} está reservado para nexdeck.",
-      "card_slug_changed": "El nombre corto de una tarjeta guardada no puede cambiar. Es {{slug}}.",
-      "card_bad_slug": "El nombre corto solo puede tener letras minúsculas, cifras y guiones.",
-      "card_unknown_kind": "nexdeck no tiene ninguna conexión del tipo {{kind}}.",
-      "card_not_allowed": "Aquí solo se permite uno de {{expected}}.",
-      "card_needs_newer": "Esta tarjeta necesita nexdeck {{need}} o posterior. Esta es la {{have}}.",
-      "card_wrong_type": "Este es un tipo de valor equivocado."
-    },
     "tooMany": "Ya hay 200 tarjetas propias, el máximo que guarda nexdeck. Elimina una primero."
   }
 }

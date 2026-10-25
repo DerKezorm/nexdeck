@@ -109,6 +109,7 @@
       "card_secret_value": "Das sieht aus wie {{what}}. Eine Karte enthält keine Geheimnisse: Die Verbindung bewahrt sie auf und fügt sie der Abfrage hinzu.",
       "card_secret_field": "Eine Karte darf {{what}} nicht haben. Die Verbindung sendet ihre eigenen Zugangsdaten und Kopfzeilen.",
       "card_slug_taken": "Eine Karte mit dem Kurznamen {{slug}} gibt es schon.",
+      "card_slug_reserved": "Der Kurzname {{slug}} ist für nexdeck selbst reserviert.",
       "card_slug_changed": "Der Kurzname einer gespeicherten Karte lässt sich nicht ändern (er lautet {{slug}}).",
       "card_needs_demo": "Eine Karte für den Shop braucht Demo-Daten.",
       "card_needs_english": "Ein Text in mehreren Sprachen braucht die englische Fassung."
@@ -2394,20 +2395,6 @@
     "problems": "Das lässt sich noch nicht speichern",
     "line": "Zeile {{line}}",
     "failed": "Die Karte konnte nicht gespeichert werden.",
-    "problem": {
-      "card_yaml": "Der Text lässt sich nicht als YAML lesen: {{reason}}.",
-      "card_empty": "Der Text ist leer.",
-      "card_missing_field": "Das Feld {{field}} ist nötig.",
-      "card_unknown_field": "{{field}} ist kein Feld einer Karte.",
-      "card_slug_taken": "Eine Karte mit dem Kurznamen {{slug}} gibt es schon.",
-      "card_slug_reserved": "Der Kurzname {{slug}} ist für nexdeck selbst reserviert.",
-      "card_slug_changed": "Der Kurzname einer gespeicherten Karte lässt sich nicht ändern. Er lautet {{slug}}.",
-      "card_bad_slug": "Der Kurzname darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten.",
-      "card_unknown_kind": "nexdeck kennt keine Anbindung der Art {{kind}}.",
-      "card_not_allowed": "Hier ist nur eines von {{expected}} erlaubt.",
-      "card_needs_newer": "Diese Karte braucht nexdeck {{need}} oder neuer. Hier läuft {{have}}.",
-      "card_wrong_type": "Das ist die falsche Art von Wert."
-    },
     "tooMany": "Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine."
   }
 }

@@ -109,6 +109,7 @@
       "card_secret_value": "This looks like {{what}}. A card holds no secrets: the connection keeps them and adds them to the request.",
       "card_secret_field": "A card cannot have {{what}}. The connection sends its own credentials and headers.",
       "card_slug_taken": "A card with the short name {{slug}} exists already.",
+      "card_slug_reserved": "The short name {{slug}} is kept for nexdeck itself.",
       "card_slug_changed": "The short name of a saved card cannot change (it is {{slug}}).",
       "card_needs_demo": "A card for the shop needs demo data.",
       "card_needs_english": "A text in several languages needs the English one."
@@ -2394,20 +2395,6 @@
     "problems": "This cannot be saved yet",
     "line": "Line {{line}}",
     "failed": "The card could not be saved.",
-    "problem": {
-      "card_yaml": "The text cannot be read as YAML: {{reason}}.",
-      "card_empty": "The text is empty.",
-      "card_missing_field": "The field {{field}} is required.",
-      "card_unknown_field": "{{field}} is not a field of a card.",
-      "card_slug_taken": "A card with the short name {{slug}} exists already.",
-      "card_slug_reserved": "The short name {{slug}} is kept for nexdeck itself.",
-      "card_slug_changed": "The short name of a saved card cannot change. It is {{slug}}.",
-      "card_bad_slug": "The short name may only have lower case letters, digits and hyphens.",
-      "card_unknown_kind": "nexdeck has no connection of the kind {{kind}}.",
-      "card_not_allowed": "This must be one of {{expected}}.",
-      "card_needs_newer": "This card needs nexdeck {{need}} or newer. This is {{have}}.",
-      "card_wrong_type": "This is the wrong kind of value."
-    },
     "tooMany": "There are 200 custom cards already, which is the most nexdeck keeps. Delete one first."
   }
 }

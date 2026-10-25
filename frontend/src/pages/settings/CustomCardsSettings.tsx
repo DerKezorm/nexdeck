@@ -70,7 +70,10 @@ export function CustomCardsSettings() {
   const changed = async () => {
     await Promise.all([queryClient.invalidateQueries({ queryKey: ['custom-cards'] }), queryClient.invalidateQueries({ queryKey: ['cards-library'] })])
   }
-  const fail = (failure: unknown) => setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+  const fail = (failure: unknown) => {
+    if (failure instanceof ApiError && failure.code === 'too_many_cards') setError(t('cards.tooMany'))
+    else setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+  }
 
   const openNew = () => {
     setProblems([])

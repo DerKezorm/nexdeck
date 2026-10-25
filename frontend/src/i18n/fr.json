@@ -109,6 +109,7 @@
       "card_secret_value": "Cela ressemble à {{what}}. Une carte ne contient aucun secret : la connexion les garde et les ajoute à la requête.",
       "card_secret_field": "Une carte ne peut pas avoir {{what}}. La connexion envoie ses propres identifiants et en-têtes.",
       "card_slug_taken": "Une carte au nom court {{slug}} existe déjà.",
+      "card_slug_reserved": "Le nom court {{slug}} est réservé à nexdeck.",
       "card_slug_changed": "Le nom court d'une carte enregistrée ne peut pas changer (il est {{slug}}).",
       "card_needs_demo": "Une carte pour la boutique a besoin de données de démonstration.",
       "card_needs_english": "Un texte en plusieurs langues a besoin de la version anglaise."
@@ -2394,20 +2395,6 @@
     "problems": "Impossible d'enregistrer pour l'instant",
     "line": "Ligne {{line}}",
     "failed": "La carte n'a pas pu être enregistrée.",
-    "problem": {
-      "card_yaml": "Le texte ne se lit pas comme du YAML : {{reason}}.",
-      "card_empty": "Le texte est vide.",
-      "card_missing_field": "Le champ {{field}} est obligatoire.",
-      "card_unknown_field": "{{field}} n'est pas un champ d'une carte.",
-      "card_slug_taken": "Une carte au nom court {{slug}} existe déjà.",
-      "card_slug_reserved": "Le nom court {{slug}} est réservé à nexdeck.",
-      "card_slug_changed": "Le nom court d'une carte enregistrée ne peut pas changer. C'est {{slug}}.",
-      "card_bad_slug": "Le nom court ne peut contenir que des minuscules, des chiffres et des tirets.",
-      "card_unknown_kind": "nexdeck n'a pas de connexion de type {{kind}}.",
-      "card_not_allowed": "Seul l'un de {{expected}} est permis ici.",
-      "card_needs_newer": "Cette carte demande nexdeck {{need}} ou plus récent. Ici c'est la {{have}}.",
-      "card_wrong_type": "Ce n'est pas le bon type de valeur."
-    },
     "tooMany": "Il y a déjà 200 cartes personnalisées, le maximum que nexdeck garde. Supprimez-en une d'abord."
   }
 }

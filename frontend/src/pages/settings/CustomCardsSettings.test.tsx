@@ -9,6 +9,7 @@ import i18next from 'i18next'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import deScreen from '../../i18n/de.json'
 import { STARTER, type CustomCardRow } from '../../lib/customCards'
 import { CustomCardsSettings } from './CustomCardsSettings'
 
@@ -181,6 +182,15 @@ describe('changing a card', () => {
     await waitFor(() => expect(sent('POST', '/cards/queue-size/copy')).toHaveLength(1))
   })
 
+  it('karten11 ac8: a copy refused because there are 200 cards says so in the language of the viewer', async () => {
+    i18next.addResourceBundle('de', 'translation', deScreen, true, true)
+    await i18next.changeLanguage('de')
+    stub([card()], { 'POST /cards/queue-size/copy': { status: 409, body: { detail: { code: 'too_many_cards', message: 'There are 200 custom cards already.' } } } })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Warteschlange duplizieren' }))
+    expect(await screen.findByText('Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine.')).toBeInTheDocument()
+  })
+
   it('karten11 ac6: delete asks first, says on how many boards the card stands, and then deletes', async () => {
     stub([card({ boards: [{ id: 1, slug: 'home', name: 'Home' }] })])
     show()
@@ -245,6 +255,32 @@ describe('the sheet', () => {
     expect(screen.getByText('A sentence only the server knows.')).toBeInTheDocument()
     expect(screen.getByText('Line 9')).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: /Card text/ })).toBeInTheDocument()
+  })
+
+  it('karten11: the problems are worded by the table of nexdeck, in the language of the viewer, with the kinds of value written out', async () => {
+    i18next.addResourceBundle('de', 'translation', deScreen, true, true)
+    await i18next.changeLanguage('de')
+    stub([card()], {
+      'POST /cards': {
+        status: 400,
+        body: {
+          detail: {
+            code: 'card_invalid',
+            message: 'x',
+            problems: [
+              { code: 'card_wrong_type', message: 'Expected a whole number here.', path: 'size.w', line: 12, params: { expected: 'whole_number' } },
+              { code: 'card_slug_reserved', message: 'The short name library is kept for nexdeck itself.', path: 'slug', line: 2, params: { slug: 'library' } },
+            ],
+          },
+        },
+      },
+    })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: /karte bauen/i }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Speichern' }))
+    expect(await screen.findByText('Hier wird eine ganze Zahl erwartet.')).toBeInTheDocument()
+    expect(screen.getByText('Der Kurzname library ist für nexdeck selbst reserviert.')).toBeInTheDocument()
+    expect(screen.getByText('Zeile 12')).toBeInTheDocument()
   })
 
   it('karten11 ec6: saving a card deleted meanwhile says so and offers "Save as new"', async () => {

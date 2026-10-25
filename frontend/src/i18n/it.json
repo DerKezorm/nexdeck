@@ -109,6 +109,7 @@
       "card_secret_value": "Sembra {{what}}. Una scheda non contiene segreti: li conserva la connessione e li aggiunge alla richiesta.",
       "card_secret_field": "Una scheda non può avere {{what}}. La connessione invia le proprie credenziali e intestazioni.",
       "card_slug_taken": "Esiste già una scheda con il nome breve {{slug}}.",
+      "card_slug_reserved": "Il nome breve {{slug}} è riservato a nexdeck.",
       "card_slug_changed": "Il nome breve di una scheda salvata non può cambiare (è {{slug}}).",
       "card_needs_demo": "Una scheda per lo store richiede dati dimostrativi.",
       "card_needs_english": "Un testo in più lingue richiede la versione inglese."
@@ -2394,20 +2395,6 @@
     "problems": "Per ora non si può salvare",
     "line": "Riga {{line}}",
     "failed": "Non è stato possibile salvare la scheda.",
-    "problem": {
-      "card_yaml": "Il testo non si legge come YAML: {{reason}}.",
-      "card_empty": "Il testo è vuoto.",
-      "card_missing_field": "Il campo {{field}} è obbligatorio.",
-      "card_unknown_field": "{{field}} non è un campo di una scheda.",
-      "card_slug_taken": "Esiste già una scheda con il nome breve {{slug}}.",
-      "card_slug_reserved": "Il nome breve {{slug}} è riservato a nexdeck.",
-      "card_slug_changed": "Il nome breve di una scheda salvata non può cambiare. È {{slug}}.",
-      "card_bad_slug": "Il nome breve può avere solo lettere minuscole, cifre e trattini.",
-      "card_unknown_kind": "nexdeck non ha connessioni del tipo {{kind}}.",
-      "card_not_allowed": "Qui è permesso solo uno tra {{expected}}.",
-      "card_needs_newer": "Questa scheda richiede nexdeck {{need}} o più recente. Questa è la {{have}}.",
-      "card_wrong_type": "Questo è il tipo di valore sbagliato."
-    },
     "tooMany": "Ci sono già 200 schede personali, il massimo che nexdeck conserva. Eliminane prima una."
   }
 }

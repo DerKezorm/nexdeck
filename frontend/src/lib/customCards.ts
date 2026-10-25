@@ -72,9 +72,20 @@ export function problemsOf(failure: unknown): CardProblem[] {
   return Array.isArray(list) ? (list as CardProblem[]) : []
 }
 
-/** A problem in words: translated when nexdeck knows its code, else the server's English sentence. */
+/**
+ * A problem in words: the sentence nexdeck has for its code (`errors.card`), with the blanks filled in, else the
+ * server's English sentence.
+ *
+ * ⚠️ A blank that names a kind of value (`expected`, `what`) is a code too, and is worded through `errors.cardTerms`.
+ * Where it is a list of choices (`must be one of …`), it stays as it came.
+ */
 export function problemText(t: TFunction, problem: CardProblem): string {
-  return t(`cards.problem.${problem.code}`, { ...problem.params, defaultValue: problem.message })
+  const params: Record<string, unknown> = { ...problem.params }
+  for (const name of ['expected', 'what']) {
+    const value = params[name]
+    if (typeof value === 'string') params[name] = t(`errors.cardTerms.${value}`, { defaultValue: value })
+  }
+  return t(`errors.card.${problem.code}`, { ...params, defaultValue: problem.message })
 }
 
 /** The source of a card as one line: the kinds it can read through. */
