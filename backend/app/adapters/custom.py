@@ -9,6 +9,7 @@ uses. The texts stay the author's own (``meta.custom``): nexdeck's table of tran
 
 from __future__ import annotations
 
+import asyncio
 import math
 from typing import Any
 
@@ -203,7 +204,10 @@ class CustomAdapter(Adapter):
                 hint="Pick a connection of a kind the card names.",
             )
         answers = {request.id: await source.fetch_source(real, real_config, real_ctx, request) for request in definition.requests}
-        return present(definition, pipeline.run(definition, answers), base=real.raw_base(real_config))
+        # ⚠️ In a thread of its own: a path or a filter over a large answer cannot be interrupted, and on the event loop it
+        # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
+        result = await asyncio.to_thread(pipeline.run, definition, answers)
+        return present(definition, result, base=real.raw_base(real_config))
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         """The author's own example answers, asking no service (KARTEN-2 AC-13); none, and the card says so (KARTEN-1 AC-11)."""

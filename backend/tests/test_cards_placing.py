@@ -222,6 +222,21 @@ async def test_karten2_ac11_a_card_keeps_its_last_numbers_when_the_service_stops
 
 
 @respx.mock
+async def test_karten5_ac11_the_calculation_runs_in_a_thread_and_not_on_the_event_loop(stand: tuple[TestClient, int], monkeypatch: pytest.MonkeyPatch) -> None:
+    import threading
+
+    from app.cards import pipeline
+
+    client, page = stand
+    widget = place(client, page, connection(client, "sonarr")).json()["widget"]["id"]
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(200, json={"totalRecords": 4}))
+    seen: list[int] = []
+    original = pipeline.run
+    monkeypatch.setattr(pipeline, "run", lambda *a, **k: seen.append(threading.get_ident()) or original(*a, **k))
+    assert (await refreshed(client, widget)).primary["value"] == 4
+    assert seen and seen[0] != threading.get_ident(), "it ran on the thread of the event loop"
+
+@respx.mock
 async def test_karten2_ac13_in_demo_mode_the_card_shows_its_example_answers_and_asks_nothing(stand: tuple[TestClient, int]) -> None:
     client, page = stand
     sonarr = connection(client, "sonarr")

@@ -232,20 +232,32 @@ class _Run:
         self.now = now if now is not None else time.time()
         self.budget = budget
         self.missing: dict[str, None] = {}
+        #: What a path found in the answers (not inside a row), and which rows a list came to: asked once per fetch.
+        self.found: dict[str, Any] = {}
+        self.listed: dict[str, list[Any]] = {}
 
     def note_missing(self, what: str) -> None:
         if len(self.missing) < 20:
             self.missing.setdefault(what, None)
 
     def search(self, ref: calc.Ref, row: Any = None, inside_row: bool = False) -> Any:
-        """Look a path up in the answers, or inside the row when there is one."""
+        """Look a path up in the answers, or inside the row when there is one.
+
+        The clock is looked at before every look-up (KARTEN-5 AC-11), and a path asked for twice is looked up once.
+        """
+        self.budget.check()
         if inside_row:
             return ref.search(row)
+        if ref.expression in self.found:
+            return self.found[ref.expression]
         if self.single is not None:
             answer = self.answers[self.single]
             found = ref.search(answer)
-            return found if found is not None else ref.search({self.single: answer})
-        return ref.search(self.answers)
+            found = found if found is not None else ref.search({self.single: answer})
+        else:
+            found = ref.search(self.answers)
+        self.found[ref.expression] = found
+        return found
 
 
 def _scalar(raw: Any) -> Any:
@@ -388,6 +400,13 @@ def _row_matches(row: Any, filters: list[Filter], numbers: list[float | None]) -
 
 def _rows_of(run: _Run, rows: Rows) -> list[Any]:
     """The rows of a list after filtering and sorting, all of them: showing the first few is up to the caller."""
+    key = rows.model_dump_json(exclude={"limit"})
+    if key not in run.listed:
+        run.listed[key] = _rows_worked_out(run, rows)
+    return run.listed[key]
+
+
+def _rows_worked_out(run: _Run, rows: Rows) -> list[Any]:
     raw = run.search(_ref(rows.select))
     if not isinstance(raw, list):
         run.note_missing(rows.select)

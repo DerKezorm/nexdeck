@@ -224,8 +224,36 @@ def test_karten5_ac11_a_calculation_that_takes_too_long_is_stopped(monkeypatch: 
     assert caught.value.code == "too_slow" and "took too long" in caught.value.message
     # the same card with less to do stays inside the time
     ticks = iter(range(1, 1000))
-    monkeypatch.setattr(pipeline, "clock", lambda: next(ticks) * 0.020)
+    monkeypatch.setattr(pipeline, "clock", lambda: next(ticks) * 0.010)
     assert show("form: value\nvalue: a", {"a": 1}).value is not None
+
+
+def test_karten5_ac11_the_clock_is_looked_at_before_every_lookup_and_not_only_between_values(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One value that looks up many paths used to be checked once, after all of them (found in the review, 25.10.2026)."""
+    ticks = iter(range(1, 1000))
+    monkeypatch.setattr(pipeline, "clock", lambda: next(ticks) * 0.010)  # every look at the clock is 10 ms later
+    with pytest.raises(AdapterError) as caught:
+        show("form: value\nvalue: {formula: '{a} + {b} + {c} + {d} + {e} + {f} + {g} + {h}'}", {key: 1 for key in "abcdefgh"})
+    assert caught.value.code == "too_slow"
+
+
+def test_karten5_a_path_and_a_list_that_a_card_asks_for_twice_are_worked_out_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    worked = []
+    original = pipeline._rows_worked_out
+    monkeypatch.setattr(pipeline, "_rows_worked_out", lambda run, rows: worked.append(rows.select) or original(run, rows))
+    searched: list[str] = []
+    original_search = calc.Ref.search
+    monkeypatch.setattr(calc.Ref, "search", lambda self, data: searched.append(self.expression) or original_search(self, data))
+    body = (
+        "form: stats\nstats:\n"
+        "  - {total: {fn: count, rows: {select: records, filter: [{field: status, op: '==', value: downloading}]}}}\n"
+        "  - {total: {fn: sum, field: size, rows: {select: records, filter: [{field: status, op: '==', value: downloading}]}}}\n"
+        "  - {path: totalRecords}\n  - {path: totalRecords}\n"
+    )
+    result = show(body)
+    assert [one.text for one in result.stats] == ["2", "500", "4", "4"]
+    assert worked == ["records"], "the same filtered list was worked out twice"
+    assert searched.count("totalRecords") == 1 and searched.count("records") == 1
 
 
 def test_karten5_ac11_the_limit_is_fifty_milliseconds(monkeypatch: pytest.MonkeyPatch) -> None:
