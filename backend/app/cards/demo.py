@@ -24,6 +24,7 @@ import re
 from typing import Any
 
 from ..adapters.base import AdapterError
+from .probe import clean
 
 #: What the examples of all requests of one card may weigh together, in characters of JSON. A definition holds 60,000
 #: with everything else in it.
@@ -196,10 +197,11 @@ def _cut(value: Any, entries: int, depth: int, cut: list[bool]) -> Any:
             cut[0] = True
         return [_cut(one, entries, depth + 1, cut) for one in value[:entries]]
     if isinstance(value, dict):
-        return {str(key): _cut(one, entries, depth + 1, cut) for key, one in value.items()}
-    if isinstance(value, str) and len(value) > TEXT_CHARS:
-        cut[0] = True
-        return value[:TEXT_CHARS]
+        return {clean(str(key)): _cut(one, entries, depth + 1, cut) for key, one in value.items()}
+    if isinstance(value, str):
+        if len(value) > TEXT_CHARS:
+            cut[0] = True
+        return clean(value[:TEXT_CHARS])
     return value
 
 

@@ -864,3 +864,50 @@ def test_karten9_ec4_a_member_who_sees_the_connection_on_a_board_of_hers_does_no
     kinds = [one["kind"] for one in admin.get("/api/v1/chronicle").json()["events"]]
     assert "version" in kinds, "she does see the lines about the connection"
     assert "card_probe" not in kinds
+
+
+def nested(depth: int, key: str = "k") -> Any:
+    value: Any = "end"
+    for _ in range(depth):
+        value = {key: value}
+    return value
+
+
+@respx.mock
+def test_karten9_ec1_an_answer_nested_far_deeper_than_anybody_reads_is_cut_not_a_failure(admin: TestClient) -> None:
+    sonarr = connection(admin)
+    sonarr_serves(nested(120))
+    answer = post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue"})
+    assert answer.status_code == 200, answer.text[:200]
+    body = answer.json()
+    assert body["cut"] is True and len(nodes_of(body["tree"])) == body["nodes"] <= probe.MAX_DEPTH + 2
+    deepest = nodes_of(body["tree"])[-1]
+    assert deepest["more"] == 1 and "children" not in deepest, "the cut says that something is below"
+
+
+def test_karten9_ec1_a_path_of_a_deep_node_still_finds_its_value() -> None:
+    body = probe.build(nested(probe.MAX_DEPTH - 2))
+    last = nodes_of(body["tree"])[-1]
+    assert jmespath.search(last["path"], nested(probe.MAX_DEPTH - 2)) == "end" or last["type"] == "string"
+
+
+def test_karten9_ec1_very_long_names_do_not_blow_the_answer_up() -> None:
+    """⚠️ Every node carries its whole path: names of 40,000 characters, 45 deep, were 24 times the size of the answer."""
+    answer = nested(45, "k" * 40_000)
+    body = probe.build(answer)
+    assert len(json.dumps(body)) < 4 * 1024 * 1024
+    wide = probe.build({"x" * 40_000: {"y" * 40_000: [1, 2]}})
+    assert len(json.dumps(wide)) < 100_000
+    assert all(len(node["path"]) <= probe.MAX_PATH + 2 * probe.TEXT_SHOWN * 6 for node in nodes_of(wide["tree"]))
+
+
+@respx.mock
+def test_karten9_ec1_a_lone_surrogate_in_a_name_or_a_text_is_no_failure(admin: TestClient) -> None:
+    """Valid JSON, not encodable as UTF-8: the answer and the examples carry a replacement mark instead."""
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(200, content=b'{"a\ud800": "x\ud800y", "b": ["\udfff"]}', headers={"content-type": "application/json"}))
+    probed = post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue"})
+    assert probed.status_code == 200, probed.text[:200]
+    made = post(admin, "demo", {"yaml": VALUE_CARD, "integration_id": sonarr})
+    assert made.status_code == 200, made.text[:200]
+    made.json()
