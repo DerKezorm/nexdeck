@@ -517,6 +517,24 @@ class Relation(Base):
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
+class Runbook(Base):
+    """What to do when a service breaks, written by an administrator (roadmap M6).
+
+    ``ref`` is the same reference as in ``Relation``: a connection, an app
+    tile, a container or a guest. A short text in Markdown and, if wanted, a
+    link to a longer guide elsewhere.
+    """
+
+    __tablename__ = "runbooks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ref: Mapped[str] = mapped_column(String(200), unique=True)
+    text: Mapped[str] = mapped_column(Text, default="")
+    link: Mapped[str] = mapped_column(String(600), default="")
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
 class HistoryHour(Base):
     """Hour averages, lowest and highest, folded from the minutes; kept 90 days (roadmap M4)."""
 

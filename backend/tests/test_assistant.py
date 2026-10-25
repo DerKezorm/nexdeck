@@ -806,6 +806,11 @@ def test_an_allowed_log_of_a_synology_is_read_and_its_secrets_masked(client: Tes
     ("GET postgres://immich:dbpass99@db:5432/immich", "dbpass99"),
     ("session eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U", "dozjgNryP4J3jVmNHl0w5N"),
     ("GET /api/x?apikey=abc123def", "abc123def"),
+    ("DB_PASSWORD=hunter2", "hunter2"),
+    ("POSTGRES_PASSWORD: s3cr3t-pw", "s3cr3t-pw"),
+    ("SECRET_KEY=django-insecure-xyz", "django-insecure-xyz"),
+    ("GITHUB_TOKEN=ghp_abcdef123456", "ghp_abcdef123456"),
+    ("DB_PASS=letmein99", "letmein99"),
 ])
 def test_a_log_line_goes_out_with_its_secrets_masked(line: str, gone: str) -> None:
     from app.services.assistant.tools import log_redact

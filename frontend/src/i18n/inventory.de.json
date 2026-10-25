@@ -31,6 +31,7 @@
     "pick": "Hinzufügen …",
     "nothing": "Noch nichts",
     "mapHelp": "Zum Anordnen ziehen; die Anordnung bleibt. Rot ist ausgefallen, gestrichelt nur vorgeschlagen.",
-    "arrange": "Neu anordnen"
+    "arrange": "Neu anordnen",
+    "diagnose": "Diagnose"
   }
 }

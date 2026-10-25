@@ -21,6 +21,7 @@ import { useNotices } from '../stores/notices'
 import type { RenderProps } from './renderers'
 import { wordedSubtitle } from './renderers'
 import { ServiceIcon } from './ServiceIcon'
+import { WhyLink } from './WhyLink'
 import { Dialog } from './ui'
 
 interface Row {
@@ -33,6 +34,8 @@ interface Row {
   url?: string
   notice?: number
   target?: { board: string; page: string; widget: number }
+  /** Whom "Why?" asks about (roadmap M6). */
+  subject?: string
   [key: string]: unknown
 }
 
@@ -133,6 +136,7 @@ export function AttentionCard({ data }: RenderProps) {
             {!compact && meta ? <span className="block text-[11px] text-muted truncate mt-px">{meta}</span> : null}
           </span>
         </button>
+        {row.source !== 'bell' ? <WhyLink subject={row.subject} name={row.title} className="self-center px-1" /> : null}
         {row.source === 'bell' && mayRead ? (
           <button type="button" className="btn btn-icon h-6 w-6 btn-flat nd-att-read" onClick={() => dismiss(row)} aria-label={t('attention.markRead')} title={t('attention.markRead')}>
             <X size={13} />

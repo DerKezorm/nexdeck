@@ -325,10 +325,16 @@ def is_down(db: Session, ref: str) -> bool:
     return False
 
 
+def cause_ref(db: Session, ref: str) -> str:
+    """The furthest thing ``ref`` hangs on that is down, or ""."""
+    down = [one for one in ancestors(db, ref) if is_down(db, one)]
+    return down[-1] if down else ""
+
+
 def cause(db: Session, ref: str) -> str:
     """The name of the furthest thing ``ref`` hangs on that is down, or ""."""
-    down = [one for one in ancestors(db, ref) if is_down(db, one)]
-    return name_of(db, down[-1]) if down else ""
+    found = cause_ref(db, ref)
+    return name_of(db, found) if found else ""
 
 
 def subject_of(widget: Widget | None) -> str | None:

@@ -265,6 +265,8 @@ def view(db: Session, rows: list[Event], user: User | None = None) -> list[dict[
             .where(Widget.id.in_({row.widget_id for row in rows if row.widget_id} or {-1}))
         )
     }
+    # Only an app tile is a service of its own; any other card is asked about through its connection.
+    apps = set(db.scalars(select(Widget.id).where(Widget.id.in_({row.widget_id for row in rows if row.widget_id} or {-1}), Widget.kind == "core.app")))
     names = {number: name for number, name in db.execute(select(User.id, User.username).where(User.id.in_({row.user_id for row in rows if row.user_id} or {-1})))}
     may_open = None if user is None or user.role == Role.admin.value else _open_boards(db, user)
     out = []
@@ -276,6 +278,10 @@ def view(db: Session, rows: list[Event], user: User | None = None) -> list[dict[
             "board": board.name if board is not None else "",
             "user": names.get(row.user_id, "") if row.user_id else "",
         }
+        subject = _subject_of(row, row.widget_id in apps)
+        if subject:
+            # Where "Why?" leads (roadmap M6); the page itself is for administrators only.
+            line["subject"] = subject
         place = places.get(row.widget_id) if row.widget_id else None
         if place is not None and (may_open is None or place[0] in may_open):
             home = db.get(Board, place[0])
@@ -283,6 +289,19 @@ def view(db: Session, rows: list[Event], user: User | None = None) -> list[dict[
                 line["target"] = {"board": home.slug, "page": place[1], "widget": row.widget_id}
         out.append(line)
     return out
+
+
+def _subject_of(row: Event, app_tile: bool) -> str:
+    """Which service a line is about: a container, a connection, or an app tile."""
+    if row.kind not in GROUPS["cards"] + GROUPS["versions"]:
+        return ""
+    if row.kind in ("container_restarted", "container_recreated") and row.integration_id:
+        return f"container:{row.integration_id}:{row.name}"
+    if row.integration_id:
+        return f"integration:{row.integration_id}"
+    if row.widget_id and app_tile:
+        return f"tile:{row.widget_id}"
+    return ""
 
 
 def card_lines(db: Session, widget_id: int, *, kinds: tuple[str, ...], whole: bool, limit: int) -> list[dict[str, Any]]:

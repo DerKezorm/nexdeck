@@ -1,0 +1,101 @@
+{
+  "diagnosis": {
+    "title": "Diagnostic",
+    "back": "Retour",
+    "notFound": "Ce service, ce conteneur ou cet invité n'existe plus.",
+    "kind": {
+      "integration": "Connexion",
+      "tile": "Tuile d'app",
+      "container": "Conteneur",
+      "guest": "Invité"
+    },
+    "state": {
+      "now_bad": "Rouge depuis {{when}}",
+      "now_warn": "Jaune depuis {{when}}",
+      "nowOpen_bad": "Rouge",
+      "nowOpen_warn": "Jaune",
+      "past_bad": "Était rouge de {{from}} à {{to}}",
+      "past_warn": "Était jaune de {{from}} à {{to}}",
+      "pastOpen_bad": "Était rouge à partir de {{from}}",
+      "pastOpen_warn": "Était jaune à partir de {{from}}",
+      "ok": "Rien ces 30 derniers jours"
+    },
+    "length": {
+      "minutes": "{{minutes}} min",
+      "hours": "{{hours}} h {{minutes}} min",
+      "days": "{{days}} j {{hours}} h"
+    },
+    "cause": {
+      "now": "Probablement à cause de {{name}}",
+      "past": "C'était à cause de {{name}}",
+      "note": "{{name}} en dépend, c'est pourquoi il n'a pas été signalé à part.",
+      "open": "Voir"
+    },
+    "happened": "Ce qui s'est passé",
+    "windowNow": "deux heures avant jusqu'à maintenant",
+    "windowPast": "deux heures avant jusqu'à la fin",
+    "windowOk": "les deux dernières heures",
+    "nothingHappened": "Rien n'a été noté pendant ce temps.",
+    "via": "dépend de : {{name}}",
+    "began": "{{time}} · début",
+    "ended": "{{time}} · fin",
+    "readOn": "Continuer dans la chronique",
+    "checksTitle": "Contrôle et cartes",
+    "checkOk": "répond",
+    "checkUnknown": "pas encore contrôlé",
+    "checkDown": "hors service depuis {{when}}",
+    "checkOff": "désactivé",
+    "noCards": "Aucune carte ne l'affiche.",
+    "log": {
+      "title": "Journal",
+      "show": "Afficher le journal",
+      "help": "Lit les 100 dernières lignes de {{container}} sur {{engine}}. Les mots de passe, jetons et clés sont masqués.",
+      "from": "{{container}} sur {{engine}} · {{count}} lignes · lu à {{time}}",
+      "again": "Relire",
+      "hide": "Masquer",
+      "empty": "Le journal est vide.",
+      "why": {
+        "no_container": "Aucun conteneur n'est connu pour cela, il n'y a donc pas de journal. Les journaux viennent des conteneurs de Docker, Portainer et d'un Synology.",
+        "no_logs": "{{engine}} ne fournit pas de journaux de conteneurs.",
+        "demo": "{{engine}} est en démo et n'a pas de vrai journal."
+      }
+    },
+    "ask": {
+      "title": "Demander à nexdeck",
+      "help": "Le chat part de cette page.",
+      "button": "Explique-moi",
+      "off": "Active l'assistant sous Système, Assistant pour poser des questions sur cette page.",
+      "question_now": "Pourquoi {{name}} a-t-il un problème ?",
+      "question_past": "Qu'est-il arrivé à {{name}} ?",
+      "question_ok": "Est-ce que {{name}} va bien ?"
+    },
+    "hangs": {
+      "title": "Dépend de",
+      "nothing": "De rien que nexdeck connaisse.",
+      "this": "ce service",
+      "carries": "En dépendent",
+      "open": "Diagnostic",
+      "down": "hors service",
+      "up": "en marche"
+    },
+    "runbook": {
+      "title": "Runbook",
+      "empty": "Pas encore de runbook. Note ce qui aidera la prochaine fois, ou mets un lien vers un guide.",
+      "write": "Écrire un runbook",
+      "edit": "Modifier",
+      "text": "Que faire",
+      "link": "Lien vers un guide plus long (facultatif)",
+      "hint": "Markdown : listes avec 1. ou -, **gras**, `code`.",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "by": "{{user}}, {{when}}",
+      "badLink": "Un lien commence par http:// ou https://."
+    },
+    "buttons": {
+      "title": "Boutons",
+      "none": "Pas de boutons : nexdeck ne peut pas redémarrer cela lui-même.",
+      "from": "De la carte {{card}}. Chacun demande d'abord et dit ce qu'il toucherait.",
+      "done": "{{label}} : fait."
+    }
+  }
+}

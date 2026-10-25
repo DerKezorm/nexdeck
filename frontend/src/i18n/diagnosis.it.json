@@ -1,0 +1,101 @@
+{
+  "diagnosis": {
+    "title": "Diagnosi",
+    "back": "Indietro",
+    "notFound": "Questo servizio, container o ospite non esiste più.",
+    "kind": {
+      "integration": "Connessione",
+      "tile": "Riquadro app",
+      "container": "Container",
+      "guest": "Ospite"
+    },
+    "state": {
+      "now_bad": "Rosso dalle {{when}}",
+      "now_warn": "Giallo dalle {{when}}",
+      "nowOpen_bad": "Rosso",
+      "nowOpen_warn": "Giallo",
+      "past_bad": "Era rosso dalle {{from}} alle {{to}}",
+      "past_warn": "Era giallo dalle {{from}} alle {{to}}",
+      "pastOpen_bad": "Era rosso dalle {{from}}",
+      "pastOpen_warn": "Era giallo dalle {{from}}",
+      "ok": "Niente negli ultimi 30 giorni"
+    },
+    "length": {
+      "minutes": "{{minutes}} min",
+      "hours": "{{hours}} h {{minutes}} min",
+      "days": "{{days}} g {{hours}} h"
+    },
+    "cause": {
+      "now": "Probabilmente a causa di {{name}}",
+      "past": "Era a causa di {{name}}",
+      "note": "{{name}} dipende da esso, per questo non è stato segnalato a parte.",
+      "open": "Guarda"
+    },
+    "happened": "Cosa è successo",
+    "windowNow": "due ore prima fino ad ora",
+    "windowPast": "due ore prima fino alla fine",
+    "windowOk": "le ultime due ore",
+    "nothingHappened": "In quel periodo non è stato annotato nulla.",
+    "via": "dipende da: {{name}}",
+    "began": "{{time}} · inizio",
+    "ended": "{{time}} · fine",
+    "readOn": "Continua nella cronaca",
+    "checksTitle": "Controllo e schede",
+    "checkOk": "risponde",
+    "checkUnknown": "non ancora controllato",
+    "checkDown": "fuori servizio dalle {{when}}",
+    "checkOff": "disattivato",
+    "noCards": "Nessuna scheda lo mostra.",
+    "log": {
+      "title": "Log",
+      "show": "Mostra il log",
+      "help": "Legge le ultime 100 righe di {{container}} su {{engine}}. Password, token e chiavi vengono mascherati.",
+      "from": "{{container}} su {{engine}} · {{count}} righe · letto alle {{time}}",
+      "again": "Rileggi",
+      "hide": "Nascondi",
+      "empty": "Il log è vuoto.",
+      "why": {
+        "no_container": "Non è noto alcun container per questo, quindi non c'è un log. I log arrivano dai container di Docker, Portainer e di un Synology.",
+        "no_logs": "{{engine}} non fornisce log dei container.",
+        "demo": "{{engine}} è nella demo e non ha un log reale."
+      }
+    },
+    "ask": {
+      "title": "Chiedi a nexdeck",
+      "help": "La chat parte da questa pagina.",
+      "button": "Spiegamelo",
+      "off": "Attiva l'assistente in Sistema, Assistente per fare domande su questa pagina.",
+      "question_now": "Perché {{name}} ha un problema?",
+      "question_past": "Cosa è successo a {{name}}?",
+      "question_ok": "{{name}} sta bene?"
+    },
+    "hangs": {
+      "title": "Dipende da",
+      "nothing": "Da niente che nexdeck conosca.",
+      "this": "questo servizio",
+      "carries": "Ne dipendono",
+      "open": "Diagnosi",
+      "down": "fuori servizio",
+      "up": "in funzione"
+    },
+    "runbook": {
+      "title": "Runbook",
+      "empty": "Ancora nessun runbook. Annota cosa aiuta la prossima volta o collega una guida.",
+      "write": "Scrivi un runbook",
+      "edit": "Modifica",
+      "text": "Cosa fare",
+      "link": "Link a una guida più lunga (facoltativo)",
+      "hint": "Markdown: elenchi con 1. o -, **grassetto**, `codice`.",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "by": "{{user}}, {{when}}",
+      "badLink": "Un link inizia con http:// o https://."
+    },
+    "buttons": {
+      "title": "Pulsanti",
+      "none": "Nessun pulsante: nexdeck non può riavviarlo da solo.",
+      "from": "Dalla scheda {{card}}. Ognuno chiede prima e dice cosa toccherebbe.",
+      "done": "{{label}}: fatto."
+    }
+  }
+}

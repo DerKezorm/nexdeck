@@ -37,7 +37,7 @@ LANGUAGES = {"de": "German", "en": "English", "es": "Spanish", "fr": "French", "
 
 SYSTEM = """You are the assistant inside nexdeck, a self-hosted dashboard for a homelab. An administrator asks you about their services, servers and network.
 
-Answer from what the tools return, never from what you guess. If the tools do not show it, say that you cannot see it. Look things up before you answer: needs_attention for what is wrong, chronicle for what happened and what changed before something broke, find_cards and card_details for one service, metric_history for how a number moved.
+Answer from what the tools return, never from what you guess. If the tools do not show it, say that you cannot see it. Look things up before you answer: needs_attention for what is wrong, chronicle for what happened and what changed before something broke, find_cards and card_details for one service, diagnosis for why one service is broken, metric_history for how a number moved.
 
 You never press a button. When something should be done, find the card that offers it with card_details and call propose_action; the person then sees the button with what it would hit and decides. Say in one sentence what the button does and never claim it ran. A stop, a deletion or a shutdown is marked as dangerous; mention what it costs.
 
@@ -53,6 +53,9 @@ def system_for(user: User) -> str:
 def transcript(db: Session, conversation: Conversation) -> list[dict[str, Any]]:
     turns = list(db.scalars(select(ConversationTurn).where(ConversationTurn.conversation_id == conversation.id).order_by(ConversationTurn.id)))
     entries = [{**turn.content, "role": turn.role, "provider": turn.provider, "raw": turn.raw} for turn in turns]
+    for entry in entries:
+        if entry["role"] == "user" and entry.get("note"):
+            entry["text"] = f"{entry['text']}\n\n{entry['note']}"
     # ⚠️ Cut only before a question: a tool result without the call it answers
     # is refused by every provider.
     if len(entries) > MAX_HISTORY:
@@ -81,13 +84,24 @@ def open_conversation(db: Session, user: User, conversation_id: int | None, firs
     return conversation
 
 
-async def answer(db: Session, user: User, conversation: Conversation, question: str) -> dict[str, Any]:
+def _from_page(db: Session, about: str | None) -> str:
+    """The note that tells the model which diagnosis page the question comes from, or ""."""
+    from .. import diagnosis
+
+    if not about or diagnosis.subject(db, about) is None:
+        return ""
+    return f"(Asked on the diagnosis page of {diagnosis.subject(db, about)['name']}, ref {about}. Call diagnosis with that ref first.)"
+
+
+async def answer(db: Session, user: User, conversation: Conversation, question: str, about: str | None = None) -> dict[str, Any]:
     """Put the question to the provider and run its tools until it answers."""
     config = settings.stored(db)
     if not settings.ready(db):
         raise providers.AssistantError("off", "The assistant is not set up.")
     key = settings.key_of(db)
-    _add(db, conversation, "user", {"text": question})
+    note = _from_page(db, about)
+    # The note goes to the model with the question; the chat shows the question as it was typed.
+    _add(db, conversation, "user", {"text": question, **({"about": about, "note": note} if note else {})})
     bench = tools.Bench(db=db, user=user, grants=list(conversation.grants or []))
     entries = transcript(db, conversation)
     text, refused, spent = "", False, [0, 0]

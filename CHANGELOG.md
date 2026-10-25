@@ -23,11 +23,13 @@ project uses semantic versioning.
 - The **Updates** card takes **Arcane** and **Dockhand** as container sources too (#51): the containers whose image has an update, as each last checked, without their buttons. One that has not checked yet says so instead of everything being up to date.
 - **What runs on what.** nexdeck asks Docker, Portainer, a Synology and Proxmox every hour which containers and guests they run, with their addresses and published ports, and works out which service runs in which: the same address and port is taken as given, a name that only looks alike is proposed for a yes or a no. Under System, Inventory everything stands as a tree, host, then its containers and guests, then the services in them, with a map beside it whose boxes can be dragged and stay where they were put. A connection and an app tile have a field "Runs on / needs" for what nexdeck cannot see itself, such as a service that needs the database of another; a relation that would go in a circle is refused. Administrators only.
 - **One message for an outage that takes others with it.** When a host, a container or a guest goes down, what runs on it waits a moment, and then a single message goes out: "Synology is down, 9 services affected", with the list. The others are not told one by one, and their coming back stays quiet too. Their cards say "because Synology is down" instead of their own reason.
+- **Why is it broken?** A red or yellow card, a row of the attention card and a line of the chronicle have a "Why?" that opens a page of the service, for administrators: since when it is in trouble, or from when to when it was; what happened in the two hours before, to it and to everything it runs on, marked with what that was; what it hangs on and what hangs on it; its check and its cards; the log of its container, read only when asked for and with passwords, tokens and keys masked; and a runbook, a few lines in Markdown and a link to a longer guide, written once for the next time. When something it runs on is down, the page says so first. The buttons of its container stand there too, each asking first with what it would hit, and "Explain it" hands the page to Ask nexdeck, which can also look up any service's page by itself. Nothing repairs itself. The inventory leads to the page of every entry.
 - Restarting, stopping or shutting down a container or a guest says **what runs on it** before the button, also in the chat; for a guest that runs a Docker engine, how many containers go down with it.
 - The question before a button says **what it would hit**, where nexdeck knows it: the streams that end when a media server's container restarts, the downloads that stop, the devices a Home Assistant scene switches.
 
 ### Fixed
 
+- A container's log handed to Ask nexdeck kept a password written as `DB_PASSWORD=...` or `POSTGRES_PASSWORD: ...`: the masking looked for the word only where it stood on its own. `SECRET_KEY=` and `DB_PASS=` are masked now as well.
 - **A page the browser translated** (Chrome, Edge or an extension) no longer goes blank the next time something on it changes. The translator swaps texts for its own elements, and the page tripped over the texts it no longer found.
 
 ### Changed
@@ -36,7 +38,7 @@ project uses semantic versioning.
 
 ### Upgrading
 
-The database gets eight tables, for maintenance, the chronicle, the assistant's conversations, the hours and days of the history, and the containers and guests with what runs on them, and its version 24, which writes the old answers into the existing Problems cards. Going back to 0.48 works; the tables stay unused.
+The database gets nine tables, for maintenance, the chronicle, the assistant's conversations, the hours and days of the history, the containers and guests with what runs on them, and the runbooks, and its version 24, which writes the old answers into the existing Problems cards. Going back to 0.48 works; the tables stay unused.
 
 A Backrest, Kopia or Duplicati connection whose backups run less often than once a day turns its cards yellow after the update: raise "Too old after (hours)" in its settings, to about 200 for a weekly one.
 

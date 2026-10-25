@@ -31,6 +31,7 @@
     "pick": "Add …",
     "nothing": "Nothing yet",
     "mapHelp": "Drag to arrange; the arrangement is kept. Red is down, a dashed line is only proposed.",
-    "arrange": "Arrange again"
+    "arrange": "Arrange again",
+    "diagnose": "Diagnosis"
   }
 }

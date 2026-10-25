@@ -2,9 +2,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, X } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { ApiError, del, get, post } from '../../api/client'
 import { tree, type Branch, type Inventory, type InventoryNode } from '../../lib/inventory'
+import { diagnosisPath } from '../../lib/diagnosis'
 import { useLazyTexts } from '../../lib/lazyTexts'
 import { SettingsCard } from './SettingsCard'
 
@@ -66,6 +68,7 @@ function Page() {
             {branch.node.down ? ` · ${t('inventory.down')}` : ''}
           </span>
         </span>
+        <Link className="nd-why" to={diagnosisPath(branch.node.ref)}>{t('inventory.diagnose')}</Link>
         {branch.relation && (
           <>
             <span className="chip !py-0 text-[10.5px]">{t(`inventory.origin.${branch.relation.origin}`)}</span>

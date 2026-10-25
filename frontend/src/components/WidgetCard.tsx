@@ -17,6 +17,8 @@ import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { ForecastLine } from './ForecastLine'
 import { ServiceIcon } from './ServiceIcon'
+import { WhyLink } from './WhyLink'
+import { subjectOf } from '../lib/diagnosis'
 
 interface Props {
   widget: WidgetView
@@ -200,6 +202,8 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
               {[reasons[0], since].filter(Boolean).join(' · ')}
             </span>
           )}
+          {/* Roadmap M6: from the reason to the page that says why, for administrators. */}
+          {!failed && (status === 'warn' || status === 'bad') ? <WhyLink subject={subjectOf(widget)} name={widget.title || widget.kind} className="hidden @min-[300px]:inline" /> : null}
           {awayChip}
           {/* In the head, beside the dot and the beta mark rather than over them. */}
           {showControls && <div className="card-controls in-head">{controls}</div>}
@@ -230,6 +234,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
           <AlertTriangle size={22} className="text-bad flex-none" aria-hidden="true" />
           <p className="text-[12px] font-medium text-bad leading-snug line-clamp-3">{errorText}</p>
           {data?.cause ? <p className="text-[11px] text-ink/80" data-testid="card-cause">{t('dependencies.because', { name: data.cause })}</p> : null}
+          <WhyLink subject={subjectOf(widget)} name={widget.title || widget.kind} />
           {data?.meta?.stale_since ? <p className="text-[10px] text-muted">{t('card.staleData')}</p> : null}
         </div>
       )}

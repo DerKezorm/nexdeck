@@ -31,6 +31,7 @@
     "pick": "Añadir …",
     "nothing": "Nada aún",
     "mapHelp": "Arrastra para ordenar; el orden se guarda. Rojo está caído, una línea discontinua solo está propuesta.",
-    "arrange": "Ordenar de nuevo"
+    "arrange": "Ordenar de nuevo",
+    "diagnose": "Diagnóstico"
   }
 }

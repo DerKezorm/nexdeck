@@ -40,6 +40,8 @@ class ModelsAsked(BaseModel):
 class Question(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     conversation_id: int | None = None
+    #: Asked from the diagnosis page of this service (roadmap M6): the assistant starts there.
+    about: str | None = Field(default=None, max_length=200)
 
 
 class Grant(BaseModel):
@@ -162,7 +164,7 @@ async def ask(body: Question, user: AdminUser, db: DbSession) -> dict:
     try:
         try:
             found = chat.open_conversation(db, user, body.conversation_id, body.text)
-            reply = await chat.answer(db, user, found, body.text.strip())
+            reply = await chat.answer(db, user, found, body.text.strip(), about=body.about)
         except providers.AssistantError as failure:
             logger.warning("The assistant could not answer %s: %s", user.username, failure.message)
             raise _refusal(failure) from None

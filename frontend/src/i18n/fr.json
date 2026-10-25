@@ -2264,5 +2264,9 @@
   },
   "dependencies": {
     "because": "car {{name}} est en panne"
+  },
+  "diagnosis": {
+    "why": "Pourquoi ?",
+    "whyOf": "Pourquoi {{name}} est-il rouge ou jaune ?"
   }
 }

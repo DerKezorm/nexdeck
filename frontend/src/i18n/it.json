@@ -2264,5 +2264,9 @@
   },
   "dependencies": {
     "because": "perché {{name}} non risponde"
+  },
+  "diagnosis": {
+    "why": "Perché?",
+    "whyOf": "Perché {{name}} è rosso o giallo?"
   }
 }
