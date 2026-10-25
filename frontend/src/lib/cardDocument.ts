@@ -97,7 +97,24 @@ export function parseCard(text: string): Parsed {
  * ⚠️ `lineWidth: 0`: the library folds long strings at 80 characters by default, which rewrote every long path
  * of a card on the first change.
  */
-export function writingOf(text: string): ToStringOptions {
+export function writingOf(text: string, block?: string): ToStringOptions {
+  const own = indentationOf(block ?? text)
+  const whole = block === undefined ? own : indentationOf(text)
+  // A block that shows no list and no nested map says nothing about indenting; the whole text then decides.
+  const chosen = own.found ? own : whole
+  const padded = (text.match(/[{[] [^\s}\]]/g) ?? []).length
+  const tight = (text.match(/[{[][^\s}\]]/g) ?? []).length
+  return {
+    indent: Math.min(Math.max(chosen.indent, 1), 8),
+    indentSeq: chosen.indentSeq,
+    lineWidth: 0,
+    minContentWidth: 0,
+    flowCollectionPadding: padded > tight,
+  }
+}
+
+/** The indent and the list style of the first list (or nested map) a text shows; `found` says it showed one. */
+function indentationOf(text: string): { indent: number; indentSeq: boolean; found: boolean } {
   const rows = text.split('\n')
   let indentSeq = true
   let indent = 2
@@ -117,15 +134,7 @@ export function writingOf(text: string): ToStringOptions {
       indent = deeper - own
     }
   }
-  const padded = (text.match(/[{[] [^\s}\]]/g) ?? []).length
-  const tight = (text.match(/[{[][^\s}\]]/g) ?? []).length
-  return {
-    indent: Math.min(Math.max(indent, 1), 8),
-    indentSeq,
-    lineWidth: 0,
-    minContentWidth: 0,
-    flowCollectionPadding: padded > tight,
-  }
+  return { indent, indentSeq, found }
 }
 
 /** One stretch of lines that differs: `a[aStart, aEnd)` became `b[bStart, bEnd)`. */
@@ -279,20 +288,55 @@ export function mergeLines(base: string, ours: string, theirs: string): string |
  * first, tidy second.
  */
 export function changeCard(card: CardDoc, change: (doc: Document) => void): CardDoc {
-  const options = writingOf(card.text)
-  const base = written(card, options)
   const next = card.doc.clone()
   change(next)
-  const theirs = next.toString(options)
-  if (theirs === base) return card
-  const merged = mergeLines(base, card.text, theirs)
-  if (merged !== null) {
+  let best: CardDoc | null = null
+  let fewest = Infinity
+  // ⚠️ An author may indent one part of a card differently from another (`requests:` four spaces, `stats:` a list
+  // without any). The library writes the whole document in one style, so a change would rewrite the other parts'
+  // lines. The change is therefore tried in the style of the whole text and in the style of each distinct top-level
+  // part, and the one that leaves the most lines as they were wins.
+  for (const options of writingStyles(card)) {
+    const base = written(card, options)
+    const theirs = next.toString(options)
+    if (theirs === base) return card
+    const merged = mergeLines(base, card.text, theirs)
+    if (merged === null) continue
     const again = parseCard(merged)
-    if (again.ok && written(again.card, options) === theirs) return again.card
+    if (!again.ok || written(again.card, options) !== theirs) continue
+    const cost = (diffLines(card.text.split('\n'), merged.split('\n')) ?? []).reduce(
+      (sum, hunk) => sum + Math.max(hunk.aEnd - hunk.aStart, hunk.bEnd - hunk.bStart),
+      0,
+    )
+    if (cost < fewest) {
+      best = again.card
+      fewest = cost
+    }
+    if (cost <= 1) break
   }
-  const plain = parseCard(theirs)
+  if (best) return best
+  const plain = parseCard(next.toString(writingOf(card.text)))
   if (!plain.ok) throw new Error('The changed card does not read back.')
   return plain.card
+}
+
+/** The ways of writing this card to try: the whole text's, then each different one of its top-level parts. */
+function writingStyles(card: CardDoc): ToStringOptions[] {
+  const styles = [writingOf(card.text)]
+  const seen = new Set([JSON.stringify(styles[0])])
+  const items = isMap(card.doc.contents) ? card.doc.contents.items : []
+  const rows = card.text.split('\n')
+  const starts = items.map((pair) => (isNode(pair.key) && pair.key.range ? card.lines.linePos(pair.key.range[0]).line - 1 : -1))
+  starts.forEach((start, index) => {
+    if (start < 0) return
+    const stop = starts.slice(index + 1).find((line) => line >= 0) ?? rows.length
+    const options = writingOf(card.text, rows.slice(start, stop).join('\n'))
+    const key = JSON.stringify(options)
+    if (seen.has(key)) return
+    seen.add(key)
+    styles.push(options)
+  })
+  return styles
 }
 
 /** The document as the library writes it, kept per card: typing in a field of a long card writes it once less. */

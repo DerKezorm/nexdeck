@@ -119,6 +119,40 @@ describe('karten10: the card as one document', () => {
     expect(after.text.startsWith('# Guests of the cluster, written by hand.\nnexdeck-card: 1\n')).toBe(true)
   })
 
+  it('karten10 AC-4: one part indented four spaces and another not at all: a change rewrites only its own lines', () => {
+    const MIXED = `# Header comment
+nexdeck-card: 1
+slug: demo     # trailing
+name: {en: Demo}
+requires: [ sonarr , radarr ]
+requests:
+    - id: a      # indent 4
+      path: "/x"
+      every: 30s
+    # between
+    - {id: b, path: /y}
+form: stats
+stats:
+- path: a.b
+  label: One
+- path: "c d"
+  rules:
+  - {op: ">", than: 5, then: warn}
+demo:
+  a: {b: 1}
+`
+    const touched = (after: CardDoc) => {
+      const { gone, added } = changedLines(MIXED, after.text)
+      return Math.max(gone.length, added.length)
+    }
+    expect(touched(changeCard(card(MIXED), (doc) => setAt(doc, ['stats', 0, 'label'], 'Uno')))).toBe(1)
+    expect(touched(changeCard(card(MIXED), (doc) => setAt(doc, ['requests', 1, 'path'], '/z')))).toBe(1)
+    expect(touched(changeCard(card(MIXED), (doc) => deleteAt(doc, ['stats', 1, 'rules'])))).toBe(2)
+    const added = changeCard(card(MIXED), (doc) => setAt(doc, ['stats', 2], { path: 'x' }))
+    expect(added.text).toContain('- path: "c d"\n  rules:\n  - {op: ">", than: 5, then: warn}\n- path: x\n')
+    expect(touched(added)).toBe(1)
+  })
+
   it('karten10 AC-4: no change, no difference at all', () => {
     const before = card(COMMENTED)
     expect(changeCard(before, (doc) => setAt(doc, ['form'], 'list')).text).toBe(COMMENTED)
