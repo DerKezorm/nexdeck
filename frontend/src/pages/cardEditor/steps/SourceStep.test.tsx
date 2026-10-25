@@ -142,6 +142,22 @@ describe('karten9: the probe and its tree', () => {
     expect(await screen.findByTestId('card-tree-more')).toHaveTextContent('… 1.234 weitere Einträge')
   })
 
+  it('karten9 EC-11: in German the places and the choices of "Use as …" break instead of running over', async () => {
+    i18next.addResourceBundle('de', 'translation', { ...deScreen, ...editorDe }, true, true)
+    await i18next.changeLanguage('de')
+    stub(CARD, probed)
+    await openCard('Queue')
+    await waitFor(() => expect(screen.getByLabelText('Abfragen mit')).toHaveValue('7'))
+    await userEvent.click(screen.getByRole('button', { name: 'Probe' }))
+    fireEvent.click(await screen.findByRole('treeitem', { name: /^totalRecords/ }))
+    const choice = screen.getByRole('menuitem', { name: 'Als Wert verwenden' })
+    expect(choice.className).toContain('break-words')
+    await userEvent.click(choice)
+    const mark = within(item(/^totalRecords, Zahl, 1236, Wert/)).getByText('Wert')
+    expect(mark.className).toContain('break-words')
+    expect(screen.getByText('Plätze der Karte').className).toContain('break-words')
+  })
+
   it('karten9 EC-2: a failed probe gives the reason the way a card does, in the language on screen', async () => {
     const failed = { status: 502, body: { detail: { code: 'auth_failed', message: 'Sonarr refused the API key (401).', hint: 'Check the key of the connection.' } } }
     stub(CARD, { 'POST /cards/probe': failed })
