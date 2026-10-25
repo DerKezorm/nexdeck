@@ -4,15 +4,17 @@ A card from the shop or from a friend carries example answers, and answers copie
 many films he has and what they are called. This makes them harmless the way the showcase mode of the board does
 (``frontend/src/lib/showcase.ts``), but for data of any shape, where nothing says which text is a name:
 
-- Kept: the keys, the structure, true and false, null, and anything that is a date or a time (a card reads those): a text
+- Kept: the keys (the paths of a card run through them), the structure, true and false, null, and anything that is a date or a time (a card reads those): a text
   in a date form, and a number in the range of epoch seconds or milliseconds under a key that names a time (``addedAt``).
 - Cut: lists to a few entries and long texts to a few hundred characters, so the answers fit into a definition.
 - Changed, the same way every time for the same value, so one title is one stand-in in all requests: a number to
   another of about the same size (a percentage stays a percentage), a text word for word to another word of the same
   kind (case and digits stay where they were), an address of a picture or a page to an address on example.com, a mail
   address to user-xxxxxx@example.com, an IP address to one from the ranges meant for documentation, a host name to
-  host-xxxxx.example. A word made of letters and digits (a token such as ``ghp_AbCd…``) becomes an invented word, never
-  its own characters moved on: nothing of three characters or more stays.
+  host-xxxxx.example. A key that is data itself is changed the way the same value would be (a hash, an IP address, a host
+  name, a mail address, a UUID, a long number): answers keyed by torrent hashes or by host names would give those away
+  otherwise. Two keys of one object never become one. A word made of letters and digits (a token such as ``ghp_AbCd…``)
+  becomes an invented word, never its own characters moved on: nothing of three characters or more stays.
 
 ⚠️ This hides what a value says, it is no encryption: a short text or a small number can be guessed from its stand-in
 by anybody who tries every one. The editor shows the result before it is taken over and lets the author change values.
@@ -55,7 +57,7 @@ _IPV4 = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?$")
 _IPV6 = re.compile(r"^[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,7}$", re.I)
 _MAC = re.compile(r"^(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}$", re.I)
 _HOST = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]*[a-z0-9]$", re.I)
-_FILE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp|pdf|mkv|mp4|avi|mov|zip|txt|json|ya?ml|log|iso|mp3|flac|m4a|m4b|epub|cbz|nfo|srt)$", re.I)
+_FILE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp|pdf|mkv|mp4|avi|mov|zip|txt|json|ya?ml|log|iso|mp3|flac|m4a|m4b|epub|cbz|nfo|srt|md|conf|cfg|ini|db|sql|tar|gz|7z|rar|html?|css|js|sh|py)$", re.I)
 _PICTURE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp)$", re.I)
 _TOKEN = re.compile(r"[^\W_]+", re.UNICODE)
 _UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
@@ -297,6 +299,16 @@ def disguise_text(text: str) -> str:
     return made
 
 
+def disguise_key(name: str, taken: set[str] | frozenset[str]) -> str:
+    """The name of a key: unchanged, unless it is data itself (a hash, an address, a host, a mail address, a UUID, a long number).
+
+    ``taken`` are the names the object has or has got already; a stand-in is never one of them, so two keys never become one.
+    """
+    stripped = name.strip()
+    kind = data_kind(stripped) or ("number" if _NUMBER.match(stripped) else None)
+    return name if kind is None else _stand_for(kind, stripped, taken)
+
+
 def _is_epoch(number: float) -> bool:
     low, high = _EPOCH
     return low <= abs(number) <= high or low * 1000 <= abs(number) <= high * 1000
@@ -368,7 +380,14 @@ def _made_up(value: Any, key: str | None = None) -> Any:
     if isinstance(value, list):
         return [_made_up(one, key) for one in value]
     if isinstance(value, dict):
-        return {name: _made_up(one, name) for name, one in value.items()}
+        # ⚠️ A key that is data (a hash, a host name) is made up like a value; the other keys stay, since the paths of a card run through them.
+        made: dict[str, Any] = {}
+        taken = set(value)
+        for name, one in value.items():
+            new_name = disguise_key(name, taken)
+            taken.add(new_name)
+            made[new_name] = _made_up(one, name)
+        return made
     return value
 
 

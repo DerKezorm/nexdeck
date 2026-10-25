@@ -1119,9 +1119,9 @@ def shares_three(original: str, made: str) -> str | None:
 
 
 def test_karten9_h3_a_token_made_of_letters_and_digits_leaves_nothing_of_three_characters_behind() -> None:
-    for text, token in random_tokens():
-        made = demo.disguise_text(text)
-        assert made != text
+    for line, token in random_tokens():
+        made = demo.disguise_text(line)
+        assert made != line
         assert shares_three(token, made) is None, (token, made, shares_three(token, made))
 
 
@@ -1147,3 +1147,65 @@ def test_karten9_h3_a_short_mixed_word_is_an_invented_word_and_not_its_own_chara
     made = demo.disguise_text(word)
     assert made != word and re.fullmatch(r"[A-Za-z]+\d{0,3}", made), made
     assert shares_three(word, made) is None
+
+
+def test_karten9_h1_a_key_that_is_a_hash_is_made_up_like_the_same_hash_as_a_value() -> None:
+    import hashlib
+
+    digest = hashlib.sha1(b"example").hexdigest()
+    made, _cut = demo.disguise({"torrents": {digest: {"hash": digest, "name": "Private Film"}}})
+    (key, entry), = made["torrents"].items()
+    assert key != digest and re.fullmatch(r"[0-9a-f]{40}", key), key
+    assert key == entry["hash"], "one value, one stand-in, as key and as value"
+    assert shares_three(digest, json.dumps(made)) is None and list(entry) == ["hash", "name"]
+
+
+@pytest.mark.parametrize(
+    ("key", "shape"),
+    [
+        ("10.20.30.40", r"192\.0\.2\.\d{1,3}"),
+        ("nas.family.example.org", r"host-[0-9a-f]{5}\.example"),
+        ("anna@family.example.org", r"user-[0-9a-f]{6}@example\.com"),
+        ("123e4567-e89b-12d3-a456-426614174000", r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}"),
+        ("abcd1234" * 4, r"[0-9a-f]{32}"),
+        ("eyJhbGciOiJIUzI1NiJ9a8Fk2Lm", r"[A-Za-z0-9]{27}"),
+        ("20261025", r"\d{8}"),
+        ("5555555555555", r"\d{13}"),
+        ("02:42:ac:11:00:02", r"02:00:00:00:[0-9a-f]{2}:[0-9a-f]{2}"),
+    ],
+)
+def test_karten9_h1_a_key_that_looks_like_data_is_made_up_as_its_kind(key: str, shape: str) -> None:
+    made, _cut = demo.disguise({"q": {key: 1, "title": "x"}})
+    (new,) = [name for name in made["q"] if name != "title"]
+    assert re.fullmatch(shape, new) and new != key
+    assert all(a != b for a, b in zip(new, key, strict=False)) or not key.isdigit(), "a number changes in every place"
+    assert shares_three(key, new) is None or not re.fullmatch(r"[0-9a-fA-F-]{20,}|[A-Za-z0-9]{20,}", key)
+
+
+PLAIN_KEYS = ["title", "records", "seasonNumber", "airDateUtc", "totalRecords", "movie_file_id", "id", "v2", "x264", "1080p", "1", "12", "1234", "S01E02", "a.b", "image.png", "readme.md", "Quality Profile", "queue-size", "added", "deadbeef", "face", "0", "2026-10-01", "mountainMountainMountain"]
+
+
+def test_karten9_h1_the_names_of_ordinary_fields_stay_so_that_the_paths_of_a_card_still_fit() -> None:
+    made, _cut = demo.disguise({"q": {"records": [{key: 1 for key in PLAIN_KEYS}]}})
+    assert list(made["q"]["records"][0]) == PLAIN_KEYS
+
+
+def test_karten9_h1_keys_that_become_stand_ins_stay_apart_in_one_object_and_in_the_same_order() -> None:
+    addresses = [f"10.0.{a}.{b}" for a in range(2) for b in range(150)]
+    answer = {"q": {**{one: {"n": n} for n, one in enumerate(addresses)}, "title": "x"}}
+    made, cut = demo.disguise(answer)
+    assert not cut and len(made["q"]) == len(addresses) + 1 and list(made["q"])[-1] == "title"
+    assert all(re.fullmatch(r"(192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}", name) for name in list(made["q"])[:-1])
+    assert demo.disguise(answer) == (made, cut), "the same input, the same stand-ins"
+
+
+def test_karten9_h1_a_stand_in_never_lands_on_a_name_the_object_has_already() -> None:
+    first = demo.disguise_key("10.0.0.1", set())
+    again = demo.disguise_key("10.0.0.1", {first})
+    assert first != again and re.fullmatch(r"(192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}", again)
+    taken = {demo.disguise_key("10.0.0.1", set()), "10.0.0.1"}
+    for _ in range(3):
+        taken.add(demo.disguise_key("10.0.0.1", taken))
+    assert len(taken) == 5
+    made, _cut = demo.disguise({"q": {first: 1, "10.0.0.1": 2}})
+    assert len(made["q"]) == 2
