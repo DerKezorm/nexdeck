@@ -153,8 +153,8 @@ export function diffLines(a: readonly string[], b: readonly string[]): Hunk[] | 
 
   const max = n + m
   const offset = max
-  let v = new Int32Array(2 * max + 2)
-  const trace: Int32Array[] = []
+  let v: Int32Array<ArrayBufferLike> = new Int32Array(2 * max + 2)
+  const trace: Int32Array<ArrayBufferLike>[] = []
   let done = -1
   for (let d = 0; d <= Math.min(max, MOST_EDITS); d += 1) {
     trace.push(v.slice())
@@ -278,9 +278,9 @@ export function mergeLines(base: string, ours: string, theirs: string): string |
  * author indented differently next to a new one, say), the changed document is taken as the library writes it. Correct
  * first, tidy second.
  */
-export function changeCard(card: CardDoc, change: (doc: Document.Parsed) => void): CardDoc {
+export function changeCard(card: CardDoc, change: (doc: Document) => void): CardDoc {
   const options = writingOf(card.text)
-  const base = card.doc.toString(options)
+  const base = written(card, options)
   const next = card.doc.clone()
   change(next)
   const theirs = next.toString(options)
@@ -288,11 +288,23 @@ export function changeCard(card: CardDoc, change: (doc: Document.Parsed) => void
   const merged = mergeLines(base, card.text, theirs)
   if (merged !== null) {
     const again = parseCard(merged)
-    if (again.ok && again.card.doc.toString(options) === theirs) return again.card
+    if (again.ok && written(again.card, options) === theirs) return again.card
   }
   const plain = parseCard(theirs)
   if (!plain.ok) throw new Error('The changed card does not read back.')
   return plain.card
+}
+
+/** The document as the library writes it, kept per card: typing in a field of a long card writes it once less. */
+const writtenOnce = new WeakMap<CardDoc, { key: string; text: string }>()
+
+function written(card: CardDoc, options: ToStringOptions): string {
+  const key = JSON.stringify(options)
+  const kept = writtenOnce.get(card)
+  if (kept?.key === key) return kept.text
+  const text = card.doc.toString(options)
+  writtenOnce.set(card, { key, text })
+  return text
 }
 
 // -- reading and changing by path ------------------------------------------------------------------------------------
@@ -303,9 +315,14 @@ function nodeAt(doc: Document, path: CardPath): unknown {
 
 /** The part at `path` as plain data (strings, numbers, lists, objects), `undefined` when there is none. */
 export function readAt(card: CardDoc, path: CardPath): unknown {
-  const node = nodeAt(card.doc, path)
+  return readIn(card.doc, path)
+}
+
+/** The same, on a document in the middle of a change. */
+export function readIn(doc: Document, path: CardPath): unknown {
+  const node = nodeAt(doc, path)
   if (node === undefined || node === null) return node ?? undefined
-  return isNode(node) ? (node as Node).toJS(card.doc) : node
+  return isNode(node) ? (node as Node).toJS(doc) : node
 }
 
 /**
