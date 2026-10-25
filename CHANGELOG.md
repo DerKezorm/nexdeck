@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.49.0 (2026-10-25)
 
 ### Added
 
@@ -29,7 +29,6 @@ project uses semantic versioning.
 
 ### Fixed
 
-- A container's log handed to Ask nexdeck kept a password written as `DB_PASSWORD=...` or `POSTGRES_PASSWORD: ...`: the masking looked for the word only where it stood on its own. `SECRET_KEY=` and `DB_PASS=` are masked now as well.
 - **A page the browser translated** (Chrome, Edge or an extension) no longer goes blank the next time something on it changes. The translator swaps texts for its own elements, and the page tripped over the texts it no longer found.
 
 ### Changed
