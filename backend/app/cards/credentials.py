@@ -30,21 +30,21 @@ _BAD_ENDINGS = ("token", "password", "passwd", "secret", "apikey", "cookie")
 
 #: Shapes that are a credential wherever they stand.
 _STRONG = (
-    ("a bearer or basic authorization", re.compile(r"\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}", re.IGNORECASE)),
-    ("a GitHub or GitLab token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{16,})")),
-    ("an API key of the sk- kind", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}")),
-    ("a Slack token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}")),
-    ("an AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
-    ("a Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
-    ("a JSON web token", re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")),
-    ("a private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
-    ("a user name and password in an address", re.compile(r"://[^/\s:@]+:[^/\s@]+@")),
+    ("bearer", re.compile(r"\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}", re.IGNORECASE)),
+    ("git_token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{16,})")),
+    ("sk_key", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}")),
+    ("slack_token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}")),
+    ("aws_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("google_key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
+    ("jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")),
+    ("private_key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("address_password", re.compile(r"://[^/\s:@]+:[^/\s@]+@")),
 )  # fmt: skip
 #: Shapes that only count in the structure of the card, where a service did not put them.
 _STRUCTURE = (
-    ("a long hexadecimal key", re.compile(r"(?<![0-9A-Za-z])(?=[0-9a-fA-F]*\d)[0-9a-fA-F]{32,}(?![0-9A-Za-z])")),
+    ("hex_key", re.compile(r"(?<![0-9A-Za-z])(?=[0-9a-fA-F]*\d)[0-9a-fA-F]{32,}(?![0-9A-Za-z])")),
     (
-        "a key, token or password in the query of an address",
+        "query_secret",
         re.compile(r"[?&;](?:api[_-]?key|apikey|access[_-]?token|token|password|passwd|secret|auth|authorization)=(?!\{)[^&\s]+", re.IGNORECASE),
     ),
 )  # fmt: skip
@@ -83,8 +83,27 @@ def _value(text: str, *, structure: bool) -> str | None:
             if pattern.search(text):
                 return what
         if _looks_like_a_key(text.strip()):
-            return "a long key or token"
+            return "long_key"
     return None
+
+
+#: What each code stands for, in English (the interface has its own words for them).
+PHRASES = {
+    "bearer": "a bearer or basic authorization",
+    "git_token": "a GitHub or GitLab token",
+    "sk_key": "an API key of the sk- kind",
+    "slack_token": "a Slack token",
+    "aws_key": "an AWS access key",
+    "google_key": "a Google API key",
+    "jwt": "a JSON web token",
+    "private_key": "a private key",
+    "address_password": "a user name and password in an address",
+    "hex_key": "a long hexadecimal key",
+    "query_secret": "a key, token or password in the query of an address",
+    "long_key": "a long key or token",
+    "headers": "a field for headers",
+    "field": "a field that holds a credential",
+}
 
 
 def find(data: Any, path: tuple[str | int, ...] = (), *, demo: bool = False) -> Iterator[Found]:
@@ -94,8 +113,7 @@ def find(data: Any, path: tuple[str | int, ...] = (), *, demo: bool = False) -> 
             here = (*path, key)
             inside_demo = demo or (not path and key == "demo")
             if isinstance(key, str) and not inside_demo and bad_name(key):
-                what = "a field for headers" if _name(key) in ("headers", "header", "cookie", "cookies") else f"a field called {key}"
-                yield Found(here, "card_secret_field", what)
+                yield Found(here, "card_secret_field", "headers" if _name(key) in ("headers", "header", "cookie", "cookies") else "field")
             yield from find(child, here, demo=inside_demo)
     elif isinstance(data, list):
         for index, child in enumerate(data):

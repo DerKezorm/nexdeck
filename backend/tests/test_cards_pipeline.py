@@ -198,7 +198,7 @@ def test_karten5_ac9_a_broken_expression_is_refused_when_saving_with_place_and_r
         with pytest.raises(load.CardInvalid) as caught:
             load.load_definition(HEAD + body)
         problem = caught.value.problems[0]
-        assert problem.code == "card_expression", body
+        assert problem.code in ("card_expression", "card_expression_at"), body
         assert problem.path == path and reason in problem.message, (problem.path, problem.message)
         assert problem.line is not None and problem.line >= 9
         if position is not None:

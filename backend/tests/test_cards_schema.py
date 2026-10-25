@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 import pytest
 
 from app import __version__
-from app.cards import load, pipeline, schema
+from app.cards import credentials, load, pipeline, schema
 
 from .cards_sample import DEMO_LINE, VALUE_CARD, changed
 
@@ -96,7 +98,7 @@ def test_karten1_ac3_a_card_that_needs_a_newer_nexdeck_is_refused_with_the_versi
 
 def test_karten1_a_rule_looks_at_one_thing() -> None:
     both = changed("{value: totalRecords, op: \">=\"", "{value: totalRecords, formula: \"1\", op: \">=\"")
-    assert refused(both).problems[0].code == "card_one_of"
+    assert refused(both).problems[0].code == "card_at_most_one"
     alone = changed("{value: totalRecords, op: \">=\", than: 10, then: warn}", "{op: \">=\", than: 10, then: warn}")
     assert refused(alone).problems[0].code == "card_rule_subject"
 
@@ -320,3 +322,21 @@ def test_karten1_t1_the_json_schema_describes_the_four_forms() -> None:
     assert value_card["properties"]["name"]["anyOf"][0]["maxLength"] == 60
     assert value_card["additionalProperties"] is False
     json.dumps(document)
+
+
+I18N = Path(__file__).resolve().parents[2] / "frontend" / "src" / "i18n"
+
+
+def test_karten1_ac2_every_message_has_a_translation_in_every_language() -> None:
+    """The message is English; the interface shows the translation of its code, with the same blanks filled in."""
+    sources = "".join(path.read_text(encoding="utf-8") for path in (Path(load.__file__).parent).glob("*.py"))
+    found = set(re.findall(r'"(card_[a-z_]+)"', sources))
+    assert len(found) >= 35, f"only {len(found)} codes were found, so this guard proves nothing"
+    terms = {*load.EXPECTED, *credentials.PHRASES}
+    for language in ("en", "de", "es", "fr", "it"):
+        texts = json.loads((I18N / f"{language}.json").read_text(encoding="utf-8"))["errors"]
+        assert found - set(texts["card"]) == set(), f"{language}: codes without a text"
+        assert terms - set(texts["cardTerms"]) == set(), f"{language}: terms without a text"
+        assert texts["widget"]["too_slow"]
+        # a text for a code that no longer exists is a text nobody sees
+        assert set(texts["card"]) - found == set(), language

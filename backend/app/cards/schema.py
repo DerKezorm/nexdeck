@@ -167,7 +167,7 @@ class Rule(Part):
     @model_validator(mode="after")
     def _one_subject(self) -> Rule:
         if self.value is not None and self.formula is not None:
-            raise PydanticCustomError("card_one_of", "Give only one of {names}.", {"names": "value, formula"})
+            raise PydanticCustomError("card_at_most_one", "Give at most one of {names}.", {"names": "value, formula"})
         return self
 
 

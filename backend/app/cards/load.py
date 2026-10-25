@@ -198,7 +198,7 @@ def _format_of(data: dict[str, Any], lines: dict[Path, int]) -> int:
         raise CardInvalid([Problem("card_missing_field", "This field is required.", "nexdeck-card", 1, {"field": "nexdeck-card"})])
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise CardInvalid(
-            [Problem("card_wrong_type", "nexdeck-card must be a whole number such as 1.", "nexdeck-card", _line(lines, ("nexdeck-card",)), {"expected": "a whole number"})]
+            [Problem("card_wrong_type", "nexdeck-card must be a whole number such as 1.", "nexdeck-card", _line(lines, ("nexdeck-card",)), {"expected": "whole_number"})]
         )
     if value > schema.FORMAT_VERSION:
         raise CardInvalid(
@@ -225,6 +225,15 @@ def _carry_over(data: dict[str, Any], version: int) -> dict[str, Any]:
 # -- what the schema says ---------------------------------------------------------
 
 
+#: What a place wants, by code; the interface translates the code.
+EXPECTED = {
+    "text": "text",
+    "whole_number": "a whole number",
+    "boolean": "true or false",
+    "mapping": "a mapping",
+    "list": "a list",
+    "other": "another kind of value",
+}
 _KINDS = frozenset({"str", "int", "float", "bool", "dict", "list", "none", "constrained-str"})
 
 
@@ -275,8 +284,8 @@ def _from_pydantic(error: Any, lines: dict[Path, int]) -> Problem:
         bound = next(iter(context.values()), "")
         return Problem("card_out_of_range", f"This is outside what is allowed ({bound}).", where, line, {"bound": bound})
     if kind.endswith("_type") or kind in ("model_type", "dict_type", "list_type"):
-        expected = {"str": "text", "int": "a whole number", "bool": "true or false", "model": "a mapping", "dict": "a mapping", "list": "a list"}.get(kind.split("_")[0], "another kind of value")
-        return Problem("card_wrong_type", f"Expected {expected} here.", where, line, {"expected": expected})
+        expected = {"str": "text", "int": "whole_number", "bool": "boolean", "model": "mapping", "dict": "mapping", "list": "list"}.get(kind.split("_")[0], "other")
+        return Problem("card_wrong_type", f"Expected {EXPECTED[expected]} here.", where, line, {"expected": expected})
     return Problem("card_invalid_value", error["msg"], where, line, {"reason": error["msg"]})
 
 
@@ -327,7 +336,7 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
         where = f" (character {failure.position + 1})" if failure.position is not None else ""
         problems.append(
             Problem(
-                "card_expression",
+                "card_expression_at" if failure.position is not None else "card_expression",
                 f"{failure.message}{where}",
                 _key_name(path),
                 _line(lines, path),
@@ -384,9 +393,9 @@ def load_definition(text: str, *, running_version: str = __version__) -> Loaded:
     findings = [
         Problem(
             found.code,
-            f"This looks like {found.what}. A card holds no secrets: the connection keeps them and adds them to the request."
+            f"This looks like {credentials.PHRASES[found.what]}. A card holds no secrets: the connection keeps them and adds them to the request."
             if found.code == "card_secret_value"
-            else f"A card cannot have {found.what}. The connection sends its own credentials and headers.",
+            else f"A card cannot have {credentials.PHRASES[found.what]}. The connection sends its own credentials and headers.",
             _key_name(found.path),
             _line(lines, found.path),
             {"what": found.what},
