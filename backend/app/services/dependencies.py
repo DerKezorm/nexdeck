@@ -54,6 +54,11 @@ HOLD_SECONDS = 90
 #: Events that are bundled under their cause.
 BUNDLED = ("outage", "widget_broken")
 DEPTH = 6
+#: Base images many containers are built on: a name like nginx says what a
+#: container is made of, not which service it is (measured 25.10.2026: two
+#: containers on nginx were proposed for Nginx Proxy Manager).
+BASE_IMAGES = frozenset({"nginx", "alpine", "debian", "ubuntu", "busybox", "python", "node", "httpd", "caddy",
+                         "postgres", "redis", "mariadb", "mysql", "traefik", "golang", "openjdk"})
 DEFAULT_PORTS = {"http": 80, "https": 443, "tcp": None}
 
 #: Outages told under a cause, so their recovery is not told either.
@@ -196,6 +201,15 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
     for integration in integrations:
         if integration.kind in HOSTS and integration.id not in host_addresses:
             host_addresses[integration.id] = resolve(address_of(_service_address(integration))[0])
+    # ⚠️ A host reached through a reverse proxy has the proxy's address, not its own.
+    # Measured 25.10.2026 on a homelab where everything goes through one proxy:
+    # every service there was put on Portainer and on Proxmox at once, and the two
+    # on each other. Such an address names no host.
+    for integration in integrations:
+        if integration.kind in HOSTS and address_of(_service_address(integration))[1] in PROXY_PORTS:
+            own = resolve(address_of(_service_address(integration))[0])
+            host_addresses[integration.id] = host_addresses.get(integration.id, set()) - own
+    kinds = {integration.id: integration.kind for integration in integrations}
 
     services: list[tuple[str, str, str, int | None, set[str]]] = []
     for integration in integrations:
@@ -210,6 +224,8 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
     proposed: set[tuple[str, str]] = set()
     for ref, words, _host, port, addresses in services:
         own = ref.split(":", 1)[1] if ref.startswith("integration:") else None
+        # Behind a proxy the address is the proxy's: it says where the proxy runs, not the service.
+        behind_proxy = port in PROXY_PORTS
         # The most exact wins: a container that publishes the port, else a guest
         # with the address, else a host with the address. A service in a
         # container on a VM hangs on the container; the VM follows through the engine.
@@ -220,23 +236,45 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
             if str(thing.integration_id) == own:
                 continue
             if thing.kind == "guest" and addresses & set(thing.addresses):
-                guests.append(thing.ref)
+                if not behind_proxy:
+                    guests.append(thing.ref)
             elif thing.kind == "container" and addresses & host_addresses.get(thing.integration_id, set()) and port and port in (thing.ports or []):
                 (guessed if port in PROXY_PORTS else containers).append(thing.ref)
-        certain = containers or guests or [f"integration:{integration_id}" for integration_id, known in host_addresses.items()
-                                           if addresses and str(integration_id) != own and addresses & known]
+        # Two hosts on one address cannot be told apart by it; which carries which is said by hand.
+        is_host = own is not None and kinds.get(int(own)) in HOSTS
+        certain = containers or guests or ([] if behind_proxy or is_host else [
+            f"integration:{integration_id}" for integration_id, known in host_addresses.items()
+            if addresses and str(integration_id) != own and addresses & known])
         for parent in certain:
             auto.add((ref, parent))
         if not certain:
             mine = _words(words)
+            named: list[Thing] = []
             for thing in things:
-                if str(thing.integration_id) != own and mine & (_words(thing.name) | _words(thing.image.split("/")[-1].split(":")[0])):
-                    guessed.append(thing.ref)
+                if str(thing.integration_id) == own:
+                    continue
+                # A guest's "image" is its type and node, not software: only a container's says what runs.
+                image = thing.image.split("/")[-1].split(":")[0] if thing.kind == "container" else ""
+                if mine & (_words(thing.name) | (_words(image) - BASE_IMAGES)):
+                    named.append(thing)
+            # One named exactly like the service beats its siblings (sabnzbd, not ndl-sabnzbd).
+            exact = [thing for thing in named if thing.name.lower() in mine]
+            guessed.extend(thing.ref for thing in (exact or named))
         for parent in guessed:
             proposed.add((ref, parent))
 
+    # ⚠️ Never a circle: a relation that would make something hang on itself is left out.
+    kept = {key for key, row in existing.items() if row.state == "on" and row.origin != "auto"}
+    for pair in sorted(auto):
+        if _reaches(kept, pair[1], pair[0]):
+            auto.discard(pair)
+        else:
+            kept.add(pair)
     for key, row in existing.items():
         if row.origin == "auto" and row.state == "on" and key not in auto:
+            db.delete(row)
+        # A proposal nobody answered goes once it is no longer found; a no stays a no.
+        elif row.state == "suggested" and key not in proposed and key not in auto:
             db.delete(row)
     for child, parent in auto:
         row = existing.get((child, parent))
@@ -248,6 +286,22 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
         if (child, parent) not in existing:
             db.add(Relation(child=child, parent=parent, origin="suggested", state="suggested"))
     db.flush()
+
+
+def _reaches(pairs: set[tuple[str, str]], start: str, goal: str) -> bool:
+    """Whether ``start`` hangs on ``goal`` through these (child, parent) pairs."""
+    up: dict[str, list[str]] = {}
+    for child, parent in pairs:
+        up.setdefault(child, []).append(parent)
+    seen, queue = set(), [start]
+    while queue:
+        one = queue.pop()
+        if one == goal:
+            return True
+        if one not in seen:
+            seen.add(one)
+            queue.extend(up.get(one, []))
+    return False
 
 
 # -- reading the relations ------------------------------------------------------------------

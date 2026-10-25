@@ -158,6 +158,81 @@ def test_a_guest_with_the_address_is_certain_and_a_no_is_never_asked_again(clien
     assert (f"integration:{named}", f"container:{engine}:grafana", "suggested", "rejected") in _relations()
 
 
+def test_behind_a_reverse_proxy_an_address_names_no_host(client: TestClient) -> None:
+    """⚠️ Measured on 25.10.2026: everything behind one proxy was put on Portainer and Proxmox at once, and those two on each other."""
+    setup_admin(client)
+    pve = _connection(client, "proxmox", "Proxmox VE", "https://10.0.0.159")
+    portainer = _connection(client, "portainer", "Portainer", "https://10.0.0.159")
+    wiki = _connection(client, "nexlore", "nexlore", "https://10.0.0.159")
+    proxy = _connection(client, "npm", "Nginx Proxy Manager", "http://10.0.0.159:81")
+    _things(pve, {"kind": "guest", "key": "100", "name": "docker-dev", "image": "VM 100 · proxmox", "state": "running", "addresses": ["10.0.0.159"], "ports": []})
+    _match({pve: ["10.0.0.159"], portainer: ["10.0.0.159"]})
+    certain = {(child, parent) for child, parent, origin, _state in _relations() if origin == "auto"}
+    assert certain == {(f"integration:{proxy}", f"guest:{pve}:100")}, "only the proxy itself, on its own port, runs where the address points"
+    assert not any(child == f"integration:{wiki}" for child, *_ in _relations())
+
+
+def test_a_host_reached_through_a_proxy_carries_nothing_by_that_address(client: TestClient) -> None:
+    setup_admin(client)
+    portainer = _connection(client, "portainer", "Portainer", "https://10.0.0.159")
+    proxy = _connection(client, "npm", "Nginx Proxy Manager", "http://10.0.0.159:81")
+    _match({portainer: ["10.0.0.159"]})
+    assert not any(child == f"integration:{proxy}" for child, *_ in _relations()), "the proxy does not run on Portainer"
+
+
+def test_what_was_found_or_proposed_before_goes_when_it_no_longer_fits(client: TestClient) -> None:
+    """The first matcher on 25.10.2026 wrote wrong relations into docker-live; the next round must take them away."""
+    setup_admin(client)
+    portainer = _connection(client, "portainer", "Portainer", "https://10.0.0.159")
+    wiki = _connection(client, "nexlore", "nexlore", "https://10.0.0.159")
+    _things(portainer, _container("nexlore-old", image="example/other"))
+    with db_session() as db:
+        db.add(Relation(child=f"integration:{wiki}", parent=f"integration:{portainer}", origin="auto", state="on"))
+        db.add(Relation(child=f"integration:{wiki}", parent=f"container:{portainer}:nexlore-old", origin="suggested", state="suggested"))
+        db.add(Relation(child=f"integration:{portainer}", parent=f"container:{portainer}:nexlore-old", origin="suggested", state="rejected"))
+    _things(portainer, _container("nexlore-old", image="example/other"))
+    with db_session() as db:
+        db.get(Thing, db.scalar(select(Thing.id).where(Thing.name == "nexlore-old"))).name = "something-else"
+    _match({portainer: ["10.0.0.159"]})
+    assert _relations() == {(f"integration:{portainer}", f"container:{portainer}:nexlore-old", "suggested", "rejected")}
+
+
+def test_two_hosts_on_one_address_are_not_put_on_each_other(client: TestClient) -> None:
+    setup_admin(client)
+    pve = _connection(client, "proxmox", "PVE", "https://10.0.0.5:8006")
+    portainer = _connection(client, "portainer", "Portainer", "http://10.0.0.5:9000")
+    _match({})
+    assert not any(child in (f"integration:{pve}", f"integration:{portainer}") for child, *_ in _relations())
+
+
+def test_a_found_relation_that_would_make_a_circle_is_left_out(client: TestClient) -> None:
+    setup_admin(client)
+    nas = _connection(client, "synology", "NAS", "https://10.0.0.9:5001")
+    photos = _connection(client, "immich", "Immich", "http://10.0.0.9:2283")
+    with db_session() as db:
+        db.add(Relation(child=f"integration:{nas}", parent=f"integration:{photos}", origin="manual", state="on"))
+    _match({})
+    assert (f"integration:{photos}", f"integration:{nas}", "auto", "on") not in _relations()
+
+
+def test_a_name_proposes_the_exact_container_and_not_what_it_is_built_on(client: TestClient) -> None:
+    setup_admin(client)
+    pve = _connection(client, "proxmox", "PVE", "https://10.0.0.2:8006")
+    engine = _connection(client, "docker", "docker-dev", "tcp://10.0.0.66:2375")
+    _things(engine, _container("sabnzbd", image="linuxserver/sabnzbd"), _container("ndl-sabnzbd", image="linuxserver/sabnzbd"),
+            _container("skp-durchreicher", image="nginx:alpine"))
+    _things(pve, {"kind": "guest", "key": "101", "name": "media", "image": "VM 101 · proxmox", "state": "running", "addresses": [], "ports": []})
+    sab = _connection(client, "sabnzbd", "SABnzbd", "http://sab.example.invalid:8080")
+    proxy = _connection(client, "npm", "Nginx Proxy Manager", "http://npm.example.invalid:81")
+    board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
+    tile = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.app", "title": "Proxmox"}, headers=CSRF).json()["widget"]
+    _match({engine: ["10.0.0.66"]})
+    proposed = {(child, parent) for child, parent, origin, _state in _relations() if origin == "suggested"}
+    assert {parent for child, parent in proposed if child == f"integration:{sab}"} == {f"container:{engine}:sabnzbd"}
+    assert not any(child == f"integration:{proxy}" for child, _parent in proposed), "nginx is what the container is built on"
+    assert not any(child == f"tile:{tile['id']}" for child, _parent in proposed), "a guest's node is not its software"
+
+
 def test_a_found_relation_goes_when_the_address_changes(client: TestClient) -> None:
     setup_admin(client)
     engine = _connection(client, "docker", "docker-live", "tcp://10.0.0.65:2375")
