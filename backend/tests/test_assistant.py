@@ -819,3 +819,8 @@ def test_an_ordinary_log_line_stays_as_it_was() -> None:
 
     line = "10:00:01 [Nest] 7 LOG Bootstrap complete, 3 workers, token cache warm"
     assert log_redact(line) == line
+
+
+def test_the_model_is_told_to_ask_for_a_log_with_the_tool_not_in_words() -> None:
+    """⚠️ Seen on 25.10.2026 with Sonnet: "I can read the log, but I need your permission", and no button to give it."""
+    assert "call container_log right away instead of offering it in words" in chat.SYSTEM
