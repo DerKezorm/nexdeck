@@ -1010,3 +1010,71 @@ def test_karten9_ac10_a_run_of_digits_changes_in_every_place() -> None:
         made = demo.disguise_text(token)
         assert len(made) == len(token) and all(new != old for new, old in zip(made, token, strict=True)), (token, made)
         assert made[0] != "0" or len(token) == 1
+
+
+# -- demo mode: nothing is asked of the real service (second review of KARTEN-9) --------------------------------
+
+
+def in_demo(how: str, admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> int:
+    """A connection, and demo mode switched on the way ``how`` says: for the installation (flag or variable) or for the connection."""
+    from app import config
+    from app.services import collector as collector_module
+
+    if how == "variable":
+        monkeypatch.setenv("NEXDECK_DEMO", "1")
+        config.reset_settings_cache()
+    sonarr = connection(admin, demo=True) if how == "connection" else connection(admin)
+    if how == "flag":
+        collector_module.set_demo_flag(True)
+    return sonarr
+
+
+@pytest.mark.parametrize("how", ["flag", "variable", "connection"])
+def test_karten9_h2_in_demo_mode_probe_and_examples_ask_no_service_and_say_where_to_switch_it_off(admin: TestClient, monkeypatch: pytest.MonkeyPatch, how: str) -> None:
+    sonarr = in_demo(how, admin, monkeypatch)
+    with respx.mock(assert_all_called=False) as router:
+        reached = router.route().mock(return_value=httpx.Response(200, json=ANSWER))
+        asked = (
+            post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue"}),
+            post(admin, "demo", {"yaml": VALUE_CARD, "integration_id": sonarr}),
+        )
+        assert not reached.called
+    for answer in asked:
+        detail = answer.json()["detail"]
+        assert answer.status_code == 409 and detail["code"] == "demo_mode", answer.text[:200]
+        assert "demo mode" in detail["message"].lower() and "invented" in detail["hint"]
+        assert ("NEXDECK_DEMO" in detail["hint"]) == (how == "variable")
+        assert ("Integrations" in detail["hint"]) == (how != "variable")
+    kinds = [one["kind"] for one in admin.get("/api/v1/chronicle").json()["events"]]
+    assert "card_probe" not in kinds, "nothing was asked, so nothing is written down"
+
+
+@pytest.mark.parametrize("how", ["flag", "variable", "connection"])
+def test_karten9_h2_in_demo_mode_a_preview_with_a_connection_shows_the_demo_data_of_the_card(admin: TestClient, monkeypatch: pytest.MonkeyPatch, how: str) -> None:
+    sonarr = in_demo(how, admin, monkeypatch)
+    with respx.mock(assert_all_called=False) as router:
+        reached = router.route().mock(return_value=httpx.Response(200, json=ANSWER))
+        answer = post(admin, "preview", {"yaml": VALUE_CARD, "integration_id": sonarr})
+        assert not reached.called
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["primary"]["value"] == 4, "the demo data of the card, as the card on a board shows them"
+
+
+@pytest.mark.parametrize("how", ["flag", "variable", "connection"])
+def test_karten9_h2_in_demo_mode_the_picture_route_fetches_nothing(admin: TestClient, monkeypatch: pytest.MonkeyPatch, how: str) -> None:
+    sonarr = in_demo(how, admin, monkeypatch)
+    with respx.mock(assert_all_called=False) as router:
+        reached = router.route().mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+        answer = admin.get(f"{API}/preview-image", params={"integration_id": sonarr, "path": signed("/p/a.jpg")})
+        assert not reached.called
+    assert answer.status_code == 409 and answer.json()["detail"]["code"] == "demo_mode"
+
+
+@respx.mock
+def test_karten9_h2_a_connection_not_in_demo_mode_is_asked_as_before_when_another_one_is(admin: TestClient) -> None:
+    other = connection(admin, demo=True)
+    real = connection(admin)
+    sonarr_serves()
+    assert other != real
+    assert post(admin, "probe", {"integration_id": real, "path": "/api/v3/queue"}).status_code == 200
+    assert post(admin, "preview", {"yaml": VALUE_CARD, "integration_id": real}).json()["primary"]["value"] == 12

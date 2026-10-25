@@ -25,10 +25,12 @@ from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
 from ..cards import credentials, load, pipeline, probe, schema, source, store
 from ..cards import demo as card_demo
+from ..config import get_settings
+from ..db import db_session
 from ..deps import AdminUser, DbSession, MemberUser, error
 from ..models import Board, CardRecord, Integration, Page, Role, User, Widget
 from ..services import chronicle
-from ..services.collector import collector
+from ..services.collector import collector, demo_flag
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1/cards", tags=["cards"])
@@ -170,6 +172,8 @@ def json_schema(user: AdminUser) -> dict[str, Any]:
 ASK_SECONDS = 20
 #: Failures that are the card's or the caller's doing, not the service's.
 _ASKED_WRONG = frozenset({"bad_path", "bad_param", "kind_mismatch", "no_raw_access", "read_only", "no_demo_data", "demo_too_large", "too_slow", "form_changed", "card_secret_value"})
+#: The code of an editor call that is not made because the installation or the connection shows invented data.
+DEMO_MODE = "demo_mode"
 
 
 def _failed(failure: AdapterError) -> HTTPException:
@@ -179,6 +183,8 @@ def _failed(failure: AdapterError) -> HTTPException:
     """
     if failure.code in _ASKED_WRONG:
         http = status.HTTP_400_BAD_REQUEST
+    elif failure.code == DEMO_MODE:
+        http = status.HTTP_409_CONFLICT
     elif failure.code == "no_integration":
         http = status.HTTP_404_NOT_FOUND
     else:
@@ -186,10 +192,40 @@ def _failed(failure: AdapterError) -> HTTPException:
     return HTTPException(http, {"code": failure.code, "message": failure.message, "hint": failure.hint})
 
 
+def _demo_mode(integration_id: int | None) -> AdapterError | None:
+    """Why the real service must not be asked: demo mode of the installation or of the connection, as the board holds to it.
+
+    ⚠️ A card on a board shows invented data then, so a probe or an example taken from the real service would not be what
+    the card shows. The editor is told in words, with the place where demo mode is switched off (found in the review of KARTEN-9, 25.10.2026).
+    """
+    if get_settings().demo:
+        return AdapterError(
+            "Demo mode is on for the whole installation through NEXDECK_DEMO, so the real service is not asked.", code=DEMO_MODE,
+            hint="Remove the variable NEXDECK_DEMO from the container and restart it. Until then a card shows invented data.",
+        )
+    if demo_flag():
+        return AdapterError(
+            "Demo mode is on for the whole installation, so the real service is not asked.", code=DEMO_MODE,
+            hint="Switch it off under System > Integrations. Until then a card shows invented data.",
+        )
+    if integration_id is not None:
+        with db_session() as db:
+            one = db.get(Integration, integration_id)
+            if one is not None and one.demo:
+                return AdapterError(
+                    f"The connection {one.name} is in demo mode, so the real service is not asked.", code=DEMO_MODE,
+                    hint="Switch off demo mode of the connection under System > Integrations. Until then a card on it shows invented data.",
+                )
+    return None
+
+
 async def _connection(integration_id: int, kinds: list[str] | None = None) -> tuple[Any, dict[str, Any], Context]:
     """The connection a probe, a preview or an example is fetched through: a kind a card may read through, and one the card names."""
     from ..services.collector import collector
 
+    in_demo = _demo_mode(integration_id)
+    if in_demo is not None:
+        raise in_demo
     adapter, config, ctx = await collector.resolve_integration(integration_id)
     if not adapter.raw_access:
         raise AdapterError(f"{adapter.label} cannot be read by a custom card yet.", code="no_raw_access", hint="Pick a connection of another kind.")
@@ -244,6 +280,8 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
         adapter, config, ctx = await _connection(body.integration_id)
         answer = await _ask(adapter, config, ctx, request)
     except AdapterError as failure:
+        if failure.code == DEMO_MODE:
+            raise _failed(failure) from failure  # nothing was asked, so there is nothing to write down
         # A probe that failed was asked all the same, with the connection's credentials: the line says why, never what came back.
         logger.info("%s probed %s at %s: %s.", user.username, name or body.integration_id, body.path, failure.code)
         chronicle.record("card_probe", level="warn", user_id=user.id, integration_id=body.integration_id if name else None, name=name,
@@ -273,7 +311,8 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
     """The same values, in the same shape, as the card has on a board: ``adapters/custom.present`` and the passes every card goes through."""
     _connection_number(body.integration_id)
     definition = _definition(body.yaml)
-    demo = body.demo or body.integration_id is None
+    # In demo mode the card shows its demo data on a board, and so it does here: nothing is asked of the service.
+    demo = body.demo or body.integration_id is None or _demo_mode(body.integration_id) is not None
     base = ""
     try:
         if demo:
@@ -331,6 +370,9 @@ async def preview_image(integration_id: int, path: str, user: AdminUser) -> Resp
     from .widgets import bad_picture_path, cached_image, custom_picture, serve_image
 
     _connection_number(integration_id)
+    in_demo = _demo_mode(integration_id)
+    if in_demo is not None:
+        raise _failed(in_demo)
     refused = bad_picture_path(path)
     if refused is not None:
         raise refused
