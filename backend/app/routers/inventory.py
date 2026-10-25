@@ -13,22 +13,15 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ..deps import AdminUser, DbSession, error
-from ..models import Integration, Relation, Setting, Thing, Widget
+from ..models import Integration, Relation, Thing, Widget
 from ..services import dependencies
 
 router = APIRouter(prefix="/api/v1", tags=["inventory"])
 logger = logging.getLogger("nexdeck.dependencies")
 
-LAYOUT = "inventory.layout"
-
-
 class RelationIn(BaseModel):
     child: str = Field(min_length=3, max_length=200)
     parent: str = Field(min_length=3, max_length=200)
-
-
-class LayoutIn(BaseModel):
-    positions: dict[str, list[float]] = Field(default_factory=dict)
 
 
 def _exists(db: DbSession, ref: str) -> bool:
@@ -99,21 +92,3 @@ def remove(relation_id: int, user: AdminUser, db: DbSession) -> None:
     else:
         row.state = "rejected"
     db.commit()
-
-
-@router.get("/inventory/layout", summary="Where the map has each thing")
-def layout(user: AdminUser, db: DbSession) -> dict:
-    row = db.get(Setting, LAYOUT)
-    return {"positions": dict(row.value or {}) if row is not None else {}}
-
-
-@router.put("/inventory/layout", summary="Keep where the map has each thing")
-def keep_layout(body: LayoutIn, user: AdminUser, db: DbSession) -> dict:
-    positions = {ref[:200]: [round(float(value), 1) for value in point[:2]] for ref, point in list(body.positions.items())[:2000] if len(point) >= 2}
-    row = db.get(Setting, LAYOUT)
-    if row is None:
-        db.add(Setting(key=LAYOUT, value=positions))
-    else:
-        row.value = positions
-    db.commit()
-    return {"positions": positions}

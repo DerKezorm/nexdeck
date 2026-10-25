@@ -30,11 +30,17 @@
     "runsOnHelp": "What this needs to work. When that is down, this one is not told on its own; its card says why.",
     "pick": "Add …",
     "nothing": "Nothing yet",
-    "mapHelp": "Drag to arrange; the arrangement is kept. Red is down, a dashed line is only proposed.",
-    "arrange": "Arrange again",
+    "mapHelp": "One column per machine, its containers and guests below, and what runs in each beside it. A name leads to its diagnosis; red is down, dashed only proposed.",
     "diagnose": "Diagnosis",
     "suggestionContainer": "{{child}} probably runs in the container {{name}} on {{host}}",
     "suggestionGuest": "{{child}} probably runs in {{name}} on {{host}}",
-    "tileOf": "{{name}} (app tile)"
+    "tileOf": "{{name}} (app tile)",
+    "proposedMark": "proposed",
+    "withTile": "+ app tile",
+    "showAll": "Show all containers ({{count}} with nothing in them)",
+    "onlyUsed": "Only containers with a service",
+    "direct": "Straight on the machine",
+    "loose": "Not placed",
+    "nothingKnown": "{{count}} containers or guests, nothing known to run in them"
   }
 }

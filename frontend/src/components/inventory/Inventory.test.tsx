@@ -3,13 +3,13 @@
  * field on a connection, and the cause a card names.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import i18n from 'i18next'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { factText } from '../../lib/assistant'
-import { layered, tree, type Inventory } from '../../lib/inventory'
+import { columns, tree, type Inventory } from '../../lib/inventory'
 import type { WidgetView } from '../../lib/types'
 import { InventorySettings } from '../../pages/settings/InventorySettings'
 import { WidgetCard } from '../WidgetCard'
@@ -40,7 +40,6 @@ vi.mock('../../api/client', async (original) => ({
   ...(await original<typeof import('../../api/client')>()),
   get: vi.fn(async (path: string) => {
     sent.push({ method: 'GET', path })
-    if (path === '/inventory/layout') return { positions: { 'tile:9': [500, 300] } }
     return INVENTORY
   }),
   post: vi.fn(async (path: string, body?: unknown) => {
@@ -80,14 +79,30 @@ describe('the shape of it', () => {
     expect(unplaced.map((node) => node.name)).toEqual(['Radarr', 'Wiki'])
   })
 
-  it('lays the map out in rows by depth, and survives a circle', () => {
-    const rows = layered(INVENTORY)
-    expect(rows['integration:1'][1]).toBeLessThan(rows['guest:1:201'][1])
-    expect(rows['guest:1:201'][1]).toBeLessThan(rows['integration:3'][1])
-    expect(rows['integration:3'][0]).toBe(rows['container:2:plex'][0])
+  it('puts each machine in a column with what runs in its containers, and folds a tile into its connection', () => {
+    const { columns: machines, loose } = columns(INVENTORY)
+    expect(machines.map((one) => one.host.name)).toEqual(['docker-live', 'PVE'])
+    const engine = machines[0]
+    expect(engine.slots.map((slot) => [slot.node.name, slot.services.map((one) => [one.node.name, one.proposed])])).toEqual([
+      ['plex', [['Plex', false]]],
+      ['radarr', [['Radarr', true]]],
+    ])
+    expect(machines[1].slots[0].services.map((one) => one.node.ref)).toEqual(['integration:2'])
+    expect(loose.map((one) => one.node.name)).toEqual(['Wiki'])
+    const folded = columns({ ...INVENTORY, relations: [...INVENTORY.relations, { id: 8, child: 'tile:9', parent: 'integration:3', origin: 'auto', state: 'on' }] })
+    expect(folded.loose).toEqual([])
+    expect(folded.columns.map((one) => one.host.name)).toEqual(['docker-live', 'PVE'])
+    expect(folded.columns[0].slots[0].services[0]).toMatchObject({ node: { name: 'Plex' }, tiles: 1 })
     const circle: Inventory = { nodes: INVENTORY.nodes, relations: [...INVENTORY.relations, { id: 9, child: 'guest:1:201', parent: 'integration:3', origin: 'manual', state: 'on' }] }
     expect(() => tree(circle)).not.toThrow()
-    expect(() => layered(circle)).not.toThrow()
+    expect(() => columns(circle)).not.toThrow()
+  })
+
+  it('keeps a container nothing runs in out of its column until asked', () => {
+    const empty: Inventory = { ...INVENTORY, nodes: [...INVENTORY.nodes, { ref: 'container:2:redis', kind: 'container', service: '', name: 'redis', detail: '', host: false, down: false, parent: 'integration:2' }] }
+    const engine = columns(empty).columns[0]
+    expect(engine.slots.map((slot) => slot.node.name)).toEqual(['plex', 'radarr'])
+    expect(engine.empty.map((slot) => slot.node.name)).toEqual(['redis'])
   })
 
   it('words what a reboot hits', () => {
@@ -143,20 +158,14 @@ describe('the inventory page', () => {
     expect(sent.some((one) => one.method === 'POST' && one.path === '/inventory/refresh')).toBe(true)
   })
 
-  it('shows the map with the kept place of a box, and keeps where one is dragged', async () => {
-    const { container } = render(<InventoryMap inventory={INVENTORY} />)
-    await waitFor(() => expect(screen.getAllByTestId('inventory-node')).toHaveLength(8))
-    const map = screen.getByTestId('inventory-map')
-    expect(container.querySelectorAll('line[stroke-dasharray]')).toHaveLength(1)
-    const wiki = screen.getAllByTestId('inventory-node').find((node) => node.textContent?.startsWith('Wiki')) as Element
-    expect(wiki.getAttribute('transform')).toBe('translate(500 300)')
-    map.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
-    fireEvent.pointerDown(wiki, { clientX: 510, clientY: 310 })
-    fireEvent.pointerMove(map, { clientX: 610, clientY: 360 })
-    fireEvent.pointerUp(map)
-    expect(wiki.getAttribute('transform')).toBe('translate(600 350)')
-    const kept = sent.filter((one) => one.method === 'PUT').at(-1)?.body as { positions: Record<string, number[]> }
-    expect(kept.positions['tile:9']).toEqual([600, 350])
+  it('draws the map as columns, names leading to their diagnosis', () => {
+    render(<MemoryRouter><InventoryMap inventory={INVENTORY} /></MemoryRouter>)
+    const machines = screen.getAllByTestId('inventory-column')
+    expect(machines.map((one) => one.querySelector('h3')?.textContent)).toEqual(['docker-live', 'PVE'])
+    const proposed = screen.getAllByTestId('inventory-service').filter((one) => one.dataset.proposed)
+    expect(proposed.map((one) => one.textContent)).toEqual([expect.stringContaining('Radarr')])
+    expect(screen.getByRole('link', { name: 'Plex' }).getAttribute('href')).toBe('/diagnosis?ref=integration%3A3')
+    expect(screen.getByTestId('inventory-loose').textContent).toContain('Wiki')
   })
 })
 

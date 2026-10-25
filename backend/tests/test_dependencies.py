@@ -405,21 +405,18 @@ def test_relations_by_hand_confirm_and_say_no(client: TestClient) -> None:
     assert not any(child == f"integration:{wiki}" for child, *_ in _relations()), "one set by hand simply goes"
 
 
-def test_the_inventory_lists_nodes_with_their_state_and_keeps_the_map(client: TestClient) -> None:
+def test_the_inventory_lists_nodes_with_their_state(client: TestClient) -> None:
     pve, engine, _plex = _chain(client)
     view = client.get("/api/v1/inventory").json()
     kinds = {node["ref"]: node["kind"] for node in view["nodes"]}
     assert kinds[f"guest:{pve}:201"] == "guest" and kinds[f"container:{engine}:plex"] == "container"
     guest = next(node for node in view["nodes"] if node["ref"] == f"guest:{pve}:201")
     assert guest["detail"] == "10.0.0.65" and guest["parent"] == f"integration:{pve}"
-    put = client.put("/api/v1/inventory/layout", json={"positions": {f"guest:{pve}:201": [120.44, 80]}}, headers=CSRF)
-    assert put.json() == {"positions": {f"guest:{pve}:201": [120.4, 80.0]}}
-    assert client.get("/api/v1/inventory/layout").json() == put.json()
 
 
 def test_members_see_no_inventory(client: TestClient) -> None:
     setup_admin(client)
     create_user(client, "member")
     login(client, "member", "another-long-password")
-    for method, path in (("get", "/api/v1/inventory"), ("post", "/api/v1/inventory/refresh"), ("post", "/api/v1/relations"), ("get", "/api/v1/inventory/layout")):
+    for method, path in (("get", "/api/v1/inventory"), ("post", "/api/v1/inventory/refresh"), ("post", "/api/v1/relations")):
         assert client.request(method.upper(), path, json={"child": "integration:1", "parent": "integration:2"}, headers=CSRF).status_code == 403, path

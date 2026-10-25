@@ -30,11 +30,17 @@
     "runsOnHelp": "Was das hier zum Laufen braucht. Fällt das aus, wird das hier nicht einzeln gemeldet; seine Karte sagt warum.",
     "pick": "Hinzufügen …",
     "nothing": "Noch nichts",
-    "mapHelp": "Zum Anordnen ziehen; die Anordnung bleibt. Rot ist ausgefallen, gestrichelt nur vorgeschlagen.",
-    "arrange": "Neu anordnen",
+    "mapHelp": "Eine Spalte je Rechner, darunter seine Container und Gäste, daneben, was darin läuft. Ein Name führt zur Diagnose; rot ist ausgefallen, gestrichelt nur vorgeschlagen.",
     "diagnose": "Diagnose",
     "suggestionContainer": "{{child}} läuft vermutlich im Container {{name}} auf {{host}}",
     "suggestionGuest": "{{child}} läuft vermutlich in {{name}} auf {{host}}",
-    "tileOf": "{{name}} (App-Kachel)"
+    "tileOf": "{{name}} (App-Kachel)",
+    "proposedMark": "vorgeschlagen",
+    "withTile": "+ App-Kachel",
+    "showAll": "Alle Container zeigen ({{count}} ohne Dienst)",
+    "onlyUsed": "Nur Container mit Dienst",
+    "direct": "Direkt auf dem Rechner",
+    "loose": "Ohne Platz",
+    "nothingKnown": "{{count}} Container oder Gäste, darin läuft nichts Bekanntes"
   }
 }

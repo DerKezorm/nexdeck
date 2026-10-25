@@ -30,11 +30,17 @@
     "runsOnHelp": "Ce dont ceci a besoin pour marcher. Si cela tombe, ceci n'est pas signalé à part ; sa carte dit pourquoi.",
     "pick": "Ajouter …",
     "nothing": "Rien pour l'instant",
-    "mapHelp": "Fais glisser pour arranger ; la disposition est gardée. Rouge est en panne, une ligne pointillée est seulement proposée.",
-    "arrange": "Réarranger",
+    "mapHelp": "Une colonne par machine, ses conteneurs et invités en dessous, et à côté ce qui tourne dans chacun. Un nom mène à son diagnostic ; rouge est hors service, pointillé seulement proposé.",
     "diagnose": "Diagnostic",
     "suggestionContainer": "{{child}} tourne probablement dans le conteneur {{name}} sur {{host}}",
     "suggestionGuest": "{{child}} tourne probablement dans {{name}} sur {{host}}",
-    "tileOf": "{{name}} (tuile d'app)"
+    "tileOf": "{{name}} (tuile d'app)",
+    "proposedMark": "proposé",
+    "withTile": "+ tuile d'app",
+    "showAll": "Afficher tous les conteneurs ({{count}} sans rien dedans)",
+    "onlyUsed": "Seulement les conteneurs avec un service",
+    "direct": "Directement sur la machine",
+    "loose": "Non placés",
+    "nothingKnown": "{{count}} conteneurs ou invités, rien de connu ne tourne dedans"
   }
 }
