@@ -86,7 +86,7 @@ describe('the library', () => {
     await waitFor(() => expect(created).toHaveBeenCalledWith(11))
     const placed = world.sent.find((one) => one.method === 'POST')!
     expect(placed.url).toBe('/pages/5/widgets')
-    expect(placed.body).toMatchObject({ kind: 'custom.value', integration_id: 7, options: { card: 'queue-size' }, title: '' })
+    expect(placed.body).toMatchObject({ kind: 'custom.value', integration_id: 7, options: { card: 'queue-size' }, title: 'Queue' })
   })
 
   it('karten11 ac2: the form of the card decides the kind it is placed as', async () => {

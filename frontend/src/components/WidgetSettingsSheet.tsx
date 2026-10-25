@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import type { LibraryCard } from '../lib/customCards'
 import { shownField } from '../lib/fields'
 import { inFigures, TILE_LINES } from '../lib/figures'
 import { useEditedPage } from '../lib/groups'
@@ -75,6 +76,9 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   const adapterKind = widget?.kind.split('.')[0] ?? ''
   const adapter = adapters.data?.find((a) => a.kind === adapterKind)
   const spec = adapter?.widgets.find((w) => w.kind === widget?.kind)
+  // A custom card reads through a connection of a kind its definition names, never one of its own kind.
+  const isCustomCard = adapterKind === 'custom'
+  const library = useQuery({ queryKey: ['cards-library'], queryFn: () => get<{ cards: LibraryCard[] }>('/cards/library'), enabled: isCustomCard, staleTime: 30_000 })
 
   useEffect(() => {
     if (!widget) return
@@ -169,8 +173,11 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
 
   if (!widget) return null
   const isApp = widget.kind === 'core.app'
-  // A service widget needs an integration of its own kind; an app tile may follow any service.
-  const matching = (integrations.data ?? []).filter((i) => isApp || i.kind === adapterKind)
+  // A service widget needs an integration of its own kind; an app tile may follow any service; a custom card any
+  // connection of a kind its definition names, and the one it sits on even while the library is still loading.
+  const readsThrough = isCustomCard ? library.data?.cards.find((card) => card.slug === options.card)?.requires.map((one) => one.kind) : undefined
+  const matching = (integrations.data ?? []).filter((i) =>
+    isApp || (isCustomCard ? String(i.id) === integrationId || (readsThrough ?? []).includes(i.kind) : i.kind === adapterKind))
   const followed = isApp ? matching.find((i) => String(i.id) === integrationId) : undefined
   const followedUrl = typeof followed?.config?.url === 'string' ? followed.config.url : ''
   const chooseIntegration = (value: string) => {
@@ -340,7 +347,10 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       </Field>
       {(adapter?.needs_integration || adapter?.optional_integration || (isApp && !followedApp)) && (
         <Field label={isApp || adapter?.optional_integration ? t('widget.integrationOptional') : t('widget.integration')} htmlFor="w-int" help={isApp ? t('widget.integrationFollowHelp') : undefined}>
-          <Select id="w-int" value={integrationId} onChange={chooseIntegration} options={[{ value: '', label: t('widget.noIntegration') }, ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
+          {/* ⚠️ A custom card without its connection shows nothing but an error, so it offers no "None", and with a single
+              connection that fits there is nothing to choose. */}
+          <Select id="w-int" value={integrationId} onChange={chooseIntegration} disabled={isCustomCard && matching.length < 2}
+            options={[...(isCustomCard ? [] : [{ value: '', label: t('widget.noIntegration') }]), ...matching.map((i) => ({ value: String(i.id), label: i.name }))]} />
         </Field>
       )}
       {/* ⚠️ An option that does nothing is not on screen. The volume card in

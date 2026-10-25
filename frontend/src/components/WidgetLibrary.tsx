@@ -176,7 +176,8 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
     try {
       const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
         kind: `custom.${card.form}`,
-        title: '',
+        // In the language of whoever places it; the server would fall back to the English name.
+        title: pickText(card.name, i18n.language),
         integration_id: chosen,
         options: { card: card.slug },
       })
