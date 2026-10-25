@@ -66,6 +66,16 @@ class SharingBody(BaseModel):
     allowed: bool
 
 
+#: The most a connection's number can be: what the database holds as an integer and then some, so no number is a failure.
+MAX_INTEGRATION = 2**31 - 1
+
+
+def _connection_number(number: int | None) -> None:
+    """A number no connection has is a mistake of the caller, not of the server (found in the review of KARTEN-9, 25.10.2026)."""
+    if number is not None and not 1 <= number <= MAX_INTEGRATION:
+        raise error("bad_integration", "That is not the number of a connection.", status.HTTP_400_BAD_REQUEST)
+
+
 def _invalid(failure: load.CardInvalid) -> HTTPException:
     return HTTPException(status.HTTP_400_BAD_REQUEST, {"code": "card_invalid", "message": str(failure), **failure.detail()})
 
@@ -222,6 +232,7 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
         )) from None
     # ⚠️ A secret in the path is refused as in a card, before anything is asked, kept or written down: the path goes into
     # the chronicle and the log, and those end up in extracts and backups (found in the review of KARTEN-9, 25.10.2026).
+    _connection_number(body.integration_id)
     secret = next(credentials.find(body.path), None)
     if secret is not None:
         raise _failed(AdapterError(
@@ -260,6 +271,7 @@ def _with_preview_pictures(data: dict[str, Any], integration_id: int | None) -> 
 @router.post("/preview", summary="Work out what a card text shows, with the answers of a connection or with its demo data")
 async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
     """The same values, in the same shape, as the card has on a board: ``adapters/custom.present`` and the passes every card goes through."""
+    _connection_number(body.integration_id)
     definition = _definition(body.yaml)
     demo = body.demo or body.integration_id is None
     base = ""
@@ -287,6 +299,7 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
 @router.post("/demo", summary="Example answers made from the real ones of a connection: shortened and made up")
 async def make_demo(body: DemoBody, user: AdminUser) -> dict[str, Any]:
     """The editor shows the result before it is taken over and lets the author change single values (KARTEN-9 AC-10)."""
+    _connection_number(body.integration_id)
     definition = _definition(body.yaml)
     try:
         answers, _adapter, _config = await _answers(definition, body.integration_id)
@@ -317,9 +330,11 @@ async def preview_image(integration_id: int, path: str, user: AdminUser) -> Resp
     from ..services.collector import collector
     from .widgets import bad_picture_path, cached_image, custom_picture, serve_image
 
+    _connection_number(integration_id)
     refused = bad_picture_path(path)
     if refused is not None:
         raise refused
+    # ⚠️ Minus the number: a widget's pictures are kept under its own (positive) number and must never be answered for a preview.
     key = (-integration_id, path)
     kept = cached_image(key)
     if kept is not None:

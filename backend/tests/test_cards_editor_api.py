@@ -911,3 +911,29 @@ def test_karten9_ec1_a_lone_surrogate_in_a_name_or_a_text_is_no_failure(admin: T
     made = post(admin, "demo", {"yaml": VALUE_CARD, "integration_id": sonarr})
     assert made.status_code == 200, made.text[:200]
     made.json()
+
+
+@respx.mock
+@pytest.mark.parametrize("number", [0, -5, 2**31, 2**70, -(2**70)])
+def test_karten9_a_number_no_connection_can_have_is_a_mistake_of_the_caller_and_never_a_failure(admin: TestClient, number: int) -> None:
+    for call in (
+        post(admin, "probe", {"integration_id": number, "path": "/x"}),
+        post(admin, "preview", {"yaml": VALUE_CARD, "integration_id": number}),
+        post(admin, "demo", {"yaml": VALUE_CARD, "integration_id": number}),
+        admin.get(f"{API}/preview-image", params={"integration_id": number, "path": "/_connection?u=%2Fx&s=0"}),
+    ):
+        assert call.status_code == 400 and call.json()["detail"]["code"] == "bad_integration", (number, call.text[:200])
+
+
+@respx.mock
+def test_karten9_a_picture_of_a_widget_is_never_answered_for_a_preview_of_the_same_number(admin: TestClient) -> None:
+    sonarr = connection(admin)
+    widget = widget_of_connection(admin, sonarr)
+    while sonarr < widget:  # a connection that has the number of the widget, which is what this is about
+        sonarr = connection(admin, name=f"Another {sonarr}")
+    assert sonarr == widget
+    route = respx.get(f"{BASE}/p/a.jpg").mock(return_value=httpx.Response(200, content=PNG + b"1", headers={"content-type": "image/png"}))
+    path = signed("/p/a.jpg")
+    assert admin.get(f"/api/v1/widgets/{widget}/image", params={"path": path}).content == PNG + b"1"
+    route.mock(return_value=httpx.Response(200, content=PNG + b"2", headers={"content-type": "image/png"}))
+    assert admin.get(f"{API}/preview-image", params={"integration_id": sonarr, "path": path}).content == PNG + b"2"
