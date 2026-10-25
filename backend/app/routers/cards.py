@@ -23,8 +23,8 @@ from ..adapters import get_adapter
 from ..adapters.base import AdapterError, Context, shape_for_display
 from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
-from ..cards import demo as card_demo
 from ..cards import credentials, load, pipeline, probe, schema, source, store
+from ..cards import demo as card_demo
 from ..deps import AdminUser, DbSession, MemberUser, error
 from ..models import Board, CardRecord, Integration, Page, Role, User, Widget
 from ..services import chronicle
@@ -233,6 +233,11 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
         adapter, config, ctx = await _connection(body.integration_id)
         answer = await _ask(adapter, config, ctx, request)
     except AdapterError as failure:
+        # A probe that failed was asked all the same, with the connection's credentials: the line says why, never what came back.
+        logger.info("%s probed %s at %s: %s.", user.username, name or body.integration_id, body.path, failure.code)
+        chronicle.record("card_probe", level="warn", user_id=user.id, integration_id=body.integration_id if name else None, name=name,
+                         detail=f"[{failure.code}] {body.path}", db=db)
+        db.commit()
         raise _failed(failure) from failure
     tree = await asyncio.to_thread(probe.build, answer)
     logger.info("%s probed %s at %s.", user.username, name or body.integration_id, body.path)

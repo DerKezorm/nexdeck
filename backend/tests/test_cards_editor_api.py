@@ -800,3 +800,17 @@ def test_karten9_ec4_a_path_with_a_secret_in_it_is_refused_like_a_card_and_leave
         everything = json.dumps([[getattr(one, column.name) for column in Event.__table__.columns] for one in db.scalars(select(Event))], default=str)
     secret = path.split("=")[-1].split("/")[-1]
     assert secret not in everything and secret not in caplog.text and secret not in answer.text
+
+
+@respx.mock
+def test_karten9_ec4_a_probe_that_failed_stands_in_the_chronicle_with_its_reason_and_nothing_of_the_answer(admin: TestClient, caplog: pytest.LogCaptureFixture) -> None:
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(500, text="Private Film Title exploded"))
+    with caplog.at_level("DEBUG"):
+        assert post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue"}).status_code == 502
+        assert post(admin, "probe", {"integration_id": 999, "path": "/api/v3/queue"}).status_code == 404
+    with db_session() as db:
+        lines = [(one.level, one.integration_id, one.detail) for one in db.scalars(select(Event).where(Event.kind == "card_probe").order_by(Event.id))]
+        everything = json.dumps([[getattr(one, column.name) for column in Event.__table__.columns] for one in db.scalars(select(Event))], default=str)
+    assert lines == [("warn", sonarr, "[http_error] /api/v3/queue"), ("warn", None, "[no_integration] /api/v3/queue")]
+    assert "Private Film" not in everything and "Private Film" not in caplog.text
