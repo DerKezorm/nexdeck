@@ -14,7 +14,9 @@ from app.adapters.base import AdapterError, AuthFailed, Context
 from app.adapters.duplicati import _moment
 
 DU = "http://duplicati.example.com"
-CONFIG = {"url": DU, "password": "made-up-password"}
+# The answers below carry the dates of the day they were measured, long past by now; how old a
+# backup may be is tested on its own in test_backup_age.py, so the rule is off here.
+CONFIG = {"url": DU, "password": "made-up-password", "stale_hours": 0}
 
 GOOD = {"Backup": {"ID": "1", "Name": "Settings to local folder", "Metadata": {
     "LastBackupDate": "20260911T090333Z", "BackupListCount": "1", "TargetSizeString": "27.43 KiB", "SourceFilesCount": "7",

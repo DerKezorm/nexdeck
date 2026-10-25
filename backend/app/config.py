@@ -96,6 +96,9 @@ class Settings(BaseSettings):
     keep_action_log_days: int = 90
     keep_notices_days: int = 90
     keep_outages_days: int = 365
+    #: The chronicle: what changed, a year back, so "when did this start" has
+    #: an answer for anything the outages remember.
+    keep_events_days: int = 365
     #: What one account may have lying in the uploads directory, in megabytes.
     #: ``0`` means no ceiling.
     #:

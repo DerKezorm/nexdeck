@@ -25,12 +25,14 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
+from . import backup_age
 from . import demo as fake
 from .base import (
     Adapter,
     AdapterError,
     AuthFailed,
     Context,
+    Detected,
     Field,
     WidgetData,
     WidgetType,
@@ -68,6 +70,7 @@ class DuplicatiAdapter(Adapter):
         Field("url", "URL", type="url", required=True, placeholder="http://duplicati:8200"),
         Field("password", "Password", type="password", secret=True, required=True, help="The password of Duplicati's web interface."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
+        backup_age.STALE_FIELD,
     )
     widgets = (
         WidgetType(kind="backups", label="Backup jobs", description="Every job with its last good backup, failed ones first.",
@@ -131,10 +134,15 @@ class DuplicatiAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         backups, state = await self._state(config, ctx)
-        rows = self._rows(backups, state)
+        rows = backup_age.age(self._rows(backups, state), backup_age.limit_of(config))
         if widget_kind == "summary":
             return self._summary(rows)
         return self._backups(rows, options)
+
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData, options: dict[str, Any]) -> list[Detected]:
+        """A job whose last good backup became too old (``backup_age``)."""
+        return backup_age.news(before, after) if widget_kind == "backups" else []
 
     # -- the cards -----------------------------------------------------------
 
@@ -170,6 +178,7 @@ class DuplicatiAdapter(Adapter):
     @staticmethod
     def _summary(rows: list[dict[str, Any]]) -> WidgetData:
         failed = sum(1 for one in rows if one["state"] == "bad")
+        stale = sum(1 for one in rows if one["row"].get("stale"))
         fine = sum(1 for one in rows if one["state"] == "ok")
         newest = max((one["good"] for one in rows), default=0.0)
         secondary: list[dict[str, Any]] = []
@@ -178,7 +187,7 @@ class DuplicatiAdapter(Adapter):
         if newest:
             secondary.append({"label": "Last backup", "value": ago(newest)})
         return WidgetData(
-            status="bad" if failed else "ok" if rows else "unknown",
+            status="bad" if failed else "warn" if stale else "ok" if rows else "unknown",
             primary={"label": "Jobs fine", "value": fine, "unit": f"/ {len(rows)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},
@@ -189,8 +198,9 @@ class DuplicatiAdapter(Adapter):
         order = {"bad": 0, "warn": 1, "unknown": 2, "ok": 3}
         ranked = sorted(rows, key=lambda one: (order.get(one["state"], 9), one["row"]["title"].lower()))
         failed = sum(1 for one in rows if one["state"] == "bad")
+        stale = any(one["row"].get("stale") for one in rows)
         return WidgetData(
-            status="bad" if failed else "ok",
+            status="bad" if failed else "warn" if stale else "ok",
             items=[one["row"] for one in ranked][: int(options.get("limit") or 10)],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No backup jobs yet."},
@@ -211,7 +221,7 @@ class DuplicatiAdapter(Adapter):
             {"Backup": {"ID": "2", "Name": "Offsite", "Metadata": offsite}},
             {"Backup": {"ID": "3", "Name": "Docker volumes", "Metadata": {"LastBackupFinished": stamp(5)}}},
         ]
-        rows = self._rows(backups, {"ActiveTask": None, "SchedulerQueueIds": []})
+        rows = backup_age.age(self._rows(backups, {"ActiveTask": None, "SchedulerQueueIds": []}), backup_age.limit_of({}))
         if widget_kind == "summary":
             return self._summary(rows)
         return self._backups(rows, options)

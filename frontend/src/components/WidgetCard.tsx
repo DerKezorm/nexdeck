@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { shownStyle, useLook } from '../lib/appearance'
 import { colourKind, followPointer, lookOf, useLogoColour } from '../lib/cardLook'
 import { cardStatus } from '../lib/cardStatus'
+import { momentOf } from '../lib/chronicle'
 import { maintenanceTarget } from '../lib/maintenance'
 import { canRefract, refract } from '../lib/refraction'
 import { safeUrl } from '../lib/safeUrl'
@@ -70,7 +71,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // service gives one (Nexview names its findings, for example).
   const urgent = Array.isArray(data?.meta?.urgent) ? (data?.meta?.urgent as unknown[]).map(String) : []
   const reasons = (showFindings || failed ? [errorText, data?.meta?.status_reason ? String(data.meta.status_reason) : '', ...urgent] : [errorText]).filter(Boolean).map((text) => tLabel(text))
-  const statusTitle = [t(`status.${status}`), ...reasons].join(' · ')
+  // Since when, from the chronicle once nexdeck was restarted (roadmap M2).
+  const since = (status === 'warn' || status === 'bad') && typeof data?.since === 'number' ? t('attention.since', { when: momentOf(data.since, i18n.language, t) }) : ''
+  const statusTitle = [t(`status.${status}`), ...reasons, since].filter(Boolean).join(' · ')
 
   const open = (event: MouseEvent<HTMLElement>) => {
     if (!clickable || !link) return
@@ -189,9 +192,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
             {disguise.free(widget.title)}
           </h3>
           {/* Why yellow or red, right on the card; the veil already says it for failures. */}
-          {!failed && (status === 'warn' || status === 'bad') && reasons.length > 0 && (
-            <span className={`hidden @min-[300px]:inline text-[10px] truncate max-w-[45%] ${status === 'bad' ? 'text-bad' : 'text-warn'}`} title={statusTitle}>
-              {reasons[0]}
+          {!failed && (status === 'warn' || status === 'bad') && (reasons.length > 0 || since) && (
+            <span className={`hidden @min-[300px]:inline text-[10px] truncate max-w-[45%] ${status === 'bad' ? 'text-bad' : 'text-warn'}`} title={statusTitle} data-testid="card-reason">
+              {[reasons[0], since].filter(Boolean).join(' · ')}
             </span>
           )}
           {awayChip}

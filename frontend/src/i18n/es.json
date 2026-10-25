@@ -546,13 +546,21 @@
       "boardInTitle": "Poner el nombre del tablero delante en la pestaña",
       "preview": "Vista previa",
       "sampleBoard": "Casa"
+    },
+    "report": {
+      "title": "Informe diario",
+      "help": "Una vez al día, lo que pasó en las últimas 24 horas y lo que sigue en rojo. Va a cada canal suscrito a «El informe diario» abajo; nadie más lo recibe. La hora es la del servidor.",
+      "at": "Hora del informe diario",
+      "goesAt": "El informe diario sale a las {{time}}.",
+      "saved": "A partir de ahora el informe diario sale a las {{time}}."
     }
   },
   "menu": {
     "settings": "Mis ajustes",
     "system": "Sistema",
     "signOut": "Cerrar sesión",
-    "signInWithPassword": "Iniciar sesión con contraseña"
+    "signInWithPassword": "Iniciar sesión con contraseña",
+    "chronicle": "Crónica"
   },
   "users": {
     "role": {
@@ -1081,7 +1089,8 @@
     "topology": "Cómo se conectan los lugares",
     "problemsMore": "+{{count}} más",
     "lastHours_one": "última hora",
-    "lastHours_other": "últimas {{count}} horas"
+    "lastHours_other": "últimas {{count}} horas",
+    "released": "Publicado"
   },
   "player": {
     "title": "Música",
@@ -2139,5 +2148,74 @@
     "move": "Cambiar el final",
     "end": "Terminar ahora",
     "failed": "No ha funcionado: {{reason}}"
+  },
+  "chronicle": {
+    "title": "Crónica",
+    "help": "Lo que cambió en tus tableros, lo más reciente primero: tarjetas que se pusieron en amarillo o rojo, servicios que dejaron de responder, mantenimiento, versiones nuevas y contenedores reiniciados.",
+    "helpAdmin": "Lo que cambió, lo más reciente primero: tarjetas que se pusieron en amarillo o rojo, servicios que dejaron de responder, mantenimiento, versiones nuevas, contenedores reiniciados y los cambios hechos en nexdeck. Se guarda un año.",
+    "which": "Qué líneas",
+    "window": "Hasta cuándo",
+    "search": "Buscar nombres y motivos",
+    "empty": "Nada en este tiempo.",
+    "older": "Mostrar líneas anteriores",
+    "cardEmpty": "Todavía no ha pasado nada.",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "group": {
+      "all": "Todo",
+      "cards": "Tarjetas y servicios",
+      "versions": "Versiones y contenedores",
+      "nexdeck": "Cambios en nexdeck"
+    },
+    "days": {
+      "1": "24 horas",
+      "7": "7 días",
+      "30": "30 días",
+      "365": "Un año"
+    },
+    "kind": {
+      "card_bad": "{{name}} se puso en rojo",
+      "card_warn": "{{name}} se puso en amarillo",
+      "card_ok": "{{name}} vuelve a estar bien",
+      "outage": "{{name}} dejó de responder",
+      "recovery": "{{name}} responde de nuevo tras {{detail}}",
+      "maintenance": "{{name}} en mantenimiento hasta las {{until}}",
+      "maintenance_end": "El mantenimiento de {{name}} terminó antes",
+      "version": "{{name}} usa {{after}} en vez de {{before}}",
+      "container_restarted": "El contenedor {{name}} se reinició",
+      "container_recreated": "El contenedor {{name}} se creó de nuevo",
+      "connection_added": "Integración {{name}} añadida",
+      "connection_changed": "Integración {{name}} cambiada",
+      "connection_removed": "Integración {{name}} eliminada",
+      "card_added": "Tarjeta {{name}} añadida a {{after}}",
+      "card_removed": "Tarjeta {{name}} quitada de {{after}}",
+      "signed_in": "{{name}} inició sesión",
+      "sign_in_refused": "Inicio de sesión rechazado para {{name}}"
+    },
+    "way": {
+      "password": "con contraseña",
+      "provider": "con un proveedor",
+      "home": "en la red de casa",
+      "passkey": "con una llave de acceso"
+    }
+  },
+  "report": {
+    "nowRed": "En rojo ahora",
+    "outages": "Caídas",
+    "turnedRed": "Se pusieron en rojo",
+    "backups": "Copias de seguridad",
+    "versions": "Versiones nuevas",
+    "containers": "Contenedores creados de nuevo",
+    "restarted": "Contenedores reiniciados",
+    "outagesCount": "caídas",
+    "outagesCount_one": "caída",
+    "outagesCount_other": "caídas",
+    "redCount": "aún en rojo",
+    "redCount_one": "aún en rojo",
+    "redCount_other": "aún en rojo",
+    "updatesCount": "actualizaciones",
+    "updatesCount_one": "actualización",
+    "updatesCount_other": "actualizaciones",
+    "quiet": "No pasó nada en las últimas 24 horas y nada está en rojo."
   }
 }

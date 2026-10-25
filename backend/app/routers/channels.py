@@ -6,9 +6,10 @@ import logging
 import time
 
 from fastapi import APIRouter, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from ..deps import CurrentUser, DbSession, MemberUser, error
+from ..deps import AdminUser, CurrentUser, DbSession, MemberUser, error
 from ..models import NotificationChannel, Subscription
 from ..schemas import ChannelCreate, ChannelPatch
 from ..services.channels import (
@@ -85,6 +86,29 @@ def channel_kinds(user: CurrentUser, db: DbSession) -> list[dict]:
 @router.get("/events", summary="List the events a channel can subscribe to")
 def events(user: CurrentUser) -> list[dict]:
     return [{"event": key, "label": label} for key, label in EVENTS.items()]
+
+
+class ReportTime(BaseModel):
+    time: str = Field(pattern=r"^([01]?\d|2[0-3]):[0-5]\d$")
+
+
+@router.get("/settings/daily-report", summary="When the daily report goes out")
+def daily_report_time(user: CurrentUser, db: DbSession) -> dict:
+    from ..services import report
+
+    return {"time": report.stored(db)["time"]}
+
+
+@router.put("/settings/daily-report", summary="Change when the daily report goes out")
+def set_daily_report_time(body: ReportTime, user: AdminUser, db: DbSession) -> dict:
+    """One time for the installation, in the server's own time zone. Administrators only."""
+    from ..services import report
+
+    hours, minutes = report.parse_time(body.time) or (7, 0)
+    value = report.store(db, time=f"{hours:02d}:{minutes:02d}")
+    db.commit()
+    logger.info("The daily report goes out at %s from now on, set by %s.", value["time"], user.username)
+    return {"time": value["time"]}
 
 
 @router.get("/channels", summary="List my notification channels")

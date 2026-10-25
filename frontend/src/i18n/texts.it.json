@@ -2021,7 +2021,20 @@
     "Updates never colour the card. They need Check for updates under System, About.": "Gli aggiornamenti non colorano mai la scheda. Serve Cerca aggiornamenti in Sistema, Informazioni.",
     "Tapping a row opens": "Toccare una riga apre",
     "The card, on its board": "La scheda, nella sua bacheca",
-    "The service": "Il servizio"
+    "The service": "Il servizio",
+    "A plan, source or job whose last good backup is older than this turns the card yellow. 26 suits a nightly backup, about 200 a weekly one; 0 switches it off.": "Un piano, una sorgente o un lavoro il cui ultimo backup riuscito è più vecchio rende gialla la scheda. 26 va bene per un backup notturno, circa 200 per uno settimanale; 0 lo disattiva.",
+    "Too old after (hours)": "Troppo vecchio dopo (ore)",
+    "Cards and services": "Schede e servizi",
+    "Cards, services and versions": "Schede, servizi e versioni",
+    "Versions and containers": "Versioni e container",
+    "Everything, changes in nexdeck too": "Tutto, anche le modifiche in nexdeck",
+    "Which lines": "Quali righe",
+    "What happened": "Cosa è successo",
+    "Daily report": "Rapporto giornaliero",
+    "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Le ultime righe della cronaca da tutte le bacheche del proprietario di questa bacheca: schede diventate gialle, rosse o di nuovo verdi, guasti, manutenzione, nuove versioni e container riavviati.",
+    "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Cosa è successo nelle ultime 24 ore e cosa è ancora rosso, da tutte le bacheche del proprietario di questa bacheca.",
+    "A backup is too old": "Un backup è troppo vecchio",
+    "The daily report": "Il rapporto giornaliero"
   },
   "labels": {
     "Private resources": "Risorse private",

@@ -15,7 +15,7 @@ from sqlalchemy import select
 
 from ..deps import AdminUser, DbSession, error
 from ..models import Maintenance, utcnow
-from ..services import maintenance
+from ..services import chronicle, maintenance
 from ..services.sse import board_topic, hub
 
 router = APIRouter(prefix="/api/v1/maintenance", tags=["maintenance"])
@@ -56,8 +56,10 @@ def start_maintenance(body: MaintenanceStart, user: AdminUser, db: DbSession) ->
     except maintenance.Refused as refused:
         code = status.HTTP_404_NOT_FOUND if refused.code == "not_found" else status.HTTP_400_BAD_REQUEST
         raise error(refused.code, refused.message, code) from None
-    db.commit()
     view = maintenance.view(db, row)
+    chronicle.record("maintenance", level="info", integration_id=row.integration_id, widget_id=row.widget_id,
+                     user_id=user.id, name=view["name"], after=view["ends_at"], db=db)
+    db.commit()
     logger.info("Maintenance for %r until %s, set by %s.", view["name"], view["ends_at"], user.username)
     _tell(db, row)
     return view
@@ -68,7 +70,11 @@ def end_maintenance(maintenance_id: int, user: AdminUser, db: DbSession) -> dict
     row = db.get(Maintenance, maintenance_id)
     if row is None:
         raise error("not_found", "No such maintenance.", status.HTTP_404_NOT_FOUND)
+    running = row.ends_at > utcnow()
     maintenance.end(row)
+    if running:
+        chronicle.record("maintenance_end", level="info", integration_id=row.integration_id, widget_id=row.widget_id,
+                         user_id=user.id, name=maintenance.view(db, row)["name"], db=db)
     db.commit()
     logger.info("Maintenance %d ended by %s.", row.id, user.username)
     _tell(db, row)

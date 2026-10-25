@@ -120,6 +120,10 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "list": (2, 2),
     # One row holds the sentence ("3 things need attention"); the rows come with the height.
     "attention": (2, 1),
+    # A few lines of the chronicle, each with its time.
+    "chronicle": (2, 2),
+    # Counts on top and the lines under them want the width of three.
+    "report": (3, 2),
     "bookmarks": (2, 2),
     "camera": (2, 2),
     "iframe": (2, 2),
@@ -476,6 +480,8 @@ class WidgetData(BaseModel):
     meta: dict[str, Any] = PydanticField(default_factory=dict)
     error: str | None = None
     updated_at: float = PydanticField(default_factory=time.time)
+    #: Since when the card is yellow or red, when that is known (filled in by the collector).
+    since: float | None = None
 
 
 class Detected(BaseModel):

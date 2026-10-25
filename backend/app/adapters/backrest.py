@@ -36,6 +36,7 @@ from typing import Any
 
 import httpx
 
+from . import backup_age
 from . import demo as fake
 from .base import (
     Action,
@@ -43,6 +44,7 @@ from .base import (
     AdapterError,
     AuthFailed,
     Context,
+    Detected,
     Field,
     Unreachable,
     WidgetData,
@@ -105,6 +107,7 @@ class BackrestAdapter(Adapter):
         Field("username", "User", help="A user of Backrest's own sign-in. Leave it empty when authentication is switched off."),
         Field("password", "Password", type="password", secret=True),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
+        backup_age.STALE_FIELD,
     )
     widgets = (
         WidgetType(kind="plans", label="Backup plans",
@@ -168,15 +171,20 @@ class BackrestAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         plans = await self._dashboard(config, ctx)
+        stale = backup_age.limit_of(config)
         if widget_kind == "summary":
-            return self._summary(plans)
+            return self._summary(plans, stale=stale)
         reasons: dict[str, str] = {}
         for plan in plans:
             status, _moment = _latest(plan)
             if status in NEEDS_REASON:
                 identifier = str(plan.get("id") or "")
                 reasons[identifier] = await self._reason(config, ctx, identifier)
-        return self._plans(plans, reasons, max(1, int(options.get("limit") or 10)))
+        return self._plans(plans, reasons, max(1, int(options.get("limit") or 10)), stale=stale)
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData, options: dict[str, Any]) -> list[Detected]:
+        """A plan whose last good backup became too old (``backup_age``)."""
+        return backup_age.news(before, after) if widget_kind == "plans" else []
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any],
                      config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
@@ -206,7 +214,7 @@ class BackrestAdapter(Adapter):
     # -- the cards -----------------------------------------------------------
 
     @staticmethod
-    def _plans(plans: list[dict[str, Any]], reasons: dict[str, str], limit: int, now: float | None = None) -> WidgetData:
+    def _plans(plans: list[dict[str, Any]], reasons: dict[str, str], limit: int, now: float | None = None, stale: float = 0.0) -> WidgetData:
         rows = []
         for plan in plans:
             identifier = str(plan.get("id") or "?")
@@ -214,6 +222,8 @@ class BackrestAdapter(Adapter):
             colour = STATUS_COLOUR.get(status, "unknown")
             if not status:
                 words: tuple[str, ...] = ("Never run",)
+            elif colour == "ok" and backup_age.too_old(_last_good(plan), stale, now):
+                colour, words = "warn", (backup_age.WORD,)
             elif colour == "ok":
                 size = _number(plan.get("protectedBytes"))
                 words = (human_bytes(size),) if size else ()
@@ -228,12 +238,15 @@ class BackrestAdapter(Adapter):
             when = ago(moment, now=now) if moment else ""
             if when:
                 row["value"] = when
+            if words == (backup_age.WORD,):
+                row["stale"] = True
             rows.append(row)
         rows.sort(key=lambda row: (ORDER.get(row["status"], 9), row["title"].lower()))
         failed = sum(1 for row in rows if row["status"] == "bad")
         known = any(row["status"] != "unknown" for row in rows)
+        stale_rows = any(row.get("stale") for row in rows)
         return WidgetData(
-            status="bad" if failed else "ok" if known else "unknown",
+            status="bad" if failed else "warn" if stale_rows else "ok" if known else "unknown",
             items=rows[:limit],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No backup plans yet."},
@@ -241,10 +254,12 @@ class BackrestAdapter(Adapter):
         )
 
     @staticmethod
-    def _summary(plans: list[dict[str, Any]], now: float | None = None) -> WidgetData:
+    def _summary(plans: list[dict[str, Any]], now: float | None = None, stale: float = 0.0) -> WidgetData:
         latest = [_latest(plan)[0] for plan in plans]
         failed = latest.count("STATUS_ERROR")
-        fine = latest.count("STATUS_SUCCESS")
+        old = sum(1 for plan, status in zip(plans, latest, strict=True)
+                  if status == "STATUS_SUCCESS" and backup_age.too_old(_last_good(plan), stale, now))
+        fine = latest.count("STATUS_SUCCESS") - old
         newest = max((moment for moment in (_last_good(plan) for plan in plans) if moment), default=None)
         secondary: list[dict[str, Any]] = []
         if failed:
@@ -252,7 +267,7 @@ class BackrestAdapter(Adapter):
         if newest:
             secondary.append({"label": "Last backup", "value": ago(newest, now=now)})
         return WidgetData(
-            status="bad" if failed else "ok" if fine else "unknown",
+            status="bad" if failed else "warn" if old else "ok" if fine else "unknown",
             primary={"label": "Plans fine", "value": fine, "unit": f"/ {len(plans)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},

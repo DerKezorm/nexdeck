@@ -43,6 +43,8 @@ EVENTS: dict[str, str] = {
     "link_down": "A network uplink went down",
     "disk_hot": "A disk is running hot",
     "backup_failed": "A backup task failed",
+    "backup_stale": "A backup is too old",
+    "daily_report": "The daily report",
     "software_update": "An update is waiting on a server",
     "update_available": "A new nexdeck version",
     "test": "Test message",

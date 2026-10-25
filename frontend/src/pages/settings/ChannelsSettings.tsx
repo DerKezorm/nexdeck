@@ -3,18 +3,53 @@ import { HelpCircle, Pencil, Plus, Power, Send, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, del, get, patch, post } from '../../api/client'
+import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { Channel, ChannelKind } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, Field, Switch, Toast } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { currentSubscription, pushSupported, subscribePush, unsubscribePush } from '../../lib/push'
+import { useAuth } from '../../stores/auth'
 import { GUIDES, KIND_ICONS, hasGuide } from './channelGuides'
 import { SettingsCard } from './SettingsCard'
 
 type Notice = { text: string; level: 'ok' | 'error' }
 type EventSpec = { event: string; label: string }
+
+/**
+ * When the daily report goes out (roadmap M2). One time for the installation,
+ * set by an administrator; it reaches the channels that subscribed to it.
+ */
+function DailyReport({ onNotice }: { onNotice: (notice: Notice) => void }) {
+  const { t } = useTranslation()
+  const admin = useAuth((state) => state.user?.role === 'admin')
+  const setting = useQuery({ queryKey: ['daily-report'], queryFn: () => get<{ time: string }>('/settings/daily-report') })
+  const [time, setTime] = useState('')
+  const shown = time || setting.data?.time || '07:00'
+  const save = async () => {
+    try {
+      const answer = await put<{ time: string }>('/settings/daily-report', { time: shown })
+      setTime(answer.time)
+      void setting.refetch()
+      onNotice({ text: t('settings.report.saved', { time: answer.time }), level: 'ok' })
+    } catch (failure) {
+      onNotice({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+    }
+  }
+  return (
+    <SettingsCard title={t('settings.report.title')} description={t('settings.report.help')}>
+      {admin ? (
+        <div className="flex items-center gap-2">
+          <input type="time" className="input h-9 w-32" value={shown} onChange={(event) => setTime(event.target.value)} aria-label={t('settings.report.at')} />
+          <button type="button" className="btn btn-accent h-9" onClick={() => void save()} disabled={!shown || shown === setting.data?.time}>{t('common.save')}</button>
+        </div>
+      ) : (
+        <p className="text-sm">{t('settings.report.goesAt', { time: shown })}</p>
+      )}
+    </SettingsCard>
+  )
+}
 
 /** Which events a new channel starts with: the ones nobody wants to miss. */
 const DEFAULT_EVENTS = ['outage', 'recovery', 'action_failed']
@@ -48,6 +83,7 @@ export function ChannelsSettings() {
   return (
     <>
       <ThisBrowser onNotice={setNotice} onChanged={() => void channels.refetch()} />
+      <DailyReport onNotice={setNotice} />
 
       <SettingsCard title={t('settings.channels.title')} description={t('settings.channels.help')}>
         {/* One tab per service, with its logo. The count says where something

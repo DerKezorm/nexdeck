@@ -15,7 +15,9 @@ from app.adapters.backrest import BackrestAdapter
 from app.adapters.base import AdapterError, AuthFailed, Context, Unreachable
 
 BR = "http://backrest.example.com:9898"
-CONFIG = {"url": BR, "username": "admin", "password": "made-up-password"}
+# The answers below carry the dates of the day they were measured, long past by now; how old a
+# backup may be is tested on its own in test_backup_age.py, so the rule is off here.
+CONFIG = {"url": BR, "username": "admin", "password": "made-up-password", "stale_hours": 0}
 #: A little over two hours after the newest backup below.
 NOW = 1789171550.0
 REASON = "failed to backup: path /userdata/does-not-exist does not exist: stat /userdata/does-not-exist: no such file or directory"

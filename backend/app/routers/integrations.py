@@ -16,7 +16,7 @@ from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
-from ..services import versions
+from ..services import chronicle, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
@@ -105,6 +105,8 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
     integration = Integration(kind=body.kind, name=body.name.strip(), config=config, enabled=body.enabled, demo=body.demo,
                               admin_only=body.admin_only, created_by=user.id)
     db.add(integration)
+    db.flush()
+    chronicle.record("connection_added", integration_id=integration.id, user_id=user.id, name=integration.name, after=integration.kind, db=db)
     db.commit()
     logger.info("Connection %r (%s) added by %s%s%s.", integration.name, integration.kind, user.username,
                 ", in demo mode" if integration.demo else "",
@@ -160,6 +162,10 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
     only_the_bell = body.model_dump(exclude_unset=True).keys() <= {"muted"}
     if not only_the_bell:
         integration.last_error = ""
+    if changed:
+        # What changed, in the same words as the log: never a value from the settings.
+        chronicle.record("connection_changed", integration_id=integration.id, user_id=user.id, name=integration.name,
+                         detail="; ".join(changed), db=db)
     db.commit()
     if changed:
         logger.info("Connection %r (%s): %s, by %s.", integration.name, integration.kind, "; ".join(changed), user.username)
@@ -219,6 +225,7 @@ def delete_integration(integration_id: int, user: AdminUser, db: DbSession) -> N
     farewell = _farewell(integration)
     forgotten = _forget_in_options(db, integration.id)
     db.delete(integration)
+    chronicle.record("connection_removed", integration_id=integration_id, user_id=user.id, name=name, after=kind, db=db)
     db.commit()
     # ⚠️ The cache and the client of a connection that no longer exists used
     # to sit in memory until the next restart, holding open sockets to a

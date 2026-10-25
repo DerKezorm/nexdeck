@@ -11,6 +11,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
+import { momentOf } from '../lib/chronicle'
 import { focusCard } from '../lib/focusCard'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
@@ -37,18 +38,6 @@ interface Row {
 
 /** Below this height the card says its sentence and the worst row, no more. */
 const SMALL = 130
-
-function clock(seconds: number, language: string, t: (key: string, options?: Record<string, unknown>) => string): string {
-  const moment = new Date(seconds * 1000)
-  const time = moment.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })
-  const today = new Date()
-  const day = (one: Date) => `${one.getFullYear()}-${one.getMonth()}-${one.getDate()}`
-  if (day(moment) === day(today)) return time
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  if (day(moment) === day(yesterday)) return t('attention.yesterday', { time })
-  return `${moment.toLocaleDateString(language, { day: 'numeric', month: 'numeric' })} ${time}`
-}
 
 export function AttentionCard({ data }: RenderProps) {
   const { t, i18n } = useTranslation()
@@ -127,7 +116,7 @@ export function AttentionCard({ data }: RenderProps) {
   }
 
   const line = (row: Row, compact: boolean) => {
-    const when = row.since ? clock(row.since, i18n.language, t) : ''
+    const when = row.since ? momentOf(row.since, i18n.language, t) : ''
     const place = row.source === 'bell' ? t('attention.notice') : row.value || ''
     const said = row.source === 'bell' ? when : when ? t('attention.since', { when }) : ''
     const meta = [place, t(`attention.source.${row.source}`), said].filter(Boolean).join(' · ')

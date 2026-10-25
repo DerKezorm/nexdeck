@@ -2021,7 +2021,20 @@
     "Updates never colour the card. They need Check for updates under System, About.": "Les mises à jour ne colorent jamais la carte. Elles ont besoin de Rechercher des mises à jour sous Système, À propos.",
     "Tapping a row opens": "Toucher une ligne ouvre",
     "The card, on its board": "La carte, sur son tableau",
-    "The service": "Le service"
+    "The service": "Le service",
+    "A plan, source or job whose last good backup is older than this turns the card yellow. 26 suits a nightly backup, about 200 a weekly one; 0 switches it off.": "Un plan, une source ou une tâche dont la dernière bonne sauvegarde est plus ancienne fait passer la carte au jaune. 26 convient à une sauvegarde nocturne, environ 200 à une hebdomadaire ; 0 le désactive.",
+    "Too old after (hours)": "Trop ancienne après (heures)",
+    "Cards and services": "Cartes et services",
+    "Cards, services and versions": "Cartes, services et versions",
+    "Versions and containers": "Versions et conteneurs",
+    "Everything, changes in nexdeck too": "Tout, y compris les changements dans nexdeck",
+    "Which lines": "Quelles lignes",
+    "What happened": "Ce qui s’est passé",
+    "Daily report": "Rapport quotidien",
+    "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Les dernières lignes de la chronique de tous les tableaux du propriétaire de ce tableau : cartes passées au jaune, au rouge ou de nouveau au vert, pannes, maintenance, nouvelles versions et conteneurs redémarrés.",
+    "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge, sur tous les tableaux du propriétaire de ce tableau.",
+    "A backup is too old": "Une sauvegarde est trop ancienne",
+    "The daily report": "Le rapport quotidien"
   },
   "labels": {
     "Private resources": "Ressources privées",

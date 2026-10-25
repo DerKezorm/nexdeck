@@ -37,7 +37,7 @@ from ..schemas import (
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import grid, history, holders
+from ..services import chronicle, grid, history, holders
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
@@ -123,6 +123,8 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     size = (body.w or widget_type.default_size[0], body.h or widget_type.default_size[1])
     place_widget(page, widget.id, size, widget_type.min_size, grid.columns(board.settings))
     health_service.ensure_check_for_widget(db, widget)
+    chronicle.record("card_added", widget_id=widget.id, integration_id=widget.integration_id, board_id=board.id,
+                     user_id=user.id, name=widget.title or body.kind, after=board.name, db=db)
     db.commit()
     db.refresh(widget)
     collector.schedule(widget.id)
@@ -220,6 +222,8 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     # the last card out again, and the next new card turned up inside them.
     holders.take_out(page, widget.id)
     history.forget_widget(db, widget.id)
+    chronicle.record("card_removed", widget_id=widget.id, integration_id=integration_id, board_id=board.id,
+                     user_id=user.id, name=widget.title or widget.kind, after=board.name, db=db)
     db.delete(widget)
     db.commit()
     collector.unschedule(widget_id)

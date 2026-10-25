@@ -111,6 +111,26 @@ function AttentionCard(props: RenderProps) {
   )
 }
 
+/** The chronicle's two cards load only when a board has one. */
+const LazyChronicleCard = lazy(() => import('./ChronicleCards').then((module) => ({ default: module.ChronicleCard })))
+const LazyReportCard = lazy(() => import('./ChronicleCards').then((module) => ({ default: module.ReportCard })))
+
+function ChronicleCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyChronicleCard {...props} />
+    </Suspense>
+  )
+}
+
+function ReportCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyReportCard {...props} />
+    </Suspense>
+  )
+}
+
 function TimerCard(props: RenderProps) {
   return (
     <Suspense fallback={<div className="flex-1" />}>
@@ -163,6 +183,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   group: (props: RenderProps) => <GroupCard {...props} />,
   figures: FiguresCard,
   attention: AttentionCard,
+  chronicle: ChronicleCard,
+  report: ReportCard,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -888,6 +910,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
               {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
               {item.value !== undefined && item.value !== '' && (
                 <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : disguise.free(tLabel(String(item.value)))}</span>
+              )}
+              {/* How old the newer release is, on a row of the updates card. */}
+              {typeof item.released === 'number' && (
+                <span className="num text-xs text-faint whitespace-nowrap" title={t('card.released')}>{timeAgo(item.released)}</span>
               )}
               {/* How long ago, in epoch seconds, for a row that is an event: a notice. */}
               {(item.value === undefined || item.value === '') && typeof item.when === 'number' && (

@@ -32,6 +32,7 @@ from .routers import (
     boards,
     brand,
     channels,
+    chronicle,
     discovery,
     home,
     home_network,
@@ -59,7 +60,7 @@ from .routers import (
 )
 from .routers import journal as journal_router
 from .security import prune_sessions
-from .services import backup, history, journal, oidc_store, provisioning, retention
+from .services import backup, history, journal, oidc_store, provisioning, report, retention
 from .services import channels as channel_service
 from .services import icons as icon_service
 from .services.apps import RememberRequest
@@ -165,11 +166,13 @@ async def lifespan(app: FastAPI):
     await hass_listener.start()
     housekeeping = asyncio.create_task(_housekeeping(), name="housekeeping")
     provisioning_task = asyncio.create_task(provisioning.watch(), name="provisioning")
+    rounds = asyncio.create_task(report.rounds(), name="rounds")
     logger.info("nexdeck %s ready.", __version__)
     try:
         yield
     finally:
         housekeeping.cancel()
+        rounds.cancel()
         provisioning_task.cancel()
         await hass_listener.stop()
         await health_service.stop()
@@ -218,7 +221,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 
 

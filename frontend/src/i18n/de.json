@@ -546,13 +546,21 @@
       "boardInTitle": "Im Tab den Namen des Boards voranstellen",
       "preview": "Vorschau",
       "sampleBoard": "Zuhause"
+    },
+    "report": {
+      "title": "Tagesbericht",
+      "help": "Einmal am Tag, was in den letzten 24 Stunden passiert ist und was noch rot ist. Er geht an jeden Kanal, der unten „Der Tagesbericht“ abonniert hat; sonst bekommt ihn niemand. Die Uhrzeit ist die des Servers.",
+      "at": "Uhrzeit des Tagesberichts",
+      "goesAt": "Der Tagesbericht kommt um {{time}}.",
+      "saved": "Der Tagesbericht kommt ab jetzt um {{time}}."
     }
   },
   "menu": {
     "settings": "Meine Einstellungen",
     "system": "System",
     "signOut": "Abmelden",
-    "signInWithPassword": "Mit Passwort anmelden"
+    "signInWithPassword": "Mit Passwort anmelden",
+    "chronicle": "Chronik"
   },
   "users": {
     "role": {
@@ -1081,7 +1089,8 @@
     "topology": "Wie die Orte zusammenhängen",
     "problemsMore": "+{{count}} weitere",
     "lastHours_one": "letzte Stunde",
-    "lastHours_other": "letzte {{count}} Stunden"
+    "lastHours_other": "letzte {{count}} Stunden",
+    "released": "Erschienen"
   },
   "player": {
     "title": "Musik",
@@ -2139,5 +2148,74 @@
     "move": "Ende ändern",
     "end": "Jetzt beenden",
     "failed": "Das hat nicht geklappt: {{reason}}"
+  },
+  "chronicle": {
+    "title": "Chronik",
+    "help": "Was sich auf deinen Boards geändert hat, das Neueste zuerst: Karten, die gelb oder rot wurden, Dienste, die nicht mehr antworteten, Wartung, neue Versionen und neu gestartete Container.",
+    "helpAdmin": "Was sich geändert hat, das Neueste zuerst: Karten, die gelb oder rot wurden, Dienste, die nicht mehr antworteten, Wartung, neue Versionen, neu gestartete Container und die Änderungen in nexdeck. Ein Jahr lang aufbewahrt.",
+    "which": "Welche Zeilen",
+    "window": "Wie weit zurück",
+    "search": "Namen und Gründe durchsuchen",
+    "empty": "In dieser Zeit ist nichts passiert.",
+    "older": "Ältere Zeilen zeigen",
+    "cardEmpty": "Noch ist nichts passiert.",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "group": {
+      "all": "Alles",
+      "cards": "Karten und Dienste",
+      "versions": "Versionen und Container",
+      "nexdeck": "Änderungen in nexdeck"
+    },
+    "days": {
+      "1": "24 Stunden",
+      "7": "7 Tage",
+      "30": "30 Tage",
+      "365": "Ein Jahr"
+    },
+    "kind": {
+      "card_bad": "{{name}} wurde rot",
+      "card_warn": "{{name}} wurde gelb",
+      "card_ok": "{{name}} ist wieder in Ordnung",
+      "outage": "{{name}} antwortet nicht mehr",
+      "recovery": "{{name}} antwortet wieder nach {{detail}}",
+      "maintenance": "{{name}} in Wartung bis {{until}}",
+      "maintenance_end": "Wartung von {{name}} vorzeitig beendet",
+      "version": "{{name}} läuft mit {{after}} statt {{before}}",
+      "container_restarted": "Container {{name}} neu gestartet",
+      "container_recreated": "Container {{name}} neu erstellt",
+      "connection_added": "Anbindung {{name}} angelegt",
+      "connection_changed": "Anbindung {{name}} geändert",
+      "connection_removed": "Anbindung {{name}} entfernt",
+      "card_added": "Karte {{name}} auf {{after}} hinzugefügt",
+      "card_removed": "Karte {{name}} von {{after}} entfernt",
+      "signed_in": "{{name}} hat sich angemeldet",
+      "sign_in_refused": "Anmeldung für {{name}} abgelehnt"
+    },
+    "way": {
+      "password": "mit Passwort",
+      "provider": "über einen Anbieter",
+      "home": "im Heimnetz",
+      "passkey": "mit Passkey"
+    }
+  },
+  "report": {
+    "nowRed": "Jetzt rot",
+    "outages": "Ausfälle",
+    "turnedRed": "Rot geworden",
+    "backups": "Sicherungen",
+    "versions": "Neue Versionen",
+    "containers": "Container neu erstellt",
+    "restarted": "Container neu gestartet",
+    "outagesCount": "Ausfälle",
+    "outagesCount_one": "Ausfall",
+    "outagesCount_other": "Ausfälle",
+    "redCount": "noch rot",
+    "redCount_one": "noch rot",
+    "redCount_other": "noch rot",
+    "updatesCount": "Updates",
+    "updatesCount_one": "Update",
+    "updatesCount_other": "Updates",
+    "quiet": "In den letzten 24 Stunden ist nichts passiert, und nichts ist rot."
   }
 }

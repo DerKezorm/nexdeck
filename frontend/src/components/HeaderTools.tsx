@@ -1,4 +1,4 @@
-import { Bell, Camera, ChevronDown, EyeOff, LogOut, Moon, Server, Sun, UserRound } from 'lucide-react'
+import { Bell, Camera, ChevronDown, EyeOff, History, LogOut, Moon, Server, Sun, UserRound } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
@@ -163,6 +163,7 @@ function UserMenu({ user }: { user: HeaderUser }) {
   const avatar = showcase ? undefined : user.avatar_url
   const entries = [
     { to: '/settings', icon: UserRound, label: t('menu.settings') },
+    { to: '/chronicle', icon: History, label: t('menu.chronicle') },
     { to: '/system', icon: Server, label: t('menu.system') },
   ]
   return (

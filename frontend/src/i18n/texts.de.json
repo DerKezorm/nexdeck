@@ -2021,7 +2021,20 @@
     "Updates never colour the card. They need Check for updates under System, About.": "Updates färben die Karte nie. Sie brauchen „Nach Updates suchen“ unter System, Über.",
     "Tapping a row opens": "Antippen einer Zeile öffnet",
     "The card, on its board": "Die Karte auf ihrem Board",
-    "The service": "Den Dienst"
+    "The service": "Den Dienst",
+    "A plan, source or job whose last good backup is older than this turns the card yellow. 26 suits a nightly backup, about 200 a weekly one; 0 switches it off.": "Ein Plan, eine Quelle oder ein Auftrag, dessen letzte gute Sicherung älter ist, färbt die Karte gelb. 26 passt zu einer nächtlichen Sicherung, etwa 200 zu einer wöchentlichen; 0 schaltet es aus.",
+    "Too old after (hours)": "Zu alt nach (Stunden)",
+    "Cards and services": "Karten und Dienste",
+    "Cards, services and versions": "Karten, Dienste und Versionen",
+    "Versions and containers": "Versionen und Container",
+    "Everything, changes in nexdeck too": "Alles, auch Änderungen in nexdeck",
+    "Which lines": "Welche Zeilen",
+    "What happened": "Was ist passiert",
+    "Daily report": "Tagesbericht",
+    "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Die neuesten Zeilen der Chronik von allen Boards des Besitzers dieses Boards: Karten, die gelb, rot oder wieder grün wurden, Ausfälle, Wartung, neue Versionen und neu gestartete Container.",
+    "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Was in den letzten 24 Stunden passiert ist und was noch rot ist, von allen Boards des Besitzers dieses Boards.",
+    "A backup is too old": "Eine Sicherung ist zu alt",
+    "The daily report": "Der Tagesbericht"
   },
   "labels": {
     "Private resources": "Private Ressourcen",

@@ -4039,3 +4039,25 @@ body.has-player-bar main {
     z-index: 2;
   }
 }
+
+/* Lines of the chronicle (roadmap M2), on its page and on its card. */
+@layer components {
+  .nd-chron-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 6px;
+    text-align: left;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: 9px;
+  }
+  button.nd-chron-row {
+    cursor: pointer;
+  }
+  button.nd-chron-row:hover {
+    background: var(--nd-surface-hover);
+  }
+}

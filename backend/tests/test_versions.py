@@ -266,3 +266,28 @@ def test_nothing_goes_to_github_while_the_operator_has_not_switched_it_on(client
     assert "asked" not in release, "GitHub was never asked"
     _asking(client)
     assert client.get("/api/v1/integrations/versions").json()[str(sonarr)]["state"] == "behind"
+
+
+def test_an_update_row_says_when_the_newer_release_came_out(client: TestClient, services: dict[str, str], release: dict[str, Any]) -> None:
+    setup_admin(client)
+    _asking(client)
+    _connection(client, "sonarr", "Series")
+    [row] = _card({}).items
+    assert row["released"] == release["published"]
+
+
+def test_a_service_that_runs_another_version_is_a_line_of_the_chronicle(client: TestClient, services: dict[str, str]) -> None:
+    from sqlalchemy import select
+
+    from app.db import db_session
+    from app.models import Event
+
+    setup_admin(client)
+    sonarr = _connection(client, "sonarr", "Series")
+    client.get("/api/v1/integrations/versions")
+    services["sonarr"] = "4.0.11.2680"
+    versions.forget_one(sonarr)
+    client.get("/api/v1/integrations/versions")
+    with db_session() as db:
+        lines = [(line.name, line.before, line.after) for line in db.scalars(select(Event).where(Event.kind == "version"))]
+    assert lines == [("Series", "4.0.9", "4.0.11.2680")]

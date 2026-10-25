@@ -287,7 +287,7 @@ async def _returned(slug: str, request: Request) -> RedirectResponse:
         response = _redirect(flow.arrived(arrival), request)
         # A provider the entry trusts with the second factor spares the duty to set one up in this session.
         kind = SESSION_VIA_PROVIDER if arrival.provider.trusts_second_factor else "password"
-        open_session(s.db, user, request, response, kind=kind)
+        open_session(s.db, user, request, response, kind=kind, way="provider")
         return response
 
 

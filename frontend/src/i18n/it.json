@@ -546,13 +546,21 @@
       "boardInTitle": "Metti il nome della bacheca davanti nella scheda",
       "preview": "Anteprima",
       "sampleBoard": "Casa"
+    },
+    "report": {
+      "title": "Rapporto giornaliero",
+      "help": "Una volta al giorno, cosa è successo nelle ultime 24 ore e cosa è ancora rosso. Va a ogni canale iscritto a «Il rapporto giornaliero» qui sotto; nessun altro lo riceve. L’ora è quella del server.",
+      "at": "Ora del rapporto giornaliero",
+      "goesAt": "Il rapporto giornaliero parte alle {{time}}.",
+      "saved": "D’ora in poi il rapporto giornaliero parte alle {{time}}."
     }
   },
   "menu": {
     "settings": "Le mie impostazioni",
     "system": "Sistema",
     "signOut": "Esci",
-    "signInWithPassword": "Accedi con una password"
+    "signInWithPassword": "Accedi con una password",
+    "chronicle": "Cronaca"
   },
   "users": {
     "role": {
@@ -1081,7 +1089,8 @@
     "topology": "Come sono collegati i punti",
     "problemsMore": "+{{count}} altri",
     "lastHours_one": "ultima ora",
-    "lastHours_other": "ultime {{count}} ore"
+    "lastHours_other": "ultime {{count}} ore",
+    "released": "Pubblicato"
   },
   "player": {
     "title": "Musica",
@@ -2139,5 +2148,74 @@
     "move": "Cambia la fine",
     "end": "Termina ora",
     "failed": "Non ha funzionato: {{reason}}"
+  },
+  "chronicle": {
+    "title": "Cronaca",
+    "help": "Cosa è cambiato sulle tue bacheche, il più recente prima: schede diventate gialle o rosse, servizi che non rispondevano più, manutenzione, nuove versioni e container riavviati.",
+    "helpAdmin": "Cosa è cambiato, il più recente prima: schede diventate gialle o rosse, servizi che non rispondevano più, manutenzione, nuove versioni, container riavviati e le modifiche fatte in nexdeck. Conservata per un anno.",
+    "which": "Quali righe",
+    "window": "Fin dove",
+    "search": "Cerca nomi e motivi",
+    "empty": "Niente in questo periodo.",
+    "older": "Mostra righe più vecchie",
+    "cardEmpty": "Non è ancora successo niente.",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "group": {
+      "all": "Tutto",
+      "cards": "Schede e servizi",
+      "versions": "Versioni e container",
+      "nexdeck": "Modifiche in nexdeck"
+    },
+    "days": {
+      "1": "24 ore",
+      "7": "7 giorni",
+      "30": "30 giorni",
+      "365": "Un anno"
+    },
+    "kind": {
+      "card_bad": "{{name}} è diventata rossa",
+      "card_warn": "{{name}} è diventata gialla",
+      "card_ok": "{{name}} è di nuovo a posto",
+      "outage": "{{name}} non risponde più",
+      "recovery": "{{name}} risponde di nuovo dopo {{detail}}",
+      "maintenance": "{{name}} in manutenzione fino alle {{until}}",
+      "maintenance_end": "La manutenzione di {{name}} è finita prima",
+      "version": "{{name}} usa {{after}} invece di {{before}}",
+      "container_restarted": "Il container {{name}} si è riavviato",
+      "container_recreated": "Il container {{name}} è stato ricreato",
+      "connection_added": "Integrazione {{name}} aggiunta",
+      "connection_changed": "Integrazione {{name}} modificata",
+      "connection_removed": "Integrazione {{name}} rimossa",
+      "card_added": "Scheda {{name}} aggiunta a {{after}}",
+      "card_removed": "Scheda {{name}} tolta da {{after}}",
+      "signed_in": "{{name}} ha effettuato l’accesso",
+      "sign_in_refused": "Accesso rifiutato per {{name}}"
+    },
+    "way": {
+      "password": "con la password",
+      "provider": "tramite un provider",
+      "home": "nella rete di casa",
+      "passkey": "con una passkey"
+    }
+  },
+  "report": {
+    "nowRed": "Rosso ora",
+    "outages": "Guasti",
+    "turnedRed": "Diventati rossi",
+    "backups": "Backup",
+    "versions": "Nuove versioni",
+    "containers": "Container ricreati",
+    "restarted": "Container riavviati",
+    "outagesCount": "guasti",
+    "outagesCount_one": "guasto",
+    "outagesCount_other": "guasti",
+    "redCount": "ancora rossi",
+    "redCount_one": "ancora rosso",
+    "redCount_other": "ancora rossi",
+    "updatesCount": "aggiornamenti",
+    "updatesCount_one": "aggiornamento",
+    "updatesCount_other": "aggiornamenti",
+    "quiet": "Non è successo niente nelle ultime 24 ore, e niente è rosso."
   }
 }

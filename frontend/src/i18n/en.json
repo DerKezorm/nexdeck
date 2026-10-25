@@ -546,13 +546,21 @@
       "boardInTitle": "Put the board's name in front in the tab",
       "preview": "Preview",
       "sampleBoard": "Home"
+    },
+    "report": {
+      "title": "Daily report",
+      "help": "Once a day, what happened in the last 24 hours and what is still red. It goes to every channel that subscribed to \"The daily report\" below; nobody gets it otherwise. The time is the server's.",
+      "at": "Time of the daily report",
+      "goesAt": "The daily report goes out at {{time}}.",
+      "saved": "The daily report goes out at {{time}} from now on."
     }
   },
   "menu": {
     "settings": "My settings",
     "system": "System",
     "signOut": "Sign out",
-    "signInWithPassword": "Sign in with a password"
+    "signInWithPassword": "Sign in with a password",
+    "chronicle": "Chronicle"
   },
   "users": {
     "role": {
@@ -1081,7 +1089,8 @@
     "topology": "How the places hang together",
     "problemsMore": "+{{count}} more",
     "lastHours_one": "last hour",
-    "lastHours_other": "last {{count}} hours"
+    "lastHours_other": "last {{count}} hours",
+    "released": "Released"
   },
   "player": {
     "title": "Music",
@@ -2139,5 +2148,74 @@
     "move": "Change the end",
     "end": "End now",
     "failed": "That did not work: {{reason}}"
+  },
+  "chronicle": {
+    "title": "Chronicle",
+    "help": "What changed on your boards, newest first: cards that turned yellow or red, services that stopped answering, maintenance, new versions and containers that restarted.",
+    "helpAdmin": "What changed, newest first: cards that turned yellow or red, services that stopped answering, maintenance, new versions, containers that restarted, and the changes made in nexdeck. Kept for a year.",
+    "which": "Which lines",
+    "window": "How far back",
+    "search": "Search names and reasons",
+    "empty": "Nothing in this time.",
+    "older": "Show older lines",
+    "cardEmpty": "Nothing happened yet.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "group": {
+      "all": "Everything",
+      "cards": "Cards and services",
+      "versions": "Versions and containers",
+      "nexdeck": "Changes in nexdeck"
+    },
+    "days": {
+      "1": "24 hours",
+      "7": "7 days",
+      "30": "30 days",
+      "365": "A year"
+    },
+    "kind": {
+      "card_bad": "{{name}} turned red",
+      "card_warn": "{{name}} turned yellow",
+      "card_ok": "{{name}} is fine again",
+      "outage": "{{name}} stopped answering",
+      "recovery": "{{name}} answers again after {{detail}}",
+      "maintenance": "{{name}} in maintenance until {{until}}",
+      "maintenance_end": "Maintenance of {{name}} ended early",
+      "version": "{{name}} runs {{after}} instead of {{before}}",
+      "container_restarted": "Container {{name}} restarted",
+      "container_recreated": "Container {{name}} was created anew",
+      "connection_added": "Connection {{name}} added",
+      "connection_changed": "Connection {{name}} changed",
+      "connection_removed": "Connection {{name}} removed",
+      "card_added": "Card {{name}} added to {{after}}",
+      "card_removed": "Card {{name}} removed from {{after}}",
+      "signed_in": "{{name}} signed in",
+      "sign_in_refused": "Sign-in refused for {{name}}"
+    },
+    "way": {
+      "password": "with the password",
+      "provider": "through a provider",
+      "home": "on the home network",
+      "passkey": "with a passkey"
+    }
+  },
+  "report": {
+    "nowRed": "Red now",
+    "outages": "Outages",
+    "turnedRed": "Turned red",
+    "backups": "Backups",
+    "versions": "New versions",
+    "containers": "Containers created anew",
+    "restarted": "Containers restarted",
+    "outagesCount": "outages",
+    "outagesCount_one": "outage",
+    "outagesCount_other": "outages",
+    "redCount": "still red",
+    "redCount_one": "still red",
+    "redCount_other": "still red",
+    "updatesCount": "updates",
+    "updatesCount_one": "update",
+    "updatesCount_other": "updates",
+    "quiet": "Nothing happened in the last 24 hours, and nothing is red."
   }
 }

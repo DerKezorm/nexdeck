@@ -13,7 +13,9 @@ from app.adapters.base import AdapterError, AuthFailed, Context
 from app.adapters.kopia import _moment
 
 KO = "http://kopia.example.com"
-CONFIG = {"url": KO, "username": "admin", "password": "made-up-password"}
+# The answers below carry the dates of the day they were measured, long past by now; how old a
+# backup may be is tested on its own in test_backup_age.py, so the rule is off here.
+CONFIG = {"url": KO, "username": "admin", "password": "made-up-password", "stale_hours": 0}
 PAGE = '<html><head><meta name="kopia-csrf-token" content="made-up-csrf"></head></html>'
 
 

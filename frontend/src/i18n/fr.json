@@ -546,13 +546,21 @@
       "boardInTitle": "Mettre le nom du tableau en tête dans l’onglet",
       "preview": "Aperçu",
       "sampleBoard": "Maison"
+    },
+    "report": {
+      "title": "Rapport quotidien",
+      "help": "Une fois par jour, ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge. Il part vers chaque canal abonné à « Le rapport quotidien » ci-dessous ; personne d’autre ne le reçoit. L’heure est celle du serveur.",
+      "at": "Heure du rapport quotidien",
+      "goesAt": "Le rapport quotidien part à {{time}}.",
+      "saved": "Le rapport quotidien part désormais à {{time}}."
     }
   },
   "menu": {
     "settings": "Mes paramètres",
     "system": "Système",
     "signOut": "Se déconnecter",
-    "signInWithPassword": "Se connecter avec un mot de passe"
+    "signInWithPassword": "Se connecter avec un mot de passe",
+    "chronicle": "Chronique"
   },
   "users": {
     "role": {
@@ -1081,7 +1089,8 @@
     "topology": "Comment les éléments sont reliés",
     "problemsMore": "+{{count}} de plus",
     "lastHours_one": "dernière heure",
-    "lastHours_other": "{{count}} dernières heures"
+    "lastHours_other": "{{count}} dernières heures",
+    "released": "Publié"
   },
   "player": {
     "title": "Musique",
@@ -2139,5 +2148,74 @@
     "move": "Changer la fin",
     "end": "Terminer maintenant",
     "failed": "Cela n’a pas marché : {{reason}}"
+  },
+  "chronicle": {
+    "title": "Chronique",
+    "help": "Ce qui a changé sur vos tableaux, le plus récent d’abord : cartes passées au jaune ou au rouge, services qui ne répondaient plus, maintenance, nouvelles versions et conteneurs redémarrés.",
+    "helpAdmin": "Ce qui a changé, le plus récent d’abord : cartes passées au jaune ou au rouge, services qui ne répondaient plus, maintenance, nouvelles versions, conteneurs redémarrés et les changements faits dans nexdeck. Conservé un an.",
+    "which": "Quelles lignes",
+    "window": "Jusqu’à quand",
+    "search": "Chercher noms et raisons",
+    "empty": "Rien pendant cette période.",
+    "older": "Afficher les lignes plus anciennes",
+    "cardEmpty": "Rien ne s’est encore passé.",
+    "today": "Aujourd’hui",
+    "yesterday": "Hier",
+    "group": {
+      "all": "Tout",
+      "cards": "Cartes et services",
+      "versions": "Versions et conteneurs",
+      "nexdeck": "Changements dans nexdeck"
+    },
+    "days": {
+      "1": "24 heures",
+      "7": "7 jours",
+      "30": "30 jours",
+      "365": "Un an"
+    },
+    "kind": {
+      "card_bad": "{{name}} est passé au rouge",
+      "card_warn": "{{name}} est passé au jaune",
+      "card_ok": "{{name}} va de nouveau bien",
+      "outage": "{{name}} ne répond plus",
+      "recovery": "{{name}} répond de nouveau après {{detail}}",
+      "maintenance": "{{name}} en maintenance jusqu’à {{until}}",
+      "maintenance_end": "La maintenance de {{name}} s’est terminée plus tôt",
+      "version": "{{name}} tourne en {{after}} au lieu de {{before}}",
+      "container_restarted": "Le conteneur {{name}} a redémarré",
+      "container_recreated": "Le conteneur {{name}} a été recréé",
+      "connection_added": "Intégration {{name}} ajoutée",
+      "connection_changed": "Intégration {{name}} modifiée",
+      "connection_removed": "Intégration {{name}} supprimée",
+      "card_added": "Carte {{name}} ajoutée à {{after}}",
+      "card_removed": "Carte {{name}} retirée de {{after}}",
+      "signed_in": "{{name}} s’est connecté",
+      "sign_in_refused": "Connexion refusée pour {{name}}"
+    },
+    "way": {
+      "password": "avec le mot de passe",
+      "provider": "via un fournisseur",
+      "home": "sur le réseau domestique",
+      "passkey": "avec une clé d’accès"
+    }
+  },
+  "report": {
+    "nowRed": "Rouge maintenant",
+    "outages": "Pannes",
+    "turnedRed": "Passés au rouge",
+    "backups": "Sauvegardes",
+    "versions": "Nouvelles versions",
+    "containers": "Conteneurs recréés",
+    "restarted": "Conteneurs redémarrés",
+    "outagesCount": "pannes",
+    "outagesCount_one": "panne",
+    "outagesCount_other": "pannes",
+    "redCount": "encore rouges",
+    "redCount_one": "encore rouge",
+    "redCount_other": "encore rouges",
+    "updatesCount": "mises à jour",
+    "updatesCount_one": "mise à jour",
+    "updatesCount_other": "mises à jour",
+    "quiet": "Rien ne s’est passé ces dernières 24 heures, et rien n’est rouge."
   }
 }

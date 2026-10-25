@@ -39,12 +39,12 @@ from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
 from ..models import ActionLog, Integration, Widget, utcnow
-from . import history
+from . import chronicle, history
 from .integrations import resolve_config
 from .loop import run_on_loop, spawn
 from .notify import emit
 from .sse import board_topic, hub
-from .state import live
+from .state import level_of, live
 
 logger = logging.getLogger("nexdeck.collector")
 
@@ -59,6 +59,9 @@ RECOVERY_INTERVAL = 60.0
 #: impatient second press, shorter than anybody waits before pressing again
 #: on purpose.
 REFRESH_NOW_GAP = 5.0
+
+#: Cards that repeat what other cards say. Their colour changes are not news of their own.
+REPEATING_CARDS = frozenset({"core.problems", "core.chronicle", "core.report", "core.status", "core.notices"})
 
 
 class Collector:
@@ -368,6 +371,10 @@ class Collector:
 
         self._tell_about(widget_id, title, adapter, widget_kind, previous, data, options, integration_id)
         live.set(widget_id, data)
+        if not demo:
+            self._write_down(widget_id, title, kind, integration_id, previous, data)
+        if level_of(data) != "ok":
+            data.since = live.recall(widget_id, lambda: chronicle.last_turned(widget_id, level_of(data)))
         kept = history.recorded(data)
         if kept:
             with db_session() as db:
@@ -517,6 +524,25 @@ class Collector:
             logger.info("%s on %r: %s", detected.event, title, detected.title)
             emit(detected.event, detected.title, detected.body,
                  level="warn" if detected.level in ("warn", "bad") else "info", integration_id=integration_id)
+
+    @staticmethod
+    def _write_down(widget_id: int, title: str, kind: str, integration_id: int | None,
+                    before: WidgetData | None, after: WidgetData) -> None:
+        """Into the chronicle: a card that changed colour, and containers that restarted.
+
+        Not the first answer after a start: nobody knows what came before it.
+        Not the cards that only repeat others, or a red one would be three lines.
+        """
+        if before is None or kind in REPEATING_CARDS:
+            return
+        was, now = level_of(before), level_of(after)
+        if was != now:
+            reason = after.error or str((after.meta or {}).get("status_reason") or "")
+            chronicle.card_turned(widget_id, title, was, now, reason, integration_id)
+        if kind == "docker.containers":
+            for change, name, old, new in chronicle.containers_changed(before, after):
+                chronicle.record(change, level="info", widget_id=widget_id, integration_id=integration_id,
+                                 name=name, before=old, after=new)
 
     def _tell_about_failure(self, widget_id: int, title: str, data: WidgetData, integration_id: int | None = None) -> None:
         """A card that stopped working, said once and not on every retry."""

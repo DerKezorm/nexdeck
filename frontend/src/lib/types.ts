@@ -91,6 +91,8 @@ export interface WidgetData {
   meta?: Record<string, unknown>
   error?: string | null
   updated_at?: number
+  /** Since when the card is yellow or red (epoch seconds), when that is known. */
+  since?: number | null
 }
 
 export interface LayoutItem {

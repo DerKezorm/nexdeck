@@ -538,6 +538,35 @@ class Maintenance(Base):
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
+class Event(Base):
+    """One line of the chronicle: something that changed, and when.
+
+    ⚠️ No foreign keys on purpose. A card or a connection that is deleted
+    keeps its past: the line still says what happened to it, under the name
+    it had then. Only administrators see a line whose card is gone.
+    """
+
+    __tablename__ = "events"
+    __table_args__ = (Index("ix_events_widget_at", "widget_id", "at"), Index("ix_events_integration_at", "integration_id", "at"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    at: Mapped[datetime] = mapped_column(Utc(), default=utcnow, index=True)
+    #: ``card``, ``outage``, ``recovery``, ``maintenance``, ``version``, ``container_restarted`` ... (``chronicle.KINDS``)
+    kind: Mapped[str] = mapped_column(String(40), index=True)
+    #: ok, warn, bad or info: how the line is coloured.
+    level: Mapped[str] = mapped_column(String(8), default="info")
+    widget_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    integration_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Whoever did it, for changes made in nexdeck and sign-ins.
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: What it is about, under the name it had then.
+    name: Mapped[str] = mapped_column(String(200), default="")
+    before: Mapped[str] = mapped_column(String(200), default="")
+    after: Mapped[str] = mapped_column(String(200), default="")
+    detail: Mapped[str] = mapped_column(String(400), default="")
+
+
 class LogLine(Base):
     __tablename__ = "log_lines"
     __table_args__ = (Index("ix_log_lines_source_ts", "source", "ts"),)

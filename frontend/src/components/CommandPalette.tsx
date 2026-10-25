@@ -82,6 +82,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       ['/system/integrations', t('settings.integrations.title')],
       ['/system/about', t('settings.systemTitle')],
       ['/notices', t('notices.title')],
+      ['/chronicle', t('chronicle.title')],
     ]) {
       list.push({ id: `s${path}`, title: label, subtitle: t('palette.settings'), icon: <Settings size={16} />, keywords: label.toLowerCase(), run: () => navigate(path) })
     }

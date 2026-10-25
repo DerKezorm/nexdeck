@@ -25,7 +25,7 @@ from ..adapters.base import AdapterError, guard_member_target, outbound_client
 from ..config import get_settings
 from ..db import db_session
 from ..models import HealthCheck, Outage, Page, Widget, utcnow
-from . import history, maintenance, notify
+from . import chronicle, history, maintenance, notify
 from .sse import board_topic, hub
 
 logger = logging.getLogger("nexdeck.health")
@@ -381,6 +381,9 @@ class HealthService:
                         if open_outage.announced and not quiet:
                             length = int((now - open_outage.started_at).total_seconds())
                             announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info", integration_id)
+                        if open_outage.announced:
+                            chronicle.record("recovery", level="ok", widget_id=check.widget_id, integration_id=integration_id,
+                                             name=name, detail=f"{length_of(open_outage, now)} min", db=db)
                 check.down_since = None
             else:
                 if check.down_since is None:
@@ -399,6 +402,10 @@ class HealthService:
                         if down_for >= settings.outage_threshold_seconds and not open_outage.announced:
                             open_outage.announced = True
                             announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error", integration_id)
+                            # Written when it counts as an outage, dated when it began: a blip
+                            # shorter than the threshold is no line of the chronicle.
+                            chronicle.record("outage", level="bad", widget_id=check.widget_id, integration_id=integration_id,
+                                             name=name, detail=detail, at=open_outage.started_at, db=db)
             payload = {
                 "check_id": check.id, "widget_id": check.widget_id, "ok": ok, "latency_ms": latency,
                 "detail": detail, "down_since": check.down_since.isoformat() if check.down_since else None,
@@ -411,6 +418,11 @@ class HealthService:
 
 
 health = HealthService()
+
+
+def length_of(outage: Outage, now: datetime) -> int:
+    """Whole minutes an outage lasted."""
+    return int((now - outage.started_at).total_seconds() // 60)
 
 
 def check_payload(check: HealthCheck) -> dict:

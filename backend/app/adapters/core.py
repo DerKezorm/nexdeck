@@ -346,6 +346,38 @@ class CoreAdapter(Adapter):
             ),
         ),
         WidgetType(
+            kind="chronicle",
+            label="What happened",
+            description="The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.",
+            renderer="chronicle",
+            default_size=(4, 4),
+            min_size=(2, 2),
+            refresh_seconds=30,
+            options=(
+                Field("scope", "From where", type="select", default="all",
+                      options=(("all", "Every board of this board's owner"), ("board", "Only this board")),
+                      help="The card is read once for everyone who sees it, so it shows what the owner of the board sees."),
+                Field("group", "Which lines", type="select", default="services",
+                      options=(("services", "Cards, services and versions"), ("cards", "Cards and services"),
+                               ("versions", "Versions and containers"), ("all", "Everything, changes in nexdeck too"))),
+                Field("limit", "Entries", type="number", default=12),
+            ),
+        ),
+        WidgetType(
+            kind="report",
+            label="Daily report",
+            description="What happened in the last 24 hours and what is still red, from every board of this board's owner.",
+            renderer="report",
+            default_size=(4, 4),
+            min_size=(3, 2),
+            refresh_seconds=300,
+            options=(
+                Field("scope", "From where", type="select", default="all",
+                      options=(("all", "Every board of this board's owner"), ("board", "Only this board")),
+                      help="The card is read once for everyone who sees it, so it shows what the owner of the board sees."),
+            ),
+        ),
+        WidgetType(
             kind="notices",
             label="Notices",
             description="The notices of this board's owner, for a wall where nobody opens the bell. Everyone who can see the board sees them.",
@@ -491,6 +523,10 @@ class CoreAdapter(Adapter):
             return self._status(ctx, options)
         if widget_kind == "notices":
             return self._notices(ctx, options)
+        if widget_kind == "chronicle":
+            return self._chronicle(ctx, options)
+        if widget_kind == "report":
+            return self._report(ctx, options)
         if widget_kind == "updates":
             return await self._updates(ctx, options)
         if widget_kind == "host":
@@ -607,6 +643,8 @@ class CoreAdapter(Adapter):
                     "value": reading.newest,
                     "url": reading.url,
                     "emphasis": fresh,
+                    # When the newer release came out: a day old is something else than a year.
+                    **({"released": reading.published} if reading.published else {}),
                 })
             elif reading.state == "current" and show_current:
                 rows.append({"title": name, "subtitle": "Up to date", "status": "ok", "value": reading.running})
@@ -890,6 +928,50 @@ class CoreAdapter(Adapter):
             "maintenance": [{"title": name, "until": until.isoformat()} for name, until in sorted(quiet.items())],
         })
 
+    #: What each choice of the chronicle card shows.
+    CHRONICLE_GROUPS = {
+        "services": ("card", "outage", "recovery", "maintenance", "maintenance_end", "version", "container_restarted", "container_recreated"),
+        "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end"),
+        "versions": ("version", "container_restarted", "container_recreated"),
+    }
+
+    @classmethod
+    def _chronicle(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The latest lines of the chronicle, as the board's owner sees them."""
+        from ..db import db_session
+        from ..services import chronicle
+
+        group = str(options.get("group") or "services")
+        kinds = cls.CHRONICLE_GROUPS.get(group) or tuple(chronicle.KINDS)
+        try:
+            limit = max(1, min(50, int(options.get("limit") or 12)))
+        except (TypeError, ValueError):
+            limit = 12
+        if ctx.widget_id is None:
+            return WidgetData(items=[], meta={"empty": "Nothing happened yet."})
+        with db_session() as db:
+            lines = chronicle.card_lines(db, ctx.widget_id, kinds=kinds, whole=options.get("scope", "all") != "board", limit=limit)
+        return WidgetData(items=lines, meta={"empty": "Nothing happened yet."})
+
+    @classmethod
+    def _report(cls, ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The last 24 hours and what is red now, for the boards of the owner (``report.summary``)."""
+        from sqlalchemy import select
+
+        from ..db import db_session
+        from ..models import Board
+        from ..services import report
+
+        with db_session() as db:
+            board = cls._board_of(db, ctx.widget_id)
+            if board is None:
+                return WidgetData(meta={"report": None})
+            boards = {board.id}
+            if options.get("scope", "all") != "board" and board.owner_id is not None:
+                boards = set(db.scalars(select(Board.id).where(Board.owner_id == board.owner_id)))
+            found = report.summary(db, boards=boards, owner_id=board.owner_id)
+        return WidgetData(status="ok", meta={"report": found})
+
     #: How many of a card's own yellow or red rows the problems card names.
     FINDINGS_SHOWN = 2
 
@@ -1042,6 +1124,25 @@ class CoreAdapter(Adapter):
             if options.get("only_down"):
                 rows = rows[:1]
             return WidgetData(status="bad", items=rows, primary={"label": "Down", "value": 1}, meta={"empty": "Everything answers.", "bars": "24h", **self._look(options, "24h")})
+        if widget_kind == "chronicle":
+            import time
+
+            now = time.time()
+            lines = [
+                {"kind": "card", "level": "bad", "name": "Paperless", "before": "ok", "after": "bad", "detail": "The service could not be reached.", "board": "Infrastructure", "when": now - 14 * 60},
+                {"kind": "version", "level": "info", "name": "Sonarr", "before": "4.0.15", "after": "4.0.16", "detail": "", "board": "", "when": now - 18 * 60},
+                {"kind": "container_recreated", "level": "info", "name": "sonarr", "before": "lscr.io/linuxserver/sonarr:4.0.15", "after": "lscr.io/linuxserver/sonarr:4.0.16", "detail": "", "board": "Infrastructure", "when": now - 19 * 60},
+                {"kind": "maintenance", "level": "info", "name": "Synology", "before": "", "after": "", "detail": "", "board": "", "when": now - 3 * 3600},
+                {"kind": "outage", "level": "bad", "name": "Nextcloud", "before": "", "after": "", "detail": "ConnectError", "board": "Infrastructure", "when": now - 9 * 3600},
+                {"kind": "recovery", "level": "ok", "name": "Nextcloud", "before": "", "after": "", "detail": "12 min", "board": "Infrastructure", "when": now - 9 * 3600 + 720},
+            ]
+            return WidgetData(items=lines[: int(options.get("limit") or 12)], meta={"empty": "Nothing happened yet."})
+        if widget_kind == "report":
+            return WidgetData(meta={"report": {
+                "since": "", "outages": ["Nextcloud"], "red": ["Paperless"], "now_red": ["Paperless"],
+                "versions": [{"name": "Sonarr", "before": "4.0.15", "after": "4.0.16"}], "containers": ["sonarr"], "restarted": [],
+                "backups": ["Photos: the last good backup is too old"],
+            }})
         if widget_kind == "notices":
             import time
 

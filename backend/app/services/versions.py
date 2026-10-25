@@ -169,6 +169,8 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context, *, al
             logger.warning("The version of connection %s could not be read: %s", integration_id, failure.__class__.__name__)
             reading.problem = f"The answer of the service could not be read ({failure.__class__.__name__})."
         _running[integration_id] = reading
+        if reading.running:
+            await asyncio.to_thread(_write_down, integration_id, reading.running)
     repo = UPSTREAM.get(kind)
     # A reading is shared, so what the last caller was allowed to learn is set again each time.
     reading.asked = allowed
@@ -180,6 +182,18 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context, *, al
             reading.url = release["url"]
             reading.published = release["published"]
     return reading
+
+
+def _write_down(integration_id: int, running: str) -> None:
+    """A connection that runs another version than last time goes into the chronicle."""
+    from ..db import db_session
+    from ..models import Integration
+    from . import chronicle
+
+    with db_session() as db:
+        integration = db.get(Integration, integration_id)
+        name = integration.name if integration is not None else ""
+    chronicle.version_read(integration_id, name, running)
 
 
 async def read_many(connections: list[tuple[int, str]], resolve: Any, ctx: Context, *, allowed: bool = True) -> dict[int, Reading]:

@@ -26,12 +26,14 @@ import time
 from datetime import datetime
 from typing import Any
 
+from . import backup_age
 from . import demo as fake
 from .base import (
     Adapter,
     AdapterError,
     AuthFailed,
     Context,
+    Detected,
     Field,
     WidgetData,
     WidgetType,
@@ -71,6 +73,7 @@ class KopiaAdapter(Adapter):
         Field("username", "User", required=True, default="kopia", help="The --server-username the server was started with."),
         Field("password", "Password", type="password", secret=True, required=True, help="The --server-password."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
+        backup_age.STALE_FIELD,
     )
     widgets = (
         WidgetType(kind="sources", label="Snapshots", description="Every source with its last good snapshot, failed ones first.",
@@ -140,10 +143,14 @@ class KopiaAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         sources, tasks = await self._state(config, ctx)
-        rows = self._rows(sources, tasks)
+        rows = backup_age.age(self._rows(sources, tasks), backup_age.limit_of(config))
         if widget_kind == "summary":
             return self._summary(rows)
         return self._sources(rows, options)
+
+    def detect(self, widget_kind: str, before: WidgetData | None, after: WidgetData, options: dict[str, Any]) -> list[Detected]:
+        """A source whose last good backup became too old (``backup_age``)."""
+        return backup_age.news(before, after) if widget_kind == "sources" else []
 
     # -- the cards -----------------------------------------------------------
 
@@ -193,6 +200,7 @@ class KopiaAdapter(Adapter):
     @staticmethod
     def _summary(rows: list[dict[str, Any]]) -> WidgetData:
         failed = sum(1 for one in rows if one["state"] == "bad")
+        stale = sum(1 for one in rows if one["row"].get("stale"))
         fine = sum(1 for one in rows if one["state"] == "ok")
         newest = max((one["good"] for one in rows), default=0.0)
         secondary: list[dict[str, Any]] = []
@@ -201,7 +209,7 @@ class KopiaAdapter(Adapter):
         if newest:
             secondary.append({"label": "Last snapshot", "value": ago(newest)})
         return WidgetData(
-            status="bad" if failed else "ok" if rows else "unknown",
+            status="bad" if failed else "warn" if stale else "ok" if rows else "unknown",
             primary={"label": "Sources fine", "value": fine, "unit": f"/ {len(rows)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},
@@ -212,8 +220,9 @@ class KopiaAdapter(Adapter):
         order = {"bad": 0, "warn": 1, "unknown": 2, "ok": 3}
         ranked = sorted(rows, key=lambda one: (order.get(one["state"], 9), one["row"]["title"]))
         failed = sum(1 for one in rows if one["state"] == "bad")
+        stale = any(one["row"].get("stale") for one in rows)
         return WidgetData(
-            status="bad" if failed else "ok",
+            status="bad" if failed else "warn" if stale else "ok",
             items=[one["row"] for one in ranked][: int(options.get("limit") or 10)],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No snapshot sources yet."},
@@ -233,7 +242,7 @@ class KopiaAdapter(Adapter):
         ]
         tasks = [{"kind": "Snapshot", "status": "FAILED", "description": f"root@nas:/volume1/photos at {stamp(2)}", "endTime": stamp(2),
                   "errorMessage": "unable to read directory: permission denied"}] if failed else []
-        rows = self._rows(sources, tasks)
+        rows = backup_age.age(self._rows(sources, tasks), backup_age.limit_of({}))
         if widget_kind == "summary":
             return self._summary(rows)
         return self._sources(rows, options)

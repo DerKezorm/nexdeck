@@ -7,6 +7,13 @@ project uses semantic versioning.
 
 ### Added
 
+- **Chronicle**, in the account menu: what changed, newest first, one heading a day. Cards that turned yellow, red or green again, services that stopped answering and came back, maintenance, a service that runs another version, containers that restarted or were created anew, and for administrators the changes made in nexdeck: connections and cards added, changed and removed, sign-ins and refused ones. Filters for the kind of line, 24 hours to a year, and words. A line about a card leads to it. Administrators see every line, everybody else the lines about boards they may open. Kept for a year (`NEXDECK_KEEP_EVENTS_DAYS`).
+- **What happened**, a new card: the latest lines of the chronicle from every board of the board's owner, or only its own.
+- **Daily report**, a new card and a message: what happened in the last 24 hours and what is still red. The message goes once a day, at 7:00 or the time set under Notifications, to every channel that subscribed to "The daily report", and to no other.
+- A yellow or red card says **since when** next to its reason ("since 14:32"), also after nexdeck was restarted, from the chronicle.
+- **A backup that is too old** turns the card yellow: Backrest, Kopia and Duplicati hold the last good backup of every plan, source or job against a limit of the connection, 26 hours unless set otherwise, and say "Too old". Told once, as "A backup is too old".
+- The **Updates** card says how old the newer release is.
+
 - **Needs attention**: the Problems card grew into a card that says what needs a look, from every board of the board's owner. It lists the cards that are yellow or red with their reason, the services whose check fails, and the warnings of the bell the owner has not read yet, red before yellow and the newest first, each with its board and since when. A row leads to the card on its board, or to the service if the card is told to. What does not fit becomes "Show 16 more" and opens the whole list. The card takes the colour of the worst it lists; when nothing is wrong it says so, and how many cards and checks it looked at. Waiting updates stand on a quiet line below and never colour it. The owner can mark a warning of the bell as read right on the card. On a wall display behind a kiosk link a row leads to a card on the same board only.
 - **Maintenance**: an administrator puts a connection, or a single app tile, into maintenance for one to eight hours or until a time, from the wrench on the card. Until then nothing about it is told, in the bell or on any channel, and no outage is opened; a service that rejects its credentials is still told. The cards keep showing what they read and say "Maintenance until 22:00". The availability bars draw the time grey and leave it out of the share of time a service was up, and an outage that outlasts the maintenance counts from its end. The attention card leaves what is in maintenance out and names it on a quiet line. `POST /api/v1/maintenance`.
 
@@ -20,7 +27,9 @@ project uses semantic versioning.
 
 ### Upgrading
 
-The database gets a table for maintenance and its version 24, which writes the old answers into the existing Problems cards. Going back to 0.48 works; the table stays unused.
+The database gets two tables, for maintenance and for the chronicle, and its version 24, which writes the old answers into the existing Problems cards. Going back to 0.48 works; the tables stay unused.
+
+A Backrest, Kopia or Duplicati connection whose backups run less often than once a day turns its cards yellow after the update: raise "Too old after (hours)" in its settings, to about 200 for a weekly one.
 
 ## 0.48.0 (2026-10-24)
 
