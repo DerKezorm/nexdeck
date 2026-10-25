@@ -1674,6 +1674,53 @@
         "undici 7.30.1 und serialize-javascript 7.1.4 in den Test- und Bauwerkzeugen.",
         "Danke an mplok1 für den Wunsch nach der Reihenfolge der Seiten (#50)."
       ]
+    },
+    "0.49.0": {
+      "lead": "nexdeck beginnt, dein Homelab zu verstehen: eine Karte, die sagt, was einen Blick braucht, eine Chronik mit dem, was sich geändert hat und seit wann, ein Chat, den du fragen kannst, Verlauf über Monate, was worauf läuft, und eine Seite, die sagt, warum etwas kaputt ist.",
+      "sections": [
+        {
+          "title": "Braucht Aufmerksamkeit",
+          "body": "Aus der Problems-Karte ist eine Karte geworden, die sagt, was einen Blick braucht, von allen Boards: gelbe und rote Karten mit Grund und seit wann, Dienste, deren Prüfung fehlschlägt, und die ungelesenen Warnungen der Glocke. Eine Zeile führt zur Karte. Was nicht passt, wird zu „16 weitere anzeigen“. Vorhandene Karten machen weiter, was sie vorher taten.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Needs attention"
+        },
+        {
+          "title": "Wartung",
+          "body": "Setz eine Anbindung oder eine App-Kachel für ein paar Stunden oder bis zu einer Uhrzeit in Wartung. Bis dahin wird nichts darüber gemeldet, kein Ausfall geöffnet, und die Verfügbarkeitsbalken zeichnen die Zeit grau. Die Karte sagt, bis wann. Nur für Admins.",
+          "path": "Der Schraubenschlüssel auf einer Karte"
+        },
+        {
+          "title": "Chronik und Tagesbericht",
+          "body": "Eine Seite mit dem, was sich geändert hat, das Neueste oben: Karten, die gelb, rot oder wieder grün wurden, Ausfälle, neue Versionen, neu gestartete Container und Änderungen in nexdeck. Eine gelbe oder rote Karte sagt jetzt, seit wann. Die Karten What happened und Daily report zeigen das auf einem Board, und der Tagesbericht kann jeden Morgen als Nachricht kommen. Backrest, Kopia und Duplicati werden gelb, wenn die letzte gute Sicherung zu alt ist.",
+          "path": "Kontomenü > Chronik; Einstellungen > Benachrichtigungen > Tagesbericht"
+        },
+        {
+          "title": "Frag nexdeck",
+          "body": "Ein Chat für Admins neben der Glocke. Er antwortet aus deinen Karten, der Chronik und dem Verlauf und zeigt, wo er nachgesehen hat. Er drückt nie einen Knopf: Er zeigt ihn samt dem, was er trifft, etwa die Streams, die beim Neustart von Plex abbrechen, und du drückst. Das Log eines Containers liest er erst, wenn du es erlaubst. Aus, bis du Claude oder ein Modell im eigenen Netz wählst, etwa Ollama.",
+          "path": "System > Assistent, dann das Funkeln neben der Glocke"
+        },
+        {
+          "title": "Verlauf über Monate und Prognosen",
+          "body": "nexdeck behält von jeder Zahl Stundenmittel für 90 Tage und Tagesmittel für zwei Jahre. Eine Diagrammkarte hat Knöpfe für 24 Stunden, 7 Tage, 30 Tage und ein Jahr, mit dem Tiefsten bis Höchsten als Band. Eine leise Zeile unten auf der Karte sagt, wann ein Volume voll ist oder eine Zahl ihre rote Linie erreicht, und unter 14 Tagen kommt eine Meldung.",
+          "path": "Die Knöpfe auf einer Diagrammkarte"
+        },
+        {
+          "title": "Was worauf läuft",
+          "body": "nexdeck fragt Docker, Portainer, eine Synology und Proxmox, welche Container und Gäste sie haben, und findet heraus, welcher Dienst worin läuft, auch über den Nginx Proxy Manager. Was es nur vermutet, wartet auf dein Ja. Fällt ein Rechner aus, kommt eine Meldung, die nennt, was er mitgerissen hat, und deren Karten sagen warum.",
+          "path": "System > Inventar"
+        },
+        {
+          "title": "Warum ist das kaputt?",
+          "body": "Eine rote oder gelbe Karte hat ein „Warum?“, das eine Seite zu ihrem Dienst öffnet: seit wann, was in den zwei Stunden davor geschah, worauf er läuft, seine Prüfung und Karten, das Log seines Containers, wenn du es anforderst, und ein Runbook, das du einmal für das nächste Mal schreibst. „Erklär es mir“ gibt die Seite an den Chat.",
+          "path": "„Warum?“ auf einer roten oder gelben Karte"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Rückfrage vor einem Knopf sagt, was er trifft: Streams, die abbrechen, Downloads, die anhalten, die Lampen, die eine Szene schaltet, was in einem Container oder Gast läuft.",
+        "Die Update-Karte nimmt Arcane und Dockhand als Container-Quellen. Danke an mplok1 für die Idee (#51).",
+        "Eine Seite, die der Browser übersetzt hat, wird nicht mehr leer, wenn sich auf ihr etwas ändert.",
+        "Die Update-Karte sagt, wie alt ein neueres Release ist."
+      ]
     }
   }
 }
