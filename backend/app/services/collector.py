@@ -39,7 +39,7 @@ from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
 from ..models import ActionLog, Integration, Widget, utcnow
-from . import chronicle, history
+from . import chronicle, forecast, history
 from .integrations import resolve_config
 from .loop import run_on_loop, spawn
 from .notify import emit
@@ -377,10 +377,13 @@ class Collector:
             self._write_down(widget_id, title, kind, integration_id, previous, data)
         if level_of(data) != "ok":
             data.since = live.recall(widget_id, lambda: chronicle.last_turned(widget_id, level_of(data)))
-        kept = history.recorded(data)
+        # Beside the card's own numbers, what its rows say: the share of each
+        # volume and how long each backup took, for the forecasts (roadmap M4).
+        kept = {**history.recorded(data), **history.extras(kind, data)}
         if kept:
             with db_session() as db:
                 history.record(db, widget_id, kept)
+        data.forecast = forecast.of(widget_id)
         hub.publish(board_topic(board_id), "widget", {"id": widget_id, "data": data.model_dump()})
 
         failures = self._failures.get(widget_id, 0)

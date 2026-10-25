@@ -117,6 +117,8 @@ Rarely needed, but real:
 | `NEXDECK_REQUEST_THREADS` | `24` | Worker threads for synchronous routes. Keep it below the two above added together. |
 | `NEXDECK_HISTORY_RAW_HOURS` | `1` | How long raw samples are kept before they become minute averages. |
 | `NEXDECK_HISTORY_MINUTE_HOURS` | `24` | How long those minute averages are kept. |
+| `NEXDECK_HISTORY_HOUR_DAYS` | `90` | How long hour averages are kept, with their lowest and highest: charts of 7 and 30 days and the forecasts read them. |
+| `NEXDECK_HISTORY_DAY_DAYS` | `730` | How long day averages are kept: a chart of a year. |
 | `NEXDECK_LOG_HISTORY_HOURS` | `6` | How long container log lines are kept. |
 | `NEXDECK_HEALTH_INTERVAL_SECONDS` | `30` | Default interval for reachability checks. |
 | `NEXDECK_OUTAGE_THRESHOLD_SECONDS` | `120` | How long a service must be down before an outage is announced. |

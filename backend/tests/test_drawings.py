@@ -532,14 +532,15 @@ def test_a_percentage_with_a_floor_still_needs_no_ceiling() -> None:
 
 
 def test_the_chart_says_how_far_back_it_reaches() -> None:
-    """nexdeck keeps a day of minute rows, so a day is the longest offered."""
+    """A day of minute rows, a week and a month of hour rows, a year of day rows (roadmap M4)."""
     widget = WidgetType(kind="x", label="X", description="", renderer="value", metrics=("only",))
     field = next(one for one in widget.options if one.name == "chart_hours")
-    assert [value for value, _ in field.options] == ["1", "6", "24"] and field.only_when == ("view", "chart")
+    assert [value for value, _ in field.options] == ["1", "6", "24", "168", "720", "8760"] and field.only_when == ("view", "chart")
     two = WidgetData(metrics={"a": 1.0, "b": 2.0})
     assert as_chart(two, {"view": "chart", "chart_hours": "6"}).meta["chart_hours"] == 6
     assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart"}).meta["chart_hours"] == 24
-    assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart", "chart_hours": "720"}).meta["chart_hours"] == 24
+    assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart", "chart_hours": "720"}).meta["chart_hours"] == 720
+    assert as_chart(WidgetData(metrics={"a": 1.0}), {"view": "chart", "chart_hours": "100"}).meta["chart_hours"] == 24
 
 
 def test_every_card_offering_a_chart_offers_its_hours() -> None:

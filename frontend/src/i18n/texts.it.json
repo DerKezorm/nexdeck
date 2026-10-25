@@ -1923,6 +1923,9 @@
     "The last hour": "L'ultima ora",
     "The last 6 hours": "Le ultime 6 ore",
     "The last 24 hours": "Le ultime 24 ore",
+    "The last 7 days": "Gli ultimi 7 giorni",
+    "The last 30 days": "Gli ultimi 30 giorni",
+    "The last year": "L'ultimo anno",
     "A big icon looks best on a square tile, two by two; a row on a wide one, three by one.": "Un'icona grande rende meglio su un riquadro quadrato, due per due; una riga su uno largo, tre per uno.",
     "A row: icon, name and bars": "Riga: icona, nome e barre",
     "A big icon under the name": "Icona grande sotto il nome",
@@ -2048,7 +2051,8 @@
     "One value from the answers of a connection, with unit, history and colour.": "Un valore dalle risposte di una connessione, con unità, storico e colore.",
     "Rows from a list in the answers of a connection, with title, value, status and link.": "Righe da un elenco nelle risposte di una connessione, con titolo, valore, stato e link.",
     "The short name of the card, as saved under System > Cards.": "Il nome breve della scheda, come salvato in Sistema > Schede.",
-    "Two to six values from the answers of a connection, side by side.": "Da due a sei valori dalle risposte di una connessione, affiancati."
+    "Two to six values from the answers of a connection, side by side.": "Da due a sei valori dalle risposte di una connessione, affiancati.",
+    "Something is full or reaches its red line soon": "Qualcosa sarà presto pieno o raggiungerà la sua linea rossa"
   },
   "labels": {
     "Private resources": "Risorse private",

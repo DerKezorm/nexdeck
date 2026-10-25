@@ -66,6 +66,8 @@ EXTRAS = ("avatars", "uploads", "brand")
 #: backup carried the whole chart history, the largest part of the database,
 #: while its profile said nothing was emptied. The two tables hold a day at
 #: most and fill again by themselves. Found on 07.09.2026.
+#: The hours and the days (``history_hours``, ``history_days``) stay in: two
+#: years of a volume filling up are not a cache, they are why the backup exists.
 CACHE_TABLES = ("history_samples", "history_minutes")
 
 WITHOUT_KEY = """This archive has no secret.key.

@@ -42,6 +42,7 @@ KINDS: dict[str, str] = {
     "recovery": "A service is back",
     "maintenance": "Maintenance began",
     "maintenance_end": "Maintenance was ended early",
+    "forecast": "Something will be full or reach its red line within two weeks",
     "version": "A service runs another version",
     "container_restarted": "A container restarted",
     "container_recreated": "A container was created anew",
@@ -56,7 +57,7 @@ KINDS: dict[str, str] = {
 
 #: The filters of the chronicle page and of the card.
 GROUPS: dict[str, tuple[str, ...]] = {
-    "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end"),
+    "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end", "forecast"),
     "versions": ("version", "container_restarted", "container_recreated"),
     "nexdeck": ("connection_added", "connection_changed", "connection_removed", "card_added", "card_removed", "signed_in", "sign_in_refused"),
 }

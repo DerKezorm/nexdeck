@@ -474,6 +474,36 @@ class HistoryMinute(Base):
     count: Mapped[int] = mapped_column(Integer)
 
 
+class HistoryHour(Base):
+    """Hour averages, lowest and highest, folded from the minutes; kept 90 days (roadmap M4)."""
+
+    __tablename__ = "history_hours"
+    __table_args__ = (UniqueConstraint("key", "ts"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(120), index=True)
+    ts: Mapped[int] = mapped_column(Integer)
+    avg: Mapped[float] = mapped_column(Float)
+    min: Mapped[float] = mapped_column(Float)
+    max: Mapped[float] = mapped_column(Float)
+    count: Mapped[int] = mapped_column(Integer)
+
+
+class HistoryDay(Base):
+    """Day averages, lowest and highest, folded from the hours by local midnight; kept two years."""
+
+    __tablename__ = "history_days"
+    __table_args__ = (UniqueConstraint("key", "ts"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(120), index=True)
+    ts: Mapped[int] = mapped_column(Integer)
+    avg: Mapped[float] = mapped_column(Float)
+    min: Mapped[float] = mapped_column(Float)
+    max: Mapped[float] = mapped_column(Float)
+    count: Mapped[int] = mapped_column(Integer)
+
+
 class HealthCheck(Base):
     __tablename__ = "health_checks"
 

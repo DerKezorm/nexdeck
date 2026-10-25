@@ -86,6 +86,15 @@ def _latest(summary: dict[str, Any]) -> tuple[str, float | None]:
     return str(statuses[0]), (_number(stamps[0]) / 1000 if stamps else None) or None
 
 
+def _last_duration(summary: dict[str, Any]) -> float | None:
+    """How long the newest good backup took, in seconds (``durationMs``), for the forecasts (roadmap M4)."""
+    recent = _recent(summary)
+    for took, status in zip(recent.get("durationMs") or [], recent.get("status") or [], strict=False):
+        if status == "STATUS_SUCCESS":
+            return _number(took) / 1000 or None
+    return None
+
+
 def _last_good(summary: dict[str, Any]) -> float | None:
     recent = _recent(summary)
     good = [_number(stamp) / 1000 for stamp, status in zip(recent.get("timestampMs") or [], recent.get("status") or [], strict=False)
@@ -238,6 +247,9 @@ class BackrestAdapter(Adapter):
             when = ago(moment, now=now) if moment else ""
             if when:
                 row["value"] = when
+            took = _last_duration(plan)
+            if took:
+                row["duration"] = took
             if words == (backup_age.WORD,):
                 row["stale"] = True
             rows.append(row)

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, get, post, put } from '../../api/client'
 import { Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { useAssistant } from '../../lib/assistant'
+import { useAssistantTexts } from '../../lib/assistantTexts'
 import { SettingsCard } from './SettingsCard'
 
 const SAID = ['auth', 'rate_limited', 'unreachable', 'model', 'provider', 'no_list']
@@ -14,7 +15,7 @@ interface Model {
   name: string
 }
 
-interface Setting {
+interface Stored {
   provider: 'off' | 'anthropic' | 'openai'
   base_url: string
   model: string
@@ -31,10 +32,15 @@ interface Setting {
  * house. The key is written, never read back: the field only says one is set.
  */
 export function AssistantSettings() {
+  const ready = useAssistantTexts()
+  return ready ? <Setting /> : null
+}
+
+function Setting() {
   const { t } = useTranslation()
-  const saved = useQuery({ queryKey: ['assistant-setting'], queryFn: () => get<Setting>('/settings/assistant') })
+  const saved = useQuery({ queryKey: ['assistant-setting'], queryFn: () => get<Stored>('/settings/assistant') })
   const reload = useAssistant((s) => s.load)
-  const [provider, setProvider] = useState<Setting['provider']>('off')
+  const [provider, setProvider] = useState<Stored['provider']>('off')
   const [address, setAddress] = useState('')
   const [model, setModel] = useState('')
   const [key, setKey] = useState('')
@@ -72,9 +78,9 @@ export function AssistantSettings() {
     if (firstLoad) void post<Model[]>('/settings/assistant/models', { provider: 'anthropic' }).then(setModels).catch(() => undefined)
   }, [firstLoad])
 
-  const store = async (dropKey = false): Promise<Setting | null> => {
+  const store = async (dropKey = false): Promise<Stored | null> => {
     try {
-      const answer = await put<Setting>('/settings/assistant', {
+      const answer = await put<Stored>('/settings/assistant', {
         provider,
         base_url: address,
         model,
@@ -118,7 +124,7 @@ export function AssistantSettings() {
             id="assistant-provider"
             value={provider}
             onChange={(value) => {
-              setProvider(value as Setting['provider'])
+              setProvider(value as Stored['provider'])
               setModels(null)
             }}
             options={[

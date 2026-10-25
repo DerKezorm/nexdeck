@@ -129,7 +129,8 @@ describe('a floor and a stretch of history', () => {
     render(<ChartCard widget={{ ...VIEW, id: 5 } as WidgetView} series={{}} data={{ status: 'ok', primary: { label: 'CPU', value: 20, unit: '%' }, metrics: { cpu: 20 }, meta: { renderer: 'chart', chart_hours: 6 } } as WidgetData} />)
     await waitFor(() => expect(asked.some((url) => url.includes('/widgets/5/history?hours=6'))).toBe(true))
     // The fetched line is drawn: lowest and highest of it, not "collecting".
-    expect(await screen.findByText(/last 6 hours/)).toBeInTheDocument()
-    expect(screen.getByText(/min 10/i)).toBeInTheDocument()
+    // The range it shows is the pressed button, next to the longer ones (roadmap M4).
+    expect(screen.getByRole('button', { name: '6 h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByText(/min 10/i)).toBeInTheDocument()
   })
 })

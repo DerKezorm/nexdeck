@@ -15,6 +15,7 @@ import { useAuth } from '../stores/auth'
 import { tLabel } from '../i18n/texts'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
+import { ForecastLine } from './ForecastLine'
 import { ServiceIcon } from './ServiceIcon'
 
 interface Props {
@@ -213,6 +214,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       {bare && awayChip ? <div className="nd-away-corner">{awayChip}</div> : null}
       <div className={`flex-1 min-h-0 flex flex-col ${veiled ? 'nd-veiled' : ''}`} aria-hidden={veiled || undefined}>
         {renderWidget({ widget, data, series, canAct, canWrite, onAction, link, editing })}
+        {!bare && !failed && data?.forecast ? <ForecastLine forecast={data.forecast} /> : null}
       </div>
       {veiled && (
         <div className={`nd-veil ${bare ? 'inset-0' : 'inset-x-0 bottom-0 top-9'}`} data-testid="showcase-veil">

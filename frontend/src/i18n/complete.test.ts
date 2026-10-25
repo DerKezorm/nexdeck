@@ -3,6 +3,11 @@
  * in the bundle and other languages arrive later, a missing key would show up
  * as its path on screen.
  */
+import assistantDe from './assistant.de.json'
+import assistantEn from './assistant.en.json'
+import assistantEs from './assistant.es.json'
+import assistantFr from './assistant.fr.json'
+import assistantIt from './assistant.it.json'
 import de from './de.json'
 import en from './en.json'
 import es from './es.json'
@@ -88,6 +93,27 @@ describe('sign-in words in every language', () => {
       expect(different, `placeholders differ between en and ${language}`).toEqual([])
       const empty = [...known].filter((p) => String(lookup(data, p)).trim() === '' || String(lookup(data, p)).includes('—'))
       expect(empty, `${language}: empty texts or em dashes`).toEqual([])
+    })
+  }
+})
+
+/**
+ * The chat's words (roadmap M3) come in files of their own with the chat (`lib/assistantTexts.ts`); each language
+ * carries every key and placeholder of the English one.
+ */
+describe('the chat words in every language', () => {
+  const english = new Set(paths(assistantEn))
+  it('are not empty by accident', () => {
+    expect(english.size).toBeGreaterThan(50)
+  })
+  for (const [language, data] of Object.entries({ de: assistantDe, es: assistantEs, fr: assistantFr, it: assistantIt })) {
+    it(`${language}: knows the same keys and placeholders as English, none empty`, () => {
+      const known = new Set(paths(data))
+      expect([...english].filter((p) => !known.has(p)).sort(), `missing from assistant.${language}.json`).toEqual([])
+      expect([...known].filter((p) => !english.has(p)).sort(), `only in assistant.${language}.json`).toEqual([])
+      const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
+      expect([...english].filter((p) => placeholders(String(lookup(assistantEn, p))) !== placeholders(String(lookup(data, p))))).toEqual([])
+      expect(paths(data).filter((p) => !String(lookup(data, p)).trim() || String(lookup(data, p)).includes('—'))).toEqual([])
     })
   }
 })

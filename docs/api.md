@@ -19,7 +19,8 @@ interactive documentation lives at `/api/docs` on every installation.
 | `GET /api/v1/stream?board={slug}` | Server-Sent Events: `widget`, `health`, `board`, `layout`, `log`, `notice`. |
 | `POST /api/v1/widgets/{id}/actions/{action}` | Run a widget action with `{"params": {...}}`. Needs the act permission. `"via": "assistant"` marks a press in the chat; the action log says so. |
 | `POST /api/v1/widgets/{id}/actions/{action}/impact` | What the action would hit, as facts: `up` (Docker's own words), `streams` (who is watching on a media server the container is named after), `downloads`, `devices` and `last_run` (a Home Assistant scene, group, script or automation). Same body and right as running it; nothing runs. |
-| `GET /api/v1/widgets/{id}/data` | The latest data of one widget. |
+| `GET /api/v1/widgets/{id}/data` | The latest data of one widget. A `forecast` says when a volume is full, a number reaches its line or a backup gets slower. |
+| `GET /api/v1/widgets/{id}/history/long` | A widget's history over `days` (up to 730) as `[[ts, avg, min, max], ...]` per metric: hours up to 30 days, days beyond. `metric` narrows it to one. |
 | `POST /api/v1/widgets/{id}/refresh` | Fetch right now. |
 | `GET /api/v1/widgets/{id}/music/{view}` | The library of a music player card: `albums`, `artists`, `artist`, `album`, `playlists`, `playlist`, `search`, `shuffle`, and `mix` on Jellyfin and Emby. `id`, `q`, `sort` and `offset` narrow it down. Needs the act permission. |
 | `GET /api/v1/widgets/{id}/audio/{track_id}` | The sound of one track, relayed by nexdeck with `Range` passed through. `quality` is `original`, `high` or `low`, `formats` lists what the browser plays, `start` is where converted sound begins. Needs the act permission. |

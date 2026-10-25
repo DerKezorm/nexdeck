@@ -1,7 +1,8 @@
 import i18n from 'i18next'
 import { describe, expect, it } from 'vitest'
 
-import { blocks, dayGroup, factText, inline } from './assistant'
+import { factText } from './assistant'
+import { blocks, dayGroup, inline } from './assistantWords'
 
 describe('the words of an answer', () => {
   it('knows bold, and leaves a lone mark as it was written', () => {
