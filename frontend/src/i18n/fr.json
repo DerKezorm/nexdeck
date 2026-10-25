@@ -2279,6 +2279,7 @@
       "card_definition_added": "Carte personnalisée {{name}} créée",
       "card_definition_changed": "Carte personnalisée {{name}} modifiée",
       "card_definition_removed": "Carte personnalisée {{name}} supprimée",
+      "card_probe": "Connexion {{name}} interrogée pour une carte personnalisée",
       "card_added": "Carte {{name}} ajoutée à {{after}}",
       "card_removed": "Carte {{name}} retirée de {{after}}",
       "signed_in": "{{name}} s’est connecté",

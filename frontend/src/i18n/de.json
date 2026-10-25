@@ -2279,6 +2279,7 @@
       "card_definition_added": "Eigene Karte {{name}} angelegt",
       "card_definition_changed": "Eigene Karte {{name}} geändert",
       "card_definition_removed": "Eigene Karte {{name}} gelöscht",
+      "card_probe": "Verbindung {{name}} für eine eigene Karte abgefragt",
       "card_added": "Karte {{name}} auf {{after}} hinzugefügt",
       "card_removed": "Karte {{name}} von {{after}} entfernt",
       "signed_in": "{{name}} hat sich angemeldet",

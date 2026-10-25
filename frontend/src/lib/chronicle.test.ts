@@ -43,6 +43,12 @@ describe('chronicle words', () => {
     expect(lineDetail(line({ kind: 'card_definition_changed', detail: 'released for users' }), t)).toBe('released for users')
   })
 
+  it('karten9 EC-4: says which connection a card probed and the path, never the answer', () => {
+    const probe = line({ kind: 'card_probe', name: 'Sonarr (NAS)', detail: '/api/v3/queue' })
+    expect(lineText(probe, t, 'en')).toBe('Connection Sonarr (NAS) probed for a custom card')
+    expect(lineDetail(probe, t)).toBe('/api/v3/queue')
+  })
+
   it('speaks German', async () => {
     await setLanguage('de')
     expect(lineText(line({}), t, 'de')).toBe('Synology wurde rot')

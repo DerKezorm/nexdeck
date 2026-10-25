@@ -2279,6 +2279,7 @@
       "card_definition_added": "Scheda personalizzata {{name}} creata",
       "card_definition_changed": "Scheda personalizzata {{name}} modificata",
       "card_definition_removed": "Scheda personalizzata {{name}} eliminata",
+      "card_probe": "Connessione {{name}} interrogata per una scheda personalizzata",
       "card_added": "Scheda {{name}} aggiunta a {{after}}",
       "card_removed": "Scheda {{name}} tolta da {{after}}",
       "signed_in": "{{name}} ha effettuato l’accesso",

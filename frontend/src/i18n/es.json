@@ -2279,6 +2279,7 @@
       "card_definition_added": "Tarjeta propia {{name}} creada",
       "card_definition_changed": "Tarjeta propia {{name}} cambiada",
       "card_definition_removed": "Tarjeta propia {{name}} eliminada",
+      "card_probe": "Conexión {{name}} consultada para una tarjeta propia",
       "card_added": "Tarjeta {{name}} añadida a {{after}}",
       "card_removed": "Tarjeta {{name}} quitada de {{after}}",
       "signed_in": "{{name}} inició sesión",
