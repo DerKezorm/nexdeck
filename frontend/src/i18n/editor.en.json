@@ -75,7 +75,10 @@
       "title": "Changed by {{by}} meanwhile",
       "body": "{{by}} saved this card at {{time}} while you had it open. Overwrite that version with yours, or reload it and drop your changes.",
       "overwrite": "Overwrite",
-      "reload": "Reload"
+      "reload": "Reload",
+      "reloadTitle": "Drop your changes and reload?",
+      "reloadBody": "Your changes to this card are lost, and Undo starts again from the version that is loaded.",
+      "reloadConfirm": "Drop and reload"
     },
     "session": {
       "title": "Sign in again to save",

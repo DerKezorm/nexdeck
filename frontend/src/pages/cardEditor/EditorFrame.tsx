@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -31,6 +31,17 @@ const STEP_PAGES: Record<EditorStep, () => React.ReactElement> = {
 
 export const LIST_PATH = '/system/cards'
 
+/**
+ * Whether Ctrl Z in `target` is the card's step back: in the editor's fields and in the YAML view, or with no field
+ * focused. Not in a dialog and not in a field outside the editor (the search, say), where it is that field's own.
+ */
+export function takesHistory(target: EventTarget | null, root: HTMLElement | null): boolean {
+  if (!(target instanceof Element)) return true
+  if (target.closest('[role="dialog"]')) return false
+  const field = target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+  return !field || (root?.contains(field) ?? false)
+}
+
 function clock(at: number | string, language: string): string {
   const moment = new Date(at)
   if (Number.isNaN(moment.getTime())) return String(at)
@@ -52,6 +63,8 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   const guard = useLeaveGuard(dirty)
   const { save, busy, trouble, clear } = useSaveCard()
   const [toast, setToast] = useState('')
+  const [askReload, setAskReload] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
 
   const shown = card ?? lastValid?.card ?? null
   const name = shown ? pickText(readAt(shown, ['name']) as CardText, i18n.language) : ''
@@ -66,9 +79,11 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   }, [text, dirty, slug, base, offer])
 
   // Ctrl Z and Ctrl Shift Z (Cmd on a Mac) for everything since the editor opened, in a field or in the YAML (EC-10).
+  // ⚠️ The code editor keeps no history of its own, and a field outside the editor or in a dialog keeps its own.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+      if (!takesHistory(event.target, root.current)) return
       const key = event.key.toLowerCase()
       if (key === 'z' && !event.shiftKey) {
         event.preventDefault()
@@ -121,7 +136,7 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   const canSave = card !== null && !busy && (dirty || trouble?.kind === 'gone')
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" ref={root}>
       <div className="sticky top-0 z-20 glass-strong border-b border-line">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex flex-wrap items-center gap-2 min-w-0">
           <Link to={LIST_PATH} className="btn btn-icon btn-flat" aria-label={t('editor.back')} title={t('editor.back')}>
@@ -249,13 +264,35 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
 
       <Confirm open={guard.asking} title={t('editor.leave.title')} body={t('editor.leave.body')} danger confirmLabel={t('editor.leave.leave')} onCancel={guard.stay} onConfirm={guard.leave} />
 
+      <Confirm
+        open={askReload}
+        title={t('editor.conflict.reloadTitle')}
+        body={t('editor.conflict.reloadBody')}
+        danger
+        confirmLabel={t('editor.conflict.reloadConfirm')}
+        onCancel={() => setAskReload(false)}
+        onConfirm={() => {
+          setAskReload(false)
+          void reload()
+        }}
+      />
+
       <Dialog
         open={trouble?.kind === 'conflict'}
         onClose={clear}
         title={trouble?.kind === 'conflict' ? t('editor.conflict.title', { by: trouble.by }) : ''}
         footer={
           <>
-            <button type="button" className="btn" onClick={() => void reload()}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                // Own changes are about to go, and the steps back with them: ask first.
+                if (!isDirty(useCardEditor.getState())) return void reload()
+                clear()
+                setAskReload(true)
+              }}
+            >
               {t('editor.conflict.reload')}
             </button>
             <button type="button" className="btn btn-accent" onClick={() => void doSave({ overwrite: true })} disabled={busy}>

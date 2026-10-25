@@ -75,7 +75,10 @@
       "title": "Inzwischen von {{by}} geändert",
       "body": "{{by}} hat diese Karte um {{time}} gespeichert, während du sie offen hattest. Überschreibe diese Fassung mit deiner, oder lade sie neu und verwirf deine Änderungen.",
       "overwrite": "Überschreiben",
-      "reload": "Neu laden"
+      "reload": "Neu laden",
+      "reloadTitle": "Änderungen verwerfen und neu laden?",
+      "reloadBody": "Deine Änderungen an dieser Karte gehen verloren, und Rückgängig beginnt wieder bei der geladenen Fassung.",
+      "reloadConfirm": "Verwerfen und neu laden"
     },
     "session": {
       "title": "Zum Speichern neu anmelden",

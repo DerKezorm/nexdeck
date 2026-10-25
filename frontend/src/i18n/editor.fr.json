@@ -75,7 +75,10 @@
       "title": "Modifiée entre-temps par {{by}}",
       "body": "{{by}} a enregistré cette carte à {{time}} pendant que vous l'aviez ouverte. Remplacez cette version par la vôtre, ou rechargez-la et abandonnez vos modifications.",
       "overwrite": "Remplacer",
-      "reload": "Recharger"
+      "reload": "Recharger",
+      "reloadTitle": "Abandonner vos modifications et recharger ?",
+      "reloadBody": "Vos modifications de cette carte sont perdues, et Annuler repart de la version chargée.",
+      "reloadConfirm": "Abandonner et recharger"
     },
     "session": {
       "title": "Reconnectez-vous pour enregistrer",

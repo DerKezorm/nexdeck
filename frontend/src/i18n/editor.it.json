@@ -75,7 +75,10 @@
       "title": "Modificata nel frattempo da {{by}}",
       "body": "{{by}} ha salvato questa scheda alle {{time}} mentre l'avevi aperta. Sovrascrivi quella versione con la tua, oppure ricaricala e scarta le tue modifiche.",
       "overwrite": "Sovrascrivi",
-      "reload": "Ricarica"
+      "reload": "Ricarica",
+      "reloadTitle": "Scartare le modifiche e ricaricare?",
+      "reloadBody": "Le tue modifiche a questa scheda vanno perse e Annulla riparte dalla versione caricata.",
+      "reloadConfirm": "Scarta e ricarica"
     },
     "session": {
       "title": "Accedi di nuovo per salvare",

@@ -75,7 +75,10 @@
       "title": "{{by}} la cambió mientras tanto",
       "body": "{{by}} guardó esta tarjeta a las {{time}} mientras la tenías abierta. Sobrescribe esa versión con la tuya, o vuelve a cargarla y descarta tus cambios.",
       "overwrite": "Sobrescribir",
-      "reload": "Volver a cargar"
+      "reload": "Volver a cargar",
+      "reloadTitle": "¿Descartar tus cambios y volver a cargar?",
+      "reloadBody": "Tus cambios en esta tarjeta se pierden y Deshacer vuelve a empezar desde la versión cargada.",
+      "reloadConfirm": "Descartar y volver a cargar"
     },
     "session": {
       "title": "Vuelve a iniciar sesión para guardar",
