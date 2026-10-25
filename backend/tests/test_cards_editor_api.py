@@ -843,3 +843,24 @@ def test_karten9_ec3_two_saves_at_the_same_moment_cannot_both_win(admin: TestCli
     for one in threads:
         one.join()
     assert sorted(out) == [200, 409]
+
+
+@respx.mock
+def test_karten9_ec4_a_member_who_sees_the_connection_on_a_board_of_hers_does_not_see_the_probes_of_it(admin: TestClient) -> None:
+    """⚠️ The connection reaches her through a board, so only ``chronicle.ADMIN_ONLY`` keeps the path back from her."""
+    from app.services import chronicle
+
+    sonarr = connection(admin)
+    sonarr_serves()
+    assert post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue?x=1"}).status_code == 200
+    chronicle.record("version", integration_id=sonarr, name="My sonarr", before="1", after="2")
+    board = admin.post("/api/v1/boards", json={"name": "Shared"}, headers=CSRF).json()
+    admin.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "sonarr.queue", "integration_id": sonarr, "title": "Queue"}, headers=CSRF)
+    ann = create_user(admin, "ann")
+    shared = admin.put(f"/api/v1/boards/{board['slug']}/shares", json={"shares": [{"user_id": ann["id"], "level": "view"}]}, headers=CSRF)
+    assert shared.status_code in (200, 201), shared.text
+    assert "card_probe" in [one["kind"] for one in admin.get("/api/v1/chronicle").json()["events"]]
+    login(admin, "ann", "another-long-password")
+    kinds = [one["kind"] for one in admin.get("/api/v1/chronicle").json()["events"]]
+    assert "version" in kinds, "she does see the lines about the connection"
+    assert "card_probe" not in kinds
