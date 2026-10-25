@@ -302,13 +302,14 @@ def test_karten5_ec3_a_number_that_came_as_text_counts_as_a_number_when_all_of_i
 
 
 def test_karten5_ec4_ten_thousand_rows_are_all_counted_but_at_most_fifty_are_shown() -> None:
+    """Within the budget every card has (50 ms), not with a budget raised for the test: that is the promise (found in the review, 25.10.2026)."""
     rows = [{"title": f"t{index}", "size": index, "status": "ok" if index % 2 else "no"} for index in range(10_000)]
     body = "form: list\nrows:\n  select: records\n  filter: [{field: status, op: '==', value: ok}]\n  sort: {field: size, desc: true}\n  limit: 50\nitem: {title: title}\n"
-    result = show(body, {"records": rows}, budget_ms=2000)
+    result = show(body, {"records": rows})
     assert result.total == 5000 and len(result.rows) == 50
     assert result.rows[0].title.text == "t9999"
-    assert len(show(rows_of(), {"records": rows}, budget_ms=2000).rows) == 10  # the default
-    summed = show("form: value\nvalue: {total: {fn: sum, rows: {select: records}, field: size}}", {"records": rows}, budget_ms=2000)
+    assert len(show(rows_of(), {"records": rows}).rows) == 10  # the default
+    summed = show("form: value\nvalue: {total: {fn: sum, rows: {select: records}, field: size}}", {"records": rows})
     assert summed.value is not None and summed.value.value == sum(range(10_000))
     with pytest.raises(load.CardInvalid) as caught:
         load.load_definition(HEAD + body.replace("limit: 50", "limit: 51"))

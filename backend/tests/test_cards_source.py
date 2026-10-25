@@ -276,14 +276,18 @@ def test_karten2_ac9_a_request_every_few_seconds_is_not_saved() -> None:
 
 
 def test_karten2_ac14_more_than_five_requests_are_not_saved() -> None:
+    """The six-request card is valid in every other way (its demo data names a request that exists), so only the limit can refuse it."""
     from app.cards import load
 
-    six = "".join(f"  - id: r{number}\n    path: /api/v3/r{number}\n" for number in range(6))
-    text = changed("requests:\n  - id: queue\n    path: /api/v3/queue\n    every: 30s\n", "requests:\n" + six)
-    with pytest.raises(load.CardInvalid):
-        load.load_definition(text)
-    five = "".join(f"  - id: r{number}\n    path: /api/v3/r{number}\n" for number in range(5))
-    load.load_definition(changed("requests:\n  - id: queue\n    path: /api/v3/queue\n    every: 30s\n", "requests:\n" + five).replace("queue:", "r0:", 1))
+    def with_requests(count: int) -> str:
+        more = "".join(f"  - id: r{number}\n    path: /api/v3/r{number}\n" for number in range(count - 1))
+        return changed("    every: 30s\n", "    every: 30s\n" + more)
+
+    assert load.load_definition(with_requests(5)).definition.requests[-1].id == "r3"
+    refused = pytest.raises(load.CardInvalid)
+    with refused as caught:
+        load.load_definition(with_requests(6))
+    assert [(problem.code, problem.path) for problem in caught.value.problems] == [("card_too_many", "requests")]
 
 
 @respx.mock

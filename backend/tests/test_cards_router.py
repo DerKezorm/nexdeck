@@ -334,6 +334,26 @@ def test_karten11_ac9_a_guest_and_a_stranger_reach_none_of_it(admin: TestClient)
     assert len(admin.get("/api/v1/cards").json()["cards"]) == 1, "none of it changed anything"
 
 
+def test_karten11_ac9_a_wall_display_with_a_kiosk_token_reaches_none_of_it(admin: TestClient) -> None:
+    """A kiosk has no session, only its token, and the token opens its board and nothing else (found missing in the review, 25.10.2026)."""
+    add(admin)
+    admin.post("/api/v1/boards", json={"name": "Wall"}, headers=CSRF)
+    slug = admin.get("/api/v1/boards").json()[0]["slug"]
+    token = admin.post(f"/api/v1/boards/{slug}/kiosk-tokens", json={"name": "hall", "cycle_seconds": 30}, headers=CSRF).json()["token"]
+    display = TestClient(admin.app)
+    assert display.get("/api/v1/kiosk", headers={"X-Kiosk-Token": token}).status_code == 200, "the token itself works"
+    calls = [
+        ("get", "/api/v1/cards", None), ("post", "/api/v1/cards", {"yaml": text_of("from-the-wall")}), ("get", "/api/v1/cards/queue-size", None),
+        ("put", "/api/v1/cards/queue-size", {"yaml": VALUE_CARD}), ("delete", "/api/v1/cards/queue-size", None),
+        ("post", "/api/v1/cards/queue-size/copy", None), ("put", "/api/v1/cards/queue-size/users", {"allowed": True}),
+        ("get", "/api/v1/cards/sources", None), ("get", "/api/v1/cards/schema", None), ("get", "/api/v1/cards/library", None),
+    ]
+    for method, path, body in calls:
+        answer = getattr(display, method)(path, headers={**CSRF, "X-Kiosk-Token": token}, **({"json": body} if body is not None else {}))
+        assert answer.status_code in (401, 403), (method, path, answer.status_code)
+    assert [one["slug"] for one in admin.get("/api/v1/cards").json()["cards"]] == ["queue-size"], "none of it changed anything"
+
+
 def test_karten11_ac9_a_member_who_is_no_administrator_changes_nothing(admin: TestClient) -> None:
     add(admin)
     as_user(admin)

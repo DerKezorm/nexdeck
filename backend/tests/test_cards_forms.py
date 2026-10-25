@@ -257,6 +257,23 @@ def test_karten6_ec7_a_row_without_a_usable_picture_has_no_art() -> None:
     assert "art" not in data.items[2] and "art" not in data.items[3]
 
 
+@respx.mock
+def test_karten6_ec3_a_wall_display_gets_the_signed_picture_of_its_own_board_and_nothing_else(stand: tuple[TestClient, int, int]) -> None:
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+    slug = next(one["slug"] for one in client.get("/api/v1/boards").json() if one["name"] == "Wall")
+    token = client.post(f"/api/v1/boards/{slug}/kiosk-tokens", json={"name": "hall", "cycle_seconds": 30}, headers=CSRF).json()["token"]
+    respx.get("https://img.example.com/b.jpg").mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    sold = respx.route(host="svc.example.com").mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    display = TestClient(client.app)
+    art = images.reference("https://img.example.com/b.jpg", BASE).removeprefix("proxy:")
+    own = display.get(f"/api/v1/widgets/{widget}/image", params={"path": art}, headers={"X-Kiosk-Token": token})
+    assert own.status_code == 200 and own.content == b"\x89PNG"
+    unsigned = display.get(f"/api/v1/widgets/{widget}/image", params={"path": "/api/v3/system/status"}, headers={"X-Kiosk-Token": token})
+    assert unsigned.status_code == 400 and not sold.called, "the key of the connection stays out of reach of a display"
+    assert display.get(f"/api/v1/widgets/{widget}/image", params={"path": art}).status_code == 401
+
+
 def test_karten6_ec3_a_forged_or_changed_signature_names_no_address() -> None:
     art = images.reference("https://img.example.com/a.jpg").removeprefix("proxy:")
     assert images.external_address(art) == "https://img.example.com/a.jpg"
@@ -491,6 +508,23 @@ def test_karten6_ac9_a_custom_card_goes_into_a_group_and_a_tab_and_the_side_bar(
     assert side.status_code == 200 and card["id"] in next(one for one in side.json()["pages"] if one["id"] == page)["side"]["cards"]
     tabs = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.tabs", "title": "Tabs"}, headers=CSRF)
     assert tabs.status_code == 201
+
+
+async def test_karten6_ac9_a_custom_card_can_stand_in_a_tab_and_keeps_running(stand: tuple[TestClient, int, int]) -> None:
+    """The tabs hold their cards by number like a group (the review found only a tabs card being made, never a card in it)."""
+    client, page, sonarr = stand
+    tabs = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.tabs", "title": "Tabs"}, headers=CSRF).json()["widget"]
+    card = place(client, page, sonarr).json()["widget"]
+    own = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.markdown", "title": "Text"}, headers=CSRF).json()["widget"]
+    held = client.patch(f"/api/v1/widgets/{tabs['id']}", json={"options": {"cards": [own["id"], card["id"]]}}, headers=CSRF)
+    assert held.status_code == 200 and held.json()["options"]["cards"] == [own["id"], card["id"]], held.text
+    with respx.mock:
+        respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(200, json={"totalRecords": 7}))
+        await collector.refresh(card["id"])
+    data = live.get(card["id"])
+    assert data is not None and data.primary["value"] == 7
+    shown = await collector.refresh(tabs["id"])
+    assert shown is not None and live.get(tabs["id"]).meta["holds"] == 2
 
 
 def test_karten6_ac1_every_card_of_the_custom_adapter_declares_what_the_floor_of_its_drawing_needs() -> None:
