@@ -282,6 +282,11 @@ def test_karten5_ec2_a_division_by_zero_shows_a_dash() -> None:
     assert result.value is not None and result.value.text == "–" and result.value.status is None
 
 
+def test_karten5_ec2_a_number_too_large_to_round_shows_a_dash() -> None:
+    result = show("form: value\nvalue: {formula: 'round({x}, 2)'}", {"x": 1e300})
+    assert result.value is not None and (result.value.value, result.value.text) == (None, "–")
+
+
 def test_karten5_ec3_a_number_that_came_as_text_counts_as_a_number_when_all_of_it_is_one() -> None:
     answer = {"v": "12.5", "w": "12 GB", "name": "007", "rows": [{"n": "1.5"}, {"n": "2"}, {"n": "x"}]}
     assert show("form: value\nvalue: {path: v, format: number}", answer).value.value == 12.5  # type: ignore[union-attr]

@@ -373,6 +373,14 @@ async def test_karten2_ec4_anything_else_is_not_json(body: bytes) -> None:
     assert failure.value.code == "not_json"
 
 
+@respx.mock
+async def test_karten2_ec4_json_nested_deeper_than_can_be_read_is_an_error_of_the_card_and_no_crash() -> None:
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(200, content=b"[" * 1_000_000 + b"]" * 1_000_000))
+    with pytest.raises(AdapterError) as failure:
+        await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), request())
+    assert failure.value.code == "not_json" and "nested" in failure.value.message
+
+
 # -- EC-5, EC-6: what the connection says ---------------------------------------------------
 
 

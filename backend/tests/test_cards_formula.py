@@ -41,6 +41,13 @@ def test_karten5_ac5_a_reference_is_a_whole_expression_of_the_answer() -> None:
     assert run('{disk."used"} + 1', data) == 5
 
 
+def test_karten5_ec2_rounding_a_number_too_large_to_round_is_nothing_not_an_error() -> None:
+    """``round({x}, 2)`` with 1e300 raised decimal.InvalidOperation and the card turned red with a server error."""
+    assert run("round({x}, 2)", {"x": 1e300}) is None
+    assert run("round({x})", {"x": -1e300}) is None
+    assert run("round({x}, 2)", {"x": 12345678901.236}) == 12345678901.24
+
+
 def test_karten5_ec2_dividing_by_zero_is_nothing_not_an_error() -> None:
     assert run("1 / 0") is None
     assert run("{a} / {b}", {"a": 1, "b": 0}) is None
@@ -104,6 +111,14 @@ def test_karten5_formula_can_run_nothing_but_arithmetic() -> None:
 def test_karten5_a_type_that_does_not_fit_finds_nothing_instead_of_failing() -> None:
     assert run("{sum(a)} + 1", {"a": ["x", "y"]}) is None
     assert run("{avg(a)}", {"a": []}) is None
+
+
+def test_karten5_a_lookup_that_nests_too_deeply_finds_nothing_instead_of_failing() -> None:
+    class Deep:
+        def search(self, data: Any) -> Any:
+            raise RecursionError
+
+    assert calc.Ref("x", Deep()).search({"x": 1}) is None
 
 
 def test_karten5_formula_has_limits_for_length_and_depth() -> None:

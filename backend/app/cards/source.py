@@ -53,6 +53,13 @@ def read_answer(response: Any) -> Any:
         )
     try:
         return json.loads(content)
+    except RecursionError as failure:
+        # ⚠️ 2 MB of opening brackets nest deeper than the interpreter reads; it was a 500 (found in the review, 25.10.2026).
+        raise AdapterError(
+            "The answer is nested too deeply. The service answered with JSON that a custom card cannot read.",
+            code="not_json",
+            hint="The path probably points at something other than the data the card needs.",
+        ) from failure
     except ValueError:
         pass
     if 0 < len(content) <= MAX_TEXT_BYTES:

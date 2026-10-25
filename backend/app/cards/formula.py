@@ -20,7 +20,7 @@ import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 import jmespath
@@ -60,7 +60,7 @@ class Ref:
         """What the expression finds. A type that does not fit (the sum of texts) finds nothing, like a missing field."""
         try:
             return self.compiled.search(data)
-        except jmespath.exceptions.JMESPathError:
+        except (jmespath.exceptions.JMESPathError, RecursionError):
             return None
 
 
@@ -366,8 +366,12 @@ def compile_formula(text: str) -> Formula:
     return _Parser(text).parse()
 
 
-def _round_half_up(value: float, digits: int) -> float:
-    return float(Decimal(repr(value)).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP))
+def _round_half_up(value: float, digits: int) -> float | None:
+    """``None`` for a number too large to round to that many digits: ``round(1e300, 2)`` is not a number to show."""
+    try:
+        return float(Decimal(repr(value)).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP))
+    except (InvalidOperation, OverflowError, ValueError):
+        return None
 
 
 def _compare(operator: str, left: Any, right: Any) -> bool | None:
