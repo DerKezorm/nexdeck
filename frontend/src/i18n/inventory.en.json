@@ -32,6 +32,9 @@
     "nothing": "Nothing yet",
     "mapHelp": "Drag to arrange; the arrangement is kept. Red is down, a dashed line is only proposed.",
     "arrange": "Arrange again",
-    "diagnose": "Diagnosis"
+    "diagnose": "Diagnosis",
+    "suggestionContainer": "{{child}} probably runs in the container {{name}} on {{host}}",
+    "suggestionGuest": "{{child}} probably runs in {{name}} on {{host}}",
+    "tileOf": "{{name}} (app tile)"
   }
 }

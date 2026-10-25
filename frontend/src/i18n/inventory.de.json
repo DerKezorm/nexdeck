@@ -32,6 +32,9 @@
     "nothing": "Noch nichts",
     "mapHelp": "Zum Anordnen ziehen; die Anordnung bleibt. Rot ist ausgefallen, gestrichelt nur vorgeschlagen.",
     "arrange": "Neu anordnen",
-    "diagnose": "Diagnose"
+    "diagnose": "Diagnose",
+    "suggestionContainer": "{{child}} läuft vermutlich im Container {{name}} auf {{host}}",
+    "suggestionGuest": "{{child}} läuft vermutlich in {{name}} auf {{host}}",
+    "tileOf": "{{name}} (App-Kachel)"
   }
 }

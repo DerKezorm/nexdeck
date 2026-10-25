@@ -175,6 +175,37 @@ def keep(db: Session, integration_id: int, found: list[dict[str, Any]]) -> None:
         db.execute(delete(Relation).where(Relation.parent.in_(gone)))
 
 
+#: Containers that help a service rather than being it: a service does not "run
+#: on" its database (measured 25.10.2026: Immich was proposed on immich_postgres,
+#: immich_redis and immich_machine_learning as well as on immich_server).
+HELPERS = frozenset({"postgres", "postgresql", "redis", "valkey", "mariadb", "mysql", "mongo", "mongodb", "db", "database",
+                     "worker", "ml", "machine", "learning", "cache", "broker", "celery", "cron", "backup"})
+#: Among several, the one with one of these in its name is the service itself.
+MAIN = frozenset({"server", "web", "app", "main"})
+
+
+def _tokens(text: str) -> set[str]:
+    """Every part of a name, short ones too: immich_machine_learning is immich, machine, learning."""
+    out, word = set(), ""
+    for char in text.lower() + " ":
+        if char.isalnum():
+            word += char
+        elif word:
+            out.add(word)
+            word = ""
+    return out
+
+
+def _best(named: list[Thing], words: set[str]) -> list[Thing]:
+    """Which of the containers and guests a name points at: one named exactly like it, else the main one, never a helper."""
+    own = [thing for thing in named if not _tokens(thing.name) & HELPERS]
+    exact = [thing for thing in own if thing.name.lower() in words]
+    if exact:
+        return exact
+    main = [thing for thing in own if _tokens(thing.name) & MAIN]
+    return main or own
+
+
 def _words(text: str) -> set[str]:
     out, word = set(), ""
     for char in text.lower():
@@ -219,11 +250,27 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
         host, port = address_of(_service_address(tile=tile))
         services.append((f"tile:{tile.id}", tile.title or "", host, port, resolve(host)))
 
+    # An app tile that opens the same address as a connection is that service:
+    # it hangs on the connection and follows wherever that runs.
+    served: dict[tuple[str, int | None], str] = {}
+    named_like: dict[str, str] = {}
+    for integration in integrations:
+        host, port = address_of(_service_address(integration))
+        if host:
+            served.setdefault((host, port), f"integration:{integration.id}")
+        named_like.setdefault(integration.name.strip().lower(), f"integration:{integration.id}")
+
     existing = {(row.child, row.parent): row for row in db.scalars(select(Relation))}
     auto: set[tuple[str, str]] = set()
     proposed: set[tuple[str, str]] = set()
-    for ref, words, _host, port, addresses in services:
+    for ref, words, host, port, addresses in services:
         own = ref.split(":", 1)[1] if ref.startswith("integration:") else None
+        if ref.startswith("tile:"):
+            same = served.get((host, port)) if host else None
+            same = same or named_like.get(words.strip().lower())
+            if same:
+                auto.add((ref, same))
+                continue
         # Behind a proxy the address is the proxy's: it says where the proxy runs, not the service.
         behind_proxy = port in PROXY_PORTS
         # The most exact wins: a container that publishes the port, else a guest
@@ -258,8 +305,7 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
                 if mine & (_words(thing.name) | (_words(image) - BASE_IMAGES)):
                     named.append(thing)
             # One named exactly like the service beats its siblings (sabnzbd, not ndl-sabnzbd).
-            exact = [thing for thing in named if thing.name.lower() in mine]
-            guessed.extend(thing.ref for thing in (exact or named))
+            guessed.extend(thing.ref for thing in _best(named, mine))
         for parent in guessed:
             proposed.add((ref, parent))
 

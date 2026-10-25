@@ -32,6 +32,9 @@
     "nothing": "Rien pour l'instant",
     "mapHelp": "Fais glisser pour arranger ; la disposition est gardée. Rouge est en panne, une ligne pointillée est seulement proposée.",
     "arrange": "Réarranger",
-    "diagnose": "Diagnostic"
+    "diagnose": "Diagnostic",
+    "suggestionContainer": "{{child}} tourne probablement dans le conteneur {{name}} sur {{host}}",
+    "suggestionGuest": "{{child}} tourne probablement dans {{name}} sur {{host}}",
+    "tileOf": "{{name}} (tuile d'app)"
   }
 }

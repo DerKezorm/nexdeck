@@ -52,7 +52,20 @@ function Page() {
   }
 
   const byRef = new Map((inventory?.nodes ?? []).map((node) => [node.ref, node]))
-  const proposed = (inventory?.relations ?? []).filter((one) => one.state === 'suggested' && byRef.has(one.child) && byRef.has(one.parent))
+  // Sorted by what is proposed, so two proposals for one service stand together.
+  const proposed = (inventory?.relations ?? [])
+    .filter((one) => one.state === 'suggested' && byRef.has(one.child) && byRef.has(one.parent))
+    .sort((a, b) => (byRef.get(a.child)?.name ?? '').localeCompare(byRef.get(b.child)?.name ?? '') || a.parent.localeCompare(b.parent))
+  // Which it is and where: an app tile says so, a container names the machine it is on.
+  const label = (node: InventoryNode | undefined) => (node?.kind === 'tile' ? t('inventory.tileOf', { name: node.name }) : (node?.name ?? ''))
+  const sentence = (child: string, parent: string) => {
+    const node = byRef.get(parent)
+    const host = node?.parent ? byRef.get(node.parent)?.name : ''
+    if (node && host && (node.kind === 'container' || node.kind === 'guest')) {
+      return t(node.kind === 'container' ? 'inventory.suggestionContainer' : 'inventory.suggestionGuest', { child: label(byRef.get(child)), name: node.name, host })
+    }
+    return t('inventory.suggestion', { child: label(byRef.get(child)), parent: label(node) })
+  }
   const { roots, unplaced } = inventory ? tree(inventory) : { roots: [], unplaced: [] }
   const places = (inventory?.nodes ?? []).filter((node) => node.host || node.kind === 'container' || node.kind === 'guest')
 
@@ -109,7 +122,7 @@ function Page() {
           <ul className="flex flex-col gap-1.5">
             {proposed.map((one) => (
               <li key={one.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="flex-1">{t('inventory.suggestion', { child: byRef.get(one.child)?.name, parent: byRef.get(one.parent)?.name })}</span>
+                <span className="flex-1">{sentence(one.child, one.parent)}</span>
                 <button type="button" className="btn btn-accent h-7" onClick={() => void changed(() => post(`/relations/${one.id}/confirm`))}>
                   {t('inventory.yes')}
                 </button>

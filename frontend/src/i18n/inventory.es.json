@@ -32,6 +32,9 @@
     "nothing": "Nada aún",
     "mapHelp": "Arrastra para ordenar; el orden se guarda. Rojo está caído, una línea discontinua solo está propuesta.",
     "arrange": "Ordenar de nuevo",
-    "diagnose": "Diagnóstico"
+    "diagnose": "Diagnóstico",
+    "suggestionContainer": "{{child}} probablemente funciona en el contenedor {{name}} en {{host}}",
+    "suggestionGuest": "{{child}} probablemente funciona en {{name}} en {{host}}",
+    "tileOf": "{{name}} (mosaico de app)"
   }
 }

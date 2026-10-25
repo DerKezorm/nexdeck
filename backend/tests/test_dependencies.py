@@ -197,6 +197,42 @@ def test_what_was_found_or_proposed_before_goes_when_it_no_longer_fits(client: T
     assert _relations() == {(f"integration:{portainer}", f"container:{portainer}:nexlore-old", "suggested", "rejected")}
 
 
+def test_a_service_is_proposed_on_its_main_container_never_on_a_helper(client: TestClient) -> None:
+    """⚠️ Seen on 25.10.2026: Immich "probably runs on" immich_postgres, immich_redis and immich_machine_learning."""
+    setup_admin(client)
+    engine = _connection(client, "docker", "docker-dev", "tcp://10.0.0.66:2375")
+    _things(engine, _container("immich_server"), _container("immich_postgres"), _container("immich_redis"), _container("immich_machine_learning"),
+            _container("authentik-server-1"), _container("authentik-worker-1"), _container("authentik-postgresql-1"),
+            _container("paperless_ngx"), _container("paperless_redis"), _container("seerr-web"), _container("seerr-cli"))
+    photos = _connection(client, "immich", "Immich", "http://photos.example.invalid:2283")
+    login_service = _connection(client, "authentik", "authentik", "https://auth.example.invalid:9443")
+    papers = _connection(client, "paperless", "Paperless", "http://papers.example.invalid:8000")
+    requests = _connection(client, "seerr", "Seerr", "http://requests.example.invalid:5055")
+    _match({engine: ["10.0.0.66"]})
+    proposed = {(child, parent) for child, parent, origin, _state in _relations() if origin == "suggested"}
+    assert {parent for child, parent in proposed if child == f"integration:{papers}"} == {f"container:{engine}:paperless_ngx"}, "no main one, still no helper"
+    assert {parent for child, parent in proposed if child == f"integration:{requests}"} == {f"container:{engine}:seerr-web"}, "no helper, the main one"
+    assert {parent for child, parent in proposed if child == f"integration:{photos}"} == {f"container:{engine}:immich_server"}
+    assert {parent for child, parent in proposed if child == f"integration:{login_service}"} == {f"container:{engine}:authentik-server-1"}
+
+
+def test_an_app_tile_of_a_connected_service_hangs_on_the_connection(client: TestClient) -> None:
+    """⚠️ Seen on 25.10.2026: "Jellyfin probably runs on jellyfin" twice, once for the connection and once for its tile."""
+    setup_admin(client)
+    engine = _connection(client, "docker", "docker-dev", "tcp://10.0.0.66:2375")
+    _things(engine, _container("jellyfin"))
+    media = _connection(client, "jellyfin", "Jellyfin", "https://jellyfin.example.invalid")
+    board = client.post("/api/v1/boards", json={"name": "Lab"}, headers=CSRF).json()
+    page = board["pages"][0]["id"]
+    same_address = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.app", "title": "Movies", "link": "https://jellyfin.example.invalid"}, headers=CSRF).json()["widget"]
+    same_name = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.app", "title": "jellyfin", "link": "https://tv.example.invalid"}, headers=CSRF).json()["widget"]
+    _match({engine: ["10.0.0.66"]})
+    found = _relations()
+    for tile in (same_address, same_name):
+        assert {(parent, origin) for child, parent, origin, _state in found if child == f"tile:{tile['id']}"} == {(f"integration:{media}", "auto")}
+    assert (f"integration:{media}", f"container:{engine}:jellyfin", "suggested", "suggested") in found
+
+
 def test_two_hosts_on_one_address_are_not_put_on_each_other(client: TestClient) -> None:
     setup_admin(client)
     pve = _connection(client, "proxmox", "PVE", "https://10.0.0.5:8006")

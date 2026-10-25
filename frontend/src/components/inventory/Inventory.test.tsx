@@ -98,12 +98,24 @@ describe('the shape of it', () => {
 })
 
 describe('the inventory page', () => {
+  it('says which proposal is an app tile, and keeps the proposals for one service together', async () => {
+    // ⚠️ Seen on 25.10.2026: "Jellyfin probably runs on jellyfin" twice, once for the connection and once for its tile.
+    INVENTORY.relations.push({ id: 4, child: 'tile:9', parent: 'integration:1', origin: 'suggested', state: 'suggested' })
+    try {
+      wrap(<InventorySettings />)
+      const proposed = await screen.findByTestId('inventory-proposed')
+      expect(proposed.textContent).toMatch(/radarr on docker-live.*Wiki \(app tile\) probably runs on PVE/)
+    } finally {
+      INVENTORY.relations.pop()
+    }
+  })
+
   it('lists the tree, says yes or no to a proposal and places what stands alone', async () => {
     wrap(<InventorySettings />)
     const rows = await screen.findAllByTestId('inventory-row')
     expect(rows.map((row) => row.textContent?.split('Connection')[0].split('VM or LXC')[0].split('Container')[0].trim())).toEqual(['PVE', 'docker-live', 'docker-live', 'plex', 'Plex', 'radarr'])
     expect(rows[1].textContent).toContain('10.0.0.65')
-    expect(screen.getByTestId('inventory-proposed').textContent).toContain('Radarr probably runs on radarr')
+    expect(screen.getByTestId('inventory-proposed').textContent).toContain('Radarr probably runs in the container radarr on docker-live')
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Yes' }))
     })
