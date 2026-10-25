@@ -8,6 +8,7 @@ through httpx, without the docker SDK.
 from __future__ import annotations
 
 import asyncio
+import re
 from typing import Any
 
 import httpx
@@ -96,6 +97,27 @@ async def engine_post(config: dict[str, Any], ctx: Context, path: str) -> None:
         except ValueError:
             pass
         raise AdapterError(detail or f"The Docker engine answered with HTTP {response.status_code}.", code="action_failed")
+
+
+def log_lines(raw: bytes, tty: bool) -> list[str]:
+    """Docker's log as lines, with the time cut to the clock.
+
+    Without a terminal each frame comes with eight bytes of header; with one,
+    the stream is the text itself.
+    """
+    if tty:
+        text = raw.decode("utf-8", "replace")
+    else:
+        out, at = [], 0
+        while at + 8 <= len(raw):
+            size = int.from_bytes(raw[at + 4:at + 8], "big")
+            out.append(raw[at + 8:at + 8 + size].decode("utf-8", "replace"))
+            at += 8 + size
+        text = "".join(out)
+    return [_STAMP.sub(r"\1 ", line) for line in text.splitlines() if line.strip()]
+
+
+_STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})\.\d+Z ")
 
 
 def container_name(entry: dict[str, Any]) -> str:
@@ -362,6 +384,15 @@ class DockerAdapter(Adapter):
             action.params = {"id": container_id}
             actions.append(action.model_dump())
         return actions
+
+    async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
+        async with docker_client(config) as client:
+            found = next((one for one in (await client.get("/containers/json", params={"all": 1})).json() if container_name(one) == container), None)
+            if found is None:
+                raise AdapterError(f"No container named {container!r} on this engine.", code="not_found")
+            tty = bool(((await client.get(f"/containers/{found['Id']}/json")).json().get("Config") or {}).get("Tty"))
+            raw = (await client.get(f"/containers/{found['Id']}/logs", params={"stdout": 1, "stderr": 1, "timestamps": 1, "tail": lines})).content
+        return log_lines(raw, tty)[-lines:]
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any],
                      options: dict[str, Any], ctx: Context) -> str:

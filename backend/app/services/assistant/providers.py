@@ -112,7 +112,9 @@ async def anthropic_turn(settings: dict[str, Any], key: str, system: str, transc
         text="\n\n".join(block.text for block in blocks if block.type == "text").strip(),
         calls=[{"id": block.id, "name": block.name, "input": dict(block.input or {})} for block in blocks if block.type == "tool_use"],
         raw=[block.model_dump(mode="json", exclude_none=True) for block in blocks],
-        tokens_in=int(getattr(response.usage, "input_tokens", 0) or 0),
+        # ⚠️ With caching, ``input_tokens`` is only what was neither written to nor
+        # read from the cache: 10 tokens for a question that sent 6000.
+        tokens_in=sum(int(getattr(response.usage, name, 0) or 0) for name in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")),
         tokens_out=int(getattr(response.usage, "output_tokens", 0) or 0),
     )
     turn.stop = "refusal" if response.stop_reason == "refusal" else "tools" if turn.calls else "end"
@@ -181,6 +183,58 @@ async def openai_turn(settings: dict[str, Any], key: str, system: str, transcrip
                 tokens_in=int(usage.get("prompt_tokens") or 0), tokens_out=int(usage.get("completion_tokens") or 0))
     turn.stop = "refusal" if choice.get("finish_reason") == "content_filter" else "tools" if calls else "end"
     return turn
+
+
+# -- the models a service offers ---------------------------------------------------------
+
+#: More than anyone picks from; a local runner with a hundred models still lists them all up to here.
+MAX_MODELS = 200
+
+
+async def list_models(provider: str, base_url: str, key: str) -> list[dict[str, str]]:
+    """``[{"id", "name"}]`` as the service lists them, Claude's newest first. Asking costs nothing."""
+    if provider == "anthropic":
+        import anthropic
+
+        client = anthropic.AsyncAnthropic(api_key=key, timeout=20.0, max_retries=1, base_url=ANTHROPIC_BASE_URL)
+        try:
+            found = [{"id": model.id, "name": model.display_name or model.id}
+                     async for model in client.models.list(limit=100, lifecycle=["active"])]
+        except anthropic.AuthenticationError:
+            raise AssistantError("auth", "Anthropic refused the key.") from None
+        except anthropic.APIStatusError as error:
+            raise AssistantError("provider", f"Anthropic answered with HTTP {error.status_code}.") from None
+        except anthropic.APIConnectionError:
+            raise AssistantError("unreachable", "Anthropic could not be reached.") from None
+        finally:
+            await client.close()
+        return found[:MAX_MODELS]
+    if provider == "openai":
+        import httpx
+
+        from ...adapters.base import outbound_client
+
+        headers = {"Authorization": f"Bearer {key}"} if key else {}
+        try:
+            async with outbound_client(timeout=20.0) as client:
+                response = await client.get(f"{base_url.rstrip('/')}/models", headers=headers)
+        except httpx.HTTPError as error:
+            raise AssistantError("unreachable", f"The service could not be reached ({error.__class__.__name__}).") from None
+        if response.status_code in (401, 403):
+            raise AssistantError("auth", "The service refused the key.")
+        if response.status_code in (404, 405, 501):
+            raise AssistantError("no_list", "This service lists no models; type the name of the model.")
+        if response.status_code >= 400:
+            raise AssistantError("provider", f"The service answered with HTTP {response.status_code}.")
+        try:
+            raw = response.json().get("data")
+        except (ValueError, AttributeError):
+            raw = None
+        if not isinstance(raw, list):
+            raise AssistantError("provider", "The service sent a list in a form nexdeck does not read.")
+        return [{"id": str(entry["id"])[:200], "name": str(entry["id"])[:200]}
+                for entry in raw[:MAX_MODELS] if isinstance(entry, dict) and str(entry.get("id") or "").strip()]
+    raise AssistantError("off", "The assistant is switched off.")
 
 
 async def turn(settings: dict[str, Any], key: str, system: str, transcript: list[dict[str, Any]], tools: list[dict[str, Any]]) -> Turn:

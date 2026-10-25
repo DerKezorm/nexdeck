@@ -631,8 +631,8 @@
       "address": "Address",
       "addressHelp": "Up to /v1, for example http://ollama:11434/v1 or https://api.openai.com/v1.",
       "model": "Model",
-      "modelHelpClaude": "Empty takes claude-opus-5-5.",
-      "modelHelpOpenai": "The model must be able to call tools, for example qwen3 or llama3.1.",
+      "modelHelpClaude": "Sonnet is enough for the chat and costs a fraction of Opus. Empty takes claude-sonnet-5-5.",
+      "modelHelpOpenai": "Load the list, or type the name. The model must be able to call tools, for example qwen3 or llama3.1.",
       "key": "API key",
       "keyHelpOpenai": "Ollama and LM Studio need none.",
       "keyKept": "A key is stored; type a new one to replace it",
@@ -643,7 +643,8 @@
       "who": "Only administrators see the chat. Conversations are kept for 30 days. The assistant never presses a button: it shows it, with what it would hit, and you press it.",
       "test": "Save and test",
       "testCosts": "The test asks one short question and costs a few tokens.",
-      "testOk": "{{model}} answers."
+      "testOk": "{{model}} answers.",
+      "loadModels": "Load models"
     }
   },
   "menu": {
@@ -2374,7 +2375,8 @@
       "unreachable": "The provider could not be reached.",
       "busy": "Still answering the last question.",
       "model": "The provider does not know this model or address.",
-      "provider": "The provider answered with an error."
+      "provider": "The provider answered with an error.",
+      "no_list": "This service lists no models; type the name of the model."
     }
   }
 }

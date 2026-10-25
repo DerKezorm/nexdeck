@@ -89,7 +89,7 @@ def test_the_key_is_kept_encrypted_and_never_comes_back(client: TestClient) -> N
     setup_admin(client)
     _switch_on(client)
     shown = client.get("/api/v1/settings/assistant").json()
-    assert shown["model"] == "claude-opus-5-5" and shown["has_key"] is True and shown["leaves_the_house"] is True
+    assert shown["model"] == "claude-sonnet-5-5" and shown["has_key"] is True and shown["leaves_the_house"] is True
     assert "sk-ant-test" not in json.dumps(shown)
     with db_session() as db:
         from app.models import Setting
@@ -555,6 +555,18 @@ class _Claude(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(out)
 
+    def do_GET(self) -> None:  # noqa: N802 - the name http.server calls
+        _Claude.seen.append({"path": self.path, "headers": {name.lower(): value for name, value in self.headers.items()}})
+        out = json.dumps({"data": [
+            {"type": "model", "id": "claude-opus-5-5", "display_name": "Claude Opus 5.5", "created_at": "2026-09-01T00:00:00Z"},
+            {"type": "model", "id": "claude-sonnet-5-5", "display_name": "Claude Sonnet 5.5", "created_at": "2026-09-01T00:00:00Z"},
+        ], "has_more": False, "first_id": "claude-opus-5-5", "last_id": "claude-sonnet-5-5"}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(out)))
+        self.end_headers()
+        self.wfile.write(out)
+
     def log_message(self, *_args: object) -> None:
         pass
 
@@ -574,7 +586,8 @@ def claude(monkeypatch: pytest.MonkeyPatch):  # noqa: ANN201 - a fixture
 
 def _message(content: list[dict], stop: str = "tool_use") -> dict:
     return {"id": "msg_1", "type": "message", "role": "assistant", "model": "claude-opus-5-5", "content": content,
-            "stop_reason": stop, "stop_sequence": None, "usage": {"input_tokens": 1500, "output_tokens": 40}}
+            "stop_reason": stop, "stop_sequence": None,
+            "usage": {"input_tokens": 12, "cache_creation_input_tokens": 1000, "cache_read_input_tokens": 488, "output_tokens": 40}}
 
 
 @pytest.mark.asyncio
@@ -649,3 +662,165 @@ def test_a_demo_connection_has_no_log_to_read(client: TestClient, monkeypatch: p
     client.post("/api/v1/assistant/chat", json={"text": "log", "conversation_id": first["conversation_id"]}, headers=CSRF)
     result = script.seen[1][-1]["results"][0]
     assert result["is_error"] is True and "demo" in result["content"]
+
+
+# -- picking the model ---------------------------------------------------------------------------
+
+
+def test_claude_lists_its_models_with_the_stored_key(client: TestClient, claude: type[_Claude]) -> None:
+    setup_admin(client)
+    missing = client.post("/api/v1/settings/assistant/models", json={"provider": "anthropic"}, headers=CSRF)
+    assert missing.status_code == 400 and missing.json()["detail"]["code"] == "missing_key"
+    _switch_on(client)
+    listed = client.post("/api/v1/settings/assistant/models", json={"provider": "anthropic"}, headers=CSRF)
+    assert listed.status_code == 200, listed.text
+    assert listed.json() == [{"id": "claude-opus-5-5", "name": "Claude Opus 5.5"}, {"id": "claude-sonnet-5-5", "name": "Claude Sonnet 5.5"}]
+    asked = claude.seen[-1]
+    assert asked["path"].startswith("/v1/models") and "lifecycle%5B%5D=active" in asked["path"], "only models that are not on their way out"
+    assert asked["headers"]["x-api-key"] == "sk-ant-test"
+
+
+@respx.mock
+def test_a_stored_key_never_goes_to_an_address_typed_elsewhere(client: TestClient) -> None:
+    setup_admin(client)
+    client.put("/api/v1/settings/assistant", json={"provider": "openai", "base_url": "http://llm.home.arpa/v1", "model": "qwen3", "key": "sk-home"}, headers=CSRF)
+    home = respx.get("http://llm.home.arpa/v1/models").mock(return_value=httpx.Response(200, json={"data": [{"id": "qwen3"}, {"id": "llama3.1:8b"}]}))
+    elsewhere = respx.get("http://other.example/v1/models").mock(return_value=httpx.Response(200, json={"data": [{"id": "x"}]}))
+    listed = client.post("/api/v1/settings/assistant/models", json={"provider": "openai", "base_url": "http://llm.home.arpa/v1/"}, headers=CSRF)
+    assert [one["id"] for one in listed.json()] == ["qwen3", "llama3.1:8b"]
+    assert home.calls[0].request.headers["Authorization"] == "Bearer sk-home"
+    client.post("/api/v1/settings/assistant/models", json={"provider": "openai", "base_url": "http://other.example/v1"}, headers=CSRF)
+    assert "Authorization" not in elsewhere.calls[0].request.headers
+    typed = client.post("/api/v1/settings/assistant/models", json={"provider": "openai", "base_url": "http://other.example/v1", "key": "sk-typed"}, headers=CSRF)
+    assert typed.status_code == 200 and elsewhere.calls[1].request.headers["Authorization"] == "Bearer sk-typed"
+
+
+@respx.mock
+def test_a_service_without_a_list_says_to_type_the_name(client: TestClient) -> None:
+    setup_admin(client)
+    respx.get("http://llm.home.arpa/v1/models").mock(return_value=httpx.Response(404))
+    answer = client.post("/api/v1/settings/assistant/models", json={"provider": "openai", "base_url": "http://llm.home.arpa/v1"}, headers=CSRF)
+    assert answer.status_code == 400 and answer.json()["detail"]["code"] == "no_list"
+    wrong = client.post("/api/v1/settings/assistant/models", json={"provider": "openai", "base_url": "llm:11434"}, headers=CSRF)
+    assert wrong.json()["detail"]["code"] == "bad_address"
+
+
+def test_members_get_no_list_of_models(client: TestClient) -> None:
+    setup_admin(client)
+    create_user(client, "member")
+    login(client, "member", "another-long-password")
+    assert client.post("/api/v1/settings/assistant/models", json={"provider": "anthropic"}, headers=CSRF).status_code == 403
+
+
+# -- logs from every engine that has them ------------------------------------------------------
+
+
+def test_docker_frames_and_times_come_out_as_lines() -> None:
+    from app.adapters.docker import log_lines
+
+    def frame(stream: int, text: str) -> bytes:
+        body = text.encode()
+        return bytes([stream, 0, 0, 0]) + len(body).to_bytes(4, "big") + body
+
+    raw = frame(1, "2026-10-25T10:02:01.068709153Z started\n") + frame(2, "2026-10-25T10:02:02.1Z CUDA out of memory\n")
+    assert log_lines(raw, tty=False) == ["10:02:01 started", "10:02:02 CUDA out of memory"]
+    assert log_lines(b"2026-10-25T10:02:01.5Z plain\n\n", tty=True) == ["10:02:01 plain"]
+
+
+async def test_a_synology_gives_its_container_log_oldest_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The shape measured against DSM 7 on 25.10.2026: name and order as JSON strings, newest first."""
+    from app.adapters.synology import SynologyAdapter
+
+    asked: list[dict] = []
+
+    async def api(_self: object, _config: dict, _ctx: object, api: str, method: str, version: str = "1", extra: dict | None = None, **_: object) -> dict:
+        asked.append({"api": api, "method": method, **(extra or {})})
+        return {"logs": [{"created": "2026-10-25T10:02:02.5Z", "stream": "stderr", "text": "second\n"},
+                         {"created": "2026-10-25T10:02:01.1Z", "stream": "stdout", "text": "first"}], "total": 2}
+
+    monkeypatch.setattr(SynologyAdapter, "_api", api)
+    lines = await SynologyAdapter().container_log({}, None, "immich_server", 2)  # type: ignore[arg-type]
+    assert lines == ["10:02:01 first", "10:02:02 second"]
+    assert asked == [{"api": "SYNO.Docker.Container.Log", "method": "get", "name": '"immich_server"', "offset": "0", "limit": "2", "sort_dir": '"DESC"'}]
+
+
+@respx.mock
+async def test_portainer_gives_the_log_through_its_docker_interface() -> None:
+    from app.adapters.base import Context
+    from app.adapters.portainer import PortainerAdapter
+
+    base = "https://portainer:9443/api/endpoints/3/docker"
+    respx.get("https://portainer:9443/api/endpoints").mock(return_value=httpx.Response(200, json=[{"Id": 3, "Name": "local"}]))
+    respx.get(f"{base}/containers/json").mock(return_value=httpx.Response(200, json=[{"Id": "abc", "Names": ["/nginx"]}]))
+    respx.get(f"{base}/containers/abc/json").mock(return_value=httpx.Response(200, json={"Config": {"Tty": True}}))
+    logs = respx.get(f"{base}/containers/abc/logs").mock(return_value=httpx.Response(200, content=b"2026-10-25T10:00:00.1Z up\n"))
+    ctx = Context(httpx.AsyncClient(), integration_id=1, cache={})
+    lines = await PortainerAdapter().container_log({"url": "https://portainer:9443", "api_key": "k", "insecure": True}, ctx, "nginx", 20)
+    assert lines == ["10:00:00 up"]
+    assert logs.calls[0].request.url.params["tail"] == "20"
+
+
+def test_a_connection_without_logs_is_said_so_before_anybody_is_asked(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    setup_admin(client)
+    _switch_on(client)
+    _docker, plex = _plex_and_docker(client)
+    script = Script(providers.Turn(calls=[_call("container_log", card_id=plex["id"], container="plex")], stop="tools"), providers.Turn(text="Cannot."))
+    monkeypatch.setattr(providers, "turn", script)
+    reply = client.post("/api/v1/assistant/chat", json={"text": "plex log"}, headers=CSRF).json()
+    assert reply["permissions"] == [], "nobody is asked for something that cannot be read"
+    assert "Docker, Portainer and a Synology" in script.seen[1][-1]["results"][0]["content"]
+
+
+def test_an_allowed_log_of_a_synology_is_read_and_its_secrets_masked(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.adapters.synology import SynologyAdapter
+
+    setup_admin(client)
+    _switch_on(client)
+    page = _board(client)["pages"][0]["id"]
+    made = client.post("/api/v1/integrations", json={"kind": "synology", "name": "NAS", "config": {"url": "https://nas.example.com:5001", "username": "u", "password": "p"}}, headers=CSRF)
+    assert made.status_code == 201, made.text
+    card = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "synology.containers", "integration_id": made.json()["id"]}, headers=CSRF).json()["widget"]
+    collector.unschedule(card["id"])
+
+    async def log(_self: object, _config: dict, _ctx: object, container: str, lines: int) -> list[str]:
+        return [f"10:00:00 {container} starting", "10:00:01 connecting with password=hunter2-secret"]
+
+    monkeypatch.setattr(SynologyAdapter, "container_log", log)
+    monkeypatch.setattr(providers, "turn", Script(providers.Turn(text="Hi.")))
+    first = client.post("/api/v1/assistant/chat", json={"text": "Hi"}, headers=CSRF).json()
+    client.post(f"/api/v1/assistant/conversations/{first['conversation_id']}/allow", json={"grant": f"log:{made.json()['id']}:immich_server"}, headers=CSRF)
+    script = Script(providers.Turn(calls=[_call("container_log", card_id=card["id"], container="immich_server")], stop="tools"), providers.Turn(text="Read."))
+    monkeypatch.setattr(providers, "turn", script)
+    reply = client.post("/api/v1/assistant/chat", json={"text": "log", "conversation_id": first["conversation_id"]}, headers=CSRF).json()
+    lines = json.loads(script.seen[1][-1]["results"][0]["content"])["lines"]
+    assert lines[0] == "10:00:00 immich_server starting"
+    assert "hunter2-secret" not in lines[1]
+    assert reply["citations"][0]["target"]["widget"] == card["id"]
+
+
+@pytest.mark.parametrize(("line", "gone"), [
+    ("connecting with password=hunter2-secret", "hunter2-secret"),
+    ('{"api_key": "sk-abcdef123456"}', "sk-abcdef123456"),
+    ("TOKEN: 9f8e7d6c5b4a", "9f8e7d6c5b4a"),
+    ("Authorization: Bearer abcdefghijklmnop", "abcdefghijklmnop"),
+    ("GET postgres://immich:dbpass99@db:5432/immich", "dbpass99"),
+    ("session eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U", "dozjgNryP4J3jVmNHl0w5N"),
+    ("GET /api/x?apikey=abc123def", "abc123def"),
+])
+def test_a_log_line_goes_out_with_its_secrets_masked(line: str, gone: str) -> None:
+    from app.services.assistant.tools import log_redact
+    from app.services.journal import redact
+
+    assert gone not in log_redact(redact(line))
+
+
+def test_an_ordinary_log_line_stays_as_it_was() -> None:
+    from app.services.assistant.tools import log_redact
+
+    line = "10:00:01 [Nest] 7 LOG Bootstrap complete, 3 workers, token cache warm"
+    assert log_redact(line) == line
+
+
+def test_the_model_is_told_to_ask_for_a_log_with_the_tool_not_in_words() -> None:
+    """⚠️ Seen on 25.10.2026 with Sonnet: "I can read the log, but I need your permission", and no button to give it."""
+    assert "call container_log right away instead of offering it in words" in chat.SYSTEM

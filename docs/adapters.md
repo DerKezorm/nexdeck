@@ -165,7 +165,7 @@ that one of twenty-one renderers draws.
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
 | OctoPrint | printer, print job | | application key from User Settings > Application Keys; its user needs the permission Status (groups Users or Read-only) |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
-| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, countdown, timer, notes, bookmarks, iframe, app tile, heading, group, tabs, key figures, status page, notices, updates (containers, GitHub projects, the versions of the connected services), this machine | | none; the versions of the connected services ask GitHub only while Check for updates is on |
+| Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, countdown, timer, notes, bookmarks, iframe, app tile, heading, group, tabs, key figures, status page, notices, updates (containers from What's Up Docker, Cup, Arcane, Dockhand and Watchtower, GitHub projects, the versions of the connected services), this machine | | none; the versions of the connected services ask GitHub only while Check for updates is on |
 | Hacker News | stories | | none |
 | Miniflux | unread, failing feeds, feed reader | | API key from Settings > API Keys |
 | FreshRSS | feed reader, unread, unread by feed | | user name and the API password from Settings > Profile, not the sign-in password; API access allowed under Administration > Authentication |

@@ -164,3 +164,54 @@ def test_the_card_can_be_put_on_a_board(client: TestClient) -> None:
     created = client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets", json={"kind": "core.updates", "options": {"nexdeck": False, "services": "none"}}, headers=CSRF)
     assert created.status_code == 201, created.text
     assert get_adapter("core").demo("updates", {}, 0).items
+
+
+# -- Arcane and Dockhand as container sources (issue #51) ---------------------------------------
+
+
+async def test_arcane_and_dockhand_bring_their_image_updates_without_buttons(client: TestClient, nexdeck_quiet: None) -> None:
+    from app.adapters.arcane import ArcaneAdapter
+    from app.adapters.dockhand import DockhandAdapter
+
+    setup_admin(client)
+    arcane = ArcaneAdapter().demo("updates", {}, 0)
+    dockhand = DockhandAdapter().demo("updates", {}, 0)
+    assert arcane.items and dockhand.items, "the demo of each lists an update, or this test proves nothing"
+    assert any(row.get("actions") for row in arcane.items), "Arcane's own card has buttons; they must stay behind"
+    sources = {1: Source("arcane", "Arcane", arcane), 2: Source("dockhand", "Dockhand", dockhand)}
+    card = await get_adapter("core").fetch("updates", {}, {"sources": ["1", "2"]}, _ctx(sources))
+    assert sources[1].asked == ["updates"] and sources[2].asked == ["updates"]
+    assert len(card.items) == len(arcane.items) + len(dockhand.items)
+    assert all("actions" not in row for row in card.items)
+    assert {row["subtitle"].rsplit(" · ", 1)[-1] for row in card.items} == {"Arcane", "Dockhand"}
+    assert card.status == "warn"
+
+
+async def test_a_source_that_has_not_checked_says_so_instead_of_up_to_date(client: TestClient, nexdeck_quiet: None) -> None:
+    from app.adapters.arcane import ArcaneAdapter
+    from app.adapters.dockhand import DockhandAdapter
+
+    setup_admin(client)
+    arcane = ArcaneAdapter._update_rows([({"id": "0", "name": "Local"}, [{"id": "a", "names": ["web"], "image": "nginx"}])], False, False)
+    dockhand = DockhandAdapter._update_rows([({"id": 1, "name": "Local", "updateCheckEnabled": False}, {"pendingUpdates": []})], False, False)
+    assert arcane.status == dockhand.status == "unknown"
+    sources = {1: Source("arcane", "Arcane", arcane), 2: Source("dockhand", "Dockhand", dockhand)}
+    card = await get_adapter("core").fetch("updates", {}, {"sources": ["1", "2"]}, _ctx(sources))
+    assert [(row["title"], row["status"]) for row in card.items] == [("Arcane", "unknown"), ("Dockhand", "unknown")]
+    assert card.items[0]["subtitle"] == "Arcane has not checked these images for updates yet."
+    assert card.status == "ok", "not checked is no reason to colour the card"
+    checked = DockhandAdapter._update_rows([({"id": 1, "name": "Local", "updateCheckEnabled": True}, {"pendingUpdates": []})], False, False)
+    quiet = await get_adapter("core").fetch("updates", {}, {"sources": ["1"]}, _ctx({1: Source("dockhand", "Dockhand", checked)}))
+    assert quiet.items == [], "checked and nothing waiting is simply up to date"
+
+
+async def test_environments_that_did_not_answer_are_a_line(client: TestClient, nexdeck_quiet: None) -> None:
+    setup_admin(client)
+    partial = WidgetData(status="warn", items=[], meta={"notice": "Some environments did not answer; their rows are missing.", "empty": "Everything is up to date."})
+    card = await get_adapter("core").fetch("updates", {}, {"sources": ["1"]}, _ctx({1: Source("arcane", "Arcane", partial)}))
+    assert card.items == [{"title": "Arcane", "subtitle": "Some environments did not answer; their rows are missing.", "status": "warn"}]
+
+
+def test_the_card_offers_arcane_and_dockhand_as_sources() -> None:
+    field = next(one for one in get_adapter("core").widget("updates").options if one.name == "sources")
+    assert {"arcane", "dockhand"} <= {kind for kind, _label in field.options}

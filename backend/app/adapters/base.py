@@ -1599,6 +1599,14 @@ class Adapter:
         """
         return []
 
+    async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
+        """The last lines of one container's log, oldest first; ``None`` where this service gives none.
+
+        Read only. The assistant asks for it once the person allowed it
+        (``services/assistant/tools.py``).
+        """
+        return None
+
     #: What a button card may ask this adapter to do. Empty for almost every
     #: adapter, and that is the point: see :class:`Deed`.
     deeds: tuple[Deed, ...] = ()

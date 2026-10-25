@@ -24,7 +24,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 - **Made to be shown.** Showcase mode replaces addresses, host names, people, devices and appointments with made-up ones that read like real ones, and a board saves as a picture on a frame of colour, ready for a forum or a chat.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
-- **What is out of date.** Every connection shows the version its service runs, and once you let nexdeck ask GitHub, the Updates card lists the services behind their project's newest release, next to containers from What's Up Docker and Cup.
+- **What is out of date.** Every connection shows the version its service runs, and once you let nexdeck ask GitHub, the Updates card lists the services behind their project's newest release, next to containers from What's Up Docker, Cup, Arcane and Dockhand.
 - **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
 - **Sign in your way.** Local accounts, OpenID Connect with several providers side by side (authentik in one step, Microsoft Entra ID, Keycloak, Authelia, Pocket ID and friends), personal API tokens.

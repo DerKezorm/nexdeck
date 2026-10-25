@@ -408,7 +408,7 @@ class CoreAdapter(Adapter):
                       # Kinds only, to narrow the picker; it shows the connections' own names.
                       options=tuple((kind, "") for kind in sorted(UPSTREAM))),
                 Field("sources", "Container sources", type="integrations", default=[],
-                      options=(("wud", "What's Up Docker"), ("cup", "Cup"), ("watchtower", "Watchtower")),
+                      options=(("wud", "What's Up Docker"), ("cup", "Cup"), ("arcane", "Arcane"), ("dockhand", "Dockhand"), ("watchtower", "Watchtower")),
                       help="Watchtower updates by itself; it shows up only when its last run could not update everything."),
                 Field("repos", "GitHub projects", type="textarea", placeholder="owner/name",
                       help="One per line, as owner/name, up to ten. Each shows its newest release; one from the last seven days stands out."),
@@ -1221,6 +1221,12 @@ async def waiting_at(adapter: Adapter, config: dict[str, Any], ctx: Context) -> 
     along without the ones they could not check and without buttons, which
     belong to the source's own card. Watchtower keeps no list of what waits,
     it updates by itself, so it has a row only when its last run failed.
+
+    Arcane and Dockhand (issue #51) list the containers whose image has an
+    update, as each last checked. ⚠️ An empty list from either can mean that
+    nothing was checked yet; their own card says so, and so does a row here,
+    instead of "Everything is up to date". The same for environments that did
+    not answer.
     """
     if adapter.kind in ("wud", "cup"):
         data = await adapter.fetch("updates", config, {"limit": 50}, ctx)
@@ -1231,6 +1237,19 @@ async def waiting_at(adapter: Adapter, config: dict[str, Any], ctx: Context) -> 
             kept = {key: row[key] for key in ("title", "status", "value", "url") if key in row}
             kept["subtitle"] = " · ".join(part for part in (str(row.get("subtitle") or ""), adapter.label) if part)
             rows.append(kept)
+        return rows
+    if adapter.kind in ("arcane", "dockhand"):
+        data = await adapter.fetch("updates", config, {}, ctx)
+        rows = []
+        for row in data.items:
+            kept = {key: row[key] for key in ("title", "status", "value", "url", "icon", "icon_dot") if key in row}
+            kept["subtitle"] = " · ".join(part for part in (str(row.get("subtitle") or ""), adapter.label) if part)
+            rows.append(kept)
+        meta = data.meta or {}
+        if meta.get("notice"):
+            rows.append({"title": adapter.label, "subtitle": str(meta["notice"]), "status": "warn"})
+        if not data.items and data.status == "unknown":
+            rows.append({"title": adapter.label, "subtitle": str(meta.get("empty") or ""), "status": "unknown"})
         return rows
     if adapter.kind == "watchtower":
         data = await adapter.fetch("summary", config, {}, ctx)

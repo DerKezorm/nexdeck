@@ -89,10 +89,10 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "container_log",
-        "description": "The last lines of one container's log, from a Docker card. Logs can hold addresses and names, so the person is asked first; if they have not allowed it yet, this answers that you asked, and you should say in one sentence that you need their permission.",
+        "description": "The last lines of one container's log, from a card of Docker, Portainer or a Synology that lists containers. Logs can hold addresses and names, so the person is asked first; if they have not allowed it yet, this answers that you asked, and you should say in one sentence that you need their permission.",
         "input_schema": {
             "type": "object",
-            "properties": {"card_id": {"type": "integer", "description": "A Docker card."}, "container": {"type": "string"}, "lines": {"type": "integer", "description": "1 to 100. Default 50."}},
+            "properties": {"card_id": {"type": "integer", "description": "A card that lists the container."}, "container": {"type": "string"}, "lines": {"type": "integer", "description": "1 to 100. Default 50."}},
             "required": ["card_id", "container"], "additionalProperties": False,
         },
     },
@@ -273,20 +273,55 @@ def metric_history(bench: Bench, given: dict[str, Any]) -> str:
                   "points": [{"at": _when(ts), "value": round(value, 3)} for ts, value in points[::step]]})
 
 
-_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})\.\d+Z ")
+#: What a foreign log may carry besides a key in an address, which is all
+#: nexdeck's own log needs to hide (``journal.redact``).
+_SECRET_PAIR = re.compile(
+    r"(?i)\b((?:password|passwd|pwd|secret|client[_-]?secret|token|access[_-]?token|refresh[_-]?token|api[_-]?key|apikey|auth|authorization)"
+    r"[\"']?\s*[:=]\s*[\"']?)([^\s\"',&;]+)"
+)
+_BEARER = re.compile(r"(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}")
+_USER_IN_ADDRESS = re.compile(r"(://[^:/\s@]+:)([^@\s/]+)@")
+_JWT = re.compile(r"\beyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]{8,}")
+
+
+def log_redact(line: str) -> str:
+    """A foreign container's log line with the usual secrets masked before it goes to the provider.
+
+    ⚠️ Best effort, which is why the person is asked first: a log can say
+    anything in any form.
+    """
+    # The scheme first: "Authorization: Bearer x" would otherwise lose the word "Bearer" and keep x.
+    line = _BEARER.sub(lambda hit: hit.group(1) + " ***", line)
+    line = _SECRET_PAIR.sub(lambda hit: hit.group(1) + "***", line)
+    line = _USER_IN_ADDRESS.sub(lambda hit: hit.group(1) + "***@", line)
+    return _JWT.sub("***", line)
+
+
+def _gives_logs(kind: str) -> bool:
+    from ...adapters import get_adapter
+    from ...adapters.base import Adapter
+
+    try:
+        return type(get_adapter(kind)).container_log is not Adapter.container_log
+    except Exception:  # noqa: BLE001 - an unknown kind gives no logs
+        return False
 
 
 async def container_log(bench: Bench, given: dict[str, Any]) -> str:
     place = _places(bench.db).get(int(given.get("card_id") or 0))
     container = str(given.get("container") or "").strip()
-    if place is None or place[0].integration is None or place[0].integration.kind != "docker" or not container:
-        return _json({"error": "Name a Docker card and one of its containers."})
+    if place is None or place[0].integration is None or not container:
+        return _json({"error": "Name a card that lists containers, and one of its containers."})
     widget = place[0]
+    if not _gives_logs(widget.integration.kind):
+        return _json({"error": f"A {widget.integration.kind} connection gives no container logs. Docker, Portainer and a Synology do."})
     grant = f"log:{widget.integration_id}:{container}"
     if grant not in bench.grants:
         bench.permissions.append({"kind": "log", "card_id": widget.id, "container": container, "grant": grant})
         return _json({"asked": True, "note": "The person has been asked whether you may read this log. Nothing was read."})
+    from ...adapters.base import AdapterError
     from ..collector import collector
+    from ..journal import redact
 
     # ⚠️ A connection in the demo points at no engine; asked anyway, it reached
     # the Docker socket of whatever machine nexdeck runs on.
@@ -296,32 +331,14 @@ async def container_log(bench: Bench, given: dict[str, Any]) -> str:
         lines = max(1, min(LOG_LINES, int(given.get("lines") or 50)))
     except (TypeError, ValueError):
         lines = 50
-    from ...adapters.docker import container_name, docker_client
-    from ..integrations import resolve_config
-    from ..journal import redact
-
-    config = resolve_config(widget.integration)
-    async with docker_client(config) as client:
-        found = next((one for one in (await client.get("/containers/json", params={"all": 1})).json() if container_name(one) == container), None)
-        if found is None:
-            return _json({"error": f"No container named {container!r} on this engine."})
-        inspect = (await client.get(f"/containers/{found['Id']}/json")).json()
-        tty = bool((inspect.get("Config") or {}).get("Tty"))
-        raw = (await client.get(f"/containers/{found['Id']}/logs", params={"stdout": 1, "stderr": 1, "timestamps": 1, "tail": lines})).content
-    text = raw.decode("utf-8", "replace") if tty else _demux(raw)
-    kept = [redact(_TIMESTAMP.sub(r"\1 ", line))[:400] for line in text.splitlines() if line.strip()][-lines:]
+    adapter, config, ctx = await collector.resolve_integration(widget.integration_id)
+    try:
+        found = await adapter.container_log(config, ctx, container, lines) or []
+    except AdapterError as failure:
+        return _json({"error": failure.message})
+    kept = [log_redact(redact(line))[:400] for line in found if line.strip()][-lines:]
     _cite(bench, *place)
     return _json({"container": container, "lines": kept})
-
-
-def _demux(raw: bytes) -> str:
-    """Docker's log stream without a terminal: eight bytes of header before each frame."""
-    out, at = [], 0
-    while at + 8 <= len(raw):
-        size = int.from_bytes(raw[at + 4:at + 8], "big")
-        out.append(raw[at + 8:at + 8 + size].decode("utf-8", "replace"))
-        at += 8 + size
-    return "".join(out)
 
 
 async def propose_action(bench: Bench, given: dict[str, Any]) -> str:

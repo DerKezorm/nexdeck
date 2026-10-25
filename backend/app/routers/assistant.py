@@ -31,6 +31,12 @@ class AssistantSetting(BaseModel):
     key: str | None = Field(default=None, max_length=500)
 
 
+class ModelsAsked(BaseModel):
+    provider: str = Field(max_length=20)
+    base_url: str = Field(default="", max_length=500)
+    key: str | None = Field(default=None, max_length=500)
+
+
 class Question(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     conversation_id: int | None = None
@@ -42,7 +48,7 @@ class Grant(BaseModel):
 
 def _refusal(failure: providers.AssistantError) -> Exception:
     code = {"not_found": status.HTTP_404_NOT_FOUND, "off": status.HTTP_409_CONFLICT}.get(failure.code, status.HTTP_502_BAD_GATEWAY)
-    if failure.code == "bad_grant":
+    if failure.code in ("bad_grant", "no_list"):
         code = status.HTTP_400_BAD_REQUEST
     return error(failure.code, failure.message, code)
 
@@ -86,6 +92,20 @@ async def test_setting(user: AdminUser, db: DbSession) -> dict:
     except providers.AssistantError as failure:
         raise _refusal(failure) from None
     return {"ok": True, "model": config["model"], "answer": turn.text[:80]}
+
+
+@router.post("/settings/assistant/models", summary="The models a service offers, with what is typed or stored")
+async def list_models(body: ModelsAsked, user: AdminUser, db: DbSession) -> list[dict]:
+    if body.provider == "openai" and not body.base_url.strip().startswith(("http://", "https://")):
+        raise error("bad_address", "The address starts with http:// or https://.")
+    key = settings.key_for(db, body.provider, body.base_url, body.key)
+    db.rollback()
+    if body.provider == "anthropic" and not key:
+        raise error("missing_key", "Claude needs its API key.")
+    try:
+        return await providers.list_models(body.provider, body.base_url, key)
+    except providers.AssistantError as failure:
+        raise _refusal(failure) from None
 
 
 @router.get("/assistant", summary="Whether the chat is there to be opened")
