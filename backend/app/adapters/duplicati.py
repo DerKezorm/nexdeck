@@ -21,6 +21,7 @@ The backup list carries no warnings, so neither do the cards.
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import UTC, datetime
 from typing import Any
@@ -57,6 +58,18 @@ def _backup_id(pair: Any) -> str:
     """The backup of a task, from the ``{"Item1": task, "Item2": backup}`` pairs of the server state."""
     return str(pair.get("Item2") or "") if isinstance(pair, dict) else ""
 
+
+
+_SPAN = re.compile(r"^(?:(\d+)\.)?(\d+):(\d{2}):(\d{2})(?:\.\d+)?$")
+
+
+def _span(raw: Any) -> float:
+    """A .NET TimeSpan as seconds: ``00:12:34.5678901``, ``1.02:03:04``; 0 when unreadable."""
+    found = _SPAN.match(str(raw or "").strip())
+    if not found:
+        return 0.0
+    days, hours, minutes, seconds = (int(part or 0) for part in found.groups())
+    return float(((days * 24 + hours) * 60 + minutes) * 60 + seconds)
 
 class DuplicatiAdapter(Adapter):
     kind = "duplicati"
@@ -172,6 +185,7 @@ class DuplicatiAdapter(Adapter):
                 "subtitle": " · ".join(part for part in (word, reason[:120]) if part),
                 "status": state_word,
                 "value": ago(good) if good else "",
+                **({"duration": _span(meta.get("LastBackupDuration"))} if _span(meta.get("LastBackupDuration")) else {}),
             }})
         return rows
 

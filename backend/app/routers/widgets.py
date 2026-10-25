@@ -737,6 +737,20 @@ def widget_history(widget_id: int, request: Request, user: OptionalUser, db: DbS
     return {name: history.series(db, widget_id, name, hours=hours) for name in names}
 
 
+@router.get("/widgets/{widget_id}/history/long", summary="A widget's metric history over days, with the lowest and highest")
+def widget_history_long(widget_id: int, request: Request, user: OptionalUser, db: DbSession, days: int = 30, metric: str = "") -> dict:
+    """``{metric: [[ts, avg, min, max], ...]}``: hours up to 30 days, days up to two years (roadmap M4)."""
+    widget, page = _widget(db, widget_id)
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    days = max(1, min(730, days))
+    if metric:
+        names = [metric]
+    else:
+        data = live.get(widget_id)
+        names = list(history.recorded(data)) if data else []
+    return {name: [list(point) for point in history.series_long(db, widget_id, name, days)] for name in names}
+
+
 @router.post("/history/prune", summary="Condense the metric history now")
 def prune_history(db: DbSession, user: AdminUser) -> dict:
     """⚠️ POST and administrators only, and both matter.

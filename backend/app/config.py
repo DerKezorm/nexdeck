@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     #: Raw samples are kept this many hours, minute averages this many hours.
     history_raw_hours: int = 1
     history_minute_hours: int = 24
+    #: Hour rows (roadmap M4): what a chart of 7 and 30 days and the forecasts read.
+    history_hour_days: int = 90
+    #: Day rows: a chart of a year, and one year held against the last.
+    history_day_days: int = 730
     #: Container log lines are kept this many hours.
     log_history_hours: int = 6
     #: Default interval for reachability checks, in seconds.

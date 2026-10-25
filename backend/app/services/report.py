@@ -212,12 +212,27 @@ def _known_kinds() -> set[str]:
     return {adapter.kind for adapter in all_adapters() if adapter.kind != "core"}
 
 
+#: How often the forecasts are worked out (roadmap M4); the first round comes a few minutes after the start.
+FORECAST_ROUND = 3600
+
+
 async def rounds() -> None:
-    """Once a minute: the daily report when it is due; every six hours: the versions."""
+    """Once a minute: the daily report when it is due; every hour: the forecasts; every six hours: the versions."""
     last_versions = 0.0
     loop = asyncio.get_running_loop()
+    # The first round once the cards have answered at least once.
+    last_forecast = loop.time() - FORECAST_ROUND + 180
     while True:
         await asyncio.sleep(60)
+        if loop.time() - last_forecast >= FORECAST_ROUND:
+            last_forecast = loop.time()
+            try:
+                from . import forecast
+
+                # ⚠️ In a thread: it reads a month of hour rows for every card that fills up.
+                await asyncio.to_thread(forecast.round_once)
+            except Exception:  # noqa: BLE001
+                logger.exception("Working out the forecasts failed.")
         try:
             await send_due()
         except Exception:  # noqa: BLE001

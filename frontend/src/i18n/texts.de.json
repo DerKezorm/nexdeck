@@ -1923,6 +1923,9 @@
     "The last hour": "Die letzte Stunde",
     "The last 6 hours": "Die letzten 6 Stunden",
     "The last 24 hours": "Die letzten 24 Stunden",
+    "The last 7 days": "Die letzten 7 Tage",
+    "The last 30 days": "Die letzten 30 Tage",
+    "The last year": "Das letzte Jahr",
     "A big icon looks best on a square tile, two by two; a row on a wide one, three by one.": "Ein großes Icon wirkt am besten auf einer quadratischen Kachel, zwei mal zwei; eine Zeile auf einer breiten, drei mal eins.",
     "A row: icon, name and bars": "Zeile: Icon, Name und Balken",
     "A big icon under the name": "Großes Icon unter dem Namen",
@@ -2036,6 +2039,7 @@
     "The latest lines of the chronicle from every board of this board's owner: cards that turned yellow, red or green, outages, maintenance, new versions and containers that restarted.": "Die neuesten Zeilen der Chronik von allen Boards des Besitzers dieses Boards: Karten, die gelb, rot oder wieder grün wurden, Ausfälle, Wartung, neue Versionen und neu gestartete Container.",
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Was in den letzten 24 Stunden passiert ist und was noch rot ist, von allen Boards des Besitzers dieses Boards.",
     "A backup is too old": "Eine Sicherung ist zu alt",
+    "Something is full or reaches its red line soon": "Etwas ist bald voll oder erreicht seine rote Linie",
     "The daily report": "Der Tagesbericht"
   },
   "labels": {

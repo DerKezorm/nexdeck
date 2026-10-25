@@ -554,31 +554,6 @@
       "at": "Heure du rapport quotidien",
       "goesAt": "Le rapport quotidien part à {{time}}.",
       "saved": "Le rapport quotidien part désormais à {{time}}."
-    },
-    "assistant": {
-      "title": "Demander à nexdeck",
-      "help": "Un chat à côté de la cloche qui répond à partir de tes cartes, de la chronique et des pannes, et te montre des boutons au lieu d'appuyer dessus. Réservé aux administrateurs.",
-      "provider": "Fournisseur",
-      "off": "Désactivé",
-      "anthropic": "Claude (Anthropic)",
-      "openai": "Format OpenAI (OpenAI, Ollama, LM Studio …)",
-      "address": "Adresse",
-      "addressHelp": "Jusqu'à /v1, par exemple http://ollama:11434/v1 ou https://api.openai.com/v1.",
-      "model": "Modèle",
-      "modelHelpClaude": "Sonnet suffit pour le chat et coûte une fraction d'Opus. Vide prend claude-sonnet-5-5.",
-      "modelHelpOpenai": "Charge la liste ou tape le nom. Le modèle doit savoir appeler des outils, par exemple qwen3 ou llama3.1.",
-      "key": "Clé d'API",
-      "keyHelpOpenai": "Ollama et LM Studio n'en ont pas besoin.",
-      "keyKept": "Une clé est enregistrée ; tapes-en une nouvelle pour la remplacer",
-      "removeKey": "Supprimer la clé enregistrée",
-      "leaves": "Les questions et ce que nexdeck consulte pour y répondre quittent la maison : états des cartes, lignes de la chronique et lignes de journal une fois autorisées. Jamais les clés ni les mots de passe de tes connexions.",
-      "stays": "Cette adresse est sur le réseau domestique : les questions et ce que nexdeck consulte restent à la maison.",
-      "unknown": "Une fois enregistré, ceci indique si l'adresse est sur le réseau domestique.",
-      "who": "Seuls les administrateurs voient le chat. Les conversations sont gardées 30 jours. L'assistant n'appuie jamais sur un bouton : il le montre avec ce qu'il toucherait, et c'est toi qui appuies.",
-      "test": "Enregistrer et tester",
-      "testCosts": "Le test pose une courte question et coûte quelques jetons.",
-      "testOk": "{{model}} répond.",
-      "loadModels": "Charger les modèles"
     }
   },
   "menu": {
@@ -1114,9 +1089,13 @@
     "flow": "Où va l'énergie",
     "topology": "Comment les éléments sont reliés",
     "problemsMore": "+{{count}} de plus",
-    "lastHours_one": "dernière heure",
-    "lastHours_other": "{{count}} dernières heures",
-    "released": "Publié"
+    "released": "Publié",
+    "range": "Période",
+    "rangeHours": "{{count}} h",
+    "rangeDays": "{{count}} j",
+    "rangeYear": "1 an",
+    "lowHigh": "{{low}} à {{high}}",
+    "collectingLong": "Collecte en cours. Les premières heures apparaissent après une heure, les premiers jours après minuit."
   },
   "player": {
     "title": "Musique",
@@ -2216,7 +2195,13 @@
       "card_added": "Carte {{name}} ajoutée à {{after}}",
       "card_removed": "Carte {{name}} retirée de {{after}}",
       "signed_in": "{{name}} s’est connecté",
-      "sign_in_refused": "Connexion refusée pour {{name}}"
+      "sign_in_refused": "Connexion refusée pour {{name}}",
+      "forecast_full_one": "{{name}} sera plein dans environ un jour",
+      "forecast_full_other": "{{name}} sera plein dans environ {{count}} jours",
+      "forecast_bad_one": "{{name}} atteint le rouge dans environ un jour",
+      "forecast_bad_other": "{{name}} atteint le rouge dans environ {{count}} jours",
+      "forecast_warn_one": "{{name}} atteint le jaune dans environ un jour",
+      "forecast_warn_other": "{{name}} atteint le jaune dans environ {{count}} jours"
     },
     "way": {
       "password": "avec le mot de passe",
@@ -2246,41 +2231,6 @@
   },
   "assistant": {
     "title": "Demander à nexdeck",
-    "new": "Nouvelle",
-    "history": "Historique",
-    "hello": "Que veux-tu savoir ?",
-    "helloHelp": "Je lis l'état de tes cartes, la chronique et les pannes. Je n'appuie jamais moi-même sur un bouton, je te le montre.",
-    "suggest": {
-      "wrong": "Y a-t-il un problème en ce moment ?",
-      "night": "Que s'est-il passé cette nuit ?",
-      "changed": "Qu'est-ce qui a changé aujourd'hui ?"
-    },
-    "placeholder": "Pose une question sur ton homelab …",
-    "question": "Question",
-    "send": "Envoyer",
-    "thinking": "Je regarde …",
-    "empty": "Aucune réponse n'est revenue.",
-    "refused": "Le fournisseur a refusé de répondre. Essaie de formuler autrement.",
-    "privacy": {
-      "anthropic": "Les questions et ce que nexdeck consulte vont chez Anthropic. Jamais les clés ni les mots de passe de tes connexions.",
-      "out": "Les questions et ce que nexdeck consulte quittent la maison. Jamais les clés ni les mots de passe de tes connexions.",
-      "home": "Reste sur le réseau domestique."
-    },
-    "notSet": "Aucun fournisseur configuré",
-    "notSetHelp": "Dans Système, Assistant, tu choisis Claude ou un service au format OpenAI, comme Ollama sur le réseau domestique. Il est désactivé par défaut et seuls les administrateurs le voient.",
-    "setUp": "Configurer dans Système",
-    "mayReadLog": "Puis-je lire les dernières lignes du journal de {{container}} ?",
-    "logLeaves": "Elles partent chez le fournisseur. Des lignes de journal peuvent contenir des adresses, des noms ou des jetons.",
-    "logStays": "Elles restent sur le réseau domestique.",
-    "allow": "Autoriser la lecture",
-    "deny": "Non",
-    "allowed": "Autorisé pour cette conversation.",
-    "denied": "Pas lu. Sans le journal, je vois seulement qu'il se passe quelque chose, pas pourquoi.",
-    "allowedFollowUp": "Oui, lis le journal de {{container}}.",
-    "reallySure": "Vraiment ? Impossible d'annuler depuis ici.",
-    "reallyDo": "Oui, {{label}}",
-    "ran": "Fait : {{message}} Le journal note qu'il a été pressé dans le chat.",
-    "cancelled": "Annulé, rien ne s'est passé.",
     "fact": {
       "up": "Docker : {{text}}",
       "streams_one": "{{count}} lecture s'interrompt : {{names}}",
@@ -2290,27 +2240,21 @@
       "devices_one": "Commute {{count}} appareil : {{names}}",
       "devices_other": "Commute {{count}} appareils : {{names}}",
       "lastRun": "Dernière exécution {{when}}"
-    },
-    "day": {
-      "today": "Aujourd'hui",
-      "yesterday": "Hier",
-      "week": "Cette semaine",
-      "older": "Plus tôt"
-    },
-    "noHistory": "Pas encore de conversation.",
-    "keep": "Les conversations sont gardées {{days}} jours après la dernière question, puis elles disparaissent.",
-    "forget": "Supprimer {{title}}",
-    "forgetAll": "Supprimer toutes les conversations",
-    "forgetAllBody": "Toutes tes conversations disparaissent et ne peuvent pas être récupérées.",
-    "error": {
-      "off": "L'assistant n'est plus configuré. Un administrateur peut l'activer dans Système.",
-      "auth": "Le fournisseur a refusé la clé. Vérifie-la dans Système, Assistant.",
-      "rate_limited": "Le fournisseur est occupé ou la limite du compte est atteinte. Réessaie dans une minute.",
-      "unreachable": "Le fournisseur est injoignable.",
-      "busy": "Je réponds encore à la dernière question.",
-      "model": "Le fournisseur ne connaît pas ce modèle ou cette adresse.",
-      "provider": "Le fournisseur a répondu par une erreur.",
-      "no_list": "Ce service ne liste aucun modèle ; tape le nom du modèle."
     }
+  },
+  "forecast": {
+    "full_one": "Plein dans environ un jour",
+    "full_other": "Plein dans environ {{count}} jours",
+    "fullRow_one": "{{row}} plein dans environ un jour",
+    "fullRow_other": "{{row}} plein dans environ {{count}} jours",
+    "bad_one": "Atteint le rouge dans environ un jour",
+    "bad_other": "Atteint le rouge dans environ {{count}} jours",
+    "warn_one": "Atteint le jaune dans environ un jour",
+    "warn_other": "Atteint le jaune dans environ {{count}} jours",
+    "slower": "{{row}} dure plus longtemps chaque semaine, +{{minutes}} min par semaine",
+    "around": "vers le {{date}}",
+    "reachesOn": "atteint vers le {{date}}",
+    "told": "signalé",
+    "basis": "Prolongé à partir des 30 derniers jours"
   }
 }

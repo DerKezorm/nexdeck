@@ -15,19 +15,18 @@ import { useNavigate } from 'react-router-dom'
 import { ApiError, del, get, post } from '../../api/client'
 import { tLabel } from '../../i18n/texts'
 import {
-  blocks,
-  dayGroup,
   factText,
   useAssistant,
   type Citation,
   type ConversationRow,
   type ConversationView,
-  type Part,
   type Permission,
   type Proposal,
   type Reply,
   type Turn,
 } from '../../lib/assistant'
+import { blocks, dayGroup, type Part } from '../../lib/assistantWords'
+import { useAssistantTexts } from '../../lib/assistantTexts'
 import { focusCard } from '../../lib/focusCard'
 import { Confirm } from '../ui'
 
@@ -140,7 +139,13 @@ function PermissionBox({ permission, outside, answered, onAnswer }: { permission
   )
 }
 
+/** The panel once its words are there; they come with it, not with the board. */
 export function AssistantPanel({ open }: { open: boolean }) {
+  const ready = useAssistantTexts()
+  return ready ? <Panel open={open} /> : null
+}
+
+function Panel({ open }: { open: boolean }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const state = useAssistant((s) => s.state)

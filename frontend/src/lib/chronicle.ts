@@ -43,6 +43,8 @@ export function clockOf(seconds: number, language: string): string {
 export function lineText(line: ChronicleLine, t: Translate, language: string): string {
   const values = { name: line.name, before: line.before, after: line.after, detail: line.detail, user: line.user ?? '' }
   if (line.kind === 'card') return t(`chronicle.kind.card_${['warn', 'bad'].includes(line.after) ? line.after : 'ok'}`, values)
+  // Roadmap M4: what will be full, or reach its red line, within two weeks.
+  if (line.kind === 'forecast') return t(`chronicle.kind.forecast_${['full', 'warn'].includes(line.before) ? line.before : 'bad'}`, { ...values, count: Number(line.after) || 1 })
   if (line.kind === 'maintenance') {
     const until = line.after ? new Date(line.after) : null
     const time = until && !Number.isNaN(until.getTime()) ? until.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) : ''

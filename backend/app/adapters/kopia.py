@@ -194,6 +194,7 @@ class KopiaAdapter(Adapter):
                 "subtitle": " · ".join(part for part in (word, reason[:120], place) if part),
                 "status": state,
                 "value": ago(good) if good else "",
+                **({"duration": good - _moment(last.get("startTime"))} if good and _moment(last.get("startTime")) and good > _moment(last.get("startTime")) else {}),
             }})
         return rows
 

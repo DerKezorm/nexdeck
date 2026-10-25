@@ -1671,10 +1671,46 @@ function useChartHistory(widgetId: number, hours: number | null): Record<string,
   return points
 }
 
+/** A chart of weeks, a month or a year (roadmap M4), fetched with its own chunk once somebody asks for one. */
+const LongChart = lazy(() => import('./LongChart').then((module) => ({ default: module.LongChart })))
+
+/** The ranges the buttons on a chart card offer, in hours; the first is the card's own when it is a day or less. */
+const LONG_RANGES = [168, 720, 8760]
+
+/**
+ * The range this browser last chose for a chart card. Each viewer picks their
+ * own; the card's setting is where it starts.
+ */
+function useChartRange(widgetId: number, configured: number | null): [number | null, (hours: number) => void] {
+  const key = `nexdeck.chart.${widgetId}`
+  const [chosen, setChosen] = useState<number | null>(() => {
+    try {
+      const stored = Number(localStorage.getItem(key))
+      return stored > 0 ? stored : null
+    } catch {
+      return null
+    }
+  })
+  const choose = (hours: number) => {
+    setChosen(hours)
+    try {
+      if (hours === configured) localStorage.removeItem(key)
+      else localStorage.setItem(key, String(hours))
+    } catch {
+      // A browser that keeps nothing still switches, until the next load.
+    }
+  }
+  return [configured === null ? null : chosen ?? configured, choose]
+}
+
 export function ChartCard({ data, series, widget }: RenderProps) {
   const { t } = useTranslation()
-  const hours = typeof data?.meta?.chart_hours === 'number' ? data.meta.chart_hours : null
+  const configured = typeof data?.meta?.chart_hours === 'number' ? data.meta.chart_hours : null
+  const [range, setRange] = useChartRange(widget?.id ?? 0, configured)
+  const long = range !== null && range > 24
+  const hours = long ? null : range
   const fetched = useChartHistory(widget?.id ?? 0, hours)
+  const ranges = configured === null ? [] : [configured <= 24 ? configured : 24, ...LONG_RANGES]
   const lines = Object.keys(data?.metrics ?? {})
     .map((metric) => ({ metric, points: fetched?.[metric] ?? series?.[metric] ?? [] }))
     .filter((line) => line.points.length > 1)
@@ -1695,13 +1731,43 @@ export function ChartCard({ data, series, widget }: RenderProps) {
       <div className="flex items-baseline gap-2">
         <span className="num text-2xl font-semibold"><Rolled value={current} unit={unit} /></span>
         <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>
-        {all.length > 1 && (
-          <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
-            {hours !== null && `${t('card.lastHours', { count: hours })} · `}
+        {!long && all.length > 1 && (
+          <span className="ml-auto num text-[10px] text-faint whitespace-nowrap hidden @min-[360px]:inline">
             {t('card.min')} {formatValue(low)} · {t('card.max')} {formatValue(high)}
           </span>
         )}
+        {ranges.length > 0 && (
+          // ⚠️ Inside a card that is a link: a press here must not open the service.
+          <span className={`${!long && all.length > 1 ? '' : 'ml-auto '}flex flex-none rounded-md bg-surface-hover p-0.5`} role="group" aria-label={t('card.range')}>
+            {ranges.map((one) => (
+              <button
+                key={one}
+                type="button"
+                className={`rounded px-1.5 py-px text-[10.5px] ${range === one ? 'bg-bg text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+                aria-pressed={range === one}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setRange(one)
+                }}
+              >
+                {one >= 8760 ? t('card.rangeYear') : one > 24 ? t('card.rangeDays', { count: Math.round(one / 24) }) : t('card.rangeHours', { count: one })}
+              </button>
+            ))}
+          </span>
+        )}
       </div>
+      {long ? (
+        <Suspense fallback={<div className="flex-1" />}>
+          <LongChart
+            widgetId={widget?.id ?? 0}
+            metrics={Object.keys(data?.metrics ?? {})}
+            days={Math.round((range ?? 168) / 24)}
+            colours={SLICE_COLOURS}
+            labelFor={labelFor}
+            forecast={data?.forecast}
+          />
+        </Suspense>
+      ) : (
       <div className="relative flex-1 min-h-[36px] mt-1" title={t('card.history')}>
         {lines.length ? (
           lines.map((line, index) => (
@@ -1720,7 +1786,9 @@ export function ChartCard({ data, series, widget }: RenderProps) {
           <Empty>{t('card.collecting')}</Empty>
         )}
       </div>
-      {lines.length > 1 && (
+      )}
+      {/* The long chart draws its own lines; this legend names the short ones. */}
+      {!long && lines.length > 1 && (
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
           {lines.map((line, index) => (
             <span key={line.metric} className="flex items-center gap-1.5 text-[10px] text-muted">

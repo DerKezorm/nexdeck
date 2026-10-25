@@ -1,3 +1,4 @@
+import type { Forecast } from './forecast'
 import type { Side } from './holding'
 
 /** Mirrors ``WidgetData`` on the server. */
@@ -93,6 +94,8 @@ export interface WidgetData {
   updated_at?: number
   /** Since when the card is yellow or red (epoch seconds), when that is known. */
   since?: number | null
+  /** When a volume is full, a number reaches its red, a backup gets slower (roadmap M4). */
+  forecast?: Forecast | null
 }
 
 export interface LayoutItem {

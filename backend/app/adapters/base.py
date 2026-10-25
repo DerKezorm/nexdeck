@@ -482,6 +482,8 @@ class WidgetData(BaseModel):
     updated_at: float = PydanticField(default_factory=time.time)
     #: Since when the card is yellow or red, when that is known (filled in by the collector).
     since: float | None = None
+    #: When a volume is full, a number reaches its red, a backup gets slower (roadmap M4, ``services/forecast.py``).
+    forecast: dict[str, Any] | None = None
 
 
 class Detected(BaseModel):
@@ -643,9 +645,11 @@ def gauge_fields(what: str, placeholder: str = "") -> tuple[Field, ...]:
     )
 
 
-#: The stretches a chart can show. nexdeck keeps a day of minute rows
-#: (``history_minute_hours``), so a day is the longest that has anything in it.
-CHART_HOURS = (("1", "The last hour"), ("6", "The last 6 hours"), ("24", "The last 24 hours"))
+#: The stretches a chart can show. A day comes from the minute rows, a week
+#: and a month from the hour rows, a year from the day rows (roadmap M4). This
+#: is where the chart starts; the buttons on the card switch it for the viewer.
+CHART_HOURS = (("1", "The last hour"), ("6", "The last 6 hours"), ("24", "The last 24 hours"),
+               ("168", "The last 7 days"), ("720", "The last 30 days"), ("8760", "The last year"))
 
 
 def chart_hours_field() -> Field:

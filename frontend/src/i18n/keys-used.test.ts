@@ -9,11 +9,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import oidcEn from '../vendor/nexoidc/oidc.en.json'
+import assistantEn from './assistant.en.json'
 import enOwn from './en.json'
 import { withOidc } from './index'
 
 // The sign-in words of the shared module are merged into English at start (`withOidc`), so they count as present.
 const en = withOidc(enOwn, oidcEn)
+// The chat's words come in a file of their own with the chat (`lib/assistantTexts.ts`), and count as English too.
+for (const [name, branch] of Object.entries(assistantEn)) {
+  ;(en as Record<string, unknown>)[name] = { ...((en as Record<string, Record<string, unknown>>)[name] ?? {}), ...branch }
+}
 
 function files(directory: string): string[] {
   return readdirSync(directory).flatMap((name: string) => {
