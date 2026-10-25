@@ -27,6 +27,7 @@ const NoticesPage = lazy(() => import('./pages/NoticesPage').then((m) => ({ defa
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ default: m.ChroniclePage })))
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
+const CardEditorPage = lazy(() => import('./pages/cardEditor/CardEditorPage').then((m) => ({ default: m.CardEditorPage })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 5000 } } })
 
@@ -120,6 +121,23 @@ export function App() {
               element={
                 <Guard>
                   <SettingsPage />
+                </Guard>
+              }
+            />
+            {/* The card editor is a page of its own, not one inside System (KARTEN-9). */}
+            <Route
+              path="/system/custom-cards/new"
+              element={
+                <Guard>
+                  <CardEditorPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system/custom-cards/:slug/edit"
+              element={
+                <Guard>
+                  <CardEditorPage />
                 </Guard>
               }
             />

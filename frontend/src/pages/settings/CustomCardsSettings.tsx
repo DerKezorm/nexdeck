@@ -2,34 +2,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, post, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
-import { Confirm, EmptyState, Field, Sheet } from '../../components/ui'
+import { Confirm, EmptyState } from '../../components/ui'
 import { pickText } from '../../lib/cardText'
-import {
-  STARTER,
-  problemsOf,
-  problemText,
-  sourceLine,
-  type CardList,
-  type CardProblem,
-  type CustomCardRow,
-} from '../../lib/customCards'
+import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
 
 type Tab = 'cards' | 'integrations' | 'shop' | 'submissions'
 
 /** From this many cards on, a search sits above the list (KARTEN-11 EC-5). */
 const SEARCH_FROM = 20
-
-/** What the sheet is editing: a new card (`slug` null) or a saved one. */
-interface Draft {
-  slug: string | null
-  text: string
-  /** The card was deleted by somebody else while this sheet had it open (KARTEN-11 EC-6). */
-  gone: boolean
-}
 
 /** The columns of the list on a wide screen; on a phone each row stacks. */
 const COLUMNS = 'gap-x-3 gap-y-1.5 items-center md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto_auto]'
@@ -39,8 +23,8 @@ const TABS: Tab[] = ['cards', 'integrations', 'shop', 'submissions']
 /**
  * System > Custom cards (KARTEN-11): every card of the installation, where it stands, and who may place it.
  *
- * The editor with its steps comes with a later version. Until then "Build a card" and "Edit" open the text of the
- * card, and the server's check names every problem by line and field.
+ * "Build a card" and "Edit" lead to the editor, a page of its own (KARTEN-9); a whole card in YAML is pasted there,
+ * in its YAML view (KARTEN-10 AC-6).
  */
 export function CustomCardsSettings() {
   const { t, i18n } = useTranslation()
@@ -48,10 +32,8 @@ export function CustomCardsSettings() {
   const cards = useQuery({ queryKey: ['custom-cards'], queryFn: () => get<CardList>('/cards') })
   const [tab, setTab] = useState<Tab>('cards')
   const [query, setQuery] = useState('')
-  const [draft, setDraft] = useState<Draft | null>(null)
-  const [problems, setProblems] = useState<CardProblem[]>([])
+  const navigate = useNavigate()
   const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
   const [removing, setRemoving] = useState<CustomCardRow | null>(null)
   const [openBoards, setOpenBoards] = useState<string | null>(null)
 
@@ -75,41 +57,8 @@ export function CustomCardsSettings() {
     else setError(failure instanceof ApiError ? failure.message : t('errors.network'))
   }
 
-  const openNew = () => {
-    setProblems([])
-    setError('')
-    setDraft({ slug: null, text: STARTER, gone: false })
-  }
-
-  const openEdit = async (card: CustomCardRow) => {
-    setProblems([])
-    setError('')
-    try {
-      const full = await get<CustomCardRow & { yaml: string }>(`/cards/${encodeURIComponent(card.slug)}`)
-      setDraft({ slug: card.slug, text: full.yaml, gone: false })
-    } catch (failure) {
-      fail(failure)
-    }
-  }
-
-  const save = async (asNew: boolean) => {
-    if (!draft) return
-    setBusy(true)
-    setError('')
-    setProblems([])
-    try {
-      if (draft.slug === null || asNew) await post('/cards', { yaml: draft.text })
-      else await put(`/cards/${encodeURIComponent(draft.slug)}`, { yaml: draft.text })
-      await changed()
-      setDraft(null)
-    } catch (failure) {
-      if (failure instanceof ApiError && failure.code === 'card_deleted') setDraft({ ...draft, gone: true })
-      else if (problemsOf(failure).length) setProblems(problemsOf(failure))
-      else fail(failure)
-    } finally {
-      setBusy(false)
-    }
-  }
+  const openNew = () => navigate('/system/custom-cards/new')
+  const openEdit = (card: CustomCardRow) => navigate(`/system/custom-cards/${encodeURIComponent(card.slug)}/edit`)
 
   const share = async (card: CustomCardRow, allowed: boolean) => {
     setError('')
@@ -269,7 +218,7 @@ export function CustomCardsSettings() {
                     </button>
                   </div>
                   <div className="flex items-center justify-end gap-0.5">
-                    <button className="btn btn-icon btn-flat" onClick={() => void openEdit(card)} aria-label={t('cards.editNamed', { name: nameOf(card) })} title={t('cards.edit')}>
+                    <button className="btn btn-icon btn-flat" onClick={() => openEdit(card)} aria-label={t('cards.editNamed', { name: nameOf(card) })} title={t('cards.edit')}>
                       <Pencil size={15} />
                     </button>
                     <button className="btn btn-icon btn-flat" onClick={() => void copy(card)} aria-label={t('cards.copyNamed', { name: nameOf(card) })} title={t('cards.copy')}>
@@ -286,68 +235,6 @@ export function CustomCardsSettings() {
           </>
         )}
       </div>
-
-      {draft && (
-        <Sheet
-          open
-          onClose={() => setDraft(null)}
-          wide
-          title={draft.slug === null ? t('cards.newTitle') : t('cards.editTitle', { name: draft.slug })}
-          footer={
-            <>
-              <button className="btn" onClick={() => setDraft(null)}>
-                {t('common.cancel')}
-              </button>
-              {draft.gone ? (
-                <button className="btn btn-accent" onClick={() => void save(true)} disabled={busy}>
-                  {t('cards.saveAsNew')}
-                </button>
-              ) : (
-                <button className="btn btn-accent" onClick={() => void save(false)} disabled={busy || !draft.text.trim()}>
-                  {t('common.save')}
-                </button>
-              )}
-            </>
-          }
-        >
-          {draft.gone && (
-            <div className="rounded-lg border border-warn/40 px-3 py-2 mb-3 text-sm" role="alert">
-              <strong>{t('cards.deletedMeanwhile')}</strong>
-              <p className="text-muted">{t('cards.deletedBody')}</p>
-            </div>
-          )}
-          {error && (
-            <p className="text-sm text-bad mb-3 rounded-lg border border-bad/40 px-3 py-2" role="alert">
-              {error}
-            </p>
-          )}
-          {problems.length > 0 && (
-            <div className="rounded-lg border border-bad/40 px-3 py-2 mb-3" role="alert">
-              <div className="text-sm font-medium text-bad mb-1">{t('cards.problems')}</div>
-              <ul className="text-[13px] space-y-1">
-                {problems.map((problem, index) => (
-                  <li key={index}>
-                    <span className="text-faint">{problem.line ? t('cards.line', { line: problem.line }) : problem.path}</span>
-                    {problem.line && problem.path ? <span className="text-faint"> · {problem.path}</span> : null}
-                    {' · '}
-                    <span>{problemText(t, problem)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <Field label={t('cards.yaml')} help={t('cards.yamlHelp')} htmlFor="card-yaml">
-            <textarea
-              id="card-yaml"
-              className="input font-mono text-[12.5px] leading-relaxed"
-              rows={22}
-              spellCheck={false}
-              value={draft.text}
-              onChange={(event) => setDraft({ ...draft, text: event.target.value })}
-            />
-          </Field>
-        </Sheet>
-      )}
 
       <Confirm
         open={removing !== null}

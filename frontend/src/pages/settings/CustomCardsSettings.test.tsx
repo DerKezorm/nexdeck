@@ -1,16 +1,16 @@
 /**
  * System > Custom cards (KARTEN-11): the list with its tabs and counts, who may place a card, where it stands, the way to
- * build, copy and delete one, and what the sheet says about a text with problems or a card deleted meanwhile.
+ * build, copy and delete one. Building and editing happen in the editor (`pages/cardEditor`), which has its own tests.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import i18next from 'i18next'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import deScreen from '../../i18n/de.json'
-import { STARTER, type CustomCardRow } from '../../lib/customCards'
+import type { CustomCardRow } from '../../lib/customCards'
 import { CustomCardsSettings } from './CustomCardsSettings'
 
 const SONARR = { kind: 'sonarr', label: 'Sonarr', icon: 'sonarr' }
@@ -56,12 +56,20 @@ function stub(cards: CustomCardRow[], answers: Record<string, { status: number; 
   )
 }
 
+/** Stands in for the editor's page: says where the list led. */
+function Where() {
+  return <p>Editor at {useLocation().pathname}</p>
+}
+
 function show() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
-        <CustomCardsSettings />
+      <MemoryRouter initialEntries={['/system/cards']}>
+        <Routes>
+          <Route path="/system/cards" element={<CustomCardsSettings />} />
+          <Route path="*" element={<Where />} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -211,89 +219,20 @@ describe('changing a card', () => {
   })
 })
 
-describe('the sheet', () => {
-  it('karten11: "Build a card" opens the text of a working card and saves it as a new one', async () => {
+describe('the way into the editor', () => {
+  it('karten9 decision 9: "Build a card" leads to the editor of a new card', async () => {
     stub([card()])
     show()
     await userEvent.click(await screen.findByRole('button', { name: /build a card/i }))
-    const text = await screen.findByRole('textbox', { name: /Card text/ })
-    expect(text).toHaveValue(STARTER)
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    await waitFor(() => expect(sent('POST', '/cards')).toHaveLength(1))
-    expect(sent('POST', '/cards')[0].body).toEqual({ yaml: STARTER })
+    expect(await screen.findByText('Editor at /system/custom-cards/new')).toBeInTheDocument()
   })
 
-  it('karten11: "Edit" opens the saved text and saves it over the same card', async () => {
+  it('karten9 decision 9: "Edit" leads to the editor of that card, and the old window for pasting is gone', async () => {
     stub([card()])
     show()
     await userEvent.click(await screen.findByRole('button', { name: 'Edit Queue' }))
-    const text = await screen.findByRole('textbox', { name: /Card text/ })
-    expect(text).toHaveValue('nexdeck-card: 1\nslug: queue-size\n')
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    await waitFor(() => expect(sent('PUT', '/cards/queue-size')).toHaveLength(1))
-  })
-
-  it('karten11: a text with problems stays open and lists every problem by line and field', async () => {
-    stub([card()], {
-      'POST /cards': {
-        status: 400,
-        body: {
-          detail: {
-            code: 'card_invalid',
-            message: 'The field version is required.',
-            problems: [
-              { code: 'card_missing_field', message: 'The field version is required.', path: 'version', line: 3, params: { field: 'version' } },
-              { code: 'card_something_new', message: 'A sentence only the server knows.', path: 'rules[0]', line: 9, params: {} },
-            ],
-          },
-        },
-      },
-    })
-    show()
-    await userEvent.click(await screen.findByRole('button', { name: /build a card/i }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
-    expect(await screen.findByText('The field version is required.')).toBeInTheDocument()
-    expect(screen.getByText('Line 3')).toBeInTheDocument()
-    expect(screen.getByText('A sentence only the server knows.')).toBeInTheDocument()
-    expect(screen.getByText('Line 9')).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: /Card text/ })).toBeInTheDocument()
-  })
-
-  it('karten11: the problems are worded by the table of nexdeck, in the language of the viewer, with the kinds of value written out', async () => {
-    i18next.addResourceBundle('de', 'translation', deScreen, true, true)
-    await i18next.changeLanguage('de')
-    stub([card()], {
-      'POST /cards': {
-        status: 400,
-        body: {
-          detail: {
-            code: 'card_invalid',
-            message: 'x',
-            problems: [
-              { code: 'card_wrong_type', message: 'Expected a whole number here.', path: 'size.w', line: 12, params: { expected: 'whole_number' } },
-              { code: 'card_slug_reserved', message: 'The short name library is kept for nexdeck itself.', path: 'slug', line: 2, params: { slug: 'library' } },
-            ],
-          },
-        },
-      },
-    })
-    show()
-    await userEvent.click(await screen.findByRole('button', { name: /karte bauen/i }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Speichern' }))
-    expect(await screen.findByText('Hier wird eine ganze Zahl erwartet.')).toBeInTheDocument()
-    expect(screen.getByText('Der Kurzname library ist für nexdeck selbst reserviert.')).toBeInTheDocument()
-    expect(screen.getByText('Zeile 12')).toBeInTheDocument()
-  })
-
-  it('karten11 ec6: saving a card deleted meanwhile says so and offers "Save as new"', async () => {
-    stub([card()], { 'PUT /cards/queue-size': { status: 404, body: { detail: { code: 'card_deleted', message: 'This card was deleted meanwhile.' } } } })
-    show()
-    await userEvent.click(await screen.findByRole('button', { name: 'Edit Queue' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
-    expect(await screen.findByText('Deleted meanwhile')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull()
-    await userEvent.click(screen.getByRole('button', { name: 'Save as new' }))
-    await waitFor(() => expect(sent('POST', '/cards')).toHaveLength(1))
-    expect(sent('POST', '/cards')[0].body).toEqual({ yaml: 'nexdeck-card: 1\nslug: queue-size\n' })
+    expect(await screen.findByText('Editor at /system/custom-cards/queue-size/edit')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Card text/ })).toBeNull()
+    expect(sent('GET', '/cards/queue-size')).toHaveLength(0)
   })
 })

@@ -1,0 +1,126 @@
+{
+  "editor": {
+    "titleNew": "New card",
+    "crumb": "Custom cards",
+    "back": "Back to Custom cards",
+    "view": {
+      "label": "View",
+      "editor": "Editor",
+      "yaml": "YAML"
+    },
+    "fixFirst": "Fix line {{line}} first",
+    "fixFirstNoLine": "Make the YAML valid first",
+    "save": "Save",
+    "saved": "Saved. Every board shows the new version.",
+    "lastValid": "Last valid version: {{time}}",
+    "notFound": "There is no card {{slug}}.",
+    "steps": {
+      "label": "Steps",
+      "source": "Source",
+      "look": "Look",
+      "rules": "Rules",
+      "texts": "Texts"
+    },
+    "stepNumber": "{{number}} {{name}}",
+    "lead": {
+      "source": "Where the card asks and what comes back.",
+      "look": "The form of the card and what goes where.",
+      "rules": "When the card, a value or a row changes colour.",
+      "texts": "Every text of the card, in each language you want to offer. Where a language is missing, the card shows the English text."
+    },
+    "preview": {
+      "title": "Preview",
+      "lastValid": "Preview of the last valid version"
+    },
+    "adjusted": {
+      "title": "Adjusted in YAML",
+      "body": "The editor has no field for these parts. They stay exactly as they are when you save.",
+      "line": "line {{line}}",
+      "open": "Open in YAML"
+    },
+    "restore": {
+      "title": "Unsaved changes in this browser",
+      "body": "Changes from {{time}} were not saved.",
+      "restore": "Restore unsaved changes",
+      "discard": "Discard them"
+    },
+    "leave": {
+      "title": "Leave without saving?",
+      "body": "Your changes to this card are not saved yet. They are lost when you leave.",
+      "leave": "Leave"
+    },
+    "conflict": {
+      "title": "Changed by {{by}} meanwhile",
+      "body": "{{by}} saved this card at {{time}} while you had it open. Overwrite that version with yours, or reload it and drop your changes.",
+      "overwrite": "Overwrite",
+      "reload": "Reload"
+    },
+    "session": {
+      "title": "Sign in again to save",
+      "body": "Your sign-in has run out. Sign in again in a new tab, then come back and save. Your changes stay in this tab.",
+      "signIn": "Sign in in a new tab",
+      "retry": "Save now"
+    },
+    "local": {
+      "yaml_empty": "The card is empty. Paste a whole card, or start from an example.",
+      "yaml_syntax": "This is not valid YAML: {{reason}}",
+      "yaml_tab": "YAML indents with spaces only, and this line is indented with a tab.",
+      "yaml_anchor": "A card is one document without anchors (&). Write the part out in full.",
+      "yaml_alias": "A card is one document without references (*). Write the part out in full.",
+      "yaml_documents": "A card is one document, and a second one begins here.",
+      "yaml_not_map": "A card is a map of keys and values that begins with nexdeck-card: 1."
+    },
+    "problems": {
+      "showLine": "Show line {{line}}",
+      "openLine": "Open line {{line}} in YAML"
+    },
+    "yaml": {
+      "label": "Card as YAML",
+      "pasted": "The pasted card is valid and shows in the editor now.",
+      "loading": "Loading the YAML view"
+    },
+    "new": {
+      "title": "Build a card",
+      "name": "Name",
+      "slug": "Short name",
+      "slugHelp": "Lower case letters, digits and hyphens. Boards know the card by it.",
+      "slugInvalid": "Use lower case letters, digits and hyphens, beginning with a letter or a digit.",
+      "nameRequired": "Give the card a name.",
+      "source": "Works with",
+      "sourceHelp": "The kind of integration the card reads through.",
+      "noConnection": "There is no {{kind}} integration yet. You can build the card now; it shows data once the integration is added.",
+      "noConnectionAtAll": "There is no integration yet that a custom card can read through. You can build the card now; it shows data once one is added.",
+      "addIntegration": "Add an integration",
+      "start": "Start from",
+      "starts": {
+        "blank": "Blank",
+        "value": "A number",
+        "stats": "Several numbers",
+        "list": "A list",
+        "posters": "A row of pictures"
+      },
+      "startFor": "Example for {{service}}",
+      "blankHelp": "One request, nothing picked yet",
+      "paste": "Paste a whole card (YAML)",
+      "create": "Create"
+    },
+    "texts": {
+      "languages": "Languages",
+      "english": "English",
+      "englishRequired": "English (required)",
+      "required": "English is required.",
+      "chooseLanguage": "Language",
+      "addLanguage": "Add language",
+      "removeLanguage": "Remove {{language}}",
+      "fallback": "Shows the English text",
+      "name": "Name",
+      "description": "Description",
+      "label": "Label",
+      "unit": "Unit",
+      "labelOf": "Label of value {{number}}",
+      "unitOf": "Unit of value {{number}}",
+      "rowUnit": "Unit of the value in each row",
+      "empty": "When there are no rows"
+    }
+  }
+}

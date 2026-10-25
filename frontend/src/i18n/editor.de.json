@@ -1,0 +1,126 @@
+{
+  "editor": {
+    "titleNew": "Neue Karte",
+    "crumb": "Eigene Karten",
+    "back": "Zurück zu Eigene Karten",
+    "view": {
+      "label": "Ansicht",
+      "editor": "Editor",
+      "yaml": "YAML"
+    },
+    "fixFirst": "Erst Zeile {{line}} berichtigen",
+    "fixFirstNoLine": "Erst das YAML berichtigen",
+    "save": "Speichern",
+    "saved": "Gespeichert. Jedes Board zeigt die neue Fassung.",
+    "lastValid": "Letzte gültige Fassung: {{time}}",
+    "notFound": "Eine Karte {{slug}} gibt es nicht.",
+    "steps": {
+      "label": "Schritte",
+      "source": "Quelle",
+      "look": "Aussehen",
+      "rules": "Regeln",
+      "texts": "Texte"
+    },
+    "stepNumber": "{{number}} {{name}}",
+    "lead": {
+      "source": "Wo die Karte fragt und was zurückkommt.",
+      "look": "Die Form der Karte und was wohin gehört.",
+      "rules": "Wann die Karte, ein Wert oder eine Zeile die Farbe wechselt.",
+      "texts": "Jeder Text der Karte in jeder Sprache, die du anbieten willst. Wo eine Sprache fehlt, zeigt die Karte den englischen Text."
+    },
+    "preview": {
+      "title": "Vorschau",
+      "lastValid": "Vorschau der letzten gültigen Fassung"
+    },
+    "adjusted": {
+      "title": "Im YAML angepasst",
+      "body": "Für diese Teile hat der Editor kein Feld. Beim Speichern bleiben sie genau so, wie sie sind.",
+      "line": "Zeile {{line}}",
+      "open": "Im YAML öffnen"
+    },
+    "restore": {
+      "title": "Ungespeicherte Änderungen in diesem Browser",
+      "body": "Änderungen von {{time}} wurden nicht gespeichert.",
+      "restore": "Ungespeicherte Änderungen wiederherstellen",
+      "discard": "Verwerfen"
+    },
+    "leave": {
+      "title": "Ohne Speichern verlassen?",
+      "body": "Deine Änderungen an dieser Karte sind noch nicht gespeichert. Wenn du gehst, sind sie weg.",
+      "leave": "Verlassen"
+    },
+    "conflict": {
+      "title": "Inzwischen von {{by}} geändert",
+      "body": "{{by}} hat diese Karte um {{time}} gespeichert, während du sie offen hattest. Überschreibe diese Fassung mit deiner, oder lade sie neu und verwirf deine Änderungen.",
+      "overwrite": "Überschreiben",
+      "reload": "Neu laden"
+    },
+    "session": {
+      "title": "Zum Speichern neu anmelden",
+      "body": "Deine Anmeldung ist abgelaufen. Melde dich in einem neuen Tab wieder an, komm dann zurück und speichere. Deine Änderungen bleiben in diesem Tab.",
+      "signIn": "In neuem Tab anmelden",
+      "retry": "Jetzt speichern"
+    },
+    "local": {
+      "yaml_empty": "Die Karte ist leer. Füge eine ganze Karte ein oder beginne mit einem Beispiel.",
+      "yaml_syntax": "Das ist kein gültiges YAML: {{reason}}",
+      "yaml_tab": "YAML rückt nur mit Leerzeichen ein, und diese Zeile ist mit einem Tabulator eingerückt.",
+      "yaml_anchor": "Eine Karte ist ein Dokument ohne Anker (&). Schreib den Teil ganz aus.",
+      "yaml_alias": "Eine Karte ist ein Dokument ohne Verweise (*). Schreib den Teil ganz aus.",
+      "yaml_documents": "Eine Karte ist ein Dokument, und hier beginnt ein zweites.",
+      "yaml_not_map": "Eine Karte besteht aus Schlüsseln und Werten und beginnt mit nexdeck-card: 1."
+    },
+    "problems": {
+      "showLine": "Zeile {{line}} zeigen",
+      "openLine": "Zeile {{line}} im YAML öffnen"
+    },
+    "yaml": {
+      "label": "Karte als YAML",
+      "pasted": "Die eingefügte Karte ist gültig und steht jetzt im Editor.",
+      "loading": "YAML-Ansicht wird geladen"
+    },
+    "new": {
+      "title": "Karte bauen",
+      "name": "Name",
+      "slug": "Kurzname",
+      "slugHelp": "Kleinbuchstaben, Ziffern und Bindestriche. Daran erkennen die Boards die Karte.",
+      "slugInvalid": "Nimm Kleinbuchstaben, Ziffern und Bindestriche, am Anfang ein Buchstabe oder eine Ziffer.",
+      "nameRequired": "Gib der Karte einen Namen.",
+      "source": "Arbeitet mit",
+      "sourceHelp": "Die Art von Anbindung, über die die Karte liest.",
+      "noConnection": "Es gibt noch keine Anbindung an {{kind}}. Du kannst die Karte jetzt bauen; Daten zeigt sie, sobald die Anbindung da ist.",
+      "noConnectionAtAll": "Es gibt noch keine Anbindung, über die eine eigene Karte lesen kann. Du kannst die Karte jetzt bauen; Daten zeigt sie, sobald eine da ist.",
+      "addIntegration": "Anbindung hinzufügen",
+      "start": "Beginnen mit",
+      "starts": {
+        "blank": "Leer",
+        "value": "Eine Zahl",
+        "stats": "Mehrere Zahlen",
+        "list": "Eine Liste",
+        "posters": "Eine Bilderreihe"
+      },
+      "startFor": "Beispiel für {{service}}",
+      "blankHelp": "Eine Anfrage, noch nichts ausgewählt",
+      "paste": "Ganze Karte einfügen (YAML)",
+      "create": "Anlegen"
+    },
+    "texts": {
+      "languages": "Sprachen",
+      "english": "Englisch",
+      "englishRequired": "Englisch (Pflicht)",
+      "required": "Der englische Text ist Pflicht.",
+      "chooseLanguage": "Sprache",
+      "addLanguage": "Sprache hinzufügen",
+      "removeLanguage": "{{language}} entfernen",
+      "fallback": "Zeigt den englischen Text",
+      "name": "Name",
+      "description": "Beschreibung",
+      "label": "Beschriftung",
+      "unit": "Einheit",
+      "labelOf": "Beschriftung von Wert {{number}}",
+      "unitOf": "Einheit von Wert {{number}}",
+      "rowUnit": "Einheit des Werts in jeder Zeile",
+      "empty": "Wenn es keine Zeilen gibt"
+    }
+  }
+}

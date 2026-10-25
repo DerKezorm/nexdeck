@@ -14,6 +14,11 @@ import diagnosisEn from './diagnosis.en.json'
 import diagnosisEs from './diagnosis.es.json'
 import diagnosisFr from './diagnosis.fr.json'
 import diagnosisIt from './diagnosis.it.json'
+import editorDe from './editor.de.json'
+import editorEn from './editor.en.json'
+import editorEs from './editor.es.json'
+import editorFr from './editor.fr.json'
+import editorIt from './editor.it.json'
 import inventoryDe from './inventory.de.json'
 import inventoryEn from './inventory.en.json'
 import inventoryEs from './inventory.es.json'
@@ -108,13 +113,15 @@ describe('sign-in words in every language', () => {
 })
 
 /**
- * The words of the chat (roadmap M3), the inventory (roadmap M5) and the diagnosis (roadmap M6) come in files of their own (`lib/lazyTexts.ts`);
+ * The words of the chat (roadmap M3), the inventory (roadmap M5) and the diagnosis (roadmap M6) come in files of their own (`lib/lazyTexts.ts`),
+ * and so do those of the card editor (`pages/cardEditor/editorTexts.ts`);
  * each language carries every key and placeholder of the English one.
  */
 const LAZY = {
   assistant: { en: assistantEn, de: assistantDe, es: assistantEs, fr: assistantFr, it: assistantIt },
   inventory: { en: inventoryEn, de: inventoryDe, es: inventoryEs, fr: inventoryFr, it: inventoryIt },
   diagnosis: { en: diagnosisEn, de: diagnosisDe, es: diagnosisEs, fr: diagnosisFr, it: diagnosisIt },
+  editor: { en: editorEn, de: editorDe, es: editorEs, fr: editorFr, it: editorIt },
 }
 for (const [part, bundles] of Object.entries(LAZY)) {
   describe(`the ${part} words in every language`, () => {

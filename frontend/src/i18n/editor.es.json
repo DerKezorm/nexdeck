@@ -1,0 +1,126 @@
+{
+  "editor": {
+    "titleNew": "Tarjeta nueva",
+    "crumb": "Tarjetas propias",
+    "back": "Volver a Tarjetas propias",
+    "view": {
+      "label": "Vista",
+      "editor": "Editor",
+      "yaml": "YAML"
+    },
+    "fixFirst": "Corrige primero la línea {{line}}",
+    "fixFirstNoLine": "Corrige primero el YAML",
+    "save": "Guardar",
+    "saved": "Guardada. Todos los tableros muestran la versión nueva.",
+    "lastValid": "Última versión válida: {{time}}",
+    "notFound": "No existe ninguna tarjeta {{slug}}.",
+    "steps": {
+      "label": "Pasos",
+      "source": "Origen",
+      "look": "Aspecto",
+      "rules": "Reglas",
+      "texts": "Textos"
+    },
+    "stepNumber": "{{number}} {{name}}",
+    "lead": {
+      "source": "Dónde pregunta la tarjeta y qué vuelve.",
+      "look": "La forma de la tarjeta y qué va en cada sitio.",
+      "rules": "Cuándo cambia de color la tarjeta, un valor o una fila.",
+      "texts": "Cada texto de la tarjeta, en cada idioma que quieras ofrecer. Donde falta un idioma, la tarjeta muestra el texto en inglés."
+    },
+    "preview": {
+      "title": "Vista previa",
+      "lastValid": "Vista previa de la última versión válida"
+    },
+    "adjusted": {
+      "title": "Ajustado en YAML",
+      "body": "El editor no tiene campo para estas partes. Al guardar se quedan exactamente como están.",
+      "line": "línea {{line}}",
+      "open": "Abrir en YAML"
+    },
+    "restore": {
+      "title": "Cambios sin guardar en este navegador",
+      "body": "Los cambios de {{time}} no se guardaron.",
+      "restore": "Recuperar los cambios sin guardar",
+      "discard": "Descartarlos"
+    },
+    "leave": {
+      "title": "¿Salir sin guardar?",
+      "body": "Tus cambios en esta tarjeta todavía no están guardados. Si sales, se pierden.",
+      "leave": "Salir"
+    },
+    "conflict": {
+      "title": "{{by}} la cambió mientras tanto",
+      "body": "{{by}} guardó esta tarjeta a las {{time}} mientras la tenías abierta. Sobrescribe esa versión con la tuya, o vuelve a cargarla y descarta tus cambios.",
+      "overwrite": "Sobrescribir",
+      "reload": "Volver a cargar"
+    },
+    "session": {
+      "title": "Vuelve a iniciar sesión para guardar",
+      "body": "Tu sesión ha caducado. Inicia sesión de nuevo en otra pestaña, vuelve aquí y guarda. Tus cambios siguen en esta pestaña.",
+      "signIn": "Iniciar sesión en otra pestaña",
+      "retry": "Guardar ahora"
+    },
+    "local": {
+      "yaml_empty": "La tarjeta está vacía. Pega una tarjeta completa o empieza con un ejemplo.",
+      "yaml_syntax": "Esto no es YAML válido: {{reason}}",
+      "yaml_tab": "YAML solo sangra con espacios, y esta línea está sangrada con un tabulador.",
+      "yaml_anchor": "Una tarjeta es un documento sin anclas (&). Escribe la parte completa.",
+      "yaml_alias": "Una tarjeta es un documento sin referencias (*). Escribe la parte completa.",
+      "yaml_documents": "Una tarjeta es un solo documento, y aquí empieza un segundo.",
+      "yaml_not_map": "Una tarjeta es un mapa de claves y valores que empieza con nexdeck-card: 1."
+    },
+    "problems": {
+      "showLine": "Mostrar la línea {{line}}",
+      "openLine": "Abrir la línea {{line}} en YAML"
+    },
+    "yaml": {
+      "label": "Tarjeta en YAML",
+      "pasted": "La tarjeta pegada es válida y ya se ve en el editor.",
+      "loading": "Cargando la vista YAML"
+    },
+    "new": {
+      "title": "Crear una tarjeta",
+      "name": "Nombre",
+      "slug": "Nombre corto",
+      "slugHelp": "Minúsculas, cifras y guiones. Los tableros reconocen la tarjeta por él.",
+      "slugInvalid": "Usa minúsculas, cifras y guiones, empezando por una letra o una cifra.",
+      "nameRequired": "Ponle un nombre a la tarjeta.",
+      "source": "Funciona con",
+      "sourceHelp": "El tipo de integración a través del que lee la tarjeta.",
+      "noConnection": "Todavía no hay ninguna integración de {{kind}}. Puedes crear la tarjeta ahora; mostrará datos en cuanto añadas la integración.",
+      "noConnectionAtAll": "Todavía no hay ninguna integración a través de la que pueda leer una tarjeta propia. Puedes crear la tarjeta ahora; mostrará datos en cuanto haya una.",
+      "addIntegration": "Añadir una integración",
+      "start": "Empezar con",
+      "starts": {
+        "blank": "En blanco",
+        "value": "Un número",
+        "stats": "Varios números",
+        "list": "Una lista",
+        "posters": "Una fila de imágenes"
+      },
+      "startFor": "Ejemplo para {{service}}",
+      "blankHelp": "Una petición, nada elegido todavía",
+      "paste": "Pegar una tarjeta completa (YAML)",
+      "create": "Crear"
+    },
+    "texts": {
+      "languages": "Idiomas",
+      "english": "Inglés",
+      "englishRequired": "Inglés (obligatorio)",
+      "required": "El texto en inglés es obligatorio.",
+      "chooseLanguage": "Idioma",
+      "addLanguage": "Añadir idioma",
+      "removeLanguage": "Quitar {{language}}",
+      "fallback": "Muestra el texto en inglés",
+      "name": "Nombre",
+      "description": "Descripción",
+      "label": "Etiqueta",
+      "unit": "Unidad",
+      "labelOf": "Etiqueta del valor {{number}}",
+      "unitOf": "Unidad del valor {{number}}",
+      "rowUnit": "Unidad del valor de cada fila",
+      "empty": "Cuando no hay filas"
+    }
+  }
+}

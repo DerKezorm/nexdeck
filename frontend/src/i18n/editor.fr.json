@@ -1,0 +1,126 @@
+{
+  "editor": {
+    "titleNew": "Nouvelle carte",
+    "crumb": "Cartes personnalisées",
+    "back": "Retour aux cartes personnalisées",
+    "view": {
+      "label": "Vue",
+      "editor": "Éditeur",
+      "yaml": "YAML"
+    },
+    "fixFirst": "Corrigez d'abord la ligne {{line}}",
+    "fixFirstNoLine": "Corrigez d'abord le YAML",
+    "save": "Enregistrer",
+    "saved": "Enregistrée. Chaque tableau affiche la nouvelle version.",
+    "lastValid": "Dernière version valide : {{time}}",
+    "notFound": "Il n'existe pas de carte {{slug}}.",
+    "steps": {
+      "label": "Étapes",
+      "source": "Source",
+      "look": "Apparence",
+      "rules": "Règles",
+      "texts": "Textes"
+    },
+    "stepNumber": "{{number}} {{name}}",
+    "lead": {
+      "source": "Où la carte interroge et ce qui revient.",
+      "look": "La forme de la carte et ce qui va où.",
+      "rules": "Quand la carte, une valeur ou une ligne change de couleur.",
+      "texts": "Chaque texte de la carte, dans chaque langue que vous voulez proposer. Là où une langue manque, la carte affiche le texte anglais."
+    },
+    "preview": {
+      "title": "Aperçu",
+      "lastValid": "Aperçu de la dernière version valide"
+    },
+    "adjusted": {
+      "title": "Ajusté dans le YAML",
+      "body": "L'éditeur n'a pas de champ pour ces parties. Elles restent telles quelles à l'enregistrement.",
+      "line": "ligne {{line}}",
+      "open": "Ouvrir dans le YAML"
+    },
+    "restore": {
+      "title": "Modifications non enregistrées dans ce navigateur",
+      "body": "Les modifications de {{time}} n'ont pas été enregistrées.",
+      "restore": "Restaurer les modifications non enregistrées",
+      "discard": "Les abandonner"
+    },
+    "leave": {
+      "title": "Quitter sans enregistrer ?",
+      "body": "Vos modifications de cette carte ne sont pas encore enregistrées. Elles sont perdues si vous quittez.",
+      "leave": "Quitter"
+    },
+    "conflict": {
+      "title": "Modifiée entre-temps par {{by}}",
+      "body": "{{by}} a enregistré cette carte à {{time}} pendant que vous l'aviez ouverte. Remplacez cette version par la vôtre, ou rechargez-la et abandonnez vos modifications.",
+      "overwrite": "Remplacer",
+      "reload": "Recharger"
+    },
+    "session": {
+      "title": "Reconnectez-vous pour enregistrer",
+      "body": "Votre connexion a expiré. Reconnectez-vous dans un nouvel onglet, puis revenez ici et enregistrez. Vos modifications restent dans cet onglet.",
+      "signIn": "Se connecter dans un nouvel onglet",
+      "retry": "Enregistrer maintenant"
+    },
+    "local": {
+      "yaml_empty": "La carte est vide. Collez une carte entière ou partez d'un exemple.",
+      "yaml_syntax": "Ce n'est pas du YAML valide : {{reason}}",
+      "yaml_tab": "YAML n'indente qu'avec des espaces, et cette ligne est indentée avec une tabulation.",
+      "yaml_anchor": "Une carte est un document sans ancres (&). Écrivez la partie en entier.",
+      "yaml_alias": "Une carte est un document sans références (*). Écrivez la partie en entier.",
+      "yaml_documents": "Une carte est un seul document, et un deuxième commence ici.",
+      "yaml_not_map": "Une carte est une table de clés et de valeurs qui commence par nexdeck-card: 1."
+    },
+    "problems": {
+      "showLine": "Afficher la ligne {{line}}",
+      "openLine": "Ouvrir la ligne {{line}} dans le YAML"
+    },
+    "yaml": {
+      "label": "Carte en YAML",
+      "pasted": "La carte collée est valide et s'affiche maintenant dans l'éditeur.",
+      "loading": "Chargement de la vue YAML"
+    },
+    "new": {
+      "title": "Créer une carte",
+      "name": "Nom",
+      "slug": "Nom court",
+      "slugHelp": "Minuscules, chiffres et traits d'union. Les tableaux reconnaissent la carte à ce nom.",
+      "slugInvalid": "Utilisez des minuscules, des chiffres et des traits d'union, en commençant par une lettre ou un chiffre.",
+      "nameRequired": "Donnez un nom à la carte.",
+      "source": "Fonctionne avec",
+      "sourceHelp": "Le type d'intégration par lequel la carte lit.",
+      "noConnection": "Il n'y a pas encore d'intégration {{kind}}. Vous pouvez créer la carte maintenant ; elle affichera des données dès que l'intégration sera ajoutée.",
+      "noConnectionAtAll": "Il n'y a pas encore d'intégration par laquelle une carte personnalisée puisse lire. Vous pouvez créer la carte maintenant ; elle affichera des données dès qu'il y en aura une.",
+      "addIntegration": "Ajouter une intégration",
+      "start": "Partir de",
+      "starts": {
+        "blank": "Vide",
+        "value": "Un nombre",
+        "stats": "Plusieurs nombres",
+        "list": "Une liste",
+        "posters": "Une rangée d'images"
+      },
+      "startFor": "Exemple pour {{service}}",
+      "blankHelp": "Une requête, rien de choisi encore",
+      "paste": "Coller une carte entière (YAML)",
+      "create": "Créer"
+    },
+    "texts": {
+      "languages": "Langues",
+      "english": "Anglais",
+      "englishRequired": "Anglais (obligatoire)",
+      "required": "Le texte anglais est obligatoire.",
+      "chooseLanguage": "Langue",
+      "addLanguage": "Ajouter une langue",
+      "removeLanguage": "Retirer {{language}}",
+      "fallback": "Affiche le texte anglais",
+      "name": "Nom",
+      "description": "Description",
+      "label": "Libellé",
+      "unit": "Unité",
+      "labelOf": "Libellé de la valeur {{number}}",
+      "unitOf": "Unité de la valeur {{number}}",
+      "rowUnit": "Unité de la valeur de chaque ligne",
+      "empty": "Quand il n'y a aucune ligne"
+    }
+  }
+}

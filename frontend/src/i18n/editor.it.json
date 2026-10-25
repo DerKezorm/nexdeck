@@ -1,0 +1,126 @@
+{
+  "editor": {
+    "titleNew": "Nuova scheda",
+    "crumb": "Schede personali",
+    "back": "Torna a Schede personali",
+    "view": {
+      "label": "Vista",
+      "editor": "Editor",
+      "yaml": "YAML"
+    },
+    "fixFirst": "Correggi prima la riga {{line}}",
+    "fixFirstNoLine": "Correggi prima lo YAML",
+    "save": "Salva",
+    "saved": "Salvata. Ogni bacheca mostra la nuova versione.",
+    "lastValid": "Ultima versione valida: {{time}}",
+    "notFound": "Non esiste una scheda {{slug}}.",
+    "steps": {
+      "label": "Passi",
+      "source": "Origine",
+      "look": "Aspetto",
+      "rules": "Regole",
+      "texts": "Testi"
+    },
+    "stepNumber": "{{number}} {{name}}",
+    "lead": {
+      "source": "Dove chiede la scheda e cosa torna indietro.",
+      "look": "La forma della scheda e cosa va dove.",
+      "rules": "Quando la scheda, un valore o una riga cambia colore.",
+      "texts": "Ogni testo della scheda, in ogni lingua che vuoi offrire. Dove manca una lingua, la scheda mostra il testo inglese."
+    },
+    "preview": {
+      "title": "Anteprima",
+      "lastValid": "Anteprima dell'ultima versione valida"
+    },
+    "adjusted": {
+      "title": "Modificato nello YAML",
+      "body": "L'editor non ha un campo per queste parti. Al salvataggio restano esattamente come sono.",
+      "line": "riga {{line}}",
+      "open": "Apri nello YAML"
+    },
+    "restore": {
+      "title": "Modifiche non salvate in questo browser",
+      "body": "Le modifiche delle {{time}} non sono state salvate.",
+      "restore": "Ripristina le modifiche non salvate",
+      "discard": "Scartale"
+    },
+    "leave": {
+      "title": "Uscire senza salvare?",
+      "body": "Le tue modifiche a questa scheda non sono ancora salvate. Se esci, vanno perse.",
+      "leave": "Esci"
+    },
+    "conflict": {
+      "title": "Modificata nel frattempo da {{by}}",
+      "body": "{{by}} ha salvato questa scheda alle {{time}} mentre l'avevi aperta. Sovrascrivi quella versione con la tua, oppure ricaricala e scarta le tue modifiche.",
+      "overwrite": "Sovrascrivi",
+      "reload": "Ricarica"
+    },
+    "session": {
+      "title": "Accedi di nuovo per salvare",
+      "body": "Il tuo accesso è scaduto. Accedi di nuovo in una nuova scheda del browser, poi torna qui e salva. Le tue modifiche restano qui.",
+      "signIn": "Accedi in una nuova scheda del browser",
+      "retry": "Salva ora"
+    },
+    "local": {
+      "yaml_empty": "La scheda è vuota. Incolla una scheda intera o parti da un esempio.",
+      "yaml_syntax": "Questo non è YAML valido: {{reason}}",
+      "yaml_tab": "YAML rientra solo con spazi, e questa riga è rientrata con una tabulazione.",
+      "yaml_anchor": "Una scheda è un documento senza ancore (&). Scrivi la parte per intero.",
+      "yaml_alias": "Una scheda è un documento senza riferimenti (*). Scrivi la parte per intero.",
+      "yaml_documents": "Una scheda è un solo documento, e qui ne inizia un secondo.",
+      "yaml_not_map": "Una scheda è una mappa di chiavi e valori che inizia con nexdeck-card: 1."
+    },
+    "problems": {
+      "showLine": "Mostra la riga {{line}}",
+      "openLine": "Apri la riga {{line}} nello YAML"
+    },
+    "yaml": {
+      "label": "Scheda come YAML",
+      "pasted": "La scheda incollata è valida e ora si vede nell'editor.",
+      "loading": "Caricamento della vista YAML"
+    },
+    "new": {
+      "title": "Crea una scheda",
+      "name": "Nome",
+      "slug": "Nome breve",
+      "slugHelp": "Lettere minuscole, cifre e trattini. Le bacheche riconoscono la scheda da questo.",
+      "slugInvalid": "Usa lettere minuscole, cifre e trattini, iniziando con una lettera o una cifra.",
+      "nameRequired": "Dai un nome alla scheda.",
+      "source": "Funziona con",
+      "sourceHelp": "Il tipo di integrazione attraverso cui legge la scheda.",
+      "noConnection": "Non c'è ancora un'integrazione {{kind}}. Puoi creare la scheda adesso; mostrerà dati appena aggiungi l'integrazione.",
+      "noConnectionAtAll": "Non c'è ancora un'integrazione attraverso cui una scheda personale possa leggere. Puoi creare la scheda adesso; mostrerà dati appena ce ne sarà una.",
+      "addIntegration": "Aggiungi un'integrazione",
+      "start": "Parti da",
+      "starts": {
+        "blank": "Vuota",
+        "value": "Un numero",
+        "stats": "Più numeri",
+        "list": "Un elenco",
+        "posters": "Una fila di immagini"
+      },
+      "startFor": "Esempio per {{service}}",
+      "blankHelp": "Una richiesta, ancora niente scelto",
+      "paste": "Incolla una scheda intera (YAML)",
+      "create": "Crea"
+    },
+    "texts": {
+      "languages": "Lingue",
+      "english": "Inglese",
+      "englishRequired": "Inglese (obbligatorio)",
+      "required": "Il testo inglese è obbligatorio.",
+      "chooseLanguage": "Lingua",
+      "addLanguage": "Aggiungi lingua",
+      "removeLanguage": "Rimuovi {{language}}",
+      "fallback": "Mostra il testo inglese",
+      "name": "Nome",
+      "description": "Descrizione",
+      "label": "Etichetta",
+      "unit": "Unità",
+      "labelOf": "Etichetta del valore {{number}}",
+      "unitOf": "Unità del valore {{number}}",
+      "rowUnit": "Unità del valore in ogni riga",
+      "empty": "Quando non ci sono righe"
+    }
+  }
+}

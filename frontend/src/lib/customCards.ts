@@ -92,21 +92,3 @@ export function problemText(t: TFunction, problem: CardProblem): string {
 export function sourceLine(card: { requires: CardSource[] }): string {
   return card.requires.map((one) => one.label).join(', ')
 }
-
-/** The text a new card starts from. It is a working card, so Save succeeds as it stands. */
-export const STARTER = `# A custom card asks a connection something and shows what comes back.
-nexdeck-card: 1
-slug: my-card
-name: My card
-version: "1.0.0"
-requires: [sonarr]
-requests:
-  - id: queue
-    path: /api/v3/queue
-form: value
-value:
-  path: totalRecords
-  label: Waiting
-demo:
-  queue: {totalRecords: 4}
-`
