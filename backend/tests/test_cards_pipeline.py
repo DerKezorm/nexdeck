@@ -385,3 +385,33 @@ def test_karten5_a_row_has_a_link_a_picture_a_subtitle_and_only_safe_addresses()
 def test_karten5_the_card_uses_the_rows_when_the_answer_has_no_list() -> None:
     result = show(rows_of(), {"records": "oops"})
     assert result.rows == [] and result.total == 0 and result.missing == ["records"]
+
+
+def test_karten5_ec5_ec9_the_instance_zone_is_the_zone_and_not_the_offset_of_today(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without ``tz`` the zone comes from ``TZ``: a January time and a July time each get their own offset."""
+    monkeypatch.setenv("TZ", "Europe/Berlin")
+    definition = define("form: value\nvalue: {path: v, format: datetime}")
+    texts = {
+        raw: pipeline.run(definition, {"data": {"v": raw}}).value.text  # type: ignore[union-attr]
+        for raw in ("2026-01-15T12:00:00Z", "2026-07-15T12:00:00Z", "2026-03-29T00:30:00Z", "2026-03-29T01:30:00Z")
+    }
+    assert texts == {
+        "2026-01-15T12:00:00Z": "2026-01-15 13:00",
+        "2026-07-15T12:00:00Z": "2026-07-15 14:00",
+        "2026-03-29T00:30:00Z": "2026-03-29 01:30",
+        "2026-03-29T01:30:00Z": "2026-03-29 03:30",
+    }
+    naive = pipeline.run(definition, {"data": {"v": "2026-07-15T12:00:00"}}).value
+    assert naive is not None and naive.value == "2026-07-15T10:00:00Z"
+
+
+def test_karten5_ec5_a_system_without_tz_is_asked_for_every_moment_and_a_wrong_tz_does_not_crash(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TZ", "Not/AZone")
+    # Winter at UTC+1, summer at UTC+2: what the machine would answer for those moments.
+    monkeypatch.setattr(pipeline, "_system_offset", lambda stamp: 7200 if 1774400000 <= stamp <= 1792000000 else 3600)
+    zone = pipeline.instance_zone()
+    definition = define("form: value\nvalue: {path: v, format: datetime}")
+    summer = pipeline.run(definition, {"data": {"v": "2026-07-15T12:00:00Z"}}, tz=zone).value
+    winter = pipeline.run(definition, {"data": {"v": "2026-01-15T12:00:00Z"}}, tz=zone).value
+    assert summer is not None and summer.text == "2026-07-15 14:00"
+    assert winter is not None and winter.text == "2026-01-15 13:00"

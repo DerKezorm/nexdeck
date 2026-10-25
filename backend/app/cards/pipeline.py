@@ -11,12 +11,15 @@ mapping a ``Result`` onto what a card draws belongs to whoever draws the form.
 
 from __future__ import annotations
 
+import calendar
+import os
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime, tzinfo
+from datetime import UTC, datetime, timedelta, tzinfo
 from functools import lru_cache
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
@@ -152,7 +155,58 @@ def expression_problems(definition: Any) -> list[tuple[tuple[str | int, ...], st
 # -- running ----------------------------------------------------------------------------
 
 
+class _SystemZone(tzinfo):
+    """The clock of the machine, asked for every moment: July and January each get their own offset.
+
+    Only for a system that names no zone in ``TZ``. Asking once for today's offset would make every other season wrong.
+    """
+
+    def utcoffset(self, dt: datetime | None) -> timedelta:
+        if dt is None:
+            return timedelta(0)
+        try:
+            return timedelta(seconds=_system_offset(time.mktime(dt.replace(tzinfo=None).timetuple())))
+        except (OverflowError, OSError, ValueError):
+            return timedelta(0)
+
+    def fromutc(self, dt: datetime) -> datetime:
+        try:
+            seconds = _system_offset(calendar.timegm(dt.replace(tzinfo=None).utctimetuple()))
+        except (OverflowError, OSError, ValueError):
+            seconds = 0
+        return (dt.replace(tzinfo=None) + timedelta(seconds=seconds)).replace(tzinfo=self)
+
+    def dst(self, dt: datetime | None) -> timedelta:
+        return timedelta(0)
+
+    def tzname(self, dt: datetime | None) -> str | None:
+        return None
+
+
+def _system_offset(timestamp: float) -> int:
+    return time.localtime(timestamp).tm_gmtoff
+
+
+def instance_zone() -> tzinfo:
+    """The time zone of the instance: ``TZ`` when it names one, else the clock of the machine, else UTC (KARTEN-5 EC-5, EC-9).
+
+    Not the offset of today: a card that shows a July time in January with the January offset is an hour wrong.
+    """
+    named = os.environ.get("TZ", "").strip().lstrip(":")
+    if named:
+        try:
+            return ZoneInfo(named)
+        except (ValueError, OSError, KeyError):
+            pass
+    try:
+        _system_offset(0)
+    except (OverflowError, OSError, ValueError, AttributeError):
+        return UTC
+    return _SystemZone()
+
+
 class _Budget:
+
     def __init__(self, milliseconds: float) -> None:
         self.start = clock()
         self.limit = milliseconds
@@ -174,7 +228,7 @@ class _Run:
         self.answers = answers
         # A card that reads one request may leave the request's name out of its paths (``records[0]``, not ``queue.records[0]``).
         self.single = next(iter(answers)) if len(answers) == 1 else None
-        self.tz = tz or datetime.now().astimezone().tzinfo or UTC
+        self.tz = tz or instance_zone()
         self.now = now if now is not None else time.time()
         self.budget = budget
         self.missing: dict[str, None] = {}
