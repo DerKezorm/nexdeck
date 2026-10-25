@@ -58,6 +58,13 @@ describe("what's new entries", () => {
     expect(latestVersion()).toBe(shipping)
   })
 
+  it('the board knows the version it compares with, without the release notes', () => {
+    // BoardPage loads the dialog only when the account has not seen this version;
+    // a number that is not the shipping one would hide the dialog for good.
+    const shipping = JSON.parse(readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8')).version
+    expect(__NEXDECK_VERSION__).toBe(shipping)
+  })
+
   it('sections carry title and body', () => {
     for (const entry of Object.values(en.entries)) {
       expect(entry.sections.length).toBeGreaterThan(0)
