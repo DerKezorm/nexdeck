@@ -392,7 +392,8 @@ export const PLAIN_PATH = /^(@|[A-Za-z_][\w-]*|"[^"]+")(\.([A-Za-z_][\w-]*|"[^"]
 const RULE: Shown = { keys: { value: 'any', formula: 'any', op: 'any', than: 'any', then: 'any' } }
 const ROWS: Shown = {
   keys: {
-    select: { test: (value) => typeof value === 'string' && PLAIN_PATH.test(value.trim()) },
+    // The Look step takes a list picked from the probe and a typed expression alike (KARTEN-9 AC-7).
+    select: 'any',
     filter: { items: { keys: { field: 'any', op: 'any', value: 'any' } } },
     sort: { keys: { field: 'any', desc: 'any' } },
     limit: 'any',

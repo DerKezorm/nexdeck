@@ -68,6 +68,8 @@
       "redirected": "Redirected, not followed. The service answered with a redirect, which a custom card does not follow.",
       "answer_too_large": "Answer too large. The service answered with more than a custom card reads.",
       "bad_param": "A value of the answer is not a plain name; the request was not made.",
+      "bad_path": "The path must start with a single / and name no host; it is always below the address of the connection.",
+      "demo_too_large": "The example answers are too large for a card even with every list cut to one entry.",
       "connection_missing": "Connection missing. The connection of this card was deleted."
     },
     "card": {

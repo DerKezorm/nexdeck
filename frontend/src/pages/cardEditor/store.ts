@@ -12,6 +12,7 @@ import { create } from 'zustand'
 
 import { changeCard, deleteAt, parseCard, pathText, readAt, setAt, type CardDoc, type CardPath, type LocalProblem } from '../../lib/cardDocument'
 import type { CardProblem } from '../../lib/customCards'
+import type { ProbeState } from './probe'
 
 export type EditorView = 'editor' | 'yaml'
 /** The steps of this version; Buttons (KARTEN-8) comes with a later one. */
@@ -52,6 +53,13 @@ export interface CardEditorState {
   focusLine: number | null
   /** The clock; tests set their own. */
   now: () => number
+  /**
+   * The connection the Source step probes with and the preview reads from (decision 4): never part of the card,
+   * which names kinds only. `null` until somebody picks one; the first fitting one is used until then.
+   */
+  integrationId: number | null
+  /** The probes of this visit by request id. ⚠️ The service's own data: kept in memory only, never in a draft (EC-4). */
+  probes: Record<string, ProbeState>
 
   /** Start over with a card: a saved one (`saved`), a new one, or a draft brought back. */
   open: (input: { slug: string | null; text: string; base: string | null; saved: string | null; view?: EditorView }) => void
@@ -72,6 +80,8 @@ export interface CardEditorState {
   /** Switch to the YAML view at this line ("Open in YAML", a problem clicked). */
   goToLine: (line: number) => void
   lineShown: () => void
+  setIntegration: (id: number | null) => void
+  setProbe: (requestId: string, probe: ProbeState | null) => void
 }
 
 function reading(text: string, previous: CardEditorState['lastValid'], at: number) {
@@ -113,6 +123,8 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     focusLine: null,
     flusher: null,
     now: () => Date.now(),
+    integrationId: null,
+    probes: {},
 
     open: ({ slug, text, base, saved, view }) => {
       const read = reading(text, null, get().now())
@@ -130,6 +142,8 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         serverProblems: [],
         serverFor: null,
         focusLine: null,
+        integrationId: null,
+        probes: {},
       })
     },
 
@@ -190,6 +204,15 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
 
     goToLine: (line) => set({ view: 'yaml', focusLine: line, typing: null }),
     lineShown: () => set({ focusLine: null }),
+
+    setIntegration: (id) => set({ integrationId: id, probes: {} }),
+    setProbe: (requestId, probe) =>
+      set((state) => {
+        const probes = { ...state.probes }
+        if (probe) probes[requestId] = probe
+        else delete probes[requestId]
+        return { probes }
+      }),
   }
 })
 

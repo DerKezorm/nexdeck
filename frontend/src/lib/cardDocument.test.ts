@@ -196,9 +196,9 @@ describe('karten9 AC-12: what the editor leaves to the YAML view', () => {
     expect(parts).toEqual([{ path: ['buttons'], line: 26 }])
   })
 
-  it('names a row filter written as an expression, which the Look step cannot pick from the tree', () => {
+  it('karten9 AC-7: takes rows written as an expression, which the Look step shows in its field', () => {
     const text = 'nexdeck-card: 1\nform: list\nrows:\n  select: "@[?hasFile == `false`] | sort_by(@, &airDateUtc)"\nitem: {title: series.title}\n'
-    expect(adjustedInYaml(card(text))).toEqual([{ path: ['rows', 'select'], line: 4 }])
+    expect(adjustedInYaml(card(text))).toEqual([])
     expect(adjustedInYaml(card('nexdeck-card: 1\nform: list\nrows: {select: records}\nitem: {title: a}\n'))).toEqual([])
   })
 

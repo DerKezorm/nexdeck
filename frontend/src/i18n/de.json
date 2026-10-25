@@ -68,6 +68,8 @@
       "redirected": "Weitergeleitet, nicht gefolgt. Der Dienst hat mit einer Weiterleitung geantwortet, der eine eigene Karte nicht folgt.",
       "answer_too_large": "Antwort zu groß. Der Dienst hat mehr geliefert, als eine eigene Karte liest.",
       "bad_param": "Ein Wert der Antwort ist kein einfacher Name; die Abfrage wurde nicht gestellt.",
+      "bad_path": "Der Pfad beginnt mit einem einzelnen / und nennt keinen Host; er liegt immer unter der Adresse der Verbindung.",
+      "demo_too_large": "Die Beispielantworten sind zu groß für eine Karte, selbst wenn jede Liste auf einen Eintrag gekürzt ist.",
       "connection_missing": "Anbindung fehlt. Die Anbindung dieser Karte wurde gelöscht."
     },
     "card": {

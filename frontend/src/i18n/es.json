@@ -68,6 +68,8 @@
       "redirected": "Redirigido, no seguido. El servicio respondió con una redirección, que una tarjeta propia no sigue.",
       "answer_too_large": "Respuesta demasiado grande. El servicio respondió con más de lo que lee una tarjeta propia.",
       "bad_param": "Un valor de la respuesta no es un nombre simple; no se hizo la consulta.",
+      "bad_path": "La ruta empieza con una sola / y no nombra ningún host; siempre está debajo de la dirección de la conexión.",
+      "demo_too_large": "Las respuestas de ejemplo son demasiado grandes para una tarjeta, incluso con cada lista reducida a una entrada.",
       "connection_missing": "Falta la conexión. Se eliminó la conexión de esta tarjeta."
     },
     "card": {

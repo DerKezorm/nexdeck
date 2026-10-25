@@ -68,6 +68,8 @@
       "redirected": "Redirigé, non suivi. Le service a répondu par une redirection, qu'une carte personnalisée ne suit pas.",
       "answer_too_large": "Réponse trop volumineuse. Le service a répondu avec plus qu'une carte personnalisée ne lit.",
       "bad_param": "Une valeur de la réponse n'est pas un nom simple ; la requête n'a pas été faite.",
+      "bad_path": "Le chemin commence par un seul / et ne nomme aucun hôte ; il est toujours sous l’adresse de la connexion.",
+      "demo_too_large": "Les réponses d’exemple sont trop grandes pour une carte, même avec chaque liste réduite à une entrée.",
       "connection_missing": "Connexion manquante. La connexion de cette carte a été supprimée."
     },
     "card": {
