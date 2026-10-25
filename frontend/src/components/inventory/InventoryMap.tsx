@@ -59,7 +59,7 @@ export function InventoryMap({ inventory }: { inventory: Inventory }) {
           </button>
         ) : null}
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+      <div className="grid items-start gap-3 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
         {machines.map((machine) => (
           <section key={machine.host.ref} className="min-w-0 rounded-xl border border-line p-3" data-testid="inventory-column">
             <h3 className="mb-1.5 flex items-center gap-1.5 text-[14px] font-semibold">
