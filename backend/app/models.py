@@ -567,6 +567,33 @@ class Event(Base):
     detail: Mapped[str] = mapped_column(String(400), default="")
 
 
+class CardRecord(Base):
+    """A custom card or connection: the text its author wrote and the checked definition beside it.
+
+    ⚠️ The text is kept word for word and is what gets edited and exported: comments in the YAML live nowhere else.
+    ``definition`` is the same card as JSON in the format of this nexdeck, so reading it does not parse text again.
+    """
+
+    __tablename__ = "card_definitions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    #: The short name; widgets refer to a card by it, so it does not change once saved.
+    slug: Mapped[str] = mapped_column(String(60), unique=True, index=True)
+    #: ``card``, and ``integration`` once own connections exist.
+    kind: Mapped[str] = mapped_column(String(20), default="card")
+    yaml_source: Mapped[str] = mapped_column(Text)
+    definition: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    #: ``local`` (written here) or ``shop``.
+    origin: Mapped[str] = mapped_column(String(10), default="local")
+    shop_ref: Mapped[str] = mapped_column(String(200), default="")
+    shop_version: Mapped[str] = mapped_column(String(20), default="")
+    #: Whether users may put this card on a board; administrators always may.
+    users_may_place: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class Conversation(Base):
     """A conversation with the assistant (roadmap M3), kept 30 days after its last turn."""
 
