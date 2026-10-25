@@ -46,6 +46,9 @@ export interface Primary {
   value?: number | string | null
   unit?: string
   format?: string
+  /** A custom card: what the server wrote out of the value, and the finished text in the viewer's language. */
+  text?: string
+  display?: string
   /**
    * Which recorded metric this number is, when the card knows.
    *
@@ -72,6 +75,10 @@ export interface Secondary {
   value?: number | string | null
   unit?: string
   metric?: string
+  /** Custom card rows, as {@link Primary.text} and {@link Primary.display}. */
+  format?: string
+  text?: string
+  display?: string
   /** Which of the card's declared pieces this row is; see {@link Primary.part}. */
   part?: string
   /** What the row would say if there were room, shown on hover. */

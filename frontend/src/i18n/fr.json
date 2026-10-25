@@ -1115,6 +1115,7 @@
   },
   "card": {
     "nothing": "Rien à afficher",
+    "nothingHere": "Rien ici",
     "total": "Total",
     "nothingPlaying": "Rien en lecture",
     "nothingUpcoming": "Rien à venir",

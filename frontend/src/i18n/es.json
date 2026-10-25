@@ -1115,6 +1115,7 @@
   },
   "card": {
     "nothing": "Nada que mostrar",
+    "nothingHere": "Aquí no hay nada",
     "total": "Total",
     "nothingPlaying": "No suena nada",
     "nothingUpcoming": "Nada próximo",

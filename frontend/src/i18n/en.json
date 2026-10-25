@@ -1115,6 +1115,7 @@
   },
   "card": {
     "nothing": "Nothing to show",
+    "nothingHere": "Nothing here",
     "total": "Total",
     "nothingPlaying": "Nothing is playing",
     "nothingUpcoming": "Nothing coming up",

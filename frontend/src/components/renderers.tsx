@@ -26,18 +26,19 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
+import { isCustom, labelOf, localizeCustom } from '../lib/customCard'
 import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
 import { playingLine, useDisguise, type Disguise } from '../lib/showcase'
-import type { Action, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Primary, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
@@ -191,7 +192,9 @@ export function renderWidget(props: RenderProps) {
   // A widget may ask for another drawing per option; the data says so.
   const name = typeof props.data?.meta?.renderer === 'string' ? props.data.meta.renderer : props.widget.renderer
   const Renderer = RENDERERS[name] ?? ValueCard
-  return <Renderer {...props} />
+  // A card the administrator described: its texts in the viewer's language, and out of the table of translations.
+  const data = props.data?.meta?.custom ? localizeCustom(props.data) : props.data
+  return <Renderer {...props} data={data} />
 }
 
 // ---------------------------------------------------------------------------
@@ -259,20 +262,34 @@ function shownValue(value: number | string | null | undefined, unit?: string): s
 }
 
 /** A value as the card shows it, rolling to a new reading when it is a number. */
-function Shown({ value, unit }: { value: number | string | null | undefined; unit?: string }) {
+function Shown({ value, unit, display }: { value: number | string | null | undefined; unit?: string; display?: string }) {
   const disguise = useDisguise()
+  // A custom card's value is written out already, in the viewer's language.
+  if (display !== undefined) return <>{disguise.free(display)}</>
   return typeof value === 'number' ? <Rolled value={value} unit={unit} /> : <>{disguise.free(shownValue(value, unit))}</>
 }
 
-function Chips({ items, series }: { items?: Secondary[]; series?: Record<string, number[]> }) {
+/** The number of a card as it reads: a custom card's is written out already (its unit stands apart), the others roll to it. */
+function Reading({ primary, withUnit }: { primary: Primary | null | undefined; withUnit?: boolean }) {
+  if (primary?.display === undefined) return <Rolled value={primary?.value} unit={withUnit ? primary?.unit : undefined} />
+  return <>{withUnit ? beside(primary.display, primary.unit) : primary.display}</>
+}
+
+/** A written-out value with its unit beside it: "12 items", "4.2°C", "75%". */
+function beside(display: string, unit?: string): string {
+  return unit ? `${display}${/^\p{L}/u.test(unit) ? ' ' : ''}${unit}` : display
+}
+
+function Chips({ items, series, custom }: { items?: Secondary[]; series?: Record<string, number[]>; custom?: boolean }) {
   if (!items?.length) return null
+  const L = custom ? (text: string | undefined) => text ?? '' : tLabel
   return (
     <div className="chips flex gap-1.5 overflow-x-auto scrollbar-none min-w-0 [&>*]:shrink-0">
       {items.slice(0, 4).map((item, index) => (
         <span className="chip" key={index}>
-          {tLabel(item.label)}
+          {L(item.label)}
           <b className="num">
-            <Shown value={item.value} unit={item.unit} />
+            <Shown value={item.value} unit={item.unit} display={item.display} />
           </b>
           {item.metric && worthDrawing(series?.[item.metric]) && (
             <span className="inline-block w-8 ml-1 -mb-0.5">
@@ -369,6 +386,7 @@ export function valueWidth(value: unknown, unit?: unknown): number {
 
 export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
   const { t } = useTranslation()
+  const L = labelOf(data)
   const primary = data?.primary
   // The first declared metric, or the number itself when none is declared.
   const metric = Object.keys(recordedMetrics(data))[0]
@@ -385,17 +403,17 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
         {/* A number rolls to its new reading; a word rises in, as it always did. */}
         <div
           className={`num value-number leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`}
-          style={{ '--chars': valueWidth(primary?.value, primary?.unit) } as CSSProperties}
+          style={{ '--chars': valueWidth(primary?.display ?? primary?.value, primary?.unit) } as CSSProperties}
           key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}
         >
-          <Rolled value={primary?.value} />
-          {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{tLabel(primary.unit)}</span>}
+          <Reading primary={primary} />
+          {primary?.unit && <span className="text-sm text-muted font-medium ml-1.5">{L(primary.unit)}</span>}
         </div>
-        {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{tLabel(primary.label)}</div>}
+        {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide">{L(primary.label)}</div>}
       </div>
       {hasFooter && (
         <div className="px-3 pb-2.5 pt-1 flex items-end justify-between gap-2 relative">
-          <Chips items={data?.secondary} series={series} />
+          <Chips items={data?.secondary} series={series} custom={isCustom(data)} />
           <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
         </div>
       )}
@@ -441,6 +459,7 @@ function levelColour(data: WidgetData | null | undefined): string {
 }
 
 export function GaugeCard({ data }: RenderProps) {
+  const L = labelOf(data)
   const primary = data?.primary
   const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number; min?: number } | null
   // ⚠️ Two kinds of card end up here. One was turned into a dial by the
@@ -490,11 +509,11 @@ export function GaugeCard({ data }: RenderProps) {
         <circle cx="50" cy="50" r="4" fill="var(--nd-bg-elev)" stroke="var(--nd-text)" strokeWidth="2.5" />
       </svg>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
-        <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Rolled value={primary?.value} unit={primary?.unit} /></div>
+        <div className="text-[11px] text-muted uppercase tracking-wide truncate">{L(primary?.label)}</div>
+        <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Reading primary={primary} withUnit /></div>
         <DialRange floor={floor} ceiling={ceiling} unit={primary?.unit} />
         <div className="mt-1.5">
-          <Chips items={data?.secondary} />
+          <Chips items={data?.secondary} custom={isCustom(data)} />
         </div>
       </div>
     </div>
@@ -547,6 +566,7 @@ export function ledColour(position: number, meter: MeterMeta, fallback: string):
 }
 
 export function MeterCard({ data }: RenderProps) {
+  const L = labelOf(data)
   const primary = data?.primary
   const dial = (data?.meta?.gauge ?? null) as { share?: number; max?: number; min?: number } | null
   const meter = (data?.meta?.meter ?? {}) as MeterMeta
@@ -576,8 +596,8 @@ export function MeterCard({ data }: RenderProps) {
   })
   const reading = (
     <div className="min-w-0">
-      <div className="text-[11px] text-muted uppercase tracking-wide truncate">{tLabel(primary?.label)}</div>
-      <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Rolled value={primary?.value} unit={primary?.unit} /></div>
+      <div className="text-[11px] text-muted uppercase tracking-wide truncate">{L(primary?.label)}</div>
+      <div className="num text-[19px] font-semibold leading-tight mt-0.5 truncate"><Reading primary={primary} withUnit /></div>
       <DialRange floor={floor} ceiling={ceiling} unit={primary?.unit} />
     </div>
   )
@@ -585,13 +605,13 @@ export function MeterCard({ data }: RenderProps) {
     return (
       <div className="flex-1 flex items-stretch gap-3 px-4 pb-3 min-h-0" data-testid="meter">
         {/* Bottom up, as a level rises. */}
-        <div className="flex flex-col-reverse gap-[3px] w-5 flex-none py-0.5" role="meter" aria-valuenow={Math.round(share)} aria-valuemin={0} aria-valuemax={100} aria-label={tLabel(primary?.label)}>
+        <div className="flex flex-col-reverse gap-[3px] w-5 flex-none py-0.5" role="meter" aria-valuenow={Math.round(share)} aria-valuemin={0} aria-valuemax={100} aria-label={L(primary?.label)}>
           {lights}
         </div>
         <div className="min-w-0 flex-1 flex flex-col justify-center">
           {reading}
           <div className="mt-1.5">
-            <Chips items={data?.secondary} />
+            <Chips items={data?.secondary} custom={isCustom(data)} />
           </div>
         </div>
       </div>
@@ -600,10 +620,10 @@ export function MeterCard({ data }: RenderProps) {
   return (
     <div className="flex-1 flex flex-col justify-center gap-2 px-4 pb-3 min-h-0" data-testid="meter">
       {reading}
-      <div className="flex gap-[3px] h-3.5" role="meter" aria-valuenow={Math.round(share)} aria-valuemin={0} aria-valuemax={100} aria-label={tLabel(primary?.label)}>
+      <div className="flex gap-[3px] h-3.5" role="meter" aria-valuenow={Math.round(share)} aria-valuemin={0} aria-valuemax={100} aria-label={L(primary?.label)}>
         {lights}
       </div>
-      <Chips items={data?.secondary} />
+      <Chips items={data?.secondary} custom={isCustom(data)} />
     </div>
   )
 }
@@ -655,6 +675,7 @@ export function segmentText(value: number): { chars: string[]; points: Set<numbe
 
 export function SegmentsCard(props: RenderProps) {
   const { data } = props
+  const L = labelOf(data)
   const primary = data?.primary
   const value = typeof primary?.value === 'number' ? primary.value : null
   // A word or nothing has no digits; the card draws it as a number card would.
@@ -670,7 +691,7 @@ export function SegmentsCard(props: RenderProps) {
           className="min-w-0 max-h-[64px] w-auto h-full flex-shrink"
           style={{ aspectRatio: `${width + 2} / ${CELL.h + 2}` }}
           role="img"
-          aria-label={`${formatValue(value, primary?.unit)}`}
+          aria-label={primary?.display !== undefined ? `${primary.display} ${primary.unit ?? ''}`.trim() : `${formatValue(value, primary?.unit)}`}
         >
           {/* A slant, as the displays have. */}
           <g transform="skewX(-6) translate(2 0)">
@@ -700,11 +721,11 @@ export function SegmentsCard(props: RenderProps) {
             })}
           </g>
         </svg>
-        {primary?.unit && <span className="text-sm text-muted font-medium pb-0.5 flex-none">{tLabel(primary.unit)}</span>}
+        {primary?.unit && <span className="text-sm text-muted font-medium pb-0.5 flex-none">{L(primary.unit)}</span>}
       </div>
-      {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide truncate">{tLabel(primary.label)}</div>}
+      {primary?.label && <div className="text-[11px] text-muted mt-1.5 uppercase tracking-wide truncate">{L(primary.label)}</div>}
       <div className="mt-1.5">
-        <Chips items={data?.secondary} />
+        <Chips items={data?.secondary} custom={isCustom(data)} />
       </div>
     </div>
   )
@@ -715,8 +736,9 @@ export function SegmentsCard(props: RenderProps) {
 // ---------------------------------------------------------------------------
 
 export function StatsCard({ data, series }: RenderProps) {
+  const L = labelOf(data)
   const rows: Secondary[] = []
-  if (data?.primary) rows.push({ label: data.primary.label ?? '', value: data.primary.value, unit: data.primary.unit, metric: Object.keys(data.metrics ?? {})[0], share: (data.primary as Secondary).share })
+  if (data?.primary) rows.push({ label: data.primary.label ?? '', value: data.primary.value, unit: data.primary.unit, display: data.primary.display, metric: data.primary.metric ?? Object.keys(data.metrics ?? {})[0], share: (data.primary as Secondary).share })
   rows.push(...(data?.secondary ?? []))
   return (
     <div className="flex-1 flex flex-col px-3 pb-2.5 min-h-0 scroll">
@@ -731,10 +753,10 @@ export function StatsCard({ data, series }: RenderProps) {
           const points = row.metric ? series?.[row.metric] : undefined
           return (
             // A row may say more than fits beside its bar: "3.1 GB of 7.8 GB" on hover.
-            <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3" title={row.hint ? tLabel(row.hint) : undefined}>
+            <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3" title={row.hint ? L(row.hint) : undefined}>
               {/* Labels grow with the language, values never wrap: "WAN eingehend" and "95.8 MB/s" must both fit. */}
-              <div className="text-[11px] text-muted min-w-[4.6rem] max-w-[10rem] truncate" title={tLabel(row.label)}>
-                {tLabel(row.label)}
+              <div className="text-[11px] text-muted min-w-[4.6rem] max-w-[10rem] truncate" title={L(row.label)}>
+                {L(row.label)}
               </div>
               <div className="min-w-0">
                 {/* ⚠️ A percentage is a bar, history or not. The line used to
@@ -755,7 +777,7 @@ export function StatsCard({ data, series }: RenderProps) {
                 )}
               </div>
               <div className="num text-[13px] font-semibold text-right whitespace-nowrap min-w-[3.5rem]">
-                <Shown value={row.value} unit={row.unit} />
+                <Shown value={row.value} unit={row.unit} display={row.display !== undefined ? beside(row.display, row.unit) : undefined} />
               </div>
             </div>
           )
@@ -783,6 +805,11 @@ const MEDIA_ROWS = /\.(queue|requests|approvals|recent|arrivals|top|torrents|dow
  * and their titles are names, not titles of films.
  */
 const PICTURE_SHAPES = new Set(['square', 'wide'])
+
+/** A picture that does not load leaves its place to what stands behind it. */
+function hideBroken(event: SyntheticEvent<HTMLImageElement>): void {
+  event.currentTarget.style.display = 'none'
+}
 
 function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>, title: string, subtitle: string): [string, string] {
   if (!disguise.on) return [title, subtitle]
@@ -820,9 +847,12 @@ export function wordedSubtitle(item: Record<string, unknown>, t: (key: string, o
 export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
   const disguise = useDisguise()
+  const L = labelOf(data)
+  const custom = isCustom(data)
   const items = data?.items ?? []
-  if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
-  const subtitleOf = (item: Record<string, unknown>): string => wordedSubtitle(item, t, i18n.language)
+  if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? L(String(data.meta.empty)) : t(isCustom(data) ? 'card.nothingHere' : 'card.nothing')}</Empty>
+  // A custom card's subtitle is the author's own and was written out already.
+  const subtitleOf = (item: Record<string, unknown>): string => (custom ? String(item.subtitle ?? '') : wordedSubtitle(item, t, i18n.language))
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {data?.meta?.headline && data.primary ? (
@@ -830,7 +860,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
         // number: unread mail in all mailboxes, then each mailbox.
         <div className="px-3 pb-1.5 flex items-baseline gap-2" data-testid="list-headline">
           <span className="num text-[26px] leading-none font-semibold tracking-tight"><Rolled value={data.primary.value} unit={data.primary.unit} /></span>
-          {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{tLabel(data.primary.label)}</span> : null}
+          {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{L(data.primary.label)}</span> : null}
         </div>
       ) : null}
       {data?.meta?.notice ? (
@@ -844,7 +874,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
           const status = statusOf(item.status)
           const progress = typeof item.progress === 'number' ? item.progress : null
           const memory = typeof item.memory_percent === 'number' ? item.memory_percent : null
-          const [title, subtitle] = listRow(disguise, widget.kind, item, item.worded ? tLabel(String(item.title ?? '')) : String(item.title ?? ''), item.subtitle ? subtitleOf(item) : '')
+          const [title, subtitle] = listRow(disguise, widget.kind, item, item.worded ? L(String(item.title ?? '')) : String(item.title ?? ''), item.subtitle ? subtitleOf(item) : '')
           return (
             <li key={String(item.id ?? index)} className="group/row flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-surface-hover">
               {item.art ? (
@@ -855,7 +885,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 // as the crop of a camera detection; `wide` for a board's picture.
                 <span className={`relative shrink-0 rounded overflow-hidden bg-surface-hover ${item.art_shape === 'square' ? 'w-10 aspect-square' : item.art_shape === 'wide' ? 'w-16 aspect-[16/10]' : 'w-8 aspect-[2/3]'}`}>
                   {/* The crop of a camera picture shows the home; in showcase mode it is blurred. */}
-                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${disguise.on && PICTURE_SHAPES.has(String(item.art_shape ?? '')) ? 'blur-md scale-110' : ''}`} />
+                  <img src={mediaUrl(widget.id, String(item.art))} alt="" loading="lazy" onError={hideBroken} className={`absolute inset-0 w-full h-full object-cover ${disguise.on && PICTURE_SHAPES.has(String(item.art_shape ?? '')) ? 'blur-md scale-110' : ''}`} />
                   <span className="dot absolute -right-0.5 -bottom-0.5 ring-2 ring-[var(--nd-card)]" data-status={status} />
                 </span>
               ) : item.icon && item.icon_dot ? (
@@ -872,10 +902,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                       a fault: an unread mail is not a yellow one. */}
                   {/* A title is a name as it stands, unless the row says it is
                       nexdeck's own wording: a finding, a kind of media. */}
-                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`}>{title}</span>
+                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`} title={custom ? title : undefined}>{title}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
-                {subtitle ? <div className="text-[11px] text-muted truncate">{subtitle}</div> : null}
+                {subtitle ? <div className="text-[11px] text-muted truncate" title={custom ? subtitle : undefined}>{subtitle}</div> : null}
                 {Array.isArray(item.bars) && item.bars.length > 0 && (
                   <AvailabilityBars
                     bars={item.bars as (number | null)[]}
@@ -909,7 +939,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
               ) : null}
               {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
               {item.value !== undefined && item.value !== '' && (
-                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : disguise.free(tLabel(String(item.value)))}</span>
+                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : disguise.free(L(String(item.value)))}</span>
               )}
               {/* How old the newer release is, on a row of the updates card. */}
               {typeof item.released === 'number' && (
@@ -930,7 +960,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
       </ul>
       {data?.secondary?.length || data?.actions?.length ? (
         <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
-          <Chips items={data?.secondary} series={series} />
+          <Chips items={data?.secondary} series={series} custom={custom} />
           <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
         </div>
       ) : null}
@@ -1096,6 +1126,20 @@ export function CountersCard({ data }: RenderProps) {
  * second copy is hidden from a screen reader. With less motion asked for it
  * is a row that scrolls by hand.
  */
+/** A cover, or the first letters of its title where there is no picture or it does not load; the card stays as it is. */
+function Cover({ src, title }: { src: string; title: string }) {
+  const [broken, setBroken] = useState(false)
+  if (src && !broken) return <img src={src} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 w-full h-full object-cover" />
+  return <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{(title || '?').slice(0, 2).toUpperCase()}</span>
+}
+
+/** The whole cover as a link, for a row that names an address. Reachable with Tab, and the focus shows. */
+function CoverLink({ item, title }: { item: Record<string, unknown>; title: string }) {
+  const href = safeUrl(item.url)
+  if (!href || !/^https?:/i.test(href)) return null
+  return <a href={href} target="_blank" rel="noopener noreferrer" aria-label={title} className="absolute inset-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent" />
+}
+
 function PosterBand({ widget, items }: { widget: RenderProps['widget']; items: Record<string, unknown>[] }) {
   const disguise = useDisguise()
   const cover = (item: Record<string, unknown>, index: number, copy: boolean) => {
@@ -1103,10 +1147,11 @@ function PosterBand({ widget, items }: { widget: RenderProps['widget']; items: R
     const title = disguise.media(String(item.title ?? ''))
     return (
       <li key={`${copy ? 'b' : 'a'}-${String(item.id ?? index)}`} className="relative h-full aspect-[2/3] flex-none rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" aria-hidden={copy || undefined} title={title}>
-        {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{(title || '?').slice(0, 2).toUpperCase()}</span>}
+        <Cover src={art} title={title} />
         <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
           <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{title}</div>
         </div>
+        {copy ? null : <CoverLink item={item} title={title} />}
       </li>
     )
   }
@@ -1123,22 +1168,24 @@ function PosterBand({ widget, items }: { widget: RenderProps['widget']; items: R
 export function PostersCard({ widget, data }: RenderProps) {
   const { t } = useTranslation()
   const disguise = useDisguise()
+  const L = labelOf(data)
   const items = data?.items ?? []
-  if (!items.length) return <Empty>{data?.meta?.empty ? tLabel(String(data.meta.empty)) : t('card.nothing')}</Empty>
+  if (!items.length) return <Empty>{data?.meta?.empty ? L(String(data.meta.empty)) : t(isCustom(data) ? 'card.nothingHere' : 'card.nothing')}</Empty>
   if (data?.meta?.band) return <PosterBand widget={widget} items={items} />
   return (
     <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {
         const art = mediaUrl(widget.id, item.art as string | undefined)
         const title = disguise.media(String(item.title ?? ''))
-        const subtitle = item.subtitle ? disguise.free(tLabel(String(item.subtitle))) : ''
+        const subtitle = item.subtitle ? disguise.free(L(String(item.subtitle))) : ''
         return (
           <li key={String(item.id ?? index)} className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${title}${subtitle ? ` · ${subtitle}` : ''}`}>
-            {art ? <img src={art} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> : <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white/70">{(title || '?').slice(0, 2).toUpperCase()}</span>}
+            <Cover src={art} title={title} />
             <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
               <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{title}</div>
               {subtitle ? <div className="text-[10px] text-white/70 truncate">{subtitle}</div> : null}
             </div>
+            <CoverLink item={item} title={title} />
           </li>
         )
       })}
@@ -1673,6 +1720,7 @@ function useChartHistory(widgetId: number, hours: number | null): Record<string,
 
 export function ChartCard({ data, series, widget }: RenderProps) {
   const { t } = useTranslation()
+  const L = labelOf(data)
   const hours = typeof data?.meta?.chart_hours === 'number' ? data.meta.chart_hours : null
   const fetched = useChartHistory(widget?.id ?? 0, hours)
   const lines = Object.keys(data?.metrics ?? {})
@@ -1681,20 +1729,18 @@ export function ChartCard({ data, series, widget }: RenderProps) {
   const all = lines.flatMap((line) => line.points)
   const low = all.length ? Math.min(...all) : 0
   const high = all.length ? Math.max(...all) : 0
-  const current = data?.primary?.value
-  const unit = data?.primary?.unit ?? ''
   //: A label for each line. The metric name is the fallback, not the choice:
   //: "wan_down" is a column name, "WAN in" is what the card already calls it.
   const labelFor = (metric: string): string => {
-    if (data?.primary?.metric === metric) return tLabel(data.primary.label)
+    if (data?.primary?.metric === metric) return L(data.primary.label)
     const row = data?.secondary?.find((one) => one.metric === metric)
-    return row ? tLabel(row.label) : metric
+    return row ? L(row.label) : metric
   }
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-3">
       <div className="flex items-baseline gap-2">
-        <span className="num text-2xl font-semibold"><Rolled value={current} unit={unit} /></span>
-        <span className="text-[11px] text-muted truncate">{tLabel(data?.primary?.label)}</span>
+        <span className="num text-2xl font-semibold"><Reading primary={data?.primary} withUnit /></span>
+        <span className="text-[11px] text-muted truncate">{L(data?.primary?.label)}</span>
         {all.length > 1 && (
           <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">
             {hours !== null && `${t('card.lastHours', { count: hours })} · `}

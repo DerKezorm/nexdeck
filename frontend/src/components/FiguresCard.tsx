@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { tLabel } from '../i18n/texts'
 import { figuresLayout, tileMetric, toneOf } from '../lib/figures'
 import { cardsOf, usePageCards } from '../lib/groups'
+import { labelOf, localizeCustom } from '../lib/customCard'
 import { formatValue } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
@@ -33,11 +34,13 @@ function Tile({ card, data, points, history }: { card: WidgetView; data: WidgetD
   const disguise = useDisguise()
   const holding = page.editing ? page.holding : undefined
   const tone = toneOf(card, data)
-  const primary = data?.primary
-  const label = primary?.label ? tLabel(primary.label) : ''
+  // A custom card's texts are the author's own and come in the language of whoever looks.
+  const L = labelOf(data)
+  const primary = localizeCustom(data)?.primary
+  const label = primary?.label ? L(primary.label) : ''
   const title = disguise.free(card.title) || label || tLabel(card.kind)
-  const value = formatValue(primary?.value)
-  const unit = primary?.unit ? tLabel(primary.unit) : ''
+  const value = primary?.display ?? formatValue(primary?.value)
+  const unit = primary?.unit ? L(primary.unit) : ''
   const reason = data?.error ? String(data.error) : tone === 'warn' || tone === 'bad' ? String(data?.meta?.status_reason ?? '') : ''
   const why = reason ? tLabel(reason) : label && label !== title ? label : (card.integration_name ?? '')
   // ⚠️ A link from the service is checked like every other; one that is not http(s) is none.
