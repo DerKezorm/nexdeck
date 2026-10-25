@@ -46,6 +46,7 @@ const BUILT_WITH = [
   { name: 'bcrypt', url: 'https://github.com/pyca/bcrypt', license: 'Apache 2.0' },
   { name: 'PyJWT', url: 'https://pyjwt.readthedocs.io', license: 'MIT' },
   { name: 'PyYAML', url: 'https://pyyaml.org', license: 'MIT' },
+  { name: 'JMESPath', url: 'https://jmespath.org', license: 'MIT' },
   { name: 'feedparser', url: 'https://feedparser.readthedocs.io', license: 'BSD' },
   { name: 'py-vapid', url: 'https://github.com/web-push-libs/vapid', license: 'MPL 2.0' },
   { name: 'PySNMP', url: 'https://github.com/lextudio/pysnmp', license: 'BSD' },
