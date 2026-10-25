@@ -17,7 +17,6 @@ import { MobileTabBar } from '../components/MobileTabBar'
 import { NoticeDrawer } from '../components/NoticeDrawer'
 import { TopBar } from '../components/TopBar'
 import { Confirm, Dialog, Spinner, Toast } from '../components/ui'
-import { WhatsNewDialog } from '../components/WhatsNewDialog'
 import { focusCard } from '../lib/focusCard'
 import { WidgetLibrary } from '../components/WidgetLibrary'
 import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
@@ -47,6 +46,12 @@ import { usePlayer } from '../stores/player'
 
 // A network plan is loaded when a page of that kind opens: most boards have none,
 // and the first load has a limit (tools/weight-check.mjs).
+/**
+ * "What's new" comes once per version, with every release note there has been:
+ * a quarter of a megabyte that has no place in the first load (measured at
+ * 0.49.0, when it pushed the first load over its limit).
+ */
+const WhatsNewDialog = lazy(() => import('../components/WhatsNewDialog').then((module) => ({ default: module.WhatsNewDialog })))
 const TopologyPage = lazy(() => import('../components/topology/TopologyPage').then((module) => ({ default: module.TopologyPage })))
 
 const EDIT_HINT_SEEN = 'nexdeck.editHintSeen'
@@ -840,7 +845,11 @@ export function BoardPage() {
       />
       <NoticeDrawer />
       <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} data={liveData} />
-      <WhatsNewDialog />
+      {user && user.seen_version !== __NEXDECK_VERSION__ ? (
+        <Suspense fallback={null}>
+          <WhatsNewDialog />
+        </Suspense>
+      ) : null}
 
       <ActionSheet
         pending={pending}

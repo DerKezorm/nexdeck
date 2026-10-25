@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { defineConfig } from 'vitest/config'
 import { loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -10,7 +12,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 const fileEnv = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), 'NEXDECK_')
 const apiTarget = process.env.NEXDECK_API || fileEnv.NEXDECK_API || 'http://127.0.0.1:8000'
 
+// The version being shipped, so the board can tell whether "What's new" is due
+// without carrying every release note in the first load.
+const version = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version as string
+
 export default defineConfig({
+  define: { __NEXDECK_VERSION__: JSON.stringify(version) },
   plugins: [
     react(),
     tailwindcss(),
