@@ -21,8 +21,9 @@ from ...models import Setting
 SETTING = "assistant"
 CONTEXT = "assistant:key"
 PROVIDERS = ("off", "anthropic", "openai")
-#: The model a new Claude setting starts with; the administrator can name another.
-DEFAULT_MODEL = {"anthropic": "claude-opus-5-5", "openai": ""}
+#: The model a new Claude setting starts with; the administrator picks another from the list.
+#: Sonnet: looking up cards and the chronicle needs no more, and costs a fraction of Opus.
+DEFAULT_MODEL = {"anthropic": "claude-sonnet-5-5", "openai": ""}
 
 
 class Refused(ValueError):
@@ -46,6 +47,19 @@ def stored(db: Session) -> dict[str, Any]:
 
 def key_of(db: Session) -> str:
     return crypto.decrypt_for(stored(db)["key"], CONTEXT)
+
+
+def key_for(db: Session, provider: str, base_url: str, typed: str | None) -> str:
+    """The key to ask a service with: the one typed, else the stored one, but only for the stored service.
+
+    ⚠️ A stored key never goes to an address typed elsewhere: whoever could type
+    one would otherwise have the key sent to a server of theirs.
+    """
+    if typed and typed.strip():
+        return typed.strip()
+    value = stored(db)
+    same = provider == value["provider"] and (provider == "anthropic" or base_url.strip().rstrip("/") == value["base_url"])
+    return key_of(db) if same and value["key"] else ""
 
 
 def leaves_the_house(provider: str, base_url: str) -> bool:

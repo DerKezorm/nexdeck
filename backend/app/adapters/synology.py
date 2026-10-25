@@ -9,6 +9,7 @@ follow the published Virtual Machine Manager API guide.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from ..services import icons
@@ -184,6 +185,20 @@ class SynologyAdapter(Adapter):
             reason = API_ERRORS.get(code, f"error {code}")
             raise AdapterError(f"DSM answered {api}.{method} with {reason}.", code="dsm_error")
         return payload.get("data")
+
+    async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
+        """Container Manager's log of one container.
+
+        ⚠️ Measured on 25.10.2026 against DSM 7 with Container Manager: the name
+        and the order go in as JSON strings (``"immich_server"``, ``"DESC"``);
+        a bare name is turned down with error 117. Newest first, each line
+        ``created`` (ISO time), ``stream`` and ``text``.
+        """
+        data = await self._api(config, ctx, "SYNO.Docker.Container.Log", "get", cache=0, extra={
+            "name": json.dumps(container), "offset": "0", "limit": str(lines), "sort_dir": json.dumps("DESC"),
+        })
+        rows = [row for row in (data or {}).get("logs") or [] if isinstance(row, dict)]
+        return [f"{str(row.get('created') or '')[11:19]} {str(row.get('text') or '').rstrip()}".strip() for row in reversed(rows)]
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         info = await self._api(config, ctx, "SYNO.Core.System", "info", cache=0)

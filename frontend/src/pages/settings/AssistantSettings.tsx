@@ -7,6 +7,13 @@ import { Field, PasswordInput, Select, Toast } from '../../components/ui'
 import { useAssistant } from '../../lib/assistant'
 import { SettingsCard } from './SettingsCard'
 
+const SAID = ['auth', 'rate_limited', 'unreachable', 'model', 'provider', 'no_list']
+
+interface Model {
+  id: string
+  name: string
+}
+
 interface Setting {
   provider: 'off' | 'anthropic' | 'openai'
   base_url: string
@@ -33,6 +40,7 @@ export function AssistantSettings() {
   const [key, setKey] = useState('')
   const [hasKey, setHasKey] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [models, setModels] = useState<Model[] | null>(null)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   useEffect(() => {
     if (!saved.data) return
@@ -42,7 +50,27 @@ export function AssistantSettings() {
     setHasKey(saved.data.has_key)
   }, [saved.data])
 
-  const report = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+  // What the provider said, in the reader's words where nexdeck has them.
+  const report = (failure: unknown) => {
+    const code = failure instanceof ApiError ? failure.code : ''
+    const text = SAID.includes(code) ? t(`assistant.error.${code}`) : failure instanceof ApiError ? failure.message : t('errors.network')
+    setToast({ text, level: 'error' })
+  }
+
+  /** The models the service offers, asked with what is typed: the list is also the proof that key and address work. */
+  const loadModels = async (quiet = false) => {
+    try {
+      setModels(await post<Model[]>('/settings/assistant/models', { provider, base_url: address, ...(key.trim() ? { key: key.trim() } : {}) }))
+    } catch (failure) {
+      setModels(null)
+      if (!quiet) report(failure)
+    }
+  }
+  // Claude with a stored key: the list is there when the page opens, it costs nothing to ask.
+  const firstLoad = saved.data?.provider === 'anthropic' && saved.data.has_key
+  useEffect(() => {
+    if (firstLoad) void post<Model[]>('/settings/assistant/models', { provider: 'anthropic' }).then(setModels).catch(() => undefined)
+  }, [firstLoad])
 
   const store = async (dropKey = false): Promise<Setting | null> => {
     try {
@@ -89,7 +117,10 @@ export function AssistantSettings() {
           <Select
             id="assistant-provider"
             value={provider}
-            onChange={(value) => setProvider(value as Setting['provider'])}
+            onChange={(value) => {
+              setProvider(value as Setting['provider'])
+              setModels(null)
+            }}
             options={[
               { value: 'off', label: t('settings.assistant.off') },
               { value: 'anthropic', label: t('settings.assistant.anthropic') },
@@ -99,14 +130,19 @@ export function AssistantSettings() {
         </Field>
         {provider === 'openai' && (
           <Field label={t('settings.assistant.address')} help={t('settings.assistant.addressHelp')}>
-            <input className="input font-mono text-[12.5px]" value={address} placeholder="http://ollama:11434/v1" onChange={(event) => setAddress(event.target.value)} />
+            <input
+              className="input font-mono text-[12.5px]"
+              value={address}
+              placeholder="http://ollama:11434/v1"
+              onChange={(event) => {
+                setAddress(event.target.value)
+                setModels(null)
+              }}
+            />
           </Field>
         )}
         {provider !== 'off' && (
           <>
-            <Field label={t('settings.assistant.model')} help={provider === 'anthropic' ? t('settings.assistant.modelHelpClaude') : t('settings.assistant.modelHelpOpenai')}>
-              <input className="input font-mono text-[12.5px]" value={model} placeholder={provider === 'anthropic' ? 'claude-opus-5-5' : 'qwen3:14b'} onChange={(event) => setModel(event.target.value)} />
-            </Field>
             <Field label={t('settings.assistant.key')} help={provider === 'openai' ? t('settings.assistant.keyHelpOpenai') : undefined} htmlFor="assistant-key">
               <PasswordInput id="assistant-key" value={key} onChange={setKey} autoComplete="new-password" placeholder={hasKey ? t('settings.assistant.keyKept') : ''} />
             </Field>
@@ -115,6 +151,34 @@ export function AssistantSettings() {
                 {t('settings.assistant.removeKey')}
               </button>
             )}
+            <Field label={t('settings.assistant.model')} help={provider === 'anthropic' ? t('settings.assistant.modelHelpClaude') : t('settings.assistant.modelHelpOpenai')} htmlFor="assistant-model">
+              <div className="flex gap-2">
+                {models ? (
+                  <Select
+                    id="assistant-model"
+                    className="flex-1"
+                    value={model}
+                    onChange={setModel}
+                    options={[
+                      // What is stored stays choosable, even when the service no longer lists it.
+                      ...(models.some((entry) => entry.id === model) ? [] : [{ value: model, label: model || '…' }]),
+                      ...models.map((entry) => ({ value: entry.id, label: entry.name === entry.id ? entry.id : `${entry.name} (${entry.id})` })),
+                    ]}
+                  />
+                ) : (
+                  <input
+                    id="assistant-model"
+                    className="input flex-1 font-mono text-[12.5px]"
+                    value={model}
+                    placeholder={provider === 'anthropic' ? 'claude-sonnet-5-5' : 'qwen3:14b'}
+                    onChange={(event) => setModel(event.target.value)}
+                  />
+                )}
+                <button type="button" className="btn" onClick={() => void loadModels()}>
+                  {t('settings.assistant.loadModels')}
+                </button>
+              </div>
+            </Field>
             <p className={`mb-3 rounded-xl border p-3 text-[12.5px] ${where === 'leaves' ? 'border-warn/50' : 'border-line'}`} data-testid="assistant-where">
               {t(`settings.assistant.${where}`)}
             </p>

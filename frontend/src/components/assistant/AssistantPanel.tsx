@@ -309,8 +309,10 @@ export function AssistantPanel({ open }: { open: boolean }) {
         </button>
       </header>
       {state && state.provider !== 'off' && (
-        <p className="mx-3 mt-2 flex items-center gap-1.5 text-[11.5px] text-muted" data-testid="assistant-privacy">
-          <span className={`rounded-full border px-1.5 ${outside ? 'border-warn/50 text-warn' : 'border-line-strong'}`}>{state.model}</span>
+        // One quiet line: which model answers, and whether questions leave the house.
+        <p className="mx-3 mt-2 text-[11.5px] leading-snug text-faint" data-testid="assistant-privacy">
+          <span className="font-medium text-muted">{state.model}</span>
+          {' · '}
           {outside ? t(state.provider === 'anthropic' ? 'assistant.privacy.anthropic' : 'assistant.privacy.out') : t('assistant.privacy.home')}
         </p>
       )}

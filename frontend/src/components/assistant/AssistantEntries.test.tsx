@@ -33,6 +33,7 @@ vi.mock('../../api/client', async (original) => ({
     sent.push({ method: 'POST', path, body })
     if (path.endsWith('/impact')) return { impact: [{ fact: 'streams', count: 3, names: ['Dune', 'Severance', 'Alien'] }] }
     if (path === '/settings/assistant/test') return { model: 'claude-opus-5-5', answer: 'OK' }
+    if (path === '/settings/assistant/models') return [{ id: 'claude-opus-5-5', name: 'Claude Opus 5.5' }, { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5' }]
     return {}
   }),
 }))
@@ -47,6 +48,7 @@ function wrap(node: React.ReactNode) {
 
 beforeEach(() => {
   sent.length = 0
+  stored.value = { provider: 'anthropic', base_url: '', model: 'claude-opus-5-5', has_key: true, ready: true, leaves_the_house: true }
   useAssistant.setState({ state: null, open: false, asking: '' })
 })
 
@@ -91,13 +93,41 @@ describe('the setting under System', () => {
     expect(screen.getByTestId('assistant-where').textContent).toContain('leave the house')
   })
 
+  it('lists the models of Claude right away when a key is stored, and saves the one picked', async () => {
+    stored.value = { provider: 'anthropic', base_url: '', model: 'claude-opus-5-5', has_key: true, ready: true, leaves_the_house: true }
+    wrap(<AssistantSettings />)
+    const picker = (await screen.findByRole('option', { name: 'Claude Sonnet 5.5 (claude-sonnet-5-5)' })).closest('select') as HTMLSelectElement
+    expect(sent.find((one) => one.path === '/settings/assistant/models')?.body).toEqual({ provider: 'anthropic' })
+    fireEvent.change(picker, { target: { value: 'claude-sonnet-5-5' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    })
+    expect(sent.filter((one) => one.method === 'PUT').at(-1)?.body).toMatchObject({ model: 'claude-sonnet-5-5' })
+  })
+
+  it('asks a local runner for its models with the address and key typed', async () => {
+    stored.value = { provider: 'off', base_url: '', model: '', has_key: false, ready: false, leaves_the_house: false }
+    wrap(<AssistantSettings />)
+    await waitFor(() => expect(sent.some((one) => one.path === '/settings/assistant')).toBe(true))
+    // Let the stored setting arrive before anything is typed over it.
+    await act(async () => undefined)
+    expect(sent.some((one) => one.path === '/settings/assistant/models')).toBe(false)
+    fireEvent.change(screen.getByLabelText('Provider'), { target: { value: 'openai' } })
+    fireEvent.change(screen.getByPlaceholderText('http://ollama:11434/v1'), { target: { value: 'http://llm.home.arpa/v1' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Load models' }))
+    })
+    expect(sent.find((one) => one.path === '/settings/assistant/models')?.body).toEqual({ provider: 'openai', base_url: 'http://llm.home.arpa/v1' })
+    expect(screen.getByRole('option', { name: 'Claude Sonnet 5.5 (claude-sonnet-5-5)' })).toBeTruthy()
+  })
+
   it('tests after saving and says who answered', async () => {
     wrap(<AssistantSettings />)
     await screen.findByPlaceholderText(/A key is stored/)
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Save and test' }))
     })
-    const order = sent.filter((one) => one.method !== 'GET').map((one) => `${one.method} ${one.path}`)
+    const order = sent.filter((one) => one.method !== 'GET' && one.path !== '/settings/assistant/models').map((one) => `${one.method} ${one.path}`)
     expect(order).toEqual(['PUT /settings/assistant', 'POST /settings/assistant/test'])
     expect(screen.getByText('claude-opus-5-5 answers.')).toBeTruthy()
   })

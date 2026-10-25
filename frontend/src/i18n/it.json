@@ -565,8 +565,8 @@
       "address": "Indirizzo",
       "addressHelp": "Fino a /v1, per esempio http://ollama:11434/v1 o https://api.openai.com/v1.",
       "model": "Modello",
-      "modelHelpClaude": "Vuoto usa claude-opus-5-5.",
-      "modelHelpOpenai": "Il modello deve saper chiamare strumenti, per esempio qwen3 o llama3.1.",
+      "modelHelpClaude": "Sonnet basta per la chat e costa una frazione di Opus. Vuoto usa claude-sonnet-5-5.",
+      "modelHelpOpenai": "Carica l'elenco o scrivi il nome. Il modello deve saper chiamare strumenti, per esempio qwen3 o llama3.1.",
       "key": "Chiave API",
       "keyHelpOpenai": "Ollama e LM Studio non ne hanno bisogno.",
       "keyKept": "Una chiave è salvata; scrivine una nuova per sostituirla",
@@ -577,7 +577,8 @@
       "who": "Solo gli amministratori vedono la chat. Le conversazioni restano 30 giorni. L'assistente non preme mai un pulsante: lo mostra con ciò che toccherebbe, e lo premi tu.",
       "test": "Salva e prova",
       "testCosts": "Il test fa una domanda breve e costa pochi token.",
-      "testOk": "{{model}} risponde."
+      "testOk": "{{model}} risponde.",
+      "loadModels": "Carica modelli"
     }
   },
   "menu": {
@@ -2308,7 +2309,8 @@
       "unreachable": "Il fornitore non è raggiungibile.",
       "busy": "Sto ancora rispondendo all'ultima domanda.",
       "model": "Il fornitore non conosce questo modello o indirizzo.",
-      "provider": "Il fornitore ha risposto con un errore."
+      "provider": "Il fornitore ha risposto con un errore.",
+      "no_list": "Questo servizio non elenca modelli; scrivi il nome del modello."
     }
   }
 }

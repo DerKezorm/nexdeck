@@ -17,7 +17,14 @@ from .base import (
     human_bytes,
     path_segment,
 )
-from .docker import CONTAINER_ACTIONS, DockerAdapter, container_name, cpu_percent, memory_used
+from .docker import (
+    CONTAINER_ACTIONS,
+    DockerAdapter,
+    container_name,
+    cpu_percent,
+    log_lines,
+    memory_used,
+)
 
 
 class PortainerAdapter(Adapter):
@@ -230,6 +237,21 @@ class PortainerAdapter(Adapter):
             history=bool(options.get("history", True)), cpu_per_core=True,
             actions=DockerAdapter._actions_for(state, entry.get("Id", "")),
         )
+
+    async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
+        """Through Portainer's own copy of the Docker interface, as the cards read it."""
+        docker = f"{base_url(config)}/api/endpoints/{await self._endpoint(config, ctx)}/docker"
+        verify = not config.get("insecure", True)
+        listed = await ctx.get_json(f"{docker}/containers/json", params={"all": 1}, headers=self._headers(config), verify=verify, cache_seconds=5)
+        found = next((one for one in listed if container_name(one) == container), None)
+        if found is None:
+            raise AdapterError(f"No container named {container!r} in this environment.", code="not_found")
+        inspect = await ctx.get_json(f"{docker}/containers/{found['Id']}/json", headers=self._headers(config), verify=verify, cache_seconds=0)
+        response = await ctx.request("GET", f"{docker}/containers/{found['Id']}/logs", headers=self._headers(config), verify=verify,
+                                     params={"stdout": 1, "stderr": 1, "timestamps": 1, "tail": lines})
+        if response.status_code >= 400:
+            raise AdapterError(f"Portainer answered with HTTP {response.status_code}.", code="http_error")
+        return log_lines(response.content, bool((inspect.get("Config") or {}).get("Tty")))[-lines:]
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         if action_id not in CONTAINER_ACTIONS:
