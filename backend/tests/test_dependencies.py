@@ -233,6 +233,90 @@ def test_an_app_tile_of_a_connected_service_hangs_on_the_connection(client: Test
     assert (f"integration:{media}", f"container:{engine}:jellyfin", "suggested", "suggested") in found
 
 
+@pytest.fixture
+def proxied(monkeypatch: pytest.MonkeyPatch) -> dict[str, tuple[str, int | None]]:
+    """What a reverse proxy said it forwards, and a network that names 10.0.0.65 docker-live; no resolver is asked."""
+    forwards: dict[str, tuple[str, int | None]] = {}
+    monkeypatch.setattr(dependencies, "_forwards", forwards)
+    monkeypatch.setattr(dependencies, "_named", {})
+    monkeypatch.setattr(dependencies.socket, "gethostbyaddr", lambda address: ("docker-live.lan", [], [address]) if address == "10.0.0.65" else (_ for _ in ()).throw(OSError()))
+    return forwards
+
+
+def test_what_the_proxy_forwards_places_a_service_behind_it_in_its_container(client: TestClient, proxied: dict) -> None:
+    """⚠️ Measured 25.10.2026: behind Nginx Proxy Manager every service answered on the proxy's address; the proxy knew the real one."""
+    setup_admin(client)
+    portainer = _connection(client, "portainer", "Portainer", "https://portainer.example.invalid")
+    wiki = _connection(client, "nexlore", "nexlore", "https://wiki.example.invalid")
+    _things(portainer, _container("nexlore", 8470), _container("nexlore-test", 8471))
+    proxied.update({"portainer.example.invalid": ("10.0.0.65", 9443), "wiki.example.invalid": ("10.0.0.65", 8470)})
+    _match({portainer: ["portainer.example.invalid"]})
+    assert (f"integration:{wiki}", f"container:{portainer}:nexlore", "auto", "on") in _relations()
+    proxied.clear()
+    _match({portainer: ["portainer.example.invalid"]})
+    assert not any(child == f"integration:{wiki}" and origin == "auto" for child, _parent, origin, _state in _relations()), "without the proxy's word it is a guess again"
+
+
+def test_a_forward_to_port_80_or_443_is_as_good_as_any_other(client: TestClient, proxied: dict) -> None:
+    """Once the proxy says where it goes, port 80 on the real machine is that machine's, not a proxy's."""
+    setup_admin(client)
+    portainer = _connection(client, "portainer", "Portainer", "https://portainer.example.invalid")
+    scanner = _connection(client, "uptimekuma", "Scanner", "https://scan.example.invalid")
+    _things(portainer, _container("nexscan", 80))
+    proxied.update({"portainer.example.invalid": ("10.0.0.65", 443), "scan.example.invalid": ("10.0.0.65", 80)})
+    _match({})
+    assert (f"integration:{scanner}", f"container:{portainer}:nexscan", "auto", "on") in _relations()
+
+
+def test_a_guest_without_an_address_is_known_by_its_name_on_the_network(client: TestClient, proxied: dict) -> None:
+    """Proxmox gives no address for a VM whose guest agent it may not ask; the network still calls 10.0.0.65 docker-live."""
+    setup_admin(client)
+    pve = _connection(client, "proxmox", "Proxmox VE", "https://pve.example.invalid")
+    portainer = _connection(client, "portainer", "Portainer", "https://portainer.example.invalid")
+    _things(pve, {"kind": "guest", "key": "100", "name": "docker-live", "image": "VM 100 · proxmox", "state": "running", "addresses": [], "ports": []},
+            {"kind": "guest", "key": "200", "name": "docker-dev", "image": "VM 200 · proxmox", "state": "running", "addresses": [], "ports": []})
+    proxied.update({"portainer.example.invalid": ("10.0.0.65", 9443)})
+    _match({pve: ["pve.example.invalid"], portainer: ["portainer.example.invalid"]})
+    assert {(child, parent) for child, parent, origin, _state in _relations() if origin == "auto"} == {(f"integration:{portainer}", f"guest:{pve}:100")}
+    machine = next(node for node in client.get("/api/v1/inventory").json()["nodes"] if node["ref"] == f"integration:{portainer}")["machine"]
+    assert machine == "docker-live", "the column is called after the machine, not the connection"
+
+
+async def test_the_proxy_manager_says_where_each_address_goes(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.adapters.npm import NpmAdapter
+
+    async def get(_self: object, _config: dict, _ctx: object, path: str, cache: float = 60, retry: bool = True) -> list:
+        assert path == "/nginx/proxy-hosts"
+        return [{"domain_names": ["Wiki.example.invalid", "notes.example.invalid"], "forward_host": "10.0.0.65", "forward_port": 8470, "enabled": 1},
+                {"domain_names": ["old.example.invalid"], "forward_host": "10.0.0.9", "forward_port": 80, "enabled": 0},
+                {"domain_names": ["nas.example.invalid"], "forward_host": "10.0.0.109", "forward_port": "5011", "enabled": True}]
+
+    monkeypatch.setattr(NpmAdapter, "_get", get)
+    found = await NpmAdapter().forwards({"url": "http://npm.example.invalid:81"}, None)  # type: ignore[arg-type]
+    assert found == {"wiki.example.invalid": ("10.0.0.65", 8470), "notes.example.invalid": ("10.0.0.65", 8470), "nas.example.invalid": ("10.0.0.109", 5011)}
+
+
+async def test_a_round_asks_the_proxy_and_keeps_its_word_when_it_does_not_answer(client: TestClient, monkeypatch: pytest.MonkeyPatch, proxied: dict) -> None:
+    from app.adapters.base import AdapterError
+    from app.adapters.npm import NpmAdapter
+
+    setup_admin(client)
+    _connection(client, "npm", "Nginx Proxy Manager", "http://10.0.0.159:81")
+    answers: list[object] = [{"wiki.example.invalid": ("10.0.0.65", 8470)}, AdapterError("down", code="unreachable")]
+
+    async def forwards(_self: object, _config: dict, _ctx: object) -> dict:
+        answer = answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(NpmAdapter, "forwards", forwards)
+    await dependencies.discover()
+    assert dependencies._forwards == {"wiki.example.invalid": ("10.0.0.65", 8470)}
+    await dependencies.discover()
+    assert dependencies._forwards == {"wiki.example.invalid": ("10.0.0.65", 8470)}, "a proxy that does not answer keeps what it said last"
+
+
 def test_two_hosts_on_one_address_are_not_put_on_each_other(client: TestClient) -> None:
     setup_admin(client)
     pve = _connection(client, "proxmox", "PVE", "https://10.0.0.5:8006")

@@ -62,11 +62,14 @@ export function InventoryMap({ inventory }: { inventory: Inventory }) {
       <div className="grid items-start gap-3 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
         {machines.map((machine) => (
           <section key={machine.host.ref} className="min-w-0 rounded-xl border border-line p-3" data-testid="inventory-column">
+            {/* The machine by its own name (docker-live), the connection that reads it below (Portainer). */}
             <h3 className="mb-1.5 flex items-center gap-1.5 text-[14px] font-semibold">
               <Dot node={machine.host} />
-              <Name node={machine.host} />
+              <Name node={{ ...machine.host, name: machine.host.machine || machine.host.name }} />
             </h3>
-            <p className="mb-2 truncate text-[11px] text-faint">{[t('inventory.kind.integration'), machine.host.detail].filter(Boolean).join(' · ')}</p>
+            <p className="mb-2 truncate text-[11px] text-faint">
+              {[machine.host.machine && machine.host.machine !== machine.host.name ? machine.host.name : t('inventory.kind.integration'), machine.host.detail].filter(Boolean).join(' · ')}
+            </p>
             {machine.direct.length ? (
               <div className="mb-1">
                 <p className="text-[11px] text-faint">{t('inventory.direct')}</p>

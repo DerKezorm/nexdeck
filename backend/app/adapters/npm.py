@@ -118,6 +118,21 @@ class NpmAdapter(Adapter):
         hosts = await self._get(config, ctx, "/nginx/proxy-hosts", cache=0)
         return f"Nginx Proxy Manager answers with {len(hosts) if isinstance(hosts, list) else 0} proxy hosts."
 
+    async def forwards(self, config: dict[str, Any], ctx: Context) -> dict[str, tuple[str, int | None]]:
+        """Where each address the proxy serves really goes: ``{domain: (host, port)}``, switched-off hosts left out."""
+        hosts = await self._get(config, ctx, "/nginx/proxy-hosts", cache=300)
+        out: dict[str, tuple[str, int | None]] = {}
+        for one in hosts if isinstance(hosts, list) else []:
+            if not isinstance(one, dict) or not one.get("enabled", True) or not one.get("forward_host"):
+                continue
+            try:
+                port = int(one.get("forward_port")) if one.get("forward_port") else None
+            except (TypeError, ValueError):
+                port = None
+            for domain in one.get("domain_names") or []:
+                out[str(domain).strip().lower()] = (str(one["forward_host"]).strip(), port)
+        return out
+
     @staticmethod
     def _days_left(expires: str) -> int | None:
         if not expires:

@@ -158,6 +158,13 @@ describe('the inventory page', () => {
     expect(sent.some((one) => one.method === 'POST' && one.path === '/inventory/refresh')).toBe(true)
   })
 
+  it('calls a column after the machine, with the connection that reads it below', () => {
+    const named: Inventory = { ...INVENTORY, nodes: INVENTORY.nodes.map((node) => (node.ref === 'integration:2' ? { ...node, name: 'Portainer', machine: 'docker-live' } : node)) }
+    render(<MemoryRouter><InventoryMap inventory={named} /></MemoryRouter>)
+    const engine = screen.getAllByTestId('inventory-column').find((one) => one.querySelector('h3')?.textContent === 'docker-live') as HTMLElement
+    expect(engine.textContent).toContain('Portainer · 10.0.0.65:2375')
+  })
+
   it('draws the map as columns, names leading to their diagnosis', () => {
     render(<MemoryRouter><InventoryMap inventory={INVENTORY} /></MemoryRouter>)
     const machines = screen.getAllByTestId('inventory-column')

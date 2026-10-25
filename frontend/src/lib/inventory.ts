@@ -17,6 +17,8 @@ export interface InventoryNode {
   down: boolean
   /** The engine or hypervisor a container or a guest belongs to. */
   parent?: string
+  /** For a connection that is a machine: what the machine is called (docker-live), not what the connection is called (Portainer). */
+  machine?: string
   demo?: boolean
 }
 
@@ -140,7 +142,7 @@ export function columns(inventory: Inventory): { columns: Column[]; loose: Place
     shown.add(host.ref)
     out.push({ host, direct, slots, empty })
   }
-  out.sort((a, b) => a.host.name.localeCompare(b.host.name))
+  out.sort((a, b) => (a.host.machine || a.host.name).localeCompare(b.host.machine || b.host.name))
   const loose = inventory.nodes
     .filter((node) => (node.kind === 'integration' || node.kind === 'tile') && !shown.has(node.ref) && !tileOn.has(node.ref))
     .map((node) => ({ node, proposed: false, tiles: folded.get(node.ref) ?? 0 }))

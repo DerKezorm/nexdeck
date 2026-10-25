@@ -84,6 +84,12 @@ def address_of(url: str) -> tuple[str, int | None]:
 
 
 _resolved: dict[str, tuple[float, set[str]]] = {}
+#: What each address is called on the network (its reverse name), remembered for an hour.
+_named: dict[str, tuple[float, str]] = {}
+#: Where each address a reverse proxy serves really goes, as the proxy last said.
+_forwards: dict[str, tuple[str, int | None]] = {}
+#: Reverse proxies that can say where they forward.
+PROXIES = ("npm",)
 
 
 def resolve(host: str) -> set[str]:
@@ -103,6 +109,35 @@ def resolve(host: str) -> set[str]:
         found = set()
     _resolved[host] = (time.monotonic(), found)
     return found
+
+
+def machine_name(address: str, look: bool = True) -> str:
+    """The short network name of an address (10.0.0.65 is docker-live), or "". ``look=False`` only remembers."""
+    known = _named.get(address)
+    if known and time.monotonic() - known[0] < 3600:
+        return known[1]
+    if not look:
+        return ""
+    try:
+        ipaddress.ip_address(address)
+        name = socket.gethostbyaddr(address)[0].split(".")[0].lower()
+    except (ValueError, OSError):
+        name = ""
+    _named[address] = (time.monotonic(), name)
+    return name
+
+
+def real_address(url: str, forwards: dict[str, tuple[str, int | None]] | None = None) -> tuple[str, int | None, bool]:
+    """``(host, port, forwarded)``: an address a reverse proxy serves is where the proxy sends it.
+
+    Measured 25.10.2026: behind Nginx Proxy Manager every service answered on
+    the proxy's address and port 443; the proxy knew the real one for each.
+    """
+    host, port = address_of(url)
+    target = (_forwards if forwards is None else forwards).get(host)
+    if target:
+        return target[0].lower(), target[1], True
+    return host, port, False
 
 
 def _service_address(integration: Integration | None = None, tile: Widget | None = None) -> str:
@@ -143,6 +178,20 @@ async def discover() -> int:
         hosts[integration_id] = list(found.get("host") or [])
         with db_session() as db:
             keep(db, integration_id, found.get("things") or [])
+    # Where the reverse proxies send each address; without one, what was known stays.
+    with db_session() as db:
+        proxies = [row.id for row in db.scalars(select(Integration).where(
+            Integration.kind.in_(PROXIES), Integration.enabled.is_(True), Integration.demo.is_(False)))]
+    forwards: dict[str, tuple[str, int | None]] = {}
+    for integration_id in proxies:
+        try:
+            adapter, config, ctx = await collector.resolve_integration(integration_id)
+            forwards.update(await adapter.forwards(config, ctx))
+        except Exception as error:  # noqa: BLE001 - a proxy that does not answer keeps what it said last
+            logger.info("Could not ask proxy %s where it forwards: %s", integration_id, getattr(error, "message", error))
+            forwards.update({key: value for key, value in _forwards.items()})
+    _forwards.clear()
+    _forwards.update(forwards)
     # ⚠️ In a thread: matching resolves names, and a resolver that hangs must not hold up the board.
     return await asyncio.to_thread(_match_now, hosts)
 
@@ -226,36 +275,39 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
     integrations = list(db.scalars(select(Integration).where(Integration.enabled.is_(True))))
     tiles = [row for row in db.scalars(select(Widget).where(Widget.kind == "core.app"))]
     things = list(db.scalars(select(Thing)))
-    host_addresses = {integration_id: set().union(*(resolve(one) for one in names)) if names else set()
+    # A name the proxy serves stands for where the proxy sends it.
+    host_addresses = {integration_id: set().union(*(resolve((_forwards.get(one.lower()) or (one,))[0]) for one in names)) if names else set()
                       for integration_id, names in hosts.items()}
     # A host whose things were not asked this round keeps its address from its own setting.
     for integration in integrations:
         if integration.kind in HOSTS and integration.id not in host_addresses:
-            host_addresses[integration.id] = resolve(address_of(_service_address(integration))[0])
+            host_addresses[integration.id] = resolve(real_address(_service_address(integration))[0])
     # ⚠️ A host reached through a reverse proxy has the proxy's address, not its own.
     # Measured 25.10.2026 on a homelab where everything goes through one proxy:
     # every service there was put on Portainer and on Proxmox at once, and the two
-    # on each other. Such an address names no host.
+    # on each other. Such an address names no host, unless the proxy says where it goes.
     for integration in integrations:
-        if integration.kind in HOSTS and address_of(_service_address(integration))[1] in PROXY_PORTS:
-            own = resolve(address_of(_service_address(integration))[0])
-            host_addresses[integration.id] = host_addresses.get(integration.id, set()) - own
+        host, port, forwarded = real_address(_service_address(integration))
+        if integration.kind in HOSTS and port in PROXY_PORTS and not forwarded:
+            host_addresses[integration.id] = host_addresses.get(integration.id, set()) - resolve(host)
     kinds = {integration.id: integration.kind for integration in integrations}
 
-    services: list[tuple[str, str, str, int | None, set[str]]] = []
+    services: list[tuple[str, str, str, int | None, set[str], bool]] = []
     for integration in integrations:
-        host, port = address_of(_service_address(integration))
-        services.append((f"integration:{integration.id}", f"{integration.kind} {integration.name}", host, port, resolve(host)))
+        host, port, forwarded = real_address(_service_address(integration))
+        services.append((f"integration:{integration.id}", f"{integration.kind} {integration.name}", host, port, resolve(host), forwarded))
     for tile in tiles:
-        host, port = address_of(_service_address(tile=tile))
-        services.append((f"tile:{tile.id}", tile.title or "", host, port, resolve(host)))
+        host, port, forwarded = real_address(_service_address(tile=tile))
+        services.append((f"tile:{tile.id}", tile.title or "", host, port, resolve(host), forwarded))
+    # A guest Proxmox gives no address for (no guest agent) is known by its name on the network.
+    nameless = [thing for thing in things if thing.kind == "guest" and not thing.addresses]
 
     # An app tile that opens the same address as a connection is that service:
     # it hangs on the connection and follows wherever that runs.
     served: dict[tuple[str, int | None], str] = {}
     named_like: dict[str, str] = {}
     for integration in integrations:
-        host, port = address_of(_service_address(integration))
+        host, port, _forwarded = real_address(_service_address(integration))
         if host:
             served.setdefault((host, port), f"integration:{integration.id}")
         named_like.setdefault(integration.name.strip().lower(), f"integration:{integration.id}")
@@ -263,7 +315,7 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
     existing = {(row.child, row.parent): row for row in db.scalars(select(Relation))}
     auto: set[tuple[str, str]] = set()
     proposed: set[tuple[str, str]] = set()
-    for ref, words, host, port, addresses in services:
+    for ref, words, host, port, addresses, forwarded in services:
         own = ref.split(":", 1)[1] if ref.startswith("integration:") else None
         if ref.startswith("tile:"):
             same = served.get((host, port)) if host else None
@@ -272,7 +324,8 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
                 auto.add((ref, same))
                 continue
         # Behind a proxy the address is the proxy's: it says where the proxy runs, not the service.
-        behind_proxy = port in PROXY_PORTS
+        behind_proxy = port in PROXY_PORTS and not forwarded
+        called = {machine_name(one) for one in addresses} - {""} if nameless and not behind_proxy else set()
         # The most exact wins: a container that publishes the port, else a guest
         # with the address, else a host with the address. A service in a
         # container on a VM hangs on the container; the VM follows through the engine.
@@ -282,11 +335,11 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
         for thing in things if addresses else []:
             if str(thing.integration_id) == own:
                 continue
-            if thing.kind == "guest" and addresses & set(thing.addresses):
+            if thing.kind == "guest" and (addresses & set(thing.addresses) or (not thing.addresses and thing.name.lower() in called)):
                 if not behind_proxy:
                     guests.append(thing.ref)
             elif thing.kind == "container" and addresses & host_addresses.get(thing.integration_id, set()) and port and port in (thing.ports or []):
-                (guessed if port in PROXY_PORTS else containers).append(thing.ref)
+                (guessed if behind_proxy or (port in PROXY_PORTS and not forwarded) else containers).append(thing.ref)
         # Two hosts on one address cannot be told apart by it; which carries which is said by hand.
         is_host = own is not None and kinds.get(int(own)) in HOSTS
         certain = containers or guests or ([] if behind_proxy or is_host else [
@@ -501,9 +554,17 @@ def view(db: Session) -> dict[str, Any]:
     for integration in db.scalars(select(Integration).order_by(Integration.name)):
         host, port = address_of(_service_address(integration))
         ref = f"integration:{integration.id}"
-        nodes.append({"ref": ref, "kind": "integration", "service": integration.kind, "name": integration.name,
-                      "detail": f"{host}:{port}" if host and port else host, "host": integration.kind in HOSTS,
-                      "down": is_down(db, ref), "demo": integration.demo})
+        node = {"ref": ref, "kind": "integration", "service": integration.kind, "name": integration.name,
+                "detail": f"{host}:{port}" if host and port else host, "host": integration.kind in HOSTS,
+                "down": is_down(db, ref), "demo": integration.demo}
+        if integration.kind in HOSTS:
+            # The machine it is: the guest it was found to run in, else its name on the network
+            # (only remembered here: drawing the page asks no resolver).
+            guest = next((row.parent for row in db.scalars(select(Relation).where(
+                Relation.child == ref, Relation.state == "on", Relation.parent.like("guest:%")))), "")
+            real = real_address(_service_address(integration))[0]
+            node["machine"] = name_of(db, guest) if guest else machine_name(real, look=False)
+        nodes.append(node)
     for tile in db.scalars(select(Widget).where(Widget.kind == "core.app")):
         ref = f"tile:{tile.id}"
         host, port = address_of(_service_address(tile=tile))
