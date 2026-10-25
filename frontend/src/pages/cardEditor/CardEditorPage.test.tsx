@@ -449,6 +449,19 @@ describe('leaving, drafts and steps back', () => {
     expect(screen.queryByText('The list of cards')).toBeNull()
   })
 
+  it('karten9 AC-11: the back button of the browser asks too, Cancel stays and the next back asks again', async () => {
+    await openQueue()
+    act(() => editor().set(['name'], 'Waiting'))
+    await waitFor(() => expect((window.history.state ?? {}).nexdeckCardEditor).toBe(true))
+    act(() => window.history.back())
+    const question = await screen.findByRole('dialog', { name: 'Leave without saving?' })
+    await userEvent.click(within(question).getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('heading', { name: 'Waiting', level: 1 })).toBeInTheDocument()
+    expect((window.history.state ?? {}).nexdeckCardEditor).toBe(true)
+    act(() => window.history.back())
+    expect(await screen.findByRole('dialog', { name: 'Leave without saving?' })).toBeInTheDocument()
+  })
+
   it('karten9 EC-7: unsaved changes are kept in this browser and offered on opening again', async () => {
     const first = await (async () => {
       await openQueue()
@@ -583,6 +596,52 @@ describe('karten10: the YAML view', () => {
     expect(sent('POST', '/cards/check').at(-1)!.body).toEqual({ yaml: pasted })
     expect(editor().view).toBe('editor')
     expect(screen.getByRole('heading', { name: 'From a forum', level: 1 })).toBeInTheDocument()
+  })
+
+  it('karten9 EC-10: Ctrl Z right after typing in the YAML takes that typing back, the code editor has no history of its own', async () => {
+    const view = await yamlView()
+    act(() => {
+      view.dispatch({ changes: { from: CARD.indexOf('Queue'), to: CARD.indexOf('Queue') + 5, insert: 'Typed' }, userEvent: 'input.type' })
+    })
+    // Not yet handed over to the store (it settles after a moment): the step back takes it along all the same.
+    fireEvent.keyDown(view.contentDOM, { key: 'z', ctrlKey: true })
+    expect(editor().text).toBe(CARD)
+    expect(view.state.doc.toString()).toBe(CARD)
+    fireEvent.keyDown(view.contentDOM, { key: 'z', ctrlKey: true, shiftKey: true })
+    expect(editor().text).toBe(CARD.replace('name: Queue', 'name: Typed'))
+  })
+
+  it('karten10 AC-2: the answer of an older check never replaces the one for the text on screen', async () => {
+    const view = await yamlView()
+    const first = vi.mocked(fetch)
+    let releaseOlder: (() => void) | undefined
+    let checks = 0
+    const problem = { code: 'card_said_by_the_server', message: 'nexdeck has no integration sonar.', path: 'requires[0]', line: 6, params: {} }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).endsWith('/cards/check')) {
+          checks += 1
+          if (checks === 1) await new Promise<void>((resolve) => (releaseOlder = resolve))
+          if (checks === 1) return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } })
+          return new Response(JSON.stringify({ ok: false, problems: [problem] }), { status: 200, headers: { 'content-type': 'application/json' } })
+        }
+        return first(input, init)
+      }),
+    )
+    act(() => {
+      view.dispatch({ changes: { from: CARD.indexOf('Queue'), to: CARD.indexOf('Queue') + 5, insert: 'One' }, userEvent: 'input.type' })
+    })
+    await waitFor(() => expect(checks).toBe(1), { timeout: 4000 })
+    const at = view.state.doc.toString().indexOf('sonarr')
+    act(() => {
+      view.dispatch({ changes: { from: at, to: at + 6, insert: 'sonar' }, userEvent: 'input.type' })
+    })
+    const list = await screen.findByTestId('card-problems', {}, { timeout: 4000 })
+    expect(within(list).getByText('nexdeck has no integration sonar.')).toBeInTheDocument()
+    act(() => releaseOlder?.())
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.getByTestId('card-problems')).toHaveTextContent('nexdeck has no integration sonar.')
   })
 
   it('karten10 EC-7: a tab typed with the Tab key becomes two spaces', async () => {

@@ -161,12 +161,19 @@ export default function YamlView({ onPastedValid }: { onPastedValid?: () => void
   }, [])
 
   // The store changed from elsewhere (a step back, a reload): the code editor follows.
-  useEffect(() => {
-    const current = view.current
-    if (!current || current.state.doc.toString() === text) return
-    const keep = Math.min(current.state.selection.main.head, text.length)
-    current.dispatch({ changes: { from: 0, to: current.state.doc.length, insert: text }, selection: { anchor: keep }, annotations: external.of(true) })
-  }, [text])
+  // ⚠️ Through the store's own subscription, not through the rendered `text`: a step back right after typing hands the
+  // typing over and takes it back within one render, so the text on screen never differs from the one rendered before
+  // and an effect on it would leave the typing in the code editor.
+  useEffect(
+    () =>
+      useCardEditor.subscribe((state, before) => {
+        const current = view.current
+        if (!current || state.text === before.text || current.state.doc.toString() === state.text) return
+        const keep = Math.min(current.state.selection.main.head, state.text.length)
+        current.dispatch({ changes: { from: 0, to: current.state.doc.length, insert: state.text }, selection: { anchor: keep }, annotations: external.of(true) })
+      }),
+    [],
+  )
 
   // Every problem at its line: the YAML's own at once, the server's once it has checked this text.
   useEffect(() => {
