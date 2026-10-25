@@ -34,6 +34,7 @@
       "data": "Daten",
       "live": "Echte Daten",
       "demo": "Demo-Daten",
+      "demoMode": "Der Demo-Modus ist an, darum zeigt die Vorschau die Demo-Daten der Karte.",
       "theme": "Darstellung",
       "dark": "Dunkel",
       "light": "Hell",

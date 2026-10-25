@@ -212,6 +212,12 @@ export function Preview() {
         />
       </div>
 
+      {/* Live data asked for, demo mode answered: without this the switch would say one thing and the card show another. */}
+      {mode === 'live' && preview.data?.meta?.demo_mode === true ? (
+        <p className="text-[12px] text-muted break-words hyphens-auto" role="note" data-testid="card-preview-demo-mode">
+          {t('editor.preview.demoMode')}
+        </p>
+      ) : null}
       <div
         className="nd-stage rounded-xl p-3 overflow-x-auto min-w-0"
         data-theme={shownTheme !== ground ? shownTheme : undefined}

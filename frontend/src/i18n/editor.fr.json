@@ -34,6 +34,7 @@
       "data": "Données",
       "live": "Données réelles",
       "demo": "Données de démonstration",
+      "demoMode": "Le mode démo est actif, l'aperçu montre donc les données de démonstration de la carte.",
       "theme": "Thème",
       "dark": "Sombre",
       "light": "Clair",

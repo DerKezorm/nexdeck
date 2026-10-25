@@ -34,6 +34,7 @@
       "data": "Datos",
       "live": "Datos reales",
       "demo": "Datos de demostración",
+      "demoMode": "El modo demo está activado, por eso la vista previa muestra los datos de demostración de la tarjeta.",
       "theme": "Tema",
       "dark": "Oscuro",
       "light": "Claro",

@@ -53,6 +53,14 @@ describe('karten9 AC-9: the card as the board shows it', () => {
     expect(within(preview()).getByRole('button', { name: 'Live data' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('says so when demo mode answers live data with the demo data of the card', async () => {
+    stub(CARD, { 'POST /cards/preview': { status: 200, body: { ...SHOWN, meta: { custom: true, demo_mode: true } } } })
+    await openCard('Queue')
+    expect(await within(preview()).findByRole('note')).toHaveTextContent('Demo mode is on')
+    await userEvent.click(within(preview()).getByRole('button', { name: 'Demo data' }))
+    await waitFor(() => expect(within(preview()).queryByRole('note')).toBeNull())
+  })
+
   it('switches to the demo data of the card, and without a connection has only those', async () => {
     await openCard('Queue')
     await userEvent.click(within(preview()).getByRole('button', { name: 'Demo data' }))

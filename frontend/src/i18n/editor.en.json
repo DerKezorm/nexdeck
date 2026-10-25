@@ -34,6 +34,7 @@
       "data": "Data",
       "live": "Live data",
       "demo": "Demo data",
+      "demoMode": "Demo mode is on, so the preview shows the demo data of the card.",
       "theme": "Theme",
       "dark": "Dark",
       "light": "Light",

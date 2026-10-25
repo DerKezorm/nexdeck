@@ -70,6 +70,7 @@
       "bad_param": "Ein Wert der Antwort ist kein einfacher Name; die Abfrage wurde nicht gestellt.",
       "bad_path": "Der Pfad beginnt mit einem einzelnen / und nennt keinen Host; er liegt immer unter der Adresse der Verbindung.",
       "demo_too_large": "Die Beispielantworten sind zu groß für eine Karte, selbst wenn jede Liste auf einen Eintrag gekürzt ist.",
+      "demo_mode": "Der Demo-Modus ist an, darum fragt nexdeck den Dienst nicht.",
       "connection_missing": "Anbindung fehlt. Die Anbindung dieser Karte wurde gelöscht."
     },
     "card": {

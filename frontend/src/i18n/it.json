@@ -70,6 +70,7 @@
       "bad_param": "Un valore della risposta non è un nome semplice; la richiesta non è stata fatta.",
       "bad_path": "Il percorso inizia con una sola / e non nomina alcun host; sta sempre sotto l’indirizzo della connessione.",
       "demo_too_large": "Le risposte di esempio sono troppo grandi per una scheda, anche con ogni elenco ridotto a una voce.",
+      "demo_mode": "La modalità demo è attiva, quindi il servizio non viene interrogato.",
       "connection_missing": "Connessione mancante. La connessione di questa scheda è stata eliminata."
     },
     "card": {

@@ -283,6 +283,7 @@ def test_karten9_ac9_a_preview_without_a_connection_or_asked_for_demo_uses_the_d
         assert not reached.called
     assert alone.status_code == chosen.status_code == 200
     assert alone.json()["primary"]["value"] == 4 and chosen.json()["primary"]["value"] == 4
+    assert "demo_mode" not in alone.json()["meta"] and "demo_mode" not in chosen.json()["meta"], "demo data asked for are no demo mode"
 
 
 def test_karten9_ac9_a_card_without_demo_data_says_so_when_there_is_nothing_to_read_from(admin: TestClient) -> None:
@@ -1058,6 +1059,7 @@ def test_karten9_h2_in_demo_mode_a_preview_with_a_connection_shows_the_demo_data
         assert not reached.called
     assert answer.status_code == 200, answer.text
     assert answer.json()["primary"]["value"] == 4, "the demo data of the card, as the card on a board shows them"
+    assert answer.json()["meta"]["demo_mode"] is True, "the editor says why there are no live data"
 
 
 @pytest.mark.parametrize("how", ["flag", "variable", "connection"])

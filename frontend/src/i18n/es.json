@@ -70,6 +70,7 @@
       "bad_param": "Un valor de la respuesta no es un nombre simple; no se hizo la consulta.",
       "bad_path": "La ruta empieza con una sola / y no nombra ningún host; siempre está debajo de la dirección de la conexión.",
       "demo_too_large": "Las respuestas de ejemplo son demasiado grandes para una tarjeta, incluso con cada lista reducida a una entrada.",
+      "demo_mode": "El modo demo está activado, así que no se consulta al servicio.",
       "connection_missing": "Falta la conexión. Se eliminó la conexión de esta tarjeta."
     },
     "card": {

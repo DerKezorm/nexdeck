@@ -312,7 +312,9 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
     _connection_number(body.integration_id)
     definition = _definition(body.yaml)
     # In demo mode the card shows its demo data on a board, and so it does here: nothing is asked of the service.
-    demo = body.demo or body.integration_id is None or _demo_mode(body.integration_id) is not None
+    # Live data was asked for, and demo mode answers instead: the editor says so beside its switch.
+    forced = not body.demo and body.integration_id is not None and _demo_mode(body.integration_id) is not None
+    demo = body.demo or body.integration_id is None or forced
     base = ""
     try:
         if demo:
@@ -332,7 +334,10 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
         raise _failed(failure) from failure
     data = present(definition, result, base=base, pictures=not demo)
     data = shape_for_display(data, CUSTOM, definition.form, {})
-    return _with_preview_pictures(data.model_dump(), None if demo else body.integration_id)
+    out = _with_preview_pictures(data.model_dump(), None if demo else body.integration_id)
+    if forced:
+        out["meta"] = {**(out.get("meta") or {}), "demo_mode": True}
+    return out
 
 
 @router.post("/demo", summary="Example answers made from the real ones of a connection: shortened and made up")

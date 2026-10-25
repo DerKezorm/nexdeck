@@ -34,6 +34,7 @@
       "data": "Dati",
       "live": "Dati reali",
       "demo": "Dati dimostrativi",
+      "demoMode": "La modalità demo è attiva, quindi l'anteprima mostra i dati demo della scheda.",
       "theme": "Tema",
       "dark": "Scuro",
       "light": "Chiaro",
