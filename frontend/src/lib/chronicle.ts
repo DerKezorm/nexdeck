@@ -58,7 +58,7 @@ export function lineDetail(line: ChronicleLine, t: Translate): string {
   if (line.kind === 'card' || line.kind === 'outage') return line.detail ? tLabel(line.detail) : ''
   if (line.kind === 'container_recreated') return line.before && line.before !== line.after ? `${line.before} → ${line.after}` : ''
   if (line.kind === 'signed_in') return [t(`chronicle.way.${line.after}`, { defaultValue: line.after }), line.detail].filter(Boolean).join(' · ')
-  if (line.kind === 'sign_in_refused' || line.kind === 'connection_changed') return line.detail
+  if (line.kind === 'sign_in_refused' || line.kind === 'connection_changed' || line.kind === 'card_definition_changed') return line.detail
   return ''
 }
 

@@ -270,6 +270,29 @@ def test_karten11_ac7_creating_changing_releasing_copying_and_deleting_are_writt
     assert "created" in lines[0] and "changed" in lines[1] and "released" in lines[2] and "copied" in lines[3] and "deleted" in lines[4]
 
 
+def test_karten11_ac7_the_chronicle_has_a_line_for_each_change_at_every_journal_level(admin: TestClient) -> None:
+    """The journal at "quiet" keeps warnings only; the chronicle is the record that does not depend on the level (found in the review, 25.10.2026)."""
+    from app.services import journal
+
+    journal.apply_mode("quiet")
+    try:
+        add(admin)
+        admin.put("/api/v1/cards/queue-size", json={"yaml": changed('version: "1.0.0"', 'version: "1.0.1"')}, headers=CSRF)
+        admin.put("/api/v1/cards/queue-size/users", json={"allowed": True}, headers=CSRF)
+        admin.post("/api/v1/cards/queue-size/copy", headers=CSRF)
+        admin.delete("/api/v1/cards/queue-size", headers=CSRF)
+    finally:
+        journal.apply_mode("normal")
+    lines = [(one["kind"], one["name"], one["detail"]) for one in admin.get("/api/v1/chronicle").json()["events"] if one["kind"].startswith("card_definition")]
+    assert sorted(lines) == sorted([
+        ("card_definition_added", "queue-size", "made"),
+        ("card_definition_changed", "queue-size", "text changed"),
+        ("card_definition_changed", "queue-size", "released for users"),
+        ("card_definition_added", "queue-size-copy", "copy of queue-size"),
+        ("card_definition_removed", "queue-size", "it stood on 0 board(s)"),
+    ])
+
+
 # -- AC-8: the limit ------------------------------------------------------------------------------
 
 

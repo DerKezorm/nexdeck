@@ -49,6 +49,9 @@ KINDS: dict[str, str] = {
     "connection_added": "A connection was added",
     "connection_changed": "A connection was changed",
     "connection_removed": "A connection was removed",
+    "card_definition_added": "A custom card was made or copied",
+    "card_definition_changed": "A custom card was changed, released for users or reserved for administrators",
+    "card_definition_removed": "A custom card was deleted",
     "card_added": "A card was added",
     "card_removed": "A card was removed",
     "signed_in": "Somebody signed in",
@@ -59,11 +62,15 @@ KINDS: dict[str, str] = {
 GROUPS: dict[str, tuple[str, ...]] = {
     "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end", "forecast"),
     "versions": ("version", "container_restarted", "container_recreated"),
-    "nexdeck": ("connection_added", "connection_changed", "connection_removed", "card_added", "card_removed", "signed_in", "sign_in_refused"),
+    "nexdeck": ("connection_added", "connection_changed", "connection_removed",
+               "card_definition_added", "card_definition_changed", "card_definition_removed", "card_added", "card_removed", "signed_in", "sign_in_refused"),
 }
 
 #: Lines only administrators see: they are about the installation, not about a board.
-ADMIN_ONLY = frozenset({"connection_added", "connection_changed", "connection_removed", "signed_in", "sign_in_refused"})
+ADMIN_ONLY = frozenset({
+    "connection_added", "connection_changed", "connection_removed",
+    "card_definition_added", "card_definition_changed", "card_definition_removed", "signed_in", "sign_in_refused",
+})
 
 
 def _clip(text: Any, length: int) -> str:

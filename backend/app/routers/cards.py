@@ -20,6 +20,7 @@ from ..adapters import get_adapter
 from ..cards import load, schema, source, store
 from ..deps import AdminUser, DbSession, MemberUser, error
 from ..models import Board, CardRecord, Integration, Page, Role, Widget
+from ..services import chronicle
 from ..services.collector import collector
 from ..services.sse import board_topic, hub
 
@@ -178,6 +179,8 @@ def create_card(body: CardText, user: AdminUser, db: DbSession) -> dict[str, Any
     except store.TooManyCards:
         raise _too_many() from None
     logger.info("Custom card %r created by %s.", row.slug, user.username)
+    chronicle.record("card_definition_added", user_id=user.id, name=row.slug, detail="made", db=db)
+    db.commit()
     return _view(row, {})
 
 
@@ -198,6 +201,8 @@ def replace_card(slug: str, body: CardText, user: AdminUser, db: DbSession) -> d
     except load.CardInvalid as failure:
         raise _invalid(failure) from failure
     logger.info("Custom card %r changed by %s.", slug, user.username)
+    chronicle.record("card_definition_changed", user_id=user.id, name=slug, detail="text changed", db=db)
+    db.commit()
     _tell(db, slug)
     return {**_view(row, _placed(db)), "yaml": row.yaml_source}
 
@@ -208,6 +213,8 @@ def delete_card(slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
     boards = len(_placed(db).get(slug, {}))
     store.delete(db, row)
     logger.info("Custom card %r deleted by %s; it stood on %d board(s).", slug, user.username, boards)
+    chronicle.record("card_definition_removed", user_id=user.id, name=slug, detail=f"it stood on {boards} board(s)", db=db)
+    db.commit()
     _tell(db, slug)
     return {"boards": boards}
 
@@ -240,6 +247,8 @@ def copy_card(slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
     except store.TooManyCards:
         raise _too_many() from None
     logger.info("Custom card %r copied to %r by %s.", slug, copy.slug, user.username)
+    chronicle.record("card_definition_added", user_id=user.id, name=copy.slug, detail=f"copy of {slug}", db=db)
+    db.commit()
     return _view(copy, {})
 
 
@@ -249,4 +258,7 @@ def share_card(slug: str, body: SharingBody, user: AdminUser, db: DbSession) -> 
     row = _row(db, slug)
     store.set_users_may_place(db, row, body.allowed)
     logger.info("Custom card %r %s for users by %s.", slug, "released" if body.allowed else "reserved for administrators", user.username)
+    chronicle.record("card_definition_changed", user_id=user.id, name=slug,
+                     detail="released for users" if body.allowed else "reserved for administrators", db=db)
+    db.commit()
     return _view(row, _placed(db))

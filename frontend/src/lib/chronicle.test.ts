@@ -36,6 +36,13 @@ describe('chronicle words', () => {
     expect(lineDetail(line({ kind: 'signed_in', after: 'home', detail: '192.168.1.20' }), t)).toBe('on the home network · 192.168.1.20')
   })
 
+  it('says what happened to a custom card and what was done to it', () => {
+    expect(lineText(line({ kind: 'card_definition_added', name: 'queue-size' }), t, 'en')).toBe('Custom card queue-size made')
+    expect(lineText(line({ kind: 'card_definition_changed', name: 'queue-size' }), t, 'en')).toBe('Custom card queue-size changed')
+    expect(lineText(line({ kind: 'card_definition_removed', name: 'queue-size' }), t, 'en')).toBe('Custom card queue-size deleted')
+    expect(lineDetail(line({ kind: 'card_definition_changed', detail: 'released for users' }), t)).toBe('released for users')
+  })
+
   it('speaks German', async () => {
     await setLanguage('de')
     expect(lineText(line({}), t, 'de')).toBe('Synology wurde rot')
