@@ -959,3 +959,54 @@ def test_karten9_ac10_a_key_that_only_ends_like_a_time_word_does_not_keep_a_numb
     assert demo.names_a_time(key) is False
     made, _cut = demo.disguise({"q": {key: 1_761_998_400}})
     assert made["q"][key] != 1_761_998_400
+
+
+# -- mutations of the review that no test noticed ---------------------------------------------------------
+
+
+def test_karten9_ec1_a_list_of_twenty_five_shows_ten_and_says_fifteen_more() -> None:
+    """The number itself, not the constant: ten entries show the shape of all."""
+    body = probe.build({"rows": [{"n": n} for n in range(25)]})
+    rows = body["tree"]["children"][0]
+    assert len(rows["children"]) == 10 and rows["more"] == 15 and body["cut"] is True
+
+
+def test_karten9_ec1_the_tree_is_built_level_by_level_so_a_long_branch_cannot_starve_its_neighbours() -> None:
+    def fan(depth: int) -> Any:
+        return [fan(depth - 1) for _ in range(10)] if depth else "leaf"
+
+    body = probe.build({"first": {"small": 1}, "wide": fan(5), "last": {"small": 2}})
+    paths = {node["path"] for node in nodes_of(body["tree"])}
+    assert body["nodes"] == probe.MAX_NODES
+    assert {"first.small", "last.small"} <= paths, "the fields next to the large branch still show"
+
+
+@respx.mock
+def test_karten9_ec2_a_service_that_takes_too_long_is_told_as_unreachable_and_the_editor_does_not_hang(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from app.routers import cards as card_routes
+
+    async def slow(request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(2)
+        return httpx.Response(200, json={})
+
+    monkeypatch.setattr(card_routes, "ASK_SECONDS", 0.05)
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/api/v3/queue").mock(side_effect=slow)
+    for answer in (
+        post(admin, "probe", {"integration_id": sonarr, "path": "/api/v3/queue"}),
+        post(admin, "demo", {"yaml": VALUE_CARD, "integration_id": sonarr}),
+        post(admin, "preview", {"yaml": VALUE_CARD, "integration_id": sonarr}),
+    ):
+        detail = answer.json()["detail"]
+        assert answer.status_code == 502 and detail["code"] == "unreachable" and detail["hint"], answer.text[:200]
+
+
+def test_karten9_ac10_a_run_of_digits_changes_in_every_place() -> None:
+    """⚠️ A digit that stays is a digit of the original: 3 of 4 places kept would be a number half given away."""
+    for number in range(1, 4000):
+        token = str(number)
+        made = demo.disguise_text(token)
+        assert len(made) == len(token) and all(new != old for new, old in zip(made, token, strict=True)), (token, made)
+        assert made[0] != "0" or len(token) == 1
