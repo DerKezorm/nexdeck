@@ -150,7 +150,8 @@
       "media": "Media",
       "player": "Music player",
       "homeNetwork": "Home network",
-      "apps": "Apps"
+      "apps": "Apps",
+      "assistant": "Assistant"
     },
     "mail": {
       "title": "Mail server",
@@ -553,6 +554,30 @@
       "at": "Time of the daily report",
       "goesAt": "The daily report goes out at {{time}}.",
       "saved": "The daily report goes out at {{time}} from now on."
+    },
+    "assistant": {
+      "title": "Ask nexdeck",
+      "help": "A chat next to the bell that answers from your cards, the chronicle and the outages, and puts buttons in front of you instead of pressing them. For administrators only.",
+      "provider": "Provider",
+      "off": "Off",
+      "anthropic": "Claude (Anthropic)",
+      "openai": "OpenAI form (OpenAI, Ollama, LM Studio …)",
+      "address": "Address",
+      "addressHelp": "Up to /v1, for example http://ollama:11434/v1 or https://api.openai.com/v1.",
+      "model": "Model",
+      "modelHelpClaude": "Empty takes claude-opus-5-5.",
+      "modelHelpOpenai": "The model must be able to call tools, for example qwen3 or llama3.1.",
+      "key": "API key",
+      "keyHelpOpenai": "Ollama and LM Studio need none.",
+      "keyKept": "A key is stored; type a new one to replace it",
+      "removeKey": "Remove the stored key",
+      "leaves": "Questions, and what nexdeck looks up to answer them, leave the house: card states, chronicle lines, and log lines once you allow them. The keys and passwords of your connections never do.",
+      "stays": "This address is on the home network: questions and what nexdeck looks up stay in the house.",
+      "unknown": "Once saved, this says whether the address is on the home network.",
+      "who": "Only administrators see the chat. Conversations are kept for 30 days. The assistant never presses a button: it shows it, with what it would hit, and you press it.",
+      "test": "Save and test",
+      "testCosts": "The test asks one short question and costs a few tokens.",
+      "testOk": "{{model}} answers."
     }
   },
   "menu": {
@@ -2217,5 +2242,73 @@
     "updatesCount_one": "update",
     "updatesCount_other": "updates",
     "quiet": "Nothing happened in the last 24 hours, and nothing is red."
+  },
+  "assistant": {
+    "title": "Ask nexdeck",
+    "new": "New",
+    "history": "History",
+    "hello": "What do you want to know?",
+    "helloHelp": "I read the state of your cards, the chronicle and the outages. I never press a button myself; I show it to you.",
+    "suggest": {
+      "wrong": "Is anything wrong right now?",
+      "night": "What happened last night?",
+      "changed": "What changed today?"
+    },
+    "placeholder": "Ask about your homelab …",
+    "question": "Question",
+    "send": "Send",
+    "thinking": "Looking it up …",
+    "empty": "No answer came back.",
+    "refused": "The provider declined to answer this. Try putting it differently.",
+    "privacy": {
+      "anthropic": "Questions and what nexdeck looks up go to Anthropic. The keys and passwords of your connections never do.",
+      "out": "Questions and what nexdeck looks up leave the house. The keys and passwords of your connections never do.",
+      "home": "Stays on the home network."
+    },
+    "notSet": "No provider set up yet",
+    "notSetHelp": "Under System, Assistant you choose Claude or a service in the OpenAI form, such as Ollama on the home network. It is off by default, and only administrators see it.",
+    "setUp": "Set up under System",
+    "mayReadLog": "May I read the last lines of the log of {{container}}?",
+    "logLeaves": "They go to the provider. Log lines can hold addresses, names or tokens.",
+    "logStays": "They stay on the home network.",
+    "allow": "Allow reading",
+    "deny": "No",
+    "allowed": "Allowed for this conversation.",
+    "denied": "Not read. Without the log I only see that something happens, not why.",
+    "allowedFollowUp": "Yes, read the log of {{container}}.",
+    "reallySure": "Really? This cannot be undone from here.",
+    "reallyDo": "Yes, {{label}}",
+    "ran": "Done: {{message}} The log notes it was pressed in the chat.",
+    "cancelled": "Cancelled, nothing happened.",
+    "fact": {
+      "up": "Docker: {{text}}",
+      "streams_one": "{{count}} stream ends: {{names}}",
+      "streams_other": "{{count}} streams end: {{names}}",
+      "downloads_one": "{{count}} download stops",
+      "downloads_other": "{{count}} downloads stop",
+      "devices_one": "Switches {{count}} device: {{names}}",
+      "devices_other": "Switches {{count}} devices: {{names}}",
+      "lastRun": "Last ran {{when}}"
+    },
+    "day": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week",
+      "older": "Earlier"
+    },
+    "noHistory": "No conversations yet.",
+    "keep": "Conversations are kept for {{days}} days after their last question, then they are gone.",
+    "forget": "Delete {{title}}",
+    "forgetAll": "Delete all conversations",
+    "forgetAllBody": "Every conversation of yours goes, and cannot be brought back.",
+    "error": {
+      "off": "The assistant is not set up any more. An administrator can switch it on under System.",
+      "auth": "The provider refused the key. Check it under System, Assistant.",
+      "rate_limited": "The provider is busy or the account's limit is reached. Try again in a minute.",
+      "unreachable": "The provider could not be reached.",
+      "busy": "Still answering the last question.",
+      "model": "The provider does not know this model or address.",
+      "provider": "The provider answered with an error."
+    }
   }
 }

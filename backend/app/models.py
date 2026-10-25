@@ -567,6 +567,41 @@ class Event(Base):
     detail: Mapped[str] = mapped_column(String(400), default="")
 
 
+class Conversation(Base):
+    """A conversation with the assistant (roadmap M3), kept 30 days after its last turn."""
+
+    __tablename__ = "conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The first question, shortened: what the list of conversations shows.
+    title: Mapped[str] = mapped_column(String(200), default="")
+    #: What the person allowed in this conversation, such as reading one container's log.
+    grants: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow, index=True)
+
+
+class ConversationTurn(Base):
+    """One entry of a conversation: a question, an answer, tool calls and their results.
+
+    ``content`` is nexdeck's own shape, the same for every provider; ``raw``
+    keeps what the provider answered, so a reply with thinking in it goes back
+    to the same provider exactly as it came.
+    """
+
+    __tablename__ = "conversation_turns"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), index=True)
+    #: ``user``, ``assistant``, ``tool``, or ``answer``: what the chat showed, with its chips and buttons.
+    role: Mapped[str] = mapped_column(String(12))
+    content: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    provider: Mapped[str] = mapped_column(String(20), default="")
+    raw: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class LogLine(Base):
     __tablename__ = "log_lines"
     __table_args__ = (Index("ix_log_lines_source_ts", "source", "ts"),)

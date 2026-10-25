@@ -1589,6 +1589,16 @@ class Adapter:
     ) -> str:
         raise AdapterError("This widget has no actions.", code="no_such_action")
 
+    async def impact(
+        self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], ctx: Context
+    ) -> list[dict[str, Any]]:
+        """What one of this adapter's buttons hits that only the service can say (``services/impact.py``).
+
+        Facts as ``{"fact": ..., ...}``; nothing by default. Read only: asking
+        what a button would do must never do it.
+        """
+        return []
+
     #: What a button card may ask this adapter to do. Empty for almost every
     #: adapter, and that is the point: see :class:`Deed`.
     deeds: tuple[Deed, ...] = ()

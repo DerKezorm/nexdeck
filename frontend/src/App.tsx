@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AppBarFrame } from './components/AppBar'
+import { AssistantHost } from './components/assistant/AssistantHost'
 import { BackgroundLayer } from './components/BackgroundLayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
@@ -152,6 +153,8 @@ export function App() {
         <NoticeToast />
         {/* Beside the routes, not inside a page: music carries on when the board changes. */}
         <PlayerHost />
+        {/* Beside the routes as well: a conversation carries on from board to board. */}
+        <AssistantHost />
       </BrowserRouter>
       </ErrorBoundary>
     </QueryClientProvider>

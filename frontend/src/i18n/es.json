@@ -150,7 +150,8 @@
       "media": "Multimedia",
       "player": "Reproductor de música",
       "homeNetwork": "Red doméstica",
-      "apps": "Apps"
+      "apps": "Apps",
+      "assistant": "Asistente"
     },
     "mail": {
       "title": "Servidor de correo",
@@ -553,6 +554,30 @@
       "at": "Hora del informe diario",
       "goesAt": "El informe diario sale a las {{time}}.",
       "saved": "A partir de ahora el informe diario sale a las {{time}}."
+    },
+    "assistant": {
+      "title": "Pregunta a nexdeck",
+      "help": "Un chat junto a la campana que responde a partir de tus tarjetas, la crónica y las caídas, y te muestra botones en lugar de pulsarlos. Solo para administradores.",
+      "provider": "Proveedor",
+      "off": "Apagado",
+      "anthropic": "Claude (Anthropic)",
+      "openai": "Formato OpenAI (OpenAI, Ollama, LM Studio …)",
+      "address": "Dirección",
+      "addressHelp": "Hasta /v1, por ejemplo http://ollama:11434/v1 o https://api.openai.com/v1.",
+      "model": "Modelo",
+      "modelHelpClaude": "Vacío usa claude-opus-5-5.",
+      "modelHelpOpenai": "El modelo debe poder llamar herramientas, por ejemplo qwen3 o llama3.1.",
+      "key": "Clave de API",
+      "keyHelpOpenai": "Ollama y LM Studio no la necesitan.",
+      "keyKept": "Hay una clave guardada; escribe otra para sustituirla",
+      "removeKey": "Quitar la clave guardada",
+      "leaves": "Las preguntas y lo que nexdeck consulta para responderlas salen de casa: estados de tarjetas, líneas de la crónica y líneas de registro cuando las permitas. Las claves y contraseñas de tus conexiones, nunca.",
+      "stays": "Esta dirección está en la red de casa: las preguntas y lo que nexdeck consulta se quedan en casa.",
+      "unknown": "Al guardar, aquí se indica si la dirección está en la red de casa.",
+      "who": "Solo los administradores ven el chat. Las conversaciones se guardan 30 días. El asistente nunca pulsa un botón: lo muestra con lo que afectaría, y tú lo pulsas.",
+      "test": "Guardar y probar",
+      "testCosts": "La prueba hace una pregunta corta y cuesta unos pocos tokens.",
+      "testOk": "{{model}} responde."
     }
   },
   "menu": {
@@ -2217,5 +2242,73 @@
     "updatesCount_one": "actualización",
     "updatesCount_other": "actualizaciones",
     "quiet": "No pasó nada en las últimas 24 horas y nada está en rojo."
+  },
+  "assistant": {
+    "title": "Pregunta a nexdeck",
+    "new": "Nueva",
+    "history": "Historial",
+    "hello": "¿Qué quieres saber?",
+    "helloHelp": "Leo el estado de tus tarjetas, la crónica y las caídas. Nunca pulso un botón yo mismo; te lo muestro.",
+    "suggest": {
+      "wrong": "¿Hay algo mal ahora mismo?",
+      "night": "¿Qué pasó anoche?",
+      "changed": "¿Qué ha cambiado hoy?"
+    },
+    "placeholder": "Pregunta por tu homelab …",
+    "question": "Pregunta",
+    "send": "Enviar",
+    "thinking": "Lo estoy consultando …",
+    "empty": "No llegó ninguna respuesta.",
+    "refused": "El proveedor no quiso responder a esto. Prueba a formularlo de otra manera.",
+    "privacy": {
+      "anthropic": "Las preguntas y lo que nexdeck consulta van a Anthropic. Las claves y contraseñas de tus conexiones, nunca.",
+      "out": "Las preguntas y lo que nexdeck consulta salen de casa. Las claves y contraseñas de tus conexiones, nunca.",
+      "home": "Se queda en la red de casa."
+    },
+    "notSet": "Aún no hay proveedor configurado",
+    "notSetHelp": "En Sistema, Asistente eliges Claude o un servicio con formato OpenAI, como Ollama en la red de casa. Viene apagado y solo lo ven los administradores.",
+    "setUp": "Configurar en Sistema",
+    "mayReadLog": "¿Puedo leer las últimas líneas del registro de {{container}}?",
+    "logLeaves": "Van al proveedor. Las líneas de registro pueden contener direcciones, nombres o tokens.",
+    "logStays": "Se quedan en la red de casa.",
+    "allow": "Permitir leer",
+    "deny": "No",
+    "allowed": "Permitido para esta conversación.",
+    "denied": "No leído. Sin el registro solo veo que algo pasa, no por qué.",
+    "allowedFollowUp": "Sí, lee el registro de {{container}}.",
+    "reallySure": "¿De verdad? Esto no se puede deshacer desde aquí.",
+    "reallyDo": "Sí, {{label}}",
+    "ran": "Hecho: {{message}} El registro anota que se pulsó en el chat.",
+    "cancelled": "Cancelado, no ha pasado nada.",
+    "fact": {
+      "up": "Docker: {{text}}",
+      "streams_one": "Se corta {{count}} reproducción: {{names}}",
+      "streams_other": "Se cortan {{count}} reproducciones: {{names}}",
+      "downloads_one": "Se detiene {{count}} descarga",
+      "downloads_other": "Se detienen {{count}} descargas",
+      "devices_one": "Cambia {{count}} dispositivo: {{names}}",
+      "devices_other": "Cambia {{count}} dispositivos: {{names}}",
+      "lastRun": "Última ejecución {{when}}"
+    },
+    "day": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "week": "Esta semana",
+      "older": "Antes"
+    },
+    "noHistory": "Aún no hay conversaciones.",
+    "keep": "Las conversaciones se guardan {{days}} días tras la última pregunta; después desaparecen.",
+    "forget": "Eliminar {{title}}",
+    "forgetAll": "Eliminar todas las conversaciones",
+    "forgetAllBody": "Todas tus conversaciones desaparecen y no se pueden recuperar.",
+    "error": {
+      "off": "El asistente ya no está configurado. Un administrador puede activarlo en Sistema.",
+      "auth": "El proveedor rechazó la clave. Revísala en Sistema, Asistente.",
+      "rate_limited": "El proveedor está ocupado o se alcanzó el límite de la cuenta. Inténtalo de nuevo en un minuto.",
+      "unreachable": "No se pudo contactar con el proveedor.",
+      "busy": "Todavía respondiendo la última pregunta.",
+      "model": "El proveedor no conoce este modelo o dirección.",
+      "provider": "El proveedor respondió con un error."
+    }
   }
 }

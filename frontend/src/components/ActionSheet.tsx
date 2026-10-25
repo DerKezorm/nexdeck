@@ -6,10 +6,17 @@
  * same confirmation twice, and the day a card first needed a pick list only
  * one of the two would have learned it: a press on the wall would have gone
  * out with the blanks empty and come back refused.
+ *
+ * Under the question stands what the button would hit, where nexdeck knows
+ * it (roadmap M3): streams that end, downloads that stop, lights a scene
+ * switches. Asked when the question opens; without an answer it is left out.
  */
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { post } from '../api/client'
 import { tLabel } from '../i18n/texts'
+import { factText, type Fact } from '../lib/assistant'
 import type { Action } from '../lib/types'
 import { unanswered } from '../lib/unanswered'
 import { Confirm } from './ui'
@@ -34,6 +41,23 @@ export function ActionSheet({
 }) {
   const { t } = useTranslation()
   const blanks = pending ? unanswered(pending.action) : []
+  const [facts, setFacts] = useState<Fact[]>([])
+  // One string, so the question is asked again only when the button changes.
+  const asked = pending ? JSON.stringify([pending.widgetId, pending.action.id, pending.action.params ?? {}]) : ''
+  useEffect(() => {
+    setFacts([])
+    if (!asked) return
+    const [widgetId, actionId, params] = JSON.parse(asked) as [number, string, Record<string, unknown>]
+    let dropped = false
+    void post<{ impact: Fact[] }>(`/widgets/${widgetId}/actions/${actionId}/impact`, { params })
+      .then((answer) => {
+        if (!dropped) setFacts(answer.impact)
+      })
+      .catch(() => undefined)
+    return () => {
+      dropped = true
+    }
+  }, [asked])
   const incomplete = pending !== null && blanks.some((blank) => !String(pending.values[blank.name] ?? '').trim())
 
   return (
@@ -49,6 +73,13 @@ export function ActionSheet({
         onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...pending.values } })
       }}
     >
+      {facts.length > 0 && (
+        <ul className="mt-2 text-[12.5px] text-muted" data-testid="action-impact">
+          {facts.map((fact, index) => (
+            <li key={index}>{factText(t, fact)}</li>
+          ))}
+        </ul>
+      )}
       {pending && blanks.length > 0 && (
         <div className="flex flex-col gap-3 mt-3">
           {blanks.map((blank) => {

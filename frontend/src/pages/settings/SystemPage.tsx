@@ -1,4 +1,4 @@
-import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Palette, Plug, ScrollText, Search, Users } from 'lucide-react'
+import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Palette, Plug, ScrollText, Search, Sparkles, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -7,6 +7,7 @@ import { useAuth } from '../../stores/auth'
 import { AboutSettings } from './AboutSettings'
 import { AppearanceSettings } from './AppearanceSettings'
 import { AppsSettings } from './AppsSettings'
+import { AssistantSettings } from './AssistantSettings'
 import { BackupsSettings } from './BackupsSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
@@ -37,6 +38,7 @@ export function SystemPage() {
     { to: 'address', icon: Globe, label: t('settings.nav.address'), show: admin },
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
     { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
+    { to: 'assistant', icon: Sparkles, label: t('settings.nav.assistant'), show: admin },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
     { to: 'sign-in', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
     { to: 'home-network', icon: House, label: t('settings.nav.homeNetwork'), show: admin },
@@ -61,6 +63,7 @@ export function SystemPage() {
             <Route path="address" element={forAdmin(<AddressSettings />)} />
             <Route path="mail" element={forAdmin(<MailSettings />)} />
             <Route path="search" element={forAdmin(<SearchSettings />)} />
+            <Route path="assistant" element={forAdmin(<AssistantSettings />)} />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="sign-in" element={forAdmin(<SignInSettings />)} />
             {/* Where the sign-in providers were until the provider list. */}

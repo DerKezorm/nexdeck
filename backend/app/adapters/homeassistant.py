@@ -161,6 +161,22 @@ class HomeAssistantAdapter(Adapter):
             raise AdapterError(f"Home Assistant answered with HTTP {response.status_code}.", code="http_error")
         return f"{domain}.{service} called for {entity_id}."
 
+    async def impact(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
+        """What a scene, a group, a script or an automation would set off, read from its own state."""
+        entity_id = str(params.get("entity_id") or "")
+        domain = entity_id.split(".", 1)[0]
+        if domain not in ("scene", "group", "script", "automation"):
+            return []
+        state = await self.state_of(entity_id, config, ctx)
+        attributes = (state.get("attributes") or {}) if isinstance(state, dict) else {}
+        facts: list[dict[str, Any]] = []
+        members = attributes.get("entity_id")
+        if isinstance(members, list) and members:
+            facts.append({"fact": "devices", "count": len(members), "names": [str(one) for one in members[:6]]})
+        if attributes.get("last_triggered"):
+            facts.append({"fact": "last_run", "at": str(attributes["last_triggered"])})
+        return facts
+
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         if widget_kind == "entity":
             temperature = fake.walk("ha-temp", tick, 20.5, 23.1, period=900)

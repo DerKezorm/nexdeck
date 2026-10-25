@@ -26,6 +26,7 @@ from .routers import (
     appearance,
     apps,
     assets,
+    assistant,
     auth,
     avatars,
     backups,
@@ -221,7 +222,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, assistant, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 
 

@@ -1,0 +1,143 @@
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { ApiError, get, post, put } from '../../api/client'
+import { Field, PasswordInput, Select, Toast } from '../../components/ui'
+import { useAssistant } from '../../lib/assistant'
+import { SettingsCard } from './SettingsCard'
+
+interface Setting {
+  provider: 'off' | 'anthropic' | 'openai'
+  base_url: string
+  model: string
+  has_key: boolean
+  ready: boolean
+  leaves_the_house: boolean
+}
+
+/**
+ * The assistant's provider (roadmap M3), chosen once for the installation.
+ *
+ * Off by default. Claude goes out to Anthropic; an OpenAI-shaped service can
+ * be Ollama or LM Studio on the home network, and then nothing leaves the
+ * house. The key is written, never read back: the field only says one is set.
+ */
+export function AssistantSettings() {
+  const { t } = useTranslation()
+  const saved = useQuery({ queryKey: ['assistant-setting'], queryFn: () => get<Setting>('/settings/assistant') })
+  const reload = useAssistant((s) => s.load)
+  const [provider, setProvider] = useState<Setting['provider']>('off')
+  const [address, setAddress] = useState('')
+  const [model, setModel] = useState('')
+  const [key, setKey] = useState('')
+  const [hasKey, setHasKey] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  useEffect(() => {
+    if (!saved.data) return
+    setProvider(saved.data.provider)
+    setAddress(saved.data.base_url)
+    setModel(saved.data.model)
+    setHasKey(saved.data.has_key)
+  }, [saved.data])
+
+  const report = (failure: unknown) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+
+  const store = async (dropKey = false): Promise<Setting | null> => {
+    try {
+      const answer = await put<Setting>('/settings/assistant', {
+        provider,
+        base_url: address,
+        model,
+        ...(dropKey ? { key: '' } : key.trim() ? { key: key.trim() } : {}),
+      })
+      setKey('')
+      setHasKey(answer.has_key)
+      setModel(answer.model)
+      await saved.refetch()
+      await reload()
+      return answer
+    } catch (failure) {
+      report(failure)
+      return null
+    }
+  }
+
+  const test = async () => {
+    setBusy(true)
+    try {
+      if (!(await store())) return
+      const answer = await post<{ model: string; answer: string }>('/settings/assistant/test')
+      setToast({ text: t('settings.assistant.testOk', { model: answer.model }), level: 'ok' })
+    } catch (failure) {
+      report(failure)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Whether questions leave the house, as the server judges the address; a
+  // changed address is judged once it is saved.
+  const sameAddress = saved.data?.provider === 'openai' && saved.data.base_url === address.trim().replace(/\/+$/, '')
+  const where = provider === 'anthropic' ? 'leaves' : sameAddress ? (saved.data?.leaves_the_house ? 'leaves' : 'stays') : 'unknown'
+
+  return (
+    <>
+      <SettingsCard title={t('settings.assistant.title')} description={t('settings.assistant.help')}>
+        <Field label={t('settings.assistant.provider')} htmlFor="assistant-provider">
+          <Select
+            id="assistant-provider"
+            value={provider}
+            onChange={(value) => setProvider(value as Setting['provider'])}
+            options={[
+              { value: 'off', label: t('settings.assistant.off') },
+              { value: 'anthropic', label: t('settings.assistant.anthropic') },
+              { value: 'openai', label: t('settings.assistant.openai') },
+            ]}
+          />
+        </Field>
+        {provider === 'openai' && (
+          <Field label={t('settings.assistant.address')} help={t('settings.assistant.addressHelp')}>
+            <input className="input font-mono text-[12.5px]" value={address} placeholder="http://ollama:11434/v1" onChange={(event) => setAddress(event.target.value)} />
+          </Field>
+        )}
+        {provider !== 'off' && (
+          <>
+            <Field label={t('settings.assistant.model')} help={provider === 'anthropic' ? t('settings.assistant.modelHelpClaude') : t('settings.assistant.modelHelpOpenai')}>
+              <input className="input font-mono text-[12.5px]" value={model} placeholder={provider === 'anthropic' ? 'claude-opus-5-5' : 'qwen3:14b'} onChange={(event) => setModel(event.target.value)} />
+            </Field>
+            <Field label={t('settings.assistant.key')} help={provider === 'openai' ? t('settings.assistant.keyHelpOpenai') : undefined} htmlFor="assistant-key">
+              <PasswordInput id="assistant-key" value={key} onChange={setKey} autoComplete="new-password" placeholder={hasKey ? t('settings.assistant.keyKept') : ''} />
+            </Field>
+            {hasKey && (
+              <button type="button" className="btn btn-flat -mt-1 mb-3 text-[12.5px]" onClick={() => void store(true)}>
+                {t('settings.assistant.removeKey')}
+              </button>
+            )}
+            <p className={`mb-3 rounded-xl border p-3 text-[12.5px] ${where === 'leaves' ? 'border-warn/50' : 'border-line'}`} data-testid="assistant-where">
+              {t(`settings.assistant.${where}`)}
+            </p>
+          </>
+        )}
+        <p className="mb-3 text-[12.5px] text-muted">{t('settings.assistant.who')}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {provider !== 'off' && (
+            <button type="button" className="btn" disabled={busy} onClick={() => void test()}>
+              {t('settings.assistant.test')}
+            </button>
+          )}
+          {provider === 'anthropic' && <span className="text-[11.5px] text-faint">{t('settings.assistant.testCosts')}</span>}
+          <button type="button" className="btn btn-accent ml-auto" disabled={busy} onClick={() => void store().then((answer) => answer && setToast({ text: t('common.saved'), level: 'ok' }))}>
+            {t('common.save')}
+          </button>
+        </div>
+      </SettingsCard>
+      {toast && (
+        <Toast level={toast.level} onClose={() => setToast(null)}>
+          {toast.text}
+        </Toast>
+      )}
+    </>
+  )
+}

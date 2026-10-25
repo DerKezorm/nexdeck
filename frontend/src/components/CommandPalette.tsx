@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, LayoutDashboard, Play, Search, Settings, Zap } from 'lucide-react'
+import { ExternalLink, LayoutDashboard, Play, Search, Settings, Sparkles, Zap } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
+import { useAssistant } from '../lib/assistant'
 import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -127,6 +128,22 @@ ${link.url}`
     return chosen && !rest.trim() ? chosen : null
   }, [search.data, query])
 
+  /** "Ask nexdeck" (roadmap M3): what was typed goes to the chat as a question. */
+  const ready = useAssistant((s) => s.state?.ready ?? false)
+  const askAssistant = useAssistant((s) => s.ask)
+  const asking = useMemo<Entry[]>(() => {
+    if (!ready || query.trim().startsWith('!')) return []
+    const words = query.trim()
+    return [{
+      id: 'ask',
+      title: words || t('assistant.title'),
+      subtitle: t('assistant.title'),
+      icon: <Sparkles size={16} className="text-accent" />,
+      keywords: '',
+      run: () => askAssistant(words),
+    }]
+  }, [ready, query, askAssistant, t])
+
   const outward = useMemo<Entry[]>(() => {
     const settings = search.data
     if (!settings?.enabled) return []
@@ -151,8 +168,10 @@ ${link.url}`
     // Own things first; the way out sits under them, unless a shortcut named
     // one target, and then that is plainly what was meant.
     const named = outward.length === 1 && query.trim().startsWith('!')
-    return named ? [...outward, ...matches.slice(0, 8)] : [...matches.slice(0, 12 - Math.min(outward.length, 4)), ...outward.slice(0, 4)]
-  }, [entries, query, outward])
+    // The question to nexdeck sits between the own things and the way out: a
+    // typed name still finds the card first.
+    return named ? [...outward, ...matches.slice(0, 8)] : [...matches.slice(0, 12 - Math.min(outward.length, 4) - asking.length), ...asking, ...outward.slice(0, 4)]
+  }, [entries, query, outward, asking])
 
   if (!open) return null
   const run = (entry: Entry) => {

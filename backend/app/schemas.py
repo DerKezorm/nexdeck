@@ -437,6 +437,8 @@ class HomeToggleBody(BaseModel):
 
 class ActionBody(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
+    #: ``assistant`` when the button was pressed in the chat: the logs say so.
+    via: Literal["", "assistant"] = ""
 
 
 class PlaylistCreate(BaseModel):

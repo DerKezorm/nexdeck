@@ -53,6 +53,11 @@ def prune_old_records(db: Session) -> dict[str, int]:
         cutoff = utcnow() - timedelta(days=settings.keep_events_days)
         gone["events"] = db.execute(delete(Event).where(Event.at < cutoff)).rowcount or 0
 
+    # Thirty days after the last turn, fixed: the chat says so where it asks.
+    from .assistant import chat
+
+    gone["conversations"] = chat.sweep(db)
+
     if any(gone.values()):
         db.commit()
 

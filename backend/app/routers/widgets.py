@@ -37,7 +37,7 @@ from ..schemas import (
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import chronicle, grid, history, holders
+from ..services import chronicle, grid, history, holders, impact
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
@@ -356,6 +356,21 @@ def widget_data(widget_id: int, request: Request, user: OptionalUser, db: DbSess
     return data.model_dump() if data else {}
 
 
+@router.post("/widgets/{widget_id}/actions/{action_id}/impact", summary="What a widget action would hit")
+async def action_impact(widget_id: int, action_id: str, body: ActionBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
+    """Streams that would end, downloads that would stop: shown before the press. Same right as pressing."""
+    _widget_row, page = _widget(db, widget_id)
+    _board, permission = board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    if permission not in ("act", "owner"):
+        raise error("forbidden", "You may look at this board, but not act on it.", status.HTTP_403_FORBIDDEN)
+    try:
+        collector._refuse_unless_offered(widget_id, action_id, body.params)
+    except AdapterError as failure:
+        raise error(failure.code, failure.message) from failure
+    db.rollback()
+    return {"impact": await impact.facts(widget_id, action_id, body.params)}
+
+
 @router.post("/widgets/{widget_id}/actions/{action_id}", summary="Run a widget action")
 async def run_action(widget_id: int, action_id: str, body: ActionBody, request: Request, user: OptionalUser, db: DbSession) -> dict:
     """Needs the act permission on the board, or a kiosk token that allows actions. Every call is logged."""
@@ -365,6 +380,8 @@ async def run_action(widget_id: int, action_id: str, body: ActionBody, request: 
     if permission not in ("act", "owner"):
         raise error("forbidden", "You may look at this board, but not act on it.", status.HTTP_403_FORBIDDEN)
     actor = user.username if user else f"kiosk:{kiosk.name}" if kiosk else "?"
+    if body.via == "assistant":
+        actor = f"{actor} (via assistant)"
     try:
         message = await collector.run_action(widget_id, action_id, body.params, actor=actor, user_id=user.id if user else None)
     except AdapterError as failure:

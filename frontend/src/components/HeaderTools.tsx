@@ -9,6 +9,7 @@ import { applyTheme, currentTheme, useAuth } from '../stores/auth'
 import { usePicture } from '../lib/boardPicture'
 import { madeUp, useShowcase } from '../lib/showcase'
 import { usePlayer } from '../stores/player'
+import { AssistantButton } from './assistant/AssistantHost'
 import { Avatar } from './Avatar'
 
 /** Loaded only once something plays and the viewer put the player in the top bar. */
@@ -299,6 +300,7 @@ export function HeaderTools({ user, unread, onNotices }: Props) {
         </Suspense>
       )}
       <ShowcaseMark />
+      <AssistantButton />
       <NoticeButton unread={unread} onClick={onNotices} />
       <span className="hidden sm:flex items-center gap-1.5">
         <ThemePill signedIn={signedIn} />
