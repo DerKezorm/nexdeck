@@ -44,6 +44,7 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
 export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
   const { t } = useTranslation()
   const panel = useRef<HTMLDivElement>(null)
+  const heading = useId()
   useEffect(() => {
     if (!open) return
     // A dialog may sit on top of a sheet. Escape closes the dialog alone: the
@@ -64,11 +65,12 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   // confine a fixed dialog to itself, and a dialog opened from a sheet would
   // be squeezed into the sheet's column.
   return createPortal(
-    <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    // The title names the dialog, so a screen reader says what it is about when it opens.
+    <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={heading}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
-          <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
+          <h2 id={heading} className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
           <button className="btn btn-icon btn-flat" onClick={onClose} aria-label={t('common.close')}>
             <X size={16} />
           </button>
