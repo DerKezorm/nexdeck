@@ -82,7 +82,7 @@ describe('language files', () => {
 
   it('use no em dashes', () => {
     for (const [language, data] of Object.entries({ en, ...TRANSLATIONS })) {
-      const offenders = paths(data).filter((p) => String(lookup(data, p)).includes('—'))
+      const offenders = paths(data).filter((p) => String(lookup(data, p)).match(/[—–]/))
       expect(offenders, `${language}: em dash`).toEqual([])
     }
   })
@@ -106,7 +106,7 @@ describe('sign-in words in every language', () => {
       const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
       const different = [...english].filter((p) => placeholders(String(lookup(oidcEn, p))) !== placeholders(String(lookup(data, p))))
       expect(different, `placeholders differ between en and ${language}`).toEqual([])
-      const empty = [...known].filter((p) => String(lookup(data, p)).trim() === '' || String(lookup(data, p)).includes('—'))
+      const empty = [...known].filter((p) => String(lookup(data, p)).trim() === '' || String(lookup(data, p)).match(/[—–]/))
       expect(empty, `${language}: empty texts or em dashes`).toEqual([])
     })
   }
@@ -136,7 +136,7 @@ for (const [part, bundles] of Object.entries(LAZY)) {
         expect([...known].filter((p) => !english.has(p)).sort(), `only in ${part}.${language}.json`).toEqual([])
         const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
         expect([...english].filter((p) => placeholders(String(lookup(bundles.en, p))) !== placeholders(String(lookup(data, p))))).toEqual([])
-        expect(paths(data).filter((p) => !String(lookup(data, p)).trim() || String(lookup(data, p)).includes('—'))).toEqual([])
+        expect(paths(data).filter((p) => !String(lookup(data, p)).trim() || String(lookup(data, p)).match(/[—–]/))).toEqual([])
       })
     }
   })

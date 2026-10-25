@@ -305,8 +305,8 @@
       "addStat": "Autre nombre",
       "removeStat": "Retirer le nombre {{number}}",
       "statsAtLeast": "Une carte de nombres en affiche au moins {{count}}.",
-      "missing": "La réponse de la sonde n’a pas de {{field}} ; {{place}} affiche « – ».",
-      "missingInRow": "La ligne {{row}} n’a pas de {{field}} ; son {{place}} affiche « – »."
+      "missing": "La réponse de la sonde n’a pas de {{field}} ; {{place}} n’affiche aucune valeur.",
+      "missingInRow": "La ligne {{row}} n’a pas de {{field}} ; son {{place}} n’affiche aucune valeur."
     },
     "ops": {
       "eq": "est",

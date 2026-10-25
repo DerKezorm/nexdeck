@@ -305,8 +305,8 @@
       "addStat": "Weitere Zahl",
       "removeStat": "Zahl {{number}} entfernen",
       "statsAtLeast": "Eine Karte mit mehreren Zahlen zeigt mindestens {{count}}.",
-      "missing": "Die Antwort der Probe hat kein {{field}}; {{place}} zeigt „–“.",
-      "missingInRow": "Zeile {{row}} hat kein {{field}}; dort zeigt {{place}} „–“."
+      "missing": "Die Antwort der Probe hat kein {{field}}; {{place}} zeigt keinen Wert.",
+      "missingInRow": "Zeile {{row}} hat kein {{field}}; dort zeigt {{place}} keinen Wert."
     },
     "ops": {
       "eq": "ist",

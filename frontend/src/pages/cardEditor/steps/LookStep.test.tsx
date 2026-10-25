@@ -172,7 +172,7 @@ describe('karten9 AC-7: values and rows in forms, or typed', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'Probe' })[0])
     await screen.findByRole('tree')
     await userEvent.click(screen.getByRole('button', { name: '2 Look' }))
-    expect(screen.getByTestId('card-missing')).toHaveTextContent('Row 2 has no series.title; its Second line shows “–”.')
+    expect(screen.getByTestId('card-missing')).toHaveTextContent('Row 2 has no series.title; its Second line shows no value.')
   })
 })
 

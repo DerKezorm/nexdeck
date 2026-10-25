@@ -305,8 +305,8 @@
       "addStat": "Otro número",
       "removeStat": "Quitar el número {{number}}",
       "statsAtLeast": "Una tarjeta de números muestra al menos {{count}}.",
-      "missing": "La respuesta de la prueba no tiene {{field}}; {{place}} muestra «–».",
-      "missingInRow": "La fila {{row}} no tiene {{field}}; su {{place}} muestra «–»."
+      "missing": "La respuesta de la prueba no tiene {{field}}; {{place}} no muestra ningún valor.",
+      "missingInRow": "La fila {{row}} no tiene {{field}}; su {{place}} no muestra ningún valor."
     },
     "ops": {
       "eq": "es",

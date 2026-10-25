@@ -305,8 +305,8 @@
       "addStat": "Altro numero",
       "removeStat": "Rimuovi il numero {{number}}",
       "statsAtLeast": "Una scheda di numeri ne mostra almeno {{count}}.",
-      "missing": "La risposta della prova non ha {{field}}; {{place}} mostra «–».",
-      "missingInRow": "La riga {{row}} non ha {{field}}; il suo {{place}} mostra «–»."
+      "missing": "La risposta della prova non ha {{field}}; {{place}} non mostra alcun valore.",
+      "missingInRow": "La riga {{row}} non ha {{field}}; il suo {{place}} non mostra alcun valore."
     },
     "ops": {
       "eq": "è",

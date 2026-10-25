@@ -305,8 +305,8 @@
       "addStat": "Another number",
       "removeStat": "Remove number {{number}}",
       "statsAtLeast": "A card of numbers shows at least {{count}}.",
-      "missing": "The answer of the probe has no {{field}}; {{place}} shows “–”.",
-      "missingInRow": "Row {{row}} has no {{field}}; its {{place}} shows “–”."
+      "missing": "The answer of the probe has no {{field}}; {{place}} shows no value.",
+      "missingInRow": "Row {{row}} has no {{field}}; its {{place}} shows no value."
     },
     "ops": {
       "eq": "is",
