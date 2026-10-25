@@ -60,7 +60,7 @@ export function PathInput({ id, value, onChange, choices, disabled, label, place
   const list = useId()
   return (
     <>
-      <input id={id} className="input input-mono min-w-0" list={choices.length ? list : undefined} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} aria-label={label} placeholder={placeholder} />
+      <input id={id} className="input font-mono min-w-0" list={choices.length ? list : undefined} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} aria-label={label} placeholder={placeholder} />
       {choices.length > 0 && (
         <datalist id={list}>
           {[...new Set(choices)].map((choice) => (
@@ -175,7 +175,7 @@ export function ValueFields({ path, row, title, required }: { path: CardPath; ro
             {kind === 'path' ? (
               <PathInput id={`${ids}-source`} value={sourceText(value)} onChange={writeSource} choices={choices} disabled={!editable} placeholder={t('editor.look.pickField')} />
             ) : (
-              <input id={`${ids}-source`} className="input input-mono min-w-0" value={sourceText(value)} disabled={!editable} onChange={(event) => writeSource(event.target.value)} placeholder={t(`editor.look.example.${kind}`)} />
+              <input id={`${ids}-source`} className="input font-mono min-w-0" value={sourceText(value)} disabled={!editable} onChange={(event) => writeSource(event.target.value)} placeholder={t(`editor.look.example.${kind}`)} />
             )}
           </label>
         ) : (
@@ -416,7 +416,7 @@ export function RulesFields({ path, own, title, defaultField }: { path: CardPath
               </span>
             )}
             {subject === 'formula' && (
-              <input className="input input-mono min-w-0 flex-1 basis-32" value={rule.formula ?? ''} disabled={!editable} aria-label={t('editor.rules.formula')} onChange={(event) => write(index, 'formula', event.target.value)} />
+              <input className="input font-mono min-w-0 flex-1 basis-32" value={rule.formula ?? ''} disabled={!editable} aria-label={t('editor.rules.formula')} onChange={(event) => write(index, 'formula', event.target.value)} />
             )}
             <select className="input !w-auto" value={rule?.op ?? '>'} disabled={!editable} aria-label={t('editor.rules.op')} onChange={(event) => write(index, 'op', event.target.value)}>
               {OPS.map((op) => (

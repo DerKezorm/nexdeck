@@ -96,7 +96,7 @@ function Request({ index, count, integrationId }: { index: number; count: number
           <label className="text-[12px] font-medium text-muted break-words hyphens-auto" htmlFor={`${ids}-id`}>
             {t('editor.source.id')}
           </label>
-          <input id={`${ids}-id`} className="input input-mono" value={id ?? ''} disabled={!editable} onChange={(event) => rename(event.target.value)} />
+          <input id={`${ids}-id`} className="input font-mono" value={id ?? ''} disabled={!editable} onChange={(event) => rename(event.target.value)} />
           <FieldProblems path={['requests', index, 'id']} />
         </div>
         <div className="grid gap-1 min-w-0">
@@ -120,7 +120,7 @@ function Request({ index, count, integrationId }: { index: number; count: number
         </label>
         <span className="flex flex-wrap sm:flex-nowrap gap-2 items-center min-w-0">
           <span className="chip font-mono text-[11px] flex-none">GET</span>
-          <input id={`${ids}-path`} className="input input-mono min-w-0 flex-1 basis-40" value={path ?? ''} disabled={!editable} onChange={(event) => setPath(event.target.value)} />
+          <input id={`${ids}-path`} className="input font-mono min-w-0 flex-1 basis-40" value={path ?? ''} disabled={!editable} onChange={(event) => setPath(event.target.value)} />
           <button
             type="button"
             className="btn btn-accent flex-none"

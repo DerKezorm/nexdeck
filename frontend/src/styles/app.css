@@ -19,8 +19,8 @@
  * ---------------------------------------------------------------------- */
 @layer base {
 /* The preview of the card editor draws a card in the other theme than the page (`.nd-stage[data-theme]`). */
-:root,
-.nd-stage[data-theme='dark'] {
+.nd-stage[data-theme='dark'],
+:root {
   --nd-bg: #0a0d12;
   --nd-bg-elev: #0f131a;
   --nd-surface: rgba(17, 22, 31, 0.64);
@@ -63,8 +63,8 @@
   color-scheme: dark;
 }
 
-:root[data-theme='light'],
-.nd-stage[data-theme='light'] {
+.nd-stage[data-theme='light'],
+:root[data-theme='light'] {
   --nd-bg: #eef1f5;
   --nd-bg-elev: #ffffff;
   --nd-surface: rgba(255, 255, 255, 0.7);
