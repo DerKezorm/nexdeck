@@ -318,8 +318,8 @@ async def preview_image(integration_id: int, path: str, user: AdminUser) -> Resp
         except AdapterError as failure:
             raise error("not_found", str(failure), status.HTTP_404_NOT_FOUND) from failure
 
-    where, client = await custom_picture(path, service)
-    return await serve_image(client, where, key)
+    where, client, own = await custom_picture(path, service)
+    return await serve_image(client, where, key, own=own)
 
 
 # -- the library -----------------------------------------------------------------------

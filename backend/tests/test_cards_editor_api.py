@@ -733,3 +733,52 @@ def test_karten9_ac10_no_whole_number_and_no_decimal_in_a_wide_range_is_ever_lef
     for step in range(-300, 3000):
         number = step / 10
         assert demo.disguise_number(number) != number, number
+
+
+# -- corrections after the review ------------------------------------------------------------------------
+
+
+def signed(path: str) -> str:
+    return images.reference(path, BASE).removeprefix("proxy:")
+
+
+def widget_of_connection(admin: TestClient, sonarr: int) -> int:
+    add(admin)
+    page = admin.post("/api/v1/boards", json={"name": "Wall"}, headers=CSRF).json()["pages"][0]["id"]
+    made = admin.post(f"/api/v1/pages/{page}/widgets", json={"kind": "custom.value", "integration_id": sonarr, "options": {"card": "queue-size"}}, headers=CSRF)
+    return int(made.json()["widget"]["id"])
+
+
+@respx.mock
+@pytest.mark.parametrize("target", ["https://evil.example.org/steal.png", "http://svc.example.com:9090/a.png", "https://svc.example.com:8080/a.png", "http://other.example.com:8080/a.png"])
+def test_karten9_a_picture_that_the_service_passes_on_to_another_host_is_not_followed_and_takes_no_key(admin: TestClient, target: str) -> None:
+    """⚠️ Another scheme, host or port is another place: the key of the connection must not go there."""
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/p/a.jpg").mock(return_value=httpx.Response(302, headers={"location": target}))
+    elsewhere = respx.route().mock(return_value=httpx.Response(200, content=PNG, headers={"content-type": "image/png"}))
+    widget = widget_of_connection(admin, sonarr)
+    for url in (f"{API}/preview-image", f"/api/v1/widgets/{widget}/image"):
+        params = {"path": signed("/p/a.jpg"), **({"integration_id": sonarr} if url.startswith(API) else {})}
+        answer = admin.get(url, params=params)
+        assert answer.status_code == 404 and answer.json()["detail"]["code"] == "no_image", (url, answer.status_code)
+    assert not elsewhere.called, "nothing was asked of the other place"
+
+
+@respx.mock
+def test_karten9_a_picture_that_the_service_moves_within_its_own_address_is_followed_with_the_key(admin: TestClient) -> None:
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/p/a.jpg").mock(return_value=httpx.Response(302, headers={"location": "/p/b.jpg"}))
+    moved = respx.get(f"{BASE}/p/b.jpg").mock(return_value=httpx.Response(200, content=PNG, headers={"content-type": "image/png"}))
+    widget = widget_of_connection(admin, sonarr)
+    for url, extra in ((f"{API}/preview-image", {"integration_id": sonarr}), (f"/api/v1/widgets/{widget}/image", {})):
+        answer = admin.get(url, params={"path": signed("/p/a.jpg"), **extra})
+        assert answer.status_code == 200 and answer.content == PNG, url
+    assert moved.calls.last.request.headers["x-api-key"] == "key-1"
+
+
+@respx.mock
+def test_karten9_a_picture_that_is_passed_on_in_circles_ends_in_the_placeholder_not_in_a_hang(admin: TestClient) -> None:
+    sonarr = connection(admin)
+    respx.get(f"{BASE}/p/a.jpg").mock(return_value=httpx.Response(302, headers={"location": "/p/a.jpg"}))
+    answer = admin.get(f"{API}/preview-image", params={"integration_id": sonarr, "path": signed("/p/a.jpg")})
+    assert answer.status_code == 404 and answer.json()["detail"]["code"] == "no_image"

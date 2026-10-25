@@ -532,23 +532,47 @@ class _Fetched:
     content: bytes
 
 
-async def _fetch_image(client: httpx.AsyncClient, source: MediaSource) -> _Fetched:
+#: How many times a picture of a connection may be passed on within its own address before it counts as a loop.
+IMAGE_REDIRECTS = 5
+_DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def _origin(url: httpx.URL) -> tuple[str, str, int | None]:
+    return (url.scheme.lower(), url.host.lower(), url.port or _DEFAULT_PORTS.get(url.scheme.lower()))
+
+
+async def _fetch_image(client: httpx.AsyncClient, source: MediaSource, *, own: bool = False) -> _Fetched:
     """The answer of a picture's address, read in pieces with a hard limit on its size and on the time it takes.
 
     ⚠️ Read whole before the size was looked at, a card pointing at a server of its author's could fill the memory of
     the process with one endless or very slow answer (found in the review of KARTEN-6, 25.10.2026).
+
+    ``own`` is a picture of a custom card on its connection, fetched with the connection's credentials: the service may
+    pass it on, but only within its own address (same scheme, host and port), where the credentials may go. Anywhere else
+    is not followed and counts as no picture. The client's own following would carry the key to the other host
+    (found in the review of KARTEN-9, 25.10.2026).
     """
     async with asyncio.timeout(IMAGE_TOTAL_SECONDS):
-        async with client.stream("GET", source.url, headers=source.headers, params=source.params or None) as response:
-            declared = response.headers.get("content-length", "")
-            if declared.isdigit() and int(declared) > IMAGE_MAX_BYTES:
-                raise _TooBig
-            body = bytearray()
-            async for chunk in response.aiter_bytes():
-                body += chunk
-                if len(body) > IMAGE_MAX_BYTES:
+        url: Any = source.url
+        params = source.params or None
+        for _hop in range(IMAGE_REDIRECTS + 1):
+            async with client.stream("GET", url, headers=source.headers, params=params, **({"follow_redirects": False} if own else {})) as response:
+                if own and response.is_redirect and response.next_request is not None:
+                    target = response.next_request.url
+                    if _origin(target) != _origin(response.request.url):
+                        raise _TooBig
+                    url, params = target, None
+                    continue
+                declared = response.headers.get("content-length", "")
+                if declared.isdigit() and int(declared) > IMAGE_MAX_BYTES:
                     raise _TooBig
-            return _Fetched(response.status_code, response.headers, bytes(body))
+                body = bytearray()
+                async for chunk in response.aiter_bytes():
+                    body += chunk
+                    if len(body) > IMAGE_MAX_BYTES:
+                        raise _TooBig
+                return _Fetched(response.status_code, response.headers, bytes(body))
+    raise _TooBig
 
 
 def cached_image(key: tuple[int, str]) -> Response | None:
@@ -567,8 +591,8 @@ async def _source_on_connection(adapter: Any, config: dict[str, Any], path: str,
         raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
 
 
-async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.AsyncClient]:
-    """Where a picture of a custom card comes from, and the client that fetches it.
+async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.AsyncClient, bool]:
+    """Where a picture of a custom card comes from, the client that fetches it, and whether it is on the connection (``own``).
 
     ``service`` is asked for the connection (adapter, configuration, context) only when the picture lives on it.
 
@@ -582,7 +606,7 @@ async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.As
     if path.startswith(card_images.EXTERNAL) and foreign is None:
         raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
     if foreign is not None:
-        return MediaSource(url=foreign, headers={}), external_client()
+        return MediaSource(url=foreign, headers={}), external_client(), False
     adapter, config, ctx = await service()
     real_path = card_images.connection_path(path, adapter.raw_base(config)) if adapter.raw_access else None
     if real_path is None:
@@ -590,7 +614,7 @@ async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.As
     source = await _source_on_connection(adapter, config, real_path, ctx)
     # A picture underneath the connection's address is fetched the way the card's own requests are.
     source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
-    return source, _image_client(bool(config.get("insecure")))
+    return source, _image_client(bool(config.get("insecure"))), True
 
 
 def bad_picture_path(path: str) -> HTTPException | None:
@@ -616,20 +640,21 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     if kept is not None:
         return kept
     if widget.kind.startswith("custom."):
-        source, client = await custom_picture(path, lambda: _service_of(widget))
+        source, client, own = await custom_picture(path, lambda: _service_of(widget))
     else:
         if path.startswith(card_images.EXTERNAL):
             raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
         adapter, config, ctx = await _service_of(widget)
         source = await _source_on_connection(adapter, config, path, ctx)
         client = _image_client(bool(config.get("insecure")))
-    return await serve_image(client, source, (widget_id, path))
+        own = False
+    return await serve_image(client, source, (widget_id, path), own=own)
 
 
-async def serve_image(client: httpx.AsyncClient, source: MediaSource, key: tuple[int, str]) -> Response:
+async def serve_image(client: httpx.AsyncClient, source: MediaSource, key: tuple[int, str], *, own: bool = False) -> Response:
     """Fetch the picture and hand it on, if it is one; keep it under ``key`` for a while."""
     try:
-        response = await _fetch_image(client, source)
+        response = await _fetch_image(client, source, own=own)
     except AdapterError as failure:
         raise error(failure.code, failure.message, status.HTTP_404_NOT_FOUND) from failure
     except TimeoutError as failure:
