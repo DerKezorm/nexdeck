@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import time
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any
 from urllib.parse import quote
 
@@ -15,7 +16,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from ..adapters import get_adapter, split_widget_kind
-from ..adapters.base import AdapterError, Context, MediaSource, member_client, outbound_client
+from ..adapters.base import AdapterError, Context, MediaSource, external_client, outbound_client
 from ..adapters.custom import MIN_REFRESH_SECONDS, name_of, sizes_of
 from ..cards import images as card_images
 from ..cards import store as card_store
@@ -516,6 +517,40 @@ async def _service_of(widget: Widget) -> tuple[Any, dict[str, Any], Context]:
         raise error("not_found", str(failure), status.HTTP_404_NOT_FOUND) from failure
 
 
+#: One picture may take this long in all, from the first byte asked to the last one read.
+IMAGE_TOTAL_SECONDS = 20.0
+
+
+class _TooBig(Exception):
+    """The picture is larger than the server keeps."""
+
+
+@dataclass
+class _Fetched:
+    status_code: int
+    headers: httpx.Headers
+    content: bytes
+
+
+async def _fetch_image(client: httpx.AsyncClient, source: MediaSource) -> _Fetched:
+    """The answer of a picture's address, read in pieces with a hard limit on its size and on the time it takes.
+
+    ⚠️ Read whole before the size was looked at, a card pointing at a server of its author's could fill the memory of
+    the process with one endless or very slow answer (found in the review of KARTEN-6, 25.10.2026).
+    """
+    async with asyncio.timeout(IMAGE_TOTAL_SECONDS):
+        async with client.stream("GET", source.url, headers=source.headers, params=source.params or None) as response:
+            declared = response.headers.get("content-length", "")
+            if declared.isdigit() and int(declared) > IMAGE_MAX_BYTES:
+                raise _TooBig
+            body = bytearray()
+            async for chunk in response.aiter_bytes():
+                body += chunk
+                if len(body) > IMAGE_MAX_BYTES:
+                    raise _TooBig
+            return _Fetched(response.status_code, response.headers, bytes(body))
+
+
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
 async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
     """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
@@ -534,26 +569,40 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     # ⚠️ A picture of a custom card that lives on another host: fetched without the connection's credentials, and by the
     # client that holds every hop to the rule for addresses a member typed (KARTEN-6 EC-3). Only an address the server
     # itself read out of a card's answers, which its signature proves.
-    foreign = card_images.external_address(path) if widget.kind.startswith("custom.") else None
+    custom = widget.kind.startswith("custom.")
+    foreign = card_images.external_address(path) if custom else None
     if path.startswith(card_images.EXTERNAL) and foreign is None:
         raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
     if foreign is not None:
-        source, client = MediaSource(url=foreign, headers={}), member_client(True)
+        source, client = MediaSource(url=foreign, headers={}), external_client()
     else:
         adapter, config, ctx = await _service_of(widget)
+        real_path = path
+        if custom:
+            # ⚠️ A custom card has no pictures of its own to ask for: only a path the server read out of the answers of
+            # the card (and signed for this connection) is fetched, and then with the credentials of the connection.
+            real_path = card_images.connection_path(path, adapter.raw_base(config)) if adapter.raw_access else None
+            if real_path is None:
+                raise error("bad_path", "That picture path is not one this card named.", status.HTTP_400_BAD_REQUEST)
         try:
-            source = await adapter.image_source(config, path, ctx)
+            source = await adapter.image_source(config, real_path, ctx)
         except AdapterError as failure:
             code = getattr(failure, "code", "") or "no_image"
             raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
-        if widget.kind.startswith("custom.") and adapter.raw_access:
+        if custom:
             # A picture underneath the connection's address is fetched the way the card's own requests are.
             source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
         client = _image_client(bool(config.get("insecure")))
     try:
-        response = await client.get(source.url, headers=source.headers, params=source.params or None)
+        response = await _fetch_image(client, source)
     except AdapterError as failure:
         raise error(failure.code, failure.message, status.HTTP_404_NOT_FOUND) from failure
+    except TimeoutError as failure:
+        raise error("unreachable", "The service did not deliver the image in time.", status.HTTP_502_BAD_GATEWAY) from failure
+    except httpx.InvalidURL as failure:
+        raise error("bad_path", "That picture address is not a valid address.", status.HTTP_404_NOT_FOUND) from failure
+    except _TooBig:
+        raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND) from None
     except httpx.HTTPError as failure:
         raise error("unreachable", f"The service did not deliver the image: {failure.__class__.__name__}.", status.HTTP_502_BAD_GATEWAY) from failure
     content_type = response.headers.get("content-type", "") or source.media_type

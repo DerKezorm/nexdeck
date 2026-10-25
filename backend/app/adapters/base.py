@@ -16,12 +16,14 @@ import ipaddress
 import json
 import logging
 import re
+import socket
 import time
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
+import httpcore
 import httpx
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
@@ -1183,6 +1185,94 @@ def guard_member_target(url: str) -> None:
         raise _barred_message(host)
 
 
+def _numeric_host(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    """The address a host spells, however it spells it: ``127.1``, ``2130706433`` and ``0x7f000001`` are all 127.0.0.1.
+
+    ⚠️ The resolver of the system reads these forms (``inet_aton``), ``ipaddress`` does not. Reading only the dotted
+    quad let ``http://0.0.0.0/``, ``http://127.1/`` and ``http://2852039166/`` (the metadata address) through
+    (found in the review of KARTEN-2 and KARTEN-6, 25.10.2026).
+    """
+    text = host.strip("[]")
+    parsed = _address(text)
+    if parsed is not None:
+        return parsed
+    try:
+        return ipaddress.IPv4Address(socket.inet_aton(text))
+    except (OSError, ValueError):
+        return None
+
+
+def refuses_for_external(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """True for every address a picture of somebody else's choosing must never be fetched from.
+
+    That is everything which is not a public address: loopback, private, link-local (the metadata service), the
+    unspecified address (``0.0.0.0`` reaches the machine itself on Linux), multicast, carrier-grade NAT and the rest.
+    The addresses of the administrator's own connections are not judged here; they may be private by design.
+    """
+    mapped = getattr(address, "ipv4_mapped", None)
+    if mapped is not None:
+        address = mapped
+    return not address.is_global or address.is_multicast or address.is_loopback or address.is_link_local or address.is_unspecified
+
+
+def guard_external_target(url: str) -> None:
+    """The strictest rule: for an address that came out of a card's data, not from the person who runs nexdeck."""
+    guard_outbound(url)
+    host = (urlsplit(url if "://" in url else f"http://{url}").hostname or "").lower()
+    name = host.rstrip(".")
+    if name == "localhost" or name.endswith(".localhost") or name.endswith(".internal") or name.endswith(".local"):
+        raise _barred_message(host)
+    numeric = _numeric_host(host)
+    if numeric is not None and refuses_for_external(numeric):
+        raise _barred_message(host)
+
+
+async def _external_guard_hook(request: Any) -> None:
+    guard_external_target(str(request.url))
+
+
+class _CheckedBackend(httpcore.AsyncNetworkBackend):
+    """Looks the name up itself, refuses the connection when any answer is not a public address, and connects to the address it checked.
+
+    ⚠️ Checking the name before the request and letting the connection look it up again is the gap of DNS rebinding,
+    and a name like ``127.0.0.1.nip.io`` passes any check of the spelling. This one lookup is both the check and the
+    address that is dialled, on every hop of a redirect.
+    """
+
+    def __init__(self) -> None:
+        self._inner = httpcore.AnyIOBackend()
+
+    async def connect_tcp(
+        self, host: str, port: int, timeout: float | None = None, local_address: str | None = None,
+        socket_options: Any = None,
+    ) -> httpcore.AsyncNetworkStream:
+        numeric = _numeric_host(host)
+        if numeric is not None:
+            found = [str(numeric)]
+        else:
+            infos = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
+            found = list(dict.fromkeys(str(info[4][0]).split("%", 1)[0] for info in infos))
+        if not found:
+            raise httpcore.ConnectError(f"{host} has no address.")
+        for one in found:
+            parsed = _address(one)
+            if parsed is None or refuses_for_external(parsed):
+                raise _barred_message(host)
+        last: Exception | None = None
+        for one in found:
+            try:
+                return await self._inner.connect_tcp(one, port, timeout=timeout, local_address=local_address, socket_options=socket_options)
+            except httpcore.ConnectError as failure:
+                last = failure
+        raise last or httpcore.ConnectError(f"{host} did not answer.")
+
+    async def connect_unix_socket(self, path: str, timeout: float | None = None, socket_options: Any = None) -> httpcore.AsyncNetworkStream:
+        raise _barred_message(path)
+
+    async def sleep(self, seconds: float) -> None:
+        await self._inner.sleep(seconds)
+
+
 async def _guard_hook(request: Any) -> None:
     """Every request a shared client makes, redirects included."""
     guard_outbound(str(request.url))
@@ -1193,7 +1283,7 @@ async def _member_guard_hook(request: Any) -> None:
     guard_member_target(str(request.url))
 
 
-def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: bool = False, **kwargs: Any) -> httpx.AsyncClient:
+def outbound_client(*, guard: bool = True, member: bool = False, external: bool = False, keep_cookies: bool = False, **kwargs: Any) -> httpx.AsyncClient:
     """The only place an outbound client is built.
 
     ⚠️ The guard hangs on the client, not on the call, because httpx runs a
@@ -1207,13 +1297,22 @@ def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: b
     led on to 127.0.0.1: the address they typed was checked, the one it pointed
     at was not. Found on 12.09.2026.
 
+    ``external=True`` is for an address that came out of the data of a card: public addresses only, checked as the
+    spelling of every hop and again as the address the connection really dials (a name that resolves to the inside is
+    refused too). It ignores the proxy variables of the environment, because a proxy would dial for it.
+
     ``guard=False`` is for a client that does not speak to the network by name,
     which today is the Docker socket and nothing else.
     """
     if guard:
         hooks = dict(kwargs.pop("event_hooks", None) or {})
-        hooks["request"] = [*hooks.get("request", []), _member_guard_hook if member else _guard_hook]
+        hook = _external_guard_hook if external else _member_guard_hook if member else _guard_hook
+        hooks["request"] = [*hooks.get("request", []), hook]
         kwargs["event_hooks"] = hooks
+    if external:
+        transport = httpx.AsyncHTTPTransport(verify=kwargs.pop("verify", True))
+        transport._pool._network_backend = _CheckedBackend()  # noqa: SLF001 - the one seam where the dialled address can be checked
+        kwargs["transport"] = transport
     if not keep_cookies:
         # ⚠️ No cookie jar unless a client asks for one. httpx keeps every
         # Set-Cookie, and the collector shares one client across every
@@ -1230,6 +1329,15 @@ def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: b
 
 
 _member_clients: dict[bool, httpx.AsyncClient] = {}
+_external_client: httpx.AsyncClient | None = None
+
+
+def external_client() -> httpx.AsyncClient:
+    """The one client for pictures at addresses a card named (public addresses only, redirects followed and checked)."""
+    global _external_client
+    if _external_client is None or _external_client.is_closed:
+        _external_client = outbound_client(external=True, follow_redirects=True)
+    return _external_client
 
 
 def member_client(verify: bool = True) -> httpx.AsyncClient:

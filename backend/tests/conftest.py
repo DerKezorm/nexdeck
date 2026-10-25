@@ -59,6 +59,10 @@ def client(data_dir: Path) -> Iterator[TestClient]:
     from app.services.home_control import home_live
 
     home_live.reset()
+    # The picture cache of the image route is keyed by widget id and path, which repeat in every fresh database.
+    from app.routers import widgets as widget_routes
+
+    widget_routes._images.clear()  # noqa: SLF001
     with TestClient(app) as test_client:
         yield test_client
     from app import db

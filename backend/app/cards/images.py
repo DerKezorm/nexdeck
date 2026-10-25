@@ -18,14 +18,17 @@ from .schema import stays_underneath
 
 #: The path the image route reads as "somewhere else", with the address and its signature in the query.
 EXTERNAL = "/_external"
+#: The path the image route reads as "a path on the connection", signed the same way: only a path the server itself
+#: read out of an answer of the card can be fetched with the credentials of the connection.
+CONNECTION = "/_connection"
 
 
 def _key() -> bytes:
     return hashlib.sha256(b"nexdeck-card-picture:" + get_settings().resolved_secret_key().encode("utf-8")).digest()
 
 
-def _signature(url: str) -> str:
-    return hmac.new(_key(), url.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+def _signature(url: str, scope: str = "") -> str:
+    return hmac.new(_key(), f"{scope}|{url}".encode(), hashlib.sha256).hexdigest()[:32]
 
 
 def reference(link: str | None, base: str = "") -> str:
@@ -39,7 +42,11 @@ def reference(link: str | None, base: str = "") -> str:
     if base and text.startswith(base.rstrip("/") + "/"):
         text = text[len(base.rstrip("/")):]
     if text.startswith("/") and not text.startswith("//"):
-        return f"proxy:{text}" if stays_underneath(text) else ""
+        # ⚠️ Signed with the address of the connection: the route fetches this path with the connection's key, and a
+        # viewer must not be able to ask for any path of the service (found in the review of KARTEN-2, 25.10.2026).
+        if not stays_underneath(text):
+            return ""
+        return f"proxy:{CONNECTION}?u={quote(text, safe='')}&s={_signature(text, 'connection:' + base.rstrip('/'))}"
     split = urlsplit(text)
     if split.scheme.lower() not in ("http", "https") or not split.hostname or split.username or split.password:
         return ""
@@ -57,3 +64,14 @@ def external_address(path: str) -> str | None:
     if not address or not hmac.compare_digest(signature, _signature(address)):
         return None
     return address
+
+
+def connection_path(path: str, base: str) -> str | None:
+    """The path behind a ``CONNECTION`` path of the connection at ``base``, or ``None`` when it is not one or the signature does not fit."""
+    if not path.startswith(CONNECTION + "?"):
+        return None
+    query = parse_qs(path[len(CONNECTION) + 1:])
+    found, signature = (query.get("u") or [""])[0], (query.get("s") or [""])[0]
+    if not found or not stays_underneath(found) or not hmac.compare_digest(signature, _signature(found, "connection:" + base.rstrip("/"))):
+        return None
+    return found

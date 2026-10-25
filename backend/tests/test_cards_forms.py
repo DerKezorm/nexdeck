@@ -230,7 +230,7 @@ def test_karten6_ac5_a_picture_wall_has_a_picture_a_title_and_a_link() -> None:
     data = made(POSTERS, RECORDS, base=BASE)
     first = data.items[0]
     assert (first["title"], first["subtitle"], first["url"]) == ("Small", "X", "https://example.com/s")
-    assert first["art"] == "proxy:/p/small.jpg"
+    assert images.connection_path(first["art"].removeprefix("proxy:"), BASE) == "/p/small.jpg"
     assert get_adapter("custom").widget("posters").renderer == "posters"
 
 
@@ -241,8 +241,9 @@ def test_karten6_ec3_a_picture_on_another_host_goes_through_the_proxy_without_th
 
 
 def test_karten6_ec3_a_picture_under_the_address_of_the_connection_keeps_the_credentials() -> None:
-    assert images.reference(f"{BASE}/MediaCover/1/poster.jpg", BASE) == "proxy:/MediaCover/1/poster.jpg"
-    assert images.reference("/MediaCover/1/poster.jpg", BASE) == "proxy:/MediaCover/1/poster.jpg"
+    for link in (f"{BASE}/MediaCover/1/poster.jpg", "/MediaCover/1/poster.jpg"):
+        art = images.reference(link, BASE).removeprefix("proxy:")
+        assert images.connection_path(art, BASE) == "/MediaCover/1/poster.jpg"
 
 
 @pytest.mark.parametrize("link", ["data:image/png;base64,AAAA", "javascript:alert(1)", "file:///etc/passwd", "ftp://example.com/a.png", "//img.example.com/a.png", "/a/../b.png", "", "https://user:pw@img.example.com/a.png"])
@@ -293,6 +294,135 @@ def test_karten6_ec3_the_route_keeps_the_network_rule_for_a_foreign_picture(stan
     answer = _picture_route(client, widget, images.reference(address, BASE))
     assert answer.status_code == 404 and answer.json()["detail"]["code"] == "forbidden_host"
     assert not reached.called
+
+
+@respx.mock
+@pytest.mark.parametrize("address", [
+    "http://0.0.0.0/a.png", "http://127.1/a.png", "http://2130706433/a.png", "http://0x7f000001/a.png", "http://2852039166/a.png",
+    "http://[::1]/a.png", "http://[::ffff:127.0.0.1]/a.png", "http://10.0.0.5/a.png", "http://192.168.1.2/a.png",
+    "http://172.16.0.9/a.png", "http://100.64.0.1/a.png", "http://224.0.0.1/a.png", "http://[fe80::1]/a.png", "http://foo.localhost/a.png",
+])
+def test_karten6_ssrf_every_spelling_of_an_address_inside_is_refused_for_a_picture_of_a_card(stand: tuple[TestClient, int, int], address: str) -> None:
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+    reached = respx.route().mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    answer = _picture_route(client, widget, images.reference(address, BASE))
+    assert answer.status_code == 404 and answer.json()["detail"]["code"] == "forbidden_host", answer.text
+    assert not reached.called
+
+
+@respx.mock
+def test_karten6_ssrf_an_address_httpx_cannot_read_is_a_failed_picture_and_no_crash(stand: tuple[TestClient, int, int]) -> None:
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+    reached = respx.route().mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    answer = _picture_route(client, widget, images.reference("http://0177.0.0.1/a.png", BASE))
+    assert answer.status_code == 404 and not reached.called
+
+
+@respx.mock
+def test_karten6_ssrf_the_address_of_the_connection_itself_may_be_private(stand: tuple[TestClient, int, int]) -> None:
+    """The rule is for what a card names; the administrator's own connection is private by design (192.168.x or 10.x)."""
+    client, page, _ = stand
+    inside = connection(client, "sonarr", url="http://192.168.1.20:8989")
+    widget = place(client, page, inside, kind="custom.posters", card="covers").json()["widget"]["id"]
+    own = respx.get("http://192.168.1.20:8989/p/a.jpg").mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    assert _picture_route(client, widget, images.reference("http://192.168.1.20:8989/p/a.jpg", "http://192.168.1.20:8989")).status_code == 200
+    assert own.called
+
+
+class _Dialled:
+    def __init__(self) -> None:
+        self.hosts: list[str] = []
+
+    async def connect_tcp(self, host: str, port: int, **_more: Any) -> str:
+        self.hosts.append(host)
+        return "stream"
+
+    async def sleep(self, seconds: float) -> None:
+        return None
+
+
+@pytest.mark.parametrize("answer", [["127.0.0.1"], ["10.1.2.3"], ["169.254.169.254"], ["0.0.0.0"], ["::1"], ["93.184.216.34", "10.0.0.7"]])
+async def test_karten6_ssrf_a_name_that_resolves_to_the_inside_is_refused_when_the_connection_is_made(monkeypatch: pytest.MonkeyPatch, answer: list[str]) -> None:
+    """``127.0.0.1.nip.io`` passes every check of the spelling; the address that is dialled is the one that counts, hop by hop."""
+    from app.adapters import base
+
+    monkeypatch.setattr("socket.getaddrinfo", lambda host, port, *a, **k: [(0, 0, 0, "", (one, port)) for one in answer])
+    backend = base._CheckedBackend()
+    backend._inner = dialled = _Dialled()
+    with pytest.raises(base.AdapterError) as refused:
+        await backend.connect_tcp("img.nip.io", 80)
+    assert refused.value.code == "forbidden_host" and dialled.hosts == []
+
+
+async def test_karten6_ssrf_the_connection_goes_to_the_address_that_was_checked(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.adapters import base
+
+    monkeypatch.setattr("socket.getaddrinfo", lambda host, port, *a, **k: [(0, 0, 0, "", ("93.184.216.34", port))])
+    backend = base._CheckedBackend()
+    backend._inner = dialled = _Dialled()
+    assert await backend.connect_tcp("img.example.com", 443) == "stream"
+    assert dialled.hosts == ["93.184.216.34"], "dialling the name again would look it up a second time"
+
+
+@respx.mock
+def test_karten6_size_a_picture_is_read_in_pieces_and_stops_at_the_limit(stand: tuple[TestClient, int, int], monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from app.routers import widgets as routes
+
+    monkeypatch.setattr(routes, "IMAGE_TOTAL_SECONDS", 3.0)
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+    sent = {"chunks": 0}
+
+    async def endless():  # noqa: ANN202
+        while True:
+            await asyncio.sleep(0)
+            sent["chunks"] += 1
+            yield b"x" * 65536
+
+    respx.get("https://img.example.com/a.jpg").mock(return_value=httpx.Response(200, content=endless(), headers={"content-type": "image/png"}))
+    answer = _picture_route(client, widget, images.reference("https://img.example.com/a.jpg", BASE))
+    assert answer.status_code == 404 and answer.json()["detail"]["code"] == "no_image", answer.text
+    assert sent["chunks"] * 65536 <= routes.IMAGE_MAX_BYTES + 4 * 65536, "it kept reading past the limit"
+
+
+@respx.mock
+def test_karten6_size_a_picture_that_drips_is_given_up_after_the_total_time(stand: tuple[TestClient, int, int], monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from app.routers import widgets as routes
+
+    monkeypatch.setattr(routes, "IMAGE_TOTAL_SECONDS", 0.4)
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+
+    async def drip():  # noqa: ANN202
+        while True:
+            await asyncio.sleep(0.05)
+            yield b"x"
+
+    respx.get("https://img.example.com/a.jpg").mock(return_value=httpx.Response(200, content=drip(), headers={"content-type": "image/png"}))
+    answer = _picture_route(client, widget, images.reference("https://img.example.com/a.jpg", BASE))
+    assert answer.status_code == 502 and answer.json()["detail"]["code"] == "unreachable"
+
+
+@respx.mock
+def test_karten2_route_only_a_path_the_card_itself_named_is_fetched_with_the_key_of_the_connection(stand: tuple[TestClient, int, int]) -> None:
+    client, page, sonarr = stand
+    widget = place(client, page, sonarr, kind="custom.posters", card="covers").json()["widget"]["id"]
+    reached = respx.route().mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
+    for path in ("/api/v3/system/status", "/p/small.jpg", f"{images.CONNECTION}?u=%2Fapi%2Fv3%2Fseries&s=" + "0" * 32):
+        answer = client.get(f"/api/v1/widgets/{widget}/image", params={"path": path})
+        assert answer.status_code == 400 and answer.json()["detail"]["code"] == "bad_path", path
+    # A path signed for the address of another connection names nothing here.
+    other = images.reference("/p/small.jpg", "http://other.example.com").removeprefix("proxy:")
+    assert client.get(f"/api/v1/widgets/{widget}/image", params={"path": other}).status_code == 400
+    assert not reached.called
+    assert _picture_route(client, widget, images.reference("/p/small.jpg", BASE)).status_code == 200
+    assert reached.calls.last.request.headers["x-api-key"] == "key-1"
 
 
 @respx.mock
