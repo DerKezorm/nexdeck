@@ -228,7 +228,8 @@
       "homeNetwork": "Heimnetz",
       "apps": "Apps",
       "assistant": "Assistent",
-      "cards": "Eigene Karten"
+      "cards": "Eigene Karten",
+      "inventory": "Inventar"
     },
     "mail": {
       "title": "Mailserver",
@@ -2322,7 +2323,11 @@
       "downloads_other": "{{count}} Downloads halten an",
       "devices_one": "Schaltet {{count}} Gerät: {{names}}",
       "devices_other": "Schaltet {{count}} Geräte: {{names}}",
-      "lastRun": "Zuletzt gelaufen {{when}}"
+      "lastRun": "Zuletzt gelaufen {{when}}",
+      "depends_one": "Läuft darauf: {{names}}",
+      "depends_other": "{{count}} laufen darauf: {{names}}",
+      "containers_one": "{{count}} Container hält mit an",
+      "containers_other": "{{count}} Container halten mit an"
     }
   },
   "forecast": {
@@ -2396,5 +2401,8 @@
     "line": "Zeile {{line}}",
     "failed": "Die Karte konnte nicht gespeichert werden.",
     "tooMany": "Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine."
+  },
+  "dependencies": {
+    "because": "weil {{name}} ausgefallen ist"
   }
 }

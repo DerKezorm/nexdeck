@@ -72,6 +72,8 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // service gives one (Nexview names its findings, for example).
   const urgent = Array.isArray(data?.meta?.urgent) ? (data?.meta?.urgent as unknown[]).map(String) : []
   const reasons = (showFindings || failed ? [errorText, data?.meta?.status_reason ? String(data.meta.status_reason) : '', ...urgent] : [errorText]).filter(Boolean).map((text) => tLabel(text))
+  // What it hangs on that is down, first: that is the reason to look at (roadmap M5).
+  if (data?.cause) reasons.unshift(t('dependencies.because', { name: data.cause }))
   // Since when, from the chronicle once nexdeck was restarted (roadmap M2).
   const since = (status === 'warn' || status === 'bad') && typeof data?.since === 'number' ? t('attention.since', { when: momentOf(data.since, i18n.language, t) }) : ''
   const statusTitle = [t(`status.${status}`), ...reasons, since].filter(Boolean).join(' · ')
@@ -227,6 +229,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
         <div className={`card-error ${bare ? 'inset-0' : 'inset-x-0 bottom-0 top-9'}`} title={String(data?.meta?.hint ?? '')} data-testid="card-error">
           <AlertTriangle size={22} className="text-bad flex-none" aria-hidden="true" />
           <p className="text-[12px] font-medium text-bad leading-snug line-clamp-3">{errorText}</p>
+          {data?.cause ? <p className="text-[11px] text-ink/80" data-testid="card-cause">{t('dependencies.because', { name: data.cause })}</p> : null}
           {data?.meta?.stale_since ? <p className="text-[10px] text-muted">{t('card.staleData')}</p> : null}
         </div>
       )}

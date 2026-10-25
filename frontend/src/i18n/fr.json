@@ -228,7 +228,8 @@
       "homeNetwork": "Réseau domestique",
       "apps": "Apps",
       "assistant": "Assistant",
-      "cards": "Cartes personnalisées"
+      "cards": "Cartes personnalisées",
+      "inventory": "Inventaire"
     },
     "mail": {
       "title": "Serveur de messagerie",
@@ -2322,7 +2323,11 @@
       "downloads_other": "{{count}} téléchargements s'arrêtent",
       "devices_one": "Commute {{count}} appareil : {{names}}",
       "devices_other": "Commute {{count}} appareils : {{names}}",
-      "lastRun": "Dernière exécution {{when}}"
+      "lastRun": "Dernière exécution {{when}}",
+      "depends_one": "Tourne dessus : {{names}}",
+      "depends_other": "{{count}} tournent dessus : {{names}}",
+      "containers_one": "{{count}} conteneur s'arrête avec",
+      "containers_other": "{{count}} conteneurs s'arrêtent avec"
     }
   },
   "forecast": {
@@ -2396,5 +2401,8 @@
     "line": "Ligne {{line}}",
     "failed": "La carte n'a pas pu être enregistrée.",
     "tooMany": "Il y a déjà 200 cartes personnalisées, le maximum que nexdeck garde. Supprimez-en une d'abord."
+  },
+  "dependencies": {
+    "because": "car {{name}} est en panne"
   }
 }

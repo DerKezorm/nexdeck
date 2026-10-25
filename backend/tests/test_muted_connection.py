@@ -163,9 +163,9 @@ def test_an_outage_of_a_check_on_a_muted_connection_stays_quiet(client: TestClie
     setup_admin(client)
     sonarr = _connection(client)
     _mute(client, sonarr, True)
-    health._announce((None, {}, ("outage", "Sonarr is down", "", "error", sonarr)))
+    health._announce((None, {}, ("outage", "Sonarr is down", "", "error", sonarr, None)))
     assert _notices() == []
-    health._announce((None, {}, ("outage", "Plain tile is down", "", "error", None)))
+    health._announce((None, {}, ("outage", "Plain tile is down", "", "error", None, None)))
     assert _notices() == ["Plain tile is down"]
 
 

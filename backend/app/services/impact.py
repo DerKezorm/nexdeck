@@ -16,6 +16,9 @@ in the reader's language.
 * ``downloads``: how many downloads are running in a download program the
   button holds, or whose name the container carries.
 * ``devices`` and ``last_run``: from the adapter itself (Home Assistant).
+* ``depends``: what hangs on the container or guest (roadmap M5): the
+  services and tiles that run on it, and for a guest the containers of an
+  engine that runs in it.
 """
 
 from __future__ import annotations
@@ -108,6 +111,19 @@ def downloads(named: str = "", widget_id: int | None = None) -> dict[str, Any] |
     return {"fact": "downloads", "count": len(running)} if running else None
 
 
+def hanging_on(ref: str) -> dict[str, Any] | None:
+    """What runs on or needs a container or a guest, by name; the containers it carries are counted, not listed."""
+    from . import dependencies
+
+    with db_session() as db:
+        below = dependencies.descendants(db, ref)
+        names = sorted({dependencies.name_of(db, one) for one in below if not one.startswith(("container:", "guest:"))} - {""})
+        carried = sum(1 for one in below if one.startswith("container:"))
+    if not names and not carried:
+        return None
+    return {"fact": "depends", "count": len(names), "names": names[:6], "containers": carried}
+
+
 async def facts(widget_id: int, action_id: str, params: dict[str, Any]) -> list[dict[str, Any]]:
     """Everything known about what this button hits. Empty when nothing is known."""
     with db_session() as db:
@@ -125,12 +141,15 @@ async def facts(widget_id: int, action_id: str, params: dict[str, Any]) -> list[
     item = _item_for(data, params)
     found: list[dict[str, Any] | None] = []
     interrupting = action_id in INTERRUPTING
-    if adapter_kind in ("docker", "proxmox", "portainer", "dockhand", "komodo", "unraid") and item is not None and interrupting:
+    if adapter_kind in ("docker", "proxmox", "portainer", "dockhand", "komodo", "unraid", "synology") and item is not None and interrupting:
         name = str(item.get("title") or "")
         # Docker's own words ("Up 3 days"); Proxmox puts the guest's number there.
         if str(item.get("subtitle") or "").startswith("Up "):
             found.append({"fact": "up", "text": str(item["subtitle"])})
         found += [streams(name), downloads(named=name)]
+        if integration_id is not None:
+            ref = f"guest:{integration_id}:{params.get('vmid')}" if adapter_kind == "proxmox" else f"container:{integration_id}:{name}"
+            found.append(hanging_on(ref))
     elif adapter_kind in DOWNLOADS and interrupting:
         found.append(downloads(widget_id=widget_id))
     try:

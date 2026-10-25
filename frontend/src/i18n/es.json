@@ -228,7 +228,8 @@
       "homeNetwork": "Red doméstica",
       "apps": "Apps",
       "assistant": "Asistente",
-      "cards": "Tarjetas propias"
+      "cards": "Tarjetas propias",
+      "inventory": "Inventario"
     },
     "mail": {
       "title": "Servidor de correo",
@@ -2322,7 +2323,11 @@
       "downloads_other": "Se detienen {{count}} descargas",
       "devices_one": "Cambia {{count}} dispositivo: {{names}}",
       "devices_other": "Cambia {{count}} dispositivos: {{names}}",
-      "lastRun": "Última ejecución {{when}}"
+      "lastRun": "Última ejecución {{when}}",
+      "depends_one": "Funciona sobre él: {{names}}",
+      "depends_other": "{{count}} funcionan sobre él: {{names}}",
+      "containers_one": "{{count}} contenedor se detiene con él",
+      "containers_other": "{{count}} contenedores se detienen con él"
     }
   },
   "forecast": {
@@ -2396,5 +2401,8 @@
     "line": "Línea {{line}}",
     "failed": "No se pudo guardar la tarjeta.",
     "tooMany": "Ya hay 200 tarjetas propias, el máximo que guarda nexdeck. Elimina una primero."
+  },
+  "dependencies": {
+    "because": "porque {{name}} no responde"
   }
 }

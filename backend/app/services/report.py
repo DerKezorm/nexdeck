@@ -233,6 +233,12 @@ async def rounds() -> None:
                 await asyncio.to_thread(forecast.round_once)
             except Exception:  # noqa: BLE001
                 logger.exception("Working out the forecasts failed.")
+            try:
+                from . import dependencies
+
+                await dependencies.discover()
+            except Exception:  # noqa: BLE001
+                logger.exception("Finding what runs where failed.")
         try:
             await send_due()
         except Exception:  # noqa: BLE001

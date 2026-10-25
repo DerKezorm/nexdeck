@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "title": "Inventaire",
+    "help": "Ce qui tourne sur quoi : les hôtes, leurs conteneurs et invités, et les services dessus. Trouvé à partir des adresses environ toutes les heures ; ce que nexdeck devine seulement d'après un nom attend ton accord. Quand quelque chose tombe, ce qui tourne dessus est signalé en un seul message et ses cartes disent pourquoi.",
+    "refresh": "Regarder maintenant",
+    "refreshing": "Recherche …",
+    "list": "Liste",
+    "map": "Carte",
+    "suggestions": "Proposé",
+    "suggestion": "{{child}} tourne probablement sur {{parent}}",
+    "yes": "Oui",
+    "no": "Non",
+    "unplaced": "Non placé",
+    "unplacedHelp": "Ceux-ci ne tournent sur rien que nexdeck connaisse. Choisis où ils tournent, ou laisse-les.",
+    "origin": {
+      "auto": "trouvé",
+      "manual": "à la main",
+      "suggested": "confirmé"
+    },
+    "down": "en panne",
+    "remove": "Retirer {{name}}",
+    "empty": "Rien trouvé pour l'instant. Ajoute une connexion Docker, Portainer, Synology ou Proxmox, puis regarde à nouveau.",
+    "kind": {
+      "integration": "Connexion",
+      "tile": "Tuile d'app",
+      "container": "Conteneur",
+      "guest": "VM ou LXC"
+    },
+    "runsOn": "Tourne sur / a besoin de",
+    "runsOnHelp": "Ce dont ceci a besoin pour marcher. Si cela tombe, ceci n'est pas signalé à part ; sa carte dit pourquoi.",
+    "pick": "Ajouter …",
+    "nothing": "Rien pour l'instant",
+    "mapHelp": "Fais glisser pour arranger ; la disposition est gardée. Rouge est en panne, une ligne pointillée est seulement proposée.",
+    "arrange": "Réarranger"
+  }
+}

@@ -103,6 +103,8 @@ export interface WidgetData {
   since?: number | null
   /** When a volume is full, a number reaches its red, a backup gets slower (roadmap M4). */
   forecast?: Forecast | null
+  /** What this card's service hangs on that is down right now (roadmap M5). */
+  cause?: string | null
 }
 
 export interface LayoutItem {
@@ -172,6 +174,8 @@ export interface HealthView {
   down_since: string | null
   last_error: string
   bars?: (number | null)[]
+  /** What the tile hangs on that is down right now (roadmap M5). */
+  cause?: string
 }
 
 export interface PageView {

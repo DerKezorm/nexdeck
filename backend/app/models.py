@@ -474,6 +474,49 @@ class HistoryMinute(Base):
     count: Mapped[int] = mapped_column(Integer)
 
 
+class Thing(Base):
+    """A container or a guest found on an engine or a hypervisor (roadmap M5), kept so it is known while that is down."""
+
+    __tablename__ = "things"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    #: ``container:<integration>:<name>`` or ``guest:<integration>:<vmid>``.
+    ref: Mapped[str] = mapped_column(String(200), unique=True)
+    kind: Mapped[str] = mapped_column(String(12))
+    integration_id: Mapped[int] = mapped_column(ForeignKey("integrations.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200), default="")
+    image: Mapped[str] = mapped_column(String(300), default="")
+    state: Mapped[str] = mapped_column(String(20), default="")
+    #: Where it answers: its own addresses (a guest), and the ports it publishes on its host (a container).
+    addresses: Mapped[list[str]] = mapped_column(JSON, default=list)
+    ports: Mapped[list[int]] = mapped_column(JSON, default=list)
+    host_network: Mapped[bool] = mapped_column(Boolean, default=False)
+    seen_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
+class Relation(Base):
+    """"This runs on that" or "this needs that" (roadmap M5).
+
+    ``child`` and ``parent`` are references: ``integration:<id>``,
+    ``tile:<widget id>`` or a thing's ``ref``. A container belongs to its
+    engine and a guest to its hypervisor without a row here.
+
+    ``origin``: ``auto`` (address and port matched), ``suggested`` (the name
+    matched), ``manual``. ``state``: ``on``, ``suggested`` (waiting for a
+    yes) or ``rejected`` (said no to; never suggested again).
+    """
+
+    __tablename__ = "relations"
+    __table_args__ = (UniqueConstraint("child", "parent"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    child: Mapped[str] = mapped_column(String(200), index=True)
+    parent: Mapped[str] = mapped_column(String(200), index=True)
+    origin: Mapped[str] = mapped_column(String(10), default="manual")
+    state: Mapped[str] = mapped_column(String(10), default="on")
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class HistoryHour(Base):
     """Hour averages, lowest and highest, folded from the minutes; kept 90 days (roadmap M4)."""
 

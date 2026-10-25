@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import re
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -118,6 +119,14 @@ def log_lines(raw: bytes, tty: bool) -> list[str]:
 
 
 _STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})\.\d+Z ")
+
+
+def container_thing(entry: dict[str, Any]) -> dict[str, Any]:
+    """A container of Docker's list as a thing of the inventory (roadmap M5), with the ports it publishes."""
+    ports = sorted({int(one["PublicPort"]) for one in entry.get("Ports") or [] if isinstance(one, dict) and one.get("PublicPort")})
+    return {"kind": "container", "key": container_name(entry), "name": container_name(entry), "image": str(entry.get("Image") or ""),
+            "state": str(entry.get("State") or ""), "addresses": [], "ports": ports,
+            "host_network": str((entry.get("HostConfig") or {}).get("NetworkMode") or "") == "host"}
 
 
 def container_name(entry: dict[str, Any]) -> str:
@@ -384,6 +393,14 @@ class DockerAdapter(Adapter):
             action.params = {"id": container_id}
             actions.append(action.model_dump())
         return actions
+
+    async def things(self, config: dict[str, Any], ctx: Context) -> dict[str, Any] | None:
+        address = str(config.get("host") or DEFAULT_HOST).strip()
+        # A socket is this machine; its address is not known from here.
+        host = [] if address.startswith("unix://") else [urlsplit(address.replace("tcp://", "http://", 1)).hostname or ""]
+        async with docker_client(config) as client:
+            rows = (await client.get("/containers/json", params={"all": 1})).json()
+        return {"host": [one for one in host if one], "things": [container_thing(row) for row in rows if isinstance(row, dict)]}
 
     async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
         async with docker_client(config) as client:

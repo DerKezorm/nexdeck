@@ -9,6 +9,11 @@ import assistantEs from './assistant.es.json'
 import assistantFr from './assistant.fr.json'
 import assistantIt from './assistant.it.json'
 import de from './de.json'
+import inventoryDe from './inventory.de.json'
+import inventoryEn from './inventory.en.json'
+import inventoryEs from './inventory.es.json'
+import inventoryFr from './inventory.fr.json'
+import inventoryIt from './inventory.it.json'
 import en from './en.json'
 import es from './es.json'
 import fr from './fr.json'
@@ -98,22 +103,28 @@ describe('sign-in words in every language', () => {
 })
 
 /**
- * The chat's words (roadmap M3) come in files of their own with the chat (`lib/assistantTexts.ts`); each language
- * carries every key and placeholder of the English one.
+ * The chat's words (roadmap M3) and the inventory's (roadmap M5) come in files of their own (`lib/lazyTexts.ts`);
+ * each language carries every key and placeholder of the English one.
  */
-describe('the chat words in every language', () => {
-  const english = new Set(paths(assistantEn))
-  it('are not empty by accident', () => {
-    expect(english.size).toBeGreaterThan(50)
-  })
-  for (const [language, data] of Object.entries({ de: assistantDe, es: assistantEs, fr: assistantFr, it: assistantIt })) {
-    it(`${language}: knows the same keys and placeholders as English, none empty`, () => {
-      const known = new Set(paths(data))
-      expect([...english].filter((p) => !known.has(p)).sort(), `missing from assistant.${language}.json`).toEqual([])
-      expect([...known].filter((p) => !english.has(p)).sort(), `only in assistant.${language}.json`).toEqual([])
-      const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
-      expect([...english].filter((p) => placeholders(String(lookup(assistantEn, p))) !== placeholders(String(lookup(data, p))))).toEqual([])
-      expect(paths(data).filter((p) => !String(lookup(data, p)).trim() || String(lookup(data, p)).includes('—'))).toEqual([])
+const LAZY = {
+  assistant: { en: assistantEn, de: assistantDe, es: assistantEs, fr: assistantFr, it: assistantIt },
+  inventory: { en: inventoryEn, de: inventoryDe, es: inventoryEs, fr: inventoryFr, it: inventoryIt },
+}
+for (const [part, bundles] of Object.entries(LAZY)) {
+  describe(`the ${part} words in every language`, () => {
+    const english = new Set(paths(bundles.en))
+    it('are not empty by accident', () => {
+      expect(english.size).toBeGreaterThan(20)
     })
-  }
-})
+    for (const [language, data] of Object.entries(bundles).filter(([code]) => code !== 'en')) {
+      it(`${language}: knows the same keys and placeholders as English, none empty`, () => {
+        const known = new Set(paths(data))
+        expect([...english].filter((p) => !known.has(p)).sort(), `missing from ${part}.${language}.json`).toEqual([])
+        expect([...known].filter((p) => !english.has(p)).sort(), `only in ${part}.${language}.json`).toEqual([])
+        const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',')
+        expect([...english].filter((p) => placeholders(String(lookup(bundles.en, p))) !== placeholders(String(lookup(data, p))))).toEqual([])
+        expect(paths(data).filter((p) => !String(lookup(data, p)).trim() || String(lookup(data, p)).includes('—'))).toEqual([])
+      })
+    }
+  })
+}

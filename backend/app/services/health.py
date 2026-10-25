@@ -25,7 +25,7 @@ from ..adapters.base import AdapterError, guard_member_target, outbound_client
 from ..config import get_settings
 from ..db import db_session
 from ..models import HealthCheck, Outage, Page, Widget, utcnow
-from . import chronicle, history, maintenance, notify
+from . import chronicle, dependencies, history, maintenance, notify
 from .sse import board_topic, hub
 
 logger = logging.getLogger("nexdeck.health")
@@ -312,7 +312,7 @@ class HealthService:
 
         await asyncio.gather(*(one(row, place) for place, row in enumerate(snapshot)))
 
-    def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]:
+    def _no_address(self, check_id: int) -> tuple[int | None, dict, tuple[str, str, str, str, int | None, str | None] | None]:
         """Unknown, not down: no result, no outage, no message."""
         with db_session() as db:
             check = db.scalar(select(HealthCheck).options(selectinload(HealthCheck.widget)).where(HealthCheck.id == check_id))
@@ -333,15 +333,15 @@ class HealthService:
         """Write the result and tell whoever is listening, in one call."""
         self._announce(self._write(check_id, ok, latency, detail))
 
-    def _announce(self, outcome: tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]) -> None:
+    def _announce(self, outcome: tuple[int | None, dict, tuple[str, str, str, str, int | None, str | None] | None]) -> None:
         board_id, payload, announce = outcome
         if board_id is not None:
             hub.publish(board_topic(board_id), "health", payload)
         if announce is not None:
-            event, title, body, level, integration_id = announce
-            notify.emit(event, title, body, level=level, integration_id=integration_id)
+            event, title, body, level, integration_id, subject = announce
+            notify.emit(event, title, body, level=level, integration_id=integration_id, subject=subject)
 
-    def _write(self, check_id: int, ok: bool, latency: int, detail: str) -> tuple[int | None, dict, tuple[str, str, str, str, int | None] | None]:
+    def _write(self, check_id: int, ok: bool, latency: int, detail: str) -> tuple[int | None, dict, tuple[str, str, str, str, int | None, str | None] | None]:
         """The database half: everything that must not run on the event loop."""
         settings = get_settings()
         now = utcnow()
@@ -370,7 +370,7 @@ class HealthService:
                 board_id = page.board_id if page else None
                 if not quiet:
                     history.record(db, check.widget.id, {"latency": float(latency), "up": 1.0 if ok else 0.0})
-            announce: tuple[str, str, str, str, int | None] | None = None
+            announce: tuple[str, str, str, str, int | None, str | None] | None = None
             if ok:
                 if check.down_since is not None:
                     open_outage = db.scalar(
@@ -380,7 +380,8 @@ class HealthService:
                         open_outage.ended_at = now
                         if open_outage.announced and not quiet:
                             length = int((now - open_outage.started_at).total_seconds())
-                            announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info", integration_id)
+                            announce = ("recovery", f"{name} is back", f"{name} answers again after {length // 60} minutes.", "info", integration_id,
+                                        dependencies.subject_of(check.widget))
                         if open_outage.announced:
                             chronicle.record("recovery", level="ok", widget_id=check.widget_id, integration_id=integration_id,
                                              name=name, detail=f"{length_of(open_outage, now)} min", db=db)
@@ -401,7 +402,8 @@ class HealthService:
                         down_for = (now - check.down_since).total_seconds()
                         if down_for >= settings.outage_threshold_seconds and not open_outage.announced:
                             open_outage.announced = True
-                            announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error", integration_id)
+                            announce = ("outage", f"{name} is down", f"{name} has not answered for {int(down_for // 60)} minutes ({detail}).", "error", integration_id,
+                                        dependencies.subject_of(check.widget))
                             # Written when it counts as an outage, dated when it began: a blip
                             # shorter than the threshold is no line of the chronicle.
                             chronicle.record("outage", level="bad", widget_id=check.widget_id, integration_id=integration_id,
@@ -413,6 +415,8 @@ class HealthService:
                 # The tile's bars travel with every result; otherwise they only
                 # moved when the whole board was loaded again.
                 "bars": uptime_bars(db, check.widget.id, bars_window(check.widget.options)) if check.widget is not None else None,
+                # What it hangs on that is down, so the tile says why (roadmap M5).
+                "cause": dependencies.cause(db, dependencies.subject_of(check.widget) or "") if not ok and check.widget is not None else "",
             }
         return board_id, payload, announce
 

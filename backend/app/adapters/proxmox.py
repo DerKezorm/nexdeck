@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 from . import containers as containers_one
 from . import demo as fake
@@ -273,6 +274,42 @@ class ProxmoxAdapter(Adapter):
                 Action(id="shutdown", label="Shut down", icon="square", confirm=True, danger=True, params=params).model_dump(),
             ]
         return [Action(id="start", label="Start", icon="play", params=params).model_dump()]
+
+    async def things(self, config: dict[str, Any], ctx: Context) -> dict[str, Any] | None:
+        """Every guest with its addresses where Proxmox knows them.
+
+        ⚠️ Measured on 25.10.2026: an LXC names its addresses
+        (``/interfaces``) while it runs; a VM only through its guest agent,
+        which wants a privilege a read-only token does not have (HTTP 403).
+        After the first refusal no other VM is asked in that round.
+        """
+        guests = await self._get(config, ctx, "/cluster/resources?type=vm", cache=60) or []
+        found, agent_refused = [], False
+        for guest in guests:
+            if not isinstance(guest, dict) or guest.get("template"):
+                continue
+            addresses: list[str] = []
+            path = f"/nodes/{guest.get('node')}/{guest.get('type')}/{guest.get('vmid')}"
+            if guest.get("status") == "running":
+                try:
+                    if guest.get("type") == "lxc":
+                        for one in await self._get(config, ctx, path + "/interfaces", cache=600) or []:
+                            for key in ("inet", "inet6"):
+                                if one.get("name") != "lo" and one.get(key):
+                                    addresses.append(str(one[key]).split("/")[0])
+                    elif not agent_refused:
+                        answer = await self._get(config, ctx, path + "/agent/network-get-interfaces", cache=600) or {}
+                        for one in answer.get("result") or []:
+                            if one.get("name") != "lo":
+                                addresses += [str(ip.get("ip-address")) for ip in one.get("ip-addresses") or [] if ip.get("ip-address")]
+                except AdapterError:
+                    agent_refused = agent_refused or guest.get("type") == "qemu"
+            found.append({"kind": "guest", "key": str(guest.get("vmid")), "name": str(guest.get("name") or guest.get("vmid")),
+                          "image": f"{'LXC' if guest.get('type') == 'lxc' else 'VM'} {guest.get('vmid')} · {guest.get('node')}",
+                          "state": str(guest.get("status") or ""), "addresses": [one for one in addresses if not one.startswith(("127.", "::1", "fe80"))],
+                          "ports": [], "host_network": False})
+        host = urlsplit(base_url(config)).hostname
+        return {"host": [host] if host else [], "things": found}
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         if action_id not in ("start", "shutdown", "reboot"):

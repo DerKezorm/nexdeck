@@ -228,7 +228,8 @@
       "homeNetwork": "Home network",
       "apps": "Apps",
       "assistant": "Assistant",
-      "cards": "Custom cards"
+      "cards": "Custom cards",
+      "inventory": "Inventory"
     },
     "mail": {
       "title": "Mail server",
@@ -2322,7 +2323,11 @@
       "downloads_other": "{{count}} downloads stop",
       "devices_one": "Switches {{count}} device: {{names}}",
       "devices_other": "Switches {{count}} devices: {{names}}",
-      "lastRun": "Last ran {{when}}"
+      "lastRun": "Last ran {{when}}",
+      "depends_one": "Runs on it: {{names}}",
+      "depends_other": "{{count}} run on it: {{names}}",
+      "containers_one": "{{count}} container stops with it",
+      "containers_other": "{{count}} containers stop with it"
     }
   },
   "forecast": {
@@ -2396,5 +2401,8 @@
     "line": "Line {{line}}",
     "failed": "The card could not be saved.",
     "tooMany": "There are 200 custom cards already, which is the most nexdeck keeps. Delete one first."
+  },
+  "dependencies": {
+    "because": "because {{name}} is down"
   }
 }

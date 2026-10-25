@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, get, patch, post, put } from '../api/client'
@@ -14,6 +14,8 @@ import { CardLookFields } from './CardLookFields'
 import { FieldInput } from './FieldInput'
 import { IconPicker } from './IconPicker'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
+
+const DependsOn = lazy(() => import('./inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
 
 export interface WidgetDraft {
   id: number
@@ -384,6 +386,12 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           icon={icon || widget.icon}
           onChange={(patch) => setOptions((o) => ({ ...o, ...patch }))}
         />
+      )}
+      {isApp && admin && widget.id > 0 && (
+        // Roadmap M5: what this tile's app runs on. Loaded with its words only when an administrator opens a tile.
+        <Suspense fallback={null}>
+          <DependsOn subject={`tile:${widget.id}`} />
+        </Suspense>
       )}
       {isApp && (
         <div className="rounded-xl border border-line p-3 mb-3">

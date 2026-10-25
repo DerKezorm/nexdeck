@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "title": "Inventario",
+    "help": "Qué funciona sobre qué: hosts, sus contenedores e invitados y los servicios encima. Se encuentra por las direcciones cada hora más o menos; lo que nexdeck solo adivina por un nombre espera tu sí. Cuando algo cae, lo que funciona encima se avisa en un solo mensaje y sus tarjetas dicen por qué.",
+    "refresh": "Buscar ahora",
+    "refreshing": "Buscando …",
+    "list": "Lista",
+    "map": "Mapa",
+    "suggestions": "Propuesto",
+    "suggestion": "{{child}} probablemente funciona sobre {{parent}}",
+    "yes": "Sí",
+    "no": "No",
+    "unplaced": "Sin asignar",
+    "unplacedHelp": "Estos no funcionan sobre nada que nexdeck conozca. Elige dónde funcionan o déjalos así.",
+    "origin": {
+      "auto": "encontrado",
+      "manual": "a mano",
+      "suggested": "confirmado"
+    },
+    "down": "caído",
+    "remove": "Quitar {{name}}",
+    "empty": "Aún no se ha encontrado nada. Añade una conexión Docker, Portainer, Synology o Proxmox y vuelve a buscar.",
+    "kind": {
+      "integration": "Conexión",
+      "tile": "Mosaico de app",
+      "container": "Contenedor",
+      "guest": "VM o LXC"
+    },
+    "runsOn": "Funciona sobre / necesita",
+    "runsOnHelp": "Lo que esto necesita para funcionar. Si cae, esto no se avisa por separado; su tarjeta dice por qué.",
+    "pick": "Añadir …",
+    "nothing": "Nada aún",
+    "mapHelp": "Arrastra para ordenar; el orden se guarda. Rojo está caído, una línea discontinua solo está propuesta.",
+    "arrange": "Ordenar de nuevo"
+  }
+}

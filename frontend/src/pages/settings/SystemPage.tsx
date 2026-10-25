@@ -1,4 +1,4 @@
-import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
+import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Network, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -12,6 +12,7 @@ import { CustomCardsSettings } from './CustomCardsSettings'
 import { BackupsSettings } from './BackupsSettings'
 import { AddressSettings } from './AddressSettings'
 import { IntegrationsSettings } from './IntegrationsSettings'
+import { InventorySettings } from './InventorySettings'
 import { HomeNetworkSettings } from './HomeNetworkSettings'
 import { MailSettings } from './MailSettings'
 import { SearchSettings } from './SearchSettings'
@@ -36,6 +37,7 @@ export function SystemPage() {
     { to: 'integrations', icon: Plug, label: t('settings.nav.integrations') },
     { to: 'apps', icon: LayoutGrid, label: t('settings.nav.apps'), show: admin },
     { to: 'cards', icon: Puzzle, label: t('settings.nav.cards'), show: admin },
+    { to: 'inventory', icon: Network, label: t('settings.nav.inventory'), show: admin },
     { to: 'users', icon: Users, label: t('settings.nav.users'), show: admin },
     { to: 'address', icon: Globe, label: t('settings.nav.address'), show: admin },
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
@@ -62,6 +64,7 @@ export function SystemPage() {
             <Route path="integrations" element={<IntegrationsSettings />} />
             <Route path="apps" element={forAdmin(<AppsSettings />)} />
             <Route path="cards" element={forAdmin(<CustomCardsSettings />)} />
+            <Route path="inventory" element={forAdmin(<InventorySettings />)} />
             <Route path="users" element={forAdmin(<UsersSettings />)} />
             <Route path="address" element={forAdmin(<AddressSettings />)} />
             <Route path="mail" element={forAdmin(<MailSettings />)} />

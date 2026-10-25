@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from urllib.parse import urlsplit
 
 from ..services import icons
 from . import containers as containers_one
@@ -185,6 +186,31 @@ class SynologyAdapter(Adapter):
             reason = API_ERRORS.get(code, f"error {code}")
             raise AdapterError(f"DSM answered {api}.{method} with {reason}.", code="dsm_error")
         return payload.get("data")
+
+    async def things(self, config: dict[str, Any], ctx: Context) -> dict[str, Any] | None:
+        """Container Manager's containers with the ports they publish on the NAS.
+
+        ⚠️ Measured on 25.10.2026 against DSM 7: the list has no ports; the
+        profile of one container (``SYNO.Docker.Container``, ``get``, the name
+        as a JSON string) has ``port_bindings`` and ``use_host_network``. The
+        profile also holds the container's environment, secrets included:
+        only those two are read from it, nothing else is kept.
+        """
+        listing = await self._api(config, ctx, "SYNO.Docker.Container", "list", extra={"limit": "-1", "offset": "0", "type": "all"}, cache=60)
+        found = []
+        for entry in (listing or {}).get("containers") or []:
+            name = str(entry.get("name") or "")
+            if not name:
+                continue
+            try:
+                profile = ((await self._api(config, ctx, "SYNO.Docker.Container", "get", extra={"name": json.dumps(name)}, cache=600)) or {}).get("profile") or {}
+            except AdapterError:
+                profile = {}
+            ports = sorted({int(one["host_port"]) for one in profile.get("port_bindings") or [] if isinstance(one, dict) and one.get("host_port")})
+            found.append({"kind": "container", "key": name, "name": name, "image": str(entry.get("image") or ""), "state": str(entry.get("status") or ""),
+                          "addresses": [], "ports": ports, "host_network": bool(profile.get("use_host_network"))})
+        host = urlsplit(base_url(config)).hostname
+        return {"host": [host] if host else [], "things": found}
 
     async def container_log(self, config: dict[str, Any], ctx: Context, container: str, lines: int) -> list[str] | None:
         """Container Manager's log of one container.
