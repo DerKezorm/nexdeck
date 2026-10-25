@@ -48,6 +48,15 @@ def definition_of(options: dict[str, Any]) -> Any:
     return entry.definition
 
 
+def name_of(options: dict[str, Any]) -> str:
+    """The name the author gave the card, English first: what a card is called until somebody renames it."""
+    try:
+        name = definition_of(options).name
+    except AdapterError:
+        return ""
+    return name if isinstance(name, str) else (name.get("en") or next(iter(name.values()), ""))
+
+
 def sizes_of(options: dict[str, Any], default: tuple[int, int], smallest: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
     """The size a card is made at and the smallest it may be: what the definition asks for, never below the form's floor (KARTEN-6 AC-10)."""
     try:
@@ -107,7 +116,8 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool) -> dict[str, Any]
         "value": row.value.text if row.value is not None and row.value.value is not None else "",
         "status": row.status or "ok",
     }
-    if row.link:
+    # ⚠️ http and https only. The service's data names the link, and a relative address would lead into nexdeck itself.
+    if row.link and row.link.lower().startswith(("http://", "https://")):
         item["url"] = row.link
     if pictures and row.image:
         art = images.reference(row.image, base)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+from dataclasses import replace
 from typing import Any
 from urllib.parse import quote
 
@@ -15,7 +16,7 @@ from sqlalchemy import select
 
 from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import AdapterError, Context, MediaSource, member_client, outbound_client
-from ..adapters.custom import MIN_REFRESH_SECONDS, sizes_of
+from ..adapters.custom import MIN_REFRESH_SECONDS, name_of, sizes_of
 from ..cards import images as card_images
 from ..cards import store as card_store
 from ..db import db_session
@@ -147,7 +148,9 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     widget_type = adapter.widget(widget_kind)
     # A tile that follows an app shows the app's name until it is given one of its own.
     follows_app = body.kind == "core.app" and bool((body.options or {}).get("app_id"))
-    widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or ("" if follows_app else widget_type.label), icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
+    # A custom card is called what its author called it.
+    default_title = name_of(body.options or {}) if adapter.kind == "custom" else ""
+    widget = Widget(page_id=page.id, kind=body.kind, title=body.title.strip() or default_title or ("" if follows_app else widget_type.label), icon=body.icon or (adapter.icon if adapter.kind != "core" else ""),
                     link=body.link.strip(), integration_id=body.integration_id, options=body.options, refresh_seconds=body.refresh_seconds)
     db.add(widget)
     db.flush()
@@ -533,6 +536,9 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
         except AdapterError as failure:
             code = getattr(failure, "code", "") or "no_image"
             raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
+        if widget.kind.startswith("custom.") and adapter.raw_access:
+            # A picture underneath the connection's address is fetched the way the card's own requests are.
+            source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
         client = _image_client(bool(config.get("insecure")))
     try:
         response = await client.get(source.url, headers=source.headers, params=source.params or None)

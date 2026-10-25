@@ -497,3 +497,14 @@ def test_karten2_ac13_a_card_without_example_answers_says_so_in_demo_mode(db: Se
     with pytest.raises(AdapterError) as failure:
         get_adapter("custom").demo("value", {"card": "queue-size"}, 0)
     assert failure.value.code == "no_demo_data"
+
+
+@respx.mock
+async def test_karten6_a_card_whose_definition_became_another_form_says_so(db: Session) -> None:
+    from .test_cards_forms import LIST
+
+    store.create(db, LIST)
+    route = respx.route().mock(return_value=httpx.Response(200, json={}))
+    with pytest.raises(AdapterError) as failure:
+        await fetch_card(RAW["sonarr"][0], widget="value", options={"card": "waiting"})
+    assert failure.value.code == "form_changed" and not route.called

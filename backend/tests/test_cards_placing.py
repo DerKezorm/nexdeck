@@ -57,6 +57,7 @@ def test_karten2_ac10_a_card_goes_on_a_connection_of_a_kind_it_names(stand: tupl
     answer = place(client, page, connection(client, "sonarr"))
     assert answer.status_code == 201, answer.text
     assert answer.json()["widget"]["options"]["card"] == "queue-size"
+    assert answer.json()["widget"]["title"] == "Queue", "a custom card is called what its author called it"
     assert place(client, page, connection(client, "radarr")).status_code == 201
 
 
