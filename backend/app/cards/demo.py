@@ -4,7 +4,8 @@ A card from the shop or from a friend carries example answers, and answers copie
 many films he has and what they are called. This makes them harmless the way the showcase mode of the board does
 (``frontend/src/lib/showcase.ts``), but for data of any shape, where nothing says which text is a name:
 
-- Kept: the keys, the structure, true and false, null, and anything that is a date or a time (a card reads those).
+- Kept: the keys, the structure, true and false, null, and anything that is a date or a time (a card reads those): a text
+  in a date form, and a number in the range of epoch seconds or milliseconds under a key that names a time (``addedAt``).
 - Cut: lists to a few entries and long texts to a few hundred characters, so the answers fit into a definition.
 - Changed, the same way every time for the same value, so one title is one stand-in in all requests: a number to
   another of about the same size (a percentage stays a percentage), a text word for word to another word of the same
@@ -57,8 +58,15 @@ _FILE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp|pdf|mkv|mp4|avi|mov|zi
 _PICTURE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp)$", re.I)
 _TOKEN = re.compile(r"[^\W_]+", re.UNICODE)
 
-#: A number in this range of seconds, or of milliseconds, is a moment in time (2000 to 2100) and stays.
+#: A number in this range of seconds, or of milliseconds, can be a moment in time (2000 to 2100).
 _EPOCH = (946_684_800, 4_102_444_800)
+#: The words of a key that say a number is a moment in time. ⚠️ The range alone is not enough: a file of 2 GB or a disk of
+#: 3 TB, in bytes, lies in it as well, and those are what a card shows (found in the review of KARTEN-9, 25.10.2026).
+_TIME_WORDS = frozenset(
+    "at time date datetime timestamp stamp ts epoch added created updated modified expires expiry expire expired since until due when utc "
+    "started finished seen scheduled aired airdate published released day ctime mtime atime login checked synced heartbeat".split()
+)
+_KEY_WORD = re.compile(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])")
 
 
 def _digest(kind: str, value: str) -> bytes:
@@ -161,11 +169,21 @@ def _is_epoch(number: float) -> bool:
     return low <= abs(number) <= high or low * 1000 <= abs(number) <= high * 1000
 
 
-def disguise_number(number: int | float) -> int | float:
-    """A number of about the same size: never the same one, a part of a hundred stays within a hundred."""
+def names_a_time(key: str | None) -> bool:
+    """Whether a key says its number is a moment in time: ``addedAt``, ``created_at``, ``timestamps``, ``date``."""
+    if not key:
+        return False
+    return any(word.lower() in _TIME_WORDS or word.lower().removesuffix("s") in _TIME_WORDS for word in _KEY_WORD.findall(key))
+
+
+def disguise_number(number: int | float, *, moment: bool = False) -> int | float:
+    """A number of about the same size: never the same one, a part of a hundred stays within a hundred.
+
+    ``moment`` says that the key names a time: a number in the range of epoch seconds or milliseconds then stays a date.
+    """
     if isinstance(number, float) and (number != number or number in (float("inf"), float("-inf"))):
         return number
-    if _is_epoch(number):
+    if moment and _is_epoch(number):
         return number
     stream = _digest("number", repr(number))
     unit = int.from_bytes(stream[:4], "big") / 0xFFFFFFFF
@@ -205,18 +223,19 @@ def _cut(value: Any, entries: int, depth: int, cut: list[bool]) -> Any:
     return value
 
 
-def _made_up(value: Any) -> Any:
+def _made_up(value: Any, key: str | None = None) -> Any:
+    """``key`` is the name the value stands under (a list takes the name of its own key)."""
     if isinstance(value, bool) or value is None:
         return value
     if isinstance(value, int | float):
-        return disguise_number(value)
+        return disguise_number(value, moment=names_a_time(key))
     if isinstance(value, str):
         # A made-up word can be longer than the one it stands for.
         return disguise_text(value)[:TEXT_CHARS]
     if isinstance(value, list):
-        return [_made_up(one) for one in value]
+        return [_made_up(one, key) for one in value]
     if isinstance(value, dict):
-        return {key: _made_up(one) for key, one in value.items()}
+        return {name: _made_up(one, name) for name, one in value.items()}
     return value
 
 

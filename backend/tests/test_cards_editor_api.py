@@ -937,3 +937,25 @@ def test_karten9_a_picture_of_a_widget_is_never_answered_for_a_preview_of_the_sa
     assert admin.get(f"/api/v1/widgets/{widget}/image", params={"path": path}).content == PNG + b"1"
     route.mock(return_value=httpx.Response(200, content=PNG + b"2", headers={"content-type": "image/png"}))
     assert admin.get(f"{API}/preview-image", params={"integration_id": sonarr, "path": path}).content == PNG + b"2"
+
+
+@pytest.mark.parametrize("size", [1_000_000_000, 1_500_000_000, 2_400_000_000, 3_999_999_999, 2_000_000_000_000, 4_000_000_000_000, -2_400_000_000, 2_400_000_000.5])
+def test_karten9_ac10_a_size_in_bytes_that_looks_like_a_moment_is_made_up_all_the_same(size: float) -> None:
+    """⚠️ Files of 1 to 4 GB and disks of 1 to 4 TB lie in the range of epoch seconds and milliseconds."""
+    assert demo.disguise_number(size) != size
+    made, _cut = demo.disguise({"q": {"size": size, "sizeOnDisk": [size], "nested": {"total": size}}})
+    assert made["q"]["size"] != size and made["q"]["sizeOnDisk"][0] != size and made["q"]["nested"]["total"] != size
+
+
+@pytest.mark.parametrize("key", ["addedAt", "created_at", "date", "timestamp", "Time", "lastSeen", "expires", "updatedOn", "times", "ts", "added-at"])
+def test_karten9_ac10_a_moment_under_a_key_that_names_a_time_stays_a_moment(key: str) -> None:
+    for moment in (1_761_998_400, 1_761_998_400_000, 1_761_998_400.5):
+        made, _cut = demo.disguise({"q": {key: moment, "list": [{key: [moment]}]}})
+        assert made["q"][key] == moment and made["q"]["list"][0][key] == [moment], key
+
+
+@pytest.mark.parametrize("key", ["size", "bytes", "stat", "attributes", "total", "free", "capacity", "format", "datum", "position"])
+def test_karten9_ac10_a_key_that_only_ends_like_a_time_word_does_not_keep_a_number(key: str) -> None:
+    assert demo.names_a_time(key) is False
+    made, _cut = demo.disguise({"q": {key: 1_761_998_400}})
+    assert made["q"][key] != 1_761_998_400
