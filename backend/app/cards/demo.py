@@ -11,7 +11,8 @@ many films he has and what they are called. This makes them harmless the way the
   another of about the same size (a percentage stays a percentage), a text word for word to another word of the same
   kind (case and digits stay where they were), an address of a picture or a page to an address on example.com, a mail
   address to user-xxxxxx@example.com, an IP address to one from the ranges meant for documentation, a host name to
-  host-xxxxx.example.
+  host-xxxxx.example. A word made of letters and digits (a token such as ``ghp_AbCd…``) becomes an invented word, never
+  its own characters moved on: nothing of three characters or more stays.
 
 ⚠️ This hides what a value says, it is no encryption: a short text or a small number can be guessed from its stand-in
 by anybody who tries every one. The editor shows the result before it is taken over and lets the author change values.
@@ -57,6 +58,12 @@ _HOST = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]*
 _FILE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp|pdf|mkv|mp4|avi|mov|zip|txt|json|ya?ml|log|iso|mp3|flac|m4a|m4b|epub|cbz|nfo|srt)$", re.I)
 _PICTURE = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|avif|bmp)$", re.I)
 _TOKEN = re.compile(r"[^\W_]+", re.UNICODE)
+_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+#: A hash or any long run of hex digits, and a short one only with digits and letters in it (a short commit name).
+_HEX = re.compile(r"^(?:[0-9a-f]{16,}|(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,15})$", re.I)
+#: A key or token in base 64 or 62: long, with capitals, small letters and several digits, so that a field name is not taken for one.
+_BASE64 = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d.*\d)[A-Za-z0-9+/_=-]{20,}$")
+_NUMBER = re.compile(r"^\d{5,}$")
 
 #: A number in this range of seconds, or of milliseconds, can be a moment in time (2000 to 2100).
 _EPOCH = (946_684_800, 4_102_444_800)
@@ -106,41 +113,167 @@ def _letters(token: str, stream: bytes) -> str:
     return token  # unreachable: the list has more than one word
 
 
+#: How many stand-ins are tried before one is taken that shares a few characters with the original.
+_TRIES = 400
+#: Longer than this, a stand-in cannot be made to share no three characters with the original, and is not asked to.
+_APART_UNTIL = 128
+_ALNUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+_DOCUMENTATION = ("192.0.2", "198.51.100", "203.0.113")
+#: The kinds whose stand-in shares no three characters with the original: these can be secrets.
+_SECRETS = frozenset({"uuid", "hex", "base64"})
+
+
+def _grams(text: str) -> set[str]:
+    lower = text.lower()
+    return {lower[at : at + 3] for at in range(len(lower) - 2)}
+
+
+def _stream(kind: str, salt: str, length: int) -> bytes:
+    out = b""
+    for at in range(length // 32 + 1):
+        out += _digest(kind, f"{salt}|{at}")
+    return out[:length]
+
+
+def _cased(word: str, like: str) -> str:
+    if like.isupper() and len(like) > 1:
+        return word.upper()
+    if like[:1].isupper():
+        return word.capitalize()
+    return word
+
+
 def _mixed(token: str, stream: bytes) -> str:
-    """Letters and digits together (``S01E02``, ``x264``): each character becomes another of its kind."""
-    out = []
-    for position, char in enumerate(token):
-        step = 1 + stream[position % len(stream)] % 9
-        if char.isdecimal():
-            out.append(str((int(char) + step) % 10))
-        elif char.isascii() and char.isalpha():
-            base = ord("A") if char.isupper() else ord("a")
-            out.append(chr(base + (ord(char) - base + step) % 26))
-        else:
-            out.append("x")
-    return "".join(out)
+    """Letters and digits together (``S01E02``, ``x264``, a token): an invented word with a few digits.
+
+    ⚠️ Not the characters of the token moved on (that left the shape and the case of a secret, and a guess among 9 steps
+    for each place): nothing of three characters or more of the token stays in the stand-in (found in the review of
+    KARTEN-9, 25.10.2026).
+    """
+    grams = _grams(token)
+    digits = min(3, sum(char.isdecimal() for char in token))
+    start = int.from_bytes(stream[:4], "big") % len(_WORDS)
+    candidate = token
+    for step in range(_TRIES):
+        word = _cased(_WORDS[(start + step) % len(_WORDS)], token)
+        candidate = word + "".join(str(stream[(4 + at + step) % len(stream)] % 10) for at in range(digits))
+        if candidate != token and not _grams(candidate) & grams:
+            return candidate
+    return candidate
 
 
-def _word(match: re.Match[str]) -> str:
-    token = match.group(0)
-    stream = _digest("word", token.lower() if token.isalpha() else token)
-    if token.isdecimal():
-        return _digits(token, stream)
-    if token.isalpha():
-        return _letters(token, stream)
-    return _mixed(token, stream)
+#: A token this long is hardly a word of a text but a name, a number or a key: nothing of three characters of it may stay.
+_LONG = 8
 
 
-def _text(text: str) -> str:
+def _word(token: str, nth: int = 0) -> str:
+    """The stand-in for one word or number of a text; ``nth`` asks for another one than the first."""
+    salt = token.lower() if token.isalpha() else token
+    stream = _digest("word", salt if nth == 0 else f"{salt}|{nth}")
+    if not (token.isdecimal() or token.isalpha()):
+        return _mixed(token, stream)
+    make = _digits if token.isdecimal() else _letters
+    made = make(token, stream)
+    if len(token) < _LONG:
+        return made
+    grams = _grams(token)
+    for more in range(1, _TRIES):
+        if not _grams(made) & grams:
+            break
+        made = make(token, _digest("word", f"{salt}|{nth}|{more}"))
+    return made
+
+
+def _text(text: str, nth: int = 0) -> str:
     """The words and numbers of a text made up one by one; spaces, punctuation and the order stay."""
-    return _TOKEN.sub(_word, text)
+    return _TOKEN.sub(lambda match: _word(match.group(0), nth), text)
 
 
-def _address(text: str) -> str:
+_INNER_CAPITAL = re.compile(r"[a-z\d][A-Z]")
+
+
+def _key_like(run: str) -> bool:
+    """A run without a space that looks like a key: ``ghp_AbCd1234…``, ``sk_live_aBcD…``, ``AKIA…``, a word of 6 or more in it with letters and digits or capitals inside."""
+    if len(run) < 10:
+        return False
+    return any(len(token) >= 6 and not token.isalpha() and not token.isdecimal() or _INNER_CAPITAL.search(token) for token in _TOKEN.findall(run))
+
+
+def _address(text: str, salt: str) -> str:
     """A page or a picture on some host, or a path on the service: an address on example.com."""
     path = re.split(r"[?#]", re.sub(r"^https?://[^/]*", "", text, flags=re.I), maxsplit=1)[0]
     extension = _PICTURE.search(path)
-    return f"https://example.com/{_hex('url', text, 10)}{extension.group(0).lower() if extension else ''}"
+    return f"https://example.com/{_hex('url', salt, 10)}{extension.group(0).lower() if extension else ''}"
+
+
+def data_kind(text: str, *, paths: bool = False) -> str | None:
+    """What a whole text is, when it is data: ``url``, ``mail``, ``mac``, ``ipv4``, ``ipv6``, ``host``, ``uuid``, ``hex`` or ``base64``.
+
+    ``paths`` takes a text that starts with a slash and holds no space for an address on the service (a value does, a key does not).
+    """
+    if _URL.match(text) or (paths and text.startswith("/") and " " not in text):
+        return "url"
+    if _MAIL.match(text):
+        return "mail"
+    if _MAC.match(text):
+        return "mac"
+    if _IPV4.match(text):
+        return "ipv4"
+    if _IPV6.match(text) and text.count(":") >= 2 and any(char in "0123456789abcdefABCDEF" for char in text):
+        return "ipv6"
+    if _HOST.match(text) and not _FILE.search(text):
+        return "host"
+    if _UUID.match(text):
+        return "uuid"
+    if not _NUMBER.match(text) and _HEX.match(text):
+        return "hex"
+    if _BASE64.match(text):
+        return "base64"
+    return None
+
+
+def _stand_in(kind: str, text: str, nth: int) -> str:
+    """The ``nth`` stand-in for a text of a kind: the first is always the same one, the next ones are for when it is taken."""
+    salt = text if nth == 0 else f"{text}\x00{nth}"
+    if kind == "url":
+        return _address(text, salt)
+    if kind == "mail":
+        return f"user-{_hex('mail', salt.lower(), 6)}@example.com"
+    if kind == "mac":
+        stream = _digest("mac", salt.lower())
+        return f"02:00:00:00:{stream[0]:02x}:{stream[1]:02x}"
+    if kind == "ipv4":
+        # The three ranges meant for documentation hold 762 addresses; past those a host name stands in.
+        if nth >= len(_DOCUMENTATION) * 254:
+            return f"host-{_hex('host', salt, 5)}.example"
+        return f"{_DOCUMENTATION[nth // 254]}.{1 + (_digest('ip', text)[0] + nth) % 254}"
+    if kind == "ipv6":
+        return f"2001:db8::{_digest('ip6', salt.lower())[0]:x}" if nth == 0 else f"2001:db8::{_digest('ip6', salt.lower())[:2].hex().lstrip('0') or '0'}"
+    if kind == "host":
+        return f"host-{_hex('host', salt.lower(), 5)}.example"
+    if kind == "uuid":
+        raw = _stream("uuid", salt.lower(), 16).hex()
+        made = f"{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:32]}"
+        return made.upper() if text.isupper() else made
+    if kind == "hex":
+        made = _stream("hex", salt.lower(), len(text) // 2 + 1).hex()[: len(text)]
+        return made.upper() if text.isupper() else made
+    if kind == "base64":
+        return "".join(_ALNUM[byte % len(_ALNUM)] for byte in _stream("base64", salt, len(text)))
+    return _digits(text, _stream("number", salt, len(text)))  # a long number
+
+
+def _stand_for(kind: str, text: str, taken: set[str] | frozenset[str] = frozenset()) -> str:
+    """The first stand-in that is no other one's, and for what can be a secret one that keeps nothing of the original."""
+    grams = _grams(text) if kind in _SECRETS and len(text) <= _APART_UNTIL else set()
+    for nth in range(_TRIES):
+        made = _stand_in(kind, text, nth)
+        if made != text and made not in taken and not _grams(made) & grams:
+            return made
+    made = _stand_in(kind, text, _TRIES)
+    while made == text or made in taken:
+        made += "x"
+    return made
 
 
 def disguise_text(text: str) -> str:
@@ -148,20 +281,20 @@ def disguise_text(text: str) -> str:
     stripped = text.strip()
     if not any(char.isalnum() for char in stripped) or _is_moment(stripped):
         return text
-    if _URL.match(stripped) or (stripped.startswith("/") and " " not in stripped):
-        return _address(stripped)
-    if _MAIL.match(stripped):
-        return f"user-{_hex('mail', stripped.lower(), 6)}@example.com"
-    if _MAC.match(stripped):
-        stream = _digest("mac", stripped.lower())
-        return f"02:00:00:00:{stream[0]:02x}:{stream[1]:02x}"
-    if _IPV4.match(stripped):
-        return f"192.0.2.{1 + _digest('ip', stripped)[0] % 254}"
-    if _IPV6.match(stripped) and stripped.count(":") >= 2 and any(char in "0123456789abcdefABCDEF" for char in stripped):
-        return f"2001:db8::{_digest('ip6', stripped.lower())[0]:x}"
-    if _HOST.match(stripped) and not _FILE.search(stripped):
-        return f"host-{_hex('host', stripped.lower(), 5)}.example"
-    return _text(text)
+    kind = data_kind(stripped, paths=True)
+    if kind is not None:
+        return _stand_for(kind, stripped)
+    made = _text(text)
+    # ⚠️ A key with a prefix and separators (ghp_…, sk_live_…) is one secret: the words of the prefix count as well, and the
+    # other words of the text must not happen to carry a piece of it.
+    secrets = [run for run in stripped.split() if _key_like(run)]
+    if secrets and len(stripped) <= _APART_UNTIL:
+        grams = set().union(*(_grams(run) for run in secrets))
+        for nth in range(1, _TRIES):
+            if not _grams(made) & grams:
+                break
+            made = _text(text, nth)
+    return made
 
 
 def _is_epoch(number: float) -> bool:

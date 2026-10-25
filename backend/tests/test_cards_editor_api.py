@@ -1078,3 +1078,72 @@ def test_karten9_h2_a_connection_not_in_demo_mode_is_asked_as_before_when_anothe
     assert other != real
     assert post(admin, "probe", {"integration_id": real, "path": "/api/v3/queue"}).status_code == 200
     assert post(admin, "preview", {"yaml": VALUE_CARD, "integration_id": real}).json()["primary"]["value"] == 12
+
+
+# -- tokens and keys in the examples (second review of KARTEN-9) -----------------------------------------------
+
+
+def random_tokens(count: int = 1500) -> list[tuple[str, str]]:
+    """Tokens as secrets look, each as the text it stands in and the secret in it: a prefix, then letters and digits, long hex, dashes and underscores."""
+    import random
+
+    dice = random.Random(20261025)
+    letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    found: list[tuple[str, str]] = []
+    for n in range(count):
+        size = dice.randint(8, 48)
+        body = "".join(dice.choice(letters) for _ in range(size))
+        hexed = "".join(dice.choice("0123456789abcdef") for _ in range(size + 8))
+        found.append(
+            [
+                ("ghp_" + body,) * 2,
+                ("xoxb-" + body[:12] + "-" + body[12:],) * 2,
+                ("AKIA" + body.upper(),) * 2,
+                ("sk_live_" + body,) * 2,
+                (body,) * 2,
+                (hexed,) * 2,
+                ("Bearer " + body, body),
+                ("<" + body + ">", body),
+            ][n % 8]
+        )
+    return found
+
+
+def shares_three(original: str, made: str) -> str | None:
+    """Three characters of the original that stand in the stand-in as well (any case), or None."""
+    lower, other = original.lower(), made.lower()
+    for at in range(len(lower) - 2):
+        if lower[at : at + 3] in other:
+            return lower[at : at + 3]
+    return None
+
+
+def test_karten9_h3_a_token_made_of_letters_and_digits_leaves_nothing_of_three_characters_behind() -> None:
+    for text, token in random_tokens():
+        made = demo.disguise_text(text)
+        assert made != text
+        assert shares_three(token, made) is None, (token, made, shares_three(token, made))
+
+
+def test_karten9_h3_a_token_in_an_answer_is_gone_wherever_it_stands() -> None:
+    token = "ghp_" + "aB3dE5gH7jK9mN1pQ3sT5vW7yZ9bC1dE3fG5"
+    import hashlib
+
+    digest = hashlib.sha1(b"example").hexdigest()
+    made, _cut = demo.disguise({"q": {"auth": token, "line": f"login with {token} now", "list": [token], "hash": digest}})
+    out = json.dumps(made)
+    assert shares_three(token, out) is None and shares_three(digest, out) is None
+
+
+def test_karten9_h3_a_token_has_one_stand_in_and_two_tokens_have_two() -> None:
+    tokens = [text for text, _token in random_tokens(300)]
+    assert [demo.disguise_text(one) for one in tokens] == [demo.disguise_text(one) for one in tokens]
+    made = {one: demo.disguise_text(one) for one in tokens}
+    assert len(set(made.values())) == len(made)
+
+
+@pytest.mark.parametrize("word", ["S01E02", "x264", "4K", "1080p", "h265", "AC3"])
+def test_karten9_h3_a_short_mixed_word_is_an_invented_word_and_not_its_own_characters_moved_on(word: str) -> None:
+    made = demo.disguise_text(word)
+    assert made != word and re.fullmatch(r"[A-Za-z]+\d{0,3}", made), made
+    assert shares_three(word, made) is None
