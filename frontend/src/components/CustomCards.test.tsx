@@ -328,6 +328,49 @@ describe('the frame of a card', () => {
   })
 })
 
+describe('HTML in the texts of a card is only text (KARTEN-1 EC-8)', () => {
+  const HOSTILE = `<img src=x onerror="document.title='hacked'"><script>document.title="hacked"</script>`
+  const nothingRuns = (container: HTMLElement) => {
+    expect(container.querySelector('script')).toBeNull()
+    expect(container.querySelector('[onerror]')).toBeNull()
+    expect(container.querySelector('img[src="x"]')).toBeNull()
+    expect(document.title).not.toBe('hacked')
+  }
+
+  it('is shown as letters in the number, the several numbers, the list and the wall of pictures', () => {
+    const forms: [string, string, WidgetData][] = [
+      ['custom.value', 'value', NUMBER({ label: HOSTILE, unit: HOSTILE })],
+      [
+        'custom.stats',
+        'stats',
+        custom({
+          primary: { label: HOSTILE, value: 'x', unit: '', format: 'text', text: HOSTILE, metric: 'stat1' } as never,
+          secondary: [{ label: HOSTILE, value: 'y', unit: HOSTILE, format: 'text', text: HOSTILE, metric: 'stat2' }] as never,
+          metrics: {},
+        }),
+      ],
+      ['custom.list', 'list', custom({ items: [{ title: HOSTILE, subtitle: HOSTILE, value: HOSTILE, status: 'ok', url: 'https://example.com/a' }] })],
+      ['custom.posters', 'posters', custom({ items: [{ title: HOSTILE, subtitle: HOSTILE, value: '', status: 'ok' }] })],
+    ]
+    for (const [kind, renderer, data] of forms) {
+      const { container, unmount } = draw(view(kind, renderer, { title: HOSTILE }), data)
+      nothingRuns(container)
+      expect(container.textContent, kind).toContain('<img src=x onerror=')
+      unmount()
+    }
+  })
+
+  it('stays text inside the frame of the card as well', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <WidgetCard widget={view('custom.list', 'list', { title: HOSTILE })} data={custom({ items: [{ title: HOSTILE, subtitle: '', value: '', status: 'ok' }] })} />
+      </MemoryRouter>,
+    )
+    nothingRuns(container)
+    expect(container.textContent).toContain('<script>')
+  })
+})
+
 describe('a tile of key figures (KARTEN-6 AC-2)', () => {
   afterEach(() => useLive.setState({ data: {}, series: {} }))
 
