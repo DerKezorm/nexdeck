@@ -24,7 +24,7 @@ from ..adapters.base import AdapterError, Context, shape_for_display
 from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
 from ..cards import demo as card_demo
-from ..cards import load, pipeline, probe, schema, source, store
+from ..cards import credentials, load, pipeline, probe, schema, source, store
 from ..deps import AdminUser, DbSession, MemberUser, error
 from ..models import Board, CardRecord, Integration, Page, Role, User, Widget
 from ..services import chronicle
@@ -159,7 +159,7 @@ def json_schema(user: AdminUser) -> dict[str, Any]:
 #: Seconds a request to a service may take before the editor is told it did not answer.
 ASK_SECONDS = 20
 #: Failures that are the card's or the caller's doing, not the service's.
-_ASKED_WRONG = frozenset({"bad_path", "bad_param", "kind_mismatch", "no_raw_access", "read_only", "no_demo_data", "demo_too_large", "too_slow", "form_changed"})
+_ASKED_WRONG = frozenset({"bad_path", "bad_param", "kind_mismatch", "no_raw_access", "read_only", "no_demo_data", "demo_too_large", "too_slow", "form_changed", "card_secret_value"})
 
 
 def _failed(failure: AdapterError) -> HTTPException:
@@ -220,6 +220,14 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
             "The path must start with a single / and name no host; it is always underneath the connection's address.", code="bad_path",
             hint="Write the path of the request, such as /api/v3/queue.",
         )) from None
+    # ⚠️ A secret in the path is refused as in a card, before anything is asked, kept or written down: the path goes into
+    # the chronicle and the log, and those end up in extracts and backups (found in the review of KARTEN-9, 25.10.2026).
+    secret = next(credentials.find(body.path), None)
+    if secret is not None:
+        raise _failed(AdapterError(
+            f"This looks like {credentials.PHRASES[secret.what]}. A card holds no secrets: the connection keeps them and adds them to the request.",
+            code="card_secret_value", hint="Leave the key out of the path; the connection sends its own.",
+        ))
     name = db.scalar(select(Integration.name).where(Integration.id == body.integration_id)) or ""
     try:
         adapter, config, ctx = await _connection(body.integration_id)

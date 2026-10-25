@@ -782,3 +782,21 @@ def test_karten9_a_picture_that_is_passed_on_in_circles_ends_in_the_placeholder_
     respx.get(f"{BASE}/p/a.jpg").mock(return_value=httpx.Response(302, headers={"location": "/p/a.jpg"}))
     answer = admin.get(f"{API}/preview-image", params={"integration_id": sonarr, "path": signed("/p/a.jpg")})
     assert answer.status_code == 404 and answer.json()["detail"]["code"] == "no_image"
+
+
+@respx.mock
+@pytest.mark.parametrize("path", ["/api/v3/queue?apikey=SuperSecret123456", "/api/v3/queue?token=abcdef0123456789abcdef", "/api/v3/ghp_" + "aB3dE5gH7jK9mN1pQ3sT5vW7yZ9bC1dE3fG5"])
+def test_karten9_ec4_a_path_with_a_secret_in_it_is_refused_like_a_card_and_leaves_no_trace(admin: TestClient, caplog: pytest.LogCaptureFixture, path: str) -> None:
+    sonarr = connection(admin)
+    reached = respx.route().mock(return_value=httpx.Response(200, json={}))
+    with caplog.at_level("DEBUG"):
+        answer = post(admin, "probe", {"integration_id": sonarr, "path": path})
+    detail = answer.json()["detail"]
+    assert answer.status_code == 400 and detail["code"] == "card_secret_value" and detail["message"] and not reached.called
+    # The same word the card gives for the same line.
+    card = admin.post(f"{API}/check", json={"yaml": changed("path: /api/v3/queue", f"path: {path}")}, headers=CSRF).json()
+    assert [problem["code"] for problem in card["problems"]] == ["card_secret_value"]
+    with db_session() as db:
+        everything = json.dumps([[getattr(one, column.name) for column in Event.__table__.columns] for one in db.scalars(select(Event))], default=str)
+    secret = path.split("=")[-1].split("/")[-1]
+    assert secret not in everything and secret not in caplog.text and secret not in answer.text
