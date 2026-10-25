@@ -249,6 +249,10 @@ def _problems_cards_stay_as_they_were(connection: Connection) -> None:
     logger.info("%d problems card(s) keep looking at their own board only.", len(rows))
 
 
+def _card_editor_column(connection: Connection) -> None:
+    _add_column(connection, "card_definitions", "updated_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -274,6 +278,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (22, "A page can be a surface of Home Assistant controls", _home_page_column),
     (23, "A card page can have a side bar", _page_side_column),
     (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
+    (25, "A custom card knows who saved it last", _card_editor_column),
 ]
 
 

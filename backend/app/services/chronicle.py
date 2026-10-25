@@ -52,6 +52,7 @@ KINDS: dict[str, str] = {
     "card_definition_added": "A custom card was made or copied",
     "card_definition_changed": "A custom card was changed, released for users or reserved for administrators",
     "card_definition_removed": "A custom card was deleted",
+    "card_probe": "A connection was asked a path while a custom card was built; the answer is not kept",
     "card_added": "A card was added",
     "card_removed": "A card was removed",
     "signed_in": "Somebody signed in",
@@ -63,13 +64,13 @@ GROUPS: dict[str, tuple[str, ...]] = {
     "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end", "forecast"),
     "versions": ("version", "container_restarted", "container_recreated"),
     "nexdeck": ("connection_added", "connection_changed", "connection_removed",
-               "card_definition_added", "card_definition_changed", "card_definition_removed", "card_added", "card_removed", "signed_in", "sign_in_refused"),
+               "card_definition_added", "card_definition_changed", "card_definition_removed", "card_probe", "card_added", "card_removed", "signed_in", "sign_in_refused"),
 }
 
 #: Lines only administrators see: they are about the installation, not about a board.
 ADMIN_ONLY = frozenset({
     "connection_added", "connection_changed", "connection_removed",
-    "card_definition_added", "card_definition_changed", "card_definition_removed", "signed_in", "sign_in_refused",
+    "card_definition_added", "card_definition_changed", "card_definition_removed", "card_probe", "signed_in", "sign_in_refused",
 })
 
 

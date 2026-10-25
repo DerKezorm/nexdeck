@@ -683,6 +683,8 @@ class CardRecord(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    #: Who saved the text last: the editor names him when somebody else saved meanwhile (KARTEN-9 EC-3).
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
 class Conversation(Base):

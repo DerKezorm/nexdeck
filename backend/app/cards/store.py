@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from weakref import WeakKeyDictionary
 
@@ -25,7 +25,7 @@ from . import load
 #: How many cards of its own an installation keeps (KARTEN-11 AC-8).
 MAX_CARDS = 200
 #: Short names the address ``/api/v1/cards/<name>`` has for other things. A card called so could not be opened.
-RESERVED_SLUGS = frozenset({"library", "sources", "schema"})
+RESERVED_SLUGS = frozenset({"library", "sources", "schema", "preview-image"})
 
 
 class TooManyCards(Exception):
@@ -45,6 +45,10 @@ class Entry:
     users_may_place: bool
     updated_at: datetime
 
+
+#: Held while a save compares what the editor read with what is stored and writes: two administrators saving at once
+#: cannot both pass the comparison (KARTEN-9 EC-3).
+saving = threading.Lock()
 
 #: One dictionary per database, so a test (or a restored backup) that opens another one starts empty.
 _cache: WeakKeyDictionary[Engine, dict[str, Entry]] = WeakKeyDictionary()
@@ -139,6 +143,7 @@ def create(
         shop_ref=shop_ref,
         shop_version=shop_version,
         created_by=user_id,
+        updated_by=user_id,
     )
     db.add(row)
     try:
@@ -150,8 +155,12 @@ def create(
     return row
 
 
-def update(db: Session, row: CardRecord, text: str) -> CardRecord:
-    """Replace the text of a saved card. The short name stays: boards refer to the card by it."""
+def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = None) -> CardRecord:
+    """Replace the text of a saved card. The short name stays: boards refer to the card by it.
+
+    ⚠️ ``updated_at`` is what the editor compares to see that somebody saved meanwhile, so it differs after every save,
+    even when two of them fall into the same tick of the clock.
+    """
     loaded = load.load_definition(text)
     if loaded.definition.slug != row.slug:
         raise load.CardInvalid(
@@ -167,7 +176,9 @@ def update(db: Session, row: CardRecord, text: str) -> CardRecord:
         )
     row.yaml_source = text
     row.definition = loaded.data
-    row.updated_at = utcnow()
+    now = utcnow()
+    row.updated_at = max(now, row.updated_at + timedelta(microseconds=1)) if row.updated_at else now
+    row.updated_by = user_id
     db.commit()
     invalidate()
     return row
