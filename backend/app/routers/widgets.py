@@ -551,6 +551,54 @@ async def _fetch_image(client: httpx.AsyncClient, source: MediaSource) -> _Fetch
             return _Fetched(response.status_code, response.headers, bytes(body))
 
 
+def cached_image(key: tuple[int, str]) -> Response | None:
+    """The picture kept for this key, if it is still good."""
+    hit = _images.get(key)
+    if hit and hit[0] > time.monotonic():
+        return Response(content=hit[1], media_type=hit[2], headers=_image_headers(hit[2], "private, max-age=3600"))
+    return None
+
+
+async def _source_on_connection(adapter: Any, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
+    try:
+        return await adapter.image_source(config, path, ctx)
+    except AdapterError as failure:
+        code = getattr(failure, "code", "") or "no_image"
+        raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
+
+
+async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.AsyncClient]:
+    """Where a picture of a custom card comes from, and the client that fetches it.
+
+    ``service`` is asked for the connection (adapter, configuration, context) only when the picture lives on it.
+
+    ⚠️ A picture of a custom card that lives on another host: fetched without the connection's credentials, and by the
+    client that holds every hop to the rule for addresses a member typed (KARTEN-6 EC-3). Only an address the server
+    itself read out of a card's answers, which its signature proves. The same goes for a path on the connection: a custom
+    card has no pictures of its own to ask for, only a path the server read out of the answers of the card (and signed for
+    this connection) is fetched, and then with the credentials of the connection.
+    """
+    foreign = card_images.external_address(path)
+    if path.startswith(card_images.EXTERNAL) and foreign is None:
+        raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
+    if foreign is not None:
+        return MediaSource(url=foreign, headers={}), external_client()
+    adapter, config, ctx = await service()
+    real_path = card_images.connection_path(path, adapter.raw_base(config)) if adapter.raw_access else None
+    if real_path is None:
+        raise error("bad_path", "That picture path is not one this card named.", status.HTTP_400_BAD_REQUEST)
+    source = await _source_on_connection(adapter, config, real_path, ctx)
+    # A picture underneath the connection's address is fetched the way the card's own requests are.
+    source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
+    return source, _image_client(bool(config.get("insecure")))
+
+
+def bad_picture_path(path: str) -> HTTPException | None:
+    if not path.startswith("/") or path.startswith("//") or "://" in path:
+        return error("bad_path", "An image path is relative to the service, starting with a slash.")
+    return None
+
+
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
 async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
     """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
@@ -561,38 +609,25 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
-    if not path.startswith("/") or path.startswith("//") or "://" in path:
-        raise error("bad_path", "An image path is relative to the service, starting with a slash.")
-    hit = _images.get((widget_id, path))
-    if hit and hit[0] > time.monotonic():
-        return Response(content=hit[1], media_type=hit[2], headers=_image_headers(hit[2], "private, max-age=3600"))
-    # ⚠️ A picture of a custom card that lives on another host: fetched without the connection's credentials, and by the
-    # client that holds every hop to the rule for addresses a member typed (KARTEN-6 EC-3). Only an address the server
-    # itself read out of a card's answers, which its signature proves.
-    custom = widget.kind.startswith("custom.")
-    foreign = card_images.external_address(path) if custom else None
-    if path.startswith(card_images.EXTERNAL) and foreign is None:
-        raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
-    if foreign is not None:
-        source, client = MediaSource(url=foreign, headers={}), external_client()
+    refused = bad_picture_path(path)
+    if refused is not None:
+        raise refused
+    kept = cached_image((widget_id, path))
+    if kept is not None:
+        return kept
+    if widget.kind.startswith("custom."):
+        source, client = await custom_picture(path, lambda: _service_of(widget))
     else:
+        if path.startswith(card_images.EXTERNAL):
+            raise error("bad_path", "That picture address is not one this card named.", status.HTTP_400_BAD_REQUEST)
         adapter, config, ctx = await _service_of(widget)
-        real_path = path
-        if custom:
-            # ⚠️ A custom card has no pictures of its own to ask for: only a path the server read out of the answers of
-            # the card (and signed for this connection) is fetched, and then with the credentials of the connection.
-            real_path = card_images.connection_path(path, adapter.raw_base(config)) if adapter.raw_access else None
-            if real_path is None:
-                raise error("bad_path", "That picture path is not one this card named.", status.HTTP_400_BAD_REQUEST)
-        try:
-            source = await adapter.image_source(config, real_path, ctx)
-        except AdapterError as failure:
-            code = getattr(failure, "code", "") or "no_image"
-            raise error(code, str(failure), status.HTTP_400_BAD_REQUEST if code == "bad_path" else status.HTTP_502_BAD_GATEWAY) from failure
-        if custom:
-            # A picture underneath the connection's address is fetched the way the card's own requests are.
-            source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
+        source = await _source_on_connection(adapter, config, path, ctx)
         client = _image_client(bool(config.get("insecure")))
+    return await serve_image(client, source, (widget_id, path))
+
+
+async def serve_image(client: httpx.AsyncClient, source: MediaSource, key: tuple[int, str]) -> Response:
+    """Fetch the picture and hand it on, if it is one; keep it under ``key`` for a while."""
     try:
         response = await _fetch_image(client, source)
     except AdapterError as failure:
@@ -627,7 +662,7 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
         raise error("no_image", "The service did not answer with an image.", status.HTTP_404_NOT_FOUND)
     if source.cache_seconds <= 0:
         return Response(content=response.content, media_type=content_type, headers=_image_headers(content_type, "no-store"))
-    _images[(widget_id, path)] = (time.monotonic() + min(IMAGE_TTL, source.cache_seconds), response.content, content_type)
+    _images[key] = (time.monotonic() + min(IMAGE_TTL, source.cache_seconds), response.content, content_type)
     _make_room()
     return Response(content=response.content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=3600"))
 
