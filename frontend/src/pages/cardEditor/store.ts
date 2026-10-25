@@ -84,6 +84,13 @@ export interface CardEditorState {
   setProbe: (requestId: string, probe: ProbeState | null) => void
 }
 
+/**
+ * A text with Windows or old Mac line ends (a card saved through the API from another editor) becomes LF on entering
+ * the store: the document writer works on LF lines, and with a trailing carriage return on every line none of them
+ * would count as untouched. The YAML view hands over LF in any case.
+ */
+export const lineFeeds = (text: string): string => text.replace(/\r\n?/g, '\n')
+
 function reading(text: string, previous: CardEditorState['lastValid'], at: number) {
   const parsed = parseCard(text)
   if (parsed.ok) return { text, card: parsed.card, problems: [] as LocalProblem[], lastValid: { card: parsed.card, at } }
@@ -126,7 +133,9 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     integrationId: null,
     probes: {},
 
-    open: ({ slug, text, base, saved, view }) => {
+    open: ({ slug, text: given, base, saved: savedGiven, view }) => {
+      const text = lineFeeds(given)
+      const saved = savedGiven === null ? null : lineFeeds(savedGiven)
       const read = reading(text, null, get().now())
       set({
         ...read,
@@ -147,7 +156,8 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
       })
     },
 
-    setText: (text, group) => {
+    setText: (given, group) => {
+      const text = lineFeeds(given)
       const state = get()
       if (text === state.text) return
       step(reading(text, state.lastValid, state.now()), group)

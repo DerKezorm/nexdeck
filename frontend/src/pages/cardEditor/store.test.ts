@@ -36,6 +36,17 @@ describe('karten10: editor and YAML are one text', () => {
     expect(editor().text.replace('name: Waiting', 'name: Queue')).toBe(CARD)
   })
 
+  it('karten10 AC-4: a card with Windows line ends opens clean and a change rewrites only its own line', () => {
+    const windows = CARD.replace('name: Queue', 'name: Queue     # kept').replace(/\n/g, '\r\n')
+    editor().open({ slug: 'queue', text: windows, base: null, saved: windows })
+    expect(isDirty(editor())).toBe(false)
+    expect(editor().text).not.toContain('\r')
+    editor().set(['version'], '1.1.0')
+    expect(editor().text.replace('version: "1.1.0"', 'version: "1.0.0"')).toBe(CARD.replace('name: Queue', 'name: Queue     # kept'))
+    editor().setText(windows.replace('Queue', 'Other'))
+    expect(editor().text).not.toContain('\r')
+  })
+
   it('karten10 AC-3: a change in the YAML is in the editor at once', () => {
     editor().setText(CARD.replace('path: /api/v3/queue', 'path: /api/v3/queue/details'))
     expect(readAt(editor().card!, ['requests', 0, 'path'])).toBe('/api/v3/queue/details')
