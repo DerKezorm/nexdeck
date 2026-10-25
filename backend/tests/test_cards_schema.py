@@ -154,9 +154,7 @@ def test_karten1_ac7_a_field_for_headers_or_a_credential_is_refused() -> None:
 
 
 def test_karten1_ac7_demo_answers_may_hold_what_a_service_sends() -> None:
-    sent = 'demo:
-  queue: {hash: "' + "0123456789abcdef" * 2 + '01234567", token: "x", records: []}
-'
+    sent = 'demo:\n  queue: {hash: "' + "0123456789abcdef" * 2 + '01234567", token: "x", records: []}\n'
     load.load_definition(changed(DEMO_LINE, sent))
     # but not a credential that is unmistakably one
     leak = 'demo:\n  queue: {note: "Bearer abcdefghijklmnop"}\n'
