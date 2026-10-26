@@ -341,12 +341,19 @@
       "next": "Siguiente",
       "back": "Atrás",
       "service": {
-        "title": "¿De dónde vienen los datos?",
-        "lead": "Elige una de tus integraciones. La tarjeta leerá justo de ahí.",
+        "title": "¿Para qué servicio es la tarjeta?",
+        "lead": "La tarjeta funciona con cualquier integración de este tipo. Tu integración solo sirve para probarla.",
         "missing": "¿Falta tu servicio?",
-        "none": "Todavía no hay ninguna integración de la que pueda leer una tarjeta.",
         "add": "Añadir una integración",
-        "paste": "Pegar una tarjeta entera (YAML)"
+        "paste": "Pegar una tarjeta entera (YAML)",
+        "search": "Buscar servicios",
+        "mine": "Conectados contigo",
+        "all": "Todos los servicios",
+        "connections_one": "{{count}} integración",
+        "connections_other": "{{count}} integraciones",
+        "tryWith": "Probar con",
+        "noneOfKind": "No tienes ninguna integración de este tipo. La tarjeta se puede crear igualmente, con datos de ejemplo. Para probarla de verdad, añade una integración.",
+        "noMatch": "Ningún servicio coincide."
       },
       "data": {
         "title": "¿Qué debe mostrar la tarjeta?",
@@ -363,7 +370,8 @@
         "readsTitle": "Lo que nexdeck ya lee aquí",
         "readsLike": "Como la tarjeta «{{name}}»",
         "readsNoCards": "Todavía no hay en ningún tablero una tarjeta integrada de {{service}}. Cuando la haya, aquí verás lo que lee.",
-        "readsNotYet": "Desde el arranque, ninguna tarjeta de {{service}} ha consultado nada. Lo hará en la próxima actualización y entonces aparecerá aquí."
+        "readsNotYet": "Desde el arranque, ninguna tarjeta de {{service}} ha consultado nada. Lo hará en la próxima actualización y entonces aparecerá aquí.",
+        "askLocked": "Para preguntar hace falta una integración de este tipo. Añade una para probar la tarjeta de verdad."
       },
       "table": {
         "answer": "Respuesta",

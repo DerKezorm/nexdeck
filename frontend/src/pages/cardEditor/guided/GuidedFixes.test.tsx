@@ -91,7 +91,7 @@ rules:
     stubGuided(FORMULA)
     await openCard('Queue', 'guided')
     await click('Guided')
-    await click(/^pve/)
+    await click(/^Proxmox/)
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveTextContent('A formula')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
@@ -134,7 +134,7 @@ rules:
 
   it('asking the same path again leaves the display as the author set it', async () => {
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     await userEvent.clear(screen.getByRole('textbox', { name: 'Path to ask' }))
     await userEvent.type(screen.getByRole('textbox', { name: 'Path to ask' }), '/v1/forecast')
     await click('Ask')
@@ -215,7 +215,7 @@ item: {title: title, subtitle: User.title}
   it('a new card from "Playing now" becomes the list of the suggestion, never a number out of a side field', async () => {
     stubGuided('', { 'POST /cards/probe': { status: 200, body: NOBODY } })
     await openNew()
-    await click(/^Plex$|^PlexPlex/)
+    await click(/^Plex/)
     await click(/^Playing now/)
     await waitFor(() => expect(editor().shapedPath).toBe('/status/sessions'))
     expect(readAt(card(), ['form'])).toBe('list')
@@ -440,7 +440,7 @@ describe('review 6: another form keeps what the author set, as the mock-up does'
   it('a list keeps its places and its red rule across Pictures and back, and the main text and the text below go along', async () => {
     stubGuided('', { 'POST /cards/probe': { status: 200, body: { nodes: 9, cut: false, tree: answerOf({ data: [{ name: 'a', type: 'qemu', mem: 1, thumb: '/t/1.jpg', status: 'running' }] }) } } })
     await openNew()
-    await click(/^pve/)
+    await click(/^Proxmox/)
     await click(/^Virtual machines and containers/)
     await waitFor(() => expect(editor().shapedPath).toBe('/api2/json/cluster/resources?type=vm'))
     await click('Next')
@@ -594,8 +594,8 @@ describe('review 11: the places the first tests left unchecked', () => {
   const placed = () => sent('POST', '/pages/5/widgets').map((one) => one.body)
 
   it.each([
-    ['a list', /^pve/, /^Virtual machines and containers/, undefined, 'custom.list'],
-    ['pictures', /^Plex$|^PlexPlex/, /^Recently added/, undefined, 'custom.posters'],
+    ['a list', /^Proxmox/, /^Virtual machines and containers/, undefined, 'custom.list'],
+    ['pictures', /^Plex/, /^Recently added/, undefined, 'custom.posters'],
     ['several numbers', /^Home/, /^Devices and sensors/, /^Several numbers/, 'custom.stats'],
     ['a number', /^Home/, /^Devices and sensors/, undefined, 'custom.value'],
   ])('%s is put on the board as the widget of its own form', async (_name, service, suggestion, form, kind) => {
@@ -740,7 +740,7 @@ describe('review 15: fields are named for people, the real name beside', () => {
 describe('review 16: the address typed under "Own address" is written when the author is done', () => {
   it('half a path reaches neither the card nor the service; the whole one does on leaving the field, and Enter asks it', async () => {
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     const own = screen.getByRole('textbox', { name: 'Path to ask' })
     await userEvent.clear(own)
     await userEvent.type(own, '/v1/fore')
@@ -759,7 +759,7 @@ describe('review 16: the address typed under "Own address" is written when the a
 
   it('Ask with the field still in hand takes what is typed', async () => {
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     const own = screen.getByRole('textbox', { name: 'Path to ask' })
     await userEvent.clear(own)
     await userEvent.type(own, '/v1/forecast')

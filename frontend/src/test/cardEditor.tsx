@@ -115,7 +115,7 @@ export async function openNew() {
       </MemoryRouter>
     </QueryClientProvider>,
   )
-  await screen.findByRole('heading', { level: 2, name: /Where does the data come from\?|Woher kommen die Daten\?/ })
+  await screen.findByRole('heading', { level: 2, name: /Which service is the card for\?|Für welchen Dienst ist die Karte\?/ })
   return rendered
 }
 

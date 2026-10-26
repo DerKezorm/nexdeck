@@ -188,7 +188,7 @@ async function buildNewCard(shown = false) {
 describe('a new card', () => {
   it('karten9 AC-2, umbau U3: begins in the guided way; a tile sets the kind and the connection, the name gives the short name', async () => {
     show('/system/custom-cards/new')
-    expect(await screen.findByRole('heading', { name: 'Where does the data come from?', level: 2 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Which service is the card for?', level: 2 })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Guided' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.queryByLabelText('Works with')).toBeNull()
     expect(screen.queryByText(/Start with/)).toBeNull()
@@ -222,11 +222,14 @@ describe('a new card', () => {
     expect(within(notice).getByRole('link', { name: 'Add an integration' })).toHaveAttribute('href', '/system/integrations?add=sonarr')
   })
 
-  it('karten9 EC-6: with no fitting connection at all it says that too, and leads to adding one', async () => {
+  it('karten9 EC-6: with no connection at all every kind is still offered, and the way to add one is there', async () => {
     stub({ 'GET /integrations': { status: 200, body: [] } })
     show('/system/custom-cards/new')
-    expect(await screen.findByTestId('card-no-connection')).toHaveTextContent('There is no integration yet that a card can read from.')
+    expect(await screen.findByTestId('card-services-all')).toBeInTheDocument()
+    expect(screen.queryByTestId('card-services-mine')).toBeNull()
     expect(screen.getByRole('link', { name: 'Add an integration' })).toHaveAttribute('href', '/system/integrations')
+    await userEvent.click(screen.getByRole('button', { name: /^Sonarr/ }))
+    expect(await screen.findByTestId('card-no-connection')).toHaveTextContent('There is no Sonarr integration to ask.')
   })
 
   it('umbau U3: a whole card can be pasted instead, in the YAML view', async () => {

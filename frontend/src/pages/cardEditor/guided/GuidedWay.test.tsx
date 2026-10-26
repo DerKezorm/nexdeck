@@ -29,16 +29,25 @@ afterEach(async () => {
 })
 
 describe('umbau U3: Service', () => {
-  it('offers the switched-on connections a card can read as tiles; a tile sets the kind and the connection', async () => {
+  it('offers the kinds of service a card can read as tiles; a tile sets the kind and the connection to try it with', async () => {
     await openNew()
-    const tiles = within(screen.getByRole('region', { name: 'Where does the data come from?' }))
-    // Switched off (Plex (old)) or of a kind no card can read (qBittorrent): no tile.
-    expect((await tiles.findAllByRole('button', { pressed: false })).map((one) => one.textContent)).toEqual(['HomeHome Assistant', 'pveProxmox VE', 'Plex', 'WeatherJSON API'])
+    const tiles = within(screen.getByRole('region', { name: 'Which service is the card for?' }))
+    // One tile for each kind, by the name of the kind (the connections are named in dienst-art D2): Plex (old) is
+    // switched off, qBittorrent cannot be read by a card.
+    expect((await tiles.findAllByRole('button', { pressed: false })).map((one) => one.textContent)).toEqual([
+      'Home Assistant',
+      'JSON API',
+      'Plex',
+      'Proxmox VE',
+      'Synology DSM2 integrations',
+      'SABnzbd',
+      'Sonarr',
+    ])
     expect(screen.getByRole('button', { name: '2 Data' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
     expect(screen.getByRole('link', { name: /Add an integration/ })).toHaveAttribute('href', '/system/integrations')
 
-    await click(/^pve/)
+    await click(/^Proxmox/)
     expect(readAt(card(), ['requires'])).toEqual(['proxmox'])
     expect(editor().integrationId).toBe(12)
     expect(editor().guidedStep).toBe('data')
@@ -129,7 +138,7 @@ describe('umbau: the three ways of the mock-up', () => {
 
   it('Proxmox VE: the guests as a list with name, type and memory, a line red when the state is not running', async () => {
     await openNew()
-    await click(/^pve/)
+    await click(/^Proxmox/)
     await click(/^Virtual machines and containers/)
     await waitFor(() => expect(editor().shapedPath).toBe('/api2/json/cluster/resources?type=vm'))
     await next()
@@ -182,7 +191,7 @@ describe('umbau: the three ways of the mock-up', () => {
 describe('umbau U4: Data', () => {
   it('a kind without suggestions has its own address open at once; Ask asks it', async () => {
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     expect(screen.getByText(/Type what the card should ask JSON API/)).toBeInTheDocument()
     const own = screen.getByRole('textbox', { name: 'Path to ask' })
     expect(own).toBeVisible()
@@ -203,7 +212,7 @@ describe('umbau U4: Data', () => {
 
   it('a failed answer says why, the way a card does, and Next waits', async () => {
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     await userEvent.clear(screen.getByRole('textbox', { name: 'Path to ask' }))
     await userEvent.type(screen.getByRole('textbox', { name: 'Path to ask' }), '/nothing')
     await click('Ask')
@@ -218,7 +227,7 @@ describe('jede J5: what nexdeck already reads here', () => {
   it('offers the paths the built-in cards of the connection read; a pick asks the service and sets the path', async () => {
     stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [read], cards: 1 } } })
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     const entry = await screen.findByRole('button', { name: /Like the card ‘Weather now’/ })
     expect(within(entry).getByText('/v1/forecast')).toBeInTheDocument()
     expect(screen.getByText('What nexdeck already reads here')).toBeInTheDocument()
@@ -233,7 +242,7 @@ describe('jede J5: what nexdeck already reads here', () => {
   it('says why there is nothing yet, and keeps the own address open', async () => {
     stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 0 } } })
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     expect(await screen.findByText('No built-in card for JSON API is on a board yet. Once one is, what it reads shows up here.')).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Path to ask' })).toBeVisible()
   })
@@ -241,7 +250,7 @@ describe('jede J5: what nexdeck already reads here', () => {
   it('says the card has not asked yet when one lies on a board', async () => {
     stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 2 } } })
     await openNew()
-    await click(/^Weather/)
+    await click(/^JSON API/)
     expect(await screen.findByText(/No card of JSON API has asked anything since nexdeck started/)).toBeInTheDocument()
   })
 
@@ -353,7 +362,7 @@ describe('umbau U8 to U11: Finish, preview, words and narrow screens', () => {
 
   it('U11: the table scrolls sideways in its own box', async () => {
     await openNew()
-    await click(/^pve/)
+    await click(/^Proxmox/)
     await click(/^Virtual machines and containers/)
     const table = await screen.findByTestId('card-answer-table')
     expect(table.querySelector('table')?.parentElement).toHaveClass('overflow-x-auto')

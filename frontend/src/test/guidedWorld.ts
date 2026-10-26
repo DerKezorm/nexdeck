@@ -6,11 +6,13 @@ import { stub } from './cardEditor'
 import { HA_HOME, PLEX_RECENT, PROXMOX_GUESTS, answerOf } from './probeAnswers'
 
 export const SOURCES = [
-  { kind: 'homeassistant', label: 'Home Assistant', icon: 'homeassistant' },
-  { kind: 'proxmox', label: 'Proxmox VE', icon: 'proxmox' },
-  { kind: 'plex', label: 'Plex', icon: 'plex' },
-  { kind: 'jsonapi', label: 'JSON API', icon: 'jsonapi' },
-  { kind: 'sonarr', label: 'Sonarr', icon: 'sonarr' },
+  { kind: 'homeassistant', label: 'Home Assistant', icon: 'homeassistant', category: 'monitoring' },
+  { kind: 'proxmox', label: 'Proxmox VE', icon: 'proxmox', category: 'hosts' },
+  { kind: 'plex', label: 'Plex', icon: 'plex', category: 'media' },
+  { kind: 'jsonapi', label: 'JSON API', icon: 'jsonapi', category: 'generic' },
+  { kind: 'sonarr', label: 'Sonarr', icon: 'sonarr', category: 'downloads' },
+  { kind: 'synology', label: 'Synology DSM', icon: 'synology', category: 'nas' },
+  { kind: 'sabnzbd', label: 'SABnzbd', icon: 'sabnzbd', category: 'downloads' },
 ]
 export const INTEGRATIONS = [
   { id: 11, kind: 'homeassistant', name: 'Home', label: 'Home Assistant', icon: 'homeassistant', config: {}, enabled: true },
@@ -19,6 +21,8 @@ export const INTEGRATIONS = [
   { id: 14, kind: 'jsonapi', name: 'Weather', label: 'JSON API', icon: 'jsonapi', config: {}, enabled: true },
   { id: 15, kind: 'plex', name: 'Plex (old)', label: 'Plex', icon: 'plex', config: {}, enabled: false },
   { id: 16, kind: 'qbittorrent', name: 'Torrents', label: 'qBittorrent', icon: 'qbittorrent', config: {}, enabled: true },
+  { id: 17, kind: 'synology', name: 'Synology Backup', label: 'Synology DSM', icon: 'synology', config: {}, enabled: true },
+  { id: 18, kind: 'synology', name: 'Synology Storage', label: 'Synology DSM', icon: 'synology', config: {}, enabled: true },
 ]
 export const ANSWERS: Record<string, unknown> = {
   '/api/states': HA_HOME,

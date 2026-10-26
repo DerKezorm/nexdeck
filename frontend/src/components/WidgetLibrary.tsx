@@ -9,6 +9,7 @@ import type { AdapterSpec, AppEntry, Integration, WidgetTypeSpec } from '../api/
 import { tAdapter, tLabel } from '../i18n/texts'
 import { pickText } from '../lib/cardText'
 import { sourceLine, type LibraryCard } from '../lib/customCards'
+import { CATEGORY_ORDER } from '../lib/adapterCategories'
 import { isNumberCard } from '../lib/figures'
 import { useAuth } from '../stores/auth'
 import { ServiceIcon } from './ServiceIcon'
@@ -45,8 +46,6 @@ export function defaultTitle(adapter: { kind: string; label: string }, widget: {
   if (english.toLowerCase().startsWith(service.toLowerCase())) return kind
   return `${service} ${kind}`
 }
-
-const CATEGORY_ORDER = ['basics', 'feeds', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
 
 /**
  * Everything a card can be found by.

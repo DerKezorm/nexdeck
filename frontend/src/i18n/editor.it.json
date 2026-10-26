@@ -341,12 +341,19 @@
       "next": "Avanti",
       "back": "Indietro",
       "service": {
-        "title": "Da dove arrivano i dati?",
-        "lead": "Scegli una delle tue integrazioni. La scheda leggerà proprio da lì.",
+        "title": "Per quale servizio è la scheda?",
+        "lead": "La scheda funziona con ogni integrazione di questo tipo. La tua integrazione serve solo per provarla.",
         "missing": "Manca il tuo servizio?",
-        "none": "Non c’è ancora nessuna integrazione da cui una scheda possa leggere.",
         "add": "Aggiungi un’integrazione",
-        "paste": "Incolla una scheda intera (YAML)"
+        "paste": "Incolla una scheda intera (YAML)",
+        "search": "Cerca servizi",
+        "mine": "Collegati da te",
+        "all": "Tutti i servizi",
+        "connections_one": "{{count}} integrazione",
+        "connections_other": "{{count}} integrazioni",
+        "tryWith": "Provare con",
+        "noneOfKind": "Non hai nessuna integrazione di questo tipo. La scheda si può costruire lo stesso, con dati di esempio. Per provarla davvero, aggiungi un’integrazione.",
+        "noMatch": "Nessun servizio corrisponde."
       },
       "data": {
         "title": "Che cosa deve mostrare la scheda?",
@@ -363,7 +370,8 @@
         "readsTitle": "Cosa legge già nexdeck qui",
         "readsLike": "Come la scheda «{{name}}»",
         "readsNoCards": "Nessuna scheda integrata di {{service}} è ancora su una bacheca. Quando ce ne sarà una, qui vedrai cosa legge.",
-        "readsNotYet": "Dall’avvio nessuna scheda di {{service}} ha ancora interrogato il servizio. Lo farà al prossimo aggiornamento e allora comparirà qui."
+        "readsNotYet": "Dall’avvio nessuna scheda di {{service}} ha ancora interrogato il servizio. Lo farà al prossimo aggiornamento e allora comparirà qui.",
+        "askLocked": "Per interrogare serve un’integrazione di questo tipo. Aggiungine una per provare davvero la scheda."
       },
       "table": {
         "answer": "Risposta",

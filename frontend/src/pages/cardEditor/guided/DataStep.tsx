@@ -15,6 +15,7 @@ import { useCardEditor, useCardField } from '../store'
 import { AnswerTable } from './AnswerTable'
 import { GuidedFrame, StepNav } from './GuidedWay'
 import { useReplaceGuard } from './ReplaceGuard'
+import { TryWith } from './ServiceStep'
 import { askFor, shapeWithoutAnswer, useAnswerTable, useGuidedAnswer } from './useGuided'
 
 const ICONS: Record<SuggestionIcon, LucideIcon> = {
@@ -115,6 +116,8 @@ export function DataStep() {
         </div>
       )}
 
+      {chosen && <TryWith />}
+
       {chosen && readsKnown && (
         <section className="grid gap-2 min-w-0" aria-labelledby={`${ids}-reads`} data-testid="card-reads">
           <h3 id={`${ids}-reads`} className="text-[13px] font-semibold text-muted break-words hyphens-auto">
@@ -194,11 +197,18 @@ export function DataStep() {
                 if (event.key === 'Enter' && asked) askOwn()
               }}
             />
-            <button type="button" className="btn btn-accent flex-none" disabled={!asked || !chosen || probe?.status === 'loading'} onClick={askOwn}>
+            <button
+              type="button"
+              className="btn btn-accent flex-none"
+              disabled={!asked || !chosen || probe?.status === 'loading'}
+              title={loaded && !chosen ? t('editor.guided.data.askLocked') : undefined}
+              onClick={askOwn}
+            >
               {t('editor.guided.data.ask')}
             </button>
           </span>
           <span className="text-[12px] text-faint break-words hyphens-auto">{t('editor.guided.data.pathHint')}</span>
+          {loaded && !chosen && <span className="text-[12px] text-muted break-words hyphens-auto">{t('editor.guided.data.askLocked')}</span>}
         </div>
       </details>
 

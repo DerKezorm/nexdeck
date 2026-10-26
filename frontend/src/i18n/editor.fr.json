@@ -341,12 +341,19 @@
       "next": "Suivant",
       "back": "Retour",
       "service": {
-        "title": "D’où viennent les données ?",
-        "lead": "Choisis une de tes intégrations. La carte lira exactement là.",
+        "title": "Pour quel service est la carte ?",
+        "lead": "La carte fonctionne avec chaque intégration de ce type. Ton intégration ne sert qu’à l’essayer.",
         "missing": "Ton service manque ?",
-        "none": "Il n’y a pas encore d’intégration qu’une carte puisse lire.",
         "add": "Ajouter une intégration",
-        "paste": "Coller une carte entière (YAML)"
+        "paste": "Coller une carte entière (YAML)",
+        "search": "Chercher un service",
+        "mine": "Connectés chez toi",
+        "all": "Tous les services",
+        "connections_one": "{{count}} intégration",
+        "connections_other": "{{count}} intégrations",
+        "tryWith": "Essayer avec",
+        "noneOfKind": "Tu n’as aucune intégration de ce type. Tu peux quand même créer la carte, avec des données d’exemple. Pour l’essayer pour de vrai, ajoute une intégration.",
+        "noMatch": "Aucun service ne correspond."
       },
       "data": {
         "title": "Que doit montrer la carte ?",
@@ -363,7 +370,8 @@
         "readsTitle": "Ce que nexdeck lit déjà ici",
         "readsLike": "Comme la carte « {{name}} »",
         "readsNoCards": "Aucune carte intégrée de {{service}} n’est encore sur un tableau. Dès qu’il y en aura une, ce qu’elle lit apparaîtra ici.",
-        "readsNotYet": "Depuis le démarrage, aucune carte de {{service}} n’a encore interrogé le service. Elle le fera à sa prochaine actualisation, puis cela apparaîtra ici."
+        "readsNotYet": "Depuis le démarrage, aucune carte de {{service}} n’a encore interrogé le service. Elle le fera à sa prochaine actualisation, puis cela apparaîtra ici.",
+        "askLocked": "Pour interroger, il faut une intégration de ce type. Ajoutes-en une pour essayer la carte pour de vrai."
       },
       "table": {
         "answer": "Réponse",

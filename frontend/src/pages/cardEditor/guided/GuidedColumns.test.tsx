@@ -19,7 +19,6 @@ import { ANSWERS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf, HA_FULL, HA_HOME, PLEX_RECENT } from '../../../test/probeAnswers'
 import { columnNames, columnName } from './columns'
 import { plainColumns, tableOf } from './guided'
-import { sameWords } from './ServiceStep'
 
 /** The German words of the editor, as the page loads them when the language is German. */
 const german = async () => {
@@ -36,23 +35,6 @@ beforeEach(() => {
 afterEach(async () => {
   vi.unstubAllGlobals()
   await i18next.changeLanguage('en')
-})
-
-describe('umbau spalten 3: the kind under a tile only when it differs from the name', () => {
-  it('shows the kind under "Home" and "pve", and nothing under a tile named like its kind', async () => {
-    await openNew()
-    const tiles = within(screen.getByRole('region', { name: 'Where does the data come from?' }))
-    const found = await tiles.findAllByRole('button', { pressed: false })
-    const plex = found.find((one) => one.textContent?.startsWith('Plex'))!
-    expect(plex.textContent).toBe('Plex')
-    expect(plex.querySelector('small')).toBeNull()
-    const home = found.find((one) => one.textContent?.startsWith('Home'))!
-    expect(home.querySelector('small')?.textContent).toBe('Home Assistant')
-  })
-
-  it('compares the words, not the spelling', () => {
-    expect([sameWords('Emby', 'Emby'), sameWords('Emby', ' emby '), sameWords('Home Assistant', 'Home')]).toEqual([true, true, false])
-  })
 })
 
 describe('umbau spalten 2: a name for people belongs to its own field, and no name stands twice', () => {

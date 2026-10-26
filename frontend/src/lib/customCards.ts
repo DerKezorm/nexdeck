@@ -28,6 +28,8 @@ export interface CardSource {
   kind: string
   label: string
   icon: string
+  /** The category of the service in the library; older answers have none. */
+  category?: string
 }
 
 export interface CardBoard {

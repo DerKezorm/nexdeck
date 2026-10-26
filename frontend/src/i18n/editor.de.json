@@ -341,12 +341,19 @@
       "next": "Weiter",
       "back": "Zurück",
       "service": {
-        "title": "Woher kommen die Daten?",
-        "lead": "Wähle eine deiner Anbindungen. Die Karte liest später genau dort.",
+        "title": "Für welchen Dienst ist die Karte?",
+        "lead": "Die Karte funktioniert mit jeder Anbindung dieser Art. Deine Anbindung dient nur zum Ausprobieren.",
         "missing": "Dein Dienst fehlt?",
-        "none": "Es gibt noch keine Anbindung, aus der eine Karte lesen kann.",
         "add": "Anbindung hinzufügen",
-        "paste": "Ganze Karte einfügen (YAML)"
+        "paste": "Ganze Karte einfügen (YAML)",
+        "search": "Dienste suchen",
+        "mine": "Bei dir angebunden",
+        "all": "Alle Dienste",
+        "connections_one": "{{count}} Anbindung",
+        "connections_other": "{{count}} Anbindungen",
+        "tryWith": "Ausprobieren mit",
+        "noneOfKind": "Du hast keine Anbindung dieser Art. Die Karte kannst du trotzdem bauen, mit Beispieldaten. Zum echten Ausprobieren: Anbindung anlegen.",
+        "noMatch": "Kein Dienst passt."
       },
       "data": {
         "title": "Was soll die Karte zeigen?",
@@ -363,7 +370,8 @@
         "readsTitle": "Was nexdeck hier schon liest",
         "readsLike": "Wie die Karte ‚{{name}}‘",
         "readsNoCards": "Für {{service}} liegt noch keine eingebaute Karte auf einem Board. Sobald eine dort liegt, steht hier, was sie liest.",
-        "readsNotYet": "Seit dem Start hat noch keine Karte von {{service}} nachgefragt. Das passiert beim nächsten Aktualisieren, dann steht es hier."
+        "readsNotYet": "Seit dem Start hat noch keine Karte von {{service}} nachgefragt. Das passiert beim nächsten Aktualisieren, dann steht es hier.",
+        "askLocked": "Zum Fragen braucht es eine Anbindung dieser Art. Lege eine an, um die Karte echt auszuprobieren."
       },
       "table": {
         "answer": "Antwort",

@@ -341,12 +341,19 @@
       "next": "Next",
       "back": "Back",
       "service": {
-        "title": "Where does the data come from?",
-        "lead": "Pick one of your integrations. The card will read from exactly that one.",
+        "title": "Which service is the card for?",
+        "lead": "The card works with every integration of this kind. Your integration is only for trying it out.",
         "missing": "Your service is missing?",
-        "none": "There is no integration yet that a card can read from.",
         "add": "Add an integration",
-        "paste": "Paste a whole card (YAML)"
+        "paste": "Paste a whole card (YAML)",
+        "search": "Search services",
+        "mine": "Connected for you",
+        "all": "All services",
+        "connections_one": "{{count}} integration",
+        "connections_other": "{{count}} integrations",
+        "tryWith": "Trying it out with",
+        "noneOfKind": "You have no integration of this kind. You can still build the card, with example data. To really try it out, add an integration.",
+        "noMatch": "No service matches."
       },
       "data": {
         "title": "What should the card show?",
@@ -363,7 +370,8 @@
         "readsTitle": "What nexdeck already reads here",
         "readsLike": "Like the card ‘{{name}}’",
         "readsNoCards": "No built-in card for {{service}} is on a board yet. Once one is, what it reads shows up here.",
-        "readsNotYet": "No card of {{service}} has asked anything since nexdeck started. It does at its next refresh, and then it shows up here."
+        "readsNotYet": "No card of {{service}} has asked anything since nexdeck started. It does at its next refresh, and then it shows up here.",
+        "askLocked": "Asking needs an integration of this kind. Add one to try the card for real."
       },
       "table": {
         "answer": "Answer",
