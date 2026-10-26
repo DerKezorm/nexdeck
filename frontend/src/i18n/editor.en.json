@@ -367,10 +367,11 @@
         "ask": "Ask",
         "asking": "Asking {{service}} …",
         "noConnection": "There is no {{service}} integration to ask. The card can be built all the same and shows data once there is one.",
-        "readsTitle": "What nexdeck already reads here",
+        "readsTitle": "What nexdeck can ask {{service}}",
         "readsLike": "Like the card ‘{{name}}’",
-        "readsNoCards": "No built-in card for {{service}} is on a board yet. Once one is, what it reads shows up here.",
-        "readsNotYet": "No card of {{service}} has asked anything since nexdeck started. It does at its next refresh, and then it shows up here.",
+        "readsLikeMore": "Like the card ‘{{name}}’ and {{count}} more",
+        "readsDocs": "From the documentation of {{service}}",
+        "readsNone": "Nothing to suggest for {{service}}: its built-in cards do not read it this way. An address of your own always works.",
         "askLocked": "Asking needs an integration of this kind. Add one to try the card for real."
       },
       "table": {

@@ -367,10 +367,11 @@
         "ask": "Chiedi",
         "asking": "Chiedo a {{service}} …",
         "noConnection": "Non c’è nessuna integrazione con {{service}} da interrogare. La scheda si può creare lo stesso e mostra dati appena ce n’è una.",
-        "readsTitle": "Cosa legge già nexdeck qui",
+        "readsTitle": "Cosa può chiedere nexdeck a {{service}}",
         "readsLike": "Come la scheda «{{name}}»",
-        "readsNoCards": "Nessuna scheda integrata di {{service}} è ancora su una bacheca. Quando ce ne sarà una, qui vedrai cosa legge.",
-        "readsNotYet": "Dall’avvio nessuna scheda di {{service}} ha ancora interrogato il servizio. Lo farà al prossimo aggiornamento e allora comparirà qui.",
+        "readsLikeMore": "Come la scheda «{{name}}» e altre {{count}}",
+        "readsDocs": "Dalla documentazione di {{service}}",
+        "readsNone": "Per {{service}} non c’è nulla da proporre: le sue schede integrate non lo leggono così. Un indirizzo proprio funziona sempre.",
         "askLocked": "Per interrogare serve un’integrazione di questo tipo. Aggiungine una per provare davvero la scheda."
       },
       "table": {

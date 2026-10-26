@@ -221,46 +221,73 @@ describe('umbau U4: Data', () => {
   })
 })
 
-describe('jede J5: what nexdeck already reads here', () => {
-  const read = { path: '/v1/forecast', card: { id: 3, title: 'Weather now', kind: 'jsonapi.value', label: 'Value' }, at: 1 }
+describe('lesen L4: what nexdeck can ask a kind of service, from the code', () => {
+  const read = { path: '/v1/forecast', widgets: [{ kind: 'value', label: 'Value' }] }
+  const more = { path: '/v1/alerts', widgets: [{ kind: 'value', label: 'Value' }, { kind: 'list', label: 'List' }, { kind: 'chart', label: 'Chart' }] }
+  const docs = { path: '/api/config/{site}', widgets: [] }
 
-  it('offers the paths the built-in cards of the connection read; a pick asks the service and sets the path', async () => {
-    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [read], cards: 1 } } })
+  it('offers the paths of the kind, names the cards that ask them, and a pick asks the service and sets the path', async () => {
+    stubGuided('', { 'GET /cards/sources/jsonapi/reads': { status: 200, body: { reads: [read, more, docs] } } })
     await openNew()
     await click(/^JSON API/)
-    const entry = await screen.findByRole('button', { name: /Like the card ‘Weather now’/ })
+    const entry = await screen.findByRole('button', { name: /Like the card ‘Value’(?! and)/ })
     expect(within(entry).getByText('/v1/forecast')).toBeInTheDocument()
-    expect(screen.getByText('What nexdeck already reads here')).toBeInTheDocument()
+    expect(screen.getByText('What nexdeck can ask JSON API')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Like the card ‘Value’ and 2 more/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /From the documentation of JSON API/ })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Path to ask' })).not.toBeVisible()
     await userEvent.click(entry)
     await waitFor(() => expect(editor().shapedPath).toBe('/v1/forecast'))
     expect(sent('POST', '/cards/probe')[0].body).toEqual({ integration_id: 14, path: '/v1/forecast' })
     expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
-    expect(screen.getByRole('button', { name: /Like the card ‘Weather now’/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Like the card ‘Value’(?! and)/ })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('says why there is nothing yet, and keeps the own address open', async () => {
-    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 0 } } })
+  it('is there without a connection of the kind, and a pick then only sets the path', async () => {
+    stubGuided('', { 'GET /cards/sources/sabnzbd/reads': { status: 200, body: { reads: [{ path: '/api?mode=queue', widgets: [{ kind: 'queue', label: 'Queue' }] }] } } })
+    await openNew()
+    await click(/^SABnzbd/)
+    const entry = await screen.findByRole('button', { name: /Like the card ‘Queue’/ })
+    expect(screen.getByTestId('card-no-connection')).toBeInTheDocument()
+    await userEvent.click(entry)
+    await waitFor(() => expect(readAt(card(), ['requests', 0, 'path'])).toBe('/api?mode=queue'))
+    expect(sent('POST', '/cards/probe')).toHaveLength(0)
+  })
+
+  it('does not ask a path that has a place in it, and opens the own address for it', async () => {
+    stubGuided('', { 'GET /cards/sources/jsonapi/reads': { status: 200, body: { reads: [docs] } } })
     await openNew()
     await click(/^JSON API/)
-    expect(await screen.findByText('No built-in card for JSON API is on a board yet. Once one is, what it reads shows up here.')).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: /From the documentation/ }))
+    await waitFor(() => expect(readAt(card(), ['requests', 0, 'path'])).toBe('/api/config/{site}'))
+    expect(sent('POST', '/cards/probe')).toHaveLength(0)
     expect(screen.getByRole('textbox', { name: 'Path to ask' })).toBeVisible()
   })
 
-  it('says the card has not asked yet when one lies on a board', async () => {
-    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 2 } } })
+  it('shows a path once when the suggestions of the kind already hold it', async () => {
+    stubGuided('', { 'GET /cards/sources/homeassistant/reads': { status: 200, body: { reads: [{ path: '/api/states', widgets: [{ kind: 'entities', label: 'Entity list' }] }, { path: '/api/events', widgets: [] }] } } })
+    await openNew()
+    await click(/^Home Assistant/)
+    expect(await screen.findByText('/api/events')).toBeInTheDocument()
+    expect(screen.queryByText('/api/states')).not.toBeInTheDocument()
+  })
+
+  it('says there is nothing to suggest for a kind without reads, and keeps the own address open', async () => {
+    stubGuided('', { 'GET /cards/sources/jsonapi/reads': { status: 200, body: { reads: [] } } })
     await openNew()
     await click(/^JSON API/)
-    expect(await screen.findByText(/No card of JSON API has asked anything since nexdeck started/)).toBeInTheDocument()
+    expect(await screen.findByText(/Nothing to suggest for JSON API/)).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Path to ask' })).toBeVisible()
   })
 
   it('speaks German without dashes and without words of programmers', async () => {
     await i18next.changeLanguage('de')
-    expect(de.editor.guided.data.readsTitle).toBe('Was nexdeck hier schon liest')
-    for (const key of ['readsTitle', 'readsLike', 'readsNoCards', 'readsNotYet'] as const) {
+    expect(de.editor.guided.data.readsTitle).toBe('Was nexdeck bei {{service}} abfragen kann')
+    for (const key of ['readsTitle', 'readsLike', 'readsLikeMore', 'readsDocs', 'readsNone'] as const) {
       expect(de.editor.guided.data[key]).not.toMatch(/[–—]/)
     }
     expect(en.editor.guided.data.readsLike).toContain('{{name}}')
+    expect('readsNoCards' in en.editor.guided.data || 'readsNotYet' in en.editor.guided.data).toBe(false)
   })
 })
 

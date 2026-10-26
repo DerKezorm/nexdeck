@@ -12,16 +12,16 @@ import type { CardText } from './cardText'
 export type CardForm = 'value' | 'stats' | 'list' | 'posters'
 
 /** A kind of connection a card reads through, as people read it. */
-/** A path a built-in card of a connection asked since nexdeck started, with the card that asked (J4). */
+/**
+ * A path the built-in cards of a kind of service ask, found in the code, with the cards that ask it (English names, as the
+ * library has them). No card behind it: the path is from the documentation of the service.
+ */
 export interface CardRead {
   path: string
-  card: { id: number; title: string; kind: string; label: string }
-  at: number
+  widgets: { kind: string; label: string }[]
 }
 export interface CardReads {
   reads: CardRead[]
-  /** Built-in cards of this connection on a board: none means nothing can have been asked yet. */
-  cards: number
 }
 
 export interface CardSource {

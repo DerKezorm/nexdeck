@@ -367,10 +367,11 @@
         "ask": "Demander",
         "asking": "Demande à {{service}} …",
         "noConnection": "Il n’y a pas d’intégration {{service}} à interroger. La carte peut quand même être créée et affichera des données dès qu’il y en aura une.",
-        "readsTitle": "Ce que nexdeck lit déjà ici",
+        "readsTitle": "Ce que nexdeck peut demander à {{service}}",
         "readsLike": "Comme la carte « {{name}} »",
-        "readsNoCards": "Aucune carte intégrée de {{service}} n’est encore sur un tableau. Dès qu’il y en aura une, ce qu’elle lit apparaîtra ici.",
-        "readsNotYet": "Depuis le démarrage, aucune carte de {{service}} n’a encore interrogé le service. Elle le fera à sa prochaine actualisation, puis cela apparaîtra ici.",
+        "readsLikeMore": "Comme la carte « {{name}} » et {{count}} autres",
+        "readsDocs": "Tiré de la documentation de {{service}}",
+        "readsNone": "Rien à proposer pour {{service}} : ses cartes intégrées ne le lisent pas ainsi. Une adresse personnelle fonctionne toujours.",
         "askLocked": "Pour interroger, il faut une intégration de ce type. Ajoutes-en une pour essayer la carte pour de vrai."
       },
       "table": {

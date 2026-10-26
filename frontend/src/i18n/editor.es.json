@@ -367,10 +367,11 @@
         "ask": "Consultar",
         "asking": "Consultando {{service}} …",
         "noConnection": "No hay ninguna integración con {{service}} a la que preguntar. Puedes crear la tarjeta igualmente; mostrará datos en cuanto haya una.",
-        "readsTitle": "Lo que nexdeck ya lee aquí",
+        "readsTitle": "Lo que nexdeck puede consultar en {{service}}",
         "readsLike": "Como la tarjeta «{{name}}»",
-        "readsNoCards": "Todavía no hay en ningún tablero una tarjeta integrada de {{service}}. Cuando la haya, aquí verás lo que lee.",
-        "readsNotYet": "Desde el arranque, ninguna tarjeta de {{service}} ha consultado nada. Lo hará en la próxima actualización y entonces aparecerá aquí.",
+        "readsLikeMore": "Como la tarjeta «{{name}}» y {{count}} más",
+        "readsDocs": "De la documentación de {{service}}",
+        "readsNone": "Para {{service}} no hay nada que proponer: sus tarjetas integradas no lo leen de este modo. Una dirección propia siempre funciona.",
         "askLocked": "Para preguntar hace falta una integración de este tipo. Añade una para probar la tarjeta de verdad."
       },
       "table": {

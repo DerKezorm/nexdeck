@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 
 import { get } from '../../../api/client'
 import { Spinner } from '../../../components/ui'
+import { tAdapter } from '../../../i18n/texts'
 import { deleteAt, setAt } from '../../../lib/cardDocument'
 import { suggestionsFor, wordsKey, type CardSuggestion, type SuggestionIcon } from '../../../lib/cardSuggestions'
 import type { CardRead, CardReads, CardSource } from '../../../lib/customCards'
@@ -49,16 +50,17 @@ export function DataStep() {
   const table = useAnswerTable()
   const service = sources.data?.find((one) => one.kind === kind)?.label ?? kind ?? ''
   const offered = suggestionsFor(kind)
-  // What the built-in cards of this very connection ask: known to work with this service, whatever kind it is (J5).
+  // What the built-in cards of this kind of service ask, found in the code: with a connection or without, with a card of the
+  // kind on a board or without. A path the suggestions above already hold is shown once, there.
   const seen = useQuery({
-    queryKey: ['cards-reads', chosen?.id],
-    queryFn: () => get<CardReads>(`/cards/sources/${chosen?.id}/read`),
-    enabled: chosen !== null && chosen !== undefined,
-    staleTime: 10_000,
+    queryKey: ['cards-reads', kind],
+    queryFn: () => get<CardReads>(`/cards/sources/${encodeURIComponent(kind ?? '')}/reads`),
+    enabled: Boolean(kind),
+    staleTime: 60_000,
     retry: false,
   })
-  const reads = Array.isArray(seen.data?.reads) ? seen.data.reads : []
-  const readsKnown = seen.isSuccess || !chosen
+  const reads = (Array.isArray(seen.data?.reads) ? seen.data.reads : []).filter((one) => !offered.some((own) => own.path === one.path))
+  const readsKnown = seen.isSuccess
   // The address typed in "Own address" goes into the card when the author leaves the field, presses Enter or asks:
   // the preview asks the service for what was written, never for half a path.
   const [typing, setTyping] = useState<string | null>(null)
@@ -66,7 +68,8 @@ export function DataStep() {
   const target = typing ?? path
   const asked = target && target !== '/'
   const fromReads = Boolean(asked) && reads.some((one) => one.path === target)
-  const ownOpen = (!offered.length && !reads.length) || (Boolean(asked) && !suggestion && !fromReads)
+  // A path with a place in it (``{entity_id}``) is not asked as it stands: it is the start of the author's own address.
+  const ownOpen = (!offered.length && !reads.length) || (Boolean(asked) && !suggestion && (!fromReads || target.includes('{')))
 
   const pick = (one: CardSuggestion) => {
     if (suggestion?.id === one.id && path === one.path) return
@@ -83,7 +86,7 @@ export function DataStep() {
     })
   }
 
-  /** A path a built-in card reads: it is the card's request, and the service is asked at once. */
+  /** A path a built-in card reads: it is the card's request, and the service is asked at once when it is a whole address. */
   const pickRead = (one: CardRead) => {
     if (path === one.path && !suggestion) return
     setTyping(null)
@@ -92,8 +95,17 @@ export function DataStep() {
         setAt(doc, ['requests'], [{ id: requestId, path: one.path }])
         deleteAt(doc, ['demo'])
       })
-      askFor(requestId, one.path, chosen?.id ?? null)
+      if (!one.path.includes('{')) askFor(requestId, one.path, chosen?.id ?? null)
     })
+  }
+
+  /** The cards that ask a path, by the names the library gives them: the first, and how many more. */
+  const askedBy = (one: CardRead) => {
+    const names = one.widgets.map((widget) => tAdapter(widget.label))
+    if (!names.length) return t('editor.guided.data.readsDocs', { service })
+    return names.length === 1
+      ? t('editor.guided.data.readsLike', { name: names[0] })
+      : t('editor.guided.data.readsLikeMore', { name: names[0], count: names.length - 1 })
   }
 
   /** Ask the path in the field; a new path makes the display again, so the same question comes first. */
@@ -118,10 +130,10 @@ export function DataStep() {
 
       {chosen && <TryWith />}
 
-      {chosen && readsKnown && (
+      {readsKnown && (reads.length > 0 || !offered.length) && (
         <section className="grid gap-2 min-w-0" aria-labelledby={`${ids}-reads`} data-testid="card-reads">
           <h3 id={`${ids}-reads`} className="text-[13px] font-semibold text-muted break-words hyphens-auto">
-            {t('editor.guided.data.readsTitle')}
+            {t('editor.guided.data.readsTitle', { service })}
           </h3>
           {reads.length > 0 ? (
             <div className="grid gap-2 min-w-0" role="group" aria-labelledby={`${ids}-reads`}>
@@ -129,13 +141,13 @@ export function DataStep() {
                 const pressed = !suggestion && path === one.path
                 return (
                   <button
-                    key={`${one.card.id}:${one.path}`}
+                    key={one.path}
                     type="button"
                     aria-pressed={pressed}
                     className={`grid gap-0.5 text-left rounded-2xl border px-3.5 py-2.5 min-w-0 ${pressed ? 'border-accent ring-[3px] ring-accent/20' : 'border-line hover:border-line-strong hover:bg-surface-hover'}`}
                     onClick={() => pickRead(one)}
                   >
-                    <span className="font-semibold text-sm break-words hyphens-auto">{t('editor.guided.data.readsLike', { name: one.card.title })}</span>
+                    <span className="font-semibold text-sm break-words hyphens-auto">{askedBy(one)}</span>
                     <span className="font-mono text-[11.5px] text-faint break-all">{one.path}</span>
                   </button>
                 )
@@ -143,7 +155,7 @@ export function DataStep() {
             </div>
           ) : (
             <p className="text-[12.5px] text-muted break-words hyphens-auto">
-              {t(seen.data?.cards ? 'editor.guided.data.readsNotYet' : 'editor.guided.data.readsNoCards', { service })}
+              {t('editor.guided.data.readsNone', { service })}
             </p>
           )}
         </section>

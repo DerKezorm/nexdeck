@@ -367,10 +367,11 @@
         "ask": "Abfragen",
         "asking": "Frage bei {{service}} nach …",
         "noConnection": "Es gibt keine Anbindung an {{service}}, die gefragt werden kann. Die Karte lässt sich trotzdem bauen und zeigt Daten, sobald es eine gibt.",
-        "readsTitle": "Was nexdeck hier schon liest",
+        "readsTitle": "Was nexdeck bei {{service}} abfragen kann",
         "readsLike": "Wie die Karte ‚{{name}}‘",
-        "readsNoCards": "Für {{service}} liegt noch keine eingebaute Karte auf einem Board. Sobald eine dort liegt, steht hier, was sie liest.",
-        "readsNotYet": "Seit dem Start hat noch keine Karte von {{service}} nachgefragt. Das passiert beim nächsten Aktualisieren, dann steht es hier.",
+        "readsLikeMore": "Wie die Karte ‚{{name}}‘ und {{count}} weitere",
+        "readsDocs": "Aus der Dokumentation von {{service}}",
+        "readsNone": "Zu {{service}} gibt es hier nichts vorzuschlagen: Die eingebauten Karten lesen es nicht auf diesem Weg. Eine eigene Adresse geht immer.",
         "askLocked": "Zum Fragen braucht es eine Anbindung dieser Art. Lege eine an, um die Karte echt auszuprobieren."
       },
       "table": {
