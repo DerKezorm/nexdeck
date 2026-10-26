@@ -71,6 +71,7 @@ test('karten10 AC-6: a whole card pasted into the YAML view is checked, shown in
   expect(saved).toBe(CARD)
 
   await page.getByRole('link', { name: 'Back to Custom cards' }).click()
+  await expect(page.getByRole('heading', { name: 'Custom cards', level: 2 })).toBeVisible()
   await expect(page.getByText('Pasted from a forum')).toBeVisible()
   expect(trouble).toEqual([])
 })
@@ -82,6 +83,8 @@ test('karten9 EC-3: two windows save the same card; the second hears who saved m
   for (const one of [page, other]) {
     await one.goto('/system/custom-cards/e2e-pasted/edit')
     await expect(one.getByRole('heading', { name: 'Pasted from a forum', level: 1 })).toBeVisible()
+    // The guided way can show this card, so it opens there; the texts are under All settings.
+    await one.getByRole('button', { name: 'All settings' }).click()
     await one.getByRole('button', { name: '4 Texts' }).click()
   }
 
@@ -98,6 +101,7 @@ test('karten9 EC-3: two windows save the same card; the second hears who saved m
 
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Saved second', level: 1 })).toBeVisible()
+  await page.getByRole('button', { name: 'All settings' }).click()
 
   // And the other way out: the first window saves again, hears of the overwrite, and reloads.
   await page.getByRole('button', { name: '4 Texts' }).click()
@@ -108,6 +112,8 @@ test('karten9 EC-3: two windows save the same card; the second hears who saved m
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   const again = page.getByRole('dialog', { name: `Changed by ${ACCOUNT.username} meanwhile` })
   await again.getByRole('button', { name: 'Reload' }).click()
+  // Own changes would go with the reload, so it asks once more.
+  await page.getByRole('dialog', { name: 'Drop your changes and reload?' }).getByRole('button', { name: 'Drop and reload' }).click()
   await expect(page.getByRole('heading', { name: 'Saved fourth', level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
 })

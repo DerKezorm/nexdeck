@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { pathText, readAt, type CardDoc, type CardPath } from '../../../lib/cardDocument'
 import type { CardSuggestion, Condition } from '../../../lib/cardSuggestions'
 import type { CardForm } from '../../../lib/customCards'
+import { FailureNote } from '../FailureNote'
 import { usePreviewQuery } from '../Preview'
 import { MAX_STATS, MIN_STATS } from '../slots'
 import { typedValue } from '../steps/fields'
@@ -367,6 +368,7 @@ export function DisplayStep() {
       </div>
 
       {!table && probe?.status !== 'failed' && path && path !== '/' && <p className="text-sm text-muted">{t('editor.guided.display.waiting')}</p>}
+      {probe?.status === 'failed' && probe.path === path && <FailureNote failure={probe} />}
 
       {form === 'value' && (
         <>
