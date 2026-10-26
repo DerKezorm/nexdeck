@@ -42,7 +42,8 @@ COOKIE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
 PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 LOGO_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,80}$")
 LOGO_UPLOAD = re.compile(r"^/api/v1/assets/\d{1,9}/[A-Za-z0-9._-]{1,120}$")
-GITHUB = re.compile(r"^(?:https://github\.com/)?([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9._-]{1,100}?)(?:\.git)?/?$")
+#: ``.`` and ``..`` are no name: the address of the GitHub API is built from it.
+GITHUB = re.compile(r"^(?:https://github\.com/)?([A-Za-z0-9][A-Za-z0-9-]{0,38})/(?!\.{1,2}(?:\.git)?/?$)([A-Za-z0-9._-]{1,100}?)(?:\.git)?/?$")
 #: Headers the request itself owns; a definition cannot set them.
 OWN_HEADERS = frozenset({"host", "content-length", "content-type", "connection", "transfer-encoding", "accept-encoding", "cookie"})
 TICKET = "ticket"

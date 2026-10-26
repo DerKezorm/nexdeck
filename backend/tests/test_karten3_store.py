@@ -141,7 +141,7 @@ def test_karten3_ac1_paths_stay_under_the_address_and_only_read(admin: TestClien
 def test_karten4_ec3_the_project_on_github_is_written_as_owner_name_or_as_its_address(admin: TestClient) -> None:  # noqa: F811
     for good in ("owner/name", "https://github.com/owner/name"):
         assert make(admin, changed(HEADER, short=f"gh-{len(good)}", github=good)).status_code == 201, good
-    for bad in ("justaname", "https://example.com/owner/name", "owner/name/extra"):
+    for bad in ("justaname", "https://example.com/owner/name", "owner/name/extra", "owner/..", "owner/.", "https://github.com/owner/../", "owner/..git"):
         assert "card_integration_github" in codes_of(make(admin, changed(HEADER, github=bad))), bad
 
 
