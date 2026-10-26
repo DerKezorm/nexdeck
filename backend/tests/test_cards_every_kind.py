@@ -102,6 +102,17 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     adapter = get_adapter(kind)
     config = invented(kind)
     route = respx.route().mock(return_value=httpx.Response(200, json={}))
+    try:
+        await adapter.test(config, ctx())
+    except Exception:  # noqa: BLE001, S110 - a stub that answers {} may fail a test; what it sent before is what counts
+        pass
+    # What proves who asks in the kind's own request (a secret field or the user name, in a header or the query, not in the path or a
+    # body) has to come along with the card's, every marker of it and not only one.
+    proof = {config[name] for name in (*adapter.secret_field_names(), "username", "user") if isinstance(config.get(name), str)}
+    expected = [
+        one for one in markers(config)
+        if one in proof and any(one in what_travelled(call.request).replace(call.request.url.path, "") for call in route.calls)
+    ]
     await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/getprobe"))
     sent = route.calls.last.request
     assert sent.method == "GET"
@@ -110,6 +121,7 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     carried = what_travelled(sent)
     given = markers(config)
     assert not given or any(one in carried for one in given), f"{kind}: nothing of the connection came along ({given})"
+    assert all(one in carried for one in expected), f"{kind}: the kind's own request carries {expected}, the card only {carried}"
 
 
 def test_jede6_the_service_step_lists_the_kinds_people_have_on_their_board_such_as_wud_and_the_sign_in_kinds() -> None:

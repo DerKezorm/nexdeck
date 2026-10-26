@@ -338,3 +338,45 @@ async def test_korrektur_f9_the_fields_of_a_form_are_copied_into_the_address_onl
 
     assert (await watched((), post)).params == {}, "a body is not guessed at"
     assert (await watched(("api_key",), post)).params == {"api_key": "K"}
+
+
+# -- F7: the two guards that no test saw ------------------------------------------------------------------------
+
+
+@respx.mock
+async def test_korrektur_f7_m1_what_a_kind_asks_of_another_host_is_never_taken_for_the_way_to_sign() -> None:
+    respx.route().mock(return_value=httpx.Response(200, json={}))
+
+    async def asks(ctx: Context) -> None:
+        # A kind that fetches something from a second host with a key of its own (a token service, a CDN), then asks its own.
+        await ctx.request("GET", "http://other.example.com/x?apikey=OTHER-HOST-KEY", headers={"X-Token": "OTHER-HOST-TOKEN"})
+        await ctx.request("GET", f"{BASE}/api/x?apikey=OWN-KEY")
+
+    sent = await watched((), asks)
+    assert sent.params == {"apikey": "OWN-KEY"} and sent.headers == {}, "only the connection's own address gives the way to sign"
+
+    async def only_the_other(ctx: Context) -> None:
+        await ctx.request("GET", "http://other.example.com/x?apikey=OTHER-HOST-KEY")
+
+    unsigned = await watched((), only_the_other)
+    assert unsigned == rawread.Sent(), "nothing of another host is copied when the connection itself was not asked signed"
+
+
+@respx.mock
+async def test_korrektur_f7_m2_the_request_that_signs_in_is_passed_over_and_its_password_never_travels() -> None:
+    respx.route().mock(return_value=httpx.Response(200, json={}))
+
+    async def signs_in_then_asks(ctx: Context) -> None:
+        await ctx.request("POST", f"{BASE}/login", data={"username": "anna", "password": "Zk-password-1"})
+        await ctx.request("POST", f"{BASE}/rpc", json_body={"method": "version"}, headers={"X-Session": "sess-1"})
+
+    sent = await watched((), signs_in_then_asks)
+    assert sent.headers == {"X-Session": "sess-1"} and sent.params == {} and sent.auth is None
+    assert "Zk-password-1" not in str(sent)
+
+    async def signs_in_by_the_address(ctx: Context) -> None:
+        await ctx.request("GET", f"{BASE}/api/auth.cgi?account=anna&passwd=Zk-password-1&sid=none")
+        await ctx.request("GET", f"{BASE}/api/x?_sid=sess-2")
+
+    again = await watched((), signs_in_by_the_address)
+    assert again.params == {"_sid": "sess-2"}, "the sign-in by its address is passed over, too"
