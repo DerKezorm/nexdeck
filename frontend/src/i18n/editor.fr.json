@@ -5,8 +5,9 @@
     "back": "Retour aux cartes personnalisées",
     "view": {
       "label": "Vue",
-      "editor": "Éditeur",
-      "yaml": "YAML"
+      "editor": "Tous les réglages",
+      "yaml": "YAML",
+      "guided": "Guidé"
     },
     "fixFirst": "Corrigez d'abord la ligne {{line}}",
     "fixFirstNoLine": "Corrigez d'abord le YAML",
@@ -33,7 +34,7 @@
       "lastValid": "Aperçu de la dernière version valide",
       "data": "Données",
       "live": "Données réelles",
-      "demo": "Données de démonstration",
+      "demo": "Données d’exemple",
       "demoMode": "Le mode démo est actif, l'aperçu montre donc les données de démonstration de la carte.",
       "theme": "Thème",
       "dark": "Sombre",
@@ -114,31 +115,6 @@
       "label": "Carte en YAML",
       "pasted": "La carte collée est valide et s'affiche maintenant dans l'éditeur.",
       "loading": "Chargement de la vue YAML"
-    },
-    "new": {
-      "title": "Créer une carte",
-      "name": "Nom",
-      "slug": "Nom court",
-      "slugHelp": "Minuscules, chiffres et traits d'union. Les tableaux reconnaissent la carte à ce nom.",
-      "slugInvalid": "Utilisez des minuscules, des chiffres et des traits d'union, en commençant par une lettre ou un chiffre.",
-      "nameRequired": "Donnez un nom à la carte.",
-      "source": "Fonctionne avec",
-      "sourceHelp": "Le type d'intégration par lequel la carte lit.",
-      "noConnection": "Il n'y a pas encore d'intégration {{kind}}. Vous pouvez créer la carte maintenant ; elle affichera des données dès que l'intégration sera ajoutée.",
-      "noConnectionAtAll": "Il n'y a pas encore d'intégration par laquelle une carte personnalisée puisse lire. Vous pouvez créer la carte maintenant ; elle affichera des données dès qu'il y en aura une.",
-      "addIntegration": "Ajouter une intégration",
-      "start": "Partir de",
-      "starts": {
-        "blank": "Vide",
-        "value": "Un nombre",
-        "stats": "Plusieurs nombres",
-        "list": "Une liste",
-        "posters": "Une rangée d'images"
-      },
-      "startFor": "Exemple pour {{service}}",
-      "blankHelp": "Une requête, rien de choisi encore",
-      "paste": "Coller une carte entière (YAML)",
-      "create": "Créer"
     },
     "texts": {
       "languages": "Langues",
@@ -353,6 +329,361 @@
       },
       "remove": "Retirer la règle {{number}}",
       "add": "Règle"
+    },
+    "guided": {
+      "steps": {
+        "service": "Service",
+        "data": "Données",
+        "display": "Affichage",
+        "finish": "Finitions"
+      },
+      "stepDone": "{{number}} {{name}}, fait",
+      "next": "Suivant",
+      "back": "Retour",
+      "service": {
+        "title": "D’où viennent les données ?",
+        "lead": "Choisis une de tes intégrations. La carte lira exactement là.",
+        "missing": "Ton service manque ?",
+        "none": "Il n’y a pas encore d’intégration qu’une carte puisse lire.",
+        "add": "Ajouter une intégration",
+        "paste": "Coller une carte entière (YAML)"
+      },
+      "data": {
+        "title": "Que doit montrer la carte ?",
+        "lead": "nexdeck connaît les données les plus importantes de {{service}}. Choisis quelque chose, la réponse s’affiche juste en dessous.",
+        "leadOwn": "Indique ce que la carte doit demander à {{service}} ; la réponse s’affiche juste en dessous.",
+        "pick": "Choisir",
+        "picked": "Choisi",
+        "own": "Adresse personnelle (pour les connaisseurs)",
+        "path": "Chemin de la requête",
+        "pathHint": "Sous l’adresse de l’intégration, en lecture seule. Qui connaît l’API du service peut tout demander ici.",
+        "ask": "Demander",
+        "asking": "Demande à {{service}} …",
+        "noConnection": "Il n’y a pas d’intégration {{service}} à interroger. La carte peut quand même être créée et affichera des données dès qu’il y en aura une."
+      },
+      "table": {
+        "answer": "Réponse",
+        "entries_one": "{{number}} entrée",
+        "entries_other": "{{number}} entrées",
+        "matching_one": "{{number}} correspond",
+        "matching_other": "{{number}} correspondent",
+        "more_one": "… et {{number}} autre entrée",
+        "more_other": "… et {{number}} autres entrées",
+        "field": "Champ",
+        "value": "Valeur",
+        "empty": "La réponse ne contient rien à afficher."
+      },
+      "display": {
+        "title": "À quoi doit ressembler la carte ?",
+        "lead": "nexdeck a déjà fait une proposition. Modifie-la jusqu’à ce que l’aperçu te convienne.",
+        "forms": "Forme de la carte",
+        "form": {
+          "value": {
+            "title": "Un nombre",
+            "text": "Compter, ou une valeur"
+          },
+          "stats": {
+            "title": "Plusieurs nombres",
+            "text": "Jusqu’à six côte à côte"
+          },
+          "list": {
+            "title": "Une liste",
+            "text": "Une ligne par entrée"
+          },
+          "posters": {
+            "title": "Images",
+            "text": "Quand il y a des images"
+          }
+        },
+        "formNeedsRows": "La réponse n’a pas d’entrées pour cela.",
+        "formNeedsPictures": "La réponse n’a pas d’images.",
+        "counted": "Qu’est-ce qui est compté ?",
+        "how": "Ce qu’est le nombre",
+        "howCount": "Compter les entrées",
+        "howField": "Valeur d’un champ",
+        "count": "Compte les entrées",
+        "all": "(toutes)",
+        "where": "pour lesquelles",
+        "and": "et",
+        "column": "Colonne",
+        "compare": "Comparaison",
+        "value": "Valeur",
+        "addCondition": "+ Condition",
+        "removeCondition": "Retirer la condition",
+        "result": "Résultat :",
+        "resultOf": "sur {{number}} entrées. Elles sont mises en évidence dans le tableau.",
+        "field": "Champ",
+        "ofFirst": "{{field}} de la première entrée",
+        "label": "Libellé sous le nombre",
+        "number": "Nombre {{number}}",
+        "addNumber": "+ Nombre",
+        "removeNumber": "Retirer le nombre {{number}}",
+        "lines": "Que contient chaque ligne ?",
+        "main": "Texte principal",
+        "below": "Dessous, en petit",
+        "right": "À droite",
+        "nothing": "(rien)",
+        "example": "p. ex. {{value}}",
+        "rowRed": "Ligne en rouge quand",
+        "rowRedHint": "Sans valeur, aucune ligne ne change de couleur.",
+        "pictures": "Images et titres",
+        "picture": "Image",
+        "pictureTitle": "Titre",
+        "pictureBelow": "Dessous",
+        "pictureOfEntry": "Image de l’entrée",
+        "expression": "Cette carte utilise une expression ; modifie-la dans Tous les réglages.",
+        "openAll": "Ouvrir Tous les réglages",
+        "waiting": "La réponse arrive."
+      },
+      "finish": {
+        "title": "Finitions",
+        "lead": "Nom, couleurs et fréquence à laquelle la carte regarde à nouveau.",
+        "name": "Nom de la carte",
+        "nameRequired": "Donne un nom à la carte.",
+        "inEnglish": "En anglais, elle affiche :",
+        "nameIn": "Nom en {{language}}",
+        "addLanguage": "+ Langue",
+        "every": "Regarder à nouveau toutes les",
+        "everyChoice": {
+          "30s": "30 secondes",
+          "60s": "minutes",
+          "5m": "5 minutes",
+          "15m": "15 minutes",
+          "1h": "heures"
+        },
+        "colour": "Couleur",
+        "warnBefore": "Jaune quand le nombre vaut",
+        "warnAfter": "ou plus",
+        "badBefore": "Rouge quand le nombre vaut",
+        "badAfter": "ou plus",
+        "warnLabel": "Seuil pour le jaune",
+        "badLabel": "Seuil pour le rouge",
+        "never": "vide = jamais",
+        "example": "Créer des données d’exemple à partir de la réponse",
+        "exampleHint": "Les données d’exemple remplissent l’aperçu, le mode démo et l’image du Card shop. Rien de tes propres données n’y reste.",
+        "saveAgain": "Enregistrer à nouveau",
+        "savedTitle": "Enregistrée.",
+        "savedBody": "La carte se trouve maintenant sous Système › Cartes personnalisées. La mettre tout de suite sur un tableau ?",
+        "board": "Tableau",
+        "page": "Page",
+        "place": "Mettre sur le tableau",
+        "later": "Plus tard",
+        "placed": "La carte est maintenant sur {{board}}.",
+        "openBoard": "Ouvrir le tableau",
+        "noBoard": "Il n’y a aucun tableau que tu peux modifier. Ajoute la carte plus tard avec Ajouter un widget."
+      },
+      "why": {
+        "text": "Le mode guidé ne peut pas montrer toute cette carte, car {{why}}. Tout est ici dans Tous les réglages et dans le YAML.",
+        "kinds": "elle fonctionne avec plus d’un type de service",
+        "requests": "elle demande plus d’une chose à son service",
+        "expression": "elle utilise une expression",
+        "rules": "elle a ses propres règles de couleur",
+        "parts": "elle a des parties que le mode guidé ne connaît pas"
+      },
+      "preview": {
+        "empty": "Dès que tu auras choisi ce que montre la carte, elle apparaîtra ici.",
+        "hint": "Voici la carte telle qu’elle apparaît sur le tableau. Chaque modification s’affiche ici aussitôt."
+      },
+      "want": {
+        "homeassistant": {
+          "states": {
+            "title": "Appareils et capteurs",
+            "text": "Tout ce que Home Assistant connaît : lumières, interrupteurs, fenêtres, températures.",
+            "label": "Lumières allumées"
+          },
+          "config": {
+            "title": "À propos de Home Assistant",
+            "text": "Version, lieu et fuseau horaire."
+          },
+          "calendars": {
+            "title": "Calendriers",
+            "text": "Les calendriers de Home Assistant, par nom."
+          }
+        },
+        "proxmox": {
+          "guests": {
+            "title": "Machines virtuelles et conteneurs",
+            "text": "Nom, état et mémoire de chaque invité."
+          },
+          "nodes": {
+            "title": "Nœuds",
+            "text": "La charge des machines Proxmox."
+          },
+          "storage": {
+            "title": "Stockage",
+            "text": "Le remplissage de ZFS, LVM et des autres."
+          }
+        },
+        "plex": {
+          "recent": {
+            "title": "Ajouts récents",
+            "text": "Nouveaux films et épisodes avec leur affiche."
+          },
+          "playing": {
+            "title": "En cours de lecture",
+            "text": "Qui regarde quoi en ce moment."
+          },
+          "libraries": {
+            "title": "Bibliothèques",
+            "text": "Films, séries et musique, par nom."
+          }
+        },
+        "jellyfin": {
+          "latest": {
+            "title": "Ajouts récents",
+            "text": "Les films et séries les plus récents avec leur affiche."
+          },
+          "sessions": {
+            "title": "En cours de lecture",
+            "text": "Qui est connecté et ce qui passe."
+          },
+          "libraries": {
+            "title": "Bibliothèques",
+            "text": "Les bibliothèques par nom et type."
+          }
+        },
+        "immich": {
+          "storage": {
+            "title": "Stockage",
+            "text": "Le remplissage du disque des photos."
+          },
+          "statistics": {
+            "title": "Photos et vidéos",
+            "text": "Combien il y en a, aussi par personne."
+          },
+          "about": {
+            "title": "Version",
+            "text": "Quelle version d’Immich tourne."
+          }
+        },
+        "portainer": {
+          "environments": {
+            "title": "Environnements",
+            "text": "Les environnements Docker et s’ils répondent."
+          },
+          "stacks": {
+            "title": "Stacks",
+            "text": "Chaque stack avec son état."
+          }
+        },
+        "sonarr": {
+          "queue": {
+            "title": "Téléchargements",
+            "text": "Ce qui est en cours de téléchargement."
+          },
+          "calendar": {
+            "title": "À venir",
+            "text": "Les épisodes diffusés aujourd’hui et demain."
+          },
+          "health": {
+            "title": "Avertissements",
+            "text": "Ce que Sonarr estime à vérifier."
+          },
+          "series": {
+            "title": "Séries",
+            "text": "Chaque série avec son année."
+          }
+        },
+        "radarr": {
+          "queue": {
+            "title": "Téléchargements",
+            "text": "Ce qui est en cours de téléchargement."
+          },
+          "calendar": {
+            "title": "À venir",
+            "text": "Les films qui sortent aujourd’hui et demain."
+          },
+          "health": {
+            "title": "Avertissements",
+            "text": "Ce que Radarr estime à vérifier."
+          },
+          "movies": {
+            "title": "Films",
+            "text": "Chaque film avec son année."
+          }
+        },
+        "lidarr": {
+          "queue": {
+            "title": "Téléchargements",
+            "text": "Ce qui est en cours de téléchargement."
+          },
+          "health": {
+            "title": "Avertissements",
+            "text": "Ce que Lidarr estime à vérifier."
+          },
+          "artists": {
+            "title": "Artistes",
+            "text": "Chaque artiste de la bibliothèque."
+          }
+        },
+        "prowlarr": {
+          "indexers": {
+            "title": "Indexeurs",
+            "text": "Chaque indexeur et s’il est activé."
+          },
+          "health": {
+            "title": "Avertissements",
+            "text": "Ce que Prowlarr estime à vérifier."
+          }
+        },
+        "adguard": {
+          "stats": {
+            "title": "Statistiques",
+            "text": "Requêtes et requêtes bloquées du dernier jour."
+          },
+          "status": {
+            "title": "Protection",
+            "text": "Si le filtrage est actif, et la version."
+          }
+        },
+        "truenas": {
+          "pools": {
+            "title": "Pools",
+            "text": "Chaque pool et s’il est sain."
+          },
+          "alerts": {
+            "title": "Alertes",
+            "text": "Ce dont TrueNAS avertit."
+          },
+          "system": {
+            "title": "Système",
+            "text": "Version, durée de fonctionnement et mémoire."
+          }
+        },
+        "traefik": {
+          "routers": {
+            "title": "Routeurs",
+            "text": "Chaque route avec sa règle et son état."
+          },
+          "services": {
+            "title": "Services",
+            "text": "Chaque service et son état."
+          },
+          "overview": {
+            "title": "Vue d’ensemble",
+            "text": "Combien de routeurs, services et middlewares il y a, et combien ont des erreurs."
+          }
+        },
+        "audiobookshelf": {
+          "libraries": {
+            "title": "Bibliothèques",
+            "text": "Tes bibliothèques de livres audio et de podcasts."
+          },
+          "online": {
+            "title": "En écoute",
+            "text": "Qui écoute en ce moment."
+          }
+        }
+      },
+      "ops": {
+        "eq": "est",
+        "ne": "n’est pas",
+        "starts_with": "commence par",
+        "ends_with": "se termine par",
+        "contains": "contient",
+        "gt": "supérieur à",
+        "lt": "inférieur à"
+      }
     }
   }
 }

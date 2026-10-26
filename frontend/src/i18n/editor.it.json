@@ -5,8 +5,9 @@
     "back": "Torna a Schede personali",
     "view": {
       "label": "Vista",
-      "editor": "Editor",
-      "yaml": "YAML"
+      "editor": "Tutte le impostazioni",
+      "yaml": "YAML",
+      "guided": "Guidato"
     },
     "fixFirst": "Correggi prima la riga {{line}}",
     "fixFirstNoLine": "Correggi prima lo YAML",
@@ -33,7 +34,7 @@
       "lastValid": "Anteprima dell'ultima versione valida",
       "data": "Dati",
       "live": "Dati reali",
-      "demo": "Dati dimostrativi",
+      "demo": "Dati di esempio",
       "demoMode": "La modalità demo è attiva, quindi l'anteprima mostra i dati demo della scheda.",
       "theme": "Tema",
       "dark": "Scuro",
@@ -114,31 +115,6 @@
       "label": "Scheda come YAML",
       "pasted": "La scheda incollata è valida e ora si vede nell'editor.",
       "loading": "Caricamento della vista YAML"
-    },
-    "new": {
-      "title": "Crea una scheda",
-      "name": "Nome",
-      "slug": "Nome breve",
-      "slugHelp": "Lettere minuscole, cifre e trattini. Le bacheche riconoscono la scheda da questo.",
-      "slugInvalid": "Usa lettere minuscole, cifre e trattini, iniziando con una lettera o una cifra.",
-      "nameRequired": "Dai un nome alla scheda.",
-      "source": "Funziona con",
-      "sourceHelp": "Il tipo di integrazione attraverso cui legge la scheda.",
-      "noConnection": "Non c'è ancora un'integrazione {{kind}}. Puoi creare la scheda adesso; mostrerà dati appena aggiungi l'integrazione.",
-      "noConnectionAtAll": "Non c'è ancora un'integrazione attraverso cui una scheda personale possa leggere. Puoi creare la scheda adesso; mostrerà dati appena ce ne sarà una.",
-      "addIntegration": "Aggiungi un'integrazione",
-      "start": "Parti da",
-      "starts": {
-        "blank": "Vuota",
-        "value": "Un numero",
-        "stats": "Più numeri",
-        "list": "Un elenco",
-        "posters": "Una fila di immagini"
-      },
-      "startFor": "Esempio per {{service}}",
-      "blankHelp": "Una richiesta, ancora niente scelto",
-      "paste": "Incolla una scheda intera (YAML)",
-      "create": "Crea"
     },
     "texts": {
       "languages": "Lingue",
@@ -353,6 +329,361 @@
       },
       "remove": "Rimuovi la regola {{number}}",
       "add": "Regola"
+    },
+    "guided": {
+      "steps": {
+        "service": "Servizio",
+        "data": "Dati",
+        "display": "Aspetto",
+        "finish": "Ritocchi"
+      },
+      "stepDone": "{{number}} {{name}}, fatto",
+      "next": "Avanti",
+      "back": "Indietro",
+      "service": {
+        "title": "Da dove arrivano i dati?",
+        "lead": "Scegli una delle tue integrazioni. La scheda leggerà proprio da lì.",
+        "missing": "Manca il tuo servizio?",
+        "none": "Non c’è ancora nessuna integrazione da cui una scheda possa leggere.",
+        "add": "Aggiungi un’integrazione",
+        "paste": "Incolla una scheda intera (YAML)"
+      },
+      "data": {
+        "title": "Che cosa deve mostrare la scheda?",
+        "lead": "nexdeck conosce i dati più importanti di {{service}}. Scegli qualcosa e la risposta compare subito sotto.",
+        "leadOwn": "Scrivi che cosa la scheda deve chiedere a {{service}}; la risposta compare subito sotto.",
+        "pick": "Scegli",
+        "picked": "Scelto",
+        "own": "Indirizzo proprio (per esperti)",
+        "path": "Percorso della richiesta",
+        "pathHint": "Sotto l’indirizzo dell’integrazione, solo lettura. Chi conosce l’API del servizio può chiedere qui qualsiasi cosa.",
+        "ask": "Chiedi",
+        "asking": "Chiedo a {{service}} …",
+        "noConnection": "Non c’è nessuna integrazione con {{service}} da interrogare. La scheda si può creare lo stesso e mostra dati appena ce n’è una."
+      },
+      "table": {
+        "answer": "Risposta",
+        "entries_one": "{{number}} voce",
+        "entries_other": "{{number}} voci",
+        "matching_one": "{{number}} corrisponde",
+        "matching_other": "{{number}} corrispondono",
+        "more_one": "… e {{number}} altra voce",
+        "more_other": "… e altre {{number}} voci",
+        "field": "Campo",
+        "value": "Valore",
+        "empty": "La risposta non contiene niente da mostrare."
+      },
+      "display": {
+        "title": "Come deve apparire la scheda?",
+        "lead": "nexdeck ha già fatto una proposta. Cambiala finché l’anteprima ti va bene.",
+        "forms": "Forma della scheda",
+        "form": {
+          "value": {
+            "title": "Un numero",
+            "text": "Contare o un valore"
+          },
+          "stats": {
+            "title": "Più numeri",
+            "text": "Fino a sei affiancati"
+          },
+          "list": {
+            "title": "Un elenco",
+            "text": "Una riga per voce"
+          },
+          "posters": {
+            "title": "Immagini",
+            "text": "Quando ci sono immagini"
+          }
+        },
+        "formNeedsRows": "La risposta non ha voci per questo.",
+        "formNeedsPictures": "La risposta non ha immagini.",
+        "counted": "Che cosa si conta?",
+        "how": "Che cos’è il numero",
+        "howCount": "Contare le voci",
+        "howField": "Valore di un campo",
+        "count": "Conta le voci",
+        "all": "(tutte)",
+        "where": "in cui",
+        "and": "e",
+        "column": "Colonna",
+        "compare": "Confronto",
+        "value": "Valore",
+        "addCondition": "+ Condizione",
+        "removeCondition": "Togli la condizione",
+        "result": "Risultato:",
+        "resultOf": "su {{number}} voci. Sono evidenziate nella tabella.",
+        "field": "Campo",
+        "ofFirst": "{{field}} della prima voce",
+        "label": "Testo sotto il numero",
+        "number": "Numero {{number}}",
+        "addNumber": "+ Numero",
+        "removeNumber": "Togli il numero {{number}}",
+        "lines": "Che cosa c’è in ogni riga?",
+        "main": "Testo principale",
+        "below": "Sotto, piccolo",
+        "right": "A destra",
+        "nothing": "(niente)",
+        "example": "per es. {{value}}",
+        "rowRed": "Riga in rosso quando",
+        "rowRedHint": "Senza valore nessuna riga cambia colore.",
+        "pictures": "Immagini e titoli",
+        "picture": "Immagine",
+        "pictureTitle": "Titolo",
+        "pictureBelow": "Sotto",
+        "pictureOfEntry": "Immagine della voce",
+        "expression": "Questa scheda usa un’espressione; modificala in Tutte le impostazioni.",
+        "openAll": "Apri Tutte le impostazioni",
+        "waiting": "La risposta sta arrivando."
+      },
+      "finish": {
+        "title": "Ritocchi",
+        "lead": "Nome, colori e ogni quanto la scheda guarda di nuovo.",
+        "name": "Nome della scheda",
+        "nameRequired": "Dai un nome alla scheda.",
+        "inEnglish": "In inglese mostra:",
+        "nameIn": "Nome in {{language}}",
+        "addLanguage": "+ Lingua",
+        "every": "Guarda di nuovo ogni",
+        "everyChoice": {
+          "30s": "30 secondi",
+          "60s": "minuto",
+          "5m": "5 minuti",
+          "15m": "15 minuti",
+          "1h": "ora"
+        },
+        "colour": "Colore",
+        "warnBefore": "Giallo quando il numero è",
+        "warnAfter": "o più",
+        "badBefore": "Rosso quando il numero è",
+        "badAfter": "o più",
+        "warnLabel": "Soglia per il giallo",
+        "badLabel": "Soglia per il rosso",
+        "never": "vuoto = mai",
+        "example": "Crea dati di esempio dalla risposta",
+        "exampleHint": "I dati di esempio riempiono l’anteprima, la modalità demo e l’immagine nel Card shop. Dei tuoi dati non resta niente.",
+        "saveAgain": "Salva di nuovo",
+        "savedTitle": "Salvata.",
+        "savedBody": "La scheda ora si trova in Sistema › Schede personali. La metti subito su una bacheca?",
+        "board": "Bacheca",
+        "page": "Pagina",
+        "place": "Metti sulla bacheca",
+        "later": "Più tardi",
+        "placed": "La scheda ora è su {{board}}.",
+        "openBoard": "Apri la bacheca",
+        "noBoard": "Non c’è nessuna bacheca che puoi modificare. Aggiungi la scheda più tardi con Aggiungi widget."
+      },
+      "why": {
+        "text": "Il percorso guidato non può mostrare tutta questa scheda, perché {{why}}. Tutto è qui in Tutte le impostazioni e nello YAML.",
+        "kinds": "funziona con più di un tipo di servizio",
+        "requests": "chiede al suo servizio più di una cosa",
+        "expression": "usa un’espressione",
+        "rules": "ha regole di colore proprie",
+        "parts": "ha parti che il percorso guidato non conosce"
+      },
+      "preview": {
+        "empty": "Appena avrai scelto che cosa mostra la scheda, comparirà qui.",
+        "hint": "Così appare la scheda sulla bacheca. Ogni modifica compare qui subito."
+      },
+      "want": {
+        "homeassistant": {
+          "states": {
+            "title": "Dispositivi e sensori",
+            "text": "Tutto ciò che Home Assistant conosce: luci, interruttori, finestre, temperature.",
+            "label": "Luci accese"
+          },
+          "config": {
+            "title": "Informazioni su Home Assistant",
+            "text": "Versione, posizione e fuso orario."
+          },
+          "calendars": {
+            "title": "Calendari",
+            "text": "I calendari di Home Assistant, per nome."
+          }
+        },
+        "proxmox": {
+          "guests": {
+            "title": "Macchine virtuali e container",
+            "text": "Nome, stato e memoria di ogni ospite."
+          },
+          "nodes": {
+            "title": "Nodi",
+            "text": "Quanto sono occupate le macchine Proxmox."
+          },
+          "storage": {
+            "title": "Archiviazione",
+            "text": "Quanto sono pieni ZFS, LVM e gli altri."
+          }
+        },
+        "plex": {
+          "recent": {
+            "title": "Aggiunti di recente",
+            "text": "Nuovi film ed episodi con la locandina."
+          },
+          "playing": {
+            "title": "In riproduzione",
+            "text": "Chi sta guardando cosa in questo momento."
+          },
+          "libraries": {
+            "title": "Librerie",
+            "text": "Film, serie e musica, per nome."
+          }
+        },
+        "jellyfin": {
+          "latest": {
+            "title": "Aggiunti di recente",
+            "text": "I film e le serie più recenti con la locandina."
+          },
+          "sessions": {
+            "title": "In riproduzione",
+            "text": "Chi è collegato e che cosa sta andando."
+          },
+          "libraries": {
+            "title": "Librerie",
+            "text": "Le librerie per nome e tipo."
+          }
+        },
+        "immich": {
+          "storage": {
+            "title": "Spazio",
+            "text": "Quanto è pieno il disco delle foto."
+          },
+          "statistics": {
+            "title": "Foto e video",
+            "text": "Quanti sono, anche per persona."
+          },
+          "about": {
+            "title": "Versione",
+            "text": "Quale versione di Immich è in funzione."
+          }
+        },
+        "portainer": {
+          "environments": {
+            "title": "Ambienti",
+            "text": "Gli ambienti Docker e se rispondono."
+          },
+          "stacks": {
+            "title": "Stack",
+            "text": "Ogni stack con il suo stato."
+          }
+        },
+        "sonarr": {
+          "queue": {
+            "title": "Download",
+            "text": "Che cosa si sta scaricando adesso."
+          },
+          "calendar": {
+            "title": "In arrivo",
+            "text": "Episodi in onda oggi e domani."
+          },
+          "health": {
+            "title": "Avvisi",
+            "text": "Che cosa Sonarr ritiene da controllare."
+          },
+          "series": {
+            "title": "Serie",
+            "text": "Ogni serie con il suo anno."
+          }
+        },
+        "radarr": {
+          "queue": {
+            "title": "Download",
+            "text": "Che cosa si sta scaricando adesso."
+          },
+          "calendar": {
+            "title": "In arrivo",
+            "text": "Film in uscita oggi e domani."
+          },
+          "health": {
+            "title": "Avvisi",
+            "text": "Che cosa Radarr ritiene da controllare."
+          },
+          "movies": {
+            "title": "Film",
+            "text": "Ogni film con il suo anno."
+          }
+        },
+        "lidarr": {
+          "queue": {
+            "title": "Download",
+            "text": "Che cosa si sta scaricando adesso."
+          },
+          "health": {
+            "title": "Avvisi",
+            "text": "Che cosa Lidarr ritiene da controllare."
+          },
+          "artists": {
+            "title": "Artisti",
+            "text": "Ogni artista della libreria."
+          }
+        },
+        "prowlarr": {
+          "indexers": {
+            "title": "Indexer",
+            "text": "Ogni indexer e se è attivo."
+          },
+          "health": {
+            "title": "Avvisi",
+            "text": "Che cosa Prowlarr ritiene da controllare."
+          }
+        },
+        "adguard": {
+          "stats": {
+            "title": "Statistiche",
+            "text": "Richieste e richieste bloccate dell’ultimo giorno."
+          },
+          "status": {
+            "title": "Protezione",
+            "text": "Se il filtro è attivo, e la versione."
+          }
+        },
+        "truenas": {
+          "pools": {
+            "title": "Pool",
+            "text": "Ogni pool e se è sano."
+          },
+          "alerts": {
+            "title": "Avvisi",
+            "text": "Di che cosa avvisa TrueNAS."
+          },
+          "system": {
+            "title": "Sistema",
+            "text": "Versione, tempo di attività e memoria."
+          }
+        },
+        "traefik": {
+          "routers": {
+            "title": "Router",
+            "text": "Ogni rotta con la sua regola e il suo stato."
+          },
+          "services": {
+            "title": "Servizi",
+            "text": "Ogni servizio e il suo stato."
+          },
+          "overview": {
+            "title": "Panoramica",
+            "text": "Quanti router, servizi e middleware ci sono e quanti hanno errori."
+          }
+        },
+        "audiobookshelf": {
+          "libraries": {
+            "title": "Librerie",
+            "text": "Le tue librerie di audiolibri e podcast."
+          },
+          "online": {
+            "title": "In ascolto",
+            "text": "Chi sta ascoltando adesso."
+          }
+        }
+      },
+      "ops": {
+        "eq": "è",
+        "ne": "non è",
+        "starts_with": "inizia con",
+        "ends_with": "finisce con",
+        "contains": "contiene",
+        "gt": "maggiore di",
+        "lt": "minore di"
+      }
     }
   }
 }

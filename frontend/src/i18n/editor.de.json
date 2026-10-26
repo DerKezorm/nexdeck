@@ -5,8 +5,9 @@
     "back": "Zurück zu Eigene Karten",
     "view": {
       "label": "Ansicht",
-      "editor": "Editor",
-      "yaml": "YAML"
+      "editor": "Alle Einstellungen",
+      "yaml": "YAML",
+      "guided": "Geführt"
     },
     "fixFirst": "Erst Zeile {{line}} berichtigen",
     "fixFirstNoLine": "Erst das YAML berichtigen",
@@ -33,7 +34,7 @@
       "lastValid": "Vorschau der letzten gültigen Fassung",
       "data": "Daten",
       "live": "Echte Daten",
-      "demo": "Demo-Daten",
+      "demo": "Beispieldaten",
       "demoMode": "Der Demo-Modus ist an, darum zeigt die Vorschau die Demo-Daten der Karte.",
       "theme": "Darstellung",
       "dark": "Dunkel",
@@ -114,31 +115,6 @@
       "label": "Karte als YAML",
       "pasted": "Die eingefügte Karte ist gültig und steht jetzt im Editor.",
       "loading": "YAML-Ansicht wird geladen"
-    },
-    "new": {
-      "title": "Karte bauen",
-      "name": "Name",
-      "slug": "Kurzname",
-      "slugHelp": "Kleinbuchstaben, Ziffern und Bindestriche. Daran erkennen die Boards die Karte.",
-      "slugInvalid": "Nimm Kleinbuchstaben, Ziffern und Bindestriche, am Anfang ein Buchstabe oder eine Ziffer.",
-      "nameRequired": "Gib der Karte einen Namen.",
-      "source": "Arbeitet mit",
-      "sourceHelp": "Die Art von Anbindung, über die die Karte liest.",
-      "noConnection": "Es gibt noch keine Anbindung an {{kind}}. Du kannst die Karte jetzt bauen; Daten zeigt sie, sobald die Anbindung da ist.",
-      "noConnectionAtAll": "Es gibt noch keine Anbindung, über die eine eigene Karte lesen kann. Du kannst die Karte jetzt bauen; Daten zeigt sie, sobald eine da ist.",
-      "addIntegration": "Anbindung hinzufügen",
-      "start": "Beginnen mit",
-      "starts": {
-        "blank": "Leer",
-        "value": "Eine Zahl",
-        "stats": "Mehrere Zahlen",
-        "list": "Eine Liste",
-        "posters": "Eine Bilderreihe"
-      },
-      "startFor": "Beispiel für {{service}}",
-      "blankHelp": "Eine Anfrage, noch nichts ausgewählt",
-      "paste": "Ganze Karte einfügen (YAML)",
-      "create": "Anlegen"
     },
     "texts": {
       "languages": "Sprachen",
@@ -353,6 +329,361 @@
       },
       "remove": "Regel {{number}} entfernen",
       "add": "Regel"
+    },
+    "guided": {
+      "steps": {
+        "service": "Dienst",
+        "data": "Daten",
+        "display": "Anzeigen",
+        "finish": "Feinschliff"
+      },
+      "stepDone": "{{number}} {{name}}, erledigt",
+      "next": "Weiter",
+      "back": "Zurück",
+      "service": {
+        "title": "Woher kommen die Daten?",
+        "lead": "Wähle eine deiner Anbindungen. Die Karte liest später genau dort.",
+        "missing": "Dein Dienst fehlt?",
+        "none": "Es gibt noch keine Anbindung, aus der eine Karte lesen kann.",
+        "add": "Anbindung hinzufügen",
+        "paste": "Ganze Karte einfügen (YAML)"
+      },
+      "data": {
+        "title": "Was soll die Karte zeigen?",
+        "lead": "nexdeck kennt die wichtigsten Daten von {{service}}. Such dir etwas aus, die Antwort siehst du sofort darunter.",
+        "leadOwn": "Gib ein, was die Karte bei {{service}} abfragen soll; die Antwort siehst du sofort darunter.",
+        "pick": "Auswählen",
+        "picked": "Gewählt",
+        "own": "Eigene Adresse (für Kenner)",
+        "path": "Pfad der Abfrage",
+        "pathHint": "Unter der Adresse der Anbindung, nur Lesen. Wer die API des Dienstes kennt, fragt hier alles ab.",
+        "ask": "Abfragen",
+        "asking": "Frage bei {{service}} nach …",
+        "noConnection": "Es gibt keine Anbindung an {{service}}, die gefragt werden kann. Die Karte lässt sich trotzdem bauen und zeigt Daten, sobald es eine gibt."
+      },
+      "table": {
+        "answer": "Antwort",
+        "entries_one": "{{number}} Eintrag",
+        "entries_other": "{{number}} Einträge",
+        "matching_one": "{{number}} passt",
+        "matching_other": "{{number}} passen",
+        "more_one": "… und {{number}} weiterer Eintrag",
+        "more_other": "… und {{number}} weitere Einträge",
+        "field": "Feld",
+        "value": "Wert",
+        "empty": "Die Antwort enthält nichts, was sich zeigen lässt."
+      },
+      "display": {
+        "title": "Wie soll die Karte aussehen?",
+        "lead": "nexdeck hat schon einen Vorschlag gemacht. Ändere ihn, bis die Vorschau passt.",
+        "forms": "Form der Karte",
+        "form": {
+          "value": {
+            "title": "Eine Zahl",
+            "text": "Zählen oder ein Wert"
+          },
+          "stats": {
+            "title": "Mehrere Zahlen",
+            "text": "Bis zu sechs nebeneinander"
+          },
+          "list": {
+            "title": "Eine Liste",
+            "text": "Eine Zeile je Eintrag"
+          },
+          "posters": {
+            "title": "Bilderreihe",
+            "text": "Wenn es Bilder gibt"
+          }
+        },
+        "formNeedsRows": "Dafür hat die Antwort keine Einträge.",
+        "formNeedsPictures": "Die Antwort hat keine Bilder.",
+        "counted": "Was wird gezählt?",
+        "how": "Was die Zahl ist",
+        "howCount": "Einträge zählen",
+        "howField": "Wert eines Feldes",
+        "count": "Zähle die Einträge",
+        "all": "(alle)",
+        "where": "bei denen",
+        "and": "und",
+        "column": "Spalte",
+        "compare": "Vergleich",
+        "value": "Wert",
+        "addCondition": "+ Bedingung",
+        "removeCondition": "Bedingung entfernen",
+        "result": "Ergebnis:",
+        "resultOf": "von {{number}} Einträgen. In der Tabelle sind sie hervorgehoben.",
+        "field": "Feld",
+        "ofFirst": "{{field}} des ersten Eintrags",
+        "label": "Beschriftung unter der Zahl",
+        "number": "Zahl {{number}}",
+        "addNumber": "+ Zahl",
+        "removeNumber": "Zahl {{number}} entfernen",
+        "lines": "Was steht in jeder Zeile?",
+        "main": "Haupttext",
+        "below": "Darunter, klein",
+        "right": "Rechts",
+        "nothing": "(nichts)",
+        "example": "z. B. {{value}}",
+        "rowRed": "Zeile rot, wenn",
+        "rowRedHint": "Ohne Wert bleibt jede Zeile ohne Farbe.",
+        "pictures": "Bilder und Titel",
+        "picture": "Bild",
+        "pictureTitle": "Titel",
+        "pictureBelow": "Darunter",
+        "pictureOfEntry": "Bild des Eintrags",
+        "expression": "Diese Karte nutzt einen Ausdruck; bearbeite ihn unter Alle Einstellungen.",
+        "openAll": "Alle Einstellungen öffnen",
+        "waiting": "Die Antwort kommt gleich."
+      },
+      "finish": {
+        "title": "Feinschliff",
+        "lead": "Name, Farben und wie oft die Karte nachsieht.",
+        "name": "Name der Karte",
+        "nameRequired": "Gib der Karte einen Namen.",
+        "inEnglish": "Auf Englisch zeigt sie:",
+        "nameIn": "Name auf {{language}}",
+        "addLanguage": "+ Sprache",
+        "every": "Nachsehen alle",
+        "everyChoice": {
+          "30s": "30 Sekunden",
+          "60s": "Minute",
+          "5m": "5 Minuten",
+          "15m": "15 Minuten",
+          "1h": "Stunde"
+        },
+        "colour": "Farbe",
+        "warnBefore": "Gelb, wenn die Zahl mindestens",
+        "warnAfter": "ist",
+        "badBefore": "Rot, wenn die Zahl mindestens",
+        "badAfter": "ist",
+        "warnLabel": "Schwelle für Gelb",
+        "badLabel": "Schwelle für Rot",
+        "never": "leer = nie",
+        "example": "Beispieldaten aus der Antwort erzeugen",
+        "exampleHint": "Beispieldaten füllen die Vorschau, den Demo-Modus und das Bild im Card shop. Von deinen eigenen Daten bleibt darin nichts.",
+        "saveAgain": "Noch einmal speichern",
+        "savedTitle": "Gespeichert.",
+        "savedBody": "Die Karte steht jetzt unter System › Eigene Karten. Gleich aufs Board?",
+        "board": "Board",
+        "page": "Seite",
+        "place": "Aufs Board setzen",
+        "later": "Später",
+        "placed": "Die Karte steht jetzt auf {{board}}.",
+        "openBoard": "Board öffnen",
+        "noBoard": "Es gibt kein Board, das du ändern darfst. Setz die Karte später mit „Widget hinzufügen“ auf eins."
+      },
+      "why": {
+        "text": "Der geführte Weg kann diese Karte nicht ganz zeigen, weil {{why}}. Unter Alle Einstellungen und im YAML ist alles da.",
+        "kinds": "sie mit mehr als einer Art von Dienst arbeitet",
+        "requests": "sie ihren Dienst nach mehr als einer Sache fragt",
+        "expression": "sie einen Ausdruck nutzt",
+        "rules": "sie eigene Farbregeln hat",
+        "parts": "sie Teile hat, die der geführte Weg nicht kennt"
+      },
+      "preview": {
+        "empty": "Sobald du gewählt hast, was die Karte zeigt, erscheint sie hier.",
+        "hint": "So sieht die Karte auf dem Board aus. Jede Änderung erscheint hier sofort."
+      },
+      "want": {
+        "homeassistant": {
+          "states": {
+            "title": "Geräte und Sensoren",
+            "text": "Alles, was Home Assistant kennt: Lichter, Schalter, Fenster, Temperaturen.",
+            "label": "Lichter an"
+          },
+          "config": {
+            "title": "Über Home Assistant",
+            "text": "Version, Ort und Zeitzone."
+          },
+          "calendars": {
+            "title": "Kalender",
+            "text": "Die Kalender, die Home Assistant hat, mit Namen."
+          }
+        },
+        "proxmox": {
+          "guests": {
+            "title": "Virtuelle Maschinen und Container",
+            "text": "Name, Zustand und Speicher jedes Gasts."
+          },
+          "nodes": {
+            "title": "Knoten",
+            "text": "Auslastung der Proxmox-Rechner."
+          },
+          "storage": {
+            "title": "Speicherplätze",
+            "text": "Wie voll ZFS, LVM und Co. sind."
+          }
+        },
+        "plex": {
+          "recent": {
+            "title": "Zuletzt hinzugefügt",
+            "text": "Neue Filme und Folgen mit Poster."
+          },
+          "playing": {
+            "title": "Läuft gerade",
+            "text": "Wer schaut gerade was."
+          },
+          "libraries": {
+            "title": "Bibliotheken",
+            "text": "Filme, Serien und Musik, mit Namen."
+          }
+        },
+        "jellyfin": {
+          "latest": {
+            "title": "Zuletzt hinzugefügt",
+            "text": "Die neuesten Filme und Serien mit Poster."
+          },
+          "sessions": {
+            "title": "Läuft gerade",
+            "text": "Wer verbunden ist und was gerade läuft."
+          },
+          "libraries": {
+            "title": "Bibliotheken",
+            "text": "Die Bibliotheken mit Namen und Art."
+          }
+        },
+        "immich": {
+          "storage": {
+            "title": "Speicherplatz",
+            "text": "Wie voll die Platte mit den Fotos ist."
+          },
+          "statistics": {
+            "title": "Fotos und Videos",
+            "text": "Wie viele es gibt, auch je Person."
+          },
+          "about": {
+            "title": "Version",
+            "text": "Welche Version von Immich läuft."
+          }
+        },
+        "portainer": {
+          "environments": {
+            "title": "Umgebungen",
+            "text": "Die Docker-Umgebungen und ob sie antworten."
+          },
+          "stacks": {
+            "title": "Stacks",
+            "text": "Jeder Stack mit seinem Zustand."
+          }
+        },
+        "sonarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "Was gerade heruntergeladen wird."
+          },
+          "calendar": {
+            "title": "Demnächst",
+            "text": "Folgen, die heute und morgen laufen."
+          },
+          "health": {
+            "title": "Warnungen",
+            "text": "Was Sonarr für prüfenswert hält."
+          },
+          "series": {
+            "title": "Serien",
+            "text": "Jede Serie mit ihrem Jahr."
+          }
+        },
+        "radarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "Was gerade heruntergeladen wird."
+          },
+          "calendar": {
+            "title": "Demnächst",
+            "text": "Filme, die heute und morgen erscheinen."
+          },
+          "health": {
+            "title": "Warnungen",
+            "text": "Was Radarr für prüfenswert hält."
+          },
+          "movies": {
+            "title": "Filme",
+            "text": "Jeder Film mit seinem Jahr."
+          }
+        },
+        "lidarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "Was gerade heruntergeladen wird."
+          },
+          "health": {
+            "title": "Warnungen",
+            "text": "Was Lidarr für prüfenswert hält."
+          },
+          "artists": {
+            "title": "Künstler",
+            "text": "Jeder Künstler in der Bibliothek."
+          }
+        },
+        "prowlarr": {
+          "indexers": {
+            "title": "Indexer",
+            "text": "Jeder Indexer und ob er eingeschaltet ist."
+          },
+          "health": {
+            "title": "Warnungen",
+            "text": "Was Prowlarr für prüfenswert hält."
+          }
+        },
+        "adguard": {
+          "stats": {
+            "title": "Statistik",
+            "text": "Anfragen und blockierte Anfragen des letzten Tages."
+          },
+          "status": {
+            "title": "Schutz",
+            "text": "Ob gefiltert wird, und die Version."
+          }
+        },
+        "truenas": {
+          "pools": {
+            "title": "Pools",
+            "text": "Jeder Pool und ob er gesund ist."
+          },
+          "alerts": {
+            "title": "Meldungen",
+            "text": "Wovor TrueNAS warnt."
+          },
+          "system": {
+            "title": "System",
+            "text": "Version, Laufzeit und Arbeitsspeicher."
+          }
+        },
+        "traefik": {
+          "routers": {
+            "title": "Router",
+            "text": "Jede Route mit Regel und Zustand."
+          },
+          "services": {
+            "title": "Dienste",
+            "text": "Jeder Dienst und sein Zustand."
+          },
+          "overview": {
+            "title": "Überblick",
+            "text": "Wie viele Router, Dienste und Middlewares es gibt und wie viele Fehler haben."
+          }
+        },
+        "audiobookshelf": {
+          "libraries": {
+            "title": "Bibliotheken",
+            "text": "Deine Bibliotheken für Hörbücher und Podcasts."
+          },
+          "online": {
+            "title": "Hört gerade",
+            "text": "Wer gerade zuhört."
+          }
+        }
+      },
+      "ops": {
+        "eq": "ist",
+        "ne": "ist nicht",
+        "starts_with": "beginnt mit",
+        "ends_with": "endet mit",
+        "contains": "enthält",
+        "gt": "größer als",
+        "lt": "kleiner als"
+      }
     }
   }
 }

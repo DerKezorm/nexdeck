@@ -5,8 +5,9 @@
     "back": "Back to Custom cards",
     "view": {
       "label": "View",
-      "editor": "Editor",
-      "yaml": "YAML"
+      "editor": "All settings",
+      "yaml": "YAML",
+      "guided": "Guided"
     },
     "fixFirst": "Fix line {{line}} first",
     "fixFirstNoLine": "Make the YAML valid first",
@@ -33,7 +34,7 @@
       "lastValid": "Preview of the last valid version",
       "data": "Data",
       "live": "Live data",
-      "demo": "Demo data",
+      "demo": "Example data",
       "demoMode": "Demo mode is on, so the preview shows the demo data of the card.",
       "theme": "Theme",
       "dark": "Dark",
@@ -114,31 +115,6 @@
       "label": "Card as YAML",
       "pasted": "The pasted card is valid and shows in the editor now.",
       "loading": "Loading the YAML view"
-    },
-    "new": {
-      "title": "Build a card",
-      "name": "Name",
-      "slug": "Short name",
-      "slugHelp": "Lower case letters, digits and hyphens. Boards know the card by it.",
-      "slugInvalid": "Use lower case letters, digits and hyphens, beginning with a letter or a digit.",
-      "nameRequired": "Give the card a name.",
-      "source": "Works with",
-      "sourceHelp": "The kind of integration the card reads through.",
-      "noConnection": "There is no {{kind}} integration yet. You can build the card now; it shows data once the integration is added.",
-      "noConnectionAtAll": "There is no integration yet that a custom card can read through. You can build the card now; it shows data once one is added.",
-      "addIntegration": "Add an integration",
-      "start": "Start from",
-      "starts": {
-        "blank": "Blank",
-        "value": "A number",
-        "stats": "Several numbers",
-        "list": "A list",
-        "posters": "A row of pictures"
-      },
-      "startFor": "Example for {{service}}",
-      "blankHelp": "One request, nothing picked yet",
-      "paste": "Paste a whole card (YAML)",
-      "create": "Create"
     },
     "texts": {
       "languages": "Languages",
@@ -353,6 +329,361 @@
       },
       "remove": "Remove rule {{number}}",
       "add": "Rule"
+    },
+    "guided": {
+      "steps": {
+        "service": "Service",
+        "data": "Data",
+        "display": "Display",
+        "finish": "Finish"
+      },
+      "stepDone": "{{number}} {{name}}, done",
+      "next": "Next",
+      "back": "Back",
+      "service": {
+        "title": "Where does the data come from?",
+        "lead": "Pick one of your integrations. The card will read from exactly that one.",
+        "missing": "Your service is missing?",
+        "none": "There is no integration yet that a card can read from.",
+        "add": "Add an integration",
+        "paste": "Paste a whole card (YAML)"
+      },
+      "data": {
+        "title": "What should the card show?",
+        "lead": "nexdeck knows the most important data of {{service}}. Pick something, and the answer shows right below.",
+        "leadOwn": "Type what the card should ask {{service}}; the answer shows right below.",
+        "pick": "Choose",
+        "picked": "Chosen",
+        "own": "Own address (for experts)",
+        "path": "Path to ask",
+        "pathHint": "Below the address of the integration, reading only. Whoever knows the API of the service can ask anything here.",
+        "ask": "Ask",
+        "asking": "Asking {{service}} …",
+        "noConnection": "There is no {{service}} integration to ask. The card can be built all the same and shows data once there is one."
+      },
+      "table": {
+        "answer": "Answer",
+        "entries_one": "{{number}} entry",
+        "entries_other": "{{number}} entries",
+        "matching_one": "{{number}} matches",
+        "matching_other": "{{number}} match",
+        "more_one": "… and {{number}} more entry",
+        "more_other": "… and {{number}} more entries",
+        "field": "Field",
+        "value": "Value",
+        "empty": "The answer holds nothing to show."
+      },
+      "display": {
+        "title": "How should the card look?",
+        "lead": "nexdeck has made a suggestion already. Change it until the preview fits.",
+        "forms": "Form of the card",
+        "form": {
+          "value": {
+            "title": "A number",
+            "text": "Count, or one value"
+          },
+          "stats": {
+            "title": "Several numbers",
+            "text": "Up to six side by side"
+          },
+          "list": {
+            "title": "A list",
+            "text": "One line per entry"
+          },
+          "posters": {
+            "title": "Pictures",
+            "text": "When there are pictures"
+          }
+        },
+        "formNeedsRows": "The answer has no entries for this.",
+        "formNeedsPictures": "The answer has no pictures.",
+        "counted": "What is counted?",
+        "how": "What the number is",
+        "howCount": "Count the entries",
+        "howField": "Value of a field",
+        "count": "Count the entries",
+        "all": "(all)",
+        "where": "where",
+        "and": "and",
+        "column": "Column",
+        "compare": "Comparison",
+        "value": "Value",
+        "addCondition": "+ Condition",
+        "removeCondition": "Remove condition",
+        "result": "Result:",
+        "resultOf": "of {{number}} entries. They are marked in the table.",
+        "field": "Field",
+        "ofFirst": "{{field}} of the first entry",
+        "label": "Label below the number",
+        "number": "Number {{number}}",
+        "addNumber": "+ Number",
+        "removeNumber": "Remove number {{number}}",
+        "lines": "What is in each line?",
+        "main": "Main text",
+        "below": "Below, small",
+        "right": "Right",
+        "nothing": "(nothing)",
+        "example": "e.g. {{value}}",
+        "rowRed": "Line red when",
+        "rowRedHint": "Without a value no line changes colour.",
+        "pictures": "Pictures and titles",
+        "picture": "Picture",
+        "pictureTitle": "Title",
+        "pictureBelow": "Below",
+        "pictureOfEntry": "Picture of the entry",
+        "expression": "This card uses an expression; edit it under All settings.",
+        "openAll": "Open All settings",
+        "waiting": "The answer is on its way."
+      },
+      "finish": {
+        "title": "Finish",
+        "lead": "Name, colours and how often the card looks again.",
+        "name": "Name of the card",
+        "nameRequired": "Give the card a name.",
+        "inEnglish": "In English it shows:",
+        "nameIn": "Name in {{language}}",
+        "addLanguage": "+ Language",
+        "every": "Look again every",
+        "everyChoice": {
+          "30s": "30 seconds",
+          "60s": "minute",
+          "5m": "5 minutes",
+          "15m": "15 minutes",
+          "1h": "hour"
+        },
+        "colour": "Colour",
+        "warnBefore": "Yellow when the number is",
+        "warnAfter": "or more",
+        "badBefore": "Red when the number is",
+        "badAfter": "or more",
+        "warnLabel": "Threshold for yellow",
+        "badLabel": "Threshold for red",
+        "never": "empty = never",
+        "example": "Make example data from the answer",
+        "exampleHint": "Example data fill the preview, the demo mode and the picture in the Card shop. Nothing of your own data stays in them.",
+        "saveAgain": "Save again",
+        "savedTitle": "Saved.",
+        "savedBody": "The card is now under System › Custom cards. Put it on a board right away?",
+        "board": "Board",
+        "page": "Page",
+        "place": "Put on the board",
+        "later": "Later",
+        "placed": "The card is on {{board}} now.",
+        "openBoard": "Open the board",
+        "noBoard": "There is no board you may change. Put the card on one later with Add widget."
+      },
+      "why": {
+        "text": "The guided way cannot show all of this card, because {{why}}. Everything is here under All settings and in the YAML.",
+        "kinds": "it works with more than one kind of service",
+        "requests": "it asks its service more than one thing",
+        "expression": "it uses an expression",
+        "rules": "it has colour rules of its own",
+        "parts": "it has parts the guided way does not know"
+      },
+      "preview": {
+        "empty": "As soon as you have chosen what the card shows, it appears here.",
+        "hint": "This is how the card looks on the board. Every change shows here at once."
+      },
+      "want": {
+        "homeassistant": {
+          "states": {
+            "title": "Devices and sensors",
+            "text": "Everything Home Assistant knows: lights, switches, windows, temperatures.",
+            "label": "Lights on"
+          },
+          "config": {
+            "title": "About Home Assistant",
+            "text": "Version, location and time zone."
+          },
+          "calendars": {
+            "title": "Calendars",
+            "text": "The calendars Home Assistant has, by name."
+          }
+        },
+        "proxmox": {
+          "guests": {
+            "title": "Virtual machines and containers",
+            "text": "Name, state and memory of every guest."
+          },
+          "nodes": {
+            "title": "Nodes",
+            "text": "How busy the Proxmox machines are."
+          },
+          "storage": {
+            "title": "Storage",
+            "text": "How full ZFS, LVM and the others are."
+          }
+        },
+        "plex": {
+          "recent": {
+            "title": "Recently added",
+            "text": "New films and episodes with their posters."
+          },
+          "playing": {
+            "title": "Playing now",
+            "text": "Who is watching what right now."
+          },
+          "libraries": {
+            "title": "Libraries",
+            "text": "Films, shows and music, by name."
+          }
+        },
+        "jellyfin": {
+          "latest": {
+            "title": "Recently added",
+            "text": "The newest films and shows with their posters."
+          },
+          "sessions": {
+            "title": "Playing now",
+            "text": "Who is connected and what is playing."
+          },
+          "libraries": {
+            "title": "Libraries",
+            "text": "The libraries by name and kind."
+          }
+        },
+        "immich": {
+          "storage": {
+            "title": "Storage",
+            "text": "How full the disk with the photos is."
+          },
+          "statistics": {
+            "title": "Photos and videos",
+            "text": "How many there are, also per person."
+          },
+          "about": {
+            "title": "Version",
+            "text": "Which Immich version runs."
+          }
+        },
+        "portainer": {
+          "environments": {
+            "title": "Environments",
+            "text": "The Docker environments and whether they answer."
+          },
+          "stacks": {
+            "title": "Stacks",
+            "text": "Every stack with its state."
+          }
+        },
+        "sonarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "What is being downloaded right now."
+          },
+          "calendar": {
+            "title": "Coming up",
+            "text": "Episodes airing today and tomorrow."
+          },
+          "health": {
+            "title": "Warnings",
+            "text": "What Sonarr thinks needs looking at."
+          },
+          "series": {
+            "title": "Series",
+            "text": "Every series with its year."
+          }
+        },
+        "radarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "What is being downloaded right now."
+          },
+          "calendar": {
+            "title": "Coming up",
+            "text": "Films coming out today and tomorrow."
+          },
+          "health": {
+            "title": "Warnings",
+            "text": "What Radarr thinks needs looking at."
+          },
+          "movies": {
+            "title": "Films",
+            "text": "Every film with its year."
+          }
+        },
+        "lidarr": {
+          "queue": {
+            "title": "Downloads",
+            "text": "What is being downloaded right now."
+          },
+          "health": {
+            "title": "Warnings",
+            "text": "What Lidarr thinks needs looking at."
+          },
+          "artists": {
+            "title": "Artists",
+            "text": "Every artist in the library."
+          }
+        },
+        "prowlarr": {
+          "indexers": {
+            "title": "Indexers",
+            "text": "Every indexer and whether it is switched on."
+          },
+          "health": {
+            "title": "Warnings",
+            "text": "What Prowlarr thinks needs looking at."
+          }
+        },
+        "adguard": {
+          "stats": {
+            "title": "Statistics",
+            "text": "Queries and blocked queries of the last day."
+          },
+          "status": {
+            "title": "Protection",
+            "text": "Whether filtering is on, and the version."
+          }
+        },
+        "truenas": {
+          "pools": {
+            "title": "Pools",
+            "text": "Every pool and whether it is healthy."
+          },
+          "alerts": {
+            "title": "Alerts",
+            "text": "What TrueNAS warns about."
+          },
+          "system": {
+            "title": "System",
+            "text": "Version, uptime and memory."
+          }
+        },
+        "traefik": {
+          "routers": {
+            "title": "Routers",
+            "text": "Every route with its rule and state."
+          },
+          "services": {
+            "title": "Services",
+            "text": "Every service and its state."
+          },
+          "overview": {
+            "title": "Overview",
+            "text": "How many routers, services and middlewares there are, and how many have errors."
+          }
+        },
+        "audiobookshelf": {
+          "libraries": {
+            "title": "Libraries",
+            "text": "Your audiobook and podcast libraries."
+          },
+          "online": {
+            "title": "Listening now",
+            "text": "Who is listening right now."
+          }
+        }
+      },
+      "ops": {
+        "eq": "is",
+        "ne": "is not",
+        "starts_with": "starts with",
+        "ends_with": "ends with",
+        "contains": "contains",
+        "gt": "greater than",
+        "lt": "less than"
+      }
     }
   }
 }
