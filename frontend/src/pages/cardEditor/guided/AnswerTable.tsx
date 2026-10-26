@@ -34,7 +34,11 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
         )}
       </div>
       <div className="overflow-x-auto">
-        {table.kind === 'rows' ? (
+        {table.kind === 'rows' && table.total === 0 ? (
+          <p className="px-3.5 py-3 text-[12.5px] text-muted" data-testid="card-answer-none">
+            {t('editor.guided.table.noEntries')}
+          </p>
+        ) : table.kind === 'rows' ? (
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
               <tr>

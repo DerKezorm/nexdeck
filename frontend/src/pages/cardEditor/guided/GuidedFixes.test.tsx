@@ -180,3 +180,57 @@ describe('review 2: put on a board offers only pages that hold cards', () => {
     expect(await within(saved).findByRole('button', { name: 'Put on the board' })).toBeEnabled()
   })
 })
+
+describe('review 3: a list the service leaves out because it is empty', () => {
+  const NOBODY = { nodes: 3, cut: false, tree: answerOf({ MediaContainer: { size: 0 } }) }
+  const PLAYING = `nexdeck-card: 1
+slug: queue
+name: Queue
+version: "1.0.0"
+requires: [plex]
+requests:
+  - id: playing
+    path: /status/sessions
+form: list
+rows: {select: MediaContainer.Metadata}
+item: {title: title, subtitle: User.title}
+`
+
+  it('a list card of Plex with nobody watching is a list in the guided way, with its places and the sentence about the empty answer', async () => {
+    stubGuided(PLAYING, { 'POST /cards/probe': { status: 200, body: NOBODY } })
+    await openCard('Queue', 'guided')
+    expect(editor().view).toBe('guided')
+    await click(/^3 Display/)
+    expect(await screen.findByTestId('card-answer-none')).toHaveTextContent('No entries right now.')
+    expect(screen.queryByTestId('card-guided-expression')).toBeNull()
+    expect(screen.getByRole('button', { name: /^A list/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('combobox', { name: 'Main text' })).toHaveValue('title')
+    expect(screen.getByRole('combobox', { name: 'Below, small' })).toHaveValue('User.title')
+    expect(screen.getByRole('group', { name: 'Line red when' })).toBeInTheDocument()
+  })
+
+  it('a new card from "Playing now" becomes the list of the suggestion, never a number out of a side field', async () => {
+    stubGuided('', { 'POST /cards/probe': { status: 200, body: NOBODY } })
+    await openNew()
+    await click(/^Plex$|^PlexPlex/)
+    await click(/^Playing now/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/status/sessions'))
+    expect(readAt(card(), ['form'])).toBe('list')
+    expect(readAt(card(), ['rows'])).toEqual({ select: 'MediaContainer.Metadata' })
+    expect(readAt(card(), ['item', 'title'])).toBe('title')
+    expect(editor().text).not.toContain('MediaContainer.size')
+    await click('Next')
+    expect(screen.getByRole('button', { name: /^A list/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^Pictures/ })).toBeDisabled()
+    expect(screen.queryByTestId('card-guided-expression')).toBeNull()
+  })
+
+  it('the answer with viewers shows the same list with its entries', async () => {
+    const watching = { nodes: 9, cut: false, tree: answerOf({ MediaContainer: { size: 1, Metadata: [{ title: 'Example Film', User: { title: 'kim' } }] } }) }
+    stubGuided(PLAYING, { 'POST /cards/probe': { status: 200, body: watching } })
+    await openCard('Queue', 'guided')
+    await click(/^3 Display/)
+    expect(await screen.findByTestId('card-answer-table')).toHaveTextContent('Example Film')
+    expect(screen.queryByTestId('card-answer-none')).toBeNull()
+  })
+})

@@ -36,13 +36,16 @@ export interface CardSuggestion {
   preset?: Preset
 }
 
+/** What the *arr services list when something needs looking at: the message, where it comes from, red for an error. */
+const HEALTH: Preset = { form: 'list', title: 'message', subtitle: 'source', bad: { field: 'type', op: '==', value: 'error' } }
+
 const ARR_V3 = (noun: { id: string; path: string }): CardSuggestion[] => [
   // arr_base.py: `self.api(config, ctx, "queue")` below /api/v3, the records of the answer are the downloads.
-  { id: 'queue', icon: 'download', path: '/api/v3/queue', every: '60s', rows: 'records' },
+  { id: 'queue', icon: 'download', path: '/api/v3/queue', every: '60s', rows: 'records', preset: { form: 'list', title: 'title', subtitle: 'status' } },
   // arr_base.py: `self.api(config, ctx, "calendar")`; without start and end it answers today and tomorrow.
-  { id: 'calendar', icon: 'calendar', path: '/api/v3/calendar', every: '1h', rows: '@' },
+  { id: 'calendar', icon: 'calendar', path: '/api/v3/calendar', every: '1h', rows: '@', preset: { form: 'list', title: 'title' } },
   // arr_base.py: `self.api(config, ctx, "health")`, a list of what needs looking at.
-  { id: 'health', icon: 'health', path: '/api/v3/health', every: '5m', rows: '@' },
+  { id: 'health', icon: 'health', path: '/api/v3/health', every: '5m', rows: '@', preset: HEALTH },
   // sonarr.py / radarr.py: `list_path`, everything the service manages.
   { id: noun.id, icon: 'library', path: noun.path, every: '1h', rows: '@' },
 ]
@@ -70,7 +73,7 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
     // homeassistant.py: `/api/config`.
     { id: 'config', icon: 'info', path: '/api/config', every: '1h', fields: true },
     // https://developers.home-assistant.io/docs/api/rest/, "GET /api/calendars".
-    { id: 'calendars', icon: 'calendar', path: '/api/calendars', every: '1h', rows: '@' },
+    { id: 'calendars', icon: 'calendar', path: '/api/calendars', every: '1h', rows: '@', preset: { form: 'list', title: 'name', subtitle: 'entity_id' } },
   ],
   proxmox: [
     // proxmox.py: `_get` puts /api2/json in front of "/cluster/resources?type=vm"; the guests are under data.
@@ -99,7 +102,8 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
       preset: { form: 'posters', image: 'thumb', title: 'title', subtitle: 'year' },
     },
     // plex.py: "/status/sessions".
-    { id: 'playing', icon: 'play', path: '/status/sessions', every: '30s', rows: 'MediaContainer.Metadata' },
+    // Without a viewer the answer is `{"MediaContainer": {"size": 0}}`: there is no `Metadata` at all, which is an empty list.
+    { id: 'playing', icon: 'play', path: '/status/sessions', every: '30s', rows: 'MediaContainer.Metadata', preset: { form: 'list', title: 'title', subtitle: 'User.title' } },
     // plex.py: "/library/sections".
     { id: 'libraries', icon: 'library', path: '/library/sections', every: '1h', rows: 'MediaContainer.Directory' },
   ],
@@ -115,7 +119,7 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
       preset: { form: 'posters', image: '/Items/{Id}/Images/Primary?maxHeight=360', title: 'Name', subtitle: 'ProductionYear' },
     },
     // jellyfin.py: "/Sessions".
-    { id: 'sessions', icon: 'play', path: '/Sessions', every: '30s', rows: '@' },
+    { id: 'sessions', icon: 'play', path: '/Sessions', every: '30s', rows: '@', preset: { form: 'list', title: 'UserName', subtitle: 'DeviceName' } },
     // jellyfin.py: "/Library/VirtualFolders".
     { id: 'libraries', icon: 'library', path: '/Library/VirtualFolders', every: '1h', rows: '@' },
   ],
@@ -135,14 +139,14 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
   radarr: ARR_V3({ id: 'movies', path: '/api/v3/movie' }),
   lidarr: [
     // lidarr.py: `api_version = "v1"`, `list_path = "artist"`; arr_base.py: queue and health.
-    { id: 'queue', icon: 'download', path: '/api/v1/queue', every: '60s', rows: 'records' },
-    { id: 'health', icon: 'health', path: '/api/v1/health', every: '5m', rows: '@' },
+    { id: 'queue', icon: 'download', path: '/api/v1/queue', every: '60s', rows: 'records', preset: { form: 'list', title: 'title', subtitle: 'status' } },
+    { id: 'health', icon: 'health', path: '/api/v1/health', every: '5m', rows: '@', preset: HEALTH },
     { id: 'artists', icon: 'library', path: '/api/v1/artist', every: '1h', rows: '@' },
   ],
   prowlarr: [
     // prowlarr.py: `api_version = "v1"`, `list_path = "indexer"`; arr_base.py: health.
     { id: 'indexers', icon: 'list', path: '/api/v1/indexer', every: '1h', rows: '@' },
-    { id: 'health', icon: 'health', path: '/api/v1/health', every: '5m', rows: '@' },
+    { id: 'health', icon: 'health', path: '/api/v1/health', every: '5m', rows: '@', preset: HEALTH },
   ],
   adguard: [
     // adguard.py: `_get` puts /control in front of "/stats" and "/status".
@@ -165,7 +169,7 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
   audiobookshelf: [
     // audiobookshelf.py: `_get` puts /api in front of "/libraries" (under libraries) and "/users/online" (openSessions).
     { id: 'libraries', icon: 'library', path: '/api/libraries', every: '1h', rows: 'libraries' },
-    { id: 'online', icon: 'people', path: '/api/users/online', every: '30s', rows: 'openSessions' },
+    { id: 'online', icon: 'people', path: '/api/users/online', every: '30s', rows: 'openSessions', preset: { form: 'list', title: 'displayTitle', subtitle: 'displayAuthor' } },
   ],
 }
 // emby.py: Emby is Jellyfin's adapter with another name, the same paths and the same answers.

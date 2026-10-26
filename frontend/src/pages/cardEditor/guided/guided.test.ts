@@ -205,3 +205,23 @@ describe('umbau U8: a text in the language on screen', () => {
     expect(readAt(fresh, ['name'])).toEqual({ en: 'Licht', de: 'Licht' })
   })
 })
+
+describe('review 3: a list that the answer leaves out is an empty list', () => {
+  const nobody = answerOf({ MediaContainer: { size: 0 } })
+  const playing = SUGGESTIONS.plex.find((one) => one.id === 'playing')!
+
+  it('the list a suggestion or a card names is empty when the answer has none, also as []', () => {
+    const table = tableOf(nobody, playing)
+    expect(table).toEqual({ kind: 'rows', list: 'MediaContainer.Metadata', columns: [], rows: [], total: 0 })
+    expect(tableOf(nobody, null, 'MediaContainer.Metadata')).toMatchObject({ kind: 'rows', total: 0 })
+    expect(tableOf(answerOf([]), SUGGESTIONS.homeassistant.find((one) => one.id === 'calendars'))).toMatchObject({ kind: 'rows', list: '@', total: 0 })
+    expect(suggestedForm(table, playing)).toBe('list')
+    expect(shapeFor('list', table, playing)).toMatchObject({ form: 'list', list: 'MediaContainer.Metadata', title: 'title', subtitle: 'User.title' })
+  })
+
+  it('an answer read as single values stays single values, and a list of plain values is not a list of entries', () => {
+    expect(tableOf(nobody, null).kind).toBe('fields')
+    expect(tableOf(nobody, SUGGESTIONS.homeassistant.find((one) => one.id === 'config')).kind).toBe('fields')
+    expect(tableOf(answerOf({ names: ['a', 'b'] }), null, 'names').kind).toBe('fields')
+  })
+})

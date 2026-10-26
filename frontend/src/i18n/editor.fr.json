@@ -371,7 +371,8 @@
         "more_other": "… et {{number}} autres entrées",
         "field": "Champ",
         "value": "Valeur",
-        "empty": "La réponse ne contient rien à afficher."
+        "empty": "La réponse ne contient rien à afficher.",
+        "noEntries": "Aucune entrée pour le moment."
       },
       "display": {
         "title": "À quoi doit ressembler la carte ?",

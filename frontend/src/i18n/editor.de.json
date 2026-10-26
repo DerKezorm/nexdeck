@@ -371,7 +371,8 @@
         "more_other": "… und {{number}} weitere Einträge",
         "field": "Feld",
         "value": "Wert",
-        "empty": "Die Antwort enthält nichts, was sich zeigen lässt."
+        "empty": "Die Antwort enthält nichts, was sich zeigen lässt.",
+        "noEntries": "Gerade keine Einträge."
       },
       "display": {
         "title": "Wie soll die Karte aussehen?",

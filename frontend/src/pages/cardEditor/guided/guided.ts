@@ -84,10 +84,25 @@ export function rowsTable(list: ProbeNode): Extract<AnswerTable, { kind: 'rows' 
   return { kind: 'rows', list: list.path, columns, rows, total: lengthOf(list) }
 }
 
+/**
+ * The list the card or the suggestion names when the answer holds none: a service leaves a list out when it is empty
+ * (Plex without a viewer answers `{"MediaContainer": {"size": 0}}`, no `Metadata` at all) or sends it as `[]`. Such a
+ * list is an empty one, not a reason to read the answer as single values.
+ */
+function emptyListOf(tree: ProbeNode, suggestion?: CardSuggestion | null, wanted?: string): string | null {
+  const path = wanted ?? (suggestion?.fields ? undefined : suggestion?.rows)
+  if (!path) return null
+  const named = path === '@' ? tree : (nodeAt(tree, path) ?? inside(tree, path))
+  if (!named) return path
+  return named.type === 'array' && !named.children?.length && !named.more ? path : null
+}
+
 /** The answer as a table: rows of a list of entries, else every single value as Field | Value. */
 export function tableOf(tree: ProbeNode, suggestion?: CardSuggestion | null, wanted?: string): AnswerTable {
   const list = rowsListOf(tree, suggestion, wanted)
   if (list) return rowsTable(list)
+  const gone = emptyListOf(tree, suggestion, wanted)
+  if (gone) return { kind: 'rows', list: gone, columns: [], rows: [], total: 0 }
   const fields = everyNode(tree)
     .filter((node) => scalar(node) && node.path !== '@')
     .slice(0, 60)

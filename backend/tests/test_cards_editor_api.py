@@ -286,6 +286,35 @@ def test_karten9_ac9_a_preview_without_a_connection_or_asked_for_demo_uses_the_d
     assert "demo_mode" not in alone.json()["meta"] and "demo_mode" not in chosen.json()["meta"], "demo data asked for are no demo mode"
 
 
+PLAYING_CARD = """nexdeck-card: 1
+slug: playing
+name: Playing
+version: "1.0.0"
+requires: [plex]
+requests:
+  - id: playing
+    path: /status/sessions
+form: list
+rows: {select: MediaContainer.Metadata}
+item: {title: title, subtitle: User.title}
+empty: {en: Nobody is watching, de: Niemand schaut}
+demo:
+  playing: {MediaContainer: {size: 0}}
+"""
+
+
+def test_karten9_ac9_a_service_that_leaves_out_the_list_when_it_is_empty_gives_an_empty_card_not_an_error(admin: TestClient) -> None:
+    """Plex sends ``{"MediaContainer": {"size": 0}}`` when nobody watches: no ``Metadata`` at all. The card is empty,
+    says what its author wrote for that, and carries no complaint about a field that is missing (review of the guided
+    editor, 26.10.2026)."""
+    shown = post(admin, "preview", {"yaml": PLAYING_CARD, "demo": True})
+    assert shown.status_code == 200, shown.text
+    body = shown.json()
+    assert body["items"] == [] and body["error"] is None and body["status"] in (None, "ok")
+    assert body["meta"]["empty"] == {"en": "Nobody is watching", "de": "Niemand schaut"}
+    assert "missing" not in json.dumps(body).lower(), "a list that is not there is an empty list, not a missing field"
+
+
 def test_karten9_ac9_a_card_without_demo_data_says_so_when_there_is_nothing_to_read_from(admin: TestClient) -> None:
     bare = re.sub(r"demo:\n  queue: .*\n", "", VALUE_CARD)
     answer = post(admin, "preview", {"yaml": bare})

@@ -371,7 +371,8 @@
         "more_other": "… e altre {{number}} voci",
         "field": "Campo",
         "value": "Valore",
-        "empty": "La risposta non contiene niente da mostrare."
+        "empty": "La risposta non contiene niente da mostrare.",
+        "noEntries": "Al momento nessuna voce."
       },
       "display": {
         "title": "Come deve apparire la scheda?",

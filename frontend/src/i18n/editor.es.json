@@ -371,7 +371,8 @@
         "more_other": "… y {{number}} entradas más",
         "field": "Campo",
         "value": "Valor",
-        "empty": "La respuesta no contiene nada que mostrar."
+        "empty": "La respuesta no contiene nada que mostrar.",
+        "noEntries": "Ahora mismo no hay entradas."
       },
       "display": {
         "title": "¿Cómo debe verse la tarjeta?",

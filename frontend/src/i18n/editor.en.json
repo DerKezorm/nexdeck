@@ -371,7 +371,8 @@
         "more_other": "… and {{number}} more entries",
         "field": "Field",
         "value": "Value",
-        "empty": "The answer holds nothing to show."
+        "empty": "The answer holds nothing to show.",
+        "noEntries": "No entries right now."
       },
       "display": {
         "title": "How should the card look?",
