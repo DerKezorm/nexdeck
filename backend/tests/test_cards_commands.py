@@ -28,8 +28,8 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
         ["/api/v2?cmd=get_activity", "/api/v2?cmd=get_history&length=5", "/api/v2?cmd=status"],
     ),
     "sabnzbd": (
-        ["/api?mode=queue&name=delete&value=all", "/api?mode=shutdown", "/api?mode=pause", "/api?mode=set_config", "/api?mode=queue&name=pause"],
-        ["/api?mode=queue&output=json", "/api?mode=history&limit=5", "/api?mode=version", "/api?mode=get_config&section=misc"],
+        ["/api?mode=queue&name=delete&value=all", "/api?mode=shutdown", "/api?mode=pause", "/api?mode=set_config", "/api?mode=get_config&section=misc", "/api?mode=queue&name=pause"],
+        ["/api?mode=queue&output=json", "/api?mode=history&limit=5", "/api?mode=version", "/api?mode=get_cats&output=json"],
     ),
     "synology": (
         ["/webapi/entry.cgi?api=SYNO.Core.System&method=shutdown", "/webapi/entry.cgi?api=SYNO.API.Auth&method=logout", "/webapi/entry.cgi?api=SYNO.Core.System&method=reboot"],

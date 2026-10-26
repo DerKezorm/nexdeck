@@ -39,7 +39,7 @@ class SabnzbdAdapter(DownloadAdapter):
     #: and no ``name`` at all (it is the sub-command of the modes that change the queue and the history).
     raw_read_commands = ReadCommands(params={
         "mode": allowed("queue", "history", "qstatus", "version", "fullstatus", "status", "get_files", "server_stats", "warnings",
-                        "get_cats", "get_scripts", "get_config", "showlog", "eval_sort", "auth"),
+                        "get_cats", "get_scripts", "showlog", "eval_sort"),
         "name": allowed(),
     })
     fields = (
