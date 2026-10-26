@@ -56,7 +56,7 @@ export interface BoardSummary {
   position: number
   /** Whether the board stands in the menu at the top. */
   in_menu: boolean
-  pages: { id: number; name: string; slug: string; widget_count: number }[]
+  pages: { id: number; name: string; slug: string; widget_count: number; kind?: 'cards' | 'topology' | 'home' }[]
   widget_count: number
 }
 

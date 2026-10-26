@@ -327,7 +327,7 @@ def board_summary(db: Session, board: Board, permission: str) -> dict[str, Any]:
     # One query with the count per page: the settings list asks what a page
     # would take with it before it offers to delete one.
     pages = db.execute(
-        select(Page.id, Page.name, Page.slug, func.count(Widget.id))
+        select(Page.id, Page.name, Page.slug, func.count(Widget.id), Page.kind)
         .outerjoin(Widget, Widget.page_id == Page.id)
         .where(Page.board_id == board.id)
         .group_by(Page.id)
@@ -341,7 +341,7 @@ def board_summary(db: Session, board: Board, permission: str) -> dict[str, Any]:
         "id": board.id, "slug": board.slug, "name": board.name, "icon": board.icon, "owner_id": board.owner_id,
         "owner_name": (owner.display_name or owner.username) if owner else "",
         "permission": permission, "provisioned": board.provisioned, "position": board.position, "in_menu": board.in_menu,
-        "pages": [{"id": p[0], "name": p[1], "slug": p[2], "widget_count": int(p[3])} for p in pages],
+        "pages": [{"id": p[0], "name": p[1], "slug": p[2], "widget_count": int(p[3]), "kind": p[4]} for p in pages],
         "widget_count": sum(int(p[3]) for p in pages),
     }
 

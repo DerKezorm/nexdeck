@@ -37,7 +37,13 @@ function PutOnBoard() {
   const slug = useCardEditor((state) => state.slug)
   const { chosen } = useConnections()
   const boards = useQuery({ queryKey: ['boards'], queryFn: () => get<BoardSummary[]>('/boards') })
-  const mine = (boards.data ?? []).filter((one) => one.permission === 'owner' || one.permission === 'edit')
+  // Cards stand on pages that hold cards, not on a network plan or a home page (the server refuses those); a board
+  // without such a page is not offered, and the first page offered is the first that holds cards.
+  const holdsCards = (one: BoardSummary['pages'][number]) => (one.kind ?? 'cards') === 'cards'
+  const mine = (boards.data ?? [])
+    .filter((one) => one.permission === 'owner' || one.permission === 'edit')
+    .map((one) => ({ ...one, pages: one.pages.filter(holdsCards) }))
+    .filter((one) => one.pages.length > 0)
   const [boardId, setBoardId] = useState<number | null>(null)
   const [pageId, setPageId] = useState<number | null>(null)
   const [state, setState] = useState<{ status: 'idle' | 'busy' | 'later' } | { status: 'placed'; board: BoardSummary } | { status: 'failed'; message: string }>({ status: 'idle' })

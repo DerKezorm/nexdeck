@@ -142,3 +142,41 @@ rules:
     expect(readAt(card(), ['value', 'path'])).toBe('wind')
   })
 })
+
+/** The Home Assistant way up to the saved card and the offer to put it on a board. */
+async function saveLightsOn() {
+  await openNew()
+  await click(/^Home/)
+  await click(/^Devices and sensors/)
+  await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+  await click('Next')
+  await click('Next')
+  await userEvent.click(within(screen.getByRole('region', { name: 'Finish' })).getByRole('button', { name: 'Save' }))
+  return screen.findByTestId('card-guided-saved')
+}
+
+describe('review 2: put on a board offers only pages that hold cards', () => {
+  it('a home page first on the board is not offered, nor a board with a network plan only; the first page that holds cards is preselected', async () => {
+    const saved = await saveLightsOn()
+    const board = await within(saved).findByRole('combobox', { name: 'Board' })
+    expect(Array.from((board as HTMLSelectElement).options).map((one) => one.text)).toEqual(['Home'])
+    const page = within(saved).getByRole('combobox', { name: 'Page' }) as HTMLSelectElement
+    expect(Array.from(page.options).map((one) => one.text)).toEqual(['Main', 'Lights'])
+    expect(page.value).toBe('5')
+    await userEvent.click(within(saved).getByRole('button', { name: 'Put on the board' }))
+    await waitFor(() => expect(sent('POST', '/pages/5/widgets')).toHaveLength(1))
+  })
+
+  it('without a board that has such a page there is only the sentence about the missing board', async () => {
+    stubGuided('', { 'GET /boards': { status: 200, body: [{ id: 3, slug: 'network', name: 'Network', permission: 'owner', pages: [{ id: 8, name: 'Plan', slug: 'plan', widget_count: 0, kind: 'topology' }] }] } })
+    const saved = await saveLightsOn()
+    expect(await within(saved).findByText(/There is no board you may change/)).toBeInTheDocument()
+    expect(within(saved).queryByRole('button', { name: 'Put on the board' })).toBeNull()
+  })
+
+  it('a board list from before (pages without a kind) still offers every page', async () => {
+    stubGuided('', { 'GET /boards': { status: 200, body: [{ id: 2, slug: 'home', name: 'Home', permission: 'owner', pages: [{ id: 5, name: 'Main', slug: 'main', widget_count: 3 }] }] } })
+    const saved = await saveLightsOn()
+    expect(await within(saved).findByRole('button', { name: 'Put on the board' })).toBeEnabled()
+  })
+})

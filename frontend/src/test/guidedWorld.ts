@@ -34,10 +34,13 @@ export const BOARDS = [
     name: 'Home',
     permission: 'owner',
     pages: [
-      { id: 5, name: 'Main', slug: 'main', widget_count: 3 },
-      { id: 6, name: 'Lights', slug: 'lights', widget_count: 0 },
+      // A home page comes first on this board and holds no cards; so does the plan of the board after it.
+      { id: 4, name: 'House', slug: 'house', widget_count: 0, kind: 'home' },
+      { id: 5, name: 'Main', slug: 'main', widget_count: 3, kind: 'cards' },
+      { id: 6, name: 'Lights', slug: 'lights', widget_count: 0, kind: 'cards' },
     ],
   },
+  { id: 3, slug: 'network', name: 'Network', permission: 'owner', pages: [{ id: 8, name: 'Plan', slug: 'plan', widget_count: 0, kind: 'topology' }] },
 ]
 
 export function stubGuided(card = '', more: Parameters<typeof stub>[1] = {}) {

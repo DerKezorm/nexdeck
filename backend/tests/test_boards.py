@@ -58,7 +58,19 @@ def test_the_board_list_counts_the_cards_of_every_page(client: TestClient) -> No
     # An empty page reports zero rather than being left out.
     third = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "Empty"}, headers=CSRF).json()["pages"][2]
     listed = next(entry for entry in client.get("/api/v1/boards").json() if entry["id"] == board["id"])
-    assert listed["pages"][2] == {"id": third["id"], "name": "Empty", "slug": third["slug"], "widget_count": 0}
+    assert listed["pages"][2] == {"id": third["id"], "name": "Empty", "slug": third["slug"], "widget_count": 0, "kind": "cards"}
+
+
+def test_the_board_list_says_which_pages_hold_cards(client: TestClient) -> None:
+    """A card can only be put on a page that holds cards; the list says what each page is, so that a screen offering
+    "put it on a board" need not guess (found in the review of the guided card editor, 26.10.2026)."""
+    setup_admin(client)
+    board = _board(client)
+    hass = client.post("/api/v1/integrations", json={"kind": "homeassistant", "name": "Home Assistant", "config": {"url": "http://ha.example.com:8123", "token": "a-token"}}, headers=CSRF).json()
+    made = client.post(f"/api/v1/boards/{board['slug']}/pages", json={"name": "House", "kind": "home", "integration_id": hass["id"]}, headers=CSRF)
+    assert made.status_code == 201, made.text
+    listed = next(entry for entry in client.get("/api/v1/boards").json() if entry["id"] == board["id"])
+    assert [(page["name"], page["kind"]) for page in listed["pages"]] == [("Overview", "cards"), ("House", "home")]
 
 
 def test_the_board_list_names_the_owner(client: TestClient) -> None:
