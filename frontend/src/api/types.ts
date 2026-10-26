@@ -98,6 +98,8 @@ export interface AdapterSpec {
   description: string
   icon: string
   beta: boolean
+  /** An integration an administrator described (System, Custom cards, Integrations), not one built in. */
+  custom?: boolean
   docs_url: string
   needs_integration: boolean
   /** Works without a connection, and takes one when there is: GitHub with a token. */
@@ -128,6 +130,8 @@ export interface Integration {
   muted: boolean
   last_ok_at: string | null
   last_error: string
+  /** The description of its kind was deleted (KARTEN-3 EC-6); the server may say so, else the kind is missing from the adapters. */
+  missing?: boolean
   widget_count: number
   created_at: string
 }

@@ -817,5 +817,135 @@
         "ask": "What the card asks"
       }
     }
+  },
+  "integrationEditor": {
+    "crumb": "Custom cards · Integrations",
+    "titleNew": "New integration",
+    "notFound": "There is no integration called {{short}}.",
+    "view": {
+      "form": "Form",
+      "yaml": "YAML"
+    },
+    "yaml": {
+      "label": "Integration as YAML"
+    },
+    "fixFirst": "Fix the YAML first, then the form opens again.",
+    "lastValid": "The form shows the last valid version.",
+    "saved": "Saved. Every connection of it follows at once.",
+    "leaveBody": "Your changes to this integration are not saved yet. They are lost when you leave.",
+    "reloadBody": "Your changes to this integration are lost, and the version that is saved now is loaded.",
+    "conflict": {
+      "title": "Changed by {{by}} meanwhile",
+      "body": "{{by}} saved this integration at {{time}} while you had it open. Overwrite that version with yours, or reload it and drop your changes."
+    },
+    "basics": {
+      "title": "Basics",
+      "lead": "What the integration is called and how it looks when someone adds a connection.",
+      "name": "Name",
+      "short": "Short name",
+      "shortHelp": "Lower case letters, digits, - and _. It becomes custom:name and cannot be changed later.",
+      "shortFixed": "The short name stays as it is once saved.",
+      "logo": "Logo",
+      "category": "Category",
+      "description": "Description"
+    },
+    "fields": {
+      "title": "Fields",
+      "lead": "What whoever adds a connection fills in besides the address: a token, a user, a number, a switch.",
+      "addressName": "Address",
+      "fixed": "always there",
+      "name": "Name in the definition",
+      "label": "Label",
+      "help": "Help text",
+      "required": "Required",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove field",
+      "add": "Add a field",
+      "most": "At most {{count}} fields."
+    },
+    "fieldType": {
+      "text": "Text",
+      "secret": "Secret",
+      "number": "Number",
+      "switch": "Switch"
+    },
+    "auth": {
+      "title": "Sign-in",
+      "lead": "How nexdeck proves itself to the service. A key is never written here: name a field in braces, like {token}, and its value is taken from the connection.",
+      "type": "Kind of sign-in",
+      "header": "Header name",
+      "headerValue": "Header value",
+      "valueHelp": "For example Bearer {token}.",
+      "user": "User",
+      "password": "Password",
+      "param": "Parameter name",
+      "queryValue": "Parameter value",
+      "queryHelp": "Name the field that holds the key, like {key}.",
+      "login": "Login address",
+      "loginHelp": "A path below the address of the connection, such as /api/login. nexdeck never signs in anywhere else.",
+      "send": "Send as",
+      "body": "Fields sent",
+      "bodyKey": "Name sent",
+      "bodyValue": "Value of {{key}}",
+      "bodyAdd": "Add a field to send",
+      "bodyRemove": "Remove this field",
+      "ticketFrom": "The ticket is in",
+      "ticketHelp": "The answer of the login: a field of its JSON, or a cookie it sets.",
+      "ticketAt": "Field of the answer",
+      "ticketAtHelp": "Where to find it in the JSON, like accessToken or data.token.",
+      "cookieName": "Cookie name",
+      "passAs": "Send the ticket as",
+      "passHelp": "How the service wants to get it back with every request.",
+      "passValue": "Value sent",
+      "passValueHelp": "{ticket} stands for the ticket, for example Bearer {ticket}."
+    },
+    "authType": {
+      "none": "None",
+      "header": "Key in a header",
+      "basic": "User and password",
+      "query": "Key in the address",
+      "session": "Login with a session"
+    },
+    "authExplained": {
+      "none": "The service needs no sign-in. Requests go out as they are.",
+      "header": "Every request carries a header with the key, such as X-Api-Key: {key} or Authorization: Bearer {key}.",
+      "basic": "Every request carries user and password as plain basic sign-in.",
+      "query": "Every request carries the key as a parameter at the end of the address. It appears in no log of nexdeck.",
+      "session": "nexdeck signs in once at a login address, keeps the ticket it gets and sends it along. On a 401 it signs in again once and asks again."
+    },
+    "insert": "Insert field",
+    "insertField": "Insert a field into {{label}}",
+    "unknownField": "There is no field called {{names}}.",
+    "option": {
+      "json": "JSON",
+      "form": "Form data",
+      "cookie": "Cookie",
+      "header": "Header",
+      "query": "Parameter in the address",
+      "any": "Any good answer"
+    },
+    "test": {
+      "title": "Test address",
+      "lead": "What the Test button asks. It is green when the service answers well, and red with the reason when not.",
+      "path": "Path",
+      "pathHelp": "A path below the address of the connection. A path in a subfolder works too.",
+      "expects": "Counts as good"
+    },
+    "reads": {
+      "title": "What nexdeck can ask",
+      "lead": "Addresses a card of this service may read, with a name each. They are offered in the Data step of the card editor.",
+      "path": "Path",
+      "label": "Name",
+      "remove": "Remove this entry",
+      "add": "Add an address",
+      "most": "At most {{count}} addresses."
+    },
+    "preview": {
+      "title": "What whoever sets it up sees",
+      "lead": "The form for a connection of {{name}}, as it stands now.",
+      "untitled": "this integration",
+      "tls": "Ignore TLS errors"
+    }
   }
 }

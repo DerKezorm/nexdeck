@@ -30,6 +30,13 @@ export interface CardSource {
   icon: string
   /** The category of the service in the library; older answers have none. */
   category?: string
+  /** An integration an administrator described (KARTEN-3); its kind begins with `custom:`. */
+  custom?: boolean
+}
+
+/** Whether a kind of service is an own integration: it carries the mark "Custom". */
+export function isOwnKind(source: { kind: string; custom?: boolean }): boolean {
+  return source.custom === true || source.kind.startsWith('custom:')
 }
 
 export interface CardBoard {

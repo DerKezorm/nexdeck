@@ -817,5 +817,135 @@
         "ask": "Lo que pregunta la tarjeta"
       }
     }
+  },
+  "integrationEditor": {
+    "crumb": "Tarjetas propias · Integraciones",
+    "titleNew": "Nueva integración",
+    "notFound": "No hay ninguna integración llamada {{short}}.",
+    "view": {
+      "form": "Formulario",
+      "yaml": "YAML"
+    },
+    "yaml": {
+      "label": "Integración como YAML"
+    },
+    "fixFirst": "Corrige primero el YAML y el formulario se abrirá de nuevo.",
+    "lastValid": "El formulario muestra la última versión válida.",
+    "saved": "Guardado. Todas sus conexiones lo siguen al instante.",
+    "leaveBody": "Tus cambios en esta integración aún no están guardados. Se pierden si te vas.",
+    "reloadBody": "Tus cambios en esta integración se pierden y se carga la versión guardada ahora.",
+    "conflict": {
+      "title": "{{by}} la cambió entretanto",
+      "body": "{{by}} guardó esta integración a las {{time}} mientras la tenías abierta. Sobrescribe esa versión con la tuya, o recárgala y descarta tus cambios."
+    },
+    "basics": {
+      "title": "Básicos",
+      "lead": "Cómo se llama la integración y qué aspecto tiene al añadir una conexión.",
+      "name": "Nombre",
+      "short": "Nombre corto",
+      "shortHelp": "Minúsculas, dígitos, - y _. Se convierte en custom:nombre y no se puede cambiar después.",
+      "shortFixed": "El nombre corto se queda como está una vez guardado.",
+      "logo": "Logo",
+      "category": "Categoría",
+      "description": "Descripción"
+    },
+    "fields": {
+      "title": "Campos",
+      "lead": "Lo que se rellena al añadir una conexión además de la dirección: un token, un usuario, un número, un interruptor.",
+      "addressName": "Dirección",
+      "fixed": "siempre presente",
+      "name": "Nombre en la definición",
+      "label": "Etiqueta",
+      "help": "Texto de ayuda",
+      "required": "Obligatorio",
+      "up": "Subir",
+      "down": "Bajar",
+      "remove": "Quitar campo",
+      "add": "Añadir un campo",
+      "most": "Como máximo {{count}} campos."
+    },
+    "fieldType": {
+      "text": "Texto",
+      "secret": "Secreto",
+      "number": "Número",
+      "switch": "Interruptor"
+    },
+    "auth": {
+      "title": "Inicio de sesión",
+      "lead": "Cómo se identifica nexdeck ante el servicio. Aquí nunca se escribe una clave: nombra un campo entre llaves, como {token}, y su valor sale de la conexión.",
+      "type": "Tipo de inicio de sesión",
+      "header": "Nombre de la cabecera",
+      "headerValue": "Valor de la cabecera",
+      "valueHelp": "Por ejemplo Bearer {token}.",
+      "user": "Usuario",
+      "password": "Contraseña",
+      "param": "Nombre del parámetro",
+      "queryValue": "Valor del parámetro",
+      "queryHelp": "Nombra el campo que guarda la clave, como {key}.",
+      "login": "Dirección de acceso",
+      "loginHelp": "Una ruta bajo la dirección de la conexión, como /api/login. nexdeck nunca inicia sesión en otro sitio.",
+      "send": "Enviar como",
+      "body": "Campos enviados",
+      "bodyKey": "Nombre enviado",
+      "bodyValue": "Valor de {{key}}",
+      "bodyAdd": "Añadir un campo para enviar",
+      "bodyRemove": "Quitar este campo",
+      "ticketFrom": "El ticket está en",
+      "ticketHelp": "En la respuesta del inicio de sesión: un campo de su JSON o una cookie que establece.",
+      "ticketAt": "Campo de la respuesta",
+      "ticketAtHelp": "Dónde está en el JSON, como accessToken o data.token.",
+      "cookieName": "Nombre de la cookie",
+      "passAs": "Enviar el ticket como",
+      "passHelp": "Cómo quiere el servicio recibirlo en cada petición.",
+      "passValue": "Valor enviado",
+      "passValueHelp": "{ticket} representa el ticket, por ejemplo Bearer {ticket}."
+    },
+    "authType": {
+      "none": "Ninguno",
+      "header": "Clave en una cabecera",
+      "basic": "Usuario y contraseña",
+      "query": "Clave en la dirección",
+      "session": "Inicio con sesión"
+    },
+    "authExplained": {
+      "none": "El servicio no necesita inicio de sesión. Las peticiones salen tal cual.",
+      "header": "Cada petición lleva una cabecera con la clave, por ejemplo X-Api-Key: {key} o Authorization: Bearer {key}.",
+      "basic": "Cada petición lleva usuario y contraseña como inicio de sesión básico.",
+      "query": "Cada petición lleva la clave como parámetro al final de la dirección. No aparece en ningún registro de nexdeck.",
+      "session": "nexdeck inicia sesión una vez en una dirección de acceso, guarda el ticket y lo envía. Ante un 401 inicia sesión de nuevo una vez y vuelve a preguntar."
+    },
+    "insert": "Insertar campo",
+    "insertField": "Insertar un campo en {{label}}",
+    "unknownField": "No hay ningún campo llamado {{names}}.",
+    "option": {
+      "json": "JSON",
+      "form": "Datos de formulario",
+      "cookie": "Cookie",
+      "header": "Cabecera",
+      "query": "Parámetro en la dirección",
+      "any": "Cualquier respuesta correcta"
+    },
+    "test": {
+      "title": "Dirección de prueba",
+      "lead": "Lo que pregunta el botón Probar. Se pone verde si el servicio responde bien y rojo con el motivo si no.",
+      "path": "Ruta",
+      "pathHelp": "Una ruta bajo la dirección de la conexión. También funciona con una subcarpeta.",
+      "expects": "Se considera correcta"
+    },
+    "reads": {
+      "title": "Qué puede preguntar nexdeck",
+      "lead": "Direcciones que una tarjeta de este servicio puede leer, cada una con un nombre. Se ofrecen en el paso Datos del editor de tarjetas.",
+      "path": "Ruta",
+      "label": "Nombre",
+      "remove": "Quitar esta entrada",
+      "add": "Añadir una dirección",
+      "most": "Como máximo {{count}} direcciones."
+    },
+    "preview": {
+      "title": "Lo que se ve al configurarla",
+      "lead": "El formulario de una conexión de {{name}}, tal como está ahora.",
+      "untitled": "esta integración",
+      "tls": "Ignorar errores TLS"
+    }
   }
 }

@@ -9,7 +9,7 @@ import type { Integration } from '../../../api/types'
 import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Select } from '../../../components/ui'
 import { deleteAt, setAt } from '../../../lib/cardDocument'
-import type { CardSource } from '../../../lib/customCards'
+import { isOwnKind, type CardSource } from '../../../lib/customCards'
 import { useConnections } from '../connections'
 import { useCardEditor } from '../store'
 import { GuidedFrame, StepNav } from './GuidedWay'
@@ -116,6 +116,7 @@ export function ServiceStep() {
           <span className="flex items-center gap-2.5 min-w-0">
             <ServiceIcon icon={one.icon || one.kind} size={28} />
             <span className="font-semibold text-sm min-w-0 break-words hyphens-auto">{one.label}</span>
+            {isOwnKind(one) && <span className="chip !py-0 text-[10px] ml-auto shrink-0">{t('settings.integrations.custom')}</span>}
           </span>
           {one.connections.length > 1 && <small className="text-[12px] text-muted">{t('editor.guided.service.connections', { count: one.connections.length })}</small>}
         </button>

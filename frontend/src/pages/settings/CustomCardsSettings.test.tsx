@@ -49,6 +49,7 @@ function stub(cards: CustomCardRow[], answers: Record<string, { status: number; 
       const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } })
       const given = world.answers[`${method} ${url}`]
       if (given) return json(given.body, given.status)
+      if (method === 'GET' && url === '/own-integrations') return json([])
       if (method === 'GET' && url === '/cards') return json({ cards: world.cards, limit: 200 })
       if (method === 'GET' && url.startsWith('/cards/')) return json({ ...(world.cards[0] as object), yaml: 'nexdeck-card: 1\nslug: queue-size\n' })
       return json({}, method === 'POST' ? 201 : 200)
@@ -129,7 +130,7 @@ describe('the list', () => {
     stub([card()])
     show()
     await screen.findByText('Queue')
-    for (const name of ['Integrations', 'Card shop', 'My submissions']) {
+    for (const name of ['Card shop', 'My submissions']) {
       await userEvent.click(screen.getByRole('tab', { name: new RegExp(name) }))
       expect(screen.getByText('This part of Custom cards comes with a later version of nexdeck.')).toBeInTheDocument()
       expect(screen.queryByText('Queue')).toBeNull()

@@ -817,5 +817,135 @@
         "ask": "Ce que la carte demande"
       }
     }
+  },
+  "integrationEditor": {
+    "crumb": "Cartes perso · Intégrations",
+    "titleNew": "Nouvelle intégration",
+    "notFound": "Il n'y a pas d'intégration nommée {{short}}.",
+    "view": {
+      "form": "Formulaire",
+      "yaml": "YAML"
+    },
+    "yaml": {
+      "label": "Intégration en YAML"
+    },
+    "fixFirst": "Corrigez d'abord le YAML, puis le formulaire se rouvre.",
+    "lastValid": "Le formulaire montre la dernière version valide.",
+    "saved": "Enregistré. Chaque connexion correspondante suit aussitôt.",
+    "leaveBody": "Vos modifications de cette intégration ne sont pas encore enregistrées. Elles seront perdues si vous partez.",
+    "reloadBody": "Vos modifications de cette intégration sont perdues et la version actuellement enregistrée est chargée.",
+    "conflict": {
+      "title": "{{by}} l'a modifiée entre-temps",
+      "body": "{{by}} a enregistré cette intégration à {{time}} pendant que vous l'aviez ouverte. Écrasez cette version par la vôtre, ou rechargez-la et abandonnez vos modifications."
+    },
+    "basics": {
+      "title": "Bases",
+      "lead": "Comment s'appelle l'intégration et à quoi elle ressemble quand on ajoute une connexion.",
+      "name": "Nom",
+      "short": "Nom court",
+      "shortHelp": "Minuscules, chiffres, - et _. Il devient custom:nom et ne peut plus être changé ensuite.",
+      "shortFixed": "Le nom court reste tel quel une fois enregistré.",
+      "logo": "Logo",
+      "category": "Catégorie",
+      "description": "Description"
+    },
+    "fields": {
+      "title": "Champs",
+      "lead": "Ce qu'on remplit en ajoutant une connexion en plus de l'adresse : un jeton, un utilisateur, un nombre, un interrupteur.",
+      "addressName": "Adresse",
+      "fixed": "toujours là",
+      "name": "Nom dans la définition",
+      "label": "Libellé",
+      "help": "Texte d'aide",
+      "required": "Obligatoire",
+      "up": "Monter",
+      "down": "Descendre",
+      "remove": "Retirer le champ",
+      "add": "Ajouter un champ",
+      "most": "Au plus {{count}} champs."
+    },
+    "fieldType": {
+      "text": "Texte",
+      "secret": "Secret",
+      "number": "Nombre",
+      "switch": "Interrupteur"
+    },
+    "auth": {
+      "title": "Connexion",
+      "lead": "Comment nexdeck s'identifie auprès du service. Aucune clé n'est écrite ici : nommez un champ entre accolades, comme {token}, et sa valeur vient de la connexion.",
+      "type": "Type de connexion",
+      "header": "Nom de l'en-tête",
+      "headerValue": "Valeur de l'en-tête",
+      "valueHelp": "Par exemple Bearer {token}.",
+      "user": "Utilisateur",
+      "password": "Mot de passe",
+      "param": "Nom du paramètre",
+      "queryValue": "Valeur du paramètre",
+      "queryHelp": "Nommez le champ qui contient la clé, comme {key}.",
+      "login": "Adresse de connexion",
+      "loginHelp": "Un chemin sous l'adresse de la connexion, comme /api/login. nexdeck ne se connecte jamais ailleurs.",
+      "send": "Envoyer en",
+      "body": "Champs envoyés",
+      "bodyKey": "Nom envoyé",
+      "bodyValue": "Valeur de {{key}}",
+      "bodyAdd": "Ajouter un champ à envoyer",
+      "bodyRemove": "Retirer ce champ",
+      "ticketFrom": "Le ticket se trouve dans",
+      "ticketHelp": "Dans la réponse à la connexion : un champ de son JSON ou un cookie qu'elle pose.",
+      "ticketAt": "Champ de la réponse",
+      "ticketAtHelp": "Où le trouver dans le JSON, comme accessToken ou data.token.",
+      "cookieName": "Nom du cookie",
+      "passAs": "Envoyer le ticket en",
+      "passHelp": "Comment le service veut le recevoir à chaque requête.",
+      "passValue": "Valeur envoyée",
+      "passValueHelp": "{ticket} représente le ticket, par exemple Bearer {ticket}."
+    },
+    "authType": {
+      "none": "Aucune",
+      "header": "Clé dans un en-tête",
+      "basic": "Utilisateur et mot de passe",
+      "query": "Clé dans l'adresse",
+      "session": "Connexion avec session"
+    },
+    "authExplained": {
+      "none": "Le service n'exige aucune connexion. Les requêtes partent telles quelles.",
+      "header": "Chaque requête porte un en-tête avec la clé, par exemple X-Api-Key: {key} ou Authorization: Bearer {key}.",
+      "basic": "Chaque requête porte l'utilisateur et le mot de passe en connexion simple (Basic).",
+      "query": "Chaque requête porte la clé comme paramètre à la fin de l'adresse. Elle n'apparaît dans aucun journal de nexdeck.",
+      "session": "nexdeck se connecte une fois à une adresse de connexion, garde le ticket reçu et l'envoie. Sur un 401 il se reconnecte une fois et redemande."
+    },
+    "insert": "Insérer un champ",
+    "insertField": "Insérer un champ dans {{label}}",
+    "unknownField": "Il n'y a pas de champ nommé {{names}}.",
+    "option": {
+      "json": "JSON",
+      "form": "Données de formulaire",
+      "cookie": "Cookie",
+      "header": "En-tête",
+      "query": "Paramètre dans l'adresse",
+      "any": "Toute réponse correcte"
+    },
+    "test": {
+      "title": "Adresse de test",
+      "lead": "Ce que demande le bouton Tester. Il devient vert quand le service répond bien, et rouge avec la raison sinon.",
+      "path": "Chemin",
+      "pathHelp": "Un chemin sous l'adresse de la connexion. Un sous-dossier convient aussi.",
+      "expects": "Est jugée bonne"
+    },
+    "reads": {
+      "title": "Ce que nexdeck peut demander",
+      "lead": "Adresses qu'une carte de ce service peut lire, chacune avec un nom. Elles sont proposées à l'étape Données de l'éditeur de cartes.",
+      "path": "Chemin",
+      "label": "Nom",
+      "remove": "Retirer cette entrée",
+      "add": "Ajouter une adresse",
+      "most": "Au plus {{count}} adresses."
+    },
+    "preview": {
+      "title": "Ce qu'on voit en la configurant",
+      "lead": "Le formulaire d'une connexion {{name}}, tel qu'il est maintenant.",
+      "untitled": "cette intégration",
+      "tls": "Ignorer les erreurs TLS"
+    }
   }
 }

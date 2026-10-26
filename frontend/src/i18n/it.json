@@ -336,6 +336,25 @@
         "unread": "Versione non letta",
         "notAsked": "Ultima non richiesta",
         "notAskedHelp": "Attiva Cerca aggiornamenti in Sistema, Informazioni per confrontare con l’ultima release su GitHub."
+      },
+      "custom": "Propria",
+      "missing": "integration missing",
+      "missingHelp": "La descrizione di questa integrazione è stata eliminata. La connessione e le sue schede tornano a funzionare appena si salva un'integrazione con lo stesso nome breve.",
+      "testCode": {
+        "auth_failed": "Il servizio ha rifiutato le credenziali.",
+        "unreachable": "Il servizio non è raggiungibile.",
+        "unexpected_answer": "Il servizio ha risposto in modo diverso da quello che l'integrazione si aspetta.",
+        "sign_in_no_ticket": "La risposta all'accesso non contiene nessun ticket.",
+        "sign_in_failed": "L'accesso non è riuscito.",
+        "sign_in_web_page": "L'accesso porta a una pagina web."
+      },
+      "testHint": {
+        "auth_failed": "Controlla la chiave, oppure utente e password.",
+        "unreachable": "Controlla l'indirizzo e che nexdeck possa raggiungerlo.",
+        "unexpected_answer": "Controlla l'indirizzo di prova nella descrizione dell'integrazione.",
+        "sign_in_no_ticket": "Controlla dove la descrizione dell'integrazione cerca il ticket.",
+        "sign_in_failed": "Controlla utente e password.",
+        "sign_in_web_page": "Davanti al servizio c'è qualcosa, per esempio un proxy con accesso, che chiede prima. Usa una chiave o un indirizzo che lo eviti."
       }
     },
     "users": {
@@ -2407,7 +2426,23 @@
     "problems": "Per ora non si può salvare",
     "line": "Riga {{line}}",
     "failed": "Non è stato possibile salvare la scheda.",
-    "tooMany": "Ci sono già 200 schede personali, il massimo che nexdeck conserva. Eliminane prima una."
+    "tooMany": "Ci sono già 200 schede personali, il massimo che nexdeck conserva. Eliminane prima una.",
+    "integrations": {
+      "lead": "Integrazioni che descrivi tu stesso per un servizio che nexdeck non conosce. Una volta salvata, compare accanto a quelle integrate quando aggiungi una connessione e le schede possono leggere attraverso di essa.",
+      "describe": "Descrivi un'integrazione",
+      "emptyTitle": "Ancora nessuna integrazione propria",
+      "emptyBody": "Descrivi un servizio con il suo indirizzo, i dati per configurarlo e il modo di accedere. Memos, un wiki o qualsiasi app con interfaccia web va bene.",
+      "custom": "Propria",
+      "connections_one": "{{count}} connessione",
+      "connections_other": "{{count}} connessioni",
+      "footer": "{{count}} di {{limit}} integrazioni proprie. Una modifica vale subito per tutte le sue connessioni.",
+      "deleteTitle": "Eliminare {{name}}?",
+      "deleteBodyNone": "Nessuna connessione la usa. Sparisce subito.",
+      "deleteBody_one": "{{count}} connessione la usa. La connessione e le schede sopra mostreranno \"integration missing\", e salvare un'integrazione con lo stesso nome breve le ripristina.",
+      "deleteBody_other": "{{count}} connessioni la usano. Le connessioni e le schede sopra mostreranno \"integration missing\", e salvare un'integrazione con lo stesso nome breve le ripristina.",
+      "tooMany": "Ci sono già 50 integrazioni proprie, il massimo che nexdeck conserva. Eliminane prima una.",
+      "exists": "Esiste già un'integrazione con questo nome breve."
+    }
   },
   "dependencies": {
     "because": "perché {{name}} non risponde"

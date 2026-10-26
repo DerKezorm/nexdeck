@@ -336,6 +336,25 @@
         "unread": "Version non lue",
         "notAsked": "Dernière non demandée",
         "notAskedHelp": "Activez Rechercher des mises à jour sous Système, À propos pour comparer avec la dernière publication sur GitHub."
+      },
+      "custom": "Perso",
+      "missing": "integration missing",
+      "missingHelp": "La description de cette intégration a été supprimée. La connexion et ses cartes refonctionnent dès qu'une intégration au même nom court est enregistrée.",
+      "testCode": {
+        "auth_failed": "Le service a refusé les identifiants.",
+        "unreachable": "Le service est injoignable.",
+        "unexpected_answer": "Le service a répondu autrement que l'intégration ne l'attend.",
+        "sign_in_no_ticket": "La réponse à la connexion ne contient aucun ticket.",
+        "sign_in_failed": "La connexion a échoué.",
+        "sign_in_web_page": "La connexion mène à une page web."
+      },
+      "testHint": {
+        "auth_failed": "Vérifiez la clé, ou l'utilisateur et le mot de passe.",
+        "unreachable": "Vérifiez l'adresse et que nexdeck peut l'atteindre.",
+        "unexpected_answer": "Vérifiez l'adresse de test dans la description de l'intégration.",
+        "sign_in_no_ticket": "Vérifiez où la description de l'intégration cherche le ticket.",
+        "sign_in_failed": "Vérifiez l'utilisateur et le mot de passe.",
+        "sign_in_web_page": "Quelque chose devant le service, un proxy avec connexion par exemple, demande d'abord. Utilisez une clé ou une adresse qui le contourne."
       }
     },
     "users": {
@@ -2407,7 +2426,23 @@
     "problems": "Impossible d'enregistrer pour l'instant",
     "line": "Ligne {{line}}",
     "failed": "La carte n'a pas pu être enregistrée.",
-    "tooMany": "Il y a déjà 200 cartes personnalisées, le maximum que nexdeck garde. Supprimez-en une d'abord."
+    "tooMany": "Il y a déjà 200 cartes personnalisées, le maximum que nexdeck garde. Supprimez-en une d'abord.",
+    "integrations": {
+      "lead": "Des intégrations que vous décrivez vous-même pour un service que nexdeck ne connaît pas. Une fois enregistrée, elle figure à côté des intégrées quand vous ajoutez une connexion, et les cartes peuvent lire par elle.",
+      "describe": "Décrire une intégration",
+      "emptyTitle": "Pas encore d'intégrations personnelles",
+      "emptyBody": "Décrivez un service par son adresse, les réglages à saisir et la façon de se connecter. Memos, un wiki ou toute appli web convient.",
+      "custom": "Perso",
+      "connections_one": "{{count}} connexion",
+      "connections_other": "{{count}} connexions",
+      "footer": "{{count}} sur {{limit}} intégrations personnelles. Une modification s'applique aussitôt à toutes ses connexions.",
+      "deleteTitle": "Supprimer {{name}} ?",
+      "deleteBodyNone": "Aucune connexion ne l'utilise. Elle disparaît aussitôt.",
+      "deleteBody_one": "{{count}} connexion l'utilise. La connexion et les cartes dessus afficheront \"integration missing\", et enregistrer une intégration au même nom court les rétablit.",
+      "deleteBody_other": "{{count}} connexions l'utilisent. Les connexions et les cartes dessus afficheront \"integration missing\", et enregistrer une intégration au même nom court les rétablit.",
+      "tooMany": "Il y a déjà 50 intégrations personnelles, c'est le maximum que nexdeck garde. Supprimez-en une d'abord.",
+      "exists": "Une intégration portant ce nom court existe déjà."
+    }
   },
   "dependencies": {
     "because": "car {{name}} est en panne"

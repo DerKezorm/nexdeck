@@ -336,6 +336,25 @@
         "unread": "Version not read",
         "notAsked": "Newest not asked",
         "notAskedHelp": "Switch on Check for updates under System, About to compare with the newest release on GitHub."
+      },
+      "custom": "Custom",
+      "missing": "integration missing",
+      "missingHelp": "The description of this kind of integration was deleted. The connection and its cards work again once an integration with the same short name is saved.",
+      "testCode": {
+        "auth_failed": "The service refused the sign-in details.",
+        "unreachable": "The service could not be reached.",
+        "unexpected_answer": "The service answered in a way the integration does not expect.",
+        "sign_in_no_ticket": "The sign-in answer comes without a ticket.",
+        "sign_in_failed": "Signing in failed.",
+        "sign_in_web_page": "The sign-in leads to a web page."
+      },
+      "testHint": {
+        "auth_failed": "Check the key, or the user and password.",
+        "unreachable": "Check the address, and that nexdeck can reach it.",
+        "unexpected_answer": "Check the test address in the description of the integration.",
+        "sign_in_no_ticket": "Check where the description of the integration looks for the ticket.",
+        "sign_in_failed": "Check the user and password.",
+        "sign_in_web_page": "Something in front of the service, a proxy with a login say, asks for the sign-in first. Use a key, or an address that goes around it."
       }
     },
     "users": {
@@ -2407,7 +2426,23 @@
     "problems": "This cannot be saved yet",
     "line": "Line {{line}}",
     "failed": "The card could not be saved.",
-    "tooMany": "There are 200 custom cards already, which is the most nexdeck keeps. Delete one first."
+    "tooMany": "There are 200 custom cards already, which is the most nexdeck keeps. Delete one first.",
+    "integrations": {
+      "lead": "Integrations you describe yourself, for a service nexdeck does not know. Once saved, one stands beside the built-in ones when you add a connection, and cards can read through it.",
+      "describe": "Describe an integration",
+      "emptyTitle": "No integrations of your own yet",
+      "emptyBody": "Describe a service by its address, the details to set up and how it signs in. Memos, a wiki or any app with a web interface will do.",
+      "custom": "Custom",
+      "connections_one": "{{count}} connection",
+      "connections_other": "{{count}} connections",
+      "footer": "{{count}} of {{limit}} integrations of your own. A change shows at once in every connection of it.",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteBodyNone": "No connection uses it. It is gone at once.",
+      "deleteBody_one": "{{count}} connection uses it. The connection and the cards on it will say \"integration missing\", and saving an integration with the same short name brings them back.",
+      "deleteBody_other": "{{count}} connections use it. The connections and the cards on them will say \"integration missing\", and saving an integration with the same short name brings them back.",
+      "tooMany": "There are 50 integrations of your own already, which is the most nexdeck keeps. Delete one first.",
+      "exists": "An integration with this short name exists already."
+    }
   },
   "dependencies": {
     "because": "because {{name}} is down"

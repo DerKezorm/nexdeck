@@ -2,13 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, del, get, post, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState } from '../../components/ui'
 import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
+import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
 
 type Tab = 'cards' | 'integrations' | 'shop' | 'submissions'
 
@@ -30,7 +31,9 @@ export function CustomCardsSettings() {
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const cards = useQuery({ queryKey: ['custom-cards'], queryFn: () => get<CardList>('/cards') })
-  const [tab, setTab] = useState<Tab>('cards')
+  const [params] = useSearchParams()
+  const own = useOwnIntegrations()
+  const [tab, setTab] = useState<Tab>(() => (TABS.includes(params.get('tab') as Tab) ? (params.get('tab') as Tab) : 'cards'))
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const [error, setError] = useState('')
@@ -90,7 +93,7 @@ export function CustomCardsSettings() {
     }
   }
 
-  const counts: Partial<Record<Tab, number>> = { cards: rows.length, integrations: 0 }
+  const counts: Partial<Record<Tab, number>> = { cards: rows.length, integrations: own.data?.length ?? 0 }
 
   return (
     <>
@@ -128,7 +131,9 @@ export function CustomCardsSettings() {
           </p>
         )}
 
-        {tab !== 'cards' && <p className="text-sm text-muted">{t('cards.later')}</p>}
+        {tab === 'integrations' && <OwnIntegrations />}
+
+        {(tab === 'shop' || tab === 'submissions') && <p className="text-sm text-muted">{t('cards.later')}</p>}
 
         {tab === 'cards' && cards.isSuccess && rows.length === 0 && (
           <EmptyState

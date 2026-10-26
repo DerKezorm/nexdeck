@@ -817,5 +817,135 @@
         "ask": "Cosa chiede la scheda"
       }
     }
+  },
+  "integrationEditor": {
+    "crumb": "Schede proprie · Integrazioni",
+    "titleNew": "Nuova integrazione",
+    "notFound": "Non esiste nessuna integrazione chiamata {{short}}.",
+    "view": {
+      "form": "Modulo",
+      "yaml": "YAML"
+    },
+    "yaml": {
+      "label": "Integrazione come YAML"
+    },
+    "fixFirst": "Correggi prima lo YAML, poi il modulo si riapre.",
+    "lastValid": "Il modulo mostra l'ultima versione valida.",
+    "saved": "Salvato. Ogni connessione lo segue subito.",
+    "leaveBody": "Le tue modifiche a questa integrazione non sono ancora salvate. Andranno perse se esci.",
+    "reloadBody": "Le tue modifiche a questa integrazione vanno perse e viene caricata la versione ora salvata.",
+    "conflict": {
+      "title": "{{by}} l'ha modificata nel frattempo",
+      "body": "{{by}} ha salvato questa integrazione alle {{time}} mentre la tenevi aperta. Sovrascrivi quella versione con la tua, oppure ricaricala e scarta le tue modifiche."
+    },
+    "basics": {
+      "title": "Base",
+      "lead": "Come si chiama l'integrazione e che aspetto ha quando si aggiunge una connessione.",
+      "name": "Nome",
+      "short": "Nome breve",
+      "shortHelp": "Minuscole, cifre, - e _. Diventa custom:nome e non si può più cambiare dopo.",
+      "shortFixed": "Il nome breve resta com'è una volta salvato.",
+      "logo": "Logo",
+      "category": "Categoria",
+      "description": "Descrizione"
+    },
+    "fields": {
+      "title": "Campi",
+      "lead": "Cosa si compila aggiungendo una connessione oltre all'indirizzo: un token, un utente, un numero, un interruttore.",
+      "addressName": "Indirizzo",
+      "fixed": "sempre presente",
+      "name": "Nome nella definizione",
+      "label": "Etichetta",
+      "help": "Testo di aiuto",
+      "required": "Obbligatorio",
+      "up": "Sposta su",
+      "down": "Sposta giù",
+      "remove": "Rimuovi campo",
+      "add": "Aggiungi un campo",
+      "most": "Al massimo {{count}} campi."
+    },
+    "fieldType": {
+      "text": "Testo",
+      "secret": "Segreto",
+      "number": "Numero",
+      "switch": "Interruttore"
+    },
+    "auth": {
+      "title": "Accesso",
+      "lead": "Come nexdeck si identifica presso il servizio. Qui non si scrive mai una chiave: nomina un campo tra graffe, come {token}, e il suo valore viene dalla connessione.",
+      "type": "Tipo di accesso",
+      "header": "Nome dell'intestazione",
+      "headerValue": "Valore dell'intestazione",
+      "valueHelp": "Per esempio Bearer {token}.",
+      "user": "Utente",
+      "password": "Password",
+      "param": "Nome del parametro",
+      "queryValue": "Valore del parametro",
+      "queryHelp": "Nomina il campo che contiene la chiave, come {key}.",
+      "login": "Indirizzo di login",
+      "loginHelp": "Un percorso sotto l'indirizzo della connessione, come /api/login. nexdeck non accede mai altrove.",
+      "send": "Invia come",
+      "body": "Campi inviati",
+      "bodyKey": "Nome inviato",
+      "bodyValue": "Valore di {{key}}",
+      "bodyAdd": "Aggiungi un campo da inviare",
+      "bodyRemove": "Rimuovi questo campo",
+      "ticketFrom": "Il ticket si trova in",
+      "ticketHelp": "Nella risposta al login: un campo del suo JSON o un cookie che imposta.",
+      "ticketAt": "Campo della risposta",
+      "ticketAtHelp": "Dove si trova nel JSON, come accessToken o data.token.",
+      "cookieName": "Nome del cookie",
+      "passAs": "Invia il ticket come",
+      "passHelp": "Come il servizio lo vuole indietro a ogni richiesta.",
+      "passValue": "Valore inviato",
+      "passValueHelp": "{ticket} sta per il ticket, per esempio Bearer {ticket}."
+    },
+    "authType": {
+      "none": "Nessuno",
+      "header": "Chiave in un'intestazione",
+      "basic": "Utente e password",
+      "query": "Chiave nell'indirizzo",
+      "session": "Login con sessione"
+    },
+    "authExplained": {
+      "none": "Il servizio non richiede accesso. Le richieste partono così come sono.",
+      "header": "Ogni richiesta porta un'intestazione con la chiave, per esempio X-Api-Key: {key} o Authorization: Bearer {key}.",
+      "basic": "Ogni richiesta porta utente e password come accesso semplice (Basic).",
+      "query": "Ogni richiesta porta la chiave come parametro in fondo all'indirizzo. Non compare in nessun registro di nexdeck.",
+      "session": "nexdeck accede una volta a un indirizzo di login, conserva il ticket ricevuto e lo invia. Con un 401 accede di nuovo una volta e richiede."
+    },
+    "insert": "Inserisci campo",
+    "insertField": "Inserisci un campo in {{label}}",
+    "unknownField": "Non esiste nessun campo chiamato {{names}}.",
+    "option": {
+      "json": "JSON",
+      "form": "Dati di modulo",
+      "cookie": "Cookie",
+      "header": "Intestazione",
+      "query": "Parametro nell'indirizzo",
+      "any": "Qualsiasi risposta corretta"
+    },
+    "test": {
+      "title": "Indirizzo di prova",
+      "lead": "Cosa chiede il pulsante Prova. Diventa verde se il servizio risponde bene, rosso con il motivo altrimenti.",
+      "path": "Percorso",
+      "pathHelp": "Un percorso sotto l'indirizzo della connessione. Va bene anche con una sottocartella.",
+      "expects": "Conta come buona"
+    },
+    "reads": {
+      "title": "Cosa può chiedere nexdeck",
+      "lead": "Indirizzi che una scheda di questo servizio può leggere, ciascuno con un nome. Sono proposti nel passo Dati dell'editor delle schede.",
+      "path": "Percorso",
+      "label": "Nome",
+      "remove": "Rimuovi questa voce",
+      "add": "Aggiungi un indirizzo",
+      "most": "Al massimo {{count}} indirizzi."
+    },
+    "preview": {
+      "title": "Cosa si vede configurandola",
+      "lead": "Il modulo per una connessione a {{name}}, così com'è ora.",
+      "untitled": "questa integrazione",
+      "tls": "Ignora errori TLS"
+    }
   }
 }

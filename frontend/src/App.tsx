@@ -28,6 +28,7 @@ const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ 
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 const CardEditorPage = lazy(() => import('./pages/cardEditor/CardEditorPage').then((m) => ({ default: m.CardEditorPage })))
+const IntegrationEditorPage = lazy(() => import('./pages/integrationEditor/IntegrationEditorPage').then((m) => ({ default: m.IntegrationEditorPage })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 5000 } } })
 
@@ -138,6 +139,22 @@ export function App() {
               element={
                 <Guard>
                   <CardEditorPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system/custom-cards/integrations/new"
+              element={
+                <Guard>
+                  <IntegrationEditorPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system/custom-cards/integrations/:short/edit"
+              element={
+                <Guard>
+                  <IntegrationEditorPage />
                 </Guard>
               }
             />

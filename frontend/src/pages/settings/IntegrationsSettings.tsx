@@ -12,10 +12,16 @@ import { LeaveDemo } from '../../components/LeaveDemo'
 import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
+import { testResultText, type TestResult } from '../../lib/testResult'
 import { useAuth } from '../../stores/auth'
 
 const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
 import { SettingsCard } from './SettingsCard'
+
+/** Whether the description of the kind of a connection is gone (KARTEN-3 EC-6): the server says so, or the adapters do not know the kind. */
+export function missingKind(integration: Integration, adapters: AdapterSpec[] | undefined): boolean {
+  return integration.missing === true || (adapters !== undefined && !adapters.some((adapter) => adapter.kind === integration.kind))
+}
 
 /** What ``GET /integrations/versions`` says about one connection. */
 interface VersionReading {
@@ -155,6 +161,11 @@ export function IntegrationsSettings() {
                     </span>
                   )}
                   {integration.beta && <span className="chip ml-1 !py-0 text-[10px]">beta</span>}
+                  {missingKind(integration, adapters.data) && (
+                    <span className="chip ml-1 !py-0 text-[10px] !text-bad" title={t('settings.integrations.missingHelp')} data-testid="integration-missing">
+                      {t('settings.integrations.missing')}
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-muted truncate">
                   {integration.label} · {t('settings.integrations.widgets', { count: integration.widget_count })}
@@ -180,7 +191,7 @@ export function IntegrationsSettings() {
                   </button>
                   {/* A pencil on a phone: "Modifier" or "Modifica" beside three other
                       buttons left the name two letters wide. */}
-                  <button className="btn h-7 text-xs max-sm:w-7 max-sm:px-0" onClick={() => setEditing(integration)} aria-label={t('common.edit')}>
+                  <button className="btn h-7 text-xs max-sm:w-7 max-sm:px-0" onClick={() => setEditing(integration)} aria-label={t('common.edit')} disabled={missingKind(integration, adapters.data)} title={missingKind(integration, adapters.data) ? t('settings.integrations.missingHelp') : undefined}>
                     <Pencil size={14} className="sm:hidden" />
                     <span className="max-sm:hidden">{t('common.edit')}</span>
                   </button>
@@ -224,6 +235,7 @@ export function IntegrationsSettings() {
                     <ServiceIcon icon={adapter.icon} size={14} />
                     {adapter.label}
                     {adapter.beta && <span className="text-[9px] text-faint">beta</span>}
+                    {adapter.custom && <span className="chip !py-0 text-[9px]">{t('settings.integrations.custom')}</span>}
                   </button>
                 ))}
               </div>
@@ -272,7 +284,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
   const [enabled, setEnabled] = useState(integration?.enabled ?? true)
   const [demo, setDemo] = useState(integration?.demo ?? false)
   const [adminOnly, setAdminOnly] = useState(integration?.admin_only ?? false)
-  const [result, setResult] = useState<{ ok: boolean; message: string; hint?: string } | null>(null)
+  const [result, setResult] = useState<TestResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   if (!adapter) return null
@@ -281,7 +293,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
     setBusy(true)
     setResult(null)
     try {
-      setResult(await post<{ ok: boolean; message: string; hint?: string }>('/integrations/test', { kind: adapter.kind, config, integration_id: integration?.id ?? null }))
+      setResult(await post<TestResult>('/integrations/test', { kind: adapter.kind, config, integration_id: integration?.id ?? null }))
     } catch (failure) {
       setResult({ ok: false, message: failure instanceof ApiError ? failure.message : t('errors.network') })
     } finally {
@@ -323,6 +335,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       <div className="flex items-start gap-3 mb-4">
         <ServiceIcon icon={adapter.icon} size={28} />
         <div className="text-sm">
+          {adapter.custom && <span className="chip !py-0 text-[10px] mb-1">{t('settings.integrations.custom')}</span>}
           <p className="text-muted">{tAdapter(adapter.description)}</p>
           {adapter.beta && <p className="text-[11px] text-warn mt-1">{t('settings.integrations.betaHelp')}</p>}
           {adapter.docs_url && (
@@ -360,8 +373,8 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
         // will not show what the test just found (demo mode, issue #2).
         <div className={`rounded-xl border p-3 text-sm mt-3 ${!result.ok ? 'border-bad/50' : result.hint ? 'border-warn/50' : 'border-ok/50'}`} role="status">
           <span className="dot mr-2" data-status={!result.ok ? 'bad' : result.hint ? 'warn' : 'ok'} />
-          {result.message}
-          {result.hint && <div className="text-xs text-muted mt-1">{result.hint}</div>}
+          {testResultText(t, result).message}
+          {testResultText(t, result).hint && <div className="text-xs text-muted mt-1">{testResultText(t, result).hint}</div>}
         </div>
       )}
       {error && (

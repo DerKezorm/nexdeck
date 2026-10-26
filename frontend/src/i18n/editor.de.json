@@ -817,5 +817,135 @@
         "ask": "Was die Karte fragt"
       }
     }
+  },
+  "integrationEditor": {
+    "crumb": "Eigene Karten · Anbindungen",
+    "titleNew": "Neue Anbindung",
+    "notFound": "Eine Anbindung namens {{short}} gibt es nicht.",
+    "view": {
+      "form": "Formular",
+      "yaml": "YAML"
+    },
+    "yaml": {
+      "label": "Anbindung als YAML"
+    },
+    "fixFirst": "Behebe zuerst das YAML, dann geht das Formular wieder.",
+    "lastValid": "Das Formular zeigt die letzte gültige Fassung.",
+    "saved": "Gespeichert. Jede Verbindung dazu folgt sofort.",
+    "leaveBody": "Deine Änderungen an dieser Anbindung sind noch nicht gespeichert. Sie gehen verloren, wenn du gehst.",
+    "reloadBody": "Deine Änderungen an dieser Anbindung gehen verloren, und die jetzt gespeicherte Fassung wird geladen.",
+    "conflict": {
+      "title": "{{by}} hat sie inzwischen geändert",
+      "body": "{{by}} hat diese Anbindung um {{time}} gespeichert, während du sie offen hattest. Überschreibe diese Fassung mit deiner, oder lade sie neu und verwirf deine Änderungen."
+    },
+    "basics": {
+      "title": "Grundlagen",
+      "lead": "Wie die Anbindung heißt und wie sie aussieht, wenn jemand eine Verbindung hinzufügt.",
+      "name": "Name",
+      "short": "Kurzname",
+      "shortHelp": "Kleinbuchstaben, Ziffern, - und _. Daraus wird custom:name, später lässt es sich nicht mehr ändern.",
+      "shortFixed": "Der Kurzname bleibt, wie er ist, sobald gespeichert.",
+      "logo": "Logo",
+      "category": "Kategorie",
+      "description": "Beschreibung"
+    },
+    "fields": {
+      "title": "Felder",
+      "lead": "Was beim Hinzufügen einer Verbindung neben der Adresse auszufüllen ist: ein Token, ein Benutzer, eine Zahl, ein Schalter.",
+      "addressName": "Adresse",
+      "fixed": "immer dabei",
+      "name": "Name in der Beschreibung",
+      "label": "Beschriftung",
+      "help": "Hilfetext",
+      "required": "Pflichtfeld",
+      "up": "Nach oben",
+      "down": "Nach unten",
+      "remove": "Feld entfernen",
+      "add": "Feld hinzufügen",
+      "most": "Höchstens {{count}} Felder."
+    },
+    "fieldType": {
+      "text": "Text",
+      "secret": "Geheimnis",
+      "number": "Zahl",
+      "switch": "Schalter"
+    },
+    "auth": {
+      "title": "Anmeldung",
+      "lead": "Wie sich nexdeck beim Dienst ausweist. Ein Schlüssel steht nie hier: Nenne ein Feld in geschweiften Klammern, etwa {token}, und sein Wert kommt aus der Verbindung.",
+      "type": "Art der Anmeldung",
+      "header": "Name der Kopfzeile",
+      "headerValue": "Wert der Kopfzeile",
+      "valueHelp": "Zum Beispiel Bearer {token}.",
+      "user": "Benutzer",
+      "password": "Passwort",
+      "param": "Name des Parameters",
+      "queryValue": "Wert des Parameters",
+      "queryHelp": "Nenne das Feld, das den Schlüssel hält, etwa {key}.",
+      "login": "Anmeldeadresse",
+      "loginHelp": "Ein Pfad unter der Adresse der Verbindung, etwa /api/login. Woanders meldet sich nexdeck nie an.",
+      "send": "Senden als",
+      "body": "Gesendete Felder",
+      "bodyKey": "Gesendeter Name",
+      "bodyValue": "Wert von {{key}}",
+      "bodyAdd": "Feld zum Senden hinzufügen",
+      "bodyRemove": "Dieses Feld entfernen",
+      "ticketFrom": "Das Ticket steckt in",
+      "ticketHelp": "Der Antwort auf die Anmeldung: einem Feld ihres JSON oder einem Cookie, das sie setzt.",
+      "ticketAt": "Feld der Antwort",
+      "ticketAtHelp": "Wo es im JSON steht, etwa accessToken oder data.token.",
+      "cookieName": "Name des Cookies",
+      "passAs": "Ticket mitschicken als",
+      "passHelp": "Wie der Dienst es bei jeder Anfrage zurückhaben will.",
+      "passValue": "Gesendeter Wert",
+      "passValueHelp": "{ticket} steht für das Ticket, zum Beispiel Bearer {ticket}."
+    },
+    "authType": {
+      "none": "Keine",
+      "header": "Schlüssel im Kopf",
+      "basic": "Benutzer und Passwort",
+      "query": "Schlüssel in der Adresse",
+      "session": "Login mit Sitzung"
+    },
+    "authExplained": {
+      "none": "Der Dienst braucht keine Anmeldung. Die Anfragen gehen so hinaus, wie sie sind.",
+      "header": "Jede Anfrage trägt eine Kopfzeile mit dem Schlüssel, etwa X-Api-Key: {key} oder Authorization: Bearer {key}.",
+      "basic": "Jede Anfrage trägt Benutzer und Passwort als einfache Anmeldung (Basic).",
+      "query": "Jede Anfrage trägt den Schlüssel als Parameter am Ende der Adresse. In keinem Protokoll von nexdeck taucht er auf.",
+      "session": "nexdeck meldet sich einmal an einer Anmeldeadresse an, merkt sich das Ticket und schickt es mit. Bei einem 401 meldet es sich einmal neu an und fragt noch einmal."
+    },
+    "insert": "Feld einfügen",
+    "insertField": "Feld in {{label}} einfügen",
+    "unknownField": "Ein Feld namens {{names}} gibt es nicht.",
+    "option": {
+      "json": "JSON",
+      "form": "Formulardaten",
+      "cookie": "Cookie",
+      "header": "Kopfzeile",
+      "query": "Parameter in der Adresse",
+      "any": "Jede gute Antwort"
+    },
+    "test": {
+      "title": "Testadresse",
+      "lead": "Wonach der Knopf \"Testen\" fragt. Er wird grün, wenn der Dienst gut antwortet, und rot mit Grund, wenn nicht.",
+      "path": "Pfad",
+      "pathHelp": "Ein Pfad unter der Adresse der Verbindung. Auch mit Unterordner geht es.",
+      "expects": "Gilt als gut"
+    },
+    "reads": {
+      "title": "Was nexdeck abfragen kann",
+      "lead": "Adressen, die eine Karte dieses Dienstes lesen darf, je mit einem Namen. Sie stehen im Schritt \"Daten\" des Karteneditors zur Auswahl.",
+      "path": "Pfad",
+      "label": "Name",
+      "remove": "Diesen Eintrag entfernen",
+      "add": "Adresse hinzufügen",
+      "most": "Höchstens {{count}} Adressen."
+    },
+    "preview": {
+      "title": "Was beim Einrichten zu sehen ist",
+      "lead": "Das Formular für eine Verbindung zu {{name}}, so wie es jetzt aussieht.",
+      "untitled": "diese Anbindung",
+      "tls": "TLS-Fehler ignorieren"
+    }
   }
 }

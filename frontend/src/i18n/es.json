@@ -336,6 +336,25 @@
         "unread": "Versión no leída",
         "notAsked": "Última no consultada",
         "notAskedHelp": "Activa Buscar actualizaciones en Sistema, Acerca de para comparar con la última publicación en GitHub."
+      },
+      "custom": "Propia",
+      "missing": "integration missing",
+      "missingHelp": "Se eliminó la descripción de esta integración. La conexión y sus tarjetas funcionan de nuevo cuando se guarda una integración con el mismo nombre corto.",
+      "testCode": {
+        "auth_failed": "El servicio rechazó los datos de acceso.",
+        "unreachable": "No se pudo alcanzar el servicio.",
+        "unexpected_answer": "El servicio respondió de una forma que la integración no espera.",
+        "sign_in_no_ticket": "La respuesta al inicio de sesión no trae ningún ticket.",
+        "sign_in_failed": "Falló el inicio de sesión.",
+        "sign_in_web_page": "El inicio de sesión lleva a una página web."
+      },
+      "testHint": {
+        "auth_failed": "Comprueba la clave, o el usuario y la contraseña.",
+        "unreachable": "Comprueba la dirección y que nexdeck pueda alcanzarla.",
+        "unexpected_answer": "Comprueba la dirección de prueba en la descripción de la integración.",
+        "sign_in_no_ticket": "Comprueba dónde busca el ticket la descripción de la integración.",
+        "sign_in_failed": "Comprueba el usuario y la contraseña.",
+        "sign_in_web_page": "Delante del servicio hay algo, por ejemplo un proxy con inicio de sesión, que pregunta primero. Usa una clave o una dirección que lo evite."
       }
     },
     "users": {
@@ -2407,7 +2426,23 @@
     "problems": "Todavía no se puede guardar",
     "line": "Línea {{line}}",
     "failed": "No se pudo guardar la tarjeta.",
-    "tooMany": "Ya hay 200 tarjetas propias, el máximo que guarda nexdeck. Elimina una primero."
+    "tooMany": "Ya hay 200 tarjetas propias, el máximo que guarda nexdeck. Elimina una primero.",
+    "integrations": {
+      "lead": "Integraciones que describes tú mismo para un servicio que nexdeck no conoce. Una vez guardada, aparece junto a las integradas al añadir una conexión y las tarjetas pueden leer a través de ella.",
+      "describe": "Describir una integración",
+      "emptyTitle": "Aún no hay integraciones propias",
+      "emptyBody": "Describe un servicio con su dirección, los datos para configurarlo y cómo inicia sesión. Memos, una wiki o cualquier app con interfaz web sirve.",
+      "custom": "Propia",
+      "connections_one": "{{count}} conexión",
+      "connections_other": "{{count}} conexiones",
+      "footer": "{{count}} de {{limit}} integraciones propias. Un cambio se aplica al instante en todas sus conexiones.",
+      "deleteTitle": "¿Eliminar {{name}}?",
+      "deleteBodyNone": "Ninguna conexión la usa. Desaparece al instante.",
+      "deleteBody_one": "{{count}} conexión la usa. La conexión y las tarjetas sobre ella mostrarán \"integration missing\", y guardar una integración con el mismo nombre corto las devuelve.",
+      "deleteBody_other": "{{count}} conexiones la usan. Las conexiones y las tarjetas sobre ellas mostrarán \"integration missing\", y guardar una integración con el mismo nombre corto las devuelve.",
+      "tooMany": "Ya hay 50 integraciones propias, que es el máximo que guarda nexdeck. Elimina una primero.",
+      "exists": "Ya existe una integración con este nombre corto."
+    }
   },
   "dependencies": {
     "because": "porque {{name}} no responde"

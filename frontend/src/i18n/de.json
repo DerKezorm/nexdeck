@@ -336,6 +336,25 @@
         "unread": "Version nicht gelesen",
         "notAsked": "Neueste nicht abgefragt",
         "notAskedHelp": "Schalte unter System, Über „Nach Updates suchen“ ein, um mit dem neuesten Release auf GitHub zu vergleichen."
+      },
+      "custom": "Eigene",
+      "missing": "integration missing",
+      "missingHelp": "Die Beschreibung dieser Anbindung wurde gelöscht. Die Verbindung und ihre Karten gehen wieder, sobald eine Anbindung mit demselben Kurznamen gespeichert wird.",
+      "testCode": {
+        "auth_failed": "Der Dienst hat die Zugangsdaten abgelehnt.",
+        "unreachable": "Der Dienst ist nicht erreichbar.",
+        "unexpected_answer": "Der Dienst hat anders geantwortet, als die Anbindung erwartet.",
+        "sign_in_no_ticket": "Die Antwort auf die Anmeldung enthält kein Ticket.",
+        "sign_in_failed": "Die Anmeldung ist fehlgeschlagen.",
+        "sign_in_web_page": "Die Anmeldung führt auf eine Webseite."
+      },
+      "testHint": {
+        "auth_failed": "Prüfe den Schlüssel oder Benutzer und Passwort.",
+        "unreachable": "Prüfe die Adresse und ob nexdeck sie erreichen kann.",
+        "unexpected_answer": "Prüfe die Testadresse in der Beschreibung der Anbindung.",
+        "sign_in_no_ticket": "Prüfe, wo die Beschreibung der Anbindung das Ticket sucht.",
+        "sign_in_failed": "Prüfe Benutzer und Passwort.",
+        "sign_in_web_page": "Davor sitzt etwas, etwa ein Proxy mit Anmeldung, das zuerst fragt. Nimm einen Schlüssel oder eine Adresse, die daran vorbeiführt."
       }
     },
     "users": {
@@ -2407,7 +2426,23 @@
     "problems": "Das lässt sich noch nicht speichern",
     "line": "Zeile {{line}}",
     "failed": "Die Karte konnte nicht gespeichert werden.",
-    "tooMany": "Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine."
+    "tooMany": "Es gibt schon 200 eigene Karten, mehr hält nexdeck nicht. Lösche zuerst eine.",
+    "integrations": {
+      "lead": "Anbindungen, die du selbst beschreibst, für einen Dienst, den nexdeck nicht kennt. Gespeichert steht sie beim Hinzufügen einer Verbindung neben den eingebauten, und Karten können darüber lesen.",
+      "describe": "Anbindung beschreiben",
+      "emptyTitle": "Noch keine eigenen Anbindungen",
+      "emptyBody": "Beschreibe einen Dienst mit Adresse, den Angaben zum Einrichten und der Art der Anmeldung. Memos, ein Wiki oder jede App mit Weboberfläche geht.",
+      "custom": "Eigene",
+      "connections_one": "{{count}} Verbindung",
+      "connections_other": "{{count}} Verbindungen",
+      "footer": "{{count}} von {{limit}} eigenen Anbindungen. Eine Änderung gilt sofort in jeder Verbindung dazu.",
+      "deleteTitle": "{{name}} löschen?",
+      "deleteBodyNone": "Keine Verbindung nutzt sie. Sie ist sofort weg.",
+      "deleteBody_one": "{{count}} Verbindung nutzt sie. Die Verbindung und die Karten darauf zeigen dann \"integration missing\", und eine Anbindung mit demselben Kurznamen bringt sie zurück.",
+      "deleteBody_other": "{{count}} Verbindungen nutzen sie. Die Verbindungen und die Karten darauf zeigen dann \"integration missing\", und eine Anbindung mit demselben Kurznamen bringt sie zurück.",
+      "tooMany": "Es gibt schon 50 eigene Anbindungen, mehr hält nexdeck nicht. Lösche zuerst eine.",
+      "exists": "Eine Anbindung mit diesem Kurznamen gibt es schon."
+    }
   },
   "dependencies": {
     "because": "weil {{name}} ausgefallen ist"
