@@ -122,7 +122,7 @@ def test_karten2_ac12_the_kinds_a_card_can_read_through_are_listed_for_administr
     kinds = admin.get("/api/v1/cards/sources").json()
     by_kind = {one["kind"]: one for one in kinds}
     assert "sonarr" in by_kind and by_kind["sonarr"]["label"] == "Sonarr" and by_kind["sonarr"]["icon"]
-    assert "qbittorrent" not in by_kind, "only kinds a card may read through"
+    assert "qbittorrent" in by_kind and "docker" not in by_kind, "every kind that speaks HTTP, and none that does not"
     as_user(admin)
     assert admin.get("/api/v1/cards/sources").status_code == 403
 
