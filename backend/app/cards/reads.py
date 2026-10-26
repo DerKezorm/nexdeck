@@ -54,9 +54,9 @@ _seen: dict[int, OrderedDict[tuple[str, tuple[str, ...], int], _Held]] = {}
 
 
 def _credential(name: str) -> bool:
-    from ..adapters.rawread import CREDENTIAL_PARAM
+    from ..credential_names import is_credential_name
 
-    return bool(CREDENTIAL_PARAM.search(name))
+    return is_credential_name(name)
 
 
 def _query(pairs: list[tuple[str, str]]) -> str:

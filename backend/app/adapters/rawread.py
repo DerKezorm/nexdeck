@@ -27,6 +27,7 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 
 import httpx
 
+from ..credential_names import is_credential_name, words_of
 from .base import (
     Adapter,
     AdapterError,
@@ -53,9 +54,8 @@ CHECKED = "card:checked"
 CHECK_EVERY = 30.0
 #: The most a card reads from one answer, in the connection's request already (not after it is in memory).
 READ_AT_MOST = 2 * 1024 * 1024
-#: Parameters that prove who asks. Matched on the name; a kind with a name that does not look like one lists it itself
-#: in ``raw_param_names``.
-CREDENTIAL_PARAM = re.compile(r"key|token|secret|pass|pwd|sid|session|auth|ticket|signature|credential|user|login", re.I)
+#: Parameters that prove who asks are found by the words of their name (:mod:`..credential_names`, the list the log uses too);
+#: a kind with a name that does not look like one lists it itself in ``raw_param_names``.
 #: Headers every client sets, or that belong to a request body: not a proof of anything, and not copied.
 NOT_COPIED = {"content-type", "content-length", "host", "connection", "accept-encoding", "transfer-encoding"}
 #: Headers that prove nothing when they are the only ones there.
@@ -148,7 +148,7 @@ def _origin(url: str) -> tuple[str, str, int]:
 
 
 def _takes_the_parameter(adapter: Adapter, name: str) -> bool:
-    return bool(CREDENTIAL_PARAM.search(name)) or name in adapter.raw_param_names
+    return is_credential_name(name) or name in adapter.raw_param_names
 
 
 def _is_static(adapter: Adapter) -> bool:
@@ -160,13 +160,14 @@ def _is_static(adapter: Adapter) -> bool:
 
 #: A request that signs in, not one that asks: its credentials are the means to a session, never the template.
 SIGN_IN_PATH = re.compile(r".*(log-?in|log-?on|sign-?in|authenticate|oauth2?|tokens?|sessions?|auth|anonymous)(\.php|\.cgi)?", re.I)
-SIGN_IN_PARAM = re.compile(r"pass|pwd|login|account|^user", re.I)
+#: Words of a parameter name that belong to a sign-in; the words, not the letters: ``users`` and ``passes`` are not.
+SIGN_IN_WORDS = frozenset({"pass", "passwd", "password", "passphrase", "pwd", "login", "account", "user", "username"})
 
 
 def _asks_to_sign_in(url: str, params: dict[str, Any] | None, data: Any) -> bool:
     parts = httpx.URL(url)
     names = [*(params or {}), *(dict(data) if isinstance(data, dict) else {}), *parts.params.keys()]
-    return bool(SIGN_IN_PATH.fullmatch(parts.path.rstrip('/').rsplit('/', 1)[-1])) or any(SIGN_IN_PARAM.search(str(name)) for name in names)
+    return bool(SIGN_IN_PATH.fullmatch(parts.path.rstrip('/').rsplit('/', 1)[-1])) or any(SIGN_IN_WORDS & set(words_of(str(name))) for name in names)
 
 
 async def watch(adapter: Adapter, config: dict[str, Any], ctx: Context) -> Sent:
@@ -184,7 +185,10 @@ async def watch(adapter: Adapter, config: dict[str, Any], ctx: Context) -> Sent:
         if _origin(url) != origin or _asks_to_sign_in(url, params, data):
             return
         kept = {name: value for name, value in (headers or {}).items() if name.lower() not in NOT_COPIED}
-        found = {**dict(httpx.URL(url).params), **(params or {}), **(dict(data) if isinstance(data, dict) else {})}
+        # ⚠️ The fields of a body are not copied into the address of a GET on a guess about their name: only those the kind lists
+        # (``raw_param_names``), as Wallos does with ``api_key``.
+        body = {name: value for name, value in (dict(data).items() if isinstance(data, dict) else []) if name in adapter.raw_param_names}
+        found = {**dict(httpx.URL(url).params), **(params or {}), **body}
         carried = {name: value for name, value in found.items() if _takes_the_parameter(adapter, str(name))}
         sent = Sent(kept, carried, tuple(auth) if auth else None)  # type: ignore[arg-type]
         if not sent.signed():

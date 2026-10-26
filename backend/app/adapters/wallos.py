@@ -64,6 +64,8 @@ class WallosAdapter(Adapter):
     #: Confirmed against a live instance on 2026-09-11.
     beta = False
     docs_url = "https://github.com/ellite/Wallos"
+    #: The key is a field of the form its API takes, not a header or a parameter of the address: a card is told so.
+    raw_param_names = ("api_key",)
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://wallos:80"),
         Field("api_key", "API key", type="password", secret=True, required=True,

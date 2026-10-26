@@ -43,6 +43,7 @@ from typing import Any
 from sqlalchemy.orm import Session as DbSessionType
 
 from ..config import get_settings
+from ..credential_names import QUERY_PARAMETER, is_credential_name
 from ..models import Setting
 
 #: What each level means for our own messages, for everything else, and for
@@ -127,6 +128,11 @@ _SECRET_IN_QUERY = re.compile(
 )
 
 
+def _blank(hit: re.Match[str]) -> str:
+    """The parameter of an address when its name is a credential by the one list of names (:mod:`..credential_names`)."""
+    return f"{hit.group(1)}{hit.group(2)}{hit.group(3)}***" if is_credential_name(hit.group(2)) and hit.group(4) else hit.group(0)
+
+
 def redact(text: str) -> str:
     """Take the credentials out of a line before it is written anywhere.
 
@@ -138,7 +144,7 @@ def redact(text: str) -> str:
     ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level exists
     precisely so somebody can download that file and attach it to an issue.
     """
-    return _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text)
+    return QUERY_PARAMETER.sub(_blank, _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
 
 
 class _Context(logging.Filter):

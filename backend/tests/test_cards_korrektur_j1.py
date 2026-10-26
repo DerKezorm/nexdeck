@@ -279,3 +279,62 @@ async def test_korrektur_f6_a_small_and_a_compressed_answer_are_read_as_before()
     adapter, config = get_adapter("radarr"), {"url": BASE, "api_key": "Zk-key"}
     assert (await adapter.raw_request("GET", "/api/v3/small", config, context())).json() == {"a": 1}
     assert (await adapter.raw_request("GET", "/api/v3/zipped", config, context())).json() == {"b": 2}
+
+
+# -- F8, F9: the names of credentials are one list, found by their words ---------------------------------------
+
+
+def test_korrektur_f8_the_log_blanks_every_name_a_card_copies() -> None:
+    from app.services.journal import redact
+
+    line = "GET http://svc.example.com/x?_sid=abc&X-Plex-Token=ZZZ&ses=9&ticket=77&sid=5&apiKey=K&access_token=T&page=2&keyword=cats"
+    shown = redact(line)
+    for secret in ("=abc", "=ZZZ", "=9&", "=77", "=5&", "=K&", "=T&"):
+        assert secret not in shown, secret
+    assert "page=2" in shown and "keyword=cats" in shown
+
+
+@pytest.mark.parametrize("name", ["keyword", "author", "users", "inside", "monkey", "page", "limit", "sort", "authors", "stats"])
+def test_korrektur_f9_a_name_that_only_contains_a_credential_word_is_not_one(name: str) -> None:
+    from app.credential_names import is_credential_name
+
+    assert not is_credential_name(name)
+
+
+@pytest.mark.parametrize("name", ["apikey", "api_key", "apiKey", "X-Plex-Token", "_sid", "sid", "ses", "ticket", "access_token", "token", "passwd", "user", "Authorization", "sessionid"])
+def test_korrektur_f9_the_names_that_carry_a_credential_are_found(name: str) -> None:
+    from app.credential_names import is_credential_name
+
+    assert is_credential_name(name)
+
+
+async def watched(names: tuple[str, ...], request: Any) -> Any:
+    from app.adapters.base import Adapter
+
+    class Fake(Adapter):
+        kind = "fake"
+        raw_param_names = names
+
+        async def test(self, config: dict[str, Any], ctx: Context) -> str:
+            await request(ctx)
+            return "ok"
+
+    return await rawread.watch(Fake(), {"url": BASE}, context())
+
+
+@respx.mock
+async def test_korrektur_f9_a_card_copies_the_credentials_of_the_test_and_not_what_only_looks_like_one() -> None:
+    respx.route().mock(return_value=httpx.Response(200, json={}))
+    sent = await watched((), lambda ctx: ctx.request("GET", f"{BASE}/api/x?keyword=cats&users=2&author=me&apikey=K"))
+    assert sent.params == {"apikey": "K"}
+
+
+@respx.mock
+async def test_korrektur_f9_the_fields_of_a_form_are_copied_into_the_address_only_when_the_kind_says_so() -> None:
+    respx.route().mock(return_value=httpx.Response(200, json={}))
+
+    def post(ctx: Context) -> Any:
+        return ctx.request("POST", f"{BASE}/api/x", data={"api_key": "K", "token": "T", "title": "Rent"})
+
+    assert (await watched((), post)).params == {}, "a body is not guessed at"
+    assert (await watched(("api_key",), post)).params == {"api_key": "K"}
