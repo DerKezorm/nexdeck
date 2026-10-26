@@ -128,7 +128,7 @@ export function IntegrationFrame({ offer, onOfferDone }: { offer: IntegrationDra
     try {
       const fresh = await get<{ yaml: string; updated_at: string }>(`/own-integrations/${encodeURIComponent(short)}`)
       dropDraft(short)
-      useIntegrationEditor.getState().open({ short, text: fresh.yaml, base: fresh.updated_at, saved: fresh.yaml })
+      useIntegrationEditor.getState().open({ short, text: fresh.yaml, base: fresh.updated_at, saved: fresh.yaml, view })
     } catch (failure) {
       setToast(failure instanceof ApiError ? failure.message : t('errors.network'))
     }

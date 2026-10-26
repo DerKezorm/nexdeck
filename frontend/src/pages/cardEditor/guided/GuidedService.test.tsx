@@ -138,6 +138,24 @@ describe('umbau dienst D3: what the card is tried with', () => {
   })
 })
 
+describe('karten3 ac8: an own integration among the services', () => {
+  it('stands among the kinds without a connection with the mark Custom; the built-in ones have none', async () => {
+    stubGuided('', { 'GET /cards/sources': { status: 200, body: [...SOURCES, { kind: 'custom:memos', label: 'Memos', icon: 'memos', category: 'other', custom: true }] } })
+    await openNew()
+    const all = within(await screen.findByTestId('card-services-all'))
+    const own = all.getByRole('button', { name: /Memos/ })
+    expect(within(own).getByText('Custom')).toBeInTheDocument()
+    expect(within(all.getByRole('button', { name: /Sonarr/ })).queryByText('Custom')).toBeNull()
+  })
+
+  it('is chosen like any other kind and written into the card as custom:name', async () => {
+    stubGuided('', { 'GET /cards/sources': { status: 200, body: [...SOURCES, { kind: 'custom:memos', label: 'Memos', icon: 'memos', category: 'other' }] } })
+    await openNew()
+    await click(/Memos/)
+    expect(readAt(card(), ['requires'])).toEqual(['custom:memos'])
+  })
+})
+
 describe('umbau dienst D5: the words come in all five languages', () => {
   it('has every new word in each language', () => {
     const keys = ['title', 'lead', 'search', 'mine', 'all', 'connections_one', 'connections_other', 'tryWith', 'noneOfKind', 'noMatch']

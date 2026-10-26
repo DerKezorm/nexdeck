@@ -28,7 +28,7 @@ export interface IntegrationEditorState {
   view: IntegrationView
   /** A line the YAML view is asked to show. */
   focusLine: number | null
-  open: (start: { short: string | null; text: string; base: string | null; saved: string | null }) => void
+  open: (start: { short: string | null; text: string; base: string | null; saved: string | null; view?: IntegrationView }) => void
   setText: (text: string) => void
   change: (change: (doc: Document) => void) => void
   setView: (view: IntegrationView) => void
@@ -57,9 +57,9 @@ export const useIntegrationEditor = create<IntegrationEditorState>((set, get) =>
   view: 'form',
   focusLine: null,
   flusher: null,
-  open: ({ short, text, base, saved }) => {
+  open: ({ short, text, base, saved, view }) => {
     const now = read(text)
-    set({ short, base, text, saved, ...now, lastValid: now.card, server: null, view: now.card ? get().view : 'yaml', focusLine: null })
+    set({ short, base, text, saved, ...now, lastValid: now.card, server: null, view: now.card ? (view ?? 'form') : 'yaml', focusLine: null })
   },
   setText: (text) => {
     if (text === get().text) return
@@ -86,7 +86,10 @@ export const useIntegrationEditor = create<IntegrationEditorState>((set, get) =>
 
 export const isDirty = (state: Pick<IntegrationEditorState, 'text' | 'saved'>) => state.saved === null || state.text !== state.saved
 
+const NONE: CardProblem[] = []
+
 /** The server's problems, while they are still about the text on screen. */
 export function currentServerProblems(state: IntegrationEditorState): CardProblem[] {
-  return state.server && state.server.text === state.text ? state.server.problems : []
+  // ⚠️ The same empty list every time: a selector that hands out a new one makes React render for ever.
+  return state.server && state.server.text === state.text ? state.server.problems : NONE
 }
