@@ -108,8 +108,9 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
     const saved = await save(options)
     if (!saved) return
     setToast(t('editor.saved'))
-    // The first save of a new card: the guided way offers to put it on a board.
-    if (before === null) useCardEditor.setState({ created: true })
+    // The first save of a new card: the guided way offers to put it on a board, on its last step, wherever the
+    // author saved from (Save at the top included).
+    if (before === null) useCardEditor.setState((state) => ({ created: true, guidedStep: state.view === 'guided' ? 'finish' : state.guidedStep }))
     if (saved.slug !== before) {
       guard.allow()
       navigate(`/system/custom-cards/${encodeURIComponent(saved.slug)}/edit`, { replace: true })

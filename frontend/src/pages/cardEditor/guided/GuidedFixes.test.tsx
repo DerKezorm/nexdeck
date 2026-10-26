@@ -466,3 +466,36 @@ describe('review 6: another form keeps what the author set, as the mock-up does'
     await waitFor(() => expect(editor().shapeMemory).toEqual({}))
   })
 })
+
+
+describe('review 7: Save at the top jumps to Finish after the first save of a new card', () => {
+  it('saved from the step Display, the offer to put the card on a board stands there, with Finish as the step', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+    expect(editor().guidedStep).toBe('display')
+    // the Save of the bar on top, not the one of the step
+    await userEvent.click(within(screen.getByRole('group', { name: 'View' })).getByText('Guided'))
+    const top = screen.getAllByRole('button', { name: 'Save' })[0]
+    await userEvent.click(top)
+    const saved = await screen.findByTestId('card-guided-saved')
+    expect(editor().guidedStep).toBe('finish')
+    expect(within(saved).getByRole('button', { name: 'Put on the board' })).toBeEnabled()
+    expect(screen.getByRole('heading', { name: 'Finish', level: 2 })).toBeInTheDocument()
+  })
+
+  it('saved from All settings it stays there: the view is not taken away', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('All settings')
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save' })[0])
+    await waitFor(() => expect(sent('POST', '/cards')).toHaveLength(1))
+    await waitFor(() => expect(editor().created).toBe(true))
+    expect(editor().view).toBe('editor')
+    expect(editor().guidedStep).not.toBe('finish')
+  })
+})
