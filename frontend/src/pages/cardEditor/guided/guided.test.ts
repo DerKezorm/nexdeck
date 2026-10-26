@@ -9,6 +9,7 @@ import { answerOf, HA_HOME, PLEX_RECENT, PROXMOX_GUESTS } from '../../../test/pr
 import { NEW_CARD } from '../templates'
 import {
   compare,
+  hiddenIn,
   numberOf,
   refusalOf,
   rowMatches,
@@ -266,5 +267,18 @@ describe('review 14: Immich photos and videos are numbers, not the list of users
     expect(shapeFor('value', table, suggestion)).toEqual({ form: 'value', number: { kind: 'field', path: 'photos' } })
     expect(shapeFor('stats', table, suggestion)).toEqual({ form: 'stats', numbers: [{ kind: 'field', path: 'photos' }, { kind: 'field', path: 'videos' }] })
     expect(suggestedForm(table, suggestion)).toBe('value')
+  })
+})
+
+describe('review 1: what a choice would put aside', () => {
+  const list = (extra: string) => card(`nexdeck-card: 1\nslug: l\nname: L\nversion: "1.0.0"\nrequires: [proxmox]\nrequests:\n  - id: g\n    path: /x\nform: list\nrows: {select: data}\nitem:\n  title: name\n${extra}`)
+  it('names the kinds of parts the guided way cannot show, and nothing for a card it shows whole', () => {
+    expect(hiddenIn(list(''))).toEqual([])
+    expect(hiddenIn(list('  link: {template: "https://x.example.com/{name}"}\n'))).toEqual(['link'])
+    expect(hiddenIn(list('  image: thumb\n'))).toEqual(['parts'])
+    expect(hiddenIn(list('  status: [{value: a, op: ">", than: 1, then: warn}, {value: b, op: ">", than: 2, then: bad}]\n'))).toEqual(['rowRules'])
+    expect(hiddenIn(card(HEAD + 'form: value\nvalue: {formula: "a * 2", label: Double}\n'))).toEqual(['formula'])
+    expect(hiddenIn(card(HEAD + 'form: value\nvalue: "length(a)"\n'))).toEqual(['expression'])
+    expect(hiddenIn(card(HEAD + 'form: value\nvalue: {path: a, rules: [{op: "<", than: 1, then: bad}]}\nrules: [{value: a, op: ">", than: 1, then: warn}]\n'))).toEqual(['colours', 'cardRules'])
   })
 })

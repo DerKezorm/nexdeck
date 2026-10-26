@@ -294,6 +294,7 @@ function hiddenOfPart(path: CardPath, value: unknown): Hidden[] {
   if (first === 'rules') return ['cardRules']
   if (first === 'rows') return ['rows']
   if (last === 'link') return ['link']
+  if (last === 'image') return ['parts']
   if (last === 'formula') return ['formula']
   if (last === 'template') return ['template']
   if (path.includes('status')) return ['rowRules']
