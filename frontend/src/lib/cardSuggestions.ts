@@ -160,12 +160,10 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
     { id: 'stats', icon: 'number', path: '/control/stats', every: '5m', fields: true },
     { id: 'status', icon: 'info', path: '/control/status', every: '5m', fields: true },
   ],
-  truenas: [
-    // truenas.py: the REST API below /api/v2.0, "/pool", "/alert/list" and "/system/info".
-    { id: 'pools', icon: 'storage', path: '/api/v2.0/pool', every: '5m', rows: '@' },
-    { id: 'alerts', icon: 'health', path: '/api/v2.0/alert/list', every: '5m', rows: '@' },
-    { id: 'system', icon: 'info', path: '/api/v2.0/system/info', every: '1h', fields: true },
-  ],
+  // ⚠️ No TrueNAS: a card reads through `raw_access`, which for TrueNAS is the REST API under /api/v2.0, and
+  // `adapters/truenas.py` says why that is no way to suggest. From 25.10 a read-only key gets 403 there, every call
+  // raises TrueNAS' alert "Deprecated REST API usage", and TrueNAS 26 removes it; the adapter itself speaks the current
+  // API (JSON-RPC over a WebSocket), which a card's path cannot. "Own address" stays for the older versions.
   traefik: [
     // traefik.py: `_get` puts /api in front of "/overview"; https://doc.traefik.io/traefik/operations/api/,
     // "/api/http/routers" and "/api/http/services".

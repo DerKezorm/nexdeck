@@ -23,7 +23,7 @@ const at = (data: unknown, key: string) => key.split('.').reduce<unknown>((node,
 describe('umbau U4: suggestions per kind of service', () => {
   it('cover the common services, two to four each, with ids of their own', () => {
     const kinds = Object.keys(SUGGESTIONS)
-    expect(kinds.length).toBeGreaterThanOrEqual(15)
+    expect(kinds.length).toBeGreaterThanOrEqual(14)
     for (const kind of ['homeassistant', 'proxmox', 'plex', 'jellyfin', 'emby', 'immich', 'portainer', 'sonarr', 'radarr']) expect(kinds).toContain(kind)
     for (const [kind, list] of Object.entries(SUGGESTIONS)) {
       expect([kind, list.length >= 2 && list.length <= 4]).toEqual([kind, true])
@@ -75,5 +75,18 @@ describe('review 9: the queues of the *arr services', () => {
       expect([kind, Number(/[?&]pageSize=(\d+)/.exec(queue.path)?.[1])]).toEqual([kind, 100])
       expect([kind, queue.total, queue.rows]).toEqual([kind, 'totalRecords', 'records'])
     }
+  })
+})
+
+describe('review 10: TrueNAS has no suggestions, because a card can only reach its deprecated REST API', () => {
+  it('is not in the catalogue, and the adapter still says why', () => {
+    expect(SUGGESTIONS.truenas).toBeUndefined()
+    expect(suggestionsFor('truenas')).toEqual([])
+    const adapter = readFileSync(path.join(adapters, 'truenas.py'), 'utf8')
+    // a card's request is the REST API of this adapter (raw_access), the one the adapter keeps for versions before 25.04
+    expect(adapter).toMatch(/raw_access = True/)
+    expect(adapter).toMatch(/The REST API is for those older versions only/)
+    expect(adapter).toMatch(/answers a key of a \*\*read-only administrator\*\* with 403/)
+    for (const words of [en, de, es, fr, it_]) expect((words as { editor: { guided: { want: Record<string, unknown> } } }).editor.guided.want.truenas).toBeUndefined()
   })
 })

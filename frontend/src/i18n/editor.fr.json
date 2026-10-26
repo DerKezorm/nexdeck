@@ -637,20 +637,6 @@
             "text": "Si le filtrage est actif, et la version."
           }
         },
-        "truenas": {
-          "pools": {
-            "title": "Pools",
-            "text": "Chaque pool et s’il est sain."
-          },
-          "alerts": {
-            "title": "Alertes",
-            "text": "Ce dont TrueNAS avertit."
-          },
-          "system": {
-            "title": "Système",
-            "text": "Version, durée de fonctionnement et mémoire."
-          }
-        },
         "traefik": {
           "routers": {
             "title": "Routeurs",

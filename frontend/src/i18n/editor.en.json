@@ -637,20 +637,6 @@
             "text": "Whether filtering is on, and the version."
           }
         },
-        "truenas": {
-          "pools": {
-            "title": "Pools",
-            "text": "Every pool and whether it is healthy."
-          },
-          "alerts": {
-            "title": "Alerts",
-            "text": "What TrueNAS warns about."
-          },
-          "system": {
-            "title": "System",
-            "text": "Version, uptime and memory."
-          }
-        },
         "traefik": {
           "routers": {
             "title": "Routers",
