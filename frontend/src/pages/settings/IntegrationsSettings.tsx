@@ -11,6 +11,7 @@ import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
 import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
+import { isOwnKind } from '../../lib/customCards'
 import { shownField } from '../../lib/fields'
 import { testResultText, type TestResult } from '../../lib/testResult'
 import { useAuth } from '../../stores/auth'
@@ -235,7 +236,7 @@ export function IntegrationsSettings() {
                     <ServiceIcon icon={adapter.icon} size={14} />
                     {adapter.label}
                     {adapter.beta && <span className="text-[9px] text-faint">beta</span>}
-                    {adapter.custom && <span className="chip !py-0 text-[9px]">{t('settings.integrations.custom')}</span>}
+                    {isOwnKind(adapter) && <span className="chip !py-0 text-[9px]">{t('settings.integrations.custom')}</span>}
                   </button>
                 ))}
               </div>
@@ -335,7 +336,7 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
       <div className="flex items-start gap-3 mb-4">
         <ServiceIcon icon={adapter.icon} size={28} />
         <div className="text-sm">
-          {adapter.custom && <span className="chip !py-0 text-[10px] mb-1">{t('settings.integrations.custom')}</span>}
+          {isOwnKind(adapter) && <span className="chip !py-0 text-[10px] mb-1">{t('settings.integrations.custom')}</span>}
           <p className="text-muted">{tAdapter(adapter.description)}</p>
           {adapter.beta && <p className="text-[11px] text-warn mt-1">{t('settings.integrations.betaHelp')}</p>}
           {adapter.docs_url && (
