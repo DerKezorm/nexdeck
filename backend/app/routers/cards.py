@@ -178,9 +178,10 @@ async def source_reads(integration_id: int, user: AdminUser, db: DbSession) -> d
         raise _failed(AdapterError(f"{adapter.label} cannot be read by a custom card.", code="no_raw_access"))
     secrets = [str(value) for name, value in config.items() if isinstance(value, str) and len(value) >= 4
                and name in adapter.secret_field_names()]
+    names, values = _what_proves_who_asks(adapter, config)
     cards = {one.id: one for one in db.scalars(select(Widget).where(Widget.integration_id == integration_id))}
     reads_here = []
-    for one in reads.read(integration_id, adapter.raw_base(config), secrets):
+    for one in reads.read(integration_id, adapter.raw_base(config), secrets, names=names, values=values | frozenset(secrets)):
         card = cards.get(one.widget_id)
         if card is None or card.kind.startswith("custom."):
             continue
@@ -191,6 +192,26 @@ async def source_reads(integration_id: int, user: AdminUser, db: DbSession) -> d
             label = card.kind
         reads_here.append({"path": one.path, "card": {"id": card.id, "title": card.title or label, "kind": card.kind, "label": label}, "at": one.at})
     return {"reads": reads_here, "cards": sum(1 for one in cards.values() if not one.kind.startswith("custom."))}
+
+
+#: Fields of a connection that name the account, whose value is a credential when it travels in an address.
+_ACCOUNT_FIELDS = ("username", "user", "login", "account", "email")
+
+
+def _what_proves_who_asks(adapter: Any, config: dict[str, Any]) -> tuple[frozenset[str], frozenset[str]]:
+    """Names and values of the parameters this connection puts into an address to prove who asks.
+
+    The names the kind lists or builds itself (``raw_params``: Navidrome's ``u``, ``t``, ``s``) and the values that are
+    the user name or a secret of the connection, whatever the parameter is called.
+    """
+    try:
+        built = dict(adapter.raw_params(config))
+    except Exception:  # noqa: BLE001 - a kind that cannot build its parameters here still lists what it can
+        built = {}
+    secret_fields = adapter.secret_field_names()
+    values = {str(value) for name, value in config.items() if isinstance(value, str) and len(value) >= 2
+              and (name in secret_fields or name in _ACCOUNT_FIELDS)}
+    return frozenset({*adapter.raw_param_names, *built}), frozenset(values | {str(value) for value in built.values() if len(str(value)) >= 2})
 
 
 @router.get("/schema", summary="The JSON schema of a custom card")
