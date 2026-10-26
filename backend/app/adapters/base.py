@@ -1690,6 +1690,43 @@ NOT_READ_BY_CARDS: dict[str, str] = {
 }
 
 
+@dataclass(frozen=True)
+class Allowed:
+    """The values one place of a card's address may take: exactly these, or anything that starts like one of the prefixes.
+
+    Compared in lower case. ``denied`` wins over both: a value that begins like a read but is not one.
+    """
+
+    exact: frozenset[str] = frozenset()
+    prefixes: tuple[str, ...] = ()
+    denied: frozenset[str] = frozenset()
+
+    def __contains__(self, value: object) -> bool:
+        text = str(value).strip().lower()
+        if text in self.denied:
+            return False
+        return text in self.exact or any(text.startswith(prefix) for prefix in self.prefixes)
+
+
+def allowed(*exact: str, prefixes: tuple[str, ...] = (), denied: tuple[str, ...] = ()) -> Allowed:
+    return Allowed(frozenset(one.lower() for one in exact), tuple(one.lower() for one in prefixes), frozenset(one.lower() for one in denied))
+
+
+@dataclass(frozen=True)
+class ReadCommands:
+    """For a kind whose address carries the command: what a card may ask, everything else is refused before it is sent.
+
+    ``params`` maps a query parameter to the values it may take (an empty :func:`allowed` forbids the parameter
+    altogether); ``after`` maps a path segment to the values the segment that follows it may take (``/rest/<method>``);
+    ``last`` limits the last segment of every path; ``words`` adds whole words to the ones refused for every kind.
+    """
+
+    params: dict[str, Allowed] = field(default_factory=dict)
+    after: dict[str, Allowed] = field(default_factory=dict)
+    last: Allowed | None = None
+    words: frozenset[str] = frozenset()
+
+
 class Adapter:
     """Base class. Subclasses set the class attributes and override the hooks."""
 
@@ -1974,6 +2011,11 @@ class Adapter:
     #: the others by their name alone).
     raw_param_names: tuple[str, ...] = ()
 
+    #: Set by a kind whose address carries the command (``?cmd=``, ``?mode=``, ``/rest/<method>``): the reads a card may
+    #: ask. ⚠️ GET is not "reads": ``GET /api.cgi?cmd=Reboot`` restarts a camera. A card can come from a shop, so what it
+    #: asks is checked against this before it leaves (see :func:`.rawread.refuse_a_command`).
+    raw_read_commands: ReadCommands | None = None
+
     def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient | None:
         """The client that holds this kind's session cookie, for a kind that signs in once and keeps the cookie."""
         return None
@@ -2018,6 +2060,7 @@ class Adapter:
             )
         from . import rawread
 
+        rawread.refuse_a_command(self, path)
         return await rawread.ask(self, method, path, config, ctx, params=params, json_body=json_body, cache_seconds=cache_seconds)
 
 

@@ -102,10 +102,10 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     adapter = get_adapter(kind)
     config = invented(kind)
     route = respx.route().mock(return_value=httpx.Response(200, json={}))
-    await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/probe"))
+    await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/getprobe"))
     sent = route.calls.last.request
     assert sent.method == "GET"
-    assert str(sent.url.path) == httpx.URL(adapter.raw_base(config)).path.rstrip("/") + "/api/probe"
+    assert str(sent.url.path) == httpx.URL(adapter.raw_base(config)).path.rstrip("/") + "/api/getprobe"
     assert sent.url.host == httpx.URL(adapter.raw_base(config)).host, "the credentials stay with the address of the connection"
     carried = what_travelled(sent)
     given = markers(config)

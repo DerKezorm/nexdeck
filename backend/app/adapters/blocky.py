@@ -34,6 +34,7 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -54,6 +55,8 @@ class BlockyAdapter(Adapter):
     #: Confirmed against a live instance on 2026-09-11.
     beta = False
     docs_url = "https://0xerr0r.github.io/blocky/latest/interfaces/"
+    #: ⚠️ ``GET /api/blocking/disable`` switches the blocking off: not for a card.
+    raw_read_commands = ReadCommands(words=frozenset({"disable", "enable"}))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://blocky:4000",
               help="The HTTP port from ports.http in Blocky's configuration. The numbers need statistics.enable: true there."),

@@ -15,8 +15,10 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     human_bytes,
 )
@@ -68,6 +70,9 @@ class TautulliAdapter(Adapter):
     description = "Streams with who is watching, library counts and the most watched titles."
     icon = "tautulli"
     docs_url = "https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference"
+    #: ⚠️ ``GET /api/v2?cmd=restart`` restarts Tautulli: its reads are the ``get_`` commands; the two that hand out a
+    #: key or a token of the Plex account are not for a card.
+    raw_read_commands = ReadCommands(params={"cmd": allowed("status", "arnold", prefixes=("get_",), denied=("get_apikey", "get_pms_token", "get_server_pms_token"))})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://tautulli:8181"),
         Field("api_key", "API key", type="password", secret=True, required=True, help="Settings > Web interface > API key"),

@@ -21,8 +21,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
 )
 
@@ -36,6 +38,9 @@ class TechnitiumAdapter(Adapter):
     description = "Queries, the blocked share, clients and the domains blocked most."
     icon = "technitium"
     docs_url = "https://github.com/TechnitiumSoftware/DnsServer/blob/master/APIDOCS.md"
+    #: ⚠️ The API is a GET API whose last segment is the verb (``/api/zones/delete``, ``/api/settings/set``): a card asks
+    #: the ones that get, list or export.
+    raw_read_commands = ReadCommands(last=allowed("export", prefixes=("get", "list")))
     #: Seen against a live Technitium 15.4 (05.09.2026).
     beta = False
     fields = (

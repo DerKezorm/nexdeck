@@ -14,6 +14,7 @@ from .base import (
     Context,
     Field,
     MediaSource,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -90,6 +91,8 @@ class PlexAdapter(MediaAdapter, MusicLibrary):
     description = "Active streams, library size and what was added last, with covers."
     icon = "plex"
     docs_url = "https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/"
+    #: ⚠️ ``GET`` starts a scan (``.../refresh``), marks something as played (``/:/scrobble``), empties the trash and so on.
+    raw_read_commands = ReadCommands(words=frozenset({"refresh", "analyze", "optimize", "empty", "scrobble", "unscrobble", "match", "unmatch", "cancel"}))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://plex:32400"),
         Field(

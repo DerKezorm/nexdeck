@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import AdapterError, Context, Field, base_url
+from .base import AdapterError, Context, Field, ReadCommands, allowed, base_url
 from .downloads_base import DownloadAdapter, QueueItem, Snapshot
 
 
@@ -14,6 +14,8 @@ class NzbgetAdapter(DownloadAdapter):
     description = "Queue, speed and pause or resume over JSON-RPC."
     icon = "nzbget"
     docs_url = "https://nzbget.com/documentation/api/"
+    #: ⚠️ ``GET /jsonrpc/<method>`` runs the method (``shutdown``, ``reload``, ``editqueue``): a card asks the methods that list.
+    raw_read_commands = ReadCommands(after={"jsonrpc": allowed("version", "status", "history", "log", "loadlog", "servervolumes", "postqueue", prefixes=("list",))})
     #: Seen against a live NZBGet (linuxserver) (05.09.2026).
     beta = False
     fields = (

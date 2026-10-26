@@ -57,9 +57,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
     human_bytes,
     human_rate,
@@ -95,6 +97,8 @@ class UrBackupAdapter(Adapter):
     icon = "urbackup"
     beta = False
     docs_url = "https://www.urbackup.org/administration_manual.html"
+    #: ⚠️ The action is the parameter ``a`` (``a=login``, ``a=add_client``): a card asks the ones that only report.
+    raw_read_commands = ReadCommands(params={"a": allowed("status", "progress", "lastacts", "backups", "logs", "clients")})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://urbackup:55414"),
         Field("username", "Username", help="An account of UrBackup's web interface with the rights status and progress. "

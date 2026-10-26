@@ -25,8 +25,10 @@ from .base import (
     Context,
     Detected,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     drawing_fields,
     gauge_pick_field,
@@ -70,6 +72,12 @@ class SynologyAdapter(Adapter):
     description = "CPU, memory, volumes, disk temperatures and health, plus the containers of the Container Manager."
     icon = "synology"
     docs_url = "https://global.download.synology.com/download/Document/Software/DeveloperGuide/Os/DSM/All/enu/DSM_Login_Web_API_Guide_enu.pdf"
+    #: ⚠️ ``method=shutdown``, ``method=reboot`` and the like go through the same ``entry.cgi`` as the reads: a card asks
+    #: the methods that return data, and only for the APIs that are not the sign-in.
+    raw_read_commands = ReadCommands(params={
+        "method": allowed("get", "list", "info", "load_info", "status", "query", "count", "search", "read", "load", prefixes=("get", "list", "load_")),
+        "api": allowed(prefixes=("syno.",), denied=("syno.api.auth",)),
+    })
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://nas.local:5001"),
         Field("username", "User name", required=True, help="A dedicated user without two-factor authentication works best."),

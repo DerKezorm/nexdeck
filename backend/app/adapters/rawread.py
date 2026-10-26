@@ -21,6 +21,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 import httpx
 
@@ -47,6 +48,63 @@ CREDENTIAL_PARAM = re.compile(r"key|token|secret|pass|pwd|sid|session|auth|ticke
 NOT_COPIED = {"content-type", "content-length", "host", "connection", "accept-encoding", "transfer-encoding"}
 #: Headers that prove nothing when they are the only ones there.
 PLAIN = {"accept", "accept-language", "user-agent", "referer", "origin", "x-requested-with"}
+
+
+#: Words that act, whatever the kind. Refused as a whole word in a path segment or the value of a parameter of a card's
+#: request, never in an answer: ``lastUpdated``, ``/api/updates`` and a field called ``deletedAt`` are not touched.
+ACTING_WORDS = frozenset({"reboot", "restart", "shutdown", "poweroff", "delete", "remove", "purge", "kill", "format", "reset", "factory"})
+
+
+def _words_of(text: str) -> set[str]:
+    """The whole words of a piece of an address: split at everything that is no letter or digit and at camel case."""
+    text = unquote(unquote(text))
+    return {word.lower() for word in re.split(r"[^A-Za-z0-9]+", re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)) if word}
+
+
+def refuse_a_command(adapter: Adapter, path: str) -> None:
+    """Refuse a request of a card that is not a read, before it leaves.
+
+    ⚠️ "Only GET" is not "only reading": ``GET /api.cgi?cmd=Reboot`` restarts a camera and ``GET /api?mode=queue&name=delete``
+    empties the queue of SABnzbd, with the key of the connection. Two layers: the kinds whose address carries the command
+    list what a card may ask (``raw_read_commands``), and for every kind the words that act are refused.
+    """
+    parts = urlsplit("http://x" + (path if path.startswith("/") else "/" + path))
+    segments = [unquote(unquote(one)) for one in parts.path.split("/") if one]
+    pairs = [(name.lower(), value) for name, value in parse_qsl(parts.query, keep_blank_values=True)]
+    rules = adapter.raw_read_commands
+    banned = ACTING_WORDS | (rules.words if rules else frozenset())
+
+    def refuse(what: str) -> AdapterError:
+        return AdapterError(
+            f"A custom card only reads: the request asks for \"{what}\", which acts.",
+            code="command_refused",
+            hint="Ask for a command that only returns data. Commands that restart, delete, pause or change something "
+                 "are not for a card, whoever wrote it.",
+        )
+
+    for segment in segments:
+        hit = _words_of(segment) & banned
+        if hit:
+            raise refuse(sorted(hit)[0])
+    for name, value in pairs:
+        hit = (_words_of(value) | (_words_of(name) - {"format"})) & banned
+        if hit:
+            raise refuse(sorted(hit)[0])
+    if rules is None:
+        return
+    for name, value in pairs:
+        wanted = rules.params.get(name)
+        if wanted is not None and value not in wanted:
+            raise refuse(f"{name}={value}")
+    lowered = [one.lower() for one in segments]
+    for index, segment in enumerate(lowered):
+        wanted = rules.after.get(segment)
+        if wanted is not None and index + 1 < len(segments):
+            command = segments[index + 1].removesuffix(".view")
+            if command not in wanted:
+                raise refuse(command)
+    if rules.last is not None and segments and segments[-1].removesuffix(".view") not in rules.last:
+        raise refuse(segments[-1])
 
 
 @dataclass

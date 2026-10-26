@@ -130,7 +130,7 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool) -> dict[str, Any]
     if row.link and row.link.lower().startswith(("http://", "https://")):
         item["url"] = row.link
     if pictures and row.image:
-        art = images.reference(row.image, base)
+        art = images.reference(row.image, base, named=row.image_named)
         if art:
             item["art"] = art
     cells = _cells(row, ("title", "subtitle", "value"))

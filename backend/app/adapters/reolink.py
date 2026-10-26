@@ -29,8 +29,10 @@ from .base import (
     Context,
     Field,
     MediaSource,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
 )
 
@@ -72,6 +74,9 @@ class ReolinkAdapter(Adapter):
     description = "Cameras of a Reolink Home Hub, NVR or a single camera: state, snapshots, live video and findings."
     icon = "reolink"
     docs_url = "https://reolink.com/software-and-manual/"
+    #: ⚠️ ``GET /api.cgi?cmd=Reboot`` restarts the device: a card asks the commands that read (the device's own
+    #: ``Get...``), the snapshot and the search of the recordings, nothing that sets, moves, formats or signs in.
+    raw_read_commands = ReadCommands(params={"cmd": allowed("snap", "search", prefixes=("get",))})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://reolink", help="The hub, recorder or camera. HTTP or HTTPS must be switched on under Network > Advanced > Port settings."),
         Field("username", "User name", required=True, help="A separate account with the user role is enough for cameras, snapshots and live video."),

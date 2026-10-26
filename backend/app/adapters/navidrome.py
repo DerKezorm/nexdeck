@@ -12,7 +12,17 @@ import secrets
 from typing import Any
 
 from . import demo as fake
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import (
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    ReadCommands,
+    WidgetData,
+    WidgetType,
+    allowed,
+    base_url,
+)
 
 
 class NavidromeAdapter(Adapter):
@@ -24,6 +34,9 @@ class NavidromeAdapter(Adapter):
     #: Seen against a live Navidrome 0.63.2 (06.09.2026).
     beta = False
     docs_url = "https://www.navidrome.org/docs/developers/subsonic-api/"
+    #: ⚠️ The Subsonic API puts the command in the path (``/rest/deletePlaylist``, ``/rest/startScan``): a card asks the
+    #: ``get...`` and ``search...`` calls and ``ping``.
+    raw_read_commands = ReadCommands(after={"rest": allowed("ping", prefixes=("get", "search"))})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://navidrome:4533"),
         Field("username", "User name", required=True),

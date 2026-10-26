@@ -203,7 +203,7 @@ def json_schema(user: AdminUser) -> dict[str, Any]:
 #: Seconds a request to a service may take before the editor is told it did not answer.
 ASK_SECONDS = 20
 #: Failures that are the card's or the caller's doing, not the service's.
-_ASKED_WRONG = frozenset({"bad_path", "bad_param", "kind_mismatch", "no_raw_access", "read_only", "no_demo_data", "demo_too_large", "too_slow", "form_changed", "card_secret_value"})
+_ASKED_WRONG = frozenset({"bad_path", "bad_param", "kind_mismatch", "no_raw_access", "read_only", "command_refused", "no_demo_data", "demo_too_large", "too_slow", "form_changed", "card_secret_value"})
 #: The code of an editor call that is not made because the installation or the connection shows invented data.
 DEMO_MODE = "demo_mode"
 

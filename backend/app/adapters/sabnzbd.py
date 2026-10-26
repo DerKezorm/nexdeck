@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import AdapterError, Context, Field, base_url
+from .base import AdapterError, Context, Field, ReadCommands, allowed, base_url
 from .downloads_base import DownloadAdapter, QueueItem, Snapshot
 
 
@@ -35,6 +35,13 @@ class SabnzbdAdapter(DownloadAdapter):
     description = "Queue, speed, remaining data and pause or resume."
     icon = "sabnzbd"
     docs_url = "https://sabnzbd.org/wiki/advanced/api"
+    #: ⚠️ ``mode=queue&name=delete`` empties the queue, ``mode=shutdown`` stops SABnzbd: the modes that only return data,
+    #: and no ``name`` at all (it is the sub-command of the modes that change the queue and the history).
+    raw_read_commands = ReadCommands(params={
+        "mode": allowed("queue", "history", "qstatus", "version", "fullstatus", "status", "get_files", "server_stats", "warnings",
+                        "get_cats", "get_scripts", "get_config", "showlog", "eval_sort", "auth"),
+        "name": allowed(),
+    })
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://sabnzbd:8080"),
         Field("api_key", "API key", type="password", secret=True, required=True, help="Config > General > API Key"),
