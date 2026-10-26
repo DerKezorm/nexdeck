@@ -434,7 +434,8 @@
         "pictureOfEntry": "Immagine della voce",
         "expression": "Questa scheda usa un’espressione; modificala in Tutte le impostazioni.",
         "openAll": "Apri Tutte le impostazioni",
-        "waiting": "La risposta sta arrivando."
+        "waiting": "La risposta sta arrivando.",
+        "noAnswer": "Non c'è nessuna integrazione da interrogare, quindi non c'è una tabella da mostrare. La scheda è fatta dal suggerimento e mostrerà i dati appena ce ne sarà una."
       },
       "finish": {
         "title": "Ritocchi",

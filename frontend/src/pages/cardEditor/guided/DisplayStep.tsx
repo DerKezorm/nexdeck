@@ -6,6 +6,7 @@ import { pathText, readAt, type CardDoc, type CardPath } from '../../../lib/card
 import type { CardSuggestion, Condition } from '../../../lib/cardSuggestions'
 import type { CardForm } from '../../../lib/customCards'
 import { FailureNote } from '../FailureNote'
+import { useConnections } from '../connections'
 import { usePreviewQuery } from '../Preview'
 import { MAX_STATS, MIN_STATS } from '../slots'
 import { typedValue, valueForOp } from '../steps/fields'
@@ -323,6 +324,7 @@ export function DisplayStep() {
   const { suggestion, probe, path } = useGuidedAnswer()
   const change = useCardEditor((state) => state.change)
   const guard = useReplaceGuard()
+  const { chosen, loaded } = useConnections()
   const whole = useAnswerTable()
   const table = useAnswerTable(listOf(card))
   const refusal = useMemo(() => (card ? refusalOf(card) : null), [card])
@@ -380,7 +382,12 @@ export function DisplayStep() {
         })}
       </div>
 
-      {!table && probe?.status !== 'failed' && path && path !== '/' && <p className="text-sm text-muted">{t('editor.guided.display.waiting')}</p>}
+      {!table && probe?.status !== 'failed' && path && path !== '/' && chosen && <p className="text-sm text-muted">{t('editor.guided.display.waiting')}</p>}
+      {!table && loaded && !chosen && path && path !== '/' && (
+        <p className="text-sm text-muted break-words hyphens-auto" role="status" data-testid="card-guided-unanswered">
+          {t('editor.guided.display.noAnswer')}
+        </p>
+      )}
       {probe?.status === 'failed' && probe.path === path && <FailureNote failure={probe} />}
 
       {form === 'value' && (

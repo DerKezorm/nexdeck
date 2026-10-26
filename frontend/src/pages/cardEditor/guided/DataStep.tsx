@@ -15,7 +15,7 @@ import { useCardEditor, useCardField } from '../store'
 import { AnswerTable } from './AnswerTable'
 import { GuidedFrame, StepNav } from './GuidedWay'
 import { useReplaceGuard } from './ReplaceGuard'
-import { askFor, useAnswerTable, useGuidedAnswer } from './useGuided'
+import { askFor, shapeWithoutAnswer, useAnswerTable, useGuidedAnswer } from './useGuided'
 
 const ICONS: Record<SuggestionIcon, LucideIcon> = {
   list: List,
@@ -60,7 +60,9 @@ export function DataStep() {
         // Examples of another answer would not fit this one.
         deleteAt(doc, ['demo'])
       })
-      askFor(one.id, one.path, chosen?.id ?? null)
+      // With nobody to ask the card is made from the suggestion alone, so that it can be built all the same.
+      if (chosen) askFor(one.id, one.path, chosen.id)
+      else shapeWithoutAnswer(one, kind, service)
     })
   }
 

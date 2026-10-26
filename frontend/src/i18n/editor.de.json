@@ -434,7 +434,8 @@
         "pictureOfEntry": "Bild des Eintrags",
         "expression": "Diese Karte nutzt einen Ausdruck; bearbeite ihn unter Alle Einstellungen.",
         "openAll": "Alle Einstellungen öffnen",
-        "waiting": "Die Antwort kommt gleich."
+        "waiting": "Die Antwort kommt gleich.",
+        "noAnswer": "Es gibt keine Anbindung, die gefragt werden kann, darum gibt es keine Tabelle. Die Karte ist nach dem Vorschlag gebaut und zeigt Daten, sobald es eine gibt."
       },
       "finish": {
         "title": "Feinschliff",

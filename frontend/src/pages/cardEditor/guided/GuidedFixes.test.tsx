@@ -637,3 +637,46 @@ describe('review 11: the places the first tests left unchecked', () => {
     }
   })
 })
+
+
+describe('review 12: no connection of the kind', () => {
+  const NO_HA = { 'GET /integrations': { status: 200 as const, body: INTEGRATIONS.filter((one) => one.kind !== 'homeassistant') } }
+  const SAVED = `${HEAD}requests:
+  - id: main
+    path: /
+form: value
+value: {path: "@"}
+`
+
+  it('a suggestion still builds the card from itself: Display and Finish open, and the card says why there is no table', async () => {
+    stubGuided(SAVED, NO_HA)
+    await openCard('Queue', 'guided')
+    await click(/^2 Data/)
+    expect(await screen.findByTestId('card-no-connection')).toBeInTheDocument()
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    expect(sent('POST', '/cards/probe')).toHaveLength(0)
+    expect(readAt(card(), ['requests', 0, 'path'])).toBe('/api/states')
+    // the form and the sentence of the suggestion, over an answer that holds nothing
+    expect(readAt(card(), ['form'])).toBe('value')
+    expect(readAt(card(), ['value', 'total', 'rows'])).toEqual({ select: '@', filter: [{ field: 'entity_id', op: 'starts_with', value: 'light.' }, { field: 'state', op: '==', value: 'on' }] })
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled()
+    await click('Next')
+    expect(await screen.findByTestId('card-guided-unanswered')).toHaveTextContent('There is no integration to ask')
+    expect(screen.queryByText('The answer is on its way.')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled()
+    await click('Next')
+    expect(screen.getByRole('textbox', { name: 'Name of the card' })).toHaveValue('Queue')
+  })
+
+  it('a list suggestion keeps its places without any answer', async () => {
+    stubGuided(SAVED.replace('homeassistant', 'plex'), { 'GET /integrations': { status: 200, body: INTEGRATIONS.filter((one) => one.kind !== 'plex') } })
+    await openCard('Queue', 'guided')
+    await click(/^2 Data/)
+    await click(/^Playing now/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/status/sessions'))
+    expect(readAt(card(), ['form'])).toBe('list')
+    expect(readAt(card(), ['rows'])).toEqual({ select: 'MediaContainer.Metadata' })
+    expect(readAt(card(), ['item', 'title'])).toBe('title')
+  })
+})

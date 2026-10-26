@@ -51,6 +51,17 @@ export function askFor(requestId: string, path: string, integrationId: number | 
   if (integrationId !== null) void runProbe(requestId, integrationId, path)
 }
 
+/**
+ * Make the card's display from a suggestion alone, for a kind of service with no connection to ask: the suggestion's
+ * own form and places, over an answer that holds nothing yet. The card can be built all the same and shows data once
+ * there is a connection.
+ */
+export function shapeWithoutAnswer(suggestion: CardSuggestion, kind: string | undefined, serviceName: string) {
+  const tree: ProbeNode = { key: null, path: '@', type: suggestion.rows === '@' ? 'array' : 'object', children: [] }
+  useCardEditor.setState({ pendingShape: suggestion.path })
+  shapeNow(tree, suggestion, kind, serviceName)
+}
+
 /** A text the guided way knows in English and in the language on screen: a plain string in English, else both. */
 function writeKnown(doc: Parameters<typeof writeShape>[0], path: CardPath, english: string, own: string, language: string) {
   setAt(doc, path, language === 'en' || own === english ? english : { en: english, [language]: own })

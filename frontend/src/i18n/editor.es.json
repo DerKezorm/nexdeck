@@ -434,7 +434,8 @@
         "pictureOfEntry": "Imagen de la entrada",
         "expression": "Esta tarjeta usa una expresión; edítala en Todos los ajustes.",
         "openAll": "Abrir Todos los ajustes",
-        "waiting": "La respuesta está en camino."
+        "waiting": "La respuesta está en camino.",
+        "noAnswer": "No hay ninguna integración a la que preguntar, así que no hay tabla que mostrar. La tarjeta se ha hecho a partir de la sugerencia y mostrará datos en cuanto haya una."
       },
       "finish": {
         "title": "Últimos detalles",

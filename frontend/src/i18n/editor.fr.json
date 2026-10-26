@@ -434,7 +434,8 @@
         "pictureOfEntry": "Image de l’entrée",
         "expression": "Cette carte utilise une expression ; modifie-la dans Tous les réglages.",
         "openAll": "Ouvrir Tous les réglages",
-        "waiting": "La réponse arrive."
+        "waiting": "La réponse arrive.",
+        "noAnswer": "Il n'y a aucune intégration à interroger, donc pas de tableau à montrer. La carte est faite d'après la suggestion et montrera des données dès qu'il y en aura une."
       },
       "finish": {
         "title": "Finitions",

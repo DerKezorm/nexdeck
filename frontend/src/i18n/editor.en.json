@@ -434,7 +434,8 @@
         "pictureOfEntry": "Picture of the entry",
         "expression": "This card uses an expression; edit it under All settings.",
         "openAll": "Open All settings",
-        "waiting": "The answer is on its way."
+        "waiting": "The answer is on its way.",
+        "noAnswer": "There is no integration to ask, so there is no table to show. The card is made from the suggestion and shows data once there is one."
       },
       "finish": {
         "title": "Finish",
