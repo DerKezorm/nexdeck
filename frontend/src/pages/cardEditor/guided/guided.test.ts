@@ -255,3 +255,16 @@ stats:
     expect(refusalOf(card(stats('[]')))).toBe('expression')
   })
 })
+
+describe('review 14: Immich photos and videos are numbers, not the list of users', () => {
+  const statistics = answerOf({ photos: 1530, videos: 120, usage: 91234567, usageByUser: [{ userId: 'u1', userName: 'kim', photos: 1000, videos: 100 }, { userId: 'u2', userName: 'lee', photos: 530, videos: 20 }] })
+  const suggestion = SUGGESTIONS.immich.find((one) => one.id === 'statistics')!
+
+  it('the answer is read as single values, and the first numbers are photos and videos', () => {
+    const table = tableOf(statistics, suggestion)
+    expect(table.kind).toBe('fields')
+    expect(shapeFor('value', table, suggestion)).toEqual({ form: 'value', number: { kind: 'field', path: 'photos' } })
+    expect(shapeFor('stats', table, suggestion)).toEqual({ form: 'stats', numbers: [{ kind: 'field', path: 'photos' }, { kind: 'field', path: 'videos' }] })
+    expect(suggestedForm(table, suggestion)).toBe('value')
+  })
+})

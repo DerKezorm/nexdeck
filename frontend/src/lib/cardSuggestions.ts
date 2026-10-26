@@ -133,7 +133,8 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
   immich: [
     // immich.py: `_get` puts /api in front of "/server/storage", "/server/statistics" and "/server/about".
     { id: 'storage', icon: 'storage', path: '/api/server/storage', every: '10m', fields: true },
-    { id: 'statistics', icon: 'pictures', path: '/api/server/statistics', every: '1h' },
+    // The answer holds `photos` and `videos` as numbers and `usageByUser` as a list; the suggestion is for the numbers.
+    { id: 'statistics', icon: 'pictures', path: '/api/server/statistics', every: '1h', fields: true },
     { id: 'about', icon: 'info', path: '/api/server/about', every: '1h', fields: true },
   ],
   portainer: [
