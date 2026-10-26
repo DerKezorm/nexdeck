@@ -28,6 +28,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from ..adapters.base import AdapterError, Context
+from .upstream import UPSTREAM as UPSTREAM  # noqa: PLC0414 - read by the tests and the readme guard
 from .upstream import repo_of
 
 logger = logging.getLogger("nexdeck.versions")
