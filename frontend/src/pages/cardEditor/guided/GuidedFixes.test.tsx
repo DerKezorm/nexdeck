@@ -10,6 +10,7 @@ import { readAt } from '../../../lib/cardDocument'
 import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEditor'
 import { ANSWERS, INTEGRATIONS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
+import { columnLabel, columnName } from './columns'
 import { thresholdOf } from './FinishStep'
 
 const click = async (name: string | RegExp) => userEvent.click(await screen.findByRole('button', { name }))
@@ -706,5 +707,30 @@ describe('review 13: Save at the top waits for a form and a name on a new card',
     await click('All settings')
     act(() => editor().set(['name'], 'Typed'))
     expect(top()).toBeEnabled()
+  })
+})
+
+
+describe('review 15: fields are named for people, the real name beside', () => {
+  it('the choices of the columns say "Name (attributes.friendly_name)", and the table head in German says Kennung and Zustand', async () => {
+    await act(() => i18next.changeLanguage('de'))
+    await openNew()
+    await click(/^Home/)
+    await click(/^Geräte und Sensoren/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    const heads = within(screen.getByTestId('card-answer-table')).getAllByRole('columnheader')
+    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['Kennung', 'Zustand', 'Name', 'Geändert'])
+    await click('Weiter')
+    const column = screen.getAllByRole('combobox', { name: 'Spalte' })[0]
+    expect(Array.from((column as HTMLSelectElement).options).map((one) => one.text)).toEqual(['Kennung (entity_id)', 'Zustand (state)', 'Name (attributes.friendly_name)', 'Geändert (last_changed)'])
+    await click(/^Eine Liste/)
+    const main = screen.getByRole('combobox', { name: 'Haupttext' })
+    expect(Array.from((main as HTMLSelectElement).options).map((one) => one.text)).toContain('Name (attributes.friendly_name)')
+  })
+
+  it('a field nobody has named is shown as words, and a plain name is not doubled', () => {
+    const t = ((key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key) as never
+    expect([columnName(t, 'ProductionYear'), columnName(t, 'last_seen'), columnName(t, 'series.title'), columnName(t, '"disk size"'), columnName(t, '@')]).toEqual(['Production year', 'Last seen', 'Title', 'Disk size', '@'])
+    expect([columnLabel(t, 'title'), columnLabel(t, 'Name'), columnLabel(t, 'series.title')]).toEqual(['title', 'Name', 'Title (series.title)'])
   })
 })

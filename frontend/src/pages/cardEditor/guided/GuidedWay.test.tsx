@@ -63,7 +63,10 @@ describe('umbau: the three ways of the mock-up', () => {
     expect(sent('POST', '/cards/probe').at(-1)?.body).toEqual({ integration_id: 11, path: '/api/states' })
     expect(readAt(card(), ['requests'])).toEqual([{ id: 'states', path: '/api/states', every: '30s' }])
     const answer = screen.getByTestId('card-answer-table')
-    expect(within(answer).getAllByRole('columnheader').map((one) => one.textContent)).toEqual(['entity_id', 'state', 'attributes.friendly_name', 'last_changed'])
+    // The name for people, the real name of the field small beneath it.
+    const heads = within(answer).getAllByRole('columnheader')
+    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['ID', 'State', 'Name', 'Changed'])
+    expect(heads.map((one) => one.querySelector('small')?.textContent)).toEqual(['entity_id', 'state', 'attributes.friendly_name', 'last_changed'])
     expect(answer).toHaveTextContent('23 entries')
     expect(answer).toHaveTextContent('… and 15 more entries')
 

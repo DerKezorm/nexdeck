@@ -687,6 +687,34 @@
         "link": "Link delle righe",
         "rows": "Come le righe sono filtrate, ordinate o limitate",
         "parts": "Altre parti della scheda"
+      },
+      "column": {
+        "name": "Nome",
+        "friendly_name": "Nome",
+        "title": "Titolo",
+        "id": "Identificativo",
+        "entity_id": "Identificativo",
+        "state": "Stato",
+        "status": "Stato",
+        "type": "Tipo",
+        "year": "Anno",
+        "size": "Dimensione",
+        "sizeleft": "Ancora da scaricare",
+        "timeleft": "Tempo rimasto",
+        "mem": "Memoria",
+        "maxmem": "Limite di memoria",
+        "cpu": "CPU",
+        "node": "Nodo",
+        "last_changed": "Modificato",
+        "thumb": "Immagine",
+        "message": "Messaggio",
+        "source": "Origine",
+        "user": "Utente",
+        "username": "Utente",
+        "description": "Descrizione",
+        "version": "Versione",
+        "url": "Indirizzo",
+        "path": "Percorso"
       }
     }
   }

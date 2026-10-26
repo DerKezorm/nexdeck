@@ -687,6 +687,34 @@
         "link": "Links of the lines",
         "rows": "How the lines are filtered, sorted or limited",
         "parts": "Other parts of the card"
+      },
+      "column": {
+        "name": "Name",
+        "friendly_name": "Name",
+        "title": "Title",
+        "id": "ID",
+        "entity_id": "ID",
+        "state": "State",
+        "status": "Status",
+        "type": "Type",
+        "year": "Year",
+        "size": "Size",
+        "sizeleft": "Size left",
+        "timeleft": "Time left",
+        "mem": "Memory",
+        "maxmem": "Memory limit",
+        "cpu": "CPU",
+        "node": "Node",
+        "last_changed": "Changed",
+        "thumb": "Picture",
+        "message": "Message",
+        "source": "Source",
+        "user": "User",
+        "username": "User",
+        "description": "Description",
+        "version": "Version",
+        "url": "Address",
+        "path": "Path"
       }
     }
   }

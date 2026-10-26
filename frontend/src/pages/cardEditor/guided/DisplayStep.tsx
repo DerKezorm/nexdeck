@@ -13,6 +13,7 @@ import { typedValue, valueForOp } from '../steps/fields'
 import { useCardEditor } from '../store'
 import { textIn, type TextSpot } from '../texts'
 import { AnswerTable } from './AnswerTable'
+import { columnLabel } from './columns'
 import {
   cellOf,
   changeForm,
@@ -91,7 +92,7 @@ function ConditionFields({ condition, columns, onChange }: { condition: Conditio
       <select className="input !w-auto max-w-full font-mono text-[12.5px]" aria-label={t('editor.guided.display.column')} value={condition.field} onChange={(event) => onChange({ ...condition, field: event.target.value })}>
         {choices.map((one) => (
           <option key={one} value={one}>
-            {one}
+            {columnLabel(t, one)}
           </option>
         ))}
       </select>
@@ -128,9 +129,9 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
   const conditions = part.kind === 'count' ? part.conditions : []
   const setConditions = (next: Condition[], group?: string) => part.kind === 'count' && write({ ...part, conditions: next }, group)
   const fieldChoices = rows
-    ? rows.columns.map((column) => ({ path: `${rows.list === '@' ? '@' : rows.list}[0].${column}`, label: t('editor.guided.display.ofFirst', { field: column }) }))
+    ? rows.columns.map((column) => ({ path: `${rows.list === '@' ? '@' : rows.list}[0].${column}`, label: t('editor.guided.display.ofFirst', { field: columnLabel(t, column) }) }))
     : table?.kind === 'fields'
-      ? table.fields.map((one) => ({ path: one.path, label: one.path }))
+      ? table.fields.map((one) => ({ path: one.path, label: columnLabel(t, one.path) }))
       : []
   const fields = part.kind === 'field' && !fieldChoices.some((one) => one.path === part.path) ? [{ path: part.path, label: part.path }, ...fieldChoices] : fieldChoices
   const spot: TextSpot = { id: `${key}.label`, path: [...path, 'label'], label: { key: 'editor.texts.label' }, valueRef: path }
@@ -259,7 +260,7 @@ function ListFields({ table }: { table: Extract<Table, { kind: 'rows' }> }) {
   const change = useCardEditor((state) => state.change)
   const rule = card ? rowRuleOf(readAt(card, ['item', 'status'])) : undefined
   const [draft, setDraft] = useState<Condition>(() => ({ field: table.columns.includes('status') ? 'status' : (table.columns[0] ?? '@'), op: '!=', value: '' }))
-  const columns = table.columns.map((one) => ({ value: one, label: one }))
+  const columns = table.columns.map((one) => ({ value: one, label: columnLabel(t, one) }))
   const shown = rule ?? draft
   return (
     <>
@@ -297,7 +298,7 @@ function PosterFields({ table, suggestion }: { table: Extract<Table, { kind: 'ro
   const { t } = useTranslation()
   const ids = useId()
   const card = useCard()
-  const columns = table.columns.map((one) => ({ value: one, label: one }))
+  const columns = table.columns.map((one) => ({ value: one, label: columnLabel(t, one) }))
   const image = card ? cellOf(readAt(card, ['item', 'image']), true) : null
   const pictures = [...(suggestion?.image ? [{ value: suggestion.image, label: t('editor.guided.display.pictureOfEntry') }] : []), ...columns]
   if (image && image.includes('{') && !pictures.some((one) => one.value === image)) pictures.unshift({ value: image, label: t('editor.guided.display.pictureOfEntry') })

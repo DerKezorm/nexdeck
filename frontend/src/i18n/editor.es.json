@@ -687,6 +687,34 @@
         "link": "Enlaces de las líneas",
         "rows": "Cómo se filtran, ordenan o limitan las líneas",
         "parts": "Otras partes de la tarjeta"
+      },
+      "column": {
+        "name": "Nombre",
+        "friendly_name": "Nombre",
+        "title": "Título",
+        "id": "Identificador",
+        "entity_id": "Identificador",
+        "state": "Estado",
+        "status": "Estado",
+        "type": "Tipo",
+        "year": "Año",
+        "size": "Tamaño",
+        "sizeleft": "Falta por descargar",
+        "timeleft": "Tiempo restante",
+        "mem": "Memoria",
+        "maxmem": "Límite de memoria",
+        "cpu": "CPU",
+        "node": "Nodo",
+        "last_changed": "Cambiado",
+        "thumb": "Imagen",
+        "message": "Mensaje",
+        "source": "Origen",
+        "user": "Usuario",
+        "username": "Usuario",
+        "description": "Descripción",
+        "version": "Versión",
+        "url": "Dirección",
+        "path": "Ruta"
       }
     }
   }

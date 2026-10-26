@@ -687,6 +687,34 @@
         "link": "Liens des lignes",
         "rows": "La façon dont les lignes sont filtrées, triées ou limitées",
         "parts": "D'autres parties de la carte"
+      },
+      "column": {
+        "name": "Nom",
+        "friendly_name": "Nom",
+        "title": "Titre",
+        "id": "Identifiant",
+        "entity_id": "Identifiant",
+        "state": "État",
+        "status": "Statut",
+        "type": "Type",
+        "year": "Année",
+        "size": "Taille",
+        "sizeleft": "Reste à télécharger",
+        "timeleft": "Temps restant",
+        "mem": "Mémoire",
+        "maxmem": "Limite de mémoire",
+        "cpu": "CPU",
+        "node": "Nœud",
+        "last_changed": "Modifié",
+        "thumb": "Image",
+        "message": "Message",
+        "source": "Source",
+        "user": "Utilisateur",
+        "username": "Utilisateur",
+        "description": "Description",
+        "version": "Version",
+        "url": "Adresse",
+        "path": "Chemin"
       }
     }
   }

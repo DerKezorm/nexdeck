@@ -687,6 +687,34 @@
         "link": "Links der Zeilen",
         "rows": "Wie die Zeilen gefiltert, sortiert oder begrenzt werden",
         "parts": "Weitere Teile der Karte"
+      },
+      "column": {
+        "name": "Name",
+        "friendly_name": "Name",
+        "title": "Titel",
+        "id": "Kennung",
+        "entity_id": "Kennung",
+        "state": "Zustand",
+        "status": "Zustand",
+        "type": "Art",
+        "year": "Jahr",
+        "size": "Größe",
+        "sizeleft": "Noch offen",
+        "timeleft": "Restzeit",
+        "mem": "Speicher",
+        "maxmem": "Speichergrenze",
+        "cpu": "CPU",
+        "node": "Knoten",
+        "last_changed": "Geändert",
+        "thumb": "Bild",
+        "message": "Meldung",
+        "source": "Quelle",
+        "user": "Benutzer",
+        "username": "Benutzer",
+        "description": "Beschreibung",
+        "version": "Version",
+        "url": "Adresse",
+        "path": "Pfad"
       }
     }
   }
