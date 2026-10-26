@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 import pytest
+import respx
 from fastapi.testclient import TestClient
 
 from app.adapters import REGISTRY, get_adapter
@@ -258,3 +259,102 @@ def test_karten3_ec11_the_descriptions_are_read_again_at_the_start_and_after_a_r
         assert integration_store.load_all(db) == 1
     assert get_adapter("custom:bookstack-own").label == "BookStack"
     assert make(admin, example("memos-cookie")).status_code == 201
+
+
+CARD = """\
+nexdeck-card: 1
+slug: books-count
+name: Books
+version: "1.0.0"
+requires: [custom:bookstack-own]
+requests:
+  - id: books
+    path: /api/books
+form: value
+value:
+  path: total
+  label: Books
+"""
+
+
+@respx.mock
+def test_karten3_ec6_nothing_that_walks_over_connections_falls_over_when_their_kind_is_gone(admin: TestClient) -> None:  # noqa: F811
+    from .test_cards_router import BASE, add, page_of, place
+
+    respx.get(f"{BASE}/api/books").mock(return_value=httpx.Response(200, json={"total": 7}))
+    assert make(admin, HEADER).status_code == 201
+    assert add(admin, CARD).status_code == 201
+    number = connect(admin, "custom:bookstack-own", {"url": BASE, "token_id": "a", "token_secret": "b" * 12})
+    widget = place(admin, page_of(admin), number, card="books-count").json()["widget"]["id"]
+    from .test_cards_editor_api import post
+
+    assert post(admin, "preview", {"yaml": CARD, "integration_id": number}).status_code == 200
+    board = admin.get("/api/v1/boards").json()[0]["slug"]
+
+    assert admin.delete(f"{API}/bookstack-own", headers=CSRF).status_code == 204
+    # the connection stands, says that its kind is missing, and shows none of its settings
+    listed = admin.get("/api/v1/integrations")
+    assert listed.status_code == 200 and listed.json()[0]["missing"] is True and listed.json()[0]["config"] == {}
+    pressed = admin.post(f"/api/v1/integrations/{number}/test", headers=CSRF)
+    assert pressed.status_code == 200 and pressed.json()["code"] == "integration_missing" and pressed.json()["message"] == "integration missing"
+    # the card on it says the same instead of failing
+    shown = post(admin, "preview", {"yaml": CARD, "integration_id": number})
+    assert shown.status_code == 502 and shown.json()["detail"]["code"] == "integration_missing"
+    assert admin.get(f"/api/v1/widgets/{widget}/data").status_code == 200
+    # and the places that look at every connection go on
+    for path in (
+        "/api/v1/integrations/versions", f"/api/v1/integrations/{number}/choices/x", f"/api/v1/integrations/{number}/barred/x",
+        f"/api/v1/boards/{board}", f"/api/v1/boards/{board}/export", "/api/v1/search", "/api/v1/search/suggestions",
+        "/api/v1/cards/library", "/api/v1/cards", "/api/v1/cards/sources", "/api/v1/templates", "/api/v1/adapters",
+    ):
+        assert admin.get(path).status_code < 500, path
+    renamed = admin.patch(f"/api/v1/integrations/{number}", json={"name": "Still mine"}, headers=CSRF)
+    assert renamed.status_code == 200 and renamed.json()["name"] == "Still mine"
+    # a description with the same name brings it back at once
+    assert make(admin, HEADER).status_code == 201
+    back = admin.get("/api/v1/integrations").json()[0]
+    assert back["missing"] is False and back["config"]["token_id"] == "a"
+    assert admin.delete(f"/api/v1/integrations/{number}", headers=CSRF).status_code == 204
+
+
+def test_karten3_ec11_a_restored_backup_brings_the_kinds_and_their_connections_with_their_secrets(client: TestClient) -> None:
+    from .conftest import setup_admin
+    from .test_backup import PASSWORD, _archive, _make, _upload
+
+    setup_admin(client)
+    assert make(client, HEADER).status_code == 201
+    number = connect(client, "custom:bookstack-own", {"url": "http://svc.example.com", "token_id": "abc", "token_secret": "s3cret-value-9"})
+    blob = _archive(client, _make(client)["name"], PASSWORD)
+    assert client.delete(f"{API}/bookstack-own", headers=CSRF).status_code == 204
+    assert client.put(f"{API}/memos", json={"yaml": MEMOS}, headers=CSRF).status_code == 404
+    assert make(client, MEMOS).status_code == 201, "a kind that is not in the backup"
+    assert "custom:bookstack-own" not in REGISTRY
+
+    assert _upload(client, blob).status_code == 200
+    # the running instance reads the restored descriptions without a restart
+    assert "custom:bookstack-own" in REGISTRY and "custom:memos" not in REGISTRY
+    after = TestClient(client.app)
+    after.post("/api/v1/auth/login", json={"username": "admin", "password": "correct-horse-battery"})
+    assert [row["short"] for row in after.get(API).json()] == ["bookstack-own"]
+    shown = after.get("/api/v1/integrations").json()
+    assert [row["id"] for row in shown] == [number] and shown[0]["missing"] is False
+    from app.services.integrations import resolve_config
+
+    with db_session() as db:
+        assert resolve_config(db.get(Integration, number))["token_secret"] == "s3cret-value-9"
+
+
+@pytest.mark.parametrize("name", ["wikijs", "bookstack", "apikey-in-address", "memos", "memos-cookie"])
+def test_karten3_the_example_descriptions_are_valid_and_hold_no_key(admin: TestClient, name: str) -> None:  # noqa: F811
+    assert make(admin, example(name)).status_code == 201
+
+
+def test_karten3_the_reads_of_the_description_are_offered_for_the_data_step_and_the_kind_is_among_the_sources(admin: TestClient) -> None:  # noqa: F811
+    assert make(admin, MEMOS).status_code == 201
+    reads = admin.get("/api/v1/cards/sources/custom:memos/reads")
+    assert reads.status_code == 200
+    assert reads.json() == {"reads": [{"path": "/api/v1/memos?pageSize=10", "label": "Latest notes", "widgets": []}]}
+    sources = {one["kind"]: one for one in admin.get("/api/v1/cards/sources").json()}
+    assert sources["custom:memos"] == {"kind": "custom:memos", "label": "Memos", "icon": "memos", "category": "other", "custom": True}
+    assert sources["sonarr"]["custom"] is False
+    assert admin.get("/api/v1/cards/sources/custom:nobody/reads").status_code == 404

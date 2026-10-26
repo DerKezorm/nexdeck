@@ -23,6 +23,7 @@ from ..adapters import get_adapter
 from ..adapters.base import AdapterError, Context, shape_for_display
 from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
+from ..adapters.defined import MissingAdapter
 from ..cards import card_reads, credentials, load, pipeline, probe, schema, source, store
 from ..cards import demo as card_demo
 from ..config import get_settings
@@ -250,6 +251,8 @@ async def _connection(integration_id: int, kinds: list[str] | None = None) -> tu
     if in_demo is not None:
         raise in_demo
     adapter, config, ctx = await collector.resolve_integration(integration_id)
+    if isinstance(adapter, MissingAdapter):
+        await adapter.test(config, ctx)  # says "integration missing" in its own words (KARTEN-3 EC-6)
     if not adapter.raw_access:
         raise AdapterError(f"{adapter.label} cannot be read by a custom card.", code="no_raw_access", hint="Pick a connection of another kind.")
     if kinds is not None and adapter.kind not in kinds:

@@ -154,7 +154,8 @@ def _takes_the_parameter(adapter: Adapter, name: str) -> bool:
 def _is_static(adapter: Adapter) -> bool:
     """The kind has helpers that build its credentials from the connection alone."""
     cls = type(adapter)
-    return callable(getattr(adapter, "_headers", None)) or callable(getattr(adapter, "_auth", None)) \
+    # ⚠️ An own connection knows how it signs from its description; running its test to "renew" would ask again and wait for itself.
+    return adapter.custom or callable(getattr(adapter, "_headers", None)) or callable(getattr(adapter, "_auth", None)) \
         or cls.raw_params is not Adapter.raw_params
 
 
