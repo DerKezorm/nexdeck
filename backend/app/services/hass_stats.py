@@ -126,6 +126,19 @@ def _ms(moment: dt.datetime) -> int:
     return int(moment.timestamp() * 1000)
 
 
+def onto(ms: int, before: dt.datetime, start: dt.datetime, zone: dt.tzinfo) -> int:
+    """A time of the period before, moved onto the same clock time of this one.
+
+    ⚠️ It was moved by the distance between the two midnights, which is 25
+    hours on the day after the clocks go back: yesterday's noon stood at one
+    o'clock today and its last hour behind the end of the day. Red in the full
+    run on 26.10.2026.
+    """
+    days = (start.astimezone(zone).date() - before.astimezone(zone).date()).days
+    clock = dt.datetime.fromtimestamp(ms / 1000, zone).replace(tzinfo=None) + dt.timedelta(days=days)
+    return _ms(clock.replace(tzinfo=zone))
+
+
 def _moment(value: Any) -> dt.datetime | None:
     """A time as Home Assistant writes it: milliseconds in statistics, seconds in history, or ISO text."""
     if isinstance(value, bool):
@@ -366,9 +379,8 @@ async def series(config: dict[str, Any], cache: dict[str, Any], wanted: list[dic
                 "kind": kind, "source": sensor["source"], "current": sensor["current"], "unavailable": sensor["unavailable"],
                 "missing": False, "step": step}
         if before is not None:
-            shift = _ms(start) - _ms(before)
             now_points = [point for point in points if point[0] >= _ms(start)]
-            then = [[point[0] + shift, *point[1:]] for point in points if point[0] < _ms(start)]
+            then = [[onto(point[0], before, start, zone), *point[1:]] for point in points if point[0] < _ms(start)]
             line.update(points=now_points, previous=then, previous_summary=summary(then, kind))
             points = now_points
         else:

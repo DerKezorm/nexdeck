@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Security
+
+- **A redirect to another place takes no credentials along.** When a service answered with a redirect to another host, another port or from https to plain http, nexdeck followed it with the API key, token or session cookie of the connection in its headers; only `Authorization` was dropped. Now such a hop keeps none of them, and a request with a body (a sign-in sent on with 307 or 308) is not sent there at all, the card says "The service sent the request on to …". A redirect within the service still carries them, including plain http raised to https on the same host, on any port.
+
+### Fixed
+
+- On a home page, a comparison with **the day or week before** laid it an hour off on the day after the clocks changed, and the last hour of the 25-hour day fell off the end. It now lies on the same clock times.
+
 ## 0.49.0 (2026-10-25)
 
 ### Added
