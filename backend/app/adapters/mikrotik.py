@@ -29,7 +29,6 @@ from .base import (
 
 class MikrotikAdapter(Adapter):
     kind = "mikrotik"
-    raw_access = True
     label = "MikroTik"
     category = "network"
     description = "Load, memory and uptime of a RouterOS device, and the state of its interfaces."

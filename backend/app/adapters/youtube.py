@@ -59,6 +59,7 @@ PRESET_OPTIONS = (
 
 
 class YoutubeAdapter(Adapter):
+    raw_root = API
     kind = "youtube"
     label = "YouTube"
     category = "feeds"

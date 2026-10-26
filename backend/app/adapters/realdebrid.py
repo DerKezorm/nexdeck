@@ -70,6 +70,7 @@ RESETS = {"daily": "resets daily", "weekly": "resets weekly", "monthly": "resets
 
 
 class RealDebridAdapter(Adapter):
+    raw_root = API
     kind = "realdebrid"
     label = "Real-Debrid"
     category = "downloads"

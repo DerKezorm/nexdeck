@@ -91,7 +91,6 @@ def _may(permissions: dict[str, str], resource: str) -> bool:
 
 class NginxIgnitionAdapter(Adapter):
     kind = "nginxignition"
-    raw_access = True
     label = "nginx ignition"
     category = "network"
     description = "Whether nginx runs, the traffic it carries, and the certificates that run out."

@@ -70,8 +70,8 @@ def test_karten2_ac10_a_connection_of_another_kind_is_refused(stand: tuple[TestC
 def test_karten2_ac10_a_kind_a_card_cannot_read_through_is_refused_whatever_the_card_names(stand: tuple[TestClient, int]) -> None:
     client, page = stand
     with db_session() as db:
-        store.create(db, changed("slug: queue-size", "slug: log-in").replace("requires: [sonarr, radarr]", "requires: [qbittorrent]"))
-    answer = place(client, page, connection(client, "qbittorrent", username="u", password="p"), card="log-in")
+        store.create(db, changed("slug: queue-size", "slug: log-in").replace("requires: [sonarr, radarr]", "requires: [docker]"))
+    answer = place(client, page, connection(client, "docker", host="http://svc.example.com:2375"), card="log-in")
     assert answer.status_code == 400 and answer.json()["detail"]["code"] == "no_raw_access"
 
 

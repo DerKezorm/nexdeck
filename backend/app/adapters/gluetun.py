@@ -25,7 +25,6 @@ from .base import (
 
 class GluetunAdapter(Adapter):
     kind = "gluetun"
-    raw_access = True
     label = "Gluetun"
     category = "network"
     description = "Tunnel state, the public address behind it and the forwarded port."

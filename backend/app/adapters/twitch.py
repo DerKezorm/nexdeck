@@ -17,6 +17,7 @@ API = "https://api.twitch.tv/helix"
 
 
 class TwitchAdapter(Adapter):
+    raw_root = API
     kind = "twitch"
     label = "Twitch"
     category = "feeds"

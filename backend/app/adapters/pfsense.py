@@ -30,7 +30,6 @@ from .base import (
 
 class PfsenseAdapter(Adapter):
     kind = "pfsense"
-    raw_access = True
     label = "pfSense"
     category = "network"
     description = "System load, uptime and the interfaces of a pfSense firewall."

@@ -80,7 +80,6 @@ def _row(device: dict[str, Any], words: tuple[str, ...]) -> dict[str, Any]:
 
 class NetAlertXAdapter(Adapter):
     kind = "netalertx"
-    raw_access = True
     label = "NetAlertX"
     category = "network"
     description = "New devices on the network, the ones that went offline, and a button to mark a new one as known."

@@ -71,6 +71,7 @@ class RateLimited(AdapterError):
 
 
 class GithubAdapter(Adapter):
+    raw_root = API
     kind = "github"
     label = "GitHub"
     category = "feeds"

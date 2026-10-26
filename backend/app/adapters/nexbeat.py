@@ -53,7 +53,6 @@ TARGETS = {"lidarr": "Lidarr", "nexcrate": "nexcrate"}
 
 class NexbeatAdapter(Adapter):
     kind = "nexbeat"
-    raw_access = True
     label = "nexbeat"
     category = "media"
     description = "Waiting and running music requests, the library and requests to approve from nexbeat."

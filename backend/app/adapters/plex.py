@@ -84,7 +84,6 @@ def device_names(ids: set[int], devices: dict[int, str]) -> str:
 
 class PlexAdapter(MediaAdapter, MusicLibrary):
     kind = "plex"
-    raw_access = True
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
     label = "Plex"

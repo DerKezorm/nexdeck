@@ -15,7 +15,6 @@ from .base import Adapter, Context, Field, WidgetData, WidgetType, base_url
 
 class BazarrAdapter(Adapter):
     kind = "bazarr"
-    raw_access = True
     label = "Bazarr"
     category = "media"
     description = "Missing subtitles for series and movies, and the ones it found lately."

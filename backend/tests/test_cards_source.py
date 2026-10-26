@@ -87,17 +87,6 @@ RAW: dict[str, tuple[dict[str, Any], dict[str, str]]] = {
     "peanut": ({"url": BASE, "device": "ups", "username": "ups", "password": "pw48"}, {"authorization": basic("ups", "pw48")}),
 }
 
-#: Kinds that stay off, each with the reason. Everything else with a helper for credentials is in ``RAW``.
-SKIPPED = {
-    "komodo": "its API is POST-only remote calls, there is nothing a card could read with a GET",
-    "tdarr": "its API is POST-only remote calls, there is nothing a card could read with a GET",
-    "kopia": "reads through a session it signs in to first, which belongs with the sign-in kinds of stage 3",
-    "homebox": "signs in with a token it fetches first, which belongs with the sign-in kinds of stage 3",
-    "cloudflare": "has no address of its own: it speaks to Cloudflare's API with an account, not to a service in the house",
-    "snmp": "is no HTTP at all",
-}
-
-
 def ctx(client: httpx.AsyncClient | None = None) -> Context:
     return Context(client or httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
 
@@ -122,20 +111,22 @@ async def test_karten2_ac1_a_custom_card_asks_with_the_credentials_of_its_connec
     assert str(sent.url) == f"{BASE}/api/v3/queue"
 
 
-def test_karten2_ac12_the_kinds_a_custom_card_can_read_through_are_exactly_the_checked_ones() -> None:
-    switched_on = {one.kind for one in all_adapters() if one.raw_access}
-    assert switched_on == set(RAW), sorted(switched_on ^ set(RAW))
-    assert len(switched_on) >= 45
-    assert {row["kind"] for row in source.sources()} == switched_on
+def test_karten2_ac12_every_adapter_can_be_read_by_a_card_or_stands_in_the_list_with_its_reason() -> None:
+    from app.adapters.base import NOT_READ_BY_CARDS
+
+    everything = {one.kind for one in all_adapters()}
+    readable = {one.kind for one in all_adapters() if one.raw_access}
+    assert readable | set(NOT_READ_BY_CARDS) == everything
+    assert not readable & set(NOT_READ_BY_CARDS)
+    assert set(NOT_READ_BY_CARDS) <= everything, "a kind in the list that does not exist"
+    assert all(len(reason) > 20 for reason in NOT_READ_BY_CARDS.values())
+    assert len(readable) >= 150
+    assert {row["kind"] for row in source.sources()} == readable
     assert all(row["label"] and row["icon"] for row in source.sources())
-    assert not set(SKIPPED) & switched_on
-    # Every skipped kind exists and says no, in the words of the error the card shows.
-    known = {one.kind for one in all_adapters()}
-    assert set(SKIPPED) <= known
 
 
-@pytest.mark.parametrize("kind", ["qbittorrent", "pihole", "synology", "unifi"])
-async def test_karten2_ac2_a_kind_that_signs_in_with_a_session_says_no_raw_access_for_now(kind: str) -> None:
+@pytest.mark.parametrize("kind", sorted(__import__("app.adapters.base", fromlist=["x"]).NOT_READ_BY_CARDS))
+async def test_karten2_ac2_a_kind_that_is_no_web_service_says_no_raw_access(kind: str) -> None:
     adapter = get_adapter(kind)
     assert adapter.raw_access is False
     with pytest.raises(AdapterError) as failure:

@@ -228,7 +228,7 @@ async def _connection(integration_id: int, kinds: list[str] | None = None) -> tu
         raise in_demo
     adapter, config, ctx = await collector.resolve_integration(integration_id)
     if not adapter.raw_access:
-        raise AdapterError(f"{adapter.label} cannot be read by a custom card yet.", code="no_raw_access", hint="Pick a connection of another kind.")
+        raise AdapterError(f"{adapter.label} cannot be read by a custom card.", code="no_raw_access", hint="Pick a connection of another kind.")
     if kinds is not None and adapter.kind not in kinds:
         raise AdapterError(
             f"This card does not read through a {adapter.label} connection.", code="kind_mismatch", hint="Pick a connection of a kind the card names."

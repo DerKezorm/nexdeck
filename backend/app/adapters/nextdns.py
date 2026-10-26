@@ -16,6 +16,7 @@ WINDOWS = (("-1h", "Last hour"), ("-24h", "Last day"), ("-7d", "Last week"), ("-
 
 
 class NextdnsAdapter(Adapter):
+    raw_root = API
     kind = "nextdns"
     label = "NextDNS"
     category = "network"

@@ -142,7 +142,6 @@ HTTP_REFUSED_HINT = (
 
 class TruenasAdapter(Adapter):
     kind = "truenas"
-    raw_access = True
     label = "TrueNAS"
     category = "nas"
     description = "Pools, disks, apps, interfaces, data protection, services and VMs, with load and alerts."

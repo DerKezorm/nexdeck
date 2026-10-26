@@ -181,7 +181,6 @@ def _result_row(result: dict[str, Any], base: str) -> dict[str, Any]:
 
 class NexpulseAdapter(Adapter):
     kind = "nexpulse"
-    raw_access = True
     label = "nexpulse"
     category = "network"
     description = "Speed tests from nexpulse: the latest result, the history, a summary, latency under load and a button to test now."

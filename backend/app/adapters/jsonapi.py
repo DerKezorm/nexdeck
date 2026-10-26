@@ -116,7 +116,6 @@ class JsonApiAdapter(Adapter):
         return f"Reachable, the base URL answers with a JSON {kind}."
 
     #: A custom card reads through a JSON API connection with its token and its extra headers (KARTEN-2 AC-3).
-    raw_access = True
 
     @staticmethod
     def _headers(config: dict[str, Any]) -> dict[str, str]:

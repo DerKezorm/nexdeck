@@ -74,7 +74,6 @@ def _took(run: dict[str, Any]) -> str:
 
 class N8nAdapter(Adapter):
     kind = "n8n"
-    raw_access = True
     #: Run against a live instance on 2026-09-08: the address, the key and both
     #: endpoints answered. ⚠️ That instance held no workflows, so the field
     #: names, the durations and the two names of the publish action rest on

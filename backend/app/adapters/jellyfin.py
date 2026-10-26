@@ -113,7 +113,6 @@ def device_names(names: Counter[str]) -> str:
 
 class JellyfinAdapter(MediaAdapter, MusicLibrary):
     kind = "jellyfin"
-    raw_access = True
     #: Confirmed against a live instance on 2026-09-05.
     beta = False
     label = "Jellyfin"

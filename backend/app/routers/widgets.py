@@ -120,7 +120,7 @@ def _validate_custom(db: DbSession, kind: str, integration_id: int | None, optio
     if integration.kind not in entry.definition.requires:
         raise error("kind_mismatch", f"The card {slug} works with {', '.join(entry.definition.requires)}, not {integration.kind}.")
     if not get_adapter(integration.kind).raw_access:
-        raise error("no_raw_access", f"A custom card cannot read through a {get_adapter(integration.kind).label} connection yet.")
+        raise error("no_raw_access", f"A custom card cannot read through a {get_adapter(integration.kind).label} connection.")
 
 
 def _refuse_other_card(db: DbSession, widget: Widget, options: dict | None, user: User) -> None:

@@ -68,7 +68,6 @@ FINDING_LABELS = {
 
 class NexviewAdapter(Adapter):
     kind = "nexview"
-    raw_access = True
     label = "Nexview"
     category = "media"
     description = "Open requests, findings, library size and instance health from Nexview."

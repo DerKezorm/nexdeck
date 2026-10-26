@@ -244,7 +244,6 @@ def _buttons(state: str, number: int, days: int) -> list[Action]:
 
 class ReclaimerrAdapter(Adapter):
     kind = "reclaimerr"
-    raw_access = True
     label = "Reclaimerr"
     category = "media"
     description = "What Reclaimerr's clean-up rules have marked for deletion, when each title goes and how much space it frees, and its tasks."

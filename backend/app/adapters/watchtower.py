@@ -55,7 +55,6 @@ RUN_NOW = Action(id="run", label="Run now", icon="play", confirm=True)
 
 class WatchtowerAdapter(Adapter):
     kind = "watchtower"
-    raw_access = True
     label = "Watchtower"
     category = "hosts"
     description = "What the last update run did, with a button that starts the next one."

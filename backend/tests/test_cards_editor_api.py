@@ -216,7 +216,7 @@ def test_karten9_ec2_a_connection_that_is_missing_off_or_not_readable_is_refused
     off = connection(admin)
     admin.patch(f"/api/v1/integrations/{off}", json={"enabled": False}, headers=CSRF)
     assert post(admin, "probe", {"integration_id": off, "path": "/x"}).json()["detail"]["code"] == "no_integration"
-    session_kind = admin.post("/api/v1/integrations", json={"kind": "qbittorrent", "name": "Torrents", "config": {"url": BASE, "username": "u", "password": "p"}}, headers=CSRF).json()["id"]
+    session_kind = admin.post("/api/v1/integrations", json={"kind": "docker", "name": "Engine", "config": {"host": BASE}}, headers=CSRF).json()["id"]
     reached = respx.route().mock(return_value=httpx.Response(200, json={}))
     refused = post(admin, "probe", {"integration_id": session_kind, "path": "/x"})
     assert refused.status_code == 400 and refused.json()["detail"]["code"] == "no_raw_access" and not reached.called

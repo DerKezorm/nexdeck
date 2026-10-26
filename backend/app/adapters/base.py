@@ -1649,6 +1649,25 @@ class MediaSource:
 WHOLE_CONNECTION = "Nothing to pick, it acts on the whole connection"
 
 
+#: The kinds a custom card cannot read through, each with the reason. Everything else that speaks HTTP can be read.
+#: ``tests/test_cards_source.py`` goes over every adapter: it is either readable or stands here.
+NOT_READ_BY_CARDS: dict[str, str] = {
+    "core": "builds the clock, notes and search of the dashboard itself, there is no service behind it",
+    "custom": "is the custom card itself",
+    "calendar": "joins the calendars of other connections, it has no address of its own",
+    "rss": "reads feed addresses typed into a card, there is no connection",
+    "weather": "asks a public weather service without a connection",
+    "hackernews": "reads a public site without a connection",
+    "stocks": "reads public quotes without a connection",
+    "publicip": "asks public services for the address of the server, there is no connection",
+    "docker": "talks to the Docker socket or engine, not to a web address",
+    "snmp": "speaks SNMP, not HTTP",
+    "wol": "sends a Wake-on-LAN packet and checks a port, it is no HTTP service",
+    "imap": "speaks the mail protocol, not HTTP",
+    "minecraft": "speaks the Minecraft status protocol over TCP, not HTTP",
+}
+
+
 class Adapter:
     """Base class. Subclasses set the class attributes and override the hooks."""
 
@@ -1891,13 +1910,24 @@ class Adapter:
 
     # -- custom cards read through a connection (KARTEN-2) ----------------------
 
-    #: True for a connection kind a custom card may read through. ⚠️ Switched on per kind, only after
-    #: ``tests/test_cards_source.py`` has asked a recorded answer through it, and the list of kinds is a test:
-    #: a kind that signs in with a session (qBittorrent, Pi-hole) stays off until it can renew the session itself.
-    raw_access: bool = False
+    #: Set by a kind whose connection is not one address of a web service, but a fixed API root (GitHub, Cloudflare).
+    raw_root: str = ""
+
+    @property
+    def raw_access(self) -> bool:
+        """Whether a custom card may read through a connection of this kind.
+
+        ⚠️ Every kind that speaks HTTP may. The safety does not sit in a list of kinds that were tried one by one but in
+        what every read has to pass (GET only, underneath the address, no redirect to another place, 2 MB, time limits,
+        administrators only) and in the credentials never leaving the connection's address. The kinds that cannot be
+        read are the ones listed in :data:`NOT_READ_BY_CARDS`, each with its reason.
+        """
+        return self.kind not in NOT_READ_BY_CARDS
 
     def raw_base(self, config: dict[str, Any]) -> str:
         """The address a card's path is put underneath; an adapter whose address is not ``url`` overrides it."""
+        if self.raw_root:
+            return self.raw_root
         found = base_url(config)
         if found:
             return found
@@ -1946,7 +1976,7 @@ class Adapter:
         """
         if not self.raw_access:
             raise AdapterError(
-                f"{self.label} cannot be read by a custom card yet.",
+                f"{self.label} cannot be read by a custom card.",
                 code="no_raw_access",
                 hint="Pick a connection of another kind.",
             )

@@ -134,7 +134,6 @@ def _allocated(allocation: dict[str, Any]) -> tuple[float, float]:
 
 class NomadAdapter(Adapter):
     kind = "nomad"
-    raw_access = True
     label = "Nomad"
     category = "hosts"
     description = "The jobs of a Nomad cluster, the nodes under them, and buttons to stop or scale a job."

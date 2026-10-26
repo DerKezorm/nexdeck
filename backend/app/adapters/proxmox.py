@@ -28,7 +28,6 @@ from .base import (
 
 class ProxmoxAdapter(Adapter):
     kind = "proxmox"
-    raw_access = True
     #: Confirmed against a live Proxmox VE on 2026-09-08: the node, guest
     #: and summary cards, and one guest on its own. The token was made with
     #: Privilege Separation on, which is what turned up the empty node list.

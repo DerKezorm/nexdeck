@@ -68,6 +68,7 @@ TRAFFIC = """query ($zone: string, $since: Time, $until: Time) {
 
 
 class CloudflareAdapter(Adapter):
+    raw_root = API
     kind = "cloudflare"
     label = "Cloudflare"
     category = "network"

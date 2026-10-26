@@ -28,7 +28,6 @@ from .base import (
 
 class OpnsenseAdapter(Adapter):
     kind = "opnsense"
-    raw_access = True
     label = "OPNsense"
     category = "network"
     description = "System load, uptime, pending updates and the state of every gateway."

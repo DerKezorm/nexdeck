@@ -27,7 +27,6 @@ def _status(priority: int) -> str:
 
 class GotifyAdapter(Adapter):
     kind = "gotify"
-    raw_access = True
     label = "Gotify"
     category = "monitoring"
     description = "The latest messages of a Gotify server, newest first."

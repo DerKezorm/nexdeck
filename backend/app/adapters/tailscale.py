@@ -19,6 +19,7 @@ ONLINE_SECONDS = 300
 
 
 class TailscaleAdapter(Adapter):
+    raw_root = API
     kind = "tailscale"
     label = "Tailscale"
     category = "network"

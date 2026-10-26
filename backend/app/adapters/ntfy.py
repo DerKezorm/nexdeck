@@ -25,7 +25,6 @@ def _status(priority: int) -> str:
 
 class NtfyAdapter(Adapter):
     kind = "ntfy"
-    raw_access = True
     label = "ntfy"
     category = "monitoring"
     description = "The messages of an ntfy topic, newest first."
