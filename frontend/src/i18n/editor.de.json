@@ -359,7 +359,11 @@
         "pathHint": "Unter der Adresse der Anbindung, nur Lesen. Wer die API des Dienstes kennt, fragt hier alles ab.",
         "ask": "Abfragen",
         "asking": "Frage bei {{service}} nach …",
-        "noConnection": "Es gibt keine Anbindung an {{service}}, die gefragt werden kann. Die Karte lässt sich trotzdem bauen und zeigt Daten, sobald es eine gibt."
+        "noConnection": "Es gibt keine Anbindung an {{service}}, die gefragt werden kann. Die Karte lässt sich trotzdem bauen und zeigt Daten, sobald es eine gibt.",
+        "readsTitle": "Was nexdeck hier schon liest",
+        "readsLike": "Wie die Karte ‚{{name}}‘",
+        "readsNoCards": "Für {{service}} liegt noch keine eingebaute Karte auf einem Board. Sobald eine dort liegt, steht hier, was sie liest.",
+        "readsNotYet": "Seit dem Start hat noch keine Karte von {{service}} nachgefragt. Das passiert beim nächsten Aktualisieren, dann steht es hier."
       },
       "table": {
         "answer": "Antwort",

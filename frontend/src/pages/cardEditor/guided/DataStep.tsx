@@ -8,7 +8,7 @@ import { get } from '../../../api/client'
 import { Spinner } from '../../../components/ui'
 import { deleteAt, setAt } from '../../../lib/cardDocument'
 import { suggestionsFor, wordsKey, type CardSuggestion, type SuggestionIcon } from '../../../lib/cardSuggestions'
-import type { CardSource } from '../../../lib/customCards'
+import type { CardRead, CardReads, CardSource } from '../../../lib/customCards'
 import { useConnections } from '../connections'
 import { FailureNote } from '../FailureNote'
 import { useCardEditor, useCardField } from '../store'
@@ -48,13 +48,24 @@ export function DataStep() {
   const table = useAnswerTable()
   const service = sources.data?.find((one) => one.kind === kind)?.label ?? kind ?? ''
   const offered = suggestionsFor(kind)
+  // What the built-in cards of this very connection ask: known to work with this service, whatever kind it is (J5).
+  const seen = useQuery({
+    queryKey: ['cards-reads', chosen?.id],
+    queryFn: () => get<CardReads>(`/cards/sources/${chosen?.id}/read`),
+    enabled: chosen !== null && chosen !== undefined,
+    staleTime: 10_000,
+    retry: false,
+  })
+  const reads = Array.isArray(seen.data?.reads) ? seen.data.reads : []
+  const readsKnown = seen.isSuccess || !chosen
   // The address typed in "Own address" goes into the card when the author leaves the field, presses Enter or asks:
   // the preview asks the service for what was written, never for half a path.
   const [typing, setTyping] = useState<string | null>(null)
   useEffect(() => setTyping(null), [path])
   const target = typing ?? path
   const asked = target && target !== '/'
-  const ownOpen = !offered.length || (Boolean(asked) && !suggestion)
+  const fromReads = Boolean(asked) && reads.some((one) => one.path === target)
+  const ownOpen = (!offered.length && !reads.length) || (Boolean(asked) && !suggestion && !fromReads)
 
   const pick = (one: CardSuggestion) => {
     if (suggestion?.id === one.id && path === one.path) return
@@ -71,6 +82,19 @@ export function DataStep() {
     })
   }
 
+  /** A path a built-in card reads: it is the card's request, and the service is asked at once. */
+  const pickRead = (one: CardRead) => {
+    if (path === one.path && !suggestion) return
+    setTyping(null)
+    guard.ask(() => {
+      useCardEditor.getState().change((doc) => {
+        setAt(doc, ['requests'], [{ id: requestId, path: one.path }])
+        deleteAt(doc, ['demo'])
+      })
+      askFor(requestId, one.path, chosen?.id ?? null)
+    })
+  }
+
   /** Ask the path in the field; a new path makes the display again, so the same question comes first. */
   const askOwn = () => {
     if (typing !== null) setOwnPath(typing)
@@ -79,7 +103,7 @@ export function DataStep() {
   }
 
   return (
-    <GuidedFrame id="data" title={t('editor.guided.data.title')} lead={t(offered.length ? 'editor.guided.data.lead' : 'editor.guided.data.leadOwn', { service })}>
+    <GuidedFrame id="data" title={t('editor.guided.data.title')} lead={t(offered.length || reads.length ? 'editor.guided.data.lead' : 'editor.guided.data.leadOwn', { service })}>
       {loaded && !chosen && (
         <div className="rounded-xl border border-warn/40 px-3 py-2 flex flex-wrap items-center gap-2 min-w-0" role="status" data-testid="card-no-connection">
           <p className="text-sm min-w-0 flex-1 basis-60 break-words hyphens-auto">{t('editor.guided.data.noConnection', { service })}</p>
@@ -89,6 +113,37 @@ export function DataStep() {
             </Link>
           )}
         </div>
+      )}
+
+      {chosen && readsKnown && (
+        <section className="grid gap-2 min-w-0" aria-labelledby={`${ids}-reads`} data-testid="card-reads">
+          <h3 id={`${ids}-reads`} className="text-[13px] font-semibold text-muted break-words hyphens-auto">
+            {t('editor.guided.data.readsTitle')}
+          </h3>
+          {reads.length > 0 ? (
+            <div className="grid gap-2 min-w-0" role="group" aria-labelledby={`${ids}-reads`}>
+              {reads.map((one) => {
+                const pressed = !suggestion && path === one.path
+                return (
+                  <button
+                    key={`${one.card.id}:${one.path}`}
+                    type="button"
+                    aria-pressed={pressed}
+                    className={`grid gap-0.5 text-left rounded-2xl border px-3.5 py-2.5 min-w-0 ${pressed ? 'border-accent ring-[3px] ring-accent/20' : 'border-line hover:border-line-strong hover:bg-surface-hover'}`}
+                    onClick={() => pickRead(one)}
+                  >
+                    <span className="font-semibold text-sm break-words hyphens-auto">{t('editor.guided.data.readsLike', { name: one.card.title })}</span>
+                    <span className="font-mono text-[11.5px] text-faint break-all">{one.path}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-[12.5px] text-muted break-words hyphens-auto">
+              {t(seen.data?.cards ? 'editor.guided.data.readsNotYet' : 'editor.guided.data.readsNoCards', { service })}
+            </p>
+          )}
+        </section>
       )}
 
       {offered.length > 0 && (

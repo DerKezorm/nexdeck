@@ -359,7 +359,11 @@
         "pathHint": "Sotto l’indirizzo dell’integrazione, solo lettura. Chi conosce l’API del servizio può chiedere qui qualsiasi cosa.",
         "ask": "Chiedi",
         "asking": "Chiedo a {{service}} …",
-        "noConnection": "Non c’è nessuna integrazione con {{service}} da interrogare. La scheda si può creare lo stesso e mostra dati appena ce n’è una."
+        "noConnection": "Non c’è nessuna integrazione con {{service}} da interrogare. La scheda si può creare lo stesso e mostra dati appena ce n’è una.",
+        "readsTitle": "Cosa legge già nexdeck qui",
+        "readsLike": "Come la scheda «{{name}}»",
+        "readsNoCards": "Nessuna scheda integrata di {{service}} è ancora su una bacheca. Quando ce ne sarà una, qui vedrai cosa legge.",
+        "readsNotYet": "Dall’avvio nessuna scheda di {{service}} ha ancora interrogato il servizio. Lo farà al prossimo aggiornamento e allora comparirà qui."
       },
       "table": {
         "answer": "Risposta",

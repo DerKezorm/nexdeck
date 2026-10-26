@@ -359,7 +359,11 @@
         "pathHint": "Bajo la dirección de la integración, solo lectura. Quien conozca la API del servicio puede consultar aquí lo que quiera.",
         "ask": "Consultar",
         "asking": "Consultando {{service}} …",
-        "noConnection": "No hay ninguna integración con {{service}} a la que preguntar. Puedes crear la tarjeta igualmente; mostrará datos en cuanto haya una."
+        "noConnection": "No hay ninguna integración con {{service}} a la que preguntar. Puedes crear la tarjeta igualmente; mostrará datos en cuanto haya una.",
+        "readsTitle": "Lo que nexdeck ya lee aquí",
+        "readsLike": "Como la tarjeta «{{name}}»",
+        "readsNoCards": "Todavía no hay en ningún tablero una tarjeta integrada de {{service}}. Cuando la haya, aquí verás lo que lee.",
+        "readsNotYet": "Desde el arranque, ninguna tarjeta de {{service}} ha consultado nada. Lo hará en la próxima actualización y entonces aparecerá aquí."
       },
       "table": {
         "answer": "Respuesta",

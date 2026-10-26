@@ -359,7 +359,11 @@
         "pathHint": "Below the address of the integration, reading only. Whoever knows the API of the service can ask anything here.",
         "ask": "Ask",
         "asking": "Asking {{service}} …",
-        "noConnection": "There is no {{service}} integration to ask. The card can be built all the same and shows data once there is one."
+        "noConnection": "There is no {{service}} integration to ask. The card can be built all the same and shows data once there is one.",
+        "readsTitle": "What nexdeck already reads here",
+        "readsLike": "Like the card ‘{{name}}’",
+        "readsNoCards": "No built-in card for {{service}} is on a board yet. Once one is, what it reads shows up here.",
+        "readsNotYet": "No card of {{service}} has asked anything since nexdeck started. It does at its next refresh, and then it shows up here."
       },
       "table": {
         "answer": "Answer",

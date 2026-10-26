@@ -359,7 +359,11 @@
         "pathHint": "Sous l’adresse de l’intégration, en lecture seule. Qui connaît l’API du service peut tout demander ici.",
         "ask": "Demander",
         "asking": "Demande à {{service}} …",
-        "noConnection": "Il n’y a pas d’intégration {{service}} à interroger. La carte peut quand même être créée et affichera des données dès qu’il y en aura une."
+        "noConnection": "Il n’y a pas d’intégration {{service}} à interroger. La carte peut quand même être créée et affichera des données dès qu’il y en aura une.",
+        "readsTitle": "Ce que nexdeck lit déjà ici",
+        "readsLike": "Comme la carte « {{name}} »",
+        "readsNoCards": "Aucune carte intégrée de {{service}} n’est encore sur un tableau. Dès qu’il y en aura une, ce qu’elle lit apparaîtra ici.",
+        "readsNotYet": "Depuis le démarrage, aucune carte de {{service}} n’a encore interrogé le service. Elle le fera à sa prochaine actualisation, puis cela apparaîtra ici."
       },
       "table": {
         "answer": "Réponse",

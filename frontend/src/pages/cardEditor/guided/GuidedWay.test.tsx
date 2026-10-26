@@ -212,6 +212,49 @@ describe('umbau U4: Data', () => {
   })
 })
 
+describe('jede J5: what nexdeck already reads here', () => {
+  const read = { path: '/v1/forecast', card: { id: 3, title: 'Weather now', kind: 'jsonapi.value', label: 'Value' }, at: 1 }
+
+  it('offers the paths the built-in cards of the connection read; a pick asks the service and sets the path', async () => {
+    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [read], cards: 1 } } })
+    await openNew()
+    await click(/^Weather/)
+    const entry = await screen.findByRole('button', { name: /Like the card ‘Weather now’/ })
+    expect(within(entry).getByText('/v1/forecast')).toBeInTheDocument()
+    expect(screen.getByText('What nexdeck already reads here')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Path to ask' })).not.toBeVisible()
+    await userEvent.click(entry)
+    await waitFor(() => expect(editor().shapedPath).toBe('/v1/forecast'))
+    expect(sent('POST', '/cards/probe')[0].body).toEqual({ integration_id: 14, path: '/v1/forecast' })
+    expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
+    expect(screen.getByRole('button', { name: /Like the card ‘Weather now’/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('says why there is nothing yet, and keeps the own address open', async () => {
+    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 0 } } })
+    await openNew()
+    await click(/^Weather/)
+    expect(await screen.findByText('No built-in card for JSON API is on a board yet. Once one is, what it reads shows up here.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Path to ask' })).toBeVisible()
+  })
+
+  it('says the card has not asked yet when one lies on a board', async () => {
+    stubGuided('', { 'GET /cards/sources/14/read': { status: 200, body: { reads: [], cards: 2 } } })
+    await openNew()
+    await click(/^Weather/)
+    expect(await screen.findByText(/No card of JSON API has asked anything since nexdeck started/)).toBeInTheDocument()
+  })
+
+  it('speaks German without dashes and without words of programmers', async () => {
+    await i18next.changeLanguage('de')
+    expect(de.editor.guided.data.readsTitle).toBe('Was nexdeck hier schon liest')
+    for (const key of ['readsTitle', 'readsLike', 'readsNoCards', 'readsNotYet'] as const) {
+      expect(de.editor.guided.data[key]).not.toMatch(/[–—]/)
+    }
+    expect(en.editor.guided.data.readsLike).toContain('{{name}}')
+  })
+})
+
 describe('umbau U1: three ways into one card', () => {
   const COUNTED = `nexdeck-card: 1
 slug: queue
