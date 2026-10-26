@@ -84,7 +84,8 @@ describe('umbau U5: the answer as a table', () => {
 describe('umbau U6: comparing as the server does, to mark the rows shown', () => {
   it('starts with, ends with, contains, is, is not, greater and less than', () => {
     expect(compare('starts_with', 'light.kitchen', 'light.')).toBe(true)
-    expect(compare('starts_with', 'switch.light', 'light.')).toBe(false)
+    expect(compare('starts_with', 'switch.light.tv', 'light.')).toBe(false)
+    expect(compare('ends_with', 'bath_light', 'bath')).toBe(false)
     expect(compare('ends_with', 'sensor.temperature_bath', '_bath')).toBe(true)
     expect(compare('contains', 'living_room', 'ing')).toBe(true)
     expect(compare('==', 'on', 'on')).toBe(true)
