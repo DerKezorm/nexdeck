@@ -40,8 +40,8 @@ def _invalid(failure: load.CardInvalid) -> HTTPException:
     detail = failure.detail()
     first = failure.problems[0].code
     if first == "card_integration_short_exists":
-        return HTTPException(status.HTTP_409_CONFLICT, {**detail, "code": "integration_exists"})
-    return HTTPException(status.HTTP_400_BAD_REQUEST, {**detail, "code": "integration_invalid"})
+        return HTTPException(status.HTTP_409_CONFLICT, {**detail, "code": "integration_exists", "message": detail["message"]})
+    return HTTPException(status.HTTP_400_BAD_REQUEST, {**detail, "code": "integration_invalid", "message": detail["message"]})
 
 
 def _too_many() -> HTTPException:
