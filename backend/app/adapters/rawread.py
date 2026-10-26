@@ -328,7 +328,6 @@ async def ask(
                 auth=sent.auth,
                 cache_seconds=cache_seconds,
                 follow_redirects=False,
-                note=False,
                 max_bytes=READ_AT_MOST,
             )
             if adapter.raw_expired(response):

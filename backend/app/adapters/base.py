@@ -1510,15 +1510,12 @@ class Context:
         self.resolve_integration = resolve_integration
         #: Watches every request before it leaves, see :mod:`.rawread`; ``None`` for all but a custom card's capture.
         self.tap: Any = None
-        #: False for a context that only watches (see :meth:`tapped`): what it asks is not what a card reads.
-        self.records = True
 
     def tapped(self, tap: Any) -> Context:
         """The same connection (client, memory, sessions) with a watcher on its requests."""
         other = Context(self.client, integration_id=self.integration_id, widget_id=self.widget_id,
                         cache=self.cache, resolve_integration=self.resolve_integration)
         other.tap = tap
-        other.records = False
         return other
 
     async def request(
@@ -1538,7 +1535,6 @@ class Context:
         auth_errors: bool = True,
         member: bool = False,
         follow_redirects: bool | None = None,
-        note: bool = True,
         max_bytes: int | None = None,
     ) -> httpx.Response:
         """Fetch, with 401 and 403 turned into a readable refusal.
@@ -1551,9 +1547,6 @@ class Context:
         ``member=True`` is for an address a member typed into a card. It goes
         through a client with the member rule on every hop of a redirect, not
         through the shared one that serves the administrator's connections.
-
-        ``note=False`` keeps the request out of the list of what the built-in cards of a connection read
-        (:mod:`..cards.reads`); a custom card's own requests and a watched connection test pass it.
 
         ``follow_redirects`` overrides what the client does for this one request;
         ``None`` leaves it to the client. A custom card asks with ``False``: httpx
@@ -1569,10 +1562,6 @@ class Context:
             guard_member_target(url)
         else:
             guard_outbound(url)
-        if note and self.records and self.widget_id is not None:
-            from ..cards import reads
-
-            reads.note(self.integration_id, self.widget_id, method, url, params)
         # Only when it was asked for, so the cache keys of every other request stay what they were.
         redirects = {} if follow_redirects is None else {"follow_redirects": follow_redirects}
         key = ""

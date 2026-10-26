@@ -14,11 +14,14 @@ from pathlib import Path
 from urllib.parse import parse_qsl, urlsplit
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.adapters import all_adapters, get_adapter
-from app.adapters.base import NOT_READ_BY_CARDS
+from app.adapters.base import NOT_READ_BY_CARDS, Context
 from app.cards import card_reads
 from app.credential_names import is_credential_name
+
+from .conftest import CSRF, create_user, login, setup_admin
 
 TOOL = Path(__file__).resolve().parent.parent / "tools" / "card_reads.py"
 
@@ -102,3 +105,43 @@ def test_lesen_l3_home_assistant_has_the_rest_paths_of_its_documentation() -> No
 
 def test_lesen_l1_a_kind_nobody_knows_has_nothing() -> None:
     assert card_reads.reads_of("nothing-like-it") == []
+
+
+# -- L5: the list by kind, for administrators ----------------------------------------------------------------------
+
+
+def test_lesen_l5_the_list_of_a_kind_comes_without_a_connection_or_a_card_on_a_board(client: TestClient) -> None:
+    setup_admin(client)
+    shown = client.get("/api/v1/cards/sources/sonarr/reads")
+    assert shown.status_code == 200, shown.text
+    reads = {one["path"]: one["widgets"] for one in shown.json()["reads"]}
+    assert reads["/api/v3/queue?pageSize=100&includeUnknownMovieItems=true"] == [{"kind": "queue", "label": get_adapter("sonarr").widget("queue").label}]
+    assert "zk" not in shown.text.lower() and "apikey" not in shown.text.lower()
+    assert client.get("/api/v1/cards/sources/synology/reads").json() == {"reads": []}, "a kind with nothing known has an empty list, not an error"
+
+
+def test_lesen_l5_only_administrators_ask(client: TestClient) -> None:
+    setup_admin(client)
+    for role in ("user", "guest"):
+        create_user(client, f"visitor-{role}", role=role)
+    client.post("/api/v1/auth/logout", headers=CSRF)
+    assert client.get("/api/v1/cards/sources/sonarr/reads").status_code == 401
+    for role in ("user", "guest"):
+        login(client, f"visitor-{role}", "another-long-password")
+        assert client.get("/api/v1/cards/sources/sonarr/reads").status_code == 403, role
+        client.post("/api/v1/auth/logout", headers=CSRF)
+
+
+def test_lesen_l5_a_kind_that_cannot_be_read_says_so_and_a_kind_nobody_knows_is_a_404(client: TestClient) -> None:
+    setup_admin(client)
+    refused = client.get("/api/v1/cards/sources/docker/reads")
+    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "no_raw_access"
+    assert client.get("/api/v1/cards/sources/nothing-like-it/reads").status_code == 404
+
+
+def test_lesen_l4_the_memory_of_what_a_card_asked_is_gone() -> None:
+    import importlib.util
+    import inspect
+
+    assert importlib.util.find_spec("app.cards.reads") is None
+    assert "note" not in inspect.signature(Context.request).parameters
