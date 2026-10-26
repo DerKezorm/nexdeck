@@ -2,7 +2,7 @@
  * The catalogue of what a card can show of a service (umbau U4): the common services, two to four suggestions each,
  * every one a relative GET path without a secret, its words in all five languages, and a kind a card can read.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,6 +17,9 @@ import { suggestionOf, suggestionsFor, SUGGESTIONS, wordsKey } from './cardSugge
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const adapters = path.resolve(here, '../../../backend/app/adapters')
+/** The kinds a custom card cannot read through: the keys of NOT_READ_BY_CARDS in base.py. */
+const unreadableBlock = readFileSync(path.join(adapters, 'base.py'), 'utf8').split('NOT_READ_BY_CARDS: dict[str, str] = {')[1].split('\n}')[0]
+const unreadable = [...unreadableBlock.matchAll(/^ {4}"(\w+)":/gm)].map((one) => one[1])
 
 const at = (data: unknown, key: string) => key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], data)
 
@@ -33,9 +36,8 @@ describe('umbau U4: suggestions per kind of service', () => {
 
   it('are relative paths to read, without a secret, and for kinds a card may read through', () => {
     for (const [kind, list] of Object.entries(SUGGESTIONS)) {
-      // The kind's adapter lets a custom card read (raw_access), itself or through the class it comes from.
-      const source = readFileSync(path.join(adapters, `${kind}.py`), 'utf8')
-      expect([kind, /raw_access = True|class \w+\((ArrAdapter|JellyfinAdapter)\)/.test(source)]).toEqual([kind, true])
+      // Every kind that speaks HTTP lets a custom card read; the exceptions stand in one list in base.py.
+      expect([kind, existsSync(path.join(adapters, `${kind}.py`)), unreadable.includes(kind)]).toEqual([kind, true, false])
       for (const one of list) {
         expect(one.path).toMatch(/^\/[^/]/)
         expect(one.path).not.toMatch(/:\/\/|\.\.|token|api_?key|password|secret/i)
@@ -83,8 +85,8 @@ describe('review 10: TrueNAS has no suggestions, because a card can only reach i
     expect(SUGGESTIONS.truenas).toBeUndefined()
     expect(suggestionsFor('truenas')).toEqual([])
     const adapter = readFileSync(path.join(adapters, 'truenas.py'), 'utf8')
-    // a card's request is the REST API of this adapter (raw_access), the one the adapter keeps for versions before 25.04
-    expect(adapter).toMatch(/raw_access = True/)
+    // a card's request is the REST API of this adapter, the one the adapter keeps for versions before 25.04
+    expect(unreadable).not.toContain('truenas')
     expect(adapter).toMatch(/The REST API is for those older versions only/)
     expect(adapter).toMatch(/answers a key of a \*\*read-only administrator\*\* with 403/)
     for (const words of [en, de, es, fr, it_]) expect((words as { editor: { guided: { want: Record<string, unknown> } } }).editor.guided.want.truenas).toBeUndefined()
