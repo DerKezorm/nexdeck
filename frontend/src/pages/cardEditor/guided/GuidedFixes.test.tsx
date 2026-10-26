@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { readAt } from '../../../lib/cardDocument'
 import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEditor'
-import { ANSWERS, stubGuided } from '../../../test/guidedWorld'
+import { ANSWERS, INTEGRATIONS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
 import { thresholdOf } from './FinishStep'
 
@@ -543,5 +543,34 @@ value:
     expect(editor().view).toBe('editor')
     await click('Guided')
     expect(screen.getByRole('button', { name: /^3 Display/ })).toBeEnabled()
+  })
+})
+
+
+describe('review 9: the *arr queue is counted by its total and asks for enough lines', () => {
+  const QUEUE = {
+    nodes: 12,
+    cut: false,
+    tree: answerOf({ page: 1, pageSize: 100, totalRecords: 340, records: [{ title: 'Example.S01E01', status: 'downloading' }, { title: 'Example.S01E02', status: 'paused' }] }),
+  }
+  const withSonarr = { 'GET /integrations': { status: 200 as const, body: [...INTEGRATIONS, { id: 17, kind: 'sonarr', name: 'Sonarr', label: 'Sonarr', icon: 'sonarr', config: {}, enabled: true }] } }
+
+  it('"A number" for Downloads reads totalRecords, so a queue of 340 reads 340, and the list asks for a hundred', async () => {
+    stubGuided('', { ...withSonarr, 'POST /cards/probe': { status: 200, body: QUEUE } })
+    await openNew()
+    await click(/^Sonarr$|^SonarrSonarr/)
+    await click(/^Downloads/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/v3/queue?pageSize=100'))
+    expect(sent('POST', '/cards/probe').at(-1)?.body).toEqual({ integration_id: 17, path: '/api/v3/queue?pageSize=100' })
+    expect(readAt(card(), ['form'])).toBe('list')
+    expect(readAt(card(), ['rows'])).toEqual({ select: 'records' })
+    await click('Next')
+    await click(/^A number/)
+    expect(readAt(card(), ['form'])).toBe('value')
+    expect(readAt(card(), ['value', 'path'])).toBe('totalRecords')
+    expect(readAt(card(), ['value', 'total'])).toBeUndefined()
+    // and "Several numbers" starts with it as well
+    await click(/^Several numbers/)
+    expect(readAt(card(), ['stats', 0, 'path'])).toBe('totalRecords')
   })
 })

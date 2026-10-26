@@ -498,13 +498,15 @@ export function shapeFor(form: CardForm, table: AnswerTable, suggestion?: CardSu
     if (form === 'stats') return { form, numbers: [first, numbers.find((one) => one !== first) ?? first].map((path) => ({ kind: 'field' as const, path })) }
     return { form: 'value', number: { kind: 'field', path: first } }
   }
+  // Everything counted: the entries of the list, or the total the service names when it answers one page of a longer list.
+  const everything: NumberPart = suggestion?.total && suggestion.rows === table.list ? { kind: 'field', path: suggestion.total } : { kind: 'count', list: table.list, conditions: [] }
   const all = { kind: 'count' as const, list: table.list, conditions: [] }
-  if (form === 'value') return { form, number: preset?.form === 'value' ? { ...all, conditions: preset.count } : all }
+  if (form === 'value') return { form, number: preset?.form === 'value' ? { ...all, conditions: preset.count } : everything }
   if (form === 'stats') {
     const column = titleColumn(table)
     const one = table.rows[0]?.[column]
     const second = one === undefined || one === null ? all : { ...all, conditions: [{ field: column, op: '==', value: one }] }
-    return { form, numbers: [all, second] }
+    return { form, numbers: [everything, second] }
   }
   if (form === 'list') {
     if (preset?.form === 'list') return { form, list: table.list, title: preset.title, subtitle: preset.subtitle, value: preset.value, bad: preset.bad }

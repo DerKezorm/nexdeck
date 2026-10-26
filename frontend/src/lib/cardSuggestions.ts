@@ -30,6 +30,11 @@ export interface CardSuggestion {
   path: string
   every: string
   rows?: string
+  /**
+   * The field of the answer that holds how many there are in all, for a service that answers one page of a longer list
+   * (`totalRecords` of the *arr queue). A count of "everything" reads this field instead of counting the page.
+   */
+  total?: string
   fields?: true
   /** A picture of each row made from its fields, for a service whose rows name no picture of their own. */
   image?: string
@@ -40,8 +45,10 @@ export interface CardSuggestion {
 const HEALTH: Preset = { form: 'list', title: 'message', subtitle: 'source', bad: { field: 'type', op: '==', value: 'error' } }
 
 const ARR_V3 = (noun: { id: string; path: string }): CardSuggestion[] => [
-  // arr_base.py: `self.api(config, ctx, "queue")` below /api/v3, the records of the answer are the downloads.
-  { id: 'queue', icon: 'download', path: '/api/v3/queue', every: '60s', rows: 'records', preset: { form: 'list', title: 'title', subtitle: 'status' } },
+  // arr_base.py: `self.api(config, ctx, "queue", params={"pageSize": 100, ...})` below /api/v3, the records of the
+  // answer are the downloads. Without `pageSize` the service answers ten (Sonarr API docs, "GET /api/v3/queue":
+  // page, pageSize), so a queue of forty would read as ten; `totalRecords` says how many there are in all.
+  { id: 'queue', icon: 'download', path: '/api/v3/queue?pageSize=100', every: '60s', rows: 'records', total: 'totalRecords', preset: { form: 'list', title: 'title', subtitle: 'status' } },
   // arr_base.py: `self.api(config, ctx, "calendar")`; without start and end it answers today and tomorrow.
   { id: 'calendar', icon: 'calendar', path: '/api/v3/calendar', every: '1h', rows: '@', preset: { form: 'list', title: 'title' } },
   // arr_base.py: `self.api(config, ctx, "health")`, a list of what needs looking at.
@@ -138,8 +145,8 @@ export const SUGGESTIONS: Record<string, CardSuggestion[]> = {
   sonarr: ARR_V3({ id: 'series', path: '/api/v3/series' }),
   radarr: ARR_V3({ id: 'movies', path: '/api/v3/movie' }),
   lidarr: [
-    // lidarr.py: `api_version = "v1"`, `list_path = "artist"`; arr_base.py: queue and health.
-    { id: 'queue', icon: 'download', path: '/api/v1/queue', every: '60s', rows: 'records', preset: { form: 'list', title: 'title', subtitle: 'status' } },
+    // lidarr.py: `api_version = "v1"`, `list_path = "artist"`; arr_base.py: queue (as for Sonarr: `pageSize`, `totalRecords`) and health.
+    { id: 'queue', icon: 'download', path: '/api/v1/queue?pageSize=100', every: '60s', rows: 'records', total: 'totalRecords', preset: { form: 'list', title: 'title', subtitle: 'status' } },
     { id: 'health', icon: 'health', path: '/api/v1/health', every: '5m', rows: '@', preset: HEALTH },
     { id: 'artists', icon: 'library', path: '/api/v1/artist', every: '1h', rows: '@' },
   ],

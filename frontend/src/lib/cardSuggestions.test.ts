@@ -64,3 +64,16 @@ describe('umbau U4: suggestions per kind of service', () => {
     expect(suggestionsFor(undefined)).toEqual([])
   })
 })
+
+describe('review 9: the queues of the *arr services', () => {
+  it('ask for a hundred entries, as the adapter does, and name the total they are counted by', () => {
+    const adapter = readFileSync(path.join(adapters, 'arr_base.py'), 'utf8')
+    expect(adapter).toMatch(/"pageSize": 100/)
+    expect(adapter).toMatch(/totalRecords/)
+    for (const kind of ['sonarr', 'radarr', 'lidarr']) {
+      const queue = SUGGESTIONS[kind].find((one) => one.id === 'queue')!
+      expect([kind, Number(/[?&]pageSize=(\d+)/.exec(queue.path)?.[1])]).toEqual([kind, 100])
+      expect([kind, queue.total, queue.rows]).toEqual([kind, 'totalRecords', 'records'])
+    }
+  })
+})
