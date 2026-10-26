@@ -2,10 +2,14 @@
  * What the integration editor reads out of a definition and the starting points it writes (KARTEN-3 AC-2 to AC-6),
  * the words of a failed test (AC-9), and which kinds carry the mark "Custom" (AC-8).
  */
-import { describe, expect, it } from 'vitest'
+import i18next from 'i18next'
+import { afterEach, describe, expect, it } from 'vitest'
+
+import de from '../i18n/de.json'
+import en from '../i18n/en.json'
 
 import { parseCard } from './cardDocument'
-import { isOwnKind } from './customCards'
+import { isOwnKind, problemText } from './customCards'
 import { AUTH_TYPES, authDefaults, authOf, fieldsOf, freeName, placeholdersIn, readsOf, shortFrom, SHORT_PATTERN } from './integrationDocument'
 import { testResultText } from './testResult'
 
@@ -125,5 +129,23 @@ describe('the words of a test', () => {
     expect(testResultText(t, { ok: false, code: 'sign_in_paused', message: 'Paused until 14:05.', hint: 'wait' })).toEqual({ message: 'Paused until 14:05.', hint: 'wait' })
     expect(testResultText(t, { ok: true, code: 'auth_failed', message: 'Fine.' })).toEqual({ message: 'Fine.', hint: undefined })
     expect(testResultText(t, { ok: false, message: 'Something else.' })).toEqual({ message: 'Something else.', hint: undefined })
+  })
+})
+
+describe('the words for what the check finds', () => {
+  const problem = { code: 'card_integration_short_taken', message: 'English words of the server.', path: 'short', line: 2, params: { short: 'sonarr' } }
+
+  it('karten3 ec1: the refusal of a built-in name is worded by nexdeck in each language, with the name filled in', async () => {
+    i18next.addResourceBundle('en', 'translation', en, true, true)
+    i18next.addResourceBundle('de', 'translation', de, true, true)
+    await i18next.changeLanguage('en')
+    expect(problemText(i18next.t, problem)).toBe('nexdeck has a built-in kind called sonarr. Pick another short name.')
+    await i18next.changeLanguage('de')
+    expect(problemText(i18next.t, problem)).toBe('nexdeck hat schon eine eingebaute Art namens sonarr. Nimm einen anderen Kurznamen.')
+    await i18next.changeLanguage('en')
+  })
+
+  afterEach(async () => {
+    await i18next.changeLanguage('en')
   })
 })
