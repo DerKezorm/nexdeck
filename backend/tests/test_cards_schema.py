@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -379,3 +380,28 @@ def test_umbau_u7_the_schema_offers_starts_with_and_ends_with_for_filters_and_ru
     head = 'nexdeck-card: 1\nslug: s\nname: S\nversion: "1.0.0"\nrequires: [jsonapi]\nrequests: [{id: a, path: /}]\n'
     loaded = load.load_definition(head + "form: list\nrows: {select: '@', filter: [{field: n, op: ends_with, value: x}]}\nitem: {title: n, status: [{op: starts_with, than: e, then: bad}]}\n")
     assert loaded.definition is not None
+
+
+#: A list card to bend: the sample up to its form, then rows with one filter.
+_UP_TO_FORM = VALUE_CARD.split("form: value")[0]
+LISTING = _UP_TO_FORM + "form: list\nrows:\n  select: records\n  filter: [<<filter>>]\nitem: {title: title}\n"
+
+
+def test_review_5_what_a_text_comparison_looks_for_is_text_and_a_number_with_a_point_is_asked_to_be_quoted() -> None:
+    def filter_of(text: str) -> Any:
+        return load.load_definition(LISTING.replace("<<filter>>", text)).definition.rows.filter[0]
+
+    # quoted, it stays what it is; a whole number written bare is taken as its text
+    assert filter_of("{field: code, op: starts_with, value: '007'}").value == "007"
+    assert filter_of("{field: code, op: ends_with, value: 7}").value == "7"
+    assert filter_of("{field: code, op: contains, value: 20}").value == "20"
+    # a number with a point cannot be given back as written (1.50 reads as 1.5): the author is asked to quote it
+    for op in ("starts_with", "ends_with", "contains"):
+        failure = refused(LISTING.replace("<<filter>>", "{field: code, op: " + op + ", value: 1.50}"))
+        assert codes(failure) == ["card_quote_it"] and failure.problems[0].path == "rows.filter[0].value"
+    assert filter_of("{field: code, op: starts_with, value: '1.50'}").value == "1.50"
+    # the comparisons that look at numbers keep their numbers
+    assert filter_of("{field: n, op: '>', value: 1.5}").value == 1.5
+    assert filter_of("{field: n, op: '==', value: 7}").value == 7
+    failure = refused(_UP_TO_FORM + "form: value\nvalue: {path: s, rules: [{op: ends_with, than: 1.50, then: bad}]}\n")
+    assert codes(failure) == ["card_quote_it"] and failure.problems[0].path == "value.rules[0].than"

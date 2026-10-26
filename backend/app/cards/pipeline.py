@@ -328,25 +328,29 @@ def _format(run: _Run, raw: Any, shape: str | None, digits: int | None) -> tuple
     return number, f"{text}%" if shape == "percent" else text, shape
 
 
+def _text(value: Any) -> str:
+    """A value as the text it is compared as: ``true`` and ``false`` as a card's author writes them, the rest as Python prints it."""
+    return str(value).lower() if isinstance(value, bool) else str(value)
+
+
 def _compare(op: str, left: Any, right: Any, right_number: float | None = None) -> bool:
     """The relation of two values. Numbers compare as numbers, also from text; everything else as text.
 
     ``right_number`` is the right side read as a number, for a caller that compares many rows with one value and
     would otherwise read it again every time.
     """
-    if isinstance(left, bool) or isinstance(right, bool):
-        one = str(left).lower() if isinstance(left, bool) else str(left)
-        two = str(right).lower() if isinstance(right, bool) else str(right)
-        return (one == two) if op == "==" else (one != two) if op == "!=" else False
     if op in ("starts_with", "ends_with"):
-        # Always as text, numbers too: 2026 starts with 20. A list or an object starts with nothing.
+        # Always as text, numbers too: 2026 starts with 20, 21.5 starts with 21, and "007" is not "7". A list or an
+        # object starts with nothing.
         if left is None or right is None or isinstance(left, list | dict):
             return False
-        return str(left).startswith(str(right)) if op == "starts_with" else str(left).endswith(str(right))
+        return _text(left).startswith(_text(right)) if op == "starts_with" else _text(left).endswith(_text(right))
     if op == "contains":
         if isinstance(left, list):
-            return any(str(item) == str(right) for item in left)
-        return left is not None and str(right) in str(left)
+            return any(_text(item) == _text(right) for item in left)
+        return left is not None and _text(right) in _text(left)
+    if isinstance(left, bool) or isinstance(right, bool):
+        return (_text(left) == _text(right)) if op == "==" else (_text(left) != _text(right)) if op == "!=" else False
     if right_number is None:
         right_number = calc.as_number(right)
     # Only a right side that is a number can make the left one count as a number; a word is compared as a word.

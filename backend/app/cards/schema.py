@@ -27,6 +27,7 @@ from pydantic import (
     Field,
     StringConstraints,
     TypeAdapter,
+    ValidationInfo,
     WithJsonSchema,
     field_validator,
     model_validator,
@@ -107,6 +108,8 @@ LocalText = str | dict[str, str]
 Status = Literal["ok", "warn", "bad"]
 #: ``starts_with`` and ``ends_with`` compare as text, letter case counts (``light.`` finds ``light.kitchen``).
 Operator = Literal["==", "!=", ">", ">=", "<", "<=", "contains", "starts_with", "ends_with"]
+#: The comparisons that look at text only. What they are compared with stays the text it was written as.
+TEXT_OPERATORS = ("contains", "starts_with", "ends_with")
 Shape = Literal["text", "number", "bytes", "rate", "duration", "ago", "percent", "date", "datetime", "time"]
 Aggregation = Literal["count", "sum", "min", "max", "avg"]
 Scalar = str | int | float | bool
@@ -119,6 +122,18 @@ def _text_only(value: Any) -> Any:
     if isinstance(value, float):
         raise PydanticCustomError("card_quote_it", "Write this in quotes so that nothing is lost, for example \"{shown}\".", {"shown": str(value)})
     return value
+
+
+def _text_for_text_operator(operator: Any, value: Any) -> Any:
+    """``007`` stays ``007`` with ``starts_with``, ``ends_with`` and ``contains``.
+
+    A whole number written bare comes in as text (``7`` for ``007`` is already gone in YAML, nothing to be done). A
+    number with a point cannot be given back as it was written (``1.50`` reads as ``1.5``), so it is refused with the
+    advice to put it in quotes, the way a version is.
+    """
+    if operator not in TEXT_OPERATORS or value is None or isinstance(value, bool):
+        return value
+    return _text_only(value)
 
 
 class Part(BaseModel):
@@ -136,6 +151,11 @@ class Filter(Part):
     field: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     op: Operator
     value: Scalar | None = None
+
+    @field_validator("value")
+    @classmethod
+    def _text_to_compare_as_text(cls, value: Any, info: ValidationInfo) -> Any:
+        return _text_for_text_operator(info.data.get("op"), value)
 
 
 class Sort(Part):
@@ -164,6 +184,11 @@ class Rule(Part):
     op: Operator
     than: Scalar
     then: Status
+
+    @field_validator("than")
+    @classmethod
+    def _text_to_compare_as_text(cls, value: Any, info: ValidationInfo) -> Any:
+        return _text_for_text_operator(info.data.get("op"), value)
 
     @model_validator(mode="after")
     def _one_subject(self) -> Rule:

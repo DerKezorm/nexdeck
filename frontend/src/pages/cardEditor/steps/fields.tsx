@@ -46,13 +46,25 @@ function useRowFieldsOf(select: string | undefined): string[] {
   }, [card, probes, select])
 }
 
-/** A typed comparison value: a number reads as a number, true and false as yes or no, anything else as text. */
-export function typedValue(text: string): string | number | boolean {
+/** The comparisons that look at text only: what they are compared with is kept as typed ("007" is not 7). */
+export const TEXT_OPS: readonly string[] = ['contains', 'starts_with', 'ends_with']
+
+/**
+ * A typed comparison value: for `contains`, `starts_with` and `ends_with` the text as typed; otherwise a number reads
+ * as a number, true and false as yes or no, anything else as text.
+ */
+export function typedValue(text: string, op?: string): string | number | boolean {
+  if (op !== undefined && TEXT_OPS.includes(op)) return text
   const trimmed = text.trim()
   if (trimmed === 'true') return true
   if (trimmed === 'false') return false
   if (trimmed !== '' && /^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed)
   return text
+}
+
+/** What stands as the value of a comparison once its operator is `op`: a text operator takes the text of a number. */
+export function valueForOp(op: string, value: unknown): unknown {
+  return TEXT_OPS.includes(op) && value !== undefined && value !== null && typeof value !== 'string' ? String(value) : value
 }
 
 /** A path, picked from the fields of the probe or typed as an expression. */
@@ -278,6 +290,12 @@ export function RowsFields({ path, total, lists }: { path: CardPath; total?: boo
       if (Array.isArray(left) && left.length === 0) deleteAt(doc, [...path, 'filter'])
     })
   const writeFilter = (index: number, part: string, next: unknown) => change((doc) => setAt(doc, [...path, 'filter', index, part], next), `field:${key}.filter.${index}.${part}`)
+  const writeFilterOp = (index: number, op: string) =>
+    change((doc) => {
+      setAt(doc, [...path, 'filter', index, 'op'], op)
+      const value = readIn(doc, [...path, 'filter', index, 'value'])
+      if (valueForOp(op, value) !== value) setAt(doc, [...path, 'filter', index, 'value'], valueForOp(op, value))
+    }, `field:${key}.filter.${index}.op`)
   const writeSort = (part: 'field' | 'desc', next: unknown) =>
     change((doc) => {
       if (part === 'field' && !next) return deleteAt(doc, [...path, 'sort'])
@@ -298,7 +316,7 @@ export function RowsFields({ path, total, lists }: { path: CardPath; total?: boo
           <span className="min-w-0 flex-1 basis-32 grid">
             <PathInput value={filter?.field ?? ''} onChange={(next) => writeFilter(index, 'field', next)} choices={fields} disabled={!editable} label={t('editor.look.filterField')} />
           </span>
-          <select className="input !w-auto" value={filter?.op ?? '=='} disabled={!editable} aria-label={t('editor.look.filterOp')} onChange={(event) => writeFilter(index, 'op', event.target.value)}>
+          <select className="input !w-auto" value={filter?.op ?? '=='} disabled={!editable} aria-label={t('editor.look.filterOp')} onChange={(event) => writeFilterOp(index, event.target.value)}>
             {OPS.map((op) => (
               <option key={op} value={op}>
                 {t(`editor.ops.${opKey(op)}`)}
@@ -310,7 +328,7 @@ export function RowsFields({ path, total, lists }: { path: CardPath; total?: boo
             value={filter?.value === undefined || filter.value === null ? '' : String(filter.value)}
             disabled={!editable}
             aria-label={t('editor.look.filterValue')}
-            onChange={(event) => writeFilter(index, 'value', typedValue(event.target.value))}
+            onChange={(event) => writeFilter(index, 'value', typedValue(event.target.value, filter?.op))}
           />
           <button type="button" className="btn btn-icon btn-flat" onClick={() => removeFilter(index)} disabled={!editable} aria-label={t('editor.look.removeFilter', { number: index + 1 })}>
             <Trash2 size={14} />
@@ -375,6 +393,12 @@ export function RulesFields({ path, own, title, defaultField }: { path: CardPath
   const choices = path[0] === 'item' ? hints.rowFields : hints.fields
 
   const write = (index: number, part: string, next: unknown) => change((doc) => setAt(doc, [...path, index, part], next), `field:${key}.${index}.${part}`)
+  const writeOp = (index: number, op: string) =>
+    change((doc) => {
+      setAt(doc, [...path, index, 'op'], op)
+      const than = readIn(doc, [...path, index, 'than'])
+      if (valueForOp(op, than) !== than) setAt(doc, [...path, index, 'than'], valueForOp(op, than))
+    }, `field:${key}.${index}.op`)
   const writeSubject = (index: number, to: 'own' | 'value' | 'formula') =>
     change((doc) => {
       const rule = (readIn(doc, [...path, index]) ?? {}) as Rule
@@ -418,7 +442,7 @@ export function RulesFields({ path, own, title, defaultField }: { path: CardPath
             {subject === 'formula' && (
               <input className="input font-mono min-w-0 flex-1 basis-32" value={rule.formula ?? ''} disabled={!editable} aria-label={t('editor.rules.formula')} onChange={(event) => write(index, 'formula', event.target.value)} />
             )}
-            <select className="input !w-auto" value={rule?.op ?? '>'} disabled={!editable} aria-label={t('editor.rules.op')} onChange={(event) => write(index, 'op', event.target.value)}>
+            <select className="input !w-auto" value={rule?.op ?? '>'} disabled={!editable} aria-label={t('editor.rules.op')} onChange={(event) => writeOp(index, event.target.value)}>
               {OPS.map((op) => (
                 <option key={op} value={op}>
                   {t(`editor.ops.${opKey(op)}`)}
@@ -430,7 +454,7 @@ export function RulesFields({ path, own, title, defaultField }: { path: CardPath
               value={rule?.than === undefined || rule.than === null ? '' : String(rule.than)}
               disabled={!editable}
               aria-label={t('editor.rules.than')}
-              onChange={(event) => write(index, 'than', typedValue(event.target.value))}
+              onChange={(event) => write(index, 'than', typedValue(event.target.value, rule?.op))}
             />
             <span className="text-sm text-muted">{t('editor.rules.then')}</span>
             <select className="input !w-auto" value={rule?.then ?? 'warn'} disabled={!editable} aria-label={t('editor.rules.colour')} onChange={(event) => write(index, 'then', event.target.value)}>

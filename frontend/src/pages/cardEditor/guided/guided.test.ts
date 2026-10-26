@@ -225,3 +225,12 @@ describe('review 3: a list that the answer leaves out is an empty list', () => {
     expect(tableOf(answerOf({ names: ['a', 'b'] }), null, 'names').kind).toBe('fields')
   })
 })
+
+describe('review 5: the marking compares text as the server does', () => {
+  it('begins with, ends with and contains look at the text of a number or a yes or no', () => {
+    expect([compare('starts_with', 21.5, '21'), compare('ends_with', 21.5, '.5'), compare('contains', 2.15, '15'), compare('starts_with', 7, '007')]).toEqual([true, true, true, false])
+    expect([compare('starts_with', true, 'tr'), compare('ends_with', false, 'lse'), compare('contains', true, 'ru'), compare('starts_with', 'yes', 'tr')]).toEqual([true, true, true, false])
+    // the other comparisons keep reading a yes or no, and a number against a number
+    expect([compare('==', true, 'TRUE'), compare('>', true, 1), compare('>', '12', 7)]).toEqual([true, false, true])
+  })
+})

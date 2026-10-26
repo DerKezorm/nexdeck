@@ -298,3 +298,90 @@ describe('review 4: thresholds take decimals, a comma and a minus sign', () => {
     expect([thresholdOf('-'), thresholdOf('0x10'), thresholdOf('1e3'), thresholdOf('abc'), thresholdOf('1.2.3')]).toEqual([undefined, undefined, undefined, undefined, undefined])
   })
 })
+
+
+describe('review 5: begins with, ends with and contains compare text, so 007 stays 007', () => {
+  const LIST_ONLY = `${HEAD}requests:
+  - id: states
+    path: /api/states
+form: list
+rows: {select: "@"}
+item: {title: entity_id}
+`
+  const FILTERED = `${HEAD}requests:
+  - id: states
+    path: /api/states
+form: list
+rows:
+  select: "@"
+  filter: [{field: entity_id, op: "==", value: "light.kitchen"}]
+item: {title: entity_id}
+rules:
+  - {value: "@", op: "==", than: 1, then: warn}
+`
+
+  it('in the guided way a text comparison keeps the text and a number comparison keeps the number', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+    const filter = ['value', 'total', 'rows', 'filter', 0] as const
+    const value = () => screen.getAllByRole('textbox', { name: 'Value' })[0]
+    // starts with: "007" and "1.50" are texts, also when they read like numbers
+    await userEvent.clear(value())
+    await userEvent.type(value(), '007')
+    expect(readAt(card(), [...filter, 'value'])).toBe('007')
+    expect(editor().text).toContain('"007"')
+    await userEvent.clear(value())
+    await userEvent.type(value(), '1.50')
+    expect(readAt(card(), [...filter, 'value'])).toBe('1.50')
+    // greater than: a number
+    await userEvent.selectOptions(screen.getAllByRole('combobox', { name: 'Comparison' })[0], '>')
+    expect(readAt(card(), [...filter, 'op'])).toBe('>')
+    await userEvent.clear(value())
+    await userEvent.type(value(), '12')
+    expect(readAt(card(), [...filter, 'value'])).toBe(12)
+    // and back to a text comparison: the number becomes its text
+    await userEvent.selectOptions(screen.getAllByRole('combobox', { name: 'Comparison' })[0], 'ends_with')
+    expect(readAt(card(), [...filter, 'value'])).toBe('12')
+    await userEvent.selectOptions(screen.getAllByRole('combobox', { name: 'Comparison' })[0], 'contains')
+    await userEvent.clear(value())
+    await userEvent.type(value(), '0070')
+    expect(readAt(card(), [...filter, 'value'])).toBe('0070')
+  })
+
+  it('in the guided way the rule of a line compares a text as text, too', async () => {
+    stubGuided(LIST_ONLY, { 'POST /cards/probe': { status: 200, body: { nodes: 5, cut: false, tree: answerOf([{ entity_id: 'light.kitchen', state: 'on' }]) } } })
+    await openCard('Queue', 'guided')
+    await click(/^3 Display/)
+    const rule = within(await screen.findByRole('group', { name: 'Line red when' }))
+    await userEvent.selectOptions(rule.getByRole('combobox', { name: 'Comparison' }), 'starts_with')
+    await userEvent.type(rule.getByRole('textbox', { name: 'Value' }), '007')
+    expect(readAt(card(), ['item', 'status', 0, 'than'])).toBe('007')
+  })
+
+  it('under All settings the filter and the rule keep a text comparison as text as well', async () => {
+    stubGuided(FILTERED)
+    await openCard('Queue')
+    await click(/^2 Look/)
+    const filter = within(screen.getByRole('group', { name: /^Filter 1/ }))
+    await userEvent.selectOptions(filter.getByRole('combobox', { name: 'Comparison' }), 'starts_with')
+    await userEvent.clear(filter.getByRole('textbox', { name: 'Value' }))
+    await userEvent.type(filter.getByRole('textbox', { name: 'Value' }), '007')
+    expect(readAt(card(), ['rows', 'filter', 0, 'value'])).toBe('007')
+    await userEvent.selectOptions(filter.getByRole('combobox', { name: 'Comparison' }), '>')
+    await userEvent.clear(filter.getByRole('textbox', { name: 'Value' }))
+    await userEvent.type(filter.getByRole('textbox', { name: 'Value' }), '7')
+    expect(readAt(card(), ['rows', 'filter', 0, 'value'])).toBe(7)
+    await userEvent.selectOptions(filter.getByRole('combobox', { name: 'Comparison' }), 'ends_with')
+    expect(readAt(card(), ['rows', 'filter', 0, 'value'])).toBe('7')
+
+    await click(/^3 Rules/)
+    const rule = within(screen.getByRole('group', { name: /^Rule 1/ }))
+    await userEvent.selectOptions(rule.getByRole('combobox', { name: 'Comparison' }), 'starts_with')
+    await userEvent.clear(rule.getByRole('textbox', { name: 'Compared with' }))
+    await userEvent.type(rule.getByRole('textbox', { name: 'Compared with' }), '007')
+    expect(readAt(card(), ['rules', 0, 'than'])).toBe('007')
+  })
+})

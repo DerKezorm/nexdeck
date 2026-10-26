@@ -125,14 +125,15 @@ const asNumber = (value: unknown): number | null => {
  */
 export function compare(op: string, left: Cell | undefined, right: Cell): boolean {
   if (left === undefined || left === null) return op === '!=' && right !== null
+  // The comparisons of text look at the text of a number or a yes or no, whatever the other side is.
+  if (op === 'starts_with') return right !== null && String(left).startsWith(String(right))
+  if (op === 'ends_with') return right !== null && String(left).endsWith(String(right))
+  if (op === 'contains') return right !== null && String(left).includes(String(right))
   if (typeof left === 'boolean' || typeof right === 'boolean') {
     const one = String(left).toLowerCase()
     const two = String(right).toLowerCase()
     return op === '==' ? one === two : op === '!=' ? one !== two : false
   }
-  if (op === 'starts_with') return right !== null && String(left).startsWith(String(right))
-  if (op === 'ends_with') return right !== null && String(left).endsWith(String(right))
-  if (op === 'contains') return right !== null && String(left).includes(String(right))
   const two = asNumber(right)
   const one = two !== null ? asNumber(left) : null
   if (one !== null && two !== null) {

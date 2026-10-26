@@ -8,7 +8,7 @@ import type { CardForm } from '../../../lib/customCards'
 import { FailureNote } from '../FailureNote'
 import { usePreviewQuery } from '../Preview'
 import { MAX_STATS, MIN_STATS } from '../slots'
-import { typedValue } from '../steps/fields'
+import { typedValue, valueForOp } from '../steps/fields'
 import { useCardEditor } from '../store'
 import { textIn, type TextSpot } from '../texts'
 import { AnswerTable } from './AnswerTable'
@@ -94,14 +94,14 @@ function ConditionFields({ condition, columns, onChange }: { condition: Conditio
           </option>
         ))}
       </select>
-      <select className="input !w-auto max-w-full" aria-label={t('editor.guided.display.compare')} value={condition.op} onChange={(event) => onChange({ ...condition, op: event.target.value })}>
+      <select className="input !w-auto max-w-full" aria-label={t('editor.guided.display.compare')} value={condition.op} onChange={(event) => onChange({ ...condition, op: event.target.value, value: valueForOp(event.target.value, condition.value) as Condition['value'] })}>
         {ops.map((op) => (
           <option key={op} value={op}>
             {opWords(t, op)}
           </option>
         ))}
       </select>
-      <input className="input !w-36 max-w-full" aria-label={t('editor.guided.display.value')} value={String(condition.value ?? '')} onChange={(event) => onChange({ ...condition, value: typedValue(event.target.value) })} />
+      <input className="input !w-36 max-w-full" aria-label={t('editor.guided.display.value')} value={String(condition.value ?? '')} onChange={(event) => onChange({ ...condition, value: typedValue(event.target.value, condition.op) })} />
     </>
   )
 }

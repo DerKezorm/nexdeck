@@ -108,6 +108,33 @@ def test_umbau_u7_a_rule_can_look_at_the_start_or_the_end_of_a_text() -> None:
     assert show(body, {"s": ["error"]}).value.status is None  # type: ignore[union-attr]
 
 
+def test_review_5_starts_with_ends_with_and_contains_compare_as_text_and_007_stays_007() -> None:
+    codes = [{"code": "007", "n": 21.5, "ok": True}, {"code": "0070", "n": 2.15, "ok": False}, {"code": "7", "n": 21, "ok": True}, {"code": "x007", "n": None, "ok": False}]
+
+    def kept(field: str, op: str, value: str) -> list[str]:
+        body = f"form: list\nrows:\n  select: records\n  filter: [{{field: {field}, op: {op}, value: '{value}'}}]\nitem: {{title: code}}\n"
+        return titles(show(body, {"records": codes}))
+
+    # the text "007" is looked for as "007", never as the number 7
+    assert kept("code", "starts_with", "007") == ["007", "0070"]
+    assert kept("code", "ends_with", "007") == ["007", "x007"]
+    assert kept("code", "contains", "007") == ["007", "0070", "x007"]
+    assert kept("code", "starts_with", "7") == ["7"]
+    # a number on the left is its text: 21.5 starts with 21, and 21 is not "21.0"
+    assert kept("n", "starts_with", "21") == ["007", "7"]
+    assert kept("n", "ends_with", ".5") == ["007"]
+    assert kept("n", "contains", "15") == ["0070"]
+    # a yes or no is its text as well
+    assert kept("ok", "starts_with", "tr") == ["007", "7"]
+    assert kept("ok", "ends_with", "lse") == ["0070", "x007"]
+    assert kept("ok", "contains", "ru") == ["007", "7"]
+    # in a rule, too
+    rule = "form: value\nvalue: {path: code, rules: [{op: starts_with, than: '007', then: bad}]}"
+    assert show(rule, {"code": "0070"}).value.status == "bad"  # type: ignore[union-attr]
+    assert show(rule, {"code": "7"}).value.status is None  # type: ignore[union-attr]
+    assert show(rule, {"code": 7}).value.status is None  # type: ignore[union-attr]
+
+
 def test_karten5_ac3_rows_come_in_the_order_the_definition_asks_for() -> None:
     assert titles(show(rows_of("sort: {field: size}"))) == ["Bravo", "Charlie", "Alpha", "Delta"]
     assert titles(show(rows_of("sort: {field: size, desc: true}"))) == ["Alpha", "Charlie", "Bravo", "Delta"]
