@@ -137,6 +137,26 @@ def test_a_comparison_shows_the_whole_day_against_the_one_before_from_midnight_o
     assert (end - start, before) == (dt.timedelta(days=7), None)
 
 
+@pytest.mark.parametrize("now", [
+    dt.datetime(2026, 10, 26, 13, 0, tzinfo=dt.UTC),  # the day after the clocks went back: yesterday had 25 hours
+    dt.datetime(2026, 3, 30, 13, 0, tzinfo=dt.UTC),  # the day after they went forward: 23
+])
+@pytest.mark.parametrize("period", ["day", "week"])
+async def test_the_period_before_lies_on_the_same_clock_times_when_the_clocks_changed(now: dt.datetime, period: str) -> None:
+    """Both dates are Mondays, so the week before holds the Sunday the clocks changed."""
+    sensor = {**LIVING, "unit": "°C", "kind": "mean", "source": "statistics", "current": 21.0, "unavailable": False}
+    start, end, before = hass_stats.window(period, now, BERLIN)
+    assert before is not None
+    line = (await hass_stats.series({}, {}, [sensor], period, demo=True, now=now))["series"][0]
+    assert line["previous"]
+    assert all(hass_stats._ms(start) <= point[0] < hass_stats._ms(end) for point in line["previous"]), "moved off this period"
+    # Noon of the last day before, after the change, lands on noon of the same day of this period.
+    last = 0 if period == "day" else 6
+    then = before.astimezone(BERLIN).replace(hour=12) + dt.timedelta(days=last)
+    there = start.astimezone(BERLIN).replace(hour=12) + dt.timedelta(days=last)
+    assert hass_stats.onto(hass_stats._ms(then), before, start, BERLIN) == hass_stats._ms(there)
+
+
 # ---------------------------------------------------------------------------
 # From answers to points
 # ---------------------------------------------------------------------------
