@@ -13,6 +13,7 @@ import type { WidgetData, WidgetView } from '../../lib/types'
 import { useConnections } from './connections'
 import { slotName } from './DataTree'
 import { FIELD_TYPE, placeDropped, readDragged } from './placing'
+import { partOfProblem } from './problems'
 import { pathsOfValue, slotsOf } from './slots'
 import { useCardEditor } from './store'
 
@@ -247,7 +248,11 @@ export function Preview({ guided = false }: { guided?: boolean }) {
             <p className="font-medium text-bad break-words hyphens-auto">{t('editor.preview.invalid')}</p>
             {shown.problems.map((problem, index) => (
               <p key={index} className="text-[12px] text-muted break-words hyphens-auto">
-                {problem.path ? <span className="font-mono">{problem.path}: </span> : null}
+                {guided ? (
+                  partOfProblem(t, problem.path) ? <span>{partOfProblem(t, problem.path)}: </span> : null
+                ) : problem.path ? (
+                  <span className="font-mono">{problem.path}: </span>
+                ) : null}
                 {problemText(t, problem)}
               </p>
             ))}

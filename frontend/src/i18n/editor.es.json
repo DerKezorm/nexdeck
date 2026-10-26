@@ -715,6 +715,20 @@
         "version": "Versión",
         "url": "Dirección",
         "path": "Ruta"
+      },
+      "part": {
+        "name": "El nombre",
+        "slug": "El nombre corto",
+        "number": "El número",
+        "numberN": "Número {{number}}",
+        "colours": "Los colores",
+        "lines": "Las líneas",
+        "main": "Texto principal",
+        "below": "Debajo, pequeño",
+        "right": "A la derecha",
+        "picture": "Imagen",
+        "lineRed": "Línea en rojo",
+        "ask": "Lo que pregunta la tarjeta"
       }
     }
   }

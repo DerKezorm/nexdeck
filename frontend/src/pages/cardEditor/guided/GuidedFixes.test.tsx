@@ -10,6 +10,7 @@ import { readAt } from '../../../lib/cardDocument'
 import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEditor'
 import { ANSWERS, INTEGRATIONS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
+import { partOfProblem } from '../problems'
 import { columnLabel, columnName } from './columns'
 import { thresholdOf } from './FinishStep'
 
@@ -765,5 +766,51 @@ describe('review 16: the address typed under "Own address" is written when the a
     await click('Ask')
     await waitFor(() => expect(editor().shapedPath).toBe('/v1/forecast'))
     expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
+  })
+})
+
+
+describe('review 17: problems in the guided way name the part of the card, not the path of a field', () => {
+  const PROBLEMS = [
+    { code: 'card_quote_it', message: 'Write this in quotes.', path: 'value.total.rows.filter[0].value', line: null, params: { shown: '1.50' } },
+    { code: 'card_bad_name', message: 'Give the card a name.', path: 'name', line: null, params: {} },
+    { code: 'card_unknown', message: 'Not known here.', path: 'item.title', line: null, params: {} },
+  ]
+
+  it('the list of problems says "The number", "The name" and "Main text"; All settings keeps the paths', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    act(() => editor().setServerProblems(PROBLEMS, editor().text))
+    const list = await screen.findByTestId('card-problems')
+    expect(list).toHaveTextContent('The number')
+    expect(list).toHaveTextContent('The name')
+    expect(list).toHaveTextContent('Main text')
+    expect(list.textContent).not.toMatch(/value\.total|filter\[0\]|item\.title/)
+    await click('All settings')
+    expect(screen.getByTestId('card-problems')).toHaveTextContent('value.total.rows.filter[0].value')
+  })
+
+  it('what the preview says of an invalid card names the part in words as well', async () => {
+    stubGuided('', { 'POST /cards/preview': { status: 400, body: { detail: { code: 'card_invalid', message: 'The card has problems.', problems: PROBLEMS } } } })
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    const shown = await screen.findByTestId('card-preview-invalid')
+    expect(shown).toHaveTextContent('The number:')
+    expect(shown.textContent).not.toMatch(/value\.total|filter\[0\]/)
+  })
+
+  it('names the parts by their place', () => {
+    const t = ((key: string, options?: { number?: number }) => `${key.replace('editor.guided.part.', '')}${options?.number ?? ''}`) as never
+    const words = (path: string) => partOfProblem(t, path)
+    expect([words('name.de'), words('slug'), words('value'), words('value.total.rows.filter[0].op'), words('stats[1].label'), words('stats[0].rules[0].than'), words('value.rules[0].than'), words('rules[0].than')]).toEqual([
+      'name', 'slug', 'number', 'number', 'numberN2', 'colours', 'colours', 'colours',
+    ])
+    expect([words('rows.select'), words('item.title'), words('item.subtitle'), words('item.value'), words('item.image'), words('item.status[0].than'), words('requests[0].path'), words('size')]).toEqual([
+      'lines', 'main', 'below', 'right', 'picture', 'lineRed', 'ask', null,
+    ])
   })
 })

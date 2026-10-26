@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
 
-import { localProblemText, serverProblemText } from './problems'
+import { localProblemText, partOfProblem, serverProblemText } from './problems'
 import { currentServerProblems, useCardEditor } from './store'
 
 /**
  * Every problem of the card at its line with its reason (KARTEN-10 AC-2, AC-5; KARTEN-9 AC-13): those of the YAML
  * itself, found in this browser, and those the server found on saving or on checking. A line opens in the YAML view.
+ * In the guided way a problem names the part of the card in its words ("The number"), never the path of a field.
  */
 export function ProblemList() {
   const { t } = useTranslation()
@@ -16,7 +17,7 @@ export function ProblemList() {
   if (!local.length && !server.length) return null
   const rows = [
     ...local.map((problem) => ({ line: problem.line, path: '', text: localProblemText(t, problem) })),
-    ...server.map((problem) => ({ line: problem.line, path: problem.path, text: serverProblemText(t, problem) })),
+    ...server.map((problem) => ({ line: problem.line, path: view === 'guided' ? (partOfProblem(t, problem.path) ?? '') : problem.path, text: serverProblemText(t, problem) })),
   ]
   return (
     <div className="rounded-xl border border-bad/40 px-3 py-2 min-w-0" role="alert" data-testid="card-problems">

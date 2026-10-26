@@ -715,6 +715,20 @@
         "version": "Versione",
         "url": "Indirizzo",
         "path": "Percorso"
+      },
+      "part": {
+        "name": "Il nome",
+        "slug": "Il nome breve",
+        "number": "Il numero",
+        "numberN": "Numero {{number}}",
+        "colours": "I colori",
+        "lines": "Le righe",
+        "main": "Testo principale",
+        "below": "Sotto, piccolo",
+        "right": "A destra",
+        "picture": "Immagine",
+        "lineRed": "Riga in rosso",
+        "ask": "Cosa chiede la scheda"
       }
     }
   }

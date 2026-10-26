@@ -715,6 +715,20 @@
         "version": "Version",
         "url": "Adresse",
         "path": "Chemin"
+      },
+      "part": {
+        "name": "Le nom",
+        "slug": "Le nom court",
+        "number": "Le nombre",
+        "numberN": "Nombre {{number}}",
+        "colours": "Les couleurs",
+        "lines": "Les lignes",
+        "main": "Texte principal",
+        "below": "Dessous, en petit",
+        "right": "À droite",
+        "picture": "Image",
+        "lineRed": "Ligne en rouge",
+        "ask": "Ce que la carte demande"
       }
     }
   }

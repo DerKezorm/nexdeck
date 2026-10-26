@@ -715,6 +715,20 @@
         "version": "Version",
         "url": "Address",
         "path": "Path"
+      },
+      "part": {
+        "name": "The name",
+        "slug": "The short name",
+        "number": "The number",
+        "numberN": "Number {{number}}",
+        "colours": "The colours",
+        "lines": "The lines",
+        "main": "Main text",
+        "below": "Below, small",
+        "right": "Right",
+        "picture": "Picture",
+        "lineRed": "Line red",
+        "ask": "What the card asks"
       }
     }
   }

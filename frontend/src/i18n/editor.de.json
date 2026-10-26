@@ -715,6 +715,20 @@
         "version": "Version",
         "url": "Adresse",
         "path": "Pfad"
+      },
+      "part": {
+        "name": "Der Name",
+        "slug": "Der Kurzname",
+        "number": "Die Zahl",
+        "numberN": "Zahl {{number}}",
+        "colours": "Die Farben",
+        "lines": "Die Zeilen",
+        "main": "Haupttext",
+        "below": "Darunter, klein",
+        "right": "Rechts",
+        "picture": "Bild",
+        "lineRed": "Zeile rot",
+        "ask": "Was die Karte fragt"
       }
     }
   }
