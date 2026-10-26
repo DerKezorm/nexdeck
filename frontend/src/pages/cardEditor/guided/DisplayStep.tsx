@@ -14,6 +14,7 @@ import { textIn, type TextSpot } from '../texts'
 import { AnswerTable } from './AnswerTable'
 import {
   cellOf,
+  changeForm,
   formsFor,
   GUIDED_OPS,
   hiddenIn,
@@ -25,7 +26,6 @@ import {
   writeLocal,
   writeNumber,
   writeRowRule,
-  writeShape,
   type AnswerTable as Table,
   type NumberPart,
 } from './guided'
@@ -360,7 +360,14 @@ export function DisplayStep() {
               onClick={() => {
                 if (form === one || !whole) return
                 // Another form makes the display again: what the guided way cannot show is asked about first.
-                guard.ask(() => change((doc) => writeShape(doc, shapeFor(one, whole, suggestion))))
+                guard.ask(() => {
+                  // The sentences of the form that is left are kept for the way back, and what both forms know goes along.
+                  let memory = useCardEditor.getState().shapeMemory
+                  change((doc) => {
+                    memory = changeForm(doc, form, one, shapeFor(one, whole, suggestion), memory)
+                  })
+                  useCardEditor.setState({ shapeMemory: memory })
+                })
               }}
             >
               <span className="text-[20px] leading-none text-accent" aria-hidden="true">

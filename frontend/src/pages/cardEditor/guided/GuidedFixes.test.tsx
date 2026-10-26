@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { readAt } from '../../../lib/cardDocument'
 import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEditor'
-import { stubGuided } from '../../../test/guidedWorld'
+import { ANSWERS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
 import { thresholdOf } from './FinishStep'
 
@@ -383,5 +383,86 @@ rules:
     await userEvent.clear(rule.getByRole('textbox', { name: 'Compared with' }))
     await userEvent.type(rule.getByRole('textbox', { name: 'Compared with' }), '007')
     expect(readAt(card(), ['rules', 0, 'than'])).toBe('007')
+  })
+})
+
+
+describe('review 6: another form keeps what the author set, as the mock-up does', () => {
+  async function toDisplay() {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+  }
+  const value = () => screen.getAllByRole('textbox', { name: 'Value' })[0]
+
+  it('a number with its own sentence, label and yellow threshold is the same number after a list and back', async () => {
+    await toDisplay()
+    await userEvent.clear(value())
+    await userEvent.type(value(), 'sensor.')
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Label below the number' }))
+    await userEvent.type(screen.getByRole('textbox', { name: 'Label below the number' }), 'Mine')
+    act(() => editor().set(['value', 'rules'], [{ op: '>=', than: 8, then: 'warn' }]))
+    const number = readAt(card(), ['value'])
+    expect(readAt(card(), ['value', 'total', 'rows', 'filter', 0, 'value'])).toBe('sensor.')
+
+    await click(/^A list/)
+    expect(readAt(card(), ['form'])).toBe('list')
+    expect(readAt(card(), ['value'])).toBeUndefined()
+    await click(/^A number/)
+    expect(readAt(card(), ['form'])).toBe('value')
+    expect(readAt(card(), ['value'])).toEqual(number)
+    expect(screen.getAllByRole('textbox', { name: 'Value' })[0]).toHaveValue('sensor.')
+    expect(screen.getByRole('textbox', { name: 'Label below the number' })).toHaveValue('Mine')
+  })
+
+  it('"Several numbers" starts with that number, its label and its colours, and "A number" takes the first one back', async () => {
+    await toDisplay()
+    await userEvent.clear(value())
+    await userEvent.type(value(), 'sensor.')
+    act(() => editor().set(['value', 'rules'], [{ op: '>=', than: 8, then: 'warn' }]))
+    act(() => editor().set(['value', 'label'], 'Mine'))
+    await click(/^Several numbers/)
+    expect(readAt(card(), ['stats', 0, 'label'])).toBe('Mine')
+    expect(readAt(card(), ['stats', 0, 'total', 'rows', 'filter', 0, 'value'])).toBe('sensor.')
+    expect(readAt(card(), ['stats', 0, 'rules'])).toEqual([{ op: '>=', than: 8, then: 'warn' }])
+    expect(readAt(card(), ['stats', 1, 'rules'])).toEqual([{ op: '>=', than: 8, then: 'warn' }])
+    expect(readAt(card(), ['value'])).toBeUndefined()
+    act(() => editor().set(['stats', 0, 'label'], 'Changed'))
+    await click(/^A number/)
+    expect(readAt(card(), ['value', 'label'])).toBe('Changed')
+    expect(readAt(card(), ['value', 'rules'])).toEqual([{ op: '>=', than: 8, then: 'warn' }])
+  })
+
+  it('a list keeps its places and its red rule across Pictures and back, and the main text and the text below go along', async () => {
+    stubGuided('', { 'POST /cards/probe': { status: 200, body: { nodes: 9, cut: false, tree: answerOf({ data: [{ name: 'a', type: 'qemu', mem: 1, thumb: '/t/1.jpg', status: 'running' }] }) } } })
+    await openNew()
+    await click(/^pve/)
+    await click(/^Virtual machines and containers/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api2/json/cluster/resources?type=vm'))
+    await click('Next')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Main text' }), 'type')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Right' }), 'mem')
+    const item = readAt(card(), ['item'])
+    await click(/^Pictures/)
+    expect(readAt(card(), ['item', 'title'])).toBe('type')
+    expect(readAt(card(), ['item', 'subtitle'])).toBe('type')
+    await click(/^A list/)
+    expect(readAt(card(), ['item'])).toEqual({ ...(item as object), subtitle: 'type' })
+    expect(readAt(card(), ['item', 'value'])).toBe('mem')
+    expect(readAt(card(), ['item', 'status'])).toEqual([{ value: 'status', op: '!=', than: 'running', then: 'bad' }])
+  })
+
+  it('another answer starts over: nothing remembered of the old one comes back', async () => {
+    stubGuided('', { 'POST /cards/probe': (body) => ({ status: 200, body: body?.path === '/api/calendars' ? CALENDARS : ANSWERS['/api/states'] }) })
+    await toDisplay()
+    await userEvent.clear(value())
+    await userEvent.type(value(), 'sensor.')
+    await click(/^A list/)
+    expect(editor().shapeMemory.value).toBeDefined()
+    await click(/^2 Data/)
+    await click(/^Calendars/)
+    await waitFor(() => expect(editor().shapeMemory).toEqual({}))
   })
 })

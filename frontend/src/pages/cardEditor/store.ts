@@ -12,7 +12,7 @@ import { create } from 'zustand'
 
 import { changeCard, deleteAt, parseCard, pathText, readAt, setAt, type CardDoc, type CardPath, type LocalProblem } from '../../lib/cardDocument'
 import type { CardProblem } from '../../lib/customCards'
-import { refusalOf, type GuidedStep, type Refusal } from './guided/guided'
+import { refusalOf, type FormMemory, type GuidedStep, type Refusal } from './guided/guided'
 import type { ProbeState } from './probe'
 
 /** The guided way, "All settings" (the steps below) and the YAML view: three ways into the same document (U1). */
@@ -53,6 +53,8 @@ export interface CardEditorState {
   refusal: Refusal | null
   /** A path picked in the guided way whose answer is awaited to make the card's display from it. */
   pendingShape: string | null
+  /** What each form had when the card left it, so that going back to it brings it back (a number's sentences, a list's places). */
+  shapeMemory: FormMemory
   /** The English name the guided way gave the card itself; a name typed by the author is never replaced. */
   autoName: string | null
   /** Whether the card on screen was saved for the first time during this visit ("Saved. Put it on a board?"). */
@@ -153,6 +155,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     shapedPath: null,
     refusal: null,
     pendingShape: null,
+    shapeMemory: {},
     autoName: null,
     created: false,
     previewData: null,
@@ -191,6 +194,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         shapedPath: shaped,
         refusal,
         pendingShape: null,
+        shapeMemory: {},
         autoName: null,
         created: false,
         previewData: null,

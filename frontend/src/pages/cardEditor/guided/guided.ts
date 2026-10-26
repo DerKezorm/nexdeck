@@ -392,6 +392,50 @@ export function writeShape(doc: Document, shape: Shape): void {
   }
 }
 
+// -- changing the form --------------------------------------------------------------------------------------------
+
+/** The parts a form is made of, as plain data. */
+export type FormParts = Partial<Record<'value' | 'stats' | 'rows' | 'item', unknown>>
+/** What each form had when the card last left it: coming back to it brings it back. */
+export type FormMemory = Partial<Record<CardForm, FormParts>>
+
+const PART_KEYS = ['value', 'stats', 'rows', 'item'] as const
+
+const partsOf = (doc: Document): FormParts => Object.fromEntries(PART_KEYS.map((key) => [key, readIn(doc, [key])]).filter(([, value]) => value !== undefined))
+
+/**
+ * Make the card show another form without losing what the author set (like the mock-up, where the sentences stay
+ * while another form is looked at). The form that is left is remembered whole; the form that comes starts as it was
+ * left, or as its default; and what both forms know carries over: the first number with its label and colours
+ * between "A number" and "Several numbers", the main text and the text below between "A list" and "Pictures".
+ * Returns the memory to keep.
+ */
+export function changeForm(doc: Document, from: CardForm, to: CardForm, fresh: Shape, memory: FormMemory): FormMemory {
+  const before = partsOf(doc)
+  const kept: FormMemory = { ...memory, [from]: before }
+  writeShape(doc, fresh)
+  const back = memory[to]
+  if (back) for (const key of PART_KEYS) if (back[key] !== undefined) setAt(doc, [key], back[key])
+
+  if (to === 'value' && from === 'stats' && Array.isArray(before.stats) && before.stats[0] !== undefined) setAt(doc, ['value'], before.stats[0])
+  if (to === 'stats' && from === 'value' && before.value !== undefined) {
+    setAt(doc, ['stats', 0], before.value)
+    // The colour sentences are the same for every number.
+    const rules = isMap(before.value) ? before.value.rules : undefined
+    const count = readIn(doc, ['stats'])
+    if (rules !== undefined && Array.isArray(count)) for (let index = 1; index < count.length; index++) setAt(doc, ['stats', index, 'rules'], rules)
+  }
+  if ((to === 'list' || to === 'posters') && (from === 'list' || from === 'posters')) {
+    const item = isMap(before.item) ? before.item : {}
+    for (const key of ['title', 'subtitle']) {
+      if (item[key] !== undefined) setAt(doc, ['item', key], item[key])
+      else if (before.item !== undefined) deleteAt(doc, ['item', key])
+    }
+    if (isMap(before.rows) && before.rows.select !== undefined) setAt(doc, ['rows'], before.rows)
+  }
+  return kept
+}
+
 /**
  * A text of the card in the language on screen. Away from English, English follows along while it is empty or the
  * same as this language, so the card always has the English it needs (KARTEN-1 AC-5); a different English stays.

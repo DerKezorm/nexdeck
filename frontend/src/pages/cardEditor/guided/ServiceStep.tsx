@@ -41,7 +41,7 @@ export function ServiceStep() {
           deleteAt(doc, ['demo'])
           writeShape(doc, { form: 'value', number: { kind: 'field', path: '@' } })
         })
-        useCardEditor.setState({ shapedPath: null, pendingShape: null })
+        useCardEditor.setState({ shapedPath: null, pendingShape: null, shapeMemory: {} })
       }
       editor.setIntegration(one.id)
       editor.setGuidedStep('data')

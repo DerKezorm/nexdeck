@@ -88,5 +88,6 @@ export function shapeNow(tree: ProbeNode, suggestion: CardSuggestion | null, kin
       named = nameEn
     }
   })
-  useCardEditor.setState((state) => ({ shapedPath: state.pendingShape ?? state.shapedPath, pendingShape: null, autoName: named ?? state.autoName }))
+  // A new answer is another thing to show: what the forms remembered of the old one means nothing here.
+  useCardEditor.setState((state) => ({ shapedPath: state.pendingShape ?? state.shapedPath, pendingShape: null, shapeMemory: {}, autoName: named ?? state.autoName }))
 }
