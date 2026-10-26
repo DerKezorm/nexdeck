@@ -159,6 +159,25 @@ def test_karten4_ac4_the_tile_follows_the_address_and_the_logo_of_the_connection
     assert shown["service_link"] == BASE, "the tile leads to the service"
 
 
+def test_karten4_ac4_the_catalog_and_the_bar_take_a_tile_on_an_own_connection_like_any_other(admin: TestClient) -> None:  # noqa: F811
+    """The catalog lists apps and the bar (Ctrl K) lists tiles with an address; neither asks for the kind of the connection."""
+    number = own(admin, WIKI)
+    # the bar reads title, icon and link of the tile as the board hands them out
+    board = admin.post("/api/v1/boards", json={"name": "Lab bar"}, headers=CSRF).json()
+    page = f"/api/v1/pages/{board['pages'][0]['id']}/widgets"
+    plain = admin.post(page, json={"kind": "core.app", "title": "Team wiki", "icon": "wikijs", "link": BASE, "integration_id": number}, headers=CSRF)
+    assert plain.status_code == 201, plain.text
+    # the catalog offers an app for the connection's logo and counts the tile that follows it
+    app = admin.post("/api/v1/apps", json={"name": "Wiki app", "icon": "wikijs", "addresses": [{"label": "Home", "url": BASE}]}, headers=CSRF)
+    assert app.status_code == 201, app.text
+    following = admin.post(page, json={"kind": "core.app", "title": "", "integration_id": number, "options": {"app_id": app.json()["id"]}}, headers=CSRF)
+    assert following.status_code == 201, following.text
+    shown = {one["title"]: one for one in admin.get(f"/api/v1/boards/{board['slug']}").json()["pages"][0]["widgets"]}
+    assert (shown["Team wiki"]["icon"], shown["Team wiki"]["link"]) == ("wikijs", BASE)
+    assert (shown["Wiki app"]["icon"], shown["Wiki app"]["service_link"]) == ("wikijs", BASE)
+    assert [(one["name"], one["tiles"]) for one in admin.get("/api/v1/apps").json()] == [("Wiki app", 1)]
+
+
 # -- AC-2, EC-1: the version ---------------------------------------------------------------------------------------
 
 
@@ -263,7 +282,7 @@ def test_karten4_ac3_a_description_saved_again_and_a_deleted_one_change_the_proj
 
 
 @respx.mock
-def test_karten4_ec6_a_locked_connection_stays_off_the_update_card_and_the_catalog_of_members(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+def test_karten4_ec6_a_locked_connection_stays_off_the_update_card_and_the_connections_of_members(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
     from .conftest import create_user, login
 
     switch_on_update_check(admin)
@@ -277,6 +296,34 @@ def test_karten4_ec6_a_locked_connection_stays_off_the_update_card_and_the_catal
     login(admin, "mia", "another-long-password")
     assert number not in [one["id"] for one in admin.get("/api/v1/integrations").json()]
     assert admin.get("/api/v1/integrations/versions").status_code == 403
+
+
+@respx.mock
+def test_karten4_ec6_a_locked_connection_is_on_the_status_page_of_its_board_and_closed_to_new_tiles_of_members(admin: TestClient) -> None:  # noqa: F811
+    from .conftest import create_user, login
+
+    number = own(admin, WIKI, admin_only=True)
+    tile = tile_on(admin, number, "Locked wiki")
+    status_card = admin.post(f"/api/v1/pages/{tile['board']['pages'][0]['id']}/widgets", json={"kind": "core.status", "title": "Status"}, headers=CSRF)
+    assert status_card.status_code == 201, status_card.text
+    # the administrator built the tile, so the board shows its check to everyone who may see the board, as for a locked built-in connection
+    with db_session() as db:
+        check = db.scalar(select(HealthCheck).where(HealthCheck.widget_id == tile["id"]))
+        check.last_ok = True
+        check.last_latency_ms = 12
+        db.commit()
+    ctx = Context(collector.client, widget_id=status_card.json()["widget"]["id"], cache={})
+    shown = asyncio.run(get_adapter("core").fetch("status", {}, {}, ctx))
+    assert [(one["title"], one["status"]) for one in shown.items] == [("Locked wiki", "ok")]
+    # nobody but an administrator builds something new on it
+    create_user(admin, "mia", role="user")
+    login(admin, "mia", "another-long-password")
+    own_board = admin.post("/api/v1/boards", json={"name": "Mia"}, headers=CSRF).json()
+    made = admin.post(
+        f"/api/v1/pages/{own_board['pages'][0]['id']}/widgets",
+        json={"kind": "core.app", "title": "Mine", "integration_id": number}, headers=CSRF,
+    )
+    assert made.status_code == 403 and made.json()["detail"]["code"] == "integration_locked"
 
 
 # -- AC-5: boards and their files ----------------------------------------------------------------------------------------

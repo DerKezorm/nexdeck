@@ -73,6 +73,18 @@ describe('CommandPalette', () => {
     await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0))
   })
 
+  it('finds the tile of an own integration by its name and opens its address (KARTEN-4 AC-4)', async () => {
+    settings.value = { enabled: false, targets: [] }
+    const open = vi.fn(() => null)
+    vi.stubGlobal('open', open)
+    const tile: WidgetView = {
+      id: 7, kind: 'core.app', title: 'Team wiki', icon: 'wikijs', link: 'http://wiki.example.com:3000', renderer: 'app', options: {}, integration_id: 4, refresh_seconds: null,
+    }
+    show([tile])
+    await userEvent.type(screen.getByRole('textbox'), 'Team wiki{Enter}')
+    expect(open).toHaveBeenCalledWith('http://wiki.example.com:3000', '_blank', 'noopener,noreferrer')
+  })
+
   describe('links on the board (issue #46)', () => {
     const card = (id: number, kind: string, title: string): WidgetView => ({
       id, kind, title, icon: '', link: '', renderer: '', options: {}, integration_id: null, refresh_seconds: null,
