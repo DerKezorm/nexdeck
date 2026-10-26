@@ -58,6 +58,9 @@ class NavidromeAdapter(Adapter):
         token = hashlib.md5(f"{password}{salt}".encode()).hexdigest()  # noqa: S324 - the Subsonic API asks for exactly this
         return {"u": str(config.get("username") or ""), "t": token, "s": salt, "v": "1.16.1", "c": "nexdeck", "f": "json"}
 
+    def raw_params(self, config: dict[str, Any]) -> dict[str, Any]:
+        return self._params(config)
+
     async def _get(self, config: dict[str, Any], ctx: Context, view: str, extra: dict[str, Any] | None = None, cache: float = 30) -> Any:
         payload = await ctx.get_json(
             f"{base_url(config)}/rest/{view}",

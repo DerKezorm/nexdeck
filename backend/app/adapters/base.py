@@ -1480,6 +1480,18 @@ class Context:
         #: ``async (integration_id) -> (adapter, config, Context)`` for widgets
         #: that combine several integrations, such as the calendar.
         self.resolve_integration = resolve_integration
+        #: Watches every request before it leaves, see :mod:`.rawread`; ``None`` for all but a custom card's capture.
+        self.tap: Any = None
+        #: False for a context that only watches (see :meth:`tapped`): what it asks is not what a card reads.
+        self.records = True
+
+    def tapped(self, tap: Any) -> Context:
+        """The same connection (client, memory, sessions) with a watcher on its requests."""
+        other = Context(self.client, integration_id=self.integration_id, widget_id=self.widget_id,
+                        cache=self.cache, resolve_integration=self.resolve_integration)
+        other.tap = tap
+        other.records = False
+        return other
 
     async def request(
         self,
@@ -1498,6 +1510,7 @@ class Context:
         auth_errors: bool = True,
         member: bool = False,
         follow_redirects: bool | None = None,
+        note: bool = True,
     ) -> httpx.Response:
         """Fetch, with 401 and 403 turned into a readable refusal.
 
@@ -1510,14 +1523,23 @@ class Context:
         through a client with the member rule on every hop of a redirect, not
         through the shared one that serves the administrator's connections.
 
+        ``note=False`` keeps the request out of the list of what the built-in cards of a connection read
+        (:mod:`..cards.reads`); a custom card's own requests and a watched connection test pass it.
+
         ``follow_redirects`` overrides what the client does for this one request;
         ``None`` leaves it to the client. A custom card asks with ``False``: httpx
         drops ``Authorization`` when a redirect changes the host, but not ``X-Api-Key``.
         """
+        if self.tap is not None:
+            self.tap(method, url, headers, params, auth, data if data is not None else json_body)
         if member:
             guard_member_target(url)
         else:
             guard_outbound(url)
+        if note and self.records and self.widget_id is not None:
+            from ..cards import reads
+
+            reads.note(self.integration_id, self.widget_id, method, url, params)
         # Only when it was asked for, so the cache keys of every other request stay what they were.
         redirects = {} if follow_redirects is None else {"follow_redirects": follow_redirects}
         key = ""
@@ -1958,6 +1980,30 @@ class Adapter:
             headers["Authorization"] = "Basic " + base64.b64encode(f"{login[0]}:{login[1]}".encode()).decode()
         return headers
 
+    #: Names of parameters that carry a key or a session for this kind and do not look like one (``rawread`` copies
+    #: the others by their name alone).
+    raw_param_names: tuple[str, ...] = ()
+
+    def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient | None:
+        """The client that holds this kind's session cookie, for a kind that signs in once and keeps the cookie."""
+        return None
+
+    async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
+        """Sign in again, by the kind's own sign-in, on the client of :meth:`raw_client`."""
+        raise NotImplementedError
+
+    async def raw_signed_headers(self, config: dict[str, Any], ctx: Context) -> dict[str, str] | None:
+        """Headers that sign a request when they have to be fetched first (a token from another host); ``None`` for most."""
+        return None
+
+    def raw_expired(self, response: httpx.Response) -> bool:
+        """True when an answer that is no 401 or 403 says the session ran out (DSM answers 200 with an error code)."""
+        return False
+
+    def raw_params(self, config: dict[str, Any]) -> dict[str, Any]:
+        """Parameters of the address that sign a request, for a kind whose key travels there and has a helper for it."""
+        return {}
+
     async def raw_request(
         self,
         method: str,
@@ -1969,7 +2015,7 @@ class Adapter:
         json_body: Any = None,
         cache_seconds: float = 0,
     ) -> httpx.Response:
-        """One request a custom card makes, with this connection's own credentials.
+        """One request a custom card makes, signed the way the built-in cards of this kind are.
 
         ⚠️ Never follows a redirect: the answer comes back as it is and the caller refuses a 3xx. The credentials
         belong to the address of the connection and go nowhere else, whatever the service answers.
@@ -1980,19 +2026,9 @@ class Adapter:
                 code="no_raw_access",
                 hint="Pick a connection of another kind.",
             )
-        from .jsonapi import join_path
+        from . import rawread
 
-        return await ctx.request(
-            method.upper(),
-            join_path(self.raw_base(config), path),
-            headers=self.raw_headers(config) or None,
-            params=params,
-            json_body=json_body,
-            verify=self.raw_verify(config),
-            auth=self.raw_auth(config),
-            cache_seconds=cache_seconds,
-            follow_redirects=False,
-        )
+        return await rawread.ask(self, method, path, config, ctx, params=params, json_body=json_body, cache_seconds=cache_seconds)
 
 
 async def hand_back(adapter: Adapter, config: dict[str, Any], ctx: Context) -> None:
