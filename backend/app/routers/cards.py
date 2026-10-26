@@ -23,7 +23,7 @@ from ..adapters import get_adapter
 from ..adapters.base import AdapterError, Context, shape_for_display
 from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
-from ..cards import credentials, load, pipeline, probe, schema, source, store
+from ..cards import credentials, load, pipeline, probe, reads, schema, source, store
 from ..cards import demo as card_demo
 from ..config import get_settings
 from ..db import db_session
@@ -159,6 +159,38 @@ def _tell(db: Session, slug: str) -> None:
 @router.get("/sources", summary="The kinds of connection a custom card can read through")
 def sources(user: AdminUser) -> list[dict[str, Any]]:
     return source.sources()
+
+
+@router.get("/sources/{integration_id}/read", summary="What the built-in cards of a connection read")
+async def source_reads(integration_id: int, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """The paths the built-in cards of this connection asked since nexdeck started, as the guided editor offers them.
+
+    ⚠️ Without anything that proves who asks (a key in the address is dropped, a path with a secret in it is not shown)
+    and only for cards that are still on a board (:mod:`..cards.reads`).
+    """
+    from ..adapters import split_widget_kind
+
+    try:
+        adapter, config, _ = await collector.resolve_integration(integration_id)
+    except AdapterError as failure:
+        raise _failed(failure) from failure
+    if not adapter.raw_access:
+        raise _failed(AdapterError(f"{adapter.label} cannot be read by a custom card.", code="no_raw_access"))
+    secrets = [str(value) for name, value in config.items() if isinstance(value, str) and len(value) >= 4
+               and name in adapter.secret_field_names()]
+    cards = {one.id: one for one in db.scalars(select(Widget).where(Widget.integration_id == integration_id))}
+    reads_here = []
+    for one in reads.read(integration_id, adapter.raw_base(config), secrets):
+        card = cards.get(one.widget_id)
+        if card is None or card.kind.startswith("custom."):
+            continue
+        try:
+            _, widget_kind = split_widget_kind(card.kind)
+            label = adapter.widget(widget_kind).label
+        except KeyError:
+            label = card.kind
+        reads_here.append({"path": one.path, "card": {"id": card.id, "title": card.title or label, "kind": card.kind, "label": label}, "at": one.at})
+    return {"reads": reads_here, "cards": sum(1 for one in cards.values() if not one.kind.startswith("custom."))}
 
 
 @router.get("/schema", summary="The JSON schema of a custom card")
