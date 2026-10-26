@@ -1,0 +1,2583 @@
+{
+ "actualbudget": [
+  {
+   "path": "/v1/budgets/{sync_id}/months/2026-10",
+   "widgets": [
+    "month",
+    "categories"
+   ]
+  },
+  {
+   "path": "/v1/budgets/{sync_id}/accounts?include_balances=true",
+   "widgets": [
+    "accounts"
+   ]
+  }
+ ],
+ "adguard": [
+  {
+   "path": "/control/stats",
+   "widgets": [
+    "summary",
+    "top"
+   ]
+  },
+  {
+   "path": "/control/status",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "alertmanager": [
+  {
+   "path": "/api/v2/alerts?filter={filter}",
+   "widgets": [
+    "alerts"
+   ]
+  },
+  {
+   "path": "/api/v2/alerts",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v2/silences",
+   "widgets": [
+    "silences"
+   ]
+  }
+ ],
+ "arcane": [
+  {
+   "path": "/api/environments?limit=-1",
+   "widgets": [
+    "summary",
+    "environments",
+    "projects",
+    "containers",
+    "updates"
+   ]
+  }
+ ],
+ "audiobookshelf": [
+  {
+   "path": "/api/libraries",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/users/online",
+   "widgets": [
+    "listening"
+   ]
+  }
+ ],
+ "authentik": [
+  {
+   "path": "/api/v3/events/events/?action=login_failed&ordering=-created&page_size=50",
+   "widgets": [
+    "status",
+    "failed"
+   ]
+  },
+  {
+   "path": "/api/v3/events/events/?action=login&ordering=-created&page_size=50",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/core/users/?page_size=1",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/admin/version/",
+   "widgets": [
+    "status"
+   ]
+  }
+ ],
+ "autobrr": [
+  {
+   "path": "/api/release?limit=8",
+   "widgets": [
+    "releases"
+   ]
+  },
+  {
+   "path": "/api/release/stats",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/filters",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "bazarr": [
+  {
+   "path": "/api/badges",
+   "widgets": [
+    "status",
+    "wanted"
+   ]
+  },
+  {
+   "path": "/api/episodes/wanted?start=0&length=8",
+   "widgets": [
+    "wanted"
+   ]
+  },
+  {
+   "path": "/api/movies/wanted?start=0&length=8",
+   "widgets": [
+    "wanted"
+   ]
+  },
+  {
+   "path": "/api/history?start=0&length=8",
+   "widgets": [
+    "history"
+   ]
+  }
+ ],
+ "beszel": [
+  {
+   "path": "/api/collections/systems/records?perPage=200",
+   "widgets": [
+    "systems",
+    "system"
+   ]
+  }
+ ],
+ "blocky": [
+  {
+   "path": "/api/stats",
+   "widgets": [
+    "blocking",
+    "top"
+   ]
+  }
+ ],
+ "changedetection": [
+  {
+   "path": "/api/v1/watch?tag={tag}",
+   "widgets": [
+    "changes"
+   ]
+  },
+  {
+   "path": "/api/v1/systeminfo",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/watch",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "cloudflare": [
+  {
+   "path": "/accounts/{account_id}/cfd_tunnel?is_deleted=false&per_page=100",
+   "widgets": [
+    "tunnels"
+   ]
+  },
+  {
+   "path": "/zones?per_page=50",
+   "widgets": [
+    "zones"
+   ]
+  },
+  {
+   "path": "/zones?name={zone}",
+   "widgets": [
+    "traffic"
+   ]
+  }
+ ],
+ "coolify": [
+  {
+   "path": "/api/v1/applications",
+   "widgets": [
+    "applications",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/deployments",
+   "widgets": [
+    "deployments"
+   ]
+  },
+  {
+   "path": "/api/v1/servers",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/version",
+   "widgets": [
+    "status"
+   ]
+  }
+ ],
+ "crowdsec": [
+  {
+   "path": "/v1/decisions?origins=crowdsec%2Ccscli",
+   "widgets": [
+    "decisions",
+    "summary"
+   ]
+  }
+ ],
+ "cup": [
+  {
+   "path": "/api/v3/json",
+   "widgets": [
+    "updates",
+    "summary"
+   ]
+  }
+ ],
+ "dawarich": [
+  {
+   "path": "/api/v1/stats",
+   "widgets": [
+    "summary",
+    "months"
+   ]
+  }
+ ],
+ "dockhand": [
+  {
+   "path": "/api/dashboard/stats",
+   "widgets": [
+    "summary",
+    "environments",
+    "stacks",
+    "containers",
+    "updates"
+   ]
+  }
+ ],
+ "elasticsearch": [
+  {
+   "path": "/_cluster/health",
+   "widgets": [
+    "cluster",
+    "indices"
+   ]
+  },
+  {
+   "path": "/_cat/nodes?format=json&bytes=b&h=name%2Cnode.role%2Cmaster%2Cheap.percent%2Ccpu%2Cload_1m%2Cdisk.used_percent%2Cversion",
+   "widgets": [
+    "nodes"
+   ]
+  }
+ ],
+ "emby": [
+  {
+   "path": "/Items/Counts",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/Library/VirtualFolders",
+   "widgets": [
+    "libraries",
+    "findings"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=Movie&Limit=8&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=Episode&Limit=40&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=MusicAlbum&Limit=8&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/System/Info",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/ScheduledTasks",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/System/ActivityLog/Entries?StartIndex=0&Limit=500",
+   "widgets": [
+    "findings",
+    "users",
+    "top"
+   ]
+  },
+  {
+   "path": "/Plugins",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/System/Storage",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/Users",
+   "widgets": [
+    "users",
+    "player"
+   ]
+  },
+  {
+   "path": "/Devices",
+   "widgets": [
+    "users"
+   ]
+  }
+ ],
+ "evcc": [
+  {
+   "path": "/api/state",
+   "widgets": [
+    "energy",
+    "flow",
+    "charging"
+   ]
+  }
+ ],
+ "filebrowserquantum": [
+  {
+   "path": "/api/settings/sources",
+   "widgets": [
+    "storage"
+   ]
+  },
+  {
+   "path": "/api/share/list",
+   "widgets": [
+    "storage"
+   ]
+  }
+ ],
+ "fileflows": [
+  {
+   "path": "/api/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/worker",
+   "widgets": [
+    "running"
+   ]
+  }
+ ],
+ "firefly": [
+  {
+   "path": "/api/v1/summary/basic",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/bills",
+   "widgets": [
+    "subscriptions"
+   ]
+  },
+  {
+   "path": "/api/v1/budgets",
+   "widgets": [
+    "budgets"
+   ]
+  }
+ ],
+ "forgejo": [
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=issues&limit=8",
+   "widgets": [
+    "issues"
+   ]
+  },
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=issues&limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=pulls&limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/user/repos?limit=50",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "fortigate": [
+  {
+   "path": "/api/v2/monitor/system/resource/usage?interval=1-min&vdom={vdom}",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/v2/monitor/system/interface/select?vdom={vdom}",
+   "widgets": [
+    "interfaces"
+   ]
+  },
+  {
+   "path": "/api/v2/monitor/vpn/ipsec?vdom={vdom}",
+   "widgets": [
+    "ipsec"
+   ]
+  },
+  {
+   "path": "/api/v2/monitor/system/ha-peer?vdom={vdom}",
+   "widgets": [
+    "ha"
+   ]
+  }
+ ],
+ "gatus": [
+  {
+   "path": "/api/v1/endpoints/statuses?pageSize=20",
+   "widgets": [
+    "endpoints",
+    "summary"
+   ]
+  }
+ ],
+ "gitea": [
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=issues&limit=8",
+   "widgets": [
+    "issues"
+   ]
+  },
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=issues&limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/repos/issues/search?state=open&type=pulls&limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/user/repos?limit=50",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "github": [
+  {
+   "path": "/repos/{owner}/{repo}/releases/latest",
+   "widgets": [
+    "releases"
+   ]
+  },
+  {
+   "path": "/search/issues?q=repo%3A{owner}%2F{repo}%20is%3Aissue%20is%3Aopen&sort=updated&order=desc&per_page=8",
+   "widgets": [
+    "issues"
+   ]
+  },
+  {
+   "path": "/repos/{owner}/{repo}/actions/runs?per_page=20&exclude_pull_requests=true",
+   "widgets": [
+    "runs"
+   ]
+  }
+ ],
+ "gitlab": [
+  {
+   "path": "/api/v4/projects/{projects}",
+   "widgets": [
+    "projects"
+   ]
+  },
+  {
+   "path": "/api/v4/projects/{projects}/pipelines/latest",
+   "widgets": [
+    "projects",
+    "pipelines"
+   ]
+  },
+  {
+   "path": "/api/v4/projects/{projects}/merge_requests?state=opened&per_page=1",
+   "widgets": [
+    "projects"
+   ]
+  },
+  {
+   "path": "/api/v4/projects/{projects}/issues_statistics",
+   "widgets": [
+    "projects"
+   ]
+  },
+  {
+   "path": "/api/v4/projects/{projects}/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=8",
+   "widgets": [
+    "merge_requests"
+   ]
+  },
+  {
+   "path": "/api/v4/projects/{projects}/releases?per_page=1",
+   "widgets": [
+    "releases"
+   ]
+  }
+ ],
+ "glances": [
+  {
+   "path": "/api/4/quicklook",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/4/mem",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/4/load",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/4/sensors",
+   "widgets": [
+    "system",
+    "sensors"
+   ]
+  },
+  {
+   "path": "/api/4/fs",
+   "widgets": [
+    "disks"
+   ]
+  }
+ ],
+ "gluetun": [
+  {
+   "path": "/v1/vpn/status",
+   "widgets": [
+    "vpn"
+   ]
+  },
+  {
+   "path": "/v1/openvpn/status",
+   "widgets": [
+    "vpn"
+   ]
+  },
+  {
+   "path": "/v1/publicip/ip",
+   "widgets": [
+    "vpn"
+   ]
+  },
+  {
+   "path": "/v1/portforwarded",
+   "widgets": [
+    "vpn"
+   ]
+  }
+ ],
+ "gotify": [
+  {
+   "path": "/message?limit=20",
+   "widgets": [
+    "messages",
+    "counts"
+   ]
+  },
+  {
+   "path": "/application",
+   "widgets": [
+    "messages",
+    "counts"
+   ]
+  }
+ ],
+ "grafana": [
+  {
+   "path": "/api/prometheus/grafana/api/v1/rules",
+   "widgets": [
+    "alerts",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/health",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/search?type=dash-db&limit=5000",
+   "widgets": [
+    "status"
+   ]
+  }
+ ],
+ "grocy": [
+  {
+   "path": "/api/stock/volatile?due_soon_days=5",
+   "widgets": [
+    "stock",
+    "summary"
+   ]
+  }
+ ],
+ "headscale": [
+  {
+   "path": "/api/v1/node",
+   "widgets": [
+    "nodes",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/user",
+   "widgets": [
+    "status"
+   ]
+  }
+ ],
+ "healthchecks": [
+  {
+   "path": "/api/v3/checks/?tag={tag}",
+   "widgets": [
+    "checks"
+   ]
+  },
+  {
+   "path": "/api/v3/checks/",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "homeassistant": [
+  {
+   "path": "/api/states/{entity_id}",
+   "widgets": [
+    "entity",
+    "entities"
+   ]
+  },
+  {
+   "path": "/api/states",
+   "widgets": [
+    "entities"
+   ]
+  },
+  {
+   "path": "/api/config",
+   "widgets": []
+  }
+ ],
+ "homebox": [
+  {
+   "path": "/api/v1/groups/statistics",
+   "widgets": [
+    "inventory"
+   ]
+  },
+  {
+   "path": "/api/v1/groups/statistics/locations",
+   "widgets": [
+    "worth"
+   ]
+  },
+  {
+   "path": "/api/v1/entities/export",
+   "widgets": [
+    "warranties"
+   ]
+  }
+ ],
+ "immich": [
+  {
+   "path": "/api/server/statistics",
+   "widgets": [
+    "library",
+    "users"
+   ]
+  },
+  {
+   "path": "/api/server/storage",
+   "widgets": [
+    "storage"
+   ]
+  }
+ ],
+ "jellyfin": [
+  {
+   "path": "/Items/Counts",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/Library/VirtualFolders",
+   "widgets": [
+    "libraries",
+    "findings"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=Movie&Limit=8&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=Episode&Limit=40&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/Items?SortBy=DateCreated&SortOrder=Descending&Recursive=true&IncludeItemTypes=MusicAlbum&Limit=8&Fields=DateCreated%2CProductionYear%2CSeriesId%2CParentIndexNumber%2CIndexNumber%2CAlbumArtist",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/System/Info",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/ScheduledTasks",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/System/ActivityLog/Entries?StartIndex=0&Limit=500",
+   "widgets": [
+    "findings",
+    "users",
+    "top"
+   ]
+  },
+  {
+   "path": "/Plugins",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/System/Storage",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/Users",
+   "widgets": [
+    "users",
+    "player"
+   ]
+  },
+  {
+   "path": "/Devices",
+   "widgets": [
+    "users"
+   ]
+  }
+ ],
+ "jellyseerr": [
+  {
+   "path": "/api/v1/request/count",
+   "widgets": [
+    "requests",
+    "counts"
+   ]
+  },
+  {
+   "path": "/api/v1/request?filter=pending&take=8&sort=added",
+   "widgets": [
+    "requests"
+   ]
+  }
+ ],
+ "jellystat": [
+  {
+   "path": "/api/getLibraries",
+   "widgets": [
+    "libraries"
+   ]
+  }
+ ],
+ "jsonapi": [
+  {
+   "path": "/{path}",
+   "widgets": [
+    "value",
+    "list"
+   ]
+  }
+ ],
+ "karakeep": [
+  {
+   "path": "/api/v1/bookmarks?limit=8&archived=false",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/v1/users/me/stats",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "kavita": [
+  {
+   "path": "/api/Library/libraries",
+   "widgets": [
+    "library"
+   ]
+  }
+ ],
+ "kimai": [
+  {
+   "path": "/api/users/me",
+   "widgets": [
+    "entries",
+    "summary"
+   ]
+  }
+ ],
+ "komga": [
+  {
+   "path": "/api/v1/libraries",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/v1/series?size=1",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/v1/books?size=1",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/v1/books/latest?size=6",
+   "widgets": [
+    "latest"
+   ]
+  }
+ ],
+ "kopia": [
+  {
+   "path": "/api/v1/sources",
+   "widgets": [
+    "sources",
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks",
+   "widgets": [
+    "sources",
+    "summary"
+   ]
+  }
+ ],
+ "kubernetes": [
+  {
+   "path": "/api/v1/nodes",
+   "widgets": [
+    "cluster",
+    "nodes"
+   ]
+  },
+  {
+   "path": "/apis/metrics.k8s.io/v1beta1/nodes",
+   "widgets": [
+    "cluster",
+    "nodes"
+   ]
+  },
+  {
+   "path": "/api/v1/pods",
+   "widgets": [
+    "cluster",
+    "pods"
+   ]
+  },
+  {
+   "path": "/apis/apps/v1/deployments",
+   "widgets": [
+    "cluster",
+    "workloads"
+   ]
+  },
+  {
+   "path": "/apis/apps/v1/statefulsets",
+   "widgets": [
+    "cluster",
+    "workloads"
+   ]
+  },
+  {
+   "path": "/apis/apps/v1/daemonsets",
+   "widgets": [
+    "cluster",
+    "workloads"
+   ]
+  },
+  {
+   "path": "/version",
+   "widgets": [
+    "cluster"
+   ]
+  }
+ ],
+ "lidarr": [
+  {
+   "path": "/api/v1/queue?pageSize=100&includeUnknownMovieItems=true",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v1/health",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/queue/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/artist",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
+   "widgets": [
+    "calendar"
+   ]
+  }
+ ],
+ "linkding": [
+  {
+   "path": "/api/user/profile/",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/bookmarks/?limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/bookmarks/?limit=8",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
+ "linkwarden": [
+  {
+   "path": "/api/v1/links?sort=0",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/v1/collections",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "m3ueditor": [
+  {
+   "path": "/user/playlists",
+   "widgets": [
+    "overview",
+    "playlists"
+   ]
+  },
+  {
+   "path": "/user/epgs",
+   "widgets": [
+    "overview",
+    "epgs"
+   ]
+  },
+  {
+   "path": "/proxy/streams/active",
+   "widgets": [
+    "overview",
+    "streams"
+   ]
+  },
+  {
+   "path": "/recordings/",
+   "widgets": [
+    "recordings"
+   ]
+  }
+ ],
+ "mailpit": [
+  {
+   "path": "/api/v1/info",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/webui",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/search?query={query}&start=0&limit=6",
+   "widgets": [
+    "latest"
+   ]
+  }
+ ],
+ "maintainerr": [
+  {
+   "path": "/api/collections",
+   "widgets": [
+    "collections",
+    "status"
+   ]
+  }
+ ],
+ "mealie": [
+  {
+   "path": "/api/households/mealplans?perPage=100",
+   "widgets": [
+    "plan"
+   ]
+  },
+  {
+   "path": "/api/households/shopping/items?perPage=-1",
+   "widgets": [
+    "shopping",
+    "summary"
+   ]
+  }
+ ],
+ "meilisearch": [
+  {
+   "path": "/stats",
+   "widgets": [
+    "indexes",
+    "summary"
+   ]
+  }
+ ],
+ "metube": [
+  {
+   "path": "/history",
+   "widgets": [
+    "fetch",
+    "downloads",
+    "counts"
+   ]
+  }
+ ],
+ "mikrotik": [
+  {
+   "path": "/rest/system/resource",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/rest/interface",
+   "widgets": [
+    "interfaces"
+   ]
+  }
+ ],
+ "miniflux": [
+  {
+   "path": "/v1/entries?limit=8&order=published_at&direction=desc&status=unread",
+   "widgets": [
+    "unread"
+   ]
+  },
+  {
+   "path": "/v1/feeds",
+   "widgets": [
+    "failing"
+   ]
+  },
+  {
+   "path": "/v1/entries?limit=1&order=published_at&direction=desc&status=unread",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "n8n": [
+  {
+   "path": "/api/v1/workflows?limit=250",
+   "widgets": [
+    "workflows",
+    "runs",
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/executions?limit=100",
+   "widgets": [
+    "runs",
+    "summary"
+   ]
+  }
+ ],
+ "navidrome": [
+  {
+   "path": "/rest/getScanStatus",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/rest/getNowPlaying",
+   "widgets": [
+    "playing"
+   ]
+  }
+ ],
+ "netalertx": [
+  {
+   "path": "/settings/TIMEZONE",
+   "widgets": [
+    "new",
+    "offline"
+   ]
+  },
+  {
+   "path": "/devices/by-status?status=new",
+   "widgets": [
+    "new"
+   ]
+  },
+  {
+   "path": "/devices/by-status?status=offline",
+   "widgets": [
+    "offline"
+   ]
+  },
+  {
+   "path": "/devices/totals/named",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "netbird": [
+  {
+   "path": "/api/peers",
+   "widgets": [
+    "peers",
+    "status"
+   ]
+  }
+ ],
+ "netbox": [
+  {
+   "path": "/api/dcim/devices/?limit=200&status__n=active",
+   "widgets": [
+    "devices"
+   ]
+  },
+  {
+   "path": "/api/ipam/prefixes/?limit=8",
+   "widgets": [
+    "prefixes"
+   ]
+  },
+  {
+   "path": "/api/dcim/devices/?limit=1&brief=true",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/dcim/devices/?status__n=active&limit=1&brief=true",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/dcim/sites/?limit=1&brief=true",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/ipam/ip-addresses/?limit=1&brief=true",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "netdata": [
+  {
+   "path": "/api/v3/alerts?status=raised&options=instances%2Cvalues",
+   "widgets": [
+    "alerts"
+   ]
+  },
+  {
+   "path": "/api/v3/nodes",
+   "widgets": [
+    "nodes",
+    "summary"
+   ]
+  }
+ ],
+ "neutarr": [
+  {
+   "path": "/api/configured-apps",
+   "widgets": [
+    "overview",
+    "apps"
+   ]
+  },
+  {
+   "path": "/api/stats",
+   "widgets": [
+    "overview",
+    "apps"
+   ]
+  }
+ ],
+ "nexbeat": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "requests",
+    "library"
+   ]
+  },
+  {
+   "path": "/api/v1/me",
+   "widgets": [
+    "approvals"
+   ]
+  }
+ ],
+ "nexbrand": [
+  {
+   "path": "/api/v1/clients",
+   "widgets": [
+    "clients",
+    "versions"
+   ]
+  }
+ ],
+ "nexcanvas": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "boards"
+   ]
+  }
+ ],
+ "nexcrate": [
+  {
+   "path": "/api/v1/titles?after=0&limit=2000",
+   "widgets": [
+    "library",
+    "why"
+   ]
+  },
+  {
+   "path": "/api/v1/health",
+   "widgets": [
+    "library",
+    "findings"
+   ]
+  },
+  {
+   "path": "/api/v1/queue",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v1/problems",
+   "widgets": [
+    "problems"
+   ]
+  },
+  {
+   "path": "/api/v1/calendar",
+   "widgets": [
+    "calendar"
+   ]
+  },
+  {
+   "path": "/api/v1/events?after=0&limit=1",
+   "widgets": [
+    "arrivals"
+   ]
+  },
+  {
+   "path": "/api/v1/events?after=0&limit=1000",
+   "widgets": [
+    "arrivals"
+   ]
+  },
+  {
+   "path": "/api/v1/storage",
+   "widgets": [
+    "storage"
+   ]
+  }
+ ],
+ "nexdiary": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "diary",
+    "capsule"
+   ]
+  }
+ ],
+ "nexlore": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/me",
+   "widgets": [
+    "overview",
+    "tasks"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?when=overdue&limit=8",
+   "widgets": [
+    "tasks"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?when=today&limit=8",
+   "widgets": [
+    "tasks"
+   ]
+  },
+  {
+   "path": "/api/v1/recent?limit=6",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
+ "nexmail": [
+  {
+   "path": "/api/v1/summary",
+   "widgets": [
+    "unread"
+   ]
+  },
+  {
+   "path": "/api/v1/me",
+   "widgets": [
+    "latest"
+   ]
+  }
+ ],
+ "nexpaper": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "inbox",
+    "deadlines",
+    "library"
+   ]
+  }
+ ],
+ "nexpulse": [
+  {
+   "path": "/api/v1/status",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/v1/results?limit=1",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/v1/results?limit=5000",
+   "widgets": [
+    "history"
+   ]
+  },
+  {
+   "path": "/api/v1/stats?range=7d",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/results?limit=8",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/v1/latest",
+   "widgets": [
+    "bufferbloat"
+   ]
+  }
+ ],
+ "nexsift": [
+  {
+   "path": "/api/v1/status",
+   "widgets": [
+    "inbox"
+   ]
+  },
+  {
+   "path": "/api/v1/threads?view=inbox&limit=8",
+   "widgets": [
+    "threads"
+   ]
+  }
+ ],
+ "nextcloud": [
+  {
+   "path": "/ocs/v2.php/apps/serverinfo/api/v1/info?format=json",
+   "widgets": [
+    "overview",
+    "activity",
+    "storage"
+   ]
+  }
+ ],
+ "nextdns": [
+  {
+   "path": "/profiles/{profile}/analytics/status?from=-24h",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/profiles/{profile}/analytics/domains?from=-24h&status=blocked&limit=8",
+   "widgets": [
+    "top"
+   ]
+  }
+ ],
+ "nextrmnl": [
+  {
+   "path": "/api/v1/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/history?limit=8",
+   "widgets": [
+    "history"
+   ]
+  },
+  {
+   "path": "/api/v1/connections",
+   "widgets": [
+    "connections"
+   ]
+  }
+ ],
+ "nexview": [
+  {
+   "path": "/api/v1/dashboard",
+   "widgets": [
+    "requests",
+    "library",
+    "instances"
+   ]
+  },
+  {
+   "path": "/api/v1/me",
+   "widgets": [
+    "approvals"
+   ]
+  }
+ ],
+ "nginxignition": [
+  {
+   "path": "/api/nginx/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/nginx/metadata",
+   "widgets": [
+    "status",
+    "traffic"
+   ]
+  },
+  {
+   "path": "/api/hosts?pageSize=1&pageNumber=0",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/streams?pageSize=1&pageNumber=0",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/certificates?pageSize=1000&pageNumber=0",
+   "widgets": [
+    "status",
+    "certificates"
+   ]
+  }
+ ],
+ "nomad": [
+  {
+   "path": "/v1/jobs?namespace={namespace}&meta=false",
+   "widgets": [
+    "jobs",
+    "summary"
+   ]
+  },
+  {
+   "path": "/v1/nodes?namespace={namespace}&resources=true",
+   "widgets": [
+    "nodes"
+   ]
+  }
+ ],
+ "npm": [
+  {
+   "path": "/api/nginx/proxy-hosts",
+   "widgets": [
+    "hosts",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/nginx/certificates",
+   "widgets": [
+    "certificates",
+    "status"
+   ]
+  }
+ ],
+ "ntfy": [
+  {
+   "path": "/{topic}/json?poll=1&since=12h",
+   "widgets": [
+    "messages"
+   ]
+  }
+ ],
+ "octoprint": [
+  {
+   "path": "/api/printer",
+   "widgets": [
+    "printer"
+   ]
+  },
+  {
+   "path": "/api/job",
+   "widgets": [
+    "job"
+   ]
+  }
+ ],
+ "ollama": [
+  {
+   "path": "/api/ps",
+   "widgets": [
+    "loaded",
+    "installed",
+    "summary"
+   ]
+  }
+ ],
+ "openwebui": [
+  {
+   "path": "/api/v1/auths/",
+   "widgets": [
+    "users",
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/models",
+   "widgets": [
+    "models"
+   ]
+  }
+ ],
+ "opnsense": [
+  {
+   "path": "/api/diagnostics/system/systemResources",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/core/firmware/status",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/routes/gateway/status",
+   "widgets": [
+    "gateways"
+   ]
+  }
+ ],
+ "overseerr": [
+  {
+   "path": "/api/v1/request/count",
+   "widgets": [
+    "requests",
+    "counts"
+   ]
+  },
+  {
+   "path": "/api/v1/request?filter=pending&take=8&sort=added",
+   "widgets": [
+    "requests"
+   ]
+  }
+ ],
+ "pangolin": [
+  {
+   "path": "/v1/org/{org_id}/sites?pageSize=200&page=1",
+   "widgets": [
+    "status",
+    "sites"
+   ]
+  },
+  {
+   "path": "/v1/org/{org_id}/resources?pageSize=200&page=1",
+   "widgets": [
+    "resources"
+   ]
+  }
+ ],
+ "paperless": [
+  {
+   "path": "/api/statistics/",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/documents/?ordering=-added&page_size=6",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/correspondents/?page_size=500",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
+ "papra": [
+  {
+   "path": "/api/organizations",
+   "widgets": [
+    "library",
+    "recent",
+    "organizations"
+   ]
+  }
+ ],
+ "patchmon": [
+  {
+   "path": "/api/v1/api/hosts?include=stats",
+   "widgets": [
+    "summary",
+    "hosts",
+    "systems"
+   ]
+  }
+ ],
+ "pbs": [
+  {
+   "path": "/api2/json/status/datastore-usage",
+   "widgets": [
+    "datastores"
+   ]
+  },
+  {
+   "path": "/api2/json/nodes/{node}/status",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api2/json/nodes/{node}/tasks?limit=8&start=0",
+   "widgets": [
+    "tasks"
+   ]
+  }
+ ],
+ "peanut": [
+  {
+   "path": "/api/v1/devices/{device}",
+   "widgets": [
+    "ups",
+    "details"
+   ]
+  }
+ ],
+ "pfsense": [
+  {
+   "path": "/api/v2/status/system",
+   "widgets": [
+    "system"
+   ]
+  },
+  {
+   "path": "/api/v2/status/interfaces",
+   "widgets": [
+    "interfaces"
+   ]
+  }
+ ],
+ "photoprism": [
+  {
+   "path": "/api/v1/config",
+   "widgets": [
+    "library"
+   ]
+  },
+  {
+   "path": "/api/v1/photos?count=8&offset=0&order=added&merged=true",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
+ "pihole": [
+  {
+   "path": "/api/stats/summary",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/dns/blocking",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/stats/top_domains?blocked=true&count=8",
+   "widgets": [
+    "top"
+   ]
+  }
+ ],
+ "plex": [
+  {
+   "path": "/library/sections",
+   "widgets": [
+    "library",
+    "libraries",
+    "recent",
+    "findings",
+    "player"
+   ]
+  },
+  {
+   "path": "/updater/status",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/myplex/account",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/activities",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/statistics/resources?timespan=6",
+   "widgets": [
+    "findings",
+    "load"
+   ]
+  },
+  {
+   "path": "/accounts",
+   "widgets": [
+    "users"
+   ]
+  },
+  {
+   "path": "/devices",
+   "widgets": [
+    "users"
+   ]
+  },
+  {
+   "path": "/status/sessions/history/all?sort=viewedAt%3Adesc&X-Plex-Container-Start=0&X-Plex-Container-Size=500",
+   "widgets": [
+    "users",
+    "top"
+   ]
+  }
+ ],
+ "pocketid": [
+  {
+   "path": "/api/audit-logs/all?sort%5Bcolumn%5D=createdAt&sort%5Bdirection%5D=desc&pagination%5Blimit%5D=10&filters%5Bevent%5D%5B0%5D=SIGN_IN&filters%5Bevent%5D%5B1%5D=TOKEN_SIGN_IN&filters%5Bevent%5D%5B2%5D=REMOTE_SIGN_IN",
+   "widgets": [
+    "signins"
+   ]
+  },
+  {
+   "path": "/api/users?pagination%5Blimit%5D=100",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "portainer": [
+  {
+   "path": "/api/endpoints",
+   "widgets": [
+    "container",
+    "containers",
+    "summary"
+   ]
+  }
+ ],
+ "prometheus": [
+  {
+   "path": "/api/v1/query?query={query}",
+   "widgets": [
+    "query",
+    "series"
+   ]
+  }
+ ],
+ "prowlarr": [
+  {
+   "path": "/api/v1/indexer",
+   "widgets": [
+    "indexers",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/indexerstats",
+   "widgets": [
+    "indexers",
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/health",
+   "widgets": [
+    "indexers",
+    "status"
+   ]
+  }
+ ],
+ "proxmox": [
+  {
+   "path": "/api2/json/cluster/resources?type=vm",
+   "widgets": [
+    "guest"
+   ]
+  },
+  {
+   "path": "/api2/json/nodes",
+   "widgets": [
+    "node",
+    "guests",
+    "map",
+    "summary"
+   ]
+  }
+ ],
+ "pulse": [
+  {
+   "path": "/api/state/summary",
+   "widgets": [
+    "overview",
+    "attention"
+   ]
+  },
+  {
+   "path": "/api/alerts/active",
+   "widgets": [
+    "alerts"
+   ]
+  }
+ ],
+ "qbittorrent": [
+  {
+   "path": "/api/v2/transfer/info",
+   "widgets": [
+    "queue",
+    "speed"
+   ]
+  },
+  {
+   "path": "/api/v2/torrents/info?filter=downloading",
+   "widgets": [
+    "queue",
+    "speed"
+   ]
+  }
+ ],
+ "qui": [
+  {
+   "path": "/api/instances",
+   "widgets": [
+    "overview",
+    "instances"
+   ]
+  }
+ ],
+ "radarr": [
+  {
+   "path": "/api/v3/queue?pageSize=100&includeUnknownMovieItems=true",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v3/health",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/queue/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/movie",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
+   "widgets": [
+    "calendar"
+   ]
+  }
+ ],
+ "readarr": [
+  {
+   "path": "/api/v1/queue?pageSize=100&includeUnknownMovieItems=true",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v1/health",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/queue/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/author",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v1/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
+   "widgets": [
+    "calendar"
+   ]
+  }
+ ],
+ "readmeabook": [
+  {
+   "path": "/api/admin/metrics",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/admin/downloads/active",
+   "widgets": [
+    "downloads"
+   ]
+  },
+  {
+   "path": "/api/admin/requests/recent",
+   "widgets": [
+    "requests"
+   ]
+  }
+ ],
+ "realdebrid": [
+  {
+   "path": "/user",
+   "widgets": [
+    "account"
+   ]
+  },
+  {
+   "path": "/torrents/activeCount",
+   "widgets": [
+    "account"
+   ]
+  },
+  {
+   "path": "/torrents?limit=8&filter=active",
+   "widgets": [
+    "torrents"
+   ]
+  },
+  {
+   "path": "/downloads?limit=6",
+   "widgets": [
+    "downloads"
+   ]
+  },
+  {
+   "path": "/traffic/details",
+   "widgets": [
+    "traffic"
+   ]
+  },
+  {
+   "path": "/traffic",
+   "widgets": [
+    "limits"
+   ]
+  }
+ ],
+ "reclaimerr": [
+  {
+   "path": "/api/v1",
+   "widgets": [
+    "overview",
+    "leaving",
+    "tasks"
+   ]
+  }
+ ],
+ "romm": [
+  {
+   "path": "/api/platforms",
+   "widgets": [
+    "platforms"
+   ]
+  },
+  {
+   "path": "/api/roms?order_by=created_at&order_dir=desc&limit=8",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/stats",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "sabnzbd": [
+  {
+   "path": "/api?mode=queue&output=json",
+   "widgets": [
+    "queue",
+    "speed"
+   ]
+  }
+ ],
+ "scrutiny": [
+  {
+   "path": "/api/summary",
+   "widgets": [
+    "disks",
+    "summary"
+   ]
+  }
+ ],
+ "seerr": [
+  {
+   "path": "/api/v1/request/count",
+   "widgets": [
+    "requests",
+    "counts"
+   ]
+  },
+  {
+   "path": "/api/v1/request?filter=pending&take=8&sort=added",
+   "widgets": [
+    "requests"
+   ]
+  }
+ ],
+ "semaphore": [
+  {
+   "path": "/api/projects",
+   "widgets": [
+    "runs",
+    "summary"
+   ]
+  }
+ ],
+ "shlink": [
+  {
+   "path": "/rest/v3/short-urls?itemsPerPage=10&orderBy=visits-DESC",
+   "widgets": [
+    "urls"
+   ]
+  },
+  {
+   "path": "/rest/v3/short-urls?itemsPerPage=1&orderBy=dateCreated-DESC",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "sonarr": [
+  {
+   "path": "/api/v3/queue?pageSize=100&includeUnknownMovieItems=true",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v3/health",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/queue/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/series",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v3/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
+   "widgets": [
+    "calendar"
+   ]
+  }
+ ],
+ "speedtest": [
+  {
+   "path": "/api/v1/results/latest",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/v1/results?page=1",
+   "widgets": [
+    "history"
+   ]
+  }
+ ],
+ "sportarr": [
+  {
+   "path": "/api/calendar",
+   "widgets": [
+    "upcoming"
+   ]
+  },
+  {
+   "path": "/api/wanted/missing?page=1&pageSize=8",
+   "widgets": [
+    "missing"
+   ]
+  },
+  {
+   "path": "/api/wanted/missing?page=1&pageSize=1",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "syncthing": [
+  {
+   "path": "/rest/config/folders",
+   "widgets": [
+    "folders",
+    "status"
+   ]
+  },
+  {
+   "path": "/rest/system/status",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/rest/system/connections",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/rest/system/version",
+   "widgets": [
+    "status"
+   ]
+  }
+ ],
+ "tailscale": [
+  {
+   "path": "/tailnet/{tailnet}/devices",
+   "widgets": [
+    "devices",
+    "status"
+   ]
+  }
+ ],
+ "tandoor": [
+  {
+   "path": "/api/meal-plan/?page_size=100",
+   "widgets": [
+    "plan"
+   ]
+  },
+  {
+   "path": "/api/shopping-list-entry/?page_size=200",
+   "widgets": [
+    "shopping"
+   ]
+  }
+ ],
+ "tautulli": [
+  {
+   "path": "/api/v2?cmd=get_activity",
+   "widgets": [
+    "activity",
+    "counts"
+   ]
+  },
+  {
+   "path": "/api/v2?cmd=get_home_stats&time_range=7&stats_count=6",
+   "widgets": [
+    "top"
+   ]
+  },
+  {
+   "path": "/api/v2?cmd=get_plays_by_date&time_range=91&y_axis=plays",
+   "widgets": [
+    "days"
+   ]
+  }
+ ],
+ "tdarr": [
+  {
+   "path": "/api/v2/get-nodes",
+   "widgets": [
+    "nodes"
+   ]
+  }
+ ],
+ "technitium": [
+  {
+   "path": "/api/dashboard/stats/get?type=LastDay&utc=true",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/dashboard/stats/getTop?type=LastDay&statsType=TopBlockedDomains&limit=8&utc=true",
+   "widgets": [
+    "top"
+   ]
+  }
+ ],
+ "tracearr": [
+  {
+   "path": "/api/v1/public/stats",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/public/stats/today",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/v1/public/violations?acknowledged=false&pageSize=8",
+   "widgets": [
+    "violations"
+   ]
+  }
+ ],
+ "traefik": [
+  {
+   "path": "/api/overview",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/http/routers",
+   "widgets": [
+    "routers"
+   ]
+  }
+ ],
+ "tubearchivist": [
+  {
+   "path": "/api/download/?filter=pending",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/notification/?filter=download",
+   "widgets": [
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/video/?sort=downloaded&order=desc",
+   "widgets": [
+    "videos"
+   ]
+  },
+  {
+   "path": "/api/stats/video/",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/stats/channel/",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/stats/download/",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "unifi": [
+  {
+   "path": "/proxy/network/integration/v1/sites?offset=0&limit=200",
+   "widgets": [
+    "summary",
+    "console",
+    "devices",
+    "map",
+    "findings",
+    "switch",
+    "wifi"
+   ]
+  }
+ ],
+ "unmanic": [
+  {
+   "path": "/unmanic/api/v2/workers/status",
+   "widgets": [
+    "workers",
+    "queue"
+   ]
+  }
+ ],
+ "uptimekuma": [
+  {
+   "path": "/metrics",
+   "widgets": [
+    "monitors",
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/status-page/heartbeat/{status_page}",
+   "widgets": [
+    "monitors",
+    "summary"
+   ]
+  }
+ ],
+ "vikunja": [
+  {
+   "path": "/api/v1/tasks?filter=done%20%3D%20false%20%26%26%20due_date%20%3C%20now%2Fd%2B1d&filter_timezone=UTC&sort_by=due_date&order_by=asc&per_page=50",
+   "widgets": [
+    "due"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?filter=done%20%3D%20false%20%26%26%20due_date%20%3C%20now&filter_timezone=UTC&per_page=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?filter=done%20%3D%20false%20%26%26%20due_date%20%3E%3D%20now%20%26%26%20due_date%20%3C%20now%2Fd%2B1d&filter_timezone=UTC&per_page=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?filter=done%20%3D%20false&filter_timezone=UTC&per_page=1",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "watchtower": [
+  {
+   "path": "/v1/status",
+   "widgets": [
+    "summary"
+   ]
+  }
+ ],
+ "wgeasy": [
+  {
+   "path": "/api/client",
+   "widgets": [
+    "clients",
+    "summary"
+   ]
+  }
+ ],
+ "wger": [
+  {
+   "path": "/api/v2/userprofile/",
+   "widgets": [
+    "weight",
+    "entries"
+   ]
+  },
+  {
+   "path": "/api/v2/weightentry/?ordering=-date&limit=100",
+   "widgets": [
+    "weight"
+   ]
+  },
+  {
+   "path": "/api/v2/weightentry/?ordering=-date&limit=9",
+   "widgets": [
+    "entries"
+   ]
+  }
+ ],
+ "wud": [
+  {
+   "path": "/api/containers",
+   "widgets": [
+    "updates",
+    "summary"
+   ]
+  }
+ ]
+}
