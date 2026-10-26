@@ -355,7 +355,8 @@
         "noProject": "No public releases",
         "unread": "Version not read",
         "notAsked": "Newest not asked",
-        "notAskedHelp": "Switch on Check for updates under System, About to compare with the newest release on GitHub."
+        "notAskedHelp": "Switch on Check for updates under System, About to compare with the newest release on GitHub.",
+        "noReleaseHelp": "GitHub has no release of the project named in the description, or no such project. Nothing to compare with."
       },
       "custom": "Custom",
       "missing": "integration missing",
@@ -1062,7 +1063,8 @@
     "needIntegration": "Need an integration you don't have",
     "addTheIntegration": "Add the integration",
     "askAdmin": "Ask an administrator to add a {{name}} integration.",
-    "pickCard": "Which connection should {{name}} read?"
+    "pickCard": "Which connection should {{name}} read?",
+    "ownConnections": "Your own integrations"
   },
   "notices": {
     "title": "Notices",

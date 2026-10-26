@@ -30,7 +30,7 @@ const CONNECTION = (extra: Record<string, unknown>) => ({
   last_ok_at: '2026-10-26T10:00:00Z', last_error: '', widget_count: 0, created_at: '2026-10-01T10:00:00Z', ...extra,
 })
 
-const world = vi.hoisted(() => ({ connections: [] as unknown[], test: {} as unknown, sent: [] as { url: string; method: string; body: Record<string, unknown> | null }[] }))
+const world = vi.hoisted(() => ({ connections: [] as unknown[], versions: {} as unknown, test: {} as unknown, sent: [] as { url: string; method: string; body: Record<string, unknown> | null }[] }))
 
 function stub() {
   world.sent = []
@@ -45,7 +45,7 @@ function stub() {
       if (url === '/integrations' && method === 'GET') return json(world.connections)
       if (url === '/integrations/test') return json(world.test)
       if (url === '/about') return json({ version: '0.48.0', demo: false, demo_forced: false, demo_data: false })
-      if (url === '/integrations/versions') return json({})
+      if (url === '/integrations/versions') return json(world.versions)
       return json({})
     }),
   )
@@ -159,5 +159,35 @@ describe('a connection whose kind was deleted', () => {
     show()
     const row = (await screen.findByText('Old notes')).closest('li')!
     expect(within(row).getByRole('button', { name: 'Delete' })).toBeEnabled()
+  })
+})
+
+describe('the version of a connection of an own kind (KARTEN-4)', () => {
+  const reading = (extra: Record<string, unknown>) => ({ running: '1.2.0', newest: null, url: '', published: null, problem: '', asked: true, state: 'unknown', major: false, unread: false, upstream: 'usememos/memos', ...extra })
+
+  beforeEach(() => {
+    world.versions = {}
+  })
+
+  it('karten4 ac2: the version it runs stands in the list', async () => {
+    world.connections = [CONNECTION({ id: 8, kind: 'custom:memos', name: 'Notes' })]
+    world.versions = { 8: reading({}) }
+    show()
+    expect(await screen.findByText('Runs 1.2.0')).toBeInTheDocument()
+  })
+
+  it('karten4 ec2: a project without a release is no comparison, and the list says why', async () => {
+    world.connections = [CONNECTION({ id: 8, kind: 'custom:memos', name: 'Notes' })]
+    world.versions = { 8: reading({}) }
+    show()
+    const note = await screen.findByText('Newest not known')
+    expect(note.getAttribute('title')).toMatch(/no release/i)
+  })
+
+  it('karten4 ec1: a version that cannot be read is said as not given, not as a fault', async () => {
+    world.connections = [CONNECTION({ id: 8, kind: 'custom:memos', name: 'Notes' })]
+    world.versions = { 8: reading({ running: null, problem: 'The service does not say which version it runs.', unread: false }) }
+    show()
+    expect(await screen.findByText('Version not given')).toBeInTheDocument()
   })
 })

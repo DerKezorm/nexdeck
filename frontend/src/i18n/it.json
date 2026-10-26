@@ -355,7 +355,8 @@
         "noProject": "Nessuna release pubblica",
         "unread": "Versione non letta",
         "notAsked": "Ultima non richiesta",
-        "notAskedHelp": "Attiva Cerca aggiornamenti in Sistema, Informazioni per confrontare con l’ultima release su GitHub."
+        "notAskedHelp": "Attiva Cerca aggiornamenti in Sistema, Informazioni per confrontare con l’ultima release su GitHub.",
+        "noReleaseHelp": "GitHub non ha alcuna versione del progetto indicato nella descrizione, oppure il progetto non esiste. Niente da confrontare."
       },
       "custom": "Propria",
       "missing": "integration missing",
@@ -1062,7 +1063,8 @@
     "needIntegration": "Richiedono un'integrazione che non hai",
     "addTheIntegration": "Aggiungi l'integrazione",
     "askAdmin": "Chiedi a un amministratore di aggiungere un'integrazione {{name}}.",
-    "pickCard": "Quale connessione deve leggere {{name}}?"
+    "pickCard": "Quale connessione deve leggere {{name}}?",
+    "ownConnections": "Le tue integrazioni proprie"
   },
   "notices": {
     "title": "Avvisi",

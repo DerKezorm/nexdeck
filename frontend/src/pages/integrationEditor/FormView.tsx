@@ -2,8 +2,8 @@
  * The form of the integration editor (KARTEN-3): one section for each part of the definition, every field writing
  * into the text by path, so that the YAML view shows the same thing and the comments stay.
  *
- * Basics, Fields, Sign-in, Test address and "What nexdeck can ask". A part of the definition the form has no field
- * for (a later section) is left alone; it is in the YAML view.
+ * Basics, Fields, Sign-in, Test address, "What nexdeck can ask" and Extras. A part of the definition the form has no field
+ * for is left alone; it is in the YAML view.
  */
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
@@ -443,6 +443,43 @@ function Reads() {
   )
 }
 
+// -- Extras (KARTEN-4) ----------------------------------------------------------------------------------------------
+
+/** Where the version stands: the path to ask and the place in the answer. Both or none; one alone is the server's to say. */
+function VersionAt() {
+  const { t } = useTranslation()
+  const pathId = useId()
+  const atId = useId()
+  const card = useIntegrationEditor((state) => state.card)
+  const raw = card ? readAt(card, ['version']) : undefined
+  const place = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {}
+  const path = asText(place.path)
+  const at = asText(place.at)
+  const write = (next: { path: string; at: string }) =>
+    useIntegrationEditor.getState().change((doc) => (next.path === '' && next.at === '' ? deleteAt(doc, ['version']) : setAt(doc, ['version'], next)))
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Labelled label={t('integrationEditor.extras.versionPath')} help={t('integrationEditor.extras.versionPathHelp')} htmlFor={pathId}>
+        <input id={pathId} className="input w-full font-mono text-[13px]" value={path} placeholder="/api/v1/status" onChange={(event) => write({ path: event.target.value, at })} />
+      </Labelled>
+      <Labelled label={t('integrationEditor.extras.versionAt')} help={t('integrationEditor.extras.versionAtHelp')} htmlFor={atId}>
+        <input id={atId} className="input w-full font-mono text-[13px]" value={at} placeholder="version" onChange={(event) => write({ path, at: event.target.value })} />
+      </Labelled>
+    </div>
+  )
+}
+
+function Extras() {
+  const { t } = useTranslation()
+  return (
+    <Section id="extras" title={t('integrationEditor.extras.title')} lead={t('integrationEditor.extras.lead')} parts={['check', 'version', 'github']}>
+      <TextAt path={['check']} label={t('integrationEditor.extras.check')} help={t('integrationEditor.extras.checkHelp')} mono placeholder="/healthz" />
+      <VersionAt />
+      <TextAt path={['github']} label={t('integrationEditor.extras.github')} help={t('integrationEditor.extras.githubHelp')} mono placeholder="owner/name" />
+    </Section>
+  )
+}
+
 // -- What whoever sets it up sees ------------------------------------------------------------------------------------
 
 /** The form for adding a connection of this kind, as the definition will make it (the address first, then the fields). */
@@ -492,6 +529,7 @@ export function FormView() {
       <SignIn />
       <TestAddress />
       <Reads />
+      <Extras />
     </div>
   )
 }

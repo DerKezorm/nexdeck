@@ -946,6 +946,18 @@
       "lead": "Das Formular für eine Verbindung zu {{name}}, so wie es jetzt aussieht.",
       "untitled": "diese Anbindung",
       "tls": "TLS-Fehler ignorieren"
+    },
+    "extras": {
+      "title": "Extras",
+      "lead": "Damit sie sich wie eine eingebaute anfühlt: der Punkt und die Statusseite, die laufende Version und das Projekt, mit dem verglichen wird. Alles ist freiwillig.",
+      "check": "Prüfadresse",
+      "checkHelp": "Der Pfad, den nexdeck fragt, um zu wissen, ob der Dienst da ist. Leer, gilt die Testadresse.",
+      "versionPath": "Version: Pfad",
+      "versionPathHelp": "Der Pfad, dessen Antwort die Version nennt. Sie wird als JSON gelesen.",
+      "versionAt": "Version: Fundort in der Antwort",
+      "versionAtHelp": "Der Name des Feldes, zum Beispiel version, oder release.version für ein Feld in einem anderen.",
+      "github": "Projekt auf GitHub",
+      "githubHelp": "Eigentümer/Name oder die GitHub-Adresse des Projekts. Seine neueste Fassung wird mit der laufenden Version verglichen, nur solange die Update-Suche unter System, Über eingeschaltet ist."
     }
   }
 }

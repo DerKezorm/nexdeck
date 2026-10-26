@@ -355,7 +355,8 @@
         "noProject": "Keine öffentlichen Releases",
         "unread": "Version nicht gelesen",
         "notAsked": "Neueste nicht abgefragt",
-        "notAskedHelp": "Schalte unter System, Über „Nach Updates suchen“ ein, um mit dem neuesten Release auf GitHub zu vergleichen."
+        "notAskedHelp": "Schalte unter System, Über „Nach Updates suchen“ ein, um mit dem neuesten Release auf GitHub zu vergleichen.",
+        "noReleaseHelp": "Auf GitHub gibt es zu dem in der Beschreibung genannten Projekt keine Fassung, oder das Projekt gibt es nicht. Es gibt nichts zu vergleichen."
       },
       "custom": "Eigene",
       "missing": "integration missing",
@@ -1062,7 +1063,8 @@
     "needIntegration": "Brauchen eine Anbindung, die du nicht hast",
     "addTheIntegration": "Anbindung anlegen",
     "askAdmin": "Bitte einen Administrator, eine {{name}}-Anbindung anzulegen.",
-    "pickCard": "Welche Anbindung soll {{name}} lesen?"
+    "pickCard": "Welche Anbindung soll {{name}} lesen?",
+    "ownConnections": "Deine eigenen Anbindungen"
   },
   "notices": {
     "title": "Hinweise",

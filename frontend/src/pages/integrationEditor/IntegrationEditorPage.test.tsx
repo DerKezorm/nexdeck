@@ -351,6 +351,46 @@ describe('the test address and what nexdeck can ask', () => {
   })
 })
 
+describe('the extras', () => {
+  it('karten4 ac1: the check address is written under check and leaves with an empty field', async () => {
+    await openNew()
+    const extras = section('extras')
+    await userEvent.type(extras.getByLabelText('Check address'), '/healthz')
+    expect(at(['check'])).toBe('/healthz')
+    await userEvent.clear(extras.getByLabelText('Check address'))
+    expect(at(['check'])).toBeUndefined()
+  })
+
+  it('karten4 ac2: the version is a path and a place in the answer, written together and removed together', async () => {
+    await openNew()
+    const extras = section('extras')
+    await userEvent.type(extras.getByLabelText('Version: path'), '/api/v1/status')
+    await userEvent.type(extras.getByLabelText('Version: place in the answer'), 'release.version')
+    expect(at(['version'])).toEqual({ path: '/api/v1/status', at: 'release.version' })
+    await userEvent.clear(extras.getByLabelText('Version: path'))
+    await userEvent.clear(extras.getByLabelText('Version: place in the answer'))
+    expect(at(['version'])).toBeUndefined()
+  })
+
+  it('karten4 ac3: the project on GitHub is written as typed, and the server says when it is none', async () => {
+    await openNew()
+    await userEvent.type(section('extras').getByLabelText('Project on GitHub'), 'usememos/memos')
+    expect(at(['github'])).toBe('usememos/memos')
+  })
+
+  it('karten4 ec3: a project the server refuses is said at its field', async () => {
+    stub({
+      'POST /own-integrations/check': {
+        status: 200,
+        body: { ok: false, problems: [{ line: 14, path: 'github', message: 'Write the project as owner/name or as https://github.com/owner/name.', code: 'card_integration_github' }] },
+      },
+    })
+    await openNew()
+    await userEvent.type(section('extras').getByLabelText('Project on GitHub'), 'https://gitlab.com/a/b')
+    expect(await within(screen.getByTestId('integration-section-extras')).findByRole('alert')).toBeTruthy()
+  })
+})
+
 describe('saving', () => {
   it('karten3 ac1: a new integration is saved with POST and the page moves to its own address', async () => {
     await openNew()

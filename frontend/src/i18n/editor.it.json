@@ -946,6 +946,18 @@
       "lead": "Il modulo per una connessione a {{name}}, così com'è ora.",
       "untitled": "questa integrazione",
       "tls": "Ignora errori TLS"
+    },
+    "extras": {
+      "title": "Extra",
+      "lead": "Ciò che la fa sentire come una integrata: il punto e la pagina di stato, la versione in esecuzione e il progetto con cui si confronta. Tutto è facoltativo.",
+      "check": "Indirizzo di controllo",
+      "checkHelp": "Il percorso che nexdeck interroga per sapere se il servizio c’è. Se vuoto, si usa l’indirizzo di prova.",
+      "versionPath": "Versione: percorso",
+      "versionPathHelp": "Il percorso la cui risposta indica la versione. Viene letta come JSON.",
+      "versionAt": "Versione: posizione nella risposta",
+      "versionAtHelp": "Il nome del campo, per esempio version, oppure release.version per un campo dentro un altro.",
+      "github": "Progetto su GitHub",
+      "githubHelp": "proprietario/nome, oppure l’indirizzo GitHub del progetto. La sua versione più recente viene confrontata con quella in esecuzione, solo finché la ricerca di aggiornamenti è attiva in Sistema, Informazioni."
     }
   }
 }

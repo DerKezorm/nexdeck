@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { ApiError, get, post } from '../api/client'
+import { ApiError, get, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration, WidgetTypeSpec } from '../api/types'
 import { tAdapter, tLabel } from '../i18n/texts'
 import { pickText } from '../lib/cardText'
-import { sourceLine, type LibraryCard } from '../lib/customCards'
+import { isOwnKind, sourceLine, type LibraryCard } from '../lib/customCards'
 import { CATEGORY_ORDER } from '../lib/adapterCategories'
 import { isNumberCard } from '../lib/figures'
 import { useAuth } from '../stores/auth'
@@ -118,6 +118,40 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
     const list = Array.isArray(apps.data) && !numbersOnly ? apps.data : []
     return list.filter((app) => !needle || `${app.name} ${app.description ?? ''}`.toLowerCase().includes(needle))
   }, [apps.data, query, numbersOnly])
+
+  /** The connections of kinds the administrator described (KARTEN-3), offered as app tiles with their logo and address. */
+  const ownConnections = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return (integrations.data ?? []).filter(
+      (one) => isOwnKind(one) && !one.missing && one.enabled && !numbersOnly && (!needle || `${one.name} ${one.label}`.toLowerCase().includes(needle)),
+    )
+  }, [integrations.data, query, numbersOnly])
+
+  /** A tile that follows a connection of an own kind: its name, its logo, its address, and the dot that asks its check path. */
+  const placeConnection = async (connection: Integration) => {
+    const tile = adapters.data?.find((one) => one.kind === 'core')?.widgets.find((one) => one.kind === 'core.app')
+    setBusy(true)
+    setError('')
+    try {
+      const defaults = Object.fromEntries((tile?.options ?? []).filter((o) => o.default !== null && o.default !== undefined).map((o) => [o.name, o.default]))
+      const result = await post<{ widget: { id: number } }>(`/pages/${pageId}/widgets`, {
+        kind: 'core.app',
+        title: connection.name,
+        icon: connection.icon,
+        integration_id: connection.id,
+        options: defaults,
+      })
+      // An empty target follows the address of the connection, at every check.
+      await put(`/widgets/${result.widget.id}/health`, {
+        kind: 'http', target: '', interval_seconds: 30, timeout_seconds: 5, expect_status: 0, enabled: true, insecure: connection.config.insecure === true,
+      })
+      onCreated(result.widget.id)
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    } finally {
+      setBusy(false)
+    }
+  }
 
   /** An app tile that follows ``app``: its name and icon stay empty, so the app's show and follow a rename. */
   const placeApp = async (app: AppEntry) => {
@@ -315,6 +349,24 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium">{app.name}</span>
                     <span className="block text-[11px] text-muted leading-snug">{app.description || (app.addresses ?? []).map((one) => one.label).join(' · ')}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {ownConnections.length > 0 && (
+        <section className="mb-4" data-testid="library-own-connections">
+          <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('library.ownConnections')}</h3>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {ownConnections.map((connection) => (
+              <li key={connection.id}>
+                <button className="w-full text-left flex items-start gap-3 p-2.5 rounded-xl border border-line hover:border-line-strong hover:bg-surface-hover transition-colors" onClick={() => void placeConnection(connection)} disabled={busy}>
+                  <ServiceIcon icon={connection.icon} size={22} className="mt-0.5" />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium">{connection.name}</span>
+                    <span className="block text-[11px] text-muted leading-snug truncate">{connection.label}</span>
                   </span>
                 </button>
               </li>

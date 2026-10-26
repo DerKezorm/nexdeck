@@ -946,6 +946,18 @@
       "lead": "El formulario de una conexión de {{name}}, tal como está ahora.",
       "untitled": "esta integración",
       "tls": "Ignorar errores TLS"
+    },
+    "extras": {
+      "title": "Extras",
+      "lead": "Lo que hace que se sienta como una integrada: el punto y la página de estado, la versión que ejecuta y el proyecto con el que se compara. Todo es opcional.",
+      "check": "Dirección de comprobación",
+      "checkHelp": "La ruta que nexdeck consulta para saber si el servicio está. Si queda vacía, se usa la dirección de prueba.",
+      "versionPath": "Versión: ruta",
+      "versionPathHelp": "La ruta cuya respuesta indica la versión. Se lee como JSON.",
+      "versionAt": "Versión: lugar en la respuesta",
+      "versionAtHelp": "El nombre del campo, por ejemplo version, o release.version para un campo dentro de otro.",
+      "github": "Proyecto en GitHub",
+      "githubHelp": "propietario/nombre, o la dirección de GitHub del proyecto. Su versión más reciente se compara con la que se ejecuta, solo mientras la búsqueda de actualizaciones esté activada en Sistema, Acerca de."
     }
   }
 }

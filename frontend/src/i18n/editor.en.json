@@ -946,6 +946,18 @@
       "lead": "The form for a connection of {{name}}, as it stands now.",
       "untitled": "this integration",
       "tls": "Ignore TLS errors"
+    },
+    "extras": {
+      "title": "Extras",
+      "lead": "What makes it feel like a built-in one: the dot and the status page, the version it runs, and the project it is compared with. All of it is optional.",
+      "check": "Check address",
+      "checkHelp": "The path nexdeck asks to tell whether the service is there. Left empty, the test address is used.",
+      "versionPath": "Version: path",
+      "versionPathHelp": "The path whose answer names the version. It is read as JSON.",
+      "versionAt": "Version: place in the answer",
+      "versionAtHelp": "The name of the field, for example version, or release.version for a field inside another.",
+      "github": "Project on GitHub",
+      "githubHelp": "owner/name, or the GitHub address of the project. Its newest release is held against the version, only while Check for updates is on under System, About."
     }
   }
 }
