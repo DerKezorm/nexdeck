@@ -11,7 +11,7 @@ import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEdit
 import { ANSWERS, INTEGRATIONS, stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
 import { partOfProblem } from '../problems'
-import { columnLabel, columnName } from './columns'
+import { columnLabels, columnName } from './columns'
 import { thresholdOf } from './FinishStep'
 
 const click = async (name: string | RegExp) => userEvent.click(await screen.findByRole('button', { name }))
@@ -731,8 +731,8 @@ describe('review 15: fields are named for people, the real name beside', () => {
 
   it('a field nobody has named is shown as words, and a plain name is not doubled', () => {
     const t = ((key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key) as never
-    expect([columnName(t, 'ProductionYear'), columnName(t, 'last_seen'), columnName(t, 'series.title'), columnName(t, '"disk size"'), columnName(t, '@')]).toEqual(['Production year', 'Last seen', 'Title', 'Disk size', '@'])
-    expect([columnLabel(t, 'title'), columnLabel(t, 'Name'), columnLabel(t, 'series.title')]).toEqual(['title', 'Name', 'Title (series.title)'])
+    expect([columnName(t, 'ProductionYear'), columnName(t, 'last_seen'), columnName(t, 'series.title'), columnName(t, '"disk size"'), columnName(t, '@')]).toEqual(['Production year', 'Last seen', 'series.title', 'Disk size', '@'])
+    expect(columnLabels(t, ['title', 'Name', 'series.title'])).toEqual({ title: 'title', Name: 'Name', 'series.title': 'series.title' })
   })
 })
 

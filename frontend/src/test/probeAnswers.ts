@@ -129,3 +129,34 @@ export const PLEX_RECENT = probed({
     ],
   },
 })
+
+/**
+ * Home Assistant's `/api/states` as a real installation answers it: 21 plain fields to an entity, among them two
+ * called `...id` (`entity_id` and `context.id`) and the ones nobody wants in a table (`context.parent_id`,
+ * `last_reported`, an update's `attributes.release_url`).
+ */
+export const HA_FULL = probed(
+  ['light.kitchen', 'update.core', 'sensor.hall_temperature'].map((entity_id, index) => ({
+    entity_id,
+    state: index === 2 ? '21.5' : 'on',
+    attributes: {
+      friendly_name: ['Kitchen light', 'Core update', 'Hall temperature'][index],
+      icon: 'mdi:lightbulb',
+      supported_features: 44,
+      device_class: 'none',
+      installed_version: '2026.10.1',
+      latest_version: '2026.10.2',
+      release_url: 'https://example.com/releases/2026.10.2',
+      title: 'Core',
+      entity_picture: '/api/update/core.png',
+      in_progress: false,
+      auto_update: false,
+      skipped_version: '2026.9.9',
+      release_summary: 'Bug fixes',
+    },
+    last_changed: '2026-10-26T06:00:00+00:00',
+    last_reported: '2026-10-26T06:05:00+00:00',
+    last_updated: '2026-10-26T06:05:00+00:00',
+    context: { id: `01JAB${index}XK3M2F9Q7R5T8W6Z4Y1`, parent_id: null, user_id: null },
+  })),
+)

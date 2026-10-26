@@ -714,7 +714,8 @@
         "description": "Beschreibung",
         "version": "Version",
         "url": "Adresse",
-        "path": "Pfad"
+        "path": "Pfad",
+        "attributes_friendly_name": "Name"
       },
       "part": {
         "name": "Der Name",

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import type { Condition } from '../../../lib/cardSuggestions'
-import { columnName } from './columns'
+import { columnNames } from './columns'
 import { rowMatches, type AnswerTable as Table, type Cell } from './guided'
 
 const cellText = (value: Cell | undefined) => (value === null || value === undefined ? '' : String(value))
@@ -16,6 +16,8 @@ const cellText = (value: Cell | undefined) => (value === null || value === undef
 export function AnswerTable({ table, highlight }: { table: Table; highlight?: Condition[] | null }) {
   const { t, i18n } = useTranslation()
   const number = (value: number) => value.toLocaleString(i18n.language)
+  // Named together with the fields the table leaves out, so that a name never changes when they are shown.
+  const names = table.kind === 'rows' ? columnNames(t, table.columns) : columnNames(t, table.fields.map((one) => one.path))
   const hits = table.kind === 'rows' && highlight ? table.rows.filter((row) => rowMatches(row, highlight)).length : 0
 
   return (
@@ -45,8 +47,8 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
               <tr>
                 {table.columns.map((column) => (
                   <th key={column} scope="col" className="text-left font-semibold text-muted bg-surface-hover px-3 py-1.5 border-b border-line whitespace-nowrap">
-                    {columnName(t, column)}
-                    <small className="block font-normal text-faint font-mono text-[11px]">{column}</small>
+                    {names[column]}
+                    {names[column] !== column && <small className="block font-normal text-faint font-mono text-[11px]">{column}</small>}
                   </th>
                 ))}
               </tr>
@@ -82,8 +84,8 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
               {table.fields.map((field) => (
                 <tr key={field.path}>
                   <td className="px-3 py-1.5 border-b border-line whitespace-nowrap">
-                    {columnName(t, field.path)}
-                    <small className="block text-faint font-mono text-[11px]">{field.path}</small>
+                    {names[field.path]}
+                    {names[field.path] !== field.path && <small className="block text-faint font-mono text-[11px]">{field.path}</small>}
                   </td>
                   <td className="px-3 py-1.5 border-b border-line whitespace-nowrap tabular-nums max-w-[24rem] overflow-hidden text-ellipsis">{cellText(field.value)}</td>
                 </tr>
