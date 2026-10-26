@@ -1456,6 +1456,34 @@ def _refuse_a_giant_answer(url: str, response: httpx.Response) -> None:
         )
 
 
+async def read_at_most(client: httpx.AsyncClient, method: str, url: str, limit: int, **keywords: Any) -> httpx.Response:
+    """One request whose answer is read only up to ``limit`` bytes: streamed, and given up at the first byte beyond it.
+
+    ⚠️ ``client.request`` reads the whole body before anything can look at its size, so a path that answers with a log or a
+    range of a time series took that much memory, every ten seconds, before a limit was checked.
+    """
+    def too_large() -> AdapterError:
+        return AdapterError(
+            "Answer too large. The service answered with more than a custom card reads.",
+            code="answer_too_large",
+            hint=f"A card reads at most {limit // (1024 * 1024)} MB of one answer. Ask for less, or use a different path of the service.",
+        )
+
+    async with client.stream(method, url, **keywords) as response:
+        declared = response.headers.get("content-length", "")
+        if declared.isdigit() and int(declared) > limit:
+            raise too_large()
+        body = bytearray()
+        async for chunk in response.aiter_bytes():
+            body += chunk
+            if len(body) > limit:
+                raise too_large()
+        # The body is decoded already: the headers that describe the wire form would make httpx decode it a second time.
+        headers = [(name, value) for name, value in response.headers.multi_items()
+                   if name.lower() not in ("content-encoding", "content-length", "transfer-encoding")]
+        return httpx.Response(response.status_code, headers=headers, content=bytes(body), request=response.request)
+
+
 class Context:
     """What an adapter gets besides its configuration.
 
@@ -1511,6 +1539,7 @@ class Context:
         member: bool = False,
         follow_redirects: bool | None = None,
         note: bool = True,
+        max_bytes: int | None = None,
     ) -> httpx.Response:
         """Fetch, with 401 and 403 turned into a readable refusal.
 
@@ -1529,6 +1558,10 @@ class Context:
         ``follow_redirects`` overrides what the client does for this one request;
         ``None`` leaves it to the client. A custom card asks with ``False``: httpx
         drops ``Authorization`` when a redirect changes the host, but not ``X-Api-Key``.
+
+        ``max_bytes`` limits what is read: the answer is streamed and the request given up the moment it is larger (a
+        declared length is believed before a single byte is read). A custom card passes its 2 MB; without it the whole
+        answer is read, as it always was.
         """
         if self.tap is not None:
             self.tap(method, url, headers, params, auth, data if data is not None else json_body)
@@ -1551,19 +1584,15 @@ class Context:
             if hit and hit[0] > time.monotonic():
                 return hit[1]
         try:
-            if member:
-                response = await member_client(verify).request(
-                    method, url, headers=headers, params=params, json=json_body,
-                    data=data, content=content, timeout=timeout, auth=auth, **redirects,
-                )
-            elif verify:
-                response = await self.client.request(
+            client = member_client(verify) if member else (self.client if verify else _relaxed_client())
+            if max_bytes is None:
+                response = await client.request(
                     method, url, headers=headers, params=params, json=json_body,
                     data=data, content=content, timeout=timeout, auth=auth, **redirects,
                 )
             else:
-                response = await _relaxed_client().request(
-                    method, url, headers=headers, params=params, json=json_body,
+                response = await read_at_most(
+                    client, method, url, max_bytes, headers=headers, params=params, json=json_body,
                     data=data, content=content, timeout=timeout, auth=auth, **redirects,
                 )
         except httpx.TimeoutException as error:

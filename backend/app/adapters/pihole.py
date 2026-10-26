@@ -52,10 +52,14 @@ class PiholeAdapter(Adapter):
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, cache: float = 10, retry: bool = True) -> Any:
         sid = await self._session(config, ctx)
-        response = await ctx.request("GET", f"{base_url(config)}/api{path}", headers={"sid": sid}, verify=not config.get("insecure"), cache_seconds=cache)
+        # ⚠️ ``auth_errors=False``: with the default the 401 of a session that ran out is raised before it can be looked at here,
+        # and the session below was never renewed (found in the review of the custom cards, 26.10.2026).
+        response = await ctx.request("GET", f"{base_url(config)}/api{path}", headers={"sid": sid}, verify=not config.get("insecure"), cache_seconds=cache, auth_errors=False)
         if response.status_code == 401 and retry:
             await self._session(config, ctx, force=True)
             return await self._get(config, ctx, path, cache, retry=False)
+        if response.status_code in (401, 403):
+            raise AuthFailed()
         if response.status_code >= 400:
             raise AdapterError(f"Pi-hole answered with HTTP {response.status_code}.", code="http_error")
         return response.json()

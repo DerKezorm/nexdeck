@@ -16,6 +16,8 @@ redirect to another place when a card asks, and a card cannot set a header itsel
 
 from __future__ import annotations
 
+import asyncio
+import copy
 import json
 import re
 import time
@@ -26,7 +28,6 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 import httpx
 
 from .base import (
-    CACHE_PREFIX,
     Adapter,
     AdapterError,
     AuthFailed,
@@ -34,13 +35,24 @@ from .base import (
     Unreachable,
     _refuse_a_giant_answer,
     guard_outbound,
+    read_at_most,
 )
 
 #: How long what was watched is used before the kind is asked again. Cheap for a key (nothing leaves the server) and for
 #: a session the kind keeps (its own memory answers), and it keeps a session id that ran out from living for ever.
 SIGNED_FOR = 300.0
-#: The memory key, in the connection's own memory.
+#: The memory keys, in the connection's own memory.
 MEMORY = "card:signed"
+#: One lock per connection around finding out how a card signs (see :func:`signed`) and around renewing the session.
+LOCK = "card:lock"
+#: ``(until, error, fingerprint)``: a connection test that failed is not run again for every card at every refresh.
+FAILED = "card:failed"
+FAIL_PAUSE = 45.0
+#: When the session was last looked at after a card's request was refused. A refusal within this time is the card's own.
+CHECKED = "card:checked"
+CHECK_EVERY = 30.0
+#: The most a card reads from one answer, in the connection's request already (not after it is in memory).
+READ_AT_MOST = 2 * 1024 * 1024
 #: Parameters that prove who asks. Matched on the name; a kind with a name that does not look like one lists it itself
 #: in ``raw_param_names``.
 CREDENTIAL_PARAM = re.compile(r"key|token|secret|pass|pwd|sid|session|auth|ticket|signature|credential|user|login", re.I)
@@ -195,28 +207,77 @@ async def watch(adapter: Adapter, config: dict[str, Any], ctx: Context) -> Sent:
     return fallback[0] if fallback else Sent()
 
 
-def forget_session(ctx: Context) -> bool:
-    """Drop what a kind remembers of a sign-in, so that its next request signs in again. ``True`` if there was any."""
-    gone = [name for name in ctx.cache if not name.startswith(CACHE_PREFIX) and name != MEMORY]
-    for name in gone:
-        ctx.cache.pop(name, None)
-    ctx.cache.pop(MEMORY, None)
-    return bool(gone)
+def _lock(ctx: Context) -> asyncio.Lock:
+    return ctx.cache.setdefault(LOCK, asyncio.Lock())  # type: ignore[no-any-return]
+
+
+def _quiet(*_: Any) -> None:
+    """A watcher that watches nothing: the kind's test runs, and what it asks is not noted as what a card reads."""
 
 
 async def signed(adapter: Adapter, config: dict[str, Any], ctx: Context, *, again: bool = False) -> Sent:
+    """How a request of a card is signed, for at most one run of the kind's connection test every five minutes.
+
+    ⚠️ One at a time per connection. Ten cards that start together found no memory, ten ran the test, and a kind that signs in
+    in its test (Pi-hole) was signed in ten times. A test that failed is remembered for a short while, so a card that refreshes
+    every ten seconds does not repeat it every ten seconds against a service that refuses.
+    """
     fetched = await adapter.raw_signed_headers(config, ctx)
     if fetched is not None:
         return Sent(dict(fetched))
     if _is_static(adapter):
         return Sent(adapter.raw_headers(config), dict(adapter.raw_params(config)), adapter.raw_auth(config))
     fingerprint = json.dumps(config, sort_keys=True, default=str)
-    held = ctx.cache.get(MEMORY)
-    if held and not again and held[0] == fingerprint and held[1] > time.monotonic():
-        return held[2]
-    sent = await watch(adapter, config, ctx)
-    ctx.cache[MEMORY] = (fingerprint, time.monotonic() + SIGNED_FOR, sent)
-    return sent
+
+    def held_still() -> Sent | None:
+        held = ctx.cache.get(MEMORY)
+        if held and not again and held[0] == fingerprint and held[1] > time.monotonic():
+            return held[2]  # type: ignore[no-any-return]
+        return None
+
+    if (found := held_still()) is not None:
+        return found
+    async with _lock(ctx):
+        if (found := held_still()) is not None:
+            return found
+        failed = ctx.cache.get(FAILED)
+        if failed and failed[0] > time.monotonic() and failed[2] == fingerprint:
+            raise copy.copy(failed[1])
+        try:
+            sent = await watch(adapter, config, ctx)
+        except AdapterError as error:
+            ctx.cache[FAILED] = (time.monotonic() + FAIL_PAUSE, error, fingerprint)
+            raise
+        ctx.cache.pop(FAILED, None)
+        ctx.cache[MEMORY] = (fingerprint, time.monotonic() + SIGNED_FOR, sent)
+        return sent
+
+
+async def renew(adapter: Adapter, config: dict[str, Any], ctx: Context, before: Sent | None) -> Sent | None:
+    """A card's request was refused with 401 or 403. Renew the session the way the kind does it for its own cards.
+
+    The kind's own connection test runs, which is the kind's own function: it signs in again when its session is gone, with
+    its logout, its lock against signing in twice and its pause after a failure. The card never signs in on its own and
+    never throws away what the kind remembers. ``None`` when there was nothing to renew: the session is fine, the path is
+    one the account may not read or the service does not have (a refusal that is the card's own), or the session was looked
+    at a moment ago. Otherwise what signs the card's request now (``before`` is what signed it a moment ago).
+    """
+    async with _lock(ctx):
+        last = ctx.cache.get(CHECKED)
+        if last is not None and last + CHECK_EVERY > time.monotonic():
+            return None
+        ctx.cache[CHECKED] = time.monotonic()
+        try:
+            await adapter.test(config, ctx.tapped(_quiet))
+        except (AuthFailed, Unreachable):
+            raise
+        except AdapterError:
+            return None  # the test failed for a reason of its own: the refusal stays the card's
+    if before is None:
+        return Sent()  # a kind with a client of its own: ask again, the client carries its cookie
+    ctx.cache.pop(MEMORY, None)
+    after = await signed(adapter, config, ctx)
+    return None if after == before else after
 
 
 async def for_a_picture(adapter: Adapter, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any]]:
@@ -248,8 +309,8 @@ async def ask(
     held = adapter.raw_client(config, ctx)
     if held is not None:
         return await _through_the_clients_own_cookies(adapter, held, url, config, ctx, params)
+    sent = await signed(adapter, config, ctx)
     for attempt in (0, 1):
-        sent = await signed(adapter, config, ctx, again=attempt == 1)
         try:
             # ⚠️ Merged into the address here: httpx replaces the query of an address when ``params`` is given, and the
             # card's own question (``?api=...&method=...``) is the point of the request.
@@ -264,14 +325,19 @@ async def ask(
                 cache_seconds=cache_seconds,
                 follow_redirects=False,
                 note=False,
+                max_bytes=READ_AT_MOST,
             )
             if adapter.raw_expired(response):
                 raise AuthFailed()
+            if attempt == 1:
+                ctx.cache.pop(CHECKED, None)  # the session really had run out: the next time may look again at once
             return response
         except AuthFailed:
-            # A session runs out. The kind signs in again by itself when its memory is gone, as it does for its own cards.
-            if attempt == 1 or _is_static(adapter) or not forget_session(ctx):
+            # ⚠️ A refusal is not an expired session. Only a kind with a session of its own renews it, by its own function,
+            # and a refusal on a path its built-in cards do not need stays the error of this card.
+            if attempt == 1 or _is_static(adapter) or (renewed := await renew(adapter, config, ctx, sent)) is None:
                 raise
+            sent = renewed
     raise AdapterError("The service did not accept the sign-in.", code="auth_failed")  # pragma: no cover
 
 
@@ -280,22 +346,23 @@ async def _through_the_clients_own_cookies(
 ) -> httpx.Response:
     """A kind that keeps the cookie of its sign-in in a client of its own (qBittorrent, UniFi): the card uses that client.
 
-    ⚠️ The same client the kind's cards use, so the session is theirs and the card signs in again, with the kind's own
-    sign-in, when the service says 401 or 403.
+    ⚠️ The same client the kind's cards use, so the session is theirs. When the service says 401 or 403 the kind's own
+    function looks at the session (:func:`renew`) and the card asks once more only if that was due.
     """
     guard_outbound(url)
     for attempt in (0, 1):
         try:
-            response = await client.request(
-                "GET", url, headers=adapter.raw_headers(config) or None, params=params, follow_redirects=False,
+            response = await read_at_most(
+                client, "GET", url, READ_AT_MOST, headers=adapter.raw_headers(config) or None, params=params, follow_redirects=False,
             )
         except httpx.TimeoutException as error:
             raise Unreachable("The service did not answer in time.") from error
         except httpx.HTTPError as error:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
-        if response.status_code in (401, 403) and attempt == 0:
-            await adapter.raw_sign_in(config, ctx)
+        if response.status_code in (401, 403) and attempt == 0 and await renew(adapter, config, ctx, None) is not None:
             continue
         _refuse_a_giant_answer(url, response)
+        if attempt == 1 and response.status_code not in (401, 403):
+            ctx.cache.pop(CHECKED, None)
         return response
     raise AdapterError("The service did not accept the sign-in.", code="auth_failed")  # pragma: no cover

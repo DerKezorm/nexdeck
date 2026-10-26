@@ -142,7 +142,8 @@ class QBittorrent(Service):
         self.asked.append(request)
         if self.valid is None or request.headers.get("cookie") != self.valid:
             return httpx.Response(403, text="Forbidden")
-        return httpx.Response(200, json={"version": "5"})
+        # The kind's own connection test asks these two, and understands only these shapes.
+        return httpx.Response(200, json=[] if request.url.path.endswith("/torrents/info") else {"version": "5"})
 
 
 @respx.mock
