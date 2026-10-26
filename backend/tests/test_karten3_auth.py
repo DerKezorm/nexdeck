@@ -94,8 +94,11 @@ class Memos:
         self.login_status = 200
         self.login_answer: httpx.Response | None = None
         self.refuse_everything = False
+        #: Seconds a sign-in takes: with none, a stub answers without ever giving the loop away and nothing runs at once.
+        self.delay = 0.0
 
-    def sign_in(self, request: httpx.Request) -> httpx.Response:
+    async def sign_in(self, request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(self.delay)
         self.logins.append(request)
         if self.login_answer is not None:
             return self.login_answer
@@ -187,7 +190,11 @@ def test_karten3_ac5_what_proves_who_asks_is_in_no_answer_no_chronicle_and_no_lo
     with caplog.at_level(logging.DEBUG):
         for _ in range(len(outcomes) + 2):
             texts.append(asked(admin, number).text)
+        # the service is well now: the sentence of a green test must not carry the settings either
+        route.side_effect = None
+        route.return_value = httpx.Response(200, json={"accessToken": "T-ticket-9", "ok": True})
         tested = admin.post(f"/api/v1/integrations/{number}/test", headers=CSRF)
+        assert tested.json()["ok"] is True, tested.text
         texts.append(tested.text)
         listed = admin.get("/api/v1/integrations")
         texts.append(listed.text)
@@ -332,6 +339,7 @@ def adapter_and_config(short: str, **config: Any) -> tuple[Any, dict[str, Any]]:
 @respx.mock
 def test_karten3_ec8_ten_cards_that_need_a_session_together_sign_in_once_and_ten_that_all_got_a_401_sign_in_once(admin: TestClient, moment: Moment) -> None:  # noqa: F811
     service = Memos().mount()
+    service.delay = 0.05
     assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
     adapter, config = adapter_and_config("memos", username="ann", password=PASSWORD)
 
@@ -518,3 +526,15 @@ def test_karten3_a_missing_kind_says_integration_missing_instead_of_failing() ->
     with pytest.raises(AdapterError) as failure:
         asyncio.run(gone.test({}, Context(httpx.AsyncClient())))
     assert failure.value.code == "integration_missing" and failure.value.message == "integration missing"
+
+
+@respx.mock
+def test_karten3_ac6_a_403_is_a_path_the_account_may_not_read_not_a_ticket_that_ran_out(admin: TestClient, moment: Moment) -> None:  # noqa: F811
+    service = Memos().mount()
+    number = own(admin, MEMOS, username="ann", password=PASSWORD)
+    assert asked(admin, number).status_code == 200
+    moment.pass_(minutes=30)
+    respx.get(f"{BASE}/api/v1/private").mock(return_value=httpx.Response(403, json={"message": "forbidden"}))
+    answer = asked(admin, number, "/api/v1/private")
+    assert answer.status_code == 502 and answer.json()["detail"]["code"] == "auth_failed"
+    assert len(service.logins) == 1, "no second sign-in for a 403"

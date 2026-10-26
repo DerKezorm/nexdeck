@@ -75,7 +75,9 @@ def export_config(integration: Integration) -> dict[str, Any]:
     config = dict(integration.config or {})
     for f in _fields(integration.kind):
         if f.secret and config.get(f.name):
-            env_name = f"NEXDECK_{integration.kind}_{integration.id}_{f.name}".upper()
+            # An own kind is called custom:<short>; a colon or a hyphen cannot stand in the name of a variable.
+            kind = integration.kind.replace(":", "_").replace("-", "_") if integration.kind.startswith("custom:") else integration.kind
+            env_name = f"NEXDECK_{kind}_{integration.id}_{f.name}".upper()
             config[f.name] = "${" + env_name + "}"
     return config
 

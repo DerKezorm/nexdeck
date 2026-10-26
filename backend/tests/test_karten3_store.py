@@ -358,3 +358,16 @@ def test_karten3_the_reads_of_the_description_are_offered_for_the_data_step_and_
     assert sources["custom:memos"] == {"kind": "custom:memos", "label": "Memos", "icon": "memos", "category": "other", "custom": True}
     assert sources["sonarr"]["custom"] is False
     assert admin.get("/api/v1/cards/sources/custom:nobody/reads").status_code == 404
+
+
+def test_karten3_ac7_a_secret_is_never_in_the_export_of_a_board_only_a_reference_to_the_environment(admin: TestClient) -> None:  # noqa: F811
+    assert make(admin, HEADER).status_code == 201
+    number = connect(admin, "custom:bookstack-own", {"url": "http://svc.example.com", "token_id": "abc", "token_secret": "s3cret-value-9"})
+    from .test_cards_router import add, page_of, place
+
+    assert add(admin, CARD).status_code == 201
+    assert place(admin, page_of(admin), number, card="books-count").status_code == 201
+    slug = next(board["slug"] for board in admin.get("/api/v1/boards").json() if board["name"] == "Wall")
+    exported = admin.get(f"/api/v1/boards/{slug}/export")
+    assert exported.status_code == 200 and "s3cret" not in exported.text
+    assert "${NEXDECK_CUSTOM_BOOKSTACK_OWN_" in exported.text and "_TOKEN_SECRET}" in exported.text
