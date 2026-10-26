@@ -683,6 +683,22 @@
         "contains": "contiene",
         "gt": "mayor que",
         "lt": "menor que"
+      },
+      "replace": {
+        "title": "¿Reemplazar partes de esta tarjeta?",
+        "lead": "El modo guiado no puede mostrar algunas partes de esta tarjeta. Esta elección las reemplaza y desaparecen de la tarjeta:",
+        "yes": "Reemplazar",
+        "kinds": "Más de un tipo de servicio",
+        "requests": "Más preguntas al servicio",
+        "formula": "Una fórmula",
+        "template": "Un texto con campos",
+        "expression": "Una expresión",
+        "colours": "Reglas de color de un número",
+        "cardRules": "Reglas de color de toda la tarjeta",
+        "rowRules": "Reglas de color de las líneas",
+        "link": "Enlaces de las líneas",
+        "rows": "Cómo se filtran, ordenan o limitan las líneas",
+        "parts": "Otras partes de la tarjeta"
       }
     }
   }

@@ -41,9 +41,13 @@ export function useAnswerTable(wanted?: string): AnswerTable | null {
   return useMemo(() => (tree ? tableOf(tree, suggestion, wanted) : null), [tree, suggestion, wanted])
 }
 
-/** Ask the service for a path of the guided way; once the answer is in, the display is made from it (`shapeNow`). */
+/**
+ * Ask the service for a path of the guided way; once the answer is in, the display is made from it (`shapeNow`).
+ * ⚠️ Only for a path the display was not made for yet: asking the same path again refreshes the table and leaves the
+ * card as its author set it.
+ */
 export function askFor(requestId: string, path: string, integrationId: number | null) {
-  useCardEditor.setState({ pendingShape: path })
+  if (useCardEditor.getState().shapedPath !== path) useCardEditor.setState({ pendingShape: path })
   if (integrationId !== null) void runProbe(requestId, integrationId, path)
 }
 

@@ -683,6 +683,22 @@
         "contains": "contiene",
         "gt": "maggiore di",
         "lt": "minore di"
+      },
+      "replace": {
+        "title": "Sostituire parti di questa scheda?",
+        "lead": "Il percorso guidato non può mostrare alcune parti di questa scheda. Questa scelta le sostituisce e spariscono dalla scheda:",
+        "yes": "Sostituisci",
+        "kinds": "Più di un tipo di servizio",
+        "requests": "Altre domande al servizio",
+        "formula": "Una formula",
+        "template": "Un testo con campi",
+        "expression": "Un'espressione",
+        "colours": "Regole di colore di un numero",
+        "cardRules": "Regole di colore dell'intera scheda",
+        "rowRules": "Regole di colore delle righe",
+        "link": "Link delle righe",
+        "rows": "Come le righe sono filtrate, ordinate o limitate",
+        "parts": "Altre parti della scheda"
       }
     }
   }

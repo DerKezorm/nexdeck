@@ -683,6 +683,22 @@
         "contains": "contains",
         "gt": "greater than",
         "lt": "less than"
+      },
+      "replace": {
+        "title": "Replace parts of this card?",
+        "lead": "The guided way cannot show some parts of this card. This choice replaces them, and they are gone from the card:",
+        "yes": "Replace",
+        "kinds": "More than one kind of service",
+        "requests": "Further questions to the service",
+        "formula": "A formula",
+        "template": "A text with fields in it",
+        "expression": "An expression",
+        "colours": "Colour rules of a number",
+        "cardRules": "Colour rules of the whole card",
+        "rowRules": "Colour rules of the lines",
+        "link": "Links of the lines",
+        "rows": "How the lines are filtered, sorted or limited",
+        "parts": "Other parts of the card"
       }
     }
   }

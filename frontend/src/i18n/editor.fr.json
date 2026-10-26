@@ -683,6 +683,22 @@
         "contains": "contient",
         "gt": "supérieur à",
         "lt": "inférieur à"
+      },
+      "replace": {
+        "title": "Remplacer des parties de cette carte ?",
+        "lead": "Le mode guidé ne peut pas montrer certaines parties de cette carte. Ce choix les remplace, et elles disparaissent de la carte :",
+        "yes": "Remplacer",
+        "kinds": "Plus d'un type de service",
+        "requests": "D'autres questions au service",
+        "formula": "Une formule",
+        "template": "Un texte avec des champs",
+        "expression": "Une expression",
+        "colours": "Règles de couleur d'un nombre",
+        "cardRules": "Règles de couleur de toute la carte",
+        "rowRules": "Règles de couleur des lignes",
+        "link": "Liens des lignes",
+        "rows": "La façon dont les lignes sont filtrées, triées ou limitées",
+        "parts": "D'autres parties de la carte"
       }
     }
   }

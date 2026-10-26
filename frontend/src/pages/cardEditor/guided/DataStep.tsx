@@ -14,6 +14,7 @@ import { FailureNote } from '../FailureNote'
 import { useCardEditor, useCardField } from '../store'
 import { AnswerTable } from './AnswerTable'
 import { GuidedFrame, StepNav } from './GuidedWay'
+import { useReplaceGuard } from './ReplaceGuard'
 import { askFor, useAnswerTable, useGuidedAnswer } from './useGuided'
 
 const ICONS: Record<SuggestionIcon, LucideIcon> = {
@@ -41,6 +42,7 @@ export function DataStep() {
   const ids = useId()
   const { kind, requestId, path, suggestion, probe } = useGuidedAnswer()
   const { chosen, loaded } = useConnections()
+  const guard = useReplaceGuard()
   const [ownPath, setOwnPath] = useCardField<string>(['requests', 0, 'path'])
   const sources = useQuery({ queryKey: ['cards-sources'], queryFn: () => get<CardSource[]>('/cards/sources'), staleTime: 60_000 })
   const table = useAnswerTable()
@@ -51,12 +53,21 @@ export function DataStep() {
 
   const pick = (one: CardSuggestion) => {
     if (suggestion?.id === one.id && path === one.path) return
-    useCardEditor.getState().change((doc) => {
-      setAt(doc, ['requests'], [{ id: one.id, path: one.path, every: one.every }])
-      // Examples of another answer would not fit this one.
-      deleteAt(doc, ['demo'])
+    // A suggestion makes the card's display again: what the guided way cannot show is asked about first.
+    guard.ask(() => {
+      useCardEditor.getState().change((doc) => {
+        setAt(doc, ['requests'], [{ id: one.id, path: one.path, every: one.every }])
+        // Examples of another answer would not fit this one.
+        deleteAt(doc, ['demo'])
+      })
+      askFor(one.id, one.path, chosen?.id ?? null)
     })
-    askFor(one.id, one.path, chosen?.id ?? null)
+  }
+
+  /** Ask the path in the field; a new path makes the display again, so the same question comes first. */
+  const askOwn = () => {
+    if (useCardEditor.getState().shapedPath === path) return askFor(requestId, path, chosen?.id ?? null)
+    guard.ask(() => askFor(requestId, path, chosen?.id ?? null))
   }
 
   return (
@@ -114,10 +125,10 @@ export function DataStep() {
               spellCheck={false}
               onChange={(event) => setOwnPath(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && asked) askFor(requestId, path, chosen?.id ?? null)
+                if (event.key === 'Enter' && asked) askOwn()
               }}
             />
-            <button type="button" className="btn btn-accent flex-none" disabled={!asked || !chosen || probe?.status === 'loading'} onClick={() => askFor(requestId, path, chosen?.id ?? null)}>
+            <button type="button" className="btn btn-accent flex-none" disabled={!asked || !chosen || probe?.status === 'loading'} onClick={askOwn}>
               {t('editor.guided.data.ask')}
             </button>
           </span>
@@ -133,6 +144,7 @@ export function DataStep() {
       {probe?.status === 'failed' && probe.path === path && <FailureNote failure={probe} />}
       {table && <AnswerTable table={table} />}
 
+      {guard.dialog}
       <StepNav />
     </GuidedFrame>
   )

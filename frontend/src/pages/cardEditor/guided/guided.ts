@@ -261,6 +261,54 @@ export function refusalOf(card: CardDoc): Refusal | null {
   return 'parts'
 }
 
+/**
+ * What a choice of the guided way (a service, a suggestion, a form) would put aside: the kinds of parts the guided
+ * way cannot show, in the words of `editor.guided.replace.<kind>`.
+ */
+export type Hidden = 'kinds' | 'requests' | 'formula' | 'template' | 'expression' | 'colours' | 'cardRules' | 'rowRules' | 'link' | 'rows' | 'parts'
+
+const HIDDEN_ORDER: Hidden[] = ['kinds', 'requests', 'formula', 'template', 'expression', 'colours', 'cardRules', 'rowRules', 'link', 'rows', 'parts']
+
+/** The kinds of one part the guided way does not show, by its place and what stands there. */
+function hiddenOfPart(path: CardPath, value: unknown): Hidden[] {
+  const first = path[0]
+  const last = path[path.length - 1]
+  if (first === 'requires') return ['kinds']
+  if (first === 'requests') return ['requests']
+  if (first === 'rules') return ['cardRules']
+  if (first === 'rows') return ['rows']
+  if (last === 'link') return ['link']
+  if (last === 'formula') return ['formula']
+  if (last === 'template') return ['template']
+  if (path.includes('status')) return ['rowRules']
+  if (last === 'rules') return ['colours']
+  if (isMap(value)) {
+    // A number or a cell that holds more than one thing the guided way cannot say.
+    const found: Hidden[] = []
+    if (value.formula !== undefined) found.push('formula')
+    if (value.template !== undefined) found.push('template')
+    if (value.rules !== undefined && thresholdsOf(value.rules) === null) found.push('colours')
+    if (value.path !== undefined && !plain(value.path)) found.push('expression')
+    if (value.total !== undefined && numberOf(value) === null) found.push('expression')
+    return found.length ? found : ['parts']
+  }
+  if (typeof value === 'string') return ['expression']
+  return ['parts']
+}
+
+/**
+ * The parts of a card that the guided way does not show and that a choice there would replace: a formula, the card's
+ * own colour rules, the links of the lines, an expression. Nothing for a card the guided way shows whole.
+ */
+export function hiddenIn(card: CardDoc): Hidden[] {
+  const found = new Set<Hidden>()
+  for (const part of adjustedInYaml(card, GUIDED_SHOWS)) for (const kind of hiddenOfPart(part.path, readAt(card, part.path))) found.add(kind)
+  const form = readAt(card, ['form'])
+  if (form === 'stats' && !STATS_RULES_ALIKE(readAt(card, ['stats']))) found.add('colours')
+  if (form === 'list' && readAt(card, ['item', 'image']) !== undefined) found.add('parts')
+  return HIDDEN_ORDER.filter((kind) => found.has(kind))
+}
+
 // -- writing ------------------------------------------------------------------------------------------------------
 
 /** A number written into the card, its label, unit and colour rules kept. */

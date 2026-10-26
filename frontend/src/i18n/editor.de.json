@@ -683,6 +683,22 @@
         "contains": "enthält",
         "gt": "größer als",
         "lt": "kleiner als"
+      },
+      "replace": {
+        "title": "Teile dieser Karte ersetzen?",
+        "lead": "Der geführte Weg kann einige Teile dieser Karte nicht zeigen. Diese Wahl ersetzt sie, und sie sind danach weg:",
+        "yes": "Ersetzen",
+        "kinds": "Mehr als eine Art von Dienst",
+        "requests": "Weitere Fragen an den Dienst",
+        "formula": "Eine Formel",
+        "template": "Ein Text mit Feldern darin",
+        "expression": "Ein Ausdruck",
+        "colours": "Farbregeln einer Zahl",
+        "cardRules": "Farbregeln der ganzen Karte",
+        "rowRules": "Farbregeln der Zeilen",
+        "link": "Links der Zeilen",
+        "rows": "Wie die Zeilen gefiltert, sortiert oder begrenzt werden",
+        "parts": "Weitere Teile der Karte"
       }
     }
   }

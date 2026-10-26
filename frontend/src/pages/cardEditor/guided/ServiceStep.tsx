@@ -12,6 +12,7 @@ import { useConnections } from '../connections'
 import { useCardEditor } from '../store'
 import { GuidedFrame, StepNav } from './GuidedWay'
 import { writeShape } from './guided'
+import { useReplaceGuard } from './ReplaceGuard'
 
 /**
  * Step 1, Service (U3): the connections a card can read from, as tiles with their logo and name. A tile sets the kind
@@ -24,24 +25,30 @@ export function ServiceStep() {
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations') })
   const { kinds, chosen } = useConnections()
   const slug = useCardEditor((state) => state.slug)
+  const guard = useReplaceGuard()
   const readable = new Map((sources.data ?? []).map((one) => [one.kind, one]))
   const tiles = (integrations.data ?? []).filter((one) => one.enabled !== false && readable.has(one.kind))
 
   const pick = (one: Integration) => {
-    const editor = useCardEditor.getState()
     const same = kinds.length === 1 && kinds[0] === one.kind
-    if (!same) {
-      editor.change((doc) => {
-        setAt(doc, ['requires'], [one.kind])
-        // What was read from another service means nothing here: back to one request that asks nothing yet.
-        setAt(doc, ['requests'], [{ id: 'main', path: '/' }])
-        deleteAt(doc, ['demo'])
-        writeShape(doc, { form: 'value', number: { kind: 'field', path: '@' } })
-      })
-      useCardEditor.setState({ shapedPath: null, pendingShape: null })
+    const go = () => {
+      const editor = useCardEditor.getState()
+      if (!same) {
+        editor.change((doc) => {
+          setAt(doc, ['requires'], [one.kind])
+          // What was read from another service means nothing here: back to one request that asks nothing yet.
+          setAt(doc, ['requests'], [{ id: 'main', path: '/' }])
+          deleteAt(doc, ['demo'])
+          writeShape(doc, { form: 'value', number: { kind: 'field', path: '@' } })
+        })
+        useCardEditor.setState({ shapedPath: null, pendingShape: null })
+      }
+      editor.setIntegration(one.id)
+      editor.setGuidedStep('data')
     }
-    editor.setIntegration(one.id)
-    editor.setGuidedStep('data')
+    // Another kind of service starts the card over: what the guided way cannot show is asked about first.
+    if (same) go()
+    else guard.ask(go)
   }
 
   return (
@@ -86,6 +93,7 @@ export function ServiceStep() {
           <ClipboardPaste size={15} /> {t('editor.guided.service.paste')}
         </button>
       )}
+      {guard.dialog}
       <StepNav />
     </GuidedFrame>
   )

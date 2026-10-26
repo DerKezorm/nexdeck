@@ -16,6 +16,7 @@ import {
   cellOf,
   formsFor,
   GUIDED_OPS,
+  hiddenIn,
   numberOf,
   refusalOf,
   rowRuleOf,
@@ -29,6 +30,7 @@ import {
   type NumberPart,
 } from './guided'
 import { GuidedFrame, StepNav } from './GuidedWay'
+import { useReplaceGuard } from './ReplaceGuard'
 import { useAnswerTable, useGuidedAnswer } from './useGuided'
 
 const FORMS: { form: CardForm; glyph: string }[] = [
@@ -320,9 +322,12 @@ export function DisplayStep() {
   const card = useCard()
   const { suggestion, probe, path } = useGuidedAnswer()
   const change = useCardEditor((state) => state.change)
+  const guard = useReplaceGuard()
   const whole = useAnswerTable()
   const table = useAnswerTable(listOf(card))
   const refusal = useMemo(() => (card ? refusalOf(card) : null), [card])
+  // A part inside a number or a cell that the sentences cannot say keeps the forms shut; the others are asked about.
+  const locked = useMemo(() => (card ? hiddenIn(card) : []).some((kind) => kind === 'expression' || kind === 'formula' || kind === 'template'), [card])
   const { preview } = usePreviewQuery()
   const form = (card ? readAt(card, ['form']) : 'value') as CardForm
   const offered = formsFor(whole, suggestion)
@@ -342,8 +347,8 @@ export function DisplayStep() {
       )}
       <div className="grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] min-w-0" role="group" aria-label={t('editor.guided.display.forms')}>
         {FORMS.map(({ form: one, glyph }) => {
-          const possible = whole !== null && offered.includes(one) && refusal !== 'expression'
-          const why = !whole || refusal === 'expression' ? undefined : !possible ? t(one === 'posters' && whole.kind === 'rows' ? 'editor.guided.display.formNeedsPictures' : 'editor.guided.display.formNeedsRows') : undefined
+          const possible = whole !== null && offered.includes(one) && !locked
+          const why = !whole || locked ? undefined : !possible ? t(one === 'posters' && whole.kind === 'rows' ? 'editor.guided.display.formNeedsPictures' : 'editor.guided.display.formNeedsRows') : undefined
           return (
             <button
               key={one}
@@ -354,7 +359,8 @@ export function DisplayStep() {
               className={`text-left grid gap-1 rounded-2xl border p-3 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed ${form === one ? 'border-accent ring-[3px] ring-accent/20' : 'border-line hover:bg-surface-hover'}`}
               onClick={() => {
                 if (form === one || !whole) return
-                change((doc) => writeShape(doc, shapeFor(one, whole, suggestion)))
+                // Another form makes the display again: what the guided way cannot show is asked about first.
+                guard.ask(() => change((doc) => writeShape(doc, shapeFor(one, whole, suggestion))))
               }}
             >
               <span className="text-[20px] leading-none text-accent" aria-hidden="true">
@@ -411,6 +417,7 @@ export function DisplayStep() {
       {form === 'posters' && table?.kind === 'rows' && <PosterFields table={table} suggestion={suggestion} />}
       {(form === 'list' || form === 'posters') && table?.kind === 'fields' && <ExpressionNote />}
 
+      {guard.dialog}
       <StepNav />
     </GuidedFrame>
   )
