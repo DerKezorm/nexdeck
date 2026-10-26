@@ -1193,6 +1193,59 @@ async def _member_guard_hook(request: Any) -> None:
     guard_member_target(str(request.url))
 
 
+#: What a request keeps when a redirect sends it somewhere credentials may not go.
+HARMLESS_HEADERS = frozenset({"host", "user-agent", "accept", "accept-encoding", "accept-language", "connection"})
+_DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def same_place(start: httpx.URL, target: httpx.URL) -> bool:
+    """Whether a redirect stays where a connection's credentials may follow it.
+
+    Same host, and either the same scheme and port or plain http raised to
+    https on any port: UniFi sends http to https, a classic controller from
+    8080 to 8443, and a reverse proxy from 80 to 443. Another host, another
+    port on the same scheme, and https lowered to http are not.
+    """
+    if start.host.lower() != target.host.lower():
+        return False
+    if start.scheme == "http" and target.scheme == "https":
+        return True
+    return (start.scheme, start.port or _DEFAULT_PORTS.get(start.scheme)) == (
+        target.scheme, target.port or _DEFAULT_PORTS.get(target.scheme))
+
+
+class RedirectRefused(httpx.RequestError):
+    """A redirect that would have carried a request body to another place."""
+
+
+class _OutboundClient(httpx.AsyncClient):
+    """httpx's client, with nothing that opens a door carried to another place.
+
+    ⚠️ httpx drops ``Authorization`` on a redirect to another origin and
+    nothing else. ``X-Api-Key``, ``X-Plex-Token``, ``X-Emby-Token`` and every
+    other header a connection signs in with went along, so a service that was
+    compromised or set up wrong handed its key to any host it named in a
+    ``Location``. Found in the review of the custom cards, 25.10.2026.
+
+    Such a hop keeps only ``HARMLESS_HEADERS``, which takes cookies with it.
+    A redirect that keeps the method and the body (307, 308 after a POST) is
+    refused there instead: the body may be the password of a sign-in.
+    """
+
+    def _build_redirect_request(self, request: httpx.Request, response: httpx.Response) -> httpx.Request:
+        following = super()._build_redirect_request(request, response)
+        if same_place(request.url, following.url):
+            # httpx keeps it only from port 80 to 443; one rule for every header.
+            if "authorization" in request.headers:
+                following.headers["Authorization"] = request.headers["authorization"]
+            return following
+        if following.method not in ("GET", "HEAD"):
+            raise RedirectRefused(f"A {following.method} was redirected to {following.url.host}.", request=following)
+        for name in [name for name in following.headers if name not in HARMLESS_HEADERS]:
+            del following.headers[name]
+        return following
+
+
 def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: bool = False, **kwargs: Any) -> httpx.AsyncClient:
     """The only place an outbound client is built.
 
@@ -1209,6 +1262,9 @@ def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: b
 
     ``guard=False`` is for a client that does not speak to the network by name,
     which today is the Docker socket and nothing else.
+
+    A redirect to another place goes on without credentials, see
+    ``_OutboundClient``.
     """
     if guard:
         hooks = dict(kwargs.pop("event_hooks", None) or {})
@@ -1226,7 +1282,7 @@ def outbound_client(*, guard: bool = True, member: bool = False, keep_cookies: b
         kwargs.setdefault("cookies", CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])))
     # The only place in the code that may build one of these directly, which is
     # what the guard test in test_guards.py holds everyone else to.
-    return httpx.AsyncClient(**kwargs)
+    return _OutboundClient(**kwargs)
 
 
 _member_clients: dict[bool, httpx.AsyncClient] = {}
@@ -1375,6 +1431,10 @@ class Context:
                 )
         except httpx.TimeoutException as error:
             raise Unreachable("The service did not answer in time.") from error
+        except RedirectRefused as error:
+            raise AdapterError(f"The service sent the request on to {error.request.url.host}.", code="redirect_refused",
+                               hint="nexdeck sends what it signs in with only to the address of the connection. "
+                                    "Check the URL; it is the address of the service itself.") from error
         except httpx.HTTPError as error:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
         if auth_errors and response.status_code in (401, 403):
