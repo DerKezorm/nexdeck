@@ -538,3 +538,51 @@ def test_karten3_ac6_a_403_is_a_path_the_account_may_not_read_not_a_ticket_that_
     answer = asked(admin, number, "/api/v1/private")
     assert answer.status_code == 502 and answer.json()["detail"]["code"] == "auth_failed"
     assert len(service.logins) == 1, "no second sign-in for a 403"
+
+
+# -- AC-5: the name of the parameter does not decide what the log leaves out -------------------------------------------
+
+#: (how it is signed, the description with a harmless name for what carries the key, the settings, where the key goes in the address)
+QUIET = (
+    ("a key in the head", changed(HEADER, short="quiet-head"), {"token_id": "abc", "token_secret": KEY}),
+    ("user and password as basic", changed(MEMOS, short="quiet-basic", auth={"type": "basic", "user": "{username}", "password": "{password}"}), {"username": "ann", "password": KEY}),
+    ("a key in the address", changed(example("apikey-in-address"), short="quiet-query", **{"auth.param": "openapi"}), {"api_key": KEY}),
+    (
+        "a ticket in the address",
+        changed(MEMOS, short="quiet-session", **{"auth.pass": {"as": "query", "param": "t"}}),
+        {"username": "ann", "password": KEY},
+    ),
+)
+
+
+@pytest.mark.parametrize(("how", "text", "config"), QUIET, ids=[row[0] for row in QUIET])
+@respx.mock
+def test_karten3_ac5_a_key_in_the_address_stays_out_of_the_trace_log_whatever_the_parameter_is_called(
+    admin: TestClient, how: str, text: str, config: dict[str, Any]  # noqa: F811
+) -> None:
+    from app.services import journal
+
+    lines: list[str] = []
+
+    class Collect(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            lines.append(self.format(record))
+
+    handler = Collect(logging.DEBUG)
+    handler.addFilter(journal._Context())
+    respx.post(f"{BASE}/api/v1/auth/signin").mock(return_value=httpx.Response(200, json={"accessToken": KEY}))
+    respx.get(url__regex=rf"{BASE}/.*").mock(return_value=httpx.Response(200, json={"ok": True}))
+    number = own(admin, text, **config)
+    root, library = logging.getLogger(), logging.getLogger("httpx")
+    before = root.level, library.level
+    root.addHandler(handler)
+    root.setLevel(logging.DEBUG)
+    library.setLevel(logging.INFO)  # what the deep levels of the log do
+    try:
+        assert asked(admin, number, count.path("/api/v2")).status_code == 200
+    finally:
+        root.removeHandler(handler)
+        root.setLevel(before[0])
+        library.setLevel(before[1])
+    assert any("GET" in line for line in lines), f"{how}: httpx wrote no request line, so nothing was checked"
+    assert all(KEY not in line for line in lines), f"{how}: a line holds the key"

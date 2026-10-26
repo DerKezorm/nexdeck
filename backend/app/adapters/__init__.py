@@ -11,6 +11,8 @@ REGISTRY: dict[str, Adapter] = {}
 #: The kinds that ship with nexdeck, found when the registry is loaded. Own kinds (``custom:<short>``) come and go.
 _BUILTIN: set[str] = set()
 CUSTOM_PREFIX = "custom:"
+#: The names of the address parameters that the sign-in of the own kinds uses, lower case. Read by the log filter (KARTEN-3 AC-5).
+_CUSTOM_PARAMS: frozenset[str] = frozenset()
 
 
 def _load() -> None:
@@ -80,16 +82,41 @@ def register_custom(adapter: Adapter) -> None:
     if not adapter.kind.startswith(CUSTOM_PREFIX):
         raise ValueError("An own kind is called custom:<short>.")
     REGISTRY[adapter.kind] = adapter
+    _note_custom_params()
 
 
 def unregister_custom(kind: str) -> None:
     REGISTRY.pop(kind, None)
+    _note_custom_params()
 
 
 def forget_all_custom() -> None:
     """Every own kind out of the registry (a new database is read, or a test starts)."""
     for kind in [one for one in REGISTRY if one.startswith(CUSTOM_PREFIX)]:
         del REGISTRY[kind]
+    _note_custom_params()
+
+
+def _note_custom_params() -> None:
+    global _CUSTOM_PARAMS
+    names: set[str] = set()
+    for kind, one in REGISTRY.items():
+        auth = getattr(getattr(one, "definition", None), "auth", None) if kind.startswith(CUSTOM_PREFIX) else None
+        if auth is None:
+            continue
+        names.add((auth.param or "").lower())
+        if auth.pass_ is not None:
+            names.add((auth.pass_.param or "").lower())
+    _CUSTOM_PARAMS = frozenset(names - {""})
+
+
+def custom_credential_params() -> frozenset[str]:
+    """The parameters of an address in which an own kind sends its key or its ticket, whatever they are called (KARTEN-3 AC-5).
+
+    ⚠️ ``openapi`` or ``t`` look harmless to the list of credential names (:mod:`..credential_names`), but the definition says
+    they carry the key, so the log leaves their value out as long as the kind is in the registry.
+    """
+    return _CUSTOM_PARAMS
 
 
 def all_adapters() -> list[Adapter]:

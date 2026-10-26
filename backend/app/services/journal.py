@@ -130,7 +130,11 @@ _SECRET_IN_QUERY = re.compile(
 
 def _blank(hit: re.Match[str]) -> str:
     """The parameter of an address when its name is a credential by the one list of names (:mod:`..credential_names`)."""
-    return f"{hit.group(1)}{hit.group(2)}{hit.group(3)}***" if is_credential_name(hit.group(2)) and hit.group(4) else hit.group(0)
+    from ..adapters import custom_credential_params
+
+    name = hit.group(2)
+    known = is_credential_name(name) or name.lower() in custom_credential_params()
+    return f"{hit.group(1)}{name}{hit.group(3)}***" if known and hit.group(4) else hit.group(0)
 
 
 def redact(text: str) -> str:
