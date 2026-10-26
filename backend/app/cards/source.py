@@ -105,9 +105,17 @@ async def fetch_source(
     if not stays_underneath(path):
         raise AdapterError("The path of a card stays underneath the connection's address.", code="bad_path")
     response = await adapter.raw_request("GET", path, config, ctx, cache_seconds=cache_for(request))
+    for _hop in range(MAX_HOPS):
+        if not 300 <= response.status_code < 400:
+            break
+        moved = same_place_move(adapter, config, path, response)
+        if moved is None:
+            break
+        config, path = moved
+        response = await adapter.raw_request("GET", path, config, ctx, cache_seconds=cache_for(request))
     if 300 <= response.status_code < 400:
         raise AdapterError(
-            "Redirected, not followed. The service answered with a redirect, which a custom card does not follow.",
+            "Redirected, not followed. The service answered with a redirect to another place, which a custom card does not follow.",
             code="redirected",
             hint="Use the address the redirect leads to as the connection's address.",
         )
@@ -120,6 +128,43 @@ async def fetch_source(
             hint="Check the path of the request; the service may not have it.",
         )
     return read_answer(response)
+
+
+#: How many redirects to the same place a card follows, as http to https and on to a login-free path.
+MAX_HOPS = 3
+
+
+def same_place_move(adapter: Adapter, config: dict[str, Any], path: str, response: Any) -> tuple[dict[str, Any], str] | None:
+    """The connection's address and the path a redirect leads to, when it stays where the credentials may follow it.
+
+    ⚠️ The rule of every outbound client (``same_place``): the same host, and http raised to https or the same scheme
+    and port. A connection typed as http that its service raises to https (UniFi, 26.10.2026) reads like the built-in
+    cards; a redirect to another host, port or a path above the connection's own is still refused. The card goes on
+    with the same credentials under the new address, so only an address the kind builds from ``url`` can move.
+    """
+    import httpx
+
+    from ..adapters.base import same_place
+    from ..adapters.jsonapi import join_path
+
+    location = response.headers.get("location")
+    if not location:
+        return None
+    base = adapter.raw_base(config)
+    start = httpx.URL(join_path(base, path))
+    target = start.join(location)
+    if not same_place(start, target):
+        return None
+    prefix = httpx.URL(base).path.rstrip("/")
+    if not target.path.startswith(prefix + "/") and target.path != prefix:
+        return None
+    rest = target.raw_path.decode("ascii")[len(prefix):] or "/"
+    if not stays_underneath(rest):
+        return None
+    moved = {**config, "url": str(target.copy_with(path=prefix or "/", query=None, fragment=None)).rstrip("/")}
+    if adapter.raw_base(moved).rstrip("/") != moved["url"]:
+        return None
+    return moved, rest
 
 
 def sources() -> list[dict[str, Any]]:

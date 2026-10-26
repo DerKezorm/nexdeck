@@ -220,6 +220,42 @@ async def test_karten2_ac6_the_other_requests_of_the_same_client_still_follow_re
     assert followed.json() == {"moved": True}
 
 
+@respx.mock
+async def test_karten2_ac6_a_connection_typed_as_http_reads_where_its_service_raises_it_to_https() -> None:
+    # UniFi on 26.10.2026: the connection said http://, the service answered 301 to the same path on https.
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(301, headers={"location": "https://svc.example.com:8443/api/v3/queue"}))
+    raised = respx.get("https://svc.example.com:8443/api/v3/queue").mock(return_value=httpx.Response(200, json={"records": []}))
+    answer = await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), request())
+    assert answer == {"records": []}
+    assert raised.calls.last.request.headers.get("x-api-key") == RAW["sonarr"][0]["api_key"], "the key goes along to the same host"
+
+
+@respx.mock
+@pytest.mark.parametrize("elsewhere", [
+    "http://svc.example.com:9090/api/v3/queue",  # another port on the same scheme
+    "http://svc.example.com/api/v3/queue",  # http on the default port is another port too
+    "https://other.example.com/api/v3/queue",  # another host
+])
+async def test_karten2_ac6_a_redirect_to_another_place_is_still_refused(elsewhere: str) -> None:
+    respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(301, headers={"location": elsewhere}))
+    there = respx.get(elsewhere).mock(return_value=httpx.Response(200, json={}))
+    with pytest.raises(AdapterError) as failure:
+        await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), request())
+    assert failure.value.code == "redirected"
+    assert not there.called
+
+
+@respx.mock
+async def test_karten2_ac6_same_place_redirects_end_after_three() -> None:
+    hops = ["/api/v3/queue", "/hop1", "/hop2", "/hop3", "/hop4", "/hop5"]
+    for here, there in zip(hops, hops[1:]):
+        respx.get(f"{BASE}{here}").mock(return_value=httpx.Response(301, headers={"location": f"{BASE}{there}"}))
+    with pytest.raises(AdapterError) as failure:
+        await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), request())
+    assert failure.value.code == "redirected"
+    assert len(respx.calls) == 1 + source.MAX_HOPS
+
+
 # -- AC-7: nothing but the connection's own -------------------------------------------------
 
 
