@@ -9,6 +9,7 @@ import { momentOf } from '../lib/chronicle'
 import { maintenanceTarget } from '../lib/maintenance'
 import { canRefract, refract } from '../lib/refraction'
 import { safeUrl } from '../lib/safeUrl'
+import { pausedUntil } from '../lib/testResult'
 import { useDisguise } from '../lib/showcase'
 import { useAuth } from '../stores/auth'
 
@@ -58,7 +59,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   const showFindings = widget.options?.show_findings === true
   const status = cardStatus(widget, data)
   const errorCode = String(data?.meta?.code ?? '')
-  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: tLabel(String(data?.error)) })) : '')
+  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: tLabel(String(data?.error)), ...pausedUntil(data?.error) })) : '')
   // ⚠️ data?.link comes from the service, not from the operator. A
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined

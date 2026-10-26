@@ -37,6 +37,7 @@ import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
+import { pausedUntil } from '../lib/testResult'
 import { playingLine, useDisguise, type Disguise } from '../lib/showcase'
 import type { Action, Primary, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
@@ -828,7 +829,7 @@ function listRow(disguise: Disguise, kind: string, item: Record<string, unknown>
  */
 export function wordedSubtitle(item: Record<string, unknown>, t: (key: string, options?: Record<string, unknown>) => string, language: string): string {
   const text = String(item.subtitle ?? '')
-  if (item.error_code && language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text })
+  if (item.error_code && language.split('-')[0] !== 'en') return t(`errors.widget.${String(item.error_code)}`, { defaultValue: text, ...pausedUntil(text) })
   // The attention card names the rows of the card it stands for; each part is
   // translated on its own, a name stays a name.
   if (Array.isArray(item.findings)) {

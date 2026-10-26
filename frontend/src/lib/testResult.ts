@@ -11,7 +11,7 @@ export interface TestResult {
   hint?: string
 }
 
-/** The codes with words of their own. `sign_in_paused` carries the time in the server's sentence and keeps it. */
+/** The codes with words of their own. `sign_in_paused` is worded on cards (`errors.widget`) with the time taken from the server's sentence; the Test button signs in anyway and never meets it. */
 export const TEST_CODES = ['auth_failed', 'unreachable', 'unexpected_answer', 'sign_in_no_ticket', 'sign_in_failed', 'sign_in_web_page'] as const
 
 export function testResultText(t: TFunction, result: TestResult): { message: string; hint: string | undefined } {
@@ -22,4 +22,12 @@ export function testResultText(t: TFunction, result: TestResult): { message: str
     }
   }
   return { message: result.message, hint: result.hint }
+}
+
+/**
+ * The time in "Signing in is paused until 14:30 after three failed attempts." (KARTEN-3 EC-4), for the sentence of the
+ * code in every other language. The server writes it as hours and minutes, so a card can name it without a second request.
+ */
+export function pausedUntil(message: unknown): { time: string } {
+  return { time: /\b(\d{1,2}:\d{2})\b/.exec(String(message ?? ''))?.[1] ?? '' }
 }

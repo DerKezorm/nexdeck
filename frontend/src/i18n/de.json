@@ -24,6 +24,7 @@
     "widget": {
       "unreachable": "Der Dienst ist nicht erreichbar.",
       "auth_failed": "Der Dienst lehnt die Zugangsdaten ab.",
+      "sign_in_paused": "Die Anmeldung pausiert bis {{time}} Uhr, damit der Dienst das Konto nicht sperrt.",
       "timeout": "Der Dienst antwortet nicht rechtzeitig.",
       "no_integration": "Dieses Widget braucht eine Anbindung an einen Dienst.",
       "http_error": "Der Dienst antwortet mit einem Fehler.",

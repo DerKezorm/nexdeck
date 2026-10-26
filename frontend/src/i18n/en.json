@@ -24,6 +24,7 @@
     "widget": {
       "unreachable": "The service could not be reached.",
       "auth_failed": "The service rejected the credentials.",
+      "sign_in_paused": "Signing in is paused until {{time}} so that the service does not lock the account.",
       "timeout": "The service did not answer in time.",
       "no_integration": "This widget needs a connection to a service.",
       "http_error": "The service answered with an error.",

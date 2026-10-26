@@ -2,6 +2,7 @@ import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { tLabel } from '../../i18n/texts'
+import { pausedUntil } from '../../lib/testResult'
 import type { Failure } from './connections'
 
 /**
@@ -11,7 +12,7 @@ import type { Failure } from './connections'
 export function failureText(t: (key: string, options?: Record<string, unknown>) => string, language: string, failure: Failure): string {
   if (failure.code === 'network') return t('errors.network')
   if (language.split('-')[0] === 'en') return failure.message
-  return t(`errors.widget.${failure.code}`, { defaultValue: tLabel(failure.message) })
+  return t(`errors.widget.${failure.code}`, { defaultValue: tLabel(failure.message), ...pausedUntil(failure.message) })
 }
 
 export function FailureNote({ failure }: { failure: Failure }) {
