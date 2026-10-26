@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -23,10 +23,43 @@ import { GuidedFrame, StepNav } from './GuidedWay'
 const LABEL = 'text-[12px] font-medium text-muted break-words hyphens-auto'
 const NAME: TextSpot = { id: 'name', path: ['name'], label: { key: 'editor.texts.name' }, required: true }
 
-/** A threshold typed: a number, or nothing for "never". */
-function thresholdOf(text: string): number | null {
-  const trimmed = text.trim().replace(',', '.')
-  return trimmed !== '' && Number.isFinite(Number(trimmed)) ? Number(trimmed) : null
+/**
+ * A threshold as typed: a number (point or comma, minus sign allowed), `null` for nothing ("never"), and `undefined`
+ * for a text that is on its way to a number or is none ("-", "0.", "abc"), which changes nothing in the card.
+ */
+export function thresholdOf(text: string): number | null | undefined {
+  const trimmed = text.trim()
+  if (trimmed === '') return null
+  return /^-?(\d+([.,]\d*)?|[.,]\d+)$/.test(trimmed) && Number.isFinite(Number(trimmed.replace(',', '.'))) ? Number(trimmed.replace(',', '.')) : undefined
+}
+
+/**
+ * The field of one colour sentence. It keeps the text as typed ("0." on the way to "0.5", "-" on the way to "-5") and
+ * writes the number into the card as soon as the text is one; a change of the card from elsewhere (a step back) is
+ * shown again.
+ */
+function ThresholdField({ value, label, placeholder, onNumber }: { value: number | null; label: string; placeholder: string; onNumber: (number: number | null) => void }) {
+  const [text, setText] = useState(value === null ? '' : String(value))
+  useEffect(() => {
+    setText((typed) => {
+      const read = thresholdOf(typed)
+      return read === value || (read === undefined && value === null) ? typed : value === null ? '' : String(value)
+    })
+  }, [value])
+  return (
+    <input
+      className="input !w-28"
+      inputMode="decimal"
+      aria-label={label}
+      placeholder={placeholder}
+      value={text}
+      onChange={(event) => {
+        setText(event.target.value)
+        const read = thresholdOf(event.target.value)
+        if (read !== undefined) onNumber(read)
+      }}
+    />
+  )
 }
 
 /** "Saved. Put it on a board right away?" (U8): a board and a page this account may change, and the card goes there. */
@@ -245,16 +278,11 @@ export function FinishStep({ onSave, canSave, busy }: { onSave: () => void; canS
             (['warn', 'bad'] as const).map((level) => (
               <div key={level} className="flex flex-wrap items-center gap-2 rounded-2xl border border-line px-3.5 py-3 text-sm min-w-0">
                 <span>{t(`editor.guided.finish.${level}Before`)}</span>
-                <input
-                  className="input !w-28"
-                  inputMode="decimal"
-                  aria-label={t(`editor.guided.finish.${level}Label`)}
+                <ThresholdField
+                  value={thresholds[level]}
+                  label={t(`editor.guided.finish.${level}Label`)}
                   placeholder={t('editor.guided.finish.never')}
-                  value={thresholds[level] ?? ''}
-                  onChange={(event) => {
-                    const next = thresholdOf(event.target.value)
-                    setThresholds(level === 'warn' ? next : thresholds.warn, level === 'bad' ? next : thresholds.bad)
-                  }}
+                  onNumber={(next) => setThresholds(level === 'warn' ? next : thresholds.warn, level === 'bad' ? next : thresholds.bad)}
                 />
                 <span>{t(`editor.guided.finish.${level}After`)}</span>
               </div>

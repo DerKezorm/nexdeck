@@ -10,6 +10,7 @@ import { readAt } from '../../../lib/cardDocument'
 import { editor, openCard, openNew, prepare, sent } from '../../../test/cardEditor'
 import { stubGuided } from '../../../test/guidedWorld'
 import { answerOf } from '../../../test/probeAnswers'
+import { thresholdOf } from './FinishStep'
 
 const click = async (name: string | RegExp) => userEvent.click(await screen.findByRole('button', { name }))
 const card = () => editor().card!
@@ -232,5 +233,68 @@ item: {title: title, subtitle: User.title}
     await click(/^3 Display/)
     expect(await screen.findByTestId('card-answer-table')).toHaveTextContent('Example Film')
     expect(screen.queryByTestId('card-answer-none')).toBeNull()
+  })
+})
+
+describe('review 4: thresholds take decimals, a comma and a minus sign', () => {
+  async function finish() {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+    await click('Next')
+    return { yellow: screen.getByRole('textbox', { name: 'Threshold for yellow' }), red: screen.getByRole('textbox', { name: 'Threshold for red' }) }
+  }
+  const rules = () => readAt(card(), ['value', 'rules'])
+
+  it('0.5 is typed as 0.5 and stored as 0.5, not as 5', async () => {
+    const { yellow } = await finish()
+    await userEvent.clear(yellow)
+    await userEvent.type(yellow, '0.5')
+    expect(yellow).toHaveValue('0.5')
+    expect(rules()).toEqual([{ op: '>=', than: 0.5, then: 'warn' }])
+  })
+
+  it('a comma works like a point, a minus sign gives a negative number, and what is not a number changes nothing', async () => {
+    const { yellow, red } = await finish()
+    await userEvent.type(red, '2,5')
+    expect(red).toHaveValue('2,5')
+    expect(rules()).toEqual([
+      { op: '>=', than: 8, then: 'warn' },
+      { op: '>=', than: 2.5, then: 'bad' },
+    ])
+    await userEvent.clear(yellow)
+    await userEvent.type(yellow, '-')
+    expect(yellow).toHaveValue('-')
+    expect(rules()).toEqual([{ op: '>=', than: 2.5, then: 'bad' }])
+    await userEvent.type(yellow, '5')
+    expect(yellow).toHaveValue('-5')
+    expect(rules()).toEqual([
+      { op: '>=', than: -5, then: 'warn' },
+      { op: '>=', than: 2.5, then: 'bad' },
+    ])
+    await userEvent.type(yellow, 'x')
+    expect(rules()).toEqual([
+      { op: '>=', than: -5, then: 'warn' },
+      { op: '>=', than: 2.5, then: 'bad' },
+    ])
+  })
+
+  it('a step back shows the earlier number in the field', async () => {
+    const { yellow } = await finish()
+    await userEvent.clear(yellow)
+    await userEvent.type(yellow, '12')
+    // Typing in one field is one step back (KARTEN-9 EC-10): one step takes the 8 back.
+    await act(async () => editor().undo())
+    expect(screen.getByRole('textbox', { name: 'Threshold for yellow' })).toHaveValue('8')
+    await act(async () => editor().redo())
+    expect(screen.getByRole('textbox', { name: 'Threshold for yellow' })).toHaveValue('12')
+  })
+
+  it('reads a text as a number, as nothing, or as not yet a number', () => {
+    expect([thresholdOf('0.5'), thresholdOf('0,5'), thresholdOf('-5'), thresholdOf(' 12 '), thresholdOf('.5'), thresholdOf('7.')]).toEqual([0.5, 0.5, -5, 12, 0.5, 7])
+    expect([thresholdOf(''), thresholdOf('  ')]).toEqual([null, null])
+    expect([thresholdOf('-'), thresholdOf('0x10'), thresholdOf('1e3'), thresholdOf('abc'), thresholdOf('1.2.3')]).toEqual([undefined, undefined, undefined, undefined, undefined])
   })
 })
