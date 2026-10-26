@@ -79,6 +79,11 @@ def test_a_reachability_check_does_not_follow_a_redirect_to_loopback(monkeypatch
 
 def test_an_rss_card_does_not_follow_a_feed_to_loopback(monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[str] = []
+    # ⚠️ Before the patch: the first get_adapter imports every adapter, and the
+    # ones that import outbound_client by name kept the stand-in for good. The
+    # UniFi, qBittorrent and Deluge tests then read this feed whenever this
+    # test ran first.
+    card = get_adapter("rss")
     real = base_module.outbound_client
     monkeypatch.setattr(base_module, "outbound_client", lambda **kwargs: real(transport=_redirecting(seen), **kwargs))
     monkeypatch.setattr(base_module, "_member_clients", {}, raising=False)
@@ -88,7 +93,7 @@ def test_an_rss_card_does_not_follow_a_feed_to_loopback(monkeypatch: pytest.Monk
 
     async def fetch() -> object:
         try:
-            return await get_adapter("rss").fetch("feed", {}, {"urls": "http://feeds.example.com/start"}, ctx)
+            return await card.fetch("feed", {}, {"urls": "http://feeds.example.com/start"}, ctx)
         finally:
             await shared.aclose()
 
