@@ -23,7 +23,7 @@ from app.models import Event
 
 from .conftest import CSRF
 from .test_cards_editor_api import admin, post  # noqa: F401 - the fixture
-from .test_cards_router import BASE, connection
+from .test_cards_router import BASE
 
 SECRET = "Zk-SuperSecret-0123456789"
 

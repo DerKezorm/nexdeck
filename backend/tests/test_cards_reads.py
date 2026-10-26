@@ -172,3 +172,10 @@ def test_korrektur_f4_a_path_that_comes_with_other_values_is_one_entry_and_other
     shown = [one.path for one in reads.read(3, BASE, [])]
     assert len([one for one in shown if one.startswith("/rest/getScanStatus")]) == 1
     assert {"/rest/getOther0", "/rest/getOther1", "/rest/getOther2"} <= set(shown)
+
+
+def test_korrektur_f7_a_deleted_connection_takes_what_its_cards_read_with_it() -> None:
+    reads.note(3, 5, "GET", f"{BASE}/api/x", None)
+    assert paths() == ["/api/x"]
+    collector.forget_integration(3)
+    assert paths() == []

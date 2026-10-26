@@ -218,6 +218,9 @@ class Collector:
 
     def forget_integration(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
         """The connection is gone. Nothing of it stays behind, not even a session at the service."""
+        from ..cards import reads
+
+        reads.forget(integration_id)  # what its built-in cards read is not kept for the next connection that gets the number
         self._drop_cache(integration_id, farewell)
 
     def reschedule_integration(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
