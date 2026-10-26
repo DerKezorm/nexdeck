@@ -33,7 +33,7 @@ describe('umbau U3: Service', () => {
     await openNew()
     const tiles = within(screen.getByRole('region', { name: 'Where does the data come from?' }))
     // Switched off (Plex (old)) or of a kind no card can read (qBittorrent): no tile.
-    expect((await tiles.findAllByRole('button', { pressed: false })).map((one) => one.textContent)).toEqual(['HomeHome Assistant', 'pveProxmox VE', 'PlexPlex', 'WeatherJSON API'])
+    expect((await tiles.findAllByRole('button', { pressed: false })).map((one) => one.textContent)).toEqual(['HomeHome Assistant', 'pveProxmox VE', 'Plex', 'WeatherJSON API'])
     expect(screen.getByRole('button', { name: '2 Data' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
     expect(screen.getByRole('link', { name: /Add an integration/ })).toHaveAttribute('href', '/system/integrations')

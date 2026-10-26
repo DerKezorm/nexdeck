@@ -14,6 +14,9 @@ import { GuidedFrame, StepNav } from './GuidedWay'
 import { writeShape } from './guided'
 import { useReplaceGuard } from './ReplaceGuard'
 
+/** The kind of a service says nothing the name does not, when both are the same words ("Emby" named Emby). */
+export const sameWords = (kind: string, name: string) => kind.trim().toLowerCase() === name.trim().toLowerCase()
+
 /**
  * Step 1, Service (U3): the connections a card can read from, as tiles with their logo and name. A tile sets the kind
  * of the card (`requires`, replaced, never added to) and the connection the answers and the preview come from, which
@@ -61,6 +64,7 @@ export function ServiceStep() {
       <div className="grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(170px,1fr))] min-w-0">
         {tiles.map((one) => {
           const pressed = chosen?.id === one.id && kinds.length === 1 && kinds[0] === one.kind
+          const kindLabel = readable.get(one.kind)?.label ?? one.kind
           return (
             <button
               key={one.id}
@@ -73,7 +77,7 @@ export function ServiceStep() {
                 <ServiceIcon icon={one.icon || readable.get(one.kind)?.icon || one.kind} size={28} />
                 <span className="font-semibold text-sm min-w-0 break-words hyphens-auto">{one.name}</span>
               </span>
-              <small className="text-[12px] text-muted break-words hyphens-auto">{readable.get(one.kind)?.label ?? one.kind}</small>
+              {sameWords(kindLabel, one.name) ? null : <small className="text-[12px] text-muted break-words hyphens-auto">{kindLabel}</small>}
             </button>
           )
         })}
