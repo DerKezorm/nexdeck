@@ -135,6 +135,21 @@ def test_review_5_starts_with_ends_with_and_contains_compare_as_text_and_007_sta
     assert show(rule, {"code": 7}).value.status is None  # type: ignore[union-attr]
 
 
+def test_review_11_the_text_comparisons_of_the_pipeline_refuse_what_has_no_text() -> None:
+    """Called alone, as the filters and the rules call it once they have looked at the row: nothing, a list and an
+    object start with nothing and end with nothing, even where Python would print them as text that does."""
+    compare = pipeline._compare
+    # None would print as "None", a list as "['x']", an object as "{'a': 'x'}"
+    assert compare("starts_with", None, "No") is False and compare("ends_with", None, "ne") is False
+    assert compare("starts_with", "None", None) is False and compare("ends_with", "None", None) is False
+    assert compare("starts_with", ["x"], "['x'") is False and compare("ends_with", ["x"], "'x']") is False
+    assert compare("starts_with", {"a": "x"}, "{'a'") is False and compare("ends_with", {"a": "x"}, "'x'}") is False
+    assert compare("contains", None, "None") is False
+    assert compare("contains", ["a", 7], "7") is True and compare("contains", ["a"], "b") is False
+    assert compare("starts_with", 21.5, "21") is True and compare("ends_with", 21.5, ".5") is True
+    assert compare("starts_with", 21.5, "5") is False
+
+
 def test_karten5_ac3_rows_come_in_the_order_the_definition_asks_for() -> None:
     assert titles(show(rows_of("sort: {field: size}"))) == ["Bravo", "Charlie", "Alpha", "Delta"]
     assert titles(show(rows_of("sort: {field: size, desc: true}"))) == ["Alpha", "Charlie", "Bravo", "Delta"]

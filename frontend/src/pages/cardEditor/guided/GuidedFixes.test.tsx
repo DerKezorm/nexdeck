@@ -574,3 +574,66 @@ describe('review 9: the *arr queue is counted by its total and asks for enough l
     expect(readAt(card(), ['stats', 0, 'path'])).toBe('totalRecords')
   })
 })
+
+
+describe('review 11: the places the first tests left unchecked', () => {
+  /** A card of the given service and suggestion, up to Finish and saved. */
+  async function savedFrom(service: RegExp, suggestion: RegExp, form?: RegExp) {
+    await openNew()
+    await click(service)
+    await click(suggestion)
+    await waitFor(() => expect(editor().shapedPath).not.toBeNull())
+    await click('Next')
+    if (form) await click(form)
+    await click('Next')
+    await userEvent.click(within(screen.getByRole('region', { name: 'Finish' })).getByRole('button', { name: 'Save' }))
+    return screen.findByTestId('card-guided-saved')
+  }
+  const placed = () => sent('POST', '/pages/5/widgets').map((one) => one.body)
+
+  it.each([
+    ['a list', /^pve/, /^Virtual machines and containers/, undefined, 'custom.list'],
+    ['pictures', /^Plex$|^PlexPlex/, /^Recently added/, undefined, 'custom.posters'],
+    ['several numbers', /^Home/, /^Devices and sensors/, /^Several numbers/, 'custom.stats'],
+    ['a number', /^Home/, /^Devices and sensors/, undefined, 'custom.value'],
+  ])('%s is put on the board as the widget of its own form', async (_name, service, suggestion, form, kind) => {
+    const saved = await savedFrom(service, suggestion, form)
+    await userEvent.click(await within(saved).findByRole('button', { name: 'Put on the board' }))
+    await waitFor(() => expect(placed()).toHaveLength(1))
+    expect(placed()[0]).toMatchObject({ kind, options: { card: editor().slug } })
+  })
+
+  it('colour sentences apply to every one of several numbers', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+    await click(/^Several numbers/)
+    await click('Next')
+    const yellow = screen.getByRole('textbox', { name: 'Threshold for yellow' })
+    await userEvent.clear(yellow)
+    await userEvent.type(yellow, '5')
+    await userEvent.type(screen.getByRole('textbox', { name: 'Threshold for red' }), '9')
+    const both = [
+      { op: '>=', than: 5, then: 'warn' },
+      { op: '>=', than: 9, then: 'bad' },
+    ]
+    expect(readAt(card(), ['stats', 0, 'rules'])).toEqual(both)
+    expect(readAt(card(), ['stats', 1, 'rules'])).toEqual(both)
+  })
+
+  it('every choice of "Look again every" is written as it says', async () => {
+    await openNew()
+    await click(/^Home/)
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await click('Next')
+    await click('Next')
+    const every = screen.getByRole('combobox', { name: 'Look again every' })
+    for (const [label, written] of [['30 seconds', '30s'], ['minute', '60s'], ['5 minutes', '5m'], ['15 minutes', '15m'], ['hour', '1h']]) {
+      await userEvent.selectOptions(every, label)
+      expect(readAt(card(), ['requests', 0, 'every'])).toBe(written)
+    }
+  })
+})

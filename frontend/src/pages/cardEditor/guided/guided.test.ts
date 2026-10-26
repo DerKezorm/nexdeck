@@ -234,3 +234,24 @@ describe('review 5: the marking compares text as the server does', () => {
     expect([compare('==', true, 'TRUE'), compare('>', true, 1), compare('>', '12', 7)]).toEqual([true, false, true])
   })
 })
+
+describe('review 11: a card with colour rules that differ per number is not the guided way\'s to show', () => {
+  const stats = (second: string) => `nexdeck-card: 1
+slug: numbers
+name: Numbers
+version: "1.0.0"
+requires: [homeassistant]
+requests:
+  - id: states
+    path: /api/states
+form: stats
+stats:
+  - {path: a, rules: [{op: ">=", than: 5, then: warn}]}
+  - {path: b, rules: ${second}}
+`
+  it('the same rules on every number are fine, different ones are not', () => {
+    expect(refusalOf(card(stats('[{op: ">=", than: 5, then: warn}]')))).toBeNull()
+    expect(refusalOf(card(stats('[{op: ">=", than: 7, then: warn}]')))).toBe('expression')
+    expect(refusalOf(card(stats('[]')))).toBe('expression')
+  })
+})
