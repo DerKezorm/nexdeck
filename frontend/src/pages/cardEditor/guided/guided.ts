@@ -30,9 +30,47 @@ export const TABLE_ROWS = 8
 
 export type Cell = string | number | boolean | null
 
+/**
+ * The answer as the table shows it. `columns` (or `fields`) holds every plain field with the important ones first, in
+ * the order the suggestion names them; `main` is those important ones, which the table shows until the author asks
+ * for the rest and which the choices of the display list before "More fields".
+ */
 export type AnswerTable =
-  | { kind: 'rows'; list: string; columns: string[]; rows: Record<string, Cell>[]; total: number }
-  | { kind: 'fields'; fields: { path: string; value: Cell }[] }
+  | { kind: 'rows'; list: string; columns: string[]; main: string[]; rows: Record<string, Cell>[]; total: number }
+  | { kind: 'fields'; fields: { path: string; value: Cell }[]; main: string[] }
+
+/** A table of rows or of fields shows at most this many columns or fields before it is asked for the rest. */
+export const MAIN_COLUMNS = 6
+
+const DATE_LIKE = /^\d{4}-\d{2}-\d{2}/
+
+/**
+ * How little a field says to a reader (smaller says more): numbers, short text, dates and flags are 0; a long
+ * identifier without spaces (a UUID, a context id) or an address is 2; a field that is empty in every row shown is 3.
+ */
+function dullness(samples: Cell[]): number {
+  const given = samples.filter((one) => one !== null && one !== undefined && one !== '')
+  if (!given.length) return 3
+  const long = (one: Cell) => typeof one === 'string' && !/\s/.test(one) && ((one.length >= 24 && !DATE_LIKE.test(one)) || /^https?:\/\//i.test(one))
+  return given.every(long) ? 2 : 0
+}
+
+/**
+ * The columns worth showing when no suggestion names them (an own address): at most six, the top level of a row
+ * before what lies deeper, text and numbers before long identifiers and empty columns, otherwise in the order of
+ * the answer.
+ */
+export function plainColumns(paths: string[], samples: (path: string) => Cell[]): string[] {
+  const rank = paths.map((path, index) => ({ path, index, depth: splitPath(path)?.length ?? 9, dull: dullness(samples(path)) }))
+  rank.sort((one, two) => one.depth - two.depth || one.dull - two.dull || one.index - two.index)
+  return rank.slice(0, MAIN_COLUMNS).map((one) => one.path)
+}
+
+/** The suggestion's own columns that the answer has, in its order; the plain ones when it names none that is there. */
+function mainOf(paths: string[], suggestion: CardSuggestion | null | undefined, samples: (path: string) => Cell[]): string[] {
+  const named = (suggestion?.columns ?? []).filter((one, at, all) => paths.includes(one) && all.indexOf(one) === at)
+  return named.length ? named : plainColumns(paths, samples)
+}
 
 const scalar = (node: ProbeNode) => node.type !== 'object' && node.type !== 'array'
 const isListOfEntries = (node: ProbeNode) => node.type === 'array' && (node.children ?? []).some((child) => child.type === 'object')
@@ -68,7 +106,7 @@ export function rowsListOf(tree: ProbeNode, suggestion?: CardSuggestion | null, 
 }
 
 /** The first rows of a list of entries, with the plain fields of a row as columns, one level deep at most. */
-export function rowsTable(list: ProbeNode): Extract<AnswerTable, { kind: 'rows' }> {
+export function rowsTable(list: ProbeNode, suggestion?: CardSuggestion | null): Extract<AnswerTable, { kind: 'rows' }> {
   const columns = rowFieldsOf(list)
     .filter((field) => field.type !== 'object' && field.type !== 'array' && field.path !== '@')
     .filter((field) => (splitPath(field.path)?.length ?? 9) <= 2)
@@ -81,7 +119,8 @@ export function rowsTable(list: ProbeNode): Extract<AnswerTable, { kind: 'rows' 
     }
     return cells
   })
-  return { kind: 'rows', list: list.path, columns, rows, total: lengthOf(list) }
+  const main = mainOf(columns, suggestion, (path) => rows.map((row) => row[path]))
+  return { kind: 'rows', list: list.path, columns: [...main, ...columns.filter((one) => !main.includes(one))], main, rows, total: lengthOf(list) }
 }
 
 /**
@@ -100,14 +139,19 @@ function emptyListOf(tree: ProbeNode, suggestion?: CardSuggestion | null, wanted
 /** The answer as a table: rows of a list of entries, else every single value as Field | Value. */
 export function tableOf(tree: ProbeNode, suggestion?: CardSuggestion | null, wanted?: string): AnswerTable {
   const list = rowsListOf(tree, suggestion, wanted)
-  if (list) return rowsTable(list)
+  if (list) return rowsTable(list, suggestion)
   const gone = emptyListOf(tree, suggestion, wanted)
-  if (gone) return { kind: 'rows', list: gone, columns: [], rows: [], total: 0 }
-  const fields = everyNode(tree)
+  if (gone) return { kind: 'rows', list: gone, columns: [], main: [], rows: [], total: 0 }
+  const found = everyNode(tree)
     .filter((node) => scalar(node) && node.path !== '@')
     .slice(0, 60)
     .map((node) => ({ path: node.path, value: node.value ?? null }))
-  return { kind: 'fields', fields }
+  const main = mainOf(
+    found.map((one) => one.path),
+    suggestion,
+    (path) => found.filter((one) => one.path === path).map((one) => one.value),
+  )
+  return { kind: 'fields', fields: [...main.map((path) => found.find((one) => one.path === path)!), ...found.filter((one) => !main.includes(one.path))], main }
 }
 
 // -- comparing, as the server does ---------------------------------------------------------------------------------

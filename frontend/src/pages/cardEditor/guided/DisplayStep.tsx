@@ -13,7 +13,8 @@ import { typedValue, valueForOp } from '../steps/fields'
 import { useCardEditor } from '../store'
 import { textIn, type TextSpot } from '../texts'
 import { AnswerTable } from './AnswerTable'
-import { columnLabels } from './columns'
+import { ChoiceOptions } from './ChoiceOptions'
+import { columnChoices, columnLabels, type Choice } from './columns'
 import {
   cellOf,
   changeForm,
@@ -83,19 +84,16 @@ function opWords(t: (key: string) => string, op: string) {
 }
 
 /** Column | comparison | value: one condition of a count, or the rule of a row. */
-function ConditionFields({ condition, columns, onChange }: { condition: Condition; columns: string[]; onChange: (next: Condition) => void }) {
+function ConditionFields({ condition, columns, main, onChange }: { condition: Condition; columns: string[]; main: string[]; onChange: (next: Condition) => void }) {
   const { t } = useTranslation()
-  const choices = columns.includes(condition.field) ? columns : [condition.field, ...columns]
-  const labels = columnLabels(t, choices)
+  // The field the card has now stays a choice even if the answer has none of that name.
+  const known = columns.includes(condition.field)
+  const choices = columnChoices(t, known ? columns : [condition.field, ...columns], known ? main : [condition.field, ...main])
   const ops: readonly string[] = GUIDED_OPS.includes(condition.op as (typeof GUIDED_OPS)[number]) ? GUIDED_OPS : [condition.op, ...GUIDED_OPS]
   return (
     <>
       <select className="input !w-auto max-w-full font-mono text-[12.5px]" aria-label={t('editor.guided.display.column')} value={condition.field} onChange={(event) => onChange({ ...condition, field: event.target.value })}>
-        {choices.map((one) => (
-          <option key={one} value={one}>
-            {labels[one]}
-          </option>
-        ))}
+        <ChoiceOptions choices={choices} />
       </select>
       <select className="input !w-auto max-w-full" aria-label={t('editor.guided.display.compare')} value={condition.op} onChange={(event) => onChange({ ...condition, op: event.target.value, value: valueForOp(event.target.value, condition.value) as Condition['value'] })}>
         {ops.map((op) => (
@@ -131,11 +129,11 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
   const setConditions = (next: Condition[], group?: string) => part.kind === 'count' && write({ ...part, conditions: next }, group)
   const labels = columnLabels(t, rows ? rows.columns : table?.kind === 'fields' ? table.fields.map((one) => one.path) : [])
   const fieldChoices = rows
-    ? rows.columns.map((column) => ({ path: `${rows.list === '@' ? '@' : rows.list}[0].${column}`, label: t('editor.guided.display.ofFirst', { field: labels[column] }) }))
+    ? rows.columns.map((column) => ({ value: `${rows.list === '@' ? '@' : rows.list}[0].${column}`, label: t('editor.guided.display.ofFirst', { field: labels[column] }), more: !rows.main.includes(column) }))
     : table?.kind === 'fields'
-      ? table.fields.map((one) => ({ path: one.path, label: labels[one.path] }))
+      ? table.fields.map((one) => ({ value: one.path, label: labels[one.path], more: !table.main.includes(one.path) }))
       : []
-  const fields = part.kind === 'field' && !fieldChoices.some((one) => one.path === part.path) ? [{ path: part.path, label: part.path }, ...fieldChoices] : fieldChoices
+  const fields: Choice[] = part.kind === 'field' && !fieldChoices.some((one) => one.value === part.path) ? [{ value: part.path, label: part.path }, ...fieldChoices] : fieldChoices
   const spot: TextSpot = { id: `${key}.label`, path: [...path, 'label'], label: { key: 'editor.texts.label' }, valueRef: path }
 
   return (
@@ -151,7 +149,7 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
             onClick={() => {
               if (part.kind === one) return
               if (one === 'count' && rows) write({ kind: 'count', list: rows.list, conditions: [] })
-              if (one === 'field') write({ kind: 'field', path: fields[0]?.path ?? '@' })
+              if (one === 'field') write({ kind: 'field', path: fields[0]?.value ?? '@' })
             }}
           >
             {t(one === 'count' ? 'editor.guided.display.howCount' : 'editor.guided.display.howField')}
@@ -172,6 +170,7 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
                 <ConditionFields
                   condition={condition}
                   columns={columns}
+                  main={rows?.main ?? []}
                   onChange={(next) => setConditions(conditions.map((one, at) => (at === index ? next : one)), `field:guided.${key}.${index}`)}
                 />
                 <button type="button" className="btn btn-icon btn-flat" aria-label={t('editor.guided.display.removeCondition')} onClick={() => setConditions(conditions.filter((_, at) => at !== index))}>
@@ -199,11 +198,7 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
             {t('editor.guided.display.field')}
           </label>
           <select id={`${ids}-field`} className="input" value={part.path} onChange={(event) => write({ kind: 'field', path: event.target.value })}>
-            {fields.map((one) => (
-              <option key={one.path} value={one.path}>
-                {one.label}
-              </option>
-            ))}
+            <ChoiceOptions choices={fields} />
           </select>
         </div>
       )}
@@ -219,7 +214,7 @@ function NumberFields({ path, table, result, highlight }: { path: CardPath; tabl
 }
 
 /** A place of a row: which column goes there, and what the first entry has in it. */
-function CellSelect({ id, label, place, table, choices, optional }: { id: string; label: string; place: CardPath; table: Extract<Table, { kind: 'rows' }>; choices: { value: string; label: string }[]; optional?: boolean }) {
+function CellSelect({ id, label, place, table, choices, optional }: { id: string; label: string; place: CardPath; table: Extract<Table, { kind: 'rows' }>; choices: Choice[]; optional?: boolean }) {
   const { t } = useTranslation()
   const card = useCard()
   const change = useCardEditor((state) => state.change)
@@ -243,11 +238,7 @@ function CellSelect({ id, label, place, table, choices, optional }: { id: string
       </label>
       <select id={id} className="input" value={cell} onChange={(event) => change((doc) => writeCell(doc, place, event.target.value))}>
         {optional && <option value="">{t('editor.guided.display.nothing')}</option>}
-        {options.map((one) => (
-          <option key={one.value} value={one.value}>
-            {one.label}
-          </option>
-        ))}
+        <ChoiceOptions choices={options} />
       </select>
       {example !== undefined && example !== null && example !== '' && <span className="text-[11.5px] text-faint truncate">{t('editor.guided.display.example', { value: String(example) })}</span>}
     </div>
@@ -262,8 +253,7 @@ function ListFields({ table }: { table: Extract<Table, { kind: 'rows' }> }) {
   const change = useCardEditor((state) => state.change)
   const rule = card ? rowRuleOf(readAt(card, ['item', 'status'])) : undefined
   const [draft, setDraft] = useState<Condition>(() => ({ field: table.columns.includes('status') ? 'status' : (table.columns[0] ?? '@'), op: '!=', value: '' }))
-  const labels = columnLabels(t, table.columns)
-  const columns = table.columns.map((one) => ({ value: one, label: labels[one] }))
+  const columns = columnChoices(t, table.columns, table.main)
   const shown = rule ?? draft
   return (
     <>
@@ -282,6 +272,7 @@ function ListFields({ table }: { table: Extract<Table, { kind: 'rows' }> }) {
             <ConditionFields
               condition={shown}
               columns={table.columns}
+              main={table.main}
               onChange={(next) => {
                 setDraft(next)
                 change((doc) => writeRowRule(doc, next), 'field:guided.item.status')
@@ -301,8 +292,7 @@ function PosterFields({ table, suggestion }: { table: Extract<Table, { kind: 'ro
   const { t } = useTranslation()
   const ids = useId()
   const card = useCard()
-  const labels = columnLabels(t, table.columns)
-  const columns = table.columns.map((one) => ({ value: one, label: labels[one] }))
+  const columns = columnChoices(t, table.columns, table.main)
   const image = card ? cellOf(readAt(card, ['item', 'image']), true) : null
   const pictures = [...(suggestion?.image ? [{ value: suggestion.image, label: t('editor.guided.display.pictureOfEntry') }] : []), ...columns]
   if (image && image.includes('{') && !pictures.some((one) => one.value === image)) pictures.unshift({ value: image, label: t('editor.guided.display.pictureOfEntry') })

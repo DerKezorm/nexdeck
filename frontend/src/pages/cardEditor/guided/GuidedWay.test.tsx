@@ -65,8 +65,8 @@ describe('umbau: the three ways of the mock-up', () => {
     const answer = screen.getByTestId('card-answer-table')
     // The name for people, the real name of the field small beneath it.
     const heads = within(answer).getAllByRole('columnheader')
-    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['ID', 'State', 'Name', 'Changed'])
-    expect(heads.map((one) => one.querySelector('small')?.textContent)).toEqual(['entity_id', 'state', 'attributes.friendly_name', 'last_changed'])
+    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['Name', 'ID', 'State', 'Changed'])
+    expect(heads.map((one) => one.querySelector('small')?.textContent)).toEqual(['attributes.friendly_name', 'entity_id', 'state', 'last_changed'])
     expect(answer).toHaveTextContent('23 entries')
     expect(answer).toHaveTextContent('… and 15 more entries')
 

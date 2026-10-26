@@ -39,3 +39,17 @@ export function columnLabels(t: TFunction, paths: string[]): Record<string, stri
   const names = columnNames(t, paths)
   return Object.fromEntries(paths.map((path) => [path, names[path].toLowerCase() === path.toLowerCase() ? path : `${names[path]} (${path})`]))
 }
+
+/** One choice in a list of fields: `more` for those the table does not count among the important ones. */
+export interface Choice {
+  value: string
+  label: string
+  more?: boolean
+}
+
+/** The fields of an answer as choices: those in `main` stand first, the others are marked `more`. */
+export function columnChoices(t: TFunction, all: string[], main: string[]): Choice[] {
+  const labels = columnLabels(t, all)
+  const first = main.filter((one) => all.includes(one))
+  return [...first.map((value) => ({ value, label: labels[value] })), ...all.filter((one) => !first.includes(one)).map((value) => ({ value, label: labels[value], more: true }))]
+}

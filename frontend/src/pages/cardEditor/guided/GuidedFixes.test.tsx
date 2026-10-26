@@ -720,10 +720,10 @@ describe('review 15: fields are named for people, the real name beside', () => {
     await click(/^Geräte und Sensoren/)
     await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
     const heads = within(screen.getByTestId('card-answer-table')).getAllByRole('columnheader')
-    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['Kennung', 'Zustand', 'Name', 'Geändert'])
+    expect(heads.map((one) => one.firstChild?.textContent)).toEqual(['Name', 'Kennung', 'Zustand', 'Geändert'])
     await click('Weiter')
     const column = screen.getAllByRole('combobox', { name: 'Spalte' })[0]
-    expect(Array.from((column as HTMLSelectElement).options).map((one) => one.text)).toEqual(['Kennung (entity_id)', 'Zustand (state)', 'Name (attributes.friendly_name)', 'Geändert (last_changed)'])
+    expect(Array.from((column as HTMLSelectElement).options).map((one) => one.text)).toEqual(['Name (attributes.friendly_name)', 'Kennung (entity_id)', 'Zustand (state)', 'Geändert (last_changed)'])
     await click(/^Eine Liste/)
     const main = screen.getByRole('combobox', { name: 'Haupttext' })
     expect(Array.from((main as HTMLSelectElement).options).map((one) => one.text)).toContain('Name (attributes.friendly_name)')

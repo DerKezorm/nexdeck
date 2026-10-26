@@ -49,7 +49,9 @@ describe('umbau U5: the answer as a table', () => {
   it('shows the entries of a list as rows, a field one level down as a column, and how many there are', () => {
     const table = rows(tableOf(HA_HOME.tree, SUGGESTIONS.homeassistant[0]))
     expect(table.list).toBe('@')
-    expect(table.columns).toEqual(['entity_id', 'state', 'attributes.friendly_name', 'last_changed'])
+    // The suggestion's own order: the name first, what the id says, the state, when it changed.
+    expect(table.columns).toEqual(['attributes.friendly_name', 'entity_id', 'state', 'last_changed'])
+    expect(table.main).toEqual(table.columns)
     expect(table.rows).toHaveLength(8)
     expect(table.rows[0]).toMatchObject({ entity_id: 'light.kitchen', state: 'on', 'attributes.friendly_name': 'Light kitchen' })
     expect(table.total).toBe(23)
@@ -76,6 +78,7 @@ describe('umbau U5: the answer as a table', () => {
         { path: 'diskUsagePercentage', value: 42.5 },
         { path: 'nested.version', value: '1.2' },
       ],
+      main: ['diskSize', 'diskUsagePercentage', 'nested.version'],
     })
     // A suggestion that reads single values says so even when the answer holds a list.
     expect(tableOf(answerOf({ num_dns_queries: 10, top_queried_domains: [{ 'example.com': 4 }] }), SUGGESTIONS.adguard[0]).kind).toBe('fields')
@@ -213,7 +216,7 @@ describe('review 3: a list that the answer leaves out is an empty list', () => {
 
   it('the list a suggestion or a card names is empty when the answer has none, also as []', () => {
     const table = tableOf(nobody, playing)
-    expect(table).toEqual({ kind: 'rows', list: 'MediaContainer.Metadata', columns: [], rows: [], total: 0 })
+    expect(table).toEqual({ kind: 'rows', list: 'MediaContainer.Metadata', columns: [], main: [], rows: [], total: 0 })
     expect(tableOf(nobody, null, 'MediaContainer.Metadata')).toMatchObject({ kind: 'rows', total: 0 })
     expect(tableOf(answerOf([]), SUGGESTIONS.homeassistant.find((one) => one.id === 'calendars'))).toMatchObject({ kind: 'rows', list: '@', total: 0 })
     expect(suggestedForm(table, playing)).toBe('list')

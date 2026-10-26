@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { Condition } from '../../../lib/cardSuggestions'
@@ -18,6 +19,11 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
   const number = (value: number) => value.toLocaleString(i18n.language)
   // Named together with the fields the table leaves out, so that a name never changes when they are shown.
   const names = table.kind === 'rows' ? columnNames(t, table.columns) : columnNames(t, table.fields.map((one) => one.path))
+  // The important fields only, until the author asks for all of them.
+  const [every, setEvery] = useState(false)
+  const total = table.kind === 'rows' ? table.columns.length : table.fields.length
+  const shownColumns = table.kind === 'rows' ? (every ? table.columns : table.main) : []
+  const shownFields = table.kind === 'fields' ? (every ? table.fields : table.fields.filter((one) => table.main.includes(one.path))) : []
   const hits = table.kind === 'rows' && highlight ? table.rows.filter((row) => rowMatches(row, highlight)).length : 0
 
   return (
@@ -45,7 +51,7 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
               <tr>
-                {table.columns.map((column) => (
+                {shownColumns.map((column) => (
                   <th key={column} scope="col" className="text-left font-semibold text-muted bg-surface-hover px-3 py-1.5 border-b border-line whitespace-nowrap">
                     {names[column]}
                     {names[column] !== column && <small className="block font-normal text-faint font-mono text-[11px]">{column}</small>}
@@ -58,7 +64,7 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
                 const hit = highlight ? rowMatches(row, highlight) : null
                 return (
                   <tr key={index} data-hit={hit === null ? undefined : String(hit)} className={hit === true ? 'bg-accent-soft' : hit === false ? 'text-faint' : ''}>
-                    {table.columns.map((column) => (
+                    {shownColumns.map((column) => (
                       <td key={column} className="px-3 py-1.5 border-b border-line whitespace-nowrap tabular-nums max-w-[24rem] overflow-hidden text-ellipsis">
                         {cellText(row[column])}
                       </td>
@@ -81,7 +87,7 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
               </tr>
             </thead>
             <tbody>
-              {table.fields.map((field) => (
+              {shownFields.map((field) => (
                 <tr key={field.path}>
                   <td className="px-3 py-1.5 border-b border-line whitespace-nowrap">
                     {names[field.path]}
@@ -96,6 +102,13 @@ export function AnswerTable({ table, highlight }: { table: Table; highlight?: Co
           <p className="px-3.5 py-3 text-[12.5px] text-muted">{t('editor.guided.table.empty')}</p>
         )}
       </div>
+      {table.main.length < total && (
+        <p className="px-3.5 py-2 text-[12.5px] border-t border-line">
+          <button type="button" className="text-accent font-medium" aria-expanded={every} onClick={() => setEvery(!every)}>
+            {every ? t('editor.guided.table.fewer') : t('editor.guided.table.every', { number: number(total) })}
+          </button>
+        </p>
+      )}
       {table.kind === 'rows' && table.total > table.rows.length && (
         <p className="px-3.5 py-2 text-[12px] text-faint">{t('editor.guided.table.more', { count: table.total - table.rows.length, number: number(table.total - table.rows.length) })}</p>
       )}
