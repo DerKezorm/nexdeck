@@ -9,7 +9,7 @@ import { languagesOf, OFFERED_LANGUAGES, removeLanguage, textIn, textSpots, writ
 import { StepFrame } from './StepFrame'
 
 /** A language by its name in the language on screen: `de` is "Deutsch" to a German, "German" to an English reader. */
-function languageName(code: string, uiLanguage: string): string {
+export function languageName(code: string, uiLanguage: string): string {
   try {
     const name = new Intl.DisplayNames([uiLanguage], { type: 'language' }).of(code)
     return name && name !== code ? name.charAt(0).toLocaleUpperCase(uiLanguage) + name.slice(1) : code

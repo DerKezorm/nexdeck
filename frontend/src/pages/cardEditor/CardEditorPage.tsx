@@ -2,7 +2,7 @@
  * The card editor's own page (decision 9): `/system/custom-cards/new` and `/system/custom-cards/:slug/edit`, for
  * administrators only (KARTEN-9 AC-1; the server refuses everyone else as well).
  *
- * A new card begins with the form for its name, kind and start; a saved one is read with its text and the moment it
+ * A new card begins in the guided way with nothing chosen (U3); a saved one is read with its text and the moment it
  * was last changed. A draft this browser kept is offered before anything is lost (EC-7).
  */
 import { useEffect, useState } from 'react'
@@ -16,10 +16,10 @@ import { useAuth } from '../../stores/auth'
 import { dropDraft, readDraft, type CardDraft } from './draft'
 import { EditorFrame, LIST_PATH } from './EditorFrame'
 import { useEditorTexts } from './editorTexts'
-import { NewCardForm } from './NewCardForm'
 import { useCardEditor } from './store'
+import { NEW_CARD } from './templates'
 
-type Phase = { kind: 'loading' } | { kind: 'new' } | { kind: 'editing' } | { kind: 'missing' } | { kind: 'failed'; message: string }
+type Phase = { kind: 'loading' } | { kind: 'editing' } | { kind: 'missing' } | { kind: 'failed'; message: string }
 
 export function CardEditorPage() {
   const { t } = useTranslation()
@@ -37,7 +37,8 @@ export function CardEditorPage() {
     let gone = false
     setOffer(readDraft(wanted ?? null))
     if (!wanted) {
-      setPhase({ kind: 'new' })
+      useCardEditor.getState().open({ slug: null, text: NEW_CARD, base: null, saved: null })
+      setPhase({ kind: 'editing' })
       return
     }
     setPhase({ kind: 'loading' })
@@ -67,11 +68,6 @@ export function CardEditorPage() {
 
   if (!admin) return <Navigate to="/system" replace />
 
-  const begin = (text: string, view: 'editor' | 'yaml' = 'editor') => {
-    useCardEditor.getState().open({ slug: null, text, base: null, saved: null, view })
-    setPhase({ kind: 'editing' })
-  }
-
   let body: React.ReactNode
   if (!ready || phase.kind === 'loading') {
     body = (
@@ -89,26 +85,8 @@ export function CardEditorPage() {
           } />
       </div>
     )
-  } else if (phase.kind === 'new') {
-    body = (
-      <NewCardForm
-        offer={offer}
-        onRestore={() => {
-          const kept = offer
-          setOffer(null)
-          // A draft that is not valid YAML opens in the YAML view by itself.
-          if (kept) begin(kept.text)
-        }}
-        onDiscard={() => {
-          dropDraft(null)
-          setOffer(null)
-        }}
-        onCreate={(text) => begin(text)}
-        onPaste={() => begin('', 'yaml')}
-      />
-    )
   } else {
-    body = <EditorFrame offer={wanted ? offer : null} onOfferDone={() => setOffer(null)} />
+    body = <EditorFrame offer={offer} onOfferDone={() => setOffer(null)} />
   }
 
   return <AppShell title={t('cards.title')}>{body}</AppShell>

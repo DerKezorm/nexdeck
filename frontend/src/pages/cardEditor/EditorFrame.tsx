@@ -9,17 +9,22 @@ import { pickText, type CardText } from '../../lib/cardText'
 import { readAt } from '../../lib/cardDocument'
 import { AdjustedBlock } from './AdjustedBlock'
 import { dropDraft, writeDraft, type CardDraft } from './draft'
+import { GuidedWay } from './guided/GuidedWay'
 import { Preview } from './Preview'
 import { ProblemList } from './ProblemList'
 import { LookStep } from './steps/LookStep'
 import { RulesStep } from './steps/RulesStep'
 import { SourceStep } from './steps/SourceStep'
 import { TextsStep } from './steps/TextsStep'
-import { isDirty, STEPS, useCardEditor, type EditorStep } from './store'
+import { isDirty, STEPS, useCardEditor, type EditorStep, type EditorView } from './store'
+import { NEW_CARD } from './templates'
 import { useLeaveGuard } from './useLeaveGuard'
 import { useSaveCard } from './useSaveCard'
 
 const YamlView = lazy(() => import('./YamlView'))
+
+/** The three ways into the card, in the order they stand on top (U1). */
+const VIEWS: EditorView[] = ['guided', 'editor', 'yaml']
 
 /** The page each step shows. A step of a later version adds itself here and to `STEPS`. */
 const STEP_PAGES: Record<EditorStep, () => React.ReactElement> = {
@@ -58,8 +63,9 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const editor = useCardEditor()
-  const { text, card, lastValid, problems, view, step, slug, base, replaced } = editor
-  const dirty = isDirty(editor)
+  const { text, card, lastValid, problems, view, step, slug, base, replaced, refusal } = editor
+  // A new card nobody has touched yet holds nothing to lose: no draft, no question before leaving.
+  const dirty = isDirty(editor) && !(slug === null && text === NEW_CARD)
   const guard = useLeaveGuard(dirty)
   const { save, busy, trouble, clear } = useSaveCard()
   const [toast, setToast] = useState('')
@@ -102,6 +108,8 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
     const saved = await save(options)
     if (!saved) return
     setToast(t('editor.saved'))
+    // The first save of a new card: the guided way offers to put it on a board.
+    if (before === null) useCardEditor.setState({ created: true })
     if (saved.slug !== before) {
       guard.allow()
       navigate(`/system/custom-cards/${encodeURIComponent(saved.slug)}/edit`, { replace: true })
@@ -122,6 +130,11 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
 
   const restore = () => {
     if (!offer) return
+    // A new card starts over with the draft, in the way that can show it; a saved one keeps its steps back.
+    if (useCardEditor.getState().slug === null) {
+      useCardEditor.getState().open({ slug: null, text: offer.text, base: offer.base ?? null, saved: null })
+      return onOfferDone()
+    }
     useCardEditor.getState().setText(offer.text)
     useCardEditor.setState({ base: offer.base ?? useCardEditor.getState().base })
     onOfferDone()
@@ -151,25 +164,20 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
               {t('editor.lastValid', { time: clock(lastValid.at, i18n.language) })}
             </span>
           )}
-          <div className="inline-flex rounded-lg bg-surface p-0.5 gap-0.5" role="group" aria-label={t('editor.view.label')}>
-            <button
-              type="button"
-              className={`px-3 h-8 rounded-md text-sm ${view === 'editor' ? 'bg-accent-soft text-ink font-medium' : 'text-muted'} disabled:opacity-50`}
-              aria-pressed={view === 'editor'}
-              disabled={!card}
-              title={!card ? (firstLine ? t('editor.fixFirst', { line: firstLine }) : t('editor.fixFirstNoLine')) : undefined}
-              onClick={() => useCardEditor.getState().setView('editor')}
-            >
-              {t('editor.view.editor')}
-            </button>
-            <button
-              type="button"
-              className={`px-3 h-8 rounded-md text-sm ${view === 'yaml' ? 'bg-accent-soft text-ink font-medium' : 'text-muted'}`}
-              aria-pressed={view === 'yaml'}
-              onClick={() => useCardEditor.getState().setView('yaml')}
-            >
-              {t('editor.view.yaml')}
-            </button>
+          <div className="inline-flex flex-wrap rounded-lg bg-surface p-0.5 gap-0.5" role="group" aria-label={t('editor.view.label')}>
+            {VIEWS.map((one) => (
+              <button
+                key={one}
+                type="button"
+                className={`px-3 h-8 rounded-md text-sm break-words hyphens-auto ${view === one ? 'bg-accent-soft text-ink font-medium' : 'text-muted'} disabled:opacity-50`}
+                aria-pressed={view === one}
+                disabled={one !== 'yaml' && !card}
+                title={one !== 'yaml' && !card ? (firstLine ? t('editor.fixFirst', { line: firstLine }) : t('editor.fixFirstNoLine')) : undefined}
+                onClick={() => useCardEditor.getState().setView(one)}
+              >
+                {t(`editor.view.${one}`)}
+              </button>
+            ))}
           </div>
           {trouble?.kind === 'gone' ? (
             <button type="button" className="btn btn-accent" onClick={() => void doSave({ asNew: true })} disabled={busy || !card}>
@@ -226,8 +234,23 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
           </p>
         )}
 
-        {view === 'editor' ? (
+        {view === 'guided' ? (
+          <div className="flex flex-col lg:flex-row gap-4 min-w-0">
+            <div className="flex-1 min-w-0 grid gap-4 content-start">
+              <ProblemList />
+              <GuidedWay onSave={() => void doSave()} canSave={canSave} busy={busy} />
+            </div>
+            <aside className="lg:w-[420px] lg:flex-none min-w-0 lg:sticky lg:top-16 lg:self-start">
+              <Preview guided />
+            </aside>
+          </div>
+        ) : view === 'editor' ? (
           <>
+            {refusal && (
+              <p className="rounded-lg border border-line px-3 py-2 text-sm text-muted break-words hyphens-auto" role="note" data-testid="card-guided-refused">
+                {t('editor.guided.why.text', { why: t(`editor.guided.why.${refusal}`) })}
+              </p>
+            )}
             <nav aria-label={t('editor.steps.label')}>
               <ol className="flex flex-wrap gap-1.5">
                 {STEPS.map((one, index) => (

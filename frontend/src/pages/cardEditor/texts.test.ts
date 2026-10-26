@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 import { changeCard, parseCard, readAt, type CardDoc } from '../../lib/cardDocument'
 import { languagesOf, removeLanguage, textIn, textSpots, writeText } from './texts'
-import { slugFrom, START_ORDER, startText, STARTS } from './templates'
+import { refusalOf } from './guided/guided'
+import { NEW_CARD, slugFrom } from './templates'
 
 function card(text: string): CardDoc {
   const parsed = parseCard(text)
@@ -71,24 +72,13 @@ describe('karten9 AC-8: the texts of a card', () => {
   })
 })
 
-describe('karten9 AC-2: what a new card starts from', () => {
-  it('has a blank start and one example per form, each a card with demo answers', () => {
-    expect(START_ORDER).toEqual(['blank', 'value', 'stats', 'list', 'posters'])
-    for (const kind of START_ORDER) {
-      const one = card(STARTS[kind].text)
-      expect(readAt(one, ['form'])).toBe(kind === 'blank' ? 'value' : kind)
-      if (kind !== 'blank') expect(Object.keys(readAt(one, ['demo']) as object)).toHaveLength(1)
-    }
-  })
-
-  it('takes the name, the short name and the kind chosen, and keeps the rest', () => {
-    const text = startText('list', { name: 'Next episodes', slug: 'next-episodes', source: 'sonarr' })
-    const one = card(text)
-    expect(readAt(one, ['slug'])).toBe('next-episodes')
-    expect(readAt(one, ['name'])).toBe('Next episodes')
-    expect(readAt(one, ['requires'])).toEqual(['sonarr'])
-    expect(text).toContain('requires: [sonarr]\n')
-    expect(text).toContain('rows: {select: data, sort: {field: name}, limit: 20}')
+describe('karten9 AC-2, umbau U3: what a new card starts from', () => {
+  it('is one request and nothing chosen yet, no kind, no name, and the guided way can show it', () => {
+    const one = card(NEW_CARD)
+    expect(readAt(one, ['requires'])).toEqual([])
+    expect(readAt(one, ['name'])).toBe('')
+    expect(readAt(one, ['requests'])).toEqual([{ id: 'main', path: '/' }])
+    expect(refusalOf(one)).toBeNull()
   })
 
   it('makes a short name from a name', () => {

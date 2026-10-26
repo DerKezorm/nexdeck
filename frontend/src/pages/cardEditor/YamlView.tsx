@@ -61,7 +61,7 @@ async function checkText(checked: string, pasted: (() => void) | null) {
     const editor = useCardEditor.getState()
     if (editor.text !== checked) return
     editor.setServerProblems(answer.ok ? [] : (answer.problems ?? []), checked)
-    if (pasted && answer.ok && editor.setView('editor')) pasted()
+    if (pasted && answer.ok && editor.leaveYaml()) pasted()
   } catch {
     // The check helps while typing; saving checks again and says what is wrong.
   }

@@ -4,6 +4,7 @@
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 
@@ -79,10 +80,13 @@ export function prepare() {
   useCardEditor.setState({ now: () => Date.now() })
 }
 
-/** Open the saved card and wait for its editor. */
-export async function openCard(name: string) {
+/**
+ * Open the saved card and wait for its editor, in "All settings" (the steps these tests are about) unless the guided
+ * way is asked for. A card the guided way can show opens there, as it does for its author (umbau U1).
+ */
+export async function openCard(name: string, view: 'guided' | 'editor' = 'editor') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const view = render(
+  const rendered = render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/system/custom-cards/queue/edit']}>
         <Routes>
@@ -93,7 +97,26 @@ export async function openCard(name: string) {
     </QueryClientProvider>,
   )
   await screen.findByRole('heading', { name, level: 1 })
-  return view
+  if (view === 'editor' && useCardEditor.getState().view === 'guided') await userEvent.click(screen.getByRole('button', { name: /^(All settings|Alle Einstellungen|Todos los ajustes|Tous les réglages|Tutte le impostazioni)$/ }))
+  return rendered
+}
+
+/** Open a new card, which begins in the guided way, and wait for its first step. */
+export async function openNew() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const rendered = render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/system/custom-cards/new']}>
+        <Routes>
+          <Route path="/system/custom-cards/new" element={<CardEditorPage />} />
+          <Route path="/system/custom-cards/:slug/edit" element={<CardEditorPage />} />
+          <Route path="*" element={<p>Somewhere else</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  await screen.findByRole('heading', { level: 2, name: /Where does the data come from\?|Woher kommen die Daten\?/ })
+  return rendered
 }
 
 export const editor = () => useCardEditor.getState()

@@ -68,6 +68,29 @@ function useDebounced<T>(value: T, ms: number): T {
   return settled
 }
 
+/**
+ * The card as the server draws it, for the preview and for the guided way's "Result": the same question, asked once.
+ * Live data of the chosen connection, or the card's example data; nothing while `enabled` is false.
+ */
+export function usePreviewQuery(enabled = true) {
+  const card = useCardEditor((state) => state.card ?? state.lastValid?.card ?? null)
+  const text = card?.text ?? ''
+  const { chosen } = useConnections()
+  const wanted = useCardEditor((state) => state.previewData)
+  const mode = wanted ?? (chosen ? 'live' : 'demo')
+  const settled = useDebounced(text, PREVIEW_MS)
+  const integrationId = mode === 'live' ? (chosen?.id ?? null) : null
+  const preview = useQuery({
+    queryKey: ['card-preview', settled, integrationId, mode],
+    queryFn: () => post<WidgetData>('/cards/preview', integrationId !== null ? { yaml: settled, integration_id: integrationId } : { yaml: settled, demo: true }),
+    enabled: enabled && Boolean(settled),
+    retry: false,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+  })
+  return { preview, mode, integrationId, chosen }
+}
+
 type Shown = { kind: 'data'; data: WidgetData } | { kind: 'invalid'; problems: CardProblem[] } | { kind: 'none' }
 
 /** A failed preview as the card would show it: red, with the reason (KARTEN-9 AC-9, EC-2). */
@@ -108,15 +131,15 @@ function Switch<T extends string>({ label, value, options, onChange }: { label: 
  * there. Switches: live data of the chosen connection or the card's demo data, light or dark, the card style, the
  * sizes of its form, and a phone. Below it, the places of the card: a field of the answer dragged onto one goes there.
  */
-export function Preview() {
+export function Preview({ guided = false }: { guided?: boolean }) {
   const { t, i18n } = useTranslation()
   const stale = useCardEditor((state) => state.card === null)
   const card = useCardEditor((state) => state.card ?? state.lastValid?.card ?? null)
-  const text = card?.text ?? ''
-  const { chosen, kinds } = useConnections()
+  const { kinds } = useConnections()
+  // The guided way shows a card once it has a display: before that it would be the start's whole answer.
+  const waiting = useCardEditor((state) => guided && (state.shapedPath === null || state.pendingShape !== null))
   const ground = useGround((state) => state.mode)
   const installed = useLook((state) => state.cards)
-  const [wanted, setWanted] = useState<'live' | 'demo' | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light' | null>(null)
   const [style, setStyle] = useState<CardStyle | null>(null)
   const [sizeIndex, setSizeIndex] = useState(1)
@@ -124,22 +147,12 @@ export function Preview() {
   const [over, setOver] = useState<string | null>(null)
   const sources = useQuery({ queryKey: ['cards-sources'], queryFn: () => get<CardSource[]>('/cards/sources'), staleTime: 60_000 })
 
-  const mode = wanted ?? (chosen ? 'live' : 'demo')
+  const { preview, mode, integrationId, chosen } = usePreviewQuery(!waiting)
+  const setWanted = (value: 'live' | 'demo') => useCardEditor.setState({ previewData: value })
   const shownTheme = theme ?? ground
   const shownStyle = style ?? installed
   // The preview is a board of its own while it stands: its card style, the installation's after.
   useBoardCardStyle(style)
-
-  const settled = useDebounced(text, PREVIEW_MS)
-  const integrationId = mode === 'live' ? (chosen?.id ?? null) : null
-  const preview = useQuery({
-    queryKey: ['card-preview', settled, integrationId, mode],
-    queryFn: () => post<WidgetData>('/cards/preview', integrationId !== null ? { yaml: settled, integration_id: integrationId } : { yaml: settled, demo: true }),
-    enabled: Boolean(settled),
-    retry: false,
-    placeholderData: keepPreviousData,
-    refetchOnWindowFocus: false,
-  })
 
   const plain = useMemo(() => (card ? (card.doc.toJS() as Record<string, unknown>) : {}), [card])
   const form = ((card ? readAt(card, ['form']) : undefined) ?? 'value') as CardForm
@@ -225,7 +238,11 @@ export function Preview() {
         data-testid="card-preview-stage"
         data-size={phone ? `phone ${size[0]}x${size[1]}` : `${size[0]}x${size[1]}`}
       >
-        {shown.kind === 'invalid' ? (
+        {waiting ? (
+          <div className="min-h-[160px] grid place-items-center text-center text-[12px] text-muted px-4 break-words hyphens-auto" data-testid="card-preview-empty">
+            {t('editor.guided.preview.empty')}
+          </div>
+        ) : shown.kind === 'invalid' ? (
           <div className="grid gap-1 text-sm" role="alert" data-testid="card-preview-invalid">
             <p className="font-medium text-bad break-words hyphens-auto">{t('editor.preview.invalid')}</p>
             {shown.problems.map((problem, index) => (
@@ -251,7 +268,9 @@ export function Preview() {
         <Switch label={t('editor.preview.style')} value={shownStyle} onChange={setStyle} options={STYLES.map((one) => ({ value: one, label: t(`editor.preview.styles.${one}`) }))} />
       </div>
 
-      {!stale && slots.length > 0 && (
+      {guided && <p className="text-[12px] text-faint break-words hyphens-auto">{t('editor.guided.preview.hint')}</p>}
+
+      {!guided && !stale && slots.length > 0 && (
         <div className="grid gap-1.5 min-w-0" role="group" aria-labelledby="card-places-title">
           <h3 id="card-places-title" className="text-[12px] font-medium text-muted break-words hyphens-auto">
             {t('editor.preview.places')}

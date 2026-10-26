@@ -127,9 +127,11 @@ afterEach(async () => {
   await i18next.changeLanguage('en')
 })
 
+/** The card opens in the guided way (umbau U1); these tests are about "All settings" and the YAML view. */
 async function openQueue() {
   show('/system/custom-cards/queue/edit')
   await screen.findByRole('heading', { name: 'Queue', level: 1 })
+  await userEvent.click(screen.getByRole('button', { name: /^(All settings|Alle Einstellungen|Todos los ajustes|Tous les réglages|Tutte le impostazioni)$/ }))
 }
 
 describe('who sees it', () => {
@@ -141,65 +143,109 @@ describe('who sees it', () => {
   })
 })
 
+/** What Radarr answers for its queue, as the probe hands it to the editor: two downloads under `records`. */
+const QUEUE_ANSWER = {
+  tree: {
+    key: null,
+    path: '@',
+    type: 'object',
+    children: [
+      { key: 'totalRecords', path: 'totalRecords', type: 'number', value: 2 },
+      {
+        key: 'records',
+        path: 'records',
+        type: 'array',
+        children: [0, 1].map((index) => ({
+          key: index,
+          path: `records[${index}]`,
+          type: 'object',
+          children: [
+            { key: 'title', path: `records[${index}].title`, type: 'string', value: ['Example Movie', 'Another Movie'][index] },
+            { key: 'status', path: `records[${index}].status`, type: 'string', value: ['downloading', 'paused'][index] },
+            { key: 'sizeleft', path: `records[${index}].sizeleft`, type: 'number', value: [100, 0][index] },
+          ],
+        })),
+      },
+    ],
+  },
+  nodes: 10,
+  cut: false,
+}
+
+/** A new card through the guided way up to its last step: Radarr, Downloads, the display it suggests, Finish. */
+async function buildNewCard(shown = false) {
+  world.answers['POST /cards/probe'] = { status: 200, body: QUEUE_ANSWER }
+  if (!shown) show('/system/custom-cards/new')
+  await userEvent.click(await screen.findByRole('button', { name: /^Radarr/ }))
+  await userEvent.click(await screen.findByRole('button', { name: /^Downloads/ }))
+  await screen.findByTestId('card-answer-table')
+  await waitFor(() => expect(editor().shapedPath).toBe('/api/v3/queue'))
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+  await screen.findByRole('heading', { name: 'Finish', level: 2 })
+}
+
 describe('a new card', () => {
-  it('karten9 AC-2: takes a name, a short name made from it, a kind of connection and a start, and opens in the editor', async () => {
+  it('karten9 AC-2, umbau U3: begins in the guided way; a tile sets the kind and the connection, the name gives the short name', async () => {
     show('/system/custom-cards/new')
-    await userEvent.type(await screen.findByLabelText('Name'), 'Next episodes')
-    expect(screen.getByLabelText('Short name')).toHaveValue('next-episodes')
-    const kind = screen.getByLabelText('Works with')
-    await waitFor(() => expect(kind).toHaveValue('radarr'))
-    await userEvent.selectOptions(kind, 'sonarr')
-    await userEvent.click(screen.getByRole('radio', { name: /A list/ }))
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
-    expect(await screen.findByRole('heading', { name: 'Next episodes', level: 1 })).toBeInTheDocument()
-    expect(readAt(editor().card!, ['requires'])).toEqual(['sonarr'])
-    expect(readAt(editor().card!, ['form'])).toBe('list')
+    expect(await screen.findByRole('heading', { name: 'Where does the data come from?', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Guided' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByLabelText('Works with')).toBeNull()
+    expect(screen.queryByText(/Start with/)).toBeNull()
+    await buildNewCard(true)
+    expect(readAt(editor().card!, ['requires'])).toEqual(['radarr'])
+    expect(editor().integrationId).toBe(3)
+    expect(readAt(editor().card!, ['requests'])).toEqual([{ id: 'queue', path: '/api/v3/queue', every: '60s' }])
+    expect(screen.getByRole('textbox', { name: 'Name of the card' })).toHaveValue('Downloads')
+    expect(readAt(editor().card!, ['slug'])).toBe('downloads')
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Name of the card' }))
+    await userEvent.type(screen.getByRole('textbox', { name: 'Name of the card' }), 'Next episodes')
+    expect(readAt(editor().card!, ['name'])).toBe('Next episodes')
     expect(readAt(editor().card!, ['slug'])).toBe('next-episodes')
     expect(editor().slug).toBeNull()
   })
 
-  it('karten9 AC-2: wants a name and a short name that follows the rule', async () => {
-    show('/system/custom-cards/new')
-    await userEvent.click(await screen.findByRole('button', { name: 'Create' }))
+  it('karten9 AC-2: wants a name before it can be saved', async () => {
+    await buildNewCard()
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Name of the card' }))
     expect(screen.getByText('Give the card a name.')).toBeInTheDocument()
-    await userEvent.type(screen.getByLabelText('Name'), 'A')
-    await userEvent.clear(screen.getByLabelText('Short name'))
-    await userEvent.type(screen.getByLabelText('Short name'), 'Not Valid')
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
-    expect(screen.getByText(/Use lower case letters, digits and hyphens/)).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'A', level: 1 })).toBeNull()
+    const finish = screen.getByRole('region', { name: 'Finish' })
+    expect(within(finish).getByRole('button', { name: 'Save' })).toBeDisabled()
   })
 
-  it('karten9 EC-6: without a connection of the kind chosen it says so and leads to adding one', async () => {
-    show('/system/custom-cards/new')
-    const kind = await screen.findByLabelText('Works with')
-    await waitFor(() => expect(kind).toHaveValue('radarr'))
-    expect(screen.queryByTestId('card-no-connection')).toBeNull()
-    await userEvent.selectOptions(kind, 'sonarr')
+  it('karten9 EC-6: without a connection of the kind the card works with it says so and leads to adding one', async () => {
+    show('/system/custom-cards/queue/edit')
+    await screen.findByRole('heading', { name: 'Queue', level: 1 })
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     const notice = await screen.findByTestId('card-no-connection')
-    expect(notice).toHaveTextContent('There is no Sonarr integration yet.')
-    expect(within(notice).getByRole('link', { name: /Add an integration/ })).toHaveAttribute('href', '/system/integrations?add=sonarr')
+    expect(notice).toHaveTextContent('There is no Sonarr integration to ask.')
+    expect(within(notice).getByRole('link', { name: 'Add an integration' })).toHaveAttribute('href', '/system/integrations?add=sonarr')
   })
 
-  it('karten9 EC-6: with no fitting connection at all it says that too', async () => {
+  it('karten9 EC-6: with no fitting connection at all it says that too, and leads to adding one', async () => {
     stub({ 'GET /integrations': { status: 200, body: [] } })
     show('/system/custom-cards/new')
-    expect(await screen.findByTestId('card-no-connection')).toHaveTextContent('There is no integration yet that a custom card can read through.')
+    expect(await screen.findByTestId('card-no-connection')).toHaveTextContent('There is no integration yet that a card can read from.')
+    expect(screen.getByRole('link', { name: 'Add an integration' })).toHaveAttribute('href', '/system/integrations')
+  })
+
+  it('umbau U3: a whole card can be pasted instead, in the YAML view', async () => {
+    show('/system/custom-cards/new')
+    await userEvent.click(await screen.findByRole('button', { name: 'Paste a whole card (YAML)' }))
+    expect(editor().view).toBe('yaml')
+    expect(editor().text).toBe('')
   })
 
   it('karten9 AC-13: a new card is saved with POST and moves to its own address', async () => {
-    show('/system/custom-cards/new')
-    await userEvent.type(await screen.findByLabelText('Name'), 'Next episodes')
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
-    await screen.findByRole('heading', { name: 'Next episodes', level: 1 })
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await buildNewCard()
+    await userEvent.click(within(screen.getByRole('region', { name: 'Finish' })).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(sent('POST', '/cards')).toHaveLength(1))
     expect(sent('POST', '/cards')[0].body).toEqual({ yaml: editor().text })
     await waitFor(() => expect(editor().slug).toBe('next-episodes'))
     expect(await screen.findByText('Saved. Every board shows the new version.')).toBeInTheDocument()
     // Saved, moved, and nothing asked: the card on screen is still the one just saved.
     expect(screen.queryByText('Leave without saving?')).toBeNull()
-    expect(screen.getByRole('heading', { name: 'Next episodes', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Downloads', level: 1 })).toBeInTheDocument()
     expect(sent('GET', '/cards/next-episodes')).toHaveLength(0)
   })
 })
@@ -215,7 +261,7 @@ describe('the steps', () => {
     expect(screen.getByRole('heading', { name: 'Texts', level: 2 })).toBeInTheDocument()
     await userEvent.click(within(steps).getByRole('button', { name: '2 Look' }))
     expect(screen.getByRole('heading', { name: 'Look', level: 2 })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Editor' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'All settings' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'YAML' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     expect(screen.queryByText(/Buttons/)).toBeNull()
@@ -436,11 +482,8 @@ describe('leaving, drafts and steps back', () => {
   })
 
   it('karten9 AC-11: after the first save of a new card a later change asks again before leaving', async () => {
-    show('/system/custom-cards/new')
-    await userEvent.type(await screen.findByLabelText('Name'), 'Next episodes')
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
-    await screen.findByRole('heading', { name: 'Next episodes', level: 1 })
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await buildNewCard()
+    await userEvent.click(within(screen.getByRole('region', { name: 'Finish' })).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(editor().slug).toBe('next-episodes'))
     await screen.findByText('Saved. Every board shows the new version.')
     act(() => editor().set(['description'], 'changed after the save'))
@@ -542,7 +585,7 @@ describe('karten10: the YAML view', () => {
     act(() => {
       view.dispatch({ changes: { from: CARD.indexOf('Queue'), to: CARD.indexOf('Queue') + 5, insert: 'Typed' }, userEvent: 'input.type' })
     })
-    await userEvent.click(screen.getByRole('button', { name: 'Editor' }))
+    await userEvent.click(screen.getByRole('button', { name: /^(All settings|Alle Einstellungen|Todos los ajustes|Tous les réglages|Tutte le impostazioni)$/ }))
     expect(await screen.findByRole('heading', { name: 'Typed', level: 1 })).toBeInTheDocument()
     expect(editor().text).toBe(CARD.replace('name: Queue', 'name: Typed'))
   })
@@ -564,8 +607,8 @@ describe('karten10: the YAML view', () => {
     const list = await screen.findByTestId('card-problems')
     expect(within(list).getByText('Line 13')).toBeInTheDocument()
     expect(within(list).getByText('YAML indents with spaces only, and this line is indented with a tab.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Editor' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Editor' })).toHaveAttribute('title', 'Fix line 13 first')
+    expect(screen.getByRole('button', { name: 'All settings' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'All settings' })).toHaveAttribute('title', 'Fix line 13 first')
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     expect(screen.getByTestId('card-last-valid')).toHaveTextContent(/^Last valid version: /)
     expect(screen.getByRole('heading', { name: 'Preview of the last valid version' })).toBeInTheDocument()
@@ -594,7 +637,8 @@ describe('karten10: the YAML view', () => {
     })
     expect(await screen.findByText('The pasted card is valid and shows in the editor now.')).toBeInTheDocument()
     expect(sent('POST', '/cards/check').at(-1)!.body).toEqual({ yaml: pasted })
-    expect(editor().view).toBe('editor')
+    // The guided way can show all of it, so it opens there (umbau U1).
+    expect(editor().view).toBe('guided')
     expect(screen.getByRole('heading', { name: 'From a forum', level: 1 })).toBeInTheDocument()
   })
 

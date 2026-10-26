@@ -12,9 +12,11 @@ import { create } from 'zustand'
 
 import { changeCard, deleteAt, parseCard, pathText, readAt, setAt, type CardDoc, type CardPath, type LocalProblem } from '../../lib/cardDocument'
 import type { CardProblem } from '../../lib/customCards'
+import { refusalOf, type GuidedStep, type Refusal } from './guided/guided'
 import type { ProbeState } from './probe'
 
-export type EditorView = 'editor' | 'yaml'
+/** The guided way, "All settings" (the steps below) and the YAML view: three ways into the same document (U1). */
+export type EditorView = 'guided' | 'editor' | 'yaml'
 /** The steps of this version; Buttons (KARTEN-8) comes with a later one. */
 export type EditorStep = 'source' | 'look' | 'rules' | 'texts'
 export const STEPS: EditorStep[] = ['source', 'look', 'rules', 'texts']
@@ -44,6 +46,19 @@ export interface CardEditorState {
   typing: { group: string; at: number } | null
   view: EditorView
   step: EditorStep
+  guidedStep: GuidedStep
+  /** The path of the request the guided way last made the card's display for; a new path makes a new one. */
+  shapedPath: string | null
+  /** Why a saved card opened in "All settings" rather than the guided way; `null` when it did not. */
+  refusal: Refusal | null
+  /** A path picked in the guided way whose answer is awaited to make the card's display from it. */
+  pendingShape: string | null
+  /** The English name the guided way gave the card itself; a name typed by the author is never replaced. */
+  autoName: string | null
+  /** Whether the card on screen was saved for the first time during this visit ("Saved. Put it on a board?"). */
+  created: boolean
+  /** What the preview shows: the chosen connection's data or the card's example data; `null` until switched. */
+  previewData: 'live' | 'demo' | null
   /** What the server found in `serverFor` (on saving, or the check of the YAML view); stale once the text changes. */
   serverProblems: CardProblem[]
   serverFor: string | null
@@ -79,6 +94,9 @@ export interface CardEditorState {
   /** Switch between editor and YAML; the editor stays closed while the text is invalid. Says whether it switched. */
   setView: (view: EditorView) => boolean
   setStep: (step: EditorStep) => void
+  setGuidedStep: (step: GuidedStep) => void
+  /** Leave the YAML view for the guided way, or for "All settings" when the guided way cannot show the card. */
+  leaveYaml: () => boolean
   /** The card was saved as `text` under `slug`. */
   saved: (slug: string, text: string, base: string | null) => void
   setServerProblems: (problems: CardProblem[], forText: string) => void
@@ -129,8 +147,15 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     past: [],
     future: [],
     typing: null,
-    view: 'editor',
+    view: 'guided',
     step: 'source',
+    guidedStep: 'service',
+    shapedPath: null,
+    refusal: null,
+    pendingShape: null,
+    autoName: null,
+    created: false,
+    previewData: null,
     serverProblems: [],
     serverFor: null,
     focusLine: null,
@@ -144,6 +169,12 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
       const text = lineFeeds(given)
       const saved = savedGiven === null ? null : lineFeeds(savedGiven)
       const read = reading(text, null, get().now())
+      // A new card begins in the guided way, a saved one there too when the guided way can show all of it (U1).
+      const refusal = read.card ? refusalOf(read.card) : null
+      const path = read.card ? readAt(read.card, ['requests', 0, 'path']) : undefined
+      // A card that reads from a service has its display already; a new one gets it once its answer is in.
+      const kinds = read.card ? readAt(read.card, ['requires']) : undefined
+      const shaped = Array.isArray(kinds) && kinds.length > 0 && typeof path === 'string' ? path : null
       set({
         ...read,
         slug,
@@ -153,8 +184,16 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
         future: [],
         typing: null,
         // An invalid text opens where it can be mended.
-        view: read.card ? (view ?? 'editor') : 'yaml',
+        view: read.card ? (view ?? (refusal ? 'editor' : 'guided')) : 'yaml',
         step: 'source',
+        // Always from the start, like the way it is: nothing is asked of the service before a step needs an answer.
+        guidedStep: 'service',
+        shapedPath: shaped,
+        refusal,
+        pendingShape: null,
+        autoName: null,
+        created: false,
+        previewData: null,
         serverProblems: [],
         serverFor: null,
         focusLine: null,
@@ -211,12 +250,25 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
 
     setView: (view) => {
       get().flusher?.()
-      if (view === 'editor' && !get().card) return false
+      if (view !== 'yaml' && !get().card) return false
       set({ view, typing: null })
       return true
     },
 
     setStep: (one) => set({ step: one }),
+    setGuidedStep: (one) => set({ guidedStep: one }),
+
+    leaveYaml: () => {
+      get().flusher?.()
+      const card = get().card
+      if (!card) return false
+      const refusal = refusalOf(card)
+      const path = readAt(card, ['requests', 0, 'path'])
+      const kinds = readAt(card, ['requires'])
+      const shaped = Array.isArray(kinds) && kinds.length > 0 && typeof path === 'string' ? path : null
+      set({ view: refusal ? 'editor' : 'guided', refusal, shapedPath: get().shapedPath ?? shaped, typing: null })
+      return true
+    },
 
     saved: (slug, text, base) => set({ slug, savedText: text, base, serverProblems: [], serverFor: null }),
 
