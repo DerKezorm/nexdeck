@@ -680,3 +680,31 @@ value: {path: "@"}
     expect(readAt(card(), ['item', 'title'])).toBe('title')
   })
 })
+
+
+describe('review 13: Save at the top waits for a form and a name on a new card', () => {
+  const top = () => screen.getAllByRole('button', { name: 'Save' })[0]
+
+  it('is shut until the card shows something and has a name, and shut again without the name', async () => {
+    await openNew()
+    expect(top()).toBeDisabled()
+    await click(/^Home/)
+    expect(top()).toBeDisabled()
+    await click(/^Devices and sensors/)
+    await waitFor(() => expect(editor().shapedPath).toBe('/api/states'))
+    await waitFor(() => expect(top()).toBeEnabled())
+    await click('Next')
+    await click('Next')
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Name of the card' }))
+    expect(top()).toBeDisabled()
+    await userEvent.type(screen.getByRole('textbox', { name: 'Name of the card' }), 'Mine')
+    expect(top()).toBeEnabled()
+  })
+
+  it('does not keep All settings or the YAML from saving a new card; the server checks it', async () => {
+    await openNew()
+    await click('All settings')
+    act(() => editor().set(['name'], 'Typed'))
+    expect(top()).toBeEnabled()
+  })
+})

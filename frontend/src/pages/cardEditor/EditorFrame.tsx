@@ -147,7 +147,10 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   }
 
   const Step = STEP_PAGES[step]
-  const canSave = card !== null && !busy && (dirty || trouble?.kind === 'gone')
+  // A new card in the guided way is saved once it has something to show and a name, like the mock-up; the other views
+  // leave that to the server's check.
+  const unfinished = slug === null && view === 'guided' && !(name.trim() && editor.shapedPath !== null && editor.pendingShape === null)
+  const canSave = card !== null && !busy && !unfinished && (dirty || trouble?.kind === 'gone')
 
   return (
     <div className="min-w-0" ref={root}>
