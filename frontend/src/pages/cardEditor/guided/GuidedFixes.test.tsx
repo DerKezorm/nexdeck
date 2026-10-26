@@ -499,3 +499,49 @@ describe('review 7: Save at the top jumps to Finish after the first save of a ne
     expect(editor().guidedStep).not.toBe('finish')
   })
 })
+
+
+describe('review 8: YAML to Guided opens the steps the card has earned, as YAML to All settings does', () => {
+  const TYPED = `${HEAD}requests:
+  - id: states
+    path: /api/states
+form: value
+value:
+  total: {fn: count, rows: {select: "@", filter: [{field: state, op: "==", value: "on"}]}}
+`
+
+  it('a card typed in YAML with a service, a path and a form: Display and Finish are open, nothing is asked again', async () => {
+    await openNew()
+    await click('YAML')
+    act(() => editor().setText(TYPED))
+    await click('Guided')
+    expect(editor().view).toBe('guided')
+    expect(editor().shapedPath).toBe('/api/states')
+    expect(screen.getByRole('button', { name: /^3 Display/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^4 Finish/ })).toBeEnabled()
+    await click(/^3 Display/)
+    expect(await screen.findByTestId('card-guided-result')).toBeInTheDocument()
+    // what was typed is what the card shows, not a suggestion's start
+    expect(editor().text).toBe(TYPED)
+  })
+
+  it('a card the guided way cannot show still opens in Guided from YAML when the author asks for it, with the reason noted', async () => {
+    await openNew()
+    await click('YAML')
+    act(() => editor().setText(TYPED.replace(/value:\n {2}total: .*\n/, 'value: "length([?state == \'on\'])"\n')))
+    await click('Guided')
+    expect(editor().view).toBe('guided')
+    expect(editor().refusal).toBe('expression')
+    expect(screen.getByRole('button', { name: /^3 Display/ })).toBeEnabled()
+  })
+
+  it('to All settings from YAML, and from there to Guided, the steps are open as well', async () => {
+    await openNew()
+    await click('YAML')
+    act(() => editor().setText(TYPED))
+    await click('All settings')
+    expect(editor().view).toBe('editor')
+    await click('Guided')
+    expect(screen.getByRole('button', { name: /^3 Display/ })).toBeEnabled()
+  })
+})

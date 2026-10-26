@@ -174,7 +174,7 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
                 aria-pressed={view === one}
                 disabled={one !== 'yaml' && !card}
                 title={one !== 'yaml' && !card ? (firstLine ? t('editor.fixFirst', { line: firstLine }) : t('editor.fixFirstNoLine')) : undefined}
-                onClick={() => useCardEditor.getState().setView(one)}
+                onClick={() => (view === 'yaml' && one !== 'yaml' ? useCardEditor.getState().leaveYaml(one) : useCardEditor.getState().setView(one))}
               >
                 {t(`editor.view.${one}`)}
               </button>

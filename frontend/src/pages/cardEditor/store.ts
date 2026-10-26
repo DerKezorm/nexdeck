@@ -97,8 +97,11 @@ export interface CardEditorState {
   setView: (view: EditorView) => boolean
   setStep: (step: EditorStep) => void
   setGuidedStep: (step: GuidedStep) => void
-  /** Leave the YAML view for the guided way, or for "All settings" when the guided way cannot show the card. */
-  leaveYaml: () => boolean
+  /**
+   * Leave the YAML view for the guided way, or for "All settings" when the guided way cannot show the card; `to` is
+   * the one the author asked for. Either way the steps the card has earned are open (a service and a path: its display).
+   */
+  leaveYaml: (to?: Exclude<EditorView, 'yaml'>) => boolean
   /** The card was saved as `text` under `slug`. */
   saved: (slug: string, text: string, base: string | null) => void
   setServerProblems: (problems: CardProblem[], forText: string) => void
@@ -262,7 +265,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
     setStep: (one) => set({ step: one }),
     setGuidedStep: (one) => set({ guidedStep: one }),
 
-    leaveYaml: () => {
+    leaveYaml: (to) => {
       get().flusher?.()
       const card = get().card
       if (!card) return false
@@ -270,7 +273,7 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
       const path = readAt(card, ['requests', 0, 'path'])
       const kinds = readAt(card, ['requires'])
       const shaped = Array.isArray(kinds) && kinds.length > 0 && typeof path === 'string' ? path : null
-      set({ view: refusal ? 'editor' : 'guided', refusal, shapedPath: get().shapedPath ?? shaped, typing: null })
+      set({ view: to ?? (refusal ? 'editor' : 'guided'), refusal, shapedPath: get().shapedPath ?? shaped, typing: null })
       return true
     },
 
