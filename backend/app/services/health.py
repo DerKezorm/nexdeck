@@ -216,7 +216,7 @@ def service_target(kind: str, widget: Widget | None, db=None) -> str:  # noqa: A
     from .integrations import resolve_config
 
     try:
-        url = get_adapter(widget.integration.kind).default_link(resolve_config(widget.integration))
+        url = get_adapter(widget.integration.kind).check_address(resolve_config(widget.integration))
     except Exception:
         # ⚠️ One connection whose secret cannot be read used to raise out of
         # the list comprehension that builds the whole round, and then no
@@ -300,7 +300,7 @@ class HealthService:
                 try:
                     ok, latency, detail = await run_check(probe)
                 except Exception as error:  # noqa: BLE001 - one broken check must not stop the others
-                    logger.warning("Check %s (%s %s) failed: %s", check_id, kind, target, error.__class__.__name__)
+                    logger.warning("Check %s (%s) failed: %s", check_id, kind, error.__class__.__name__)
                     ok, latency, detail = False, 0, f"Check failed: {error.__class__.__name__}"
             self._next_due[check_id] = time.monotonic() + max(5, interval or get_settings().health_interval_seconds)
             # ⚠️ The writing goes into a thread, the telling stays here. Writing

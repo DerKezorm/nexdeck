@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from ..adapters.base import AdapterError, Context
-from .upstream import UPSTREAM
+from .upstream import repo_of
 
 logger = logging.getLogger("nexdeck.versions")
 
@@ -171,7 +171,7 @@ async def read(integration_id: int, kind: str, resolve: Any, ctx: Context, *, al
         _running[integration_id] = reading
         if reading.running:
             await asyncio.to_thread(_write_down, integration_id, reading.running)
-    repo = UPSTREAM.get(kind)
+    repo = repo_of(kind)
     # A reading is shared, so what the last caller was allowed to learn is set again each time.
     reading.asked = allowed
     reading.newest, reading.url, reading.published = None, "", None

@@ -89,7 +89,7 @@ async def connection_versions(user: AdminUser, db: DbSession) -> dict[str, dict]
     ctx = Context(collector.client, cache={})
     readings = await versions.read_many(connections, collector.resolve_integration, ctx, allowed=update_check_on(db))
     kinds = dict(connections)
-    return {str(number): {**reading.public(), "upstream": versions.UPSTREAM.get(kinds[number], "")} for number, reading in readings.items()}
+    return {str(number): {**reading.public(), "upstream": versions.repo_of(kinds[number])} for number, reading in readings.items()}
 
 
 @router.post("/integrations", status_code=status.HTTP_201_CREATED, summary="Add an integration")

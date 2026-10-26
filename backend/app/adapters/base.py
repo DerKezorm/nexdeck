@@ -1787,6 +1787,10 @@ class Adapter:
     def default_link(self, config: dict[str, Any]) -> str:
         return base_url(config)
 
+    def check_address(self, config: dict[str, Any]) -> str:
+        """The address a reachability check follows for a tile on this connection: its link, unless a kind knows a better one."""
+        return self.default_link(config)
+
     def image_headers(self, config: dict[str, Any]) -> dict[str, str]:
         """Headers for fetching a service's images (posters, thumbnails) through the server.
 

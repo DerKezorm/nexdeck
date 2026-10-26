@@ -76,3 +76,16 @@ UPSTREAM: dict[str, str] = {
     "wger": "wger-project/wger",
     "wud": "getwud/wud",
 }
+
+
+def repo_of(kind: str) -> str:
+    """The GitHub project whose releases name the versions of a kind, or an empty text.
+
+    The built-in kinds are listed above; an own kind (``custom:<short>``) names its project in its description, which
+    the registry holds. Looked up when asked, so a description saved a moment ago counts at once.
+    """
+    if kind.startswith("custom:"):
+        from ..adapters import REGISTRY
+
+        return str(getattr(REGISTRY.get(kind), "upstream", "") or "")
+    return UPSTREAM.get(kind, "")

@@ -32,6 +32,19 @@ class CoreAdapter(Adapter):
     icon = "lucide:layout-dashboard"
     beta = False
     needs_integration = False
+
+    def to_dict(self) -> dict[str, Any]:
+        """The picker of the updates card also offers the own kinds whose description names a project on GitHub."""
+        from . import REGISTRY
+
+        found = super().to_dict()
+        own = sorted(kind for kind, one in REGISTRY.items() if kind.startswith("custom:") and getattr(one, "upstream", ""))
+        for widget in found["widgets"]:
+            for option in widget["options"]:
+                if widget["kind"] == "core.updates" and option["name"] == "picked":
+                    option["options"] = [*option["options"], *({"value": kind, "label": ""} for kind in own)]
+        return found
+
     widgets = (
         WidgetType(
             kind="clock",
@@ -628,7 +641,7 @@ class CoreAdapter(Adapter):
             found = [
                 (one.id, one.kind, one.name)
                 for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
-                if one.kind in versions.UPSTREAM and not one.admin_only and (wanted is None or one.id in wanted)
+                if versions.repo_of(one.kind) and not one.admin_only and (wanted is None or one.id in wanted)
             ]
         readings = await versions.read_many([(number, kind) for number, kind, _name in found], ctx.resolve_integration, ctx)
         rows: list[dict[str, Any]] = []

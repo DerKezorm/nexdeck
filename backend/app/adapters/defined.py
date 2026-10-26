@@ -27,6 +27,7 @@ import httpx
 import jmespath
 
 from ..cards import integration_schema as sch
+from ..services.versions import version_in
 from .base import Adapter, AdapterError, AuthFailed, Context, Field, WidgetType, base_url
 from .jsonapi import join_path
 
@@ -354,3 +355,29 @@ class DefinedAdapter(Adapter):
 
     def default_link(self, config: dict[str, Any]) -> str:
         return base_url(config)
+
+    # -- the extras (KARTEN-4) -----------------------------------------------------------------------
+
+    @property
+    def upstream(self) -> str:
+        """The GitHub project whose releases name the versions, ``owner/name``, or an empty text."""
+        return sch.github_project(self.definition.github) if self.definition.github else ""
+
+    def check_address(self, config: dict[str, Any]) -> str:
+        """Where the reachability check asks: the check path, else the test path (EC-4), underneath the address."""
+        base = self.raw_base(config)
+        return join_path(base, self.definition.check or self.definition.test) if base else ""
+
+    async def running_version(self, config: dict[str, Any], ctx: Context) -> str | None:
+        """The version the description says where to find, or None: no place named, no JSON, nothing there (EC-1)."""
+        where = self.definition.version
+        if where is None:
+            return None
+        response = await self.raw_request("GET", where.path, config, ctx)
+        try:
+            found = jmespath.search(where.at, response.json())
+        except Exception:  # noqa: BLE001 - not JSON, or an expression that fits nothing: the version is not said
+            return None
+        if isinstance(found, bool) or not isinstance(found, str | int | float):
+            return None
+        return version_in(str(found)[:100])
