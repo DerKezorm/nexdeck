@@ -36,6 +36,12 @@ class QbittorrentAdapter(DownloadAdapter):
             ctx.cache["qb_client"] = client
         return client
 
+    def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
+        return self._client(config, ctx)
+
+    async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
+        await self._login(config, ctx)
+
     async def _login(self, config: dict[str, Any], ctx: Context) -> None:
         """Sign in, and understand both answers qBittorrent gives.
 

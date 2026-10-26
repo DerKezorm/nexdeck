@@ -35,6 +35,14 @@ class DelugeAdapter(DownloadAdapter):
             ctx.cache["deluge_client"] = client
         return client
 
+    def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
+        return self._client(config, ctx)
+
+    async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
+        login = await self._client(config, ctx).post("/json", json={"method": "auth.login", "params": [config.get("password") or ""], "id": 2})
+        if not login.json().get("result"):
+            raise AuthFailed("Deluge rejected the password.")
+
     async def _call(self, config: dict[str, Any], ctx: Context, method: str, params: list[Any] | None = None, retry: bool = True) -> Any:
         client = self._client(config, ctx)
         try:

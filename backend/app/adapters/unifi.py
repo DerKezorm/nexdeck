@@ -130,6 +130,18 @@ class UnifiAdapter(Adapter):
             ctx.cache["unifi_client"] = client
         return client
 
+    def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
+        return self._client(config, ctx)
+
+    def raw_headers(self, config: dict[str, Any]) -> dict[str, str]:
+        # The key of the Integration API; a local account signs in with the cookie of the client instead.
+        return {"X-API-KEY": str(config.get("api_key", "")).strip(), "Accept": "application/json"} if self._uses_api_key(config) else {}
+
+    async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
+        if not self._uses_api_key(config):
+            self._require_account(config)
+            await self._login(config, ctx)
+
     def _prefix(self, config: dict[str, Any]) -> str:
         return "/proxy/network" if config.get("unifi_os", True) else ""
 

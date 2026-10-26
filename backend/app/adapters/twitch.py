@@ -48,6 +48,9 @@ class TwitchAdapter(Adapter):
     def default_link(self, config: dict[str, Any]) -> str:
         return "https://www.twitch.tv/"
 
+    async def raw_signed_headers(self, config: dict[str, Any], ctx: Context) -> dict[str, str]:
+        return {"Client-Id": str(config.get("client_id") or ""), "Authorization": f"Bearer {await self._token(config, ctx)}"}
+
     async def _token(self, config: dict[str, Any], ctx: Context) -> str:
         """A token of the application itself, kept until shortly before it ends."""
         kept = ctx.cache.get("twitch_token")

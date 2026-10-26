@@ -173,6 +173,14 @@ class SynologyAdapter(Adapter):
         ctx.cache["syno_sid"] = sid
         return sid
 
+    def raw_expired(self, response: Any) -> bool:
+        # DSM answers 200 with ``success: false`` and these codes when the session has run out.
+        try:
+            payload = response.json()
+        except ValueError:
+            return False
+        return isinstance(payload, dict) and payload.get("success") is False and int((payload.get("error") or {}).get("code", 0)) in (105, 106, 107, 119)
+
     async def _api(self, config: dict[str, Any], ctx: Context, api: str, method: str, version: str = "1", extra: dict[str, Any] | None = None, cache: float = 5, retry: bool = True) -> Any:
         sid = await self._sid(config, ctx)
         params = {"api": api, "version": version, "method": method, "_sid": sid}
