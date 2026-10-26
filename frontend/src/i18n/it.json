@@ -69,6 +69,7 @@
       "answer_too_large": "Risposta troppo grande. Il servizio ha risposto con più di quanto legga una scheda personalizzata.",
       "bad_param": "Un valore della risposta non è un nome semplice; la richiesta non è stata fatta.",
       "bad_path": "Il percorso inizia con una sola / e non nomina alcun host; sta sempre sotto l’indirizzo della connessione.",
+      "command_refused": "Una scheda propria legge soltanto. Questa richiesta chiede qualcosa che agisce, come un riavvio, una cancellazione o una pausa, quindi non è stata fatta.",
       "demo_too_large": "Le risposte di esempio sono troppo grandi per una scheda, anche con ogni elenco ridotto a una voce.",
       "demo_mode": "La modalità demo è attiva, quindi il servizio non viene interrogato.",
       "connection_missing": "Connessione mancante. La connessione di questa scheda è stata eliminata."
@@ -107,6 +108,7 @@
       "card_unknown_kind": "nexdeck non ha alcuna connessione del tipo {{kind}}.",
       "card_demo_unknown_request": "La risposta dimostrativa {{id}} non appartiene ad alcuna richiesta.",
       "card_rule_subject": "Una regola della scheda deve dire che cosa guarda: un valore o una formula.",
+      "card_picture_address": "Un'immagine è un valore della risposta o un percorso della connessione che inizia con una sola /.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (carattere {{position}})",
       "card_secret_value": "Sembra {{what}}. Una scheda non contiene segreti: li conserva la connessione e li aggiunge alla richiesta.",

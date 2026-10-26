@@ -69,6 +69,7 @@
       "answer_too_large": "Answer too large. The service answered with more than a custom card reads.",
       "bad_param": "A value of the answer is not a plain name; the request was not made.",
       "bad_path": "The path must start with a single / and name no host; it is always below the address of the connection.",
+      "command_refused": "A custom card only reads. This request asks for something that acts, such as a restart, a delete or a pause, so it was not made.",
       "demo_too_large": "The example answers are too large for a card even with every list cut to one entry.",
       "demo_mode": "Demo mode is on, so nothing is asked of the service.",
       "connection_missing": "Connection missing. The connection of this card was deleted."
@@ -107,6 +108,7 @@
       "card_unknown_kind": "nexdeck has no connection of the kind {{kind}}.",
       "card_demo_unknown_request": "The demo answer {{id}} belongs to no request.",
       "card_rule_subject": "A rule on the card has to say what it looks at: a value or a formula.",
+      "card_picture_address": "A picture is a value of the answer, or a path on the connection that starts with a single /.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (character {{position}})",
       "card_secret_value": "This looks like {{what}}. A card holds no secrets: the connection keeps them and adds them to the request.",

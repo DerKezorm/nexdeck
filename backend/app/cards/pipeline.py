@@ -59,6 +59,9 @@ class Row:
     status: str | None = None
     link: str | None = None
     image: str | None = None
+    #: The picture address is one value the answer named (a path), not something put together from a template: only
+    #: then may it lead to a host other than the connection's (korrektur J1, F3).
+    image_named: bool = False
 
 
 @dataclass
@@ -535,6 +538,7 @@ def _row(run: _Run, item: Any, source: Any) -> Row:
         status=_status(run, rules, own, source, True),
         link=_link(link.text if link and link.value is not None else None),
         image=_link(image.text if image and image.value is not None else None),
+        image_named=getattr(getattr(item, "image", None), "path", None) is not None,
     )
 
 

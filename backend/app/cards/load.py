@@ -338,6 +338,13 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
     for index, rule in enumerate(definition.rules):
         if rule.value is None and rule.formula is None:
             add("card_rule_subject", "A rule on the card has to say what it looks at: a value or a formula.", ("rules", index))
+    for path, shown in _pictures(definition):
+        if shown.formula is not None or (shown.template is not None and not (shown.template.startswith("/") and not shown.template.startswith("//"))):
+            add(
+                "card_picture_address",
+                "A picture is a value of the answer, or a path on the connection that starts with a single /.",
+                (*path, "formula" if shown.formula is not None else "template"),
+            )
     for path, what, failure in pipeline.expression_problems(definition):
         where = f" (character {failure.position + 1})" if failure.position is not None else ""
         problems.append(
@@ -350,6 +357,13 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
             )
         )
     return problems
+
+
+def _pictures(definition: Any) -> list[tuple[Path, Any]]:
+    """The picture value of the rows of a card, with its place."""
+    item = getattr(definition, "item", None)
+    image = getattr(item, "image", None)
+    return [(("item", "image"), image)] if image is not None else []
 
 
 def check_for_submission(definition: Any) -> list[Problem]:
