@@ -166,6 +166,21 @@ def test_karten3_only_administrators_describe_connections(client: TestClient) ->
     assert make(client, MEMOS).status_code == 403
     assert client.get(f"{API}/template").status_code == 403
     assert client.post(f"{API}/check", json={"yaml": MEMOS}, headers=CSRF).status_code == 403
+    # the one description, to read, to change and to delete, is the administrators' as well
+    assert client.get(f"{API}/memos").status_code == 403
+    assert client.put(f"{API}/memos", json={"yaml": MEMOS}, headers=CSRF).status_code == 403
+    assert client.delete(f"{API}/memos", headers=CSRF).status_code == 403
+
+
+def test_karten3_a_description_stays_within_30_reads_and_64_kb(admin: TestClient) -> None:  # noqa: F811
+    thirty = [{"path": f"/api/items/{number}", "label": f"Item {number}"} for number in range(30)]
+    assert make(admin, changed(HEADER, short="reads-30", reads=thirty)).status_code == 201
+    too_many = make(admin, changed(HEADER, short="reads-31", reads=thirty + [{"path": "/api/items/30", "label": "Item 30"}]))
+    assert too_many.status_code == 400 and codes_of(too_many)
+    assert admin.get(f"{API}/reads-31").status_code == 404
+    long_text = make(admin, HEADER + "# " + "x" * 65_000)
+    assert long_text.status_code == 400 and long_text.json()["detail"]["code"] == "integration_invalid"
+    assert admin.get(f"{API}/bookstack-own").status_code == 404
 
 
 def test_karten3_the_template_and_the_check_and_the_listing(admin: TestClient) -> None:  # noqa: F811
