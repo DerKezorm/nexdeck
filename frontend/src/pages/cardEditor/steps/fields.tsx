@@ -17,7 +17,7 @@ import { writeText } from '../texts'
 import { FieldProblems } from './SourceStep'
 
 export const SHAPES = ['text', 'number', 'bytes', 'rate', 'duration', 'ago', 'percent', 'date', 'datetime', 'time'] as const
-export const OPS = ['==', '!=', '>', '>=', '<', '<=', 'contains'] as const
+export const OPS = ['==', '!=', '>', '>=', '<', '<=', 'contains', 'starts_with', 'ends_with'] as const
 export const FNS = ['count', 'sum', 'min', 'max', 'avg'] as const
 export const STATUSES = ['ok', 'warn', 'bad'] as const
 const SOURCES = ['path', 'formula', 'template', 'total'] as const

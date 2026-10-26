@@ -338,6 +338,11 @@ def _compare(op: str, left: Any, right: Any, right_number: float | None = None) 
         one = str(left).lower() if isinstance(left, bool) else str(left)
         two = str(right).lower() if isinstance(right, bool) else str(right)
         return (one == two) if op == "==" else (one != two) if op == "!=" else False
+    if op in ("starts_with", "ends_with"):
+        # Always as text, numbers too: 2026 starts with 20. A list or an object starts with nothing.
+        if left is None or right is None or isinstance(left, list | dict):
+            return False
+        return str(left).startswith(str(right)) if op == "starts_with" else str(left).endswith(str(right))
     if op == "contains":
         if isinstance(left, list):
             return any(str(item) == str(right) for item in left)

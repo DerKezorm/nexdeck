@@ -326,7 +326,9 @@
       "gte": "≥",
       "lt": "<",
       "lte": "≤",
-      "contains": "enthält"
+      "contains": "enthält",
+      "starts_with": "beginnt mit",
+      "ends_with": "endet mit"
     },
     "rules": {
       "card": "Die ganze Karte",

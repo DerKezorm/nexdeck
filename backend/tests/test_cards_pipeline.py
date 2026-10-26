@@ -80,6 +80,34 @@ def test_karten5_ac2_a_filter_keeps_only_the_rows_that_match() -> None:
     assert titles(show(rows_of(both))) == ["Alpha"]
 
 
+def test_umbau_u7_a_filter_keeps_the_rows_that_start_or_end_with_a_text() -> None:
+    assert titles(show(rows_of("filter: [{field: title, op: starts_with, value: Ch}]"))) == ["Charlie"]
+    assert titles(show(rows_of("filter: [{field: status, op: ends_with, value: ing}]"))) == ["Alpha", "Charlie"]
+    # letter case counts, and only the start counts: "ar" is inside Charlie, not at its start
+    assert titles(show(rows_of("filter: [{field: title, op: starts_with, value: ch}]"))) == []
+    assert titles(show(rows_of("filter: [{field: title, op: starts_with, value: ar}]"))) == []
+    # a number is read as its text, and a row without the field never matches
+    assert titles(show(rows_of("filter: [{field: size, op: starts_with, value: 1}]"))) == ["Bravo"]
+    assert titles(show(rows_of("filter: [{field: added, op: ends_with, value: 'Z'}]"))) == ["Alpha", "Bravo", "Charlie"]
+    # the way the guided editor counts the lights that are on
+    states = [{"entity_id": "light.kitchen", "state": "on"}, {"entity_id": "light.hall", "state": "off"}, {"entity_id": "switch.tv", "state": "on"}]
+    lights = """form: value
+value:
+  total:
+    fn: count
+    rows: {select: '@', filter: [{field: entity_id, op: starts_with, value: light.}, {field: state, op: '==', value: 'on'}]}
+"""
+    assert show(lights, states).value.text == "1"  # type: ignore[union-attr]
+
+
+def test_umbau_u7_a_rule_can_look_at_the_start_or_the_end_of_a_text() -> None:
+    body = "form: value\nvalue: {path: s, rules: [{op: starts_with, than: err, then: bad}, {op: ends_with, than: '!', then: warn}]}"
+    assert show(body, {"s": "error: disk"}).value.status == "bad"  # type: ignore[union-attr]
+    assert show(body, {"s": "watch out!"}).value.status == "warn"  # type: ignore[union-attr]
+    assert show(body, {"s": "all fine"}).value.status is None  # type: ignore[union-attr]
+    assert show(body, {"s": ["error"]}).value.status is None  # type: ignore[union-attr]
+
+
 def test_karten5_ac3_rows_come_in_the_order_the_definition_asks_for() -> None:
     assert titles(show(rows_of("sort: {field: size}"))) == ["Bravo", "Charlie", "Alpha", "Delta"]
     assert titles(show(rows_of("sort: {field: size, desc: true}"))) == ["Alpha", "Charlie", "Bravo", "Delta"]

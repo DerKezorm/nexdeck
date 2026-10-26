@@ -371,3 +371,11 @@ def test_karten1_ac2_every_message_has_a_translation_in_every_language() -> None
         assert texts["widget"]["too_slow"]
         # a text for a code that no longer exists is a text nobody sees
         assert set(texts["card"]) - found == set(), language
+
+
+def test_umbau_u7_the_schema_offers_starts_with_and_ends_with_for_filters_and_rules() -> None:
+    text = json.dumps(schema.json_schema())
+    assert '"starts_with"' in text and '"ends_with"' in text
+    head = 'nexdeck-card: 1\nslug: s\nname: S\nversion: "1.0.0"\nrequires: [jsonapi]\nrequests: [{id: a, path: /}]\n'
+    loaded = load.load_definition(head + "form: list\nrows: {select: '@', filter: [{field: n, op: ends_with, value: x}]}\nitem: {title: n, status: [{op: starts_with, than: e, then: bad}]}\n")
+    assert loaded.definition is not None

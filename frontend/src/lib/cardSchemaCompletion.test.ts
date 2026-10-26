@@ -62,3 +62,10 @@ describe('karten10 AC-2: suggestions while typing', () => {
     expect(at('unknown:\n  |')).toBeNull()
   })
 })
+
+describe('umbau U7: starts with and ends with', () => {
+  it('are offered as comparisons of a filter and of a rule', () => {
+    expect(at('form: list\nrows:\n  select: data\n  filter:\n    - field: name\n      op: |')?.labels).toEqual(expect.arrayContaining(['contains', 'starts_with', 'ends_with']))
+    expect(at('form: value\nrules:\n  - op: |')?.labels).toEqual(expect.arrayContaining(['starts_with', 'ends_with']))
+  })
+})

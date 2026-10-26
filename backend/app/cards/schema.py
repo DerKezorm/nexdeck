@@ -105,7 +105,8 @@ Description = _local_text(DESCRIPTION_MAX)
 LocalText = str | dict[str, str]
 
 Status = Literal["ok", "warn", "bad"]
-Operator = Literal["==", "!=", ">", ">=", "<", "<=", "contains"]
+#: ``starts_with`` and ``ends_with`` compare as text, letter case counts (``light.`` finds ``light.kitchen``).
+Operator = Literal["==", "!=", ">", ">=", "<", "<=", "contains", "starts_with", "ends_with"]
 Shape = Literal["text", "number", "bytes", "rate", "duration", "ago", "percent", "date", "datetime", "time"]
 Aggregation = Literal["count", "sum", "min", "max", "avg"]
 Scalar = str | int | float | bool

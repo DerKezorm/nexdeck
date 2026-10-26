@@ -326,7 +326,9 @@
       "gte": "≥",
       "lt": "<",
       "lte": "≤",
-      "contains": "contiene"
+      "contains": "contiene",
+      "starts_with": "inizia con",
+      "ends_with": "finisce con"
     },
     "rules": {
       "card": "Tutta la scheda",
