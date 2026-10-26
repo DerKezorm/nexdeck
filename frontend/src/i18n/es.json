@@ -126,6 +126,7 @@
       "card_integration_placeholder_unknown": "Ningún campo se llama {{name}}. Nombra un campo de esta integración entre llaves.",
       "card_integration_placeholder_broken": "Una llave está sola. Un campo se escribe entre llaves, como {token}.",
       "card_integration_path": "Una ruta empieza con una sola /, no nombra ningún host y no sube a otra parte.",
+      "card_integration_path_acts": "Una integración solo lee. Esta ruta pide algo que ejecuta una acción (reiniciar, borrar, restablecer y similares), y nexdeck no lo envía.",
       "card_integration_expression": "Esto no es una ruta dentro de la respuesta: {{reason}}.",
       "card_integration_default": "El valor por defecto no encaja con el tipo del campo (un secreto no tiene).",
       "card_integration_ticket_json": "Un ticket de la respuesta JSON necesita at: el lugar del valor, como accessToken.",

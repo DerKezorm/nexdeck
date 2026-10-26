@@ -126,6 +126,7 @@
       "card_integration_placeholder_unknown": "Nessun campo si chiama {{name}}. Nomina un campo di questa integrazione tra graffe.",
       "card_integration_placeholder_broken": "Una graffa è sola. Un campo si scrive tra graffe, come {token}.",
       "card_integration_path": "Un percorso inizia con una sola /, non nomina nessun host e non esce da nessuna parte.",
+      "card_integration_path_acts": "Un'integrazione legge soltanto. Questo percorso chiede qualcosa che agisce (riavviare, eliminare, ripristinare e simili), e nexdeck non lo invia.",
       "card_integration_expression": "Questo non è un percorso nella risposta: {{reason}}.",
       "card_integration_default": "Il valore predefinito non si adatta al tipo del campo (un segreto non ne ha).",
       "card_integration_ticket_json": "Un ticket dalla risposta JSON richiede at: il punto del valore, come accessToken.",

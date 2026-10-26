@@ -126,6 +126,7 @@
       "card_integration_placeholder_unknown": "No field is called {{name}}. Name a field of this integration between braces.",
       "card_integration_placeholder_broken": "A brace stands alone. A field is written between braces, like {token}.",
       "card_integration_path": "A path starts with a single /, names no host and climbs nowhere.",
+      "card_integration_path_acts": "An integration only reads. This path asks for something that acts (restart, delete, reset and the like), and nexdeck does not send that.",
       "card_integration_expression": "This is not a path into the answer: {{reason}}.",
       "card_integration_default": "The default does not fit the type of the field (a secret has none).",
       "card_integration_ticket_json": "A ticket from the JSON answer needs at: the place of the value, such as accessToken.",

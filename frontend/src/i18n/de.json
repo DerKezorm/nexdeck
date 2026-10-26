@@ -126,6 +126,7 @@
       "card_integration_placeholder_unknown": "Ein Feld namens {{name}} gibt es nicht. Nenne ein Feld dieser Anbindung in geschweiften Klammern.",
       "card_integration_placeholder_broken": "Eine Klammer steht allein. Ein Feld steht in geschweiften Klammern, etwa {token}.",
       "card_integration_path": "Ein Pfad beginnt mit einem einzelnen /, nennt keinen Rechner und führt nirgends hinaus.",
+      "card_integration_path_acts": "Eine Anbindung liest nur. Dieser Pfad fragt nach etwas, das etwas auslöst (Neustart, Löschen, Zurücksetzen und Ähnliches), und das schickt nexdeck nicht.",
       "card_integration_expression": "Das ist kein Pfad in die Antwort: {{reason}}.",
       "card_integration_default": "Der Vorgabewert passt nicht zum Typ des Felds (ein Geheimnis hat keinen).",
       "card_integration_ticket_json": "Ein Ticket aus der JSON-Antwort braucht at: den Ort des Werts, etwa accessToken.",
