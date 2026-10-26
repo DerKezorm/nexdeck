@@ -8,6 +8,7 @@ Everything here runs through the places the built-in kinds use, not through ones
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 import httpx
@@ -324,3 +325,16 @@ def test_karten4_the_forms_the_screens_read_are_the_ones_the_server_sends(admin:
     respx.get(f"{BASE}/api/v1/status").mock(return_value=httpx.Response(200, json={}))
     green = admin.post("/api/v1/integrations/test", json={"kind": "custom:wiki-x", "config": {"url": BASE, "token": "k-0123456789"}}, headers=CSRF).json()
     assert green["ok"] is True and green["message"]
+
+
+async def test_karten3_ec6_a_tile_on_a_connection_of_a_deleted_kind_has_a_check_that_says_nothing_in_the_log(
+    admin: TestClient, caplog: pytest.LogCaptureFixture  # noqa: F811
+) -> None:
+    number = own(admin, WIKI)
+    tile = tile_on(admin, number)
+    assert admin.delete(f"{API}/wiki-x", headers=CSRF).status_code == 204
+    with caplog.at_level(logging.DEBUG):
+        await health.health.run_due(force=True)
+        await health.health.run_due(force=True)
+    assert [row for row in caplog.records if row.levelno >= logging.WARNING or row.exc_info] == []
+    assert target_of(tile["id"]) == ""

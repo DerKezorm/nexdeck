@@ -212,11 +212,16 @@ def service_target(kind: str, widget: Widget | None, db=None) -> str:  # noqa: A
             return shape_target(kind, url)
     if widget is None or widget.integration is None:
         return ""
-    from ..adapters import get_adapter
+    from ..adapters import adapter_or_missing
+    from ..adapters.defined import MissingAdapter
     from .integrations import resolve_config
 
     try:
-        url = get_adapter(widget.integration.kind).check_address(resolve_config(widget.integration))
+        adapter = adapter_or_missing(widget.integration.kind)
+        if isinstance(adapter, MissingAdapter):
+            # An own kind that was deleted (KARTEN-3 EC-6): the tile shows "integration missing", the check has no target and no word to say.
+            return ""
+        url = adapter.check_address(resolve_config(widget.integration))
     except Exception:
         # ⚠️ One connection whose secret cannot be read used to raise out of
         # the list comprehension that builds the whole round, and then no
