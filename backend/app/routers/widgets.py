@@ -613,7 +613,10 @@ async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.As
         raise error("bad_path", "That picture path is not one this card named.", status.HTTP_400_BAD_REQUEST)
     source = await _source_on_connection(adapter, config, real_path, ctx)
     # A picture underneath the connection's address is fetched the way the card's own requests are.
-    source = replace(source, headers={**source.headers, **adapter.raw_credentials(config)})
+    from ..adapters import rawread
+
+    headers, params = await rawread.for_a_picture(adapter, config, ctx)
+    source = replace(source, headers={**source.headers, **headers}, params={**source.params, **params})
     return source, _image_client(bool(config.get("insecure"))), True
 
 

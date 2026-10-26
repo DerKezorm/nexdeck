@@ -1970,16 +1970,6 @@ class Adapter:
         default = next((one.default for one in self.fields if one.name == "insecure"), False)
         return not bool(config.get("insecure", default))
 
-    def raw_credentials(self, config: dict[str, Any]) -> dict[str, str]:
-        """The credentials of the connection as headers, for a picture the server fetches on a card's behalf."""
-        headers = self.raw_headers(config)
-        login = self.raw_auth(config)
-        if login is not None and not any(name.lower() == "authorization" for name in headers):
-            import base64
-
-            headers["Authorization"] = "Basic " + base64.b64encode(f"{login[0]}:{login[1]}".encode()).decode()
-        return headers
-
     #: Names of parameters that carry a key or a session for this kind and do not look like one (``rawread`` copies
     #: the others by their name alone).
     raw_param_names: tuple[str, ...] = ()

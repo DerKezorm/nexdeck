@@ -161,6 +161,17 @@ async def signed(adapter: Adapter, config: dict[str, Any], ctx: Context, *, agai
     return sent
 
 
+async def for_a_picture(adapter: Adapter, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any]]:
+    """Headers and parameters that sign a picture the server fetches on a card's behalf, the way the card's requests are."""
+    import base64
+
+    sent = await signed(adapter, config, ctx)
+    headers = dict(sent.headers)
+    if sent.auth is not None and not any(name.lower() == "authorization" for name in headers):
+        headers["Authorization"] = "Basic " + base64.b64encode(f"{sent.auth[0]}:{sent.auth[1]}".encode()).decode()
+    return headers, dict(sent.params)
+
+
 async def ask(
     adapter: Adapter,
     method: str,
