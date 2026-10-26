@@ -110,3 +110,9 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     carried = what_travelled(sent)
     given = markers(config)
     assert not given or any(one in carried for one in given), f"{kind}: nothing of the connection came along ({given})"
+
+
+def test_jede6_the_service_step_lists_the_kinds_people_have_on_their_board_such_as_wud_and_the_sign_in_kinds() -> None:
+    listed = {row["kind"] for row in source.sources()}
+    assert {"wud", "pihole", "qbittorrent", "synology", "unifi", "tautulli", "github", "cloudflare"} <= listed
+    assert not listed & set(NOT_READ_BY_CARDS)
