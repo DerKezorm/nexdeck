@@ -188,6 +188,8 @@ describe('umbau U4: Data', () => {
     expect(own).toBeVisible()
     await userEvent.clear(own)
     await userEvent.type(own, '/v1/forecast')
+    // into the card when the author leaves the field (review 16); nothing is asked of the service before
+    await userEvent.tab()
     expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
     expect(sent('POST', '/cards/probe')).toHaveLength(0)
     await click('Ask')

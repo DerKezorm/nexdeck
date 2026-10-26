@@ -734,3 +734,36 @@ describe('review 15: fields are named for people, the real name beside', () => {
     expect([columnLabel(t, 'title'), columnLabel(t, 'Name'), columnLabel(t, 'series.title')]).toEqual(['title', 'Name', 'Title (series.title)'])
   })
 })
+
+
+describe('review 16: the address typed under "Own address" is written when the author is done', () => {
+  it('half a path reaches neither the card nor the service; the whole one does on leaving the field, and Enter asks it', async () => {
+    await openNew()
+    await click(/^Weather/)
+    const own = screen.getByRole('textbox', { name: 'Path to ask' })
+    await userEvent.clear(own)
+    await userEvent.type(own, '/v1/fore')
+    expect(own).toHaveValue('/v1/fore')
+    expect(readAt(card(), ['requests', 0, 'path'])).toBe('/')
+    // longer than the preview waits before it asks: it still has nothing to ask about
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    expect(sent('POST', '/cards/preview')).toHaveLength(0)
+    expect(sent('POST', '/cards/probe')).toHaveLength(0)
+    await userEvent.type(own, 'cast{Enter}')
+    expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
+    await waitFor(() => expect(sent('POST', '/cards/probe')).toHaveLength(1))
+    expect(sent('POST', '/cards/probe')[0].body).toEqual({ integration_id: 14, path: '/v1/forecast' })
+    expect(sent('POST', '/cards/probe').every((one) => one.body?.path === '/v1/forecast')).toBe(true)
+  })
+
+  it('Ask with the field still in hand takes what is typed', async () => {
+    await openNew()
+    await click(/^Weather/)
+    const own = screen.getByRole('textbox', { name: 'Path to ask' })
+    await userEvent.clear(own)
+    await userEvent.type(own, '/v1/forecast')
+    await click('Ask')
+    await waitFor(() => expect(editor().shapedPath).toBe('/v1/forecast'))
+    expect(readAt(card(), ['requests', 0, 'path'])).toBe('/v1/forecast')
+  })
+})

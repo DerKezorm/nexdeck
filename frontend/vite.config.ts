@@ -89,6 +89,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // ⚠️ A page test that clicks through a whole way (the card editor's) takes two seconds alone and more than five
+    // while a dozen other files run beside it; a test must not fail for the load of the machine.
+    testTimeout: 30_000,
     exclude: ['node_modules/**', 'e2e/**', 'dist/**'],
     coverage: {
       provider: 'v8',

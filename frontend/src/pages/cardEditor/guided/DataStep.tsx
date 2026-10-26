@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Activity, Calendar, Download, HardDrive, Hash, Image, Info, Library, List, Play, Server, Users, type LucideIcon } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -48,7 +48,12 @@ export function DataStep() {
   const table = useAnswerTable()
   const service = sources.data?.find((one) => one.kind === kind)?.label ?? kind ?? ''
   const offered = suggestionsFor(kind)
-  const asked = path && path !== '/'
+  // The address typed in "Own address" goes into the card when the author leaves the field, presses Enter or asks:
+  // the preview asks the service for what was written, never for half a path.
+  const [typing, setTyping] = useState<string | null>(null)
+  useEffect(() => setTyping(null), [path])
+  const target = typing ?? path
+  const asked = target && target !== '/'
   const ownOpen = !offered.length || (Boolean(asked) && !suggestion)
 
   const pick = (one: CardSuggestion) => {
@@ -68,8 +73,9 @@ export function DataStep() {
 
   /** Ask the path in the field; a new path makes the display again, so the same question comes first. */
   const askOwn = () => {
-    if (useCardEditor.getState().shapedPath === path) return askFor(requestId, path, chosen?.id ?? null)
-    guard.ask(() => askFor(requestId, path, chosen?.id ?? null))
+    if (typing !== null) setOwnPath(typing)
+    if (useCardEditor.getState().shapedPath === target) return askFor(requestId, target, chosen?.id ?? null)
+    guard.ask(() => askFor(requestId, target, chosen?.id ?? null))
   }
 
   return (
@@ -122,10 +128,13 @@ export function DataStep() {
             <input
               id={`${ids}-path`}
               className="input font-mono min-w-0 flex-1 basis-40"
-              value={ownPath ?? ''}
+              value={typing ?? ownPath ?? ''}
               placeholder="/api/…"
               spellCheck={false}
-              onChange={(event) => setOwnPath(event.target.value)}
+              onChange={(event) => setTyping(event.target.value)}
+              onBlur={() => {
+                if (typing !== null && typing !== ownPath) setOwnPath(typing)
+              }}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && asked) askOwn()
               }}
