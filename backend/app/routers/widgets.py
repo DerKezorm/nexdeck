@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
-from ..adapters import get_adapter, split_widget_kind
+from ..adapters import adapter_or_missing, split_widget_kind
 from ..adapters.base import AdapterError, Context, MediaSource, external_client, outbound_client
 from ..adapters.custom import MIN_REFRESH_SECONDS, name_of, sizes_of
 from ..cards import images as card_images
@@ -119,8 +119,9 @@ def _validate_custom(db: DbSession, kind: str, integration_id: int | None, optio
         return
     if integration.kind not in entry.definition.requires:
         raise error("kind_mismatch", f"The card {slug} works with {', '.join(entry.definition.requires)}, not {integration.kind}.")
-    if not get_adapter(integration.kind).raw_access:
-        raise error("no_raw_access", f"A custom card cannot read through a {get_adapter(integration.kind).label} connection.")
+    through = adapter_or_missing(integration.kind)
+    if not through.raw_access:
+        raise error("no_raw_access", f"A custom card cannot read through a {through.label} connection.")
 
 
 def _refuse_other_card(db: DbSession, widget: Widget, options: dict | None, user: User) -> None:

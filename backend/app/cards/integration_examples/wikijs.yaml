@@ -1,0 +1,23 @@
+nexdeck: integration
+short: wikijs-own
+name: Wiki.js
+logo: wikijs
+description: A wiki you host yourself.
+category: other
+fields:
+  - name: token
+    type: secret
+    label: API key
+    help: Administration > API Access > New API Key.
+    required: true
+auth:
+  type: header
+  header: Authorization
+  value: "Bearer {token}"
+# Wiki.js answers GraphQL on /graphql; the root answers its web page, so a read of the health path tells that it is there.
+test: /healthz
+reads:
+  - path: /healthz
+    label: Health
+check: /healthz
+github: requarks/wiki

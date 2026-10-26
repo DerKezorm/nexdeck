@@ -709,10 +709,23 @@ def restore(data: bytes, password: str, *, without_safety_copy: bool = False) ->
     from .oidc_store import sync_list
 
     sync_list()
+    _own_kinds_again()
     _sign_everybody_out()
 
     logger.info("Backup restored: version %s from %s.", profile.version, profile.created_at or "?")
     return Verdict(profile, True, "ok", key is not None)
+
+
+def _own_kinds_again() -> None:
+    """The own kinds of connection of the restored database take the place of the ones in memory (KARTEN-3 EC-11)."""
+    from ..cards import integration_store
+    from ..db import db_session
+
+    try:
+        with db_session() as db:
+            integration_store.load_all(db)
+    except Exception:  # noqa: BLE001 - the restore itself is done; the next start reads them again
+        logger.exception("Could not read the own connections after the restore.")
 
 
 def _sign_everybody_out() -> None:

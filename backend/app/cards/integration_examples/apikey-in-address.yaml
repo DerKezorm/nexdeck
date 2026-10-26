@@ -1,0 +1,24 @@
+nexdeck: integration
+short: tautulli-own
+name: Tautulli
+logo: tautulli
+description: Statistics for a Plex server, with the key in the address.
+category: media
+fields:
+  - name: api_key
+    type: secret
+    label: API key
+    help: Settings > Web Interface > API key.
+    required: true
+auth:
+  type: query
+  param: apikey
+  value: "{api_key}"
+test: /api/v2?cmd=arnold
+test_expects: json
+reads:
+  - path: /api/v2?cmd=get_activity
+    label: Current activity
+  - path: /api/v2?cmd=get_libraries
+    label: Libraries
+github: Tautulli/Tautulli

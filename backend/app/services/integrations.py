@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..adapters import get_adapter
+from ..adapters import REGISTRY, adapter_or_missing
 from ..adapters.base import Field
 from ..crypto import decrypt, encrypt, is_encrypted
 from ..models import Integration
@@ -18,7 +18,8 @@ SECRET_PLACEHOLDER = "********"
 
 
 def _fields(kind: str) -> tuple[Field, ...]:
-    return get_adapter(kind).fields
+    """The fields of a kind; none for a kind that is gone (an own kind that was deleted keeps its connections, EC-6)."""
+    return adapter_or_missing(kind).fields
 
 
 def store_config(kind: str, incoming: dict[str, Any], existing: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -57,6 +58,9 @@ def resolve_config(integration: Integration) -> dict[str, Any]:
 
 def public_config(integration: Integration) -> dict[str, Any]:
     """The config as the API shows it: secrets replaced by a marker."""
+    if integration.kind not in REGISTRY:
+        # ⚠️ Nothing says which values were secrets once the kind is gone: show none of them.
+        return {}
     config = dict(integration.config or {})
     for f in _fields(integration.kind):
         if f.secret:
@@ -66,6 +70,8 @@ def public_config(integration: Integration) -> dict[str, Any]:
 
 def export_config(integration: Integration) -> dict[str, Any]:
     """The config for a board file: secrets become environment references."""
+    if integration.kind not in REGISTRY:
+        return {}
     config = dict(integration.config or {})
     for f in _fields(integration.kind):
         if f.secret and config.get(f.name):

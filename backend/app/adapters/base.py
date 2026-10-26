@@ -1067,8 +1067,10 @@ class AdapterError(Exception):
 
 
 class AuthFailed(AdapterError):
-    def __init__(self, message: str = "The service rejected the credentials.") -> None:
+    def __init__(self, message: str = "The service rejected the credentials.", *, status: int | None = None) -> None:
         super().__init__(message, code="auth_failed", hint="Check the API key or the password.")
+        #: The HTTP status that was refused (401 or 403), when it is known.
+        self.status = status
 
 
 class Unreachable(AdapterError):
@@ -1593,7 +1595,7 @@ class Context:
         except httpx.HTTPError as error:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
         if auth_errors and response.status_code in (401, 403):
-            raise AuthFailed()
+            raise AuthFailed(status=response.status_code)
         _refuse_a_giant_answer(url, response)
         if key:
             self._remember(key, time.monotonic() + cache_seconds, response)
@@ -1752,6 +1754,8 @@ class Adapter:
     label: str = ""
     category: str = "other"
     description: str = ""
+    #: True for a kind somebody described in nexdeck itself (``custom:<short>``, KARTEN-3).
+    custom: bool = False
     #: Icon name in dashboard-icons, e.g. ``radarr``.
     icon: str = ""
     #: True until someone confirms the adapter against a live instance.
@@ -1818,6 +1822,7 @@ class Adapter:
     def to_dict(self) -> dict[str, Any]:
         return {
             "kind": self.kind,
+            "custom": self.custom,
             "label": self.label,
             "category": self.category,
             "description": self.description,
@@ -2041,6 +2046,30 @@ class Adapter:
     async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
         """Sign in again, by the kind's own sign-in, on the client of :meth:`raw_client`."""
         raise NotImplementedError
+
+    #: True for a kind that signs in by itself with a session of its own (an own connection of the session type): then
+    #: :func:`.rawread.ask` leaves renewing the session to :meth:`raw_renew` and never runs the kind's connection test.
+    raw_session: bool = False
+
+    async def raw_signed(
+        self, config: dict[str, Any], ctx: Context
+    ) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:
+        """Headers, parameters and login that sign a request, when the kind knows them from its configuration alone."""
+        return None
+
+    async def raw_renew(
+        self,
+        config: dict[str, Any],
+        ctx: Context,
+        refused: tuple[dict[str, str], dict[str, Any], tuple[str, str] | None],
+        *,
+        again: bool,
+    ) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:
+        """What signs the request after the service said 401 to ``refused``; see :attr:`raw_session`."""
+        return None
+
+    def raw_accepted(self, ctx: Context) -> None:
+        """The service answered a signed request of a card; a kind with a session of its own notes that it works."""
 
     async def raw_signed_headers(self, config: dict[str, Any], ctx: Context) -> dict[str, str] | None:
         """Headers that sign a request when they have to be fetched first (a token from another host); ``None`` for most."""

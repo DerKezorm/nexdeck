@@ -9,7 +9,7 @@ from fastapi import APIRouter, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..adapters import all_adapters, get_adapter
+from ..adapters import REGISTRY, adapter_or_missing, all_adapters, get_adapter
 from ..adapters.base import Adapter, AdapterError, Context, hand_back
 from ..config import get_settings
 from ..crypto import SecretUnreadable
@@ -49,9 +49,10 @@ def adapters(user: CurrentUser) -> list[dict]:
 
 def _public(db: DbSession, integration: Integration) -> dict:
     widgets = db.scalar(select(func.count(Widget.id)).where(Widget.integration_id == integration.id)) or 0
-    adapter = get_adapter(integration.kind)
+    adapter = adapter_or_missing(integration.kind)
     return {
         "id": integration.id, "kind": integration.kind, "label": adapter.label, "icon": adapter.icon, "beta": adapter.beta,
+        "missing": integration.kind not in REGISTRY,
         "name": integration.name, "config": public_config(integration), "enabled": integration.enabled, "demo": integration.demo,
         "last_ok_at": integration.last_ok_at, "last_error": integration.last_error, "widget_count": int(widgets),
         "admin_only": integration.admin_only, "muted": integration.muted,
@@ -81,7 +82,7 @@ async def connection_versions(user: AdminUser, db: DbSession) -> dict[str, dict]
     connections = [
         (one.id, one.kind)
         for one in db.scalars(select(Integration).where(Integration.enabled.is_(True), Integration.demo.is_(False)))
-        if get_adapter(one.kind).needs_integration and one.kind != "core"
+        if one.kind in REGISTRY and REGISTRY[one.kind].needs_integration and one.kind != "core"
     ]
     from .system import update_check_on
 
@@ -351,7 +352,7 @@ async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dic
         raise error("not_found", "There is no such integration.", status.HTTP_404_NOT_FOUND)
     if integration.demo:
         return {"ok": True, "message": "Demo mode: nothing is contacted."}
-    adapter = get_adapter(integration.kind)
+    adapter = adapter_or_missing(integration.kind)
     ctx = Context(collector.client, integration_id=integration.id, cache={})
     # ⚠️ The same answers as the test on the settings page. This route read the
     # stored config outside any ``try`` and caught adapter errors only, so an

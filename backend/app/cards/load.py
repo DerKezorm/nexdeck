@@ -142,15 +142,15 @@ def _walk(node: Node, path: Path, found: _Walk) -> None:
             _walk(child, (*path, index), found)
 
 
-def parse(text: str) -> tuple[dict[str, Any], dict[Path, int]]:
+def parse(text: str, limit: int = schema.MAX_DEFINITION) -> tuple[dict[str, Any], dict[Path, int]]:
     """The data of a text and the line of every place in it. Raises ``CardInvalid``."""
-    if len(text) > schema.MAX_DEFINITION:
+    if len(text) > limit:
         raise CardInvalid(
             [
                 Problem(
                     "card_definition_too_long",
-                    f"The definition with its demo answers is {len(text)} characters long, the limit is {schema.MAX_DEFINITION}.",
-                    params={"length": len(text), "limit": schema.MAX_DEFINITION},
+                    f"The definition is {len(text)} characters long, the limit is {limit}.",
+                    params={"length": len(text), "limit": limit},
                 )
             ]
         )

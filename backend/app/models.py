@@ -687,6 +687,25 @@ class CardRecord(Base):
     updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
+class OwnIntegration(Base):
+    """A kind of connection somebody described (KARTEN-3): the text as written and the checked definition beside it.
+
+    The short name is what the kind is called, ``custom:<short>``, and connections refer to it by that name: deleting
+    the row leaves them in the database, and saving the same short name again brings them back.
+    """
+
+    __tablename__ = "own_integrations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    short: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    yaml_source: Mapped[str] = mapped_column(Text)
+    definition: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
 class Conversation(Base):
     """A conversation with the assistant (roadmap M3), kept 30 days after its last turn."""
 

@@ -172,7 +172,7 @@ def sources() -> list[dict[str, Any]]:
     from ..adapters import all_adapters
 
     return [
-        {"kind": one.kind, "label": one.label, "icon": one.icon, "category": one.category}
+        {"kind": one.kind, "label": one.label, "icon": one.icon, "category": one.category, "custom": one.custom}
         for one in all_adapters()
         if one.raw_access
     ]

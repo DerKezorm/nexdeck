@@ -1,0 +1,28 @@
+nexdeck: integration
+short: bookstack-own
+name: BookStack
+logo: bookstack
+description: Documentation in books, chapters and pages.
+category: other
+fields:
+  - name: token_id
+    type: text
+    label: Token ID
+    help: Profile > API Tokens > Create Token.
+    required: true
+  - name: token_secret
+    type: secret
+    label: Token secret
+    required: true
+auth:
+  type: header
+  header: Authorization
+  value: "Token {token_id}:{token_secret}"
+test: /api/books?count=1
+test_expects: json
+reads:
+  - path: /api/books?count=10
+    label: Books
+  - path: /api/pages?count=10&sort=-updated_at
+    label: Latest pages
+github: BookStackApp/BookStack

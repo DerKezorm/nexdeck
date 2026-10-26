@@ -23,11 +23,13 @@ def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("NEXDECK_HEALTH_INTERVAL_SECONDS", "5")
     monkeypatch.setenv("NEXDECK_LOG_LEVEL", "WARNING")
     from app import config, crypto, db
+    from app.adapters import forget_all_custom
     from app.services import collector as collector_module
     from app.services import login_guard, oidc_store
     from app.vendor.nexoidc import attempt as oidc_attempt
     from app.vendor.nexoidc import protocol as oidc_protocol
 
+    forget_all_custom()
     config.reset_settings_cache()
     db.reset_engine()
     crypto.forget_key()

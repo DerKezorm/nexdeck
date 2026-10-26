@@ -226,6 +226,9 @@ async def signed(adapter: Adapter, config: dict[str, Any], ctx: Context, *, agai
     in its test (Pi-hole) was signed in ten times. A test that failed is remembered for a short while, so a card that refreshes
     every ten seconds does not repeat it every ten seconds against a service that refuses.
     """
+    own = await adapter.raw_signed(config, ctx)
+    if own is not None:
+        return Sent(dict(own[0]), dict(own[1]), own[2])
     fetched = await adapter.raw_signed_headers(config, ctx)
     if fetched is not None:
         return Sent(dict(fetched))
@@ -332,10 +335,20 @@ async def ask(
             )
             if adapter.raw_expired(response):
                 raise AuthFailed()
+            adapter.raw_accepted(ctx)
             if attempt == 1:
                 ctx.cache.pop(CHECKED, None)  # the session really had run out: the next time may look again at once
             return response
-        except AuthFailed:
+        except AuthFailed as refusal:
+            if adapter.raw_session:
+                # ⚠️ An own connection with a session: only 401 means the ticket ran out. The adapter signs in again, once
+                # per request of a card (attempt 0); a second 401 after that is the end of it (KARTEN-3 EC-3).
+                if refusal.status == 401:
+                    renewed = await adapter.raw_renew(config, ctx, (sent.headers, sent.params, sent.auth), again=attempt == 1)
+                    if renewed is not None and attempt == 0:
+                        sent = Sent(dict(renewed[0]), dict(renewed[1]), renewed[2])
+                        continue
+                raise
             # ⚠️ A refusal is not an expired session. Only a kind with a session of its own renews it, by its own function,
             # and a refusal on a path its built-in cards do not need stays the error of this card.
             if attempt == 1 or _is_static(adapter) or (renewed := await renew(adapter, config, ctx, sent)) is None:

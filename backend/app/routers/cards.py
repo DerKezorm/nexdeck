@@ -174,6 +174,9 @@ def source_reads(kind: str, user: AdminUser) -> dict[str, Any]:
         raise HTTPException(status.HTTP_404_NOT_FOUND, {"code": "no_such_kind", "message": f"There is no kind {kind!r}.", "hint": ""}) from error
     if not adapter.raw_access:
         raise _failed(AdapterError(f"{adapter.label} cannot be read by a custom card.", code="no_raw_access"))
+    if adapter.custom:
+        # An own connection says itself what is worth asking (KARTEN-3): its own list, with the labels its author wrote.
+        return {"reads": [{"path": one.path, "label": one.label, "widgets": []} for one in adapter.definition.reads]}  # type: ignore[attr-defined]
     labels = {one.kind: one.label for one in adapter.widgets}
     return {"reads": [
         {"path": one["path"], "widgets": [{"kind": name, "label": labels[name]} for name in one["widgets"] if name in labels]}

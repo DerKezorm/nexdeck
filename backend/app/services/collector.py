@@ -459,13 +459,13 @@ class Collector:
 
     async def resolve_integration(self, integration_id: int) -> tuple[Any, dict[str, Any], Context]:
         """For widgets that combine several integrations, such as the calendar."""
-        from ..adapters import get_adapter
+        from ..adapters import adapter_or_missing
 
         with db_session() as db:
             integration = db.get(Integration, integration_id)
             if integration is None or not integration.enabled:
                 raise AdapterError(f"Integration {integration_id} is missing or disabled.", code="no_integration")
-            adapter = get_adapter(integration.kind)
+            adapter = adapter_or_missing(integration.kind)
             config = resolve_config(integration)
         ctx = Context(self.client, integration_id=integration_id, cache=self._caches.setdefault(integration_id, {}))
         return adapter, config, ctx

@@ -18,6 +18,7 @@ from starlette.staticfiles import StaticFiles
 
 from . import __version__
 from .adapters.base import close_relaxed_client
+from .cards import integration_store
 from .config import get_settings
 from .db import db_session, get_engine
 from .deps import DbSession
@@ -50,6 +51,7 @@ from .routers import (
     nexcrate,
     notices,
     oidc,
+    own_integrations,
     plex,
     push,
     search,
@@ -162,6 +164,7 @@ async def lifespan(app: FastAPI):
     oidc_store.sync_list()
     await nexoidc.warm()
     with db_session() as db:
+        integration_store.load_all(db)
         system.load_demo_flag(db)
         journal.apply_stored(db)
     provisioning.load_all()
@@ -225,7 +228,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, cards, maintenance, chronicle, assistant, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, own_integrations, apps, cards, maintenance, chronicle, assistant, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 
 

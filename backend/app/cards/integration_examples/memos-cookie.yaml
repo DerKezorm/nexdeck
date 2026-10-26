@@ -1,0 +1,27 @@
+nexdeck: integration
+short: memos-cookie
+name: Memos (cookie)
+logo: memos
+description: The same service, with the ticket kept in a cookie.
+category: other
+fields:
+  - name: username
+    type: text
+    label: User name
+    required: true
+  - name: password
+    type: secret
+    label: Password
+    required: true
+auth:
+  type: session
+  login: /api/v1/auth/signin
+  send: json
+  body: {username: "{username}", password: "{password}"}
+  ticket: {from: cookie, name: memos.access-token}
+  pass: {as: cookie}
+test: /api/v1/auth/status
+test_expects: json
+reads:
+  - path: /api/v1/memos?pageSize=10
+    label: Latest notes

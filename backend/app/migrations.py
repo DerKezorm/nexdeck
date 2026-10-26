@@ -253,6 +253,10 @@ def _card_editor_column(connection: Connection) -> None:
     _add_column(connection, "card_definitions", "updated_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
 
 
+def _own_integrations_table(connection: Connection) -> None:
+    Base.metadata.tables["own_integrations"].create(connection, checkfirst=True)
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -279,6 +283,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (23, "A card page can have a side bar", _page_side_column),
     (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
     (25, "A custom card knows who saved it last", _card_editor_column),
+    (26, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
 ]
 
 
