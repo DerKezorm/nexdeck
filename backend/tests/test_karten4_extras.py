@@ -310,3 +310,17 @@ def test_karten4_ac3_the_picker_of_the_update_card_offers_the_own_kinds_with_a_p
 
     assert "custom:wiki-x" in offered() and "custom:wiki-none" not in offered()
     assert "sonarr" in offered()
+
+
+@respx.mock
+def test_karten4_the_forms_the_screens_read_are_the_ones_the_server_sends(admin: TestClient) -> None:  # noqa: F811
+    """What the integrations screen relies on: ``custom`` and ``icon`` in the adapter list, ``ok message hint code`` in a red test."""
+    own(admin, WIKI)
+    adapter = next(one for one in admin.get("/api/v1/adapters").json() if one["kind"] == "custom:wiki-x")
+    assert adapter["custom"] is True and adapter["icon"] == "wikijs" and adapter["label"] == "Wiki.js"
+    respx.get(f"{BASE}/api/v1/status").mock(return_value=httpx.Response(401, json={}))
+    red = admin.post("/api/v1/integrations/test", json={"kind": "custom:wiki-x", "config": {"url": BASE, "token": "k-0123456789"}}, headers=CSRF).json()
+    assert set(red) == {"ok", "message", "hint", "code"} and red["ok"] is False and red["code"] == "auth_failed"
+    respx.get(f"{BASE}/api/v1/status").mock(return_value=httpx.Response(200, json={}))
+    green = admin.post("/api/v1/integrations/test", json={"kind": "custom:wiki-x", "config": {"url": BASE, "token": "k-0123456789"}}, headers=CSRF).json()
+    assert green["ok"] is True and green["message"]
