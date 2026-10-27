@@ -13,10 +13,13 @@ import json
 import math
 import re
 from typing import Annotated, Any, Literal
+from urllib.parse import quote
 
 from pydantic import BeforeValidator, Field, StringConstraints, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
+from ..adapters.base import AdapterError
+from .formula import compile_ref
 from .schema import LABEL_MAX, Label, Part, _local_text, stays_underneath
 
 #: The most buttons a card has (KARTEN-8 AC-10).
@@ -305,3 +308,83 @@ def offered_values(button: Button, find: Any) -> dict[str, Any] | None:
         return None
     return values
 
+
+# -- pressing: the request a button makes --------------------------------------------
+
+#: The longest text of the service's answer a button shows (KARTEN-8 AC-9).
+MAX_ANSWER_TEXT = 200
+
+
+def no_longer_offered() -> AdapterError:
+    """The row, the value or the button is gone since the card showed it (EC-3), or the values are not the offered ones (AC-8)."""
+    return AdapterError(
+        "No longer offered. The card changed since this button was shown.",
+        code="no_longer_offered",
+        hint="The card is reloaded; press the button again if it is still there.",
+    )
+
+
+def bad_value() -> AdapterError:
+    return AdapterError("A value of this button cannot go into an address.", code="bad_value")
+
+
+def press(button: Button, params: dict[str, Any]) -> tuple[str, Any]:
+    """The path and the body of a press, from the definition as it is now and the values that were offered.
+
+    ⚠️ Never text glued into JSON (EC-8): the body is built as an object and serialised once, when it is sent. A body
+    value that is exactly one placeholder takes the value with its type; one with text around it takes the value as
+    text. A value in the path is checked once more (EC-1) and written with every character outside letters, digits and
+    ``-._~`` percent-encoded, so it is always one plain piece of the path.
+    """
+
+    def value_of(place: str) -> Any:
+        blank = ask_name(place)
+        key = ASK_PREFIX + blank if blank is not None else place
+        if key not in params:
+            # The definition asks for something the card did not offer: it was changed since.
+            raise no_longer_offered()
+        return params[key]
+
+    def into_the_path(found: re.Match[str]) -> str:
+        value = value_of(found.group(1))
+        if not isinstance(value, PLAIN) or not fits_an_address(value):
+            raise bad_value()
+        return quote(as_text(value), safe="-._~")
+
+    path = BRACES.sub(into_the_path, button.path)
+    if not stays_underneath(path):
+        raise bad_value()
+
+    def filled(node: Any) -> Any:
+        if isinstance(node, dict):
+            return {key: filled(child) for key, child in node.items()}
+        if isinstance(node, list):
+            return [filled(child) for child in node]
+        if not isinstance(node, str):
+            return node
+        whole = BRACES.fullmatch(node)
+        if whole is not None:
+            return value_of(whole.group(1))
+        return BRACES.sub(lambda found: as_text(value_of(found.group(1))), node)
+
+    body = filled(button.body) if button.body is not None else None
+    if body is not None and button.send == "form":
+        body = {key: as_text(value) for key, value in body.items()}
+    return path, body
+
+
+def answer_text(button: Button, answer: Any) -> str:
+    """What a pressed button says: the value the author named in the answer, cut to 200 characters, or ``Done`` (AC-9).
+
+    The service's own words appear only when the definition names the field; never its error page, never anything else.
+    """
+    if button.answer is None or answer is None:
+        return "Done"
+    found = compile_ref(button.answer).search(answer)
+    if found is None:
+        return "Done"
+    text = as_text(found) if isinstance(found, PLAIN) else json.dumps(found, ensure_ascii=False)
+    text = " ".join("".join(char if char.isprintable() else " " for char in text).split())
+    if not text:
+        return "Done"
+    return text if len(text) <= MAX_ANSWER_TEXT else text[: MAX_ANSWER_TEXT - 1] + "…"

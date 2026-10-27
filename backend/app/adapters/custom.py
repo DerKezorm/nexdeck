@@ -20,6 +20,7 @@ from .base import (
     Adapter,
     AdapterError,
     Ask,
+    AuthFailed,
     Choice,
     Context,
     Field,
@@ -242,6 +243,42 @@ class CustomAdapter(Adapter):
         # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
         result = await asyncio.to_thread(pipeline.run, definition, answers)
         return present(definition, result, base=real.raw_base(real_config))
+
+    async def action(
+        self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context
+    ) -> str:
+        """One press of a button of the card: one request to the card's connection (KARTEN-8, decisions 3, 4, 7, 8).
+
+        The guard of the collector let through only a button the card offered, with exactly the values it offered. The
+        definition is read again here: a button removed since is no longer offered, a path changed since is the new
+        path with the values that were offered.
+        """
+        if not action_id.startswith(buttons.ACTION_PREFIX):
+            raise AdapterError("This widget has no actions.", code="no_such_action")
+        definition = definition_of(options)
+        button = next((one for one in definition.buttons if buttons.ACTION_PREFIX + one.id == action_id), None)
+        if button is None:
+            raise buttons.no_longer_offered()
+        real, real_config, real_ctx = await self._connection(definition, widget_kind, ctx)
+        path, body = buttons.press(button, params)
+        try:
+            response = await real.raw_act(
+                button.method, path, real_config, real_ctx,
+                json_body=body if button.send == "json" else None,
+                form=body if button.send == "form" else None,
+            )
+        finally:
+            # Whatever came back, the service may have changed: the next read asks again instead of answering from memory.
+            real_ctx.forget_answers()
+        if response.status_code in (401, 403):
+            raise AuthFailed(status=response.status_code)
+        if response.status_code >= 400:
+            raise AdapterError(f"The service answered HTTP {response.status_code}.", code="http_error")
+        try:
+            answer = response.json() if button.answer is not None and response.content else None
+        except (ValueError, RecursionError):
+            answer = None  # no JSON, or nested deeper than it can be read: nothing of it is shown
+        return buttons.answer_text(button, answer)
 
     async def _connection(self, definition: Any, widget_kind: str, ctx: Context) -> tuple[Adapter, dict[str, Any], Context]:
         """The connection the card reads through and its buttons act on, after the checks every read and press passes."""

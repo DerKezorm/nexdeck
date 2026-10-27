@@ -23,7 +23,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import parse_qsl, unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit
 
 import httpx
 
@@ -311,29 +311,123 @@ async def ask(
     cache_seconds: float = 0,
 ) -> httpx.Response:
     """One request of a card, signed the way the kind signs its own."""
+    return await _send(adapter, method, path, config, ctx, params=params, json_body=json_body, cache_seconds=cache_seconds)
+
+
+#: The most a button sends and the most of the answer it reads (KARTEN-8, decision 3).
+ACT_BODY_AT_MOST = 64 * 1024
+ACT_READ_AT_MOST = 256 * 1024
+#: Failures that come after the request went out: the service may have done it (KARTEN-8 EC-7).
+AFTER_SENDING = (httpx.ReadTimeout, httpx.ReadError, httpx.RemoteProtocolError)
+NO_ANSWER = "No answer. It may have run; check the service."
+
+
+async def act(
+    adapter: Adapter,
+    method: str,
+    path: str,
+    config: dict[str, Any],
+    ctx: Context,
+    *,
+    json_body: Any = None,
+    form: dict[str, str] | None = None,
+) -> httpx.Response:
+    """The one request of a button of a custom card, signed exactly like the reads of the card (KARTEN-8, decision 3).
+
+    ⚠️ The sister of :func:`ask` and the only way a card writes. The same signing, the same renewal after a 401, only to
+    the address of the connection and never on through a redirect: a 3xx is an error, whatever it names. At most 64 KB go
+    out and 256 KB of the answer are read. A connection that breaks after the request left is "no answer", never success
+    or failure: the service may have done it.
+    """
+    from ..cards.schema import stays_underneath
+
+    if not stays_underneath(path):
+        raise AdapterError("The path of a button stays underneath the connection's address.", code="bad_path")
+    size = len(json.dumps(json_body, ensure_ascii=False).encode()) if json_body is not None else len(urlencode(form or {}).encode())
+    if size > ACT_BODY_AT_MOST:
+        raise AdapterError(
+            f"What this button sends is larger than {ACT_BODY_AT_MOST // 1024} KB.", code="body_too_large",
+            hint="The values of the data that go into the body are too long.",
+        )
+    try:
+        response = await _send(adapter, method, path, config, ctx, json_body=json_body, data=form, max_bytes=ACT_READ_AT_MOST, acting=True)
+    except AdapterError as error:
+        if error.code == "redirect_refused":
+            # The client stops a redirect to another place on its own; to the one who pressed it is the same refusal.
+            raise _redirected() from error
+        if error.code == "answer_too_large":
+            raise AdapterError(
+                f"The service answered with more than {ACT_READ_AT_MOST // 1024} KB, which nexdeck did not read. It may have run; check the service.",
+                code="answer_too_large",
+            ) from error
+        raise
+    if 300 <= response.status_code < 400:
+        raise _redirected()
+    return response
+
+
+def _redirected() -> AdapterError:
+    return AdapterError(
+        "The service answered with a redirect; nexdeck does not follow it.", code="redirected",
+        hint="Use the address the redirect leads to as the connection's address.",
+    )
+
+
+def _no_answer(error: AdapterError) -> AdapterError:
+    """``no_answer`` for a failure after the request went out; a failure before it (refused, no connection) stays what it is."""
+    if isinstance(error, Unreachable) and isinstance(error.__cause__, AFTER_SENDING):
+        failure = AdapterError(NO_ANSWER, code="no_answer", hint="The connection broke after the request was sent.")
+        failure.__cause__ = error.__cause__
+        return failure
+    return error
+
+
+async def _send(
+    adapter: Adapter,
+    method: str,
+    path: str,
+    config: dict[str, Any],
+    ctx: Context,
+    *,
+    params: dict[str, Any] | None = None,
+    json_body: Any = None,
+    data: Any = None,
+    cache_seconds: float = 0,
+    max_bytes: int = READ_AT_MOST,
+    acting: bool = False,
+) -> httpx.Response:
+    """A request of a card or of a button: signed, renewed after a refusal the way the kind does it, never redirected."""
     from .jsonapi import join_path
 
     url = join_path(adapter.raw_base(config), path)
     held = adapter.raw_client(config, ctx)
     if held is not None:
-        return await _through_the_clients_own_cookies(adapter, held, url, config, ctx, params)
+        return await _through_the_clients_own_cookies(
+            adapter, held, url, config, ctx, params, method=method, json_body=json_body, data=data, max_bytes=max_bytes, acting=acting,
+        )
     sent = await signed(adapter, config, ctx)
     for attempt in (0, 1):
         try:
             # ⚠️ Merged into the address here: httpx replaces the query of an address when ``params`` is given, and the
             # card's own question (``?api=...&method=...``) is the point of the request.
             more = {**sent.params, **(params or {})}
-            response = await ctx.request(
-                method.upper(),
-                str(httpx.URL(url).copy_merge_params(more)) if more else url,
-                headers=dict(sent.headers) or None,
-                json_body=json_body,
-                verify=adapter.raw_verify(config),
-                auth=sent.auth,
-                cache_seconds=cache_seconds,
-                follow_redirects=False,
-                max_bytes=READ_AT_MOST,
-            )
+            try:
+                response = await ctx.request(
+                    method.upper(),
+                    str(httpx.URL(url).copy_merge_params(more)) if more else url,
+                    headers=_headers_for(sent.headers, acting) or None,
+                    json_body=json_body,
+                    data=data,
+                    verify=adapter.raw_verify(config),
+                    auth=sent.auth,
+                    cache_seconds=cache_seconds,
+                    follow_redirects=False,
+                    max_bytes=max_bytes,
+                )
+            except Unreachable as error:
+                if not acting:
+                    raise
+                raise _no_answer(error) from error.__cause__
             if adapter.raw_expired(response):
                 raise AuthFailed()
             adapter.raw_accepted(ctx)
@@ -358,24 +452,45 @@ async def ask(
     raise AdapterError("The service did not accept the sign-in.", code="auth_failed")  # pragma: no cover
 
 
+def _headers_for(headers: dict[str, str], acting: bool) -> dict[str, str]:
+    """What signs the request. A button's body says itself what it is: a header the kind sends for its own JSON does not go."""
+    return {name: value for name, value in headers.items() if not acting or name.lower() not in NOT_COPIED}
+
+
 async def _through_the_clients_own_cookies(
-    adapter: Adapter, client: httpx.AsyncClient, url: str, config: dict[str, Any], ctx: Context, params: dict[str, Any] | None
+    adapter: Adapter,
+    client: httpx.AsyncClient,
+    url: str,
+    config: dict[str, Any],
+    ctx: Context,
+    params: dict[str, Any] | None,
+    *,
+    method: str = "GET",
+    json_body: Any = None,
+    data: Any = None,
+    max_bytes: int = READ_AT_MOST,
+    acting: bool = False,
 ) -> httpx.Response:
     """A kind that keeps the cookie of its sign-in in a client of its own (qBittorrent, UniFi): the card uses that client.
 
     ⚠️ The same client the kind's cards use, so the session is theirs. When the service says 401 or 403 the kind's own
-    function looks at the session (:func:`renew`) and the card asks once more only if that was due.
+    function looks at the session (:func:`renew`) and the card asks once more only if that was due. A button goes the same way.
     """
     guard_outbound(url)
     for attempt in (0, 1):
         try:
             response = await read_at_most(
-                client, "GET", url, READ_AT_MOST, headers=adapter.raw_headers(config) or None, params=params, follow_redirects=False,
+                client, method.upper(), url, max_bytes, headers=_headers_for(adapter.raw_headers(config), acting) or None,
+                params=params, json=json_body, data=data, follow_redirects=False,
             )
         except httpx.TimeoutException as error:
-            raise Unreachable("The service did not answer in time.") from error
+            failure: AdapterError = Unreachable("The service did not answer in time.")
+            failure.__cause__ = error
+            raise (_no_answer(failure) if acting else failure) from error
         except httpx.HTTPError as error:
-            raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
+            failure = Unreachable(f"The service could not be reached: {error.__class__.__name__}.")
+            failure.__cause__ = error
+            raise (_no_answer(failure) if acting else failure) from error
         if response.status_code in (401, 403) and attempt == 0 and await renew(adapter, config, ctx, None) is not None:
             continue
         _refuse_a_giant_answer(url, response)

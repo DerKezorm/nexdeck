@@ -2164,6 +2164,34 @@ class Adapter:
         rawread.refuse_a_command(self, path)
         return await rawread.ask(self, method, path, config, ctx, params=params, json_body=json_body, cache_seconds=cache_seconds)
 
+    async def raw_act(
+        self,
+        method: str,
+        path: str,
+        config: dict[str, Any],
+        ctx: Context,
+        *,
+        json_body: Any = None,
+        form: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """The one request a button of a custom card makes, signed the way the card's reads are (KARTEN-8).
+
+        ⚠️ The only way a custom card changes something. POST, PUT, PATCH and DELETE, nothing else: a GET goes through
+        :meth:`raw_request` with its guards and no button has one. No word is barred, the button is the wanted effect,
+        but a kind a card cannot read has no buttons either. A redirect is never followed.
+        """
+        if not self.raw_access:
+            raise AdapterError(f"{self.label} cannot be used by a custom card.", code="no_raw_access", hint="Pick a connection of another kind.")
+        if method.upper() not in ACT_METHODS:
+            raise AdapterError("A button changes something: it sends POST, PUT, PATCH or DELETE.", code="method_refused")
+        from . import rawread
+
+        return await rawread.act(self, method.upper(), path, config, ctx, json_body=json_body, form=form)
+
+
+#: What a button of a custom card may send (:meth:`Adapter.raw_act`).
+ACT_METHODS = ("POST", "PUT", "PATCH", "DELETE")
+
 
 async def hand_back(adapter: Adapter, config: dict[str, Any], ctx: Context) -> None:
     """Let an adapter log out of whatever ``ctx`` holds, briefly, and never fail what it follows.

@@ -35,6 +35,7 @@ from ..adapters.base import (
     outbound_client,
     shape_for_display,
 )
+from ..cards import buttons
 from ..config import get_settings
 from ..crypto import SecretUnreadable
 from ..db import db_session
@@ -669,7 +670,12 @@ class Collector:
         the ones that arrived.
         """
         offered = self._offered(live.get(widget_id))
+        # A button of a custom card that is not on screen any more was there a moment ago: its row went, or its values
+        # changed (KARTEN-8 EC-3, AC-8). The built-in cards keep their own words.
+        button = action_id.startswith(buttons.ACTION_PREFIX)
         if not offered:
+            if button:
+                raise buttons.no_longer_offered()
             raise AdapterError("This card is not offering any action right now.", code="no_such_action")
         given = dict(params or {})
         for offered_id, fixed, asks in offered:
@@ -688,6 +694,8 @@ class Collector:
                 continue
             return {**rest, **{one.name: fill_in(one, given.get(one.name)) for one in asks}}
         logger.warning("Widget %s was asked for the action %r, which it did not offer.", widget_id, action_id)
+        if button:
+            raise buttons.no_longer_offered()
         raise AdapterError("This card is not offering that action.", code="no_such_action")
 
     async def run_action(
@@ -724,6 +732,9 @@ class Collector:
         except AdapterError as error:
             ok = False
             message = error.message
+            # A button of a custom card says why in its own code (no_answer, auth_failed, bad_value ...); the built-in cards
+            # answer with action_failed as they always did.
+            code = error.code if action_id.startswith(buttons.ACTION_PREFIX) else "action_failed"
         with db_session() as db:
             db.add(
                 ActionLog(
@@ -732,7 +743,7 @@ class Collector:
                 )
             )
         if not ok:
-            raise AdapterError(message, code="action_failed")
+            raise AdapterError(message, code=code)
         # Show the effect right away instead of waiting for the next interval.
         spawn(lambda: self.refresh(widget_id), name=f"refresh-{widget_id}")
         return message
