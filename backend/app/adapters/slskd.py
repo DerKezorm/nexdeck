@@ -251,7 +251,11 @@ class SlskdAdapter(Adapter):
         up = [file for file in _files(uploads) if _kind(file) == "active"]
         down_speed = sum(_number(file.get("averageSpeed")) for file in down)
         up_speed = sum(_number(file.get("averageSpeed")) for file in up)
+        down_rate, up_rate = round(down_speed / 1024 / 1024, 2), round(up_speed / 1024 / 1024, 2)
+        # The chips under a drawing of in and out find their numbers by these metrics.
         secondary = [
+            {"label": "Download", "metric": "download", "value": down_rate, "unit": "MB/s"},
+            {"label": "Upload", "metric": "upload", "value": up_rate, "unit": "MB/s"},
             {"label": "Downloading", "value": len(down)},
             {"label": "Uploading", "value": len(up)},
             {"label": "Shared files", "value": int(_number(shares.get("files")))},
@@ -267,7 +271,7 @@ class SlskdAdapter(Adapter):
             status=status,
             primary={"label": "Soulseek", "value": word},
             secondary=secondary,
-            metrics={"download": round(down_speed / 1024 / 1024, 2), "upload": round(up_speed / 1024 / 1024, 2)},
+            metrics={"download": down_rate, "upload": up_rate},
             link=link,
         )
 

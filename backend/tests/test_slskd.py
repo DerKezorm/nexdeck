@@ -72,7 +72,9 @@ async def test_the_status_card_says_connected_and_what_is_shared_and_on_the_move
     route = respx.get(f"{BASE}/transfers/uploads").mock(return_value=httpx.Response(200, json=[]))
     data = await ADAPTER.fetch("status", KEY, {}, ctx)
     assert (data.status, data.primary) == ("ok", {"label": "Soulseek", "value": "Connected"})
-    assert data.secondary == [{"label": "Downloading", "value": 2}, {"label": "Uploading", "value": 0},
+    assert data.secondary == [{"label": "Download", "metric": "download", "value": 3.0, "unit": "MB/s"},
+                              {"label": "Upload", "metric": "upload", "value": 0.0, "unit": "MB/s"},
+                              {"label": "Downloading", "value": 2}, {"label": "Uploading", "value": 0},
                               {"label": "Shared files", "value": 14230}, {"label": "Shared folders", "value": 1480}]
     assert data.metrics == {"download": 3.0, "upload": 0.0}
     assert route.calls.last.request.headers["X-API-Key"] == "slskd-example-key"

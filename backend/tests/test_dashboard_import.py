@@ -66,7 +66,7 @@ def test_a_link_becomes_a_tile_and_an_unknown_widget_says_so() -> None:
     assert cards["Router"]["options"] == {"description": "The gateway", "check": True}
     assert cards["Router"]["icon"] == "lucide:link", "an mdi- icon is Homepage's own and means nothing here"
     assert cards["Something odd"]["kind"] == "core.app"
-    assert any("moonraker" in note for note in plan["notes"])
+    assert any("gamedig" in note for note in plan["notes"])
 
 
 def test_a_group_inside_a_group_joins_its_page_and_a_custom_api_keeps_its_field() -> None:
