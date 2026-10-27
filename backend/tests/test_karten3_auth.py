@@ -655,3 +655,23 @@ def test_karten3_ac11_a_kind_deleted_and_described_again_starts_without_the_paus
     service.login_status = 200
     assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
     assert asked(admin, number).status_code == 200
+
+
+@respx.mock
+def test_karten3_ac6_the_sign_in_itself_refuses_a_path_that_acts_before_it_posts() -> None:
+    from app.cards.integration import load_integration
+
+    loaded = load_integration(MEMOS)
+    adapter = defined.DefinedAdapter(loaded.definition, MEMOS)
+    adapter.definition.auth.login = "/api/v1/system/restart"  # a description that got past the check some other way
+    posted = respx.post(f"{BASE}/api/v1/system/restart").mock(return_value=httpx.Response(200, json={"accessToken": "T"}))
+
+    async def run() -> str:
+        async with httpx.AsyncClient() as client:
+            try:
+                await adapter.raw_request("GET", "/api/v1/memos", {"url": BASE, "username": "ann", "password": PASSWORD}, Context(client, cache={}))
+            except AdapterError as failure:
+                return failure.code
+            return "sent"
+
+    assert asyncio.run(run()) == "command_refused" and not posted.called

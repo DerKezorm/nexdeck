@@ -130,6 +130,8 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
         except AdapterError as failure:
             add("card_integration_path_acts", failure.message, path)
 
+    if auth.type == "session" and auth.login and stays_underneath(auth.login):
+        reading(("auth", "login"), auth.login)  # the one POST of a connection: no path that acts, whoever wrote the description
     reading(("test",), definition.test)
     reading(("check",), definition.check)
     if definition.version is not None:

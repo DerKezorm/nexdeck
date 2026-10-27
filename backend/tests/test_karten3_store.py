@@ -386,3 +386,12 @@ def test_karten3_ac7_a_secret_is_never_in_the_export_of_a_board_only_a_reference
     exported = admin.get(f"/api/v1/boards/{slug}/export")
     assert exported.status_code == 200 and "s3cret" not in exported.text
     assert "${NEXDECK_CUSTOM_BOOKSTACK_OWN_" in exported.text and "_TOKEN_SECRET}" in exported.text
+
+
+def test_karten3_ac6_the_sign_in_path_is_refused_when_it_names_a_word_that_acts(admin: TestClient) -> None:  # noqa: F811
+    # The one POST of an own connection goes with the user name and the password: it must not reach a path that acts.
+    for login in ("/api/v1/system/restart", "/api/v1/users/delete", "/api/factory-reset"):
+        checked = admin.post(f"{API}/check", json={"yaml": changed(MEMOS, short="acting", **{"auth.login": login})}, headers=CSRF).json()
+        assert checked["ok"] is False and [one["code"] for one in checked["problems"]] == ["card_integration_path_acts"], login
+        assert checked["problems"][0]["path"].startswith("auth.login"), checked
+    assert admin.post(f"{API}/check", json={"yaml": MEMOS}, headers=CSRF).json()["ok"] is True

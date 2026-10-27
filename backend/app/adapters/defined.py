@@ -284,6 +284,9 @@ class DefinedAdapter(Adapter):
         ticket or with a web page. A service that cannot be reached or fails with a 5xx is not refusing anybody.
         """
         session = self.definition.auth.session()
+        from .rawread import refuse_a_command
+
+        refuse_a_command(self, session.login)
         url = join_path(self.raw_base(config), session.login)
         body = {name: self._fill(text, config) for name, text in session.body.items()}
         response = await ctx.request(
