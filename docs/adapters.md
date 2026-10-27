@@ -123,6 +123,7 @@ that one of twenty-one renderers draws.
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |
 | Jackett | Jackett overview (indexers set up, failing, public and private), indexers (failing ones first with the first line of the reason) | test an indexer | none; the admin password only when one is set in Jackett |
+| Ombi | requests (pending movie, show and album requests, newest first, with who asked), request counts (pending, approved, available, declined) | approve, decline | API key from Settings > Ombi Configuration; the counts answer without a key, so the connection test reads a request list |
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | NeutArr | NeutArr overview, hunted apps | | the API key from NeutArr's User page, sent as a header; NeutArr is the continuation of Huntarr |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |

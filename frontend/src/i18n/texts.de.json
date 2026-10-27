@@ -2060,7 +2060,10 @@
     "Jackett overview": "Jackett-Überblick",
     "Only the failing ones": "Nur die defekten",
     "Only when you set one under Jackett's Admin password. Leave it empty otherwise.": "Nur wenn du in Jackett unter Admin password eines gesetzt hast. Sonst leer lassen.",
-    "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Die Indexer, die Jackett eingerichtet hat, welche davon ausfallen und warum, und ein Test für jeden."
+    "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Die Indexer, die Jackett eingerichtet hat, welche davon ausfallen und warum, und ein Test für jeden.",
+    "Pending requests for movies, shows and albums with approve and decline, and the counts.": "Offene Anfragen für Filme, Serien und Alben mit Freigeben und Ablehnen, und die Zahlen.",
+    "Pending, approved, available and declined, in one number.": "Wartend, freigegeben, verfügbar und abgelehnt, in einer Zahl.",
+    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3284,6 +3287,9 @@
     "Test": "Testen",
     "Works": "Läuft",
     "No indexer fails.": "Kein Indexer fällt aus.",
-    "No indexer is set up.": "Kein Indexer eingerichtet."
+    "No indexer is set up.": "Kein Indexer eingerichtet.",
+    "Declined": "Abgelehnt",
+    "Album": "Album",
+    "No request waits.": "Keine Anfrage wartet."
   }
 }
