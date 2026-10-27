@@ -2,7 +2,7 @@
  * The calm card style keeps every card still: no tipping towards the
  * pointer, whatever the account says, and it is back in the other styles.
  */
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { beforeEach, vi } from 'vitest'
 
 import { DEMO_DATA, DEMO_VIEWS } from '../demo/board'
@@ -34,6 +34,15 @@ it('does not tip in the calm style, and does in glass', () => {
   useLook.setState({ cards: 'calm' })
   render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} />)
   expect(followed.at(-1)!()).toBe(false)
+})
+
+it('draws its title small and soft in the calm style', () => {
+  const { unmount } = render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} />)
+  expect(screen.getByRole('heading', { name: view.title })).not.toHaveClass('uppercase')
+  unmount()
+  useLook.setState({ cards: 'calm' })
+  render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} />)
+  expect(screen.getByRole('heading', { name: view.title })).toHaveClass('uppercase', 'text-faint')
 })
 
 it('marks the page for the calm style, so the sheet can draw it', () => {

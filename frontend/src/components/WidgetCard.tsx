@@ -198,9 +198,10 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
       onClick={clickable ? open : undefined}
     >
       {!bare && (
-        <header className="flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9">
-          <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={18} />
-          <h3 className="text-[13px] font-medium truncate flex-1 text-ink/90" title={disguise.free(widget.title)}>
+        // Calm: small capitals in the faint colour, a smaller logo, more room around them.
+        <header className={calm ? 'flex items-center gap-2 px-3.5 pt-3 pb-1.5' : 'flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9'}>
+          <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={calm ? 14 : 18} className={calm ? 'opacity-85' : ''} />
+          <h3 className={calm ? 'text-[11px] font-semibold uppercase tracking-[0.07em] truncate flex-1 text-faint' : 'text-[13px] font-medium truncate flex-1 text-ink/90'} title={disguise.free(widget.title)}>
             {disguise.free(widget.title)}
           </h3>
           {/* Why yellow or red, right on the card; the veil already says it for failures. */}
