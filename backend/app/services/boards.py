@@ -14,7 +14,7 @@ from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
 from ..deps import error, require_integration
 from ..models import Board, Integration, Page, User, Widget
-from . import grid, holders
+from . import app_keys, grid, holders
 from . import health as health_service
 from .integrations import export_config, store_config
 from .state import live
@@ -566,6 +566,17 @@ def _check_look(options: dict) -> None:
         raise error("bad_card_effect", "A card's colour shows as a frame, a tint or a fill.")
 
 
+#: Whether a card is left out of the phone's stack, and whether it comes back when it turns red.
+PHONE_SWITCHES = ("phone_hide", "phone_show_red")
+
+
+def _check_phone(options: dict) -> None:
+    """The two switches for the phone are switches: on, off or not set."""
+    for name in PHONE_SWITCHES:
+        if options.get(name) is not None and not isinstance(options[name], bool):
+            raise error("bad_phone", "Hiding a card on the phone is switched on or off, nothing else.")
+
+
 def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
     """Check every option that names a connection.
 
@@ -578,6 +589,7 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
         return
     _check_look(options)
     _check_held(options)
+    _check_phone(options)
     if kind == "core.app" and options.get("app_id") not in (None, ""):
         from ..models import App
 
@@ -728,6 +740,15 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
                 except HTTPException as refused:
                     detail = refused.detail if isinstance(refused.detail, dict) else {}
                     raise ImportError_(f"{where.capitalize()}: {detail.get('message', 'this option is not allowed')}") from refused
+            try:
+                app_keys.check_value(kind, options)
+            except HTTPException as refused:
+                detail = refused.detail if isinstance(refused.detail, dict) else {}
+                raise ImportError_(f"{where.capitalize()}: {detail.get('message', 'this key is not allowed')}") from refused
+    # A file is one board, and a key opens one tile of a board.
+    twice = app_keys.twice_in_file(pages or [])
+    if twice:
+        raise ImportError_(f"Key {twice} is given to two app tiles. Each key opens one tile of a board.")
 
 
 def _refuse_if_oversized(document: dict) -> None:

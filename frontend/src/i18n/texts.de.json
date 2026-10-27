@@ -2055,7 +2055,18 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Was in den letzten 24 Stunden passiert ist und was noch rot ist, von allen Boards des Besitzers dieses Boards.",
     "A backup is too old": "Eine Sicherung ist zu alt",
     "Something is full or reaches its red line soon": "Etwas ist bald voll oder erreicht seine rote Linie",
-    "The daily report": "Der Tagesbericht"
+    "The daily report": "Der Tagesbericht",
+    "Key": "Taste",
+    "Pressing this digit on the board opens the tile, as a click would. Each key opens one tile of the board; ? shows the keys on the tiles.": "Diese Ziffer öffnet auf dem Board die Kachel, wie ein Klick es täte. Jede Taste öffnet eine Kachel des Boards; ? zeigt die Tasten auf den Kacheln.",
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "9"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
