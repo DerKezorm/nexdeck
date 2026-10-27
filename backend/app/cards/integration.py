@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from ..adapters.base import AdapterError
 from . import credentials, load
 from . import integration_schema as sch
-from .schema import stays_underneath
+from .schema import spaces_are_the_only_fault, stays_underneath
 
 Path = load.Path
 Problem = load.Problem
@@ -107,7 +107,9 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
         if "{" in stripped or "}" in stripped:
             add("card_integration_placeholder_broken", "A brace stands alone: a placeholder is written {name}.", path)
     auth = definition.auth
-    if auth.type == "session" and auth.login and not stays_underneath(auth.login):
+    if auth.type == "session" and auth.login and spaces_are_the_only_fault(auth.login):
+        add("card_integration_path_space", "A path has no spaces: write each space as %20.", ("auth", "login"))
+    elif auth.type == "session" and auth.login and not stays_underneath(auth.login):
         add("card_integration_path", "A sign-in address is a path under the address of the connection and starts with a single /.", ("auth", "login"))
     if auth.type == "session" and auth.send == "form":
         for name, child in (auth.body or {}).items():
@@ -123,6 +125,9 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
 
     def reading(path: Path, text: str | None) -> None:
         if text is None:
+            return
+        if spaces_are_the_only_fault(text):
+            add("card_integration_path_space", "A path has no spaces: write each space as %20.", path)
             return
         if not stays_underneath(text):
             add("card_integration_path", "A path starts with a single /, names no host and climbs nowhere.", path)

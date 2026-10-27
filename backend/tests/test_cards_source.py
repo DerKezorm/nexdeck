@@ -559,3 +559,12 @@ async def test_karten6_a_card_whose_definition_became_another_form_says_so(db: S
     with pytest.raises(AdapterError) as failure:
         await fetch_card(RAW["sonarr"][0], widget="value", options={"card": "waiting"})
     assert failure.value.code == "form_changed" and not route.called
+
+
+@respx.mock
+async def test_karten2_a_request_with_a_space_in_its_path_is_told_to_write_it_as_percent_20() -> None:
+    sent = respx.get(url__regex=rf"{BASE}/.*").mock(return_value=httpx.Response(200, json={}))
+    forged = Request.model_construct(id="queue", path="/graphql?query=x y", every=None)
+    with pytest.raises(AdapterError) as failure:
+        await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), forged)
+    assert failure.value.code == "bad_path" and "%20" in (failure.value.hint or "") and not sent.called

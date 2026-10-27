@@ -438,3 +438,12 @@ def test_karten3_ac2_a_value_with_a_line_break_is_refused_when_a_connection_of_a
     changed_value = admin.patch(f"/api/v1/integrations/{number}", json={"config": bad}, headers=CSRF)
     assert changed_value.status_code == 400 and changed_value.json()["detail"]["code"] == "field_line_break"
     assert admin.patch(f"/api/v1/integrations/{number}", json={"config": {**good, "token_id": "abcd"}}, headers=CSRF).status_code == 200
+
+
+def test_karten3_ac1_a_space_in_a_path_of_a_description_is_told_to_be_written_as_percent_20(admin: TestClient) -> None:  # noqa: F811
+    for place in ("test", "check", "version.path", "reads.0.path", "auth.login"):
+        text = changed(MEMOS, short="spaced", version={"path": "/v", "at": "version"}, **{place: "/graphql?query=x y"})
+        checked = admin.post(f"{API}/check", json={"yaml": text}, headers=CSRF).json()
+        assert [one["code"] for one in checked["problems"]] == ["card_integration_path_space"], (place, checked)
+        assert checked["problems"][0]["line"]
+    assert admin.post(f"{API}/check", json={"yaml": changed(MEMOS, test="/graphql?query=x%20y")}, headers=CSRF).json()["ok"] is True

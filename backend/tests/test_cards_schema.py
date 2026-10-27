@@ -405,3 +405,11 @@ def test_review_5_what_a_text_comparison_looks_for_is_text_and_a_number_with_a_p
     assert filter_of("{field: n, op: '==', value: 7}").value == 7
     failure = refused(_UP_TO_FORM + "form: value\nvalue: {path: s, rules: [{op: ends_with, than: 1.50, then: bad}]}\n")
     assert codes(failure) == ["card_quote_it"] and failure.problems[0].path == "value.rules[0].than"
+
+
+def test_karten2_a_path_with_a_space_is_told_to_write_it_as_percent_20_and_one_with_a_space_and_another_fault_is_not() -> None:
+    problem = refused(changed("path: /api/v3/queue", 'path: "/graphql?query=x y"')).problems[0]
+    assert problem.code == "card_bad_path_space" and "%20" in problem.message
+    assert load.load_definition(changed("path: /api/v3/queue", "path: /graphql?query=x%20y")).definition
+    assert refused(changed("path: /api/v3/queue", 'path: "//example.com/x y"')).problems[0].code == "card_bad_path"
+    assert refused(changed("path: /api/v3/queue", 'path: "/a/../x y"')).problems[0].code == "card_bad_path"

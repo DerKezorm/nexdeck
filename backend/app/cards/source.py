@@ -13,7 +13,7 @@ import re
 from typing import Any
 
 from ..adapters.base import Adapter, AdapterError, AuthFailed, Context, path_segment
-from .schema import Request, every_seconds, stays_underneath
+from .schema import Request, every_seconds, spaces_are_the_only_fault, stays_underneath
 
 #: The most a card reads from one answer (KARTEN-2 AC-8).
 MAX_ANSWER_BYTES = 2 * 1024 * 1024
@@ -102,6 +102,8 @@ async def fetch_source(
     if method.upper() != "GET":
         raise AdapterError("A custom card only reads.", code="read_only", hint="Reading is a GET request.")
     path = fill_path(request.path, values)
+    if spaces_are_the_only_fault(path):
+        raise AdapterError("A path has no spaces.", code="bad_path", hint="Write each space as %20.")
     if not stays_underneath(path):
         raise AdapterError("The path of a card stays underneath the connection's address.", code="bad_path")
     response = await adapter.raw_request("GET", path, config, ctx, cache_seconds=cache_for(request))

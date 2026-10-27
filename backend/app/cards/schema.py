@@ -282,6 +282,11 @@ def stays_underneath(path: str) -> bool:
     return not any(segment.replace("%2e", ".") == ".." for segment in lowered.split("/"))
 
 
+def spaces_are_the_only_fault(path: str) -> bool:
+    """True when a path would stay underneath the address if its spaces were written ``%20``: then that is what to tell."""
+    return " " in path and stays_underneath(path.replace(" ", "%20"))
+
+
 class Request(Part):
     """One request to the service, always a GET underneath the address of the connection."""
 
@@ -296,6 +301,8 @@ class Request(Part):
     def _path_stays_underneath_the_connection(cls, path: str) -> str:
         # ⚠️ Same rule as the JSON API card (``join_path``): a path that names a host would send the connection's
         # credentials to a server of the author's choosing, and a card can come from the shop.
+        if spaces_are_the_only_fault(path):
+            raise PydanticCustomError("card_bad_path_space", "A path has no spaces: write each space as %20.")
         if not stays_underneath(path):
             raise PydanticCustomError(
                 "card_bad_path", "The path must start with a single / and name no host; it is always underneath the connection's address."
