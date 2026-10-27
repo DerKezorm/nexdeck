@@ -12,6 +12,7 @@ minutes, and the widget shows the last error instead of stale numbers.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import random
 import time
@@ -71,6 +72,17 @@ def _no_connection(adapter: Any, hint: str) -> AdapterError:
     if adapter.kind == "custom":
         return AdapterError("Connection missing. The connection of this card was deleted.", code="connection_missing", hint="Pick a connection in the card's settings.")
     return AdapterError("This widget needs a connection to a service.", code="no_integration", hint=hint)
+
+
+def _same_values(given: dict[str, Any], fixed: dict[str, Any], strict: bool) -> bool:
+    """Whether the values of a press are the offered ones.
+
+    ⚠️ For a button of a custom card the type counts: ``true`` and ``1.0`` are not the ``1`` that was offered, because
+    the value goes into a path or a body as it is written. The built-in cards keep Python's equality.
+    """
+    if not strict:
+        return given == fixed
+    return json.dumps(given, sort_keys=True, default=repr) == json.dumps(fixed, sort_keys=True, default=repr)
 
 
 class Collector:
@@ -682,7 +694,7 @@ class Collector:
             if offered_id != action_id:
                 continue
             if not asks:
-                if given == fixed:
+                if _same_values(given, fixed, button):
                     return given
                 continue
             # The blanks the card declared are the only parameters that may
@@ -690,7 +702,7 @@ class Collector:
             # adapter is handed it. Everything else still has to match.
             blanks = {one.name for one in asks}
             rest = {name: value for name, value in given.items() if name not in blanks}
-            if rest != {name: value for name, value in fixed.items() if name not in blanks}:
+            if not _same_values(rest, {name: value for name, value in fixed.items() if name not in blanks}, button):
                 continue
             return {**rest, **{one.name: fill_in(one, given.get(one.name)) for one in asks}}
         logger.warning("Widget %s was asked for the action %r, which it did not offer.", widget_id, action_id)

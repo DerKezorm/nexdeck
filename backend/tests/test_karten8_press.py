@@ -270,6 +270,19 @@ def test_karten8_ac8_values_the_card_did_not_offer_are_refused_and_nothing_leave
     assert everything.call_count == 0
 
 
+@pytest.mark.parametrize("given", [True, 1.0])
+@respx.mock
+def test_karten8_ac8_a_value_of_another_type_that_python_calls_equal_is_not_what_was_offered(stand: Stand, given: Any) -> None:
+    shown = stand.refresh(rows=[{"name": "One", "hash": 1, "progress": 1}])
+    assert shown["items"][0]["actions"][1]["params"] == {"hash": 1}
+    everything = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))
+    answer = stand.press("button:delete", {"hash": given})
+    assert answer.status_code == 400 and code_of(answer) == "no_longer_offered" and everything.call_count == 0
+    # the value as it was offered still goes out
+    respx.delete(f"{BASE}/api/v2/torrents/1").mock(return_value=httpx.Response(200))
+    assert stand.press("button:delete", {"hash": 1}).status_code == 200
+
+
 @respx.mock
 def test_karten8_ac8_a_button_the_card_never_had_is_refused(stand: Stand) -> None:
     stand.refresh()
