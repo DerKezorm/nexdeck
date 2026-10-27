@@ -1,0 +1,94 @@
+{
+ "methodResponses": [
+  [
+   "x:Domain/get",
+   {
+    "accountId": "b",
+    "list": [
+     {
+      "name": "example.com",
+      "enable": true,
+      "description": null,
+      "catchAllAddress": null,
+      "id": "b"
+     },
+     {
+      "name": "example.net",
+      "enable": true,
+      "description": "Second domain",
+      "catchAllAddress": null,
+      "id": "c"
+     }
+    ],
+    "notFound": []
+   },
+   "domains"
+  ],
+  [
+   "x:Account/query",
+   {
+    "accountId": "b",
+    "queryState": "n",
+    "canCalculateChanges": true,
+    "position": 0,
+    "ids": [
+     "e",
+     "d",
+     "c",
+     "b"
+    ],
+    "total": 4
+   },
+   "accountIds"
+  ],
+  [
+   "x:Account/get",
+   {
+    "accountId": "b",
+    "list": [
+     {
+      "name": "team",
+      "domainId": "b",
+      "quotas": {},
+      "@type": "Group",
+      "usedDiskQuota": 0,
+      "emailAddress": "team@example.com",
+      "id": "e"
+     },
+     {
+      "name": "bob",
+      "domainId": "b",
+      "quotas": {},
+      "@type": "User",
+      "usedDiskQuota": 0,
+      "emailAddress": "bob@example.com",
+      "id": "d"
+     },
+     {
+      "name": "alice",
+      "domainId": "b",
+      "quotas": {
+       "maxDiskQuota": 104857600
+      },
+      "@type": "User",
+      "usedDiskQuota": 3334,
+      "emailAddress": "alice@example.com",
+      "id": "c"
+     },
+     {
+      "name": "admin",
+      "domainId": "b",
+      "quotas": {},
+      "@type": "User",
+      "usedDiskQuota": 0,
+      "emailAddress": "admin@example.com",
+      "id": "b"
+     }
+    ],
+    "notFound": []
+   },
+   "accounts"
+  ]
+ ],
+ "sessionState": "1259fefa"
+}

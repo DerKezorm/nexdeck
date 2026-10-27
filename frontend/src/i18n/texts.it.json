@@ -2063,7 +2063,19 @@
     "The admin API, port 3903 unless you changed it, not the S3 port.": "L'API di amministrazione, porta 3903 se non l'hai cambiata, non la porta S3.",
     "What all buckets hold together, and the free space on the data disks.": "Quanto contengono tutti i bucket insieme e lo spazio libero sui dischi dati.",
     "Whether Garage is healthy, how many storage nodes are up, and a layout change that waits to be applied.": "Se Garage è in salute, quanti nodi di archiviazione sono attivi e se una modifica del layout attende di essere applicata.",
-    "admin_token in the [admin] section of garage.toml, or a token made with garage admin-token create.": "admin_token nella sezione [admin] di garage.toml, o un token creato con garage admin-token create."
+    "admin_token in the [admin] section of garage.toml, or a token made with garage admin-token create.": "admin_token nella sezione [admin] di garage.toml, o un token creato con garage admin-token create.",
+    "An API key of the administrator, starting with API_. It carries that account's rights.": "Una chiave API dell'amministratore, che inizia con API_. Porta i diritti di quell'account.",
+    "Create a key and copy it right away; Stalwart shows the secret once. It starts with API_.": "Crea una chiave e copiala subito; Stalwart mostra il segreto una sola volta. Inizia con API_.",
+    "Domains": "Domini",
+    "Every domain with the number of its accounts; a switched-off one turns the card yellow.": "Ogni dominio con il numero dei suoi account; uno disattivato rende la scheda gialla.",
+    "Every message waiting to leave, the stuck ones first, with the reason the remote server or the connection gave.": "Ogni messaggio in attesa di partire, quelli bloccati per primi, con il motivo indicato dal server remoto o dalla connessione.",
+    "Mail queue": "Coda della posta",
+    "Messages waiting in the queue and how many of them are failing, accounts and domains.": "Messaggi in coda e quanti di essi falliscono, più account e domini.",
+    "Needs Stalwart 1.0 or newer: older versions manage the server with a different interface.": "Richiede Stalwart 1.0 o successivo: le versioni precedenti gestiscono il server con un'altra interfaccia.",
+    "Sign in to Stalwart's web interface as the administrator and open the account's API keys.": "Accedi all'interfaccia web di Stalwart come amministratore e apri le chiavi API dell'account.",
+    "The address of the web interface; the management API answers on it at /jmap/.": "L'indirizzo dell'interfaccia web; l'API di gestione risponde su /jmap/.",
+    "The mail queue with the reason a message is stuck, accounts and domains of a Stalwart mail server.": "La coda della posta con il motivo per cui un messaggio è bloccato, più account e domini di un server di posta Stalwart.",
+    "Users and groups with the disk they use, the fullest first, red near a quota.": "Utenti e gruppi con lo spazio che usano, i più pieni per primi, in rosso vicino alla quota."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3291,6 +3303,10 @@
     "Storage nodes": "Nodi di archiviazione",
     "Stored": "Archiviato",
     "Unavailable": "Non disponibile",
-    "No role": "Senza ruolo"
+    "No role": "Senza ruolo",
+    "Catch-all": "Indirizzo catch-all",
+    "Delivered": "Consegnato",
+    "Retry now": "Riprova ora",
+    "Waiting for its turn": "In attesa del primo tentativo"
   }
 }

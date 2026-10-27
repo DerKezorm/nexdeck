@@ -173,6 +173,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) in flight$/, '$1 in Bearbeitung'],
     [/^(\d+) failed$/, '$1 fehlgeschlagen'],
     [/^Zone (\S+)$/, 'Zone $1'],
+    [/^(\d+) tries$/, '$1 Versuche'],
   ],
   es: spanish,
   fr: french,

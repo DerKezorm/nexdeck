@@ -1,0 +1,64 @@
+{
+ "methodResponses": [
+  [
+   "x:QueuedMessage/query",
+   {
+    "accountId": "b",
+    "queryState": "n",
+    "canCalculateChanges": true,
+    "position": 0,
+    "ids": [
+     "jltbn29kaaaa"
+    ],
+    "total": 1
+   },
+   "queueIds"
+  ],
+  [
+   "x:QueuedMessage/get",
+   {
+    "accountId": "b",
+    "list": [
+     {
+      "createdAt": "2026-10-27T17:58:41Z",
+      "nextRetry": "2026-10-27T18:01:16Z",
+      "returnPath": "alice@example.com",
+      "recipients": {
+       "nobody@example.net": {
+        "retryCount": 1,
+        "retryDue": "2026-10-27T18:01:16Z",
+        "notifyCount": 0,
+        "notifyDue": "2026-10-28T17:58:41Z",
+        "expires": {
+         "expiresAt": "2026-10-30T17:58:41Z",
+         "@type": "Ttl"
+        },
+        "queueName": "remote",
+        "status": {
+         "errorType": "connectionError",
+         "errorMessage": "I/O error: Connection timed out (os error 110)",
+         "errorCommand": null,
+         "responseHostname": "192.0.2.1.nip.io",
+         "responseCode": null,
+         "responseEnhanced": null,
+         "responseMessage": null,
+         "@type": "TemporaryFailure"
+        },
+        "flags": {},
+        "orcpt": null
+       }
+      },
+      "flags": {
+       "authenticated": true
+      },
+      "size": 80,
+      "id": "jltbn29kaaaa"
+     }
+    ],
+    "notFound": []
+   },
+   "queue"
+  ]
+ ],
+ "sessionState": "1259fefa"
+}

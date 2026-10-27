@@ -143,4 +143,5 @@ export const patterns: Pattern[] = [
   [/^(\d+) in flight$/, '$1 in corso'],
   [/^(\d+) failed$/, '$1 falliti'],
   [/^Zone (\S+)$/, 'Zona $1'],
+  [/^(\d+) tries$/, '$1 tentativi'],
 ]
