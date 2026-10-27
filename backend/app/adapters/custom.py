@@ -1,4 +1,4 @@
-"""Cards the administrator describes as data: one adapter, four forms.
+"""Cards the administrator describes as data: one adapter, five forms.
 
 A custom card is a definition (``cards/schema.py``) saved in the database. The widget carries the short name of the
 definition in its ``card`` option and sits on a connection of one of the kinds the definition names. ``fetch`` asks that
@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import asyncio
 import math
+from collections.abc import Iterator
 from typing import Any
+from urllib.parse import quote
 
-from ..cards import buttons, images, pipeline, source, store
+from ..cards import blocks, buttons, images, pipeline, source, store
 from ..db import db_session
 from .base import (
     Action,
@@ -185,8 +187,168 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[bu
     return item
 
 
-def present(definition: Any, result: pipeline.Result, *, base: str = "", pictures: bool = True) -> WidgetData:
-    """What the renderers read, made from the finished values of the pipeline (KARTEN-6), with the buttons (KARTEN-8)."""
+#: What a rule says, as the browser of a card of blocks knows it.
+BLOCK_STATUS = {"ok": "ok", "warn": "warn", "bad": "error"}
+
+
+def _block_value(shown: pipeline.Shown | None, fixed: Any = None) -> dict[str, Any] | None:
+    """One value of a block as it is drawn, ``None`` where there is nothing to show (KARTEN-7 EC-1).
+
+    A text the author wrote stands as English (or the first language written) and, written in several languages, carries
+    them all in ``local`` for the browser to pick from. A unit goes behind the text; a percentage already has its sign.
+    """
+    if shown is None:
+        if fixed is None or fixed == "":
+            return None
+        out: dict[str, Any] = {"text": plain(fixed)}
+        if isinstance(fixed, dict):
+            out["local"] = fixed
+        return out
+    if shown.value is None:
+        return None
+    text = shown.text
+    unit = plain(shown.unit)
+    if unit and shown.format != "percent":
+        text = f"{text} {unit}"
+    out = {"text": text}
+    number = _number(shown)
+    if number is not None:
+        out["number"] = number
+    if shown.status in BLOCK_STATUS:
+        out["status"] = BLOCK_STATUS[shown.status]
+    return out
+
+
+def _statuses(tree: list[dict[str, Any]]) -> Iterator[str]:
+    """The colours the rules of the values of a card of blocks came to, leaving out the rows of its lists."""
+    for node in tree:
+        shown = node.get("value")
+        if isinstance(shown, pipeline.Shown) and shown.status:
+            yield shown.status
+        if node["type"] in blocks.HOLDERS:
+            yield from _statuses(node["children"])
+
+
+def _metrics_of(tree: list[dict[str, Any]]) -> Iterator[tuple[str, float]]:
+    """The number of every sparkline: what the card records under ``b_<id>``."""
+    for node in tree:
+        if node["type"] == "sparkline":
+            number = _number(node["value"])
+            if number is not None:
+                yield node["metric"], float(number)
+        if node["type"] in blocks.HOLDERS:
+            yield from _metrics_of(node["children"])
+
+
+def _texts(nodes: list[dict[str, Any]]) -> Iterator[str]:
+    """The words of a row, first to last: the title its item carries."""
+    for node in nodes:
+        shown = node.get("value")
+        if isinstance(shown, pipeline.Shown) and shown.value is not None:
+            yield shown.text
+        if node["type"] in blocks.HOLDERS:
+            yield from _texts(node["children"])
+
+
+class _Blocks:
+    """The worked out blocks of a card as the browser draws them (``meta.blocks``), with the actions they offer."""
+
+    def __init__(self, definition: Any, base: str, pictures: bool, widget_id: int | None) -> None:
+        self.buttons = {one.id: one for one in definition.buttons}
+        self.base, self.pictures, self.widget_id = base, pictures, widget_id
+        #: The buttons on the card that a block draws; and the rows of the lists, as items with the buttons on them.
+        self.on_card: dict[str, Action] = {}
+        self.items: list[dict[str, Any]] = []
+
+    def picture(self, node: dict[str, Any]) -> str | None:
+        if not self.pictures or not node["link"]:
+            return None
+        art = images.reference(node["link"], self.base, named=node["named"])
+        if not art:
+            return None
+        # Where the browser asks for it: the image route of this card, which adds the connection's own credentials.
+        return f"/api/v1/widgets/{self.widget_id}/image?path={quote(art[6:], safe='')}" if self.widget_id is not None else art
+
+    def draw(self, nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [self.one(node) for node in nodes]
+
+    def one(self, node: dict[str, Any]) -> dict[str, Any]:
+        kind = node["type"]
+        out: dict[str, Any] = {"type": kind}
+        if node["id"] is not None:
+            out["id"] = node["id"]
+        if kind in blocks.HOLDERS:
+            out["gap"] = node["gap"]
+            if kind == "row":
+                out["align"], out["wrap"] = node["align"], node["wrap"]
+            out["children"] = self.draw(node["children"])
+        elif kind in ("text", "badge"):
+            out["value"] = _block_value(node["value"], node["fixed"])
+            out["color"] = node["color"]
+            if kind == "text":
+                out["size"], out["weight"] = node["size"], node["weight"]
+        elif kind == "value":
+            shown = node["value"]
+            if shown.label is not None:
+                out["label"] = shown.label
+            out.update(value=_block_value(shown), size=node["size"], color=node["color"])
+        elif kind == "symbol":
+            out.update(icon=node["icon"], color=node["color"], size=node["size"])
+        elif kind == "image":
+            out.update(src=self.picture(node), height=node["height"])
+        elif kind == "progress":
+            out.update(value=_block_value(node["value"]), max=node["max"], color=node["color"])
+        elif kind == "sparkline":
+            out.update(value=_block_value(node["value"]), metric=node["metric"])
+        elif kind == "list":
+            out["rows"] = [self.row(one) for one in node["rows"]]
+            if node["empty"] is not None:
+                out["empty"] = node["empty"]
+        elif kind == "button":
+            out["action"] = self.action(node)
+        return out
+
+    def action(self, node: dict[str, Any]) -> dict[str, Any] | None:
+        button = self.buttons.get(node["button"])
+        if button is None or node["values"] is None:
+            return None
+        made = _action(button, node["values"])
+        if button.where == "card":
+            self.on_card.setdefault(button.id, made)
+        return made.model_dump()
+
+    def row(self, row: dict[str, Any]) -> dict[str, Any]:
+        drawn = self.draw(row["blocks"])
+        offered = [_action(self.buttons[name], values).model_dump() for name, values in row["buttons"].items()]
+        # The row is an item as well: the guard of the collector knows the buttons on rows by the items of a card.
+        self.items.append({"title": next(iter(_texts(row["blocks"])), ""), **({"actions": offered} if offered else {})})
+        return {"blocks": drawn, **({"actions": offered} if offered else {})}
+
+
+def _present_blocks(definition: Any, result: pipeline.Result, *, base: str, pictures: bool, widget_id: int | None) -> WidgetData:
+    """A card of blocks: the tree to draw, the main value for the tile, the history of its sparklines (KARTEN-7)."""
+    drawn = _Blocks(definition, base, pictures, widget_id)
+    meta: dict[str, Any] = {"custom": True, "blocks": drawn.draw(result.tree)}
+    metrics: dict[str, float] = dict(_metrics_of(result.tree))
+    primary = None
+    if result.value is not None:
+        primary = _cell(result.value)
+        if isinstance(primary["value"], int | float) and not isinstance(primary["value"], bool):
+            metrics["value"] = float(primary["value"])
+    status = _worst(result.status, *_statuses(result.tree))
+    return WidgetData(status=status, primary=primary, metrics=metrics, items=drawn.items, meta=meta, actions=list(drawn.on_card.values()))
+
+
+def present(
+    definition: Any, result: pipeline.Result, *, base: str = "", pictures: bool = True, widget_id: int | None = None
+) -> WidgetData:
+    """What the renderers read, made from the finished values of the pipeline (KARTEN-6), with the buttons (KARTEN-8).
+
+    ``widget_id`` is the card the pictures of a card of blocks are asked of; without it (a preview) they keep the
+    address ``proxy:…`` for whoever knows where to ask.
+    """
+    if definition.form == "builder":
+        return _present_blocks(definition, result, base=base, pictures=pictures, widget_id=widget_id)
     meta: dict[str, Any] = {"custom": True}
     every = tuple(getattr(definition, "buttons", None) or ())
     actions = [_action(one, result.buttons[one.id]) for one in every if one.where == "card" and one.id in result.buttons]
@@ -230,6 +392,8 @@ class CustomAdapter(Adapter):
               default_size=(3, 3)),
         _kind("posters", "Custom pictures", "A wall of pictures with titles from a list in the answers of a connection.", "posters",
               default_size=(4, 3), min_size=(2, 2)),
+        _kind("builder", "Custom layout", "A card put together from blocks: rows, columns, text, values, bars, pictures, lists and buttons.", "builder",
+              default_size=(3, 3), min_size=(2, 2)),
     )
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
@@ -242,7 +406,7 @@ class CustomAdapter(Adapter):
         # ⚠️ In a thread of its own: a path or a filter over a large answer cannot be interrupted, and on the event loop it
         # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
         result = await asyncio.to_thread(pipeline.run, definition, answers)
-        return present(definition, result, base=real.raw_base(real_config))
+        return present(definition, result, base=real.raw_base(real_config), widget_id=ctx.widget_id)
 
     async def action(
         self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context

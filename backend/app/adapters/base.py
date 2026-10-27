@@ -142,6 +142,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     "player": (2, 2),
     "weather": (3, 2),
     "posters": (3, 2),
+    # A card put together from blocks (KARTEN-7): two by two holds a heading row and a value; the rest comes with the size.
+    "builder": (2, 2),
     "chart": (3, 2),
     "log": (3, 2),
     "timeline": (3, 2),

@@ -5,7 +5,7 @@ limited, the values picked, calculated and formatted, the colours from the
 rules. The browser never sees an expression, only what came out (KARTEN-5
 AC-10), and nothing here can do more than read, compare and calculate.
 
-The form decides what is read (``value``, ``stats``, ``list``, ``posters``);
+The form decides what is read (``value``, ``stats``, ``list``, ``posters``, ``builder``);
 mapping a ``Result`` onto what a card draws belongs to whoever draws the form.
 """
 
@@ -24,6 +24,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel
 
 from ..adapters.base import AdapterError, ago, duration_short, human_bytes, human_rate
+from . import blocks as block_kinds
 from . import buttons
 from . import formula as calc
 from .buttons import Button
@@ -82,6 +83,9 @@ class Result:
     millis: float = 0.0
     #: The buttons on the card that can be offered, by id, each with the values of the answers it takes (KARTEN-8 AC-1).
     buttons: dict[str, dict[str, Any]] = field(default_factory=dict)
+    #: The blocks of a card of the form ``builder``, worked out: one plain dictionary each, the values as ``Shown``, the
+    #: rows of a list with the buttons offered on them (KARTEN-7). Drawing them is up to whoever draws the form.
+    tree: list[dict[str, Any]] = field(default_factory=list)
 
     def as_dict(self, *, for_the_editor: bool = False) -> dict[str, Any]:
         """The result as plain data. ``missing`` quotes expressions of the card, so only the editor's preview gets it."""
@@ -558,6 +562,89 @@ def _row(run: _Run, item: Any, source: Any) -> Row:
     )
 
 
+# -- blocks ------------------------------------------------------------------------------
+
+
+class _Builder:
+    """The blocks of a card of the form ``builder``, worked out against the answers (KARTEN-7).
+
+    Every block becomes a plain dictionary with the settings it was given (the defaults filled in) and its values as
+    ``Shown``; a block with nothing to show keeps its place and carries a value that is none (EC-1). A list repeats its
+    blocks for every row and reads their paths inside the row (AC-4).
+    """
+
+    def __init__(self, run: _Run, definition: Any, rows: list[Any]) -> None:
+        self.run = run
+        self.buttons = {one.id: one for one in definition.buttons}
+        self.rows = rows
+        self.main = definition.main
+        #: The value block the card named as its main value, once it was worked out.
+        self.main_shown: Shown | None = None
+        self._on_card: dict[str, dict[str, Any] | None] = {}
+
+    def on_card(self, button: Button) -> dict[str, Any] | None:
+        if button.id not in self._on_card:
+            self._on_card[button.id] = buttons.offered_values(button, self.run.place)
+        return self._on_card[button.id]
+
+    def nodes(self, blocks: list[Any], source: Any = None, inside: bool = False, sink: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+        return [self.node(one, source, inside, sink) for one in blocks]
+
+    def node(self, block: Any, source: Any, inside: bool, sink: dict[str, dict[str, Any]] | None) -> dict[str, Any]:
+        kind = block.type
+        node: dict[str, Any] = {"type": kind, "id": block.id}
+        if kind in block_kinds.HOLDERS:
+            node["gap"] = block.gap
+            if kind == "row":
+                node["align"], node["wrap"] = block.align, block.wrap
+            node["children"] = self.nodes(block.children, source, inside, sink)
+        elif kind == "text" or kind == "badge":
+            node["value"] = _value(self.run, block.value, source, inside) if block.value is not None else None
+            node["fixed"] = block.text
+            node["color"] = block.color
+            if kind == "text":
+                node["size"], node["weight"] = block.size, block.weight
+        elif kind == "value":
+            shown = _value(self.run, block, source, inside)
+            if block.id is not None and block.id == self.main and not inside:
+                self.main_shown = shown
+            node.update(value=shown, size=block.size, color=block.color)
+        elif kind == "symbol":
+            node.update(icon=block.icon, color=block.color, size=block.size)
+        elif kind == "image":
+            shown = _value(self.run, block.src, source, inside)
+            node.update(link=_link(shown.text if shown.value is not None else None), named=block.src.path is not None, height=block.height)
+        elif kind == "progress":
+            node.update(value=_value(self.run, block.value, source, inside), max=self._largest(block.max, source, inside), color=block.color)
+        elif kind == "sparkline":
+            node.update(value=_value(self.run, block.value, source, inside), metric=block_kinds.METRIC_PREFIX + block.id)
+        elif kind == "list":
+            node["rows"] = [self._row(block, one) for one in self.rows]
+            node["empty"] = block.empty
+        elif kind == "button":
+            one = self.buttons.get(block.button)
+            values = None
+            if one is not None and one.where == "row" and inside and sink is not None:
+                values = buttons.offered_values(one, lambda path: buttons.walk(source, path))
+                if values is not None:
+                    sink[one.id] = values
+            elif one is not None and one.where == "card":
+                values = self.on_card(one)
+            node.update(button=block.button, values=values)
+        return node
+
+    def _row(self, block: Any, source: Any) -> dict[str, Any]:
+        offered: dict[str, dict[str, Any]] = {}
+        return {"blocks": self.nodes(block.item, source, True, offered), "buttons": offered}
+
+    def _largest(self, wanted: Any, source: Any, inside: bool) -> float:
+        """What fills a bar: the number given, or the value of the answers named; 100 when that is no number above zero."""
+        if isinstance(wanted, int | float):
+            return float(wanted)
+        number = calc.as_number(_value(self.run, wanted, source, inside).value)
+        return number if number is not None and number > 0 else 100.0
+
+
 def run(
     definition: Any,
     answers: dict[str, Any],
@@ -578,6 +665,13 @@ def run(
         result.value = _value(context, definition.value)
     elif definition.form == "stats":
         result.stats = [_value(context, one) for one in definition.stats]
+    elif definition.form == "builder":
+        everything = _rows_of(context, definition.rows) if definition.rows is not None else []
+        result.total = len(everything)
+        limit = min((definition.rows.limit if definition.rows is not None else None) or DEFAULT_ROWS, MAX_ROWS)
+        built = _Builder(context, definition, everything[:limit])
+        result.tree = built.nodes(definition.blocks)
+        result.value = built.main_shown
     else:
         everything = _rows_of(context, definition.rows)
         result.total = len(everything)

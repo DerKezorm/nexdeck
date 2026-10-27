@@ -543,11 +543,12 @@ def clean_cards(db: Session, page_id: int, own_id: int | None, kind: str, option
             continue
         if number != own_id and number not in wanted:
             wanted.append(number)
-    present = {row.id: row.kind for row in db.scalars(select(Widget).where(Widget.page_id == page_id, Widget.id.in_(wanted or [-1])))}
+    found = {row.id: row for row in db.scalars(select(Widget).where(Widget.page_id == page_id, Widget.id.in_(wanted or [-1])))}
+    present = {number: row.kind for number, row in found.items()}
     kept = [number for number in wanted if number in present and present[number] not in GROUP_KINDS][:MOST_TUCKED]
     # Key figures hold numbers: a list or a clock picked for them is left where it is.
     if kind == "core.figures":
-        kept = [number for number in kept if holders.is_number_card(present[number])]
+        kept = [number for number in kept if holders.is_number_card(present[number], found[number].options)]
     # ⚠️ A card stands in one place. Picked here, it leaves the other holders of
     # the page and its side bar; it used to be drawn twice, in both.
     page = db.get(Page, page_id)

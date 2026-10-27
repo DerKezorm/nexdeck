@@ -325,10 +325,25 @@ def _with_preview_pictures(data: dict[str, Any], integration_id: int | None) -> 
     """The pictures of a preview come through the administrator's own route, since no widget stands behind them."""
     if integration_id is None:
         return data
+
+    def route(art: str) -> str:
+        return f"/api/v1/cards/preview-image?integration_id={integration_id}&path={quote(art[6:], safe='')}"
+
     for item in data.get("items") or []:
         art = item.get("art")
         if isinstance(art, str) and art.startswith("proxy:"):
-            item["art"] = f"/api/v1/cards/preview-image?integration_id={integration_id}&path={quote(art[6:], safe='')}"
+            item["art"] = route(art)
+    # The pictures of a card of blocks stand in its tree, at any depth (KARTEN-7).
+    pending = [data.get("meta", {}).get("blocks") or []]
+    while pending:
+        for block in pending.pop():
+            if not isinstance(block, dict):
+                continue
+            if isinstance(block.get("src"), str) and block["src"].startswith("proxy:"):
+                block["src"] = route(block["src"])
+            pending.append(block.get("children") or [])
+            for row in block.get("rows") or []:
+                pending.append(row.get("blocks") or [])
     return data
 
 
@@ -453,7 +468,8 @@ def library(user: MemberUser, db: DbSession) -> dict[str, Any]:
             except KeyError:
                 continue
             fits.append({"id": one.id, "name": one.name, "kind": one.kind})
-        out.append({k: view[k] for k in ("slug", "name", "description", "form", "requires", "version")} | {"fits": fits})
+        # ``main`` is the value a card of blocks names as its main one: only with it is the card a tile of key figures (KARTEN-7 AC-8).
+        out.append({k: view[k] for k in ("slug", "name", "description", "form", "requires", "version")} | {"fits": fits, "main": (row.definition or {}).get("main")})
     return {"cards": out}
 
 

@@ -34,11 +34,14 @@ HOLDER_KINDS = frozenset({"core.tabs", "core.group", "core.figures"})
 DROP_KINDS = frozenset({"core.group", "core.figures"})
 
 
-def is_number_card(kind: str) -> bool:
+def is_number_card(kind: str, options: dict[str, Any] | None = None) -> bool:
     """Whether a card's big number is a measured number, and so can be a tile of key figures.
 
     The same rule that offers a dial, LEDs and digits for a card (issue #39):
     a number renderer and a metric it records, refreshed by the server.
+
+    A card put together from blocks is one only when its definition names a main value (KARTEN-7 AC-8): that is a
+    question about the card, so it takes the options of the widget, which name the definition.
     """
     from ..adapters import split_widget_kind
     from ..adapters.base import NUMBER_RENDERERS
@@ -48,7 +51,20 @@ def is_number_card(kind: str) -> bool:
         widget = adapter.widget(short)
     except KeyError:
         return False
+    if kind == "custom.builder":
+        return bool(options) and has_main(options or {})
     return widget.renderer in NUMBER_RENDERERS and bool(widget.metrics) and not widget.client_only
+
+
+def has_main(options: dict[str, Any]) -> bool:
+    """Whether the definition a custom card points at names a main value."""
+    from ..adapters.base import AdapterError
+    from ..adapters.custom import definition_of
+
+    try:
+        return getattr(definition_of(options), "main", None) is not None
+    except AdapterError:
+        return False
 
 
 def side_of(page: Page, present: set[int] | None = None) -> dict[str, Any]:
@@ -120,7 +136,7 @@ def place(db: Session, page: Page, widget: Widget, into: str, *, group: Widget |
     if into == "group":
         if group is None or group.page_id != page.id or group.kind not in DROP_KINDS or group.id == widget.id:
             raise error("bad_place", "That is not a group on this page.")
-        if group.kind == "core.figures" and not is_number_card(widget.kind):
+        if group.kind == "core.figures" and not is_number_card(widget.kind, widget.options):
             raise error("not_a_number", "Only a card that shows a number can be a tile of key figures.")
         held = [number for number in (group.options or {}).get("cards") or [] if number != widget.id]
         if len(held) >= MOST_TUCKED:

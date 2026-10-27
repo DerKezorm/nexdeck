@@ -2049,6 +2049,8 @@
     "Custom number": "Número propio",
     "Custom numbers": "Números propios",
     "Custom pictures": "Imágenes propias",
+    "Custom layout": "Diseño propio",
+    "A card put together from blocks: rows, columns, text, values, bars, pictures, lists and buttons.": "Una tarjeta hecha con bloques: filas, columnas, texto, valores, barras, imágenes, listas y botones.",
     "One value from the answers of a connection, with unit, history and colour.": "Un valor de las respuestas de una conexión, con unidad, historial y color.",
     "Rows from a list in the answers of a connection, with title, value, status and link.": "Filas de una lista en las respuestas de una conexión, con título, valor, estado y enlace.",
     "The card this one shows, as saved under System > Custom cards.": "La tarjeta que muestra esta, tal como está guardada en Sistema > Tarjetas propias.",

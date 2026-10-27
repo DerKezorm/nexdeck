@@ -380,10 +380,13 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
 
 
 def _pictures(definition: Any) -> list[tuple[Path, Any]]:
-    """The picture value of the rows of a card, with its place."""
+    """The picture values of a card, with their place: that of its rows, and the picture blocks of a card of blocks."""
     item = getattr(definition, "item", None)
     image = getattr(item, "image", None)
-    return [(("item", "image"), image)] if image is not None else []
+    found: list[tuple[Path, Any]] = [(("item", "image"), image)] if image is not None else []
+    if definition.form == "builder":
+        found += [((*place, "src"), block.src) for place, block, _inside in blocks.walk(definition.blocks) if block.type == "image"]
+    return found
 
 
 def check_for_submission(definition: Any) -> list[Problem]:
