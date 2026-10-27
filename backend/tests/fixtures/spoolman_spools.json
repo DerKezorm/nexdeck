@@ -1,0 +1,131 @@
+[
+  {
+    "id": 1,
+    "registered": "2026-10-27T15:48:53Z",
+    "first_used": "2026-10-27T15:48:53Z",
+    "last_used": "2026-10-27T15:48:53Z",
+    "filament": {
+      "id": 1,
+      "registered": "2026-10-27T15:48:52Z",
+      "name": "PLA Signal Red",
+      "vendor": {
+        "id": 1,
+        "registered": "2026-10-27T15:48:52Z",
+        "name": "Example Filaments",
+        "empty_spool_weight": 200.0,
+        "extra": {}
+      },
+      "material": "PLA",
+      "density": 1.24,
+      "diameter": 1.75,
+      "weight": 1000.0,
+      "spool_weight": 200.0,
+      "settings_extruder_temp": 210,
+      "settings_bed_temp": 60,
+      "color_hex": "FF0000",
+      "extra": {},
+      "tags": []
+    },
+    "remaining_weight": 805.0,
+    "initial_weight": 1000.0,
+    "spool_weight": 200.0,
+    "used_weight": 195.0,
+    "remaining_length": 269903.3136304954,
+    "used_length": 65380.305786269055,
+    "location": "Shelf A",
+    "archived": false,
+    "extra": {},
+    "tags": []
+  },
+  {
+    "id": 2,
+    "registered": "2026-10-27T15:48:53Z",
+    "filament": {
+      "id": 1,
+      "registered": "2026-10-27T15:48:52Z",
+      "name": "PLA Signal Red",
+      "vendor": {
+        "id": 1,
+        "registered": "2026-10-27T15:48:52Z",
+        "name": "Example Filaments",
+        "empty_spool_weight": 200.0,
+        "extra": {}
+      },
+      "material": "PLA",
+      "density": 1.24,
+      "diameter": 1.75,
+      "weight": 1000.0,
+      "spool_weight": 200.0,
+      "settings_extruder_temp": 210,
+      "settings_bed_temp": 60,
+      "color_hex": "FF0000",
+      "extra": {},
+      "tags": []
+    },
+    "remaining_weight": 60.0,
+    "initial_weight": 1000.0,
+    "spool_weight": 200.0,
+    "used_weight": 940.0,
+    "remaining_length": 20117.017165005866,
+    "used_length": 315166.60225175857,
+    "location": "Shelf A",
+    "archived": false,
+    "extra": {},
+    "tags": []
+  },
+  {
+    "id": 3,
+    "registered": "2026-10-27T15:48:53Z",
+    "filament": {
+      "id": 2,
+      "registered": "2026-10-27T15:48:52Z",
+      "name": "PETG Black",
+      "vendor": {
+        "id": 1,
+        "registered": "2026-10-27T15:48:52Z",
+        "name": "Example Filaments",
+        "empty_spool_weight": 200.0,
+        "extra": {}
+      },
+      "material": "PETG",
+      "density": 1.27,
+      "diameter": 1.75,
+      "weight": 1000.0,
+      "spool_weight": 220.0,
+      "settings_extruder_temp": 240,
+      "settings_bed_temp": 80,
+      "color_hex": "111111",
+      "extra": {},
+      "tags": []
+    },
+    "remaining_weight": 500.0,
+    "initial_weight": 1000.0,
+    "spool_weight": 220.0,
+    "used_weight": 500.0,
+    "remaining_length": 163681.7669593653,
+    "used_length": 163681.7669593653,
+    "location": "Printer",
+    "archived": false,
+    "extra": {},
+    "tags": []
+  },
+  {
+    "id": 5,
+    "registered": "2026-10-27T15:49:07Z",
+    "filament": {
+      "id": 3,
+      "registered": "2026-10-27T15:49:07Z",
+      "name": "Mystery",
+      "material": "ABS",
+      "density": 1.04,
+      "diameter": 1.75,
+      "extra": {},
+      "tags": []
+    },
+    "used_weight": 0.0,
+    "used_length": 0.0,
+    "archived": false,
+    "extra": {},
+    "tags": []
+  }
+]

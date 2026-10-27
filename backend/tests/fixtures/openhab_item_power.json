@@ -1,0 +1,20 @@
+{
+  "link": "http://openhab.example.com:8080/rest/items/Power_Now",
+  "state": "412 W",
+  "stateDescription": {
+    "pattern": "%.0f %unit%",
+    "readOnly": false,
+    "options": []
+  },
+  "lastState": "NULL",
+  "lastStateUpdate": 1793118707988,
+  "lastStateChange": 1793118676894,
+  "unitSymbol": "W",
+  "editable": true,
+  "type": "Number:Power",
+  "name": "Power_Now",
+  "label": "Power [%.0f W]",
+  "category": "energy",
+  "tags": [],
+  "groupNames": []
+}
