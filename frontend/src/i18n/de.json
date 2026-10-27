@@ -1300,7 +1300,6 @@
     "duplicated_other": "Die {{count}} Kopien stehen unten auf der Seite.",
     "copied_one": "Nach {{page}} kopiert.",
     "copied_other": "{{count}} Karten nach {{page}} kopiert.",
-    "copyStartedEmpty": "Die Kopie von {{name}} beginnt leer, ihre Karten bleiben im Original.",
     "copyHeldLeft_one": "Eine Karte aus {{name}} ist nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
     "copyHeldLeft_other": "{{count}} Karten aus {{name}} sind nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
     "copyKeyDropped": "Die Kopie von {{name}} hat keine Taste, denn {{key}} öffnet auf dem Board schon eine Kachel.",

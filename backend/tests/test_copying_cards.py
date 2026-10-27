@@ -158,7 +158,7 @@ def test_a_card_on_a_locked_connection_is_copied_by_nobody_who_could_not_have_ma
     assert _copy(client, [card["id"]], page).status_code == 200
 
 
-def test_key_figures_duplicated_here_start_without_tiles_and_the_original_keeps_them(client: TestClient) -> None:
+def test_key_figures_duplicated_here_take_copies_of_their_tiles_and_the_original_keeps_its_own(client: TestClient) -> None:
     setup_admin(client)
     board = _board(client, "Wall")
     page = board["pages"][0]["id"]
@@ -168,9 +168,31 @@ def test_key_figures_duplicated_here_start_without_tiles_and_the_original_keeps_
     answer = _copy(client, [figures["id"]], page)
     assert answer.status_code == 200, answer.text
     [new] = answer.json()["ids"]
-    assert answer.json()["notes"] == [{"code": "started_empty", "name": "Figures", "count": 1}]
-    assert _widget(client, board["slug"], page, new)["options"]["cards"] == []
+    assert answer.json()["notes"] == []
+    [tile] = _widget(client, board["slug"], page, new)["options"]["cards"]
+    assert tile != machine["id"], "a copy of the tile, not the tile itself"
+    copied = _widget(client, board["slug"], page, tile)
+    assert (copied["kind"], copied["title"]) == ("core.host", "NAS")
     assert _widget(client, board["slug"], page, figures["id"])["options"]["cards"] == [machine["id"]]
+
+
+def test_a_group_duplicated_here_leaves_behind_what_the_member_could_not_make(client: TestClient) -> None:
+    setup_admin(client)
+    locked = client.post("/api/v1/integrations", json={"kind": "docker", "name": "Engine", "config": {}, "demo": True, "admin_only": True}, headers=CSRF).json()
+    admins = _board(client, "Admin's")
+    page = admins["pages"][0]["id"]
+    clock = _card(client, page, title="Clock")
+    engine = _card(client, page, "docker.containers", integration_id=locked["id"], title="Containers")
+    group = _card(client, page, "core.group", title="Box", options={"cards": [clock["id"], engine["id"]]})
+    client.put(f"/api/v1/boards/{admins['slug']}/shares", json={"shares": [{"user_id": None, "role": "user", "level": "edit"}]}, headers=CSRF)
+    kim = _member(client)
+
+    answer = _copy(kim, [group["id"]], page)
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["notes"] == [{"code": "held_left", "name": "Box", "count": 1}]
+    [held] = _widget(kim, admins["slug"], page, answer.json()["ids"][0])["options"]["cards"]
+    assert held not in (clock["id"], engine["id"])
+    assert _widget(client, admins["slug"], page, group["id"])["options"]["cards"] == [clock["id"], engine["id"]]
 
 
 def test_a_group_copied_elsewhere_takes_copies_of_its_cards_and_says_what_stayed_behind(client: TestClient) -> None:

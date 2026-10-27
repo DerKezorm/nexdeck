@@ -1300,7 +1300,6 @@
     "duplicated_other": "The {{count}} copies are at the bottom of the page.",
     "copied_one": "Copied to {{page}}.",
     "copied_other": "{{count}} cards copied to {{page}}.",
-    "copyStartedEmpty": "The copy of {{name}} starts empty; its cards stay in the original.",
     "copyHeldLeft_one": "One card of {{name}} stayed behind, because you could not add it there yourself.",
     "copyHeldLeft_other": "{{count}} cards of {{name}} stayed behind, because you could not add them there yourself.",
     "copyKeyDropped": "The copy of {{name}} has no key: {{key}} already opens a tile of the board.",

@@ -2,8 +2,7 @@ import type { TFunction } from 'i18next'
 
 /** What did not come along with a copy, as the server names it (``POST /widgets/copy``). */
 export interface CopyNote {
-  /** ``started_empty``: a holder copied onto its own page, without its cards.
-      ``held_left``: cards of a holder this person could not have made where the copy went.
+  /** ``held_left``: cards of a holder this person could not have made where the copy went.
       ``key_dropped``: an app tile whose number key another tile of the board has. */
   code: string
   name: string
@@ -24,7 +23,6 @@ export interface CopyAnswer {
  */
 export function copyNotes(notes: CopyNote[], t: TFunction): string[] {
   return notes.flatMap((note) => {
-    if (note.code === 'started_empty') return [t('arrange.copyStartedEmpty', { name: note.name })]
     if (note.code === 'held_left') return [t('arrange.copyHeldLeft', { name: note.name, count: note.count ?? 1 })]
     if (note.code === 'key_dropped') return [t('arrange.copyKeyDropped', { name: note.name, key: note.key ?? '' })]
     return []

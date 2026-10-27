@@ -1300,7 +1300,6 @@
     "duplicated_other": "Le {{count}} copie sono in fondo alla pagina.",
     "copied_one": "Copiata in {{page}}.",
     "copied_other": "{{count}} schede copiate in {{page}}.",
-    "copyStartedEmpty": "La copia di {{name}} parte vuota; le sue schede restano nell'originale.",
     "copyHeldLeft_one": "Una scheda di {{name}} è rimasta indietro, perché lì non potresti aggiungerla tu.",
     "copyHeldLeft_other": "{{count}} schede di {{name}} sono rimaste indietro, perché lì non potresti aggiungerle tu.",
     "copyKeyDropped": "La copia di {{name}} non ha tasto: {{key}} apre già un riquadro della bacheca.",

@@ -1300,7 +1300,6 @@
     "duplicated_other": "Las {{count}} copias están al final de la página.",
     "copied_one": "Copiada a {{page}}.",
     "copied_other": "{{count}} tarjetas copiadas a {{page}}.",
-    "copyStartedEmpty": "La copia de {{name}} empieza vacía; sus tarjetas se quedan en el original.",
     "copyHeldLeft_one": "Una tarjeta de {{name}} se ha quedado atrás, porque allí no podrías añadirla tú.",
     "copyHeldLeft_other": "{{count}} tarjetas de {{name}} se han quedado atrás, porque allí no podrías añadirlas tú.",
     "copyKeyDropped": "La copia de {{name}} no tiene tecla: {{key}} ya abre un mosaico del tablero.",

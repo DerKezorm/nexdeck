@@ -1300,7 +1300,6 @@
     "duplicated_other": "Les {{count}} copies sont en bas de la page.",
     "copied_one": "Copiée vers {{page}}.",
     "copied_other": "{{count}} cartes copiées vers {{page}}.",
-    "copyStartedEmpty": "La copie de {{name}} commence vide ; ses cartes restent dans l’original.",
     "copyHeldLeft_one": "Une carte de {{name}} est restée en place, car vous ne pourriez pas l’ajouter vous-même là-bas.",
     "copyHeldLeft_other": "{{count}} cartes de {{name}} sont restées en place, car vous ne pourriez pas les ajouter vous-même là-bas.",
     "copyKeyDropped": "La copie de {{name}} n’a pas de touche : {{key}} ouvre déjà une tuile du tableau.",

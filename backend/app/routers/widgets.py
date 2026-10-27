@@ -372,12 +372,11 @@ def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
     original, because he could not have made it.
 
     A card that holds others (a group, tabs, key figures) names them by
-    number, and those numbers mean cards of its own page. Copied to another
-    page, it takes copies of its cards along, those this person could make;
-    the rest stay behind and the answer says how many. Copied onto its own
-    page it starts empty: it would otherwise take the cards out of the
-    original, since a card stands in one place only, or show the same
-    cards twice. The answer says that too.
+    number, and those numbers mean cards of its own page. Wherever it is
+    copied, beside the original as well, it takes copies of its cards along,
+    those this person could make; the rest stay behind and the answer says
+    how many. ⚠️ Copies, never the same numbers: a card stands in one place
+    only, so the copy would have taken the cards out of the original.
     """
     target = db.get(Page, body.page_id)
     if target is None:
@@ -411,10 +410,6 @@ def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
         if widget.kind not in GROUP_KINDS or not isinstance(cards, list) or not cards:
             continue
         name = widget.title or widget.kind
-        if page.id == target.id:
-            twin.options = {**twin.options, "cards": []}
-            notes.append({"code": "started_empty", "name": name, "count": len(cards)})
-            continue
         wanted = [number for number in cards if isinstance(number, int)]
         inside = {row.id: row for row in db.scalars(select(Widget).where(Widget.page_id == page.id, Widget.id.in_(wanted or [-1])))}
         taken: list[Widget] = []
