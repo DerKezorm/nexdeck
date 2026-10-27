@@ -2078,7 +2078,17 @@
     "Stream": "Stream",
     "Live or offline, how long it has been live, the viewers, the picture it sends and how healthy it is.": "Live oder offline, wie lange schon live, die Zuschauer, das gesendete Bild und wie gesund der Stream ist.",
     "The number of people watching now, with the peak of this session and of all time. Needs the stream key.": "Die Zahl der Zuschauer jetzt, mit der Spitze dieser Sitzung und aller Zeiten. Braucht den Stream-Key.",
-    "Viewers": "Zuschauer"
+    "Viewers": "Zuschauer",
+    "In Kodi, open Settings, then Services, then Control.": "In Kodi Einstellungen öffnen, dann Dienste, dann Steuerung.",
+    "Kodi status": "Kodi-Status",
+    "Leave empty when Kodi's web server has no password.": "Leer lassen, wenn der Webserver von Kodi kein Passwort hat.",
+    "Movies, series, episodes, albums and songs in Kodi's library.": "Filme, Serien, Folgen, Alben und Titel in der Bibliothek von Kodi.",
+    "Switch on Allow remote control via HTTP, and set a user name and a password.": "Fernsteuerung über HTTP zulassen einschalten, und einen Benutzernamen und ein Passwort setzen.",
+    "The adapter reads what plays and the library, and presses play or pause, stop, mute and the library update.": "Der Adapter liest, was läuft, und die Bibliothek, und drückt Wiedergabe oder Pause, Stopp, Stumm und die Aktualisierung der Bibliothek.",
+    "The web server of Kodi, switched on under Settings, Services, Control.": "Der Webserver von Kodi, eingeschaltet unter Einstellungen, Dienste, Steuerung.",
+    "What Kodi plays, whether it is playing or paused, the library, with play or pause, stop, mute and a library update.": "Was Kodi abspielt, ob es läuft oder pausiert, die Bibliothek, mit Wiedergabe oder Pause, Stopp, Stumm und Bibliotheksaktualisierung.",
+    "What Kodi plays, with its picture, progress and time left.": "Was Kodi abspielt, mit Bild, Fortschritt und Restzeit.",
+    "Whether Kodi plays, pauses or waits, the volume, and buttons for play or pause, stop, mute and a library update.": "Ob Kodi spielt, pausiert oder wartet, die Lautstärke, und Knöpfe für Wiedergabe oder Pause, Stopp, Stumm und Bibliotheksaktualisierung."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3326,6 +3336,12 @@
     "Followers": "Follower",
     "Peak this session": "Spitze dieser Sitzung",
     "Peak ever": "Spitze insgesamt",
-    "Disconnect the broadcaster": "Sendenden trennen"
+    "Disconnect the broadcaster": "Sendenden trennen",
+    "Kodi": "Kodi",
+    "Now": "Jetzt",
+    "Unmute": "Ton an",
+    "Update the video library": "Videobibliothek aktualisieren",
+    "Mute": "Stumm",
+    "Play": "Abspielen"
   }
 }
