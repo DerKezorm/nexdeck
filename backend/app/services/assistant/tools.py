@@ -37,6 +37,13 @@ REPEATING = ("core.problems", "core.chronicle", "core.report")
 LOG_LINES = 100
 
 
+def _said(label: Any) -> str:
+    """The label of a button as one text, for the people and the model that have no language of their own to pick: a custom card gives one per language, English first."""
+    from ...adapters.custom import plain
+
+    return plain(label)
+
+
 @dataclass
 class Bench:
     """What one answer gathered along the way: where it looked, what it proposes, what it asks."""
@@ -234,7 +241,7 @@ def card_details(bench: Bench, given: dict[str, Any]) -> str:
     data = live.get(widget.id)
     if data is None:
         return _json({"card": widget.title, "note": "The card has not been read yet."})
-    labels = {action.id: (action.label, action.danger) for action in data.actions}
+    labels = {action.id: (_said(action.label), action.danger) for action in data.actions}
     buttons = []
     for action_id, params, _asks in _offered(data):
         label, danger = labels.get(action_id, (action_id, False))
@@ -244,7 +251,7 @@ def card_details(bench: Bench, given: dict[str, Any]) -> str:
             entry = entry if isinstance(entry, dict) else entry.model_dump()
             for button in buttons:
                 if button["action"] == entry.get("id") and button["params"] == dict(entry.get("params") or {}):
-                    button.update(label=entry.get("label") or button["label"], danger=bool(entry.get("danger")), row=item.get("title"))
+                    button.update(label=_said(entry.get("label")) or button["label"], danger=bool(entry.get("danger")), row=item.get("title"))
     rows = [{key: item.get(key) for key in ("title", "subtitle", "status", "value", "state") if item.get(key) not in (None, "")}
             for item in data.items[:25] if isinstance(item, dict)]
     return _json({
@@ -372,12 +379,12 @@ async def propose_action(bench: Bench, given: dict[str, Any]) -> str:
     label, danger, row = action_id, False, ""
     for action in data.actions if data is not None else []:
         if action.id == action_id and dict(action.params) == params:
-            label, danger = action.label, action.danger
+            label, danger = _said(action.label), action.danger
     for item in data.items if data is not None else []:
         for entry in item.get("actions") or [] if isinstance(item, dict) else []:
             entry = entry if isinstance(entry, dict) else entry.model_dump()
             if entry.get("id") == action_id and dict(entry.get("params") or {}) == params:
-                label, danger, row = entry.get("label") or label, bool(entry.get("danger")), str(item.get("title") or "")
+                label, danger, row = _said(entry.get("label")) or label, bool(entry.get("danger")), str(item.get("title") or "")
     facts = await impact.facts(widget.id, action_id, params)
     _cite(bench, widget, page, board)
     bench.proposals.append({"card_id": widget.id, "card": widget.title or widget.kind, "row": row, "action": action_id, "label": label,

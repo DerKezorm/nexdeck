@@ -149,6 +149,15 @@ def test_the_buttons_are_those_of_the_card_that_lists_its_container(client: Test
     assert _page(client, f"integration:{alone}")["buttons"] == []
 
 
+def test_karten8_a_label_per_language_is_one_text_in_the_buttons_of_a_diagnosis(client: TestClient) -> None:
+    _pve, engine, plex = _chain(client)
+    containers = _card(client, "docker.containers", engine)
+    restart = {"id": "button:restart", "label": {"en": "Restart", "de": "Neu starten"}, "params": {"id": "c1"}}
+    live.set(containers["id"], WidgetData(status="ok", items=[{"title": "plex", "actions": [restart]}]))
+    [button] = _page(client, f"integration:{plex}")["buttons"]
+    assert button["label"] == "Restart"
+
+
 def test_the_log_is_read_on_asking_with_secrets_masked(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     from app.adapters.docker import DockerAdapter
 

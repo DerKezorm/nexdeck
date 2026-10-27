@@ -284,6 +284,21 @@ def test_karten8_ac8_a_value_of_another_type_that_python_calls_equal_is_not_what
 
 
 @respx.mock
+def test_karten8_a_label_per_language_reaches_the_assistant_as_one_text(stand: Stand) -> None:
+    from app.models import User
+    from app.services.assistant import tools
+
+    stand.refresh()
+    with db_session() as db:
+        user = db.scalars(select(User)).first()
+        bench = tools.Bench(db=db, user=user, grants=[])
+        details = json.loads(tools.card_details(bench, {"card_id": stand.widget}))
+        asyncio.run(tools.propose_action(bench, {"card_id": stand.widget, "action": "button:pause", "params": {"hash": "abc123"}}))
+    [proposal] = bench.proposals
+    assert proposal["label"] == "Pause" and all(isinstance(one["label"], str) for one in details["buttons"]), (proposal, details)
+
+
+@respx.mock
 def test_karten8_ac8_a_button_the_card_never_had_is_refused(stand: Stand) -> None:
     stand.refresh()
     everything = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))

@@ -303,6 +303,8 @@ def log_place(db: Session, ref: str) -> dict[str, Any]:
 
 def _buttons(db: Session, ref: str) -> list[dict[str, Any]]:
     """The buttons of the container or guest, as the cards that list it offer them."""
+    from ..adapters.custom import plain  # a custom card's label comes per language; English first
+
     thing = container_of(db, ref)
     if thing is None:
         return []
@@ -324,7 +326,7 @@ def _buttons(db: Session, ref: str) -> list[dict[str, Any]]:
                 continue
             for action in actions:
                 out.append({"widget_id": widget.id, "card": widget.title or widget.kind, "item": str(item.get("title") or thing.name),
-                            "id": str(action.get("id") or ""), "label": str(action.get("label") or ""),
+                            "id": str(action.get("id") or ""), "label": plain(action.get("label")),
                             "icon": str(action.get("icon") or ""), "params": action.get("params") or {},
                             "confirm": bool(action.get("confirm")), "danger": bool(action.get("danger"))})
         if out:
