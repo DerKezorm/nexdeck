@@ -2312,7 +2312,17 @@
     "Only when the server was started with --api-key. /health works without it, everything else needs it.": "Solo se il server è stato avviato con --api-key. /health funziona senza, tutto il resto la richiede.",
     "Slots": "Slot",
     "The model a llama.cpp server serves, how many of its slots are busy and how many tokens a second it makes.": "Il modello servito da un server llama.cpp, quanti dei suoi slot sono occupati e quanti token al secondo produce.",
-    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "Il modello, gli slot occupati e i token al secondo, in giallo finché tutti gli slot sono occupati. Per la velocità serve --metrics."
+    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "Il modello, gli slot occupati e i token al secondo, in giallo finché tutti gli slot sono occupati. Per la velocità serve --metrics.",
+    "A user of the API with a read-only role. Not the dashboard's wazuh-wui.": "Un utente dell'API con un ruolo di sola lettura. Non il wazuh-wui della dashboard.",
+    "Agents": "Agent",
+    "Agents not reporting": "Agent che non rispondono",
+    "How many Wazuh agents report in, which ones do not, and whether the manager's daemons run.": "Quanti agent Wazuh si fanno sentire, quali no, e se i daemon del manager sono in esecuzione.",
+    "How many agents are active, and which are disconnected, never connected or pending, as a ring.": "Quanti agent sono attivi e quali disconnessi, mai connessi o in attesa, come anello.",
+    "Manager": "Manager",
+    "The API ships with a certificate Wazuh made itself.": "L'API viene con un certificato creato da Wazuh stesso.",
+    "The agents that are not active, disconnected ones first, with when they last reported.": "Gli agent non attivi, prima quelli disconnessi, con l'ultimo momento in cui si sono fatti sentire.",
+    "The manager's API on port 55000, not the dashboard.": "L'API del manager sulla porta 55000, non la dashboard.",
+    "Whether the manager's daemons run; red when one has failed.": "Se i daemon del manager sono in esecuzione; rosso quando uno è fallito."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3692,6 +3702,11 @@
     "Quantisation": "Quantizzazione",
     "Slots busy": "Slot occupati",
     "Tokens a second": "Token al secondo",
-    "No slots.": "Nessuno slot."
+    "No slots.": "Nessuno slot.",
+    "Agents active": "Agent attivi",
+    "Daemons running": "Daemon in esecuzione",
+    "Disconnected": "Disconnesso",
+    "Not reporting": "Non rispondono",
+    "Every agent is reporting.": "Ogni agent si fa sentire."
   }
 }

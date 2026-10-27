@@ -176,6 +176,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^Keeps (.+)$/, 'Behält $1'],
     [/^(\d+) tokens made$/, '$1 Token erzeugt'],
     [/^(\d+) tokens$/, '$1 Token'],
+    [/^Not running: (.+)$/, 'Läuft nicht: $1'],
   ],
   es: spanish,
   fr: french,

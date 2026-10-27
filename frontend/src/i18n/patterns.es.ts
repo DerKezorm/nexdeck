@@ -146,4 +146,5 @@ export const patterns: Pattern[] = [
   [/^Keeps (.+)$/, 'Conserva $1'],
   [/^(\d+) tokens made$/, '$1 tokens generados'],
   [/^(\d+) tokens$/, '$1 tokens'],
+  [/^Not running: (.+)$/, 'No funcionan: $1'],
 ]

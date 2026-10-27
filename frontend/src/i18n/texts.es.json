@@ -2312,7 +2312,17 @@
     "Only when the server was started with --api-key. /health works without it, everything else needs it.": "Solo si el servidor se inició con --api-key. /health funciona sin ella, todo lo demás la necesita.",
     "Slots": "Slots",
     "The model a llama.cpp server serves, how many of its slots are busy and how many tokens a second it makes.": "El modelo que sirve un servidor llama.cpp, cuántos de sus slots están ocupados y cuántos tokens por segundo genera.",
-    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "El modelo, los slots ocupados y los tokens por segundo, en amarillo mientras todos los slots están ocupados. Para la velocidad hace falta --metrics."
+    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "El modelo, los slots ocupados y los tokens por segundo, en amarillo mientras todos los slots están ocupados. Para la velocidad hace falta --metrics.",
+    "A user of the API with a read-only role. Not the dashboard's wazuh-wui.": "Un usuario de la API con un rol de solo lectura. No el wazuh-wui del panel.",
+    "Agents": "Agentes",
+    "Agents not reporting": "Agentes sin informar",
+    "How many Wazuh agents report in, which ones do not, and whether the manager's daemons run.": "Cuántos agentes de Wazuh informan, cuáles no, y si los daemons del manager funcionan.",
+    "How many agents are active, and which are disconnected, never connected or pending, as a ring.": "Cuántos agentes están activos y cuáles desconectados, nunca conectados o pendientes, como un anillo.",
+    "Manager": "Manager",
+    "The API ships with a certificate Wazuh made itself.": "La API trae un certificado que Wazuh creó por sí mismo.",
+    "The agents that are not active, disconnected ones first, with when they last reported.": "Los agentes que no están activos, primero los desconectados, con cuándo informaron por última vez.",
+    "The manager's API on port 55000, not the dashboard.": "La API del manager en el puerto 55000, no el panel.",
+    "Whether the manager's daemons run; red when one has failed.": "Si los daemons del manager funcionan; en rojo si uno ha fallado."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3692,6 +3702,11 @@
     "Quantisation": "Cuantización",
     "Slots busy": "Slots ocupados",
     "Tokens a second": "Tokens por segundo",
-    "No slots.": "Sin slots."
+    "No slots.": "Sin slots.",
+    "Agents active": "Agentes activos",
+    "Daemons running": "Daemons en marcha",
+    "Disconnected": "Desconectado",
+    "Not reporting": "Sin informar",
+    "Every agent is reporting.": "Todos los agentes informan."
   }
 }

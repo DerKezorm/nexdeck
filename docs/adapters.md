@@ -89,6 +89,7 @@ that one of twenty-one renderers draws.
 | NextDNS | blocking, top blocked | | API key and the profile ID |
 | authentik | status, failed sign-ins | | API token of a service account with read access |
 | CrowdSec | blocked addresses, blocked | | bouncer key from `cscli bouncers add`; it may read decisions and nothing else |
+| Wazuh | agents (active of all, as a ring; red for a disconnected one, yellow for one that never connected), agents not reporting (disconnected first, with when each last reported), manager (daemons running; red when one has failed) | | a user of the manager's API on port 55000 with a read-only role (not the dashboard's wazuh-wui), and its password; the token is fetched and kept for 12 minutes. The API has a certificate of its own making, so Ignore TLS errors is usually needed. Alerts live in the indexer and are not read. Beta: built from the documentation of the server API, never run against a Wazuh (too heavy for the test machine) |
 | Shlink | short URLs, visits | | API key from `shlink api-key:generate` |
 | Blocky | blocking, top blocked | pause 5 min, enable | none; Blocky's API has no sign-in, so its HTTP port stays inside the network, and statistics.enable has to be on (Blocky 0.35 or newer) |
 | Gatus | endpoints, endpoint health | | user and password of security.basic, or nothing when Gatus has no security section |
