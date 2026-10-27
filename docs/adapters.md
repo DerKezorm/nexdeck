@@ -276,7 +276,12 @@ hands out `proxy:/path`, and `GET /api/v1/widgets/{id}/image?path=` fetches it
 from the service with the adapter's `image_headers`, cached for an hour. An adapter
 may override `image_source(config, path, ctx)` to turn a path into another request,
 for example a camera snapshot with a session token that must not be cached
-(`cache_seconds=0`). Live video goes the same way: `stream_source(config, options,
+(`cache_seconds=0`). ⚠️ The route answers only for the shapes the adapter names in
+`image_paths`, a tuple of `ImagePath(pattern, **query_patterns)`, checked before the cache and before
+`image_source`. The default is none, so an adapter without the list hands out no pictures: a GET with the
+service's credentials can do harm (Plex marks a film as watched on `/:/scrobble`). Name every shape you write,
+as narrowly as the service allows. `tests/test_image_paths.py` finds adapters with pictures by itself and fails
+until their real paths pass and dangerous ones do not. Live video goes the same way: `stream_source(config, options,
 ctx)` names an HTTP-FLV stream, and `GET /api/v1/widgets/{id}/stream` relays its
 bytes to the browser, which plays them with Media Source Extensions. The server
 relays at most twelve streams at once.

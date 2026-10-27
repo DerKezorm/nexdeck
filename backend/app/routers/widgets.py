@@ -14,8 +14,8 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
-from ..adapters import split_widget_kind
-from ..adapters.base import AdapterError, Context, outbound_client
+from ..adapters import get_adapter, split_widget_kind
+from ..adapters.base import AdapterError, Context, image_path, outbound_client
 from ..db import db_session
 from ..deps import (
     AdminUser,
@@ -649,6 +649,19 @@ async def widget_favicon(widget_id: int, request: Request, user: OptionalUser, d
     return Response(content=content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=86400"))
 
 
+def _picture_path(db: DbSession, widget: Widget, path: str) -> str:
+    """The path checked against the shapes the connection's adapter hands out, before the cache or the service sees it."""
+    integration = db.get(Integration, widget.integration_id) if widget.integration_id else None
+    if integration is None:
+        raise error("not_found", "This widget has no service to fetch from.", status.HTTP_404_NOT_FOUND)
+    try:
+        return image_path(get_adapter(integration.kind), path)
+    except KeyError as failure:
+        raise error("not_found", "This widget has no service to fetch from.", status.HTTP_404_NOT_FOUND) from failure
+    except AdapterError as failure:
+        raise error("bad_path", str(failure)) from failure
+
+
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
 async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession,
                        _effect: NotReadOnly) -> Response:
@@ -662,11 +675,14 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
     on a media server is not always a read: Plex marks a title as played on
     ``/:/scrobble`` and scans a library on ``.../refresh``, both asked with
     the server's credentials.
+
+    ⚠️ Only a path of a shape the adapter names in ``image_paths``, and checked
+    before the cache: the request itself is what does harm (Plex marks a film
+    as watched on a GET), not the answer, which is only ever an image.
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
-    if not path.startswith("/") or path.startswith("//") or "://" in path:
-        raise error("bad_path", "An image path is relative to the service, starting with a slash.")
+    path = _picture_path(db, widget, path)
     hit = _images.get((widget_id, path))
     if hit and hit[0] > time.monotonic():
         return Response(content=hit[1], media_type=hit[2], headers=_image_headers(hit[2], "private, max-age=3600"))

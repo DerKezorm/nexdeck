@@ -28,6 +28,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -421,6 +422,10 @@ class ReolinkAdapter(Adapter):
         return WidgetData(status="bad" if bad else ("warn" if warn else "ok"), items=items, meta=meta)
 
     # -- snapshots and live video ---------------------------------------------------------
+
+    #: Snapshots by channel number. ⚠️ The device does everything on one GET
+    #: address, ``/cgi-bin/api.cgi?cmd=Reboot`` included; only Snap is built.
+    image_paths = (ImagePath(r"/snap/[0-9]{1,3}(?:/(?:sub|main))?"),)
 
     async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
         """``/snap/<channel>[/<sub|main>]`` becomes the device's Snap command with the session token; never cached."""
