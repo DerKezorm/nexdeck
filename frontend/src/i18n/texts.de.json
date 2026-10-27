@@ -2128,7 +2128,14 @@
     "The power all inverters make together now, with the energy of today and in total, and how many of them are producing.": "Die Leistung aller Wechselrichter zusammen jetzt, mit der Energie von heute und insgesamt, und wie viele davon erzeugen.",
     "Producing": "Erzeugen",
     "Inverters": "Wechselrichter",
-    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Jeder Wechselrichter mit seiner Leistung, ob er antwortet, und seiner Temperatur und Leistungsgrenze, wo OpenDTU sie nennt."
+    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Jeder Wechselrichter mit seiner Leistung, ob er antwortet, und seiner Temperatur und Leistungsgrenze, wo OpenDTU sie nennt.",
+    "A Shelly relay or plug, Gen1 or Gen2 and newer: whether it is on, a button to switch it, and the power it draws.": "Ein Shelly-Relais oder eine Shelly-Steckdose, Gen1 oder Gen2 und neuer: ob sie an ist, ein Knopf zum Schalten und die Leistung, die sie zieht.",
+    "The address of the device. Both generations are told apart by themselves.": "Die Adresse des Geräts. Die beiden Generationen werden von selbst unterschieden.",
+    "Only a Gen1 device has a user of its own; a Gen2 or newer one is always admin.": "Nur ein Gen1-Gerät hat einen eigenen Benutzer; ein Gen2 oder neueres ist immer admin.",
+    "Only if the device has a sign-in set.": "Nur nötig, wenn das Gerät eine Anmeldung eingerichtet hat.",
+    "The power all measuring channels of the device draw now, with the energy they have used, the temperature and the Wi-Fi signal.": "Die Leistung, die alle messenden Kanäle des Geräts gerade ziehen, mit der verbrauchten Energie, der Temperatur und dem WLAN-Signal.",
+    "Switches": "Schalter",
+    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Jedes Relais des Geräts, an oder aus mit der Leistung, die es zieht, und ein Knopf zum Schalten nach einer Rückfrage."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3373,6 +3380,8 @@
     "Devices online": "Geräte online",
     "No device in the dashboard.": "Kein Gerät im Dashboard.",
     "Solar power": "Solarleistung",
-    "No inverter is set up in OpenDTU.": "In OpenDTU ist kein Wechselrichter eingerichtet."
+    "No inverter is set up in OpenDTU.": "In OpenDTU ist kein Wechselrichter eingerichtet.",
+    "Switches on": "Schalter an",
+    "This device has no relay.": "Dieses Gerät hat kein Relais."
   }
 }

@@ -2128,7 +2128,14 @@
     "The power all inverters make together now, with the energy of today and in total, and how many of them are producing.": "La potenza prodotta ora da tutti gli inverter insieme, con l'energia di oggi e totale, e quanti stanno producendo.",
     "Producing": "In produzione",
     "Inverters": "Inverter",
-    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Ogni inverter con la sua potenza, se risponde, e la sua temperatura e il limite di potenza dove OpenDTU li indica."
+    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Ogni inverter con la sua potenza, se risponde, e la sua temperatura e il limite di potenza dove OpenDTU li indica.",
+    "A Shelly relay or plug, Gen1 or Gen2 and newer: whether it is on, a button to switch it, and the power it draws.": "Un relè o una presa Shelly, Gen1 o Gen2 e successivi: se è acceso, un pulsante per commutarlo e la potenza assorbita.",
+    "The address of the device. Both generations are told apart by themselves.": "L'indirizzo del dispositivo. Le due generazioni vengono distinte automaticamente.",
+    "Only a Gen1 device has a user of its own; a Gen2 or newer one is always admin.": "Solo un dispositivo Gen1 ha un utente proprio; uno Gen2 o successivo è sempre admin.",
+    "Only if the device has a sign-in set.": "Solo se il dispositivo ha un accesso impostato.",
+    "The power all measuring channels of the device draw now, with the energy they have used, the temperature and the Wi-Fi signal.": "La potenza assorbita ora da tutti i canali con misura del dispositivo, con l'energia usata, la temperatura e il segnale Wi-Fi.",
+    "Switches": "Interruttori",
+    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Ogni relè del dispositivo, acceso o spento con la potenza assorbita, e un pulsante per commutarlo dopo una domanda."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3373,6 +3380,8 @@
     "Devices online": "Dispositivi online",
     "No device in the dashboard.": "Nessun dispositivo nella dashboard.",
     "Solar power": "Potenza solare",
-    "No inverter is set up in OpenDTU.": "Nessun inverter è configurato in OpenDTU."
+    "No inverter is set up in OpenDTU.": "Nessun inverter è configurato in OpenDTU.",
+    "Switches on": "Interruttori accesi",
+    "This device has no relay.": "Questo dispositivo non ha un relè."
   }
 }
