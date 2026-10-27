@@ -217,7 +217,6 @@
       "help": "Une intégration est une connexion à un service. Les widgets y puisent.",
       "empty": "Aucune intégration pour l’instant.",
       "add": "Ajouter une intégration",
-      "addHelp": "Choisissez le service. Vous pouvez tester la connexion avant d’enregistrer.",
       "remove": "Supprimer {{name}} ?",
       "removeBody": "{{count}} widgets l’utilisent. Ils restent en place et indiquent qu’il leur faut une connexion.",
       "edit": "Modifier {{name}}",
@@ -238,9 +237,6 @@
       "mutedHelp": "Coupées : rien concernant cette connexion n’arrive à la cloche ni à un canal. Ses cartes continuent de tourner. Cliquez pour réactiver les notifications.",
       "bellFailed": "Impossible de modifier les notifications.",
       "enabled": "Activé",
-      "search": "Rechercher",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Aucun résultat pour « {{query}} ».",
       "version": {
         "checking": "Recherche de la version…",
         "runs": "En service : {{version}}",
@@ -295,6 +291,28 @@
         "title": "Mode démo",
         "off": "désactivé. Fait passer chaque carte sur des données inventées.",
         "left": "Certaines connexions sont encore en mode démo et affichent des données inventées."
+      },
+      "catalog": {
+        "intro": "{{count}} services. Tape ce que tu cherches ou choisis une catégorie. Entrée ouvre le premier résultat.",
+        "search": "Service ou mot clé : plex, photos, wol, wallbox…",
+        "searchLabel": "Chercher un service",
+        "hideBeta": "Masquer les bêtas",
+        "sections": "Catégories",
+        "all": "Tous",
+        "connectedNav": "Déjà connectés",
+        "connected": "connecté",
+        "connectedMany": "connecté ({{count}})",
+        "hits_one": "{{count}} résultat",
+        "hits_other": "{{count}} résultats",
+        "inSection": "dans {{name}}",
+        "hint": "Les mots clés comptent aussi, comme « photos », « wallbox » ou « wol ».",
+        "nothing": "Rien ne correspond à « {{query}} ».",
+        "nothingIn": "Rien ne correspond à « {{query}} » dans {{name}}.",
+        "empty": "Rien ici.",
+        "allHits_one": "{{count}} résultat dans toutes les catégories",
+        "allHits_other": "{{count}} résultats dans toutes les catégories",
+        "generic": "Absent ? La connexion générique lit un nombre ou une liste dans presque n'importe quelle API JSON.",
+        "genericButton": "Générique (HTTP/JSON)"
       }
     },
     "users": {

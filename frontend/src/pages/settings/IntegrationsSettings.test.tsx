@@ -14,6 +14,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { IntegrationsSettings } from './IntegrationsSettings'
 import { useAuth } from '../../stores/auth'
 
+const ADAPTERS = vi.hoisted(() =>
+  ['sonarr', 'radarr'].map((kind) => ({
+    kind, label: kind[0].toUpperCase() + kind.slice(1), category: 'downloads', description: '', icon: kind, beta: false, docs_url: '',
+    needs_integration: true, fields: [{ name: 'url', label: 'URL', type: 'url', required: true, default: null }], widgets: [],
+  })),
+)
+
 const state = vi.hoisted(() => ({
   muted: false,
   fail: false,
@@ -28,7 +35,7 @@ vi.mock('../../api/client', () => {
     ApiError,
     get: vi.fn(async (path: string) => {
       if (path === '/about') return { version: '0.22.0', demo: state.demo, demo_forced: false, demo_data: false }
-      if (path === '/adapters') return []
+      if (path === '/adapters') return ADAPTERS
       if (path === '/boards') return [{ id: 3, slug: 'home', name: 'Home' }]
       return [
         {
@@ -55,11 +62,11 @@ function Board() {
   return <p>{`board ${location.pathname} ${JSON.stringify(location.state)}`}</p>
 }
 
-function show() {
+function show(at = '/system/integrations') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/system/integrations']}>
+      <MemoryRouter initialEntries={[at]}>
         <Routes>
           <Route path="/system/integrations" element={<IntegrationsSettings />} />
           <Route path="/b/:slug" element={<Board />} />
@@ -153,5 +160,40 @@ describe('demo mode for everything', () => {
     expect(screen.getByText('Some connections still run in demo mode and show invented data.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Leave demo mode…' })).toBeInTheDocument()
     expect(screen.queryByText('off. Switches every card to invented data.')).toBeNull()
+  })
+})
+
+describe('adding a connection', () => {
+  beforeEach(() => {
+    state.cards = 2
+    useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin' } as never })
+  })
+
+  it('opens the catalog as a window, and a service from it opens the sheet', async () => {
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Add an integration' }))
+    const search = await screen.findByRole('textbox', { name: 'Search the services' })
+    await userEvent.type(search, 'radarr{Enter}')
+    expect(await screen.findByRole('heading', { name: 'New Radarr integration' })).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Search the services' })).toBeNull()
+  })
+
+  it('still opens the sheet straight from ?add=<kind>', async () => {
+    show('/system/integrations?add=radarr')
+    expect(await screen.findByRole('heading', { name: 'New Radarr integration' })).toBeInTheDocument()
+  })
+
+  it('takes the words of the own search into the catalog', async () => {
+    show()
+    await userEvent.type(await screen.findByRole('textbox', { name: 'Search your connections' }), 'radar')
+    await userEvent.click(screen.getByRole('button', { name: 'Search the catalog for “radar”' }))
+    expect(await screen.findByRole('textbox', { name: 'Search the services' })).toHaveValue('radar')
+  })
+
+  it('is not offered to a user', async () => {
+    useAuth.setState({ user: { id: 2, username: 'sam', role: 'user' } as never })
+    show()
+    await screen.findByText('1 connection, 2 cards together.')
+    expect(screen.queryByRole('button', { name: 'Add an integration' })).toBeNull()
   })
 })

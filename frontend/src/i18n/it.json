@@ -217,7 +217,6 @@
       "help": "Un'integrazione è una connessione a un servizio. I widget scelgono tra queste.",
       "empty": "Nessuna integrazione ancora.",
       "add": "Aggiungi un'integrazione",
-      "addHelp": "Scegli il servizio. Puoi provare la connessione prima di salvare.",
       "remove": "Rimuovere {{name}}?",
       "removeBody": "{{count}} widget la usano. Restano e mostrano che hanno bisogno di una connessione.",
       "edit": "Modifica {{name}}",
@@ -238,9 +237,6 @@
       "mutedHelp": "Silenziata: nulla che riguardi questa connessione arriva alla campanella o a un canale. Le sue schede continuano a funzionare. Clicca per riattivare gli avvisi.",
       "bellFailed": "Impossibile cambiare gli avvisi.",
       "enabled": "Attiva",
-      "search": "Cerca",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nessun risultato per “{{query}}”.",
       "version": {
         "checking": "Ricerca della versione…",
         "runs": "In uso: {{version}}",
@@ -295,6 +291,28 @@
         "title": "Modalità demo",
         "off": "disattivata. Passa ogni scheda a dati inventati.",
         "left": "Alcune connessioni sono ancora in modalità demo e mostrano dati inventati."
+      },
+      "catalog": {
+        "intro": "{{count}} servizi. Scrivi cosa cerchi o scegli una categoria. Invio apre il primo risultato.",
+        "search": "Servizio o parola chiave: plex, foto, wol, wallbox…",
+        "searchLabel": "Cerca tra i servizi",
+        "hideBeta": "Nascondi beta",
+        "sections": "Categorie",
+        "all": "Tutti",
+        "connectedNav": "Già collegati",
+        "connected": "collegato",
+        "connectedMany": "collegato ({{count}})",
+        "hits_one": "{{count}} risultato",
+        "hits_other": "{{count}} risultati",
+        "inSection": "in {{name}}",
+        "hint": "Contano anche le parole chiave, come «foto», «wallbox» o «wol».",
+        "nothing": "Niente corrisponde a «{{query}}».",
+        "nothingIn": "Niente corrisponde a «{{query}}» in {{name}}.",
+        "empty": "Qui non c'è niente.",
+        "allHits_one": "{{count}} risultato in tutte le categorie",
+        "allHits_other": "{{count}} risultati in tutte le categorie",
+        "generic": "Non c'è? La connessione generica legge un numero o un elenco da quasi ogni API JSON.",
+        "genericButton": "Generica (HTTP/JSON)"
       }
     },
     "users": {

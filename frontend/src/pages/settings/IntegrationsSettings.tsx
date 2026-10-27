@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { FlaskConical, Plus, Search as SearchIcon } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { FlaskConical, Plus } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -9,13 +9,15 @@ import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
-import { Confirm, Field, Select, Sheet, Switch, Toast, Toggle } from '../../components/ui'
+import { Confirm, Field, Sheet, Switch, Toast, Toggle } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
 import { useHomeBoardPath } from '../../lib/homeBoard'
 import { useAuth } from '../../stores/auth'
 
 const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
+// The catalog is a window of its own and only comes when it is opened.
+const CatalogDialog = lazy(() => import('./integrations/CatalogDialog'))
 import { OwnList } from './integrations/OwnList'
 import type { VersionReading } from './integrations/own'
 import { SettingsCard } from './SettingsCard'
@@ -70,7 +72,8 @@ export function IntegrationsSettings() {
   const [editing, setEditing] = useState<Integration | null>(null)
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
-  const [adapterSearch, setAdapterSearch] = useState('')
+  // The catalog window, with the words it opens with; null while it is closed.
+  const [catalog, setCatalog] = useState<string | null>(null)
   const [bellFailed, setBellFailed] = useState('')
   const navigate = useNavigate()
   const home = useHomeBoardPath()
@@ -93,29 +96,24 @@ export function IntegrationsSettings() {
     }
   }, [params, setParams])
 
-  const byCategory = useMemo(() => {
-    const needle = adapterSearch.trim().toLowerCase()
-    const groups: Record<string, AdapterSpec[]> = {}
-    for (const adapter of adapters.data ?? []) {
-      if (!adapter.needs_integration && !adapter.optional_integration) continue
-      // The technical name counts: somebody types "wol", "pbs" or "npm",
-      // which none of the written-out names contain.
-      // The vendors count as well: nobody searches for "SNMP", they search
-      // for the name printed on their switch.
-      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''} ${tAdapter(adapter.description)} ${(adapter.keywords ?? []).join(' ')}`.toLowerCase()
-      if (needle && !haystack.includes(needle)) continue
-      ;(groups[adapter.category] ??= []).push(adapter)
-    }
-    return groups
-  }, [adapters.data, adapterSearch])
-
   return (
     <>
       {/* The switch that puts every connection at once into demo mode. It sits
           here and not on a page of its own: it says what the connections show,
           and each one carries the same switch for itself. */}
       {admin && about.data && <DemoMode about={about.data} onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())} />}
-      <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>
+      <SettingsCard
+        title={t('settings.integrations.title')}
+        description={t('settings.integrations.help')}
+        action={
+          admin && (
+            <button type="button" className="btn btn-accent" onClick={() => setCatalog('')}>
+              <Plus size={15} />
+              {t('settings.integrations.add')}
+            </button>
+          )
+        }
+      >
         {integrations.data && adapters.data && (
           <OwnList
             integrations={integrations.data}
@@ -128,6 +126,7 @@ export function IntegrationsSettings() {
             onRemove={setRemoving}
             // The way a card is always made: the library of a board, already searching for this service.
             onBuildCard={(integration) => navigate(home, { state: { library: integration.label } })}
+            onSearchCatalog={admin ? setCatalog : undefined}
           />
         )}
         {bellFailed && (
@@ -136,38 +135,19 @@ export function IntegrationsSettings() {
           </Toast>
         )}
       </SettingsCard>
-      {admin && (
-        <SettingsCard title={t('settings.integrations.add')} description={t('settings.integrations.addHelp')}>
-          {/* Seventy-nine of them. Without this the list is a wall you scroll
-              past rather than something you pick from. */}
-          <div className="relative mb-4 max-w-sm">
-            <SearchIcon size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none" />
-            <input
-              className="input input-icon"
-              value={adapterSearch}
-              placeholder={t('settings.integrations.searchPlaceholder')}
-              aria-label={t('settings.integrations.search')}
-              onChange={(event) => setAdapterSearch(event.target.value)}
-            />
-          </div>
-          {Object.keys(byCategory).length === 0 && (
-            <p className="text-sm text-muted">{t('settings.integrations.noMatch', { query: adapterSearch.trim() })}</p>
-          )}
-          {Object.entries(byCategory).map(([category, list]) => (
-            <div key={category} className="mb-3">
-              <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t(`library.category.${category}`, { defaultValue: category })}</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {list.map((adapter) => (
-                  <button key={adapter.kind} className="btn h-8 text-xs gap-1.5" onClick={() => setAdding(adapter.kind)}>
-                    <ServiceIcon icon={adapter.icon} size={14} />
-                    {adapter.label}
-                    {adapter.beta && <span className="text-[9px] text-faint">beta</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </SettingsCard>
+      {catalog !== null && adapters.data && integrations.data && (
+        <Suspense fallback={null}>
+          <CatalogDialog
+            adapters={adapters.data}
+            integrations={integrations.data}
+            initialQuery={catalog}
+            onClose={() => setCatalog(null)}
+            onPick={(kind) => {
+              setCatalog(null)
+              setAdding(kind)
+            }}
+          />
+        </Suspense>
       )}
       {(editing || adding) && adapters.data && (
         <IntegrationSheet
@@ -319,4 +299,3 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
   )
 }
 
-export { Select, Plus }

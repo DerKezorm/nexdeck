@@ -217,7 +217,6 @@
       "help": "One integration is one connection to a service. Widgets pick from them.",
       "empty": "No integrations yet.",
       "add": "Add an integration",
-      "addHelp": "Pick the service. You can test the connection before saving.",
       "remove": "Remove {{name}}?",
       "removeBody": "{{count}} widgets use it. They stay and show that they need a connection.",
       "edit": "Edit {{name}}",
@@ -238,9 +237,6 @@
       "mutedHelp": "Muted: nothing about this connection reaches the bell or a channel. Its cards keep running. Click to turn notices back on.",
       "bellFailed": "The notices could not be switched.",
       "enabled": "Enabled",
-      "search": "Search",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nothing matches “{{query}}”.",
       "version": {
         "checking": "Looking up the version…",
         "runs": "Runs {{version}}",
@@ -295,6 +291,28 @@
         "title": "Demo mode",
         "off": "off. Switches every card to invented data.",
         "left": "Some connections still run in demo mode and show invented data."
+      },
+      "catalog": {
+        "intro": "{{count}} services. Type what you are looking for or pick a category. Enter opens the first hit.",
+        "search": "Service or keyword: plex, photos, wol, wallbox…",
+        "searchLabel": "Search the services",
+        "hideBeta": "Hide beta",
+        "sections": "Categories",
+        "all": "All",
+        "connectedNav": "Already connected",
+        "connected": "connected",
+        "connectedMany": "connected ({{count}})",
+        "hits_one": "{{count}} hit",
+        "hits_other": "{{count}} hits",
+        "inSection": "in {{name}}",
+        "hint": "Keywords count too, such as “photos”, “wallbox” or “wol”.",
+        "nothing": "Nothing matches “{{query}}”.",
+        "nothingIn": "Nothing matches “{{query}}” in {{name}}.",
+        "empty": "Nothing here.",
+        "allHits_one": "{{count}} hit in all categories",
+        "allHits_other": "{{count}} hits in all categories",
+        "generic": "Not there? The generic connection reads a number or a list from almost any JSON API.",
+        "genericButton": "Generic (HTTP/JSON)"
       }
     },
     "users": {
