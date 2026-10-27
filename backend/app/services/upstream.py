@@ -75,4 +75,5 @@ UPSTREAM: dict[str, str] = {
     "wgeasy": "wg-easy/wg-easy",
     "wger": "wger-project/wger",
     "wud": "getwud/wud",
+    "zerobyte": "nicotsx/zerobyte",
 }

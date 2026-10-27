@@ -2041,7 +2041,13 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge, sur tous les tableaux du propriétaire de ce tableau.",
     "A backup is too old": "Une sauvegarde est trop ancienne",
     "Something is full or reaches its red line soon": "Quelque chose sera bientôt plein ou atteindra sa ligne rouge",
-    "The daily report": "Le rapport quotidien"
+    "The daily report": "Le rapport quotidien",
+    "Backup summary": "Résumé des sauvegardes",
+    "Every backup schedule with its last run, source and destination, and a button that runs it now.": "Chaque planification de sauvegarde avec sa dernière exécution, sa source et sa destination, et un bouton qui la lance maintenant.",
+    "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Chaque planification avec sa dernière exécution, sa source, sa destination et sa prochaine exécution, celles en échec d’abord, avec un bouton qui la lance maintenant.",
+    "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Combien il y a de planifications, combien sont en bon état, en échec, en cours ou en pause, et quand la dernière bonne sauvegarde a eu lieu.",
+    "Every repository with its state, size and snapshots, worst first.": "Chaque dépôt avec son état, sa taille et ses instantanés, le pire d’abord.",
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Dans Réglages > Personnel > Clés API de Zerobyte 0.40 ou plus récent. La clé peut tout ce que peut son utilisateur ; les cartes ne font que lire."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3253,6 +3259,13 @@
     "Cloud backup": "Sauvegarde cloud",
     "Reboot required": "Redémarrage requis",
     "major version": "version majeure",
-    "Task Photos": "Tâche Photos"
+    "Task Photos": "Tâche Photos",
+    "Backups fine": "Sauvegardes en bon état",
+    "In error": "En erreur",
+    "Too old": "Trop ancienne",
+    "Source unavailable": "Source indisponible",
+    "Repository error": "Erreur du dépôt",
+    "Being repaired": "En réparation",
+    "Check cancelled": "Vérification annulée"
   }
 }

@@ -2041,7 +2041,13 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Was in den letzten 24 Stunden passiert ist und was noch rot ist, von allen Boards des Besitzers dieses Boards.",
     "A backup is too old": "Eine Sicherung ist zu alt",
     "Something is full or reaches its red line soon": "Etwas ist bald voll oder erreicht seine rote Linie",
-    "The daily report": "Der Tagesbericht"
+    "The daily report": "Der Tagesbericht",
+    "Backup summary": "Sicherungsübersicht",
+    "Every backup schedule with its last run, source and destination, and a button that runs it now.": "Jeder Sicherungsplan mit letztem Lauf, Quelle und Ziel und einem Knopf, der ihn sofort startet.",
+    "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Jeder Plan mit letztem Lauf, Quelle, Ziel und nächstem Lauf, gescheiterte zuerst, mit einem Knopf, der ihn sofort startet.",
+    "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Wie viele Pläne es gibt, wie viele in Ordnung, fehlgeschlagen, laufend oder pausiert sind und wann die letzte gute Sicherung lief.",
+    "Every repository with its state, size and snapshots, worst first.": "Jedes Repository mit Zustand, Größe und Snapshots, das schlechteste zuerst.",
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Aus Einstellungen > Persönlich > API-Schlüssel in Zerobyte 0.40 oder neuer. Der Schlüssel darf, was sein Benutzer darf, die Karten lesen nur."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3253,6 +3259,13 @@
     "Cloud backup": "Cloud-Backup",
     "Reboot required": "Neustart nötig",
     "major version": "Hauptversion",
-    "Task Photos": "Aufgabe Fotos"
+    "Task Photos": "Aufgabe Fotos",
+    "Backups fine": "Sicherungen in Ordnung",
+    "In error": "Mit Fehler",
+    "Too old": "Zu alt",
+    "Source unavailable": "Quelle nicht erreichbar",
+    "Repository error": "Repository-Fehler",
+    "Being repaired": "Wird repariert",
+    "Check cancelled": "Prüfung abgebrochen"
   }
 }
