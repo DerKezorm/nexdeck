@@ -71,7 +71,7 @@ that one of twenty-one renderers draws.
 | OpenWrt | router, interfaces, DHCP devices | | root, or an rpcd login with the read groups luci-mod-status-index, luci-mod-status-index-dhcp and luci-base-network-status (the last also reads the wireless configuration); needs LuCI or uhttpd-mod-ubus |
 | MikroTik | system, interfaces | | user with the read policy; needs RouterOS 7 with the REST service on |
 | SNMP (switches and network devices) | device, ports, port traffic, findings, PoE | | SNMPv3 user with SHA and AES, read only; or an SNMPv2c community, which travels unencrypted. Any vendor, standard MIBs only (IF-MIB, EtherLike, ENTITY, POWER-ETHERNET, LLDP); never writes |
-| FRITZ!Box | connection, line | | none; TR-064 on port 49000, the part of it that answers without credentials |
+| FRITZ!Box | connection, line | | none, through "Transmit status information over UPnP" on port 49000; or a FRITZ!Box user for TR-064, needed in front of another router |
 | Cloudflare | tunnels (healthy, degraded, down or never run, with their connections and data centres), zones (active, waiting for the name servers, paused), traffic (a zone's requests, visits, data and cached share over 24 hours) | | an API token with Account > Cloudflare Tunnel > Read, Zone > Zone > Read and Account > Account Analytics > Read, and the account ID for the tunnels. Built from Cloudflare's documentation, not yet measured |
 | Tailscale | devices, status | | API access token from the admin console |
 | Headscale | nodes, status | | API key from `headscale apikeys create` |

@@ -1385,7 +1385,7 @@ class Context:
         content: bytes | None = None,
         timeout: float = 15.0,
         verify: bool = True,
-        auth: tuple[str, str] | None = None,
+        auth: tuple[str, str] | httpx.Auth | None = None,
         cache_seconds: float = 0,
         auth_errors: bool = True,
         member: bool = False,

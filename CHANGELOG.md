@@ -9,8 +9,14 @@ project uses semantic versioning.
 
 - **A redirect to another place takes no credentials along.** When a service answered with a redirect to another host, another port or from https to plain http, nexdeck followed it with the API key, token or session cookie of the connection in its headers; only `Authorization` was dropped. Now such a hop keeps none of them, and a request with a body (a sign-in sent on with 307 or 308) is not sent there at all, the card says "The service sent the request on to …". A redirect within the service still carries them, including plain http raised to https on the same host, on any port.
 
+### Changed
+
+- **FRITZ!Box with a user, out of beta.** The connection takes an optional FRITZ!Box user. With one, the state of the line, the address, the uptime and the current rates come over TR-064, which also works when the box sits as a modem or bridge in front of another router and when it does not transmit its status over UPnP. Confirmed against a 6591 Cable in bridge mode, with and without a user.
+
 ### Fixed
 
+- **FRITZ!Box in bridge mode** said "Uptime 0s" and painted the connection card red, because over UPnP such a box does not dial in itself. The card stays grey now, leaves the uptime out and says that a user shows the state of the line.
+- **FRITZ!Box hints**: when the box does not transmit its status over UPnP, the card names that switch instead of "Allow access for applications", which is a different one. `https://` on port 49000 says that this port speaks http; it said "could not be reached" while the box answered every time.
 - On a home page, a comparison with **the day or week before** laid it an hour off on the day after the clocks changed, and the last hour of the 25-hour day fell off the end. It now lies on the same clock times.
 
 ## 0.49.0 (2026-10-25)
