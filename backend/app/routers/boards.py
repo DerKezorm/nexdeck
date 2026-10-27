@@ -35,6 +35,7 @@ from ..schemas import (
     GridBody,
     ImportBody,
     KioskCreate,
+    KioskLook,
     KioskSession,
     LayoutsBody,
     PageCreate,
@@ -110,9 +111,14 @@ def get_board(slug: str, request: Request, user: OptionalUser, db: DbSession) ->
     view = board_view(db, board, permission)
     # Only on the display's own board; a cookie left over from another says nothing about this one.
     if kiosk is not None and kiosk.board_id == board.id:
-        view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name,
-                         "rest_minutes": kiosk.rest_minutes}
+        view["kiosk"] = _kiosk_settings(kiosk)
     return view
+
+
+def _kiosk_settings(kiosk: KioskToken) -> dict:
+    """What a display needs to know about itself: pages, dimming, rest, and how light it is."""
+    return {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name,
+            "rest_minutes": kiosk.rest_minutes, "theme": kiosk.theme or "dark", "light_from": kiosk.light_from or "07:00", "dark_from": kiosk.dark_from or "20:00"}
 
 
 @router.post("/kiosk/session", summary="Exchange a kiosk token for a session cookie")
@@ -149,8 +155,7 @@ def kiosk_board(request: Request, db: DbSession) -> dict:
     if board is None:
         raise error("not_found", "The board of this kiosk token is gone.", status.HTTP_404_NOT_FOUND)
     view = board_view(db, board, "act" if kiosk.allow_actions else "view")
-    view["kiosk"] = {"cycle_seconds": kiosk.cycle_seconds, "dim_from": kiosk.dim_from, "dim_to": kiosk.dim_to, "allow_actions": kiosk.allow_actions, "name": kiosk.name,
-                         "rest_minutes": kiosk.rest_minutes}
+    view["kiosk"] = _kiosk_settings(kiosk)
     return view
 
 
@@ -583,7 +588,7 @@ def create_kiosk_token(slug: str, body: KioskCreate, user: PasswordUser, db: DbS
     ends = utcnow() + timedelta(days=body.expires_days) if body.expires_days else None
     row = KioskToken(board_id=board.id, name=body.name, token_hash=token_hash, prefix=prefix, allow_actions=body.allow_actions,
                      cycle_seconds=body.cycle_seconds, dim_from=body.dim_from, dim_to=body.dim_to, rest_minutes=body.rest_minutes,
-                     expires_at=ends)
+                     theme=body.theme, light_from=body.light_from, dark_from=body.dark_from, expires_at=ends)
     db.add(row)
     db.commit()
     # A kiosk link is a way in that needs no password. Its making belongs in
@@ -592,6 +597,18 @@ def create_kiosk_token(slug: str, body: KioskCreate, user: PasswordUser, db: DbS
                 user.username, "act" if row.allow_actions else "look only",
                 f"ending {ends:%Y-%m-%d}" if ends else "with no end")
     return {**_kiosk_public(row), "token": token, "url": f"/k/{token}"}
+
+
+@router.patch("/kiosk-tokens/{token_id}/look", summary="Change how light a wall display is")
+def change_kiosk_look(token_id: int, body: KioskLook, user: CurrentUser, db: DbSession) -> dict:
+    """Only the look: a display already on the wall turns dark at night without a new link."""
+    row = db.get(KioskToken, token_id)
+    if row is None or row.revoked:
+        raise error("not_found", "There is no such kiosk link.", status.HTTP_404_NOT_FOUND)
+    require_board_id(db, row.board_id, user, "edit")
+    row.theme, row.light_from, row.dark_from = body.theme, body.light_from, body.dark_from
+    db.commit()
+    return _kiosk_public(row)
 
 
 @router.delete("/kiosk-tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Revoke a kiosk link")
@@ -613,5 +630,6 @@ def delete_kiosk_token(token_id: int, user: CurrentUser, db: DbSession) -> None:
 def _kiosk_public(token: KioskToken) -> dict:
     return {"id": token.id, "name": token.name, "prefix": token.prefix, "allow_actions": token.allow_actions, "cycle_seconds": token.cycle_seconds,
             "dim_from": token.dim_from, "dim_to": token.dim_to, "rest_minutes": token.rest_minutes,
+            "theme": token.theme or "dark", "light_from": token.light_from or "07:00", "dark_from": token.dark_from or "20:00",
             "created_at": token.created_at, "last_used_at": token.last_used_at,
             "expires_at": token.expires_at}

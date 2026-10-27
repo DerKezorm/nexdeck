@@ -1,0 +1,212 @@
+{
+  "latitude": 52.512604,
+  "longitude": 13.419517,
+  "generationtime_ms": 0.3319978713989258,
+  "utc_offset_seconds": 3600,
+  "timezone": "Europe/Berlin",
+  "timezone_abbreviation": "GMT+1",
+  "elevation": 38.0,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "temperature_2m": "°C",
+    "apparent_temperature": "°C",
+    "relative_humidity_2m": "%",
+    "weather_code": "wmo code",
+    "wind_speed_10m": "km/h",
+    "is_day": ""
+  },
+  "current": {
+    "time": "2026-10-27T16:45",
+    "interval": 900,
+    "temperature_2m": 14.8,
+    "apparent_temperature": 12.6,
+    "relative_humidity_2m": 64,
+    "weather_code": 3,
+    "wind_speed_10m": 11.9,
+    "is_day": 1
+  },
+  "hourly_units": {
+    "time": "iso8601",
+    "temperature_2m": "°C",
+    "precipitation_probability": "%",
+    "is_day": "",
+    "weather_code": "wmo code"
+  },
+  "hourly": {
+    "time": [
+      "2026-10-27T16:00",
+      "2026-10-27T17:00",
+      "2026-10-27T18:00",
+      "2026-10-27T19:00",
+      "2026-10-27T20:00",
+      "2026-10-27T21:00",
+      "2026-10-27T22:00",
+      "2026-10-27T23:00",
+      "2026-10-28T00:00",
+      "2026-10-28T01:00",
+      "2026-10-28T02:00",
+      "2026-10-28T03:00",
+      "2026-10-28T04:00",
+      "2026-10-28T05:00",
+      "2026-10-28T06:00",
+      "2026-10-28T07:00",
+      "2026-10-28T08:00",
+      "2026-10-28T09:00",
+      "2026-10-28T10:00",
+      "2026-10-28T11:00",
+      "2026-10-28T12:00",
+      "2026-10-28T13:00",
+      "2026-10-28T14:00",
+      "2026-10-28T15:00"
+    ],
+    "temperature_2m": [
+      15.1,
+      14.7,
+      14.1,
+      13.4,
+      12.5,
+      11.5,
+      10.6,
+      10.0,
+      9.4,
+      8.8,
+      8.4,
+      8.2,
+      8.0,
+      7.8,
+      8.1,
+      9.1,
+      9.6,
+      10.1,
+      10.7,
+      11.4,
+      12.6,
+      14.1,
+      14.6,
+      14.7
+    ],
+    "precipitation_probability": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      35,
+      60,
+      70,
+      63,
+      53,
+      28,
+      18,
+      10,
+      8
+    ],
+    "is_day": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "weather_code": [
+      3,
+      3,
+      2,
+      2,
+      1,
+      1,
+      1,
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      3,
+      61,
+      61,
+      61,
+      3,
+      3,
+      2,
+      2,
+      2
+    ]
+  },
+  "daily_units": {
+    "time": "iso8601",
+    "weather_code": "wmo code",
+    "temperature_2m_max": "°C",
+    "temperature_2m_min": "°C",
+    "precipitation_probability_max": "%",
+    "sunrise": "iso8601",
+    "sunset": "iso8601",
+    "uv_index_max": ""
+  },
+  "daily": {
+    "time": [
+      "2026-10-27",
+      "2026-10-28"
+    ],
+    "weather_code": [
+      3,
+      61
+    ],
+    "temperature_2m_max": [
+      15.4,
+      14.8
+    ],
+    "temperature_2m_min": [
+      7.3,
+      7.8
+    ],
+    "precipitation_probability_max": [
+      15,
+      70
+    ],
+    "sunrise": [
+      "2026-10-27T06:53",
+      "2026-10-28T06:55"
+    ],
+    "sunset": [
+      "2026-10-27T16:46",
+      "2026-10-28T16:44"
+    ],
+    "uv_index_max": [
+      2.05,
+      1.8
+    ]
+  }
+}

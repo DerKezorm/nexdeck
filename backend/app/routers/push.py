@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Request, status
 from sqlalchemy import select
 
-from ..deps import CurrentUser, DbSession, error
+from ..deps import CurrentUser, DbSession, NotReadOnly, error
 from ..models import NotificationChannel, Subscription
 from ..schemas import PushSubscribeBody, PushUnsubscribeBody
 from ..services.channels import webpush
@@ -18,7 +18,8 @@ logger = logging.getLogger("nexdeck.push")
 
 
 @router.get("/key", summary="Read the public VAPID key")
-def public_key(user: CurrentUser) -> dict:
+def public_key(user: CurrentUser, _effect: NotReadOnly) -> dict:
+    # The first call makes the installation's key pair, so not for a token that only reads.
     return {"key": webpush.public_key()}
 
 

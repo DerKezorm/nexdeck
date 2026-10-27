@@ -1,0 +1,31 @@
+{
+  "name": "homebridge",
+  "private": false,
+  "description": "HomeKit support for the impatient",
+  "verifiedPlugin": false,
+  "verifiedPlusPlugin": false,
+  "supportsMatter": false,
+  "supportsHap": false,
+  "icon": null,
+  "isHbScoped": false,
+  "isUnmaintained": false,
+  "installedVersion": "2.4.0",
+  "globalInstall": false,
+  "settingsSchema": false,
+  "engines": {
+    "node": "^22 || ^24 || ^26"
+  },
+  "installPath": "/var/lib/homebridge/node_modules",
+  "updateAvailable": false,
+  "updateTag": null,
+  "latestVersion": "2.4.0",
+  "updateEngines": null,
+  "publicPackage": true,
+  "links": {
+    "npm": "https://www.npmjs.com/package/homebridge",
+    "homepage": "https://github.com/homebridge/homebridge#readme",
+    "bugs": "https://github.com/homebridge/homebridge/issues"
+  },
+  "author": "oznu",
+  "multipleInstances": false
+}

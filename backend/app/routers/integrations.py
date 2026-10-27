@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from typing import Any
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, Response, status
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -16,7 +18,7 @@ from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
-from ..services import chronicle, versions
+from ..services import chronicle, favicons, found, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
@@ -89,6 +91,38 @@ async def connection_versions(user: AdminUser, db: DbSession) -> dict[str, dict]
     readings = await versions.read_many(connections, collector.resolve_integration, ctx, allowed=update_check_on(db))
     kinds = dict(connections)
     return {str(number): {**reading.public(), "upstream": versions.UPSTREAM.get(kinds[number], "")} for number, reading in readings.items()}
+
+
+class FoundIgnore(BaseModel):
+    key: str = Field(min_length=3, max_length=300)
+
+
+@router.get("/integrations/found", summary="Services running in the homelab that could be connected and are not yet")
+def found_services(user: AdminUser, db: DbSession, request: Request) -> dict:
+    """From the inventory only: nothing is asked of the network. Administrators only, as the inventory is.
+
+    The address of a Docker engine on its socket is where the browser reached
+    nexdeck, when that is an address and not a name or this machine itself.
+    """
+    host = request.url.hostname or ""
+    try:
+        fallback = host if not ipaddress.ip_address(host).is_loopback else ""
+    except ValueError:
+        fallback = ""
+    return found.found(db, fallback)
+
+
+@router.post("/integrations/found/ignore", status_code=status.HTTP_204_NO_CONTENT, summary="Stop suggesting one found service")
+def ignore_found(body: FoundIgnore, user: AdminUser, db: DbSession) -> None:
+    found.ignore(db, body.key)
+    db.commit()
+    logger.info("%s no longer wants %s suggested.", user.username, body.key)
+
+
+@router.delete("/integrations/found/ignore", status_code=status.HTTP_204_NO_CONTENT, summary="Suggest every found service again")
+def show_found_again(user: AdminUser, db: DbSession) -> None:
+    found.show_again(db)
+    db.commit()
 
 
 @router.post("/integrations", status_code=status.HTTP_201_CREATED, summary="Add an integration")
@@ -275,6 +309,23 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
     finally:
         await hand_back(adapter, config, ctx)
     return {"ok": True, "message": message, **_demo_note()}
+
+
+@router.get("/integrations/{integration_id}/favicon", summary="Serve the logo a connection's service names for itself")
+async def integration_favicon(integration_id: int, user: CurrentUser, db: DbSession) -> Response:
+    """For a connection whose logo no collection has, in the list of connections: as for a card (``widget_favicon``)."""
+    integration = require_integration(db, integration_id, user)
+    try:
+        address = get_adapter(integration.kind).default_link(resolve_config(integration))
+    except (KeyError, ValueError):
+        address = ""
+    found = await favicons.favicon(address) if address else None
+    if found is None:
+        raise error("not_found", "The service names no logo of its own.", status.HTTP_404_NOT_FOUND)
+    from .widgets import _image_headers
+
+    content, content_type = found
+    return Response(content=content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=86400"))
 
 
 @router.get("/integrations/{integration_id}/choices/{field}", summary="What a widget field can be set to, asked of the service")

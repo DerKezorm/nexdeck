@@ -1,0 +1,13 @@
+{
+  "link": "http://openhab.example.com:8080/rest/items/Unset_Switch",
+  "state": "NULL",
+  "lastState": "NULL",
+  "lastStateUpdate": 1793118878931,
+  "lastStateChange": 1793118878931,
+  "editable": true,
+  "type": "Switch",
+  "name": "Unset_Switch",
+  "label": "Never set",
+  "tags": [],
+  "groupNames": []
+}

@@ -119,6 +119,15 @@ describe('PlayerCard', () => {
     expect(screen.getByRole('button', { name: 'Open Album 9' })).toBeInTheDocument()
   })
 
+  it('carries the title of the card in a bar that only 1984 shows, and no other look does', () => {
+    const { container } = render(withProviders(<PlayerCard widget={{ ...widget, title: 'Plex Music' }} canAct data={{ status: 'ok', items: ['1'].map(album) }} />))
+    const bar = container.querySelector('.player-titlebar')
+    expect(bar?.textContent).toBe('Plex Music')
+    // Hidden by the utility, so the sheet of 1984 is the only thing that opens it.
+    expect(bar?.classList.contains('hidden')).toBe(true)
+    expect(bar?.getAttribute('aria-hidden')).toBe('true')
+  })
+
   it('offers nothing to press to somebody who may only look', () => {
     render(withProviders(<PlayerCard widget={widget} canAct={false} data={{ status: 'ok', items: ['1'].map(album) }} />))
     expect(screen.queryByRole('button', { name: /^Open Album/ })).toBeNull()

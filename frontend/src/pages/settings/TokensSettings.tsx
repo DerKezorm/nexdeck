@@ -6,13 +6,15 @@ import { useTranslation } from 'react-i18next'
 import { del, get, post } from '../../api/client'
 import type { ApiToken } from '../../api/types'
 import { KeyFactorHint } from '../../components/KeyFactorHint'
-import { Field } from '../../components/ui'
+import { Field, Select } from '../../components/ui'
 import { SettingsCard } from './SettingsCard'
 
 export function TokensSettings() {
   const { t } = useTranslation()
   const tokens = useQuery({ queryKey: ['tokens'], queryFn: () => get<ApiToken[]>('/tokens') })
   const [name, setName] = useState('')
+  // A new token reads only, unless full access is chosen on purpose.
+  const [scope, setScope] = useState<ApiToken['scope']>('read')
   const [fresh, setFresh] = useState<ApiToken | null>(null)
   return (
     <SettingsCard title={t('settings.tokens.title')} description={t('settings.tokens.help')}>
@@ -23,6 +25,7 @@ export function TokensSettings() {
             <span className="flex-1 truncate">
               {token.name} <span className="num text-xs text-faint">{token.prefix}…</span>
             </span>
+            <span className={`chip text-[11px] ${token.scope === 'full' ? 'text-warn' : 'text-muted'}`}>{token.scope === 'full' ? t('settings.tokens.scopeFull') : t('settings.tokens.scopeRead')}</span>
             <span className="text-[11px] text-faint">{token.last_used_at ? new Date(token.last_used_at).toLocaleString() : t('settings.tokens.neverUsed')}</span>
             <button className="btn btn-icon h-7 w-7 btn-danger" onClick={() => void del(`/tokens/${token.id}`).then(() => tokens.refetch())} aria-label={t('common.delete')}>
               <Trash2 size={14} />
@@ -43,16 +46,29 @@ export function TokensSettings() {
           <pre className="text-[11px] num mt-1 whitespace-pre-wrap">{`curl -H "Authorization: Bearer ${fresh.token}" ${window.location.origin}/api/v1/boards`}</pre>
         </div>
       )}
+      <Field label={t('settings.tokens.scope')} htmlFor="t-scope" help={t('settings.tokens.scopeHelp')}>
+        <Select
+          id="t-scope"
+          value={scope}
+          onChange={(value) => setScope(value === 'full' ? 'full' : 'read')}
+          options={[
+            { value: 'read', label: t('settings.tokens.scopeRead') },
+            { value: 'full', label: t('settings.tokens.scopeFull') },
+          ]}
+        />
+      </Field>
       <Field label={t('settings.tokens.name')} htmlFor="t-name">
-        <div className="flex gap-2">
+        {/* An id of its own, so the field names the input and not this row. */}
+        <div id="t-name-row" className="flex gap-2">
           <input id="t-name" className="input" value={name} placeholder="Home Assistant" onChange={(e) => setName(e.target.value)} />
           <button
             className="btn btn-accent flex-none"
             disabled={!name.trim()}
             onClick={() =>
-              void post<ApiToken>('/tokens', { name: name.trim() }).then((created) => {
+              void post<ApiToken>('/tokens', { name: name.trim(), scope }).then((created) => {
                 setFresh(created)
                 setName('')
+                setScope('read')
                 void tokens.refetch()
               })
             }

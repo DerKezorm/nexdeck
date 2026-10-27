@@ -156,6 +156,35 @@ describe("a card's menu", () => {
     expect(moved.mock.calls.at(-1)![1]).toBe(7)
   })
 
+  it('copies the card beside itself or onto another page, and the selection with it', async () => {
+    const copied = vi.fn()
+    const { moved, wrapper } = board({ moveTargets: targets, onCopy: copied, here: { id: 5, name: 'Overview' } })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Size and place' })[2])
+    // Moving is what the menu starts with; "duplicate here" belongs to copying only.
+    expect(screen.queryByRole('menuitem', { name: 'Duplicate here' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    expect(screen.getByText('Copy to')).toBeTruthy()
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Duplicate here' }))
+    expect(copied).toHaveBeenLastCalledWith([3], 5)
+    expect(moved).not.toHaveBeenCalled()
+
+    fireEvent.mouseDown(wrapper(1), { shiftKey: true })
+    fireEvent.mouseDown(wrapper(2), { shiftKey: true })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Size and place' })[1])
+    await userEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    expect(screen.getByText('Copy 2 cards to')).toBeTruthy()
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Rack' }))
+    expect(copied.mock.calls.at(-1)![0].sort()).toEqual([1, 2])
+    expect(copied.mock.calls.at(-1)![1]).toBe(9)
+    expect(moved).not.toHaveBeenCalled()
+  })
+
+  it('offers no copying where the board cannot take it', async () => {
+    board({ moveTargets: targets })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Size and place' })[0])
+    expect(screen.queryByRole('button', { name: 'Copy' })).toBeNull()
+  })
+
   it('is not offered outside edit mode', () => {
     board({ editing: false })
     expect(screen.queryByRole('button', { name: 'Size and place' })).toBeNull()

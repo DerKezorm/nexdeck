@@ -1,0 +1,15 @@
+{
+  "type": "credentials",
+  "prompts": [
+    {
+      "id": "username",
+      "type": "text",
+      "label": "user.username"
+    },
+    {
+      "id": "password",
+      "type": "password",
+      "label": "user.password"
+    }
+  ]
+}

@@ -32,7 +32,8 @@ import type { TFunction } from 'i18next'
 
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
-import { formatValue, timeAgo } from '../lib/format'
+import { appTarget, keyOf, useKeyMarks } from '../lib/appKeys'
+import { formatValue, serviceLogo, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
@@ -53,6 +54,8 @@ import { NoteEditor, saveNote } from './NoteEditor'
 import { Rolled } from './Rolled'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
+import type { Air, Hourly } from './WeatherExtras'
+import type { Entry, Range } from '../lib/calendarGrid'
 
 export interface RenderProps {
   widget: WidgetView
@@ -88,6 +91,12 @@ function CountdownCard(props: RenderProps) {
     </Suspense>
   )
 }
+
+/** The week and month grid of the calendar card loads only for a card that chose one. */
+const LazyCalendarGrid = lazy(() => import('./CalendarGrid'))
+
+/** The weather card's hourly strip and air chips load only for a card that switched one on. */
+const LazyWeatherExtras = lazy(() => import('./WeatherExtras'))
 
 /** Key figures draw the number cards they hold; loaded only when a board has them. */
 const LazyFiguresCard = lazy(() => import('./FiguresCard').then((module) => ({ default: module.FiguresCard })))
@@ -1156,6 +1165,22 @@ export function CalendarCard({ widget, data }: RenderProps) {
   // An appointment of one's own comes from an iCal calendar and says so; the rest are releases.
   const appointment = (entry: Record<string, unknown>) => widget.kind === 'ical.events' || entry.appointment === true
   const items = data?.items ?? []
+  // The week and the month are a grid, drawn by a part of their own that loads when a card has chosen one.
+  const grid = data?.meta?.view
+  if (grid === 'week' || grid === 'month') {
+    return (
+      <Suspense fallback={<div className="flex-1" />}>
+        <LazyCalendarGrid
+          items={items as Entry[]}
+          view={grid}
+          range={data?.meta?.range as Range | undefined}
+          nameOf={(entry) => (appointment(entry) ? disguise.as('event', String(entry.title ?? '')) : disguise.media(String(entry.title ?? '')))}
+          placeOf={(entry) => (appointment(entry) && disguise.on ? '' : disguise.free(tLabel(String(entry.subtitle ?? ''))))}
+          sourceOf={(entry) => (disguise.on ? '' : String(entry.source ?? ''))}
+        />
+      </Suspense>
+    )
+  }
   if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
   for (const item of items) {
@@ -1529,8 +1554,13 @@ export function WeatherCard({ data }: RenderProps) {
   const night = data?.meta?.is_day === false
   const Icon = night && condition === 'clear' ? Moon : (CONDITION_ICONS[condition] ?? Cloud)
   const days = data?.items ?? []
+  // The hourly strip and the air chips load only for a card that asked for them; the card scrolls when it was given too little height.
+  const hourly = data?.meta?.hourly as Hourly | undefined
+  const air = data?.meta?.air as Air | undefined
+  const unavailable = data?.meta?.air_unavailable === true
+  const extras = Boolean(hourly || (air && Object.keys(air).length) || unavailable)
   return (
-    <div className="flex-1 flex flex-col px-3 pb-2 min-h-0">
+    <div className={`flex-1 flex flex-col px-3 pb-2 min-h-0 ${extras ? 'scroll' : ''}`}>
       <div className="flex items-center gap-3 my-auto">
         <Icon size={36} className="text-accent flex-none" strokeWidth={1.5} />
         <div className="min-w-0">
@@ -1568,6 +1598,13 @@ export function WeatherCard({ data }: RenderProps) {
               </div>
             )
           })}
+        </div>
+      )}
+      {extras && (
+        <div className="shrink-0">
+          <Suspense fallback={null}>
+            <LazyWeatherExtras hourly={hourly} air={air} unavailable={unavailable} />
+          </Suspense>
         </div>
       )}
     </div>
@@ -2134,14 +2171,23 @@ export function RingCard({ data }: RenderProps) {
 // App tile: launcher with reachability
 // ---------------------------------------------------------------------------
 
-export function AppTile({ widget, data, link }: RenderProps) {
+export function AppTile({ widget, data, editing }: RenderProps) {
   const { t } = useTranslation()
   const health = widget.health
   const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
   // The tile's own line, else the one of the app it follows (issue #37).
   const description = String(data?.meta?.description || widget.app?.description || '')
-  const href = safeUrl(link || widget.link || widget.service_link) || undefined
+  // The same address and the same tab as its number key (lib/appKeys.ts).
+  const { href, newTab } = appTarget(widget, data)
+  const key = keyOf(widget)
+  const marks = useKeyMarks((state) => state.shown)
+  // Not while the board is arranged: the keys do nothing then.
+  const mark = key && marks && !editing ? (
+    <kbd className="absolute left-1.5 top-1.5 z-[1] grid place-items-center min-w-[18px] h-[18px] px-1 rounded-md bg-accent text-white text-[11px] font-semibold leading-none shadow" aria-hidden="true" data-testid="key-mark">
+      {key}
+    </kbd>
+  ) : null
   const bars = health?.bars ?? []
   // Why the dot is the colour it is, on hover. A grey dot used to say nothing
   // at all, and issue #17 took five rounds to find a check switched off.
@@ -2165,14 +2211,16 @@ export function AppTile({ widget, data, link }: RenderProps) {
     return (
       <Tag
         href={href}
-        target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
+        target={newTab ? '_blank' : undefined}
         rel="noopener noreferrer"
         className="app-big flex-1 flex flex-col items-center min-h-0 px-3 pt-2.5 pb-3 no-underline text-inherit relative"
         data-testid="app-big"
+        aria-keyshortcuts={key || undefined}
       >
+        {mark}
         <div className="text-[14px] font-semibold truncate max-w-full text-center">{widget.title}</div>
         <div className="app-big-icon flex-1 min-h-0 w-full grid place-items-center">
-          <ServiceIcon icon={widget.icon} size={96} />
+          <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={96} />
         </div>
         {asBars ? (
           <AvailabilityBars bars={bars} title={barsTitle} className="w-full" />
@@ -2185,12 +2233,14 @@ export function AppTile({ widget, data, link }: RenderProps) {
   return (
     <Tag
       href={href}
-      target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
+      target={newTab ? '_blank' : undefined}
       rel="noopener noreferrer"
-      className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit"
+      className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit relative"
+      aria-keyshortcuts={key || undefined}
     >
+      {mark}
       <div className="flex items-center gap-3">
-        <ServiceIcon icon={widget.icon} size={30} />
+        <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={30} />
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold truncate">{widget.title}</div>
           {description && <div className="text-[11px] text-muted truncate">{description}</div>}

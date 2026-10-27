@@ -11,7 +11,7 @@ import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
 import { applyAppearance, type Appearance } from './lib/appearance'
-import { loadBrand } from './lib/brand'
+import { loadBrand, useBrand } from './lib/brand'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
@@ -51,11 +51,17 @@ function Guard({ children }: { children: React.ReactNode }) {
 /**
  * The look the operator chose, painted on once the browser is signed in.
  *
- * Signed out there is nothing to read and nothing to paint, so the sign-in
- * page keeps the colours nexdeck ships with.
+ * Signed out, the sign-in page and the first start are drawn in the part of
+ * the look the brand carries (theme, cards, type, no style sheet), so an
+ * installation in 1984 greets in 1984. A wall display paints its own.
  */
 function Look() {
   const user = useAuth((s) => s.user)
+  const open = useBrand((s) => s.look)
+  useEffect(() => {
+    if (user || !open || window.location.pathname.startsWith('/k/')) return
+    applyAppearance(open)
+  }, [user, open])
   useEffect(() => {
     if (!user) return
     let dropped = false

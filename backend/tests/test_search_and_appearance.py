@@ -245,7 +245,7 @@ def test_a_wall_display_is_painted_with_the_look_of_the_installation(client: Tes
 def test_the_cards_are_drawn_the_way_the_administrator_chose(admin_client: TestClient) -> None:
     fresh = admin_client.get("/api/v1/settings/appearance").json()
     assert (fresh["card_style"], fresh["radius"], fresh["gap"]) == ("glass", 16, 12), "nexdeck as it always looked"
-    assert fresh["card_styles"] == ["glass", "liquid", "flat", "outline", "neon"]
+    assert fresh["card_styles"] == ["glass", "liquid", "flat", "outline", "neon", "calm", "window"]
     assert fresh["refraction"] is True, "liquid glass bends the light unless switched off"
     stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "card_style": "neon", "radius": 4, "gap": 20})
     assert stored.status_code == 200, stored.text
@@ -263,6 +263,10 @@ def test_the_cards_are_drawn_the_way_the_administrator_chose(admin_client: TestC
     ({"gap": 3}, "bad_gap"),
     ({"gap": 100}, "bad_gap"),
     ({"refraction": "yes"}, "bad_refraction"),
+    ({"font": "comic-sans"}, "no_such_font"),
+    ({"retro": {"status": "blink"}}, "bad_retro"),
+    ({"retro": {"colour": "green"}}, "bad_retro"),
+    ({"retro": "pattern"}, "bad_retro"),
 ])
 def test_a_card_that_is_not_one_is_refused_in_words(body: dict, code: str, admin_client: TestClient) -> None:
     answer = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", **body})
@@ -283,3 +287,79 @@ def test_liquid_glass_and_its_light_are_stored(admin_client: TestClient) -> None
     assert stored.status_code == 200, stored.text
     again = admin_client.get("/api/v1/settings/appearance").json()
     assert (again["card_style"], again["refraction"]) == ("liquid", False)
+
+
+def test_the_calm_cards_and_a_font_are_stored(admin_client: TestClient) -> None:
+    fresh = admin_client.get("/api/v1/settings/appearance").json()
+    assert fresh["font"] == "inter", "nexdeck as it always looked"
+    assert fresh["fonts"] == ["inter", "system", "plex", "atkinson", "geist", "mono", "pixel"]
+    stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "card_style": "calm", "font": "mono"})
+    assert stored.status_code == 200, stored.text
+    again = admin_client.get("/api/v1/settings/appearance").json()
+    assert (again["card_style"], again["font"]) == ("calm", "mono")
+    # A save from an older page that knows nothing of fonts puts it back to the default.
+    older = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan"})
+    assert older.json()["font"] == "inter"
+
+
+def test_a_stored_font_nobody_ships_reads_as_the_default(admin_client: TestClient) -> None:
+    """A value written by hand into the database must not reach the page."""
+    from app.db import session_factory
+    from app.models import Setting
+
+    with session_factory()() as db:
+        db.add(Setting(key=appearance.KEY, value={"font": "../../etc", "card_style": "calm"}))
+        db.commit()
+    shown = admin_client.get("/api/v1/settings/appearance").json()
+    assert (shown["font"], shown["card_style"]) == ("inter", "calm")
+
+
+def test_a_board_may_have_calm_cards_of_its_own(admin_client: TestClient) -> None:
+    board = admin_client.post("/api/v1/boards", json={"name": "Quiet"}, headers=CSRF).json()
+    changed = admin_client.patch(f"/api/v1/boards/{board['slug']}", json={"settings": {"card_style": "calm"}}, headers=CSRF)
+    assert changed.status_code == 200, changed.text
+    assert admin_client.get(f"/api/v1/boards/{board['slug']}").json()["settings"]["card_style"] == "calm"
+
+
+# -- 1984: the window style and what it can be told ------------------------------
+
+
+def test_1984_is_stored_with_its_choices_and_read_back(admin_client: TestClient) -> None:
+    fresh = admin_client.get("/api/v1/settings/appearance").json()
+    assert fresh["retro"] == {"status": "symbol", "icons": "colour", "desk": "dither", "type": "titles"}, "the mock-up as it was approved"
+    theme = fresh["themes"]["1984"]
+    body = {"preset": "cyan", "theme": theme, "card_style": "window", "font": "pixel", "radius": 0,
+            "retro": {"status": "pattern", "icons": "mono", "desk": "weave", "type": "all"}}
+    stored = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json=body)
+    assert stored.status_code == 200, stored.text
+    again = admin_client.get("/api/v1/settings/appearance").json()
+    assert (again["card_style"], again["font"], again["theme"]["name"]) == ("window", "pixel", "1984")
+    assert again["retro"] == {"status": "pattern", "icons": "mono", "desk": "weave", "type": "all"}
+    # A choice left out is its default, not an error: an older page sends none.
+    part = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={**body, "retro": {"status": "tint"}})
+    assert part.json()["retro"] == {"status": "tint", "icons": "colour", "desk": "dither", "type": "titles"}
+
+
+def test_a_stored_choice_of_1984_out_of_the_list_reads_as_its_default() -> None:
+    assert appearance._retro({"status": "blink", "desk": "grey"}) == {"status": "symbol", "icons": "colour", "desk": "grey", "type": "titles"}
+    assert appearance._retro("pattern") == {"status": "symbol", "icons": "colour", "desk": "dither", "type": "titles"}
+
+
+def test_the_sign_in_page_reads_the_look_but_never_the_style_sheet(admin_client: TestClient) -> None:
+    theme = admin_client.get("/api/v1/settings/appearance").json()["themes"]["1984"]
+    admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={
+        "preset": "cyan", "theme": theme, "card_style": "window", "font": "pixel", "css": ".card { color: red; }",
+        "retro": {"status": "pattern"},
+    })
+    admin_client.cookies.clear()
+    look = admin_client.get("/api/v1/brand").json()["look"]
+    assert (look["card_style"], look["font"], look["theme"]["name"], look["retro"]["status"]) == ("window", "pixel", "1984", "pattern")
+    assert "css" not in look, "the operator's sheet is for those who sign in"
+
+
+def test_a_board_cannot_take_the_window_style_for_itself() -> None:
+    """1984 redraws every page; one board in it among glass ones would be half of it."""
+    from app.services import grid
+
+    assert grid.clean({"card_style": "window"}, grid.BASE) == {}
+    assert grid.clean({"card_style": "calm"}, grid.BASE) == {"card_style": "calm"}

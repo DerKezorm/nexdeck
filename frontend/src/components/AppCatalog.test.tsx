@@ -104,6 +104,21 @@ describe('an app tile and the catalog', () => {
     await waitFor(() => expect(screen.getByLabelText(/^link/i)).toHaveValue(''))
   })
 
+  it('shows the short name taken from the name, and keeps one typed in, in lower case', async () => {
+    const sent: Sent[] = []
+    vi.stubGlobal('fetch', server(sent, []))
+    sheet({ ...TILE, title: 'Home Assistant', link: 'https://ha.example' })
+    const alias = await screen.findByLabelText(/^short name/i)
+    expect(alias).toHaveValue('')
+    expect(alias).toHaveAttribute('placeholder', 'home-assistant')
+    expect(screen.getByText(/\/go\/home-assistant/)).toBeInTheDocument()
+    await userEvent.type(alias, 'HA')
+    expect(screen.getByText(/\/go\/ha\b/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await waitFor(() => expect(sent.some((one) => one.method === 'PATCH')).toBe(true))
+    expect(sent.find((one) => one.method === 'PATCH')!.body!.options).toMatchObject({ alias: 'ha' })
+  })
+
   it('is not offered to somebody who may not change the catalog', async () => {
     useAuth.setState({ user: { id: 2, username: 'kim', role: 'user' } as never })
     vi.stubGlobal('fetch', server([], []))

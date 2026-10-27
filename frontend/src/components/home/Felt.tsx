@@ -24,7 +24,9 @@ export function Felt({ arranging, look, children }: { arranging: boolean; look: 
   const box = useRef<HTMLDivElement>(null)
   const filterId = `nd-hg-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const liquid = useLook((state) => shownStyle(state) === 'liquid' && state.refraction)
-  const tilts = useAuth((state) => state.user?.tilt !== false) && !arranging
+  // Calm surfaces never move, as calm cards do not.
+  const calm = useLook((state) => shownStyle(state) === 'calm')
+  const tilts = useAuth((state) => state.user?.tilt !== false) && !arranging && !calm
   const tiltsNow = useRef(tilts)
   useEffect(() => {
     tiltsNow.current = tilts

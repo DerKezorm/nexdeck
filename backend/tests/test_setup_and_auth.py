@@ -35,7 +35,8 @@ def test_cookie_sessions_need_the_request_header(client: TestClient) -> None:
 
 def test_api_token_authenticates_without_cookie(client: TestClient) -> None:
     setup_admin(client)
-    token = client.post("/api/v1/tokens", json={"name": "script"}, headers=CSRF).json()["token"]
+    # Full access: the write further down is what this test is about; a token starts out reading only.
+    token = client.post("/api/v1/tokens", json={"name": "script", "scope": "full"}, headers=CSRF).json()["token"]
     assert token.startswith("nd_")
     bare = TestClient(client.app)
     assert bare.get("/api/v1/auth/me").status_code == 401

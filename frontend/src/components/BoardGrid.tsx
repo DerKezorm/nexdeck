@@ -9,6 +9,7 @@ import { useLook } from '../lib/appearance'
 import { cardsOf, GROUP_KINDS, PageCardsContext, tucked, useFolded, type Holding } from '../lib/groups'
 import { boardRowsFor, cellAt, freeGroup, freeSpot, grown, heldSizeOf, NO_SIDE, pack, rowsOf, sizeFromBoard, sizeOnBoard, type HeldSize, type Side } from '../lib/holding'
 import { fittingRow, perTwelfth } from '../lib/grid'
+import { hiddenOnPhone } from '../lib/phone'
 import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { CardMenu, type MoveTarget } from './CardMenu'
 import { SideBar } from './Held'
@@ -67,6 +68,11 @@ interface Props {
   /** Pages a card may be moved to from its menu; without them the menu offers sizes only. */
   moveTargets?: MoveTarget[]
   onMove?: (widgetIds: number[], pageId: number) => void
+  /** Copies cards onto a page; the page in view is offered as "duplicate here". */
+  onCopy?: (widgetIds: number[], pageId: number) => void
+  here?: { id: number; name: string }
+  /** Leave the cards switched off for the phone out of the stack. The board does; a wall display does not. */
+  phoneHides?: boolean
   /** Counted up by the page when it puts an arrangement back itself, so the grid draws it fresh. */
   epoch?: number
   /** The page's side bar: where it stands and the cards in it. */
@@ -145,7 +151,20 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, side = NO_SIDE, onPlace, onHeldSize, onAddInto, onSide } = props
+  const { widgets: allCards, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, onCopy, here, side = NO_SIDE, onPlace, onHeldSize, onAddInto, onSide, phoneHides } = props
+  // The grid draws at the width WidthProvider assumes before it has measured,
+  // which is a wide one; a phone reports itself right after.
+  const [screen, setScreen] = useState<Screen>('lg')
+  // On a phone, a card switched off for it stays out of the stack, and out of
+  // its group and the side bar. Arranging shows every card, so it can be found
+  // again. ⚠️ Kept as a string of numbers: the data changes every second, the
+  // cards it leaves out hardly ever, and a new list would redraw the grid.
+  const leftOut = phoneHides && screen === 'sm' && !editing ? allCards.filter((widget) => hiddenOnPhone(widget, data[widget.id])).map((widget) => widget.id).join(',') : ''
+  const everyCard = useMemo(() => {
+    if (!leftOut) return allCards
+    const out = new Set(leftOut.split(',').map(Number))
+    return allCards.filter((widget) => !out.has(widget.id))
+  }, [allCards, leftOut])
   // Cards that live inside a tabs card or a group, or in the side bar, are
   // not on the grid; the holder draws them, from the whole page handed down below.
   const sideIds = useMemo(() => (side.place === 'off' ? [] : side.cards), [side])
@@ -158,9 +177,6 @@ export function BoardGrid(props: Props) {
   const folded = useFolded((state) => state.folded)
   const columns = props.columns ?? COLUMNS.lg
   const { t } = useTranslation()
-  // The grid draws at the width WidthProvider assumes before it has measured,
-  // which is a wide one; a phone reports itself right after.
-  const [screen, setScreen] = useState<Screen>('lg')
   // ⚠️ Rebuilt only when the arrangement or the cards change. Without the memo
   // this ran on every widget tick, once or twice a second on a board of
   // thirty, and handed react-grid-layout a new object identity each time.
@@ -520,7 +536,11 @@ export function BoardGrid(props: Props) {
             role={editing ? 'application' : undefined}
             aria-label={editing ? t('board.moveWith', { name: widget.title || widget.kind }) : undefined}
             aria-selected={editing && selected.has(String(widget.id)) ? true : undefined}
-            className={editing && selected.has(String(widget.id)) ? 'card-selected' : undefined}
+            className={[
+              editing && selected.has(String(widget.id)) ? 'card-selected' : '',
+              // Arranged on a phone, a card it leaves out is there, faded, so it can be found and switched back on.
+              editing && phoneHides && screen === 'sm' && widget.options?.phone_hide === true ? 'nd-phone-hidden' : '',
+            ].filter(Boolean).join(' ') || undefined}
             onKeyDown={editing ? (event) => nudge(event, widget) : undefined}
             onMouseDownCapture={editing ? (event) => pick(event, String(widget.id)) : undefined}
           >
@@ -565,6 +585,12 @@ export function BoardGrid(props: Props) {
             setSelected(new Set())
             onMove?.(ids, pageId)
           }}
+          here={here}
+          onCopy={onCopy ? (pageId) => {
+            const ids = group(menuSpot.i) ? [...selected].map(Number) : [menuCard.id]
+            setSelected(new Set())
+            onCopy(ids, pageId)
+          } : undefined}
           onClose={() => setMenu(null)}
         />
       )}

@@ -11,6 +11,7 @@ import { PlayerSettings } from './PlayerSettings'
 import { ProfileSettings } from './ProfileSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
 import { TokensSettings } from './TokensSettings'
+import { AddressBarHelp } from './AddressBarHelp'
 
 /**
  * The old address of a page that now lives under ``/system``.
@@ -49,7 +50,15 @@ export function SettingsPage() {
         <section className="min-w-0">
           <Routes>
             <Route index element={<ProfileSettings />} />
-            <Route path="boards" element={<BoardsSettings />} />
+            <Route
+              path="boards"
+              element={
+                <>
+                  <BoardsSettings />
+                  <AddressBarHelp />
+                </>
+              }
+            />
             <Route path="media" element={<MediaSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
             <Route path="player" element={<PlayerSettings />} />

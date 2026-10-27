@@ -1,0 +1,24 @@
+{
+  "link": "http://openhab.example.com:8080/rest/items/Living_Light",
+  "state": "ON",
+  "lastState": "NULL",
+  "lastStateUpdate": 1793118676645,
+  "lastStateChange": 1793118676645,
+  "metadata": {
+    "semantics": {
+      "value": "Equipment_LightSource_Lightbulb",
+      "editable": false
+    }
+  },
+  "editable": true,
+  "type": "Switch",
+  "name": "Living_Light",
+  "label": "Living room light",
+  "category": "light",
+  "tags": [
+    "Lightbulb"
+  ],
+  "groupNames": [
+    "gLights"
+  ]
+}

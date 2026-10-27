@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from typing import Any, Literal
-from urllib.parse import urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 import httpx
 from pydantic import BaseModel
@@ -1529,6 +1529,80 @@ class MediaSource:
     svg: bool = False
 
 
+class ImagePath:
+    """One shape of path an adapter's pictures take through the image route.
+
+    ``path`` is a pattern the whole path has to match; every keyword names a
+    parameter the service needs for that picture and the pattern its value has
+    to match. A parameter that is not named, or one given twice, is refused.
+    Patterns are matched as they are written, upper and lower case included.
+    """
+
+    __slots__ = ("path", "query")
+
+    def __init__(self, path: str, **query: str) -> None:
+        self.path = re.compile(path)
+        self.query = {name: re.compile(value) for name, value in query.items()}
+
+    def fits(self, path: str, pairs: list[tuple[str, str]]) -> bool:
+        return bool(self.path.fullmatch(path)) and all(
+            name in self.query and self.query[name].fullmatch(value) for name, value in pairs)
+
+
+#: The path part of a picture's path: no percent sign, so nothing in it is
+#: encoded once or twice, and no backslash, semicolon, space or "@".
+_IMAGE_PATH_PART = re.compile(r"/[A-Za-z0-9/_.:~-]*")
+#: Its query before it is decoded. "/" and ":" arrive encoded there, the way
+#: the adapters write them, so a second "?" can only be a smuggled one.
+_IMAGE_QUERY_PART = re.compile(r"[A-Za-z0-9_.~%=&-]*")
+#: A decoded name or value: no percent sign left, so nothing was encoded twice.
+_IMAGE_QUERY_TEXT = re.compile(r"[A-Za-z0-9/_.:~-]*")
+#: What a decoded value may not carry even where its shape allows slashes: an
+#: address (``//``, so ``http://...``) or a step up (``..`` between slashes).
+_IMAGE_QUERY_LEAD = re.compile(r"//|(?:^|/)\.\.(?:/|$)")
+
+
+def image_path(adapter: Adapter, path: str) -> str:
+    """The path of a picture as it may go to the service, or an error with code ``bad_path``.
+
+    ⚠️ The image route fetches with the connection's credentials, and a GET is
+    not always harmless: Plex marks a film as watched on ``/:/scrobble`` and
+    scans a library on ``/library/sections/1/refresh``, and anybody who may
+    read the board, a kiosk included, may ask the route for any path. So every
+    adapter names the shapes of its pictures in ``image_paths``, and one that
+    names none hands out none. The default is nothing, not everything.
+
+    What comes back is put together again from what was checked, so the
+    service is sent exactly that and never a second reading of the original:
+    no ``..``, ``.`` or empty segment, nothing encoded in the path part,
+    nothing encoded twice in the query, no address or ``..`` inside a value,
+    no backslash, no control character,
+    no fragment, no parameter twice.
+    """
+    if not adapter.image_paths:
+        raise AdapterError(f"{adapter.label or 'This service'} hands out no pictures through nexdeck.", code="bad_path")
+    refused = AdapterError("That is not the path of a picture this service hands out.", code="bad_path")
+    part, mark, query = path.partition("?")
+    if not _IMAGE_PATH_PART.fullmatch(part) or not _IMAGE_QUERY_PART.fullmatch(query) or (mark and not query):
+        raise refused
+    if any(segment in ("", ".", "..") for segment in part[1:].split("/")):
+        raise refused
+    pairs: list[tuple[str, str]] = []
+    for piece in query.split("&") if query else ():
+        name, equals, value = piece.partition("=")
+        try:
+            name, value = unquote(name, errors="strict"), unquote(value, errors="strict")
+        except UnicodeDecodeError as failure:
+            raise refused from failure
+        if not equals or not _IMAGE_QUERY_TEXT.fullmatch(name) or not _IMAGE_QUERY_TEXT.fullmatch(value) or _IMAGE_QUERY_LEAD.search(value):
+            raise refused
+        pairs.append((name, value))
+    names = [name for name, _ in pairs]
+    if len(set(names)) != len(names) or not any(shape.fits(part, pairs) for shape in adapter.image_paths):
+        raise refused
+    return part + ("?" + "&".join(f"{quote(name, safe='')}={quote(value, safe='')}" for name, value in pairs) if pairs else "")
+
+
 #: What a button's target list says for an action that acts on the whole
 #: connection and needs nothing picked.
 WHOLE_CONNECTION = "Nothing to pick, it acts on the whole connection"
@@ -1562,6 +1636,13 @@ class Adapter:
     #: up on its own side before nexdeck can reach it. English, translated by
     #: their wording like every other adapter text.
     guide: tuple[str, ...] = ()
+    #: The shapes of the paths this adapter's pictures take through the image
+    #: route (``proxy:/path``), checked by :func:`image_path` before anything
+    #: is fetched or served from the cache. Empty means no pictures at all: an
+    #: adapter that hands out ``proxy:`` paths names every shape it writes, as
+    #: narrowly as the service allows (``tests/test_image_paths.py`` holds it
+    #: to that).
+    image_paths: tuple[ImagePath, ...] = ()
 
     def widget(self, kind: str) -> WidgetType:
         for w in self.widgets:
@@ -1586,6 +1667,7 @@ class Adapter:
         The default fetches the path from the service with ``image_headers`` and
         lets the server keep it for an hour. Adapters whose images need a
         session token or must stay fresh (camera snapshots) override this.
+        The path has passed :func:`image_path` against ``image_paths`` first.
         """
         return MediaSource(url=f"{base_url(config)}{path}", headers=self.image_headers(config))
 

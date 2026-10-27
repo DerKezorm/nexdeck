@@ -17,6 +17,7 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { LanguagePill } from '../components/HeaderTools'
 import { BrandLogo } from '../components/Brand'
 import { Field, PasswordInput } from '../components/ui'
+import { keepReturn, returnPath, takeReturn } from '../lib/returnPath'
 import { useAuth } from '../stores/auth'
 import { oidcErrorKey } from '../vendor/nexoidc/oidc'
 
@@ -65,8 +66,19 @@ export function LoginPage() {
     }
   }, [loading, user, status, homeSignIn])
 
+  // A short address (``/go/plex``) sends a signed-out browser here with ``?next=``. Kept in the tab as well:
+  // a sign-in at a provider leaves this page and comes back to ``/``, where ``HomeRedirect`` picks it up.
+  const next = returnPath(new URLSearchParams(location.search).get('next'))
   useEffect(() => {
-    if (user) navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true })
+    if (next) keepReturn(next)
+  }, [next])
+
+  useEffect(() => {
+    if (!user) return
+    const back = takeReturn()
+    // A whole page load, not the router: ``/go`` is answered by the server.
+    if (back) window.location.replace(back)
+    else navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true })
   }, [user, navigate, location.state])
 
   if (!loading && status?.needs_setup) return <Navigate to="/setup" replace />

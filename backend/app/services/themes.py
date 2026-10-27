@@ -3,7 +3,7 @@
 A theme names the fifteen colours the interface is built from, once for the
 dark look and once for the light one, as ``#rrggbb``. The browser derives the
 see-through surfaces and the soft and glowing shades of the accent from them.
-nexdeck ships seven of its own and six known ones from elsewhere (Catppuccin,
+nexdeck ships eight of its own and six known ones from elsewhere (Catppuccin,
 Nord, Dracula, Tokyo Night, Gruvbox, Rosé Pine); any other can be pasted in as
 JSON and taken out again the same way.
 
@@ -129,6 +129,24 @@ THEMES: dict[str, dict[str, Any]] = {
             "border": "#dcdce0", "border-strong": "#c6c6cc", "text": "#141416", "text-muted": "#45454d",
             "text-faint": "#57575f", "accent": "#3f6212", "on-accent": "#ffffff", "ok": "#166534",
             "warn": "#854d0e", "bad": "#b91c1c", "unknown": "#5c5c64",
+        },
+    },
+    # 1984: black on white as an early desktop drew it, and its night the same
+    # inverted. Colour is left to the status symbols (the style sheet of the
+    # window style); here the status colours are dark enough to read as text.
+    "1984": {
+        "name": "1984",
+        "dark": {
+            "bg": "#0c0c0c", "bg-elev": "#0c0c0c", "surface": "#0c0c0c", "surface-hover": "#1e1e1e",
+            "border": "#f2f2f2", "border-strong": "#f2f2f2", "text": "#f2f2f2", "text-muted": "#a8a8a8",
+            "text-faint": "#a0a0a0", "accent": "#f2f2f2", "on-accent": "#0c0c0c", "ok": "#3ccf5f",
+            "warn": "#f2c300", "bad": "#ff6b61", "unknown": "#a0a0a0",
+        },
+        "light": {
+            "bg": "#ffffff", "bg-elev": "#ffffff", "surface": "#ffffff", "surface-hover": "#ececec",
+            "border": "#000000", "border-strong": "#000000", "text": "#000000", "text-muted": "#555555",
+            "text-faint": "#595959", "accent": "#000000", "on-accent": "#ffffff", "ok": "#0b7a2c",
+            "warn": "#7a5c00", "bad": "#c4161c", "unknown": "#595959",
         },
     },
     "plum": {

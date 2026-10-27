@@ -11,6 +11,9 @@
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
+import { DEFAULT_FONT, fontOf, setFont } from './fonts'
+import { paintRetro, retroOf, type RetroChoices } from './retro'
+
 export type Palette = Record<string, string>
 export interface Theme {
   name: string
@@ -42,10 +45,25 @@ export interface Appearance {
   card_styles?: CardStyle[]
   /** Liquid glass: whether its rim bends the background (Chromium only). */
   refraction?: boolean
+  /** The type of the interface (lib/fonts.ts), and the ones there are. */
+  font?: string
+  fonts?: string[]
+  /** The window style's choices (lib/retro.ts). */
+  retro?: Partial<RetroChoices>
 }
 
-/** How a card is drawn. Glass is nexdeck as it always looked. */
-export type CardStyle = 'glass' | 'liquid' | 'flat' | 'outline' | 'neon'
+/**
+ * How a card is drawn. Glass is nexdeck as it always looked. A new style is
+ * a name here, the same name in `appearance.CARD_STYLES` on the server, its
+ * rules under `:root[data-cards='…']` in the style sheet and a sample in the
+ * settings; the board, the kiosk and the settings take it from this list.
+ *
+ * Window is 1984 (lib/retro.ts): it redraws every page, so it is the
+ * installation's or nothing, and a board does not get to choose it.
+ */
+export const CARD_STYLES = ['glass', 'liquid', 'flat', 'outline', 'neon', 'calm', 'window'] as const
+export type CardStyle = (typeof CARD_STYLES)[number]
+export const BOARD_STYLES: readonly CardStyle[] = CARD_STYLES.filter((style) => style !== 'window')
 
 /**
  * The part of the look a component has to know rather than only paint: the
@@ -53,11 +71,21 @@ export type CardStyle = 'glass' | 'liquid' | 'flat' | 'outline' | 'neon'
  * liquid glass to bend the light. ``board`` is the style of the board on
  * screen when it has one of its own; it wins over the installation's.
  */
-export const useLook = create<{ gap: number; cards: CardStyle; board: CardStyle | null; refraction: boolean }>(() => ({ gap: 12, cards: 'glass', board: null, refraction: true }))
+export const useLook = create<{ gap: number; cards: CardStyle; board: CardStyle | null; refraction: boolean; retro: RetroChoices }>(() => ({
+  gap: 12,
+  cards: 'glass',
+  board: null,
+  refraction: true,
+  retro: retroOf(null),
+}))
 
-/** The style the cards on screen are drawn in. */
+/**
+ * The style the cards on screen are drawn in. 1984 wins over a board's own
+ * style: with it chosen nothing on any page may look modern.
+ */
 export function shownStyle(look: { cards: CardStyle; board: CardStyle | null }): CardStyle {
-  return look.board ?? look.cards
+  if (look.cards === 'window') return 'window'
+  return look.board && look.board !== 'window' ? look.board : look.cards
 }
 
 /** The style onto the page: the board's own, else the installation's. Glass needs no mark. */
@@ -68,6 +96,7 @@ function paintCards(): void {
   if (style !== 'glass') root.dataset.cards = style
   else delete root.dataset.cards
   root.dataset.refract = look.refraction ? 'on' : 'off'
+  paintRetro(style === 'window', look.retro)
 }
 useLook.subscribe(paintCards)
 
@@ -87,7 +116,7 @@ export function useBoardCardStyle(style: unknown): void {
 }
 
 const STYLE_ID = 'nexdeck-appearance'
-const STYLES: CardStyle[] = ['glass', 'liquid', 'flat', 'outline', 'neon']
+const STYLES: readonly CardStyle[] = CARD_STYLES
 const THEME_ID = 'nexdeck-theme'
 const HEX = /^#[0-9a-f]{6}$/i
 
@@ -105,6 +134,22 @@ export function darker(colour: string, by = 0.18): string {
   return `#${shaded.map((value) => value.toString(16).padStart(2, '0')).join('')}`
 }
 
+/** The two inks that sit on an accent ground: the dark one of the dark theme and white, as shipped. */
+const INK_DARK = '#041016'
+const INK_LIGHT = '#ffffff'
+
+/**
+ * The ink for text on an accent ground, whichever of the two reads better.
+ *
+ * ⚠️ The accent is written onto the root in both brightnesses, and the shipped
+ * `--nd-on-accent` is white in the light one. A light cyan under white text
+ * was 1.7:1 on a fresh installation in the light theme. The ink follows the
+ * accent that is really drawn.
+ */
+export function onAccent(colour: string): string {
+  return contrast(colour, INK_DARK) >= contrast(colour, INK_LIGHT) ? INK_DARK : INK_LIGHT
+}
+
 /** The variables an accent colour turns into. */
 export function accentVariables(colour: string): Record<string, string> {
   const parts = channels(colour)
@@ -112,6 +157,7 @@ export function accentVariables(colour: string): Record<string, string> {
   const [red, green, blue] = parts
   return {
     '--nd-accent': colour,
+    '--nd-on-accent': onAccent(colour),
     '--nd-accent-strong': darker(colour),
     '--nd-accent-soft': `rgba(${red}, ${green}, ${blue}, 0.14)`,
     '--nd-accent-glow': `rgba(${red}, ${green}, ${blue}, 0.35)`,
@@ -189,7 +235,7 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   const own = HEX.test(look?.accent ?? '')
   const colour = look?.theme && !own ? '' : (look?.colour ?? '')
   const variables = accentVariables(colour)
-  for (const name of ['--nd-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']) {
+  for (const name of ['--nd-accent', '--nd-on-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']) {
     if (variables[name]) root.style.setProperty(name, variables[name])
     else root.style.removeProperty(name)
   }
@@ -204,8 +250,44 @@ export function applyAppearance(look: Appearance | null | undefined): void {
     gap: typeof look?.gap === 'number' ? look.gap : 12,
     cards: STYLES.includes(look?.card_style as CardStyle) ? (look?.card_style as CardStyle) : 'glass',
     refraction: look?.refraction !== false,
+    retro: retroOf(look?.retro),
   })
   paintCards()
+  void setFont(look?.font ?? DEFAULT_FONT)
+  remember(look)
+}
+
+const KEPT = 'nexdeck.look'
+
+/**
+ * The look as this browser saw it last, without the operator's style sheet.
+ *
+ * The look is read from the server after the page has started, so every load
+ * began in nexdeck's own glass and turned into the chosen look a moment
+ * later. For a theme that is a flicker; for 1984, which redraws everything,
+ * it is a different program for half a second. The start paints what was
+ * kept here first (main.tsx), the server's answer follows as before.
+ */
+function remember(look: Appearance | null | undefined): void {
+  try {
+    if (!look) localStorage.removeItem(KEPT)
+    else {
+      const { theme, accent, colour, preset, card_style, radius, gap, refraction, font, retro } = look
+      localStorage.setItem(KEPT, JSON.stringify({ theme: theme ?? null, accent, colour, preset, card_style, radius, gap, refraction, font, retro, css: '' }))
+    }
+  } catch {
+    // A browser that keeps nothing starts in nexdeck's own look, as it always did.
+  }
+}
+
+/** Paint the look this browser kept, before the server has said anything. */
+export function recallLook(): void {
+  try {
+    const kept = localStorage.getItem(KEPT)
+    if (kept) applyAppearance(JSON.parse(kept) as Appearance)
+  } catch {
+    // Nothing kept, or nothing readable: nexdeck's own look until the server answers.
+  }
 }
 
 /** The contrast ratio of two #rrggbb colours, from 1 to 21, the way WCAG counts it. */
@@ -221,6 +303,30 @@ export function contrast(one: string, other: string): number {
   }
   const [a, b] = [luminance(one), luminance(other)]
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+}
+
+/** The fifteen colours a theme sets, as the server names them (`themes.TOKENS`). */
+export const THEME_TOKENS = [
+  'bg', 'bg-elev', 'surface', 'surface-hover', 'border', 'border-strong',
+  'text', 'text-muted', 'text-faint', 'accent', 'on-accent', 'ok', 'warn', 'bad', 'unknown',
+] as const
+
+/**
+ * nexdeck's own look as fifteen plain colours, the start of a theme of one's
+ * own. The style sheet draws surfaces and lines see-through; here they are
+ * the colour they come out as over the page.
+ */
+export const OWN_PALETTES: { dark: Palette; light: Palette } = {
+  dark: {
+    bg: '#0a0d12', 'bg-elev': '#0f131a', surface: '#11161f', 'surface-hover': '#181f2b', border: '#1b1e23', 'border-strong': '#313337',
+    text: '#e7eaf0', 'text-muted': '#94a0b3', 'text-faint': '#8590a2', accent: '#22d3ee', 'on-accent': '#041016',
+    ok: '#34d399', warn: '#fbbf24', bad: '#fb7185', unknown: '#7f8b9e',
+  },
+  light: {
+    bg: '#eef1f5', 'bg-elev': '#ffffff', surface: '#ffffff', 'surface-hover': '#f6f8fa', border: '#dce0e5', 'border-strong': '#cacfd5',
+    text: '#0f172a', 'text-muted': '#55627a', 'text-faint': '#556072', accent: '#0e7490', 'on-accent': '#ffffff',
+    ok: '#047857', warn: '#a4560a', bad: '#be123c', unknown: '#556070',
+  },
 }
 
 const TEXT = ['text', 'text-muted', 'text-faint', 'accent', 'ok', 'warn', 'bad', 'unknown']
@@ -279,6 +385,8 @@ export function lookFile(look: Appearance): string {
     refraction: look.refraction !== false,
     radius: look.radius ?? 16,
     gap: look.gap ?? 12,
+    font: fontOf(look.font).key,
+    retro: retroOf(look.retro),
   })
 }
 
@@ -313,6 +421,9 @@ export function readLook(text: string): { look: Partial<Appearance> } | { error:
   const within = (number: unknown, low: number, high: number, fallback: number) => (typeof number === 'number' && Number.isInteger(number) && number >= low && number <= high ? number : fallback)
   look.radius = within(value.radius, 0, 28, 16)
   look.gap = within(value.gap, 4, 28, 12)
+  // A look shared before fonts could be chosen leaves the font as it is.
+  if (typeof value.font === 'string') look.font = fontOf(value.font).key
+  if (value.retro && typeof value.retro === 'object') look.retro = retroOf(value.retro)
   return { look }
 }
 

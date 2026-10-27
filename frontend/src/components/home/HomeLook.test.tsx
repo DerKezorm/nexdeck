@@ -49,6 +49,12 @@ it('lets a surface of the page follow the pointer and tip, as a card does', () =
   expect(bent).toEqual([])
 })
 
+it('keeps still in the calm card style', () => {
+  useLook.setState({ cards: 'calm' })
+  render(<Felt arranging={false} look="contact:pill:surface">{pill()}</Felt>)
+  expect(followed[0].tilts()).toBe(false)
+})
+
 it('does not tip while the page is arranged, nor when the account asked for no tilt', () => {
   const { rerender } = render(<Felt arranging look="contact:pill:surface">{pill()}</Felt>)
   expect(followed[0].tilts()).toBe(false)
@@ -81,7 +87,7 @@ it('leaves a drawing alone: a door is a picture, not a card', () => {
 it('names in the style sheet the same surfaces as Felt, for every card style', () => {
   const css = readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8')
   const wanted = SURFACES.split(',').map((one) => one.trim()).sort()
-  for (const style of ['flat', 'outline', 'neon', 'liquid']) {
+  for (const style of ['flat', 'outline', 'neon', 'liquid', 'calm']) {
     const found = css.match(new RegExp(`:root\\[data-cards='${style}'\\] \\[data-home-page\\] :is\\(([^)]*)\\)`))
     expect(found, style).not.toBeNull()
     expect(found![1].split(',').map((one) => one.trim()).sort(), style).toEqual(wanted)

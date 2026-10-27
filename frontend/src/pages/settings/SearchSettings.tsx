@@ -7,6 +7,7 @@ import { ApiError, get, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Switch, Toast } from '../../components/ui'
 import type { SearchSettings as Settings, SearchTarget } from '../../lib/search'
+import { AddressBarHelp } from './AddressBarHelp'
 import { SettingsCard } from './SettingsCard'
 
 const EMPTY: Settings = { enabled: true, targets: [] }
@@ -122,6 +123,7 @@ export function SearchSettings() {
           </button>
         </div>
       </SettingsCard>
+      <AddressBarHelp />
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>
           {toast.text}
