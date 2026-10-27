@@ -2071,7 +2071,14 @@
     "Uploads": "Envois",
     "What is downloading, queued or failed, with progress.": "Ce qui se télécharge, attend ou a échoué, avec la progression.",
     "What others are taking from you or waiting for.": "Ce que d'autres vous prennent ou attendent.",
-    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Si slskd est connecté à Soulseek, ce qu'il partage et ce qui est en cours."
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Si slskd est connecté à Soulseek, ce qu'il partage et ce qui est en cours.",
+    "Whether the stream is live, how long, how many watch, and the way to disconnect the broadcaster.": "Si le flux est en direct, depuis combien de temps, combien de personnes regardent, et le moyen de déconnecter l'émetteur.",
+    "Admin password (stream key)": "Mot de passe administrateur (clé de flux)",
+    "The stream key is the password of the user admin. Without it only the public status is shown.": "La clé de flux est le mot de passe de l'utilisateur admin. Sans elle, seul l'état public est affiché.",
+    "Stream": "Flux",
+    "Live or offline, how long it has been live, the viewers, the picture it sends and how healthy it is.": "En direct ou hors ligne, depuis quand, les spectateurs, l'image envoyée et l'état de santé du flux.",
+    "The number of people watching now, with the peak of this session and of all time. Needs the stream key.": "Le nombre de personnes qui regardent maintenant, avec le pic de cette session et de tous les temps. Demande la clé de flux.",
+    "Viewers": "Spectateurs"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3311,6 +3318,14 @@
     "Queued here": "En file ici",
     "Queued by the other side": "En file chez l'autre",
     "Refused": "Refusé",
-    "Nothing is on the move.": "Rien n'est en cours."
+    "Nothing is on the move.": "Rien n'est en cours.",
+    "Title": "Titre",
+    "Live for": "En direct depuis",
+    "Offline for": "Hors ligne depuis",
+    "Bitrate": "Débit",
+    "Followers": "Abonnés",
+    "Peak this session": "Pic de cette session",
+    "Peak ever": "Pic historique",
+    "Disconnect the broadcaster": "Déconnecter l'émetteur"
   }
 }

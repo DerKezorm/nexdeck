@@ -2071,7 +2071,14 @@
     "Uploads": "Upload",
     "What is downloading, queued or failed, with progress.": "Cosa è in download, in coda o fallito, con l'avanzamento.",
     "What others are taking from you or waiting for.": "Cosa gli altri prendono da te o aspettano.",
-    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Se slskd è connesso a Soulseek, cosa condivide e cosa è in corso."
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Se slskd è connesso a Soulseek, cosa condivide e cosa è in corso.",
+    "Whether the stream is live, how long, how many watch, and the way to disconnect the broadcaster.": "Se la diretta è in corso, da quanto, quanti la guardano e il modo di disconnettere chi trasmette.",
+    "Admin password (stream key)": "Password amministratore (chiave dello stream)",
+    "The stream key is the password of the user admin. Without it only the public status is shown.": "La chiave dello stream è la password dell'utente admin. Senza di essa si vede solo lo stato pubblico.",
+    "Stream": "Stream",
+    "Live or offline, how long it has been live, the viewers, the picture it sends and how healthy it is.": "In diretta o offline, da quanto, gli spettatori, l'immagine inviata e lo stato di salute dello stream.",
+    "The number of people watching now, with the peak of this session and of all time. Needs the stream key.": "Il numero di persone che guardano ora, con il picco di questa sessione e di sempre. Richiede la chiave dello stream.",
+    "Viewers": "Spettatori"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3311,6 +3318,14 @@
     "Queued here": "In coda qui",
     "Queued by the other side": "In coda dall'altra parte",
     "Refused": "Rifiutato",
-    "Nothing is on the move.": "Nulla è in corso."
+    "Nothing is on the move.": "Nulla è in corso.",
+    "Title": "Titolo",
+    "Live for": "In diretta da",
+    "Offline for": "Offline da",
+    "Bitrate": "Bitrate",
+    "Followers": "Follower",
+    "Peak this session": "Picco di questa sessione",
+    "Peak ever": "Picco di sempre",
+    "Disconnect the broadcaster": "Disconnetti chi trasmette"
   }
 }

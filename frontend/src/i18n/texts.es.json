@@ -2071,7 +2071,14 @@
     "Uploads": "Subidas",
     "What is downloading, queued or failed, with progress.": "Lo que se descarga, espera o ha fallado, con el progreso.",
     "What others are taking from you or waiting for.": "Lo que otros te están pidiendo o esperan.",
-    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Si slskd está conectado a Soulseek, qué comparte y qué está en marcha."
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Si slskd está conectado a Soulseek, qué comparte y qué está en marcha.",
+    "Whether the stream is live, how long, how many watch, and the way to disconnect the broadcaster.": "Si la emisión está en directo, desde cuándo, cuántos la ven y la forma de desconectar al emisor.",
+    "Admin password (stream key)": "Contraseña de administrador (clave de emisión)",
+    "The stream key is the password of the user admin. Without it only the public status is shown.": "La clave de emisión es la contraseña del usuario admin. Sin ella solo se muestra el estado público.",
+    "Stream": "Emisión",
+    "Live or offline, how long it has been live, the viewers, the picture it sends and how healthy it is.": "En directo o no, desde cuándo, los espectadores, la imagen que envía y su estado de salud.",
+    "The number of people watching now, with the peak of this session and of all time. Needs the stream key.": "El número de personas que miran ahora, con el máximo de esta sesión y de siempre. Necesita la clave de emisión.",
+    "Viewers": "Espectadores"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3311,6 +3318,14 @@
     "Queued here": "En cola aquí",
     "Queued by the other side": "En la cola del otro lado",
     "Refused": "Rechazado",
-    "Nothing is on the move.": "No hay nada en marcha."
+    "Nothing is on the move.": "No hay nada en marcha.",
+    "Title": "Título",
+    "Live for": "En directo desde hace",
+    "Offline for": "Sin emitir desde hace",
+    "Bitrate": "Tasa de bits",
+    "Followers": "Seguidores",
+    "Peak this session": "Máximo de esta sesión",
+    "Peak ever": "Máximo histórico",
+    "Disconnect the broadcaster": "Desconectar al emisor"
   }
 }
