@@ -182,6 +182,8 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+ (?:min|h|d)) old$/, '$1 alt'],
     [/^(\d+) times$/, '$1-mal'],
     [/^seen (\d+ (?:min|h|d)) ago$/, 'gesehen vor $1'],
+    [/^(\d+) users$/, '$1 Benutzer'],
+    [/^(\d+ (?:min|h|d)) ago$/, 'vor $1'],
   ],
   es: spanish,
   fr: french,

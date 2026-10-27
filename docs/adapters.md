@@ -87,6 +87,7 @@ that one of twenty-one renderers draws.
 | Technitium DNS | blocking, top blocked | | API token |
 | NextDNS | blocking, top blocked | | API key and the profile ID |
 | authentik | status, failed sign-ins | | API token of a service account with read access |
+| Keycloak | overview (open sessions, realms, users, failed sign-ins in 24 hours), realms (users, sessions and failures of each), failed sign-ins (user, client, address, reason) | | a client with Client authentication and a service account (client ID and secret), whose service account holds view-realm, view-users, view-events and view-clients of each realm to show; from the master realm one client reaches them all. Failed sign-ins need Events switched on in the realm, which Keycloak does not do by default. Measured against Keycloak 26 |
 | CrowdSec | blocked addresses, blocked | | bouncer key from `cscli bouncers add`; it may read decisions and nothing else |
 | Shlink | short URLs, visits | | API key from `shlink api-key:generate` |
 | Blocky | blocking, top blocked | pause 5 min, enable | none; Blocky's API has no sign-in, so its HTTP port stays inside the network, and statistics.enable has to be on (Blocky 0.35 or newer) |

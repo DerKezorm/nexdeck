@@ -2317,7 +2317,19 @@
     "The space each user has used, the fullest first, yellow and red near a quota.": "Der Platz, den jeder Benutzer belegt, die vollsten zuerst, gelb und rot nahe am Kontingent.",
     "Under API keys, create a key with the scope Admin for that admin. SFTPGo shows it once.": "Erstelle unter API keys einen Schlüssel mit dem Geltungsbereich Admin für diesen Admin. SFTPGo zeigt ihn nur einmal.",
     "What the Monitor has found and not yet seen resolved, the critical ones first, with its reason.": "Was der Monitor gefunden hat und noch nicht als behoben sah, die kritischen zuerst, mit seiner Begründung.",
-    "Who is connected right now, from where, and what they are transferring.": "Wer gerade verbunden ist, von wo, und was übertragen wird."
+    "Who is connected right now, from where, and what they are transferring.": "Wer gerade verbunden ist, von wo, und was übertragen wird.",
+    "Create a client with Client authentication on and only Service accounts roles ticked as the flow.": "Erstelle einen Client mit eingeschalteter Client authentication und nur Service accounts roles als Ablauf.",
+    "Every realm with its users, its open sessions and the failed sign-ins of the last 24 hours.": "Jeder Realm mit seinen Benutzern, seinen offenen Sitzungen und den fehlgeschlagenen Anmeldungen der letzten 24 Stunden.",
+    "From the client's Credentials tab. Client authentication and Service accounts roles have to be on.": "Vom Reiter Credentials des Clients. Client authentication und Service accounts roles müssen an sein.",
+    "On its Service accounts roles tab assign view-realm, view-users, view-events and view-clients of the realm-management client of each realm nexdeck should show. From the master realm one client can reach all of them.": "Weise auf dem Reiter Service accounts roles view-realm, view-users, view-events und view-clients des Clients realm-management jedes Realms zu, den nexdeck zeigen soll. Aus dem Master-Realm erreicht ein Client alle.",
+    "Open sessions, realms, users and the sign-ins that failed in the last 24 hours.": "Offene Sitzungen, Realms, Benutzer und die Anmeldungen, die in den letzten 24 Stunden scheiterten.",
+    "Realm of the client": "Realm des Clients",
+    "Realms": "Realms",
+    "Realms, open sessions and failed sign-ins of a Keycloak server.": "Realms, offene Sitzungen und fehlgeschlagene Anmeldungen eines Keycloak-Servers.",
+    "Switch on Events in each realm's settings, or its failed sign-ins stay invisible. Keycloak keeps none by default.": "Schalte in den Einstellungen jedes Realms Events ein, sonst bleiben seine fehlgeschlagenen Anmeldungen unsichtbar. Keycloak hält ab Werk keine vor.",
+    "The address of Keycloak, with its relative path if it has one, such as /auth.": "Die Adresse von Keycloak, mit ihrem relativen Pfad, falls es einen gibt, etwa /auth.",
+    "The latest sign-ins that failed in the realms that keep events, with the user, the client, the address and the reason.": "Die letzten gescheiterten Anmeldungen in den Realms, die Events führen, mit Benutzer, Client, Adresse und Grund.",
+    "The realm the client below lives in. The client's service account is what signs in.": "Der Realm, in dem der Client unten liegt. Das Service-Konto des Clients meldet sich an."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3667,6 +3679,17 @@
     "Flush queue": "Warteschlange leeren",
     "Mail disk": "Mail-Platte",
     "Proxmox VE": "Proxmox VE",
-    "Unban": "Entsperren"
+    "Unban": "Entsperren",
+    "Realms with events": "Realms mit Events",
+    "Failed sign-ins in 24 h": "Gescheiterte Anmeldungen in 24 h",
+    "User not found": "Benutzer nicht gefunden",
+    "Wrong password": "Falsches Passwort",
+    "User disabled": "Benutzer deaktiviert",
+    "Temporarily locked": "Vorübergehend gesperrt",
+    "Wrong client secret": "Falsches Client-Geheimnis",
+    "Expired code": "Abgelaufener Code",
+    "Wrong code": "Falscher Code",
+    "Unknown user": "Unbekannter Benutzer",
+    "Events off": "Events aus"
   }
 }

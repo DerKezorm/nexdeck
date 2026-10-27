@@ -152,4 +152,6 @@ export const patterns: Pattern[] = [
   [/^(\d+ (?:min|h|d)) old$/, 'il y a $1'],
   [/^(\d+) times$/, '$1 fois'],
   [/^seen (\d+ (?:min|h|d)) ago$/, 'vu il y a $1'],
+  [/^(\d+) users$/, '$1 utilisateurs'],
+  [/^(\d+ (?:min|h|d)) ago$/, 'il y a $1'],
 ]
