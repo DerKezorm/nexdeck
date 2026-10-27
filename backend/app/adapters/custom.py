@@ -167,6 +167,8 @@ class CustomAdapter(Adapter):
     category = "generic"
     description = "A card described as data: which requests to ask a connection, which values to show, and when to turn yellow or red."
     icon = "lucide:layout-dashboard"
+    # A card someone wrote is theirs, not a service nexdeck has yet to confirm: no beta mark on it.
+    beta = False
     # Not a connection of its own: the card sits on a connection of another kind, the one its definition names.
     needs_integration = True
     fields = ()

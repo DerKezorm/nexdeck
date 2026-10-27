@@ -257,7 +257,7 @@ def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = N
         "id": widget.id,
         "kind": widget.kind,
         "title": widget.title or (app["name"] if app is not None else ""),
-        "icon": widget.icon or (app["icon"] if app is not None else ""),
+        "icon": _card_icon(widget) or (app["icon"] if app is not None else ""),
         **own,
         "link": widget.link,
         "service_link": app_link if app is not None else service_link(widget),
@@ -276,6 +276,24 @@ def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = N
         "maintenance": _away((maintenance_until if maintenance_until is not None
                               else maintenance.until_by_card(db, [widget])).get(widget.id)),
     }
+
+
+def _card_icon(widget: Widget) -> str:
+    """The icon in a card's head; a custom card without one of its own shows the logo of the service it reads.
+
+    ⚠️ Cards placed before 27.10.2026 kept the generic icon of the custom kind; it counts as none, so they show the
+    logo too, and a logo changed in an own integration reaches every card at once.
+    """
+    if not widget.kind.startswith("custom."):
+        return widget.icon
+    from ..adapters import adapter_or_missing
+
+    generic = adapter_or_missing("custom").icon
+    if widget.icon and widget.icon != generic:
+        return widget.icon
+    if widget.integration is None:
+        return generic
+    return adapter_or_missing(widget.integration.kind).icon or generic
 
 
 def _away(row: Any) -> dict[str, Any] | None:

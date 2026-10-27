@@ -283,3 +283,36 @@ async def test_karten2_ec9_after_a_restart_a_custom_card_is_where_a_built_in_car
     assert client.get("/api/v1/boards").status_code == 200
     collector._caches.clear()
     assert (await refreshed(client, widget)).primary["value"] == 4
+
+
+def test_karten3_a_custom_card_carries_the_logo_of_the_service_it_reads_and_no_beta_mark(stand: tuple[TestClient, int]) -> None:
+    from app.cards import integration_store
+    from app.models import Widget
+
+    from .karten3_sample import HEADER
+
+    client, page = stand
+    shown = place(client, page, connection(client, "sonarr")).json()["widget"]
+    assert shown["icon"] == "sonarr" and shown["beta"] is False
+
+    with db_session() as db:
+        integration_store.create(db, HEADER)
+        store.create(db, changed("slug: queue-size", "slug: shelves").replace("requires: [sonarr, radarr]", 'requires: ["custom:bookstack-own"]'))
+    own = client.post("/api/v1/integrations", json={"kind": "custom:bookstack-own", "name": "Books",
+                                                     "config": {"url": BASE, "token_id": "id-1", "token_secret": "secret-1"}}, headers=CSRF)
+    assert own.status_code == 201, own.text
+    shown = place(client, page, int(own.json()["id"]), card="shelves").json()["widget"]
+    assert shown["icon"] == "bookstack" and shown["beta"] is False, "an own integration's card shows the logo its author gave it"
+
+    # A card placed before kept the generic icon of the custom kind; it shows the logo all the same. One with an icon of its own keeps it.
+    from app.services.boards import widget_view
+
+    with db_session() as db:
+        widget = db.get(Widget, shown["id"])
+        widget.icon = "lucide:layout-dashboard"
+    with db_session() as db:
+        assert widget_view(db, db.get(Widget, shown["id"]))["icon"] == "bookstack"
+    patched = client.patch(f"/api/v1/widgets/{shown['id']}", json={"icon": "lucide:book"}, headers=CSRF)
+    assert patched.status_code == 200, patched.text
+    with db_session() as db:
+        assert widget_view(db, db.get(Widget, shown["id"]))["icon"] == "lucide:book"
