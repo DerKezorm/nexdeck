@@ -183,6 +183,22 @@ class SlskdAdapter(Adapter):
             ctx.cache["slskd_token"] = token
         return {"Authorization": f"Bearer {token[0]}"}
 
+    # -- custom cards -------------------------------------------------------------
+
+    #: A kind that signs in by a name and password holds a token that a card renews the way the built-in cards do.
+    raw_session = True
+
+    async def raw_signed(self, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any], None]:
+        # ⚠️ Not ``raw_headers``: ``_headers`` here signs in and so takes the context, which the helper of that name does not.
+        return await self._headers(config, ctx), {}, None
+
+    async def raw_renew(self, config: dict[str, Any], ctx: Context, refused: Any, *, again: bool) -> tuple[dict[str, str], dict[str, Any], None] | None:
+        """A token slskd turned down: one new sign-in. A key that is turned down stays turned down."""
+        if config.get("api_key") or again:
+            return None
+        ctx.cache.pop("slskd_token", None)
+        return await self._headers(config, ctx, fresh=True), {}, None
+
     @staticmethod
     def _json(response: Any) -> Any:
         if response.status_code == 404:
