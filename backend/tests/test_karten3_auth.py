@@ -831,3 +831,31 @@ def test_karten3_ac5_a_secret_that_cannot_be_sent_as_a_header_value_stays_out_of
     assert not any("X-Injected" in seen[2] for seen in Local.seen)
     assert any("Illegal header value" in line for line in trace), "h11 wrote no refusal, so nothing was checked"
     assert not [line for line in trace if KEY in line]
+
+
+@respx.mock
+def test_karten3_a_sign_in_answer_beyond_its_limit_says_so_in_kilobytes_and_does_not_count_as_a_failed_sign_in() -> None:
+    from app.cards.integration import load_integration
+
+    adapter = defined.DefinedAdapter(load_integration(MEMOS).definition, MEMOS)
+    respx.post(f"{BASE}/api/v1/auth/signin").mock(return_value=httpx.Response(200, content=b"x" * (300 * 1024)))
+    cache: dict[str, Any] = {}
+
+    async def run() -> AdapterError:
+        async with httpx.AsyncClient() as client:
+            with pytest.raises(AdapterError) as failure:
+                await adapter.raw_request("GET", "/data", {"url": BASE, "username": "a", "password": "b"}, Context(client, cache=cache))
+            return failure.value
+
+    failure = asyncio.run(run())
+    assert failure.code == "answer_too_large" and "sign-in answer" in failure.message
+    assert "256 KB" in (failure.hint or "") and "0 MB" not in (failure.hint or "")
+    assert cache[defined.STATE].failures == 0
+
+
+@respx.mock
+def test_karten3_a_card_answer_beyond_two_megabytes_names_the_limit_in_megabytes(admin: TestClient) -> None:  # noqa: F811
+    respx.get(f"{BASE}/api/books").mock(return_value=httpx.Response(200, content=b"x" * (3 * 1024 * 1024)))
+    number = own(admin, example("bookstack"), token_id="abc", token_secret=KEY)
+    answer = asked(admin, number, "/api/books")
+    assert answer.json()["detail"]["code"] == "answer_too_large" and "2 MB" in answer.json()["detail"]["hint"]

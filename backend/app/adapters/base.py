@@ -1468,7 +1468,9 @@ async def read_at_most(client: httpx.AsyncClient, method: str, url: str, limit: 
         return AdapterError(
             "Answer too large. The service answered with more than a custom card reads.",
             code="answer_too_large",
-            hint=f"A card reads at most {limit // (1024 * 1024)} MB of one answer. Ask for less, or use a different path of the service.",
+            hint=f"A card reads at most {limit // (1024 * 1024)} MB of one answer. Ask for less, or use a different path of the service."
+            if limit >= 1024 * 1024
+            else f"At most {limit // 1024} KB of this answer are read. Ask for less, or use a different path of the service.",
         )
 
     async with client.stream(method, url, **keywords) as response:

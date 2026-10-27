@@ -293,12 +293,22 @@ class DefinedAdapter(Adapter):
         refuse_a_command(self, session.login)
         url = join_path(self.raw_base(config), session.login)
         body = self._fill_body(session.body, config)
-        response = await ctx.request(
-            "POST", url,
-            json_body=body if session.send == "json" else None,
-            data=body if session.send == "form" else None,
-            verify=self.raw_verify(config), auth_errors=False, follow_redirects=False, max_bytes=SIGN_IN_AT_MOST,
-        )
+        try:
+            response = await ctx.request(
+                "POST", url,
+                json_body=body if session.send == "json" else None,
+                data=body if session.send == "form" else None,
+                verify=self.raw_verify(config), auth_errors=False, follow_redirects=False, max_bytes=SIGN_IN_AT_MOST,
+            )
+        except AdapterError as failure:
+            if failure.code != "answer_too_large":
+                raise
+            raise AdapterError(
+                "The sign-in answer is too large.",
+                code="answer_too_large",
+                hint=f"A sign-in answers with a few lines, and nexdeck reads at most {SIGN_IN_AT_MOST // 1024} KB of it. "
+                     "The sign-in address is probably not the one that signs in.",
+            ) from None
         code = response.status_code
         if code >= 500:
             raise AdapterError("The service failed while signing in.", code="sign_in_error", hint="Try again in a moment.")
