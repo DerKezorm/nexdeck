@@ -35,7 +35,14 @@ from ..adapters.music import (
     demo_sound,
     read_formats,
 )
-from ..deps import DbSession, OptionalUser, board_for_viewer_id, error, kiosk_from_request
+from ..deps import (
+    DbSession,
+    NotReadOnly,
+    OptionalUser,
+    board_for_viewer_id,
+    error,
+    kiosk_from_request,
+)
 from ..models import Integration, Page, Widget
 from ..schemas import PlaylistCreate, PlaylistEntries, PlaylistRename, PlaylistTracks
 from ..services.collector import collector
@@ -138,13 +145,15 @@ async def music_view(widget_id: int, view: str, request: Request, user: Optional
 
 
 @router.get("/widgets/{widget_id}/audio/{track_id}", summary="The sound of one track, relayed by the server")
-async def music_audio(widget_id: int, track_id: str, request: Request, user: OptionalUser, db: DbSession,
+async def music_audio(widget_id: int, track_id: str, request: Request, user: OptionalUser, db: DbSession, _effect: NotReadOnly,
                       quality: str = "original", formats: str = "", start: float = 0) -> Response:
     """Relays the media server's answer as it comes, Range included.
 
     ⚠️ The browser's Range header goes to the media server and the 206 comes
     back unchanged. Without that no track can be skipped into, and Safari does
     not play a file at all.
+
+    Not for a token that only reads: the media server starts a transcode.
     """
     global _audio_open
     widget, adapter, demo = _player(db, widget_id, request, user)
@@ -193,7 +202,7 @@ async def music_audio(widget_id: int, track_id: str, request: Request, user: Opt
 
 @router.get("/widgets/{widget_id}/audio/{track_id}/hls/{part:path}", summary="A piece of a track's HLS playlist, relayed by the server")
 async def music_hls(widget_id: int, track_id: str, part: str, request: Request, user: OptionalUser, db: DbSession,
-                    quality: str = "low", formats: str = "") -> Response:
+                    _effect: NotReadOnly, quality: str = "low", formats: str = "") -> Response:
     """For a browser that plays converted sound only as HLS, which is Safari.
 
     ``master.m3u8`` asks the media server for the playlist; everything the

@@ -285,15 +285,27 @@ def container_icon(image: str, name: str, labels: dict[str, Any] | None = None) 
     known = set(bundled_names()) | (_known_now() or set())
     if not known:
         return ""
+    for candidate in name_candidates(image, name):
+        if candidate in known:
+            return candidate
+    return ""
+
+
+def name_candidates(image: str, name: str) -> list[str]:
+    """What a container may be known as, surest first: its image, its name, each without a trailing part, each's first word.
+
+    ``ghcr.io/immich-app/immich-server`` gives ``immich-server``, ``immich``;
+    a container ``sonarr-4k`` gives ``sonarr-4k``, ``sonarr``. The logos use
+    this, and so does finding the services one could connect (``found.py``).
+    """
     candidates: list[str] = []
     for raw in (guess_from_image(image), re.sub(r"[^a-z0-9_-]", "-", name.lower()).strip("-_")):
         if not raw:
             continue
-        candidates += [raw, _TRAILING.sub("", raw), re.split(r"[-_]", raw)[0]]
-    for candidate in candidates:
-        if candidate and candidate in known:
-            return candidate
-    return ""
+        for one in (raw, _TRAILING.sub("", raw), re.split(r"[-_]", raw)[0]):
+            if one and one not in candidates:
+                candidates.append(one)
+    return candidates
 
 
 def logo_fields(image: str, name: str, labels: dict[str, Any] | None = None) -> dict[str, Any]:

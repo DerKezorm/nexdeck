@@ -1,0 +1,37 @@
+{
+  "env": {
+    "canShutdownRestartHost": false,
+    "dockerOfflineUpdate": false,
+    "featureFlags": {
+      "childBridgeDebugMode": true,
+      "matterSupport": true,
+      "hapBridgeDisable": true,
+      "externalAccessoriesAttribution": true,
+      "disableAllProtocols": true,
+      "matterDisableInPlace": true,
+      "matterMonitoringAck": true,
+      "protocolExternalsOnly": true,
+      "matterDisableIpv4": true,
+      "hapDisableIdentifyingMaterial": true,
+      "matterFabricInfo": true
+    },
+    "homebridgeVersion": "2.4.0",
+    "homebridgeInstanceName": "Homebridge 0001",
+    "instanceId": "instance-example",
+    "packageName": "homebridge-config-ui-x",
+    "packageVersion": "5.29.0",
+    "platform": "linux",
+    "port": 8581,
+    "setupWizardComplete": true,
+    "scheduledBackupDisable": false,
+    "scheduledBackupPath": "/var/lib/homebridge/backups/instance-backups",
+    "temperatureUnits": "c"
+  },
+  "formAuth": true,
+  "sessionTimeout": 28800,
+  "sessionTimeoutInactivityBased": false,
+  "lightingMode": "auto",
+  "serverTimestamp": "2026-10-27T17:05:40.420Z",
+  "theme": "deep-purple",
+  "menuMode": "default"
+}

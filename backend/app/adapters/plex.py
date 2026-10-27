@@ -13,6 +13,7 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -74,6 +75,19 @@ HISTORY_LIMIT = 5000
 PLEX_FORMATS = {"flac": "flac", "mp3": "mp3", "aac": "aac", "alac": "alac", "opus": "opus", "vorbis": "vorbis", "pcm": "wav"}
 #: Plex's item types, by the number its library filter takes.
 ALBUM_TYPE, ARTIST_TYPE, TRACK_TYPE = 9, 8, 10
+#: Where Plex keeps a picture of its own: the thumb or art of an item, the
+#: composite of a playlist, each with the time it last changed.
+PLEX_PICTURE = r"/library/metadata/[0-9]{1,12}/(?:thumb|art)(?:/[0-9]{1,12})?|/playlists/[0-9]{1,12}/composite(?:/[0-9]{1,12})?"
+#: Every picture the Plex adapter writes, and nothing else.
+#:
+#: ⚠️ Plex does things on a plain GET with the token: ``/:/scrobble`` marks
+#: an item as watched, ``/library/sections/1/refresh`` scans a library. The
+#: scaler fetches ``url`` with the server's own rights, so that value is held
+#: to the same shapes and never takes an address or a query of its own.
+PLEX_IMAGE_PATHS = (
+    ImagePath(PLEX_PICTURE),
+    ImagePath(r"/photo/:/transcode", width=r"[0-9]{1,4}", height=r"[0-9]{1,4}", minSize=r"[01]", upscale=r"[01]", url=PLEX_PICTURE),
+)
 
 
 def device_names(ids: set[int], devices: dict[int, str]) -> str:
@@ -163,6 +177,7 @@ class PlexAdapter(MediaAdapter, MusicLibrary):
     #: came back empty on a library that had never been analysed, and HLS for
     #: music was refused for every client Plex was told about.
     music_features: tuple[str, ...] = ()
+    image_paths = PLEX_IMAGE_PATHS
 
     # -- plumbing ----------------------------------------------------------------
 

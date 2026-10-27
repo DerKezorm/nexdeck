@@ -29,6 +29,8 @@ def test_a_card_takes_a_colour_from_the_list_or_of_its_own(client: TestClient, c
     ({"card_colour": "tomato"}, "bad_card_colour"),
     ({"card_colour": 3}, "bad_card_colour"),
     ({"card_effect": "glow"}, "bad_card_effect"),
+    ({"hide_head": "yes"}, "bad_hide_head"),
+    ({"frameless": 1}, "bad_frameless"),
 ])
 def test_anything_else_never_reaches_a_style(client: TestClient, options: dict, code: str) -> None:
     """⚠️ The colour goes into the card's style; only a name from the list or #rrggbb gets there."""
@@ -41,6 +43,17 @@ def test_anything_else_never_reaches_a_style(client: TestClient, options: dict, 
     widget_id = made.get("id") or made["widget"]["id"]
     changed = client.patch(f"/api/v1/widgets/{widget_id}", json={"options": options}, headers=CSRF)
     assert changed.status_code == 400 and changed.json()["detail"]["code"] == code
+
+
+def test_a_card_may_go_without_its_head_and_its_frame(client: TestClient) -> None:
+    setup_admin(client)
+    board, page = _board_and_page(client)
+    made = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "core.search", "options": {"hide_head": True, "frameless": True}}, headers=CSRF)
+    assert made.status_code == 201, made.text
+    shown = client.get(f"/api/v1/boards/{board['slug']}").json()["pages"][0]["widgets"][0]["options"]
+    assert (shown["hide_head"], shown["frameless"]) == (True, True)
+    exported = client.get(f"/api/v1/boards/{board['slug']}/export").text
+    assert "hide_head: true" in exported and "frameless: true" in exported, "and it travels with the board"
 
 
 def test_a_board_draws_its_cards_in_a_style_of_its_own_or_follows(client: TestClient) -> None:

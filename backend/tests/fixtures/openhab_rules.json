@@ -1,0 +1,67 @@
+[
+  {
+    "status": {
+      "status": "IDLE",
+      "statusDetail": "NONE"
+    },
+    "editable": true,
+    "triggers": [
+      {
+        "id": "1",
+        "configuration": {
+          "types": "",
+          "payload": "",
+          "eventSource": "Living_Light",
+          "topic": "",
+          "eventTopic": "openhab/items/*",
+          "source": "",
+          "eventTypes": "ItemStateChangedEvent"
+        },
+        "type": "core.GenericEventTrigger"
+      }
+    ],
+    "conditions": [],
+    "actions": [
+      {
+        "inputs": {},
+        "id": "2",
+        "configuration": {
+          "itemName": "Kitchen_Light",
+          "command": "ON"
+        },
+        "type": "core.ItemCommandAction"
+      }
+    ],
+    "configuration": {},
+    "configDescriptions": [],
+    "templateState": "no-template",
+    "uid": "test_rule",
+    "name": "Test rule",
+    "tags": [],
+    "visibility": "VISIBLE"
+  },
+  {
+    "status": {
+      "status": "UNINITIALIZED",
+      "statusDetail": "HANDLER_INITIALIZING_ERROR",
+      "description": "Missing handler 'nosuch.Trigger' for module '1'\n"
+    },
+    "editable": true,
+    "triggers": [
+      {
+        "id": "1",
+        "configuration": {},
+        "type": "nosuch.Trigger"
+      }
+    ],
+    "conditions": [],
+    "actions": [],
+    "configuration": {},
+    "configDescriptions": [],
+    "templateState": "no-template",
+    "uid": "broken_rule",
+    "name": "Broken rule",
+    "tags": [],
+    "visibility": "VISIBLE"
+  }
+]

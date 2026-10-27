@@ -210,15 +210,17 @@
       "saveProfile": "Salva nome e indirizzo",
       "unsaved": "Non ancora salvato",
       "tilt": "Le schede si inclinano verso il puntatore",
-      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento."
+      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento.",
+      "theme_schedule": "In base all’ora",
+      "lightFrom": "Chiaro dalle",
+      "darkFrom": "Scuro dalle",
+      "scheduleHelp": "Secondo l’orologio dello schermo che lo mostra."
     },
     "integrations": {
       "title": "Integrazioni",
       "help": "Un'integrazione è una connessione a un servizio. I widget scelgono tra queste.",
       "empty": "Nessuna integrazione ancora.",
-      "widgets": "{{count}} widget",
       "add": "Aggiungi un'integrazione",
-      "addHelp": "Scegli il servizio. Puoi provare la connessione prima di salvare.",
       "remove": "Rimuovere {{name}}?",
       "removeBody": "{{count}} widget la usano. Restano e mostrano che hanno bisogno di una connessione.",
       "edit": "Modifica {{name}}",
@@ -239,9 +241,6 @@
       "mutedHelp": "Silenziata: nulla che riguardi questa connessione arriva alla campanella o a un canale. Le sue schede continuano a funzionare. Clicca per riattivare gli avvisi.",
       "bellFailed": "Impossibile cambiare gli avvisi.",
       "enabled": "Attiva",
-      "search": "Cerca",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nessun risultato per “{{query}}”.",
       "version": {
         "checking": "Ricerca della versione…",
         "runs": "In uso: {{version}}",
@@ -254,6 +253,85 @@
         "unread": "Versione non letta",
         "notAsked": "Ultima non richiesta",
         "notAskedHelp": "Attiva Cerca aggiornamenti in Sistema, Informazioni per confrontare con l’ultima release su GitHub."
+      },
+      "list": {
+        "noCard": "nessuna scheda",
+        "buildCard": "Crea una scheda",
+        "off": "disattivata",
+        "muted": "silenziata",
+        "lastOk": "ultima risposta {{ago}} fa",
+        "newerRuns": "nuova {{newest}}, in uso {{running}}",
+        "editOne": "Modifica {{name}}",
+        "removeOne": "Rimuovi {{name}}",
+        "cards_one": "{{count}} scheda",
+        "cards_other": "{{count}} schede",
+        "filters": "Filtra l'elenco",
+        "search": "Cerca tra le tue connessioni",
+        "clear": "Cancella la ricerca",
+        "order": "Prima gli errori, poi gli aggiornamenti, poi per nome",
+        "view": "Come si mostra l'elenco",
+        "asList": "Elenco",
+        "byCategory": "Per categoria",
+        "noMatch": "Nessuna delle tue connessioni corrisponde a «{{query}}».",
+        "searchCatalog": "Cerca «{{query}}» nel catalogo",
+        "nothingHere": "Niente con questo filtro.",
+        "groupFailing": "{{count}} con errore",
+        "groupUpdates_one": "{{count}} aggiornamento",
+        "groupUpdates_other": "{{count}} aggiornamenti",
+        "footAll_one": "{{count}} connessione, {{cards}} in tutto.",
+        "footAll_other": "{{count}} connessioni, {{cards}} in tutto.",
+        "footSome": "{{shown}} di {{count}} mostrate, {{cards}} in tutto.",
+        "filter": {
+          "all_one": "connessione",
+          "all_other": "connessioni",
+          "failing": "con errore",
+          "updates_one": "aggiornamento",
+          "updates_other": "aggiornamenti",
+          "cardless": "senza scheda",
+          "muted": "silenziate"
+        }
+      },
+      "demoRow": {
+        "title": "Modalità demo",
+        "off": "disattivata. Passa ogni scheda a dati inventati.",
+        "left": "Alcune connessioni sono ancora in modalità demo e mostrano dati inventati."
+      },
+      "catalog": {
+        "intro": "{{count}} servizi. Scrivi cosa cerchi o scegli una categoria. Invio apre il primo risultato.",
+        "search": "Servizio o parola chiave: plex, foto, wol, wallbox…",
+        "searchLabel": "Cerca tra i servizi",
+        "hideBeta": "Nascondi beta",
+        "sections": "Categorie",
+        "all": "Tutti",
+        "connectedNav": "Già collegati",
+        "connected": "collegato",
+        "connectedMany": "collegato ({{count}})",
+        "hits_one": "{{count}} risultato",
+        "hits_other": "{{count}} risultati",
+        "inSection": "in {{name}}",
+        "hint": "Contano anche le parole chiave, come «foto», «wallbox» o «wol».",
+        "nothing": "Niente corrisponde a «{{query}}».",
+        "nothingIn": "Niente corrisponde a «{{query}}» in {{name}}.",
+        "empty": "Qui non c'è niente.",
+        "allHits_one": "{{count}} risultato in tutte le categorie",
+        "allHits_other": "{{count}} risultati in tutte le categorie",
+        "generic": "Non c'è? La connessione generica legge un numero o un elenco da quasi ogni API JSON.",
+        "genericButton": "Generica (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Trovato nella tua rete",
+        "help": "in funzione, ma non ancora collegato",
+        "looked": "controllato {{ago}} fa",
+        "container": "Container {{name}} su {{engine}}",
+        "guest": "Ospite {{name}} su {{engine}}",
+        "address": "Indirizzo di {{name}}",
+        "connect": "Collega",
+        "connectOne": "Collega {{name}}",
+        "ignore": "Ignora",
+        "ignoreOne": "Ignora {{name}}",
+        "ignored_one": "{{count}} ignorato.",
+        "ignored_other": "{{count}} ignorati.",
+        "showAgain": "Mostra di nuovo"
       }
     },
     "users": {
@@ -267,11 +345,15 @@
     },
     "tokens": {
       "title": "Token API",
-      "help": "Un token ha i permessi del tuo account. Usalo in script e automazioni.",
+      "help": "Un token legge ciò che il tuo account può vedere oppure, con accesso completo, fa tutto ciò che il tuo account può fare. Usalo in script e automazioni.",
       "neverUsed": "mai usato",
       "created": "Questo è il tuo token. Viene mostrato una sola volta.",
       "usage": "Esempio:",
-      "name": "Nome del token"
+      "name": "Nome del token",
+      "scope": "Accesso",
+      "scopeRead": "Sola lettura",
+      "scopeFull": "Accesso completo",
+      "scopeHelp": "Un token in sola lettura può guardare, ma non cambia mai nulla: ogni richiesta che non sia una lettura viene rifiutata. Dai l’accesso completo solo a uno script che deve cambiare qualcosa."
     },
     "boards": {
       "title": "Bacheche",
@@ -355,7 +437,13 @@
         "ok": "Buono",
         "warn": "Avvertimento",
         "bad": "Guasto",
-        "unknown": "Sconosciuto"
+        "unknown": "Sconosciuto",
+        "bg": "Pagina",
+        "bg-elev": "Pagina rialzata",
+        "surface": "Scheda",
+        "surface-hover": "Scheda sotto il puntatore",
+        "border": "Linea",
+        "border-strong": "Linea marcata"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Incolla un tema o porta via questo",
@@ -377,7 +465,9 @@
         "flat": "Piatta",
         "outline": "Contorno",
         "neon": "Bordo neon",
-        "liquid": "Vetro liquido"
+        "liquid": "Vetro liquido",
+        "calm": "Quieto",
+        "window": "Finestra"
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
@@ -391,7 +481,9 @@
         "latte": "Carta latte",
         "castle": "Castello notturno",
         "workshop": "Officina",
-        "evening": "Sera rosé"
+        "evening": "Sera rosé",
+        "quiet": "Scrivania quieta",
+        "1984": "1984"
       },
       "lookShare": "Condividi lo stile",
       "lookShareHelp": "Il tema, un colore tuo e le schede come un breve testo: copialo qui e incollalo in un altro nexdeck. Il tuo foglio di stile resta fuori, è codice.",
@@ -401,7 +493,61 @@
       "lookTake": "Usa questo stile",
       "refraction": "Il bordo piega la luce",
       "refractionHelp": "Il bordo del vetro piega ciò che sta dietro. Costa un po' di potenza grafica; spegnilo per un vecchio tablet a parete.",
-      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura."
+      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura.",
+      "fontTitle": "Carattere",
+      "fontHelp": "Il carattere di tutta l’interfaccia, per tutti. Ogni carattere arriva con nexdeck e viene caricato da nexdeck solo quando si vede.",
+      "fontSample": "Attivo 99,98 % · 21 °C",
+      "fontSystem": "Quello del sistema",
+      "fontDefault": "di serie",
+      "editor": {
+        "open": "Crea i tuoi colori",
+        "title": "I tuoi colori",
+        "name": "Nome",
+        "nameDefault": "I miei colori",
+        "brightness": "Quale luminosità modificare",
+        "groups": {
+          "ground": "Sfondi e linee",
+          "text": "Testo",
+          "accent": "Accento",
+          "status": "Stati"
+        },
+        "hex": "{{name}} come #rrggbb",
+        "sampleTitle": "Backup",
+        "sampleLine": "Ultima esecuzione finita alle 03:12",
+        "sampleSmall": "La prossima stanotte",
+        "sampleButton": "Avvia ora",
+        "sampleOther": "Registro",
+        "allReadable": "Ogni colore del testo si legge bene sui suoi sfondi.",
+        "close": "Fatto",
+        "fromOwn": "Ricomincia dai colori di nexdeck",
+        "saveHint": "La pagina mostra i colori mentre li scegli. Salva li tiene per tutti; lasciare la pagina senza salvare rimette quelli salvati."
+      },
+      "retro": {
+        "help": "1984 disegna tutto nexdeck come una delle prime scrivanie: finestre, una barra dei menu, uno sfondo a puntini e caratteri a pixel. Il colore resta sui piccoli simboli.",
+        "fontNote": "In 1984 i titoli sono a pixel e il testo in un carattere semplice del sistema.",
+        "status": {
+          "title": "Come lo mostra una finestra gialla o rossa",
+          "symbol": "Simboli colorati",
+          "tint": "Un tocco di colore",
+          "pattern": "Solo motivo"
+        },
+        "icons": {
+          "title": "Loghi",
+          "colour": "A colori",
+          "mono": "In bianco e nero"
+        },
+        "desk": {
+          "title": "Sfondo",
+          "dither": "Retino",
+          "weave": "Motivo",
+          "grey": "Grigio"
+        },
+        "type": {
+          "title": "Caratteri a pixel",
+          "titles": "Per i titoli",
+          "all": "Ovunque"
+        }
+      }
     },
     "journal": {
       "title": "Livello di log",
@@ -555,6 +701,12 @@
       "at": "Ora del rapporto giornaliero",
       "goesAt": "Il rapporto giornaliero parte alle {{time}}.",
       "saved": "D’ora in poi il rapporto giornaliero parte alle {{time}}."
+    },
+    "addressBar": {
+      "title": "Dalla barra degli indirizzi",
+      "tiles": "Ogni riquadro di app risponde a un nome breve, impostato nelle sue impostazioni: {{example}} apre il riquadro con il nome breve plex, nelle bacheche che puoi aprire.",
+      "engines": "Chrome, Edge e Firefox possono aggiungere nexdeck come motore di ricerca. Un nome breve digitato lì apre il suo riquadro, altre parole aprono qui la ricerca con quelle parole, e la barra degli indirizzi suggerisce riquadri e schede mentre scrivi. Chrome ed Edge lo mostrano in Impostazioni, Motore di ricerca, Gestisci motori di ricerca, dove si può attivare; Firefox lo offre nel menu della barra degli indirizzi.",
+      "safari": "Safari non può aggiungere motori di ricerca in questo modo. Lì basta un segnalibro a un indirizzo breve."
     }
   },
   "menu": {
@@ -890,7 +1042,9 @@
       "untitled": "App",
       "firstLabel": "Principale",
       "titleHelp": "Vuoto: il nome dell'app.",
-      "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza."
+      "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza.",
+      "alias": "Nome breve",
+      "aliasHelp": "Apre questo riquadro dalla barra degli indirizzi: {{address}}. Se vuoto, viene preso dal nome. Lettere minuscole, cifre e trattini."
     },
     "look": {
       "title": "Colore",
@@ -915,8 +1069,19 @@
         "orange": "Arancione",
         "yellow": "Giallo",
         "green": "Verde"
-      }
-    }
+      },
+      "hideHead": "Senza intestazione",
+      "hideHeadHelp": "Nessun titolo, logo o punto sopra. Se la scheda non sta bene, torna un punto nell’angolo.",
+      "frameless": "Senza cornice",
+      "framelessHelp": "Nessuno sfondo, nessuna cornice, nessuna ombra: sta libera sulla bacheca, come un titolo. Mentre si dispone tiene un contorno e una maniglia."
+    },
+    "phone": {
+      "hide": "Nascondi sul telefono",
+      "hideHelp": "Non compare nella pila di schede del telefono. La bacheca larga, un tablet e un display a parete la mantengono, e sistemando la bacheca sul telefono appare sbiadita.",
+      "showRed": "Mostrala comunque quando è rossa",
+      "showRedHelp": "Il telefono è ciò che guardi quando qualcosa non va."
+    },
+    "keyTaken": "Il tasto {{key}} apre già {{name}} su questa bacheca. Ogni tasto apre un riquadro; scegline un altro o nessuno."
   },
   "library": {
     "title": "Aggiungi un widget",
@@ -1283,6 +1448,19 @@
     "nowhere": "Non c'è un'altra pagina in cui andare. Prima aggiungi una pagina o una bacheca.",
     "moved_one": "Spostata in {{page}}.",
     "moved_other": "{{count}} schede spostate in {{page}}.",
+    "copy": "Copia in",
+    "copyMany": "Copia {{count}} schede in",
+    "moveOrCopy": "Sposta o copia",
+    "moveMode": "Sposta",
+    "copyMode": "Copia",
+    "duplicateHere": "Duplica qui",
+    "duplicated_one": "La copia è in fondo alla pagina.",
+    "duplicated_other": "Le {{count}} copie sono in fondo alla pagina.",
+    "copied_one": "Copiata in {{page}}.",
+    "copied_other": "{{count}} schede copiate in {{page}}.",
+    "copyHeldLeft_one": "Una scheda di {{name}} è rimasta indietro, perché lì non potresti aggiungerla tu.",
+    "copyHeldLeft_other": "{{count}} schede di {{name}} sono rimaste indietro, perché lì non potresti aggiungerle tu.",
+    "copyKeyDropped": "La copia di {{name}} non ha tasto: {{key}} apre già un riquadro della bacheca.",
     "selected_one": "{{count}} scheda selezionata.",
     "selected_other": "{{count}} schede selezionate. Trascinane una o usa i tasti freccia per spostarle insieme; Esc le rilascia.",
     "undo": "Annulla",
@@ -2194,6 +2372,7 @@
       "connection_changed": "Integrazione {{name}} modificata",
       "connection_removed": "Integrazione {{name}} rimossa",
       "card_added": "Scheda {{name}} aggiunta a {{after}}",
+      "card_copied": "Scheda {{name}} copiata da {{before}}",
       "card_removed": "Scheda {{name}} tolta da {{after}}",
       "signed_in": "{{name}} ha effettuato l’accesso",
       "sign_in_refused": "Accesso rifiutato per {{name}}",
@@ -2268,5 +2447,45 @@
   "diagnosis": {
     "why": "Perché?",
     "whyOf": "Perché {{name}} è rosso o giallo?"
+  },
+  "weather": {
+    "hourlyLabel": "Previsioni orarie per le prossime {{hours}} ore",
+    "sunrise": "Alba",
+    "sunset": "Tramonto",
+    "rainUpTo": "Pioggia fino al {{percent}} % verso le {{time}}",
+    "noRain": "Nessuna pioggia prevista",
+    "aqi": "Qualità dell'aria",
+    "uv": "UV",
+    "uvPeak": "picco {{value}}",
+    "pollen": "Pollini",
+    "airUnavailable": "Dati sull'aria non disponibili",
+    "pollenKinds": {
+      "alder": "Ontano",
+      "birch": "Betulla",
+      "grass": "Graminacee",
+      "mugwort": "Artemisia",
+      "olive": "Olivo",
+      "ragweed": "Ambrosia"
+    },
+    "level": {
+      "good": "Buona",
+      "fair": "Discreta",
+      "moderate": "Moderata",
+      "poor": "Scadente",
+      "veryPoor": "Molto scadente",
+      "extremelyPoor": "Estremamente scadente",
+      "low": "Basso",
+      "high": "Alto",
+      "veryHigh": "Molto alto",
+      "extreme": "Estremo",
+      "none": "Nessuno"
+    }
+  },
+  "calendar": {
+    "previous": "Precedente",
+    "next": "Successivo",
+    "noEventsOnDay": "Niente in questo giorno",
+    "moreEvents": "altri {{count}}",
+    "dayEvents": "{{date}}, voci: {{count}}"
   }
 }

@@ -13,6 +13,7 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -190,6 +191,14 @@ class JellyfinAdapter(MediaAdapter, MusicLibrary):
         if self.token_header == "Authorization":
             return {"Authorization": f'MediaBrowser Token="{token}", Client="nexdeck", Device="nexdeck", DeviceId="nexdeck", Version="1"'}
         return {self.token_header: token}
+
+    #: The poster, backdrop and cover of an item, in the sizes the adapter asks for.
+    #: Jellyfin and Emby take an item's id as the only free part; a GET such as
+    #: ``/Videos/<id>/stream`` would start a transcode with the key.
+    image_paths = (
+        ImagePath(r"/Items/[A-Za-z0-9-]{1,64}/Images/(?:Primary|Backdrop)",
+                  maxHeight=r"[0-9]{1,4}", maxWidth=r"[0-9]{1,4}", quality=r"[0-9]{1,3}"),
+    )
 
     def image_headers(self, config: dict[str, Any]) -> dict[str, str]:
         return self._headers(config)

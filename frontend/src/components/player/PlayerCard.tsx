@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { mediaUrl, post } from '../../api/client'
 import type { MusicAlbum } from '../../api/music'
 import { tLabel } from '../../i18n/texts'
+import { useDisguise } from '../../lib/showcase'
 import { currentTrack, usePlayer, type PlayerSource } from '../../stores/player'
 import type { RenderProps } from '../renderers'
 import { ServiceIcon } from '../ServiceIcon'
@@ -37,6 +38,7 @@ export function faceFor(width: number, height: number): Face {
 
 export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
   const { t, i18n } = useTranslation()
+  const disguise = useDisguise()
   const root = useRef<HTMLDivElement>(null)
   const { width, height } = useBoxSize(root)
   const face = faceFor(width || 400, height || 320)
@@ -138,6 +140,14 @@ export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
   }
 
   return (
+    <>
+    {/* The title bar of 1984, where the card is a window (styles/retro.css); every other look leaves it out. */}
+    <div className="player-titlebar hidden" aria-hidden="true">
+      <span className="player-titlebar-name">
+        <ServiceIcon icon={widget.icon} size={14} />
+        <span className="truncate">{disguise.free(idleTitle)}</span>
+      </span>
+    </div>
     <div ref={root} className={`player player-${face} relative flex-1 min-h-0 overflow-hidden`} style={style} data-testid="player" data-face={face}>
       <div className="player-backdrop" aria-hidden="true" style={cover ? { backgroundImage: `url("${cover}")` } : undefined} />
       <div className="player-veil" aria-hidden="true" />
@@ -148,7 +158,7 @@ export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
             {/* No play buttons on the covers here: the card's own button sits right on top of them. */}
             {track || newest.length ? artwork('absolute inset-0 !rounded-none', 40, false) : <Placeholder />}
           </div>
-          <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent text-white flex items-end gap-2">
+          <div className="player-caption absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent text-white flex items-end gap-2">
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-semibold leading-tight truncate">{heading}</p>
               <p className="text-[11px] text-white/70 truncate">{subheading}</p>
@@ -226,7 +236,7 @@ export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
       {face === 'split' && (
         <div className="relative h-full flex">
           <div className="flex-none w-[min(42%,340px)] flex flex-col p-4 pr-3 gap-3 min-h-0">
-            <div className="flex items-center gap-2 text-[11px] text-muted min-w-0">
+            <div className="player-kicker flex items-center gap-2 text-[11px] text-muted min-w-0">
               <ServiceIcon icon={widget.icon} size={14} />
               <span className="truncate">{idleTitle}</span>
             </div>
@@ -266,6 +276,7 @@ export function PlayerCard({ widget, data, canAct, editing }: RenderProps) {
         </div>
       )}
     </div>
+    </>
   )
 }
 
@@ -273,8 +284,10 @@ function Title({ icon, kicker, title, subtitle, chip }: { icon: string; kicker: 
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted min-w-0">
-        <ServiceIcon icon={icon} size={12} />
-        <span className="truncate">{kicker}</span>
+        <span className="player-kicker contents">
+          <ServiceIcon icon={icon} size={12} />
+          <span className="truncate">{kicker}</span>
+        </span>
         {chip}
       </div>
       <h3 className="text-[15px] font-semibold leading-snug truncate mt-0.5" title={title}>{title}</h3>
@@ -322,7 +335,7 @@ function TinyProgress() {
   const duration = usePlayer((state) => state.duration ?? currentTrack(state)?.duration ?? 0)
   const share = duration ? Math.min(100, (time / duration) * 100) : 0
   return (
-    <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/15" aria-hidden="true">
+    <div className="player-progress absolute inset-x-0 bottom-0 h-[3px] bg-white/15" aria-hidden="true">
       <div className="h-full player-fill" style={{ width: `${share}%` }} />
     </div>
   )

@@ -12,6 +12,7 @@ import {
   type Box, type ClimateAnswer, type ClimateInfo, type ClimateStyle, type Guide, type ClimateSensor, type ClimateView, type ClimateWish, type HomeAnswer, type HomeClimate, type HomeElement, type HomeHeading,
   type HomeLayout, type HomeLight, type HomeStat, type LampInfo, type LampStyle, type LampWish, type StatStyle, type SwitchAnswer,
 } from '../../lib/home'
+import { keepInView } from '../../lib/keepInView'
 import { Spinner } from '../ui'
 import { ClimateControl } from './ClimateControl'
 import { ClimateDetails } from './ClimateDetails'
@@ -1266,7 +1267,9 @@ const TOP_ROOM = 56
  * screen or out of the window; always over the bar.
  *
  * ⚠️ Without it the style menu of a cover near the foot of the page opened
- * under the bar and could not be chosen from (seen 20.10.2026). One place
+ * under the bar and could not be chosen from (seen 20.10.2026), and a menu
+ * of an element at the left or right edge ran out of the screen
+ * (`keepInView`, seen 27.10.2026). One place
  * for all of them rather than each menu on its own: there are a dozen.
  */
 export function useMenusInView(box: React.RefObject<HTMLElement | null>, active: boolean) {
@@ -1275,6 +1278,7 @@ export function useMenusInView(box: React.RefObject<HTMLElement | null>, active:
     if (!root || !active || typeof MutationObserver === 'undefined') return
     const place = (menu: HTMLElement) => {
       menu.style.zIndex = '45'
+      keepInView(menu)
       const rect = menu.getBoundingClientRect()
       if (!rect.height) return
       const bar = document.querySelector('[data-edit-bar]')?.getBoundingClientRect()

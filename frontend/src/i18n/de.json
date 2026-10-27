@@ -210,15 +210,17 @@
       "saveProfile": "Name und Adresse speichern",
       "unsaved": "Noch nicht gespeichert",
       "tilt": "Karten neigen sich zum Mauszeiger",
-      "tiltHelp": "Nur mit der Maus, und nie, wenn das System weniger Bewegung wünscht."
+      "tiltHelp": "Nur mit der Maus, und nie, wenn das System weniger Bewegung wünscht.",
+      "theme_schedule": "Nach Uhrzeit",
+      "lightFrom": "Hell ab",
+      "darkFrom": "Dunkel ab",
+      "scheduleHelp": "Nach der Uhr des Geräts, das es zeigt."
     },
     "integrations": {
       "title": "Anbindungen",
       "help": "Eine Anbindung ist eine Verbindung zu einem Dienst. Widgets wählen daraus.",
       "empty": "Noch keine Anbindungen.",
-      "widgets": "{{count}} Widgets",
       "add": "Anbindung hinzufügen",
-      "addHelp": "Dienst wählen. Die Verbindung lässt sich vor dem Speichern testen.",
       "remove": "{{name}} entfernen?",
       "removeBody": "{{count}} Widgets nutzen sie. Sie bleiben stehen und zeigen, dass ihnen die Verbindung fehlt.",
       "edit": "{{name}} bearbeiten",
@@ -239,9 +241,6 @@
       "mutedHelp": "Stumm: Nichts von dieser Anbindung erreicht die Glocke oder einen Kanal. Ihre Karten laufen weiter. Klick schaltet die Meldungen wieder ein.",
       "bellFailed": "Die Meldungen ließen sich nicht umschalten.",
       "enabled": "Aktiv",
-      "search": "Suchen",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nichts passt zu „{{query}}“.",
       "version": {
         "checking": "Version wird nachgesehen…",
         "runs": "Läuft mit {{version}}",
@@ -254,6 +253,85 @@
         "unread": "Version nicht gelesen",
         "notAsked": "Neueste nicht abgefragt",
         "notAskedHelp": "Schalte unter System, Über „Nach Updates suchen“ ein, um mit dem neuesten Release auf GitHub zu vergleichen."
+      },
+      "list": {
+        "noCard": "keine Karte",
+        "buildCard": "Karte bauen",
+        "off": "ausgeschaltet",
+        "muted": "stumm",
+        "lastOk": "zuletzt geantwortet vor {{ago}}",
+        "newerRuns": "neu {{newest}}, läuft {{running}}",
+        "editOne": "{{name}} bearbeiten",
+        "removeOne": "{{name}} entfernen",
+        "cards_one": "{{count}} Karte",
+        "cards_other": "{{count}} Karten",
+        "filters": "Liste filtern",
+        "search": "In deinen Anbindungen suchen",
+        "clear": "Suche leeren",
+        "order": "Fehler zuerst, dann Updates, dann Name",
+        "view": "Ansicht der Liste",
+        "asList": "Liste",
+        "byCategory": "Nach Kategorie",
+        "noMatch": "Keine deiner Anbindungen passt zu „{{query}}“.",
+        "searchCatalog": "„{{query}}“ im Katalog suchen",
+        "nothingHere": "Nichts in diesem Filter.",
+        "groupFailing": "{{count}} mit Fehler",
+        "groupUpdates_one": "{{count}} Update",
+        "groupUpdates_other": "{{count}} Updates",
+        "footAll_one": "{{count}} Anbindung, zusammen {{cards}}.",
+        "footAll_other": "{{count}} Anbindungen, zusammen {{cards}}.",
+        "footSome": "{{shown}} von {{count}} gezeigt, zusammen {{cards}}.",
+        "filter": {
+          "all_one": "Anbindung",
+          "all_other": "Anbindungen",
+          "failing": "mit Fehler",
+          "updates_one": "Update",
+          "updates_other": "Updates",
+          "cardless": "ohne Karte",
+          "muted": "stumm"
+        }
+      },
+      "demoRow": {
+        "title": "Vorführmodus",
+        "off": "aus. Schaltet jede Karte auf erfundene Daten.",
+        "left": "Einige Verbindungen stehen noch im Demo-Modus und zeigen erfundene Daten."
+      },
+      "catalog": {
+        "intro": "{{count}} Dienste. Tippe, was du suchst, oder wähle eine Kategorie. Enter öffnet den ersten Treffer.",
+        "search": "Dienst oder Stichwort: plex, fotos, wol, wallbox…",
+        "searchLabel": "Dienste durchsuchen",
+        "hideBeta": "Beta ausblenden",
+        "sections": "Kategorien",
+        "all": "Alle",
+        "connectedNav": "Schon verbunden",
+        "connected": "verbunden",
+        "connectedMany": "verbunden ({{count}})",
+        "hits_one": "{{count}} Treffer",
+        "hits_other": "{{count}} Treffer",
+        "inSection": "in {{name}}",
+        "hint": "Gesucht wird auch in Stichworten, etwa „fotos“, „wallbox“ oder „wol“.",
+        "nothing": "Nichts passt zu „{{query}}“.",
+        "nothingIn": "Nichts passt zu „{{query}}“ in {{name}}.",
+        "empty": "Hier ist nichts.",
+        "allHits_one": "{{count}} Treffer in allen Kategorien",
+        "allHits_other": "{{count}} Treffer in allen Kategorien",
+        "generic": "Nicht dabei? Die allgemeine Anbindung liest eine Zahl oder Liste aus fast jeder JSON-API.",
+        "genericButton": "Allgemein (HTTP/JSON)"
+      },
+      "found": {
+        "title": "In deinem Netz gefunden",
+        "help": "läuft, ist aber noch nicht verbunden",
+        "looked": "zuletzt geschaut vor {{ago}}",
+        "container": "Container {{name}} auf {{engine}}",
+        "guest": "Gast {{name}} auf {{engine}}",
+        "address": "Adresse von {{name}}",
+        "connect": "Verbinden",
+        "connectOne": "{{name}} verbinden",
+        "ignore": "Ignorieren",
+        "ignoreOne": "{{name}} ignorieren",
+        "ignored_one": "{{count}} ignoriert.",
+        "ignored_other": "{{count}} ignoriert.",
+        "showAgain": "Wieder zeigen"
       }
     },
     "users": {
@@ -267,11 +345,15 @@
     },
     "tokens": {
       "title": "API-Token",
-      "help": "Ein Token trägt die Rechte deines Kontos. Für Skripte und Automationen.",
+      "help": "Ein Token liest, was dein Konto sehen darf, oder darf mit vollem Zugriff alles, was dein Konto darf. Für Skripte und Automationen.",
       "neverUsed": "nie benutzt",
       "created": "Das ist dein Token. Es wird nur einmal angezeigt.",
       "usage": "Beispiel:",
-      "name": "Name des Tokens"
+      "name": "Name des Tokens",
+      "scope": "Zugriff",
+      "scopeRead": "Nur lesen",
+      "scopeFull": "Voller Zugriff",
+      "scopeHelp": "Ein lesendes Token kann schauen, aber nichts ändern: Jede Anfrage außer Lesen wird abgelehnt. Vollen Zugriff nur für ein Skript, das etwas ändern muss."
     },
     "boards": {
       "title": "Boards",
@@ -355,7 +437,13 @@
         "ok": "Gut",
         "warn": "Warnung",
         "bad": "Fehler",
-        "unknown": "Unbekannt"
+        "unknown": "Unbekannt",
+        "bg": "Seite",
+        "bg-elev": "Erhöhte Fläche",
+        "surface": "Karte",
+        "surface-hover": "Karte unter dem Zeiger",
+        "border": "Linie",
+        "border-strong": "Kräftige Linie"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Thema einfügen oder dieses mitnehmen",
@@ -377,7 +465,9 @@
         "flat": "Flach",
         "outline": "Umriss",
         "neon": "Neonkante",
-        "liquid": "Liquid Glass"
+        "liquid": "Liquid Glass",
+        "calm": "Ruhig",
+        "window": "Fenster"
       },
       "radius": "Ecken",
       "gap": "Abstand zwischen Karten",
@@ -391,7 +481,9 @@
         "latte": "Latte-Papier",
         "castle": "Nachtschloss",
         "workshop": "Werkstatt",
-        "evening": "Rosé-Abend"
+        "evening": "Rosé-Abend",
+        "quiet": "Stiller Schreibtisch",
+        "1984": "1984"
       },
       "lookShare": "Look teilen",
       "lookShareHelp": "Farbschema, eigene Farbe und Karten als kurzer Text: hier kopieren und in einem anderen nexdeck einfügen. Dein eigenes CSS bleibt draußen, es ist Code.",
@@ -401,7 +493,61 @@
       "lookTake": "Diesen Look übernehmen",
       "refraction": "Rand bricht das Licht",
       "refractionHelp": "Der Rand des Glases biegt, was dahinter liegt. Das kostet etwas Grafikleistung; für ein altes Wand-Tablet ausschalten.",
-      "refractionNotHere": "Dieser Browser kann das nicht: Chrome und Edge können es, Safari und Firefox zeigen das Glas ohne Biegung."
+      "refractionNotHere": "Dieser Browser kann das nicht: Chrome und Edge können es, Safari und Firefox zeigen das Glas ohne Biegung.",
+      "fontTitle": "Schrift",
+      "fontHelp": "Die Schrift der ganzen Oberfläche, für alle. Jede Schrift kommt mit nexdeck und wird nur von nexdeck geladen, wenn sie zu sehen ist.",
+      "fontSample": "Laufzeit 99,98 % · 21 °C",
+      "fontSystem": "Die des Systems",
+      "fontDefault": "ab Werk",
+      "editor": {
+        "open": "Eigene Farben machen",
+        "title": "Eigene Farben",
+        "name": "Name",
+        "nameDefault": "Meine Farben",
+        "brightness": "Welche Helligkeit bearbeiten",
+        "groups": {
+          "ground": "Flächen und Linien",
+          "text": "Text",
+          "accent": "Akzent",
+          "status": "Zustände"
+        },
+        "hex": "{{name}} als #rrggbb",
+        "sampleTitle": "Sicherungen",
+        "sampleLine": "Letzter Lauf fertig um 03:12",
+        "sampleSmall": "Die nächste heute Nacht",
+        "sampleButton": "Jetzt starten",
+        "sampleOther": "Protokoll",
+        "allReadable": "Jede Textfarbe ist auf ihren Flächen gut lesbar.",
+        "close": "Fertig",
+        "fromOwn": "Neu mit den Farben von nexdeck beginnen",
+        "saveHint": "Die Seite zeigt die Farben, während du wählst. Speichern behält sie für alle; wer die Seite ohne Speichern verlässt, bekommt die gespeicherten zurück."
+      },
+      "retro": {
+        "help": "1984 zeichnet ganz nexdeck wie einen frühen Schreibtisch: Fenster, eine Menüleiste, ein Punktraster und Pixelschrift. Farbe bleibt an den kleinen Symbolen.",
+        "fontNote": "In 1984 stehen Titel in Pixelschrift und Text in einer schlichten Schrift des Systems.",
+        "status": {
+          "title": "Wie ein gelbes oder rotes Fenster es zeigt",
+          "symbol": "Farbige Symbole",
+          "tint": "Hauch Farbe",
+          "pattern": "Nur Muster"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "Farbig",
+          "mono": "Einfarbig"
+        },
+        "desk": {
+          "title": "Hintergrund",
+          "dither": "Raster",
+          "weave": "Muster",
+          "grey": "Grau"
+        },
+        "type": {
+          "title": "Pixelschrift",
+          "titles": "Für Titel",
+          "all": "Überall"
+        }
+      }
     },
     "journal": {
       "title": "Protokollstufe",
@@ -555,6 +701,12 @@
       "at": "Uhrzeit des Tagesberichts",
       "goesAt": "Der Tagesbericht kommt um {{time}}.",
       "saved": "Der Tagesbericht kommt ab jetzt um {{time}}."
+    },
+    "addressBar": {
+      "title": "Aus der Adresszeile",
+      "tiles": "Jede App-Kachel hat einen Kurznamen, einstellbar in ihren Einstellungen: {{example}} öffnet die Kachel mit dem Kurznamen plex, auf den Boards, die du öffnen darfst.",
+      "engines": "Chrome, Edge und Firefox können nexdeck als Suchmaschine aufnehmen. Ein Kurzname dort öffnet seine Kachel, andere Wörter öffnen hier die Suche mit den Wörtern darin, und beim Tippen schlägt die Adresszeile Kacheln und Karten vor. Chrome und Edge führen es unter Einstellungen, Suchmaschine, Suchmaschinen verwalten, wo es eingeschaltet werden kann; Firefox bietet es im Menü der Adresszeile an.",
+      "safari": "Safari kann Suchmaschinen so nicht aufnehmen. Dort hilft ein Lesezeichen auf eine Kurzadresse."
     }
   },
   "menu": {
@@ -890,7 +1042,9 @@
       "untitled": "App",
       "firstLabel": "Haupt",
       "titleHelp": "Leer: der Name der App.",
-      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor."
+      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor.",
+      "alias": "Kurzname",
+      "aliasHelp": "Öffnet diese Kachel aus der Adresszeile: {{address}}. Leer nimmt ihn aus dem Namen. Kleinbuchstaben, Ziffern und Bindestriche."
     },
     "look": {
       "title": "Farbe",
@@ -915,8 +1069,19 @@
         "orange": "Orange",
         "yellow": "Gelb",
         "green": "Grün"
-      }
-    }
+      },
+      "hideHead": "Ohne Kopf",
+      "hideHeadHelp": "Kein Titel, Logo oder Punkt darüber. Geht es der Karte nicht gut, steht ein Punkt in der Ecke.",
+      "frameless": "Ohne Rahmen",
+      "framelessHelp": "Kein Grund, kein Rahmen, kein Schatten: Sie steht frei auf dem Board, wie eine Überschrift. Beim Anordnen behält sie Umriss und Griff."
+    },
+    "phone": {
+      "hide": "Auf dem Handy ausblenden",
+      "hideHelp": "Fehlt im Kartenstapel des Handys. Das breite Board, ein Tablet und eine Wandanzeige behalten sie, und beim Bearbeiten auf dem Handy steht sie blass da.",
+      "showRed": "Trotzdem zeigen, wenn sie rot ist",
+      "showRedHelp": "Aufs Handy schaut man, wenn etwas nicht stimmt."
+    },
+    "keyTaken": "Die Taste {{key}} öffnet auf diesem Board schon {{name}}. Jede Taste öffnet eine Kachel; wähl eine andere oder keine."
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -1283,6 +1448,19 @@
     "nowhere": "Es gibt keine andere Seite. Leg erst eine Seite oder ein Board an.",
     "moved_one": "Nach {{page}} verschoben.",
     "moved_other": "{{count}} Karten nach {{page}} verschoben.",
+    "copy": "Kopieren nach",
+    "copyMany": "{{count}} Karten kopieren nach",
+    "moveOrCopy": "Verschieben oder kopieren",
+    "moveMode": "Verschieben",
+    "copyMode": "Kopieren",
+    "duplicateHere": "Hier duplizieren",
+    "duplicated_one": "Die Kopie steht unten auf der Seite.",
+    "duplicated_other": "Die {{count}} Kopien stehen unten auf der Seite.",
+    "copied_one": "Nach {{page}} kopiert.",
+    "copied_other": "{{count}} Karten nach {{page}} kopiert.",
+    "copyHeldLeft_one": "Eine Karte aus {{name}} ist nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
+    "copyHeldLeft_other": "{{count}} Karten aus {{name}} sind nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
+    "copyKeyDropped": "Die Kopie von {{name}} hat keine Taste, denn {{key}} öffnet auf dem Board schon eine Kachel.",
     "selected_one": "{{count}} Karte ausgewählt.",
     "selected_other": "{{count}} Karten ausgewählt. Zieh eine davon oder nimm die Pfeiltasten, dann bewegen sich alle; Escape hebt die Auswahl auf.",
     "undo": "Rückgängig",
@@ -2194,6 +2372,7 @@
       "connection_changed": "Anbindung {{name}} geändert",
       "connection_removed": "Anbindung {{name}} entfernt",
       "card_added": "Karte {{name}} auf {{after}} hinzugefügt",
+      "card_copied": "Karte {{name}} kopiert von {{before}}",
       "card_removed": "Karte {{name}} von {{after}} entfernt",
       "signed_in": "{{name}} hat sich angemeldet",
       "sign_in_refused": "Anmeldung für {{name}} abgelehnt",
@@ -2268,5 +2447,45 @@
   "diagnosis": {
     "why": "Warum?",
     "whyOf": "Warum ist {{name}} rot oder gelb?"
+  },
+  "weather": {
+    "hourlyLabel": "Stundenvorhersage für die nächsten {{hours}} Stunden",
+    "sunrise": "Sonnenaufgang",
+    "sunset": "Sonnenuntergang",
+    "rainUpTo": "Regen bis {{percent}} % gegen {{time}}",
+    "noRain": "Kein Regen erwartet",
+    "aqi": "Luftqualität",
+    "uv": "UV",
+    "uvPeak": "Spitze {{value}}",
+    "pollen": "Pollen",
+    "airUnavailable": "Luftdaten nicht verfügbar",
+    "pollenKinds": {
+      "alder": "Erle",
+      "birch": "Birke",
+      "grass": "Gras",
+      "mugwort": "Beifuß",
+      "olive": "Olive",
+      "ragweed": "Ambrosia"
+    },
+    "level": {
+      "good": "Gut",
+      "fair": "Annehmbar",
+      "moderate": "Mäßig",
+      "poor": "Schlecht",
+      "veryPoor": "Sehr schlecht",
+      "extremelyPoor": "Extrem schlecht",
+      "low": "Niedrig",
+      "high": "Hoch",
+      "veryHigh": "Sehr hoch",
+      "extreme": "Extrem",
+      "none": "Keine"
+    }
+  },
+  "calendar": {
+    "previous": "Zurück",
+    "next": "Weiter",
+    "noEventsOnDay": "Nichts an diesem Tag",
+    "moreEvents": "{{count}} weitere",
+    "dayEvents": "{{date}}, Einträge: {{count}}"
   }
 }

@@ -32,6 +32,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -394,6 +395,9 @@ class FrigateAdapter(Adapter):
             return f"proxy:/thumb/{path_segment(identifier, 'The detection')}"
         except AdapterError:
             return ""
+
+    #: A camera's latest picture and a detection's thumbnail, one plain segment each.
+    image_paths = (ImagePath(r"/(?:latest|thumb)/[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}"),)
 
     async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
         """``/latest/<camera>`` and ``/thumb/<detection>``, fetched with the account's token.

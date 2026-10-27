@@ -1,0 +1,79 @@
+{
+  "httpNodeRoot": "/",
+  "version": "5.0.9",
+  "user": {
+    "username": "admin",
+    "permissions": "*"
+  },
+  "context": {
+    "default": "memory",
+    "stores": [
+      "memory"
+    ]
+  },
+  "codeEditor": {
+    "lib": "monaco",
+    "options": {}
+  },
+  "markdownEditor": {
+    "mermaid": {
+      "enabled": true
+    }
+  },
+  "libraries": [
+    {
+      "id": "local",
+      "label": "editor:library.types.local",
+      "user": false,
+      "icon": "font-awesome/fa-hdd-o"
+    },
+    {
+      "id": "examples",
+      "label": "editor:library.types.examples",
+      "user": false,
+      "icon": "font-awesome/fa-life-ring",
+      "types": [
+        "flows"
+      ],
+      "readOnly": true
+    }
+  ],
+  "flowFilePretty": true,
+  "externalModules": {},
+  "flowEncryptionType": "system",
+  "diagnostics": {
+    "enabled": true,
+    "ui": true
+  },
+  "runtimeState": {
+    "enabled": false,
+    "ui": false
+  },
+  "functionExternalModules": true,
+  "functionTimeout": 0,
+  "tlsConfigDisableLocalFiles": false,
+  "editorTheme": {
+    "palette": {},
+    "projects": {
+      "enabled": false,
+      "workflow": {
+        "mode": "manual"
+      }
+    },
+    "multiplayer": {
+      "enabled": false
+    },
+    "languages": [
+      "de",
+      "en-US",
+      "es-ES",
+      "fr",
+      "ja",
+      "ko",
+      "pt-BR",
+      "ru",
+      "zh-CN",
+      "zh-TW"
+    ]
+  }
+}

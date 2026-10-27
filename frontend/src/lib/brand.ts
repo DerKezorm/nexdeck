@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { create } from 'zustand'
 
 import { get, serverUrl } from '../api/client'
+import type { Appearance } from './appearance'
 
 export interface Brand {
   name: string
@@ -16,6 +17,8 @@ export interface Brand {
   favicon: string | null
   app_icons: Record<'192' | '512', string> | null
   board_in_title: boolean
+  /** The part of the look a page is drawn in before anybody signs in. */
+  look?: Appearance | null
 }
 
 export const NO_BRAND: Brand = { name: '', logo: null, favicon: null, app_icons: null, board_in_title: true }
@@ -51,6 +54,8 @@ export function applyBrand(brand: Brand): void {
   useBrand.setState(brand, true)
   relink('icon', brand.favicon)
   relink('apple-touch-icon', brand.app_icons?.['512'] ?? null)
+  // The name a browser offers nexdeck under as a search engine (``/opensearch.xml`` says the same).
+  document.head.querySelector('link[rel="search"]')?.setAttribute('title', shownName(brand))
   document.title = tabTitle(brand)
 }
 

@@ -210,15 +210,17 @@
       "saveProfile": "Save name and address",
       "unsaved": "Not saved yet",
       "tilt": "Cards tip towards the pointer",
-      "tiltHelp": "Only with a mouse, and never when the system asks for less motion."
+      "tiltHelp": "Only with a mouse, and never when the system asks for less motion.",
+      "theme_schedule": "By the clock",
+      "lightFrom": "Light from",
+      "darkFrom": "Dark from",
+      "scheduleHelp": "On the clock of the screen that shows it."
     },
     "integrations": {
       "title": "Integrations",
       "help": "One integration is one connection to a service. Widgets pick from them.",
       "empty": "No integrations yet.",
-      "widgets": "{{count}} widgets",
       "add": "Add an integration",
-      "addHelp": "Pick the service. You can test the connection before saving.",
       "remove": "Remove {{name}}?",
       "removeBody": "{{count}} widgets use it. They stay and show that they need a connection.",
       "edit": "Edit {{name}}",
@@ -239,9 +241,6 @@
       "mutedHelp": "Muted: nothing about this connection reaches the bell or a channel. Its cards keep running. Click to turn notices back on.",
       "bellFailed": "The notices could not be switched.",
       "enabled": "Enabled",
-      "search": "Search",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Nothing matches “{{query}}”.",
       "version": {
         "checking": "Looking up the version…",
         "runs": "Runs {{version}}",
@@ -254,6 +253,85 @@
         "unread": "Version not read",
         "notAsked": "Newest not asked",
         "notAskedHelp": "Switch on Check for updates under System, About to compare with the newest release on GitHub."
+      },
+      "list": {
+        "noCard": "no card",
+        "buildCard": "Build a card",
+        "off": "switched off",
+        "muted": "muted",
+        "lastOk": "last answered {{ago}} ago",
+        "newerRuns": "newer {{newest}}, runs {{running}}",
+        "editOne": "Edit {{name}}",
+        "removeOne": "Remove {{name}}",
+        "cards_one": "{{count}} card",
+        "cards_other": "{{count}} cards",
+        "filters": "Filter the list",
+        "search": "Search your connections",
+        "clear": "Clear the search",
+        "order": "Failing first, then updates, then by name",
+        "view": "How the list is shown",
+        "asList": "List",
+        "byCategory": "By category",
+        "noMatch": "None of your connections matches “{{query}}”.",
+        "searchCatalog": "Search the catalog for “{{query}}”",
+        "nothingHere": "Nothing under this filter.",
+        "groupFailing": "{{count}} failing",
+        "groupUpdates_one": "{{count}} update",
+        "groupUpdates_other": "{{count}} updates",
+        "footAll_one": "{{count}} connection, {{cards}} together.",
+        "footAll_other": "{{count}} connections, {{cards}} together.",
+        "footSome": "{{shown}} of {{count}} shown, {{cards}} together.",
+        "filter": {
+          "all_one": "connection",
+          "all_other": "connections",
+          "failing": "failing",
+          "updates_one": "update",
+          "updates_other": "updates",
+          "cardless": "without a card",
+          "muted": "muted"
+        }
+      },
+      "demoRow": {
+        "title": "Demo mode",
+        "off": "off. Switches every card to invented data.",
+        "left": "Some connections still run in demo mode and show invented data."
+      },
+      "catalog": {
+        "intro": "{{count}} services. Type what you are looking for or pick a category. Enter opens the first hit.",
+        "search": "Service or keyword: plex, photos, wol, wallbox…",
+        "searchLabel": "Search the services",
+        "hideBeta": "Hide beta",
+        "sections": "Categories",
+        "all": "All",
+        "connectedNav": "Already connected",
+        "connected": "connected",
+        "connectedMany": "connected ({{count}})",
+        "hits_one": "{{count}} hit",
+        "hits_other": "{{count}} hits",
+        "inSection": "in {{name}}",
+        "hint": "Keywords count too, such as “photos”, “wallbox” or “wol”.",
+        "nothing": "Nothing matches “{{query}}”.",
+        "nothingIn": "Nothing matches “{{query}}” in {{name}}.",
+        "empty": "Nothing here.",
+        "allHits_one": "{{count}} hit in all categories",
+        "allHits_other": "{{count}} hits in all categories",
+        "generic": "Not there? The generic connection reads a number or a list from almost any JSON API.",
+        "genericButton": "Generic (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Found in your network",
+        "help": "running, but not connected yet",
+        "looked": "looked {{ago}} ago",
+        "container": "Container {{name}} on {{engine}}",
+        "guest": "Guest {{name}} on {{engine}}",
+        "address": "Address of {{name}}",
+        "connect": "Connect",
+        "connectOne": "Connect {{name}}",
+        "ignore": "Ignore",
+        "ignoreOne": "Ignore {{name}}",
+        "ignored_one": "{{count}} ignored.",
+        "ignored_other": "{{count}} ignored.",
+        "showAgain": "Show again"
       }
     },
     "users": {
@@ -267,11 +345,15 @@
     },
     "tokens": {
       "title": "API tokens",
-      "help": "A token carries the rights of your account. Use it in scripts and automations.",
+      "help": "A token reads what your account may see or, with full access, does everything your account may. Use it in scripts and automations.",
       "neverUsed": "never used",
       "created": "This is your token. It is shown only once.",
       "usage": "Example:",
-      "name": "Token name"
+      "name": "Token name",
+      "scope": "Access",
+      "scopeRead": "Read only",
+      "scopeFull": "Full access",
+      "scopeHelp": "A read-only token can look but never change anything: every request other than reading is refused. Give full access only to a script that has to change something."
     },
     "boards": {
       "title": "Boards",
@@ -355,7 +437,13 @@
         "ok": "Good",
         "warn": "Warning",
         "bad": "Fault",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "bg": "Page",
+        "bg-elev": "Raised page",
+        "surface": "Card",
+        "surface-hover": "Card under the pointer",
+        "border": "Line",
+        "border-strong": "Strong line"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Paste a theme or take this one along",
@@ -377,7 +465,9 @@
         "flat": "Flat",
         "outline": "Outline",
         "neon": "Neon edge",
-        "liquid": "Liquid glass"
+        "liquid": "Liquid glass",
+        "calm": "Calm",
+        "window": "Window"
       },
       "radius": "Corners",
       "gap": "Gap between cards",
@@ -391,7 +481,9 @@
         "latte": "Latte paper",
         "castle": "Night castle",
         "workshop": "Workshop",
-        "evening": "Rosé evening"
+        "evening": "Rosé evening",
+        "quiet": "Quiet desk",
+        "1984": "1984"
       },
       "lookShare": "Share the look",
       "lookShareHelp": "The theme, a colour of your own and the cards as a short text: copy it here and paste it into another nexdeck. Your own style sheet stays out, it is code.",
@@ -401,7 +493,61 @@
       "lookTake": "Take this look",
       "refraction": "The edge bends the light",
       "refractionHelp": "The rim of the glass bends what lies behind it. It costs some graphics power; switch it off for an old wall tablet.",
-      "refractionNotHere": "This browser cannot do it: Chrome and Edge can, Safari and Firefox show the glass without the bend."
+      "refractionNotHere": "This browser cannot do it: Chrome and Edge can, Safari and Firefox show the glass without the bend.",
+      "fontTitle": "Type",
+      "fontHelp": "The type of the whole interface, for everyone. Every font ships with nexdeck and is loaded from nexdeck only when it is shown.",
+      "fontSample": "Uptime 99.98 % · 21 °C",
+      "fontSystem": "The system's own",
+      "fontDefault": "as shipped",
+      "editor": {
+        "open": "Make your own colours",
+        "title": "Your own colours",
+        "name": "Name",
+        "nameDefault": "My colours",
+        "brightness": "Which brightness to edit",
+        "groups": {
+          "ground": "Grounds and lines",
+          "text": "Text",
+          "accent": "Accent",
+          "status": "States"
+        },
+        "hex": "{{name}} as #rrggbb",
+        "sampleTitle": "Backups",
+        "sampleLine": "Last run finished at 03:12",
+        "sampleSmall": "Next one tonight",
+        "sampleButton": "Run now",
+        "sampleOther": "Log",
+        "allReadable": "Every text colour is easy to read on its grounds.",
+        "close": "Done",
+        "fromOwn": "Start again from nexdeck's colours",
+        "saveHint": "The page shows the colours as you choose them. Save keeps them for everyone; leaving the page without saving puts the stored ones back."
+      },
+      "retro": {
+        "help": "1984 draws the whole of nexdeck as an early desktop: windows, a menu bar, a dotted desk and pixel type. Colour stays on the small symbols.",
+        "fontNote": "In 1984 the titles are set in pixels and the text in a plain type of the system.",
+        "status": {
+          "title": "How a yellow or red window shows it",
+          "symbol": "Coloured symbols",
+          "tint": "A touch of colour",
+          "pattern": "Pattern only"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "In colour",
+          "mono": "Black and white"
+        },
+        "desk": {
+          "title": "Desk",
+          "dither": "Dither",
+          "weave": "Pattern",
+          "grey": "Grey"
+        },
+        "type": {
+          "title": "Pixel type",
+          "titles": "For titles",
+          "all": "Everywhere"
+        }
+      }
     },
     "journal": {
       "title": "Log level",
@@ -555,6 +701,12 @@
       "at": "Time of the daily report",
       "goesAt": "The daily report goes out at {{time}}.",
       "saved": "The daily report goes out at {{time}} from now on."
+    },
+    "addressBar": {
+      "title": "From the address bar",
+      "tiles": "Every app tile answers to a short name, set in its settings: {{example}} opens the tile with the short name plex, on the boards you may open.",
+      "engines": "Chrome, Edge and Firefox can add nexdeck as a search engine. A short name typed there opens its tile, other words open the search bar here with the words in it, and the address bar suggests tiles and cards while you type. Chrome and Edge list it under Settings, Search engine, Manage search engines, where it can be switched on; Firefox offers it in the menu of the address bar.",
+      "safari": "Safari cannot add search engines this way. A bookmark to a short address works there."
     }
   },
   "menu": {
@@ -890,7 +1042,9 @@
       "untitled": "App",
       "firstLabel": "Main",
       "titleHelp": "Empty: the name of the app.",
-      "linkFollows": "Empty: the address of the app. An address here wins over it."
+      "linkFollows": "Empty: the address of the app. An address here wins over it.",
+      "alias": "Short name",
+      "aliasHelp": "Opens this tile from the address bar: {{address}}. Empty takes it from the name. Lower-case letters, digits and hyphens."
     },
     "look": {
       "title": "Colour",
@@ -915,8 +1069,19 @@
         "orange": "Orange",
         "yellow": "Yellow",
         "green": "Green"
-      }
-    }
+      },
+      "hideHead": "Without its head",
+      "hideHeadHelp": "No title, logo or dot above it. A dot comes back in the corner when the card is not well.",
+      "frameless": "Without a frame",
+      "framelessHelp": "No ground, no frame, no shadow: it stands free on the board, like a heading. While arranging it keeps an outline and a grip."
+    },
+    "phone": {
+      "hide": "Hide on the phone",
+      "hideHelp": "Left out of the stack a phone shows. The wide board, a tablet and a wall display keep it, and arranging the board on the phone shows it faded.",
+      "showRed": "Show it anyway when it is red",
+      "showRedHelp": "The phone is where you look when something is wrong."
+    },
+    "keyTaken": "Key {{key}} already opens {{name}} on this board. Each key opens one tile; pick another one or none."
   },
   "library": {
     "title": "Add a widget",
@@ -1283,6 +1448,19 @@
     "nowhere": "No other page to go to. Add a page or a board first.",
     "moved_one": "Moved to {{page}}.",
     "moved_other": "{{count}} cards moved to {{page}}.",
+    "copy": "Copy to",
+    "copyMany": "Copy {{count}} cards to",
+    "moveOrCopy": "Move or copy",
+    "moveMode": "Move",
+    "copyMode": "Copy",
+    "duplicateHere": "Duplicate here",
+    "duplicated_one": "The copy is at the bottom of the page.",
+    "duplicated_other": "The {{count}} copies are at the bottom of the page.",
+    "copied_one": "Copied to {{page}}.",
+    "copied_other": "{{count}} cards copied to {{page}}.",
+    "copyHeldLeft_one": "One card of {{name}} stayed behind, because you could not add it there yourself.",
+    "copyHeldLeft_other": "{{count}} cards of {{name}} stayed behind, because you could not add them there yourself.",
+    "copyKeyDropped": "The copy of {{name}} has no key: {{key}} already opens a tile of the board.",
     "selected_one": "{{count}} card selected.",
     "selected_other": "{{count}} cards selected. Drag one or use the arrow keys to move them together; Escape lets go.",
     "undo": "Undo",
@@ -2194,6 +2372,7 @@
       "connection_changed": "Connection {{name}} changed",
       "connection_removed": "Connection {{name}} removed",
       "card_added": "Card {{name}} added to {{after}}",
+      "card_copied": "Card {{name}} copied from {{before}}",
       "card_removed": "Card {{name}} removed from {{after}}",
       "signed_in": "{{name}} signed in",
       "sign_in_refused": "Sign-in refused for {{name}}",
@@ -2268,5 +2447,45 @@
   "diagnosis": {
     "why": "Why?",
     "whyOf": "Why is {{name}} red or yellow?"
+  },
+  "weather": {
+    "hourlyLabel": "Hourly forecast for the next {{hours}} hours",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "rainUpTo": "Rain up to {{percent}} % around {{time}}",
+    "noRain": "No rain expected",
+    "aqi": "Air quality",
+    "uv": "UV",
+    "uvPeak": "peak {{value}}",
+    "pollen": "Pollen",
+    "airUnavailable": "Air data unavailable",
+    "pollenKinds": {
+      "alder": "Alder",
+      "birch": "Birch",
+      "grass": "Grass",
+      "mugwort": "Mugwort",
+      "olive": "Olive",
+      "ragweed": "Ragweed"
+    },
+    "level": {
+      "good": "Good",
+      "fair": "Fair",
+      "moderate": "Moderate",
+      "poor": "Poor",
+      "veryPoor": "Very poor",
+      "extremelyPoor": "Extremely poor",
+      "low": "Low",
+      "high": "High",
+      "veryHigh": "Very high",
+      "extreme": "Extreme",
+      "none": "None"
+    }
+  },
+  "calendar": {
+    "previous": "Previous",
+    "next": "Next",
+    "noEventsOnDay": "Nothing on this day",
+    "moreEvents": "{{count}} more",
+    "dayEvents": "{{date}}, entries: {{count}}"
   }
 }

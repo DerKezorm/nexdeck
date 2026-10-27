@@ -49,7 +49,8 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <span className="flex-1" />
         <HeaderTools user={user} unread={unread} onNotices={() => setOpen(true)} />
       </Bar>
-      <main>{children}</main>
+      {/* The title again on the page itself, for a look that draws the page as a window with a title bar (1984). */}
+      <main data-shell data-title={title}>{children}</main>
       <MobileTabBar
         boards={(boards.data ?? []).filter((b) => b.in_menu).map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={-1}
