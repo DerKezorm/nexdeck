@@ -932,7 +932,9 @@
       "range": "Bitte eine Zahl von {{min}} bis {{max}} eingeben.",
       "atLeast": "Bitte eine Zahl ab {{min}} eingeben.",
       "atMost": "Bitte eine Zahl bis {{max}} eingeben."
-    }
+    },
+    "reallyTitle": "Wirklich?",
+    "reallyBody": "Diese Aktion ist als gefährlich markiert. Zum Ausführen noch einmal „{{name}}“ drücken."
   },
   "widget": {
     "remove": {

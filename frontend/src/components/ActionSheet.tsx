@@ -60,6 +60,10 @@ export function ActionSheet({
   }, [asked])
   // ⚠️ A number outside its range is as unfinished as an empty field: it never
   // goes out, and the field says why.
+  // The second question of a dangerous action: asked after the first is answered, and asked again for the next press.
+  const [sure, setSure] = useState(false)
+  const closed = pending === null
+  useEffect(() => setSure(false), [asked, closed])
   const incomplete =
     pending !== null &&
     blanks.some((blank) => {
@@ -70,26 +74,32 @@ export function ActionSheet({
   return (
     <Confirm
       open={pending !== null}
-      title={pending ? `${tLabel(pending.action.label)}?` : ''}
-      body={blanks.length ? t('board.chooseBeforeAction') : t('board.confirmAction')}
+      title={pending ? (sure ? t('board.reallyTitle') : `${tLabel(pending.action.label)}?`) : ''}
+      body={pending && sure ? t('board.reallyBody', { name: tLabel(pending.action.label) }) : blanks.length ? t('board.chooseBeforeAction') : t('board.confirmAction')}
       danger={pending?.action.danger}
+      confirmLabel={pending && sure ? tLabel(pending.action.label) : undefined}
       confirmDisabled={incomplete}
       onCancel={onCancel}
       onConfirm={() => {
         if (!pending || incomplete) return
+        // ⚠️ Red means two presses: the first one only asks again, with the button's own name on it.
+        if (pending.action.danger && !sure) {
+          setSure(true)
+          return
+        }
         // A number goes out as a number, not as the text that was typed.
         const typed = Object.fromEntries(Object.entries(pending.values).map(([name, text]) => [name, blanks.find((blank) => blank.name === name)?.kind === 'number' ? Number(text) : text]))
         onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...typed } })
       }}
     >
-      {facts.length > 0 && (
+      {!sure && facts.length > 0 && (
         <ul className="mt-2 text-[12.5px] text-muted" data-testid="action-impact">
           {facts.map((fact, index) => (
             <li key={index}>{factText(t, fact)}</li>
           ))}
         </ul>
       )}
-      {pending && blanks.length > 0 && (
+      {pending && !sure && blanks.length > 0 && (
         <div className="flex flex-col gap-3 mt-3">
           {blanks.map((blank) => {
             const value = pending.values[blank.name] ?? ''

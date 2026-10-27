@@ -932,7 +932,9 @@
       "range": "Saisissez un nombre de {{min}} à {{max}}.",
       "atLeast": "Saisissez un nombre d’au moins {{min}}.",
       "atMost": "Saisissez un nombre d’au plus {{max}}."
-    }
+    },
+    "reallyTitle": "Vraiment ?",
+    "reallyBody": "Cette action est marquée comme dangereuse. Appuyez encore une fois sur « {{name}} » pour l’exécuter."
   },
   "widget": {
     "remove": {

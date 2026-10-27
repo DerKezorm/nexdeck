@@ -13,7 +13,7 @@ import { Spinner } from '../components/ui'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { withNews, type HomeAnswer } from '../lib/home'
-import { startingValue, unanswered } from '../lib/unanswered'
+import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
 import { anyCardDown, cardStatus } from '../lib/cardStatus'
@@ -262,9 +262,8 @@ export function KioskPage() {
             onAction={(widgetId, action) => {
               // The same rule as on the board: a blank nobody filled in opens
               // the sheet, or the wall display sends the press out half empty.
-              const open = unanswered(action)
-              if (action.confirm || open.length) {
-                setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
+              if (needsSheet(action)) {
+                setPending({ widgetId, action, values: Object.fromEntries(unanswered(action).map((blank) => [blank.name, startingValue(blank)])) })
               } else run(widgetId, action)
             }}
           />

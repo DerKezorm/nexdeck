@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ActionSheet, type PendingAction } from './ActionSheet'
 import type { Action, Ask } from '../lib/types'
-import { startingValue, unanswered } from '../lib/unanswered'
+import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
 
 /** The sheet with its state kept the way the board keeps it. */
 function Harness({ action, onRun }: { action: Action; onRun: (widgetId: number, action: Action) => void | Promise<unknown> }) {
@@ -73,5 +73,59 @@ describe('a blank that takes a number', () => {
     expect(screen.queryByRole('alert')).toBeNull()
     await userEvent.click(confirmButton())
     expect((onRun.mock.calls[0] as [number, Action])[1].params).toEqual({ kib: 1.5 })
+  })
+})
+
+const remove = (extra: Partial<Action> = {}): Action => ({ id: 'button:delete', label: 'Delete', ...extra })
+
+describe('a button that asks first', () => {
+  it('karten8 ac3 asks once before a button with a question runs', async () => {
+    const onRun = vi.fn()
+    render(<Harness action={remove({ confirm: true })} onRun={onRun} />)
+    expect(screen.getByRole('dialog')).toHaveTextContent('Delete?')
+    expect(onRun).not.toHaveBeenCalled()
+    await userEvent.click(confirmButton())
+    expect(onRun).toHaveBeenCalledTimes(1)
+  })
+
+  it('karten8 ac3 asks a second time, with the name of the button, before a dangerous button runs', async () => {
+    const onRun = vi.fn()
+    render(<Harness action={remove({ danger: true })} onRun={onRun} />)
+    // The red button is red, and danger asks even though `confirm` was left out.
+    expect(confirmButton()).toHaveClass('btn-danger')
+    await userEvent.click(confirmButton())
+    expect(onRun).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toHaveTextContent('Really?')
+    const second = screen.getByRole('button', { name: 'Delete' })
+    expect(second).toHaveClass('btn-danger')
+    await userEvent.click(second)
+    expect(onRun).toHaveBeenCalledTimes(1)
+  })
+
+  it('karten8 ac3 asks again after the second question was cancelled', async () => {
+    const onRun = vi.fn()
+    function Reopen() {
+      const [open, setOpen] = useState(true)
+      return (
+        <>
+          <button onClick={() => setOpen(true)}>again</button>
+          <ActionSheet pending={open ? { widgetId: 1, action: remove({ danger: true }), values: {} } : null} onChange={vi.fn()} onCancel={() => setOpen(false)} onRun={onRun} />
+        </>
+      )
+    }
+    render(<Reopen />)
+    await userEvent.click(confirmButton())
+    await userEvent.click(screen.getByRole('button', { name: /cancel|abbrechen/i }))
+    await userEvent.click(screen.getByRole('button', { name: 'again' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('Delete?')
+    await userEvent.click(confirmButton())
+    expect(onRun).not.toHaveBeenCalled()
+  })
+
+  it('karten8 ac3 opens the sheet for a dangerous button even when its card did not ask for a confirmation', () => {
+    expect(needsSheet(remove({ danger: true }))).toBe(true)
+    expect(needsSheet(remove({ confirm: true }))).toBe(true)
+    expect(needsSheet(limit())).toBe(true)
+    expect(needsSheet(remove())).toBe(false)
   })
 })

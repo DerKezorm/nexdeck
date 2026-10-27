@@ -51,3 +51,14 @@ export function numberProblem(blank: Ask, raw: string): NumberProblem | null {
   if (blank.min !== undefined && blank.max !== undefined) return 'range'
   return low ? 'atLeast' : 'atMost'
 }
+
+/**
+ * Whether pressing the action first opens the sheet.
+ *
+ * A confirmation asks for it, a blank nobody filled in needs it, and a
+ * dangerous action asks even if its card forgot to say `confirm` (danger
+ * includes it: the card cannot ask for less than the red button promises).
+ */
+export function needsSheet(action: Action): boolean {
+  return Boolean(action.confirm || action.danger || unanswered(action).length)
+}

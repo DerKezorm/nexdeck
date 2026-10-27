@@ -23,7 +23,7 @@ import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSetti
 import { useStream } from '../hooks/useStream'
 import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
-import { startingValue, unanswered } from '../lib/unanswered'
+import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
 import { useBoardCardStyle } from '../lib/appearance'
 import { closeGaps, Steps } from '../lib/arranging'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
@@ -440,9 +440,8 @@ export function BoardPage() {
     // ⚠️ A blank nobody filled in opens the sheet, whether or not the action
     // asked for a confirmation. Sent as it is, the server refuses it, and the
     // toast would be the first anybody heard that there was a choice to make.
-    const open = unanswered(action)
-    if (action.confirm || open.length) {
-      setPending({ widgetId, action, values: Object.fromEntries(open.map((blank) => [blank.name, startingValue(blank)])) })
+    if (needsSheet(action)) {
+      setPending({ widgetId, action, values: Object.fromEntries(unanswered(action).map((blank) => [blank.name, startingValue(blank)])) })
     } else void runActionRef.current(widgetId, action)
   }, [])
   const onRefresh = useCallback((id: number) => void post(`/widgets/${id}/refresh`), [])

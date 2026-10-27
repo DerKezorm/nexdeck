@@ -932,7 +932,9 @@
       "range": "Enter a number from {{min}} to {{max}}.",
       "atLeast": "Enter a number of {{min}} or more.",
       "atMost": "Enter a number of {{max}} or less."
-    }
+    },
+    "reallyTitle": "Really?",
+    "reallyBody": "This action is marked as dangerous. Press {{name}} once more to run it."
   },
   "widget": {
     "remove": {

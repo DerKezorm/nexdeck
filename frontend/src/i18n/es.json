@@ -932,7 +932,9 @@
       "range": "Introduce un número de {{min}} a {{max}}.",
       "atLeast": "Introduce un número a partir de {{min}}.",
       "atMost": "Introduce un número hasta {{max}}."
-    }
+    },
+    "reallyTitle": "¿Seguro?",
+    "reallyBody": "Esta acción está marcada como peligrosa. Pulsa «{{name}}» otra vez para ejecutarla."
   },
   "widget": {
     "remove": {

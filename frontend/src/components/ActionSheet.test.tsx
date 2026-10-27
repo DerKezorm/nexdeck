@@ -71,6 +71,9 @@ describe('ActionSheet', () => {
     render(<Harness action={{ id: 'reject', label: 'Turn down', confirm: true, danger: true, params: { id: 13 } }} onRun={onRun} />)
     expect(screen.queryByRole('combobox')).toBeNull()
     await userEvent.click(confirmButton())
+    // Red asks a second time (KARTEN-8): the first press only moves on.
+    expect(onRun).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: 'Turn down' }))
     expect((onRun.mock.calls[0] as [number, Action])[1].params).toEqual({ id: 13 })
   })
 })
