@@ -41,8 +41,13 @@ describe('the search', () => {
   })
 
   it('puts the service named so first, so Enter opens the one meant', () => {
-    // Tautulli comes first in the catalog and mentions Plex; Plex itself is what was typed.
-    expect(kinds(search(all, 'plex', false))).toEqual(['plex', 'tautulli'])
+    // Bazarr comes first in the catalog and mentions Sonarr; Sonarr itself is what was typed.
+    const list = entries([adapter('bazarr', 'Bazarr', 'media', { description: 'Subtitles for what Sonarr holds.' }), adapter('sonarr', 'Sonarr', 'media')], [], ORDER, (c) => c)
+    expect(kinds(list)).toEqual(['bazarr', 'sonarr'])
+    expect(kinds(search(list, 'sonarr', false))).toEqual(['sonarr', 'bazarr'])
+    // A name that begins with the word before one that only holds it.
+    const names = entries([adapter('jason', 'Jason', 'media'), adapter('sonarr', 'Sonarr', 'media')], [], ORDER, (c) => c)
+    expect(kinds(search(names, 'son', false))).toEqual(['sonarr', 'jason'])
   })
 
   it('needs every word, in any order', () => {

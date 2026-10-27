@@ -22,15 +22,20 @@ vi.mock('../api/client', () => ({
   post: vi.fn(async () => ({ widget: { id: 1 } })),
 }))
 
-function show(initialQuery?: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+function library(initialQuery?: string) {
+  return (
     <QueryClientProvider client={client}>
       <MemoryRouter>
         <WidgetLibrary open onClose={() => undefined} pageId={1} onCreated={() => undefined} initialQuery={initialQuery} />
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
+}
+
+function show(initialQuery?: string) {
+  return render(library(initialQuery))
 }
 
 describe('the library opened for one service', () => {
@@ -45,5 +50,14 @@ describe('the library opened for one service', () => {
     show()
     expect(await screen.findByRole('button', { name: /Queue/ })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Search widgets…' })).toHaveValue('')
+  })
+
+  it('takes the next service when the board, already open, is sent another', async () => {
+    // The library stays mounted on the board; a second "Build a card" changes only what it starts with.
+    const { rerender } = show('Sonarr')
+    await screen.findByRole('button', { name: /Calendar/ })
+    rerender(library('Radarr'))
+    expect(screen.getByRole('textbox', { name: 'Search widgets…' })).toHaveValue('Radarr')
+    expect(await screen.findByRole('button', { name: /Queue/ })).toBeInTheDocument()
   })
 })

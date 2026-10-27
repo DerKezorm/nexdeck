@@ -94,6 +94,8 @@ def test_helpers_and_stopped_containers_are_not_offered(client: TestClient) -> N
     _things(docker,
             _container("immich_machine_learning", "ghcr.io/immich-app/immich-machine-learning:release", 3003),
             _container("immich_postgres", "ghcr.io/immich-app/postgres:14", 5432),
+            # Publishes nothing, so no port tells it apart: only its name says it helps Immich.
+            _container("immich_redis", "docker.io/valkey/valkey:8"),
             _container("jellyfin", "jellyfin/jellyfin", 8096, state="exited"),
             _container("whoami", "traefik/whoami", 8081))
     assert _found(client)["found"] == []
@@ -119,7 +121,8 @@ def test_what_is_connected_already_is_not_offered(client: TestClient) -> None:
     _connection(client, "sonarr", "Sonarr", "http://192.0.2.10:8989")  # by its address
     _connection(client, "radarr", "Radarr", "http://radarr:7878")  # by its name on a shared Docker network
     _connection(client, "pihole", "Pi-hole one", "http://192.0.2.10:8080")  # the same host, another port: another Pi-hole
-    plex = _connection(client, "plex", "Plex", "https://plex.example.com", field="url")
+    # Through a proxy on another address: only the relation of the inventory says it is this one.
+    plex = _connection(client, "plex", "Plex", "https://192.0.2.99", field="url")
     with db_session() as db:
         db.add(Relation(child=f"integration:{plex}", parent=f"container:{docker}:plex", origin="manual", state="on"))
     assert _by_kind(client) == {"pihole": "http://192.0.2.10:8053"}
