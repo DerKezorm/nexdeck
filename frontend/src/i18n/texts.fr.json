@@ -2047,7 +2047,17 @@
     "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Chaque planification avec sa dernière exécution, sa source, sa destination et sa prochaine exécution, celles en échec d’abord, avec un bouton qui la lance maintenant.",
     "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Combien il y a de planifications, combien sont en bon état, en échec, en cours ou en pause, et quand la dernière bonne sauvegarde a eu lieu.",
     "Every repository with its state, size and snapshots, worst first.": "Chaque dépôt avec son état, sa taille et ses instantanés, le pire d’abord.",
-    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Dans Réglages > Personnel > Clés API de Zerobyte 0.40 ou plus récent. La clé peut tout ce que peut son utilisateur ; les cartes ne font que lire."
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Dans Réglages > Personnel > Clés API de Zerobyte 0.40 ou plus récent. La clé peut tout ce que peut son utilisateur ; les cartes ne font que lire.",
+    "Charge, runtime, load, power and input voltage of a UPS, read from upsd itself, red while it runs on battery.": "Charge, autonomie, charge électrique, puissance et tension d’entrée d’un onduleur, lues directement dans upsd, en rouge tant qu’il fonctionne sur batterie.",
+    "Charge as a gauge, with the state, load, runtime and power; red while the UPS runs on battery.": "La charge de la batterie en jauge, avec l’état, la charge électrique, l’autonomie et la puissance ; en rouge tant que l’onduleur fonctionne sur batterie.",
+    "UPS power": "Puissance de l’onduleur",
+    "What the UPS delivers in watts, with the load and the voltage that comes in.": "Ce que l’onduleur fournit en watts, avec la charge électrique et la tension d’entrée.",
+    "State, charge, runtime, load, power, voltages, temperature and the model, one line each.": "État, charge de la batterie, autonomie, charge électrique, puissance, tensions, température et modèle, une ligne chacun.",
+    "Empty means 3493.": "Vide signifie 3493.",
+    "The machine upsd runs on. It has to listen on a network address (LISTEN in upsd.conf), and reading needs no login.": "La machine sur laquelle tourne upsd. Elle doit écouter sur une adresse réseau (LISTEN dans upsd.conf) ; la lecture ne demande aucune connexion.",
+    "The name from ups.conf. Empty takes the first one upsd knows.": "Le nom dans ups.conf. Vide prend le premier que upsd connaît.",
+    "A UPS runs on battery": "Un onduleur fonctionne sur batterie",
+    "A UPS is back on mains": "Un onduleur est de retour sur le secteur"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3266,6 +3276,19 @@
     "Source unavailable": "Source indisponible",
     "Repository error": "Erreur du dépôt",
     "Being repaired": "En réparation",
-    "Check cancelled": "Vérification annulée"
+    "Check cancelled": "Vérification annulée",
+    "On mains": "Sur le secteur",
+    "On battery": "Sur batterie",
+    "Battery low": "Batterie faible",
+    "Battery high": "Batterie pleine",
+    "Replace battery": "Remplacer la batterie",
+    "Discharging": "En décharge",
+    "Bypass": "Bypass",
+    "Calibrating": "Étalonnage",
+    "Overloaded": "Surchargé",
+    "Trimming voltage": "Abaisse la tension",
+    "Boosting voltage": "Relève la tension",
+    "Shutdown forced": "Arrêt forcé",
+    "Alarm": "Alarme"
   }
 }

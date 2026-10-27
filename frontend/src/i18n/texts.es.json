@@ -2047,7 +2047,17 @@
     "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Cada programación con su última ejecución, origen, destino y próxima ejecución, primero las fallidas, con un botón que la ejecuta ahora.",
     "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Cuántas programaciones hay, cuántas están bien, han fallado, están en marcha o en pausa, y cuándo se hizo la última copia correcta.",
     "Every repository with its state, size and snapshots, worst first.": "Cada repositorio con su estado, tamaño e instantáneas, primero el peor.",
-    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "De Ajustes > Personal > Claves API en Zerobyte 0.40 o posterior. La clave puede hacer lo que puede su usuario; las tarjetas solo leen."
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "De Ajustes > Personal > Claves API en Zerobyte 0.40 o posterior. La clave puede hacer lo que puede su usuario; las tarjetas solo leen.",
+    "Charge, runtime, load, power and input voltage of a UPS, read from upsd itself, red while it runs on battery.": "Carga, autonomía, consumo, potencia y tensión de entrada de un SAI, leídos directamente de upsd, en rojo mientras funciona con batería.",
+    "Charge as a gauge, with the state, load, runtime and power; red while the UPS runs on battery.": "La carga como indicador, con el estado, el consumo, la autonomía y la potencia; en rojo mientras el SAI funciona con batería.",
+    "UPS power": "Potencia del SAI",
+    "What the UPS delivers in watts, with the load and the voltage that comes in.": "Lo que entrega el SAI en vatios, con el consumo y la tensión de entrada.",
+    "State, charge, runtime, load, power, voltages, temperature and the model, one line each.": "Estado, carga, autonomía, consumo, potencia, tensiones, temperatura y el modelo, una línea cada uno.",
+    "Empty means 3493.": "Vacío significa 3493.",
+    "The machine upsd runs on. It has to listen on a network address (LISTEN in upsd.conf), and reading needs no login.": "La máquina en la que corre upsd. Tiene que escuchar en una dirección de red (LISTEN en upsd.conf); para leer no hace falta iniciar sesión.",
+    "The name from ups.conf. Empty takes the first one upsd knows.": "El nombre de ups.conf. Vacío toma el primero que conoce upsd.",
+    "A UPS runs on battery": "Un SAI funciona con batería",
+    "A UPS is back on mains": "Un SAI vuelve a estar en la red eléctrica"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3266,6 +3276,19 @@
     "Source unavailable": "Origen no disponible",
     "Repository error": "Error del repositorio",
     "Being repaired": "En reparación",
-    "Check cancelled": "Comprobación cancelada"
+    "Check cancelled": "Comprobación cancelada",
+    "On mains": "En la red",
+    "On battery": "Con batería",
+    "Battery low": "Batería baja",
+    "Battery high": "Batería alta",
+    "Replace battery": "Sustituir la batería",
+    "Discharging": "Descargando",
+    "Bypass": "Bypass",
+    "Calibrating": "Calibrando",
+    "Overloaded": "Sobrecargado",
+    "Trimming voltage": "Reduciendo la tensión",
+    "Boosting voltage": "Elevando la tensión",
+    "Shutdown forced": "Apagado forzado",
+    "Alarm": "Alarma"
   }
 }

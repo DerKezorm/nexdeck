@@ -2047,7 +2047,17 @@
     "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Jeder Plan mit letztem Lauf, Quelle, Ziel und nächstem Lauf, gescheiterte zuerst, mit einem Knopf, der ihn sofort startet.",
     "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Wie viele Pläne es gibt, wie viele in Ordnung, fehlgeschlagen, laufend oder pausiert sind und wann die letzte gute Sicherung lief.",
     "Every repository with its state, size and snapshots, worst first.": "Jedes Repository mit Zustand, Größe und Snapshots, das schlechteste zuerst.",
-    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Aus Einstellungen > Persönlich > API-Schlüssel in Zerobyte 0.40 oder neuer. Der Schlüssel darf, was sein Benutzer darf, die Karten lesen nur."
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Aus Einstellungen > Persönlich > API-Schlüssel in Zerobyte 0.40 oder neuer. Der Schlüssel darf, was sein Benutzer darf, die Karten lesen nur.",
+    "Charge, runtime, load, power and input voltage of a UPS, read from upsd itself, red while it runs on battery.": "Ladung, Restlaufzeit, Last, Leistung und Eingangsspannung einer USV, direkt von upsd gelesen, rot, solange sie auf Batterie läuft.",
+    "Charge as a gauge, with the state, load, runtime and power; red while the UPS runs on battery.": "Ladung als Anzeige, dazu Zustand, Last, Restlaufzeit und Leistung; rot, solange die USV auf Batterie läuft.",
+    "UPS power": "USV-Leistung",
+    "What the UPS delivers in watts, with the load and the voltage that comes in.": "Was die USV in Watt liefert, dazu die Last und die ankommende Spannung.",
+    "State, charge, runtime, load, power, voltages, temperature and the model, one line each.": "Zustand, Ladung, Restlaufzeit, Last, Leistung, Spannungen, Temperatur und Modell, je eine Zeile.",
+    "Empty means 3493.": "Leer bedeutet 3493.",
+    "The machine upsd runs on. It has to listen on a network address (LISTEN in upsd.conf), and reading needs no login.": "Der Rechner, auf dem upsd läuft. Er muss auf einer Netzwerkadresse lauschen (LISTEN in upsd.conf), zum Lesen braucht es keine Anmeldung.",
+    "The name from ups.conf. Empty takes the first one upsd knows.": "Der Name aus ups.conf. Leer nimmt die erste, die upsd kennt.",
+    "A UPS runs on battery": "Eine USV läuft auf Batterie",
+    "A UPS is back on mains": "Eine USV ist wieder am Netz"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3266,6 +3276,19 @@
     "Source unavailable": "Quelle nicht erreichbar",
     "Repository error": "Repository-Fehler",
     "Being repaired": "Wird repariert",
-    "Check cancelled": "Prüfung abgebrochen"
+    "Check cancelled": "Prüfung abgebrochen",
+    "On mains": "Am Netz",
+    "On battery": "Auf Batterie",
+    "Battery low": "Batterie schwach",
+    "Battery high": "Batterie voll",
+    "Replace battery": "Batterie ersetzen",
+    "Discharging": "Entlädt",
+    "Bypass": "Bypass",
+    "Calibrating": "Kalibriert",
+    "Overloaded": "Überlastet",
+    "Trimming voltage": "Senkt die Spannung",
+    "Boosting voltage": "Hebt die Spannung",
+    "Shutdown forced": "Abschaltung erzwungen",
+    "Alarm": "Alarm"
   }
 }

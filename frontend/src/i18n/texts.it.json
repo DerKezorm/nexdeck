@@ -2047,7 +2047,17 @@
     "Every schedule with its last run, source and destination and when it runs next, failed ones first, with a button that runs it now.": "Ogni pianificazione con l'ultima esecuzione, origine, destinazione e prossima esecuzione, prima quelle non riuscite, con un pulsante che la avvia subito.",
     "How many schedules there are, how many are fine, failed, running or paused, and when the last good backup ran.": "Quante pianificazioni ci sono, quante sono a posto, non riuscite, in esecuzione o in pausa, e quando è stato fatto l'ultimo backup riuscito.",
     "Every repository with its state, size and snapshots, worst first.": "Ogni repository con stato, dimensione e snapshot, prima il peggiore.",
-    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Da Impostazioni > Personale > Chiavi API in Zerobyte 0.40 o successivo. La chiave può fare ciò che può il suo utente; le schede si limitano a leggere."
+    "From Settings > Personal > API keys in Zerobyte 0.40 or newer. The key may do what its user may, and the cards only read.": "Da Impostazioni > Personale > Chiavi API in Zerobyte 0.40 o successivo. La chiave può fare ciò che può il suo utente; le schede si limitano a leggere.",
+    "Charge, runtime, load, power and input voltage of a UPS, read from upsd itself, red while it runs on battery.": "Carica, autonomia, carico, potenza e tensione di ingresso di un UPS, letti direttamente da upsd, in rosso finché funziona a batteria.",
+    "Charge as a gauge, with the state, load, runtime and power; red while the UPS runs on battery.": "La carica come indicatore, con stato, carico, autonomia e potenza; in rosso finché l'UPS funziona a batteria.",
+    "UPS power": "Potenza dell'UPS",
+    "What the UPS delivers in watts, with the load and the voltage that comes in.": "Quanto eroga l'UPS in watt, con il carico e la tensione in ingresso.",
+    "State, charge, runtime, load, power, voltages, temperature and the model, one line each.": "Stato, carica, autonomia, carico, potenza, tensioni, temperatura e modello, una riga ciascuno.",
+    "Empty means 3493.": "Vuoto significa 3493.",
+    "The machine upsd runs on. It has to listen on a network address (LISTEN in upsd.conf), and reading needs no login.": "La macchina su cui gira upsd. Deve restare in ascolto su un indirizzo di rete (LISTEN in upsd.conf); per leggere non serve alcun accesso.",
+    "The name from ups.conf. Empty takes the first one upsd knows.": "Il nome da ups.conf. Vuoto prende il primo che upsd conosce.",
+    "A UPS runs on battery": "Un UPS funziona a batteria",
+    "A UPS is back on mains": "Un UPS è di nuovo alla rete"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3266,6 +3276,19 @@
     "Source unavailable": "Origine non disponibile",
     "Repository error": "Errore del repository",
     "Being repaired": "In riparazione",
-    "Check cancelled": "Controllo annullato"
+    "Check cancelled": "Controllo annullato",
+    "On mains": "Alla rete",
+    "On battery": "A batteria",
+    "Battery low": "Batteria scarica",
+    "Battery high": "Batteria carica",
+    "Replace battery": "Sostituire la batteria",
+    "Discharging": "In scarica",
+    "Bypass": "Bypass",
+    "Calibrating": "Calibrazione",
+    "Overloaded": "Sovraccarico",
+    "Trimming voltage": "Riduce la tensione",
+    "Boosting voltage": "Alza la tensione",
+    "Shutdown forced": "Spegnimento forzato",
+    "Alarm": "Allarme"
   }
 }

@@ -141,6 +141,7 @@ that one of twenty-one renderers draws.
 | Glances | system, file systems, sensors | | optional password |
 | Scrutiny | disks, disk health | | none |
 | UPS (PeaNUT) | UPS, UPS details | | optional sign-in; PeaNUT 6.0.0 refuses a password with a colon or umlauts on its API, and any password behind a reverse proxy with HTTPS unless WEB_USERNAME and WEB_PASSWORD are set on its container |
+| NUT | UPS (charge as a gauge with the state, load, runtime and watts, red while the UPS runs on battery), UPS power (watts, load, input voltage), UPS details | | none; upsd's own text protocol on port 3493, which has to listen on a network address (LISTEN in upsd.conf), and reading needs no login. Tells when the UPS runs on battery and when it is back on mains. Beta: run against NUT 2.8.2 with the dummy driver, not yet a real UPS |
 | Gotify | messages, message count | | client token (an application token may only write) |
 | ntfy | messages | | topic, and a token for a protected one |
 | Prometheus | query value, query list | | optional basic auth |
