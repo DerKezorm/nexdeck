@@ -2041,7 +2041,14 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Was in den letzten 24 Stunden passiert ist und was noch rot ist, von allen Boards des Besitzers dieses Boards.",
     "A backup is too old": "Eine Sicherung ist zu alt",
     "Something is full or reaches its red line soon": "Etwas ist bald voll oder erreicht seine rote Linie",
-    "The daily report": "Der Tagesbericht"
+    "The daily report": "Der Tagesbericht",
+    "How much filament is left in total, and which spools are running low.": "Wie viel Filament insgesamt übrig ist und welche Spulen zur Neige gehen.",
+    "Filament stock": "Filamentvorrat",
+    "The filament left on all spools together, how many spools there are and how many are running low.": "Das Filament, das auf allen Spulen zusammen übrig ist, wie viele Spulen es gibt und wie viele zur Neige gehen.",
+    "Running low below (%)": "Zur Neige unter (%)",
+    "Spools": "Spulen",
+    "Each spool with what is left of it, the emptiest first.": "Jede Spule mit ihrem Rest, die leerste zuerst.",
+    "Running low": "Zur Neige"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3253,6 +3260,8 @@
     "Cloud backup": "Cloud-Backup",
     "Reboot required": "Neustart nötig",
     "major version": "Hauptversion",
-    "Task Photos": "Aufgabe Fotos"
+    "Task Photos": "Aufgabe Fotos",
+    "Filament left": "Filament übrig",
+    "No spool in Spoolman.": "Keine Spule in Spoolman."
   }
 }

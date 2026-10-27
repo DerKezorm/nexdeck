@@ -164,6 +164,7 @@ that one of twenty-one renderers draws.
 | PhotoPrism | photo library, recently added | start indexing | app password from Settings > Account > Apps and Devices; a client access token cannot list photos |
 | Tandoor Recipes | meal plan, shopping list | tick an entry off | API token from Settings > API; the scope read is enough to look, ticking off needs read write |
 | OctoPrint | printer, print job | | application key from User Settings > Application Keys; its user needs the permission Status (groups Users or Read-only) |
+| Spoolman | filament stock (the filament left on all spools together, how many spools there are and how many run low), spools (each with what is left, the emptiest first) | | none; Spoolman has no sign-in, so its port stays inside the network. Beta: run against Spoolman 0.27.0, not yet one in use |
 | Wallos | next payments, subscription costs | | API key from the profile; it goes in the body of a POST, never in the address |
 | Weather (Open-Meteo), RSS feeds, Calendar, Basics | current, headlines, upcoming, clock, countdown, timer, notes, bookmarks, iframe, app tile, heading, group, tabs, key figures, status page, notices, updates (containers from What's Up Docker, Cup, Arcane, Dockhand and Watchtower, GitHub projects, the versions of the connected services), this machine | | none; the versions of the connected services ask GitHub only while Check for updates is on |
 | Hacker News | stories | | none |

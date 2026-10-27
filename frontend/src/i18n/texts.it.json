@@ -2041,7 +2041,14 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Cosa è successo nelle ultime 24 ore e cosa è ancora rosso, da tutte le bacheche del proprietario di questa bacheca.",
     "A backup is too old": "Un backup è troppo vecchio",
     "Something is full or reaches its red line soon": "Qualcosa sarà presto pieno o raggiungerà la sua linea rossa",
-    "The daily report": "Il rapporto giornaliero"
+    "The daily report": "Il rapporto giornaliero",
+    "How much filament is left in total, and which spools are running low.": "Quanto filamento resta in totale e quali bobine stanno finendo.",
+    "Filament stock": "Scorta di filamento",
+    "The filament left on all spools together, how many spools there are and how many are running low.": "Il filamento rimasto su tutte le bobine insieme, quante bobine ci sono e quante stanno finendo.",
+    "Running low below (%)": "In esaurimento sotto (%)",
+    "Spools": "Bobine",
+    "Each spool with what is left of it, the emptiest first.": "Ogni bobina con ciò che resta, la più vuota per prima.",
+    "Running low": "In esaurimento"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3253,6 +3260,8 @@
     "Cloud backup": "Backup cloud",
     "Reboot required": "Riavvio necessario",
     "major version": "versione principale",
-    "Task Photos": "Attività Foto"
+    "Task Photos": "Attività Foto",
+    "Filament left": "Filamento rimasto",
+    "No spool in Spoolman.": "Nessuna bobina in Spoolman."
   }
 }
