@@ -775,6 +775,7 @@ export function BoardPage() {
           onMove={onMove}
           onCopy={onCopy}
           here={{ id: activePage.id, name: activePage.name }}
+          phoneHides
           onAction={onAction}
           onRefresh={onRefresh}
           onSettings={onSettings}

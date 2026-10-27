@@ -916,6 +916,12 @@
         "yellow": "Gelb",
         "green": "Grün"
       }
+    },
+    "phone": {
+      "hide": "Auf dem Handy ausblenden",
+      "hideHelp": "Fehlt im Kartenstapel des Handys. Das breite Board, ein Tablet und eine Wandanzeige behalten sie, und beim Bearbeiten auf dem Handy steht sie blass da.",
+      "showRed": "Trotzdem zeigen, wenn sie rot ist",
+      "showRedHelp": "Aufs Handy schaut man, wenn etwas nicht stimmt."
     }
   },
   "library": {

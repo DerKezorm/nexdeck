@@ -916,6 +916,12 @@
         "yellow": "Giallo",
         "green": "Verde"
       }
+    },
+    "phone": {
+      "hide": "Nascondi sul telefono",
+      "hideHelp": "Non compare nella pila di schede del telefono. La bacheca larga, un tablet e un display a parete la mantengono, e sistemando la bacheca sul telefono appare sbiadita.",
+      "showRed": "Mostrala comunque quando è rossa",
+      "showRedHelp": "Il telefono è ciò che guardi quando qualcosa non va."
     }
   },
   "library": {

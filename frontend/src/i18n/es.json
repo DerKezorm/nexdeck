@@ -916,6 +916,12 @@
         "yellow": "Amarillo",
         "green": "Verde"
       }
+    },
+    "phone": {
+      "hide": "Ocultar en el móvil",
+      "hideHelp": "No aparece en la pila de tarjetas del móvil. El tablero ancho, una tableta y una pantalla de pared la mantienen, y al ordenar el tablero en el móvil se ve atenuada.",
+      "showRed": "Mostrarla igualmente si está en rojo",
+      "showRedHelp": "El móvil es lo que miras cuando algo va mal."
     }
   },
   "library": {

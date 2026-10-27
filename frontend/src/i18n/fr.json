@@ -916,6 +916,12 @@
         "yellow": "Jaune",
         "green": "Vert"
       }
+    },
+    "phone": {
+      "hide": "Masquer sur le téléphone",
+      "hideHelp": "Absente de la pile de cartes du téléphone. Le tableau large, une tablette et un écran mural la gardent, et en arrangeant le tableau sur le téléphone elle apparaît estompée.",
+      "showRed": "L’afficher quand même si elle est rouge",
+      "showRedHelp": "C’est le téléphone qu’on regarde quand quelque chose ne va pas."
     }
   },
   "library": {

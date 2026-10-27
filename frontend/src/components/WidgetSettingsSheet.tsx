@@ -387,6 +387,13 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           onChange={(patch) => setOptions((o) => ({ ...o, ...patch }))}
         />
       )}
+      {/* Every card, in the same place: a phone shows a stack, and not every card belongs in it. */}
+      <div className="rounded-xl border border-line px-3 py-1 mb-3" data-testid="card-phone">
+        <Switch checked={options.phone_hide === true} onChange={(value) => setOptions((o) => ({ ...o, phone_hide: value }))} label={t('widget.phone.hide')} description={t('widget.phone.hideHelp')} />
+        {options.phone_hide === true && (
+          <Switch checked={options.phone_show_red !== false} onChange={(value) => setOptions((o) => ({ ...o, phone_show_red: value }))} label={t('widget.phone.showRed')} description={t('widget.phone.showRedHelp')} />
+        )}
+      </div>
       {isApp && admin && widget.id > 0 && (
         // Roadmap M5: what this tile's app runs on. Loaded with its words only when an administrator opens a tile.
         <Suspense fallback={null}>

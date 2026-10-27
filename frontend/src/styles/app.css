@@ -1153,6 +1153,11 @@ textarea.input {
   box-shadow: 0 0 0 2px var(--nd-accent), 0 0 0 5px var(--nd-accent-soft);
 }
 
+/* A card left out of the phone's stack, while the phone arranges the board: there, but faded. */
+.nd-phone-hidden .card.is-editing {
+  opacity: 0.5;
+}
+
 .card.is-editing {
   cursor: grab;
 }

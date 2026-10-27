@@ -916,6 +916,12 @@
         "yellow": "Yellow",
         "green": "Green"
       }
+    },
+    "phone": {
+      "hide": "Hide on the phone",
+      "hideHelp": "Left out of the stack a phone shows. The wide board, a tablet and a wall display keep it, and arranging the board on the phone shows it faded.",
+      "showRed": "Show it anyway when it is red",
+      "showRedHelp": "The phone is where you look when something is wrong."
     }
   },
   "library": {
