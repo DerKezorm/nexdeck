@@ -2041,7 +2041,13 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Cosa è successo nelle ultime 24 ore e cosa è ancora rosso, da tutte le bacheche del proprietario di questa bacheca.",
     "A backup is too old": "Un backup è troppo vecchio",
     "Something is full or reaches its red line soon": "Qualcosa sarà presto pieno o raggiungerà la sua linea rossa",
-    "The daily report": "Il rapporto giornaliero"
+    "The daily report": "Il rapporto giornaliero",
+    "Finished and failed": "Completati e falliti",
+    "Queue, speed, finished and failed downloads, pause or resume over JSON-RPC.": "Coda, velocità, download completati e falliti, pausa e ripresa tramite JSON-RPC.",
+    "RPC secret": "Segreto RPC",
+    "The RPC address of aria2, usually port 6800. The /jsonrpc at the end is added when it is missing.": "L'indirizzo RPC di aria2, di solito la porta 6800. Il /jsonrpc finale viene aggiunto se manca.",
+    "The latest downloads aria2 has stopped with, failed ones in red and the reason under them.": "Gli ultimi download fermati da aria2, quelli falliti in rosso e il motivo sotto.",
+    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "Il valore di rpc-secret. Lascia vuoto se aria2 funziona senza."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3253,6 +3259,8 @@
     "Cloud backup": "Backup cloud",
     "Reboot required": "Riavvio necessario",
     "major version": "versione principale",
-    "Task Photos": "Attività Foto"
+    "Task Photos": "Attività Foto",
+    "Clear the list": "Svuota l'elenco",
+    "Nothing has stopped yet.": "Ancora nulla si è fermato."
   }
 }

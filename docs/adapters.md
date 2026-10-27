@@ -125,6 +125,7 @@ that one of twenty-one renderers draws.
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | NeutArr | NeutArr overview, hunted apps | | the API key from NeutArr's User page, sent as a header; NeutArr is the continuation of Huntarr |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
+| aria2 | queue, speed, finished and failed (the latest stopped downloads with the reason for each failure) | pause, resume, clear the list of stopped downloads | the RPC address (port 6800) and the RPC secret when aria2 runs with one |
 | Qui | Qui overview, instances | | an API key, made under Settings > API keys; one key reads every qBittorrent behind Qui |
 | Real-Debrid | Real-Debrid account (premium days, end, points, active torrents against the limit), torrents (progress and state), latest downloads, data used (a bar for each of the last 7, 14 or 31 days, the total and the hoster most of it came from), hoster limits (each hoster with a limit, used against what is left, and when it resets) | | the private API token from real-debrid.com/apitoken; Real-Debrid refuses many VPN and data centre addresses, and allows 250 requests a minute for all apps on an account together |
 | rTorrent | queue, speed, torrents, rTorrent overview | pause, resume | the XML-RPC address (such as :8000/RPC2 of crazymax/rtorrent-rutorrent) or the address of ruTorrent, with the web server's user and password when one is set |
