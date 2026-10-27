@@ -215,16 +215,15 @@ class DefinedAdapter(Adapter):
         """The service said 401 to a request signed with ``refused``.
 
         The first time in a request of a card: sign in again, once, and let the card ask again. A ticket made a moment
-        ago, or a second 401 after the new sign-in, is a refusal of the sign-in itself: counted, and the card says "sign-in
-        failed" without trying a third time (EC-3). Ten cards that all got the 401 sign in once (EC-8).
+        ago, or a second 401 after the new sign-in, means the service takes the sign-in but not this path (a path the
+        account may not read, one that is not there): the card says "sign-in failed" without trying a third time (EC-3).
+        ⚠️ That is the error of this card and no failed sign-in: it is not counted and the ticket, which the service
+        gave, stays for the other cards. Only :meth:`_sign_in` counts, so one card on a path that says 401 cannot pause the
+        connection. Ten cards that all got the 401 sign in once (EC-8).
         """
         state = _state(ctx)
         fresh = state.held is not None and state.held.parts == refused and clock() - state.held.issued < FRESH
         if again or fresh:
-            async with state.lock:
-                if state.held is not None and state.held.parts == refused:
-                    state.held = None
-                    self._count_failure(state)
             raise SignInFailed()
         return (await self._session(config, ctx, stale=refused)).parts
 

@@ -96,6 +96,8 @@ class Memos:
         self.refuse_everything = False
         #: Seconds a sign-in takes: with none, a stub answers without ever giving the loop away and nothing runs at once.
         self.delay = 0.0
+        #: Called at every read: a slow service lets the clock run on while a card waits for it.
+        self.on_read: Any = None
 
     async def sign_in(self, request: httpx.Request) -> httpx.Response:
         await asyncio.sleep(self.delay)
@@ -113,6 +115,8 @@ class Memos:
 
     def read(self, request: httpx.Request) -> httpx.Response:
         self.reads.append(request)
+        if self.on_read is not None:
+            self.on_read()
         ticket = request.headers.get("authorization", "").removeprefix("Bearer ")
         if self.cookie:
             ticket = request.headers.get("cookie", "").removeprefix("memos.access-token=")
@@ -270,11 +274,29 @@ def test_karten3_ec3_when_the_new_sign_in_is_refused_too_the_card_asks_no_third_
     assert asked(admin, number).status_code == 200
     moment.pass_(minutes=30)
     service.refuse_everything = True
+    # A slow service: the clock runs on by more than FRESH while the card waits, so only "the second 401 of this request"
+    # (and not "a ticket made a moment ago") keeps the card from signing in a third time.
+    service.on_read = lambda: moment.pass_(seconds=defined.FRESH.total_seconds() + 1)
     before = (len(service.logins), len(service.reads))
     answer = asked(admin, number)
     assert answer.status_code == 502 and answer.json()["detail"]["code"] == "sign_in_failed"
     assert "sign-in failed" in answer.json()["detail"]["message"].lower()
     assert (len(service.logins) - before[0], len(service.reads) - before[1]) == (1, 2)
+
+
+@respx.mock
+def test_karten3_ec3_a_card_on_a_path_that_says_401_does_not_pause_the_other_cards_of_the_connection(admin: TestClient, moment: Moment) -> None:  # noqa: F811
+    service = Memos().mount()
+    respx.get(f"{BASE}/api/v1/admin").mock(return_value=httpx.Response(401, json={"message": "admins only"}))
+    number = own(admin, MEMOS, username="ann", password=PASSWORD)
+    assert asked(admin, number).status_code == 200
+    codes = []
+    for step in range(4):
+        moment.pass_(minutes=1)
+        codes.append(asked(admin, number, f"/api/v1/admin?n={step}").json()["detail"]["code"])
+    assert codes == ["sign_in_failed"] * 4, "the card of that path says so, not that signing in is paused"
+    other = asked(admin, number)
+    assert other.status_code == 200, f"the other card of the connection: {other.json()}; {len(service.logins)} sign-ins"
 
 
 @respx.mock
