@@ -18,6 +18,8 @@ interface Props {
   onCreated: (widgetId: number) => void
   /** For a tile of key figures: only the cards that show a number, and no apps. */
   numbersOnly?: boolean
+  /** What the search starts with: the service of a connection that has no card yet. */
+  initialQuery?: string
 }
 
 /**
@@ -43,7 +45,8 @@ export function defaultTitle(adapter: { kind: string; label: string }, widget: {
   return `${service} ${kind}`
 }
 
-const CATEGORY_ORDER = ['basics', 'feeds', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
+/** The order categories are shown in, here and wherever connections are grouped. */
+export const CATEGORY_ORDER = ['basics', 'feeds', 'generic', 'hosts', 'nas', 'downloads', 'media', 'network', 'monitoring', 'other']
 
 /**
  * Everything a card can be found by.
@@ -69,13 +72,20 @@ export function haystack(adapter: AdapterSpec, widget: WidgetTypeSpec): string {
 }
 
 /** The widget library: every adapter's widgets, searchable, one click to add. */
-export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = false }: Props) {
+export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = false, initialQuery = '' }: Props) {
   const { t } = useTranslation()
   const adapters = useQuery({ queryKey: ['adapters'], queryFn: () => get<AdapterSpec[]>('/adapters'), enabled: open, staleTime: 300_000 })
   const integrations = useQuery({ queryKey: ['integrations'], queryFn: () => get<Integration[]>('/integrations'), enabled: open })
   // The app catalog (issue #37): an app is placed straight from here, already following it.
   const apps = useQuery({ queryKey: ['apps'], queryFn: () => get<AppEntry[]>('/apps'), enabled: open, staleTime: 60_000 })
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
+  // A new search to start with replaces the old one; the library is drawn
+  // closed as well, so this is set while rendering, not after.
+  const [started, setStarted] = useState(initialQuery)
+  if (initialQuery !== started) {
+    setStarted(initialQuery)
+    if (initialQuery) setQuery(initialQuery)
+  }
   const [picking, setPicking] = useState<{ adapter: AdapterSpec; widget: WidgetTypeSpec } | null>(null)
   const [integrationId, setIntegrationId] = useState<string>('')
   const [error, setError] = useState('')

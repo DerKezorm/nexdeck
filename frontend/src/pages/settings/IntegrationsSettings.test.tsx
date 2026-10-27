@@ -8,7 +8,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IntegrationsSettings } from './IntegrationsSettings'
@@ -17,6 +17,7 @@ import { useAuth } from '../../stores/auth'
 const state = vi.hoisted(() => ({
   muted: false,
   fail: false,
+  cards: 2,
   patches: [] as { path: string; body: unknown }[],
 }))
 
@@ -27,11 +28,12 @@ vi.mock('../../api/client', () => {
     get: vi.fn(async (path: string) => {
       if (path === '/about') return { version: '0.22.0', demo: false, demo_forced: false, demo_data: false }
       if (path === '/adapters') return []
+      if (path === '/boards') return [{ id: 3, slug: 'home', name: 'Home' }]
       return [
         {
           id: 7, kind: 'sonarr', label: 'Sonarr', icon: 'sonarr', beta: false, name: 'Sonarr', config: {},
           enabled: true, demo: false, admin_only: false, muted: state.muted,
-          last_ok_at: '2026-09-26T10:00:00Z', last_error: '', widget_count: 2, created_at: '2026-09-01T10:00:00Z',
+          last_ok_at: '2026-09-26T10:00:00Z', last_error: '', widget_count: state.cards, created_at: '2026-09-01T10:00:00Z',
         },
       ]
     }),
@@ -46,12 +48,21 @@ vi.mock('../../api/client', () => {
   }
 })
 
+/** Where "Build a card" leads, and what it carries there. */
+function Board() {
+  const location = useLocation()
+  return <p>{`board ${location.pathname} ${JSON.stringify(location.state)}`}</p>
+}
+
 function show() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
-        <IntegrationsSettings />
+      <MemoryRouter initialEntries={['/system/integrations']}>
+        <Routes>
+          <Route path="/system/integrations" element={<IntegrationsSettings />} />
+          <Route path="/b/:slug" element={<Board />} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -61,6 +72,7 @@ describe('the bell on a connection', () => {
   beforeEach(() => {
     state.muted = false
     state.fail = false
+    state.cards = 2
     state.patches.length = 0
     useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin' } as never })
   })
@@ -97,7 +109,20 @@ describe('the bell on a connection', () => {
   it('is not there for a user, who may not change a connection', async () => {
     useAuth.setState({ user: { id: 2, username: 'sam', role: 'user' } as never })
     show()
-    await screen.findByText('Sonarr', { selector: 'div' })
+    await screen.findByText('1 connection, 2 cards together.')
     await waitFor(() => expect(screen.queryByRole('button', { name: /notices for Sonarr/ })).toBeNull())
+  })
+})
+
+describe('a connection without a card', () => {
+  beforeEach(() => {
+    state.cards = 0
+    useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin', start_board_id: 3 } as never })
+  })
+
+  it('leads to the library of the home board, already searching for its service', async () => {
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Build a card' }))
+    expect(await screen.findByText('board /b/home {"library":"Sonarr"}')).toBeInTheDocument()
   })
 })

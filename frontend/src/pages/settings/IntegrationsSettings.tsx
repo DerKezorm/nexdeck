@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { Bell, BellOff, Pencil, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
+import { Plus, Search as SearchIcon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
 import type { About, AdapterSpec, Integration } from '../../api/types'
@@ -12,56 +12,13 @@ import { LeaveDemo } from '../../components/LeaveDemo'
 import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
+import { useHomeBoardPath } from '../../lib/homeBoard'
 import { useAuth } from '../../stores/auth'
 
 const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
+import { OwnList } from './integrations/OwnList'
+import type { VersionReading } from './integrations/own'
 import { SettingsCard } from './SettingsCard'
-
-/** What ``GET /integrations/versions`` says about one connection. */
-interface VersionReading {
-  running: string | null
-  newest: string | null
-  url: string
-  problem: string
-  state: 'behind' | 'current' | 'unknown'
-  major: boolean
-  upstream: string
-  /** The service could not be asked at all. */
-  unread: boolean
-  /** Whether GitHub may be asked: the switch Check for updates under System, About. */
-  asked: boolean
-}
-
-/** The version a connection runs and how it stands against its project's newest release. */
-function VersionColumn({ reading, loading }: { reading?: VersionReading; loading: boolean }) {
-  const { t } = useTranslation()
-  if (!reading) {
-    // Only while the server is looking: a connection it does not read, or a look that failed, says nothing.
-    return <span className="w-32 shrink-0 text-[11px] text-faint max-sm:hidden">{loading ? t('settings.integrations.version.checking') : ''}</span>
-  }
-  return (
-    <span className="w-32 shrink-0 grid text-[11px] leading-tight max-sm:hidden" data-version={reading.state}>
-      <span className="num truncate" title={reading.problem || undefined}>
-        {reading.running ? (
-          t('settings.integrations.version.runs', { version: reading.running })
-        ) : (
-          <span className="text-faint">{t(reading.unread ? 'settings.integrations.version.unread' : 'settings.integrations.version.notSaid')}</span>
-        )}
-      </span>
-      {reading.state === 'behind' && (
-        <a className="num text-warn truncate hover:underline" href={reading.url} target="_blank" rel="noreferrer noopener">
-          {t(reading.major ? 'settings.integrations.version.newerMajor' : 'settings.integrations.version.newer', { version: reading.newest })}
-        </a>
-      )}
-      {reading.state === 'current' && <span className="text-ok">{t('settings.integrations.version.current')}</span>}
-      {reading.state === 'unknown' && reading.running && (
-        <span className="text-faint truncate" title={reading.upstream && !reading.asked ? t('settings.integrations.version.notAskedHelp') : undefined}>
-          {!reading.upstream ? t('settings.integrations.version.noProject') : reading.asked ? t('settings.integrations.version.noRelease') : t('settings.integrations.version.notAsked')}
-        </span>
-      )}
-    </span>
-  )
-}
 
 /** Configured connections, and a sheet to add or edit one with a live test. */
 export function IntegrationsSettings() {
@@ -79,6 +36,8 @@ export function IntegrationsSettings() {
   const [removing, setRemoving] = useState<Integration | null>(null)
   const [adapterSearch, setAdapterSearch] = useState('')
   const [bellFailed, setBellFailed] = useState('')
+  const navigate = useNavigate()
+  const home = useHomeBoardPath()
 
   /** The bell of one connection, flipped where it stands. Nothing to open, nothing to save. */
   const toggleBell = async (integration: Integration) => {
@@ -138,58 +97,20 @@ export function IntegrationsSettings() {
         </SettingsCard>
       )}
       <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>
-        {integrations.data?.length === 0 && <p className="text-sm text-muted mb-3">{t('settings.integrations.empty')}</p>}
-        <ul className="space-y-1.5">
-          {(integrations.data ?? []).map((integration) => (
-            <li key={integration.id} className="flex items-center gap-3 rounded-xl border border-line p-2.5">
-              <ServiceIcon icon={integration.icon} size={22} />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">
-                  {integration.name}
-                  {integration.demo && <span className="chip ml-2 !py-0 text-[10px]">demo</span>}
-                  {integration.admin_only && (
-                    <span className="chip ml-1 !py-0 text-[10px]" title={t('settings.integrations.adminOnlyHelp')}>
-                      {t('settings.integrations.adminOnlyChip')}
-                    </span>
-                  )}
-                  {integration.beta && <span className="chip ml-1 !py-0 text-[10px]">beta</span>}
-                </div>
-                <div className="text-[11px] text-muted truncate">
-                  {integration.label} · {t('settings.integrations.widgets', { count: integration.widget_count })}
-                  {integration.last_error && <span className="text-bad"> · {integration.last_error}</span>}
-                  {/* On a phone the version column has no room; a newer version still says so here. */}
-                  {versions.data?.[String(integration.id)]?.state === 'behind' && (
-                    <span className="text-warn sm:hidden"> · {t('settings.integrations.version.newer', { version: versions.data[String(integration.id)].newest })}</span>
-                  )}
-                </div>
-              </div>
-              {admin && integration.enabled && !integration.demo && <VersionColumn reading={versions.data?.[String(integration.id)]} loading={versions.isLoading} />}
-              <span className="dot" data-status={!integration.enabled ? 'unknown' : integration.last_error ? 'bad' : integration.last_ok_at || integration.demo ? 'ok' : 'unknown'} />
-              {admin && (
-                <>
-                  <button
-                    className={`btn btn-icon h-7 w-7 ${integration.muted ? 'text-muted' : ''}`}
-                    onClick={() => void toggleBell(integration)}
-                    aria-pressed={integration.muted}
-                    aria-label={t(integration.muted ? 'settings.integrations.unmute' : 'settings.integrations.mute', { name: integration.name })}
-                    title={t(integration.muted ? 'settings.integrations.mutedHelp' : 'settings.integrations.notifyHelp')}
-                  >
-                    {integration.muted ? <BellOff size={14} /> : <Bell size={14} />}
-                  </button>
-                  {/* A pencil on a phone: "Modifier" or "Modifica" beside three other
-                      buttons left the name two letters wide. */}
-                  <button className="btn h-7 text-xs max-sm:w-7 max-sm:px-0" onClick={() => setEditing(integration)} aria-label={t('common.edit')}>
-                    <Pencil size={14} className="sm:hidden" />
-                    <span className="max-sm:hidden">{t('common.edit')}</span>
-                  </button>
-                  <button className="btn btn-icon h-7 w-7 btn-danger" onClick={() => setRemoving(integration)} aria-label={t('common.delete')}>
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        {integrations.data && adapters.data && (
+          <OwnList
+            integrations={integrations.data}
+            adapters={adapters.data}
+            versions={versions.data}
+            versionsLoading={versions.isLoading}
+            admin={admin}
+            onBell={(integration) => void toggleBell(integration)}
+            onEdit={setEditing}
+            onRemove={setRemoving}
+            // The way a card is always made: the library of a board, already searching for this service.
+            onBuildCard={(integration) => navigate(home, { state: { library: integration.label } })}
+          />
+        )}
         {bellFailed && (
           <Toast level="error" onClose={() => setBellFailed('')}>
             {bellFailed}
