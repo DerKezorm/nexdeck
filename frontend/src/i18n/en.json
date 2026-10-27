@@ -313,6 +313,21 @@
         "allHits_other": "{{count}} hits in all categories",
         "generic": "Not there? The generic connection reads a number or a list from almost any JSON API.",
         "genericButton": "Generic (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Found in your network",
+        "help": "running, but not connected yet",
+        "looked": "looked {{ago}} ago",
+        "container": "Container {{name}} on {{engine}}",
+        "guest": "Guest {{name}} on {{engine}}",
+        "address": "Address of {{name}}",
+        "connect": "Connect",
+        "connectOne": "Connect {{name}}",
+        "ignore": "Ignore",
+        "ignoreOne": "Ignore {{name}}",
+        "ignored_one": "{{count}} ignored.",
+        "ignored_other": "{{count}} ignored.",
+        "showAgain": "Show again"
       }
     },
     "users": {

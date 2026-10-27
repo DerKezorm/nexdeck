@@ -313,6 +313,21 @@
         "allHits_other": "{{count}} resultados en todas las categorías",
         "generic": "¿No está? La conexión genérica lee un número o una lista de casi cualquier API JSON.",
         "genericButton": "Genérica (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Encontrado en tu red",
+        "help": "funciona, pero aún no está conectado",
+        "looked": "revisado hace {{ago}}",
+        "container": "Contenedor {{name}} en {{engine}}",
+        "guest": "Invitado {{name}} en {{engine}}",
+        "address": "Dirección de {{name}}",
+        "connect": "Conectar",
+        "connectOne": "Conectar {{name}}",
+        "ignore": "Ignorar",
+        "ignoreOne": "Ignorar {{name}}",
+        "ignored_one": "{{count}} ignorado.",
+        "ignored_other": "{{count}} ignorados.",
+        "showAgain": "Mostrar de nuevo"
       }
     },
     "users": {

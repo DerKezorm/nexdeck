@@ -26,6 +26,7 @@ const state = vi.hoisted(() => ({
   fail: false,
   cards: 2,
   demo: false,
+  found: [] as Record<string, unknown>[],
   patches: [] as { path: string; body: unknown }[],
 }))
 
@@ -36,6 +37,7 @@ vi.mock('../../api/client', () => {
     get: vi.fn(async (path: string) => {
       if (path === '/about') return { version: '0.22.0', demo: state.demo, demo_forced: false, demo_data: false }
       if (path === '/adapters') return ADAPTERS
+      if (path === '/integrations/found') return { found: state.found, ignored: 0, looked_at: null }
       if (path === '/boards') return [{ id: 3, slug: 'home', name: 'Home' }]
       return [
         {
@@ -195,5 +197,15 @@ describe('adding a connection', () => {
     show()
     await screen.findByText('1 connection, 2 cards together.')
     expect(screen.queryByRole('button', { name: 'Add an integration' })).toBeNull()
+  })
+
+  it('connects a service found in the network with its address filled in', async () => {
+    state.found = [{ key: 'radarr@container:1:radarr', kind: 'radarr', label: 'Radarr', icon: 'radarr', beta: false, thing: 'container', name: 'radarr', engine: 'Docker', address: 'http://192.0.2.10:7878' }]
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Add an integration' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Connect Radarr' }))
+    expect(await screen.findByRole('heading', { name: 'New Radarr integration' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /URL/ })).toHaveValue('http://192.0.2.10:7878')
+    state.found = []
   })
 })

@@ -105,13 +105,4 @@ describe('the catalog window', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(props.onClose).toHaveBeenCalledTimes(2)
   })
-
-  it('shows what stands above the catalog only while all categories are shown', async () => {
-    show({ above: (query) => <p>{`found for "${query}"`}</p> })
-    expect(screen.getByText('found for ""')).toBeInTheDocument()
-    await userEvent.type(field(), 'pi')
-    expect(screen.getByText('found for "pi"')).toBeInTheDocument()
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Categories' })).getByRole('button', { name: /Media/ }))
-    expect(screen.queryByText(/found for/)).toBeNull()
-  })
 })

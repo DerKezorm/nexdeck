@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FlaskConical, Plus } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -74,9 +74,12 @@ export function IntegrationsSettings() {
   const [removing, setRemoving] = useState<Integration | null>(null)
   // The catalog window, with the words it opens with; null while it is closed.
   const [catalog, setCatalog] = useState<string | null>(null)
+  // What a new connection starts with besides its defaults: the address of a service found in the network.
+  const [prefill, setPrefill] = useState<Record<string, unknown> | null>(null)
   const [bellFailed, setBellFailed] = useState('')
   const navigate = useNavigate()
   const home = useHomeBoardPath()
+  const queries = useQueryClient()
 
   /** The bell of one connection, flipped where it stands. Nothing to open, nothing to save. */
   const toggleBell = async (integration: Integration) => {
@@ -144,6 +147,12 @@ export function IntegrationsSettings() {
             onClose={() => setCatalog(null)}
             onPick={(kind) => {
               setCatalog(null)
+              setPrefill(null)
+              setAdding(kind)
+            }}
+            onConnect={(kind, address) => {
+              setCatalog(null)
+              setPrefill(address ? { url: address } : null)
               setAdding(kind)
             }}
           />
@@ -154,14 +163,19 @@ export function IntegrationsSettings() {
           adapters={adapters.data}
           integration={editing}
           kind={adding ?? editing?.kind ?? ''}
+          prefill={editing ? null : prefill}
           onClose={() => {
             setEditing(null)
             setAdding(null)
+            setPrefill(null)
           }}
           onSaved={() => {
             setEditing(null)
             setAdding(null)
+            setPrefill(null)
             void integrations.refetch()
+            // A service connected from what was found is no longer one to suggest.
+            void queries.invalidateQueries({ queryKey: ['integrations-found'] })
           }}
         />
       )}
@@ -181,12 +195,14 @@ export function IntegrationsSettings() {
   )
 }
 
-function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; onClose: () => void; onSaved: () => void }) {
+function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; prefill?: Record<string, unknown> | null; onClose: () => void; onSaved: () => void }) {
   const admin = useAuth((s) => s.user?.role === 'admin')
   const { t } = useTranslation()
   const adapter = adapters.find((a) => a.kind === kind)
   const [name, setName] = useState(integration?.name ?? adapter?.label ?? '')
-  const [config, setConfig] = useState<Record<string, unknown>>(() => integration?.config ?? Object.fromEntries((adapter?.fields ?? []).filter((f) => f.default !== null && f.default !== undefined).map((f) => [f.name, f.default])))
+  const [config, setConfig] = useState<Record<string, unknown>>(
+    () => integration?.config ?? { ...Object.fromEntries((adapter?.fields ?? []).filter((f) => f.default !== null && f.default !== undefined).map((f) => [f.name, f.default])), ...(prefill ?? {}) },
+  )
   const [enabled, setEnabled] = useState(integration?.enabled ?? true)
   const [demo, setDemo] = useState(integration?.demo ?? false)
   const [adminOnly, setAdminOnly] = useState(integration?.admin_only ?? false)

@@ -313,6 +313,21 @@
         "allHits_other": "{{count}} Treffer in allen Kategorien",
         "generic": "Nicht dabei? Die allgemeine Anbindung liest eine Zahl oder Liste aus fast jeder JSON-API.",
         "genericButton": "Allgemein (HTTP/JSON)"
+      },
+      "found": {
+        "title": "In deinem Netz gefunden",
+        "help": "läuft, ist aber noch nicht verbunden",
+        "looked": "zuletzt geschaut vor {{ago}}",
+        "container": "Container {{name}} auf {{engine}}",
+        "guest": "Gast {{name}} auf {{engine}}",
+        "address": "Adresse von {{name}}",
+        "connect": "Verbinden",
+        "connectOne": "{{name}} verbinden",
+        "ignore": "Ignorieren",
+        "ignoreOne": "{{name}} ignorieren",
+        "ignored_one": "{{count}} ignoriert.",
+        "ignored_other": "{{count}} ignoriert.",
+        "showAgain": "Wieder zeigen"
       }
     },
     "users": {

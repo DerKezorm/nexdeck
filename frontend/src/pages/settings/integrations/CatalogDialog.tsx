@@ -20,6 +20,7 @@ import { Toggle } from '../../../components/ui'
 import { CATEGORY_ORDER } from '../../../components/WidgetLibrary'
 import { tAdapter } from '../../../i18n/texts'
 import { useFocusTrap } from '../../../lib/useFocusTrap'
+import { FoundInNetwork } from './FoundInNetwork'
 import { entries, firstSentence, markIn, search, sections, within, type CatalogEntry } from './catalog'
 
 /** The connection for whatever has no adapter of its own. */
@@ -33,8 +34,8 @@ export interface CatalogDialogProps {
   onClose: () => void
   /** A service was chosen: the sheet to set up a connection of this kind. */
   onPick: (kind: string) => void
-  /** What stands above the catalog while nothing narrows it, given the search words. */
-  above?: (query: string) => ReactNode
+  /** "Connect" on a service found in the network: the sheet with kind and address filled in. Without it, nothing found is shown. */
+  onConnect?: (kind: string, address: string) => void
 }
 
 function Name({ label, query }: { label: string; query: string }) {
@@ -87,7 +88,7 @@ function Head({ children, count }: { children: ReactNode; count: number }) {
 
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] max-md:grid-cols-1 gap-2 max-md:gap-1.5 mb-[18px]'
 
-export default function CatalogDialog({ adapters, integrations, initialQuery = '', onClose, onPick, above }: CatalogDialogProps) {
+export default function CatalogDialog({ adapters, integrations, initialQuery = '', onClose, onPick, onConnect }: CatalogDialogProps) {
   const { t } = useTranslation()
   const [query, setQuery] = useState(initialQuery)
   const [section, setSection] = useState('all')
@@ -274,7 +275,8 @@ export default function CatalogDialog({ adapters, integrations, initialQuery = '
             ))}
           </nav>
           <div ref={main} className="overflow-y-auto scroll px-5 pt-4 pb-7 max-md:px-3.5 max-md:pt-3.5 max-md:pb-6">
-            {section === 'all' && above?.(typed)}
+            {/* What runs here already and is not connected: above everything, while all categories are shown. */}
+            {section === 'all' && onConnect && <FoundInNetwork query={typed} onConnect={onConnect} />}
             {body}
           </div>
         </div>

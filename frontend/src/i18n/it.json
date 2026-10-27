@@ -313,6 +313,21 @@
         "allHits_other": "{{count}} risultati in tutte le categorie",
         "generic": "Non c'è? La connessione generica legge un numero o un elenco da quasi ogni API JSON.",
         "genericButton": "Generica (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Trovato nella tua rete",
+        "help": "in funzione, ma non ancora collegato",
+        "looked": "controllato {{ago}} fa",
+        "container": "Container {{name}} su {{engine}}",
+        "guest": "Ospite {{name}} su {{engine}}",
+        "address": "Indirizzo di {{name}}",
+        "connect": "Collega",
+        "connectOne": "Collega {{name}}",
+        "ignore": "Ignora",
+        "ignoreOne": "Ignora {{name}}",
+        "ignored_one": "{{count}} ignorato.",
+        "ignored_other": "{{count}} ignorati.",
+        "showAgain": "Mostra di nuovo"
       }
     },
     "users": {
