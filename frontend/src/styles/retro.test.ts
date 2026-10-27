@@ -68,6 +68,15 @@ describe('the sheet of 1984', () => {
     expect(sheet.indexOf(pressed)).toBeGreaterThan(sheet.indexOf(`${MARK} .app-bar :is(.text-muted, .text-faint)`))
   })
 
+  it('draws the music player as a window: a striped title bar, no soft picture behind it, tabs inverted when open', () => {
+    expect(bodyOf(`${MARK} .player-titlebar`)).toMatch(/var\(--r-stripes\)/)
+    expect(bodyOf(`${MARK} .player-titlebar`)).not.toMatch(/display: none/)
+    expect(bodyOf(`${MARK} :is(.player-backdrop, .player-veil)`)).toMatch(/display: none/)
+    expect(bodyOf(`${MARK} :is(.player, .player-volume-pop)`)).toMatch(/--pa: var\(--r-ink\) !important/)
+    expect(bodyOf(`${MARK} .player-tab.is-active`)).toMatch(/background: var\(--r-ink\)/)
+    expect(bodyOf(`${MARK} .player-caption`)).toMatch(/background: var\(--r-paper\)/)
+  })
+
   it('gives green, yellow and red a symbol of their own shape, and no colour at all in pattern only', () => {
     const shapes = ['ok', 'warn', 'bad'].map((status) => /--r-mark: url\(([^)]*)\)/.exec(bodyOf(`${MARK} .dot[data-status='${status}']`))?.[1])
     expect(shapes.every(Boolean)).toBe(true)

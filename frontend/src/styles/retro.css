@@ -716,6 +716,248 @@
     color: var(--r-ink);
   }
 
+  /* -- The music player: a window like the others, its covers the only picture -- */
+  /* The title bar is part of the card (PlayerCard), left out in every other look. */
+  :root[data-cards='window'] .player-titlebar {
+    position: relative;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    padding: 0 26px 0 28px;
+    border-bottom: 1px solid var(--r-ink);
+    background: var(--r-stripes) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-titlebar::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-paper);
+  }
+  :root[data-cards='window'] .player-titlebar-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 0 6px;
+    background: var(--r-paper);
+    font: 600 14px/20px var(--r-pixel);
+  }
+  :root[data-cards='window'] .card.glass[data-status='warn']:not(.card-plain) .player-titlebar {
+    background: var(--r-hatch) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) .player-titlebar {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) .player-titlebar-name {
+    background: var(--r-ink);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) .player-titlebar::before {
+    box-shadow: none;
+    border-color: var(--r-paper);
+    background: var(--r-ink);
+  }
+
+  /* The colour the cover lends the card is ink here, and the soft picture behind it is gone. */
+  :root[data-cards='window'] :is(.player, .player-volume-pop) {
+    --pa: var(--r-ink) !important;
+    --pa-ink: var(--r-paper) !important;
+  }
+  :root[data-cards='window'] :is(.player-backdrop, .player-veil) {
+    display: none;
+  }
+  :root[data-cards='window'] .player-cover {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+  }
+  /* The name above the cover says what the title bar says. */
+  :root[data-cards='window'] .player-kicker {
+    display: none;
+  }
+  :root[data-cards='window'] .player-hero-cover {
+    box-shadow: none;
+  }
+  /* Words that were white for the picture or the dark gradient under them. */
+  :root[data-cards='window'] .player [class*='text-white'] {
+    color: var(--r-ink);
+  }
+  /* The smallest face: the name and the button on a strip of paper under the cover. */
+  :root[data-cards='window'] .player-caption {
+    padding: 6px 8px;
+    background: var(--r-paper);
+    border-top: 1px solid var(--r-ink);
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-caption [class*='text-white'] {
+    color: var(--r-dim);
+  }
+  :root[data-cards='window'] .player-progress {
+    height: 5px;
+    background: var(--r-paper);
+    border-top: 1px solid var(--r-ink);
+  }
+
+  /* Buttons as the others: a frame, paper, round corners; the main one with a second frame. */
+  :root[data-cards='window'] :is(.player-pill, .player-play, .player-art-play, .player-tile-play, .player-corner) {
+    border: 1px solid var(--r-ink);
+    border-radius: 6px;
+    background: var(--r-paper);
+    color: var(--r-ink);
+    box-shadow: none;
+    filter: none;
+    transform: none;
+    transition: none;
+    font-family: var(--r-pixel);
+  }
+  :root[data-cards='window'] :is(.player-pill.is-accent, .player-play) {
+    box-shadow: 0 0 0 2px var(--r-paper), 0 0 0 3px var(--r-ink);
+  }
+  :root[data-cards='window'] :is(.player-pill, .player-play, .player-art-play, .player-tile-play, .player-corner):hover {
+    background: var(--r-paper);
+    filter: none;
+    transform: none;
+  }
+  :root[data-cards='window'] :is(.player-pill, .player-play, .player-art-play, .player-tile-play, .player-corner):active:not(:disabled) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] :is(.player-pill, .player-play):disabled {
+    opacity: 1;
+    color: var(--r-dim);
+    border-color: var(--r-dim);
+    border-style: dotted;
+  }
+  /* Small tools: no frame until pressed, like the flat buttons. */
+  :root[data-cards='window'] .player-icon {
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--r-ink);
+    opacity: 1;
+    transition: none;
+  }
+  :root[data-cards='window'] .player-icon:hover {
+    background: transparent;
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-icon:is(:active, [aria-pressed='true']):not(:disabled) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-icon:disabled {
+    color: var(--r-dim);
+  }
+  /* The tabs: a row of frames, the open one inverted, as a chosen entry is everywhere here. */
+  :root[data-cards='window'] .player-tab {
+    height: 24px;
+    padding: 0 10px;
+    margin-left: -1px;
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: var(--r-paper);
+    color: var(--r-ink);
+    font-family: var(--r-pixel);
+    font-size: 13px;
+    font-weight: 500;
+    transition: none;
+  }
+  :root[data-cards='window'] .player-tab:first-child {
+    margin-left: 0;
+  }
+  :root[data-cards='window'] .player-tab:hover {
+    background: var(--r-paper);
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-tab.is-active {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-sheet-tabs {
+    background: var(--r-paper);
+    border-bottom: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] .player-chip {
+    color: var(--r-ink);
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-chip.is-reduced {
+    color: var(--r-ink);
+    border-style: dashed;
+  }
+
+  /* The seek bar and the volume: a framed track, filled in black, a square to hold. */
+  :root[data-cards='window'] .player-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: linear-gradient(to right, var(--r-ink) var(--fill), var(--r-paper) var(--fill));
+  }
+  :root[data-cards='window'] .player-range::-moz-range-track {
+    height: 6px;
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-range::-moz-range-progress {
+    height: 6px;
+    border-radius: 0;
+    background: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-range::-webkit-slider-thumb {
+    width: 10px;
+    height: 14px;
+    margin-top: -5px;
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: var(--r-paper);
+    box-shadow: 1px 1px 0 var(--r-ink);
+    transform: none;
+  }
+  :root[data-cards='window'] .player-range::-moz-range-thumb {
+    width: 10px;
+    height: 14px;
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-fill {
+    background: var(--r-ink);
+  }
+
+  /* Rows: a hovered one is inverted, the one that plays is framed. */
+  :root[data-cards='window'] :is(.player-row, .player-track):is(:hover, :focus-within) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] :is(.player-row, .player-track):is(:hover, :focus-within) :is(.text-muted, .text-faint, .player-track-number, .player-icon) {
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-track:is(:hover, :focus-within) .player-eq i {
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .player-track.is-current {
+    background: var(--r-paper);
+    box-shadow: inset 0 0 0 1px var(--r-ink);
+    font-weight: 600;
+  }
+  :root[data-cards='window'] .player-track.is-current:is(:hover, :focus-within) {
+    background: var(--r-ink);
+  }
+  :root[data-cards='window'] .player-toast {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+    color: var(--r-ink);
+  }
+
   /* -- The switch: a box with a black square that moves ---------------------- */
   :root[data-cards='window'] button[role='switch'][aria-checked='true'] {
     background: var(--r-paper);
