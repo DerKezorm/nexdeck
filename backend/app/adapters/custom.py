@@ -28,6 +28,7 @@ from .base import (
     Field,
     WidgetData,
     WidgetType,
+    fill_in,
 )
 
 #: A custom card asks its connection at most this often (KARTEN-2 AC-9).
@@ -423,6 +424,14 @@ class CustomAdapter(Adapter):
         button = next((one for one in definition.buttons if buttons.ACTION_PREFIX + one.id == action_id), None)
         if button is None:
             raise buttons.no_longer_offered()
+        # ⚠️ The blanks are checked against the definition as it is now, not as it was when the button was shown: a range
+        # or a list of choices that was narrowed since is the one that counts (EC-9).
+        params = dict(params)
+        for ask in button.asks:
+            key = buttons.ASK_PREFIX + ask.name
+            if key not in params:
+                raise buttons.no_longer_offered()
+            params[key] = fill_in(_ask(ask), params[key])
         real, real_config, real_ctx = await self._connection(definition, widget_kind, ctx)
         path, body = buttons.press(button, params)
         try:

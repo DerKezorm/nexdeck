@@ -497,6 +497,34 @@ def test_karten8_ec9_a_blank_out_of_range_or_of_the_wrong_type_is_refused_before
     assert dict(httpx.QueryParams(limit.calls.last.request.content.decode())) == {"limit": "512"}
 
 
+@pytest.mark.parametrize(
+    "ask",
+    [
+        {"name": "kib", "label": "KiB?", "type": "number", "min": 0, "max": 10, "step": 1},
+        {"name": "kib", "label": "KiB?", "type": "choice", "options": [{"value": "1", "label": "One"}]},
+        {"name": "kib", "label": "KiB?", "type": "text", "max_length": 2},
+    ],
+)
+@respx.mock
+def test_karten8_ec9_a_blank_changed_since_it_was_shown_is_checked_against_the_definition_as_it_is_now(stand: Stand, ask: dict[str, Any]) -> None:
+    stand.refresh()
+    limit = dict(button(id="limit", path="/api/v2/transfer/setDownloadLimit", send="form", body={"limit": "{ask.kib}"}, asks=[ask]))
+    stand.define(with_buttons(limit))
+    sent = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))
+    answer = stand.press("button:limit", {"ask.kib": "500" if ask["type"] != "number" else 500})
+    assert answer.status_code == 400 and code_of(answer) == "bad_value" and sent.call_count == 0, answer.text
+
+
+@respx.mock
+def test_karten8_ec9_a_blank_the_definition_has_gained_since_is_no_longer_offered(stand: Stand) -> None:
+    stand.refresh()
+    asks = [{"name": "extra", "label": "Extra?", "type": "number", "min": 0, "max": 5, "step": 1}]
+    stand.define(with_buttons(button(id="limit", path="/api/v2/transfer/setDownloadLimit", send="form", body={"limit": "{ask.kib}", "extra": "{ask.extra}"}, asks=asks + [{"name": "kib", "label": "KiB?", "type": "number", "min": 0, "max": 100000, "step": 1}])))
+    sent = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))
+    answer = stand.press("button:limit", {"ask.kib": 512})
+    assert code_of(answer) == "no_longer_offered" and sent.call_count == 0, answer.text
+
+
 @respx.mock
 def test_karten8_ac4_a_number_blank_in_a_json_body_stays_a_number(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     asks = [{"name": "minutes", "label": "How many minutes?", "type": "number", "min": 1, "max": 120, "step": 1}]
