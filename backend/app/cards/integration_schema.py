@@ -41,7 +41,9 @@ SHORT = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
 FIELD_NAME = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 #: A header name as the protocol writes it, and none that belongs to the request itself.
 HEADER_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,59}$")
-PARAM_NAME = re.compile(r"^[A-Za-z0-9_.\[\]-]{1,60}$")
+#: ⚠️ Only characters that httpx writes into an address as they are: the log is cleaned by the name as the address spells it,
+#: and a name with ``[`` or ``]`` is written ``%5B`` there, so the key under it would stay in the line.
+PARAM_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,60}$")
 COOKIE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
 PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 LOGO_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,80}$")

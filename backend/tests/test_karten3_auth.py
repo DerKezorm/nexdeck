@@ -575,6 +575,7 @@ QUIET = (
         changed(MEMOS, short="quiet-session", **{"auth.pass": {"as": "query", "param": "t"}}),
         {"username": "ann", "password": KEY},
     ),
+    ("a name with dots and hyphens", changed(example("apikey-in-address"), short="quiet-dots", **{"auth.param": "x-api.key"}), {"api_key": KEY}),
 )
 
 
@@ -717,3 +718,13 @@ def test_karten3_the_memos_example_is_the_one_for_0_31_and_the_cookie_example_sa
     assert (memos.test, memos.check, memos.version.path, memos.version.at, memos.github) == ("/api/v1/auth/me", "/healthz", "/api/v1/instance/profile", "version", "usememos/memos")
     assert memos.auth.login == "/api/v1/auth/signin" and "0.25 and later" in memos.description
     assert "0.22 to 0.24" in load_integration(example("memos-cookie")).definition.description
+
+
+@pytest.mark.parametrize("param", ["k[x]", "k]", "a b", "k%5Bx%5D", "k&x", "k=x", "ü"])
+def test_karten3_ac5_a_parameter_name_httpx_would_write_differently_is_refused_so_the_log_can_always_blank_the_key(admin: TestClient, param: str) -> None:  # noqa: F811
+    for place, text in (
+        ("auth.param", changed(example("apikey-in-address"), short="spelled", **{"auth.param": param})),
+        ("auth.pass.param", changed(MEMOS, short="spelled", **{"auth.pass": {"as": "query", "param": param}})),
+    ):
+        checked = admin.post(f"{API}/check", json={"yaml": text}, headers=CSRF).json()
+        assert checked["ok"] is False and checked["problems"][0]["path"] == place, (place, checked)
