@@ -1,65 +1,60 @@
-import { useQuery } from '@tanstack/react-query'
-import { Bell, BellOff, Pencil, Plus, Search as SearchIcon, Trash2 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { FlaskConical, Plus } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post } from '../../api/client'
 import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
-import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
+import { Confirm, Field, Sheet, Switch, Toast, Toggle } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
+import { useHomeBoardPath } from '../../lib/homeBoard'
 import { useAuth } from '../../stores/auth'
 
 const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then((module) => ({ default: module.DependsOn })))
+// The catalog is a window of its own and only comes when it is opened.
+const CatalogDialog = lazy(() => import('./integrations/CatalogDialog'))
+import { OwnList } from './integrations/OwnList'
+import type { VersionReading } from './integrations/own'
 import { SettingsCard } from './SettingsCard'
 
-/** What ``GET /integrations/versions`` says about one connection. */
-interface VersionReading {
-  running: string | null
-  newest: string | null
-  url: string
-  problem: string
-  state: 'behind' | 'current' | 'unknown'
-  major: boolean
-  upstream: string
-  /** The service could not be asked at all. */
-  unread: boolean
-  /** Whether GitHub may be asked: the switch Check for updates under System, About. */
-  asked: boolean
-}
-
-/** The version a connection runs and how it stands against its project's newest release. */
-function VersionColumn({ reading, loading }: { reading?: VersionReading; loading: boolean }) {
+/**
+ * Demo mode for everything: a slim line while it is off, the full box while it is on.
+ *
+ * Off, it is one switch nobody needs most days, and the box pushed the
+ * connections below the fold. On, or with invented connections left behind,
+ * it says so and offers the way out.
+ */
+function DemoMode({ about, onChange }: { about: About; onChange: (demo: boolean) => void }) {
   const { t } = useTranslation()
-  if (!reading) {
-    // Only while the server is looking: a connection it does not read, or a look that failed, says nothing.
-    return <span className="w-32 shrink-0 text-[11px] text-faint max-sm:hidden">{loading ? t('settings.integrations.version.checking') : ''}</span>
+  if (!about.demo && !about.demo_data && !about.demo_forced) {
+    return (
+      <div className="glass rounded-[14px] flex items-center gap-2.5 pl-3.5 pr-3 py-2.5 mb-3 text-[13px]">
+        <FlaskConical size={15} className="text-faint flex-none" />
+        <span className="font-medium whitespace-nowrap">{t('settings.integrations.demoRow.title')}</span>
+        <span className="text-faint text-[12.5px] truncate min-w-0 flex-1 max-md:hidden">{t('settings.integrations.demoRow.off')}</span>
+        <span className="ml-auto" />
+        <Toggle checked={false} onChange={onChange} label={t('settings.system.demo')} />
+      </div>
+    )
   }
   return (
-    <span className="w-32 shrink-0 grid text-[11px] leading-tight max-sm:hidden" data-version={reading.state}>
-      <span className="num truncate" title={reading.problem || undefined}>
-        {reading.running ? (
-          t('settings.integrations.version.runs', { version: reading.running })
-        ) : (
-          <span className="text-faint">{t(reading.unread ? 'settings.integrations.version.unread' : 'settings.integrations.version.notSaid')}</span>
-        )}
-      </span>
-      {reading.state === 'behind' && (
-        <a className="num text-warn truncate hover:underline" href={reading.url} target="_blank" rel="noreferrer noopener">
-          {t(reading.major ? 'settings.integrations.version.newerMajor' : 'settings.integrations.version.newer', { version: reading.newest })}
-        </a>
+    <div className="glass rounded-2xl p-5 mb-4 border-warn/40 bg-[color-mix(in_srgb,var(--nd-warn)_6%,var(--nd-surface))]">
+      <h2 className="font-semibold text-[15px] mb-1">{t('settings.integrations.demoRow.title')}</h2>
+      <Switch checked={about.demo} disabled={about.demo_forced} onChange={onChange} label={t('settings.system.demo')} description={about.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')} />
+      {/* The switch alone leaves the demo's own connections inventing
+          data; this takes them away, after saying what goes. */}
+      {!about.demo_forced && (about.demo || about.demo_data) && (
+        <div className="mt-3.5 pt-3.5 border-t border-line flex flex-wrap items-center gap-3 text-[12.5px] text-muted">
+          <span className="flex-[1_1_200px]">{t('settings.integrations.demoRow.left')}</span>
+          <LeaveDemo className="btn btn-xs" />
+        </div>
       )}
-      {reading.state === 'current' && <span className="text-ok">{t('settings.integrations.version.current')}</span>}
-      {reading.state === 'unknown' && reading.running && (
-        <span className="text-faint truncate" title={reading.upstream && !reading.asked ? t('settings.integrations.version.notAskedHelp') : undefined}>
-          {!reading.upstream ? t('settings.integrations.version.noProject') : reading.asked ? t('settings.integrations.version.noRelease') : t('settings.integrations.version.notAsked')}
-        </span>
-      )}
-    </span>
+    </div>
   )
 }
 
@@ -77,8 +72,14 @@ export function IntegrationsSettings() {
   const [editing, setEditing] = useState<Integration | null>(null)
   const [adding, setAdding] = useState<string | null>(params.get('add'))
   const [removing, setRemoving] = useState<Integration | null>(null)
-  const [adapterSearch, setAdapterSearch] = useState('')
+  // The catalog window, with the words it opens with; null while it is closed.
+  const [catalog, setCatalog] = useState<string | null>(null)
+  // What a new connection starts with besides its defaults: the address of a service found in the network.
+  const [prefill, setPrefill] = useState<Record<string, unknown> | null>(null)
   const [bellFailed, setBellFailed] = useState('')
+  const navigate = useNavigate()
+  const home = useHomeBoardPath()
+  const queries = useQueryClient()
 
   /** The bell of one connection, flipped where it stands. Nothing to open, nothing to save. */
   const toggleBell = async (integration: Integration) => {
@@ -98,150 +99,83 @@ export function IntegrationsSettings() {
     }
   }, [params, setParams])
 
-  const byCategory = useMemo(() => {
-    const needle = adapterSearch.trim().toLowerCase()
-    const groups: Record<string, AdapterSpec[]> = {}
-    for (const adapter of adapters.data ?? []) {
-      if (!adapter.needs_integration && !adapter.optional_integration) continue
-      // The technical name counts: somebody types "wol", "pbs" or "npm",
-      // which none of the written-out names contain.
-      // The vendors count as well: nobody searches for "SNMP", they search
-      // for the name printed on their switch.
-      const haystack = `${adapter.kind} ${adapter.label} ${adapter.category} ${adapter.description ?? ''} ${tAdapter(adapter.description)} ${(adapter.keywords ?? []).join(' ')}`.toLowerCase()
-      if (needle && !haystack.includes(needle)) continue
-      ;(groups[adapter.category] ??= []).push(adapter)
-    }
-    return groups
-  }, [adapters.data, adapterSearch])
-
   return (
     <>
       {/* The switch that puts every connection at once into demo mode. It sits
           here and not on a page of its own: it says what the connections show,
           and each one carries the same switch for itself. */}
-      {admin && about.data && (
-        <SettingsCard title={t('settings.system.demo')}>
-          <Switch
-            checked={about.data.demo}
-            disabled={about.data.demo_forced}
-            onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())}
-            label={t('settings.system.demo')}
-            description={about.data.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')}
+      {admin && about.data && <DemoMode about={about.data} onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())} />}
+      <SettingsCard
+        title={t('settings.integrations.title')}
+        description={t('settings.integrations.help')}
+        action={
+          admin && (
+            <button type="button" className="btn btn-accent" onClick={() => setCatalog('')}>
+              <Plus size={15} />
+              {t('settings.integrations.add')}
+            </button>
+          )
+        }
+      >
+        {integrations.data && adapters.data && (
+          <OwnList
+            integrations={integrations.data}
+            adapters={adapters.data}
+            versions={versions.data}
+            versionsLoading={versions.isLoading}
+            admin={admin}
+            onBell={(integration) => void toggleBell(integration)}
+            onEdit={setEditing}
+            onRemove={setRemoving}
+            // The way a card is always made: the library of a board, already searching for this service.
+            onBuildCard={(integration) => navigate(home, { state: { library: integration.label } })}
+            onSearchCatalog={admin ? setCatalog : undefined}
           />
-          {/* The switch alone leaves the demo's own connections inventing
-              data; this takes them away, after saying what goes. */}
-          {!about.data.demo_forced && (about.data.demo || about.data.demo_data) && (
-            <div className="mt-3">
-              <LeaveDemo />
-            </div>
-          )}
-        </SettingsCard>
-      )}
-      <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>
-        {integrations.data?.length === 0 && <p className="text-sm text-muted mb-3">{t('settings.integrations.empty')}</p>}
-        <ul className="space-y-1.5">
-          {(integrations.data ?? []).map((integration) => (
-            <li key={integration.id} className="flex items-center gap-3 rounded-xl border border-line p-2.5">
-              <ServiceIcon icon={integration.icon} fallback={`/api/v1/integrations/${integration.id}/favicon`} size={22} />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">
-                  {integration.name}
-                  {integration.demo && <span className="chip ml-2 !py-0 text-[10px]">demo</span>}
-                  {integration.admin_only && (
-                    <span className="chip ml-1 !py-0 text-[10px]" title={t('settings.integrations.adminOnlyHelp')}>
-                      {t('settings.integrations.adminOnlyChip')}
-                    </span>
-                  )}
-                  {integration.beta && <span className="chip ml-1 !py-0 text-[10px]">beta</span>}
-                </div>
-                <div className="text-[11px] text-muted truncate">
-                  {integration.label} · {t('settings.integrations.widgets', { count: integration.widget_count })}
-                  {integration.last_error && <span className="text-bad"> · {integration.last_error}</span>}
-                  {/* On a phone the version column has no room; a newer version still says so here. */}
-                  {versions.data?.[String(integration.id)]?.state === 'behind' && (
-                    <span className="text-warn sm:hidden"> · {t('settings.integrations.version.newer', { version: versions.data[String(integration.id)].newest })}</span>
-                  )}
-                </div>
-              </div>
-              {admin && integration.enabled && !integration.demo && <VersionColumn reading={versions.data?.[String(integration.id)]} loading={versions.isLoading} />}
-              <span className="dot" data-status={!integration.enabled ? 'unknown' : integration.last_error ? 'bad' : integration.last_ok_at || integration.demo ? 'ok' : 'unknown'} />
-              {admin && (
-                <>
-                  <button
-                    className={`btn btn-icon h-7 w-7 ${integration.muted ? 'text-muted' : ''}`}
-                    onClick={() => void toggleBell(integration)}
-                    aria-pressed={integration.muted}
-                    aria-label={t(integration.muted ? 'settings.integrations.unmute' : 'settings.integrations.mute', { name: integration.name })}
-                    title={t(integration.muted ? 'settings.integrations.mutedHelp' : 'settings.integrations.notifyHelp')}
-                  >
-                    {integration.muted ? <BellOff size={14} /> : <Bell size={14} />}
-                  </button>
-                  {/* A pencil on a phone: "Modifier" or "Modifica" beside three other
-                      buttons left the name two letters wide. */}
-                  <button className="btn h-7 text-xs max-sm:w-7 max-sm:px-0" onClick={() => setEditing(integration)} aria-label={t('common.edit')}>
-                    <Pencil size={14} className="sm:hidden" />
-                    <span className="max-sm:hidden">{t('common.edit')}</span>
-                  </button>
-                  <button className="btn btn-icon h-7 w-7 btn-danger" onClick={() => setRemoving(integration)} aria-label={t('common.delete')}>
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        )}
         {bellFailed && (
           <Toast level="error" onClose={() => setBellFailed('')}>
             {bellFailed}
           </Toast>
         )}
       </SettingsCard>
-      {admin && (
-        <SettingsCard title={t('settings.integrations.add')} description={t('settings.integrations.addHelp')}>
-          {/* Seventy-nine of them. Without this the list is a wall you scroll
-              past rather than something you pick from. */}
-          <div className="relative mb-4 max-w-sm">
-            <SearchIcon size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none" />
-            <input
-              className="input input-icon"
-              value={adapterSearch}
-              placeholder={t('settings.integrations.searchPlaceholder')}
-              aria-label={t('settings.integrations.search')}
-              onChange={(event) => setAdapterSearch(event.target.value)}
-            />
-          </div>
-          {Object.keys(byCategory).length === 0 && (
-            <p className="text-sm text-muted">{t('settings.integrations.noMatch', { query: adapterSearch.trim() })}</p>
-          )}
-          {Object.entries(byCategory).map(([category, list]) => (
-            <div key={category} className="mb-3">
-              <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t(`library.category.${category}`, { defaultValue: category })}</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {list.map((adapter) => (
-                  <button key={adapter.kind} className="btn h-8 text-xs gap-1.5" onClick={() => setAdding(adapter.kind)}>
-                    <ServiceIcon icon={adapter.icon} size={14} />
-                    {adapter.label}
-                    {adapter.beta && <span className="text-[9px] text-faint">beta</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </SettingsCard>
+      {catalog !== null && adapters.data && integrations.data && (
+        <Suspense fallback={null}>
+          <CatalogDialog
+            adapters={adapters.data}
+            integrations={integrations.data}
+            initialQuery={catalog}
+            onClose={() => setCatalog(null)}
+            onPick={(kind) => {
+              setCatalog(null)
+              setPrefill(null)
+              setAdding(kind)
+            }}
+            onConnect={(kind, address) => {
+              setCatalog(null)
+              setPrefill(address ? { url: address } : null)
+              setAdding(kind)
+            }}
+          />
+        </Suspense>
       )}
       {(editing || adding) && adapters.data && (
         <IntegrationSheet
           adapters={adapters.data}
           integration={editing}
           kind={adding ?? editing?.kind ?? ''}
+          prefill={editing ? null : prefill}
           onClose={() => {
             setEditing(null)
             setAdding(null)
+            setPrefill(null)
           }}
           onSaved={() => {
             setEditing(null)
             setAdding(null)
+            setPrefill(null)
             void integrations.refetch()
+            // A service connected from what was found is no longer one to suggest.
+            void queries.invalidateQueries({ queryKey: ['integrations-found'] })
           }}
         />
       )}
@@ -261,12 +195,14 @@ export function IntegrationsSettings() {
   )
 }
 
-function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; onClose: () => void; onSaved: () => void }) {
+function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; prefill?: Record<string, unknown> | null; onClose: () => void; onSaved: () => void }) {
   const admin = useAuth((s) => s.user?.role === 'admin')
   const { t } = useTranslation()
   const adapter = adapters.find((a) => a.kind === kind)
   const [name, setName] = useState(integration?.name ?? adapter?.label ?? '')
-  const [config, setConfig] = useState<Record<string, unknown>>(() => integration?.config ?? Object.fromEntries((adapter?.fields ?? []).filter((f) => f.default !== null && f.default !== undefined).map((f) => [f.name, f.default])))
+  const [config, setConfig] = useState<Record<string, unknown>>(
+    () => integration?.config ?? { ...Object.fromEntries((adapter?.fields ?? []).filter((f) => f.default !== null && f.default !== undefined).map((f) => [f.name, f.default])), ...(prefill ?? {}) },
+  )
   const [enabled, setEnabled] = useState(integration?.enabled ?? true)
   const [demo, setDemo] = useState(integration?.demo ?? false)
   const [adminOnly, setAdminOnly] = useState(integration?.admin_only ?? false)
@@ -379,4 +315,3 @@ function IntegrationSheet({ adapters, integration, kind, onClose, onSaved }: { a
   )
 }
 
-export { Select, Plus }

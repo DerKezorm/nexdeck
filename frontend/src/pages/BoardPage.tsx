@@ -88,6 +88,8 @@ export function BoardPage() {
   const [library, setLibrary] = useState(false)
   // The key figures a card added from the library goes into, or none.
   const [libraryInto, setLibraryInto] = useState<number | null>(null)
+  // What the library searches for when it opens: a service a connection was made for, sent from System, Integrations.
+  const [libraryQuery, setLibraryQuery] = useState('')
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   const [boardSettings, setBoardSettings] = useState(false)
   const [palette, setPalette] = useState(false)
@@ -155,6 +157,17 @@ export function BoardPage() {
     const search = rest.toString()
     navigate(`${location.pathname}${search ? `?${search}` : ''}`, { replace: true, state: location.state })
   }, [find, navigate, location.pathname, location.search, location.state])
+
+  // "Build a card" on a connection without one leads here: the library, already searching for that service.
+  const libraryFor = (location.state as { library?: string } | null)?.library
+  useEffect(() => {
+    if (!libraryFor || !activePage || !data) return
+    if (canEdit) {
+      setLibraryQuery(libraryFor)
+      setLibrary(true)
+    }
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [libraryFor, activePage, data, canEdit, navigate, location.pathname, location.search])
 
   // Snapshot and history into the live store.
   useEffect(() => {
@@ -855,12 +868,15 @@ export function BoardPage() {
         onClose={() => {
           setLibrary(false)
           setLibraryInto(null)
+          setLibraryQuery('')
         }}
         pageId={activePage.id}
         numbersOnly={libraryInto !== null}
+        initialQuery={libraryQuery}
         onCreated={(widgetId) => {
           setLibrary(false)
           setLibraryInto(null)
+          setLibraryQuery('')
           // Added from key figures, it becomes a tile there at once.
           if (libraryInto !== null) onPlace({ widget_id: widgetId, into: 'group', group_id: libraryInto })
           else void board.refetch()
