@@ -601,7 +601,8 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     Uptime Kuma 2026-10-24 on a real instance, 1.23.17, the status pages against 1.23.17 and 2.x;
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
-    # iCal and the JSON API talk to no particular product; they were never beta.
+    # iCal and the JSON API talk to no particular product; they were never beta. Nor is a custom card: whoever wrote it
+    # owns it, and nexdeck has no product behind it to confirm.
     assert confirmed == {"adguard", "audiobookshelf", "authentik", "autobrr", "beszel", "changedetection", "crowdsec", "cup", "dawarich", "deluge", "docker", "duplicati", "emby", "frigate", "nexcrate",
         "evcc", "firefly", "forgejo", "gitea", "glances", "gotify", "grafana", "grocy", "headscale", "healthchecks", "homeassistant", "ical", "immich", "jellyfin", "jsonapi",
         "karakeep", "kavita", "kimai", "komga", "kopia", "lidarr", "linkwarden", "mealie", "meilisearch", "metube", "miniflux", "n8n", "navidrome", "netbox", "nextcloud", "nexview", "npm", "ntfy", "nzbget",
@@ -609,7 +610,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
         "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix", "truenas", "nexmail", "nexpulse", "netbird", "nextrmnl", "arcane", "dockhand", "elasticsearch", "urbackup", "openwrt", "kubernetes",
         "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault", "patchmon", "imap", "nexbeat",
-        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition", "uptimekuma"}
+        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition", "uptimekuma", "custom"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.
