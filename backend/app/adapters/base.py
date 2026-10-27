@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 import httpcore
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 from pydantic import Field as PydanticField
 
 logger = logging.getLogger("nexdeck.adapters")
@@ -411,6 +411,16 @@ class Ask(BaseModel):
     min: float | None = None
     max: float | None = None
     step: float | None = None
+
+    @model_serializer(mode="wrap")
+    def _without_an_empty_range(self, handler: Any) -> Any:
+        """The three fields of a number only where they are set: a blank of the built-in cards looks as it always did."""
+        data = handler(self)
+        if isinstance(data, dict):
+            for name in ("min", "max", "step"):
+                if data.get(name, 0) is None:
+                    del data[name]
+        return data
 
 
 #: A number as a field of a form sends it: digits, a point, a sign and an exponent, nothing else.
