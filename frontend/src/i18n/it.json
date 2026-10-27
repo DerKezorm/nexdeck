@@ -210,7 +210,11 @@
       "saveProfile": "Salva nome e indirizzo",
       "unsaved": "Non ancora salvato",
       "tilt": "Le schede si inclinano verso il puntatore",
-      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento."
+      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento.",
+      "theme_schedule": "In base all’ora",
+      "lightFrom": "Chiaro dalle",
+      "darkFrom": "Scuro dalle",
+      "scheduleHelp": "Secondo l’orologio dello schermo che lo mostra."
     },
     "integrations": {
       "title": "Integrazioni",

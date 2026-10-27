@@ -210,7 +210,11 @@
       "saveProfile": "Enregistrer le nom et l’adresse",
       "unsaved": "Pas encore enregistré",
       "tilt": "Les cartes s'inclinent vers le pointeur",
-      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement."
+      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement.",
+      "theme_schedule": "Selon l’heure",
+      "lightFrom": "Clair à partir de",
+      "darkFrom": "Sombre à partir de",
+      "scheduleHelp": "Selon l’horloge de l’écran qui l’affiche."
     },
     "integrations": {
       "title": "Intégrations",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import (
     BaseModel,
@@ -18,6 +18,11 @@ from .languages import Code, Pair
 
 # -- users -------------------------------------------------------------------
 
+#: How light a page is: always dark, always light, as the system says, or by the clock.
+ThemeMode = Literal["dark", "light", "system", "schedule"]
+#: A time of day as ``HH:MM``.
+Clock = Annotated[str, Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")]
+
 
 class UserPublic(BaseModel):
     id: int
@@ -28,6 +33,9 @@ class UserPublic(BaseModel):
     #: The two languages in the top bar; ``locale`` is always one of them.
     language_pair: list[str]
     theme: str
+    #: With the theme ``schedule``: when light begins, and when dark does.
+    light_from: str = "07:00"
+    dark_from: str = "20:00"
     tilt: bool = True
     start_board_id: int | None
     disabled: bool
@@ -54,7 +62,9 @@ class MePatch(BaseModel):
     email: str | None = Field(default=None, max_length=200)
     locale: Code | None = None
     language_pair: Pair | None = None
-    theme: Literal["dark", "light", "system"] | None = None
+    theme: ThemeMode | None = None
+    light_from: Clock | None = None
+    dark_from: Clock | None = None
     tilt: bool | None = None
     start_board_id: int | None = None
     seen_version: str | None = Field(default=None, max_length=16)
@@ -266,7 +276,21 @@ class SharesBody(BaseModel):
     shares: list[ShareBody]
 
 
-class KioskCreate(BaseModel):
+class KioskLook(BaseModel):
+    """How light a wall display is, and when it turns if it goes by the clock."""
+
+    theme: ThemeMode = "dark"
+    light_from: Clock = "07:00"
+    dark_from: Clock = "20:00"
+
+    @model_validator(mode="after")
+    def _two_times(self) -> KioskLook:
+        if self.light_from == self.dark_from:
+            raise ValueError("Light and dark cannot begin at the same time.")
+        return self
+
+
+class KioskCreate(KioskLook):
     name: str = Field(default="Wall display", max_length=80)
     allow_actions: bool = False
     cycle_seconds: int = Field(default=0, ge=0, le=3600)

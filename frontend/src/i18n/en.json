@@ -210,7 +210,11 @@
       "saveProfile": "Save name and address",
       "unsaved": "Not saved yet",
       "tilt": "Cards tip towards the pointer",
-      "tiltHelp": "Only with a mouse, and never when the system asks for less motion."
+      "tiltHelp": "Only with a mouse, and never when the system asks for less motion.",
+      "theme_schedule": "By the clock",
+      "lightFrom": "Light from",
+      "darkFrom": "Dark from",
+      "scheduleHelp": "On the clock of the screen that shows it."
     },
     "integrations": {
       "title": "Integrations",

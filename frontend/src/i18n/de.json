@@ -210,7 +210,11 @@
       "saveProfile": "Name und Adresse speichern",
       "unsaved": "Noch nicht gespeichert",
       "tilt": "Karten neigen sich zum Mauszeiger",
-      "tiltHelp": "Nur mit der Maus, und nie, wenn das System weniger Bewegung wünscht."
+      "tiltHelp": "Nur mit der Maus, und nie, wenn das System weniger Bewegung wünscht.",
+      "theme_schedule": "Nach Uhrzeit",
+      "lightFrom": "Hell ab",
+      "darkFrom": "Dunkel ab",
+      "scheduleHelp": "Nach der Uhr des Geräts, das es zeigt."
     },
     "integrations": {
       "title": "Anbindungen",

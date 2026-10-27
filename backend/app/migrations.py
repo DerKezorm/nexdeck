@@ -249,6 +249,14 @@ def _problems_cards_stay_as_they_were(connection: Connection) -> None:
     logger.info("%d problems card(s) keep looking at their own board only.", len(rows))
 
 
+def _theme_schedule_columns(connection: Connection) -> None:
+    """An account and a wall display can follow the clock; a display made before stays dark, as it always was."""
+    for table in ("users", "kiosk_tokens"):
+        _add_column(connection, table, "light_from", "VARCHAR(5) NOT NULL DEFAULT '07:00'")
+        _add_column(connection, table, "dark_from", "VARCHAR(5) NOT NULL DEFAULT '20:00'")
+    _add_column(connection, "kiosk_tokens", "theme", "VARCHAR(8) NOT NULL DEFAULT 'dark'")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -274,6 +282,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (22, "A page can be a surface of Home Assistant controls", _home_page_column),
     (23, "A card page can have a side bar", _page_side_column),
     (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
+    (25, "Light and dark can follow the clock, for an account and for a wall display", _theme_schedule_columns),
 ]
 
 

@@ -20,6 +20,7 @@ import { anyCardDown, cardStatus } from '../lib/cardStatus'
 import { WallRest, type Rest } from '../components/WallRest'
 import { useTabTitle } from '../lib/brand'
 import { useLive } from '../stores/live'
+import { followTheme } from '../lib/themeMode'
 
 // Loaded when a plan is on the wall, as on the board (pages/BoardPage.tsx).
 const TopologyPage = lazy(() => import('../components/topology/TopologyPage').then((module) => ({ default: module.TopologyPage })))
@@ -75,9 +76,6 @@ export function KioskPage() {
   const [pending, setPending] = useState<PendingAction | null>(null)
   const [admitted, setAdmitted] = useState(false)
   useEffect(() => {
-    document.documentElement.dataset.theme = 'dark'
-  }, [])
-  useEffect(() => {
     // ⚠️ Out of the address as soon as it is here. The token stood in /k/nk_...
     // for as long as the display ran: in its browser history, and handed in
     // again from the address every few hours, while this comment claimed it
@@ -115,6 +113,13 @@ export function KioskPage() {
   const history = useQuery({ queryKey: ['kiosk-history', token, board.data?.slug], queryFn: () => get<Record<string, Record<string, [number, number][]>>>(`/boards/${board.data?.slug}/history`), enabled: Boolean(board.data) })
   const data = board.data
   useBoardCardStyle(data?.settings?.card_style)
+  // Light or dark as the link says: dark as every display always was, light,
+  // the system's, or by the clock, followed while the display runs. The
+  // browser's own choice is left alone; it is the link's, not the person's.
+  const plan = data?.kiosk
+  useEffect(() => {
+    followTheme({ theme: plan?.theme ?? 'dark', light_from: plan?.light_from, dark_from: plan?.dark_from }, { remember: false })
+  }, [plan?.theme, plan?.light_from, plan?.dark_from])
   useTabTitle(data?.name)
   useEffect(() => {
     if (data?.live) setSnapshot(data.live)

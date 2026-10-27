@@ -210,7 +210,11 @@
       "saveProfile": "Guardar nombre y dirección",
       "unsaved": "Aún no guardado",
       "tilt": "Las tarjetas se inclinan hacia el puntero",
-      "tiltHelp": "Solo con ratón, y nunca si el sistema pide menos movimiento."
+      "tiltHelp": "Solo con ratón, y nunca si el sistema pide menos movimiento.",
+      "theme_schedule": "Según la hora",
+      "lightFrom": "Claro desde",
+      "darkFrom": "Oscuro desde",
+      "scheduleHelp": "Según el reloj de la pantalla que lo muestra."
     },
     "integrations": {
       "title": "Integraciones",
