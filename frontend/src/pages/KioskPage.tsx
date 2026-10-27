@@ -9,7 +9,8 @@ import { BackgroundLayer } from '../components/BackgroundLayer'
 import { BoardGrid } from '../components/BoardGrid'
 import { HomePage } from '../components/home/HomePage'
 import { ActionSheet, type PendingAction } from '../components/ActionSheet'
-import { Spinner } from '../components/ui'
+import { Spinner, Toast } from '../components/ui'
+import { actionDoneText, actionFailureText } from '../lib/actionResult'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { withNews, type HomeAnswer } from '../lib/home'
@@ -58,7 +59,8 @@ function keepToken(token: string): void {
 }
 
 export function KioskPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { token: fromAddress = '' } = useParams()
@@ -211,7 +213,11 @@ export function KioskPage() {
     )
   }
   const canAct = Boolean(data.kiosk?.allow_actions)
-  const run = (widgetId: number, action: Action) => post(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} }).catch(() => undefined)
+  // The wall display says what came of a press the way the board does: there is no other sign that it went out.
+  const run = (widgetId: number, action: Action) =>
+    post<{ message: string }>(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
+      .then((result) => setToast({ text: actionDoneText(result.message), level: 'ok' }))
+      .catch((failure) => setToast({ text: actionFailureText(t, i18n.language, failure), level: 'error' }))
   return (
     <div className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
       <BackgroundLayer background={data.background} alarm={anyCardDown(widgets, liveData)} />
@@ -269,6 +275,11 @@ export function KioskPage() {
           />
         )}
       </main>
+      {toast && (
+        <Toast level={toast.level} onClose={() => setToast(null)}>
+          {toast.text}
+        </Toast>
+      )}
       {resting && <WallRest rest={rest} onWake={() => setResting(false)} />}
       {/* ⚠️ The board's own sheet, not a copy of it. The title is translated
           there, which it once was not here: the same button read "Restart?"

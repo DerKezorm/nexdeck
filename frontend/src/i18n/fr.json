@@ -73,7 +73,12 @@
       "command_refused": "Une carte personnelle ne fait que lire. Cette requête demande une action, comme un redémarrage, une suppression ou une pause, elle n'a donc pas été envoyée.",
       "demo_too_large": "Les réponses d’exemple sont trop grandes pour une carte, même avec chaque liste réduite à une entrée.",
       "demo_mode": "Le mode démo est actif, le service n'est donc pas interrogé.",
-      "connection_missing": "Connexion manquante. La connexion de cette carte a été supprimée."
+      "connection_missing": "Connexion manquante. La connexion de cette carte a été supprimée.",
+      "no_longer_offered": "Plus proposé. La carte a changé depuis l'affichage de ce bouton.",
+      "no_answer": "Pas de réponse. L'action a peut-être été exécutée ; vérifiez le service.",
+      "bad_value": "Une valeur de ce bouton manque ou n'est pas autorisée ; rien n'a été envoyé.",
+      "body_too_large": "Ce que ce bouton envoie est trop volumineux ; rien n'a été envoyé.",
+      "no_such_action": "Cette carte ne propose pas ce bouton."
     },
     "card": {
       "card_invalid": "Cette carte ne peut pas être enregistrée.",

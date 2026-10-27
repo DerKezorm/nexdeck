@@ -73,7 +73,12 @@
       "command_refused": "Una scheda propria legge soltanto. Questa richiesta chiede qualcosa che agisce, come un riavvio, una cancellazione o una pausa, quindi non è stata fatta.",
       "demo_too_large": "Le risposte di esempio sono troppo grandi per una scheda, anche con ogni elenco ridotto a una voce.",
       "demo_mode": "La modalità demo è attiva, quindi il servizio non viene interrogato.",
-      "connection_missing": "Connessione mancante. La connessione di questa scheda è stata eliminata."
+      "connection_missing": "Connessione mancante. La connessione di questa scheda è stata eliminata.",
+      "no_longer_offered": "Non più offerto. La scheda è cambiata da quando è stato mostrato questo pulsante.",
+      "no_answer": "Nessuna risposta. Potrebbe essere stato eseguito; controlla il servizio.",
+      "bad_value": "Un valore di questo pulsante manca o non è consentito; non è stato inviato nulla.",
+      "body_too_large": "Ciò che questo pulsante invia è troppo grande; non è stato inviato nulla.",
+      "no_such_action": "Questa scheda non offre quel pulsante."
     },
     "card": {
       "card_invalid": "Questa scheda non può essere salvata.",

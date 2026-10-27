@@ -22,7 +22,7 @@ import { focusCard } from '../lib/focusCard'
 import { WidgetLibrary } from '../components/WidgetLibrary'
 import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
 import { useStream } from '../hooks/useStream'
-import { tLabel } from '../i18n/texts'
+import { actionDoneText, actionFailureText } from '../lib/actionResult'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
 import { useBoardCardStyle } from '../lib/appearance'
@@ -58,7 +58,7 @@ const TopologyPage = lazy(() => import('../components/topology/TopologyPage').th
 const EDIT_HINT_SEEN = 'nexdeck.editHintSeen'
 
 export function BoardPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { slug = '', page: pageSlug } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -425,9 +425,9 @@ export function BoardPage() {
       // the one place the eye goes right after a press. A sentence the service
       // itself wrote back has no entry and stays as it came, which is right:
       // it is MeTube speaking, not nexdeck.
-      setToast({ text: tLabel(result.message), level: 'ok' })
+      setToast({ text: actionDoneText(result.message), level: 'ok' })
     } catch (failure) {
-      setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' })
+      setToast({ text: actionFailureText(t, i18n.language, failure), level: 'error' })
     }
   }
   // ⚠️ Stable, all four of them. A new function on every render makes every

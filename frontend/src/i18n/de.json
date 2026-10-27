@@ -73,7 +73,12 @@
       "command_refused": "Eine eigene Karte liest nur. Diese Anfrage verlangt etwas, das etwas bewirkt, etwa einen Neustart, ein Löschen oder eine Pause, darum wurde sie nicht gestellt.",
       "demo_too_large": "Die Beispielantworten sind zu groß für eine Karte, selbst wenn jede Liste auf einen Eintrag gekürzt ist.",
       "demo_mode": "Der Demo-Modus ist an, darum fragt nexdeck den Dienst nicht.",
-      "connection_missing": "Anbindung fehlt. Die Anbindung dieser Karte wurde gelöscht."
+      "connection_missing": "Anbindung fehlt. Die Anbindung dieser Karte wurde gelöscht.",
+      "no_longer_offered": "Nicht mehr angeboten. Die Karte hat sich verändert, seit dieser Knopf gezeigt wurde.",
+      "no_answer": "Keine Antwort. Es kann ausgeführt worden sein; prüfe es im Dienst.",
+      "bad_value": "Ein Wert dieses Knopfs fehlt oder ist nicht erlaubt; es wurde nichts gesendet.",
+      "body_too_large": "Was dieser Knopf sendet, ist zu groß; es wurde nichts gesendet.",
+      "no_such_action": "Diese Karte bietet diesen Knopf nicht an."
     },
     "card": {
       "card_invalid": "Diese Karte kann nicht gespeichert werden.",

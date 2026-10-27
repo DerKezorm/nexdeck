@@ -73,7 +73,12 @@
       "command_refused": "Una tarjeta propia solo lee. Esta petición pide algo que actúa, como reiniciar, borrar o pausar, por eso no se hizo.",
       "demo_too_large": "Las respuestas de ejemplo son demasiado grandes para una tarjeta, incluso con cada lista reducida a una entrada.",
       "demo_mode": "El modo demo está activado, así que no se consulta al servicio.",
-      "connection_missing": "Falta la conexión. Se eliminó la conexión de esta tarjeta."
+      "connection_missing": "Falta la conexión. Se eliminó la conexión de esta tarjeta.",
+      "no_longer_offered": "Ya no se ofrece. La tarjeta cambió desde que se mostró este botón.",
+      "no_answer": "Sin respuesta. Puede que se haya ejecutado; revisa el servicio.",
+      "bad_value": "Falta un valor de este botón o no está permitido; no se envió nada.",
+      "body_too_large": "Lo que envía este botón es demasiado grande; no se envió nada.",
+      "no_such_action": "Esta tarjeta no ofrece ese botón."
     },
     "card": {
       "card_invalid": "No se puede guardar esta tarjeta.",

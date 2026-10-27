@@ -73,7 +73,12 @@
       "command_refused": "A custom card only reads. This request asks for something that acts, such as a restart, a delete or a pause, so it was not made.",
       "demo_too_large": "The example answers are too large for a card even with every list cut to one entry.",
       "demo_mode": "Demo mode is on, so nothing is asked of the service.",
-      "connection_missing": "Connection missing. The connection of this card was deleted."
+      "connection_missing": "Connection missing. The connection of this card was deleted.",
+      "no_longer_offered": "No longer offered. The card changed since this button was shown.",
+      "no_answer": "No answer. It may have run; check the service.",
+      "bad_value": "A value of this button is missing or not allowed; nothing was sent.",
+      "body_too_large": "What this button sends is too large; nothing was sent.",
+      "no_such_action": "This card does not offer that button."
     },
     "card": {
       "card_invalid": "This card cannot be saved.",
