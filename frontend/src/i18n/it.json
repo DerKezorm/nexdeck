@@ -290,6 +290,11 @@
           "cardless": "senza scheda",
           "muted": "silenziate"
         }
+      },
+      "demoRow": {
+        "title": "Modalità demo",
+        "off": "disattivata. Passa ogni scheda a dati inventati.",
+        "left": "Alcune connessioni sono ancora in modalità demo e mostrano dati inventati."
       }
     },
     "users": {

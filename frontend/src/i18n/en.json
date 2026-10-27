@@ -290,6 +290,11 @@
           "cardless": "without a card",
           "muted": "muted"
         }
+      },
+      "demoRow": {
+        "title": "Demo mode",
+        "off": "off. Switches every card to invented data.",
+        "left": "Some connections still run in demo mode and show invented data."
       }
     },
     "users": {

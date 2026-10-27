@@ -18,6 +18,7 @@ const state = vi.hoisted(() => ({
   muted: false,
   fail: false,
   cards: 2,
+  demo: false,
   patches: [] as { path: string; body: unknown }[],
 }))
 
@@ -26,7 +27,7 @@ vi.mock('../../api/client', () => {
   return {
     ApiError,
     get: vi.fn(async (path: string) => {
-      if (path === '/about') return { version: '0.22.0', demo: false, demo_forced: false, demo_data: false }
+      if (path === '/about') return { version: '0.22.0', demo: state.demo, demo_forced: false, demo_data: false }
       if (path === '/adapters') return []
       if (path === '/boards') return [{ id: 3, slug: 'home', name: 'Home' }]
       return [
@@ -73,6 +74,7 @@ describe('the bell on a connection', () => {
     state.muted = false
     state.fail = false
     state.cards = 2
+    state.demo = false
     state.patches.length = 0
     useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin' } as never })
   })
@@ -124,5 +126,32 @@ describe('a connection without a card', () => {
     show()
     await userEvent.click(await screen.findByRole('button', { name: 'Build a card' }))
     expect(await screen.findByText('board /b/home {"library":"Sonarr"}')).toBeInTheDocument()
+  })
+})
+
+describe('demo mode for everything', () => {
+  beforeEach(() => {
+    state.demo = false
+    state.patches.length = 0
+    useAuth.setState({ user: { id: 1, username: 'admin', role: 'admin' } as never })
+  })
+
+  it('is one slim line while it is off, and switches on from there', async () => {
+    show()
+    const toggle = await screen.findByRole('switch', { name: 'Demo mode for everything' })
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByText('off. Switches every card to invented data.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Leave demo mode…' })).toBeNull()
+    await userEvent.click(toggle)
+    expect(state.patches).toContainEqual({ path: '/settings', body: { demo: true } })
+  })
+
+  it('is the full box while it is on, with the way out', async () => {
+    state.demo = true
+    show()
+    expect(await screen.findByRole('switch', { name: 'Demo mode for everything' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByText('Some connections still run in demo mode and show invented data.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Leave demo mode…' })).toBeInTheDocument()
+    expect(screen.queryByText('off. Switches every card to invented data.')).toBeNull()
   })
 })

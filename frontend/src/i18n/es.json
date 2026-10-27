@@ -290,6 +290,11 @@
           "cardless": "sin tarjeta",
           "muted": "silenciadas"
         }
+      },
+      "demoRow": {
+        "title": "Modo demo",
+        "off": "desactivado. Pasa todas las tarjetas a datos inventados.",
+        "left": "Algunas conexiones siguen en modo demo y muestran datos inventados."
       }
     },
     "users": {

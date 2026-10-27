@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search as SearchIcon } from 'lucide-react'
+import { FlaskConical, Plus, Search as SearchIcon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -9,7 +9,7 @@ import type { About, AdapterSpec, Integration } from '../../api/types'
 import { FieldInput } from '../../components/FieldInput'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { LeaveDemo } from '../../components/LeaveDemo'
-import { Confirm, Field, Select, Sheet, Switch, Toast } from '../../components/ui'
+import { Confirm, Field, Select, Sheet, Switch, Toast, Toggle } from '../../components/ui'
 import { tAdapter } from '../../i18n/texts'
 import { shownField } from '../../lib/fields'
 import { useHomeBoardPath } from '../../lib/homeBoard'
@@ -19,6 +19,42 @@ const DependsOn = lazy(() => import('../../components/inventory/DependsOn').then
 import { OwnList } from './integrations/OwnList'
 import type { VersionReading } from './integrations/own'
 import { SettingsCard } from './SettingsCard'
+
+/**
+ * Demo mode for everything: a slim line while it is off, the full box while it is on.
+ *
+ * Off, it is one switch nobody needs most days, and the box pushed the
+ * connections below the fold. On, or with invented connections left behind,
+ * it says so and offers the way out.
+ */
+function DemoMode({ about, onChange }: { about: About; onChange: (demo: boolean) => void }) {
+  const { t } = useTranslation()
+  if (!about.demo && !about.demo_data && !about.demo_forced) {
+    return (
+      <div className="glass rounded-[14px] flex items-center gap-2.5 pl-3.5 pr-3 py-2.5 mb-3 text-[13px]">
+        <FlaskConical size={15} className="text-faint flex-none" />
+        <span className="font-medium whitespace-nowrap">{t('settings.integrations.demoRow.title')}</span>
+        <span className="text-faint text-[12.5px] truncate min-w-0 flex-1 max-md:hidden">{t('settings.integrations.demoRow.off')}</span>
+        <span className="ml-auto" />
+        <Toggle checked={false} onChange={onChange} label={t('settings.system.demo')} />
+      </div>
+    )
+  }
+  return (
+    <div className="glass rounded-2xl p-5 mb-4 border-warn/40 bg-[color-mix(in_srgb,var(--nd-warn)_6%,var(--nd-surface))]">
+      <h2 className="font-semibold text-[15px] mb-1">{t('settings.integrations.demoRow.title')}</h2>
+      <Switch checked={about.demo} disabled={about.demo_forced} onChange={onChange} label={t('settings.system.demo')} description={about.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')} />
+      {/* The switch alone leaves the demo's own connections inventing
+          data; this takes them away, after saying what goes. */}
+      {!about.demo_forced && (about.demo || about.demo_data) && (
+        <div className="mt-3.5 pt-3.5 border-t border-line flex flex-wrap items-center gap-3 text-[12.5px] text-muted">
+          <span className="flex-[1_1_200px]">{t('settings.integrations.demoRow.left')}</span>
+          <LeaveDemo className="btn btn-xs" />
+        </div>
+      )}
+    </div>
+  )
+}
 
 /** Configured connections, and a sheet to add or edit one with a live test. */
 export function IntegrationsSettings() {
@@ -78,24 +114,7 @@ export function IntegrationsSettings() {
       {/* The switch that puts every connection at once into demo mode. It sits
           here and not on a page of its own: it says what the connections show,
           and each one carries the same switch for itself. */}
-      {admin && about.data && (
-        <SettingsCard title={t('settings.system.demo')}>
-          <Switch
-            checked={about.data.demo}
-            disabled={about.data.demo_forced}
-            onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())}
-            label={t('settings.system.demo')}
-            description={about.data.demo_forced ? t('settings.system.demoForced') : t('settings.system.demoHelp')}
-          />
-          {/* The switch alone leaves the demo's own connections inventing
-              data; this takes them away, after saying what goes. */}
-          {!about.data.demo_forced && (about.data.demo || about.data.demo_data) && (
-            <div className="mt-3">
-              <LeaveDemo />
-            </div>
-          )}
-        </SettingsCard>
-      )}
+      {admin && about.data && <DemoMode about={about.data} onChange={(demo) => void patch('/settings', { demo }).then(() => about.refetch()).then(() => integrations.refetch())} />}
       <SettingsCard title={t('settings.integrations.title')} description={t('settings.integrations.help')}>
         {integrations.data && adapters.data && (
           <OwnList

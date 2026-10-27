@@ -116,18 +116,26 @@ export function Switch({ checked, onChange, label, description, disabled }: { ch
         </span>
         {description && <span className="text-xs text-muted block">{description}</span>}
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-labelledby={id}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative flex-none w-10 h-6 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-[color-mix(in_srgb,var(--nd-text)_18%,transparent)]'} disabled:opacity-50`}
-      >
-        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
-      </button>
+      <Toggle checked={checked} onChange={onChange} disabled={disabled} labelledBy={id} />
     </div>
+  )
+}
+
+/** The switch alone, for a row that carries its own words; named by ``label`` or by the element ``labelledBy`` points at. */
+export function Toggle({ checked, onChange, disabled, label, labelledBy }: { checked: boolean; onChange: (value: boolean) => void; disabled?: boolean; label?: string; labelledBy?: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative flex-none w-10 h-6 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-[color-mix(in_srgb,var(--nd-text)_18%,transparent)]'} disabled:opacity-50`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
+    </button>
   )
 }
 

@@ -290,6 +290,11 @@
           "cardless": "ohne Karte",
           "muted": "stumm"
         }
+      },
+      "demoRow": {
+        "title": "Vorführmodus",
+        "off": "aus. Schaltet jede Karte auf erfundene Daten.",
+        "left": "Einige Verbindungen stehen noch im Demo-Modus und zeigen erfundene Daten."
       }
     },
     "users": {
