@@ -343,3 +343,24 @@ def test_a_key_in_a_query_never_reaches_the_file() -> None:
     assert "THE-REAL-PASSWORD" not in written, "a password from a query string was written to the log"
     assert "apiKey=***" in written and "passwd=***" in written, "the lines were not written at all, so this proves nothing"
     assert "libraryId=1" in written, "the rest of the address should survive; only the secret goes"
+
+
+def test_a_header_with_a_ticket_or_a_refused_header_value_never_reaches_the_file() -> None:
+    """⚠️ At the trace level httpcore prints the headers of an answer and h11 prints a header it refuses with its whole value. A
+    ``Set-Cookie`` holds the ticket of a session (as good as the password until it runs out) and the file is the one people
+    attach to an issue."""
+    sent = (
+        "receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json'), "
+        "(b'Set-Cookie', b'sid=THE-TICKET; Path=/; HttpOnly'), (b'X-Api-Key', b\"it's-THE-KEY\"), (b'Authorization', b'Bearer THE-BEARER')])"
+    )
+    refused = r"""send_request_headers.failed exception=LocalProtocolError("Illegal header value b'Bearer THE-SECRET\r\nX-Injected: yes'")"""
+    journal.apply_mode("trace")
+    logging.getLogger("httpcore.http11").debug(sent)
+    logging.getLogger("httpcore.http11").debug(refused)
+    for handler in logging.getLogger().handlers:
+        handler.flush()
+    written = journal.log_file().read_text(encoding="utf-8", errors="replace")
+    for secret in ("THE-TICKET", "THE-KEY", "THE-BEARER", "THE-SECRET"):
+        assert secret not in written, f"{secret} was written to the log"
+    assert "(b'Set-Cookie', b'***')" in written and "application/json" in written, "the other headers stay, or nothing was checked"
+    assert "Illegal header value b'***'" in written

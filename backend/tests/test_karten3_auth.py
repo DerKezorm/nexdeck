@@ -11,7 +11,10 @@ import asyncio
 import base64
 import json
 import logging
+import threading
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 import httpx
@@ -728,3 +731,103 @@ def test_karten3_ac5_a_parameter_name_httpx_would_write_differently_is_refused_s
     ):
         checked = admin.post(f"{API}/check", json={"yaml": text}, headers=CSRF).json()
         assert checked["ok"] is False and checked["problems"][0]["path"] == place, (place, checked)
+
+
+# -- AC-5: what a ticket or a refused value leaves in the trace log, against a service that really answers ------------------
+
+TICKET = "TK-LocalTicket-555666777"
+
+
+class Local(BaseHTTPRequestHandler):
+    """A real server on this machine, so that httpcore and h11 run and write what they write (respx would skip them)."""
+
+    seen: list[tuple[str, str, dict[str, str]]] = []
+
+    def log_message(self, *args: Any) -> None:
+        pass
+
+    def _answer(self, body: bytes, extra: dict[str, str] | None = None) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        for name, value in (extra or {}).items():
+            self.send_header(name, value)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:  # noqa: N802
+        self.rfile.read(int(self.headers.get("content-length") or 0))
+        Local.seen.append(("POST", self.path, dict(self.headers)))
+        self._answer(b'{"user": "x"}', {"Set-Cookie": f"sid={TICKET}; Path=/; HttpOnly"})
+
+    def do_GET(self) -> None:  # noqa: N802
+        Local.seen.append(("GET", self.path, dict(self.headers)))
+        self._answer(b'{"ok": true}')
+
+
+@pytest.fixture
+def local() -> Iterator[str]:
+    Local.seen = []
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Local)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        yield f"http://127.0.0.1:{server.server_address[1]}"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.fixture
+def trace() -> Iterator[list[str]]:
+    """What the log file gets at the trace level: the journal's filter and format, the libraries at DEBUG."""
+    from app.services import journal
+
+    lines: list[str] = []
+
+    class Collect(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            lines.append(self.format(record))
+
+    handler = Collect(logging.DEBUG)
+    handler.setFormatter(logging.Formatter(journal.LOG_FORMAT))
+    handler.addFilter(journal._Context())
+    root, libraries = logging.getLogger(), [logging.getLogger(name) for name in ("httpx", "httpcore")]
+    before = root.level, [one.level for one in libraries]
+    root.addHandler(handler)
+    root.setLevel(logging.DEBUG)
+    for one in libraries:
+        one.setLevel(logging.DEBUG)
+    try:
+        yield lines
+    finally:
+        root.removeHandler(handler)
+        root.setLevel(before[0])
+        for one, level in zip(libraries, before[1], strict=True):
+            one.setLevel(level)
+
+
+async def _read_through(text: str, config: dict[str, Any]) -> httpx.Response:
+    from app.adapters.base import outbound_client
+    from app.cards.integration import load_integration
+
+    adapter = defined.DefinedAdapter(load_integration(text).definition, text)
+    async with outbound_client() as client:
+        return await adapter.raw_request("GET", "/data", config, Context(client, integration_id=1, cache={}))
+
+
+def test_karten3_ac5_the_ticket_of_a_session_in_a_cookie_stays_out_of_the_trace_log(local: str, trace: list[str]) -> None:
+    text = changed(example("memos-cookie"), short="local-cookie", **{"auth.login": "/login", "auth.ticket": {"from": "cookie", "name": "sid"}, "auth.pass": {"as": "cookie"}, "test": "/data"})
+    assert asyncio.run(_read_through(text, {"url": local, "username": "ann", "password": PASSWORD})).status_code == 200
+    assert any(f"sid={TICKET}" in seen[2].get("Cookie", "") for seen in Local.seen), "the ticket never travelled, so nothing was checked"
+    assert any("Set-Cookie" in line for line in trace), "httpcore wrote no header line, so nothing was checked"
+    assert not [line for line in trace if TICKET in line]
+
+
+def test_karten3_ac5_a_secret_that_cannot_be_sent_as_a_header_value_stays_out_of_the_trace_log(local: str, trace: list[str]) -> None:
+    text = changed(example("wikijs"), short="local-crlf", test="/data")
+    bad = f"{KEY}\r\nX-Injected: yes"
+    with pytest.raises(AdapterError):
+        asyncio.run(_read_through(text, {"url": local, "token": bad}))
+    assert not any("X-Injected" in seen[2] for seen in Local.seen)
+    assert any("Illegal header value" in line for line in trace), "h11 wrote no refusal, so nothing was checked"
+    assert not [line for line in trace if KEY in line]

@@ -137,6 +137,16 @@ def _blank(hit: re.Match[str]) -> str:
     return f"{hit.group(1)}{name}{hit.group(3)}***" if known and hit.group(4) else hit.group(0)
 
 
+#: A header as httpcore prints it at the trace level: ``(b'Set-Cookie', b'sid=...')``, in either kind of quote.
+_HEADER_TUPLE = re.compile(r"\(b(?P<q1>['\"])(?P<name>[A-Za-z0-9-]+)(?P=q1), b(?P<q2>['\"])(?P<value>.*?)(?P=q2)\)", re.DOTALL)
+#: What h11 says about a header it refuses, with the whole value in it (a secret that carried a line break).
+_ILLEGAL_HEADER = re.compile(r"(Illegal header value b)(?P<q>['\"])(?:\\.|(?!(?P=q)).)*(?P=q)", re.DOTALL)
+
+
+def _blank_header(hit: re.Match[str]) -> str:
+    return f"(b{hit.group('q1')}{hit.group('name')}{hit.group('q1')}, b{hit.group('q2')}***{hit.group('q2')})" if is_credential_name(hit.group("name")) else hit.group(0)
+
+
 def redact(text: str) -> str:
     """Take the credentials out of a line before it is written anywhere.
 
@@ -148,6 +158,9 @@ def redact(text: str) -> str:
     ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level exists
     precisely so somebody can download that file and attach it to an issue.
     """
+    # ⚠️ The headers too: at the trace level httpcore prints the answer's headers (a ``Set-Cookie`` holds the ticket of a session,
+    # which is as good as the password until it runs out), and h11 prints a refused header with its whole value.
+    text = _ILLEGAL_HEADER.sub(lambda hit: f"{hit.group(1)}{hit.group('q')}***{hit.group('q')}", _HEADER_TUPLE.sub(_blank_header, text))
     return QUERY_PARAMETER.sub(_blank, _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
 
 
@@ -161,7 +174,7 @@ class _Context(logging.Filter):
         if record.args:
             record.msg = record.getMessage()
             record.args = ()
-        if isinstance(record.msg, str) and "=" in record.msg:
+        if isinstance(record.msg, str) and ("=" in record.msg or "header value" in record.msg):
             record.msg = redact(record.msg)
         return True
 

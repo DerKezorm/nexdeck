@@ -94,6 +94,20 @@ def validate_required(kind: str, config: dict[str, Any]) -> list[str]:
     return missing
 
 
+def broken_lines(kind: str, config: dict[str, Any]) -> list[str]:
+    """Labels of the fields of an own kind whose value has a line break (or another control character).
+
+    ⚠️ What a person types into a field of an own kind travels in a header or the sign-in: a line break there cannot be sent, and
+    the library that refuses it writes the whole value into the log. The kinds built in have fields that know their own shape.
+    """
+    if kind not in REGISTRY or not getattr(REGISTRY[kind], "custom", False):
+        return []
+    return [
+        f.label for f in _fields(kind)
+        if isinstance(config.get(f.name), str) and any(ord(char) < 32 or ord(char) == 127 for char in config[f.name])
+    ]
+
+
 def has_plain_secrets(integration: Integration) -> bool:
     return any(
         f.secret and isinstance(integration.config.get(f.name), str)

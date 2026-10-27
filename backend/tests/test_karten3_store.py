@@ -421,3 +421,20 @@ def test_karten3_ac6_a_form_cannot_be_nested_and_the_problem_has_its_line(admin:
     assert found["code"] == "card_integration_body_form" and found["path"] == "auth.body.passwordCredentials" and found["line"]
     flat = {"username": "{username}", "password": "{password}"}
     assert admin.post(f"{API}/check", json={"yaml": changed(MEMOS, short="nest", **{"auth.send": "form", "auth.body": flat})}, headers=CSRF).json()["ok"] is True
+
+
+def test_karten3_ac2_a_value_with_a_line_break_is_refused_when_a_connection_of_an_own_kind_is_saved_or_tested(admin: TestClient) -> None:  # noqa: F811
+    assert make(admin, HEADER).status_code == 201
+    good = {"url": "http://svc.example.com", "token_id": "abc", "token_secret": "s3cret-value-9"}
+    bad = {**good, "token_secret": "s3cret\r\nX-Injected: yes"}
+    for sent in (
+        admin.post("/api/v1/integrations", json={"kind": "custom:bookstack-own", "name": "Mine", "config": bad}, headers=CSRF),
+        admin.post("/api/v1/integrations/test", json={"kind": "custom:bookstack-own", "config": bad}, headers=CSRF),
+    ):
+        assert sent.status_code == 400 and sent.json()["detail"]["code"] == "field_line_break", sent.text
+        assert "Token secret" in sent.json()["detail"]["message"] or "secret" in sent.json()["detail"]["message"].lower()
+        assert "s3cret" not in sent.text, "the value stays out of the answer"
+    number = connect(admin, "custom:bookstack-own", good)
+    changed_value = admin.patch(f"/api/v1/integrations/{number}", json={"config": bad}, headers=CSRF)
+    assert changed_value.status_code == 400 and changed_value.json()["detail"]["code"] == "field_line_break"
+    assert admin.patch(f"/api/v1/integrations/{number}", json={"config": {**good, "token_id": "abcd"}}, headers=CSRF).status_code == 200

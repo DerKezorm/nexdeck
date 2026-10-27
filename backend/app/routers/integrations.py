@@ -19,7 +19,7 @@ from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
 from ..services import chronicle, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
-from ..services.integrations import public_config, resolve_config, store_config, validate_required
+from ..services.integrations import broken_lines, public_config, resolve_config, store_config, validate_required
 
 router = APIRouter(prefix="/api/v1", tags=["integrations"])
 
@@ -100,6 +100,7 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
         raise error("unknown_kind", f"There is no adapter {body.kind!r}.") from failure
     if body.kind == "custom":
         raise error("not_a_connection", "A custom card sits on a connection of another kind; it is not a connection itself.")
+    _refuse_line_breaks(body.kind, body.config)
     config = store_config(body.kind, body.config)
     if not body.demo:
         missing = validate_required(body.kind, config)
@@ -117,6 +118,13 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
     return _public(db, integration)
+
+
+def _refuse_line_breaks(kind: str, config: dict[str, Any]) -> None:
+    """A value with a line break in a field of an own kind is refused, naming the field."""
+    broken = broken_lines(kind, config)
+    if broken:
+        raise error("field_line_break", f"{', '.join(broken)}: a value of one line is expected, this one has a line break.")
 
 
 def _farewell(integration: Integration) -> tuple[Adapter, dict[str, Any]] | None:
@@ -141,6 +149,7 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
             changed.append(f"renamed from {integration.name!r}")
         integration.name = body.name.strip()
     if body.config is not None:
+        _refuse_line_breaks(integration.kind, body.config)
         integration.config = store_config(integration.kind, body.config, integration.config)
         changed.append("settings")
     if body.enabled is not None:
@@ -250,6 +259,7 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
     except KeyError as failure:
         raise error("unknown_kind", f"There is no adapter {body.kind!r}.") from failure
     existing = db.get(Integration, body.integration_id) if body.integration_id else None
+    _refuse_line_breaks(body.kind, body.config)
     # ⚠️ Reading a stored connection can fail, and it used to fail as a 500
     # with a stack trace. After a restore into an installation with a
     # different NEXDECK_SECRET_KEY every stored key is unreadable, and the
