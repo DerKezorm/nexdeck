@@ -388,7 +388,8 @@
         "outline": "Contorno",
         "neon": "Bordo neon",
         "liquid": "Vetro liquido",
-        "calm": "Quieto"
+        "calm": "Quieto",
+        "window": "Finestra"
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
@@ -403,7 +404,8 @@
         "castle": "Castello notturno",
         "workshop": "Officina",
         "evening": "Sera rosé",
-        "quiet": "Scrivania quieta"
+        "quiet": "Scrivania quieta",
+        "1984": "1984"
       },
       "lookShare": "Condividi lo stile",
       "lookShareHelp": "Il tema, un colore tuo e le schede come un breve testo: copialo qui e incollalo in un altro nexdeck. Il tuo foglio di stile resta fuori, è codice.",
@@ -441,6 +443,32 @@
         "close": "Fatto",
         "fromOwn": "Ricomincia dai colori di nexdeck",
         "saveHint": "La pagina mostra i colori mentre li scegli. Salva li tiene per tutti; lasciare la pagina senza salvare rimette quelli salvati."
+      },
+      "retro": {
+        "help": "1984 disegna tutto nexdeck come una delle prime scrivanie: finestre, una barra dei menu, uno sfondo a puntini e caratteri a pixel. Il colore resta sui piccoli simboli.",
+        "fontNote": "In 1984 i titoli sono a pixel e il testo in un carattere semplice del sistema.",
+        "status": {
+          "title": "Come lo mostra una finestra gialla o rossa",
+          "symbol": "Simboli colorati",
+          "tint": "Un tocco di colore",
+          "pattern": "Solo motivo"
+        },
+        "icons": {
+          "title": "Loghi",
+          "colour": "A colori",
+          "mono": "In bianco e nero"
+        },
+        "desk": {
+          "title": "Sfondo",
+          "dither": "Retino",
+          "weave": "Motivo",
+          "grey": "Grigio"
+        },
+        "type": {
+          "title": "Caratteri a pixel",
+          "titles": "Per i titoli",
+          "all": "Ovunque"
+        }
       }
     },
     "journal": {

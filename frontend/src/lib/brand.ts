@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { create } from 'zustand'
 
 import { get, serverUrl } from '../api/client'
+import type { Appearance } from './appearance'
 
 export interface Brand {
   name: string
@@ -16,6 +17,8 @@ export interface Brand {
   favicon: string | null
   app_icons: Record<'192' | '512', string> | null
   board_in_title: boolean
+  /** The part of the look a page is drawn in before anybody signs in. */
+  look?: Appearance | null
 }
 
 export const NO_BRAND: Brand = { name: '', logo: null, favicon: null, app_icons: null, board_in_title: true }

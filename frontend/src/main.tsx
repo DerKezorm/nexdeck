@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 
 import './styles/app.css'
 import { App } from './App'
+import { recallLook } from './lib/appearance'
 import { bearTranslatedPages } from './lib/translatedPage'
 import { followTheme, keptPlan } from './lib/themeMode'
 
@@ -12,6 +13,8 @@ if (forced === 'light' || forced === 'dark') (globalThis as { __NEXDECK_FORCED_T
 // The plan this browser followed last, so the page starts in the right brightness before the account
 // answers, and the sign-in page follows the system or the clock as well.
 followTheme(keptPlan(), { remember: false })
+// The look this browser saw last, so 1984 does not start as glass and turn into itself a moment later.
+recallLook()
 
 // A page the browser translated must not take React down with it (nexbase #job-260).
 bearTranslatedPages()

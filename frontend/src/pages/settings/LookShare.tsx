@@ -31,6 +31,8 @@ export const LOOKS: Look[] = [
   { key: 'workshop', theme: 'gruvbox', card_style: 'flat', radius: 4, gap: 8 },
   { key: 'evening', theme: 'rosepine', card_style: 'glass', radius: 20, gap: 16 },
   { key: 'quiet', theme: 'graphite', card_style: 'calm', radius: 10, gap: 14, font: 'geist' },
+  // Not only the cards: the window style redraws every page (lib/retro.ts).
+  { key: '1984', theme: '1984', card_style: 'window', radius: 0, gap: 14 },
 ]
 
 function Sample({ form, look }: { form: Appearance; look: Look }) {
@@ -38,6 +40,17 @@ function Sample({ form, look }: { form: Appearance; look: Look }) {
   const ground = palette?.bg ?? '#0a0d12'
   const surface = palette?.surface ?? '#11161f'
   const accent = palette?.accent ?? '#22d3ee'
+  if (look.card_style === 'window') {
+    const window: React.CSSProperties = { background: 'repeating-linear-gradient(#000 0 1px, #fff 1px 2px) 0 2px / 100% 5px no-repeat, #fff', border: '1px solid #000', boxShadow: '1px 1px 0 #000' }
+    return (
+      <span className="grid grid-cols-3 gap-1.5 h-14 p-1.5 rounded-lg border border-line" style={{ background: 'repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 2px 2px' }} aria-hidden="true">
+        <span className="col-span-2" style={window} />
+        <span style={window} />
+        <span style={window} />
+        <span className="col-span-2" style={window} />
+      </span>
+    )
+  }
   const card: React.CSSProperties = {
     borderRadius: Math.min(look.radius, 10),
     background: look.card_style === 'outline' ? 'transparent' : surface,

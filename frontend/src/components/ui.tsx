@@ -41,7 +41,12 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
   )
 }
 
-export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
+/**
+ * A dialog over the page. ``alert`` marks a question that wants an answer
+ * before anything goes on (Confirm): a look may draw it as an alert box, as
+ * 1984 does, with its frame doubled and the default button ringed.
+ */
+export function Dialog({ open, onClose, title, children, footer, size = 'md', alert = false }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg'; alert?: boolean }) {
   const { t } = useTranslation()
   const panel = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -66,7 +71,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   return createPortal(
     <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
+      <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`} data-alert={alert || undefined}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
           <h2 className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
           <button className="btn btn-icon btn-flat" onClick={onClose} aria-label={t('common.close')}>
@@ -89,6 +94,7 @@ export function Confirm({ open, title, body, danger, onCancel, onConfirm, confir
       onClose={onCancel}
       title={title}
       size="sm"
+      alert
       footer={
         <>
           <button className="btn" onClick={onCancel}>

@@ -101,7 +101,7 @@ describe('a look to share', () => {
     const text = lookFile(base)
     expect(text).not.toContain('secret')
     const read = readLook(text)
-    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20, font: 'inter' })
+    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20, font: 'inter', retro: { status: 'symbol', icons: 'colour', desk: 'dither', type: 'titles' } })
   })
 
   it('carries the calm cards and the font, and an older look leaves the font as it is', () => {

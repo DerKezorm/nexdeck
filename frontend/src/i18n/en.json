@@ -388,7 +388,8 @@
         "outline": "Outline",
         "neon": "Neon edge",
         "liquid": "Liquid glass",
-        "calm": "Calm"
+        "calm": "Calm",
+        "window": "Window"
       },
       "radius": "Corners",
       "gap": "Gap between cards",
@@ -403,7 +404,8 @@
         "castle": "Night castle",
         "workshop": "Workshop",
         "evening": "Rosé evening",
-        "quiet": "Quiet desk"
+        "quiet": "Quiet desk",
+        "1984": "1984"
       },
       "lookShare": "Share the look",
       "lookShareHelp": "The theme, a colour of your own and the cards as a short text: copy it here and paste it into another nexdeck. Your own style sheet stays out, it is code.",
@@ -441,6 +443,32 @@
         "close": "Done",
         "fromOwn": "Start again from nexdeck's colours",
         "saveHint": "The page shows the colours as you choose them. Save keeps them for everyone; leaving the page without saving puts the stored ones back."
+      },
+      "retro": {
+        "help": "1984 draws the whole of nexdeck as an early desktop: windows, a menu bar, a dotted desk and pixel type. Colour stays on the small symbols.",
+        "fontNote": "In 1984 the titles are set in pixels and the text in a plain type of the system.",
+        "status": {
+          "title": "How a yellow or red window shows it",
+          "symbol": "Coloured symbols",
+          "tint": "A touch of colour",
+          "pattern": "Pattern only"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "In colour",
+          "mono": "Black and white"
+        },
+        "desk": {
+          "title": "Desk",
+          "dither": "Dither",
+          "weave": "Pattern",
+          "grey": "Grey"
+        },
+        "type": {
+          "title": "Pixel type",
+          "titles": "For titles",
+          "all": "Everywhere"
+        }
       }
     },
     "journal": {

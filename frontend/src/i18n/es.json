@@ -388,7 +388,8 @@
         "outline": "Contorno",
         "neon": "Borde neón",
         "liquid": "Cristal líquido",
-        "calm": "Sereno"
+        "calm": "Sereno",
+        "window": "Ventana"
       },
       "radius": "Esquinas",
       "gap": "Espacio entre tarjetas",
@@ -403,7 +404,8 @@
         "castle": "Castillo nocturno",
         "workshop": "Taller",
         "evening": "Tarde rosé",
-        "quiet": "Escritorio tranquilo"
+        "quiet": "Escritorio tranquilo",
+        "1984": "1984"
       },
       "lookShare": "Compartir el estilo",
       "lookShareHelp": "El tema, un color propio y las tarjetas como un texto corto: cópialo aquí y pégalo en otro nexdeck. Tu hoja de estilo propia se queda fuera, es código.",
@@ -441,6 +443,32 @@
         "close": "Listo",
         "fromOwn": "Empezar de nuevo con los colores de nexdeck",
         "saveHint": "La página muestra los colores mientras los eliges. Guardar los conserva para todos; salir sin guardar devuelve los guardados."
+      },
+      "retro": {
+        "help": "1984 dibuja todo nexdeck como un escritorio de los primeros: ventanas, una barra de menús, un fondo de puntos y letra de píxeles. El color queda en los pequeños símbolos.",
+        "fontNote": "En 1984 los títulos van en píxeles y el texto en una letra sencilla del sistema.",
+        "status": {
+          "title": "Cómo lo muestra una ventana amarilla o roja",
+          "symbol": "Símbolos de color",
+          "tint": "Un toque de color",
+          "pattern": "Solo trama"
+        },
+        "icons": {
+          "title": "Logotipos",
+          "colour": "En color",
+          "mono": "En blanco y negro"
+        },
+        "desk": {
+          "title": "Fondo",
+          "dither": "Trama de puntos",
+          "weave": "Dibujo",
+          "grey": "Gris"
+        },
+        "type": {
+          "title": "Letra de píxeles",
+          "titles": "Para títulos",
+          "all": "En todo"
+        }
       }
     },
     "journal": {

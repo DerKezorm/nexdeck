@@ -9,7 +9,7 @@ import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { useHomeBoardPath } from '../lib/homeBoard'
 import { useHandleReorder } from '../lib/useHandleReorder'
-import { CARD_STYLES } from '../lib/appearance'
+import { BOARD_STYLES } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
@@ -202,7 +202,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               onChange={(value) => setSettings(({ card_style: _old, ...current }) => (value ? { ...current, card_style: value } : current))}
               options={[
                 { value: '', label: t('board.cardStyleInstallation') },
-                ...CARD_STYLES.map((style) => ({ value: style, label: t(`settings.appearance.cardStyle.${style}`) })),
+                ...BOARD_STYLES.map((style) => ({ value: style, label: t(`settings.appearance.cardStyle.${style}`) })),
               ]}
             />
           </Field>

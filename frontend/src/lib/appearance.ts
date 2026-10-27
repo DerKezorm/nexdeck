@@ -12,6 +12,7 @@ import { useEffect } from 'react'
 import { create } from 'zustand'
 
 import { DEFAULT_FONT, fontOf, setFont } from './fonts'
+import { paintRetro, retroOf, type RetroChoices } from './retro'
 
 export type Palette = Record<string, string>
 export interface Theme {
@@ -47,6 +48,8 @@ export interface Appearance {
   /** The type of the interface (lib/fonts.ts), and the ones there are. */
   font?: string
   fonts?: string[]
+  /** The window style's choices (lib/retro.ts). */
+  retro?: Partial<RetroChoices>
 }
 
 /**
@@ -54,9 +57,13 @@ export interface Appearance {
  * a name here, the same name in `appearance.CARD_STYLES` on the server, its
  * rules under `:root[data-cards='…']` in the style sheet and a sample in the
  * settings; the board, the kiosk and the settings take it from this list.
+ *
+ * Window is 1984 (lib/retro.ts): it redraws every page, so it is the
+ * installation's or nothing, and a board does not get to choose it.
  */
-export const CARD_STYLES = ['glass', 'liquid', 'flat', 'outline', 'neon', 'calm'] as const
+export const CARD_STYLES = ['glass', 'liquid', 'flat', 'outline', 'neon', 'calm', 'window'] as const
 export type CardStyle = (typeof CARD_STYLES)[number]
+export const BOARD_STYLES: readonly CardStyle[] = CARD_STYLES.filter((style) => style !== 'window')
 
 /**
  * The part of the look a component has to know rather than only paint: the
@@ -64,11 +71,21 @@ export type CardStyle = (typeof CARD_STYLES)[number]
  * liquid glass to bend the light. ``board`` is the style of the board on
  * screen when it has one of its own; it wins over the installation's.
  */
-export const useLook = create<{ gap: number; cards: CardStyle; board: CardStyle | null; refraction: boolean }>(() => ({ gap: 12, cards: 'glass', board: null, refraction: true }))
+export const useLook = create<{ gap: number; cards: CardStyle; board: CardStyle | null; refraction: boolean; retro: RetroChoices }>(() => ({
+  gap: 12,
+  cards: 'glass',
+  board: null,
+  refraction: true,
+  retro: retroOf(null),
+}))
 
-/** The style the cards on screen are drawn in. */
+/**
+ * The style the cards on screen are drawn in. 1984 wins over a board's own
+ * style: with it chosen nothing on any page may look modern.
+ */
 export function shownStyle(look: { cards: CardStyle; board: CardStyle | null }): CardStyle {
-  return look.board ?? look.cards
+  if (look.cards === 'window') return 'window'
+  return look.board && look.board !== 'window' ? look.board : look.cards
 }
 
 /** The style onto the page: the board's own, else the installation's. Glass needs no mark. */
@@ -79,6 +96,7 @@ function paintCards(): void {
   if (style !== 'glass') root.dataset.cards = style
   else delete root.dataset.cards
   root.dataset.refract = look.refraction ? 'on' : 'off'
+  paintRetro(style === 'window', look.retro)
 }
 useLook.subscribe(paintCards)
 
@@ -215,9 +233,44 @@ export function applyAppearance(look: Appearance | null | undefined): void {
     gap: typeof look?.gap === 'number' ? look.gap : 12,
     cards: STYLES.includes(look?.card_style as CardStyle) ? (look?.card_style as CardStyle) : 'glass',
     refraction: look?.refraction !== false,
+    retro: retroOf(look?.retro),
   })
   paintCards()
   void setFont(look?.font ?? DEFAULT_FONT)
+  remember(look)
+}
+
+const KEPT = 'nexdeck.look'
+
+/**
+ * The look as this browser saw it last, without the operator's style sheet.
+ *
+ * The look is read from the server after the page has started, so every load
+ * began in nexdeck's own glass and turned into the chosen look a moment
+ * later. For a theme that is a flicker; for 1984, which redraws everything,
+ * it is a different program for half a second. The start paints what was
+ * kept here first (main.tsx), the server's answer follows as before.
+ */
+function remember(look: Appearance | null | undefined): void {
+  try {
+    if (!look) localStorage.removeItem(KEPT)
+    else {
+      const { theme, accent, colour, preset, card_style, radius, gap, refraction, font, retro } = look
+      localStorage.setItem(KEPT, JSON.stringify({ theme: theme ?? null, accent, colour, preset, card_style, radius, gap, refraction, font, retro, css: '' }))
+    }
+  } catch {
+    // A browser that keeps nothing starts in nexdeck's own look, as it always did.
+  }
+}
+
+/** Paint the look this browser kept, before the server has said anything. */
+export function recallLook(): void {
+  try {
+    const kept = localStorage.getItem(KEPT)
+    if (kept) applyAppearance(JSON.parse(kept) as Appearance)
+  } catch {
+    // Nothing kept, or nothing readable: nexdeck's own look until the server answers.
+  }
 }
 
 /** The contrast ratio of two #rrggbb colours, from 1 to 21, the way WCAG counts it. */
@@ -316,6 +369,7 @@ export function lookFile(look: Appearance): string {
     radius: look.radius ?? 16,
     gap: look.gap ?? 12,
     font: fontOf(look.font).key,
+    retro: retroOf(look.retro),
   })
 }
 
@@ -352,6 +406,7 @@ export function readLook(text: string): { look: Partial<Appearance> } | { error:
   look.gap = within(value.gap, 4, 28, 12)
   // A look shared before fonts could be chosen leaves the font as it is.
   if (typeof value.font === 'string') look.font = fontOf(value.font).key
+  if (value.retro && typeof value.retro === 'object') look.retro = retroOf(value.retro)
   return { look }
 }
 

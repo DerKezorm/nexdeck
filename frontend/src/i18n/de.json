@@ -388,7 +388,8 @@
         "outline": "Umriss",
         "neon": "Neonkante",
         "liquid": "Liquid Glass",
-        "calm": "Ruhig"
+        "calm": "Ruhig",
+        "window": "Fenster"
       },
       "radius": "Ecken",
       "gap": "Abstand zwischen Karten",
@@ -403,7 +404,8 @@
         "castle": "Nachtschloss",
         "workshop": "Werkstatt",
         "evening": "Rosé-Abend",
-        "quiet": "Stiller Schreibtisch"
+        "quiet": "Stiller Schreibtisch",
+        "1984": "1984"
       },
       "lookShare": "Look teilen",
       "lookShareHelp": "Farbschema, eigene Farbe und Karten als kurzer Text: hier kopieren und in einem anderen nexdeck einfügen. Dein eigenes CSS bleibt draußen, es ist Code.",
@@ -441,6 +443,32 @@
         "close": "Fertig",
         "fromOwn": "Neu mit den Farben von nexdeck beginnen",
         "saveHint": "Die Seite zeigt die Farben, während du wählst. Speichern behält sie für alle; wer die Seite ohne Speichern verlässt, bekommt die gespeicherten zurück."
+      },
+      "retro": {
+        "help": "1984 zeichnet ganz nexdeck wie einen frühen Schreibtisch: Fenster, eine Menüleiste, ein Punktraster und Pixelschrift. Farbe bleibt an den kleinen Symbolen.",
+        "fontNote": "In 1984 stehen Titel in Pixelschrift und Text in einer schlichten Schrift des Systems.",
+        "status": {
+          "title": "Wie ein gelbes oder rotes Fenster es zeigt",
+          "symbol": "Farbige Symbole",
+          "tint": "Hauch Farbe",
+          "pattern": "Nur Muster"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "Farbig",
+          "mono": "Einfarbig"
+        },
+        "desk": {
+          "title": "Hintergrund",
+          "dither": "Raster",
+          "weave": "Muster",
+          "grey": "Grau"
+        },
+        "type": {
+          "title": "Pixelschrift",
+          "titles": "Für Titel",
+          "all": "Überall"
+        }
       }
     },
     "journal": {

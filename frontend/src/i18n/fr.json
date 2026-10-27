@@ -388,7 +388,8 @@
         "outline": "Contour",
         "neon": "Bord néon",
         "liquid": "Verre liquide",
-        "calm": "Calme"
+        "calm": "Calme",
+        "window": "Fenêtre"
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
@@ -403,7 +404,8 @@
         "castle": "Château de nuit",
         "workshop": "Atelier",
         "evening": "Soirée rosé",
-        "quiet": "Bureau calme"
+        "quiet": "Bureau calme",
+        "1984": "1984"
       },
       "lookShare": "Partager le style",
       "lookShareHelp": "Le thème, une couleur à vous et les cartes en un court texte : copiez-le ici et collez-le dans un autre nexdeck. Votre feuille de style reste à part, c'est du code.",
@@ -441,6 +443,32 @@
         "close": "Terminé",
         "fromOwn": "Recommencer avec les couleurs de nexdeck",
         "saveHint": "La page montre les couleurs pendant que vous les choisissez. Enregistrer les garde pour tout le monde ; quitter la page sans enregistrer remet celles enregistrées."
+      },
+      "retro": {
+        "help": "1984 dessine tout nexdeck comme un des premiers bureaux : des fenêtres, une barre de menus, un fond à points et des lettres en pixels. La couleur reste sur les petits symboles.",
+        "fontNote": "En 1984, les titres sont en pixels et le texte dans une police simple du système.",
+        "status": {
+          "title": "Comment une fenêtre jaune ou rouge le montre",
+          "symbol": "Symboles en couleur",
+          "tint": "Une touche de couleur",
+          "pattern": "Motif seul"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "En couleur",
+          "mono": "En noir et blanc"
+        },
+        "desk": {
+          "title": "Fond",
+          "dither": "Trame",
+          "weave": "Motif",
+          "grey": "Gris"
+        },
+        "type": {
+          "title": "Lettres en pixels",
+          "titles": "Pour les titres",
+          "all": "Partout"
+        }
       }
     },
     "journal": {
