@@ -2061,7 +2061,18 @@
     "Layer": "Livello",
     "Print time": "Tempo di stampa",
     "Filament": "Filamento",
-    "Longest print": "Stampa più lunga"
+    "Longest print": "Stampa più lunga",
+    "Which things are online, whether the rules run, and the state of any item, with a switch where it is one.": "Quali thing sono online, se le regole funzionano e lo stato di ogni item, con un interruttore dove lo è.",
+    "From your profile in openHAB, API Tokens, as an administrator. Items can be read without one, things and rules cannot.": "Dal tuo profilo in openHAB, API Tokens, come amministratore. Gli item si leggono senza, i thing e le regole no.",
+    "openHAB overview": "Panoramica di openHAB",
+    "How many things are online and offline, how many items and rules there are, and whether a rule failed to start. Needs a token.": "Quanti thing sono online e offline, quanti item e regole ci sono e se una regola non è partita. Richiede un token.",
+    "Rules": "Regole",
+    "Things needing a look": "Thing da controllare",
+    "The things that are offline, did not start or are still starting, worst first, with the reason. Disabled ones come last. Needs a token.": "I thing offline, non avviati o ancora in avvio, i peggiori per primi, con il motivo. Quelli disattivati vengono per ultimi. Richiede un token.",
+    "The state of your items, with a switch on those that are one. Name a group to show only its items.": "Lo stato dei tuoi item, con un interruttore su quelli che lo sono. Indica un gruppo per mostrare solo i suoi item.",
+    "The name of a group; empty shows every item that is not a group.": "Il nome di un gruppo; vuoto mostra ogni item che non è un gruppo.",
+    "Item": "Item",
+    "One item as a big number with its history, or as a switch. Use it for power, temperature or a light.": "Un item come numero grande con la sua cronologia, o come interruttore. Per potenza, temperatura o una luce."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3279,6 +3290,15 @@
     "Klipper is not running.": "Klipper non è in esecuzione.",
     "Prints": "Stampe",
     "Cancel print": "Annulla stampa",
-    "Shutdown": "Arresto di emergenza"
+    "Shutdown": "Arresto di emergenza",
+    "Things online": "Thing online",
+    "Rules not running": "Regole non attive",
+    "Not started": "Non avviato",
+    "Previous": "Precedente",
+    "All things are online.": "Tutti i thing sono online.",
+    "No item matches.": "Nessun item corrisponde.",
+    "Changed": "Modificato",
+    "Turn on": "Accendi",
+    "Turn off": "Spegni"
   }
 }

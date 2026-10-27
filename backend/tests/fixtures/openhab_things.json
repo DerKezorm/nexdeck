@@ -1,0 +1,165 @@
+[
+  {
+    "channels": [
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:local:dateTime",
+        "id": "dateTime",
+        "channelTypeUID": "ntp:dateTime-channel",
+        "itemType": "DateTime",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {}
+      },
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:local:string",
+        "id": "string",
+        "channelTypeUID": "ntp:string-channel",
+        "itemType": "String",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {
+          "DateTimeFormat": "yyyy-MM-dd HH:mm:ss z"
+        }
+      }
+    ],
+    "statusInfo": {
+      "status": "ONLINE",
+      "statusDetail": "NONE"
+    },
+    "editable": true,
+    "label": "Time server",
+    "configuration": {
+      "hostname": "0.pool.ntp.org",
+      "serverPort": 123,
+      "refreshInterval": 60,
+      "refreshNtp": 30
+    },
+    "properties": {},
+    "UID": "ntp:ntp:local",
+    "thingTypeUID": "ntp:ntp",
+    "semanticEquipmentTag": "WebService"
+  },
+  {
+    "channels": [
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:off:dateTime",
+        "id": "dateTime",
+        "channelTypeUID": "ntp:dateTime-channel",
+        "itemType": "DateTime",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {}
+      },
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:off:string",
+        "id": "string",
+        "channelTypeUID": "ntp:string-channel",
+        "itemType": "String",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {
+          "DateTimeFormat": "yyyy-MM-dd HH:mm:ss z"
+        }
+      }
+    ],
+    "statusInfo": {
+      "status": "UNINITIALIZED",
+      "statusDetail": "DISABLED"
+    },
+    "editable": true,
+    "label": "Disabled thing",
+    "configuration": {
+      "hostname": "0.pool.ntp.org",
+      "serverPort": 123,
+      "refreshInterval": 60,
+      "refreshNtp": 30
+    },
+    "properties": {},
+    "UID": "ntp:ntp:off",
+    "thingTypeUID": "ntp:ntp",
+    "semanticEquipmentTag": "WebService"
+  },
+  {
+    "channels": [
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:broken:dateTime",
+        "id": "dateTime",
+        "channelTypeUID": "ntp:dateTime-channel",
+        "itemType": "DateTime",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {}
+      },
+      {
+        "linkedItems": [],
+        "uid": "ntp:ntp:broken:string",
+        "id": "string",
+        "channelTypeUID": "ntp:string-channel",
+        "itemType": "String",
+        "kind": "STATE",
+        "label": "Date",
+        "description": "NTP refreshed date and time.",
+        "defaultTags": [
+          "Status",
+          "Timestamp"
+        ],
+        "properties": {},
+        "configuration": {
+          "DateTimeFormat": "yyyy-MM-dd HH:mm:ss z"
+        }
+      }
+    ],
+    "statusInfo": {
+      "status": "OFFLINE",
+      "statusDetail": "COMMUNICATION_ERROR",
+      "description": "The timeserver hostname nope.invalid is unknown -> returning current sytem time instead."
+    },
+    "editable": true,
+    "label": "Broken time server",
+    "configuration": {
+      "hostname": "nope.invalid",
+      "serverPort": 123,
+      "refreshInterval": 60,
+      "refreshNtp": 30
+    },
+    "properties": {},
+    "UID": "ntp:ntp:broken",
+    "thingTypeUID": "ntp:ntp",
+    "semanticEquipmentTag": "WebService"
+  }
+]

@@ -2061,7 +2061,18 @@
     "Layer": "Couche",
     "Print time": "Temps d'impression",
     "Filament": "Filament",
-    "Longest print": "Impression la plus longue"
+    "Longest print": "Impression la plus longue",
+    "Which things are online, whether the rules run, and the state of any item, with a switch where it is one.": "Quels things sont en ligne, si les règles tournent et l'état de n'importe quel item, avec un interrupteur quand c'en est un.",
+    "From your profile in openHAB, API Tokens, as an administrator. Items can be read without one, things and rules cannot.": "Depuis votre profil dans openHAB, API Tokens, en tant qu'administrateur. Les items se lisent sans, les things et les règles non.",
+    "openHAB overview": "Aperçu d'openHAB",
+    "How many things are online and offline, how many items and rules there are, and whether a rule failed to start. Needs a token.": "Combien de things sont en ligne et hors ligne, combien d'items et de règles il y a et si une règle n'a pas démarré. Nécessite un jeton.",
+    "Rules": "Règles",
+    "Things needing a look": "Things à vérifier",
+    "The things that are offline, did not start or are still starting, worst first, with the reason. Disabled ones come last. Needs a token.": "Les things hors ligne, non démarrés ou encore en démarrage, les pires d'abord, avec la raison. Les désactivés viennent en dernier. Nécessite un jeton.",
+    "The state of your items, with a switch on those that are one. Name a group to show only its items.": "L'état de vos items, avec un interrupteur sur ceux qui en sont un. Indiquez un groupe pour n'afficher que ses items.",
+    "The name of a group; empty shows every item that is not a group.": "Le nom d'un groupe ; vide affiche tous les items qui ne sont pas des groupes.",
+    "Item": "Item",
+    "One item as a big number with its history, or as a switch. Use it for power, temperature or a light.": "Un item en grand chiffre avec son historique, ou comme interrupteur. Pour la puissance, la température ou une lampe."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3279,6 +3290,15 @@
     "Klipper is not running.": "Klipper ne tourne pas.",
     "Prints": "Impressions",
     "Cancel print": "Annuler l'impression",
-    "Shutdown": "Arrêt d'urgence"
+    "Shutdown": "Arrêt d'urgence",
+    "Things online": "Things en ligne",
+    "Rules not running": "Règles à l'arrêt",
+    "Not started": "Non démarré",
+    "Previous": "Précédent",
+    "All things are online.": "Tous les things sont en ligne.",
+    "No item matches.": "Aucun item ne correspond.",
+    "Changed": "Modifié",
+    "Turn on": "Allumer",
+    "Turn off": "Éteindre"
   }
 }

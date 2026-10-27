@@ -2061,7 +2061,18 @@
     "Layer": "Schicht",
     "Print time": "Druckzeit",
     "Filament": "Filament",
-    "Longest print": "Längster Druck"
+    "Longest print": "Längster Druck",
+    "Which things are online, whether the rules run, and the state of any item, with a switch where it is one.": "Welche Things online sind, ob die Regeln laufen und der Zustand jedes Items, mit Schalter, wo es einer ist.",
+    "From your profile in openHAB, API Tokens, as an administrator. Items can be read without one, things and rules cannot.": "Aus deinem Profil in openHAB unter API Tokens, als Administrator. Items lassen sich ohne lesen, Things und Regeln nicht.",
+    "openHAB overview": "openHAB-Überblick",
+    "How many things are online and offline, how many items and rules there are, and whether a rule failed to start. Needs a token.": "Wie viele Things online und offline sind, wie viele Items und Regeln es gibt und ob eine Regel nicht gestartet ist. Braucht ein Token.",
+    "Rules": "Regeln",
+    "Things needing a look": "Things, die einen Blick brauchen",
+    "The things that are offline, did not start or are still starting, worst first, with the reason. Disabled ones come last. Needs a token.": "Die Things, die offline sind, nicht gestartet oder noch beim Starten sind, die schlimmsten zuerst, mit Grund. Deaktivierte kommen zuletzt. Braucht ein Token.",
+    "The state of your items, with a switch on those that are one. Name a group to show only its items.": "Der Zustand deiner Items, mit Schalter bei denen, die einer sind. Mit dem Namen einer Gruppe zeigt die Karte nur deren Items.",
+    "The name of a group; empty shows every item that is not a group.": "Der Name einer Gruppe; leer zeigt jedes Item, das keine Gruppe ist.",
+    "Item": "Item",
+    "One item as a big number with its history, or as a switch. Use it for power, temperature or a light.": "Ein Item als große Zahl mit Verlauf oder als Schalter. Für Leistung, Temperatur oder ein Licht."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3279,6 +3290,15 @@
     "Klipper is not running.": "Klipper läuft nicht.",
     "Prints": "Drucke",
     "Cancel print": "Druck abbrechen",
-    "Shutdown": "Abgeschaltet"
+    "Shutdown": "Abgeschaltet",
+    "Things online": "Things online",
+    "Rules not running": "Regeln nicht aktiv",
+    "Not started": "Nicht gestartet",
+    "Previous": "Zurück",
+    "All things are online.": "Alle Things sind online.",
+    "No item matches.": "Kein Item passt.",
+    "Changed": "Geändert",
+    "Turn on": "Einschalten",
+    "Turn off": "Ausschalten"
   }
 }
