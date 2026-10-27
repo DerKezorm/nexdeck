@@ -2047,7 +2047,13 @@
     "RPC secret": "RPC-Secret",
     "The RPC address of aria2, usually port 6800. The /jsonrpc at the end is added when it is missing.": "Die RPC-Adresse von aria2, meist Port 6800. Das /jsonrpc am Ende wird ergänzt, wenn es fehlt.",
     "The latest downloads aria2 has stopped with, failed ones in red and the reason under them.": "Die letzten Downloads, mit denen aria2 aufgehört hat, fehlgeschlagene in Rot und der Grund darunter.",
-    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "Der Wert von rpc-secret. Leer lassen, wenn aria2 ohne läuft."
+    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "Der Wert von rpc-secret. Leer lassen, wenn aria2 ohne läuft.",
+    "Create a key and copy it right away: pyLoad shows it only once.": "Einen Schlüssel anlegen und gleich kopieren: pyLoad zeigt ihn nur einmal.",
+    "In pyLoad, sign in and open Settings, then API keys.": "In pyLoad anmelden und Einstellungen öffnen, dann API-Schlüssel.",
+    "Links that failed or are offline, with the reason, and a captcha that waits for an answer.": "Links, die fehlgeschlagen oder offline sind, mit Grund, und ein Captcha, das auf eine Antwort wartet.",
+    "Made in pyLoad under Settings, API keys. It starts with pl_.": "In pyLoad unter Einstellungen, API-Schlüssel erstellt. Er beginnt mit pl_.",
+    "Queue, speed, failed links and a waiting captcha, pause or resume, retry the failed ones.": "Warteschlange, Geschwindigkeit, fehlgeschlagene Links und ein wartendes Captcha, Pause und Fortsetzen, Fehlgeschlagene erneut versuchen.",
+    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "Der Schlüssel handelt als der Benutzer, für den er erstellt wurde; ein Benutzer, der Downloads hinzufügen und ändern darf, genügt."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3261,6 +3267,10 @@
     "major version": "Hauptversion",
     "Task Photos": "Aufgabe Fotos",
     "Clear the list": "Liste leeren",
-    "Nothing has stopped yet.": "Noch nichts angehalten."
+    "Nothing has stopped yet.": "Noch nichts angehalten.",
+    "Downloads of that host stand still until it is solved.": "Downloads dieses Hosters stehen still, bis es gelöst ist.",
+    "A captcha waits for an answer": "Ein Captcha wartet auf eine Antwort",
+    "Try the failed ones again": "Fehlgeschlagene erneut versuchen",
+    "queued": "wartet"
   }
 }

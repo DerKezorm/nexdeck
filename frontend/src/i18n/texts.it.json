@@ -2047,7 +2047,13 @@
     "RPC secret": "Segreto RPC",
     "The RPC address of aria2, usually port 6800. The /jsonrpc at the end is added when it is missing.": "L'indirizzo RPC di aria2, di solito la porta 6800. Il /jsonrpc finale viene aggiunto se manca.",
     "The latest downloads aria2 has stopped with, failed ones in red and the reason under them.": "Gli ultimi download fermati da aria2, quelli falliti in rosso e il motivo sotto.",
-    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "Il valore di rpc-secret. Lascia vuoto se aria2 funziona senza."
+    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "Il valore di rpc-secret. Lascia vuoto se aria2 funziona senza.",
+    "Create a key and copy it right away: pyLoad shows it only once.": "Crea una chiave e copiala subito: pyLoad la mostra una sola volta.",
+    "In pyLoad, sign in and open Settings, then API keys.": "In pyLoad, accedi e apri Impostazioni, poi Chiavi API.",
+    "Links that failed or are offline, with the reason, and a captcha that waits for an answer.": "Link falliti o offline, con il motivo, e un captcha in attesa di risposta.",
+    "Made in pyLoad under Settings, API keys. It starts with pl_.": "Si crea in pyLoad sotto Impostazioni, Chiavi API. Inizia con pl_.",
+    "Queue, speed, failed links and a waiting captcha, pause or resume, retry the failed ones.": "Coda, velocità, link falliti e un captcha in attesa, pausa e ripresa, nuovo tentativo per i falliti.",
+    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La chiave agisce come l'utente per cui è stata creata; basta un utente che possa aggiungere e modificare i download."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3261,6 +3267,10 @@
     "major version": "versione principale",
     "Task Photos": "Attività Foto",
     "Clear the list": "Svuota l'elenco",
-    "Nothing has stopped yet.": "Ancora nulla si è fermato."
+    "Nothing has stopped yet.": "Ancora nulla si è fermato.",
+    "Downloads of that host stand still until it is solved.": "I download di quell'host restano fermi finché non viene risolto.",
+    "A captcha waits for an answer": "Un captcha attende una risposta",
+    "Try the failed ones again": "Riprova i falliti",
+    "queued": "in coda"
   }
 }

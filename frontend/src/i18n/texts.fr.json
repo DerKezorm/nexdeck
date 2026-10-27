@@ -2047,7 +2047,13 @@
     "RPC secret": "Secret RPC",
     "The RPC address of aria2, usually port 6800. The /jsonrpc at the end is added when it is missing.": "L'adresse RPC d'aria2, en général le port 6800. Le /jsonrpc final est ajouté s'il manque.",
     "The latest downloads aria2 has stopped with, failed ones in red and the reason under them.": "Les derniers téléchargements arrêtés par aria2, les échecs en rouge avec la raison dessous.",
-    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "La valeur de rpc-secret. Laissez vide si aria2 tourne sans."
+    "The value of rpc-secret. Leave it empty when aria2 runs without one.": "La valeur de rpc-secret. Laissez vide si aria2 tourne sans.",
+    "Create a key and copy it right away: pyLoad shows it only once.": "Créez une clé et copiez-la tout de suite : pyLoad ne l'affiche qu'une fois.",
+    "In pyLoad, sign in and open Settings, then API keys.": "Dans pyLoad, connectez-vous et ouvrez Paramètres, puis Clés API.",
+    "Links that failed or are offline, with the reason, and a captcha that waits for an answer.": "Liens échoués ou hors ligne, avec la raison, et un captcha qui attend une réponse.",
+    "Made in pyLoad under Settings, API keys. It starts with pl_.": "Créée dans pyLoad sous Paramètres, Clés API. Elle commence par pl_.",
+    "Queue, speed, failed links and a waiting captcha, pause or resume, retry the failed ones.": "File d'attente, vitesse, liens échoués et captcha en attente, pause et reprise, nouvel essai des échecs.",
+    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La clé agit comme l'utilisateur pour lequel elle a été créée ; un utilisateur autorisé à ajouter et modifier des téléchargements suffit."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3261,6 +3267,10 @@
     "major version": "version majeure",
     "Task Photos": "Tâche Photos",
     "Clear the list": "Vider la liste",
-    "Nothing has stopped yet.": "Rien ne s'est encore arrêté."
+    "Nothing has stopped yet.": "Rien ne s'est encore arrêté.",
+    "Downloads of that host stand still until it is solved.": "Les téléchargements de cet hébergeur restent à l'arrêt tant qu'il n'est pas résolu.",
+    "A captcha waits for an answer": "Un captcha attend une réponse",
+    "Try the failed ones again": "Réessayer les échecs",
+    "queued": "en file"
   }
 }
