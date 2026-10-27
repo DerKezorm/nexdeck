@@ -13,9 +13,19 @@ import asyncio
 import math
 from typing import Any
 
-from ..cards import images, pipeline, source, store
+from ..cards import buttons, images, pipeline, source, store
 from ..db import db_session
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType
+from .base import (
+    Action,
+    Adapter,
+    AdapterError,
+    Ask,
+    Choice,
+    Context,
+    Field,
+    WidgetData,
+    WidgetType,
+)
 
 #: A custom card asks its connection at most this often (KARTEN-2 AC-9).
 MIN_REFRESH_SECONDS = 10
@@ -119,7 +129,39 @@ def _cells(row: pipeline.Row, order: tuple[str, ...]) -> dict[str, dict[str, Any
     return cells
 
 
-def _row_item(row: pipeline.Row, base: str, *, pictures: bool) -> dict[str, Any]:
+def _ask(ask: buttons.ButtonAsk) -> Ask:
+    """A blank of a button as the blank of any other action (``base.Ask``), under ``ask.<name>`` so that it never meets a field of the data."""
+    return Ask(
+        name=buttons.ASK_PREFIX + ask.name,
+        label=ask.label,
+        kind=ask.type,
+        options=[Choice(value=one.value, label=one.label) for one in ask.options or []],
+        max_length=ask.max_length or buttons.DEFAULT_ASK_TEXT,
+        min=ask.min,
+        max=ask.max,
+        step=ask.step,
+    )
+
+
+def _action(button: buttons.Button, values: dict[str, Any]) -> Action:
+    """A button of the author as an action like every other one (KARTEN-8, one way for all actions).
+
+    ``params`` are the values of the data the button takes, exactly as the answer had them: the guard of the collector
+    lets through only what was offered, and a press with other values never reaches :meth:`CustomAdapter.action`.
+    """
+    return Action(
+        id=buttons.ACTION_PREFIX + button.id,
+        label=button.label,
+        icon=button.icon or "",
+        # ⚠️ Dangerous includes asking first: the second question is the browser's, after the first.
+        confirm=button.confirm or button.danger,
+        danger=button.danger,
+        params=dict(values),
+        asks=[_ask(one) for one in button.asks],
+    )
+
+
+def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[buttons.Button, ...] = ()) -> dict[str, Any]:
     item: dict[str, Any] = {
         "title": row.title.text,
         "subtitle": row.subtitle.text if row.subtitle is not None and row.subtitle.value is not None else "",
@@ -136,17 +178,22 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool) -> dict[str, Any]
     cells = _cells(row, ("title", "subtitle", "value"))
     if cells:
         item["shown"] = cells
+    offered = [_action(one, row.buttons[one.id]).model_dump() for one in on_rows if one.id in row.buttons]
+    if offered:
+        item["actions"] = offered
     return item
 
 
 def present(definition: Any, result: pipeline.Result, *, base: str = "", pictures: bool = True) -> WidgetData:
-    """What the renderers read, made from the finished values of the pipeline (KARTEN-6)."""
+    """What the renderers read, made from the finished values of the pipeline (KARTEN-6), with the buttons (KARTEN-8)."""
     meta: dict[str, Any] = {"custom": True}
+    every = tuple(getattr(definition, "buttons", None) or ())
+    actions = [_action(one, result.buttons[one.id]) for one in every if one.where == "card" and one.id in result.buttons]
     if definition.form == "value":
         assert result.value is not None
         primary = _cell(result.value)
         metrics = {"value": float(primary["value"])} if isinstance(primary["value"], int | float) and not isinstance(primary["value"], bool) else {}
-        return WidgetData(status=_worst(result.value.status, result.status), primary=primary, metrics=metrics, meta=meta)
+        return WidgetData(status=_worst(result.value.status, result.status), primary=primary, metrics=metrics, meta=meta, actions=actions)
     if definition.form == "stats":
         cells = [_cell(one) for one in result.stats]
         metrics: dict[str, float] = {}
@@ -155,10 +202,11 @@ def present(definition: Any, result: pipeline.Result, *, base: str = "", picture
             if isinstance(cell["value"], int | float) and not isinstance(cell["value"], bool):
                 metrics[STAT_METRICS[index]] = float(cell["value"])
         status = _worst(result.status, *(one.status for one in result.stats))
-        return WidgetData(status=status, primary=cells[0] if cells else None, secondary=cells[1:], metrics=metrics, meta=meta)
+        return WidgetData(status=status, primary=cells[0] if cells else None, secondary=cells[1:], metrics=metrics, meta=meta, actions=actions)
     meta["empty"] = getattr(definition, "empty", None)
-    items = [_row_item(row, base, pictures=pictures) for row in result.rows]
-    return WidgetData(status=_worst(result.status), items=items, meta=meta)
+    on_rows = tuple(one for one in every if one.where == "row")
+    items = [_row_item(row, base, pictures=pictures, on_rows=on_rows) for row in result.rows]
+    return WidgetData(status=_worst(result.status), items=items, meta=meta, actions=actions)
 
 
 class CustomAdapter(Adapter):
@@ -188,6 +236,15 @@ class CustomAdapter(Adapter):
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
         definition = definition_of(options)
+        real, real_config, real_ctx = await self._connection(definition, widget_kind, ctx)
+        answers = {request.id: await source.fetch_source(real, real_config, real_ctx, request) for request in definition.requests}
+        # ⚠️ In a thread of its own: a path or a filter over a large answer cannot be interrupted, and on the event loop it
+        # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
+        result = await asyncio.to_thread(pipeline.run, definition, answers)
+        return present(definition, result, base=real.raw_base(real_config))
+
+    async def _connection(self, definition: Any, widget_kind: str, ctx: Context) -> tuple[Adapter, dict[str, Any], Context]:
+        """The connection the card reads through and its buttons act on, after the checks every read and press passes."""
         if ctx.resolve_integration is None or ctx.integration_id is None:
             raise AdapterError(
                 "Connection missing. The connection of this card was deleted.", code="connection_missing", hint="Pick a connection in the card's settings."
@@ -205,11 +262,7 @@ class CustomAdapter(Adapter):
                 code="kind_mismatch",
                 hint="Pick a connection of a kind the card names.",
             )
-        answers = {request.id: await source.fetch_source(real, real_config, real_ctx, request) for request in definition.requests}
-        # ⚠️ In a thread of its own: a path or a filter over a large answer cannot be interrupted, and on the event loop it
-        # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
-        result = await asyncio.to_thread(pipeline.run, definition, answers)
-        return present(definition, result, base=real.raw_base(real_config))
+        return real, real_config, real_ctx
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         """The author's own example answers, asking no service (KARTEN-2 AC-13); none, and the card says so (KARTEN-1 AC-11)."""

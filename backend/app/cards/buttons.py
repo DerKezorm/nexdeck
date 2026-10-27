@@ -9,6 +9,7 @@ button may say is narrow: no headers, no host, no credentials, no free placehold
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from typing import Annotated, Any, Literal
@@ -247,4 +248,60 @@ def problems(definition: Any) -> list[tuple[tuple[str | int, ...], str, str, dic
             if blank is not None and blank not in declared:
                 found.append(((*here, *place), "card_unknown_ask", f"The button has no blank called {blank}; declare it under asks.", {"name": blank}))
     return found
+
+
+# -- offering: the values of the data a button takes ------------------------------
+
+#: What a value of the data may be to go into a button: text, a number, true or false, or nothing.
+PLAIN = (str, int, float, bool, type(None))
+#: What a value never has when it goes into an address (EC-1); ``..`` is looked for on its own.
+NOT_IN_AN_ADDRESS = re.compile(r"[/\\?#%\s\x00-\x1f\x7f]")
+
+
+def walk(data: Any, path: str) -> tuple[bool, Any]:
+    """The value at a dotted path, and whether it is there at all: a field that holds ``null`` is there."""
+    cursor = data
+    for part in path.split("."):
+        if not isinstance(cursor, dict) or part not in cursor:
+            return False, None
+        cursor = cursor[part]
+    return True, cursor
+
+
+def as_text(value: Any) -> str:
+    """A value of the data written into a text: ``true``, ``false`` and numbers as JSON writes them, nothing as nothing."""
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int | float):
+        return json.dumps(value)
+    return str(value)
+
+
+def fits_an_address(value: Any) -> bool:
+    """A value that may stand in the path of a button: not empty, one plain piece, nothing that ends or climbs a path."""
+    text = as_text(value)
+    return bool(text) and ".." not in text and not NOT_IN_AN_ADDRESS.search(text)
+
+
+def offered_values(button: Button, find: Any) -> dict[str, Any] | None:
+    """The values a button takes from the data, by placeholder, or ``None`` when it cannot be offered with this data.
+
+    ``find(path)`` gives ``(found, value)``. A placeholder whose field is missing, holds an object or a list, or holds a
+    value that cannot go into an address where the path needs it, means no button (EC-1): it is never drawn, so it
+    cannot be pressed.
+    """
+    values: dict[str, Any] = {}
+    in_the_path = set(places(button.path))
+    for _where, place in button.placeholders():
+        if ask_name(place) is not None or place in values:
+            continue
+        found, value = find(place)
+        if not found or not isinstance(value, PLAIN) or (isinstance(value, float) and not math.isfinite(value)):
+            return None
+        values[place] = value
+    if any(not fits_an_address(values[place]) for place in in_the_path if place in values):
+        return None
+    return values
 

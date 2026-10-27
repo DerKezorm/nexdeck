@@ -24,6 +24,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel
 
 from ..adapters.base import AdapterError, ago, duration_short, human_bytes, human_rate
+from . import buttons
 from . import formula as calc
 from .buttons import Button
 from .schema import DEFAULT_ROWS, MAX_ROWS, Filter, LocalText, Rows, Rule, Sort, Total, Val
@@ -63,6 +64,8 @@ class Row:
     #: The picture address is one value the answer named (a path), not something put together from a template: only
     #: then may it lead to a host other than the connection's (korrektur J1, F3).
     image_named: bool = False
+    #: The buttons on this row that can be offered, by id, each with the values of this row it takes (KARTEN-8 AC-2).
+    buttons: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -77,6 +80,8 @@ class Result:
     #: What the answers did not hold (a path that gave nothing), for the preview in the editor.
     missing: list[str] = field(default_factory=list)
     millis: float = 0.0
+    #: The buttons on the card that can be offered, by id, each with the values of the answers it takes (KARTEN-8 AC-1).
+    buttons: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def as_dict(self, *, for_the_editor: bool = False) -> dict[str, Any]:
         """The result as plain data. ``missing`` quotes expressions of the card, so only the editor's preview gets it."""
@@ -245,6 +250,14 @@ class _Run:
     def note_missing(self, what: str) -> None:
         if len(self.missing) < 20:
             self.missing.setdefault(what, None)
+
+    def place(self, path: str) -> tuple[bool, Any]:
+        """A placeholder of a button on the card, looked up the way a path of the card is (``search``), and whether it is there."""
+        if self.single is not None:
+            answer = self.answers[self.single]
+            found = buttons.walk(answer, path)
+            return found if found[0] else buttons.walk({self.single: answer}, path)
+        return buttons.walk(self.answers, path)
 
     def search(self, ref: calc.Ref, row: Any = None, inside_row: bool = False) -> Any:
         """Look a path up in the answers, or inside the row when there is one.
@@ -570,6 +583,15 @@ def run(
         result.total = len(everything)
         limit = min(definition.rows.limit or DEFAULT_ROWS, MAX_ROWS)
         result.rows = [_row(context, definition.item, row) for row in everything[:limit]]
+        on_rows = [one for one in definition.buttons if one.where == "row"]
+        for row, source in zip(result.rows, everything[:limit], strict=True):
+            for one in on_rows:
+                values = buttons.offered_values(one, lambda path, source=source: buttons.walk(source, path))
+                if values is not None:
+                    row.buttons[one.id] = values
+    for one in definition.buttons:
+        if one.where == "card" and (values := buttons.offered_values(one, context.place)) is not None:
+            result.buttons[one.id] = values
     result.status = _status(context, definition.rules, None)
     budget.check()
     result.missing = list(context.missing)
