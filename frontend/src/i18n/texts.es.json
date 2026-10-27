@@ -2115,7 +2115,11 @@
     "Scenes, images, galleries, how much space they take, and how much has been watched.": "Escenas, imágenes, galerías, cuánto espacio ocupan y cuánto se ha visto.",
     "Settings > Security > Generate API Key; it needs a user name and password to be set first. Leave empty when Stash has no login.": "Settings > Security > Generate API Key; antes hay que definir un nombre de usuario y una contraseña. Déjalo vacío si Stash no tiene inicio de sesión.",
     "The size of the library, the tasks Stash is running and a button to scan for new files.": "El tamaño de la biblioteca, las tareas que ejecuta Stash y un botón para buscar archivos nuevos.",
-    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Lo que Stash está escaneando, generando o limpiando ahora, con el progreso, y botones para escanear o detener."
+    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Lo que Stash está escaneando, generando o limpiando ahora, con el progreso, y botones para escanear o detener.",
+    "The web interface of xTeVe, port 34400. Its API has to be switched on in the settings.": "La interfaz web de xTeVe, puerto 34400. Su API debe estar activada en los ajustes.",
+    "Whether xTeVe answers, its version, the guide source, the streams and channels it knows, and update buttons.": "Si xTeVe responde, su versión, la fuente de la guía, los streams y canales que conoce, y botones de actualización.",
+    "Whether xTeVe or Threadfin runs, its version and guide source, and buttons to update the playlists, the guide and the channel mapping.": "Si xTeVe o Threadfin está en marcha, su versión y fuente de guía, y botones para actualizar las listas, la guía y la asignación de canales.",
+    "xTeVe status": "Estado de xTeVe"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3393,6 +3397,11 @@
     "Scenes": "Escenas",
     "Stop all tasks": "Detener todas las tareas",
     "Watched": "Visto",
-    "No task is running.": "Ninguna tarea en curso."
+    "No task is running.": "Ninguna tarea en curso.",
+    "Guide source": "Fuente de la guía",
+    "xTeVe": "xTeVe",
+    "Update the playlists": "Actualizar las listas",
+    "Update the guide": "Actualizar la guía",
+    "Map the channels again": "Asignar los canales de nuevo"
   }
 }
