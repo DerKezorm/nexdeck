@@ -54,20 +54,36 @@ PRESETS: dict[str, str] = {
 #: the background. Flat is solid, outline is a frame on nothing, neon a frame
 #: that glows in the accent, liquid a thick glass with a lit rim whose edge
 #: bends what lies behind it, calm a quiet sheet with small titles and soft
-#: small print that does not move. A new style is a name here and its rules in
-#: the style sheet (``:root[data-cards='…']``); nothing else needs to know it.
-CARD_STYLES: tuple[str, ...] = ("glass", "liquid", "flat", "outline", "neon", "calm")
+#: small print that does not move, window a card as a window of an early
+#: desktop (the look called 1984, which redraws the whole interface, not only
+#: the cards). A new style is a name here and its rules in the style sheet
+#: (``:root[data-cards='…']``); nothing else needs to know it.
+CARD_STYLES: tuple[str, ...] = ("glass", "liquid", "flat", "outline", "neon", "calm", "window")
+#: Window is the installation's or nothing: it redraws every page, so one board
+#: in it among boards of glass would be half of it.
+BOARD_STYLES: tuple[str, ...] = tuple(style for style in CARD_STYLES if style != "window")
 #: The type of the interface. Inter is what nexdeck has always been set in, the
 #: system's own costs no download, the rest ship with nexdeck under the SIL Open
 #: Font License and are fetched from nexdeck itself, only by a browser that
 #: shows them. As with the styles, a new one is a name here and an entry in
 #: the browser's list (``lib/fonts.ts``).
-FONTS: tuple[str, ...] = ("inter", "system", "plex", "atkinson", "geist", "mono")
+FONTS: tuple[str, ...] = ("inter", "system", "plex", "atkinson", "geist", "mono", "pixel")
+#: What the window style can be told, each with its choices, the first the
+#: default: how a yellow or red card says so (a coloured symbol and a shape, a
+#: touch of colour on the shape as well, or the shape alone without any
+#: colour), whether logos keep their colours, the ground of the desk, and
+#: whether the pixel type sets the titles only or everything.
+RETRO: dict[str, tuple[str, ...]] = {
+    "status": ("symbol", "tint", "pattern"),
+    "icons": ("colour", "mono"),
+    "desk": ("dither", "weave", "grey"),
+    "type": ("titles", "all"),
+}
 #: Corners and gaps in pixels, with the bounds a board still reads well in.
 RADIUS = (0, 28, 16)
 GAP = (4, 28, 12)
 DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None, "card_style": "glass", "radius": RADIUS[2], "gap": GAP[2], "refraction": True,
-                           "font": FONTS[0]}
+                           "font": FONTS[0], "retro": {}}
 
 
 class AppearanceError(Exception):
@@ -92,12 +108,34 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         # that cannot (Safari, Firefox) draws the glass without it either way.
         "refraction": value.get("refraction") is not False,
         "font": value["font"] if value.get("font") in FONTS else FONTS[0],
+        "retro": _retro(value.get("retro")),
         "card_styles": list(CARD_STYLES),
         "fonts": list(FONTS),
         "presets": PRESETS,
         "themes": themes.THEMES,
         # What in the chosen theme is hard to read, so the page can say so.
         "weak": themes.weak_spots(value["theme"]) if value.get("theme") else [],
+    }
+
+
+def _retro(value: Any) -> dict[str, str]:
+    """The window style's choices as stored, each known one or its default."""
+    given = value if isinstance(value, dict) else {}
+    return {key: given[key] if given.get(key) in choices else choices[0] for key, choices in RETRO.items()}
+
+
+def public(db: DbSessionType) -> dict[str, Any]:
+    """The part of the look a page needs before anybody signs in.
+
+    The sign-in page and the first start are drawn in the installation's look
+    as well, which for 1984 is the whole point. Without the operator's style
+    sheet: that one is code, written for those who sign in.
+    """
+    config = stored(db)
+    return {
+        "theme": config["theme"], "card_style": config["card_style"], "font": config["font"],
+        "retro": config["retro"], "radius": config["radius"], "gap": config["gap"],
+        "colour": colour_of(config), "accent": config["accent"], "preset": config["preset"],
     }
 
 
@@ -153,9 +191,16 @@ def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
     refraction = incoming.get("refraction", True)
     if not isinstance(refraction, bool):
         raise AppearanceError("Whether the glass bends the light is yes or no.", "bad_refraction")
+    retro = incoming.get("retro") or {}
+    if not isinstance(retro, dict):
+        raise AppearanceError("The choices of the window style are a mapping.", "bad_retro")
+    for key, choice in retro.items():
+        if key not in RETRO or choice not in RETRO[key]:
+            known = "; ".join(f"{name} is {' or '.join(options)}" for name, options in RETRO.items())
+            raise AppearanceError(f"The window style knows these choices: {known}.", "bad_retro")
     value = {
         "preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme,
-        "card_style": card_style, **sizes, "refraction": refraction, "font": font,
+        "card_style": card_style, **sizes, "refraction": refraction, "font": font, "retro": _retro(retro),
     }
     row = db.get(Setting, KEY)
     if row is None:

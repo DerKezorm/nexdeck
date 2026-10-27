@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 
 from ..deps import AdminUser, DbSession, error
 from ..schemas import BrandBody
-from ..services import brand
+from ..services import appearance, brand
 from ..uploads import read_at_most
 
 router = APIRouter(tags=["system"])
@@ -28,8 +28,12 @@ _SERVED = {
 
 @router.get("/api/v1/brand", summary="Read the name and the logo of the installation")
 def read_public(db: DbSession) -> dict:
-    """Public on purpose: the sign-in page and the browser tab need them before anyone signs in."""
-    return brand.public(db)
+    """Public on purpose: the sign-in page and the browser tab need them before anyone signs in.
+
+    With them the part of the look the sign-in page is drawn in, so an
+    installation in 1984 greets in 1984 and not in nexdeck's glass.
+    """
+    return {**brand.public(db), "look": appearance.public(db)}
 
 
 @router.get("/api/v1/brand/logo", summary="The logo of the installation", response_class=FileResponse)
