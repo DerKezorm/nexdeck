@@ -890,6 +890,8 @@
       "bodyValue": "Wert von {{key}}",
       "bodyAdd": "Feld zum Senden hinzufügen",
       "bodyRemove": "Dieses Feld entfernen",
+      "bodyNested": "Diese Anmeldung sendet Namen in Namen. Das Formular kann das nicht zeigen und lässt es unverändert; bearbeite es im YAML.",
+      "bodyNestedOpen": "Im YAML bearbeiten",
       "ticketFrom": "Das Ticket steckt in",
       "ticketHelp": "Der Antwort auf die Anmeldung: einem Feld ihres JSON oder einem Cookie, das sie setzt.",
       "ticketAt": "Feld der Antwort",

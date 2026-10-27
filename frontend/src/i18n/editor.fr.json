@@ -890,6 +890,8 @@
       "bodyValue": "Valeur de {{key}}",
       "bodyAdd": "Ajouter un champ à envoyer",
       "bodyRemove": "Retirer ce champ",
+      "bodyNested": "Cette connexion envoie des noms dans des noms. Le formulaire ne peut pas l'afficher et le laisse tel quel ; modifiez-le dans le YAML.",
+      "bodyNestedOpen": "Modifier dans le YAML",
       "ticketFrom": "Le ticket se trouve dans",
       "ticketHelp": "Dans la réponse à la connexion : un champ de son JSON ou un cookie qu'elle pose.",
       "ticketAt": "Champ de la réponse",

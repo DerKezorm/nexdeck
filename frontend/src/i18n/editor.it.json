@@ -890,6 +890,8 @@
       "bodyValue": "Valore di {{key}}",
       "bodyAdd": "Aggiungi un campo da inviare",
       "bodyRemove": "Rimuovi questo campo",
+      "bodyNested": "Questo accesso invia nomi dentro nomi. Il modulo non può mostrarlo e lo lascia com'è; modificalo nello YAML.",
+      "bodyNestedOpen": "Modifica nello YAML",
       "ticketFrom": "Il ticket si trova in",
       "ticketHelp": "Nella risposta al login: un campo del suo JSON o un cookie che imposta.",
       "ticketAt": "Campo della risposta",

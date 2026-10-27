@@ -305,6 +305,21 @@ function BodyRows({ names }: { names: string[] }) {
   const card = useIntegrationEditor((state) => state.card)
   if (!card) return null
   const raw = readAt(card, ['auth', 'body'])
+  // ⚠️ A body with names inside names (Memos 0.31) is not rows of text: showing rows would drop it at the first edit. It stays as written.
+  const nested = raw && typeof raw === 'object' && !Array.isArray(raw) && Object.values(raw as Record<string, unknown>).some((value) => value !== null && typeof value === 'object')
+  if (nested) {
+    return (
+      <div className="grid gap-2" role="group" aria-label={t('integrationEditor.auth.body')}>
+        <div className="text-xs font-medium text-muted">{t('integrationEditor.auth.body')}</div>
+        <p className="text-[13px] text-muted">{t('integrationEditor.auth.bodyNested')}</p>
+        <div>
+          <button type="button" className="btn" onClick={() => useIntegrationEditor.getState().setView('yaml')}>
+            {t('integrationEditor.auth.bodyNestedOpen')}
+          </button>
+        </div>
+      </div>
+    )
+  }
   const rows = raw && typeof raw === 'object' && !Array.isArray(raw) ? Object.entries(raw as Record<string, unknown>).map(([key, value]) => [key, asText(value)] as const) : []
   const write = (next: (readonly [string, string])[]) => useIntegrationEditor.getState().change((doc) => setAt(doc, ['auth', 'body'], Object.fromEntries(next)))
   return (

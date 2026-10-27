@@ -13,7 +13,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import deScreen from '../../i18n/de.json'
 import editorDe from '../../i18n/editor.de.json'
 import { useAuth } from '../../stores/auth'
-import { readAt } from '../../lib/cardDocument'
+import { readAt, setAt } from '../../lib/cardDocument'
 import { draftKey } from './draft'
 import { IntegrationEditorPage } from './IntegrationEditorPage'
 import { useIntegrationEditor } from './store'
@@ -312,6 +312,22 @@ describe('the sign-in', () => {
     expect(within(inLogin).queryByRole('option', { name: '{ticket}' })).toBeNull()
     const inPass = screen.getByRole('combobox', { name: 'Insert a field into Value sent' })
     expect(within(inPass).getByRole('option', { name: '{ticket}' })).toBeInTheDocument()
+  })
+
+  it('karten3 ac6: a body with names inside names is not shown as rows and survives a change in the form and a round trip through the YAML', async () => {
+    await openNew()
+    await userEvent.selectOptions(screen.getByLabelText('Kind of sign-in'), 'session')
+    const nested = { passwordCredentials: { username: '{token}', password: '{token}' } }
+    act(() => editor().change((doc) => setAt(doc, ['auth', 'body'], nested)))
+    expect(screen.getByText(/names inside names/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add a field to send' })).toBeNull()
+    await userEvent.type(screen.getByLabelText('Description'), '!')
+    expect(at(['auth', 'body'])).toEqual(nested)
+    await userEvent.click(screen.getByRole('button', { name: 'Edit in the YAML' }))
+    expect(await screen.findByTestId('integration-yaml')).toBeInTheDocument()
+    expect(editor().text).toContain('passwordCredentials')
+    await userEvent.click(screen.getByRole('button', { name: 'Form' }))
+    expect(at(['auth', 'body'])).toEqual(nested)
   })
 
   it('karten3 ac1: each kind is explained in a sentence of its own', async () => {

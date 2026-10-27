@@ -890,6 +890,8 @@
       "bodyValue": "Valor de {{key}}",
       "bodyAdd": "Añadir un campo para enviar",
       "bodyRemove": "Quitar este campo",
+      "bodyNested": "Este inicio de sesión envía nombres dentro de nombres. El formulario no puede mostrarlo y lo deja tal cual; edítalo en el YAML.",
+      "bodyNestedOpen": "Editar en el YAML",
       "ticketFrom": "El ticket está en",
       "ticketHelp": "En la respuesta del inicio de sesión: un campo de su JSON o una cookie que establece.",
       "ticketAt": "Campo de la respuesta",

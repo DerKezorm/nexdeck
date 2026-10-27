@@ -890,6 +890,8 @@
       "bodyValue": "Value of {{key}}",
       "bodyAdd": "Add a field to send",
       "bodyRemove": "Remove this field",
+      "bodyNested": "This sign-in sends names inside names. The form cannot show that and leaves it as it is; edit it in the YAML.",
+      "bodyNestedOpen": "Edit in the YAML",
       "ticketFrom": "The ticket is in",
       "ticketHelp": "The answer of the login: a field of its JSON, or a cookie it sets.",
       "ticketAt": "Field of the answer",
