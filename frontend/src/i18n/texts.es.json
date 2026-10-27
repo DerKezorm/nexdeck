@@ -2092,7 +2092,14 @@
     "Flows": "Flujos",
     "The tabs of the editor with the number of nodes on each, disabled ones last.": "Las pestañas del editor con el número de nodos de cada una, las desactivadas al final.",
     "Inject nodes": "Nodos inject",
-    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Cada nodo inject de un flujo en ejecución, con un botón que lo activa tras una pregunta. Necesita un usuario que pueda escribir."
+    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Cada nodo inject de un flujo en ejecución, con un botón que lo activa tras una pregunta. Necesita un usuario que pueda escribir.",
+    "How many of your ESPHome devices are online, which are offline, and which run an older firmware than the dashboard offers.": "Cuántos de tus dispositivos ESPHome están en línea, cuáles están sin conexión y cuáles tienen un firmware más antiguo que el que ofrece el panel.",
+    "The address of the ESPHome dashboard (device builder).": "La dirección del panel de ESPHome (device builder).",
+    "Only if the dashboard has USERNAME and PASSWORD set.": "Solo si el panel tiene USERNAME y PASSWORD definidos.",
+    "ESPHome overview": "Resumen de ESPHome",
+    "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Cuántos dispositivos están en línea y sin conexión, cuántos esperan una actualización de firmware y la versión del panel.",
+    "Dashboard": "Panel",
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Cada dispositivo del panel, los que están sin conexión primero, después los que tienen una actualización pendiente."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3333,6 +3340,8 @@
     "No accessory. Homebridge has to run in insecure mode for this card.": "Ningún accesorio. Homebridge debe funcionar en modo inseguro para esta tarjeta.",
     "Run": "Ejecutar",
     "No flow is deployed.": "Ningún flujo desplegado.",
-    "No inject node in a flow that runs.": "Ningún nodo inject en un flujo en ejecución."
+    "No inject node in a flow that runs.": "Ningún nodo inject en un flujo en ejecución.",
+    "Devices online": "Dispositivos en línea",
+    "No device in the dashboard.": "Ningún dispositivo en el panel."
   }
 }

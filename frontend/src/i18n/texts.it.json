@@ -2092,7 +2092,14 @@
     "Flows": "Flussi",
     "The tabs of the editor with the number of nodes on each, disabled ones last.": "Le schede dell'editor con il numero di nodi di ciascuna, quelle disattivate per ultime.",
     "Inject nodes": "Nodi inject",
-    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Ogni nodo inject di un flusso in esecuzione, con un pulsante che lo attiva dopo una domanda. Richiede un utente che possa scrivere."
+    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Ogni nodo inject di un flusso in esecuzione, con un pulsante che lo attiva dopo una domanda. Richiede un utente che possa scrivere.",
+    "How many of your ESPHome devices are online, which are offline, and which run an older firmware than the dashboard offers.": "Quanti dei tuoi dispositivi ESPHome sono online, quali sono offline e quali hanno un firmware più vecchio di quello offerto dalla dashboard.",
+    "The address of the ESPHome dashboard (device builder).": "L'indirizzo della dashboard di ESPHome (device builder).",
+    "Only if the dashboard has USERNAME and PASSWORD set.": "Solo se la dashboard ha USERNAME e PASSWORD impostati.",
+    "ESPHome overview": "Panoramica di ESPHome",
+    "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Quanti dispositivi sono online e offline, quanti attendono un aggiornamento del firmware e la versione della dashboard.",
+    "Dashboard": "Dashboard",
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Ogni dispositivo della dashboard, prima quelli offline, poi quelli con un aggiornamento in attesa."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3333,6 +3340,8 @@
     "No accessory. Homebridge has to run in insecure mode for this card.": "Nessun accessorio. Homebridge deve funzionare in modalità insicura per questa scheda.",
     "Run": "Esegui",
     "No flow is deployed.": "Nessun flusso distribuito.",
-    "No inject node in a flow that runs.": "Nessun nodo inject in un flusso in esecuzione."
+    "No inject node in a flow that runs.": "Nessun nodo inject in un flusso in esecuzione.",
+    "Devices online": "Dispositivi online",
+    "No device in the dashboard.": "Nessun dispositivo nella dashboard."
   }
 }

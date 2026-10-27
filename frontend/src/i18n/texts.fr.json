@@ -2092,7 +2092,14 @@
     "Flows": "Flux",
     "The tabs of the editor with the number of nodes on each, disabled ones last.": "Les onglets de l'éditeur avec le nombre de nœuds de chacun, les désactivés en dernier.",
     "Inject nodes": "Nœuds inject",
-    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Chaque nœud inject d'un flux qui tourne, avec un bouton qui le déclenche après une question. Nécessite un utilisateur qui peut écrire."
+    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Chaque nœud inject d'un flux qui tourne, avec un bouton qui le déclenche après une question. Nécessite un utilisateur qui peut écrire.",
+    "How many of your ESPHome devices are online, which are offline, and which run an older firmware than the dashboard offers.": "Combien de vos appareils ESPHome sont en ligne, lesquels sont hors ligne et lesquels ont un firmware plus ancien que celui que propose le tableau de bord.",
+    "The address of the ESPHome dashboard (device builder).": "L'adresse du tableau de bord ESPHome (device builder).",
+    "Only if the dashboard has USERNAME and PASSWORD set.": "Seulement si le tableau de bord a USERNAME et PASSWORD définis.",
+    "ESPHome overview": "Aperçu d'ESPHome",
+    "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Combien d'appareils sont en ligne et hors ligne, combien attendent une mise à jour du firmware et la version du tableau de bord.",
+    "Dashboard": "Tableau de bord",
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Chaque appareil du tableau de bord, les hors ligne d'abord, puis ceux avec une mise à jour en attente."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3333,6 +3340,8 @@
     "No accessory. Homebridge has to run in insecure mode for this card.": "Aucun accessoire. Homebridge doit tourner en mode non sécurisé pour cette carte.",
     "Run": "Lancer",
     "No flow is deployed.": "Aucun flux déployé.",
-    "No inject node in a flow that runs.": "Aucun nœud inject dans un flux qui tourne."
+    "No inject node in a flow that runs.": "Aucun nœud inject dans un flux qui tourne.",
+    "Devices online": "Appareils en ligne",
+    "No device in the dashboard.": "Aucun appareil dans le tableau de bord."
   }
 }
