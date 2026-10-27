@@ -2119,7 +2119,18 @@
     "The web interface of xTeVe, port 34400. Its API has to be switched on in the settings.": "Die Weboberfläche von xTeVe, Port 34400. Die API muss in den Einstellungen eingeschaltet sein.",
     "Whether xTeVe answers, its version, the guide source, the streams and channels it knows, and update buttons.": "Ob xTeVe antwortet, seine Version, die Quelle der Programmführer, die Streams und Kanäle, die es kennt, und Knöpfe zum Aktualisieren.",
     "Whether xTeVe or Threadfin runs, its version and guide source, and buttons to update the playlists, the guide and the channel mapping.": "Ob xTeVe oder Threadfin läuft, seine Version und Guide-Quelle, und Knöpfe, um Playlists, Guide und Kanalzuordnung zu aktualisieren.",
-    "xTeVe status": "xTeVe-Status"
+    "xTeVe status": "xTeVe-Status",
+    "Generate the public token and copy it.": "Das öffentliche Token erzeugen und kopieren.",
+    "How many tracks were played today, this week and this month, and the ones played last.": "Wie viele Titel heute, diese Woche und diesen Monat gespielt wurden, und die zuletzt gespielten.",
+    "In Your Spotify under Settings, Public token. It lets a program read the statistics and change nothing.": "In Your Spotify unter Settings, Public token. Es lässt ein Programm die Statistik lesen und nichts ändern.",
+    "In the web interface of Your Spotify, open Settings.": "In der Weboberfläche von Your Spotify die Settings öffnen.",
+    "Listening": "Gehört",
+    "Played last": "Zuletzt gespielt",
+    "Public token": "Öffentliches Token",
+    "The server of Your Spotify (the API, port 8080), not the web interface.": "Der Server von Your Spotify (die API, Port 8080), nicht die Weboberfläche.",
+    "The tracks played last, with artist and how long ago.": "Die zuletzt gespielten Titel, mit Künstler und wie lange das her ist.",
+    "Tracks played today, this week and this month.": "Heute, diese Woche und diesen Monat gespielte Titel.",
+    "Use the address of the server (the API), which is not always the one of the web interface.": "Die Adresse des Servers (der API) nehmen, die nicht immer die der Weboberfläche ist."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3402,6 +3413,7 @@
     "xTeVe": "xTeVe",
     "Update the playlists": "Playlists aktualisieren",
     "Update the guide": "Guide aktualisieren",
-    "Map the channels again": "Kanäle neu zuordnen"
+    "Map the channels again": "Kanäle neu zuordnen",
+    "Nothing was played yet.": "Noch nichts gespielt."
   }
 }

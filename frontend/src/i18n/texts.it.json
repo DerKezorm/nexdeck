@@ -2119,7 +2119,18 @@
     "The web interface of xTeVe, port 34400. Its API has to be switched on in the settings.": "L'interfaccia web di xTeVe, porta 34400. La sua API deve essere attivata nelle impostazioni.",
     "Whether xTeVe answers, its version, the guide source, the streams and channels it knows, and update buttons.": "Se xTeVe risponde, la sua versione, la fonte della guida, gli stream e i canali che conosce, e pulsanti di aggiornamento.",
     "Whether xTeVe or Threadfin runs, its version and guide source, and buttons to update the playlists, the guide and the channel mapping.": "Se xTeVe o Threadfin è attivo, la sua versione e fonte della guida, e pulsanti per aggiornare le playlist, la guida e l'abbinamento dei canali.",
-    "xTeVe status": "Stato di xTeVe"
+    "xTeVe status": "Stato di xTeVe",
+    "Generate the public token and copy it.": "Genera il token pubblico e copialo.",
+    "How many tracks were played today, this week and this month, and the ones played last.": "Quanti brani sono stati riprodotti oggi, questa settimana e questo mese, e gli ultimi riprodotti.",
+    "In Your Spotify under Settings, Public token. It lets a program read the statistics and change nothing.": "In Your Spotify sotto Settings, Public token. Permette a un programma di leggere le statistiche senza modificare nulla.",
+    "In the web interface of Your Spotify, open Settings.": "Nell'interfaccia web di Your Spotify, apri Settings.",
+    "Listening": "Ascolti",
+    "Played last": "Riprodotti per ultimi",
+    "Public token": "Token pubblico",
+    "The server of Your Spotify (the API, port 8080), not the web interface.": "Il server di Your Spotify (l'API, porta 8080), non l'interfaccia web.",
+    "The tracks played last, with artist and how long ago.": "Gli ultimi brani riprodotti, con artista e quanto tempo fa.",
+    "Tracks played today, this week and this month.": "Brani riprodotti oggi, questa settimana e questo mese.",
+    "Use the address of the server (the API), which is not always the one of the web interface.": "Usa l'indirizzo del server (l'API), che non sempre coincide con quello dell'interfaccia web."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3402,6 +3413,7 @@
     "xTeVe": "xTeVe",
     "Update the playlists": "Aggiorna le playlist",
     "Update the guide": "Aggiorna la guida",
-    "Map the channels again": "Abbina di nuovo i canali"
+    "Map the channels again": "Abbina di nuovo i canali",
+    "Nothing was played yet.": "Ancora nulla riprodotto."
   }
 }
