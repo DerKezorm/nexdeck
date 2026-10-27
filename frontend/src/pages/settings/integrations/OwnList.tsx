@@ -101,7 +101,7 @@ function Row({ row, admin, versionsLoading, onBell, onEdit, onRemove, onBuildCar
           )}
           {integration.beta && <span className="chip !py-0 text-[10px]">beta</span>}
         </div>
-        <div className="text-xs text-muted truncate max-md:whitespace-normal mt-px">
+        <div className="text-xs text-muted truncate mt-px max-md:flex max-md:flex-wrap max-md:overflow-visible">
           {meta.map((part, index) => (
             <span key={index} className="whitespace-nowrap">
               {index > 0 && <span className="text-faint mx-1.5">·</span>}
@@ -121,7 +121,8 @@ function Row({ row, admin, versionsLoading, onBell, onEdit, onRemove, onBuildCar
         <span className="flex gap-0.5">
           <button
             type="button"
-            className={`btn btn-icon btn-flat h-[30px] w-[30px] ${integration.muted ? 'text-warn' : 'text-faint'}`}
+            // Muted is the crossed bell in the colour of a warning, not a pressed button: the row says "muted" in words.
+            className={`btn btn-icon btn-flat h-[30px] w-[30px] aria-pressed:bg-transparent aria-pressed:border-transparent ${integration.muted ? 'text-warn' : 'text-faint'}`}
             onClick={() => onBell(integration)}
             aria-pressed={integration.muted}
             aria-label={t(integration.muted ? 'settings.integrations.unmute' : 'settings.integrations.mute', { name: integration.name })}
