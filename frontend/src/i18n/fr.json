@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Jetons API",
-      "help": "Un jeton porte les droits de votre compte. Utilisez-le dans des scripts et des automatisations.",
+      "help": "Un jeton lit ce que votre compte peut voir ou, avec un accès complet, fait tout ce que votre compte peut faire. Utilisez-le dans des scripts et des automatisations.",
       "neverUsed": "jamais utilisé",
       "created": "Voici votre jeton. Il n’est affiché qu’une seule fois.",
       "usage": "Exemple :",
-      "name": "Nom du jeton"
+      "name": "Nom du jeton",
+      "scope": "Accès",
+      "scopeRead": "Lecture seule",
+      "scopeFull": "Accès complet",
+      "scopeHelp": "Un jeton en lecture seule peut regarder, mais ne change jamais rien : toute requête autre qu’une lecture est refusée. Ne donnez un accès complet qu’à un script qui doit modifier quelque chose."
     },
     "boards": {
       "title": "Tableaux",

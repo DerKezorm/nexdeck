@@ -221,6 +221,11 @@ def _page_side_column(connection: Connection) -> None:
     _add_column(connection, "pages", "side", "JSON NOT NULL DEFAULT '{}'")
 
 
+def _token_scope_column(connection: Connection) -> None:
+    """Every token that exists keeps the full rights it was made with; new ones start at reading."""
+    _add_column(connection, "api_tokens", "scope", "VARCHAR(8) NOT NULL DEFAULT 'full'")
+
+
 def _problems_cards_stay_as_they_were(connection: Connection) -> None:
     """The problems card becomes the attention card; the ones that exist keep their old answers.
 
@@ -274,6 +279,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (22, "A page can be a surface of Home Assistant controls", _home_page_column),
     (23, "A card page can have a side bar", _page_side_column),
     (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
+    (25, "An API token can be one that only reads", _token_scope_column),
 ]
 
 

@@ -16,7 +16,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.staticfiles import StaticFiles
 
-from . import __version__
+from . import __version__, deps
 from .adapters.base import close_relaxed_client
 from .config import get_settings
 from .db import db_session, get_engine
@@ -264,6 +264,23 @@ async def refuse_a_body_nobody_asked_for(request: Request, call_next):  # noqa: 
                 {"detail": {"code": "too_large", "message": f"The body is larger than {allowed // (1024 * 1024)} MB."}},
                 status_code=413,
             )
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def read_tokens_only_read(request: Request, call_next):  # noqa: ANN001
+    """A token that may only read never reaches a route with any other method.
+
+    Here and not in a dependency, so that it holds for every route at once:
+    one that forgets to ask for the account, or one added next year, is
+    covered all the same. The GETs that set something going ask
+    ``deps.NotReadOnly`` on top. ``tests/test_read_only_tokens.py`` walks
+    every route of the app to prove it.
+    """
+    if request.method not in deps.SAFE_METHODS:
+        token = deps.bearer_token(request)
+        if token and await anyio.to_thread.run_sync(deps.token_is_read_only, token):
+            return JSONResponse({"detail": dict(deps.READ_ONLY)}, status_code=403)
     return await call_next(request)
 
 

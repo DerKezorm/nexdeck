@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "API-Token",
-      "help": "Ein Token trägt die Rechte deines Kontos. Für Skripte und Automationen.",
+      "help": "Ein Token liest, was dein Konto sehen darf, oder darf mit vollem Zugriff alles, was dein Konto darf. Für Skripte und Automationen.",
       "neverUsed": "nie benutzt",
       "created": "Das ist dein Token. Es wird nur einmal angezeigt.",
       "usage": "Beispiel:",
-      "name": "Name des Tokens"
+      "name": "Name des Tokens",
+      "scope": "Zugriff",
+      "scopeRead": "Nur lesen",
+      "scopeFull": "Voller Zugriff",
+      "scopeHelp": "Ein lesendes Token kann schauen, aber nichts ändern: Jede Anfrage außer Lesen wird abgelehnt. Vollen Zugriff nur für ein Skript, das etwas ändern muss."
     },
     "boards": {
       "title": "Boards",

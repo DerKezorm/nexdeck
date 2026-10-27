@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Token API",
-      "help": "Un token ha i permessi del tuo account. Usalo in script e automazioni.",
+      "help": "Un token legge ciò che il tuo account può vedere oppure, con accesso completo, fa tutto ciò che il tuo account può fare. Usalo in script e automazioni.",
       "neverUsed": "mai usato",
       "created": "Questo è il tuo token. Viene mostrato una sola volta.",
       "usage": "Esempio:",
-      "name": "Nome del token"
+      "name": "Nome del token",
+      "scope": "Accesso",
+      "scopeRead": "Sola lettura",
+      "scopeFull": "Accesso completo",
+      "scopeHelp": "Un token in sola lettura può guardare, ma non cambia mai nulla: ogni richiesta che non sia una lettura viene rifiutata. Dai l’accesso completo solo a uno script che deve cambiare qualcosa."
     },
     "boards": {
       "title": "Bacheche",

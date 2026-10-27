@@ -20,6 +20,7 @@ from ..deps import (
     AdminUser,
     CurrentUser,
     DbSession,
+    NotReadOnly,
     OptionalUser,
     board_for_viewer_id,
     error,
@@ -458,12 +459,18 @@ async def _service_of(widget: Widget) -> tuple[Any, dict[str, Any], Context]:
 
 
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
-async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
+async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession,
+                       _effect: NotReadOnly) -> Response:
     """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
 
     ``path`` is relative to the integration's address, so the server only ever
     fetches from the service the widget already talks to. The adapter may
     redirect a path (``/snap/0``) to the real request through ``image_source``.
+
+    ⚠️ Not for a token that only reads. The path is the caller's, and a GET
+    on a media server is not always a read: Plex marks a title as played on
+    ``/:/scrobble`` and scans a library on ``.../refresh``, both asked with
+    the server's credentials.
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))

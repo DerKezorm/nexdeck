@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Tokens API",
-      "help": "Un token lleva los permisos de tu cuenta. Úsalo en scripts y automatizaciones.",
+      "help": "Un token lee lo que tu cuenta puede ver o, con acceso completo, hace todo lo que tu cuenta puede hacer. Úsalo en scripts y automatizaciones.",
       "neverUsed": "nunca usado",
       "created": "Este es tu token. Solo se muestra una vez.",
       "usage": "Ejemplo:",
-      "name": "Nombre del token"
+      "name": "Nombre del token",
+      "scope": "Acceso",
+      "scopeRead": "Solo lectura",
+      "scopeFull": "Acceso completo",
+      "scopeHelp": "Un token de solo lectura puede mirar, pero nunca cambia nada: se rechaza toda petición que no sea de lectura. Da acceso completo solo a un script que tenga que cambiar algo."
     },
     "boards": {
       "title": "Tableros",

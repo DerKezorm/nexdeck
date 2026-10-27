@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "API tokens",
-      "help": "A token carries the rights of your account. Use it in scripts and automations.",
+      "help": "A token reads what your account may see or, with full access, does everything your account may. Use it in scripts and automations.",
       "neverUsed": "never used",
       "created": "This is your token. It is shown only once.",
       "usage": "Example:",
-      "name": "Token name"
+      "name": "Token name",
+      "scope": "Access",
+      "scopeRead": "Read only",
+      "scopeFull": "Full access",
+      "scopeHelp": "A read-only token can look but never change anything: every request other than reading is refused. Give full access only to a script that has to change something."
     },
     "boards": {
       "title": "Boards",
