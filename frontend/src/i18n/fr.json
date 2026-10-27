@@ -926,7 +926,11 @@
         "orange": "Orange",
         "yellow": "Jaune",
         "green": "Vert"
-      }
+      },
+      "hideHead": "Sans en-tête",
+      "hideHeadHelp": "Ni titre, ni logo, ni point au-dessus. Si la carte va mal, un point revient dans le coin.",
+      "frameless": "Sans cadre",
+      "framelessHelp": "Ni fond, ni cadre, ni ombre : elle se tient libre sur le tableau, comme un titre. Pendant l’agencement, elle garde un contour et une poignée."
     }
   },
   "library": {

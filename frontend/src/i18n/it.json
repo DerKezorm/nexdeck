@@ -926,7 +926,11 @@
         "orange": "Arancione",
         "yellow": "Giallo",
         "green": "Verde"
-      }
+      },
+      "hideHead": "Senza intestazione",
+      "hideHeadHelp": "Nessun titolo, logo o punto sopra. Se la scheda non sta bene, torna un punto nell’angolo.",
+      "frameless": "Senza cornice",
+      "framelessHelp": "Nessuno sfondo, nessuna cornice, nessuna ombra: sta libera sulla bacheca, come un titolo. Mentre si dispone tiene un contorno e una maniglia."
     }
   },
   "library": {

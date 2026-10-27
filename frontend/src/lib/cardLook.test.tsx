@@ -69,6 +69,19 @@ describe('a colour of the card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fill' }))
     expect(changed).toHaveBeenLastCalledWith({ card_effect: 'fill' })
   })
+
+  it('lets the head and the frame go, and come back', () => {
+    const changed = vi.fn()
+    const { rerender } = render(<CardLookFields options={{}} icon="" onChange={changed} />)
+    fireEvent.click(screen.getByRole('switch', { name: 'Without its head' }))
+    expect(changed).toHaveBeenLastCalledWith({ hide_head: true })
+    fireEvent.click(screen.getByRole('switch', { name: 'Without a frame' }))
+    expect(changed).toHaveBeenLastCalledWith({ frameless: true })
+    rerender(<CardLookFields options={{ hide_head: true, frameless: true }} icon="" onChange={changed} />)
+    expect(screen.getByRole('switch', { name: 'Without a frame' })).toHaveAttribute('aria-checked', 'true')
+    fireEvent.click(screen.getByRole('switch', { name: 'Without its head' }))
+    expect(changed).toHaveBeenLastCalledWith({ hide_head: false })
+  })
 })
 
 describe('liquid glass', () => {

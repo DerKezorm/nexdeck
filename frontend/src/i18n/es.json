@@ -926,7 +926,11 @@
         "orange": "Naranja",
         "yellow": "Amarillo",
         "green": "Verde"
-      }
+      },
+      "hideHead": "Sin cabecera",
+      "hideHeadHelp": "Sin título, logo ni punto encima. Si la tarjeta no está bien, aparece un punto en la esquina.",
+      "frameless": "Sin marco",
+      "framelessHelp": "Sin fondo, sin marco, sin sombra: queda suelta en el tablero, como un título. Al ordenar conserva un contorno y un asa."
     }
   },
   "library": {

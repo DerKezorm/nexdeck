@@ -270,6 +270,36 @@ body {
   border-color: transparent;
 }
 
+/* A card without its head or its frame (its settings, Look) keeps a dot in the
+   corner when it is not well, and while the board is arranged a grip where
+   the head would be: the dashed outline alone is easy to miss on a clock. */
+.nd-corner-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.nd-grip {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  color: var(--nd-on-accent);
+  background: var(--nd-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.nd-grip > svg {
+  rotate: 90deg;
+}
+
 /* How a card is drawn, chosen under Appearance. Glass is the default and has
    no rule of its own. A heading stays without a ground in every style, and a
    card that is red or amber keeps its coloured frame in every style too: the

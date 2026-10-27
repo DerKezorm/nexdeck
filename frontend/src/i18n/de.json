@@ -926,7 +926,11 @@
         "orange": "Orange",
         "yellow": "Gelb",
         "green": "Grün"
-      }
+      },
+      "hideHead": "Ohne Kopf",
+      "hideHeadHelp": "Kein Titel, Logo oder Punkt darüber. Geht es der Karte nicht gut, steht ein Punkt in der Ecke.",
+      "frameless": "Ohne Rahmen",
+      "framelessHelp": "Kein Grund, kein Rahmen, kein Schatten: Sie steht frei auf dem Board, wie eine Überschrift. Beim Anordnen behält sie Umriss und Griff."
     }
   },
   "library": {

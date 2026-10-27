@@ -1,4 +1,4 @@
-import { AlertTriangle, Ellipsis, ExternalLink, RefreshCw, Settings2, Trash2, Wrench } from 'lucide-react'
+import { AlertTriangle, Ellipsis, ExternalLink, GripVertical, RefreshCw, Settings2, Trash2, Wrench } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -63,9 +63,13 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
   // Clocks and app tiles draw themselves without a header; the player's cover runs to the edge.
-  const bare = ['app', 'clock', 'button', 'image', 'player', 'heading', 'tabs', 'group'].includes(widget.renderer)
+  // Any other card may leave its head off too (its settings, Look), for a search or a clock of its own.
+  const headless = widget.options?.hide_head === true
+  const bare = headless || ['app', 'clock', 'button', 'image', 'player', 'heading', 'tabs', 'group'].includes(widget.renderer)
   // A heading has no ground at all: it stands between the cards, not among them.
-  const plain = widget.renderer === 'heading'
+  // Any card may stand so (its settings, Look): no ground, no frame, no shadow.
+  const frameless = widget.options?.frameless === true
+  const plain = widget.renderer === 'heading' || frameless
   // With a link, the whole card is the link; app tiles are anchors already.
   // ⚠️ Not the player: every gap between its buttons would open the media
   // server in a new tab, which is not what a miss next to "pause" should do.
@@ -216,6 +220,16 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
             </span>
           )}
         </header>
+      )}
+      {/* Without its head or its frame, a card still says when it is not well: a dot in the corner. */}
+      {(headless || frameless) && !failed && (status === 'warn' || status === 'bad') && (
+        <span className="dot nd-corner-dot" data-status={status} role="img" aria-label={statusTitle} title={statusTitle} data-testid="card-corner-dot" />
+      )}
+      {/* And while the board is arranged, something to take hold of where the head was. */}
+      {(headless || frameless) && editing && (
+        <span className="nd-grip" aria-hidden="true" data-testid="card-grip">
+          <GripVertical size={14} />
+        </span>
       )}
       {/* A card without a head: the controls float over the corner, always while editing, on hover otherwise. */}
       {showControls && bare && <div className="card-controls glass">{controls}</div>}

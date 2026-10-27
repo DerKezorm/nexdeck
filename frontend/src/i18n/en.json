@@ -926,7 +926,11 @@
         "orange": "Orange",
         "yellow": "Yellow",
         "green": "Green"
-      }
+      },
+      "hideHead": "Without its head",
+      "hideHeadHelp": "No title, logo or dot above it. A dot comes back in the corner when the card is not well.",
+      "frameless": "Without a frame",
+      "framelessHelp": "No ground, no frame, no shadow: it stands free on the board, like a heading. While arranging it keeps an outline and a grip."
     }
   },
   "library": {
