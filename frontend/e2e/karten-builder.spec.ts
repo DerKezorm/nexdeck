@@ -4,6 +4,13 @@
  * moving and taking out a block, is done from the keyboard alone.
  */
 import { expect, test, type Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const here = path.dirname(fileURLToPath(import.meta.url))
+/** The words of the editor in one language, to find its buttons by. */
+const words = (language: string) => (JSON.parse(readFileSync(path.join(here, '..', 'src', 'i18n', `editor.${language}.json`), 'utf8')) as { editor: Record<string, any> }).editor // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const ACCOUNT = { username: 'e2e-admin', password: 'A-long-enough-password-1' }
 
@@ -65,22 +72,28 @@ async function standIn(page: Page) {
   )
 }
 
-async function openBuilder(page: Page) {
+async function openBuilder(page: Page, language = 'en') {
+  const said = words(language)
   await standIn(page)
+  // The language of the account, which the page takes at the start.
+  await page.evaluate(
+    (code) => fetch('/api/v1/auth/me', { method: 'PATCH', headers: { 'content-type': 'application/json', 'X-Nexdeck-Request': '1' }, body: JSON.stringify({ locale: code }), credentials: 'same-origin' }).then((response) => response.status),
+    language,
+  )
   await page.goto('/system/custom-cards/new')
-  await page.getByRole('button', { name: 'Paste a whole card (YAML)' }).click()
+  await page.getByRole('button', { name: said.guided.service.paste }).click()
   const field = page.locator('.cm-content')
   await expect(field).toBeVisible()
   await page.evaluate((text) => navigator.clipboard.writeText(text), CARD)
   await field.click()
   await page.keyboard.press('ControlOrMeta+V')
   // A free layout is built in All settings, which is where a pasted builder card opens.
-  await expect(page.getByRole('navigation', { name: 'Steps' })).toBeVisible()
-  await page.getByRole('button', { name: '2 Look' }).click()
+  await expect(page.getByRole('navigation', { name: said.steps.label })).toBeVisible()
+  await page.getByRole('button', { name: `2 ${said.steps.look}` }).click()
   await expect(page.getByTestId('card-builder')).toBeVisible()
 }
 
-const order = (page: Page) => page.getByRole('tree', { name: 'Layout of the card' }).getByRole('treeitem').evaluateAll((items) => items.map((item) => item.textContent ?? ''))
+const order = (page: Page) => page.getByTestId('card-builder-tree').getByRole('treeitem').evaluateAll((items) => items.map((item) => item.textContent ?? ''))
 
 test('karten7: a block is added by tapping and moved with the arrows at the width of a phone', async ({ page, context }) => {
   const trouble: string[] = []
@@ -143,3 +156,22 @@ test('karten7: blocks are chosen with Tab and moved and removed with the keyboar
   expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir'])
   expect(trouble).toEqual([])
 })
+
+for (const language of ['de', 'fr', 'es', 'it']) {
+  test(`karten7: the builder fits a phone in ${language} too`, async ({ page, context }) => {
+    const trouble: string[] = []
+    page.on('pageerror', (error) => trouble.push(String(error)))
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await page.setViewportSize({ width: 375, height: 812 })
+    await signIn(page)
+    await openBuilder(page, language)
+    // The palette, the tree and the settings of a chosen block: nothing runs over the edge of the screen.
+    await page.getByTestId('card-builder-tree').getByText('Second').click()
+    const over = await page.evaluate(() => {
+      const past = (element: Element) => element.getBoundingClientRect().right > window.innerWidth + 1
+      return { page: document.documentElement.scrollWidth > window.innerWidth, builder: [...document.querySelectorAll('[data-testid="card-builder"] *')].filter(past).length }
+    })
+    expect(over).toEqual({ page: false, builder: 0 })
+    expect(trouble).toEqual([])
+  })
+}
