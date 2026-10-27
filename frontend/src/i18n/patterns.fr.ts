@@ -155,4 +155,7 @@ export const patterns: Pattern[] = [
   [/^(\d+) users$/, '$1 utilisateurs'],
   [/^(\d+ (?:min|h|d)) ago$/, 'il y a $1'],
   [/^up ([\dhmsd ]+)$/, 'actif depuis $1'],
+  [/^(\d+) of (\d+) players$/, '$1 joueurs sur $2'],
+  [/^(\d+) players$/, '$1 joueurs'],
+  [/^(\d+) of (\d+) MB$/, '$1 sur $2 MB'],
 ]

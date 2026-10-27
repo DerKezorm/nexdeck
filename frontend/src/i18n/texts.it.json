@@ -2337,7 +2337,14 @@
     "It must be a client key (ptlc_), not an application key (ptla_). It sees and may power the servers of the account it was made in.": "Deve essere una chiave client (ptlc_), non una chiave application (ptla_). Vede i server dell'account in cui è stata creata e può accenderli e spegnerli.",
     "Servers": "Server",
     "The address of the panel.": "L'indirizzo del pannello.",
-    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "I server di gioco di un account Pterodactyl: quali sono in esecuzione, quanto usano, e pulsanti per avviarli e fermarli."
+    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "I server di gioco di un account Pterodactyl: quali sono in esecuzione, quanto usano, e pulsanti per avviarli e fermarli.",
+    "An AMP user. Its role decides which instances it sees.": "Un utente AMP. Il suo ruolo decide quali istanze vede.",
+    "Every instance with its state, players, processor and memory, and buttons to start or stop it.": "Ogni istanza con il suo stato, giocatori, processore e memoria, e pulsanti per avviarla o fermarla.",
+    "Give its role only what is needed: viewing the instances, and starting and stopping them if the buttons should work. A user with two-factor sign-in cannot be used.": "Dai al suo ruolo solo il necessario: vedere le istanze e, perché i pulsanti funzionino, avviarle e fermarle. Un utente con accesso a due fattori non può essere usato.",
+    "How many instances run, how many are stopped or failed, and how many players are on.": "Quante istanze sono in esecuzione, quante ferme o fallite e quanti giocatori ci sono.",
+    "In AMP create a user of its own for nexdeck under Configuration > User Management.": "In AMP crea un utente dedicato a nexdeck in Configuration > User Management.",
+    "The address of the AMP web interface.": "L'indirizzo dell'interfaccia web di AMP.",
+    "The game server instances of an AMP panel: which run, who is playing, and buttons to start and stop them.": "Le istanze di server di gioco di un pannello AMP: quali sono in esecuzione, chi gioca, e pulsanti per avviarle e fermarle."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3699,6 +3706,11 @@
     "Wrong code": "Codice errato",
     "Unknown user": "Utente sconosciuto",
     "Events off": "Eventi disattivati",
-    "Suspended": "Sospeso"
+    "Suspended": "Sospeso",
+    "Sleeping": "In pausa",
+    "Installing": "Installazione",
+    "Updating": "Aggiornamento",
+    "Waiting for input": "In attesa di input",
+    "Maintenance": "Manutenzione"
   }
 }

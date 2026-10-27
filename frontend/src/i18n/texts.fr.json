@@ -2337,7 +2337,14 @@
     "It must be a client key (ptlc_), not an application key (ptla_). It sees and may power the servers of the account it was made in.": "Ce doit être une clé client (ptlc_), pas une clé application (ptla_). Elle voit les serveurs du compte où elle a été créée et peut les démarrer et les arrêter.",
     "Servers": "Serveurs",
     "The address of the panel.": "L'adresse du panneau.",
-    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "Les serveurs de jeu d'un compte Pterodactyl : lesquels tournent, combien ils utilisent, et des boutons pour les démarrer et les arrêter."
+    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "Les serveurs de jeu d'un compte Pterodactyl : lesquels tournent, combien ils utilisent, et des boutons pour les démarrer et les arrêter.",
+    "An AMP user. Its role decides which instances it sees.": "Un utilisateur AMP. Son rôle décide quelles instances il voit.",
+    "Every instance with its state, players, processor and memory, and buttons to start or stop it.": "Chaque instance avec son état, ses joueurs, son processeur et sa mémoire, et des boutons pour la démarrer ou l'arrêter.",
+    "Give its role only what is needed: viewing the instances, and starting and stopping them if the buttons should work. A user with two-factor sign-in cannot be used.": "Ne donnez à son rôle que le nécessaire : voir les instances et, pour que les boutons marchent, les démarrer et les arrêter. Un utilisateur avec connexion à deux facteurs ne peut pas être utilisé.",
+    "How many instances run, how many are stopped or failed, and how many players are on.": "Combien d'instances tournent, combien sont arrêtées ou en échec et combien de joueurs sont connectés.",
+    "In AMP create a user of its own for nexdeck under Configuration > User Management.": "Dans AMP, créez un utilisateur dédié à nexdeck sous Configuration > User Management.",
+    "The address of the AMP web interface.": "L'adresse de l'interface web d'AMP.",
+    "The game server instances of an AMP panel: which run, who is playing, and buttons to start and stop them.": "Les instances de serveur de jeu d'un panneau AMP : lesquelles tournent, qui joue, et des boutons pour les démarrer et les arrêter."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3699,6 +3706,11 @@
     "Wrong code": "Code incorrect",
     "Unknown user": "Utilisateur inconnu",
     "Events off": "Événements désactivés",
-    "Suspended": "Suspendu"
+    "Suspended": "Suspendu",
+    "Sleeping": "En veille",
+    "Installing": "Installation",
+    "Updating": "Mise à jour",
+    "Waiting for input": "Attend une saisie",
+    "Maintenance": "Maintenance"
   }
 }
