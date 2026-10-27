@@ -96,6 +96,70 @@ describe('the blocks of a card', () => {
   })
 })
 
+/** A card with a button of the card and one of every row, a list and a main value, to try what the server would refuse. */
+const WITH_BUTTONS = `buttons:
+  - {id: reboot, label: Reboot, where: card, method: POST, path: /api/reboot}
+  - {id: restart, label: Restart, where: row, method: POST, path: "/api/c/{id}/restart"}
+main: cpu
+rows: {select: containers}
+blocks:
+  - {type: value, id: cpu, path: host.cpu}
+  - {type: button, button: restart}
+  - {type: sparkline, id: trend, value: {path: host.cpu}}
+  - type: list
+    item:
+      - {type: text, value: {path: name}}
+      - {type: button, button: restart}
+`
+
+describe('what the server would refuse, the editor does not make (KARTEN-7 AC-1)', () => {
+  it('karten7 ac1 puts no sparkline into a list, by adding or by dragging', () => {
+    const card = open(WITH_BUTTONS)
+    expect(canAdd(card, ['blocks', 3], 'sparkline')).toBe(false)
+    expect(canAdd(card, ['blocks', 3, 'item', 0], 'sparkline')).toBe(false)
+    expect(addBlock(card.doc, card, ['blocks', 3], 'sparkline')).toBeNull()
+    expect(canAdd(card, ['blocks', 0], 'sparkline')).toBe(true)
+    expect(canDrop(card, ['blocks', 2], ['blocks', 3])).toBe(false)
+    expect(canDrop(card, ['blocks', 2], ['blocks', 3, 'item', 0])).toBe(false)
+    // Not hidden inside a row either.
+    const wrapped = open('rows: {select: x}\nblocks:\n  - type: row\n    children: [{type: sparkline, id: s, value: {path: a}}]\n  - {type: list, item: []}\n')
+    expect(canDrop(wrapped, ['blocks', 0], ['blocks', 1])).toBe(false)
+  })
+
+  it('karten7 ac1 keeps the main value out of a list', () => {
+    const card = open(WITH_BUTTONS)
+    expect(canDrop(card, ['blocks', 0], ['blocks', 3])).toBe(false)
+    expect(canDrop(card, ['blocks', 0], ['blocks', 3, 'item', 0])).toBe(false)
+    // Any other value, and the main value anywhere outside a list, may go.
+    const other = open(WITH_BUTTONS.replace('main: cpu\n', ''))
+    expect(canDrop(other, ['blocks', 0], ['blocks', 3])).toBe(true)
+    expect(canDrop(card, ['blocks', 0], ['blocks', 2])).toBe(true)
+  })
+
+  it('karten7 ac1 keeps the button of every row inside a list, and lets the button of the card stand anywhere', () => {
+    const card = open(WITH_BUTTONS)
+    // Dragged out of the list, or stepped out with the arrows.
+    expect(canDrop(card, ['blocks', 3, 'item', 1], ['blocks', 0])).toBe(false)
+    expect(run(card, (doc) => expect(moveBlock(doc, ['blocks', 3, 'item', 1], 1)).toBeNull())).toBe(card)
+    // A row holding it cannot leave either.
+    const inRow = open(
+      'buttons:\n  - {id: restart, label: Restart, where: row, method: POST, path: /a}\nrows: {select: x}\nblocks:\n  - type: list\n    item:\n      - {type: row, children: [{type: button, button: restart}]}\n  - {type: divider}\n',
+    )
+    expect(moveBlock(inRow.doc, ['blocks', 0, 'item', 0], 1)).toBeNull()
+    expect(canDrop(inRow, ['blocks', 0, 'item', 0], ['blocks', 1])).toBe(false)
+    // Inside the template it may move about, and a button of the card leaves freely.
+    expect(canDrop(card, ['blocks', 3, 'item', 1], ['blocks', 3, 'item', 0])).toBe(true)
+    const free = open('buttons:\n  - {id: reboot, label: Reboot, where: card, method: POST, path: /a}\nrows: {select: x}\nblocks:\n  - type: list\n    item: [{type: button, button: reboot}]\n')
+    expect(moveBlock(free.doc, ['blocks', 0, 'item', 0], 1)).toEqual(['blocks', 1])
+  })
+
+  it('karten7 ac1 starts a list empty, which the server takes like an empty row', () => {
+    const card = open('rows: {select: x}\nblocks: []\n')
+    const next = run(card, (doc) => void addBlock(doc, card, null, 'list'))
+    expect(readAt(next, ['blocks', 0])).toEqual({ type: 'list', item: [] })
+  })
+})
+
 describe('moving and taking out', () => {
   it('karten7 ec4 swaps with a neighbour and steps out at the end of a row, column or list', () => {
     const card = open(TREE)

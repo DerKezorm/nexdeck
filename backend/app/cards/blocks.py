@@ -163,7 +163,7 @@ class ListBlock(_Block):
     """The same blocks for every row of the card's ``rows``, at most 50."""
 
     type: Literal["list"]
-    item: list[Block] = Field(min_length=1, description="The blocks of one row. Paths in them are read inside the row. No list in here.")
+    item: list[Block] = Field(default_factory=list, description="The blocks of one row. Paths in them are read inside the row. No list in here. Empty, like a new row, until the author fills it.")
     empty: Label | None = Field(default=None, description="What the list says when there are no rows. Left out, it says Nothing here.")
 
 

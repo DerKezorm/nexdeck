@@ -142,6 +142,11 @@ def test_karten7_ac6_a_number_a_time_and_a_unit_arrive_with_what_the_browser_nee
     assert text["cell"]["format"] == "number" and badge["cell"]["unit"] == "kg"
 
 
+def test_karten7_ac4_a_list_with_an_empty_template_draws_its_rows_without_blocks() -> None:
+    [listing] = tree(with_blocks({"type": "list", "item": []}, buttons=[], main=None))
+    assert listing["rows"] == [{"blocks": []}, {"blocks": []}, {"blocks": []}]
+
+
 def test_karten7_ac2_the_colour_of_the_rules_reaches_the_card_but_a_row_of_a_list_does_not_colour_the_card() -> None:
     assert made(GLANCE, {**ANSWERS, "host": {**ANSWERS["host"], "cpu": 95}}).status == "bad"
     on_a_row = changed(GLANCE, blocks=[{"type": "list", "item": [{"type": "text", "value": {"path": "state", "rules": [{"op": "==", "than": "stopped", "then": "bad"}]}}]}], buttons=[], main=None)

@@ -104,6 +104,31 @@ function insideList(path: CardPath): boolean {
   return path.includes('item')
 }
 
+/** Whether the block, or any block inside it, is of this type. */
+function holds(block: unknown, type: string): boolean {
+  const plain = asBlock(block)
+  return plain.type === type || innerOf(plain).some((one) => holds(one, type))
+}
+
+/** The ids of the buttons that sit on every row of a list (`where: row`): they only make sense inside a list. */
+function rowButtonIds(buttons: unknown): Set<string> {
+  const list = Array.isArray(buttons) ? buttons : []
+  return new Set(list.map(asBlock).filter((one) => one.where === 'row' && typeof one.id === 'string').map((one) => String(one.id)))
+}
+
+/** Whether the block, or any block inside it, is the button of a row. */
+function holdsRowButton(block: unknown, rows: Set<string>): boolean {
+  const plain = asBlock(block)
+  return (plain.type === 'button' && rows.has(String(plain.button))) || innerOf(plain).some((one) => holdsRowButton(one, rows))
+}
+
+/** Whether the block, or any block inside it, is the value block the card names as its main value. */
+function holdsMain(block: unknown, main: unknown): boolean {
+  if (typeof main !== 'string' || main === '') return false
+  const plain = asBlock(block)
+  return (plain.type === 'value' && plain.id === main) || innerOf(plain).some((one) => holdsMain(one, main))
+}
+
 /** Whether a block can take other blocks. */
 export const isContainer = (type: unknown): boolean => childKey(type) !== null
 
@@ -131,6 +156,7 @@ export function newBlock(type: BlockType, taken: string[], field = '@', button =
     case 'sparkline':
       return { type, id: freeId(taken, 'trend'), value: { path: field } }
     case 'list':
+      // Empty like a new row or column: the server takes a list with nothing in its template yet.
       return { type, item: [] }
     case 'button':
       return { type, button }
@@ -157,7 +183,8 @@ export function mainChoices(card: CardDoc | null): string[] {
 export function canAdd(card: CardDoc | null, selected: CardPath | null, type: BlockType): boolean {
   if (totalOf(card) >= MAX_BLOCKS) return false
   const target = whereToAdd(card, selected)
-  if (type === 'list' && insideList(target.parent)) return false
+  // No list inside a list, and no sparkline: the history belongs to the card, not to a row.
+  if ((type === 'list' || type === 'sparkline') && insideList(target.parent)) return false
   // A container is added empty, so its own level is all that counts.
   return depthAt(target.parent) + 1 <= MAX_DEPTH
 }
@@ -251,7 +278,8 @@ export function moveBlock(doc: Document, path: CardPath, by: -1 | 1): CardPath |
   if (!outer) return null
   const holderIndex = Number(holder[holder.length - 1])
   const node = list.items[index]
-  // A list's template may not hold a list; leaving it is fine, entering one is not asked here.
+  // Out of a list, a button of every row would stand where there are no rows.
+  if (!insideList(holder.slice(0, -1)) && holdsRowButton(readIn(doc, path), rowButtonIds(readIn(doc, ['buttons'])))) return null
   list.items.splice(index, 1)
   const at = by === -1 ? holderIndex : holderIndex + 1
   outer.items.splice(at, 0, node)
@@ -284,8 +312,10 @@ export function canDrop(card: CardDoc, from: CardPath, onto: CardPath): boolean 
   const place = dropPlace(card, onto)
   const moving = readAt(card, from)
   if (depthAt(place.parent) + heightOf(moving) > MAX_DEPTH) return false
-  const holdsList = JSON.stringify(moving).includes('"type":"list"')
-  return !(holdsList && insideList(place.parent))
+  const into = insideList(place.parent)
+  // What the server refuses in a list: a list, a sparkline, the main value. And what it refuses outside one: a button of every row.
+  if (into && (holds(moving, 'list') || holds(moving, 'sparkline') || holdsMain(moving, readAt(card, ['main'])))) return false
+  return into || !holdsRowButton(moving, rowButtonIds(readAt(card, ['buttons'])))
 }
 
 /** Drag the block at `from` onto the block at `onto` (into it if it can hold blocks, else behind it). Says where it is now. */

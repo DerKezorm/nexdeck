@@ -121,6 +121,13 @@ def test_karten7_ac1_a_list_needs_rows_and_a_sparkline_does_not_belong_in_one() 
     assert codes(refused(with_blocks(inside, buttons=[], main=None))) == ["card_sparkline_in_list"]
 
 
+def test_karten7_ac1_a_list_whose_template_is_still_empty_is_taken_like_an_empty_row_or_column() -> None:
+    # The editor starts a list as it starts a row, and takes the last block out of one the same way: both are valid.
+    loaded = load.load_definition(with_blocks({"type": "list", "item": []}, {"type": "row", "children": []}, buttons=[], main=None))
+    assert loaded.definition.blocks[0].item == []
+    assert load.load_definition(with_blocks({"type": "list"}, buttons=[], main=None)).definition.blocks[0].item == []
+
+
 def test_karten7_ac1_the_main_value_is_a_value_block_with_that_id() -> None:
     assert codes(refused(changed(main="nobody"))) == ["card_main_unknown"]
     # A progress bar with the id is no value; a value inside a list is a value of a row, not of the card.
