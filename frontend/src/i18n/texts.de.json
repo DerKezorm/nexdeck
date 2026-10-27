@@ -2099,7 +2099,21 @@
     "ESPHome overview": "ESPHome-Überblick",
     "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Wie viele Geräte online und offline sind, wie viele auf ein Firmware-Update warten und die Version des Dashboards.",
     "Dashboard": "Dashboard",
-    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Jedes Gerät des Dashboards, die Offline-Geräte zuerst, dann die mit wartendem Update."
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Jedes Gerät des Dashboards, die Offline-Geräte zuerst, dann die mit wartendem Update.",
+    "A Tasmota plug or relay: whether it is on, a button to switch it, and the power it draws with the energy of the day.": "Eine Tasmota-Steckdose oder ein Relais: ob es an ist, ein Knopf zum Schalten und die Leistung, die es zieht, mit der Energie des Tages.",
+    "The address of the device, as its web interface opens.": "Die Adresse des Geräts, unter der sich seine Weboberfläche öffnet.",
+    "Only if the device has a web password. Tasmota's user is admin unless changed.": "Nur nötig, wenn das Gerät ein Web-Passwort hat. Der Benutzer von Tasmota ist admin, wenn er nicht geändert wurde.",
+    "The web password of the device (WebPassword).": "Das Web-Passwort des Geräts (WebPassword).",
+    "Relay": "Relais",
+    "Whether the relay is on, with a button to switch it after a question, and how well the device is connected. One card for each relay of the device.": "Ob das Relais an ist, mit einem Knopf zum Schalten nach einer Rückfrage, und wie gut das Gerät verbunden ist. Eine Karte für jedes Relais des Geräts.",
+    "The number of the relay, 1 for a plug.": "Die Nummer des Relais, 1 bei einer Steckdose.",
+    "Wi-Fi signal": "WLAN-Signal",
+    "Power draw": "Leistungsaufnahme",
+    "The power the plug draws now, its voltage and current, and the energy of today, yesterday and in total. Needs a device that measures.": "Die Leistung, die die Steckdose gerade zieht, Spannung und Strom und die Energie von heute, gestern und insgesamt. Braucht ein Gerät, das misst.",
+    "Voltage": "Spannung",
+    "Current": "Strom",
+    "Yesterday": "Gestern",
+    "Total": "Gesamt"
   },
   "labels": {
     "Private resources": "Private Ressourcen",

@@ -2099,7 +2099,21 @@
     "ESPHome overview": "Panoramica di ESPHome",
     "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Quanti dispositivi sono online e offline, quanti attendono un aggiornamento del firmware e la versione della dashboard.",
     "Dashboard": "Dashboard",
-    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Ogni dispositivo della dashboard, prima quelli offline, poi quelli con un aggiornamento in attesa."
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Ogni dispositivo della dashboard, prima quelli offline, poi quelli con un aggiornamento in attesa.",
+    "A Tasmota plug or relay: whether it is on, a button to switch it, and the power it draws with the energy of the day.": "Una presa o un relè Tasmota: se è acceso, un pulsante per commutarlo e la potenza assorbita, con l'energia del giorno.",
+    "The address of the device, as its web interface opens.": "L'indirizzo del dispositivo, dove si apre la sua interfaccia web.",
+    "Only if the device has a web password. Tasmota's user is admin unless changed.": "Solo se il dispositivo ha una password web. L'utente di Tasmota è admin, salvo modifica.",
+    "The web password of the device (WebPassword).": "La password web del dispositivo (WebPassword).",
+    "Relay": "Relè",
+    "Whether the relay is on, with a button to switch it after a question, and how well the device is connected. One card for each relay of the device.": "Se il relè è acceso, con un pulsante per commutarlo dopo una domanda, e la qualità del collegamento del dispositivo. Una scheda per ogni relè del dispositivo.",
+    "The number of the relay, 1 for a plug.": "Il numero del relè, 1 per una presa.",
+    "Wi-Fi signal": "Segnale Wi-Fi",
+    "Power draw": "Potenza assorbita",
+    "The power the plug draws now, its voltage and current, and the energy of today, yesterday and in total. Needs a device that measures.": "La potenza assorbita ora dalla presa, tensione e corrente, e l'energia di oggi, ieri e in totale. Richiede un dispositivo che misuri.",
+    "Voltage": "Tensione",
+    "Current": "Corrente",
+    "Yesterday": "Ieri",
+    "Total": "Totale"
   },
   "labels": {
     "Private resources": "Risorse private",

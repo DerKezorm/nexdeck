@@ -2099,7 +2099,21 @@
     "ESPHome overview": "Resumen de ESPHome",
     "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Cuántos dispositivos están en línea y sin conexión, cuántos esperan una actualización de firmware y la versión del panel.",
     "Dashboard": "Panel",
-    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Cada dispositivo del panel, los que están sin conexión primero, después los que tienen una actualización pendiente."
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Cada dispositivo del panel, los que están sin conexión primero, después los que tienen una actualización pendiente.",
+    "A Tasmota plug or relay: whether it is on, a button to switch it, and the power it draws with the energy of the day.": "Un enchufe o relé Tasmota: si está encendido, un botón para conmutarlo y la potencia que consume, con la energía del día.",
+    "The address of the device, as its web interface opens.": "La dirección del dispositivo, donde se abre su interfaz web.",
+    "Only if the device has a web password. Tasmota's user is admin unless changed.": "Solo si el dispositivo tiene contraseña web. El usuario de Tasmota es admin salvo que se cambie.",
+    "The web password of the device (WebPassword).": "La contraseña web del dispositivo (WebPassword).",
+    "Relay": "Relé",
+    "Whether the relay is on, with a button to switch it after a question, and how well the device is connected. One card for each relay of the device.": "Si el relé está encendido, con un botón para conmutarlo tras una pregunta, y qué tan bien está conectado el dispositivo. Una tarjeta por cada relé del dispositivo.",
+    "The number of the relay, 1 for a plug.": "El número del relé, 1 para un enchufe.",
+    "Wi-Fi signal": "Señal Wi-Fi",
+    "Power draw": "Consumo de potencia",
+    "The power the plug draws now, its voltage and current, and the energy of today, yesterday and in total. Needs a device that measures.": "La potencia que consume el enchufe ahora, su tensión y corriente, y la energía de hoy, ayer y en total. Necesita un dispositivo que mida.",
+    "Voltage": "Tensión",
+    "Current": "Corriente",
+    "Yesterday": "Ayer",
+    "Total": "Total"
   },
   "labels": {
     "Private resources": "Recursos privados",

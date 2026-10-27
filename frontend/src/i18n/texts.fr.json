@@ -2099,7 +2099,21 @@
     "ESPHome overview": "Aperçu d'ESPHome",
     "How many devices are online and offline, how many wait for a firmware update, and the version of the dashboard.": "Combien d'appareils sont en ligne et hors ligne, combien attendent une mise à jour du firmware et la version du tableau de bord.",
     "Dashboard": "Tableau de bord",
-    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Chaque appareil du tableau de bord, les hors ligne d'abord, puis ceux avec une mise à jour en attente."
+    "Every device of the dashboard, the offline ones first, then those with an update waiting.": "Chaque appareil du tableau de bord, les hors ligne d'abord, puis ceux avec une mise à jour en attente.",
+    "A Tasmota plug or relay: whether it is on, a button to switch it, and the power it draws with the energy of the day.": "Une prise ou un relais Tasmota : s'il est allumé, un bouton pour le commuter et la puissance qu'il consomme, avec l'énergie du jour.",
+    "The address of the device, as its web interface opens.": "L'adresse de l'appareil, là où s'ouvre son interface web.",
+    "Only if the device has a web password. Tasmota's user is admin unless changed.": "Seulement si l'appareil a un mot de passe web. L'utilisateur de Tasmota est admin sauf modification.",
+    "The web password of the device (WebPassword).": "Le mot de passe web de l'appareil (WebPassword).",
+    "Relay": "Relais",
+    "Whether the relay is on, with a button to switch it after a question, and how well the device is connected. One card for each relay of the device.": "Si le relais est allumé, avec un bouton pour le commuter après une question, et la qualité de la connexion de l'appareil. Une carte par relais de l'appareil.",
+    "The number of the relay, 1 for a plug.": "Le numéro du relais, 1 pour une prise.",
+    "Wi-Fi signal": "Signal Wi-Fi",
+    "Power draw": "Puissance consommée",
+    "The power the plug draws now, its voltage and current, and the energy of today, yesterday and in total. Needs a device that measures.": "La puissance que la prise consomme maintenant, sa tension et son courant, et l'énergie d'aujourd'hui, d'hier et au total. Nécessite un appareil qui mesure.",
+    "Voltage": "Tension",
+    "Current": "Courant",
+    "Yesterday": "Hier",
+    "Total": "Total"
   },
   "labels": {
     "Private resources": "Ressources privées",
