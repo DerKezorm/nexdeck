@@ -103,6 +103,15 @@ def _refuse_unless_cards(page: Page) -> None:
         raise error("home_page", "A home page holds controls, not cards. Add the card to another page.")
 
 
+def _refuse_a_taken_alias(db: DbSession, board_id: int, widget_id: int | None, kind: str, options: dict | None) -> None:
+    from ..services import aliases
+
+    try:
+        aliases.refuse_taken(db, board_id, widget_id, kind, options)
+    except aliases.AliasRefused as refused:
+        raise error(refused.code, str(refused), status.HTTP_409_CONFLICT if refused.code == "alias_taken" else 400) from None
+
+
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")
 def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSession) -> dict:
     page = db.get(Page, page_id)
@@ -112,6 +121,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     _refuse_unless_cards(page)
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_options(db, body.kind, body.options, user)
+    _refuse_a_taken_alias(db, board.id, None, body.kind, body.options)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     # A tile that follows an app shows the app's name until it is given one of its own.
@@ -151,6 +161,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         widget.link = body.link.strip()
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
+        _refuse_a_taken_alias(db, board.id, widget.id, widget.kind, body.options)
         widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
     if body.clear_refresh:
         widget.refresh_seconds = None

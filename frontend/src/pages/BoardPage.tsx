@@ -139,6 +139,20 @@ export function BoardPage() {
     return () => window.clearInterval(timer)
   }, [focus, activePage, navigate, location.pathname, location.search])
 
+  // ``?find=words``: a search from the address bar that named no tile (``/go?q=``). The bar opens with the
+  // words in it, and they leave the address, so a reload does not open it again.
+  const [paletteWords, setPaletteWords] = useState('')
+  const find = new URLSearchParams(location.search).get('find')
+  useEffect(() => {
+    if (find === null) return
+    setPaletteWords(find.slice(0, 200))
+    setPalette(true)
+    const rest = new URLSearchParams(location.search)
+    rest.delete('find')
+    const search = rest.toString()
+    navigate(`${location.pathname}${search ? `?${search}` : ''}`, { replace: true, state: location.state })
+  }, [find, navigate, location.pathname, location.search, location.state])
+
   // Snapshot and history into the live store.
   useEffect(() => {
     if (data?.live) setSnapshot(data.live)
@@ -309,6 +323,7 @@ export function BoardPage() {
     const onKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
+        setPaletteWords('')
         setPalette((v) => !v)
         return
       }
@@ -844,7 +859,19 @@ export function BoardPage() {
         onChanged={() => void Promise.all([board.refetch(), boards.refetch()])}
       />
       <NoticeDrawer />
-      <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} data={liveData} />
+      <CommandPalette
+        open={palette}
+        onClose={() => {
+          setPalette(false)
+          setPaletteWords('')
+        }}
+        boards={boards.data ?? []}
+        widgets={widgets}
+        actions={allActions}
+        onAction={onAction}
+        data={liveData}
+        initial={paletteWords}
+      />
       {user && user.seen_version !== __NEXDECK_VERSION__ ? (
         <Suspense fallback={null}>
           <WhatsNewDialog />

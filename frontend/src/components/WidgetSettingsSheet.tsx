@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { deriveAlias } from '../lib/alias'
 import { shownField } from '../lib/fields'
 import { inFigures, TILE_LINES } from '../lib/figures'
 import { useEditedPage } from '../lib/groups'
@@ -183,6 +184,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   }
 
   const followedApp = isApp ? catalog.find((app) => app.id === Number(options.app_id)) : undefined
+  const derivedAlias = isApp ? deriveAlias(title || followedApp?.name || '') : ''
   /** Follow an app of the catalog, or stop following one. */
   const chooseApp = (value: string) => {
     const app = catalog.find((one) => String(one.id) === value)
@@ -329,6 +331,19 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
               {t('widget.app.saveAs')}
             </button>
           )}
+          {/* The short name of /go/<name>: taken from the name until one is typed in. */}
+          <Field label={t('widget.app.alias')} htmlFor="w-alias" help={t('widget.app.aliasHelp', { address: `${window.location.origin}/go/${String(options.alias || '') || derivedAlias || '…'}` })}>
+            <input
+              id="w-alias"
+              className="input"
+              value={String(options.alias ?? '')}
+              placeholder={derivedAlias}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={40}
+              onChange={(e) => setOptions((o) => ({ ...o, alias: e.target.value.toLowerCase() }))}
+            />
+          </Field>
         </div>
       )}
       <Field label={t('widget.title')} htmlFor="w-title" help={followedApp ? t('widget.app.titleHelp') : undefined}>

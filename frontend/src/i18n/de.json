@@ -894,7 +894,9 @@
       "untitled": "App",
       "firstLabel": "Haupt",
       "titleHelp": "Leer: der Name der App.",
-      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor."
+      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor.",
+      "alias": "Kurzname",
+      "aliasHelp": "Öffnet diese Kachel aus der Adresszeile: {{address}}. Leer nimmt ihn aus dem Namen. Kleinbuchstaben, Ziffern und Bindestriche."
     },
     "look": {
       "title": "Farbe",

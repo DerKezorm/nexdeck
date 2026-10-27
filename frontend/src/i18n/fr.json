@@ -894,7 +894,9 @@
       "untitled": "App",
       "firstLabel": "Principale",
       "titleHelp": "Vide : le nom de l'app.",
-      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte."
+      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte.",
+      "alias": "Nom court",
+      "aliasHelp": "Ouvre cette tuile depuis la barre d’adresse : {{address}}. Vide, il est tiré du nom. Lettres minuscules, chiffres et traits d’union."
     },
     "look": {
       "title": "Couleur",

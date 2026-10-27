@@ -894,7 +894,9 @@
       "untitled": "App",
       "firstLabel": "Main",
       "titleHelp": "Empty: the name of the app.",
-      "linkFollows": "Empty: the address of the app. An address here wins over it."
+      "linkFollows": "Empty: the address of the app. An address here wins over it.",
+      "alias": "Short name",
+      "aliasHelp": "Opens this tile from the address bar: {{address}}. Empty takes it from the name. Lower-case letters, digits and hyphens."
     },
     "look": {
       "title": "Colour",

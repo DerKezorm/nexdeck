@@ -894,7 +894,9 @@
       "untitled": "App",
       "firstLabel": "Principal",
       "titleHelp": "Vacío: el nombre de la app.",
-      "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad."
+      "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad.",
+      "alias": "Nombre corto",
+      "aliasHelp": "Abre este mosaico desde la barra de direcciones: {{address}}. Si se deja vacío, se toma del nombre. Minúsculas, cifras y guiones."
     },
     "look": {
       "title": "Color",
