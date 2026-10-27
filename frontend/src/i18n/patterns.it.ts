@@ -142,4 +142,5 @@ export const patterns: Pattern[] = [
   [/^Down: (.+)$/, 'Non raggiungibili: $1'],
   [/^(\d+) in flight$/, '$1 in corso'],
   [/^(\d+) failed$/, '$1 falliti'],
+  [/^Zone (\S+)$/, 'Zona $1'],
 ]

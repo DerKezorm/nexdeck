@@ -1,0 +1,10 @@
+{
+  "status": "healthy",
+  "knownNodes": 1,
+  "connectedNodes": 1,
+  "storageNodes": 1,
+  "storageNodesUp": 1,
+  "partitions": 256,
+  "partitionsQuorum": 256,
+  "partitionsAllOk": 256
+}

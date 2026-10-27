@@ -2051,7 +2051,19 @@
     "The address of the admin API, not of a site Caddy serves.": "Die Adresse der Admin-API, nicht die einer Site, die Caddy ausliefert.",
     "The sites Caddy serves, where it sends them, and which upstreams are down.": "Die Sites, die Caddy ausliefert, wohin er sie leitet und welche Upstreams ausgefallen sind.",
     "The state of the upstreams comes from the metrics on the same port, which Caddy serves by default.": "Der Zustand der Upstreams kommt aus den Metriken am selben Port, die Caddy ab Werk liefert.",
-    "Upstreams": "Upstreams"
+    "Upstreams": "Upstreams",
+    "Admin token": "Admin-Token",
+    "Buckets": "Buckets",
+    "Every bucket with its objects, its size and, where there is a quota, how much of it is used.": "Jeder Bucket mit seinen Objekten, seiner Größe und, wo es ein Kontingent gibt, wie viel davon belegt ist.",
+    "Every node with its zone, its capacity and the free space of its data disk, those that are down first.": "Jeder Knoten mit Zone, Kapazität und freiem Platz seiner Datenplatte, die ausgefallenen zuerst.",
+    "In garage.toml, the [admin] section needs api_bind_addr and an admin_token.": "In der garage.toml braucht der Abschnitt [admin] api_bind_addr und einen admin_token.",
+    "Publish the admin port to your own network only; the token can change the whole cluster, and nexdeck only reads.": "Gib den Admin-Port nur in deinem eigenen Netz frei; der Token kann den ganzen Cluster ändern, und nexdeck liest nur.",
+    "Storage used": "Belegter Speicher",
+    "The Garage cluster, its nodes, its buckets and how full they are.": "Der Garage-Cluster, seine Knoten, seine Buckets und wie voll sie sind.",
+    "The admin API, port 3903 unless you changed it, not the S3 port.": "Die Admin-API, Port 3903 wenn du ihn nicht geändert hast, nicht der S3-Port.",
+    "What all buckets hold together, and the free space on the data disks.": "Was alle Buckets zusammen enthalten, und der freie Platz auf den Datenplatten.",
+    "Whether Garage is healthy, how many storage nodes are up, and a layout change that waits to be applied.": "Ob Garage gesund ist, wie viele Speicherknoten laufen und ob eine Layout-Änderung auf Anwendung wartet.",
+    "admin_token in the [admin] section of garage.toml, or a token made with garage admin-token create.": "admin_token im Abschnitt [admin] der garage.toml, oder ein Token aus garage admin-token create."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3269,6 +3281,16 @@
     "Proxy": "Proxy",
     "Redirect": "Weiterleitung",
     "Response": "Antwort",
-    "PHP": "PHP"
+    "PHP": "PHP",
+    "Draining": "Wird geleert",
+    "Fullest data disk": "Vollste Datenplatte",
+    "Layout changes waiting": "Wartende Layout-Änderungen",
+    "Nodes up": "Knoten aktiv",
+    "Objects": "Objekte",
+    "Partitions short of copies": "Partitionen ohne volle Kopienzahl",
+    "Storage nodes": "Speicherknoten",
+    "Stored": "Gespeichert",
+    "Unavailable": "Nicht verfügbar",
+    "No role": "Keine Rolle"
   }
 }

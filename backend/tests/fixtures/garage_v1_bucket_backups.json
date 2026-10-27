@@ -1,0 +1,19 @@
+{
+  "id": "3404dde85226c027",
+  "globalAliases": [
+    "backups"
+  ],
+  "websiteAccess": false,
+  "websiteConfig": null,
+  "keys": [],
+  "objects": 0,
+  "bytes": 0,
+  "unfinishedUploads": 0,
+  "unfinishedMultipartUploads": 0,
+  "unfinishedMultipartUploadParts": 0,
+  "unfinishedMultipartUploadBytes": 0,
+  "quotas": {
+    "maxSize": null,
+    "maxObjects": null
+  }
+}

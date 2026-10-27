@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "roles": [
+    {
+      "id": "1eeb7409d32c8bc2",
+      "zone": "dc1",
+      "tags": [
+        "example"
+      ],
+      "capacity": 10737418240,
+      "storedPartitions": 256,
+      "usableCapacity": 10737418240
+    }
+  ],
+  "parameters": {
+    "zoneRedundancy": "maximum"
+  },
+  "partitionSize": 41943040,
+  "stagedRoleChanges": [],
+  "stagedParameters": null
+}
