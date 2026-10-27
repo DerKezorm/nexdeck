@@ -36,6 +36,7 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -129,6 +130,8 @@ class NexcanvasAdapter(NexappApi, Adapter):
 
     def demo_choices(self, field: str) -> list[tuple[str, str]]:
         return [(f"demo-board-{number}", f"{title} · {space}") for number, (title, space) in enumerate(DEMO_BOARDS, start=1)] if field == "board" else []
+
+    image_paths = (ImagePath(PICTURE_PATH.pattern),)
 
     async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
         """The picture of one board, fetched with the token.

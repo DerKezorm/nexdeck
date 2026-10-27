@@ -38,6 +38,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ImagePath,
     MediaSource,
     WidgetData,
     WidgetType,
@@ -532,6 +533,13 @@ class NexcrateAdapter(Adapter):
         await self._call(config, ctx, "POST", f"/downloads/{download}/{action_id}", body=body)
         ctx.forget_answers()
         return {"retry": "Tried again.", "search": "Searching again.", "remove": "Removed; searching again.", "clear": "Cleared."}[action_id]
+
+    #: A TMDB poster file in the one size the cards use, and a cover of the Cover
+    #: Art Archive by MusicBrainz id. Both are fetched without a key.
+    image_paths = (
+        ImagePath(r"/tmdb/w342/[A-Za-z0-9_-]{1,64}\.(?:jpg|jpeg|png|webp)"),
+        ImagePath(r"/caa/release(?:-group)?/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/front(?:-(?:250|500|1200))?"),
+    )
 
     async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
         """Posters from TMDB and covers from the Cover Art Archive; nexcrate hands out none to a key."""
