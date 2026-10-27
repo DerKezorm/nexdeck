@@ -67,6 +67,7 @@ from .routers import journal as journal_router
 from .security import prune_sessions
 from .services import backup, history, journal, oidc_store, provisioning, report, retention
 from .services import channels as channel_service
+from .services import favicons as favicon_service
 from .services import icons as icon_service
 from .services.apps import RememberRequest
 from .services.channels import webpush as webpush_service
@@ -185,6 +186,7 @@ async def lifespan(app: FastAPI):
         await collector.stop()
         await close_relaxed_client()
         await icon_service.close_client()
+        await favicon_service.close_client()
         await channel_service.close_client()
         await webpush_service.close_client()
         await system.close_client()

@@ -56,6 +56,13 @@ export default defineConfig({
           '**/*-greek-*.woff2',
           '**/*-greek-ext-*.woff2',
           '**/*-vietnamese-*.woff2',
+          // The fonts one may choose under Appearance (src/lib/fonts.ts) load
+          // when they are chosen, not with every first visit. Inter and
+          // JetBrains Mono are in the first style sheet and stay.
+          '**/ibm-plex-sans-*.woff2',
+          '**/atkinson-hyperlegible-next-*.woff2',
+          '**/geist-*.woff2',
+          '**/pixelify-sans-*.woff2',
         ],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },

@@ -142,7 +142,7 @@ export function IntegrationsSettings() {
         <ul className="space-y-1.5">
           {(integrations.data ?? []).map((integration) => (
             <li key={integration.id} className="flex items-center gap-3 rounded-xl border border-line p-2.5">
-              <ServiceIcon icon={integration.icon} size={22} />
+              <ServiceIcon icon={integration.icon} fallback={`/api/v1/integrations/${integration.id}/favicon`} size={22} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium truncate">
                   {integration.name}

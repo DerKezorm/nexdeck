@@ -210,7 +210,11 @@
       "saveProfile": "Salva nome e indirizzo",
       "unsaved": "Non ancora salvato",
       "tilt": "Le schede si inclinano verso il puntatore",
-      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento."
+      "tiltHelp": "Solo con il mouse, e mai quando il sistema chiede meno movimento.",
+      "theme_schedule": "In base all’ora",
+      "lightFrom": "Chiaro dalle",
+      "darkFrom": "Scuro dalle",
+      "scheduleHelp": "Secondo l’orologio dello schermo che lo mostra."
     },
     "integrations": {
       "title": "Integrazioni",
@@ -359,7 +363,13 @@
         "ok": "Buono",
         "warn": "Avvertimento",
         "bad": "Guasto",
-        "unknown": "Sconosciuto"
+        "unknown": "Sconosciuto",
+        "bg": "Pagina",
+        "bg-elev": "Pagina rialzata",
+        "surface": "Scheda",
+        "surface-hover": "Scheda sotto il puntatore",
+        "border": "Linea",
+        "border-strong": "Linea marcata"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Incolla un tema o porta via questo",
@@ -381,7 +391,9 @@
         "flat": "Piatta",
         "outline": "Contorno",
         "neon": "Bordo neon",
-        "liquid": "Vetro liquido"
+        "liquid": "Vetro liquido",
+        "calm": "Quieto",
+        "window": "Finestra"
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
@@ -395,7 +407,9 @@
         "latte": "Carta latte",
         "castle": "Castello notturno",
         "workshop": "Officina",
-        "evening": "Sera rosé"
+        "evening": "Sera rosé",
+        "quiet": "Scrivania quieta",
+        "1984": "1984"
       },
       "lookShare": "Condividi lo stile",
       "lookShareHelp": "Il tema, un colore tuo e le schede come un breve testo: copialo qui e incollalo in un altro nexdeck. Il tuo foglio di stile resta fuori, è codice.",
@@ -405,7 +419,61 @@
       "lookTake": "Usa questo stile",
       "refraction": "Il bordo piega la luce",
       "refractionHelp": "Il bordo del vetro piega ciò che sta dietro. Costa un po' di potenza grafica; spegnilo per un vecchio tablet a parete.",
-      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura."
+      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura.",
+      "fontTitle": "Carattere",
+      "fontHelp": "Il carattere di tutta l’interfaccia, per tutti. Ogni carattere arriva con nexdeck e viene caricato da nexdeck solo quando si vede.",
+      "fontSample": "Attivo 99,98 % · 21 °C",
+      "fontSystem": "Quello del sistema",
+      "fontDefault": "di serie",
+      "editor": {
+        "open": "Crea i tuoi colori",
+        "title": "I tuoi colori",
+        "name": "Nome",
+        "nameDefault": "I miei colori",
+        "brightness": "Quale luminosità modificare",
+        "groups": {
+          "ground": "Sfondi e linee",
+          "text": "Testo",
+          "accent": "Accento",
+          "status": "Stati"
+        },
+        "hex": "{{name}} come #rrggbb",
+        "sampleTitle": "Backup",
+        "sampleLine": "Ultima esecuzione finita alle 03:12",
+        "sampleSmall": "La prossima stanotte",
+        "sampleButton": "Avvia ora",
+        "sampleOther": "Registro",
+        "allReadable": "Ogni colore del testo si legge bene sui suoi sfondi.",
+        "close": "Fatto",
+        "fromOwn": "Ricomincia dai colori di nexdeck",
+        "saveHint": "La pagina mostra i colori mentre li scegli. Salva li tiene per tutti; lasciare la pagina senza salvare rimette quelli salvati."
+      },
+      "retro": {
+        "help": "1984 disegna tutto nexdeck come una delle prime scrivanie: finestre, una barra dei menu, uno sfondo a puntini e caratteri a pixel. Il colore resta sui piccoli simboli.",
+        "fontNote": "In 1984 i titoli sono a pixel e il testo in un carattere semplice del sistema.",
+        "status": {
+          "title": "Come lo mostra una finestra gialla o rossa",
+          "symbol": "Simboli colorati",
+          "tint": "Un tocco di colore",
+          "pattern": "Solo motivo"
+        },
+        "icons": {
+          "title": "Loghi",
+          "colour": "A colori",
+          "mono": "In bianco e nero"
+        },
+        "desk": {
+          "title": "Sfondo",
+          "dither": "Retino",
+          "weave": "Motivo",
+          "grey": "Grigio"
+        },
+        "type": {
+          "title": "Caratteri a pixel",
+          "titles": "Per i titoli",
+          "all": "Ovunque"
+        }
+      }
     },
     "journal": {
       "title": "Livello di log",
@@ -927,7 +995,11 @@
         "orange": "Arancione",
         "yellow": "Giallo",
         "green": "Verde"
-      }
+      },
+      "hideHead": "Senza intestazione",
+      "hideHeadHelp": "Nessun titolo, logo o punto sopra. Se la scheda non sta bene, torna un punto nell’angolo.",
+      "frameless": "Senza cornice",
+      "framelessHelp": "Nessuno sfondo, nessuna cornice, nessuna ombra: sta libera sulla bacheca, come un titolo. Mentre si dispone tiene un contorno e una maniglia."
     },
     "phone": {
       "hide": "Nascondi sul telefono",

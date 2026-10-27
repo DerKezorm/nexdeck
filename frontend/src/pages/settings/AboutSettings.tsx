@@ -62,6 +62,11 @@ const BUILT_WITH = [
   { name: 'DOMPurify', url: 'https://github.com/cure53/DOMPurify', license: 'Apache 2.0 / MPL 2.0' },
   { name: 'Inter', url: 'https://rsms.me/inter', license: 'OFL 1.1' },
   { name: 'JetBrains Mono', url: 'https://www.jetbrains.com/lp/mono', license: 'OFL 1.1' },
+  { name: 'IBM Plex Sans', url: 'https://github.com/IBM/plex', license: 'OFL 1.1' },
+  { name: 'Atkinson Hyperlegible Next', url: 'https://www.brailleinstitute.org/freefont', license: 'OFL 1.1' },
+  { name: 'Geist', url: 'https://github.com/vercel/geist-font', license: 'OFL 1.1' },
+  { name: 'Pixelify Sans', url: 'https://github.com/eifetx/Pixelify-Sans', license: 'OFL 1.1' },
+  { name: 'Fontsource', url: 'https://fontsource.org', license: 'MIT' },
 ]
 
 /** Thanks, and the notes that are not politeness but obligation. */

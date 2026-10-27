@@ -1,0 +1,1025 @@
+/* 1984: the window style (lib/retro.ts).
+ *
+ * Loaded only when it is chosen. Every rule starts with :root[data-cards='window'],
+ * so no other look is touched; styles/retro.test.ts keeps it so.
+ *
+ * ⚠️ Everything sits in the layer `retro`, which this sheet declares after the
+ * layers of app.css and therefore wins over all of them, utilities included.
+ * That is the point (a `rounded-xl` or a `backdrop-blur` written on an element
+ * must not survive 1984), and it is also the danger: a size or a padding set
+ * here beats the utility written on the element. So these rules paint
+ * (colour, frame, corners, shadow, type, pattern) and leave sizes and layout
+ * alone, except where a part is rebuilt as a whole and says so.
+ *
+ * Patterns are drawn in whole screen pixels: --r-px is one of them in CSS
+ * pixels (lib/retro.ts), so the dither does not show stripes at 125 or 150 %.
+ */
+@layer retro {
+  /* -- The paper, the ink, and the few colours left -------------------------- */
+  :root[data-cards='window'] {
+    --r-ink: var(--nd-text);
+    --r-paper: var(--nd-bg-elev);
+    --r-dim: var(--nd-text-muted);
+    --r-px: 1px;
+    --r-pixel: 'Pixelify Sans Variable', 'Courier New', monospace;
+    --r-text: Geneva, Verdana, Tahoma, 'DejaVu Sans', sans-serif;
+    /* The fills of the status symbols: bright, because each sits in a black frame. */
+    --r-ok: #19a33c;
+    --r-warn: #f2c300;
+    --r-bad: #e0281c;
+    --r-unknown: var(--r-paper);
+    --r-shadow: 2px 2px 0 var(--r-ink);
+    --r-dither: repeating-conic-gradient(var(--r-ink) 0 25%, var(--r-paper) 0 50%) 0 0 / calc(2 * var(--r-px)) calc(2 * var(--r-px));
+    --r-stripes: repeating-linear-gradient(to bottom, var(--r-ink) 0 var(--r-px), transparent var(--r-px) calc(2 * var(--r-px)));
+    --r-hatch: repeating-linear-gradient(135deg, var(--r-ink) 0 var(--r-px), transparent var(--r-px) calc(4 * var(--r-px)));
+    /* Every surface solid: nothing is seen through anything in 1984. The theme's
+       sheet stands outside the layers and makes them see-through, so these
+       take !important, which is the one way a layer wins over it. */
+    --nd-surface: var(--nd-bg-elev) !important;
+    --nd-surface-strong: var(--nd-bg-elev) !important;
+    --nd-radius: 0px !important;
+    --nd-radius-sm: 0px !important;
+    --nd-shadow: none;
+    --nd-accent-soft: var(--nd-bg-elev) !important;
+    --nd-accent-glow: transparent !important;
+    --nd-lg-shadow: none;
+    /* Tailwind's corners, shadows and blurs come from these. */
+    --radius-xs: 0px;
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
+    --radius-3xl: 0px;
+    --radius-4xl: 0px;
+    --radius-card: 0px;
+    --blur-xs: 0px;
+    --blur-sm: 0px;
+    --blur-md: 0px;
+    --blur-lg: 0px;
+    --blur-xl: 0px;
+    --blur-2xl: 0px;
+    --blur-3xl: 0px;
+    color-scheme: light;
+  }
+  :root[data-cards='window'][data-theme='dark'],
+  :root[data-cards='window']:not([data-theme='light']) {
+    color-scheme: dark;
+  }
+  /* Only the shape says it: no colour anywhere, the status symbols included. */
+  :root[data-cards='window'][data-r-status='pattern'] {
+    --r-ok: var(--r-paper);
+    --r-warn: var(--r-paper);
+    --r-bad: var(--r-paper);
+    --nd-ok: var(--r-ink) !important;
+    --nd-warn: var(--r-ink) !important;
+    --nd-bad: var(--r-ink) !important;
+    --nd-unknown: var(--r-ink) !important;
+  }
+
+  /* -- Nothing modern: no glass, no blur, no glow, no round corners ----------- */
+  :root[data-cards='window'] *,
+  :root[data-cards='window'] *::before,
+  :root[data-cards='window'] *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    text-shadow: none !important;
+    border-radius: 0;
+  }
+  :root[data-cards='window'] :is([class*='blur'], [class*='drop-shadow']) {
+    filter: none;
+  }
+  /* A gradient on an element is light falling somewhere; 1984 has none. */
+  :root[data-cards='window'] :is([class*='bg-gradient'], [class*='bg-linear'], [class*='bg-radial']) {
+    background-image: none;
+  }
+  /* What was a soft shadow is a hard one, one step down and to the right. */
+  :root[data-cards='window'] :is([class~='shadow'], [class*='shadow-sm'], [class*='shadow-md'], [class*='shadow-lg'], [class*='shadow-xl'], [class*='shadow-2xl']) {
+    --tw-shadow: var(--r-shadow);
+  }
+  :root[data-cards='window'] ::selection {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] :focus-visible {
+    outline: 1px dashed var(--r-ink);
+    outline-offset: 2px;
+  }
+
+  /* -- Type: pixels for titles and menus, a plain sans for text -------------- */
+  :root[data-cards='window'] body {
+    font-family: var(--r-text);
+    font-size: 13px;
+    -webkit-font-smoothing: auto;
+  }
+  :root[data-cards='window'][data-r-type='all'] body {
+    font-family: var(--r-pixel);
+  }
+  :root[data-cards='window'] :is(h1, h2, h3, h4, legend, summary, th, label > .font-medium, .btn, .chip, .app-bar, [role='menu'], [role='tab'], [role='menuitem'], kbd) {
+    font-family: var(--r-pixel);
+  }
+  :root[data-cards='window'] :is(h1, h2, h3) {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  :root[data-cards='window'] .num {
+    font-family: var(--r-text);
+  }
+  :root[data-cards='window'][data-r-type='all'] .num,
+  :root[data-cards='window'] :is(.value-number, .text-2xl.num, .text-3xl.num, .text-4xl.num) {
+    font-family: var(--r-pixel);
+    letter-spacing: 0.02em;
+  }
+
+  /* -- The desk ------------------------------------------------------------- */
+  :root[data-cards='window'] body {
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] [data-background] {
+    background: var(--r-dither);
+    image-rendering: pixelated;
+  }
+  :root[data-cards='window'] [data-background] > * {
+    display: none;
+  }
+  :root[data-cards='window'][data-r-desk='grey'] [data-background] {
+    background: color-mix(in srgb, var(--r-ink) 38%, var(--r-paper));
+  }
+  /* A woven pattern: one dot in four, set diagonally, as an early desk had it. */
+  :root[data-cards='window'][data-r-desk='weave'] [data-background] {
+    background:
+      linear-gradient(var(--r-ink) 0 0) 0 0 / var(--r-px) var(--r-px),
+      var(--r-paper);
+    background:
+      repeating-conic-gradient(var(--r-ink) 0 25%, transparent 0 100%) 0 0 / calc(4 * var(--r-px)) calc(4 * var(--r-px)),
+      repeating-conic-gradient(var(--r-ink) 0 25%, transparent 0 100%) calc(2 * var(--r-px)) calc(2 * var(--r-px)) / calc(4 * var(--r-px)) calc(4 * var(--r-px)),
+      var(--r-paper);
+  }
+
+  /* -- Windows: every glass surface is one ----------------------------------- */
+  :root[data-cards='window'] :is(.glass, .glass-strong) {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+    color: var(--r-ink);
+  }
+
+  /* The menu bar: the bar every page shares. */
+  :root[data-cards='window'] .glass-strong.app-bar {
+    background: var(--r-paper);
+    border: 0;
+    border-bottom: 1px solid var(--r-ink);
+    box-shadow: none;
+    font-family: var(--r-pixel);
+  }
+  :root[data-cards='window'] .glass-strong.app-bar[data-look='bare'] {
+    background: transparent;
+    border-bottom-color: transparent;
+  }
+
+  /* -- The card as a window -------------------------------------------------- */
+  :root[data-cards='window'] .card.glass:not(.card-plain) {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+    transform: none !important;
+    transition: none;
+  }
+  :root[data-cards='window'] .card.glass:not(.card-plain):hover {
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .card.glass > header {
+    position: relative;
+    min-height: 20px;
+    height: 20px;
+    padding: 0 26px 0 28px;
+    gap: 5px;
+    justify-content: center;
+    border-bottom: 1px solid var(--r-ink);
+    background: var(--r-stripes) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+    color: var(--r-ink);
+  }
+  /* The close box on the left of the bar. */
+  :root[data-cards='window'] .card.glass > header::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-paper);
+  }
+  /* The logo and the title sit together in the middle, on a strip of paper. */
+  :root[data-cards='window'] .card.glass > header > :first-child {
+    margin-left: auto;
+    box-shadow: -3px 0 0 3px var(--r-paper);
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass > header > h3 {
+    flex: 0 1 auto;
+    margin-right: auto;
+    padding: 0 6px 0 2px;
+    background: var(--r-paper);
+    color: var(--r-ink);
+    font: 600 14px/20px var(--r-pixel);
+    text-transform: none;
+    letter-spacing: 0.01em;
+  }
+  :root[data-cards='window'] .card.glass > header > :where(:not(h3):not(:first-child)) {
+    position: relative;
+    background: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass > header > .dot {
+    position: absolute;
+    right: 6px;
+    top: 2px;
+    box-shadow: 0 0 0 2px var(--r-paper);
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass > header > .card-controls.in-head {
+    margin-right: 14px;
+  }
+
+  /* Yellow: a hatched title bar. */
+  :root[data-cards='window'] .card.glass[data-status='warn']:not(.card-plain) > header {
+    background: var(--r-hatch) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+  }
+  /* Red: a black title bar and a double frame. */
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) {
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--r-ink);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) > header {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) > header > * {
+    background: var(--r-ink);
+    color: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-ink);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) > header::before {
+    box-shadow: none;
+    border-color: var(--r-paper);
+    background: var(--r-ink);
+  }
+  :root[data-cards='window'] .card.glass[data-status='bad']:not(.card-plain) > header .btn {
+    color: var(--r-paper);
+  }
+  /* A touch of colour: the hatching in a dark yellow, the bar of a red window in red. */
+  :root[data-cards='window'][data-r-status='tint'] .card.glass[data-status='warn']:not(.card-plain) > header {
+    background: repeating-linear-gradient(to bottom, #b38f00 0 var(--r-px), transparent var(--r-px) calc(2 * var(--r-px))) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+  }
+  :root[data-cards='window'][data-r-status='tint'] .card.glass[data-status='warn']:not(.card-plain) {
+    box-shadow: 2px 2px 0 #b38f00;
+  }
+  :root[data-cards='window'][data-r-status='tint'] .card.glass[data-status='bad']:not(.card-plain) > header,
+  :root[data-cards='window'][data-r-status='tint'] .card.glass[data-status='bad']:not(.card-plain) > header > * {
+    background: #c0201a;
+    color: #fff;
+    box-shadow: 0 0 0 2px #c0201a;
+  }
+  :root[data-cards='window'][data-r-status='tint'] .card.glass[data-status='bad']:not(.card-plain) > header::before {
+    background: #c0201a;
+    border-color: #fff;
+  }
+
+  /* Arranging: a dashed outline around each window and the grow box in its corner. */
+  :root[data-cards='window'] .card.glass.is-editing {
+    outline: 1px dashed var(--r-ink);
+    outline-offset: 3px;
+    border-style: solid;
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .board-editing .react-grid-item > .react-resizable-handle {
+    width: 15px;
+    height: 15px;
+    right: 0;
+    bottom: 0;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    opacity: 1;
+  }
+  :root[data-cards='window'] .board-editing .react-grid-item > .react-resizable-handle::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    right: auto;
+    bottom: auto;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    box-shadow: -3px -3px 0 -1px var(--r-paper), -3px -3px 0 0 var(--r-ink);
+    transform: none;
+  }
+
+  /* -- Status: pixel symbols, colour inside a black frame ------------------- */
+  :root[data-cards='window'] .dot {
+    --r-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h14v14H0z'/%3E%3C/svg%3E");
+    --r-inside: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M1 1h12v12H1z'/%3E%3C/svg%3E");
+    --r-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M5 6h4v2H5z'/%3E%3C/svg%3E");
+    --r-mark-ink: var(--r-mark);
+    --r-fill: var(--r-unknown);
+    display: inline-grid;
+    width: calc(14 * var(--r-px));
+    height: calc(14 * var(--r-px));
+    background: none;
+    box-shadow: none;
+    animation: none;
+    vertical-align: -2px;
+  }
+  :root[data-cards='window'] .dot::before,
+  :root[data-cards='window'] .dot::after {
+    content: '';
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+  /* The frame, and the mark where it is drawn in ink. */
+  :root[data-cards='window'] .dot::before {
+    background: var(--r-ink);
+    mask-image: var(--r-mark-ink), var(--r-inside), var(--r-shape);
+    mask-composite: add, exclude, add;
+  }
+  /* The colour, with the mark left out so the paper shows through it. */
+  :root[data-cards='window'] .dot::after {
+    background: var(--r-fill);
+    mask-image: var(--r-inside), var(--r-mark);
+    mask-composite: subtract, add;
+  }
+  /* Green: a box with a tick. */
+  :root[data-cards='window'] .dot[data-status='ok'] {
+    --r-fill: var(--r-ok);
+    --r-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M10 3h2v2h-1v1h-1v1H9v1H8v1H7v1H5V9H4V8H3V6h2v1h1V6h1V5h1V4h1V3z'/%3E%3C/svg%3E");
+    --r-mark-ink: none;
+  }
+  /* Yellow: a triangle with an exclamation mark, the mark always black. */
+  :root[data-cards='window'] .dot[data-status='warn'] {
+    --r-fill: var(--r-warn);
+    --r-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M6 0h2v2h1v2h1v2h1v2h1v2h1v2h1v2H0v-2h1v-2h1V8h1V6h1V4h1V2h1z'/%3E%3C/svg%3E");
+    --r-inside: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M6 2h2v2h1v2h1v2h1v2h1v2H2v-2h1V8h1V6h1V4h1z'/%3E%3C/svg%3E");
+    --r-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M6 4h2v4H6zM6 9h2v2H6z'/%3E%3C/svg%3E");
+    --r-mark-ink: var(--r-mark);
+  }
+  /* Red: an octagon with a cross. */
+  :root[data-cards='window'] .dot[data-status='bad'] {
+    --r-fill: var(--r-bad);
+    --r-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M4 0h6v1h2v2h1v1h1v6h-1v1h-1v2h-2v1H4v-1H2v-2H1v-1H0V4h1V3h1V1h2z'/%3E%3C/svg%3E");
+    --r-inside: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M5 1h4v1h2v2h1v6h-1v2H9v1H5v-1H3v-2H2V4h1V2h2z'/%3E%3C/svg%3E");
+    --r-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M4 4h2v1h2V4h2v2H9v2h1v2H8V9H6v1H4V8h1V6H4z'/%3E%3C/svg%3E");
+    --r-mark-ink: none;
+  }
+  /* Something of note: a black diamond. */
+  :root[data-cards='window'] .dot[data-status='accent'] {
+    --r-fill: var(--r-ink);
+    --r-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cpath d='M6 1h2v1h1v1h1v1h1v1h1v1h1v2h-1v1h-1v1h-1v1H9v1H8v1H6v-1H5v-1H4v-1H3V9H2V8H1V6h1V5h1V4h1V3h1V2h1z'/%3E%3C/svg%3E");
+    --r-inside: var(--r-shape);
+    --r-mark-ink: none;
+  }
+  /* In pattern only, the marks of green and red are black as well, or they would vanish in the white. */
+  :root[data-cards='window'][data-r-status='pattern'] .dot:is([data-status='ok'], [data-status='bad']) {
+    --r-mark-ink: var(--r-mark);
+  }
+
+  /* -- Buttons: the one thing with round corners ----------------------------- */
+  :root[data-cards='window'] .btn {
+    border: 1px solid var(--r-ink);
+    border-radius: 6px;
+    background: var(--r-paper);
+    color: var(--r-ink);
+    font-family: var(--r-pixel);
+    font-weight: 500;
+    transition: none;
+  }
+  :root[data-cards='window'] .btn:hover {
+    background: var(--r-paper);
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .btn:active:not(:disabled),
+  :root[data-cards='window'] .btn[aria-pressed='true'] {
+    background: var(--r-ink);
+    color: var(--r-paper);
+    border-color: var(--r-ink);
+  }
+  /* The default button: a second frame around it, as the one Return presses. */
+  :root[data-cards='window'] .btn:is(.btn-accent, .btn-danger) {
+    background: var(--r-paper);
+    color: var(--r-ink);
+    box-shadow: 0 0 0 2px var(--r-paper), 0 0 0 3px var(--r-ink);
+    border-width: 1px;
+  }
+  :root[data-cards='window'] .btn:is(.btn-accent, .btn-danger):active:not(:disabled) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .btn:disabled {
+    opacity: 1;
+    color: var(--r-dim);
+    border-color: var(--r-dim);
+    border-style: dotted;
+  }
+  /* Small tools without a frame stay without one until pressed. */
+  :root[data-cards='window'] .btn.btn-flat {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  :root[data-cards='window'] .btn.btn-flat:hover {
+    background: transparent;
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .btn.btn-flat:active:not(:disabled),
+  :root[data-cards='window'] .btn.btn-flat[aria-pressed='true'] {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+
+  /* -- Forms ----------------------------------------------------------------- */
+  :root[data-cards='window'] .input {
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    color: var(--r-ink);
+    font-family: var(--r-text);
+    transition: none;
+  }
+  :root[data-cards='window'] .input:is(:focus, :focus-within) {
+    border-color: var(--r-ink);
+    box-shadow: inset 1px 1px 0 var(--r-ink);
+  }
+  :root[data-cards='window'] .input::placeholder,
+  :root[data-cards='window'] input::placeholder,
+  :root[data-cards='window'] textarea::placeholder {
+    color: var(--r-dim);
+  }
+  :root[data-cards='window'] select.input {
+    appearance: none;
+    padding-right: 26px;
+    background:
+      linear-gradient(var(--r-ink) 0 0) right 18px top 0 / 1px 100% no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 5' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h8v1H7v1H6v1H5v1H4v1H4V4H3V3H2V2H1V1H0z'/%3E%3C/svg%3E") right 5px center / 8px 5px no-repeat,
+      var(--r-paper);
+  }
+  :root[data-cards='window'][data-theme='dark'] select.input,
+  :root[data-cards='window']:not([data-theme='light']) select.input {
+    background:
+      linear-gradient(var(--r-ink) 0 0) right 18px top 0 / 1px 100% no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 5' shape-rendering='crispEdges'%3E%3Cpath fill='%23f2f2f2' d='M0 0h8v1H7v1H6v1H5v1H4v1H4V4H3V3H2V2H1V1H0z'/%3E%3C/svg%3E") right 5px center / 8px 5px no-repeat,
+      var(--r-paper);
+  }
+  :root[data-cards='window'] input[type='checkbox'],
+  :root[data-cards='window'] input[type='radio'] {
+    accent-color: var(--r-ink);
+  }
+  :root[data-cards='window'] input[type='range'] {
+    accent-color: var(--r-ink);
+  }
+  /* The switch: a box that is either empty or holds a cross. */
+  :root[data-cards='window'] button[role='switch'] {
+    border: 1px solid var(--r-ink);
+    border-radius: 0;
+    background: var(--r-paper);
+    transition: none;
+  }
+  :root[data-cards='window'] button[role='switch'] > span {
+    border-radius: 0;
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: none;
+    transition: none;
+  }
+  :root[data-cards='window'] button[role='switch'][aria-checked='true'] {
+    background: var(--r-dither);
+  }
+  :root[data-cards='window'] button[role='switch'][aria-checked='true'] > span {
+    background: var(--r-ink);
+  }
+
+  /* -- Chips, bars, small things --------------------------------------------- */
+  :root[data-cards='window'] .chip {
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    color: var(--r-ink);
+    border-radius: 0;
+  }
+  :root[data-cards='window'] .bar {
+    height: 10px;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    border-radius: 0;
+  }
+  :root[data-cards='window'] .bar > i {
+    background: var(--r-ink);
+    border-radius: 0;
+  }
+  :root[data-cards='window'] .bar[data-status='warn'] > i {
+    background: var(--r-dither);
+  }
+  :root[data-cards='window'] .bar[data-status='bad'] > i {
+    background: var(--r-ink);
+  }
+  :root[data-cards='window'] hr,
+  :root[data-cards='window'] .divide-y > * + * {
+    border-color: var(--r-ink);
+  }
+
+  /* -- Logos in black and white ---------------------------------------------- */
+  :root[data-cards='window'][data-r-icons='mono'] :is(.card, .app-bar, [role='dialog'], nav) img {
+    filter: grayscale(1) contrast(1.9) brightness(1.05);
+  }
+  :root[data-cards='window'][data-r-icons='mono'][data-theme='dark'] :is(.card, .app-bar, [role='dialog'], nav) img,
+  :root[data-cards='window'][data-r-icons='mono']:not([data-theme='light']) :is(.card, .app-bar, [role='dialog'], nav) img {
+    filter: grayscale(1) contrast(1.9) brightness(1.05) invert(1);
+  }
+
+  /* -- Overlays: the ground behind a dialog is the desk, not a dimmed blur -- */
+  :root[data-cards='window'] .overlay > [aria-hidden='true']:first-child {
+    background: transparent;
+  }
+  :root[data-cards='window'] .overlay header {
+    border-bottom: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] .overlay footer {
+    border-top: 1px solid var(--r-ink);
+  }
+
+  /* -- The menu bar ---------------------------------------------------------- */
+  :root[data-cards='window'] nav.glass-strong.app-bar {
+    border-bottom: 0;
+    border-top: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] .app-bar :is(.btn, a, button) {
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  :root[data-cards='window'] .app-bar :is(.btn, a, button):is(:hover, :active, [aria-expanded='true'], [aria-pressed='true'], [aria-current='page']),
+  :root[data-cards='window'] .app-bar :is(button, a):is(.bg-accent-soft, .text-accent) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] .app-bar :is(.text-muted, .text-faint) {
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .app-bar .bg-line-strong {
+    background: var(--r-ink);
+  }
+  /* The search in the bar stays a field. */
+  :root[data-cards='window'] .app-bar button.border-line {
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+  }
+  :root[data-cards='window'] .app-bar button.border-line:hover {
+    background: var(--r-paper);
+    color: var(--r-ink);
+  }
+
+  /* -- Selection is inversion, as it always was ------------------------------ */
+  :root[data-cards='window'] :is(.bg-accent-soft, .bg-accent):not(.btn):not(.dot) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] :is(.bg-accent-soft, .bg-accent):not(.btn) :is(.text-accent, .text-ink, .text-muted, .text-faint) {
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] [class*='hover:bg-surface-hover']:hover,
+  :root[data-cards='window'] [role='menuitem']:hover,
+  :root[data-cards='window'] [role='option'][aria-selected='true'] {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] [class*='hover:bg-surface-hover']:hover :is(.text-muted, .text-faint, .text-accent, .text-ink),
+  :root[data-cards='window'] [role='option'][aria-selected='true'] :is(.text-muted, .text-faint, .text-accent, .text-ink) {
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] .text-accent {
+    color: var(--r-ink);
+  }
+
+  /* -- Notes that warn: a framed box on paper, not a tinted one --------------- */
+  :root[data-cards='window'] :is([class*='bg-warn/'], [class*='bg-bad/'], [class*='bg-ok/'], [class*='bg-accent/']) {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] :is([class*='border-warn/'], [class*='border-bad/'], [class*='border-ok/'], [class*='border-accent/'], [class*='border-line/']) {
+    border-color: var(--r-ink);
+  }
+  :root[data-cards='window'] :is(.border-line, .border-line-strong) {
+    border-color: var(--r-ink);
+  }
+
+  /* -- A page that is no board: one big window with the page's title --------- */
+  :root[data-cards='window'] main[data-shell] {
+    position: relative;
+    display: flow-root;
+    margin: 12px 14px 0;
+    min-height: calc(100vh - 48px - 26px);
+    padding-top: 20px;
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+  }
+  :root[data-cards='window'] main[data-shell]::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 20px;
+    border-bottom: 1px solid var(--r-ink);
+    background:
+      linear-gradient(var(--r-paper) 0 0) 9px 4px / 12px 12px no-repeat,
+      linear-gradient(var(--r-ink) 0 0) 8px 3px / 14px 14px no-repeat,
+      linear-gradient(var(--r-paper) 0 0) 6px 1px / 18px 18px no-repeat,
+      var(--r-stripes) center / calc(100% - 6px) calc(100% - 8px) no-repeat,
+      var(--r-paper);
+  }
+  :root[data-cards='window'] main[data-shell]::after {
+    content: attr(data-title);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 8px;
+    background: var(--r-paper);
+    font: 600 14px/19px var(--r-pixel);
+    color: var(--r-ink);
+  }
+  @media (max-width: 767px) {
+    :root[data-cards='window'] main[data-shell] {
+      margin: 6px 6px 0;
+      min-height: calc(100vh - 48px - 70px);
+    }
+  }
+  /* Inside it, a card of the settings is a panel: a frame, its title on a double rule. */
+  :root[data-cards='window'] main[data-shell] .glass {
+    box-shadow: none;
+  }
+  :root[data-cards='window'] main[data-shell] .glass.p-5 > h2:first-child {
+    margin: -20px -20px 10px;
+    padding: 3px 12px;
+    border-bottom: 3px double var(--r-ink);
+    font-size: 14px;
+  }
+  /* The list of pages beside it: plain entries, the chosen one inverted. */
+  :root[data-cards='window'] main[data-shell] nav a {
+    border-radius: 0;
+    color: var(--r-ink);
+    font-family: var(--r-pixel);
+  }
+  :root[data-cards='window'] main[data-shell] nav a[aria-current='page'] {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+
+  /* -- Pictures behind a card: in 1984 the card is paper --------------------- */
+  :root[data-cards='window'] .nd-backdrop {
+    display: none;
+  }
+  :root[data-cards='window'] .card:has(.nd-on-backdrop) {
+    color: var(--r-ink);
+    --nd-text: var(--r-ink);
+    --nd-text-muted: var(--r-dim);
+    --nd-text-faint: var(--r-dim);
+  }
+  :root[data-cards='window'] .card:has(.nd-on-backdrop) :is(.text-muted, .text-faint) {
+    color: var(--r-dim);
+  }
+  :root[data-cards='window'] .card:has(.nd-on-backdrop) .chip {
+    background: var(--r-paper);
+    color: var(--r-ink);
+  }
+
+  /* -- The switch: a box with a black square that moves ---------------------- */
+  :root[data-cards='window'] button[role='switch'][aria-checked='true'] {
+    background: var(--r-paper);
+  }
+
+  /* -- Words are black: the colour of a state lives on its symbol ------------ */
+  :root[data-cards='window'] :is(.text-ok, .text-warn, .text-bad, .text-unknown) {
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .text-bad {
+    font-weight: 600;
+  }
+  :root[data-cards='window'] :is(.bg-ok, .bg-warn, .bg-bad):not(.dot) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+
+  /* -- Sheets and dialogs: windows with a title bar --------------------------- */
+  :root[data-cards='window'] .overlay > .glass-strong,
+  :root[data-cards='window'] .overlay > aside.glass-strong {
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+  }
+  :root[data-cards='window'] .overlay .glass-strong > header {
+    position: relative;
+    height: 22px;
+    min-height: 22px;
+    padding: 0 6px 0 30px;
+    gap: 6px;
+    justify-content: center;
+    border-bottom: 1px solid var(--r-ink);
+    background: var(--r-stripes) center / calc(100% - 6px) calc(100% - 8px) no-repeat, var(--r-paper);
+  }
+  :root[data-cards='window'] .overlay .glass-strong > header::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--r-ink);
+    background: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-paper);
+  }
+  :root[data-cards='window'] .overlay .glass-strong > header > h2 {
+    flex: 0 1 auto;
+    margin: 0 auto;
+    padding: 0 8px;
+    background: var(--r-paper);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  :root[data-cards='window'] .overlay .glass-strong > header > :not(h2) {
+    position: absolute;
+    right: 4px;
+    top: 1px;
+    width: 18px;
+    height: 18px;
+    background: var(--r-paper);
+    box-shadow: 0 0 0 2px var(--r-paper);
+  }
+
+  /* A question that wants an answer: the alert box. A doubled frame, a sign
+     on the left, no title bar, and the default button ringed. */
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] {
+    border: 1px solid var(--r-ink);
+    box-shadow: 0 0 0 3px var(--r-paper), 0 0 0 4px var(--r-ink), 6px 6px 0 2px var(--r-ink);
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert]::before {
+    content: '';
+    grid-row: 1 / 3;
+    grid-column: 1;
+    width: 40px;
+    height: 40px;
+    margin: 16px 0 0 16px;
+    background: var(--r-ink);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' shape-rendering='crispEdges'%3E%3Cpath fill-rule='evenodd' d='M8 0h4v1h2v1h2v2h1v2h1v2h1v4h-1v2h-1v2h-1v2h-2v1h-2v1H8v-1H6v-1H4v-2H3v-2H2v-2H1V8h1V6h1V4h1V2h2V1h2zM8 2v1H6v1H5v2H4v2H3v4h1v2h1v2h1v1h2v1h4v-1h2v-1h1v-2h1v-2h1V8h-1V6h-1V4h-1V3h-2V2zM9 4h2v8H9zM9 13h2v2H9z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > header {
+    grid-column: 2;
+    height: auto;
+    min-height: 0;
+    padding: 16px 18px 0 8px;
+    justify-content: flex-start;
+    background: none;
+    border: 0;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > header::before {
+    display: none;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > header > h2 {
+    margin: 0;
+    padding: 0;
+    background: none;
+    white-space: normal;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > header > :not(h2) {
+    display: none;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > div {
+    grid-column: 2;
+    padding: 6px 18px 4px 8px;
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > div .text-muted {
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] .overlay .glass-strong[data-alert] > footer {
+    grid-column: 1 / -1;
+    border-top: 0;
+    padding: 8px 18px 16px;
+    gap: 14px;
+  }
+
+  /* The first window: sign-in, the first start, a new password. A dialog of its own, frame doubled. */
+  :root[data-cards='window'] .glass.p-6.shadow-2xl {
+    box-shadow: 0 0 0 3px var(--r-paper), 0 0 0 4px var(--r-ink), 6px 6px 0 2px var(--r-ink);
+  }
+
+  /* -- Waiting: a pixel hourglass, not a spinning ring ----------------------- */
+  :root[data-cards='window'] .animate-spin.rounded-full {
+    border: 0;
+    border-radius: 0;
+    width: 16px;
+    height: 16px;
+    background: var(--r-ink);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill-rule='evenodd' d='M2 0h12v2h-1v3h-1v1h-1v1h-1v2h1v1h1v1h1v3h1v2H2v-2h1v-3h1v-1h1V9h1V7H5V6H4V5H3V2H2zM4 2v3h1v1h1v1h1v2H6v1H5v1H4v3h8v-3h-1v-1h-1V9H9V7h1V6h1V5h1V2zM5 12h6v1H5zM6 4h4v1H6z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    animation: nd-r-turn 1.6s steps(2, jump-none) infinite;
+  }
+  @keyframes nd-r-turn {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(180deg); }
+  }
+
+  /* -- The switch: a box, the knob a black square that moves ------------------ */
+  :root[data-cards='window'] button[role='switch'] > span {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] button[role='switch'][aria-checked='true'] {
+    background: var(--r-dither);
+  }
+  :root[data-cards='window'] button[role='switch'][aria-checked='true'] > span {
+    background: var(--r-ink);
+    border-color: var(--r-paper);
+    box-shadow: 0 0 0 1px var(--r-ink);
+  }
+  :root[data-cards='window'] button[role='switch']:disabled {
+    opacity: 1;
+    border-style: dotted;
+  }
+
+  /* -- The bar: menus without frames ------------------------------------------ */
+  :root[data-cards='window'] .app-bar :is(.border, [class*='border-line'], [class*='rounded-full']):not(:has(kbd)) {
+    border-color: transparent;
+  }
+  :root[data-cards='window'] .app-bar [role='group'] {
+    background: transparent;
+    border-color: transparent;
+  }
+  :root[data-cards='window'] .app-bar [role='menu'] {
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+  }
+  :root[data-cards='window'] .app-bar [role='menu'] :is(a, button) {
+    font-family: var(--r-text);
+  }
+  :root[data-cards='window'] .app-bar [role='menu'] :is(a, button):hover {
+    background: var(--r-ink);
+    color: var(--r-paper);
+  }
+
+  /* -- Charts: a black line over a dither ------------------------------------- */
+  :root[data-cards='window'] #nd-r-patterns rect {
+    fill: var(--r-ink);
+  }
+  :root[data-cards='window'] svg path[fill^='url(#'] {
+    fill: url(#nd-r-dither);
+  }
+  :root[data-cards='window'] svg[preserveAspectRatio='none'] path[fill^='url(#'] {
+    fill: url(#nd-r-lines);
+  }
+  :root[data-cards='window'] svg :is(path, polyline, line, circle, rect)[stroke]:not([stroke='none']):not([stroke='transparent']):not([stroke='currentColor']) {
+    stroke: var(--r-ink);
+  }
+  :root[data-cards='window'] svg circle[fill]:not([fill='none']):not([fill='currentColor']):not([fill^='url']) {
+    fill: var(--r-ink);
+  }
+  :root[data-cards='window'] [data-chart] :is(path, rect)[opacity] {
+    fill: url(#nd-r-dither);
+    opacity: 1;
+  }
+
+  /* -- Topology: devices on paper, links as one black line each -------------- */
+  /* The flow draws its lines and dots with colours and widths of its own,
+     written on the element; these win over them, as they have to. */
+  :root[data-cards='window'] [data-link-id] :is(path, polyline):not([data-link]) {
+    stroke: var(--r-ink) !important;
+    stroke-width: 1px !important;
+    stroke-opacity: 1 !important;
+    stroke-linecap: square;
+  }
+  :root[data-cards='window'] [data-link-id] g[filter] {
+    filter: none;
+  }
+  :root[data-cards='window'] [data-link-id] circle {
+    fill: var(--r-ink) !important;
+    r: 1.5px;
+  }
+  /* The legend of the lines: black as the lines are. */
+  :root[data-cards='window'] .nd-topology-run,
+  :root[data-cards='window'] .nd-flow-run,
+  :root[data-cards='window'] .nd-flow-back {
+    filter: none;
+  }
+
+  /* -- Home: the page is a control panel, one window, the controls black on white -- */
+  :root[data-cards='window'] [data-home-page] {
+    --lc: var(--r-ink) !important;
+    --pa: var(--r-ink);
+    --so: var(--r-ink);
+    --sc: var(--r-ink);
+    --sw: var(--r-ink);
+    --sm: var(--r-ink);
+    --fill: var(--r-ink);
+    --track: var(--r-paper) !important;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 16px;
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: var(--r-shadow);
+    min-height: calc(100vh - 48px - 40px);
+  }
+  :root[data-cards='window'] [data-home-page] * {
+    --lc: var(--r-ink) !important;
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .lamp-round, .lamp-ring, .climate-tile, .climate-chip, .climate-round, .climate-slide, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, .scene, .scene-bar, .scene-square, .cover, .switch-all) {
+    background: var(--r-paper);
+    border: 1px solid var(--r-ink);
+    box-shadow: 1px 1px 0 var(--r-ink);
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-slide, .scene-segment, .switch-toggle, .switch-all, .cover-button) {
+    border-radius: 6px;
+  }
+  :root[data-cards='window'] [data-home-page] .is-on:not(.lamp-slide):not(.climate-dial):not(.lamp-bulb-glass):not(.lamp-knob):not(.lamp-plate):not(.lamp-dots) {
+    background: var(--r-ink);
+    color: var(--r-paper);
+    box-shadow: 1px 1px 0 var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] .is-on :is(.lamp-p, .sensor-state, .text-muted, .text-faint) {
+    color: var(--r-paper);
+  }
+  :root[data-cards='window'] [data-home-page] .lamp-slide.is-on .lamp-fill {
+    background: var(--r-dither);
+  }
+  :root[data-cards='window'] [data-home-page] .lamp-slide.is-on > span:not(.lamp-fill) {
+    background: var(--r-paper);
+    padding: 0 3px;
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-cap, .lamp-p, .sensor-state) {
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] h2 {
+    font-family: var(--r-pixel);
+    color: var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] svg :is(path, circle)[stroke] {
+    stroke: var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] .lamp-quiet {
+    opacity: 1;
+  }
+
+  /* Home controls paint their light in the lamp's own colour, on the element. */
+  :root[data-cards='window'] [data-home-page] .glass:is(.lamp-pill, .lamp-tile, .lamp-chip, .climate-tile, .climate-chip) {
+    background: var(--r-paper) !important;
+    border-color: var(--r-ink) !important;
+    box-shadow: 1px 1px 0 var(--r-ink) !important;
+  }
+  :root[data-cards='window'] [data-home-page] .lamp-pill > span[style*='background'] {
+    background: var(--r-ink) !important;
+    color: var(--r-paper) !important;
+  }
+  :root[data-cards='window'] [data-home-page] .lamp-pill > span.absolute[style*='width'] {
+    background: var(--r-dither) !important;
+  }
+  :root[data-cards='window'] [data-home-page] [style*='box-shadow'] {
+    box-shadow: none !important;
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-bulb-glass, .lamp-led, .lamp-k)[style] {
+    background: var(--r-paper) !important;
+    border: 1px solid var(--r-ink);
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-bulb-glass, .lamp-led).is-on {
+    background: var(--r-ink) !important;
+  }
+
+  :root[data-cards='window'] [data-home-page] .lamp-bulb-glass {
+    background-image: none !important;
+    filter: none;
+  }
+  :root[data-cards='window'] [data-home-page] :is(.lamp-bulb, .lamp-knob, .lamp-k) {
+    filter: none;
+    box-shadow: none !important;
+  }
+
+  /* -- nexdeck's own colours beyond the theme's: black as well ----------------- */
+  :root[data-cards='window'] {
+    --nd-c-blue: var(--r-ink) !important;
+    --nd-c-violet: var(--r-ink) !important;
+    --nd-c-pink: var(--r-ink) !important;
+    --nd-c-orange: var(--r-ink) !important;
+  }
+  :root[data-cards='window'] [class*='text-[#'] {
+    color: var(--r-ink);
+  }
+}

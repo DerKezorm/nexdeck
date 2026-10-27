@@ -1,3 +1,4 @@
+import type { ThemeChoice } from '../lib/themeMode'
 import type { BoardView, WidgetData, WidgetView } from '../lib/types'
 
 export interface User {
@@ -8,7 +9,10 @@ export interface User {
   locale: string
   /** The two languages in the top bar; `locale` is always one of them. */
   language_pair: string[]
-  theme: 'dark' | 'light' | 'system'
+  theme: 'dark' | 'light' | 'system' | 'schedule'
+  /** With the theme `schedule`: when light begins and when dark does, `HH:MM`. */
+  light_from?: string
+  dark_from?: string
   /** Whether a card tips towards the mouse pointer; off on the profile page. */
   tilt?: boolean
   start_board_id: number | null
@@ -181,6 +185,9 @@ export interface KioskToken {
   dim_from: string
   dim_to: string
   rest_minutes?: number
+  theme?: ThemeChoice
+  light_from?: string
+  dark_from?: string
   created_at: string
   last_used_at: string | null
   token?: string
@@ -189,7 +196,7 @@ export interface KioskToken {
 
 export interface BoardWithLive extends BoardView {
   live: Record<string, WidgetData>
-  kiosk?: { cycle_seconds: number; dim_from: string; dim_to: string; allow_actions: boolean; name: string; rest_minutes?: number }
+  kiosk?: { cycle_seconds: number; dim_from: string; dim_to: string; allow_actions: boolean; name: string; rest_minutes?: number; theme?: ThemeChoice; light_from?: string; dark_from?: string }
 }
 
 export interface About {

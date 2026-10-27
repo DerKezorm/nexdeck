@@ -45,11 +45,12 @@ def clean(settings: dict[str, Any] | None, cols: int) -> dict[str, Any]:
     if "fit_height" in result and not isinstance(result["fit_height"], bool):
         result.pop("fit_height")
     # A board may draw its cards in a style of its own; without one, or with
-    # one nexdeck does not know, it follows the installation.
+    # one nexdeck does not know, it follows the installation. Window is not a
+    # board's to choose: it redraws every page (appearance.BOARD_STYLES).
     if "card_style" in result:
-        from .appearance import CARD_STYLES
+        from .appearance import BOARD_STYLES
 
-        if result["card_style"] not in CARD_STYLES:
+        if result["card_style"] not in BOARD_STYLES:
             result.pop("card_style")
     if cols != BASE:
         result["columns"] = cols

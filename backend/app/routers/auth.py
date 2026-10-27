@@ -68,7 +68,7 @@ def clear_session_cookie(response: Response) -> None:
 def user_public(user: User, request: Request | None = None) -> UserPublic:
     return UserPublic(
         id=user.id, username=user.username, display_name=user.display_name or user.username, role=user.role,
-        locale=user.locale, theme=user.theme, tilt=user.tilt is not False, start_board_id=user.start_board_id, disabled=user.disabled,
+        locale=user.locale, theme=user.theme, light_from=user.light_from or "07:00", dark_from=user.dark_from or "20:00", tilt=user.tilt is not False, start_board_id=user.start_board_id, disabled=user.disabled,
         language_pair=languages.read_pair(user.language_pair),
         seen_version=user.seen_version, has_password=has_usable_password(user.password_hash),
         auth_kind=getattr(request.state, "auth_kind", "session") if request is not None else "session",
@@ -239,6 +239,9 @@ def me(user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
 
 @router.patch("/me", response_model=UserPublic, summary="Change own profile settings")
 def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
+    # Checked before anything changes: two equal times would leave a look that never comes.
+    if (body.light_from or user.light_from) == (body.dark_from or user.dark_from):
+        raise error("same_times", "Light and dark cannot begin at the same time.")
     if body.display_name is not None:
         user.display_name = body.display_name.strip()
     if body.email is not None:
@@ -248,6 +251,10 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
     languages.apply(user, body.locale, body.language_pair)
     if body.theme is not None:
         user.theme = body.theme
+    if body.light_from is not None:
+        user.light_from = body.light_from
+    if body.dark_from is not None:
+        user.dark_from = body.dark_from
     if body.tilt is not None:
         user.tilt = body.tilt
     if body.start_board_id is not None:

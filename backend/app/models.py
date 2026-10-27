@@ -94,6 +94,10 @@ class User(Base):
     #: ⚠️ With a default the database knows: 0.42 does not know the column and
     #: still has to create accounts on a database this version made.
     tilt: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    #: With ``theme == "schedule"``: when the light look begins and when the
+    #: dark one does, ``HH:MM`` on the clock of the browser that shows it.
+    light_from: Mapped[str] = mapped_column(String(5), default="07:00", server_default="07:00")
+    dark_from: Mapped[str] = mapped_column(String(5), default="20:00", server_default="20:00")
     start_board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     disabled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
@@ -438,6 +442,11 @@ class KioskToken(Base):
     dim_to: Mapped[str] = mapped_column(String(5), default="")
     #: Minutes without a touch until the display rests on a large clock; 0 never.
     rest_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    #: dark, light, system or schedule, as for an account. Dark is what every
+    #: display showed before it could choose, and what a link made then keeps.
+    theme: Mapped[str] = mapped_column(String(8), default="dark", server_default="dark")
+    light_from: Mapped[str] = mapped_column(String(5), default="07:00", server_default="07:00")
+    dark_from: Mapped[str] = mapped_column(String(5), default="20:00", server_default="20:00")
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     #: When the display stops being let in. Empty means no end.

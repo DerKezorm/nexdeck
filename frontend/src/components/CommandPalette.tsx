@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
 import { useAssistant } from '../lib/assistant'
+import { serviceLogo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -66,7 +67,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       // open, and the entry was offered anyway: pressing it opened a blank
       // window. Asked here, so an entry that cannot be opened is not offered.
       if (safeUrl(widget.link)) {
-        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
+        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
       }
     }
     for (const { widget, action } of actions) {

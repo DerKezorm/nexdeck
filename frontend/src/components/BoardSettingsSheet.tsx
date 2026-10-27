@@ -9,10 +9,12 @@ import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { useHomeBoardPath } from '../lib/homeBoard'
 import { useHandleReorder } from '../lib/useHandleReorder'
-import type { CardStyle } from '../lib/appearance'
+import { BOARD_STYLES } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
+import { ThemePlanField } from './ThemePlanField'
+import { DARK_FROM, LIGHT_FROM, type ThemeChoice } from '../lib/themeMode'
 
 interface Props {
   open: boolean
@@ -49,7 +51,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [newBoard, setNewBoard] = useState('')
   const [importText, setImportText] = useState('')
   const [editingYaml, setEditingYaml] = useState(false)
-  const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '', rest_minutes: 0 })
+  const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '', rest_minutes: 0, theme: 'dark' as ThemeChoice, light_from: LIGHT_FROM, dark_from: DARK_FROM })
   const [freshToken, setFreshToken] = useState<KioskToken | null>(null)
   const users = useQuery({ queryKey: ['users'], queryFn: () => get<{ id: number; username: string; display_name: string; role: string }[]>('/users'), enabled: open && tab === 'sharing' })
   const shares = useQuery({ queryKey: ['shares', board.slug], queryFn: () => get<{ id: number; user_id: number | null; role: string | null; level: string }[]>(`/boards/${board.slug}/shares`), enabled: open && tab === 'sharing' && canEdit })
@@ -200,7 +202,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               onChange={(value) => setSettings(({ card_style: _old, ...current }) => (value ? { ...current, card_style: value } : current))}
               options={[
                 { value: '', label: t('board.cardStyleInstallation') },
-                ...(['glass', 'liquid', 'flat', 'outline', 'neon'] as CardStyle[]).map((style) => ({ value: style, label: t(`settings.appearance.cardStyle.${style}`) })),
+                ...BOARD_STYLES.map((style) => ({ value: style, label: t(`settings.appearance.cardStyle.${style}`) })),
               ]}
             />
           </Field>
@@ -320,14 +322,24 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           <p className="text-xs text-muted mb-3">{t('board.kioskHelp')}</p>
           <ul className="space-y-2 mb-4">
             {(kiosks.data ?? []).map((token) => (
-              <li key={token.id} className="flex items-center gap-2 rounded-xl border border-line p-2">
-                <span className="flex-1 text-sm">
-                  {token.name} <span className="text-faint num text-xs">{token.prefix}…</span>
-                  {token.allow_actions && <span className="chip ml-2 !py-0 text-[10px]">{t('board.kioskActions')}</span>}
-                </span>
-                <button className="btn btn-icon btn-danger" onClick={() => void del(`/kiosk-tokens/${token.id}`).then(() => kiosks.refetch())} aria-label={t('common.delete')}>
-                  <Trash2 size={14} />
-                </button>
+              <li key={token.id} className="rounded-xl border border-line p-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex-1 text-sm">
+                    {token.name} <span className="text-faint num text-xs">{token.prefix}…</span>
+                    {token.allow_actions && <span className="chip ml-2 !py-0 text-[10px]">{t('board.kioskActions')}</span>}
+                  </span>
+                  <button className="btn btn-icon btn-danger" onClick={() => void del(`/kiosk-tokens/${token.id}`).then(() => kiosks.refetch())} aria-label={t('common.delete')}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                {/* A display already on the wall turns dark at night without a new link. */}
+                <div className="grid sm:grid-cols-3 gap-x-2 mt-1">
+                  <ThemePlanField
+                    id={`kiosk-theme-${token.id}`}
+                    value={{ theme: token.theme ?? 'dark', light_from: token.light_from, dark_from: token.dark_from }}
+                    onChange={(plan) => void patch(`/kiosk-tokens/${token.id}/look`, plan).then(() => kiosks.refetch()).catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))}
+                  />
+                </div>
               </li>
             ))}
           </ul>
@@ -364,6 +376,9 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
               options={[0, 5, 10, 15, 30, 60].map((minutes) => ({ value: String(minutes), label: minutes ? t('board.kioskRestMinutes', { count: minutes }) : t('board.kioskRestNever') }))}
             />
           </Field>
+          <div className="grid sm:grid-cols-3 gap-x-2">
+            <ThemePlanField id="kiosk-theme" value={kioskForm} onChange={(plan) => setKioskForm((f) => ({ ...f, ...plan }))} />
+          </div>
           <Switch checked={kioskForm.allow_actions} onChange={(allow_actions) => setKioskForm((f) => ({ ...f, allow_actions }))} label={t('board.kioskAllow')} description={t('board.kioskAllowHelp')} />
           <button className="btn btn-accent mt-2" onClick={() => void post<KioskToken>(`/boards/${board.slug}/kiosk-tokens`, kioskForm).then((created) => { setFreshToken(created); void kiosks.refetch() })}>
             {t('board.kioskCreate')}

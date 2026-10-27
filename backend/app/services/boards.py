@@ -564,6 +564,10 @@ def _check_look(options: dict) -> None:
     effect = options.get("card_effect")
     if effect not in (None, "") and effect not in CARD_EFFECTS:
         raise error("bad_card_effect", "A card's colour shows as a frame, a tint or a fill.")
+    # A card without its head or without its frame: yes or no, nothing that could reach a class name.
+    for name in ("hide_head", "frameless"):
+        if options.get(name) is not None and not isinstance(options[name], bool):
+            raise error(f"bad_{name}", f"Whether a card goes {'without its head' if name == 'hide_head' else 'without its frame'} is yes or no.")
 
 
 #: Whether a card is left out of the phone's stack, and whether it comes back when it turns red.

@@ -210,7 +210,11 @@
       "saveProfile": "Enregistrer le nom et l’adresse",
       "unsaved": "Pas encore enregistré",
       "tilt": "Les cartes s'inclinent vers le pointeur",
-      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement."
+      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement.",
+      "theme_schedule": "Selon l’heure",
+      "lightFrom": "Clair à partir de",
+      "darkFrom": "Sombre à partir de",
+      "scheduleHelp": "Selon l’horloge de l’écran qui l’affiche."
     },
     "integrations": {
       "title": "Intégrations",
@@ -359,7 +363,13 @@
         "ok": "Bon",
         "warn": "Avertissement",
         "bad": "Défaut",
-        "unknown": "Inconnu"
+        "unknown": "Inconnu",
+        "bg": "Page",
+        "bg-elev": "Page surélevée",
+        "surface": "Carte",
+        "surface-hover": "Carte sous le pointeur",
+        "border": "Ligne",
+        "border-strong": "Ligne marquée"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Coller un thème ou emporter celui-ci",
@@ -381,7 +391,9 @@
         "flat": "Plate",
         "outline": "Contour",
         "neon": "Bord néon",
-        "liquid": "Verre liquide"
+        "liquid": "Verre liquide",
+        "calm": "Calme",
+        "window": "Fenêtre"
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
@@ -395,7 +407,9 @@
         "latte": "Papier latte",
         "castle": "Château de nuit",
         "workshop": "Atelier",
-        "evening": "Soirée rosé"
+        "evening": "Soirée rosé",
+        "quiet": "Bureau calme",
+        "1984": "1984"
       },
       "lookShare": "Partager le style",
       "lookShareHelp": "Le thème, une couleur à vous et les cartes en un court texte : copiez-le ici et collez-le dans un autre nexdeck. Votre feuille de style reste à part, c'est du code.",
@@ -405,7 +419,61 @@
       "lookTake": "Prendre ce style",
       "refraction": "Le bord courbe la lumière",
       "refractionHelp": "Le bord du verre courbe ce qui se trouve derrière. Cela coûte un peu de puissance graphique ; désactivez-le pour une vieille tablette murale.",
-      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure."
+      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure.",
+      "fontTitle": "Police",
+      "fontHelp": "La police de toute l’interface, pour tout le monde. Chaque police est livrée avec nexdeck et n’est chargée depuis nexdeck que lorsqu’elle s’affiche.",
+      "fontSample": "Disponibilité 99,98 % · 21 °C",
+      "fontSystem": "Celle du système",
+      "fontDefault": "d’origine",
+      "editor": {
+        "open": "Créer vos propres couleurs",
+        "title": "Vos propres couleurs",
+        "name": "Nom",
+        "nameDefault": "Mes couleurs",
+        "brightness": "Quelle luminosité modifier",
+        "groups": {
+          "ground": "Fonds et lignes",
+          "text": "Texte",
+          "accent": "Accent",
+          "status": "États"
+        },
+        "hex": "{{name}} en #rrggbb",
+        "sampleTitle": "Sauvegardes",
+        "sampleLine": "Dernière exécution terminée à 03:12",
+        "sampleSmall": "La prochaine cette nuit",
+        "sampleButton": "Lancer",
+        "sampleOther": "Journal",
+        "allReadable": "Chaque couleur de texte se lit bien sur ses fonds.",
+        "close": "Terminé",
+        "fromOwn": "Recommencer avec les couleurs de nexdeck",
+        "saveHint": "La page montre les couleurs pendant que vous les choisissez. Enregistrer les garde pour tout le monde ; quitter la page sans enregistrer remet celles enregistrées."
+      },
+      "retro": {
+        "help": "1984 dessine tout nexdeck comme un des premiers bureaux : des fenêtres, une barre de menus, un fond à points et des lettres en pixels. La couleur reste sur les petits symboles.",
+        "fontNote": "En 1984, les titres sont en pixels et le texte dans une police simple du système.",
+        "status": {
+          "title": "Comment une fenêtre jaune ou rouge le montre",
+          "symbol": "Symboles en couleur",
+          "tint": "Une touche de couleur",
+          "pattern": "Motif seul"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "En couleur",
+          "mono": "En noir et blanc"
+        },
+        "desk": {
+          "title": "Fond",
+          "dither": "Trame",
+          "weave": "Motif",
+          "grey": "Gris"
+        },
+        "type": {
+          "title": "Lettres en pixels",
+          "titles": "Pour les titres",
+          "all": "Partout"
+        }
+      }
     },
     "journal": {
       "title": "Niveau de journalisation",
@@ -927,7 +995,11 @@
         "orange": "Orange",
         "yellow": "Jaune",
         "green": "Vert"
-      }
+      },
+      "hideHead": "Sans en-tête",
+      "hideHeadHelp": "Ni titre, ni logo, ni point au-dessus. Si la carte va mal, un point revient dans le coin.",
+      "frameless": "Sans cadre",
+      "framelessHelp": "Ni fond, ni cadre, ni ombre : elle se tient libre sur le tableau, comme un titre. Pendant l’agencement, elle garde un contour et une poignée."
     },
     "phone": {
       "hide": "Masquer sur le téléphone",

@@ -210,7 +210,11 @@
       "saveProfile": "Guardar nombre y dirección",
       "unsaved": "Aún no guardado",
       "tilt": "Las tarjetas se inclinan hacia el puntero",
-      "tiltHelp": "Solo con ratón, y nunca si el sistema pide menos movimiento."
+      "tiltHelp": "Solo con ratón, y nunca si el sistema pide menos movimiento.",
+      "theme_schedule": "Según la hora",
+      "lightFrom": "Claro desde",
+      "darkFrom": "Oscuro desde",
+      "scheduleHelp": "Según el reloj de la pantalla que lo muestra."
     },
     "integrations": {
       "title": "Integraciones",
@@ -359,7 +363,13 @@
         "ok": "Bien",
         "warn": "Advertencia",
         "bad": "Fallo",
-        "unknown": "Desconocido"
+        "unknown": "Desconocido",
+        "bg": "Página",
+        "bg-elev": "Página elevada",
+        "surface": "Tarjeta",
+        "surface-hover": "Tarjeta bajo el puntero",
+        "border": "Línea",
+        "border-strong": "Línea marcada"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Pega un tema o llévate este",
@@ -381,7 +391,9 @@
         "flat": "Plana",
         "outline": "Contorno",
         "neon": "Borde neón",
-        "liquid": "Cristal líquido"
+        "liquid": "Cristal líquido",
+        "calm": "Sereno",
+        "window": "Ventana"
       },
       "radius": "Esquinas",
       "gap": "Espacio entre tarjetas",
@@ -395,7 +407,9 @@
         "latte": "Papel latte",
         "castle": "Castillo nocturno",
         "workshop": "Taller",
-        "evening": "Tarde rosé"
+        "evening": "Tarde rosé",
+        "quiet": "Escritorio tranquilo",
+        "1984": "1984"
       },
       "lookShare": "Compartir el estilo",
       "lookShareHelp": "El tema, un color propio y las tarjetas como un texto corto: cópialo aquí y pégalo en otro nexdeck. Tu hoja de estilo propia se queda fuera, es código.",
@@ -405,7 +419,61 @@
       "lookTake": "Usar este estilo",
       "refraction": "El borde curva la luz",
       "refractionHelp": "El borde del cristal curva lo que hay detrás. Cuesta algo de potencia gráfica; desactívalo en una tableta de pared antigua.",
-      "refractionNotHere": "Este navegador no puede: Chrome y Edge sí, Safari y Firefox muestran el cristal sin curvatura."
+      "refractionNotHere": "Este navegador no puede: Chrome y Edge sí, Safari y Firefox muestran el cristal sin curvatura.",
+      "fontTitle": "Tipografía",
+      "fontHelp": "La tipografía de toda la interfaz, para todos. Cada fuente viene con nexdeck y solo se carga desde nexdeck cuando se muestra.",
+      "fontSample": "Disponible 99,98 % · 21 °C",
+      "fontSystem": "La del sistema",
+      "fontDefault": "de fábrica",
+      "editor": {
+        "open": "Crear tus propios colores",
+        "title": "Tus propios colores",
+        "name": "Nombre",
+        "nameDefault": "Mis colores",
+        "brightness": "Qué brillo editar",
+        "groups": {
+          "ground": "Fondos y líneas",
+          "text": "Texto",
+          "accent": "Acento",
+          "status": "Estados"
+        },
+        "hex": "{{name}} como #rrggbb",
+        "sampleTitle": "Copias",
+        "sampleLine": "Última copia terminada a las 03:12",
+        "sampleSmall": "La próxima esta noche",
+        "sampleButton": "Ejecutar ya",
+        "sampleOther": "Registro",
+        "allReadable": "Cada color de texto se lee bien sobre sus fondos.",
+        "close": "Listo",
+        "fromOwn": "Empezar de nuevo con los colores de nexdeck",
+        "saveHint": "La página muestra los colores mientras los eliges. Guardar los conserva para todos; salir sin guardar devuelve los guardados."
+      },
+      "retro": {
+        "help": "1984 dibuja todo nexdeck como un escritorio de los primeros: ventanas, una barra de menús, un fondo de puntos y letra de píxeles. El color queda en los pequeños símbolos.",
+        "fontNote": "En 1984 los títulos van en píxeles y el texto en una letra sencilla del sistema.",
+        "status": {
+          "title": "Cómo lo muestra una ventana amarilla o roja",
+          "symbol": "Símbolos de color",
+          "tint": "Un toque de color",
+          "pattern": "Solo trama"
+        },
+        "icons": {
+          "title": "Logotipos",
+          "colour": "En color",
+          "mono": "En blanco y negro"
+        },
+        "desk": {
+          "title": "Fondo",
+          "dither": "Trama de puntos",
+          "weave": "Dibujo",
+          "grey": "Gris"
+        },
+        "type": {
+          "title": "Letra de píxeles",
+          "titles": "Para títulos",
+          "all": "En todo"
+        }
+      }
     },
     "journal": {
       "title": "Nivel de registro",
@@ -927,7 +995,11 @@
         "orange": "Naranja",
         "yellow": "Amarillo",
         "green": "Verde"
-      }
+      },
+      "hideHead": "Sin cabecera",
+      "hideHeadHelp": "Sin título, logo ni punto encima. Si la tarjeta no está bien, aparece un punto en la esquina.",
+      "frameless": "Sin marco",
+      "framelessHelp": "Sin fondo, sin marco, sin sombra: queda suelta en el tablero, como un título. Al ordenar conserva un contorno y un asa."
     },
     "phone": {
       "hide": "Ocultar en el móvil",
