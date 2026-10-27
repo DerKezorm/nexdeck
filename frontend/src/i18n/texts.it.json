@@ -2298,7 +2298,12 @@
     "Active sessions, connections and the throughput of the last minute, with the traffic proxied so far.": "Sessioni attive, connessioni e throughput dell'ultimo minuto, con il traffico inoltrato finora.",
     "Sessions, connections, throughput and traffic of a Syncthing relay server (strelaysrv).": "Sessioni, connessioni, throughput e traffico di un server relay Syncthing (strelaysrv).",
     "Status URL": "URL di stato",
-    "The status address of the relay, started with -status-srv; not the relay port 22067.": "L'indirizzo di stato del relay, avviato con -status-srv; non la porta del relay 22067."
+    "The status address of the relay, started with -status-srv; not the relay port 22067.": "L'indirizzo di stato del relay, avviato con -status-srv; non la porta del relay 22067.",
+    "CPU load, memory, storage and network traffic of the machine dashdot runs on.": "Carico della CPU, memoria, archiviazione e traffico di rete della macchina su cui gira dashdot.",
+    "How much of the disks is in use. Needs dashdot's privileged mount of the host.": "Quanto dei dischi è in uso. Richiede il montaggio privilegiato dell'host di dashdot.",
+    "How much of the memory is in use.": "Quanta memoria è in uso.",
+    "The load of the processor, with the busiest core.": "Il carico del processore, con il core più occupato.",
+    "What the machine receives and sends, in megabits per second.": "Ciò che la macchina riceve e invia, in megabit al secondo."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3659,6 +3664,9 @@
     "Proxied": "Inoltrato",
     "Throughput": "Throughput",
     "Pool": "Pool",
-    "None": "Nessuno"
+    "None": "Nessuno",
+    "Busiest core": "Core più occupato",
+    "Cores": "Core",
+    "Needs the host mounted": "Richiede l'host montato"
   }
 }
