@@ -2084,7 +2084,15 @@
     "Accessories": "Zubehör",
     "The state of the accessories Homebridge gives to HomeKit, with a switch on those that are one. Needs insecure mode, which Homebridge's Docker image and hb-service use.": "Der Zustand des Zubehörs, das Homebridge an HomeKit gibt, mit Schalter bei denen, die einer sind. Braucht den unsicheren Modus, den das Docker-Abbild und hb-service von Homebridge nutzen.",
     "Accessory": "Zubehör",
-    "One accessory as a big number with its history, or as a switch. Use it for a temperature, a humidity or a light.": "Ein Zubehör als große Zahl mit Verlauf oder als Schalter. Für eine Temperatur, eine Luftfeuchte oder ein Licht."
+    "One accessory as a big number with its history, or as a switch. Use it for a temperature, a humidity or a light.": "Ein Zubehör als große Zahl mit Verlauf oder als Schalter. Für eine Temperatur, eine Luftfeuchte oder ein Licht.",
+    "Whether the flows run, how many flows and nodes are deployed, and a button for every inject node.": "Ob die Flows laufen, wie viele Flows und Nodes eingespielt sind und ein Knopf für jeden Inject-Node.",
+    "Only when Node-RED has adminAuth switched on. A user who may only read fills the cards; the inject buttons need one who may write.": "Nur nötig, wenn Node-RED adminAuth eingeschaltet hat. Ein Benutzer, der nur lesen darf, füllt die Karten; die Inject-Knöpfe brauchen einen, der schreiben darf.",
+    "Node-RED": "Node-RED",
+    "Whether the flows run, the version, how many flows and nodes are deployed, and the memory Node-RED holds.": "Ob die Flows laufen, die Version, wie viele Flows und Nodes eingespielt sind und der Speicher, den Node-RED belegt.",
+    "Flows": "Flows",
+    "The tabs of the editor with the number of nodes on each, disabled ones last.": "Die Reiter des Editors mit der Zahl der Nodes auf jedem, deaktivierte zuletzt.",
+    "Inject nodes": "Inject-Nodes",
+    "Every inject node of a flow that runs, with a button that triggers it after a question. Needs a user who may write.": "Jeder Inject-Node eines laufenden Flows, mit einem Knopf, der ihn nach einer Rückfrage auslöst. Braucht einen Benutzer, der schreiben darf."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3322,6 +3330,9 @@
     "Unlocked": "Entriegelt",
     "Jammed": "Klemmt",
     "No plugin installed.": "Kein Plugin installiert.",
-    "No accessory. Homebridge has to run in insecure mode for this card.": "Kein Zubehör. Homebridge muss für diese Karte im unsicheren Modus laufen."
+    "No accessory. Homebridge has to run in insecure mode for this card.": "Kein Zubehör. Homebridge muss für diese Karte im unsicheren Modus laufen.",
+    "Run": "Auslösen",
+    "No flow is deployed.": "Kein Flow eingespielt.",
+    "No inject node in a flow that runs.": "Kein Inject-Node in einem laufenden Flow."
   }
 }
