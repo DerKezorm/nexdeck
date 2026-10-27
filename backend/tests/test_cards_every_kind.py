@@ -113,6 +113,11 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
         one for one in markers(config)
         if one in proof and any(one in what_travelled(call.request).replace(call.request.url.path, "") for call in route.calls)
     ]
+    # A kind whose own requests are all POSTs and carry none of the markers keeps its credentials for the POST (FRITZ!Box: user
+    # and password only go with a TR-064 call, answered to a digest challenge); a card reads with a GET, which asks for none of it.
+    posts_only = bool(route.calls) and all(
+        call.request.method == "POST" and not any(one in what_travelled(call.request) for one in markers(config)) for call in route.calls
+    )
     await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/getprobe"))
     sent = route.calls.last.request
     assert sent.method == "GET"
@@ -120,8 +125,21 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     assert sent.url.host == httpx.URL(adapter.raw_base(config)).host, "the credentials stay with the address of the connection"
     carried = what_travelled(sent)
     given = markers(config)
+    if posts_only:
+        return
     assert not given or any(one in carried for one in given), f"{kind}: nothing of the connection came along ({given})"
     assert all(one in carried for one in expected), f"{kind}: the kind's own request carries {expected}, the card only {carried}"
+
+
+@respx.mock
+async def test_jede2_a_card_never_sends_the_fritzbox_user_and_password_with_its_get() -> None:
+    adapter = get_adapter("fritzbox")
+    config = {"url": BASE, "username": "ZkUser", "password": "ZkSecret"}
+    route = respx.route().mock(return_value=httpx.Response(200, json={}))
+    await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/getprobe"))
+    sent = route.calls.last.request
+    assert sent.method == "GET" and "authorization" not in sent.headers
+    assert "ZkUser" not in what_travelled(sent) and "ZkSecret" not in what_travelled(sent)
 
 
 def test_jede6_the_service_step_lists_the_kinds_people_have_on_their_board_such_as_wud_and_the_sign_in_kinds() -> None:
