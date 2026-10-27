@@ -2041,7 +2041,17 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge, sur tous les tableaux du propriétaire de ce tableau.",
     "A backup is too old": "Une sauvegarde est trop ancienne",
     "Something is full or reaches its red line soon": "Quelque chose sera bientôt plein ou atteindra sa ligne rouge",
-    "The daily report": "Le rapport quotidien"
+    "The daily report": "Le rapport quotidien",
+    "Caddy's admin API listens on localhost:2019 and has no sign-in. To reach it from nexdeck, name an address in the global options: { admin 0.0.0.0:2019 }.": "L'API d'administration de Caddy écoute sur localhost:2019 et n'a pas de connexion. Pour que nexdeck l'atteigne, indiquez une adresse dans les options globales : { admin 0.0.0.0:2019 }.",
+    "Every upstream behind a reverse proxy with its state, the requests in flight and the failures counted.": "Chaque upstream derrière un reverse proxy avec son état, les requêtes en cours et les échecs comptés.",
+    "How many sites Caddy serves, how many upstreams are down, and whether the last reload worked.": "Combien de sites Caddy sert, combien d'upstreams sont en panne et si le dernier rechargement a réussi.",
+    "One line per host name: what it does and how many of its upstreams answer, the broken ones first.": "Une ligne par nom d'hôte : ce qu'il fait et combien de ses upstreams répondent, les défaillants d'abord.",
+    "Only if a proxy in front of the admin API asks for basic authentication.": "Seulement si un proxy devant l'API d'administration demande l'authentification basique.",
+    "Publish that port to your own network only, never to the internet.": "Ne publiez ce port que sur votre propre réseau, jamais sur Internet.",
+    "The address of the admin API, not of a site Caddy serves.": "L'adresse de l'API d'administration, pas celle d'un site servi par Caddy.",
+    "The sites Caddy serves, where it sends them, and which upstreams are down.": "Les sites que Caddy sert, où il les envoie et quels upstreams sont en panne.",
+    "The state of the upstreams comes from the metrics on the same port, which Caddy serves by default.": "L'état des upstreams vient des métriques sur le même port, que Caddy sert par défaut.",
+    "Upstreams": "Upstreams"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3253,6 +3263,12 @@
     "Cloud backup": "Sauvegarde cloud",
     "Reboot required": "Redémarrage requis",
     "major version": "version majeure",
-    "Task Photos": "Tâche Photos"
+    "Task Photos": "Tâche Photos",
+    "Last reload": "Dernier rechargement",
+    "Worked": "A réussi",
+    "Proxy": "Proxy",
+    "Redirect": "Redirection",
+    "Response": "Réponse",
+    "PHP": "PHP"
   }
 }
