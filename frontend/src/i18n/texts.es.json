@@ -2063,7 +2063,15 @@
     "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Los indexadores que Jackett tiene configurados, cuáles fallan y por qué, y una prueba para cada uno.",
     "Pending requests for movies, shows and albums with approve and decline, and the counts.": "Solicitudes pendientes de películas, series y álbumes con aprobar y rechazar, y los recuentos.",
     "Pending, approved, available and declined, in one number.": "Pendientes, aprobadas, disponibles y rechazadas, en un solo número.",
-    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key"
+    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key",
+    "From the slskd configuration under web, authentication, api_keys. Leave empty to sign in with a name and password.": "De la configuración de slskd, en web, authentication, api_keys. Déjalo vacío para iniciar sesión con nombre y contraseña.",
+    "Soulseek status": "Estado de Soulseek",
+    "The Soulseek connection, shared files, and what is downloading and uploading.": "La conexión a Soulseek, los archivos compartidos y lo que se descarga y se sube.",
+    "The web user of slskd. Only without an API key.": "El usuario web de slskd. Solo sin clave API.",
+    "Uploads": "Subidas",
+    "What is downloading, queued or failed, with progress.": "Lo que se descarga, espera o ha fallado, con el progreso.",
+    "What others are taking from you or waiting for.": "Lo que otros te están pidiendo o esperan.",
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Si slskd está conectado a Soulseek, qué comparte y qué está en marcha."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3290,6 +3298,19 @@
     "No indexer is set up.": "No hay ningún indexador configurado.",
     "Declined": "Rechazadas",
     "Album": "Álbum",
-    "No request waits.": "Ninguna solicitud espera."
+    "No request waits.": "Ninguna solicitud espera.",
+    "Clear finished": "Quitar terminadas",
+    "Faulted": "Con fallos",
+    "Share index": "Índice compartido",
+    "Shared files": "Archivos compartidos",
+    "Shared folders": "Carpetas compartidas",
+    "Soulseek": "Soulseek",
+    "Transferring": "Transfiriendo",
+    "Uploading": "Subiendo",
+    "Requested": "Solicitado",
+    "Queued here": "En cola aquí",
+    "Queued by the other side": "En la cola del otro lado",
+    "Refused": "Rechazado",
+    "Nothing is on the move.": "No hay nada en marcha."
   }
 }

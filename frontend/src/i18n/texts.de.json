@@ -2063,7 +2063,15 @@
     "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Die Indexer, die Jackett eingerichtet hat, welche davon ausfallen und warum, und ein Test für jeden.",
     "Pending requests for movies, shows and albums with approve and decline, and the counts.": "Offene Anfragen für Filme, Serien und Alben mit Freigeben und Ablehnen, und die Zahlen.",
     "Pending, approved, available and declined, in one number.": "Wartend, freigegeben, verfügbar und abgelehnt, in einer Zahl.",
-    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key"
+    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key",
+    "From the slskd configuration under web, authentication, api_keys. Leave empty to sign in with a name and password.": "Aus der slskd-Konfiguration unter web, authentication, api_keys. Leer lassen, um sich mit Name und Passwort anzumelden.",
+    "Soulseek status": "Soulseek-Status",
+    "The Soulseek connection, shared files, and what is downloading and uploading.": "Die Soulseek-Verbindung, geteilte Dateien, und was gerade geladen und hochgeladen wird.",
+    "The web user of slskd. Only without an API key.": "Der Web-Benutzer von slskd. Nur ohne API-Schlüssel.",
+    "Uploads": "Uploads",
+    "What is downloading, queued or failed, with progress.": "Was lädt, wartet oder fehlgeschlagen ist, mit Fortschritt.",
+    "What others are taking from you or waiting for.": "Was andere von dir holen oder wofür sie anstehen.",
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Ob slskd mit Soulseek verbunden ist, was es teilt und was gerade läuft."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3290,6 +3298,19 @@
     "No indexer is set up.": "Kein Indexer eingerichtet.",
     "Declined": "Abgelehnt",
     "Album": "Album",
-    "No request waits.": "Keine Anfrage wartet."
+    "No request waits.": "Keine Anfrage wartet.",
+    "Clear finished": "Fertige entfernen",
+    "Faulted": "Gestört",
+    "Share index": "Freigabe-Index",
+    "Shared files": "Geteilte Dateien",
+    "Shared folders": "Geteilte Ordner",
+    "Soulseek": "Soulseek",
+    "Transferring": "Überträgt",
+    "Uploading": "Lädt hoch",
+    "Requested": "Angefragt",
+    "Queued here": "Hier eingereiht",
+    "Queued by the other side": "Bei der Gegenseite eingereiht",
+    "Refused": "Abgelehnt",
+    "Nothing is on the move.": "Nichts ist unterwegs."
   }
 }

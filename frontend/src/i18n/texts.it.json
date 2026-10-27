@@ -2063,7 +2063,15 @@
     "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Gli indicizzatori configurati in Jackett, quali falliscono e perché, e una prova per ciascuno.",
     "Pending requests for movies, shows and albums with approve and decline, and the counts.": "Richieste in sospeso di film, serie e album con approva e rifiuta, e i conteggi.",
     "Pending, approved, available and declined, in one number.": "In sospeso, approvate, disponibili e rifiutate, in un solo numero.",
-    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key"
+    "Settings > Ombi Configuration > API key": "Settings > Ombi Configuration > API key",
+    "From the slskd configuration under web, authentication, api_keys. Leave empty to sign in with a name and password.": "Dalla configurazione di slskd, sotto web, authentication, api_keys. Lascia vuoto per accedere con nome e password.",
+    "Soulseek status": "Stato di Soulseek",
+    "The Soulseek connection, shared files, and what is downloading and uploading.": "La connessione a Soulseek, i file condivisi e ciò che è in download e in upload.",
+    "The web user of slskd. Only without an API key.": "L'utente web di slskd. Solo senza chiave API.",
+    "Uploads": "Upload",
+    "What is downloading, queued or failed, with progress.": "Cosa è in download, in coda o fallito, con l'avanzamento.",
+    "What others are taking from you or waiting for.": "Cosa gli altri prendono da te o aspettano.",
+    "Whether slskd is connected to Soulseek, what it shares and what is on the move.": "Se slskd è connesso a Soulseek, cosa condivide e cosa è in corso."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3290,6 +3298,19 @@
     "No indexer is set up.": "Nessun indicizzatore configurato.",
     "Declined": "Rifiutate",
     "Album": "Album",
-    "No request waits.": "Nessuna richiesta in attesa."
+    "No request waits.": "Nessuna richiesta in attesa.",
+    "Clear finished": "Rimuovi i completati",
+    "Faulted": "In errore",
+    "Share index": "Indice condiviso",
+    "Shared files": "File condivisi",
+    "Shared folders": "Cartelle condivise",
+    "Soulseek": "Soulseek",
+    "Transferring": "In trasferimento",
+    "Uploading": "In upload",
+    "Requested": "Richiesto",
+    "Queued here": "In coda qui",
+    "Queued by the other side": "In coda dall'altra parte",
+    "Refused": "Rifiutato",
+    "Nothing is on the move.": "Nulla è in corso."
   }
 }
