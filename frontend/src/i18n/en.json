@@ -2268,5 +2268,45 @@
   "diagnosis": {
     "why": "Why?",
     "whyOf": "Why is {{name}} red or yellow?"
+  },
+  "weather": {
+    "hourlyLabel": "Hourly forecast for the next {{hours}} hours",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "rainUpTo": "Rain up to {{percent}} % around {{time}}",
+    "noRain": "No rain expected",
+    "aqi": "Air quality",
+    "uv": "UV",
+    "uvPeak": "peak {{value}}",
+    "pollen": "Pollen",
+    "airUnavailable": "Air data unavailable",
+    "pollenKinds": {
+      "alder": "Alder",
+      "birch": "Birch",
+      "grass": "Grass",
+      "mugwort": "Mugwort",
+      "olive": "Olive",
+      "ragweed": "Ragweed"
+    },
+    "level": {
+      "good": "Good",
+      "fair": "Fair",
+      "moderate": "Moderate",
+      "poor": "Poor",
+      "veryPoor": "Very poor",
+      "extremelyPoor": "Extremely poor",
+      "low": "Low",
+      "high": "High",
+      "veryHigh": "Very high",
+      "extreme": "Extreme",
+      "none": "None"
+    }
+  },
+  "calendar": {
+    "previous": "Previous",
+    "next": "Next",
+    "noEventsOnDay": "Nothing on this day",
+    "moreEvents": "{{count}} more",
+    "dayEvents": "{{date}}, entries: {{count}}"
   }
 }

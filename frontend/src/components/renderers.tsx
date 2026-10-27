@@ -53,6 +53,8 @@ import { NoteEditor, saveNote } from './NoteEditor'
 import { Rolled } from './Rolled'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
+import type { Air, Hourly } from './WeatherExtras'
+import type { Entry, Range } from '../lib/calendarGrid'
 
 export interface RenderProps {
   widget: WidgetView
@@ -88,6 +90,12 @@ function CountdownCard(props: RenderProps) {
     </Suspense>
   )
 }
+
+/** The week and month grid of the calendar card loads only for a card that chose one. */
+const LazyCalendarGrid = lazy(() => import('./CalendarGrid'))
+
+/** The weather card's hourly strip and air chips load only for a card that switched one on. */
+const LazyWeatherExtras = lazy(() => import('./WeatherExtras'))
 
 /** Key figures draw the number cards they hold; loaded only when a board has them. */
 const LazyFiguresCard = lazy(() => import('./FiguresCard').then((module) => ({ default: module.FiguresCard })))
@@ -1156,6 +1164,22 @@ export function CalendarCard({ widget, data }: RenderProps) {
   // An appointment of one's own comes from an iCal calendar and says so; the rest are releases.
   const appointment = (entry: Record<string, unknown>) => widget.kind === 'ical.events' || entry.appointment === true
   const items = data?.items ?? []
+  // The week and the month are a grid, drawn by a part of their own that loads when a card has chosen one.
+  const grid = data?.meta?.view
+  if (grid === 'week' || grid === 'month') {
+    return (
+      <Suspense fallback={<div className="flex-1" />}>
+        <LazyCalendarGrid
+          items={items as Entry[]}
+          view={grid}
+          range={data?.meta?.range as Range | undefined}
+          nameOf={(entry) => (appointment(entry) ? disguise.as('event', String(entry.title ?? '')) : disguise.media(String(entry.title ?? '')))}
+          placeOf={(entry) => (appointment(entry) && disguise.on ? '' : disguise.free(tLabel(String(entry.subtitle ?? ''))))}
+          sourceOf={(entry) => (disguise.on ? '' : String(entry.source ?? ''))}
+        />
+      </Suspense>
+    )
+  }
   if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
   for (const item of items) {
@@ -1529,8 +1553,13 @@ export function WeatherCard({ data }: RenderProps) {
   const night = data?.meta?.is_day === false
   const Icon = night && condition === 'clear' ? Moon : (CONDITION_ICONS[condition] ?? Cloud)
   const days = data?.items ?? []
+  // The hourly strip and the air chips load only for a card that asked for them; the card scrolls when it was given too little height.
+  const hourly = data?.meta?.hourly as Hourly | undefined
+  const air = data?.meta?.air as Air | undefined
+  const unavailable = data?.meta?.air_unavailable === true
+  const extras = Boolean(hourly || (air && Object.keys(air).length) || unavailable)
   return (
-    <div className="flex-1 flex flex-col px-3 pb-2 min-h-0">
+    <div className={`flex-1 flex flex-col px-3 pb-2 min-h-0 ${extras ? 'scroll' : ''}`}>
       <div className="flex items-center gap-3 my-auto">
         <Icon size={36} className="text-accent flex-none" strokeWidth={1.5} />
         <div className="min-w-0">
@@ -1568,6 +1597,13 @@ export function WeatherCard({ data }: RenderProps) {
               </div>
             )
           })}
+        </div>
+      )}
+      {extras && (
+        <div className="shrink-0">
+          <Suspense fallback={null}>
+            <LazyWeatherExtras hourly={hourly} air={air} unavailable={unavailable} />
+          </Suspense>
         </div>
       )}
     </div>

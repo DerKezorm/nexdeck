@@ -2268,5 +2268,45 @@
   "diagnosis": {
     "why": "Pourquoi ?",
     "whyOf": "Pourquoi {{name}} est-il rouge ou jaune ?"
+  },
+  "weather": {
+    "hourlyLabel": "Prévisions heure par heure pour les {{hours}} prochaines heures",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil",
+    "rainUpTo": "Pluie jusqu’à {{percent}} % vers {{time}}",
+    "noRain": "Pas de pluie prévue",
+    "aqi": "Qualité de l’air",
+    "uv": "UV",
+    "uvPeak": "pic {{value}}",
+    "pollen": "Pollens",
+    "airUnavailable": "Données de l’air indisponibles",
+    "pollenKinds": {
+      "alder": "Aulne",
+      "birch": "Bouleau",
+      "grass": "Graminées",
+      "mugwort": "Armoise",
+      "olive": "Olivier",
+      "ragweed": "Ambroisie"
+    },
+    "level": {
+      "good": "Bonne",
+      "fair": "Moyenne",
+      "moderate": "Dégradée",
+      "poor": "Mauvaise",
+      "veryPoor": "Très mauvaise",
+      "extremelyPoor": "Extrêmement mauvaise",
+      "low": "Faible",
+      "high": "Élevé",
+      "veryHigh": "Très élevé",
+      "extreme": "Extrême",
+      "none": "Aucun"
+    }
+  },
+  "calendar": {
+    "previous": "Précédent",
+    "next": "Suivant",
+    "noEventsOnDay": "Rien ce jour-là",
+    "moreEvents": "{{count}} de plus",
+    "dayEvents": "{{date}}, entrées : {{count}}"
   }
 }

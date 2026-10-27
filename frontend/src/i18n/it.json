@@ -2268,5 +2268,45 @@
   "diagnosis": {
     "why": "Perché?",
     "whyOf": "Perché {{name}} è rosso o giallo?"
+  },
+  "weather": {
+    "hourlyLabel": "Previsioni orarie per le prossime {{hours}} ore",
+    "sunrise": "Alba",
+    "sunset": "Tramonto",
+    "rainUpTo": "Pioggia fino al {{percent}} % verso le {{time}}",
+    "noRain": "Nessuna pioggia prevista",
+    "aqi": "Qualità dell'aria",
+    "uv": "UV",
+    "uvPeak": "picco {{value}}",
+    "pollen": "Pollini",
+    "airUnavailable": "Dati sull'aria non disponibili",
+    "pollenKinds": {
+      "alder": "Ontano",
+      "birch": "Betulla",
+      "grass": "Graminacee",
+      "mugwort": "Artemisia",
+      "olive": "Olivo",
+      "ragweed": "Ambrosia"
+    },
+    "level": {
+      "good": "Buona",
+      "fair": "Discreta",
+      "moderate": "Moderata",
+      "poor": "Scadente",
+      "veryPoor": "Molto scadente",
+      "extremelyPoor": "Estremamente scadente",
+      "low": "Basso",
+      "high": "Alto",
+      "veryHigh": "Molto alto",
+      "extreme": "Estremo",
+      "none": "Nessuno"
+    }
+  },
+  "calendar": {
+    "previous": "Precedente",
+    "next": "Successivo",
+    "noEventsOnDay": "Niente in questo giorno",
+    "moreEvents": "altri {{count}}",
+    "dayEvents": "{{date}}, voci: {{count}}"
   }
 }
