@@ -7,14 +7,14 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-173-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-185-3fb6d4)](#the-services-it-speaks-to)
 
 ![A nexdeck board in liquid glass: clock, weather, internet traffic, speed test, Pi-hole, charts of CPU and memory for Proxmox, TrueNAS and a NAS, app tiles, what is playing, downloads, AdGuard, containers, a UPS and uptime](docs/screenshot-overview.png)
 
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **173 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **185 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
 - **A map of your network.** A page can be a live plan of your UniFi network: gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions. You pick which servers and devices join it, and nothing moves by itself.
 - **Your home, switched from the board.** A page can hold the lamps, thermostats, covers, scenes, switches, sensors and statistics of Home Assistant on a free surface, as small as a light switch, each in a style of its own, from a pill to a rocker switch, a dial, a window or a door. nexdeck calls nothing but their own services, and only for what stands on the page. A beta for now.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
@@ -150,7 +150,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 **Network.** Public IP address, Cloudflare, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, FortiGate, OpenWrt, Traefik, Nginx Proxy Manager, nginx ignition, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, nexpulse, nexsift, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
 
-**Media.** Plex, Jellyfin, Emby, Tautulli, Tracearr, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, NeutArr, Bazarr, SABnzbd, NZBGet, qBittorrent, Qui, Transmission, Deluge, rTorrent, MeTube, Seerr, Overseerr, Jellyseerr, ReadMeABook, Nexview, nexcrate, nexbeat, Maintainerr, Reclaimerr, Tdarr, Unmanic, FileFlows, RomM, Sportarr, Tube Archivist, Real-Debrid, M3U Editor, Minecraft.
+**Media.** Plex, Jellyfin, Emby, Tautulli, Tracearr, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, NeutArr, Bazarr, SABnzbd, NZBGet, qBittorrent, Qui, Transmission, Deluge, rTorrent, MeTube, Seerr, Overseerr, Jellyseerr, ReadMeABook, Nexview, nexcrate, nexbeat, Maintainerr, Reclaimerr, Tdarr, Unmanic, FileFlows, RomM, Sportarr, Tube Archivist, Real-Debrid, M3U Editor, Minecraft, aria2, pyLoad, Jackett, Ombi, slskd, Owncast, Kodi, PeerTube, rclone, Stash, xTeVe, Your Spotify.
 
 **Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, FileBrowser Quantum, Syncthing, Paperless-ngx, Papra, Firefly III, Actual Budget, Mealie, Grocy, Vikunja, nexlore, nexpaper, nexdiary, nexcanvas, nexbrand, Kimai, Dawarich, wger, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes, Wallos, OctoPrint.
 
