@@ -938,7 +938,8 @@
       "whole": "Introduce un número entero.",
       "range": "Introduce un número de {{min}} a {{max}}.",
       "atLeast": "Introduce un número a partir de {{min}}.",
-      "atMost": "Introduce un número hasta {{max}}."
+      "atMost": "Introduce un número hasta {{max}}.",
+      "step": "Usa pasos de {{step}}, contados desde {{from}}."
     },
     "reallyTitle": "¿Seguro?",
     "reallyBody": "Esta acción está marcada como peligrosa. Pulsa «{{name}}» otra vez para ejecutarla."

@@ -938,7 +938,8 @@
       "whole": "Enter a whole number.",
       "range": "Enter a number from {{min}} to {{max}}.",
       "atLeast": "Enter a number of {{min}} or more.",
-      "atMost": "Enter a number of {{max}} or less."
+      "atMost": "Enter a number of {{max}} or less.",
+      "step": "Use steps of {{step}}, counted from {{from}}."
     },
     "reallyTitle": "Really?",
     "reallyBody": "This action is marked as dangerous. Press {{name}} once more to run it."

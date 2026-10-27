@@ -28,6 +28,20 @@ const KIB: Ask = { name: 'kib', label: 'KiB per second?', kind: 'number', min: 0
 const limit = (ask: Ask = KIB): Action => ({ id: 'button:limit', label: 'Limit speed', confirm: true, asks: [ask] })
 
 describe('a blank that takes a number', () => {
+  it('karten8 ec9 will not send a value between two steps, counted from the lowest value', async () => {
+    const onRun = vi.fn()
+    render(<Harness action={limit({ name: 'kib', label: 'Share', kind: 'number', min: 5, max: 20, step: 5 })} onRun={onRun} />)
+    const field = screen.getByLabelText('Share')
+    await userEvent.type(field, '12')
+    expect(screen.getByRole('alert')).toHaveTextContent(/steps of 5.*from 5/)
+    await userEvent.click(confirmButton())
+    expect(onRun).not.toHaveBeenCalled()
+    await userEvent.clear(field)
+    await userEvent.type(field, '15')
+    await userEvent.click(confirmButton())
+    expect((onRun.mock.calls[0] as [number, Action])[1].params).toEqual({ kib: 15 })
+  })
+
   it('karten8 ac4 shows a number field with its range and sends the number it was given', async () => {
     const onRun = vi.fn()
     render(<Harness action={limit()} onRun={onRun} />)

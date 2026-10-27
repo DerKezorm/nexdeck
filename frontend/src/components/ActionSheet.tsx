@@ -149,7 +149,7 @@ export function ActionSheet({
                     />
                     {wrong && (
                       <span className="text-bad text-xs" role="alert">
-                        {t(`board.number.${wrong}`, { min: blank.min, max: blank.max })}
+                        {t(`board.number.${wrong}`, { min: blank.min, max: blank.max, step: blank.step, from: blank.min ?? 0 })}
                       </span>
                     )}
                   </>

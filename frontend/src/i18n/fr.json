@@ -938,7 +938,8 @@
       "whole": "Saisissez un nombre entier.",
       "range": "Saisissez un nombre de {{min}} à {{max}}.",
       "atLeast": "Saisissez un nombre d’au moins {{min}}.",
-      "atMost": "Saisissez un nombre d’au plus {{max}}."
+      "atMost": "Saisissez un nombre d’au plus {{max}}.",
+      "step": "Saisissez par pas de {{step}}, à partir de {{from}}."
     },
     "reallyTitle": "Vraiment ?",
     "reallyBody": "Cette action est marquée comme dangereuse. Appuyez encore une fois sur « {{name}} » pour l’exécuter."

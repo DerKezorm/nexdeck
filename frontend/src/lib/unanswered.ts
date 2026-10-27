@@ -30,7 +30,7 @@ export function startingValue(blank: Ask): string {
 }
 
 /** What is wrong with a typed number, as the key of the sentence that says so. */
-export type NumberProblem = 'number' | 'whole' | 'range' | 'atLeast' | 'atMost'
+export type NumberProblem = 'number' | 'whole' | 'range' | 'atLeast' | 'atMost' | 'step'
 
 /**
  * Whether a typed value fits a `number` blank; `null` when it does, or when
@@ -38,7 +38,7 @@ export type NumberProblem = 'number' | 'whole' | 'range' | 'atLeast' | 'atMost'
  *
  * ⚠️ The server checks the same things again before anything goes out. This
  * one exists so the person hears it at the field rather than from a refusal.
- * A whole `step` means whole numbers, as on the server.
+ * A whole `step` means whole numbers, and the steps count from `min` (or 0), as on the server.
  */
 export function numberProblem(blank: Ask, raw: string): NumberProblem | null {
   if (blank.kind !== 'number' || raw.trim() === '') return null
@@ -47,9 +47,16 @@ export function numberProblem(blank: Ask, raw: string): NumberProblem | null {
   if (blank.step !== undefined && Number.isInteger(blank.step) && !Number.isInteger(value)) return 'whole'
   const low = blank.min !== undefined && value < blank.min
   const high = blank.max !== undefined && value > blank.max
-  if (!low && !high) return null
-  if (blank.min !== undefined && blank.max !== undefined) return 'range'
-  return low ? 'atLeast' : 'atMost'
+  if (low || high) {
+    if (blank.min !== undefined && blank.max !== undefined) return 'range'
+    return low ? 'atLeast' : 'atMost'
+  }
+  // The steps count from the lowest value, or from 0 (as the server counts them).
+  if (blank.step !== undefined && blank.step > 0) {
+    const steps = (value - (blank.min ?? 0)) / blank.step
+    if (Math.abs(steps - Math.round(steps)) > 1e-9) return 'step'
+  }
+  return null
 }
 
 /**

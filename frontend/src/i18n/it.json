@@ -938,7 +938,8 @@
       "whole": "Inserisci un numero intero.",
       "range": "Inserisci un numero da {{min}} a {{max}}.",
       "atLeast": "Inserisci un numero a partire da {{min}}.",
-      "atMost": "Inserisci un numero fino a {{max}}."
+      "atMost": "Inserisci un numero fino a {{max}}.",
+      "step": "Usa passi di {{step}}, contati da {{from}}."
     },
     "reallyTitle": "Davvero?",
     "reallyBody": "Questa azione è contrassegnata come pericolosa. Premi ancora «{{name}}» per eseguirla."

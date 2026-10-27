@@ -938,7 +938,8 @@
       "whole": "Bitte eine ganze Zahl eingeben.",
       "range": "Bitte eine Zahl von {{min}} bis {{max}} eingeben.",
       "atLeast": "Bitte eine Zahl ab {{min}} eingeben.",
-      "atMost": "Bitte eine Zahl bis {{max}} eingeben."
+      "atMost": "Bitte eine Zahl bis {{max}} eingeben.",
+      "step": "Bitte in Schritten von {{step}} angeben, gezählt ab {{from}}."
     },
     "reallyTitle": "Wirklich?",
     "reallyBody": "Diese Aktion ist als gefährlich markiert. Zum Ausführen noch einmal „{{name}}“ drücken."
