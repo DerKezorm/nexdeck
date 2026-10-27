@@ -18,7 +18,7 @@ import { post } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { factText, type Fact } from '../lib/assistant'
 import type { Action } from '../lib/types'
-import { unanswered } from '../lib/unanswered'
+import { numberProblem, unanswered } from '../lib/unanswered'
 import { Confirm } from './ui'
 
 export interface PendingAction {
@@ -58,7 +58,14 @@ export function ActionSheet({
       dropped = true
     }
   }, [asked])
-  const incomplete = pending !== null && blanks.some((blank) => !String(pending.values[blank.name] ?? '').trim())
+  // ⚠️ A number outside its range is as unfinished as an empty field: it never
+  // goes out, and the field says why.
+  const incomplete =
+    pending !== null &&
+    blanks.some((blank) => {
+      const value = String(pending.values[blank.name] ?? '')
+      return !value.trim() || numberProblem(blank, value) !== null
+    })
 
   return (
     <Confirm
@@ -70,7 +77,9 @@ export function ActionSheet({
       onCancel={onCancel}
       onConfirm={() => {
         if (!pending || incomplete) return
-        onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...pending.values } })
+        // A number goes out as a number, not as the text that was typed.
+        const typed = Object.fromEntries(Object.entries(pending.values).map(([name, text]) => [name, blanks.find((blank) => blank.name === name)?.kind === 'number' ? Number(text) : text]))
+        onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...typed } })
       }}
     >
       {facts.length > 0 && (
@@ -85,6 +94,7 @@ export function ActionSheet({
           {blanks.map((blank) => {
             const value = pending.values[blank.name] ?? ''
             const set = (next: string) => onChange({ ...pending, values: { ...pending.values, [blank.name]: next } })
+            const wrong = numberProblem(blank, value)
             return (
               <label key={blank.name} className="flex flex-col gap-1 text-sm">
                 <span className="text-muted">{tLabel(blank.label)}</span>
@@ -101,6 +111,26 @@ export function ActionSheet({
                       </option>
                     ))}
                   </select>
+                ) : blank.kind === 'number' ? (
+                  <>
+                    <input
+                      className="input"
+                      type="number"
+                      inputMode="decimal"
+                      value={value}
+                      min={blank.min}
+                      max={blank.max}
+                      step={blank.step ?? 'any'}
+                      placeholder={blank.placeholder || undefined}
+                      aria-invalid={wrong ? true : undefined}
+                      onChange={(event) => set(event.target.value)}
+                    />
+                    {wrong && (
+                      <span className="text-bad text-xs" role="alert">
+                        {t(`board.number.${wrong}`, { min: blank.min, max: blank.max })}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <input
                     className="input"

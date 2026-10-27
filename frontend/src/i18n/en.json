@@ -925,7 +925,14 @@
     "kioskRestMinutes_other": "{{count}} minutes",
     "cardStyle": "Cards",
     "cardStyleHelp": "This board's cards in a style of their own, for a wall display or a board with a picture behind it.",
-    "cardStyleInstallation": "As under Appearance"
+    "cardStyleInstallation": "As under Appearance",
+    "number": {
+      "number": "Enter a number.",
+      "whole": "Enter a whole number.",
+      "range": "Enter a number from {{min}} to {{max}}.",
+      "atLeast": "Enter a number of {{min}} or more.",
+      "atMost": "Enter a number of {{max}} or less."
+    }
   },
   "widget": {
     "remove": {

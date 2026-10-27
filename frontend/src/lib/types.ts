@@ -21,15 +21,20 @@ export interface Choice {
  * A parameter of an action that whoever presses it fills in.
  *
  * `choice` picks from `options`, which the card delivered with its answer; the
- * server checks the pressed value against exactly that list.
+ * server checks the pressed value against exactly that list. `number` takes a
+ * number inside `min` and `max`; the server checks that again.
  */
 export interface Ask {
   name: string
   label: string
-  kind?: 'text' | 'url' | 'choice'
+  kind?: 'text' | 'url' | 'choice' | 'number'
   options?: Choice[]
   placeholder?: string
   max_length?: number
+  /** A `number` blank: the lowest and highest value allowed, and the step (a whole step means whole numbers). */
+  min?: number
+  max?: number
+  step?: number
 }
 
 export interface Action {

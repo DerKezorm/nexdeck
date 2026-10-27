@@ -28,3 +28,26 @@ export function startingValue(blank: Ask): string {
   if (blank.kind === 'choice' && blank.options?.length === 1) return blank.options[0].value
   return ''
 }
+
+/** What is wrong with a typed number, as the key of the sentence that says so. */
+export type NumberProblem = 'number' | 'whole' | 'range' | 'atLeast' | 'atMost'
+
+/**
+ * Whether a typed value fits a `number` blank; `null` when it does, or when
+ * nothing has been typed yet (that is "not filled in", not "wrong").
+ *
+ * ⚠️ The server checks the same things again before anything goes out. This
+ * one exists so the person hears it at the field rather than from a refusal.
+ * A whole `step` means whole numbers, as on the server.
+ */
+export function numberProblem(blank: Ask, raw: string): NumberProblem | null {
+  if (blank.kind !== 'number' || raw.trim() === '') return null
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return 'number'
+  if (blank.step !== undefined && Number.isInteger(blank.step) && !Number.isInteger(value)) return 'whole'
+  const low = blank.min !== undefined && value < blank.min
+  const high = blank.max !== undefined && value > blank.max
+  if (!low && !high) return null
+  if (blank.min !== undefined && blank.max !== undefined) return 'range'
+  return low ? 'atLeast' : 'atMost'
+}

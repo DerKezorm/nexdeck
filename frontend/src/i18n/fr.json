@@ -925,7 +925,14 @@
     "kioskRestMinutes_other": "{{count}} minutes",
     "cardStyle": "Cartes",
     "cardStyleHelp": "Les cartes de ce tableau dans un style à elles, pour un écran mural ou un tableau avec une image derrière.",
-    "cardStyleInstallation": "Comme sous Apparence"
+    "cardStyleInstallation": "Comme sous Apparence",
+    "number": {
+      "number": "Saisissez un nombre.",
+      "whole": "Saisissez un nombre entier.",
+      "range": "Saisissez un nombre de {{min}} à {{max}}.",
+      "atLeast": "Saisissez un nombre d’au moins {{min}}.",
+      "atMost": "Saisissez un nombre d’au plus {{max}}."
+    }
   },
   "widget": {
     "remove": {

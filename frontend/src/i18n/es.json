@@ -925,7 +925,14 @@
     "kioskRestMinutes_other": "{{count}} minutos",
     "cardStyle": "Tarjetas",
     "cardStyleHelp": "Las tarjetas de este tablero con un estilo propio, para una pantalla de pared o un tablero con una imagen detrás.",
-    "cardStyleInstallation": "Como en Apariencia"
+    "cardStyleInstallation": "Como en Apariencia",
+    "number": {
+      "number": "Introduce un número.",
+      "whole": "Introduce un número entero.",
+      "range": "Introduce un número de {{min}} a {{max}}.",
+      "atLeast": "Introduce un número a partir de {{min}}.",
+      "atMost": "Introduce un número hasta {{max}}."
+    }
   },
   "widget": {
     "remove": {

@@ -925,7 +925,14 @@
     "kioskRestMinutes_other": "{{count}} minuti",
     "cardStyle": "Schede",
     "cardStyleHelp": "Le schede di questa bacheca in uno stile proprio, per un display a parete o una bacheca con un'immagine dietro.",
-    "cardStyleInstallation": "Come in Aspetto"
+    "cardStyleInstallation": "Come in Aspetto",
+    "number": {
+      "number": "Inserisci un numero.",
+      "whole": "Inserisci un numero intero.",
+      "range": "Inserisci un numero da {{min}} a {{max}}.",
+      "atLeast": "Inserisci un numero a partire da {{min}}.",
+      "atMost": "Inserisci un numero fino a {{max}}."
+    }
   },
   "widget": {
     "remove": {
