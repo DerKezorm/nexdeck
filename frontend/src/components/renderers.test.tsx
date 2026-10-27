@@ -123,7 +123,7 @@ describe('renderers', () => {
   it('offers list actions only when acting is allowed', () => {
     const view = DEMO_VIEWS.find((v) => v.kind === 'docker.containers')!
     const received: Action[] = []
-    const { unmount } = render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} canAct onAction={(action) => received.push(action)} />)
+    const { unmount } = render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} canAct onAction={(action) => void received.push(action)} />)
     expect(screen.getAllByRole('button', { name: 'Restart' }).length).toBeGreaterThan(0)
     unmount()
     render(<WidgetCard widget={view} data={DEMO_DATA[view.id]} canAct={false} />)

@@ -26,7 +26,7 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
@@ -39,7 +39,7 @@ import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
 import { pausedUntil } from '../lib/testResult'
 import { playingLine, useDisguise, type Disguise } from '../lib/showcase'
-import type { Action, Primary, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Pressed, Primary, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
 import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
@@ -63,7 +63,7 @@ export interface RenderProps {
   canAct?: boolean
   /** May change the board: a note card is then written from the card itself. */
   canWrite?: boolean
-  onAction?: (action: Action) => void
+  onAction?: (action: Action) => Pressed
   link?: string
   editing?: boolean
 }
@@ -318,6 +318,10 @@ function ActionButtons({
   canAct?: boolean
   compact?: boolean
 }) {
+  // ⚠️ A button stays shut from the press until the answer is in. The ref
+  // answers a second click that lands before React has drawn the first one.
+  const [shut, setShut] = useState<string[]>([])
+  const holding = useRef(new Set<string>())
   if (!actions?.length || !canAct || !onAction) return null
   const symbols: Record<string, ComponentType<LucideProps>> = { play: Play, square: Square, 'rotate-cw': RotateCw, pause: Pause, search: Search }
   return (
@@ -329,9 +333,19 @@ function ActionButtons({
           <button
             key={action.id}
             className={`btn ${compact ? 'btn-icon h-6 w-6 btn-flat' : 'h-7 px-2 text-xs'} ${action.danger ? 'btn-danger' : ''}`}
+            disabled={shut.includes(action.id)}
             onClick={(event) => {
               event.stopPropagation()
-              onAction(action)
+              if (holding.current.has(action.id)) return
+              const pending = onAction(action)
+              if (!pending) return
+              holding.current.add(action.id)
+              setShut([...holding.current])
+              const open = () => {
+                holding.current.delete(action.id)
+                setShut([...holding.current])
+              }
+              pending.then(open, open)
             }}
             aria-label={label}
             title={label}

@@ -37,6 +37,13 @@ export interface Ask {
   step?: number
 }
 
+/**
+ * What pressing an action hands back: nothing, when the sheet opened instead,
+ * or the pending request, so that the button can stay shut until the answer is
+ * in (a double click goes out once).
+ */
+export type Pressed = void | Promise<unknown>
+
 export interface Action {
   id: string
   label: string

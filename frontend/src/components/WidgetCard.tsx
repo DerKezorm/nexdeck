@@ -14,7 +14,7 @@ import { useDisguise } from '../lib/showcase'
 import { useAuth } from '../stores/auth'
 
 import { tLabel } from '../i18n/texts'
-import type { Action, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Pressed, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { ForecastLine } from './ForecastLine'
 import { ServiceIcon } from './ServiceIcon'
@@ -28,7 +28,7 @@ interface Props {
   editing?: boolean
   canAct?: boolean
   canWrite?: boolean
-  onAction?: (action: Action) => void
+  onAction?: (action: Action) => Pressed
   onRefresh?: () => void
   onSettings?: () => void
   onRemove?: () => void

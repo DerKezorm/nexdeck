@@ -9,7 +9,7 @@ import { useLook } from '../lib/appearance'
 import { cardsOf, GROUP_KINDS, PageCardsContext, tucked, useFolded, type Holding } from '../lib/groups'
 import { boardRowsFor, cellAt, freeGroup, freeSpot, grown, heldSizeOf, NO_SIDE, pack, rowsOf, sizeFromBoard, sizeOnBoard, type HeldSize, type Side } from '../lib/holding'
 import { fittingRow, perTwelfth } from '../lib/grid'
-import type { Action, Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
+import type { Action, Breakpoint, Pressed, LayoutItem, WidgetData, WidgetView } from '../lib/types'
 import { CardMenu, type MoveTarget } from './CardMenu'
 import { SideBar } from './Held'
 import { WidgetCard } from './WidgetCard'
@@ -51,7 +51,7 @@ interface Props {
   canWrite?: boolean
   /** ``quiet``: an arrangement the board makes itself, a group grown to its cards, not a step to take back. */
   onLayoutChange?: (breakpoint: Breakpoint, layout: LayoutItem[], quiet?: boolean) => void
-  onAction?: (widgetId: number, action: Action) => void
+  onAction?: (widgetId: number, action: Action) => Pressed
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void
@@ -605,7 +605,7 @@ interface CardProps {
   editing?: boolean
   canAct?: boolean
   canWrite?: boolean
-  onAction?: (widgetId: number, action: Action) => void
+  onAction?: (widgetId: number, action: Action) => Pressed
   onRefresh?: (widgetId: number) => void
   onSettings?: (widgetId: number) => void
   onRemove?: (widgetId: number) => void

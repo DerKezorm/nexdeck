@@ -29,7 +29,7 @@ function data(extra: Partial<WidgetData> = {}): WidgetData {
 describe('AskCard', () => {
   it('hands the typed value over under the name the adapter asked for', async () => {
     const received: Action[] = []
-    render(<AskCard widget={widget} data={data()} canAct onAction={(action) => received.push(action)} />)
+    render(<AskCard widget={widget} data={data()} canAct onAction={(action) => void received.push(action)} />)
     await userEvent.type(screen.getByLabelText('Video address'), 'https://videos.example.com/x')
     await userEvent.click(screen.getByRole('button', { name: /Fetch|Holen/ }))
     expect(received).toHaveLength(1)

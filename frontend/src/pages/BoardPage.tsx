@@ -442,7 +442,7 @@ export function BoardPage() {
     // toast would be the first anybody heard that there was a choice to make.
     if (needsSheet(action)) {
       setPending({ widgetId, action, values: Object.fromEntries(unanswered(action).map((blank) => [blank.name, startingValue(blank)])) })
-    } else void runActionRef.current(widgetId, action)
+    } else return runActionRef.current(widgetId, action)
   }, [])
   const onRefresh = useCallback((id: number) => void post(`/widgets/${id}/refresh`), [])
   const onSettings = useCallback((id: number) => setSettingsFor(id), [])
@@ -854,8 +854,8 @@ export function BoardPage() {
         pending={pending}
         onChange={setPending}
         onCancel={() => setPending(null)}
-        onRun={(widgetId, action) => {
-          void runAction(widgetId, action)
+        onRun={async (widgetId, action) => {
+          await runAction(widgetId, action)
           setPending(null)
         }}
       />

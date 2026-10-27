@@ -8,7 +8,7 @@ import { createContext, useContext, type PointerEvent as ReactPointerEvent } fro
 import { create } from 'zustand'
 
 import type { HeldSize } from './holding'
-import type { Action, WidgetView } from './types'
+import type { Action, Pressed, WidgetView } from './types'
 
 export const GROUP_KINDS = new Set(['core.tabs', 'core.group', 'core.figures'])
 
@@ -60,7 +60,7 @@ export interface PageCards {
   widgets: WidgetView[]
   canAct?: boolean
   editing?: boolean
-  onAction?: (widgetId: number, action: Action) => void
+  onAction?: (widgetId: number, action: Action) => Pressed
   /** The board's rows and gap, for a group that lays its cards out on rows of its own. */
   rowHeight?: number
   gap?: number

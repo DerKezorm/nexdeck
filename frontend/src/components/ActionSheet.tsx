@@ -11,13 +11,13 @@
  * it (roadmap M3): streams that end, downloads that stop, lights a scene
  * switches. Asked when the question opens; without an answer it is left out.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { post } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { factText, type Fact } from '../lib/assistant'
-import type { Action } from '../lib/types'
+import type { Action, Pressed } from '../lib/types'
 import { numberProblem, unanswered } from '../lib/unanswered'
 import { Confirm } from './ui'
 
@@ -37,7 +37,8 @@ export function ActionSheet({
   pending: PendingAction | null
   onChange: (next: PendingAction) => void
   onCancel: () => void
-  onRun: (widgetId: number, action: Action) => void
+  /** Gives back the pending request when there is one; the sheet stays shut until it is answered. */
+  onRun: (widgetId: number, action: Action) => Pressed
 }) {
   const { t } = useTranslation()
   const blanks = pending ? unanswered(pending.action) : []
@@ -58,12 +59,15 @@ export function ActionSheet({
       dropped = true
     }
   }, [asked])
-  // ⚠️ A number outside its range is as unfinished as an empty field: it never
-  // goes out, and the field says why.
   // The second question of a dangerous action: asked after the first is answered, and asked again for the next press.
   const [sure, setSure] = useState(false)
+  // ⚠️ One press goes out. The ref catches the second click that lands before the first is drawn.
+  const [running, setRunning] = useState(false)
+  const going = useRef(false)
   const closed = pending === null
   useEffect(() => setSure(false), [asked, closed])
+  // ⚠️ A number outside its range is as unfinished as an empty field: it never
+  // goes out, and the field says why.
   const incomplete =
     pending !== null &&
     blanks.some((blank) => {
@@ -78,10 +82,10 @@ export function ActionSheet({
       body={pending && sure ? t('board.reallyBody', { name: tLabel(pending.action.label) }) : blanks.length ? t('board.chooseBeforeAction') : t('board.confirmAction')}
       danger={pending?.action.danger}
       confirmLabel={pending && sure ? tLabel(pending.action.label) : undefined}
-      confirmDisabled={incomplete}
+      confirmDisabled={incomplete || running}
       onCancel={onCancel}
       onConfirm={() => {
-        if (!pending || incomplete) return
+        if (!pending || incomplete || going.current) return
         // ⚠️ Red means two presses: the first one only asks again, with the button's own name on it.
         if (pending.action.danger && !sure) {
           setSure(true)
@@ -89,7 +93,15 @@ export function ActionSheet({
         }
         // A number goes out as a number, not as the text that was typed.
         const typed = Object.fromEntries(Object.entries(pending.values).map(([name, text]) => [name, blanks.find((blank) => blank.name === name)?.kind === 'number' ? Number(text) : text]))
-        onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...typed } })
+        const result = onRun(pending.widgetId, { ...pending.action, params: { ...(pending.action.params ?? {}), ...typed } })
+        if (!result) return
+        going.current = true
+        setRunning(true)
+        const open = () => {
+          going.current = false
+          setRunning(false)
+        }
+        result.then(open, open)
       }}
     >
       {!sure && facts.length > 0 && (

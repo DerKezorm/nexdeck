@@ -211,7 +211,7 @@ export function KioskPage() {
     )
   }
   const canAct = Boolean(data.kiosk?.allow_actions)
-  const run = (widgetId: number, action: Action) => void post(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
+  const run = (widgetId: number, action: Action) => post(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} }).catch(() => undefined)
   return (
     <div className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
       <BackgroundLayer background={data.background} alarm={anyCardDown(widgets, liveData)} />
@@ -264,7 +264,7 @@ export function KioskPage() {
               // the sheet, or the wall display sends the press out half empty.
               if (needsSheet(action)) {
                 setPending({ widgetId, action, values: Object.fromEntries(unanswered(action).map((blank) => [blank.name, startingValue(blank)])) })
-              } else run(widgetId, action)
+              } else return run(widgetId, action)
             }}
           />
         )}
@@ -277,8 +277,8 @@ export function KioskPage() {
         pending={pending}
         onChange={setPending}
         onCancel={() => setPending(null)}
-        onRun={(widgetId, action) => {
-          run(widgetId, action)
+        onRun={async (widgetId, action) => {
+          await run(widgetId, action)
           setPending(null)
         }}
       />

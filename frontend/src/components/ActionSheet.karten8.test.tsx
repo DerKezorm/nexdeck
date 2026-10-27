@@ -3,7 +3,7 @@
  * a blank that takes a number, the second question of a dangerous button, and
  * a press that cannot go out twice.
  */
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -127,5 +127,21 @@ describe('a button that asks first', () => {
     expect(needsSheet(remove({ confirm: true }))).toBe(true)
     expect(needsSheet(limit())).toBe(true)
     expect(needsSheet(remove())).toBe(false)
+  })
+})
+
+describe('a question answered twice', () => {
+  it('karten8 ec2 sends the action once and keeps the question shut until the answer is in', async () => {
+    let answer!: () => void
+    const request = new Promise<void>((resolve) => {
+      answer = resolve
+    })
+    const onRun = vi.fn(() => request)
+    render(<Harness action={remove({ confirm: true })} onRun={onRun} />)
+    await userEvent.dblClick(confirmButton())
+    expect(onRun).toHaveBeenCalledTimes(1)
+    expect(confirmButton()).toBeDisabled()
+    await act(async () => answer())
+    expect(confirmButton()).toBeEnabled()
   })
 })

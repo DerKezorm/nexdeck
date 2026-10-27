@@ -428,13 +428,14 @@ function Buttons({ page, done }: { page: Diagnosis; done: () => Promise<void> })
   const [pending, setPending] = useState<PendingAction | null>(null)
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null)
   const run = async (widgetId: number, action: Action) => {
-    setPending(null)
     try {
       const result = await post<{ message: string }>(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
       setSaid({ text: tLabel(result.message) || t('diagnosis.buttons.done', { label: tLabel(action.label) }), bad: false })
       void done()
     } catch (error) {
       setSaid({ text: error instanceof ApiError ? error.message : t('errors.network'), bad: true })
+    } finally {
+      setPending(null)
     }
   }
   return (
@@ -459,7 +460,7 @@ function Buttons({ page, done }: { page: Diagnosis; done: () => Promise<void> })
         </>
       )}
       {said ? <p className={`mt-2 text-[12px] ${said.bad ? 'text-bad' : 'text-ok'}`} role="status">{said.text}</p> : null}
-      <ActionSheet pending={pending} onChange={setPending} onCancel={() => setPending(null)} onRun={(widgetId, action) => void run(widgetId, action)} />
+      <ActionSheet pending={pending} onChange={setPending} onCancel={() => setPending(null)} onRun={run} />
     </Section>
   )
 }
