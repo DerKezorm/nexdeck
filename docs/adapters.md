@@ -34,6 +34,7 @@ that one of twenty-one renderers draws.
 | Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
 | Duplicati | backup jobs, backups | | the password of the web interface; Duplicati 2.1 or newer |
 | Syncthing | folders, status | | API key |
+| Syncthing Relay | relay (active sessions, connections, throughput of the last minute, traffic proxied so far, uptime) | | none; the status address of strelaysrv (`-status-srv`, port 22070), not the relay port 22067. Beta: run against strelaysrv 2.1.7, idle, nobody used the relay |
 | Backrest | backup plans, backups | back up a plan now | user and password of Backrest's own sign-in, or nothing when it is switched off |
 | Zerobyte | backups (every schedule with its last run, source, destination and next run, failed ones first, yellow when the last good backup is older than the limit), backup summary (fine, failed, running, paused), repositories (state, size, snapshots) | run a schedule now | an API key from Settings > Personal > API keys, Zerobyte 0.40 or newer, sent as X-Api-Key; the key may do what its user may, and the cards only read. Beta: run against a fresh Zerobyte 0.43.2, not yet an instance in use |
 | Komodo | stacks, deployments, overview | restart a stack | API key and secret of a user, best a service user, with Read on stacks, deployments and servers and Execute on a stack to restart it; Komodo 2 |

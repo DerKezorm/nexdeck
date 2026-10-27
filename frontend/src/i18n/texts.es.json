@@ -2294,7 +2294,11 @@
     "Download, upload and ping averaged over a day, a week or a month, with the lowest and highest.": "Descarga, subida y ping promediados durante un día, una semana o un mes, con el más bajo y el más alto.",
     "Download, upload and ping of the newest test, yellow when MySpeed's expected values are missed, with a button that runs a test.": "Descarga, subida y ping de la prueba más reciente, en amarillo si no se alcanzan los valores esperados de MySpeed, con un botón que inicia una prueba.",
     "Only when MySpeed has one. With the level Read, reading works without it, but the test button needs it.": "Solo si MySpeed tiene una. Con el nivel Lectura se puede leer sin ella, pero el botón de prueba la necesita.",
-    "The latest speed test, the averages of a period and the history, with a button that runs a test.": "La última prueba de velocidad, los promedios de un periodo y el historial, con un botón que inicia una prueba."
+    "The latest speed test, the averages of a period and the history, with a button that runs a test.": "La última prueba de velocidad, los promedios de un periodo y el historial, con un botón que inicia una prueba.",
+    "Active sessions, connections and the throughput of the last minute, with the traffic proxied so far.": "Sesiones activas, conexiones y el caudal del último minuto, con el tráfico retransmitido hasta ahora.",
+    "Sessions, connections, throughput and traffic of a Syncthing relay server (strelaysrv).": "Sesiones, conexiones, caudal y tráfico de un servidor de relé de Syncthing (strelaysrv).",
+    "Status URL": "URL de estado",
+    "The status address of the relay, started with -status-srv; not the relay port 22067.": "La dirección de estado del relé, iniciada con -status-srv; no el puerto de relé 22067."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3651,6 +3655,10 @@
     "Lowest download": "Descarga más baja",
     "Highest download": "Descarga más alta",
     "No test in this period.": "Ninguna prueba en este periodo.",
-    "No test yet.": "Todavía ninguna prueba."
+    "No test yet.": "Todavía ninguna prueba.",
+    "Proxied": "Retransmitido",
+    "Throughput": "Caudal",
+    "Pool": "Pool",
+    "None": "Ninguno"
   }
 }

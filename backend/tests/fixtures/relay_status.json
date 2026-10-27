@@ -1,0 +1,37 @@
+{
+    "buildDate": "2026-10-20T19:54:38Z",
+    "buildHost": "github.syncthing.net",
+    "buildUser": "docker",
+    "bytesProxied": 0,
+    "goArch": "amd64",
+    "goMaxProcs": 4,
+    "goNumRoutine": 11,
+    "goOS": "linux",
+    "goVersion": "go1.27.3",
+    "kbps10s1m5m15m30m60m": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "numActiveSessions": 0,
+    "numConnections": 0,
+    "numPendingSessionKeys": 0,
+    "numProxies": 0,
+    "options": {
+        "global-rate": 0,
+        "message-timeout": 60,
+        "network-timeout": 120,
+        "per-session-rate": 0,
+        "ping-interval": 60,
+        "pools": [
+            ""
+        ],
+        "provided-by": "Example Relay"
+    },
+    "startTime": "2026-10-27T21:51:00.16227304Z",
+    "uptimeSeconds": 12,
+    "version": "v2.1.7"
+}
