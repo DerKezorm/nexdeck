@@ -14,13 +14,16 @@ import { HomePage } from './HomePage'
 /** Where the menu stands before it is placed: low, or high on the screen. */
 let menuTop = 410
 let menuHeight = 110
+/** Where its left edge stands before it is placed: at the element, or out of the screen. */
+let menuLeft = 0
 const measured = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
 beforeAll(() => {
   measured.mockImplementation(function (this: HTMLElement) {
     const box = this.hasAttribute('data-edit-bar') ? { top: 440, height: 48 }
       : this.getAttribute('role') === 'menu' && !this.hasAttribute('data-up') ? { top: menuTop, height: menuHeight }
       : { top: 0, height: 0 }
-    return { left: 0, top: box.top, width: 200, height: box.height, right: 200, bottom: box.top + box.height, x: 0, y: box.top, toJSON: () => ({}) } as DOMRect
+    const left = (this.getAttribute('role') === 'menu' ? menuLeft : 0) + (parseFloat(this.style.translate) || 0)
+    return { left, top: box.top, width: 200, height: box.height, right: left + 200, bottom: box.top + box.height, x: left, y: box.top, toJSON: () => ({}) } as DOMRect
   })
 })
 afterAll(() => measured.mockRestore())
@@ -102,6 +105,21 @@ it('leaves a menu below where it fits, and where there is no room above it eithe
   const tall = await openMenu()
   expect(tall).not.toHaveAttribute('data-up')
   expect(tall.style.bottom).toBe('')
+})
+
+it('pulls a menu that hangs out of the screen on the left back to the margin, and one on the right too', async () => {
+  menuTop = 200
+  menuHeight = 110
+  menuLeft = -167
+  expect((await openMenu()).style.translate).toBe('175px 0')
+  cleanup()
+  // The window is 1024 wide in jsdom.
+  menuLeft = 900
+  expect((await openMenu()).style.translate).toBe('-84px 0')
+  cleanup()
+  menuLeft = 100
+  expect((await openMenu()).style.translate).toBe('')
+  menuLeft = 0
 })
 
 it('splits the edit bar into what goes onto the page and the page and board themselves', async () => {
