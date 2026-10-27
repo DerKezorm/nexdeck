@@ -144,4 +144,12 @@ export const patterns: Pattern[] = [
   [/^(\d+) failed$/, '$1 échecs'],
   [/^Zone (\S+)$/, 'Zone $1'],
   [/^(\d+) tries$/, '$1 essais'],
+  [/^Uploading (.+)$/, 'Envoi : $1'],
+  [/^Downloading (.+)$/, 'Téléchargement : $1'],
+  [/^up (\d+ (?:min|h|d))$/, 'actif depuis $1'],
+  [/^(\d+) of (\d+) mailboxes$/, '$1 sur $2 boîtes'],
+  [/^(\d+) mailboxes$/, '$1 boîtes'],
+  [/^(\d+ (?:min|h|d)) old$/, 'il y a $1'],
+  [/^(\d+) times$/, '$1 fois'],
+  [/^seen (\d+ (?:min|h|d)) ago$/, 'vu il y a $1'],
 ]

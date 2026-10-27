@@ -1,0 +1,17 @@
+{
+ "version": "2.7.6",
+ "build_date": "2026-09-18T20:26:10Z",
+ "commit_hash": "62ae9ba3",
+ "features": [
+  "+metrics",
+  "+azblob",
+  "+gcs",
+  "+s3",
+  "+bolt",
+  "+mysql",
+  "+pgsql",
+  "+sqlite",
+  "+unixcrypt",
+  "+portable"
+ ]
+}
