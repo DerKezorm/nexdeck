@@ -29,6 +29,7 @@ import { closeGaps, Steps } from '../lib/arranging'
 import { copyNotes, type CopyAnswer } from '../lib/copying'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
+import { pageAfter, useSwipe } from '../lib/swipe'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { withNews, type HomeAnswer } from '../lib/home'
 import { homeBoardPath } from '../lib/homeBoard'
@@ -629,7 +630,7 @@ export function BoardPage() {
     />
   )
   const tabBar = (
-    <div key="tab-bar" data-no-picture>
+    <div key="tab-bar" data-no-picture data-no-swipe>
       <MobileTabBar
         boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={data?.id ?? listed?.id ?? -1}
@@ -650,6 +651,15 @@ export function BoardPage() {
 
   const topology = activePage?.kind === 'topology'
   const homePage = activePage?.kind === 'home'
+
+  // On a phone a sideways swipe turns to the next page or the one before; not
+  // while the board is arranged, where a finger moves cards. The first and the
+  // last page are the ends: a swipe past them does nothing.
+  const swipeArea = useRef<HTMLDivElement>(null)
+  useSwipe(swipeArea, !editing && pages.length > 1, (direction) => {
+    const next = pageAfter(pages, activePage?.id, direction)
+    if (next) navigate(`/b/${slug}/${next.slug}`)
+  })
 
   if (board.isLoading) {
     return (
@@ -687,7 +697,7 @@ export function BoardPage() {
     // edit bar takes, so the lowest card scrolls out from under it. With the
     // usual room the bar lay over that card's resize corner (issue #12).
     <>
-    <div className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
+    <div ref={swipeArea} className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       {topBar}
       {homePage ? (
