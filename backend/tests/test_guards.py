@@ -932,3 +932,34 @@ def test_bars_are_offered_where_they_can_be_drawn() -> None:
     assert lists > 100, "the lists were not found, so this guard proves nothing"
     assert offered_in_vain == [], f"cards offering bars their rows cannot give: {offered_in_vain}"
     assert could_but_does_not == [], f"lists with numbers that do not offer bars (set bars=True): {could_but_does_not}"
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE", "post", "HEAD"])
+def test_karten3_raw_request_itself_sends_nothing_but_a_get(method: str) -> None:
+    import asyncio
+
+    import httpx
+    import respx
+
+    from app.adapters.base import AdapterError, Context
+
+    adapter = get_adapter("sonarr")
+
+    async def ask() -> str:
+        async with httpx.AsyncClient() as client:
+            try:
+                await adapter.raw_request(method, "/api/v3/series", {"url": "http://svc.example.com:8989", "api_key": "k"}, Context(client, cache={}))
+            except AdapterError as failure:
+                return failure.code
+            return "sent"
+
+    with respx.mock:
+        route = respx.route(host="svc.example.com").mock(return_value=httpx.Response(200, json=[]))
+        assert asyncio.run(ask()) == "method_refused" and not route.called
+        route.mock(return_value=httpx.Response(200, json=[]))
+
+        async def get() -> int:
+            async with httpx.AsyncClient() as client:
+                return (await adapter.raw_request("GET", "/api/v3/series", {"url": "http://svc.example.com:8989", "api_key": "k"}, Context(client, cache={}))).status_code
+
+        assert asyncio.run(get()) == 200 and route.called

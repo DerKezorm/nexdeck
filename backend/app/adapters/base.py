@@ -2109,6 +2109,9 @@ class Adapter:
                 code="no_raw_access",
                 hint="Pick a connection of another kind.",
             )
+        # ⚠️ The guard sits here and not in the callers: a caller that is added later cannot send anything else.
+        if method.upper() != "GET":
+            raise AdapterError("A custom card only reads: it asks with GET.", code="method_refused", hint="Nothing but a GET leaves for a service.")
         from . import rawread
 
         rawread.refuse_a_command(self, path)
