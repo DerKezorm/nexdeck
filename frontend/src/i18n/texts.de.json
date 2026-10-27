@@ -2101,7 +2101,17 @@
     "Open reports, accounts waiting to be let in, and videos held back for a look. Needs a moderator.": "Offene Meldungen, Konten, die auf Einlass warten, und Videos, die zur Prüfung zurückgehalten werden. Braucht einen Moderator.",
     "The videos published last, with channel, length and views.": "Die zuletzt veröffentlichten Videos, mit Kanal, Länge und Aufrufen.",
     "Videos, users and views of a PeerTube instance, the newest videos, the job queue and the reports waiting for a moderator.": "Videos, Nutzer und Aufrufe einer PeerTube-Instanz, die neuesten Videos, die Job-Warteschlange und die Meldungen, die auf einen Moderator warten.",
-    "Videos, views, users and storage of the instance. PeerTube keeps these numbers for a few minutes.": "Videos, Aufrufe, Nutzer und Speicher der Instanz. PeerTube hält diese Zahlen einige Minuten vor."
+    "Videos, views, users and storage of the instance. PeerTube keeps these numbers for a few minutes.": "Videos, Aufrufe, Nutzer und Speicher der Instanz. PeerTube hält diese Zahlen einige Minuten vor.",
+    "How fast rclone moves data now, how much is done, the time left and errors, with the bandwidth limit as the full dial.": "Wie schnell rclone gerade Daten bewegt, wie viel schon fertig ist, die Restzeit und Fehler, mit dem Bandbreitenlimit als vollem Zeiger.",
+    "The --rc-user of rclone. Leave empty when it runs with --rc-no-auth.": "Der --rc-user von rclone. Leer lassen, wenn es mit --rc-no-auth läuft.",
+    "The address of rclone rcd, port 5572 unless you set --rc-addr.": "Die Adresse von rclone rcd, Port 5572, wenn du --rc-addr nicht geändert hast.",
+    "The bandwidth limit, the remotes that are set up and the version, with a button for the limit.": "Das Bandbreitenlimit, die eingerichteten Remotes und die Version, mit einem Knopf für das Limit.",
+    "The files moving now with progress, then the latest finished ones, failed ones in red with the reason.": "Die Dateien, die gerade laufen, mit Fortschritt, dann die zuletzt fertigen, fehlgeschlagene in Rot mit Grund.",
+    "Transfer speed": "Übertragungsgeschwindigkeit",
+    "Transfers": "Übertragungen",
+    "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Gilt, wenn rclone kein Bandbreitenlimit hat, in MB/s. Leer lassen, dann bleibt die Karte eine Zahl.",
+    "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Was rclone gerade bewegt, die Dateien, die es bewegt hat, Fehler, das Bandbreitenlimit und ein Weg, es zu ändern.",
+    "rclone overview": "rclone-Überblick"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3362,6 +3372,16 @@
     "Videos held back": "Zurückgehaltene Videos",
     "Views": "Aufrufe",
     "Nothing waits for a moderator.": "Nichts wartet auf einen Moderator.",
-    "No video is published.": "Kein Video veröffentlicht."
+    "No video is published.": "Kein Video veröffentlicht.",
+    "Bandwidth limit": "Bandbreitenlimit",
+    "Last error": "Letzter Fehler",
+    "Limit": "Limit",
+    "Moving": "In Bewegung",
+    "No limit": "Kein Limit",
+    "Remotes": "Remotes",
+    "Reset the counters": "Zähler zurücksetzen",
+    "Set the limit": "Limit setzen",
+    "Transferred": "Übertragen",
+    "Nothing has been moved.": "Nichts wurde bewegt."
   }
 }

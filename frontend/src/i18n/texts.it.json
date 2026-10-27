@@ -2101,7 +2101,17 @@
     "Open reports, accounts waiting to be let in, and videos held back for a look. Needs a moderator.": "Segnalazioni aperte, account in attesa di essere ammessi e video trattenuti per un controllo. Richiede un moderatore.",
     "The videos published last, with channel, length and views.": "I video pubblicati per ultimi, con canale, durata e visualizzazioni.",
     "Videos, users and views of a PeerTube instance, the newest videos, the job queue and the reports waiting for a moderator.": "Video, utenti e visualizzazioni di un'istanza PeerTube, i video più recenti, la coda dei job e le segnalazioni in attesa di un moderatore.",
-    "Videos, views, users and storage of the instance. PeerTube keeps these numbers for a few minutes.": "Video, visualizzazioni, utenti e spazio dell'istanza. PeerTube conserva questi numeri per qualche minuto."
+    "Videos, views, users and storage of the instance. PeerTube keeps these numbers for a few minutes.": "Video, visualizzazioni, utenti e spazio dell'istanza. PeerTube conserva questi numeri per qualche minuto.",
+    "How fast rclone moves data now, how much is done, the time left and errors, with the bandwidth limit as the full dial.": "Quanto velocemente rclone sposta i dati ora, quanto è fatto, il tempo rimanente e gli errori, con il limite di banda come fondo scala.",
+    "The --rc-user of rclone. Leave empty when it runs with --rc-no-auth.": "Il --rc-user di rclone. Lascia vuoto se funziona con --rc-no-auth.",
+    "The address of rclone rcd, port 5572 unless you set --rc-addr.": "L'indirizzo di rclone rcd, porta 5572 se non hai cambiato --rc-addr.",
+    "The bandwidth limit, the remotes that are set up and the version, with a button for the limit.": "Il limite di banda, i remote configurati e la versione, con un pulsante per il limite.",
+    "The files moving now with progress, then the latest finished ones, failed ones in red with the reason.": "I file in movimento con l'avanzamento, poi gli ultimi completati, quelli falliti in rosso con il motivo.",
+    "Transfer speed": "Velocità di trasferimento",
+    "Transfers": "Trasferimenti",
+    "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Usato quando rclone non ha un limite di banda, in MB/s. Lascia vuoto e la scheda resta un numero.",
+    "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Cosa sposta rclone ora, i file spostati, gli errori, il limite di banda e un modo per cambiarlo.",
+    "rclone overview": "Panoramica di rclone"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3362,6 +3372,16 @@
     "Videos held back": "Video trattenuti",
     "Views": "Visualizzazioni",
     "Nothing waits for a moderator.": "Niente attende un moderatore.",
-    "No video is published.": "Nessun video pubblicato."
+    "No video is published.": "Nessun video pubblicato.",
+    "Bandwidth limit": "Limite di banda",
+    "Last error": "Ultimo errore",
+    "Limit": "Limite",
+    "Moving": "In movimento",
+    "No limit": "Nessun limite",
+    "Remotes": "Remote",
+    "Reset the counters": "Azzera i contatori",
+    "Set the limit": "Imposta il limite",
+    "Transferred": "Trasferito",
+    "Nothing has been moved.": "Non è stato spostato nulla."
   }
 }
