@@ -922,7 +922,8 @@
       "hideHelp": "No aparece en la pila de tarjetas del móvil. El tablero ancho, una tableta y una pantalla de pared la mantienen, y al ordenar el tablero en el móvil se ve atenuada.",
       "showRed": "Mostrarla igualmente si está en rojo",
       "showRedHelp": "El móvil es lo que miras cuando algo va mal."
-    }
+    },
+    "keyTaken": "La tecla {{key}} ya abre {{name}} en este tablero. Cada tecla abre un mosaico; elige otra o ninguna."
   },
   "library": {
     "title": "Añadir un widget",
@@ -1302,6 +1303,7 @@
     "copyStartedEmpty": "La copia de {{name}} empieza vacía; sus tarjetas se quedan en el original.",
     "copyHeldLeft_one": "Una tarjeta de {{name}} se ha quedado atrás, porque allí no podrías añadirla tú.",
     "copyHeldLeft_other": "{{count}} tarjetas de {{name}} se han quedado atrás, porque allí no podrías añadirlas tú.",
+    "copyKeyDropped": "La copia de {{name}} no tiene tecla: {{key}} ya abre un mosaico del tablero.",
     "selected_one": "{{count}} tarjeta seleccionada.",
     "selected_other": "{{count}} tarjetas seleccionadas. Arrastra una o usa las flechas para moverlas juntas; Escape las suelta.",
     "undo": "Deshacer",

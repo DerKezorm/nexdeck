@@ -2041,7 +2041,18 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Ce qui s’est passé ces dernières 24 heures et ce qui est encore rouge, sur tous les tableaux du propriétaire de ce tableau.",
     "A backup is too old": "Une sauvegarde est trop ancienne",
     "Something is full or reaches its red line soon": "Quelque chose sera bientôt plein ou atteindra sa ligne rouge",
-    "The daily report": "Le rapport quotidien"
+    "The daily report": "Le rapport quotidien",
+    "Key": "Touche",
+    "Pressing this digit on the board opens the tile, as a click would. Each key opens one tile of the board; ? shows the keys on the tiles.": "Appuyer sur ce chiffre sur le tableau ouvre la tuile, comme le ferait un clic. Chaque touche ouvre une tuile du tableau ; ? affiche les touches sur les tuiles.",
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "9"
   },
   "labels": {
     "Private resources": "Ressources privées",

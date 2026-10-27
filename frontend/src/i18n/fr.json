@@ -922,7 +922,8 @@
       "hideHelp": "Absente de la pile de cartes du téléphone. Le tableau large, une tablette et un écran mural la gardent, et en arrangeant le tableau sur le téléphone elle apparaît estompée.",
       "showRed": "L’afficher quand même si elle est rouge",
       "showRedHelp": "C’est le téléphone qu’on regarde quand quelque chose ne va pas."
-    }
+    },
+    "keyTaken": "La touche {{key}} ouvre déjà {{name}} sur ce tableau. Chaque touche ouvre une tuile ; choisissez-en une autre ou aucune."
   },
   "library": {
     "title": "Ajouter un widget",
@@ -1299,9 +1300,10 @@
     "duplicated_other": "Les {{count}} copies sont en bas de la page.",
     "copied_one": "Copiée vers {{page}}.",
     "copied_other": "{{count}} cartes copiées vers {{page}}.",
-    "copyStartedEmpty": "La copie de {{name}} commence vide ; ses cartes restent dans l’original.",
+    "copyStartedEmpty": "La copie de {{name}} commence vide ; ses cartes restent dans l’original.",
     "copyHeldLeft_one": "Une carte de {{name}} est restée en place, car vous ne pourriez pas l’ajouter vous-même là-bas.",
     "copyHeldLeft_other": "{{count}} cartes de {{name}} sont restées en place, car vous ne pourriez pas les ajouter vous-même là-bas.",
+    "copyKeyDropped": "La copie de {{name}} n’a pas de touche : {{key}} ouvre déjà une tuile du tableau.",
     "selected_one": "{{count}} carte sélectionnée.",
     "selected_other": "{{count}} cartes sélectionnées. Glissez-en une ou utilisez les flèches pour les déplacer ensemble ; Échap les relâche.",
     "undo": "Annuler",

@@ -25,6 +25,7 @@ import { tLabel } from '../i18n/texts'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useBoardCardStyle } from '../lib/appearance'
+import { failureText, useAppKeys } from '../lib/appKeys'
 import { closeGaps, Steps } from '../lib/arranging'
 import { copyNotes, type CopyAnswer } from '../lib/copying'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
@@ -331,6 +332,11 @@ export function BoardPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [editing, putBack])
 
+  // A number key opens the app tile that has it, on whichever page it stands; ? shows the keys.
+  // Not while the board is arranged or the search is open: there a digit is typed, not pressed.
+  const everyTile = useMemo(() => pages.flatMap((page) => page.widgets), [pages])
+  useAppKeys(!editing && !palette, everyTile, liveData)
+
   // The player's bar sits where the edit bar does; it steps aside while editing.
   useEffect(() => {
     usePlayer.getState().setBarHidden(editing)
@@ -522,7 +528,7 @@ export function BoardPage() {
           setToast({ text: t('arrange.moved', { count: answer.moved, page: name ? (name.board ? `${name.board} › ${name.name}` : name.name) : '' }), level: 'ok' })
           void Promise.all([board.refetch(), boards.refetch()])
         })
-        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+        .catch((failure) => setToast({ text: failureText(failure, t), level: 'error' }))
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [flush, moveTargets, t],

@@ -14,7 +14,7 @@ from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
 from ..deps import error, require_integration
 from ..models import Board, Integration, Page, User, Widget
-from . import grid, holders
+from . import app_keys, grid, holders
 from . import health as health_service
 from .integrations import export_config, store_config
 from .state import live
@@ -740,6 +740,15 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
                 except HTTPException as refused:
                     detail = refused.detail if isinstance(refused.detail, dict) else {}
                     raise ImportError_(f"{where.capitalize()}: {detail.get('message', 'this option is not allowed')}") from refused
+            try:
+                app_keys.check_value(kind, options)
+            except HTTPException as refused:
+                detail = refused.detail if isinstance(refused.detail, dict) else {}
+                raise ImportError_(f"{where.capitalize()}: {detail.get('message', 'this key is not allowed')}") from refused
+    # A file is one board, and a key opens one tile of a board.
+    twice = app_keys.twice_in_file(pages or [])
+    if twice:
+        raise ImportError_(f"Key {twice} is given to two app tiles. Each key opens one tile of a board.")
 
 
 def _refuse_if_oversized(document: dict) -> None:

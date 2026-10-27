@@ -922,7 +922,8 @@
       "hideHelp": "Fehlt im Kartenstapel des Handys. Das breite Board, ein Tablet und eine Wandanzeige behalten sie, und beim Bearbeiten auf dem Handy steht sie blass da.",
       "showRed": "Trotzdem zeigen, wenn sie rot ist",
       "showRedHelp": "Aufs Handy schaut man, wenn etwas nicht stimmt."
-    }
+    },
+    "keyTaken": "Die Taste {{key}} öffnet auf diesem Board schon {{name}}. Jede Taste öffnet eine Kachel; wähl eine andere oder keine."
   },
   "library": {
     "title": "Widget hinzufügen",
@@ -1302,6 +1303,7 @@
     "copyStartedEmpty": "Die Kopie von {{name}} beginnt leer, ihre Karten bleiben im Original.",
     "copyHeldLeft_one": "Eine Karte aus {{name}} ist nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
     "copyHeldLeft_other": "{{count}} Karten aus {{name}} sind nicht mitgekommen, weil du sie dort nicht selbst anlegen könntest.",
+    "copyKeyDropped": "Die Kopie von {{name}} hat keine Taste, denn {{key}} öffnet auf dem Board schon eine Kachel.",
     "selected_one": "{{count}} Karte ausgewählt.",
     "selected_other": "{{count}} Karten ausgewählt. Zieh eine davon oder nimm die Pfeiltasten, dann bewegen sich alle; Escape hebt die Auswahl auf.",
     "undo": "Rückgängig",

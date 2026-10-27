@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { failureText } from '../lib/appKeys'
 import { shownField } from '../lib/fields'
 import { inFigures, TILE_LINES } from '../lib/figures'
 import { useEditedPage } from '../lib/groups'
@@ -261,7 +262,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       onSaved()
       onClose()
     } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+      setError(failureText(failure, t))
     } finally {
       setBusy(false)
     }

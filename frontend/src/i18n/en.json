@@ -922,7 +922,8 @@
       "hideHelp": "Left out of the stack a phone shows. The wide board, a tablet and a wall display keep it, and arranging the board on the phone shows it faded.",
       "showRed": "Show it anyway when it is red",
       "showRedHelp": "The phone is where you look when something is wrong."
-    }
+    },
+    "keyTaken": "Key {{key}} already opens {{name}} on this board. Each key opens one tile; pick another one or none."
   },
   "library": {
     "title": "Add a widget",
@@ -1302,6 +1303,7 @@
     "copyStartedEmpty": "The copy of {{name}} starts empty; its cards stay in the original.",
     "copyHeldLeft_one": "One card of {{name}} stayed behind, because you could not add it there yourself.",
     "copyHeldLeft_other": "{{count}} cards of {{name}} stayed behind, because you could not add them there yourself.",
+    "copyKeyDropped": "The copy of {{name}} has no key: {{key}} already opens a tile of the board.",
     "selected_one": "{{count}} card selected.",
     "selected_other": "{{count}} cards selected. Drag one or use the arrow keys to move them together; Escape lets go.",
     "undo": "Undo",

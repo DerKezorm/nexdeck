@@ -32,6 +32,7 @@ import type { TFunction } from 'i18next'
 
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
+import { appTarget, keyOf, useKeyMarks } from '../lib/appKeys'
 import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
@@ -2134,14 +2135,23 @@ export function RingCard({ data }: RenderProps) {
 // App tile: launcher with reachability
 // ---------------------------------------------------------------------------
 
-export function AppTile({ widget, data, link }: RenderProps) {
+export function AppTile({ widget, data, editing }: RenderProps) {
   const { t } = useTranslation()
   const health = widget.health
   const window = String(widget.options?.bars ?? '24h')
   const status: Status = health ? (health.last_ok === null ? 'unknown' : health.last_ok ? 'ok' : 'bad') : 'unknown'
   // The tile's own line, else the one of the app it follows (issue #37).
   const description = String(data?.meta?.description || widget.app?.description || '')
-  const href = safeUrl(link || widget.link || widget.service_link) || undefined
+  // The same address and the same tab as its number key (lib/appKeys.ts).
+  const { href, newTab } = appTarget(widget, data)
+  const key = keyOf(widget)
+  const marks = useKeyMarks((state) => state.shown)
+  // Not while the board is arranged: the keys do nothing then.
+  const mark = key && marks && !editing ? (
+    <kbd className="absolute left-1.5 top-1.5 z-[1] grid place-items-center min-w-[18px] h-[18px] px-1 rounded-md bg-accent text-white text-[11px] font-semibold leading-none shadow" aria-hidden="true" data-testid="key-mark">
+      {key}
+    </kbd>
+  ) : null
   const bars = health?.bars ?? []
   // Why the dot is the colour it is, on hover. A grey dot used to say nothing
   // at all, and issue #17 took five rounds to find a check switched off.
@@ -2165,11 +2175,13 @@ export function AppTile({ widget, data, link }: RenderProps) {
     return (
       <Tag
         href={href}
-        target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
+        target={newTab ? '_blank' : undefined}
         rel="noopener noreferrer"
         className="app-big flex-1 flex flex-col items-center min-h-0 px-3 pt-2.5 pb-3 no-underline text-inherit relative"
         data-testid="app-big"
+        aria-keyshortcuts={key || undefined}
       >
+        {mark}
         <div className="text-[14px] font-semibold truncate max-w-full text-center">{widget.title}</div>
         <div className="app-big-icon flex-1 min-h-0 w-full grid place-items-center">
           <ServiceIcon icon={widget.icon} size={96} />
@@ -2185,10 +2197,12 @@ export function AppTile({ widget, data, link }: RenderProps) {
   return (
     <Tag
       href={href}
-      target={href && data?.meta?.open_new_tab !== false ? '_blank' : undefined}
+      target={newTab ? '_blank' : undefined}
       rel="noopener noreferrer"
-      className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit"
+      className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit relative"
+      aria-keyshortcuts={key || undefined}
     >
+      {mark}
       <div className="flex items-center gap-3">
         <ServiceIcon icon={widget.icon} size={30} />
         <div className="min-w-0 flex-1">

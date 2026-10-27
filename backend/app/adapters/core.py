@@ -466,6 +466,10 @@ class CoreAdapter(Adapter):
                     ),
                 ),
                 Field("open_new_tab", "Open in a new tab", type="bool", default=True),
+                # One digit per board opens the tile from the keyboard (services/app_keys.py).
+                Field("key", "Key", type="select", default="",
+                      options=(("", "None"), *((digit, digit) for digit in "123456789")),
+                      help="Pressing this digit on the board opens the tile, as a click would. Each key opens one tile of the board; ? shows the keys on the tiles."),
             ),
         ),
     )

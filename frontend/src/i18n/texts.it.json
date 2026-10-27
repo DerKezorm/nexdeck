@@ -2041,7 +2041,18 @@
     "What happened in the last 24 hours and what is still red, from every board of this board's owner.": "Cosa è successo nelle ultime 24 ore e cosa è ancora rosso, da tutte le bacheche del proprietario di questa bacheca.",
     "A backup is too old": "Un backup è troppo vecchio",
     "Something is full or reaches its red line soon": "Qualcosa sarà presto pieno o raggiungerà la sua linea rossa",
-    "The daily report": "Il rapporto giornaliero"
+    "The daily report": "Il rapporto giornaliero",
+    "Key": "Tasto",
+    "Pressing this digit on the board opens the tile, as a click would. Each key opens one tile of the board; ? shows the keys on the tiles.": "Premere questa cifra sulla bacheca apre il riquadro, come farebbe un clic. Ogni tasto apre un riquadro della bacheca; ? mostra i tasti sui riquadri.",
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "9"
   },
   "labels": {
     "Private resources": "Risorse private",

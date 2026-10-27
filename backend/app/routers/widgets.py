@@ -39,7 +39,7 @@ from ..schemas import (
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import chronicle, grid, history, holders, impact
+from ..services import app_keys, chronicle, grid, history, holders, impact
 from ..services import health as health_service
 from ..services.boards import (
     GROUP_KINDS,
@@ -114,6 +114,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     _refuse_unless_cards(page)
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_options(db, body.kind, body.options, user)
+    app_keys.refuse_twice(db, board.id, None, body.kind, body.options)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     # A tile that follows an app shows the app's name until it is given one of its own.
@@ -153,6 +154,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         widget.link = body.link.strip()
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
+        app_keys.refuse_twice(db, board.id, widget.id, widget.kind, body.options)
         widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
     if body.clear_refresh:
         widget.refresh_seconds = None
@@ -295,6 +297,17 @@ def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
         moving.append((widget, page))
     if not moving:
         return {"moved": 0, "page_id": target.id}
+    # ⚠️ A key means one tile per board. A tile that brings its key to a board
+    # where another tile has it is refused, with the name of that tile, as in
+    # the settings; nothing is moved.
+    arriving = {widget.id for widget, page in moving if page.board_id != to_board.id}
+    keys = app_keys.taken(db, to_board.id, leaving=arriving)
+    for widget, _page in moving:
+        key = app_keys.key_of(widget.options) if widget.kind == app_keys.KIND and widget.id in arriving else ""
+        if key and key in keys:
+            raise app_keys.refused(db, key, keys[key])
+        if key:
+            keys[key] = widget
 
     to_columns = grid.columns(to_board.settings)
     placed = _below(target, [_spot_in(widget, page, grid.columns(boards[page.board_id].settings), to_columns) for widget, page in moving])
@@ -386,6 +399,8 @@ def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
 
     to_columns = grid.columns(to_board.settings)
     notes: list[dict[str, Any]] = []
+    # Read before the first copy is made: the copies carry the keys of their originals.
+    keys = app_keys.taken(db, to_board.id)
     made: list[tuple[Widget, Widget, Page]] = []
     held: list[tuple[Widget, Widget, Page]] = []
     taken_along: dict[int, list[Widget]] = {}
@@ -413,6 +428,15 @@ def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
         taken_along[id(twin)] = taken
         if len(taken) < len(inside):
             notes.append({"code": "held_left", "name": name, "count": len(inside) - len(taken)})
+    # A key opens one tile of a board. Beside its original, or where another
+    # tile has it, the copy comes without it, and the answer says so.
+    for twin, _source, _page in [*made, *held]:
+        key = app_keys.key_of(twin.options) if twin.kind == app_keys.KIND else ""
+        if key and key in keys:
+            twin.options = {name: value for name, value in twin.options.items() if name != "key"}
+            notes.append({"code": "key_dropped", "name": twin.title or app_keys.name_of(db, keys[key]), "key": key})
+        elif key:
+            keys[key] = twin
     db.flush()
 
     # The holders name their copied cards by the numbers those just got.
