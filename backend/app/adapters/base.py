@@ -15,6 +15,7 @@ import hashlib
 import ipaddress
 import json
 import logging
+import math
 import re
 import socket
 import time
@@ -361,7 +362,8 @@ class Choice(BaseModel):
     """One entry of a pick list a card offers with an action."""
 
     value: str
-    label: str
+    #: A custom card hands over the author's text in every language it was written in (``{"en": ..., "de": ...}``).
+    label: str | dict[str, str]
 
 
 class Ask(BaseModel):
@@ -391,24 +393,66 @@ class Ask(BaseModel):
 
     #: The parameter the chosen or typed value is passed as.
     name: str
-    label: str
+    #: Text, or the texts of a custom card's author per language.
+    label: str | dict[str, str]
     #: ``choice`` picks from ``options``; ``url`` is checked the way a
     #: member-supplied address is checked everywhere else in nexdeck: http or
     #: https, a host, and nothing that only answers to the server itself.
-    kind: Literal["text", "url", "choice"] = "text"
+    #: ``number`` takes a number inside ``min`` and ``max`` on the grid of
+    #: ``step`` (a button of a custom card, KARTEN-8 AC-4).
+    kind: Literal["text", "url", "choice", "number"] = "text"
     #: For ``choice``: what may be picked. Delivered with the card's answer,
     #: which is what lets the guard check the pressed value against it.
     options: list[Choice] = PydanticField(default_factory=list)
     placeholder: str = ""
     max_length: int = 400
+    #: For ``number``: the smallest and the largest value, and the steps from
+    #: ``min`` (or from 0). A whole step takes whole numbers only.
+    min: float | None = None
+    max: float | None = None
+    step: float | None = None
 
 
-def fill_in(ask: Ask, value: Any) -> str:
+#: A number as a field of a form sends it: digits, a point, a sign and an exponent, nothing else.
+_NUMBER_TEXT = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$")
+
+
+def _number_in(ask: Ask, value: Any) -> int | float:
+    """A filled-in number, checked against the type, the range and the steps of its blank (KARTEN-8 EC-9).
+
+    ⚠️ ``True`` is a number to Python and never one here, and neither is a
+    list, ``NaN`` or infinity. Text is taken only when it is a plain number:
+    a browser's number field may send ``"12"``.
+    """
+    if isinstance(value, str) and _NUMBER_TEXT.match(value.strip()):
+        value = float(value.strip())
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
+        raise AdapterError("This needs a number.", code="bad_value")
+    if (ask.min is not None and value < ask.min) or (ask.max is not None and value > ask.max):
+        low = "" if ask.min is None else f"{ask.min:g}"
+        high = "" if ask.max is None else f"{ask.max:g}"
+        raise AdapterError(f"That is outside what this field takes ({low} to {high}).", code="bad_value")
+    if ask.step is not None and ask.step > 0:
+        steps = (value - (ask.min or 0)) / ask.step
+        if abs(steps - round(steps)) > 1e-9:
+            raise AdapterError(f"That is not a step of {ask.step:g}.", code="bad_value")
+    whole = ask.step is not None and float(ask.step).is_integer()
+    if whole or float(value).is_integer():
+        if not float(value).is_integer():
+            raise AdapterError("This needs a whole number.", code="bad_value")
+        return int(value)
+    return float(value)
+
+
+def fill_in(ask: Ask, value: Any) -> Any:
     """What the filled-in value must look like before an adapter sees it.
 
     Refuses rather than trims, apart from surrounding blanks: a silently
-    shortened address is a download of something else.
+    shortened address is a download of something else. Text for every kind but
+    ``number``, which gives a number.
     """
+    if ask.kind == "number":
+        return _number_in(ask, value)
     if not isinstance(value, str):
         raise AdapterError("This action needs a value.", code="bad_value")
     text = value.strip()
@@ -435,7 +479,8 @@ def fill_in(ask: Ask, value: Any) -> str:
 
 class Action(BaseModel):
     id: str
-    label: str
+    #: Text, or the texts of a custom card's author per language, which the browser picks from like every other text of such a card.
+    label: str | dict[str, str]
     icon: str = ""
     confirm: bool = False
     danger: bool = False
