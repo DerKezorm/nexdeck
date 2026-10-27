@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, darker, lookFile, readLook, useLook } from './appearance'
+import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, onAccent, readLook, useLook } from './appearance'
 
 describe('the accent colour', () => {
   it('reads the three parts of a colour', () => {
@@ -21,11 +21,21 @@ describe('the accent colour', () => {
   it('turns one colour into the four variables the interface uses', () => {
     expect(accentVariables('#22d3ee')).toEqual({
       '--nd-accent': '#22d3ee',
+      '--nd-on-accent': '#041016',
       '--nd-accent-strong': '#1cadc3',
       '--nd-accent-soft': 'rgba(34, 211, 238, 0.14)',
       '--nd-accent-glow': 'rgba(34, 211, 238, 0.35)',
       '--nd-aurora-1': 'rgba(34, 211, 238, 0.16)',
     })
+  })
+
+  it('puts the ink that reads on the accent, not the white of the light theme, over a light colour', () => {
+    // A fresh installation: preset cyan, light theme. White on #22d3ee is 1.7:1.
+    for (const colour of ['#22d3ee', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#38bdf8', '#94a3b8']) {
+      expect(contrast(colour, onAccent(colour)), colour).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(onAccent('#0e7490')).toBe('#ffffff')
+    expect(onAccent('#22d3ee')).toBe('#041016')
   })
 
   it('hands back nothing for a colour it cannot read, so the shipped one stays', () => {
@@ -43,6 +53,13 @@ describe('painting it on', () => {
     applyAppearance({ preset: 'violet', accent: '', colour: '#a78bfa', css: '.card { border-radius: 4px; }' })
     expect(document.documentElement.style.getPropertyValue('--nd-accent')).toBe('#a78bfa')
     expect(document.getElementById('nexdeck-appearance')?.textContent).toBe('.card { border-radius: 4px; }')
+  })
+
+  it('paints the ink over the accent too, and gives it back with it', () => {
+    applyAppearance({ preset: 'cyan', accent: '', colour: '#22d3ee', css: '' })
+    expect(document.documentElement.style.getPropertyValue('--nd-on-accent')).toBe('#041016')
+    applyAppearance(null)
+    expect(document.documentElement.style.getPropertyValue('--nd-on-accent')).toBe('')
   })
 
   it('takes the style sheet away again when it is emptied', () => {

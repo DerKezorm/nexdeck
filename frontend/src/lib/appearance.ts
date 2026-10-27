@@ -134,6 +134,22 @@ export function darker(colour: string, by = 0.18): string {
   return `#${shaded.map((value) => value.toString(16).padStart(2, '0')).join('')}`
 }
 
+/** The two inks that sit on an accent ground: the dark one of the dark theme and white, as shipped. */
+const INK_DARK = '#041016'
+const INK_LIGHT = '#ffffff'
+
+/**
+ * The ink for text on an accent ground, whichever of the two reads better.
+ *
+ * ⚠️ The accent is written onto the root in both brightnesses, and the shipped
+ * `--nd-on-accent` is white in the light one. A light cyan under white text
+ * was 1.7:1 on a fresh installation in the light theme. The ink follows the
+ * accent that is really drawn.
+ */
+export function onAccent(colour: string): string {
+  return contrast(colour, INK_DARK) >= contrast(colour, INK_LIGHT) ? INK_DARK : INK_LIGHT
+}
+
 /** The variables an accent colour turns into. */
 export function accentVariables(colour: string): Record<string, string> {
   const parts = channels(colour)
@@ -141,6 +157,7 @@ export function accentVariables(colour: string): Record<string, string> {
   const [red, green, blue] = parts
   return {
     '--nd-accent': colour,
+    '--nd-on-accent': onAccent(colour),
     '--nd-accent-strong': darker(colour),
     '--nd-accent-soft': `rgba(${red}, ${green}, ${blue}, 0.14)`,
     '--nd-accent-glow': `rgba(${red}, ${green}, ${blue}, 0.35)`,
@@ -218,7 +235,7 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   const own = HEX.test(look?.accent ?? '')
   const colour = look?.theme && !own ? '' : (look?.colour ?? '')
   const variables = accentVariables(colour)
-  for (const name of ['--nd-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']) {
+  for (const name of ['--nd-accent', '--nd-on-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']) {
     if (variables[name]) root.style.setProperty(name, variables[name])
     else root.style.removeProperty(name)
   }
