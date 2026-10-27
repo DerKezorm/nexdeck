@@ -859,3 +859,19 @@ def test_karten3_a_card_answer_beyond_two_megabytes_names_the_limit_in_megabytes
     number = own(admin, example("bookstack"), token_id="abc", token_secret=KEY)
     answer = asked(admin, number, "/api/books")
     assert answer.json()["detail"]["code"] == "answer_too_large" and "2 MB" in answer.json()["detail"]["hint"]
+
+
+@respx.mock
+def test_karten3_a_limit_below_one_megabyte_is_named_in_kilobytes() -> None:
+    from app.adapters.base import read_at_most
+
+    respx.get(f"{BASE}/big").mock(return_value=httpx.Response(200, content=b"x" * (300 * 1024)))
+
+    async def run() -> AdapterError:
+        async with httpx.AsyncClient() as client:
+            with pytest.raises(AdapterError) as failure:
+                await read_at_most(client, "GET", f"{BASE}/big", 256 * 1024)
+            return failure.value
+
+    hint = asyncio.run(run()).hint or ""
+    assert "256 KB" in hint and "0 MB" not in hint
