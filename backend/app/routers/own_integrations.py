@@ -80,6 +80,7 @@ def _view(db: Session, row: OwnIntegration, *, text: bool) -> dict[str, Any]:
 def _tell(db: Session, short: str) -> None:
     """Every card on a connection of the kind fetches again: the change shows at once (AC-11)."""
     kind = store.kind_of(short)
+    collector.forget_sign_ins(list(db.scalars(select(Integration.id).where(Integration.kind == kind))))
     for widget in db.scalars(select(Widget).join(Integration, Integration.id == Widget.integration_id).where(Integration.kind == kind)):
         collector.schedule(widget.id)
 

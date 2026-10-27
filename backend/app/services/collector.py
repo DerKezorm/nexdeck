@@ -220,6 +220,19 @@ class Collector:
         """The connection is gone. Nothing of it stays behind, not even a session at the service."""
         self._drop_cache(integration_id, farewell)
 
+    def lift_sign_in_pause(self, integration_id: int) -> None:
+        """A test of the connection signed in: the cards of it sign in again at once (KARTEN-3 EC-4)."""
+        from ..adapters.defined import lift_pause
+
+        lift_pause(self._caches.get(integration_id))
+
+    def forget_sign_ins(self, integration_ids: list[int]) -> None:
+        """The description of these connections' kind changed or is gone: no ticket, failure or pause of the old one stays."""
+        from ..adapters.defined import forget_session
+
+        for number in integration_ids:
+            forget_session(self._caches.get(number))
+
     def reschedule_integration(self, integration_id: int, farewell: tuple[Adapter, dict[str, Any]] | None = None) -> None:
         self._drop_cache(integration_id, farewell)
         with db_session() as db:

@@ -379,4 +379,6 @@ async def test_saved(integration_id: int, user: AdminUser, db: DbSession) -> dic
         await hand_back(adapter, config, ctx)
     integration.last_error = ""
     db.commit()
+    # ⚠️ The test runs in a memory of its own; what it learned about the sign-in has to reach the cards of the connection.
+    collector.lift_sign_in_pause(integration.id)
     return {"ok": True, "message": message, **_demo_note()}

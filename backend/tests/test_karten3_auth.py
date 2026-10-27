@@ -325,12 +325,11 @@ def test_karten3_ec4_three_failed_sign_ins_pause_the_connection_for_fifteen_minu
     assert len(service.logins) == 3, "no sign-in during the pause"
     moment.pass_(minutes=14)
     assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
-    # the Test button signs in whatever the pause says
-    service.login_status = 200
+    # the Test button signs in whatever the pause says; a test that fails does not end the pause
     tested = admin.post(f"/api/v1/integrations/{number}/test", headers=CSRF).json()
-    assert tested["ok"] is True and len(service.logins) == 4
+    assert tested["ok"] is False and len(service.logins) == 4
+    assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
     moment.pass_(minutes=2)
-    service.login_status = 401
     assert asked(admin, number).json()["detail"]["code"] == "sign_in_failed"
     assert len(service.logins) == 5, "after the pause one attempt is made, not three"
     assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
@@ -608,3 +607,51 @@ def test_karten3_ac5_a_key_in_the_address_stays_out_of_the_trace_log_whatever_th
         library.setLevel(before[1])
     assert any("GET" in line for line in lines), f"{how}: httpx wrote no request line, so nothing was checked"
     assert all(KEY not in line for line in lines), f"{how}: a line holds the key"
+
+
+@respx.mock
+def test_karten3_ec4_a_green_test_lifts_the_pause_of_the_cards_of_the_connection(admin: TestClient, moment: Moment) -> None:  # noqa: F811
+    service = Memos().mount()
+    service.login_status = 401
+    number = own(admin, MEMOS, username="ann", password=PASSWORD)
+    for _ in range(3):
+        asked(admin, number)
+    assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
+    service.login_status = 200
+    assert pressed(admin, number)["ok"] is True
+    after = asked(admin, number)
+    assert after.status_code == 200, f"the cards still say {after.json()}"
+    # and the count began again: two refused sign-ins after it do not pause
+    service.login_status = 401
+    service.valid.clear()
+    moment.pass_(minutes=30)
+    assert [asked(admin, number).json()["detail"]["code"] for _ in range(2)] == ["sign_in_failed"] * 2
+
+
+@respx.mock
+def test_karten3_ac11_a_corrected_description_lifts_the_pause_of_its_connections(admin: TestClient, moment: Moment) -> None:  # noqa: F811
+    service = Memos().mount()
+    wrong = changed(MEMOS, **{"auth.login": "/api/v1/auth/wrong"})
+    respx.post(f"{BASE}/api/v1/auth/wrong").mock(return_value=httpx.Response(404, json={}))
+    number = own(admin, wrong, username="ann", password=PASSWORD)
+    for _ in range(3):
+        asked(admin, number)
+    assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
+    assert admin.put(f"{API}/memos", json={"yaml": MEMOS, "overwrite": True}, headers=CSRF).status_code == 200
+    after = asked(admin, number)
+    assert after.status_code == 200, f"after the correction: {after.json()}"
+    assert len(service.logins) == 1
+
+
+@respx.mock
+def test_karten3_ac11_a_kind_deleted_and_described_again_starts_without_the_pause_of_before(admin: TestClient, moment: Moment) -> None:  # noqa: F811
+    service = Memos().mount()
+    service.login_status = 401
+    number = own(admin, MEMOS, username="ann", password=PASSWORD)
+    for _ in range(3):
+        asked(admin, number)
+    assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
+    assert admin.delete(f"{API}/memos", headers=CSRF).status_code == 204
+    service.login_status = 200
+    assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
+    assert asked(admin, number).status_code == 200

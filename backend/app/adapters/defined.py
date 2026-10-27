@@ -94,6 +94,20 @@ def _state(ctx: Context) -> State:
     return ctx.cache.setdefault(STATE, State())  # type: ignore[no-any-return]
 
 
+def lift_pause(cache: dict[str, Any] | None) -> None:
+    """The failed sign-ins of a connection are forgotten, the pause with them; the ticket stays (a test that signed in)."""
+    state = (cache or {}).get(STATE)
+    if state is not None:
+        state.failures = 0
+        state.paused_until = None
+
+
+def forget_session(cache: dict[str, Any] | None) -> None:
+    """Everything a connection remembers of its session: ticket, failures and pause (its description changed or is gone)."""
+    if cache is not None:
+        cache.pop(STATE, None)
+
+
 class MissingAdapter(Adapter):
     """The stand-in for a kind that is gone: connections of a deleted own kind stay in the database (KARTEN-3 EC-6)."""
 
