@@ -875,3 +875,34 @@ def test_karten3_a_limit_below_one_megabyte_is_named_in_kilobytes() -> None:
 
     hint = asyncio.run(run()).hint or ""
     assert "256 KB" in hint and "0 MB" not in hint
+
+
+@respx.mock
+def test_karten3_ac6_a_changed_address_signs_in_again_there_and_the_old_ticket_never_goes_there(moment: Moment) -> None:
+    from app.cards.integration import load_integration
+
+    def adapter_of(text: str) -> defined.DefinedAdapter:
+        return defined.DefinedAdapter(load_integration(text).definition, text)
+
+    one, other_host = "http://a.example.com:8080", "http://b.example.com:8080"
+    text = changed(MEMOS, short="moving")
+    adapter = adapter_of(text)
+    respx.post(f"{one}/api/v1/auth/signin").mock(return_value=httpx.Response(200, json={"accessToken": "TICKET-A"}))
+    respx.post(f"{other_host}/api/v1/auth/signin").mock(return_value=httpx.Response(200, json={"accessToken": "TICKET-B"}))
+    on_a = respx.get(f"{one}/data").mock(return_value=httpx.Response(200, json={}))
+    on_b = respx.get(f"{other_host}/data").mock(return_value=httpx.Response(200, json={}))
+    cache: dict[str, Any] = {}
+
+    async def run() -> None:
+        async with httpx.AsyncClient() as client:
+            for url in (one, other_host):  # the same memory of the connection, another address
+                await adapter.raw_request("GET", "/data", {"url": url, "username": "ann", "password": "pw"}, Context(client, cache=cache))
+            # a description with another sign-in path: the ticket made for the old one is not used for the new
+            other = adapter_of(changed(text, **{"auth.login": "/api/v2/signin"}))
+            respx.post(f"{other_host}/api/v2/signin").mock(return_value=httpx.Response(200, json={"accessToken": "TICKET-B2"}))
+            await other.raw_request("GET", "/data", {"url": other_host, "username": "ann", "password": "pw"}, Context(client, cache=cache))
+
+    asyncio.run(run())
+    assert [call.request.headers["authorization"] for call in on_a.calls] == ["Bearer TICKET-A"]
+    assert [call.request.headers["authorization"] for call in on_b.calls] == ["Bearer TICKET-B", "Bearer TICKET-B2"]
+    assert all(call.request.url.host != "a.example.com" or call.request.url.path != "/api/v2/signin" for call in respx.calls)
