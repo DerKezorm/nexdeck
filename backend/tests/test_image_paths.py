@@ -317,7 +317,12 @@ def test_plex_never_hears_of_a_path_that_marks_watched_or_scans(client: TestClie
         anything = mock.route(host="plex").mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
         refused = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": path})
     assert refused.status_code == 400 and refused.json()["detail"]["code"] == "bad_path"
-    assert anything.call_count == 0 and asked == [], "nothing went to Plex, not even through the adapter"
+    # ⚠️ Not ``call_count == 0``: the collector may read the new card in the
+    # meantime, and under a full run it did once. What must never arrive is a
+    # picture request, let alone the path that was refused.
+    sent = [call.request.url.path for call in anything.calls]
+    assert asked == [] and not [one for one in sent if one.startswith(("/:/", "/photo/", "/library/sections/", "/library/metadata/"))], \
+        f"nothing of the picture went to Plex, not even through the adapter: {sent}"
 
 
 def test_a_cached_answer_is_no_way_around_the_check(client: TestClient) -> None:
