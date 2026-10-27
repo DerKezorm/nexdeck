@@ -186,11 +186,17 @@ def suggestions(db: Session, cards: list[Seen], words: str, most: int = 8) -> li
     """What the address bar offers while somebody types: ``(completion, description)``.
 
     Tiles by their short name first (a pick opens the tile), then cards by
-    their name (a pick opens their board with the search bar).
+    their name (a pick opens their board with the search bar). A name counts
+    when the words begin it or one of its words.
     """
     wanted = str(words or "").strip().casefold()
     if not wanted:
         return []
+
+    def named(text: str) -> bool:
+        # The start of the name or of one of its words: "k" offers "Kitchen clock", not "Docker".
+        return f" {wanted}" in f" {text.casefold()}"
+
     first: list[tuple[str, str]] = []
     then: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -200,11 +206,11 @@ def suggestions(db: Session, cards: list[Seen], words: str, most: int = 8) -> li
             app = _app(db, one.widget)
             alias = alias_of(one.widget, app)
             shown = title or (app.name if app is not None else "")
-            if alias and alias not in seen and (alias.startswith(wanted) or wanted in shown.casefold()):
+            if alias and alias not in seen and (alias.startswith(wanted) or named(shown)):
                 seen.add(alias)
                 first.append((alias, shown))
             continue
-        if title and title.casefold() not in seen and wanted in title.casefold():
+        if title and title.casefold() not in seen and named(title):
             seen.add(title.casefold())
             then.append((title, f"{one.board.name} › {one.page.name}"))
     return (first + then)[:most]

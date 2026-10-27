@@ -60,6 +60,8 @@ PUBLIC: dict[str, str] = {
     "GET /api/v1/brand/icon-{size}.png": "the icons a phone puts on its home screen, fetched without a session",
     "GET /go": "an address the browser opens; signed out it goes to the sign-in, and it looks only where the caller may",
     "GET /go/{name}": "the same, for one short name",
+    "GET /opensearch.xml": "a browser reads it to offer nexdeck as a search engine; a name, a logo and two addresses",
+    "GET /api/v1/go/suggestions": "a browser asks it while somebody types; without a session the list is empty",
 }
 
 AUTH_DEPENDENCIES = {deps.optional_user, deps.current_user, deps.admin_user, deps.not_guest}

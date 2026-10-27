@@ -559,6 +559,12 @@
       "at": "Heure du rapport quotidien",
       "goesAt": "Le rapport quotidien part à {{time}}.",
       "saved": "Le rapport quotidien part désormais à {{time}}."
+    },
+    "addressBar": {
+      "title": "Depuis la barre d’adresse",
+      "tiles": "Chaque tuile d’app répond à un nom court, réglé dans ses paramètres : {{example}} ouvre la tuile au nom court plex, sur les tableaux que vous pouvez ouvrir.",
+      "engines": "Chrome, Edge et Firefox peuvent ajouter nexdeck comme moteur de recherche. Un nom court saisi là ouvre sa tuile, d’autres mots ouvrent ici la recherche avec ces mots, et la barre d’adresse propose des tuiles et des cartes pendant la saisie. Chrome et Edge l’affichent sous Paramètres, Moteur de recherche, Gérer les moteurs de recherche, où il peut être activé ; Firefox le propose dans le menu de la barre d’adresse.",
+      "safari": "Safari ne peut pas ajouter de moteurs de recherche de cette façon. Un signet vers une adresse courte y fait l’affaire."
     }
   },
   "menu": {

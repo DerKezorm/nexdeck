@@ -559,6 +559,12 @@
       "at": "Uhrzeit des Tagesberichts",
       "goesAt": "Der Tagesbericht kommt um {{time}}.",
       "saved": "Der Tagesbericht kommt ab jetzt um {{time}}."
+    },
+    "addressBar": {
+      "title": "Aus der Adresszeile",
+      "tiles": "Jede App-Kachel hat einen Kurznamen, einstellbar in ihren Einstellungen: {{example}} öffnet die Kachel mit dem Kurznamen plex, auf den Boards, die du öffnen darfst.",
+      "engines": "Chrome, Edge und Firefox können nexdeck als Suchmaschine aufnehmen. Ein Kurzname dort öffnet seine Kachel, andere Wörter öffnen hier die Suche mit den Wörtern darin, und beim Tippen schlägt die Adresszeile Kacheln und Karten vor. Chrome und Edge führen es unter Einstellungen, Suchmaschine, Suchmaschinen verwalten, wo es eingeschaltet werden kann; Firefox bietet es im Menü der Adresszeile an.",
+      "safari": "Safari kann Suchmaschinen so nicht aufnehmen. Dort hilft ein Lesezeichen auf eine Kurzadresse."
     }
   },
   "menu": {

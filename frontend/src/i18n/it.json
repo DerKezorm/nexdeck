@@ -559,6 +559,12 @@
       "at": "Ora del rapporto giornaliero",
       "goesAt": "Il rapporto giornaliero parte alle {{time}}.",
       "saved": "D’ora in poi il rapporto giornaliero parte alle {{time}}."
+    },
+    "addressBar": {
+      "title": "Dalla barra degli indirizzi",
+      "tiles": "Ogni riquadro di app risponde a un nome breve, impostato nelle sue impostazioni: {{example}} apre il riquadro con il nome breve plex, nelle bacheche che puoi aprire.",
+      "engines": "Chrome, Edge e Firefox possono aggiungere nexdeck come motore di ricerca. Un nome breve digitato lì apre il suo riquadro, altre parole aprono qui la ricerca con quelle parole, e la barra degli indirizzi suggerisce riquadri e schede mentre scrivi. Chrome ed Edge lo mostrano in Impostazioni, Motore di ricerca, Gestisci motori di ricerca, dove si può attivare; Firefox lo offre nel menu della barra degli indirizzi.",
+      "safari": "Safari non può aggiungere motori di ricerca in questo modo. Lì basta un segnalibro a un indirizzo breve."
     }
   },
   "menu": {

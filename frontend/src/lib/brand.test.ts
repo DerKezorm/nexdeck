@@ -16,7 +16,9 @@ describe('the tab title', () => {
 
 describe('the icons in the head', () => {
   beforeEach(() => {
-    document.head.innerHTML = '<link rel="icon" type="image/svg+xml" href="/icon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+    document.head.innerHTML =
+      '<link rel="icon" type="image/svg+xml" href="/icon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
+      '<link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="nexdeck">'
   })
   afterEach(() => applyBrand(NO_BRAND))
 
@@ -27,6 +29,8 @@ describe('the icons in the head', () => {
     expect(href('icon')).toBe('/api/v1/brand/logo?v=1')
     expect(document.head.querySelector('link[rel="icon"]')?.hasAttribute('type')).toBe(false)
     expect(href('apple-touch-icon')).toBe('/api/v1/brand/icon-512.png?v=1')
+    expect(document.head.querySelector('link[rel="search"]')?.getAttribute('title')).toBe('Homelab')
+    expect(href('search')).toBe('/opensearch.xml')
     expect(document.title).toBe('Homelab')
   })
 
@@ -36,6 +40,7 @@ describe('the icons in the head', () => {
     expect(href('icon')).toBe('/icon.svg')
     expect(document.head.querySelector('link[rel="icon"]')?.getAttribute('type')).toBe('image/svg+xml')
     expect(href('apple-touch-icon')).toBe('/apple-touch-icon.png')
+    expect(document.head.querySelector('link[rel="search"]')?.getAttribute('title')).toBe('nexdeck')
     expect(document.title).toBe('nexdeck')
   })
 })
