@@ -2113,7 +2113,14 @@
     "Voltage": "Tension",
     "Current": "Courant",
     "Yesterday": "Hier",
-    "Total": "Total"
+    "Total": "Total",
+    "The power the solar system makes now, what the house uses, and what goes to or comes from the grid, with the energy of the day.": "La puissance que produit l'installation solaire maintenant, ce que consomme la maison et ce qui part vers le réseau ou en vient, avec l'énergie du jour.",
+    "The address of the inverter or its Datamanager. The Solar API has no sign-in.": "L'adresse de l'onduleur ou de son Datamanager. La Solar API n'a pas de connexion.",
+    "Solar production": "Production solaire",
+    "The power the solar system makes now, with the energy of today, this year and in total, and how much of it the house uses itself.": "La puissance que produit l'installation solaire maintenant, avec l'énergie d'aujourd'hui, de cette année et au total, et la part que la maison consomme elle-même.",
+    "Used by the house": "Utilisé par la maison",
+    "Own supply": "Autosuffisance",
+    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solaire, maison, batterie et réseau en une image, avec la puissance qui circule entre eux. Nécessite un compteur, qui donne la consommation de la maison."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3356,6 +3363,7 @@
     "No flow is deployed.": "Aucun flux déployé.",
     "No inject node in a flow that runs.": "Aucun nœud inject dans un flux qui tourne.",
     "Devices online": "Appareils en ligne",
-    "No device in the dashboard.": "Aucun appareil dans le tableau de bord."
+    "No device in the dashboard.": "Aucun appareil dans le tableau de bord.",
+    "Solar power": "Puissance solaire"
   }
 }
