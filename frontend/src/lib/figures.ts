@@ -15,7 +15,9 @@ const NUMBER_RENDERERS = new Set(['value', 'stats', 'gauge'])
  * Whether a card can be a tile: a number it measures, refreshed by the server.
  * The server holds the same rule (``holders.is_number_card``) and has the last word.
  */
-export function isNumberCard(card: { renderer: string; client_only?: boolean; metrics?: string[] }): boolean {
+export function isNumberCard(card: { renderer: string; client_only?: boolean; metrics?: string[]; number_card?: boolean }): boolean {
+  // A card of blocks is one only when its definition names a main value; the server says so (KARTEN-7 AC-8).
+  if (card.renderer === 'builder') return card.number_card === true && !card.client_only
   return NUMBER_RENDERERS.has(card.renderer) && !card.client_only && (card.metrics === undefined || card.metrics.length > 0)
 }
 

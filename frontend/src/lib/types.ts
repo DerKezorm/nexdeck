@@ -168,6 +168,8 @@ export interface WidgetView {
   refresh_seconds: number | null
   beta?: boolean
   client_only?: boolean
+  /** Only on a card of blocks: whether its definition names a main value, so it can be a tile of key figures. */
+  number_card?: boolean
   default_size?: [number, number]
   min_size?: [number, number]
   health?: HealthView | null

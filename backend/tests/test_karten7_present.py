@@ -252,6 +252,14 @@ def test_karten7_ac8_a_card_of_blocks_with_a_main_value_is_a_tile_of_key_figures
     with_main = place(client, page, sonarr, kind="custom.builder", card="server-glance").json()["widget"]
     without = place(client, page, sonarr, kind="custom.builder", card="no-main").json()["widget"]
     assert holders.is_number_card("custom.builder", {"card": "server-glance"}) and not holders.is_number_card("custom.builder", {"card": "no-main"})
+    # The page cannot read that off the renderer, so the card it gets says so; the picker of key figures goes by this.
+    assert with_main["number_card"] is True and without["number_card"] is False and "number_card" not in figures
+    from app.models import Widget
+    from app.services.boards import widget_view
+
+    with db_session() as db:
+        assert widget_view(db, db.get(Widget, with_main["id"]))["number_card"] is True
+        assert widget_view(db, db.get(Widget, without["id"]))["number_card"] is False
     assert not holders.is_number_card("custom.builder") and not holders.is_number_card("custom.builder", {"card": "gone"})
     taken = client.post(f"/api/v1/pages/{page}/place", json={"widget_id": with_main["id"], "into": "group", "group_id": figures["id"]}, headers=CSRF)
     assert taken.status_code == 200, taken.text

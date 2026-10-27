@@ -71,6 +71,15 @@ describe('the picker in the settings of key figures', () => {
     expect(screen.getAllByRole('checkbox')).toHaveLength(1)
   })
 
+  it('karten7 ac8 lists a card of blocks that names its main value, and none without one', () => {
+    useEditedPage.setState({
+      widgets: [view(1, 'With main', 'builder', { number_card: true }), view(2, 'Without main', 'builder', { number_card: false }), view(3, 'Unknown', 'builder'), view(4, 'Offline', 'builder', { number_card: true, client_only: true })],
+    })
+    render(<FieldInput spec={spec('numbers')} value={[]} onChange={() => undefined} />)
+    expect(screen.getByRole('checkbox', { name: 'With main' })).toBeInTheDocument()
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+  })
+
   it('lists every card that is no holder for a group', () => {
     useEditedPage.setState({ widgets: [view(1, 'CPU', 'stats'), view(2, 'Top domains', 'list'), view(4, 'Wall', 'figures', { kind: 'core.figures' })] })
     render(<FieldInput spec={spec('')} value={[]} onChange={() => undefined} />)

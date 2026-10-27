@@ -253,12 +253,16 @@ def widget_view(db: Session, widget: Widget, bars: list[float | None] | None = N
     # Saving the shown name back would pin the app's name to the tile and stop
     # it following a rename.
     own = {"own_title": widget.title, "own_icon": widget.icon} if app is not None else {}
+    # A card of blocks is a tile of key figures when its definition names a main value; the page cannot see that in the
+    # renderer, so the card says so (KARTEN-7 AC-8, the same rule as ``holders.is_number_card``).
+    number = {"number_card": holders.is_number_card(widget.kind, widget.options)} if widget.kind == "custom.builder" else {}
     return {
         "id": widget.id,
         "kind": widget.kind,
         "title": widget.title or (app["name"] if app is not None else ""),
         "icon": _card_icon(widget) or (app["icon"] if app is not None else ""),
         **own,
+        **number,
         "link": widget.link,
         "service_link": app_link if app is not None else service_link(widget),
         "app": app,
