@@ -21,7 +21,7 @@ from pydantic import BaseModel, ValidationError
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from .. import __version__
-from . import credentials, schema
+from . import buttons, credentials, schema
 
 Path = tuple[str | int, ...]
 
@@ -345,6 +345,8 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
                 "A picture is a value of the answer, or a path on the connection that starts with a single /.",
                 (*path, "formula" if shown.formula is not None else "template"),
             )
+    for path, code, message, params in buttons.problems(definition):
+        add(code, message, path, **params)
     for path, what, failure in pipeline.expression_problems(definition):
         where = f" (character {failure.position + 1})" if failure.position is not None else ""
         problems.append(

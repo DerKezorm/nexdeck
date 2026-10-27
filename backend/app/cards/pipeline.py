@@ -25,6 +25,7 @@ from pydantic import BaseModel
 
 from ..adapters.base import AdapterError, ago, duration_short, human_bytes, human_rate
 from . import formula as calc
+from .buttons import Button
 from .schema import DEFAULT_ROWS, MAX_ROWS, Filter, LocalText, Rows, Rule, Sort, Total, Val
 
 #: What a card may spend on calculating one answer, in milliseconds (KARTEN-5 AC-11).
@@ -149,6 +150,8 @@ def expression_problems(definition: Any) -> list[tuple[tuple[str | int, ...], st
             check(path, "select", model.select, _ref)
         elif isinstance(model, Filter | Sort | Total):
             check(path, "field", model.field, _ref)
+        elif isinstance(model, Button):
+            check(path, "answer", model.answer, _ref)
         if isinstance(model, Rule):
             check(path, "value", model.value, _ref)
             check(path, "formula", model.formula, _formula)

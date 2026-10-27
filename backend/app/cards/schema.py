@@ -325,6 +325,9 @@ def every_seconds(text: str | None) -> int | None:
     return int(text[:-1]) * {"s": 1, "m": 60, "h": 3600}[text[-1]]
 
 
+# ⚠️ Here and not at the top: the models of a button are built from the parts above (``Part``, ``Label``, ``stays_underneath``).
+from .buttons import MAX_BUTTONS, Buttons  # noqa: E402
+
 Kind = Annotated[str, StringConstraints(pattern=r"^(custom:)?[a-z0-9][a-z0-9_-]{0,59}$")]
 Version = Annotated[str, BeforeValidator(_text_only), StringConstraints(pattern=VERSION.pattern)]
 
@@ -350,6 +353,11 @@ class CardBase(Part):
     demo: dict[str, Any] = Field(default_factory=dict, description="One example answer per request id; fills the preview, the demo mode and the shop picture.")
     size: Size | None = None
     min_size: Size | None = None
+    buttons: Buttons = Field(
+        default_factory=list,
+        json_schema_extra={"maxItems": MAX_BUTTONS},
+        description="Up to 10 buttons, each one request that changes something at the service (KARTEN-8).",
+    )
 
     @model_validator(mode="after")
     def _ids_are_unique(self) -> CardBase:
