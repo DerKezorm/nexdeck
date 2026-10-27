@@ -2268,5 +2268,38 @@
   "diagnosis": {
     "why": "Warum?",
     "whyOf": "Warum ist {{name}} rot oder gelb?"
+  },
+  "weather": {
+    "hourlyLabel": "Stundenvorhersage für die nächsten {{hours}} Stunden",
+    "sunrise": "Sonnenaufgang",
+    "sunset": "Sonnenuntergang",
+    "rainUpTo": "Regen bis {{percent}} % gegen {{time}}",
+    "noRain": "Kein Regen erwartet",
+    "aqi": "Luftqualität",
+    "uv": "UV",
+    "uvPeak": "Spitze {{value}}",
+    "pollen": "Pollen",
+    "airUnavailable": "Luftdaten nicht verfügbar",
+    "pollenKinds": {
+      "alder": "Erle",
+      "birch": "Birke",
+      "grass": "Gras",
+      "mugwort": "Beifuß",
+      "olive": "Olive",
+      "ragweed": "Ambrosia"
+    },
+    "level": {
+      "good": "Gut",
+      "fair": "Annehmbar",
+      "moderate": "Mäßig",
+      "poor": "Schlecht",
+      "veryPoor": "Sehr schlecht",
+      "extremelyPoor": "Extrem schlecht",
+      "low": "Niedrig",
+      "high": "Hoch",
+      "veryHigh": "Sehr hoch",
+      "extreme": "Extrem",
+      "none": "Keine"
+    }
   }
 }

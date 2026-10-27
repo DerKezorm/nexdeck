@@ -53,6 +53,7 @@ import { NoteEditor, saveNote } from './NoteEditor'
 import { Rolled } from './Rolled'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
+import type { Air, Hourly } from './WeatherExtras'
 
 export interface RenderProps {
   widget: WidgetView
@@ -88,6 +89,9 @@ function CountdownCard(props: RenderProps) {
     </Suspense>
   )
 }
+
+/** The weather card's hourly strip and air chips load only for a card that switched one on. */
+const LazyWeatherExtras = lazy(() => import('./WeatherExtras'))
 
 /** Key figures draw the number cards they hold; loaded only when a board has them. */
 const LazyFiguresCard = lazy(() => import('./FiguresCard').then((module) => ({ default: module.FiguresCard })))
@@ -1529,8 +1533,13 @@ export function WeatherCard({ data }: RenderProps) {
   const night = data?.meta?.is_day === false
   const Icon = night && condition === 'clear' ? Moon : (CONDITION_ICONS[condition] ?? Cloud)
   const days = data?.items ?? []
+  // The hourly strip and the air chips load only for a card that asked for them; the card scrolls when it was given too little height.
+  const hourly = data?.meta?.hourly as Hourly | undefined
+  const air = data?.meta?.air as Air | undefined
+  const unavailable = data?.meta?.air_unavailable === true
+  const extras = Boolean(hourly || (air && Object.keys(air).length) || unavailable)
   return (
-    <div className="flex-1 flex flex-col px-3 pb-2 min-h-0">
+    <div className={`flex-1 flex flex-col px-3 pb-2 min-h-0 ${extras ? 'scroll' : ''}`}>
       <div className="flex items-center gap-3 my-auto">
         <Icon size={36} className="text-accent flex-none" strokeWidth={1.5} />
         <div className="min-w-0">
@@ -1568,6 +1577,13 @@ export function WeatherCard({ data }: RenderProps) {
               </div>
             )
           })}
+        </div>
+      )}
+      {extras && (
+        <div className="shrink-0">
+          <Suspense fallback={null}>
+            <LazyWeatherExtras hourly={hourly} air={air} unavailable={unavailable} />
+          </Suspense>
         </div>
       )}
     </div>

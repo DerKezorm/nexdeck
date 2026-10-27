@@ -2268,5 +2268,38 @@
   "diagnosis": {
     "why": "¿Por qué?",
     "whyOf": "¿Por qué {{name}} está en rojo o amarillo?"
+  },
+  "weather": {
+    "hourlyLabel": "Previsión por horas para las próximas {{hours}} horas",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer",
+    "rainUpTo": "Lluvia de hasta {{percent}} % hacia las {{time}}",
+    "noRain": "No se espera lluvia",
+    "aqi": "Calidad del aire",
+    "uv": "UV",
+    "uvPeak": "máx. {{value}}",
+    "pollen": "Polen",
+    "airUnavailable": "Datos del aire no disponibles",
+    "pollenKinds": {
+      "alder": "Aliso",
+      "birch": "Abedul",
+      "grass": "Gramíneas",
+      "mugwort": "Artemisa",
+      "olive": "Olivo",
+      "ragweed": "Ambrosía"
+    },
+    "level": {
+      "good": "Buena",
+      "fair": "Aceptable",
+      "moderate": "Moderada",
+      "poor": "Mala",
+      "veryPoor": "Muy mala",
+      "extremelyPoor": "Extremadamente mala",
+      "low": "Bajo",
+      "high": "Alto",
+      "veryHigh": "Muy alto",
+      "extreme": "Extremo",
+      "none": "Ninguno"
+    }
   }
 }
