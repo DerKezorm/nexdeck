@@ -1,7 +1,8 @@
 /**
  * The builder of the card editor against a real server (KARTEN-7 EC-4, EC-5): at the width of a phone a block is
  * added by tapping and moved with the arrows, nothing runs over the edge of the screen; and the whole job, choosing,
- * moving and taking out a block, is done from the keyboard alone.
+ * moving and taking out a block, is done from the keyboard alone. The check of the card and its preview are the
+ * server's own: the card brings its demo data, so no service is asked.
  */
 import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
@@ -11,6 +12,8 @@ import { fileURLToPath } from 'node:url'
 const here = path.dirname(fileURLToPath(import.meta.url))
 /** The words of the editor in one language, to find its buttons by. */
 const words = (language: string) => (JSON.parse(readFileSync(path.join(here, '..', 'src', 'i18n', `editor.${language}.json`), 'utf8')) as { editor: Record<string, any> }).editor // eslint-disable-line @typescript-eslint/no-explicit-any
+
+test.use({ hasTouch: true })
 
 const ACCOUNT = { username: 'e2e-admin', password: 'A-long-enough-password-1' }
 
@@ -23,6 +26,8 @@ requests:
   - id: queue
     path: /api/v3/queue
 form: builder
+demo:
+  queue: {records: []}
 blocks:
   - {type: text, text: First block with a long text that cannot fit a phone}
   - {type: text, text: Second}
@@ -48,33 +53,8 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL(/\/b\//)
 }
 
-/**
- * ⚠️ The server's check and its drawing of the card are answered here until the server knows the form "builder" (its
- * part is built apart from this one): the subject is the editor in the browser, and the card it draws is the tree the
- * server will send.
- */
-async function standIn(page: Page) {
-  await page.route('**/api/v1/cards/check', (route) => route.fulfill({ json: { ok: true } }))
-  await page.route('**/api/v1/cards/preview', (route) =>
-    route.fulfill({
-      json: {
-        status: 'ok',
-        meta: {
-          custom: true,
-          renderer: 'builder',
-          blocks: [
-            { type: 'text', value: { text: 'First block with a long text that cannot fit a phone' }, size: 'm', weight: 'bold', color: 'text' },
-            { type: 'row', gap: 'm', align: 'between', wrap: true, children: [{ type: 'badge', value: { text: 'up' }, color: 'green' }, { type: 'value', label: 'CPU', value: { text: '42 %' }, size: 'l', color: 'accent' }] },
-          ],
-        },
-      },
-    }),
-  )
-}
-
 async function openBuilder(page: Page, language = 'en') {
   const said = words(language)
-  await standIn(page)
   // The language of the account, which the page takes at the start.
   await page.evaluate(
     (code) => fetch('/api/v1/auth/me', { method: 'PATCH', headers: { 'content-type': 'application/json', 'X-Nexdeck-Request': '1' }, body: JSON.stringify({ locale: code }), credentials: 'same-origin' }).then((response) => response.status),
@@ -91,6 +71,8 @@ async function openBuilder(page: Page, language = 'en') {
   await expect(page.getByRole('navigation', { name: said.steps.label })).toBeVisible()
   await page.getByRole('button', { name: `2 ${said.steps.look}` }).click()
   await expect(page.getByTestId('card-builder')).toBeVisible()
+  // The preview is the server's: the card as the server works it out, with the demo data of the card.
+  await expect(page.getByTestId('builder-card')).toContainText('Third')
 }
 
 const order = (page: Page) => page.getByTestId('card-builder-tree').getByRole('treeitem').evaluateAll((items) => items.map((item) => item.textContent ?? ''))
@@ -112,11 +94,11 @@ test('karten7: a block is added by tapping and moved with the arrows at the widt
   expect(await wide()).toEqual({ page: false, builder: 0 })
 
   // Tap a block in the tree, then a block in the list: it stands under the one chosen.
-  await page.getByTestId('card-builder-tree').getByText('Second').click()
-  await page.getByRole('group', { name: 'Blocks' }).getByRole('button', { name: 'Divider' }).click()
+  await page.getByTestId('card-builder-tree').getByText('Second').tap()
+  await page.getByRole('group', { name: 'Blocks' }).getByRole('button', { name: 'Divider' }).tap()
   expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir', 'TextSec', 'Divider', 'Row', 'TextThi'])
   // The arrows move it; no dragging is needed.
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: 'Move up' }).tap()
   expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir', 'Divider', 'TextSec', 'Row', 'TextThi'])
   expect(await wide()).toEqual({ page: false, builder: 0 })
   expect(trouble).toEqual([])
@@ -166,7 +148,7 @@ for (const language of ['de', 'fr', 'es', 'it']) {
     await signIn(page)
     await openBuilder(page, language)
     // The palette, the tree and the settings of a chosen block: nothing runs over the edge of the screen.
-    await page.getByTestId('card-builder-tree').getByText('Second').click()
+    await page.getByTestId('card-builder-tree').getByText('Second').tap()
     const over = await page.evaluate(() => {
       const past = (element: Element) => element.getBoundingClientRect().right > window.innerWidth + 1
       return { page: document.documentElement.scrollWidth > window.innerWidth, builder: [...document.querySelectorAll('[data-testid="card-builder"] *')].filter(past).length }

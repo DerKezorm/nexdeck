@@ -353,7 +353,7 @@ def test_karten7_ec7_anything_that_is_no_http_address_and_no_path_is_the_placeho
     assert picture(link, widget_id=7) is None
 
 
-@pytest.mark.parametrize("link", ["/a/../b.png", "/a/./b.png", "/a/%2e%2e/b.png", "/a/..;/b.png", "/a%2fb.png", "/a\b.png", "/a b.png", "/a/%252e%252e/b.png"])
+@pytest.mark.parametrize("link", ["/a/../b.png", "/a/./b.png", "/a/%2e%2e/b.png", "/a/..;/b.png", "/a%2fb.png", "/a\\b.png", "/a b.png", "/a/%252e%252e/b.png"])
 def test_karten7_ec7_a_path_that_climbs_or_hides_a_slash_is_the_placeholder_and_is_never_signed(link: str) -> None:
     assert picture(link, widget_id=7) is None
     assert picture(f"{BASE}{link}", widget_id=7) is None

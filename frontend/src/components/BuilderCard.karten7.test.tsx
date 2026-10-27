@@ -121,7 +121,7 @@ describe('a card put together from blocks', () => {
   it('karten7 ac6 writes numbers, units and times as the server sends them in the language and zone of whoever looks', () => {
     const data = backend as unknown as WidgetData
     const seen = (lang: string, zone: string) =>
-      (localizeCustom(data, lang, zone)!.meta!.blocks as Block[]).flatMap((block) => (block.type === 'value' ? [(block.value as { text: string }).text.replace(/[  ]/g, ' ')] : []))
+      (localizeCustom(data, lang, zone)!.meta!.blocks as Block[]).flatMap((block) => (block.type === 'value' ? [(block.value as { text: string }).text.replace(/[\u00a0\u202f]/g, ' ')] : []))
     // The server's own text is English and in its own zone; what the viewer reads follows the viewer.
     expect(seen('de', 'UTC')).toEqual(['1.234.567,89', '4,2 Stück', '12,5 %', '5.0 GB', '27.10.2025, 22:20', '27.10.2025', 'up'])
     expect(seen('en', 'Asia/Tokyo')).toEqual(['1,234,567.89', '4.2 items', '12.5%', '5.0 GB', 'Oct 28, 2025, 7:20 AM', 'Oct 28, 2025', 'up'])
