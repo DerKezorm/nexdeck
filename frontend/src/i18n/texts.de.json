@@ -2079,7 +2079,13 @@
     "Monitors up": "Monitore aktiv",
     "Name contains": "Name enthält",
     "Only the monitors whose name has this text.": "Nur die Monitore, deren Name diesen Text enthält.",
-    "Which UptimeRobot monitors are up and which are down, with their uptime of the last 30 days.": "Welche UptimeRobot-Monitore laufen und welche ausgefallen sind, mit ihrer Verfügbarkeit der letzten 30 Tage."
+    "Which UptimeRobot monitors are up and which are down, with their uptime of the last 30 days.": "Welche UptimeRobot-Monitore laufen und welche ausgefallen sind, mit ihrer Verfügbarkeit der letzten 30 Tage.",
+    "Averages": "Durchschnitte",
+    "Download and upload over a period, a failed test as a gap.": "Download und Upload über einen Zeitraum, ein fehlgeschlagener Test als Lücke.",
+    "Download, upload and ping averaged over a day, a week or a month, with the lowest and highest.": "Download, Upload und Ping gemittelt über einen Tag, eine Woche oder einen Monat, mit dem niedrigsten und höchsten Wert.",
+    "Download, upload and ping of the newest test, yellow when MySpeed's expected values are missed, with a button that runs a test.": "Download, Upload und Ping des neuesten Tests, gelb, wenn die erwarteten Werte von MySpeed verfehlt werden, mit einem Knopf, der einen Test startet.",
+    "Only when MySpeed has one. With the level Read, reading works without it, but the test button needs it.": "Nur wenn MySpeed eines hat. Mit der Stufe Lesen geht das Lesen ohne, der Testknopf braucht es aber.",
+    "The latest speed test, the averages of a period and the history, with a button that runs a test.": "Der neueste Speedtest, die Durchschnitte eines Zeitraums und der Verlauf, mit einem Knopf, der einen Test startet."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3319,6 +3325,16 @@
     "No databases yet.": "Noch keine Datenbanken.",
     "Keyword": "Stichwort",
     "Heartbeat": "Heartbeat",
-    "No monitors yet.": "Noch keine Monitore."
+    "No monitors yet.": "Noch keine Monitore.",
+    "Last test": "Letzter Test",
+    "No test yet": "Noch kein Test",
+    "Run test now": "Test jetzt starten",
+    "Average download": "Download im Durchschnitt",
+    "Average upload": "Upload im Durchschnitt",
+    "Average ping": "Ping im Durchschnitt",
+    "Lowest download": "Niedrigster Download",
+    "Highest download": "Höchster Download",
+    "No test in this period.": "Kein Test in diesem Zeitraum.",
+    "No test yet.": "Noch kein Test."
   }
 }

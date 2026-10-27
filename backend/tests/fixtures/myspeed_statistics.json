@@ -1,0 +1,1 @@
+{"tests":{"total":3,"failed":1,"custom":3},"ping":{"min":28,"max":39,"avg":34},"download":{"min":294.47,"max":566.46,"avg":430.47},"upload":{"min":4.66,"max":14.86,"avg":9.76},"time":{"min":28,"max":30,"avg":29},"data":{"ping":[39,28],"download":[566.46,294.47],"upload":[4.66,14.86],"time":[28,30]},"labels":["2026-10-27T18:19:53.541Z","2026-10-27T18:18:12.783Z"]}

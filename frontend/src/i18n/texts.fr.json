@@ -2079,7 +2079,13 @@
     "Monitors up": "Moniteurs actifs",
     "Name contains": "Le nom contient",
     "Only the monitors whose name has this text.": "Seulement les moniteurs dont le nom contient ce texte.",
-    "Which UptimeRobot monitors are up and which are down, with their uptime of the last 30 days.": "Quels moniteurs UptimeRobot fonctionnent et lesquels sont en panne, avec leur disponibilité des 30 derniers jours."
+    "Which UptimeRobot monitors are up and which are down, with their uptime of the last 30 days.": "Quels moniteurs UptimeRobot fonctionnent et lesquels sont en panne, avec leur disponibilité des 30 derniers jours.",
+    "Averages": "Moyennes",
+    "Download and upload over a period, a failed test as a gap.": "Téléchargement et envoi sur une période, un test échoué comme un trou.",
+    "Download, upload and ping averaged over a day, a week or a month, with the lowest and highest.": "Téléchargement, envoi et ping moyennés sur un jour, une semaine ou un mois, avec le plus bas et le plus haut.",
+    "Download, upload and ping of the newest test, yellow when MySpeed's expected values are missed, with a button that runs a test.": "Téléchargement, envoi et ping du test le plus récent, en jaune si les valeurs attendues de MySpeed ne sont pas atteintes, avec un bouton qui lance un test.",
+    "Only when MySpeed has one. With the level Read, reading works without it, but the test button needs it.": "Seulement si MySpeed en a un. Avec le niveau Lecture, la lecture marche sans, mais le bouton de test en a besoin.",
+    "The latest speed test, the averages of a period and the history, with a button that runs a test.": "Le dernier test de débit, les moyennes d’une période et l’historique, avec un bouton qui lance un test."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3319,6 +3325,16 @@
     "No databases yet.": "Pas encore de bases de données.",
     "Keyword": "Mot-clé",
     "Heartbeat": "Heartbeat",
-    "No monitors yet.": "Pas encore de moniteurs."
+    "No monitors yet.": "Pas encore de moniteurs.",
+    "Last test": "Dernier test",
+    "No test yet": "Pas encore de test",
+    "Run test now": "Lancer un test maintenant",
+    "Average download": "Téléchargement moyen",
+    "Average upload": "Envoi moyen",
+    "Average ping": "Ping moyen",
+    "Lowest download": "Téléchargement le plus bas",
+    "Highest download": "Téléchargement le plus haut",
+    "No test in this period.": "Aucun test sur cette période.",
+    "No test yet.": "Pas encore de test."
   }
 }
