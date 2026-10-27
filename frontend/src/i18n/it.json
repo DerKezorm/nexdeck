@@ -2301,5 +2301,12 @@
       "extreme": "Estremo",
       "none": "Nessuno"
     }
+  },
+  "calendar": {
+    "previous": "Precedente",
+    "next": "Successivo",
+    "noEventsOnDay": "Niente in questo giorno",
+    "moreEvents": "altri {{count}}",
+    "dayEvents": "{{date}}, voci: {{count}}"
   }
 }

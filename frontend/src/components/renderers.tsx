@@ -54,6 +54,7 @@ import { Rolled } from './Rolled'
 import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 import type { Air, Hourly } from './WeatherExtras'
+import type { Entry, Range } from '../lib/calendarGrid'
 
 export interface RenderProps {
   widget: WidgetView
@@ -89,6 +90,9 @@ function CountdownCard(props: RenderProps) {
     </Suspense>
   )
 }
+
+/** The week and month grid of the calendar card loads only for a card that chose one. */
+const LazyCalendarGrid = lazy(() => import('./CalendarGrid'))
 
 /** The weather card's hourly strip and air chips load only for a card that switched one on. */
 const LazyWeatherExtras = lazy(() => import('./WeatherExtras'))
@@ -1160,6 +1164,22 @@ export function CalendarCard({ widget, data }: RenderProps) {
   // An appointment of one's own comes from an iCal calendar and says so; the rest are releases.
   const appointment = (entry: Record<string, unknown>) => widget.kind === 'ical.events' || entry.appointment === true
   const items = data?.items ?? []
+  // The week and the month are a grid, drawn by a part of their own that loads when a card has chosen one.
+  const grid = data?.meta?.view
+  if (grid === 'week' || grid === 'month') {
+    return (
+      <Suspense fallback={<div className="flex-1" />}>
+        <LazyCalendarGrid
+          items={items as Entry[]}
+          view={grid}
+          range={data?.meta?.range as Range | undefined}
+          nameOf={(entry) => (appointment(entry) ? disguise.as('event', String(entry.title ?? '')) : disguise.media(String(entry.title ?? '')))}
+          placeOf={(entry) => (appointment(entry) && disguise.on ? '' : disguise.free(tLabel(String(entry.subtitle ?? ''))))}
+          sourceOf={(entry) => (disguise.on ? '' : String(entry.source ?? ''))}
+        />
+      </Suspense>
+    )
+  }
   if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
   for (const item of items) {
