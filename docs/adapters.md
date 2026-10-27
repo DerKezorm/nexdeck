@@ -31,6 +31,7 @@ that one of twenty-one renderers draws.
 | TrueNAS | system (with a waiting update), pools (with the last scrub), alerts; from 25.04 also interfaces, apps, disks, data protection, services, VMs and containers | | API key; use https, where a Read-Only Administrator is enough; over http only a TrueNAS before 25.04 is read, with a full administrator's key, because later versions deprecate the REST API that http is limited to |
 | openmediavault | system, file systems, disks | | admin, or a user in the group openmediavault-admin; other users may sign in but read nothing. Three wrong passwords in five minutes lock the account in openmediavault until faillock resets it, so a refused password is tried again only every 15 minutes |
 | Proxmox Backup Server | datastores, host, tasks | | API token; DatastoreAudit on /datastore and Sys.Audit on /system |
+| ProxMenux | host health (the Monitor's verdict and counts), open findings (critical first, with the reason), host (processor, memory, temperature, uptime) | | only the optional ProxMenux Monitor on port 8008 of the Proxmox host is read, not the ProxMenux menu; a token from the Monitor's Settings when its login is on. Built from the project's README and source, not run against a Monitor |
 | Kopia | snapshots, backups | | the server's user and password; the CSRF token of its start page is fetched and kept |
 | Duplicati | backup jobs, backups | | the password of the web interface; Duplicati 2.1 or newer |
 | Syncthing | folders, status | | API key |
