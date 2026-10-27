@@ -41,7 +41,7 @@ describe('where a swipe leads', () => {
 })
 
 describe('where a swipe may start', () => {
-  it('not in a field, a row that scrolls sideways, a swiped control or a place marked so', () => {
+  it('not in a field, a row that scrolls sideways, a swiped control, a sheet or a place marked so', () => {
     document.body.innerHTML = `
       <div id="root">
         <p id="text">words</p>
@@ -49,13 +49,14 @@ describe('where a swipe may start', () => {
         <div id="row" style="overflow-x: auto"><span id="inside">wide</span></div>
         <div style="touch-action: pan-y"><button id="dial">20°</button></div>
         <nav data-no-swipe><a id="tab">Media</a></nav>
+        <div role="dialog"><p id="sheet">Restart?</p></div>
       </div>`
     const root = document.getElementById('root')
     const row = document.getElementById('row')!
     Object.defineProperty(row, 'scrollWidth', { value: 900, configurable: true })
     Object.defineProperty(row, 'clientWidth', { value: 300 })
     expect(takesSideways(document.getElementById('text'), root)).toBe(false)
-    for (const id of ['field', 'inside', 'dial', 'tab']) expect(takesSideways(document.getElementById(id), root), id).toBe(true)
+    for (const id of ['field', 'inside', 'dial', 'tab', 'sheet']) expect(takesSideways(document.getElementById(id), root), id).toBe(true)
     // A row with nothing to scroll is just a row.
     Object.defineProperty(row, 'scrollWidth', { value: 300 })
     expect(takesSideways(document.getElementById('inside'), root)).toBe(false)

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -17,6 +17,7 @@ import { startingValue, unanswered } from '../lib/unanswered'
 import { useStream } from '../hooks/useStream'
 import type { Action, WidgetView } from '../lib/types'
 import { anyCardDown, cardStatus } from '../lib/cardStatus'
+import { pageAfter, useSwipe } from '../lib/swipe'
 import { WallRest, type Rest } from '../components/WallRest'
 import { useTabTitle } from '../lib/brand'
 import { useLive } from '../stores/live'
@@ -143,11 +144,18 @@ export function KioskPage() {
   })
 
   const cycle = data?.kiosk?.cycle_seconds ?? 0
+  // Counted up when somebody turns the page by hand: the rotation then starts
+  // its time again from the page chosen, rather than leaving it a moment later.
+  const [turned, setTurned] = useState(0)
   useEffect(() => {
     if (!cycle || !data || data.pages.length < 2) return
     const id = window.setInterval(() => setPageIndex((i) => (i + 1) % data.pages.length), cycle * 1000)
     return () => window.clearInterval(id)
-  }, [cycle, data])
+  }, [cycle, data, turned])
+  const turnTo = (index: number) => {
+    setPageIndex(index)
+    setTurned((n) => n + 1)
+  }
   useEffect(() => {
     const check = () => setDimmed(withinWindow(data?.kiosk?.dim_from ?? '', data?.kiosk?.dim_to ?? '', new Date()))
     check()
@@ -178,6 +186,15 @@ export function KioskPage() {
       for (const name of events) window.removeEventListener(name, awake)
     }
   }, [restMinutes])
+  // A swipe turns the page, as on a phone's board (lib/swipe.ts). ⚠️ On a wide
+  // screen too: a wall tablet is wide, and only a touch screen swipes anyway.
+  // Not while the display rests; the touch that wakes it is only that.
+  const swipeArea = useRef<HTMLDivElement>(null)
+  useSwipe(swipeArea, Boolean(data && data.pages.length > 1) && !resting, (direction) => {
+    if (!data) return
+    const next = pageAfter(data.pages, data.pages[pageIndex % data.pages.length]?.id, direction)
+    if (next) turnTo(data.pages.indexOf(next))
+  }, 'all')
   // What the rest shows: the first weather card of the board, and every card that is down on any page.
   const rest: Rest = useMemo(() => {
     const all = (data?.pages ?? []).flatMap((one) => one.widgets)
@@ -213,7 +230,7 @@ export function KioskPage() {
   const canAct = Boolean(data.kiosk?.allow_actions)
   const run = (widgetId: number, action: Action) => void post(`/widgets/${widgetId}/actions/${action.id}`, { params: action.params ?? {} })
   return (
-    <div className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
+    <div ref={swipeArea} className={`min-h-full kiosk ${dimmed ? 'dimmed' : ''} select-none`}>
       <BackgroundLayer background={data.background} alarm={anyCardDown(widgets, liveData)} />
       {/* ⚠️ Not aria-hidden. These are the only way to change page on a
           display with a touchscreen, and hiding a container that holds
@@ -228,7 +245,7 @@ export function KioskPage() {
               // The dot stays 8 px; the target around it is 32, which is what
               // a finger needs and what a focus ring can be seen on.
               className="grid place-items-center w-8 h-8 rounded-full focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => setPageIndex(i)}
+              onClick={() => turnTo(i)}
               aria-label={p.name}
               aria-current={i === pageIndex % data.pages.length ? 'page' : undefined}
             >

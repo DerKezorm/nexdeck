@@ -57,12 +57,14 @@ export function pageAfter<Page extends { id: number }>(pages: Page[], current: n
  * Whether the element under the finger, or one around it up to ``root``,
  * takes sideways movement for itself: a row that scrolls sideways, a
  * slider, a field, a control that is swiped (it says so with
- * ``touch-action``), or anything marked ``data-no-swipe``.
+ * ``touch-action``), a dialog or a sheet, or anything marked ``data-no-swipe``.
  */
 export function takesSideways(target: EventTarget | null, root: Element | null): boolean {
   let node = target instanceof Element ? target : null
   while (node && node !== root?.parentElement) {
-    if (node.matches('input, textarea, select, [contenteditable="true"], [data-no-swipe]')) return true
+    // ⚠️ A dialog or a sheet is drawn inside the page more often than not:
+    // a finger in it is reading or choosing, never turning the page behind.
+    if (node.matches('input, textarea, select, [contenteditable="true"], [data-no-swipe], [role="dialog"], [aria-modal="true"]')) return true
     const style = window.getComputedStyle(node)
     const action = style.touchAction || ''
     if (action === 'none' || (action.includes('pan-y') && !action.includes('pan-x'))) return true
@@ -79,7 +81,11 @@ export function takesSideways(target: EventTarget | null, root: Element | null):
  *
  * Listened to on the document rather than on the area: a page that is
  * still loading has no area yet, and the area may be drawn anew. What lies
- * outside it, a dialog or a sheet drawn over the page, never turns a page.
+ * outside it never turns a page, and neither does a dialog inside it.
+ *
+ * ``narrow`` is when the screen counts as one that swipes; a wall display
+ * passes ``all``, since a wall tablet is wide and touch events come from a
+ * touch screen only.
  */
 export function useSwipe(area: RefObject<HTMLElement | null>, enabled: boolean, onSwipe: (direction: -1 | 1) => void, narrow = '(max-width: 767px)'): void {
   const latest = useRef(onSwipe)
