@@ -143,4 +143,5 @@ export const patterns: Pattern[] = [
   [/^next in (\d+ (?:min|h|d))$/, 'prochaine exécution dans $1'],
   [/^(\d+) snapshots?$/, '$1 instantanés'],
   [/^checked (\d+ (?:min|h|d)) ago$/, 'vérifié il y a $1'],
+  [/^Keeps (.+)$/, 'Conserve $1'],
 ]

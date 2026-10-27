@@ -145,6 +145,7 @@ that one of twenty-one renderers draws.
 | Gotify | messages, message count | | client token (an application token may only write) |
 | ntfy | messages | | topic, and a token for a protected one |
 | Prometheus | query value, query list | | optional basic auth |
+| InfluxDB | InfluxDB (ready or not, version, number of buckets or databases), buckets (version 2: each with how long it keeps its data; version 3: the databases), query value (a Flux query on version 2 or an SQL query on version 3 that returns one number, drawn with its history) | | an API token that may read, which version 3 needs for everything (version 2 sends `Token`, version 3 `Bearer`; the version is told by `/ping`); on version 2 the organization, or the first one the token sees. The query cards run the editor's text with the token's rights, so use a read-only token. Beta: run against InfluxDB 2.7.12 and InfluxDB 3 Core 3.12.1, not yet an instance in use |
 | Grafana | alerts, status | | service account token; needs unified alerting, so Grafana 9.0 or newer |
 | JSON API | value (with up to four badges from the same answer), list | | optional bearer token |
 | iCal feed | events | | feed address |

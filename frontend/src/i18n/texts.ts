@@ -173,6 +173,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^next in (\d+ (?:min|h|d))$/, 'nächster Lauf in $1'],
     [/^(\d+) snapshots?$/, '$1 Snapshots'],
     [/^checked (\d+ (?:min|h|d)) ago$/, 'geprüft vor $1'],
+    [/^Keeps (.+)$/, 'Behält $1'],
   ],
   es: spanish,
   fr: french,

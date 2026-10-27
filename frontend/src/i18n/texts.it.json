@@ -2057,7 +2057,22 @@
     "The machine upsd runs on. It has to listen on a network address (LISTEN in upsd.conf), and reading needs no login.": "La macchina su cui gira upsd. Deve restare in ascolto su un indirizzo di rete (LISTEN in upsd.conf); per leggere non serve alcun accesso.",
     "The name from ups.conf. Empty takes the first one upsd knows.": "Il nome da ups.conf. Vuoto prende il primo che upsd conosce.",
     "A UPS runs on battery": "Un UPS funziona a batteria",
-    "A UPS is back on mains": "Un UPS è di nuovo alla rete"
+    "A UPS is back on mains": "Un UPS è di nuovo alla rete",
+    "A Flux query (version 2) or an SQL query (version 3) that returns one number, drawn with its history.": "Una query Flux (versione 2) o SQL (versione 3) che restituisce un numero, disegnato con il suo storico.",
+    "Also the ones InfluxDB keeps for itself, such as _monitoring and _tasks.": "Anche quelli che InfluxDB tiene per sé, come _monitoring e _tasks.",
+    "An API token that may read; version 3 needs one for everything. The query cards run what you write with its rights, so a read-only token is the one to use.": "Un token API che può leggere; la versione 3 ne richiede uno per tutto. Le schede di query eseguono ciò che scrivi con i suoi permessi, quindi il token giusto è uno di sola lettura.",
+    "Buckets": "Bucket",
+    "Database": "Database",
+    "Flux for version 2, SQL for version 3. The first number of the answer is the value.": "Flux per la versione 2, SQL per la versione 3. Il primo numero della risposta è il valore.",
+    "InfluxDB": "InfluxDB",
+    "Port 8086 for version 2, 8181 for version 3 Core.": "Porta 8086 per la versione 2, 8181 per la versione 3 Core.",
+    "Query": "Query",
+    "System buckets": "Bucket di sistema",
+    "The buckets of version 2 with how long each keeps its data, or the databases of version 3.": "I bucket della versione 2 con per quanto tempo ciascuno conserva i dati, oppure i database della versione 3.",
+    "Version 2 only: the name of the organization the queries run in. Empty takes the first one the token can see.": "Solo versione 2: il nome dell'organizzazione in cui girano le query. Vuoto prende la prima che il token vede.",
+    "Version 3 only: the database the query runs in.": "Solo versione 3: il database in cui gira la query.",
+    "Whether InfluxDB is up, its buckets or databases, and one query as a number with its history. Version 2 and 3.": "Se InfluxDB è attivo, i suoi bucket o database e una query come numero con il suo storico. Versioni 2 e 3.",
+    "Whether it is ready, its version and how many buckets or databases it holds.": "Se è pronto, la sua versione e quanti bucket o database contiene."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3289,6 +3304,11 @@
     "Trimming voltage": "Riduce la tensione",
     "Boosting voltage": "Alza la tensione",
     "Shutdown forced": "Spegnimento forzato",
-    "Alarm": "Allarme"
+    "Alarm": "Allarme",
+    "Keeps forever": "Conserva per sempre",
+    "System": "Sistema",
+    "Databases": "Database",
+    "No buckets yet.": "Ancora nessun bucket.",
+    "No databases yet.": "Ancora nessun database."
   }
 }
