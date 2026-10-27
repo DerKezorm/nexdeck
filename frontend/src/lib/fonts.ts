@@ -8,9 +8,10 @@
  * them: the first visit stays as light as it was, and nothing is ever
  * fetched from anywhere but nexdeck itself.
  *
- * A font to come (a pixel face for a retro look, say) is one more entry here
- * and one more name in `appearance.FONTS` on the server. `data-font` on the
- * root lets the style sheet set it a little differently where it needs to.
+ * A font to come is one more entry here and one more name in
+ * `appearance.FONTS` on the server. `data-font` on the root lets the style
+ * sheet set it a little differently where it needs to. The pixel face is
+ * also what 1984 sets its titles in (lib/retro.ts asks for it there).
  */
 export interface FontChoice {
   key: string
@@ -31,6 +32,7 @@ export const FONTS: FontChoice[] = [
   { key: 'atkinson', name: 'Atkinson Hyperlegible', family: "'Atkinson Hyperlegible Next Variable'", load: () => import('@fontsource-variable/atkinson-hyperlegible-next') },
   { key: 'geist', name: 'Geist', family: "'Geist Variable'", load: () => import('@fontsource-variable/geist') },
   { key: 'mono', name: 'JetBrains Mono', family: "'JetBrains Mono Variable'", mono: true },
+  { key: 'pixel', name: 'Pixelify Sans', family: "'Pixelify Sans Variable'", load: () => import('@fontsource-variable/pixelify-sans') },
 ]
 
 export const DEFAULT_FONT = FONTS[0].key

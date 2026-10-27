@@ -65,6 +65,7 @@ const BUILT_WITH = [
   { name: 'IBM Plex Sans', url: 'https://github.com/IBM/plex', license: 'OFL 1.1' },
   { name: 'Atkinson Hyperlegible Next', url: 'https://www.brailleinstitute.org/freefont', license: 'OFL 1.1' },
   { name: 'Geist', url: 'https://github.com/vercel/geist-font', license: 'OFL 1.1' },
+  { name: 'Pixelify Sans', url: 'https://github.com/eifetx/Pixelify-Sans', license: 'OFL 1.1' },
   { name: 'Fontsource', url: 'https://fontsource.org', license: 'MIT' },
 ]
 

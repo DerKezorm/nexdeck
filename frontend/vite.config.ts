@@ -62,6 +62,7 @@ export default defineConfig({
           '**/ibm-plex-sans-*.woff2',
           '**/atkinson-hyperlegible-next-*.woff2',
           '**/geist-*.woff2',
+          '**/pixelify-sans-*.woff2',
         ],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
