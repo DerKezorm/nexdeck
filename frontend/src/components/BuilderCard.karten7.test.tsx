@@ -118,6 +118,17 @@ describe('a card put together from blocks', () => {
     expect(screen.getByText('Fixed')).toBeInTheDocument()
   })
 
+  it('karten7 ac6 writes numbers, units and times as the server sends them in the language and zone of whoever looks', () => {
+    const data = backend as unknown as WidgetData
+    const seen = (lang: string, zone: string) =>
+      (localizeCustom(data, lang, zone)!.meta!.blocks as Block[]).flatMap((block) => (block.type === 'value' ? [(block.value as { text: string }).text.replace(/[  ]/g, ' ')] : []))
+    // The server's own text is English and in its own zone; what the viewer reads follows the viewer.
+    expect(seen('de', 'UTC')).toEqual(['1.234.567,89', '4,2 Stück', '12,5 %', '5.0 GB', '27.10.2025, 22:20', '27.10.2025', 'up'])
+    expect(seen('en', 'Asia/Tokyo')).toEqual(['1,234,567.89', '4.2 items', '12.5%', '5.0 GB', 'Oct 28, 2025, 7:20 AM', 'Oct 28, 2025', 'up'])
+    render(<>{renderWidget({ widget, data: localizeCustom(data, 'de', 'UTC') as WidgetData, canAct: true })}</>)
+    expect(screen.getByText('1.234.567,89')).toBeInTheDocument()
+  })
+
   it('karten7 ac6 shows the button of the card in the language of whoever looks, and nothing for a button that is not offered', async () => {
     const onAction = vi.fn()
     const action = { id: 'button:go', label: { en: 'Go', de: 'Los' } } as unknown as Action

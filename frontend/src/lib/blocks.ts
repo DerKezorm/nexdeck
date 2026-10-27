@@ -21,6 +21,8 @@ export type ShownBlockValue = {
   status?: 'ok' | 'warn' | 'error' | 'unknown' | null
   /** A fixed text the author wrote in several languages, one text for each; `text` is the first of them. */
   local?: Record<string, string>
+  /** What the browser writes in the language and zone of the viewer: a number, a date, anything with a unit. */
+  cell?: { value: number | string | boolean | null; text: string; format: string; digits?: number | null; unit?: string | Record<string, string> }
 } | null
 
 export interface BlockRow {

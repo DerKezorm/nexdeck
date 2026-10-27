@@ -48,7 +48,14 @@
     "id": "big",
     "value": {
      "text": "1234567.89",
-     "number": 1234567.89
+     "number": 1234567.89,
+     "cell": {
+      "value": 1234567.89,
+      "text": "1234567.89",
+      "format": "number",
+      "digits": null,
+      "unit": ""
+     }
     },
     "size": "l",
     "color": "text"
@@ -57,7 +64,17 @@
     "type": "value",
     "value": {
      "text": "4.2 items",
-     "number": 4.2
+     "number": 4.2,
+     "cell": {
+      "value": 4.2,
+      "text": "4.2",
+      "format": "number",
+      "digits": 1,
+      "unit": {
+       "en": "items",
+       "de": "St\u00fcck"
+      }
+     }
     },
     "size": "l",
     "color": "text"
@@ -66,7 +83,14 @@
     "type": "value",
     "value": {
      "text": "12.5%",
-     "number": 12.5
+     "number": 12.5,
+     "cell": {
+      "value": 12.5,
+      "text": "12.5%",
+      "format": "percent",
+      "digits": 1,
+      "unit": ""
+     }
     },
     "size": "l",
     "color": "text"
@@ -75,7 +99,14 @@
     "type": "value",
     "value": {
      "text": "5.0 GB",
-     "number": 5368709120
+     "number": 5368709120,
+     "cell": {
+      "value": 5368709120,
+      "text": "5.0 GB",
+      "format": "bytes",
+      "digits": null,
+      "unit": ""
+     }
     },
     "size": "l",
     "color": "text"
@@ -83,7 +114,14 @@
    {
     "type": "value",
     "value": {
-     "text": "2025-10-27 23:20"
+     "text": "2025-10-27 23:20",
+     "cell": {
+      "value": "2025-10-27T22:20:00Z",
+      "text": "2025-10-27 23:20",
+      "format": "datetime",
+      "digits": null,
+      "unit": ""
+     }
     },
     "size": "l",
     "color": "text"
@@ -91,7 +129,14 @@
    {
     "type": "value",
     "value": {
-     "text": "2025-10-27"
+     "text": "2025-10-27",
+     "cell": {
+      "value": "2025-10-27T22:20:00Z",
+      "text": "2025-10-27",
+      "format": "date",
+      "digits": null,
+      "unit": ""
+     }
     },
     "size": "l",
     "color": "text"
@@ -107,7 +152,7 @@
   ]
  },
  "error": null,
- "updated_at": 1793135339.4991362,
+ "updated_at": 1793135540.4453194,
  "since": null,
  "forecast": null,
  "cause": null

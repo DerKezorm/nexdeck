@@ -84,7 +84,7 @@ def test_karten7_ac2_every_setting_arrives_with_its_default_so_the_browser_calcu
     assert symbol == {"type": "symbol", "icon": "server", "color": "accent", "size": "m"}
     assert text == {"type": "text", "value": {"text": "nas"}, "color": "text", "size": "m", "weight": "bold"}
     assert badge == {"type": "badge", "value": {"text": "up"}, "color": "green"}
-    assert value == {"type": "value", "id": "cpu", "label": {"en": "CPU", "de": "Prozessor"}, "value": {"text": "42%", "number": 42}, "size": "l", "color": "text"}
+    assert value == {"type": "value", "id": "cpu", "label": {"en": "CPU", "de": "Prozessor"}, "value": {"text": "42%", "number": 42, "cell": {"value": 42, "text": "42%", "format": "percent", "digits": None, "unit": ""}}, "size": "l", "color": "text"}
     assert progress == {"type": "progress", "value": {"text": "61", "number": 61}, "max": 100.0, "color": "accent"}
     assert sparkline == {"type": "sparkline", "id": "cpu_trend", "value": {"text": "42", "number": 42}, "metric": "b_cpu_trend"}
     assert divider == {"type": "divider"}
@@ -116,10 +116,30 @@ def test_karten7_ac2_a_unit_goes_behind_the_text_and_the_rules_give_the_status_t
         {"type": "progress", "value": {"path": "host.memory"}},
         buttons=[], rows=None, main=None,
     ))
-    assert nodes[0]["value"] == {"text": "42 GHz", "number": 42, "status": "warn"}
-    assert nodes[1]["value"] == {"text": "42%", "number": 42}, "no status where no rule applies, and no second percent sign"
+    assert nodes[0]["value"]["text"] == "42 GHz" and nodes[0]["value"]["number"] == 42 and nodes[0]["value"]["status"] == "warn"
+    assert nodes[1]["value"]["text"] == "42%" and "status" not in nodes[1]["value"], "no status where no rule applies, and no second percent sign"
     assert nodes[2]["value"] == {"text": "up", "status": "error"}
     assert "status" not in nodes[3]["value"]
+
+
+def test_karten7_ac6_a_number_a_time_and_a_unit_arrive_with_what_the_browser_needs_to_write_them_in_its_own_language_and_zone() -> None:
+    nodes = tree(with_blocks(
+        {"type": "value", "path": "n", "format": "number", "digits": 1, "unit": {"en": "items", "de": "Stück"}},
+        {"type": "value", "path": "t", "format": "datetime"},
+        {"type": "value", "path": "b", "format": "bytes"},
+        {"type": "value", "path": "w"},
+        {"type": "text", "value": {"path": "n", "format": "number"}},
+        {"type": "badge", "value": {"path": "n", "unit": "kg"}},
+        buttons=[], rows=None, main=None,
+    ), {"n": 1234.56, "t": "2025-10-27T22:20:00Z", "b": 5368709120, "w": "up"})
+    number, moment, size, word, text, badge = (node["value"] for node in nodes)
+    assert number["cell"] == {"value": 1234.6, "text": "1234.6", "format": "number", "digits": 1, "unit": {"en": "items", "de": "Stück"}}
+    assert number["text"] == "1234.6 items", "what a browser without the cell would show"
+    assert moment["cell"]["value"] == "2025-10-27T22:20:00Z" and moment["cell"]["format"] == "datetime"
+    assert size["cell"]["format"] == "bytes" and size["cell"]["text"] == "5.0 GB", "bytes stay as the server wrote them, as on every form"
+    assert "cell" not in word, "a plain word needs nothing written for a language"
+    assert "cell" not in tree(with_blocks({"type": "progress", "value": {"path": "n", "unit": "kg"}}, buttons=[], rows=None, main=None), {"n": 5})[0]["value"]
+    assert text["cell"]["format"] == "number" and badge["cell"]["unit"] == "kg"
 
 
 def test_karten7_ac2_the_colour_of_the_rules_reaches_the_card_but_a_row_of_a_list_does_not_colour_the_card() -> None:

@@ -94,25 +94,31 @@ function actionsOf(actions: Action[] | undefined, lang: string): Action[] | unde
   }))
 }
 
-/** A value of a block: a fixed text written in several languages comes as one text per language; the viewer's is picked. */
-function valueIn(value: ShownBlockValue, lang: string): ShownBlockValue {
-  if (!value?.local) return value
-  const { local, ...rest } = value
-  return { ...rest, text: pickText(local as CardText, lang) || rest.text }
+/**
+ * A value of a block as the viewer reads it: a fixed text written in several languages is picked, and a number, a date
+ * or anything with a unit is written in the viewer's language and zone, exactly as a cell of a list is.
+ */
+function valueIn(value: ShownBlockValue, lang: string, zone?: string): ShownBlockValue {
+  if (!value || (!value.local && !value.cell)) return value
+  const { local, cell, ...rest } = value
+  if (local) return { ...rest, text: pickText(local as CardText, lang) || rest.text }
+  return { ...rest, text: inRow(cell as Cell, lang, zone) }
 }
 
 /**
- * The blocks of a card put together from blocks, with every text in the viewer's language: the fixed texts and the label
- * of a value, the words of an empty list, the buttons (on the card and on each row of a list). Nothing else is touched.
+ * The blocks of a card put together from blocks, with every text in the viewer's language: the fixed texts, the values and
+ * the label of a value, the words of an empty list, the buttons (on the card and on each row of a list). Nothing else is touched.
  */
-function blocksIn(blocks: Block[], lang: string): Block[] {
+function blocksIn(blocks: Block[], lang: string, zone?: string): Block[] {
   return blocks.map((block): Block => {
-    if (block.type === 'row' || block.type === 'column') return { ...block, children: blocksIn(block.children ?? [], lang) }
-    if (block.type === 'text' || block.type === 'badge') return { ...block, value: valueIn(block.value, lang) }
-    if (block.type === 'value') return { ...block, label: block.label === undefined ? undefined : pickText(block.label as CardText, lang) }
+    if (block.type === 'row' || block.type === 'column') return { ...block, children: blocksIn(block.children ?? [], lang, zone) }
+    if (block.type === 'text' || block.type === 'badge') return { ...block, value: valueIn(block.value, lang, zone) }
+    if (block.type === 'value') {
+      return { ...block, value: valueIn(block.value, lang, zone), label: block.label === undefined ? undefined : pickText(block.label as CardText, lang) }
+    }
     if (block.type === 'button') return { ...block, action: block.action ? (actionsOf([block.action], lang) as [Action])[0] : null }
     if (block.type === 'list') {
-      const rows: BlockRow[] = (block.rows ?? []).map((row) => ({ ...row, blocks: blocksIn(row.blocks ?? [], lang), actions: actionsOf(row.actions, lang) }))
+      const rows: BlockRow[] = (block.rows ?? []).map((row) => ({ ...row, blocks: blocksIn(row.blocks ?? [], lang, zone), actions: actionsOf(row.actions, lang) }))
       return { ...block, rows, empty: block.empty === undefined ? undefined : pickText(block.empty as CardText, lang) }
     }
     return block
@@ -135,7 +141,7 @@ export function localizeCustom(data: WidgetData | undefined, lang: string = i18n
     return made
   })
   const empty = data.meta?.empty
-  const blocks = Array.isArray(data.meta?.blocks) ? { blocks: blocksIn(data.meta.blocks as Block[], lang) } : {}
+  const blocks = Array.isArray(data.meta?.blocks) ? { blocks: blocksIn(data.meta.blocks as Block[], lang, zone) } : {}
   return {
     ...data,
     primary: data.primary ? primaryOf(data.primary, lang, zone) : data.primary,

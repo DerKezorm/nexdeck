@@ -192,11 +192,14 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[bu
 BLOCK_STATUS = {"ok": "ok", "warn": "warn", "bad": "error"}
 
 
-def _block_value(shown: pipeline.Shown | None, fixed: Any = None) -> dict[str, Any] | None:
+def _block_value(shown: pipeline.Shown | None, fixed: Any = None, *, written: bool = True) -> dict[str, Any] | None:
     """One value of a block as it is drawn, ``None`` where there is nothing to show (KARTEN-7 EC-1).
 
     A text the author wrote stands as English (or the first language written) and, written in several languages, carries
     them all in ``local`` for the browser to pick from. A unit goes behind the text; a percentage already has its sign.
+    A number, a date or anything with a unit also carries ``cell`` (value, format, digits, unit in every language written)
+    for the browser to write in the language and zone of its viewer; ``text`` is what a browser without it would show.
+    A bar and a line draw the number and have no words to write (``written=False``).
     """
     if shown is None:
         if fixed is None or fixed == "":
@@ -215,6 +218,15 @@ def _block_value(shown: pipeline.Shown | None, fixed: Any = None) -> dict[str, A
     number = _number(shown)
     if number is not None:
         out["number"] = number
+    # ⚠️ Numbers and times in the language and zone of whoever looks: the browser writes them from this, as for a cell of a list.
+    if written and (shown.format != "text" or shown.unit):
+        out["cell"] = {
+            "value": number if number is not None else shown.value,
+            "text": shown.text,
+            "format": shown.format,
+            "digits": shown.digits,
+            "unit": shown.unit or "",
+        }
     if shown.status in BLOCK_STATUS:
         out["status"] = BLOCK_STATUS[shown.status]
     return out
@@ -298,9 +310,9 @@ class _Blocks:
         elif kind == "image":
             out.update(src=self.picture(node), height=node["height"])
         elif kind == "progress":
-            out.update(value=_block_value(node["value"]), max=node["max"], color=node["color"])
+            out.update(value=_block_value(node["value"], written=False), max=node["max"], color=node["color"])
         elif kind == "sparkline":
-            out.update(value=_block_value(node["value"]), metric=node["metric"])
+            out.update(value=_block_value(node["value"], written=False), metric=node["metric"])
         elif kind == "list":
             out["rows"] = [self.row(one) for one in node["rows"]]
             if node["empty"] is not None:
