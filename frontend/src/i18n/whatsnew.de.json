@@ -1721,6 +1721,58 @@
         "Eine Seite, die der Browser übersetzt hat, wird nicht mehr leer, wenn sich auf ihr etwas ändert.",
         "Die Update-Karte sagt, wie alt ein neueres Release ist."
       ]
+    },
+    "0.50.0": {
+      "lead": "nexdeck bekommt einen eigenen Look: 1984, in dem jede Karte ein Fenster ist. Hell und Dunkel folgen dem System oder der Uhrzeit, Karten lassen sich kopieren und ausblenden, Wetter und Kalender sagen mehr, die Anbindungen haben eine eigene Seite, und 22 Dienste kommen dazu.",
+      "sections": [
+        {
+          "title": "1984",
+          "body": "Ganz nexdeck wie ein früher Schreibtisch gezeichnet: jede Karte ein Fenster mit gestreifter Titelleiste, die Leiste eine Menüleiste, die Seite ein Punktraster, Titel in Pixelschrift, schwarz auf weiß und für die Nacht umgekehrt. Eine gelbe Karte ist schraffiert, eine rote wird schwarz, so hängt ein Status nie allein an der Farbe. Wähl einen Hauch Farbe oder nur das Muster, schwarzweiße Logos und den Hintergrund.",
+          "path": "System > Aussehen > 1984"
+        },
+        {
+          "title": "Hell, Dunkel und Schrift",
+          "body": "Hell und Dunkel folgen dem System in dem Moment, in dem es umschaltet, oder der Uhrzeit: zwei Zeiten am Tag, für jedes Konto und für jeden Kiosk-Link. Neben dem Glas gibt es einen ruhigen Kartenstil, sechs Schriften für die Oberfläche (Inter, die des Systems, IBM Plex Sans, Atkinson Hyperlegible Next, Geist, JetBrains Mono) und einen Editor für ein eigenes Farbschema.",
+          "path": "System > Aussehen; Meine Einstellungen > Profil"
+        },
+        {
+          "title": "Kopieren, ausblenden, wischen, Tasten",
+          "body": "Kopier eine Karte auf dieselbe Seite oder auf eine Seite eines anderen Boards, eine Gruppe samt ihren Karten. Blend eine Karte auf dem Handy aus, außer wenn sie rot wird. Wisch zwischen Seiten am Handy und auf der Wandanzeige. Mit 1 bis 9 öffnest du eine App-Kachel, und ? zeigt, welche Taste welche ist.",
+          "path": "Bearbeiten (Stift) > Verschieben-Menü einer Karte, Kopieren nach"
+        },
+        {
+          "title": "Wetter und Kalender",
+          "body": "Die Wetterkarte kann die nächsten 12 oder 24 Stunden mit der Regenwahrscheinlichkeit zeigen, dazu Luftqualität, UV-Index und Pollen. Die Kalenderkarte zeigt eine Woche oder einen Monat als Raster, jede Quelle in ihrer Farbe, und die Pfeile blättern nur für dich.",
+          "path": "Bearbeiten (Stift) > Wetter- oder Kalenderkarte > Einstellungen"
+        },
+        {
+          "title": "Eine Seite für deine Anbindungen",
+          "body": "Die Zahlen oben sind Filter: fehlerhaft, Updates, ohne Karte, stummgeschaltet. Fehlerhafte Anbindungen stehen zuerst, es gibt eine Liste nach Kategorie, und der Katalog hinter „Anbindung hinzufügen“ ist ein Fenster mit Suche. Ganz oben zeigt „In deinem Netz gefunden“ die Dienste, die deine Container und Gäste betreiben und die du noch nicht verbunden hast, mit ausgefüllter Adresse.",
+          "path": "System > Anbindungen"
+        },
+        {
+          "title": "Kurznamen und eine Suchmaschine",
+          "body": "Jede App-Kachel hat einen Kurznamen, und /go/<name> öffnet sie. Nimm nexdeck in Chrome, Edge oder Firefox als Suchmaschine auf: Ein Kurzname in der Adressleiste öffnet seine Kachel, andere Wörter öffnen die Suche, beim Tippen mit Vorschlägen. Safari kann das nicht.",
+          "path": "System > Suche"
+        },
+        {
+          "title": "22 neue Anbindungen",
+          "body": "aria2, pyLoad, Jackett, Ombi, slskd, Kodi, Owncast, PeerTube, rclone, Stash, xTeVe, Your Spotify, Spoolman, Moonraker, openHAB, Homebridge, Node-RED, ESPHome, Tasmota, Shelly, OpenDTU und Fronius, mit Knöpfen, wo der Dienst etwas Unbedenkliches zu drücken hat. Alle starten als Beta.",
+          "path": "System > Anbindungen > Anbindung hinzufügen"
+        },
+        {
+          "title": "Strenger ab Werk",
+          "body": "API-Token können nur lesen, und neue tun es: Sie schauen, ändern aber nie etwas. Der Bild-Proxy schickt einem Dienst nur noch die Bildpfade, die seine Anbindung ausdrücklich nennt; vorher konnte jeder Pfad mit den Zugangsdaten der Anbindung dort landen, etwa „als gesehen markieren“ bei Plex. Eine Weiterleitung an eine andere Stelle nimmt keine Zugangsdaten mit.",
+          "path": "Meine Einstellungen > API-Token"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Eine Karte kann ohne Kopf und ohne Rahmen stehen, für eine Uhr oder eine Textzeile, die frei stehen soll.",
+        "Eine Karte oder Anbindung ohne Logo zeigt das, das ihr Dienst von sich aus nennt.",
+        "Die FRITZ!Box nimmt einen Benutzer an und ist nicht mehr Beta; hinter einer Bridge wird sie nicht mehr rot mit 0 Sekunden Laufzeit.",
+        "Menüs auf Zuhause-Seiten bleiben im Bild, und die Schrift auf der Akzentfarbe ist auch auf hellem Akzent lesbar."
+      ]
     }
   }
 }

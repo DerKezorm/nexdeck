@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { ApiError, get, patch, post } from '../api/client'
 import type { SetupStatus, User } from '../api/types'
 import { setLanguage } from '../i18n'
+import { followTheme, type ThemeChoice, type ThemePlan } from '../lib/themeMode'
 
 /**
  * What the first half of a sign-in ends in. An account with a second factor
@@ -21,7 +22,7 @@ interface AuthState {
   /** Signed in on the home network without a password; `again` after signing out on purpose. */
   homeSignIn: (again?: boolean) => Promise<void>
   logout: () => Promise<void>
-  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'language_pair' | 'theme' | 'tilt' | 'start_board_id' | 'seen_version'>>) => Promise<void>
+  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'language_pair' | 'theme' | 'light_from' | 'dark_from' | 'tilt' | 'start_board_id' | 'seen_version'>>) => Promise<void>
   /** Take an account the server just handed back, after an upload for instance. */
   setUser: (user: User) => void
 }
@@ -53,7 +54,7 @@ export const useAuth = create<AuthState>((set, getState) => ({
         const user = await get<User>('/auth/me')
         set({ user, loading: false })
         await setLanguage(user.locale)
-        applyTheme(user.theme)
+        applyTheme(user)
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) set({ user: null, loading: false })
         else set({ loading: false })
@@ -67,7 +68,7 @@ export const useAuth = create<AuthState>((set, getState) => ({
       const user = await post<User>('/auth/login', { username, password })
       set({ user })
       await setLanguage(user.locale)
-      applyTheme(user.theme)
+      applyTheme(user)
       return { done: true }
     } catch (failure) {
       if (failure instanceof ApiError && failure.code === 'second_step') {
@@ -80,13 +81,13 @@ export const useAuth = create<AuthState>((set, getState) => ({
     const user = await post<User>('/auth/login/second-step', { ticket, code, recovery_code: recoveryCode })
     set({ user })
     await setLanguage(user.locale)
-    applyTheme(user.theme)
+    applyTheme(user)
   },
   homeSignIn: async (again = false) => {
     const user = await post<User>('/auth/home', { again })
     set({ user })
     await setLanguage(user.locale)
-    applyTheme(user.theme)
+    applyTheme(user)
   },
   logout: async () => {
     await post('/auth/logout')
@@ -103,26 +104,15 @@ export const useAuth = create<AuthState>((set, getState) => ({
     set({ user })
     // The server's answer, not the request: a new pair can move the language too.
     if (fields.locale || fields.language_pair) await setLanguage(user.locale)
-    if (fields.theme) applyTheme(fields.theme)
+    if (fields.theme || fields.light_from || fields.dark_from) applyTheme(user)
     void getState
   },
   setUser: (user) => set({ user }),
 }))
 
-export function applyTheme(theme: 'dark' | 'light' | 'system') {
-  // ?theme=… in the address wins for this page load (screenshots, displays).
-  const forced = (globalThis as { __NEXDECK_FORCED_THEME__?: string }).__NEXDECK_FORCED_THEME__
-  if (forced === 'light' || forced === 'dark') {
-    document.documentElement.dataset.theme = forced
-    return
-  }
-  const resolved = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : theme
-  document.documentElement.dataset.theme = resolved
-  try {
-    localStorage.setItem('nexdeck.theme', theme)
-  } catch {
-    // ignore
-  }
+/** Light or dark for the person signed in: a fixed one, the system's, or by the clock, followed live. */
+export function applyTheme(theme: ThemeChoice | ThemePlan) {
+  followTheme(typeof theme === 'string' ? { theme } : theme)
 }
 
 export function currentTheme(): 'dark' | 'light' {

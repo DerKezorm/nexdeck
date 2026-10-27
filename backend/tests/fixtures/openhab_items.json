@@ -1,0 +1,99 @@
+[
+  {
+    "state": "35",
+    "editable": true,
+    "type": "Dimmer",
+    "name": "Bedroom_Dimmer",
+    "label": "Bedroom lamp [%d %%]",
+    "category": "light",
+    "groupNames": []
+  },
+  {
+    "state": "All fine",
+    "stateDescription": {
+      "pattern": "%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": true,
+    "type": "String",
+    "name": "Status_Text",
+    "label": "Status",
+    "groupNames": []
+  },
+  {
+    "state": "21.5 °C",
+    "stateDescription": {
+      "pattern": "%.0f %unit%",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": true,
+    "type": "Number:Temperature",
+    "name": "Living_Temp",
+    "label": "Living room temperature [%.1f °C]",
+    "category": "temperature",
+    "groupNames": []
+  },
+  {
+    "state": "OPEN",
+    "editable": true,
+    "type": "Contact",
+    "name": "Front_Door",
+    "label": "Front door [%s]",
+    "category": "door",
+    "groupNames": []
+  },
+  {
+    "state": "ON",
+    "editable": true,
+    "type": "Group",
+    "name": "gLights",
+    "label": "All lights",
+    "groupNames": []
+  },
+  {
+    "state": "ON",
+    "editable": true,
+    "type": "Switch",
+    "name": "Living_Light",
+    "label": "Living room light",
+    "category": "light",
+    "groupNames": [
+      "gLights"
+    ]
+  },
+  {
+    "state": "412 W",
+    "stateDescription": {
+      "pattern": "%.0f %unit%",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": true,
+    "type": "Number:Power",
+    "name": "Power_Now",
+    "label": "Power [%.0f W]",
+    "category": "energy",
+    "groupNames": []
+  },
+  {
+    "state": "NULL",
+    "editable": true,
+    "type": "Switch",
+    "name": "Unset_Switch",
+    "label": "Never set",
+    "groupNames": []
+  },
+  {
+    "state": "ON",
+    "editable": true,
+    "type": "Switch",
+    "name": "Kitchen_Light",
+    "label": "Kitchen light",
+    "category": "light",
+    "groupNames": [
+      "gLights"
+    ]
+  }
+]

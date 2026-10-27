@@ -5,14 +5,16 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Switch, Toast } from '../../components/ui'
-import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
+import { accentVariables, applyAppearance, CARD_STYLES, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
+import { RETRO_CHOICES, retroOf, type RetroChoices } from '../../lib/retro'
 import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
+import { FontPicker } from './FontPicker'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
 
-const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true }
+const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true, font: 'inter' }
 
 /** What each style looks like in its button, drawn with the same colours the card will use. */
 const SAMPLE: Record<CardStyle, React.CSSProperties> = {
@@ -26,6 +28,14 @@ const SAMPLE: Record<CardStyle, React.CSSProperties> = {
   flat: { background: 'var(--nd-bg-elev)', border: '1px solid var(--nd-border)' },
   outline: { background: 'transparent', border: '1.5px solid var(--nd-border-strong)' },
   neon: { background: 'var(--nd-surface)', border: '1px solid color-mix(in srgb, var(--nd-accent) 45%, transparent)', boxShadow: '0 0 14px -4px var(--nd-accent-glow)' },
+  calm: { background: 'color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg))', border: '1px solid color-mix(in srgb, var(--nd-border) 75%, transparent)' },
+  // 1984: white with a black hairline, a hard shadow, and the stripes of a title bar.
+  window: {
+    background: 'linear-gradient(#000 0 0) top / 100% 1px no-repeat, repeating-linear-gradient(#000 0 1px, #fff 1px 2px) 0 3px / 100% 9px no-repeat, #fff',
+    border: '1px solid #000',
+    boxShadow: '2px 2px 0 #000',
+    borderRadius: 0,
+  },
 }
 
 /**
@@ -58,7 +68,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter', retro: retroOf(form.retro) })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -102,8 +112,8 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
-        <ul className="grid gap-2 grid-cols-2 sm:grid-cols-5" aria-label={t('settings.appearance.cardsTitle')}>
-          {(form.card_styles ?? ['glass', 'liquid', 'flat', 'outline', 'neon']).map((style) => {
+        <ul className="grid gap-2 grid-cols-3 sm:grid-cols-7" aria-label={t('settings.appearance.cardsTitle')}>
+          {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE).map((style) => {
             const chosen = (form.card_style ?? 'glass') === style
             return (
               <li key={style}>
@@ -114,9 +124,10 @@ export function AppearanceSettings() {
                   className={`w-full text-left rounded-xl border p-2 ${chosen ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-hover'}`}
                 >
                   <span className="block h-12 p-1.5" aria-hidden="true">
-                    <span className="block h-full p-1.5" style={{ ...SAMPLE[style], borderRadius: Math.min(form.radius ?? 16, 14) }}>
-                      <span className="block h-1.5 w-2/3 rounded-full bg-ink/70" />
-                      <span className="block h-1.5 w-1/3 rounded-full bg-accent mt-1.5" />
+                    <span className="block h-full p-1.5" style={{ borderRadius: Math.min(form.radius ?? 16, 14), ...SAMPLE[style] }}>
+                      {/* Calm draws its title small and its small print soft, as its cards do. */}
+                      <span className={`block rounded-full ${style === 'calm' ? 'h-1 w-1/3 bg-faint/70' : 'h-1.5 w-2/3 bg-ink/70'}`} />
+                      <span className={`block h-1.5 rounded-full mt-1.5 ${style === 'calm' ? 'w-1/2 bg-ink/60' : 'w-1/3 bg-accent'}`} />
                     </span>
                   </span>
                   <span className="mt-1 flex items-center gap-1 text-xs font-medium">
@@ -128,6 +139,7 @@ export function AppearanceSettings() {
             )
           })}
         </ul>
+        {form.card_style === 'window' && <RetroFields value={retroOf(form.retro)} onChange={(retro) => setForm((current) => ({ ...current, retro }))} />}
         {form.card_style === 'liquid' && (
           <div className="mt-3">
             <Switch
@@ -153,6 +165,12 @@ export function AppearanceSettings() {
           </Field>
         </div>
         <button className="btn btn-accent mt-2" onClick={store}>
+          {t('common.save')}
+        </button>
+      </SettingsCard>
+      <SettingsCard title={t('settings.appearance.fontTitle')} description={form.card_style === 'window' ? `${t('settings.appearance.fontHelp')} ${t('settings.appearance.retro.fontNote')}` : t('settings.appearance.fontHelp')}>
+        <FontPicker value={form.font ?? 'inter'} onChange={(font) => setForm((current) => ({ ...current, font }))} />
+        <button className="btn btn-accent mt-4" onClick={store}>
           {t('common.save')}
         </button>
       </SettingsCard>
@@ -226,7 +244,7 @@ export function AppearanceSettings() {
           <button
             className="btn"
             onClick={() => {
-              setForm({ ...EMPTY, presets: form.presets, themes: form.themes, card_styles: form.card_styles })
+              setForm({ ...EMPTY, presets: form.presets, themes: form.themes, card_styles: form.card_styles, fonts: form.fonts })
             }}
           >
             {t('settings.appearance.reset')}
@@ -250,5 +268,37 @@ export function AppearanceSettings() {
         </Toast>
       )}
     </>
+  )
+}
+
+/**
+ * What 1984 can be told, each as a row of choices: how a yellow or red window
+ * says so, the logos, the desk and the type. Shown while the window style is
+ * chosen, painted at once like the rest of this page.
+ */
+function RetroFields({ value, onChange }: { value: RetroChoices; onChange: (next: RetroChoices) => void }) {
+  const { t } = useTranslation()
+  return (
+    <div className="mt-4 grid gap-3" data-testid="retro-fields">
+      <p className="text-xs text-muted">{t('settings.appearance.retro.help')}</p>
+      {(Object.keys(RETRO_CHOICES) as (keyof RetroChoices)[]).map((key) => (
+        <div key={key} role="group" aria-label={t(`settings.appearance.retro.${key}.title`)}>
+          <p className="text-xs font-medium text-muted mb-1">{t(`settings.appearance.retro.${key}.title`)}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {RETRO_CHOICES[key].map((choice) => (
+              <button
+                key={choice}
+                type="button"
+                className="btn btn-xs"
+                aria-pressed={value[key] === choice}
+                onClick={() => onChange({ ...value, [key]: choice })}
+              >
+                {t(`settings.appearance.retro.${key}.${choice}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }

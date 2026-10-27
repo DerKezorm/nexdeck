@@ -72,6 +72,12 @@ interface Props {
   icon?: string | null
   size?: number
   className?: string
+  /**
+   * The service's own logo, asked of the server when there is no icon or no
+   * collection has the one named (`/api/v1/widgets/{id}/favicon`). Tried
+   * once, then the grey box.
+   */
+  fallback?: string | null
 }
 
 /**
@@ -148,10 +154,11 @@ export const SYMBOLS: Record<string, ComponentType<LucideProps>> = {
  * A service logo (dashboard-icons name, URL or upload) or, with the
  * ``lucide:`` prefix, a symbol from the set above.
  */
-export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
+export function ServiceIcon({ icon, size = 20, className = '', fallback = null }: Props) {
   // Remember which address failed, not that one did: while a name is being
   // typed, "r" and "ra" fail and "radarr" must still get its chance.
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const [failedFallback, setFailedFallback] = useState<string | null>(null)
   const ground = useGround((state) => state.mode)
   // Set once a logo turned out to vanish on this ground; it then asks for its variant.
   const [, looked] = useState(0)
@@ -166,8 +173,11 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
   // A name the server serves can have a variant for the ground; an address or an upload cannot.
   const plain = iconUrl(icon)
   const named = Boolean(plain && icon && !/^(https?:|\/|data:)/.test(icon))
-  const url = named && plain && verdictFor(plain, ground) ? iconUrl(icon, ground) : plain
-  if (!url || failedUrl === url) {
+  const own = named && plain && verdictFor(plain, ground) ? iconUrl(icon, ground) : plain
+  // Without an icon, or with one nobody has, the service's own logo; after that, the box.
+  const fromService = Boolean(fallback) && (!own || failedUrl === own) && failedFallback !== fallback
+  const url = fromService ? fallback : own
+  if (!url || (!fromService && failedUrl === url)) {
     return <Box size={size} className={`${className} text-muted`} aria-hidden="true" />
   }
   return (
@@ -180,9 +190,9 @@ export function ServiceIcon({ icon, size = 20, className = '' }: Props) {
       style={{ width: size, height: size }}
       loading="lazy"
       onLoad={(event) => {
-        if (named && plain && url === plain && verdictFor(plain, ground) === undefined && judge(event.currentTarget, plain, ground)) looked((n) => n + 1)
+        if (!fromService && named && plain && url === plain && verdictFor(plain, ground) === undefined && judge(event.currentTarget, plain, ground)) looked((n) => n + 1)
       }}
-      onError={() => setFailedUrl(url)}
+      onError={() => (fromService ? setFailedFallback(url) : setFailedUrl(url))}
     />
   )
 }

@@ -7,19 +7,22 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-173-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-195-3fb6d4)](#the-services-it-speaks-to)
 
 ![A nexdeck board in liquid glass: clock, weather, internet traffic, speed test, Pi-hole, charts of CPU and memory for Proxmox, TrueNAS and a NAS, app tiles, what is playing, downloads, AdGuard, containers, a UPS and uptime](docs/screenshot-overview.png)
 
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **173 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources, iframes, notes and bookmarks.
+- **195 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources and shows a list, a week or a month, a weather card with an hourly strip, air quality, UV and pollen, iframes, notes and bookmarks.
 - **A map of your network.** A page can be a live plan of your UniFi network: gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions. You pick which servers and devices join it, and nothing moves by itself.
 - **Your home, switched from the board.** A page can hold the lamps, thermostats, covers, scenes, switches, sensors and statistics of Home Assistant on a free surface, as small as a light switch, each in a style of its own, from a pill to a rocker switch, a dial, a window or a door. nexdeck calls nothing but their own services, and only for what stands on the page. A beta for now.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
 - **Three screens.** A free grid of 12, 24 or 36 columns you arrange once: a tablet shows it as arranged, a phone stacks the cards in the same order. Drag cards into a group, where each takes a width and a height of its own, or into a side bar that stays in place while the page scrolls. An installable phone app with a bottom bar, kiosk links for wall tablets that cycle pages and dim at night, and a sign-in without a password for a tablet on the home network.
 - **Yours to look at.** Your own name and logo in the browser tab, the bar, on the sign-in page and on the installed app. Thirteen colour themes besides nexdeck's own, Catppuccin, Nord, Dracula, Tokyo Night, Gruvbox and Rosé Pine among them, cards drawn as glass, liquid glass with an edge that bends the light, flat, outline or with a neon edge, each card in a colour of its own if you like, and backgrounds that drift, show the stars or follow the time of day. Numbers roll to each new reading, and a card that goes down glows red while the room behind it turns a little red too.
+- **A look of 1984.** Every card a window with a striped title bar, the bar a menu bar, the page a dotted desk, in pixel type, black on white and inverted for the night. A yellow card is hatched and a red one turns black, so a status never rests on colour alone.
+- **Light, dark and type.** Light and dark follow the system or the clock, for each account and each wall display. A calm card style, six types for the interface, an editor for a colour theme of your own, and cards without their head or frame.
+- **Cards you copy, hide and open by key.** Copy a card, or a whole group, onto another page or board. Hide a card on the phone. Number keys open app tiles, a swipe turns the page on a phone and on a wall tablet, and `/go/<name>` or nexdeck as the search engine of your browser opens a tile by its short name.
 - **For the wall.** Key figures put numbers from several services into one grid of tiles that grow with the card and turn yellow or red. A countdown to a date, and a kitchen timer that rings and flashes when it is done.
 - **Made to be shown.** Showcase mode replaces addresses, host names, people, devices and appointments with made-up ones that read like real ones, and a board saves as a picture on a frame of colour, ready for a forum or a chat.
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
@@ -29,9 +32,9 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 - **History over months.** Every number kept as hours for 90 days and days for two years, charts over a year, and a forecast of when a volume is full.
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
 - **What is out of date.** Every connection shows the version its service runs, and once you let nexdeck ask GitHub, the Updates card lists the services behind their project's newest release, next to containers from What's Up Docker, Cup, Arcane and Dockhand.
-- **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything.
+- **A head start.** Six board templates that fill their slots with whichever of your services fits, and an import from Homepage or Homarr that shows its plan before it makes anything. Services nexdeck finds in your containers and guests wait in the catalog under Found in your network, one click from a connection.
 - **Boards as files.** Export a board as YAML, keep it in Git, drop it into `data/boards/` to provision it. Docker labels create tiles.
-- **Sign in your way.** Local accounts, OpenID Connect with several providers side by side (authentik in one step, Microsoft Entra ID, Keycloak, Authelia, Pocket ID and friends), personal API tokens.
+- **Sign in your way.** Local accounts, OpenID Connect with several providers side by side (authentik in one step, Microsoft Entra ID, Keycloak, Authelia, Pocket ID and friends), personal API tokens that only read unless you say otherwise.
 - **In English, German, Spanish, French or Italian.** The interface and every card, including what the services report. Each account picks the two languages that stand in its top bar.
 
 ## A board is whatever you put on it
@@ -150,9 +153,9 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 **Network.** Public IP address, Cloudflare, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, FortiGate, OpenWrt, Traefik, Nginx Proxy Manager, nginx ignition, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, CrowdSec, Shlink, Speedtest Tracker, nexpulse, nexsift, Uptime Kuma, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
 
-**Media.** Plex, Jellyfin, Emby, Tautulli, Tracearr, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, NeutArr, Bazarr, SABnzbd, NZBGet, qBittorrent, Qui, Transmission, Deluge, rTorrent, MeTube, Seerr, Overseerr, Jellyseerr, ReadMeABook, Nexview, nexcrate, nexbeat, Maintainerr, Reclaimerr, Tdarr, Unmanic, FileFlows, RomM, Sportarr, Tube Archivist, Real-Debrid, M3U Editor, Minecraft.
+**Media.** Plex, Jellyfin, Emby, Tautulli, Tracearr, Jellystat, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, autobrr, NeutArr, Bazarr, SABnzbd, NZBGet, qBittorrent, Qui, Transmission, Deluge, rTorrent, MeTube, Seerr, Overseerr, Jellyseerr, ReadMeABook, Nexview, nexcrate, nexbeat, Maintainerr, Reclaimerr, Tdarr, Unmanic, FileFlows, RomM, Sportarr, Tube Archivist, Real-Debrid, M3U Editor, Minecraft, aria2, pyLoad, Jackett, Ombi, slskd, Owncast, Kodi, PeerTube, rclone, Stash, xTeVe, Your Spotify.
 
-**Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, FileBrowser Quantum, Syncthing, Paperless-ngx, Papra, Firefly III, Actual Budget, Mealie, Grocy, Vikunja, nexlore, nexpaper, nexdiary, nexcanvas, nexbrand, Kimai, Dawarich, wger, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes, Wallos, OctoPrint.
+**Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, FileBrowser Quantum, Syncthing, Paperless-ngx, Papra, Firefly III, Actual Budget, Mealie, Grocy, Vikunja, nexlore, nexpaper, nexdiary, nexcanvas, nexbrand, Kimai, Dawarich, wger, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes, Wallos, OctoPrint, Spoolman, Moonraker, openHAB, Homebridge, Node-RED, ESPHome, Tasmota, Fronius, OpenDTU, Shelly.
 
 **Feeds, weather and messages.** Hacker News, YouTube, GitHub, share prices, Twitch, RSS, Miniflux, FreshRSS, Karakeep, Linkwarden, Linkding, iCal and CalDAV, Weather, ntfy, Gotify, nexmail, IMAP, Mailpit.
 

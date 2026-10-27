@@ -109,7 +109,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  /* --nd-font is the type chosen under Appearance (lib/fonts.ts); unset, Inter. */
+  --font-sans: var(--nd-font, 'Inter Variable'), system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-bg: var(--nd-bg);
   --color-elev: var(--nd-bg-elev);
@@ -150,6 +151,12 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+}
+
+/* A monospaced interface runs wide: a step smaller keeps the titles on their cards. */
+:root[data-font='mono'] body {
+  font-size: 13px;
+  letter-spacing: -0.01em;
 }
 
 ::selection {
@@ -266,6 +273,36 @@ body {
   border-color: transparent;
 }
 
+/* A card without its head or its frame (its settings, Look) keeps a dot in the
+   corner when it is not well, and while the board is arranged a grip where
+   the head would be: the dashed outline alone is easy to miss on a clock. */
+.nd-corner-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.nd-grip {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  color: var(--nd-on-accent);
+  background: var(--nd-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.nd-grip > svg {
+  rotate: 90deg;
+}
+
 /* How a card is drawn, chosen under Appearance. Glass is the default and has
    no rule of its own. A heading stays without a ground in every style, and a
    card that is red or amber keeps its coloured frame in every style too: the
@@ -365,6 +402,43 @@ body {
 
 :root[data-cards='liquid'] .card.glass[data-status='warn']:not(.card-plain) {
   border-color: color-mix(in srgb, var(--nd-warn) 45%, transparent);
+}
+
+/* Calm: a quiet sheet, a shade off the page, with a hairline and nothing that
+   moves. Small titles in capitals, the small print a step softer (the faint
+   colour, which every theme keeps readable), more room around the content,
+   no glass, no shadow, no tipping, and a card that is down says so with a
+   steady red frame rather than a breath. */
+:root[data-cards='calm'] .card.glass:not(.card-plain) {
+  --nd-text-muted: var(--nd-text-faint);
+  background: color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg));
+  border-color: color-mix(in srgb, var(--nd-border) 75%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transition: border-color 160ms ease;
+}
+
+:root[data-cards='calm'] .card.glass:not(.card-plain):hover {
+  border-color: var(--nd-border);
+}
+
+/* Its head is drawn small by the card itself (WidgetCard), the dot here. */
+:root[data-cards='calm'] .card.glass > header .dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+  animation: none;
+}
+
+:root[data-cards='calm'] .card.glass[data-status='bad']:not(.is-editing):not(.card-plain) {
+  animation: none;
+  border-color: color-mix(in srgb, var(--nd-bad) 60%, var(--nd-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--nd-bad) 25%, transparent);
+}
+
+:root[data-cards='calm'] .card.glass[data-status='warn']:not(.is-editing):not(.card-plain) {
+  border-color: color-mix(in srgb, var(--nd-warn) 50%, var(--nd-border));
 }
 
 /* A colour of a card's own (the card's settings, Look): a frame, a tint over
@@ -1154,6 +1228,11 @@ textarea.input {
 .card-selected .card.is-editing {
   border-style: solid;
   box-shadow: 0 0 0 2px var(--nd-accent), 0 0 0 5px var(--nd-accent-soft);
+}
+
+/* A card left out of the phone's stack, while the phone arranges the board: there, but faded. */
+.nd-phone-hidden .card.is-editing {
+  opacity: 0.5;
 }
 
 .card.is-editing {
@@ -2683,6 +2762,14 @@ body.has-player-bar main {
      names the same list for the bent edge and the tilt. */
   :root[data-cards='flat'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
     background: var(--nd-bg-elev);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  :root[data-cards='calm'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg));
+    border-color: color-mix(in srgb, var(--nd-border) 75%, transparent);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow: none;

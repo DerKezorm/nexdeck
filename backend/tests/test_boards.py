@@ -294,8 +294,12 @@ def test_widget_images_come_through_the_server_with_the_service_token(client: Te
         second = client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"})
         assert second.status_code == 200 and poster.call_count == 1, "the second request is served from the cache"
         assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "http://evil.example.com/x.png"}).status_code == 400
-        respx.get("http://plex:32400/login").mock(return_value=Response(200, text="<html>", headers={"content-type": "text/html"}))
-        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/login"}).status_code == 404
+        page = respx.get("http://plex:32400/library/metadata/11/thumb/1").mock(return_value=Response(200, text="<html>", headers={"content-type": "text/html"}))
+        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/11/thumb/1"}).status_code == 404
+        assert page.call_count == 1, "a picture's path that answers with a page is fetched and refused"
+        login = respx.get("http://plex:32400/login").mock(return_value=Response(200, text="<html>", headers={"content-type": "text/html"}))
+        assert client.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/login"}).status_code == 400
+        assert login.call_count == 0, "a path that is no picture of Plex's is never sent"
     other = TestClient(client.app)
     assert other.get(f"/api/v1/widgets/{widget['id']}/image", params={"path": "/library/metadata/10/thumb/1"}).status_code in (401, 403), "no session, no image"
 

@@ -40,7 +40,9 @@ def test_without_a_name_or_logo_everything_says_nexdeck(client: TestClient) -> N
     client.cookies.clear()
     answer = client.get("/api/v1/brand")
     assert answer.status_code == 200, "the sign-in page reads it before anyone signs in"
-    assert answer.json() == {"name": "", "logo": None, "favicon": None, "app_icons": None, "board_in_title": True}
+    shown = answer.json()
+    assert shown.pop("look")["card_style"] == "glass", "and the look the sign-in page is drawn in"
+    assert shown == {"name": "", "logo": None, "favicon": None, "app_icons": None, "board_in_title": True}
 
 
 def test_an_administrator_names_the_installation(client: TestClient) -> None:

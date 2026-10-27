@@ -1721,6 +1721,58 @@
         "A page the browser translated no longer goes blank when something on it changes.",
         "The Updates card says how old a newer release is."
       ]
+    },
+    "0.50.0": {
+      "lead": "nexdeck gets a look of its own: 1984, where every card is a window. Light and dark follow the system or the clock, cards can be copied and hidden, the weather and the calendar say more, the integrations have a page of their own, and 22 services join.",
+      "sections": [
+        {
+          "title": "1984",
+          "body": "The whole of nexdeck drawn as an early desktop: every card a window with a striped title bar, the bar a menu bar, the page a dotted desk, titles in pixel type, black on white and inverted for the night. A yellow card is hatched and a red one turns black, so a status never rests on colour alone. Choose a touch of colour or the pattern only, black and white logos, and the desk.",
+          "path": "System > Appearance > 1984"
+        },
+        {
+          "title": "Light, dark and type",
+          "body": "Light and dark follow the system the moment it switches, or the clock: two times of day, for each account and for each wall display link. Besides the glass there is a calm card style, six types for the interface (Inter, the system's own, IBM Plex Sans, Atkinson Hyperlegible Next, Geist, JetBrains Mono) and an editor for a colour theme of your own.",
+          "path": "System > Appearance; My settings > Profile"
+        },
+        {
+          "title": "Copy, hide, swipe, keys",
+          "body": "Copy a card onto the same page or onto a page of another board, a group with the cards it holds. Hide a card on the phone, unless it turns red. Swipe between pages on a phone and on a wall display. Press 1 to 9 to open an app tile, and ? shows which key is which.",
+          "path": "Edit mode (pencil) > the move menu of a card, Copy to"
+        },
+        {
+          "title": "Weather and calendar",
+          "body": "The weather card can show the next 12 or 24 hours with the chance of rain, the air quality, the UV index and pollen. The calendar card shows a week or a month as a grid, each source in its own colour, and the arrows page for you alone.",
+          "path": "Edit mode (pencil) > Weather or Calendar card > Settings"
+        },
+        {
+          "title": "A page for your integrations",
+          "body": "The counts at the top are filters: failing, updates, without a card, muted. Failing connections come first, there is a list by category, and the catalog behind Add an integration is a window with a search. At its top, Found in your network lists the services your containers and guests run that you have not connected yet, with the address filled in.",
+          "path": "System > Integrations"
+        },
+        {
+          "title": "Short names and a search engine",
+          "body": "Every app tile has a short name, and /go/<name> opens it. Add nexdeck as a search engine in Chrome, Edge or Firefox, and a short name typed in the address bar opens its tile, other words open the search, with suggestions as you type. Safari cannot do this.",
+          "path": "System > Search"
+        },
+        {
+          "title": "22 new integrations",
+          "body": "aria2, pyLoad, Jackett, Ombi, slskd, Kodi, Owncast, PeerTube, rclone, Stash, xTeVe, Your Spotify, Spoolman, Moonraker, openHAB, Homebridge, Node-RED, ESPHome, Tasmota, Shelly, OpenDTU and Fronius, with buttons where the service has something safe to press. All of them start as beta.",
+          "path": "System > Integrations > Add an integration"
+        },
+        {
+          "title": "Tighter by default",
+          "body": "API tokens can be read only, and new ones are: they look but never change anything. The picture relay sends a service only the picture paths its integration names, where any path could reach it with the credentials of the connection, such as marking a title as watched in Plex. A redirect to another place takes no credentials along.",
+          "path": "My settings > API tokens"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A card can go without its head and without its frame, for a clock or a line of text that should stand free.",
+        "A card or connection without a logo shows the one its service names for itself.",
+        "FRITZ!Box takes an optional user and is out of beta; behind a bridge it no longer turns red with an uptime of 0 seconds.",
+        "Menus on home pages stay in view, and the text on the accent colour reads on a light accent too."
+      ]
     }
   }
 }

@@ -3,21 +3,52 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 0.50.0 (2026-10-28)
 
-### Security
+### Added
 
-- **A redirect to another place takes no credentials along.** When a service answered with a redirect to another host, another port or from https to plain http, nexdeck followed it with the API key, token or session cookie of the connection in its headers; only `Authorization` was dropped. Now such a hop keeps none of them, and a request with a body (a sign-in sent on with 307 or 308) is not sent there at all, the card says "The service sent the request on to …". A redirect within the service still carries them, including plain http raised to https on the same host, on any port.
+- **1984**, a look that draws the whole of nexdeck as an early desktop. Every card is a window with a striped title bar, a close box and a hard shadow, the bar is a menu bar, the page a dotted desk, titles are set in a pixel type, dialogs have a title bar, a question is an alert box and the sign-in a dialog. Black on white, and the same inverted for the night. A yellow card hatches its title bar, a red one turns it black behind a double frame, and the status dots are pixel symbols, so a status never rests on colour alone. Under Appearance you choose how a yellow or red window shows it (coloured symbols, **A touch of colour**, or **Pattern only**), logos in colour or in black and white, the desk (dither, pattern or grey) and whether the pixel type sets titles only or everything. The style sheet and the type are fetched the first time 1984 is shown, never with the first visit, and no other look changes. The last look a browser saw is painted before the server answers.
+- **Light and dark follow the system at once**, while the page is open, and can follow the **clock** instead: two times of day, for each account and for each wall display link. A link already on the wall can change its look without a new token.
+- **A card style "Calm"**: a quiet sheet a shade off the page, a hairline, small capitals for the title, no glass, no shadow, and a steady red frame for a card that is down. The look **Quiet desk** puts it together with Graphite and Geist.
+- **A type for the interface**, under Appearance: Inter as shipped, the system's own, IBM Plex Sans, Atkinson Hyperlegible Next, Geist, JetBrains Mono and Pixelify Sans. They are served by nexdeck itself, and the files of a type load only when it is shown.
+- **Your own colours**: under Appearance, "Make your own colours" opens an editor for the fifteen colours of a theme, for dark and for light, each with a picker and its hex, starting from the theme you chose. The page shows the colours as you pick them, a small board beside the editor shows both, and a colour that is hard to read says so.
+- **A card without its head, a card without its frame**, two switches under a card's Look, for a clock, a search or a line of text that should stand free. A card like that shows a dot in its corner when it is not well.
+- **A logo from the service itself.** A card or connection without a logo shows the one its service names for itself: nexdeck reads the start page of the address the card opens and takes the icon from that same host.
+- **Copy cards.** The move menu of a card in edit mode switches between moving and copying, onto the same page or onto a page of another board. A copy takes connection, title, icon, link, view, options, colour and size, but not the history or the check of the original. A group, tabs or key figures take copies of the cards they hold, those you could make there; the message names what stayed behind.
+- **Hide a card on the phone.** A switch in the card settings leaves it out of the stack a phone shows; the wide board, a tablet and a wall display keep it. A second switch, on from the start, brings it back while its frame is red.
+- **Swipe between pages.** On a phone a sideways swipe turns to the next page of a board or the one before. A wall display with several pages turns them the same way, on a wide screen too, and a page turned by hand starts the rotation's time again. Not while the board is arranged, and not on something that moves sideways by itself.
+- **Number keys for app tiles.** An app tile can have a key from 1 to 9, one tile per key and board, set in its settings. On the board the key opens the tile as a click would. `?` shows the keys as small marks on the tiles. A key given twice is refused with the name of the tile that has it.
+- **Weather**: the next 12 or 24 hours as columns of temperature with the chance of rain, night hours shaded and sunrise and sunset marked; the air quality (European AQI); the UV index with the peak of the day; and pollen (Europe only). The air data comes from Open-Meteo. All four are off for a card until it asks for them.
+- **Calendar as a week or a month.** The calendar card takes a View: the list as before, a week of seven days with their times, or a month with today marked and the entries as dots on a narrow card and as bars on a wide one. Each entry wears the colour of its source. The arrows page for the viewer alone, and a click on a day lists its entries.
+- **A new Integrations page**, under System: the counts are filters (failing, updates, without a card, muted), failing connections come first and then those with a newer release, and there is a list by category, kept per browser. A connection without a card leads to the library of the home board, already searching for its service. The catalog behind "Add an integration" is a window with a search that has the focus as it opens, categories with their counts, a tile for each service and a switch for hiding betas.
+- **Found in your network**, at the top of the catalog: services that the inventory knows from Docker, Portainer, a Synology and Proxmox, that have an adapter and no connection yet, with address and port filled in. "Connect" opens the sheet; "Ignore" is kept until "Show again". Nothing is asked of the network.
+- **Short names.** Every app tile answers to a short name, taken from its name until you give it one in its settings. `/go/<name>` opens the tile; `/go?q=<words>` opens a tile by its name or searches with the words. Signed out, it sends you to the sign-in and back.
+- **nexdeck as a search engine of the browser** (OpenSearch): Chrome, Edge and Firefox can add it, and a short name typed in the address bar opens its tile, other words open the search. While you type, the browser gets suggestions: tiles by short name first, then cards. Safari cannot add search engines this way; the settings say so.
+- **API tokens that only read.** A token has an access, "Read only" or "Full". A read-only token can call GET, HEAD and OPTIONS and is refused with 403 for everything else, and so are the three reads that set something going. New tokens start read only; tokens made before keep full access.
+- **22 new integrations**, all beta: **aria2**, **pyLoad**, **Jackett**, **Ombi**, **slskd**, **Kodi**, **Owncast**, **PeerTube**, **rclone**, **Stash**, **xTeVe**, **Your Spotify**, **Spoolman**, **Moonraker**, **openHAB**, **Homebridge**, **Node-RED**, **ESPHome**, **Tasmota**, **Shelly**, **OpenDTU** and **Fronius**. Downloads and their queues (aria2, pyLoad, slskd), indexers and requests (Jackett, Ombi), what plays, who is live and what was listened to (Kodi, Owncast, PeerTube, Stash, Your Spotify), files on their way (rclone, xTeVe), filament and printers (Spoolman, Moonraker), and the house (openHAB, Homebridge, Node-RED, ESPHome, Tasmota, Shelly, and the solar power of OpenDTU and Fronius). Buttons where the service has something safe to press: pause and resume, approve and decline, play and stop, a scan, a relay, a limit, an inject node.
 
 ### Changed
 
 - **FRITZ!Box with a user, out of beta.** The connection takes an optional FRITZ!Box user. With one, the state of the line, the address, the uptime and the current rates come over TR-064, which also works when the box sits as a modem or bridge in front of another router and when it does not transmit its status over UPnP. Confirmed against a 6591 Cable in bridge mode, with and without a user.
+- Demo mode on the Integrations page is a slim line while it is off, instead of a box that pushed the connections below the fold.
 
 ### Fixed
 
+- **Menus on home pages** hung off an element at the left or right edge of the screen ran out of it. They are moved into view now.
+- **The text on the accent** is light or dark by contrast, as the accent is drawn. On a fresh installation in the light theme it was white on light cyan, 1.7 to 1.
 - **FRITZ!Box in bridge mode** said "Uptime 0s" and painted the connection card red, because over UPnP such a box does not dial in itself. The card stays grey now, leaves the uptime out and says that a user shows the state of the line.
 - **FRITZ!Box hints**: when the box does not transmit its status over UPnP, the card names that switch instead of "Allow access for applications", which is a different one. `https://` on port 49000 says that this port speaks http; it said "could not be reached" while the box answered every time.
 - On a home page, a comparison with **the day or week before** laid it an hour off on the day after the clocks changed, and the last hour of the 25-hour day fell off the end. It now lies on the same clock times.
+
+### Security
+
+- **The picture relay sends only the paths an integration names.** `/widgets/{id}/image?path=` sent any path starting with a slash to the service with the credentials of the connection, so anybody who may read a board, a wall display included, could set off a request with side effects, such as marking a title as watched in Plex or starting a library scan. Now an integration declares the shapes of its pictures (Plex, Jellyfin and Emby, Frigate, Reolink, nexcanvas, nexcrate and Kodi), and anything else is refused before the cache and before the service is asked: no `..`, no encoded or doubly encoded path, no address inside a value. An integration that names none relays none.
+- **API tokens can be read only**, and new ones are (see Added).
+- **A redirect to another place takes no credentials along.** When a service answered with a redirect to another host, another port or from https to plain http, nexdeck followed it with the API key, token or session cookie of the connection in its headers; only `Authorization` was dropped. Now such a hop keeps none of them, and a request with a body (a sign-in sent on with 307 or 308) is not sent there at all, the card says "The service sent the request on to …". A redirect within the service still carries them, including plain http raised to https on the same host, on any port.
+
+### Upgrading
+
+The database gets two migrations, 25 and 26: a column for the access of a token, and the times of light and dark for accounts and wall displays. Tokens made before keep full access, and wall displays made before stay dark, as they were. Going back to 0.49 works; the columns stay unused, and a token made read only has full access again there.
 
 ## 0.49.0 (2026-10-25)
 

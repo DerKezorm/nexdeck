@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import logging
 import re
 import time
@@ -15,8 +16,15 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
-from ..adapters import adapter_or_missing, split_widget_kind
-from ..adapters.base import AdapterError, Context, MediaSource, external_client, outbound_client
+from ..adapters import adapter_or_missing, get_adapter, split_widget_kind
+from ..adapters.base import (
+    AdapterError,
+    Context,
+    MediaSource,
+    external_client,
+    image_path,
+    outbound_client,
+)
 from ..adapters.custom import MIN_REFRESH_SECONDS, name_of, sizes_of
 from ..cards import images as card_images
 from ..cards import store as card_store
@@ -25,6 +33,7 @@ from ..deps import (
     AdminUser,
     CurrentUser,
     DbSession,
+    NotReadOnly,
     OptionalUser,
     board_for_viewer_id,
     error,
@@ -37,14 +46,16 @@ from ..schemas import (
     ActionBody,
     HealthBody,
     NoteBody,
+    WidgetCopy,
     WidgetCreate,
     WidgetMove,
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import chronicle, grid, history, holders, impact
+from ..services import app_keys, chronicle, favicons, grid, history, holders, impact
 from ..services import health as health_service
 from ..services.boards import (
+    GROUP_KINDS,
     _validate_options,
     card_sizes,
     clean_cards,
@@ -143,6 +154,15 @@ def _refuse_unless_cards(page: Page) -> None:
         raise error("home_page", "A home page holds controls, not cards. Add the card to another page.")
 
 
+def _refuse_a_taken_alias(db: DbSession, board_id: int, widget_id: int | None, kind: str, options: dict | None) -> None:
+    from ..services import aliases
+
+    try:
+        aliases.refuse_taken(db, board_id, widget_id, kind, options)
+    except aliases.AliasRefused as refused:
+        raise error(refused.code, str(refused), status.HTTP_409_CONFLICT if refused.code == "alias_taken" else 400) from None
+
+
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")
 def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSession) -> dict:
     page = db.get(Page, page_id)
@@ -154,6 +174,8 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_custom(db, body.kind, body.integration_id, body.options, body.refresh_seconds)
     _validate_options(db, body.kind, body.options, user)
+    app_keys.refuse_twice(db, board.id, None, body.kind, body.options)
+    _refuse_a_taken_alias(db, board.id, None, body.kind, body.options)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     # A tile that follows an app shows the app's name until it is given one of its own.
@@ -209,6 +231,8 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         widget.link = body.link.strip()
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
+        app_keys.refuse_twice(db, board.id, widget.id, widget.kind, body.options)
+        _refuse_a_taken_alias(db, board.id, widget.id, widget.kind, body.options)
         widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
     if body.clear_refresh:
         widget.refresh_seconds = None
@@ -290,6 +314,27 @@ def delete_widget(widget_id: int, user: CurrentUser, db: DbSession) -> None:
     hub.publish(board_topic(board.id), "board", {"id": board.id, "changed": True})
 
 
+def _spot_in(widget: Widget, page: Page, from_columns: int, to_columns: int, as_id: int | None = None) -> dict:
+    """Where a card stands on its page, in the columns of the board it goes to, under ``as_id`` if it arrives as another card."""
+    spot = next((dict(item) for item in (page.layouts or {}).get("lg", []) if item.get("i") == str(widget.id)), None)
+    if spot is None:
+        default = card_sizes(widget, from_columns)[0]
+        spot = {"x": 0, "y": 0, "w": default[0], "h": default[1]}
+    name = str(as_id if as_id is not None else widget.id)
+    floor = card_sizes(widget, to_columns)[1][0]
+    [spot] = grid.rescale([{"i": name, **{key: spot[key] for key in ("x", "y", "w", "h")}}], from_columns, to_columns, {name: floor})
+    return spot
+
+
+def _below(target: Page, spots: list[dict]) -> dict[str, dict]:
+    """Cards arriving together, as they stood, below the last row of the page they land on."""
+    # Cards from different pages may now claim the same cells.
+    block = grid.settle(spots)
+    top = min(spot["y"] for spot in block)
+    bottom = max((item["y"] + item["h"] for item in (target.layouts or {}).get("lg", [])), default=0)
+    return {spot["i"]: {**spot, "y": spot["y"] - top + bottom} for spot in block}
+
+
 @router.post("/widgets/move", summary="Put cards on another page, of this board or another")
 def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
     """The cards go together and arrive as they stood: side by side stays
@@ -330,24 +375,20 @@ def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
         moving.append((widget, page))
     if not moving:
         return {"moved": 0, "page_id": target.id}
+    # ⚠️ A key means one tile per board. A tile that brings its key to a board
+    # where another tile has it is refused, with the name of that tile, as in
+    # the settings; nothing is moved.
+    arriving = {widget.id for widget, page in moving if page.board_id != to_board.id}
+    keys = app_keys.taken(db, to_board.id, leaving=arriving)
+    for widget, _page in moving:
+        key = app_keys.key_of(widget.options) if widget.kind == app_keys.KIND and widget.id in arriving else ""
+        if key and key in keys:
+            raise app_keys.refused(db, key, keys[key])
+        if key:
+            keys[key] = widget
 
     to_columns = grid.columns(to_board.settings)
-    # Where each card stands now, in the columns of the board it lands on.
-    spots: list[dict] = []
-    for widget, page in moving:
-        from_columns = grid.columns(boards[page.board_id].settings)
-        spot = next((dict(item) for item in (page.layouts or {}).get("lg", []) if item.get("i") == str(widget.id)), None)
-        if spot is None:
-            default = card_sizes(widget, from_columns)[0]
-            spot = {"i": str(widget.id), "x": 0, "y": 0, "w": default[0], "h": default[1]}
-        floor = card_sizes(widget, to_columns)[1][0]
-        [spot] = grid.rescale([{key: spot[key] for key in ("i", "x", "y", "w", "h")}], from_columns, to_columns, {str(widget.id): floor})
-        spots.append(spot)
-    # Cards from different pages may now claim the same cells.
-    block = grid.settle(spots)
-    top = min(spot["y"] for spot in block)
-    bottom = max((item["y"] + item["h"] for item in (target.layouts or {}).get("lg", [])), default=0)
-    placed = {spot["i"]: {**spot, "y": spot["y"] - top + bottom} for spot in block}
+    placed = _below(target, [_spot_in(widget, page, grid.columns(boards[page.board_id].settings), to_columns) for widget, page in moving])
 
     for widget, page in moving:
         remove_from_layouts(page, widget.id)
@@ -368,6 +409,142 @@ def move_widgets(body: WidgetMove, user: CurrentUser, db: DbSession) -> dict:
         hub.publish(board_topic(board_id), "board", {"id": board_id, "changed": True})
     logger.info("%d card(s) moved to page %r of board %r by %s.", len(moving), target.name, to_board.slug, user.username)
     return {"moved": len(moving), "page_id": target.id}
+
+
+#: Options that belong to the reachability check, which a copy does not take along:
+#: it gets the check a new card gets.
+CHECK_OPTIONS = frozenset({"check_target"})
+
+
+def _twin(db: DbSession, widget: Widget, page_id: int) -> Widget:
+    """A new card made like ``widget``: the same connection, title, icon, link and options, nothing else.
+
+    ⚠️ Not the history, not the chronicle, not the check. The copy is usually
+    changed right after, and one history under two cards would mix two series
+    of numbers; its check is the one a new card gets.
+    """
+    options = {key: copy.deepcopy(value) for key, value in (widget.options or {}).items() if key not in CHECK_OPTIONS}
+    twin = Widget(page_id=page_id, kind=widget.kind, title=widget.title, icon=widget.icon, link=widget.link,
+                  integration_id=widget.integration_id, options=options, refresh_seconds=widget.refresh_seconds)
+    db.add(twin)
+    return twin
+
+
+def _may_copy(db: DbSession, widget: Widget, user: User) -> bool:
+    """Whether this person could make this card anew: its connection and its options, as for a new card."""
+    try:
+        _validate_kind(db, widget.kind, widget.integration_id, user)
+        _validate_options(db, widget.kind, widget.options, user)
+    except HTTPException:
+        return False
+    return True
+
+
+@router.post("/widgets/copy", summary="Copy cards onto a page, the one they are on or one of another board")
+def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
+    """The copies arrive together and as the cards stood, below the last row
+    of the page, in the columns of its board. Edit is needed on both boards.
+
+    Each card is checked as a new one would be: a member cannot copy a card
+    on a connection reserved for administrators, not even beside the
+    original, because he could not have made it.
+
+    A card that holds others (a group, tabs, key figures) names them by
+    number, and those numbers mean cards of its own page. Wherever it is
+    copied, beside the original as well, it takes copies of its cards along,
+    those this person could make; the rest stay behind and the answer says
+    how many. ⚠️ Copies, never the same numbers: a card stands in one place
+    only, so the copy would have taken the cards out of the original.
+    """
+    target = db.get(Page, body.page_id)
+    if target is None:
+        raise error("not_found", "There is no such page.", status.HTTP_404_NOT_FOUND)
+    to_board, _ = require_board_id(db, target.board_id, user, "edit")
+    _refuse_unless_cards(target)
+    if to_board.provisioned:
+        raise error("provisioned", "That board comes from a file on the server; change the file instead.", status.HTTP_409_CONFLICT)
+    boards = {to_board.id: to_board}
+    sources: list[tuple[Widget, Page]] = []
+    for widget_id in dict.fromkeys(body.ids):
+        widget, page = _widget(db, widget_id)
+        if page.board_id not in boards:
+            boards[page.board_id], _ = require_board_id(db, page.board_id, user, "edit")
+        # Refused as a whole, with the reason: these are the cards that were asked for.
+        _validate_kind(db, widget.kind, widget.integration_id, user)
+        _validate_options(db, widget.kind, widget.options, user)
+        sources.append((widget, page))
+
+    to_columns = grid.columns(to_board.settings)
+    notes: list[dict[str, Any]] = []
+    # Read before the first copy is made: the copies carry the keys of their originals.
+    keys = app_keys.taken(db, to_board.id)
+    made: list[tuple[Widget, Widget, Page]] = []
+    held: list[tuple[Widget, Widget, Page]] = []
+    taken_along: dict[int, list[Widget]] = {}
+    for widget, page in sources:
+        twin = _twin(db, widget, target.id)
+        made.append((twin, widget, page))
+        cards = (widget.options or {}).get("cards")
+        if widget.kind not in GROUP_KINDS or not isinstance(cards, list) or not cards:
+            continue
+        name = widget.title or widget.kind
+        wanted = [number for number in cards if isinstance(number, int)]
+        inside = {row.id: row for row in db.scalars(select(Widget).where(Widget.page_id == page.id, Widget.id.in_(wanted or [-1])))}
+        taken: list[Widget] = []
+        for number in wanted:
+            card = inside.get(number)
+            if card is None or card.kind in GROUP_KINDS or not _may_copy(db, card, user):
+                continue
+            copied = _twin(db, card, target.id)
+            taken.append(copied)
+            held.append((copied, card, page))
+        taken_along[id(twin)] = taken
+        if len(taken) < len(inside):
+            notes.append({"code": "held_left", "name": name, "count": len(inside) - len(taken)})
+    # A key opens one tile of a board. Beside its original, or where another
+    # tile has it, the copy comes without it, and the answer says so.
+    for twin, _source, _page in [*made, *held]:
+        key = app_keys.key_of(twin.options) if twin.kind == app_keys.KIND else ""
+        if key and key in keys:
+            twin.options = {name: value for name, value in twin.options.items() if name != "key"}
+            notes.append({"code": "key_dropped", "name": twin.title or app_keys.name_of(db, keys[key]), "key": key})
+        elif key:
+            keys[key] = twin
+    db.flush()
+
+    # The holders name their copied cards by the numbers those just got.
+    for twin, _source, _page in made:
+        if id(twin) in taken_along:
+            twin.options = clean_cards(db, target.id, twin.id, twin.kind, {**twin.options, "cards": [card.id for card in taken_along[id(twin)]]})
+
+    placed = _below(target, [_spot_in(widget, page, grid.columns(boards[page.board_id].settings), to_columns, twin.id)
+                             for twin, widget, page in made])
+    for twin, _source, _page in made:
+        adapter, widget_kind = split_widget_kind(twin.kind)
+        widget_type = adapter.widget(widget_kind)
+        place_widget(target, twin.id, widget_type.default_size, widget_type.min_size, to_columns)
+        layouts = dict(target.layouts)
+        layouts["lg"] = [placed[item["i"]] if item["i"] == str(twin.id) else item for item in layouts["lg"]]
+        target.layouts = layouts
+    # A card inside a holder is drawn by it; its place on the grid only matters once it is taken out.
+    for twin, _source, _page in held:
+        adapter, widget_kind = split_widget_kind(twin.kind)
+        place_widget(target, twin.id, adapter.widget(widget_kind).default_size, adapter.widget(widget_kind).min_size, to_columns)
+    target.layout_version = (target.layout_version or 0) + 1
+
+    for twin, source, page in [*made, *held]:
+        health_service.ensure_check_for_widget(db, twin)
+        chronicle.record("card_copied", widget_id=twin.id, integration_id=twin.integration_id, board_id=to_board.id,
+                         user_id=user.id, name=twin.title or source.kind, before=f"{boards[page.board_id].name} › {page.name}",
+                         after=to_board.name, db=db)
+    db.commit()
+    for twin, _source, _page in [*made, *held]:
+        collector.schedule(twin.id)
+    for integration_id in {twin.integration_id for twin, _source, _page in [*made, *held] if twin.integration_id}:
+        hass_listener.forget_widgets(integration_id)
+    hub.publish(board_topic(to_board.id), "board", {"id": to_board.id, "changed": True})
+    logger.info("%d card(s) copied to page %r of board %r by %s.", len(made), target.name, to_board.slug, user.username)
+    return {"copied": len(made), "page_id": target.id, "ids": [twin.id for twin, _source, _page in made], "notes": notes}
 
 
 @router.post("/widgets/{widget_id}/preview", summary="Fetch a widget's data with draft settings, without saving")
@@ -627,19 +804,66 @@ def bad_picture_path(path: str) -> HTTPException | None:
     return None
 
 
+@router.get("/widgets/{widget_id}/favicon", summary="Serve the logo the service of a card names for itself")
+async def widget_favicon(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> Response:
+    """For a card whose logo no collection has: the service's own, from the address the card opens.
+
+    Only for whoever may see the board, a wall display included, and only from
+    the address stored on the card, its app or its connection: the request
+    names no address, so it cannot point the server anywhere else.
+    """
+    widget, page = _widget(db, widget_id)
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    from ..services import apps as apps_service
+    from ..services.boards import service_link
+
+    _app, app_link = apps_service.tile_view(db, widget)
+    address = widget.link or app_link or service_link(widget)
+    found = await favicons.favicon(address) if address else None
+    if found is None:
+        raise error("not_found", "The service names no logo of its own.", status.HTTP_404_NOT_FOUND)
+    content, content_type = found
+    return Response(content=content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=86400"))
+
+
+def _picture_path(db: DbSession, widget: Widget, path: str) -> str:
+    """The path checked against the shapes the connection's adapter hands out, before the cache or the service sees it."""
+    integration = db.get(Integration, widget.integration_id) if widget.integration_id else None
+    if integration is None:
+        raise error("not_found", "This widget has no service to fetch from.", status.HTTP_404_NOT_FOUND)
+    try:
+        return image_path(get_adapter(integration.kind), path)
+    except KeyError as failure:
+        raise error("not_found", "This widget has no service to fetch from.", status.HTTP_404_NOT_FOUND) from failure
+    except AdapterError as failure:
+        raise error("bad_path", str(failure)) from failure
+
+
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
-async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
+async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession,
+                       _effect: NotReadOnly) -> Response:
     """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
 
     ``path`` is relative to the integration's address, so the server only ever
     fetches from the service the widget already talks to. The adapter may
     redirect a path (``/snap/0``) to the real request through ``image_source``.
+
+    ⚠️ Not for a token that only reads. The path is the caller's, and a GET
+    on a media server is not always a read: Plex marks a title as played on
+    ``/:/scrobble`` and scans a library on ``.../refresh``, both asked with
+    the server's credentials.
+
+    ⚠️ Only a path of a shape the adapter names in ``image_paths``, and checked
+    before the cache: the request itself is what does harm (Plex marks a film
+    as watched on a GET), not the answer, which is only ever an image.
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
     refused = bad_picture_path(path)
     if refused is not None:
         raise refused
+    if not widget.kind.startswith("custom."):
+        path = _picture_path(db, widget, path)
     kept = cached_image((widget_id, path))
     if kept is not None:
         return kept

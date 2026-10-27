@@ -16,7 +16,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.staticfiles import StaticFiles
 
-from . import __version__
+from . import __version__, deps
 from .adapters.base import close_relaxed_client
 from .cards import integration_store
 from .config import get_settings
@@ -38,6 +38,7 @@ from .routers import (
     chronicle,
     diagnosis,
     discovery,
+    go,
     home,
     home_network,
     icons,
@@ -51,6 +52,7 @@ from .routers import (
     nexcrate,
     notices,
     oidc,
+    opensearch,
     own_integrations,
     plex,
     push,
@@ -68,6 +70,7 @@ from .routers import journal as journal_router
 from .security import prune_sessions
 from .services import backup, history, journal, oidc_store, provisioning, report, retention
 from .services import channels as channel_service
+from .services import favicons as favicon_service
 from .services import icons as icon_service
 from .services.apps import RememberRequest
 from .services.channels import webpush as webpush_service
@@ -187,6 +190,7 @@ async def lifespan(app: FastAPI):
         await collector.stop()
         await close_relaxed_client()
         await icon_service.close_client()
+        await favicon_service.close_client()
         await channel_service.close_client()
         await webpush_service.close_client()
         await system.close_client()
@@ -228,7 +232,7 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, own_integrations, apps, cards, maintenance, chronicle, assistant, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (go, opensearch, system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, own_integrations, apps, cards, maintenance, chronicle, assistant, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 
 
@@ -268,6 +272,23 @@ async def refuse_a_body_nobody_asked_for(request: Request, call_next):  # noqa: 
                 {"detail": {"code": "too_large", "message": f"The body is larger than {allowed // (1024 * 1024)} MB."}},
                 status_code=413,
             )
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def read_tokens_only_read(request: Request, call_next):  # noqa: ANN001
+    """A token that may only read never reaches a route with any other method.
+
+    Here and not in a dependency, so that it holds for every route at once:
+    one that forgets to ask for the account, or one added next year, is
+    covered all the same. The GETs that set something going ask
+    ``deps.NotReadOnly`` on top. ``tests/test_read_only_tokens.py`` walks
+    every route of the app to prove it.
+    """
+    if request.method not in deps.SAFE_METHODS:
+        token = deps.bearer_token(request)
+        if token and await anyio.to_thread.run_sync(deps.token_is_read_only, token):
+            return JSONResponse({"detail": dict(deps.READ_ONLY)}, status_code=403)
     return await call_next(request)
 
 

@@ -44,6 +44,19 @@ describe('CommandPalette', () => {
     vi.stubGlobal('open', () => null)
   })
 
+  it('opens with the words a search from the address bar brought along', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <CommandPalette open onClose={vi.fn()} boards={[]} widgets={[]} initial="kitchen clock" />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(screen.getByRole('textbox')).toHaveValue('kitchen clock')
+    // The words go to the search targets at once, as if typed.
+    expect(await screen.findAllByText('kitchen clock')).not.toHaveLength(0)
+  })
+
   it('says which target it is waiting on, not that nothing matches', async () => {
     show()
     await userEvent.type(screen.getByRole('textbox'), '!y')

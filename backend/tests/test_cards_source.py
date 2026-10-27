@@ -7,6 +7,7 @@ that kind send. The list of kinds is a test of its own, so a kind cannot be swit
 from __future__ import annotations
 
 import base64
+import itertools
 from collections.abc import Iterator
 from typing import Any
 
@@ -248,7 +249,7 @@ async def test_karten2_ac6_a_redirect_to_another_place_is_still_refused(elsewher
 @respx.mock
 async def test_karten2_ac6_same_place_redirects_end_after_three() -> None:
     hops = ["/api/v3/queue", "/hop1", "/hop2", "/hop3", "/hop4", "/hop5"]
-    for here, there in zip(hops, hops[1:]):
+    for here, there in itertools.pairwise(hops):
         respx.get(f"{BASE}{here}").mock(return_value=httpx.Response(301, headers={"location": f"{BASE}{there}"}))
     with pytest.raises(AdapterError) as failure:
         await source.fetch_source(get_adapter("sonarr"), RAW["sonarr"][0], ctx(), request())

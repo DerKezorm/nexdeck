@@ -24,7 +24,6 @@
     "widget": {
       "unreachable": "Impossible de joindre le service.",
       "auth_failed": "Le service a refusé les identifiants.",
-      "sign_in_paused": "La connexion est suspendue jusqu'à {{time}} pour que le service ne verrouille pas le compte.",
       "timeout": "Le service n’a pas répondu à temps.",
       "no_integration": "Ce widget a besoin d’une connexion à un service.",
       "http_error": "Le service a répondu par une erreur.",
@@ -60,6 +59,7 @@
       "nginxignition_stats_disabled": "Les statistiques de trafic sont désactivées dans les réglages.",
       "nginxignition_stats_stopped": "Les statistiques de trafic demandent que nginx tourne.",
       "nginxignition_stats_unavailable": "nginx ignition n'a pas pu lire les statistiques de trafic de nginx.",
+      "sign_in_paused": "La connexion est suspendue jusqu'à {{time}} pour que le service ne verrouille pas le compte.",
       "too_slow": "Le calcul a pris trop de temps.",
       "definition_missing": "Définition manquante. La carte n'est plus enregistrée.",
       "form_changed": "La carte a changé de forme depuis qu'elle a été placée.",
@@ -283,8 +283,8 @@
       "homeNetwork": "Réseau domestique",
       "apps": "Apps",
       "assistant": "Assistant",
-      "cards": "Cartes personnalisées",
-      "inventory": "Inventaire"
+      "inventory": "Inventaire",
+      "cards": "Cartes personnalisées"
     },
     "mail": {
       "title": "Serveur de messagerie",
@@ -342,15 +342,17 @@
       "saveProfile": "Enregistrer le nom et l’adresse",
       "unsaved": "Pas encore enregistré",
       "tilt": "Les cartes s'inclinent vers le pointeur",
-      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement."
+      "tiltHelp": "Seulement à la souris, et jamais quand le système demande moins de mouvement.",
+      "theme_schedule": "Selon l’heure",
+      "lightFrom": "Clair à partir de",
+      "darkFrom": "Sombre à partir de",
+      "scheduleHelp": "Selon l’horloge de l’écran qui l’affiche."
     },
     "integrations": {
       "title": "Intégrations",
       "help": "Une intégration est une connexion à un service. Les widgets y puisent.",
       "empty": "Aucune intégration pour l’instant.",
-      "widgets": "{{count}} widgets",
       "add": "Ajouter une intégration",
-      "addHelp": "Choisissez le service. Vous pouvez tester la connexion avant d’enregistrer.",
       "remove": "Supprimer {{name}} ?",
       "removeBody": "{{count}} widgets l’utilisent. Ils restent en place et indiquent qu’il leur faut une connexion.",
       "edit": "Modifier {{name}}",
@@ -371,9 +373,6 @@
       "mutedHelp": "Coupées : rien concernant cette connexion n’arrive à la cloche ni à un canal. Ses cartes continuent de tourner. Cliquez pour réactiver les notifications.",
       "bellFailed": "Impossible de modifier les notifications.",
       "enabled": "Activé",
-      "search": "Rechercher",
-      "searchPlaceholder": "plex, docker, wol, npm...",
-      "noMatch": "Aucun résultat pour « {{query}} ».",
       "version": {
         "checking": "Recherche de la version…",
         "runs": "En service : {{version}}",
@@ -387,6 +386,85 @@
         "notAsked": "Dernière non demandée",
         "notAskedHelp": "Activez Rechercher des mises à jour sous Système, À propos pour comparer avec la dernière publication sur GitHub.",
         "noReleaseHelp": "GitHub n’a aucune version du projet nommé dans la description, ou ce projet n’existe pas. Rien à comparer."
+      },
+      "list": {
+        "noCard": "aucune carte",
+        "buildCard": "Créer une carte",
+        "off": "désactivée",
+        "muted": "en sourdine",
+        "lastOk": "dernière réponse il y a {{ago}}",
+        "newerRuns": "nouvelle {{newest}}, tourne en {{running}}",
+        "editOne": "Modifier {{name}}",
+        "removeOne": "Retirer {{name}}",
+        "cards_one": "{{count}} carte",
+        "cards_other": "{{count}} cartes",
+        "filters": "Filtrer la liste",
+        "search": "Chercher dans tes connexions",
+        "clear": "Effacer la recherche",
+        "order": "Erreurs d'abord, puis mises à jour, puis par nom",
+        "view": "Affichage de la liste",
+        "asList": "Liste",
+        "byCategory": "Par catégorie",
+        "noMatch": "Aucune de tes connexions ne correspond à « {{query}} ».",
+        "searchCatalog": "Chercher « {{query}} » dans le catalogue",
+        "nothingHere": "Rien dans ce filtre.",
+        "groupFailing": "{{count}} en erreur",
+        "groupUpdates_one": "{{count}} mise à jour",
+        "groupUpdates_other": "{{count}} mises à jour",
+        "footAll_one": "{{count}} connexion, {{cards}} en tout.",
+        "footAll_other": "{{count}} connexions, {{cards}} en tout.",
+        "footSome": "{{shown}} sur {{count}} affichées, {{cards}} en tout.",
+        "filter": {
+          "all_one": "connexion",
+          "all_other": "connexions",
+          "failing": "en erreur",
+          "updates_one": "mise à jour",
+          "updates_other": "mises à jour",
+          "cardless": "sans carte",
+          "muted": "en sourdine"
+        }
+      },
+      "demoRow": {
+        "title": "Mode démo",
+        "off": "désactivé. Fait passer chaque carte sur des données inventées.",
+        "left": "Certaines connexions sont encore en mode démo et affichent des données inventées."
+      },
+      "catalog": {
+        "intro": "{{count}} services. Tape ce que tu cherches ou choisis une catégorie. Entrée ouvre le premier résultat.",
+        "search": "Service ou mot clé : plex, photos, wol, wallbox…",
+        "searchLabel": "Chercher un service",
+        "hideBeta": "Masquer les bêtas",
+        "sections": "Catégories",
+        "all": "Tous",
+        "connectedNav": "Déjà connectés",
+        "connected": "connecté",
+        "connectedMany": "connecté ({{count}})",
+        "hits_one": "{{count}} résultat",
+        "hits_other": "{{count}} résultats",
+        "inSection": "dans {{name}}",
+        "hint": "Les mots clés comptent aussi, comme « photos », « wallbox » ou « wol ».",
+        "nothing": "Rien ne correspond à « {{query}} ».",
+        "nothingIn": "Rien ne correspond à « {{query}} » dans {{name}}.",
+        "empty": "Rien ici.",
+        "allHits_one": "{{count}} résultat dans toutes les catégories",
+        "allHits_other": "{{count}} résultats dans toutes les catégories",
+        "generic": "Absent ? La connexion générique lit un nombre ou une liste dans presque n'importe quelle API JSON.",
+        "genericButton": "Générique (HTTP/JSON)"
+      },
+      "found": {
+        "title": "Trouvé dans ton réseau",
+        "help": "tourne, mais pas encore connecté",
+        "looked": "vérifié il y a {{ago}}",
+        "container": "Conteneur {{name}} sur {{engine}}",
+        "guest": "Invité {{name}} sur {{engine}}",
+        "address": "Adresse de {{name}}",
+        "connect": "Connecter",
+        "connectOne": "Connecter {{name}}",
+        "ignore": "Ignorer",
+        "ignoreOne": "Ignorer {{name}}",
+        "ignored_one": "{{count}} ignoré.",
+        "ignored_other": "{{count}} ignorés.",
+        "showAgain": "Afficher à nouveau"
       },
       "custom": "Perso",
       "missing": "integration missing",
@@ -419,11 +497,15 @@
     },
     "tokens": {
       "title": "Jetons API",
-      "help": "Un jeton porte les droits de votre compte. Utilisez-le dans des scripts et des automatisations.",
+      "help": "Un jeton lit ce que votre compte peut voir ou, avec un accès complet, fait tout ce que votre compte peut faire. Utilisez-le dans des scripts et des automatisations.",
       "neverUsed": "jamais utilisé",
       "created": "Voici votre jeton. Il n’est affiché qu’une seule fois.",
       "usage": "Exemple :",
-      "name": "Nom du jeton"
+      "name": "Nom du jeton",
+      "scope": "Accès",
+      "scopeRead": "Lecture seule",
+      "scopeFull": "Accès complet",
+      "scopeHelp": "Un jeton en lecture seule peut regarder, mais ne change jamais rien : toute requête autre qu’une lecture est refusée. Ne donnez un accès complet qu’à un script qui doit modifier quelque chose."
     },
     "boards": {
       "title": "Tableaux",
@@ -507,7 +589,13 @@
         "ok": "Bon",
         "warn": "Avertissement",
         "bad": "Défaut",
-        "unknown": "Inconnu"
+        "unknown": "Inconnu",
+        "bg": "Page",
+        "bg-elev": "Page surélevée",
+        "surface": "Carte",
+        "surface-hover": "Carte sous le pointeur",
+        "border": "Ligne",
+        "border-strong": "Ligne marquée"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Coller un thème ou emporter celui-ci",
@@ -529,7 +617,9 @@
         "flat": "Plate",
         "outline": "Contour",
         "neon": "Bord néon",
-        "liquid": "Verre liquide"
+        "liquid": "Verre liquide",
+        "calm": "Calme",
+        "window": "Fenêtre"
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
@@ -543,7 +633,9 @@
         "latte": "Papier latte",
         "castle": "Château de nuit",
         "workshop": "Atelier",
-        "evening": "Soirée rosé"
+        "evening": "Soirée rosé",
+        "quiet": "Bureau calme",
+        "1984": "1984"
       },
       "lookShare": "Partager le style",
       "lookShareHelp": "Le thème, une couleur à vous et les cartes en un court texte : copiez-le ici et collez-le dans un autre nexdeck. Votre feuille de style reste à part, c'est du code.",
@@ -553,7 +645,61 @@
       "lookTake": "Prendre ce style",
       "refraction": "Le bord courbe la lumière",
       "refractionHelp": "Le bord du verre courbe ce qui se trouve derrière. Cela coûte un peu de puissance graphique ; désactivez-le pour une vieille tablette murale.",
-      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure."
+      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure.",
+      "fontTitle": "Police",
+      "fontHelp": "La police de toute l’interface, pour tout le monde. Chaque police est livrée avec nexdeck et n’est chargée depuis nexdeck que lorsqu’elle s’affiche.",
+      "fontSample": "Disponibilité 99,98 % · 21 °C",
+      "fontSystem": "Celle du système",
+      "fontDefault": "d’origine",
+      "editor": {
+        "open": "Créer vos propres couleurs",
+        "title": "Vos propres couleurs",
+        "name": "Nom",
+        "nameDefault": "Mes couleurs",
+        "brightness": "Quelle luminosité modifier",
+        "groups": {
+          "ground": "Fonds et lignes",
+          "text": "Texte",
+          "accent": "Accent",
+          "status": "États"
+        },
+        "hex": "{{name}} en #rrggbb",
+        "sampleTitle": "Sauvegardes",
+        "sampleLine": "Dernière exécution terminée à 03:12",
+        "sampleSmall": "La prochaine cette nuit",
+        "sampleButton": "Lancer",
+        "sampleOther": "Journal",
+        "allReadable": "Chaque couleur de texte se lit bien sur ses fonds.",
+        "close": "Terminé",
+        "fromOwn": "Recommencer avec les couleurs de nexdeck",
+        "saveHint": "La page montre les couleurs pendant que vous les choisissez. Enregistrer les garde pour tout le monde ; quitter la page sans enregistrer remet celles enregistrées."
+      },
+      "retro": {
+        "help": "1984 dessine tout nexdeck comme un des premiers bureaux : des fenêtres, une barre de menus, un fond à points et des lettres en pixels. La couleur reste sur les petits symboles.",
+        "fontNote": "En 1984, les titres sont en pixels et le texte dans une police simple du système.",
+        "status": {
+          "title": "Comment une fenêtre jaune ou rouge le montre",
+          "symbol": "Symboles en couleur",
+          "tint": "Une touche de couleur",
+          "pattern": "Motif seul"
+        },
+        "icons": {
+          "title": "Logos",
+          "colour": "En couleur",
+          "mono": "En noir et blanc"
+        },
+        "desk": {
+          "title": "Fond",
+          "dither": "Trame",
+          "weave": "Motif",
+          "grey": "Gris"
+        },
+        "type": {
+          "title": "Lettres en pixels",
+          "titles": "Pour les titres",
+          "all": "Partout"
+        }
+      }
     },
     "journal": {
       "title": "Niveau de journalisation",
@@ -707,6 +853,12 @@
       "at": "Heure du rapport quotidien",
       "goesAt": "Le rapport quotidien part à {{time}}.",
       "saved": "Le rapport quotidien part désormais à {{time}}."
+    },
+    "addressBar": {
+      "title": "Depuis la barre d’adresse",
+      "tiles": "Chaque tuile d’app répond à un nom court, réglé dans ses paramètres : {{example}} ouvre la tuile au nom court plex, sur les tableaux que vous pouvez ouvrir.",
+      "engines": "Chrome, Edge et Firefox peuvent ajouter nexdeck comme moteur de recherche. Un nom court saisi là ouvre sa tuile, d’autres mots ouvrent ici la recherche avec ces mots, et la barre d’adresse propose des tuiles et des cartes pendant la saisie. Chrome et Edge l’affichent sous Paramètres, Moteur de recherche, Gérer les moteurs de recherche, où il peut être activé ; Firefox le propose dans le menu de la barre d’adresse.",
+      "safari": "Safari ne peut pas ajouter de moteurs de recherche de cette façon. Un signet vers une adresse courte y fait l’affaire."
     }
   },
   "menu": {
@@ -1052,7 +1204,9 @@
       "untitled": "App",
       "firstLabel": "Principale",
       "titleHelp": "Vide : le nom de l'app.",
-      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte."
+      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte.",
+      "alias": "Nom court",
+      "aliasHelp": "Ouvre cette tuile depuis la barre d’adresse : {{address}}. Vide, il est tiré du nom. Lettres minuscules, chiffres et traits d’union."
     },
     "look": {
       "title": "Couleur",
@@ -1077,8 +1231,19 @@
         "orange": "Orange",
         "yellow": "Jaune",
         "green": "Vert"
-      }
-    }
+      },
+      "hideHead": "Sans en-tête",
+      "hideHeadHelp": "Ni titre, ni logo, ni point au-dessus. Si la carte va mal, un point revient dans le coin.",
+      "frameless": "Sans cadre",
+      "framelessHelp": "Ni fond, ni cadre, ni ombre : elle se tient libre sur le tableau, comme un titre. Pendant l’agencement, elle garde un contour et une poignée."
+    },
+    "phone": {
+      "hide": "Masquer sur le téléphone",
+      "hideHelp": "Absente de la pile de cartes du téléphone. Le tableau large, une tablette et un écran mural la gardent, et en arrangeant le tableau sur le téléphone elle apparaît estompée.",
+      "showRed": "L’afficher quand même si elle est rouge",
+      "showRedHelp": "C’est le téléphone qu’on regarde quand quelque chose ne va pas."
+    },
+    "keyTaken": "La touche {{key}} ouvre déjà {{name}} sur ce tableau. Chaque touche ouvre une tuile ; choisissez-en une autre ou aucune."
   },
   "library": {
     "title": "Ajouter un widget",
@@ -1185,7 +1350,6 @@
   },
   "card": {
     "nothing": "Rien à afficher",
-    "nothingHere": "Rien ici",
     "total": "Total",
     "nothingPlaying": "Rien en lecture",
     "nothingUpcoming": "Rien à venir",
@@ -1265,7 +1429,8 @@
     "rangeDays": "{{count}} j",
     "rangeYear": "1 an",
     "lowHigh": "{{low}} à {{high}}",
-    "collectingLong": "Collecte en cours. Les premières heures apparaissent après une heure, les premiers jours après minuit."
+    "collectingLong": "Collecte en cours. Les premières heures apparaissent après une heure, les premiers jours après minuit.",
+    "nothingHere": "Rien ici"
   },
   "player": {
     "title": "Musique",
@@ -1452,6 +1617,19 @@
     "nowhere": "Aucune autre page où aller. Ajoutez d’abord une page ou un tableau.",
     "moved_one": "Déplacée vers {{page}}.",
     "moved_other": "{{count}} cartes déplacées vers {{page}}.",
+    "copy": "Copier vers",
+    "copyMany": "Copier {{count}} cartes vers",
+    "moveOrCopy": "Déplacer ou copier",
+    "moveMode": "Déplacer",
+    "copyMode": "Copier",
+    "duplicateHere": "Dupliquer ici",
+    "duplicated_one": "La copie est en bas de la page.",
+    "duplicated_other": "Les {{count}} copies sont en bas de la page.",
+    "copied_one": "Copiée vers {{page}}.",
+    "copied_other": "{{count}} cartes copiées vers {{page}}.",
+    "copyHeldLeft_one": "Une carte de {{name}} est restée en place, car vous ne pourriez pas l’ajouter vous-même là-bas.",
+    "copyHeldLeft_other": "{{count}} cartes de {{name}} sont restées en place, car vous ne pourriez pas les ajouter vous-même là-bas.",
+    "copyKeyDropped": "La copie de {{name}} n’a pas de touche : {{key}} ouvre déjà une tuile du tableau.",
     "selected_one": "{{count}} carte sélectionnée.",
     "selected_other": "{{count}} cartes sélectionnées. Glissez-en une ou utilisez les flèches pour les déplacer ensemble ; Échap les relâche.",
     "undo": "Annuler",
@@ -2362,11 +2540,8 @@
       "connection_added": "Intégration {{name}} ajoutée",
       "connection_changed": "Intégration {{name}} modifiée",
       "connection_removed": "Intégration {{name}} supprimée",
-      "card_definition_added": "Carte personnalisée {{name}} créée",
-      "card_definition_changed": "Carte personnalisée {{name}} modifiée",
-      "card_definition_removed": "Carte personnalisée {{name}} supprimée",
-      "card_probe": "Connexion {{name}} interrogée pour une carte personnalisée",
       "card_added": "Carte {{name}} ajoutée à {{after}}",
+      "card_copied": "Carte {{name}} copiée depuis {{before}}",
       "card_removed": "Carte {{name}} retirée de {{after}}",
       "signed_in": "{{name}} s’est connecté",
       "sign_in_refused": "Connexion refusée pour {{name}}",
@@ -2375,7 +2550,11 @@
       "forecast_bad_one": "{{name}} atteint le rouge dans environ un jour",
       "forecast_bad_other": "{{name}} atteint le rouge dans environ {{count}} jours",
       "forecast_warn_one": "{{name}} atteint le jaune dans environ un jour",
-      "forecast_warn_other": "{{name}} atteint le jaune dans environ {{count}} jours"
+      "forecast_warn_other": "{{name}} atteint le jaune dans environ {{count}} jours",
+      "card_definition_added": "Carte personnalisée {{name}} créée",
+      "card_definition_changed": "Carte personnalisée {{name}} modifiée",
+      "card_definition_removed": "Carte personnalisée {{name}} supprimée",
+      "card_probe": "Connexion {{name}} interrogée pour une carte personnalisée"
     },
     "way": {
       "password": "avec le mot de passe",
@@ -2434,6 +2613,53 @@
     "reachesOn": "atteint vers le {{date}}",
     "told": "signalé",
     "basis": "Prolongé à partir des 30 derniers jours"
+  },
+  "dependencies": {
+    "because": "car {{name}} est en panne"
+  },
+  "diagnosis": {
+    "why": "Pourquoi ?",
+    "whyOf": "Pourquoi {{name}} est-il rouge ou jaune ?"
+  },
+  "weather": {
+    "hourlyLabel": "Prévisions heure par heure pour les {{hours}} prochaines heures",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil",
+    "rainUpTo": "Pluie jusqu’à {{percent}} % vers {{time}}",
+    "noRain": "Pas de pluie prévue",
+    "aqi": "Qualité de l’air",
+    "uv": "UV",
+    "uvPeak": "pic {{value}}",
+    "pollen": "Pollens",
+    "airUnavailable": "Données de l’air indisponibles",
+    "pollenKinds": {
+      "alder": "Aulne",
+      "birch": "Bouleau",
+      "grass": "Graminées",
+      "mugwort": "Armoise",
+      "olive": "Olivier",
+      "ragweed": "Ambroisie"
+    },
+    "level": {
+      "good": "Bonne",
+      "fair": "Moyenne",
+      "moderate": "Dégradée",
+      "poor": "Mauvaise",
+      "veryPoor": "Très mauvaise",
+      "extremelyPoor": "Extrêmement mauvaise",
+      "low": "Faible",
+      "high": "Élevé",
+      "veryHigh": "Très élevé",
+      "extreme": "Extrême",
+      "none": "Aucun"
+    }
+  },
+  "calendar": {
+    "previous": "Précédent",
+    "next": "Suivant",
+    "noEventsOnDay": "Rien ce jour-là",
+    "moreEvents": "{{count}} de plus",
+    "dayEvents": "{{date}}, entrées : {{count}}"
   },
   "cards": {
     "title": "Cartes personnalisées",
@@ -2506,12 +2732,5 @@
       "tooMany": "Il y a déjà 50 intégrations personnelles, c'est le maximum que nexdeck garde. Supprimez-en une d'abord.",
       "exists": "Une intégration portant ce nom court existe déjà."
     }
-  },
-  "dependencies": {
-    "because": "car {{name}} est en panne"
-  },
-  "diagnosis": {
-    "why": "Pourquoi ?",
-    "whyOf": "Pourquoi {{name}} est-il rouge ou jaune ?"
   }
 }

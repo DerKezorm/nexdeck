@@ -186,9 +186,10 @@ class ArrAdapter(Adapter):
     def noun_plural(self) -> str:
         return self.noun + "s"
 
-    async def upcoming(self, config: dict[str, Any], ctx: Context, days: int) -> list[dict[str, Any]]:
-        start = datetime.now(UTC).date()
-        end = start + timedelta(days=max(1, days))
+    async def upcoming(self, config: dict[str, Any], ctx: Context, days: int, back: int = 0) -> list[dict[str, Any]]:
+        today = datetime.now(UTC).date()
+        start = today - timedelta(days=back)
+        end = today + timedelta(days=max(1, days))
         entries = await self.api(config, ctx, "calendar", params={"start": start.isoformat(), "end": end.isoformat(), "includeSeries": "true", "includeArtist": "true", "includeAuthor": "true"}, cache_seconds=300)
         items = []
         for entry in entries if isinstance(entries, list) else []:

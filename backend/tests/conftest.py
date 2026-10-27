@@ -57,6 +57,11 @@ def client(data_dir: Path) -> Iterator[TestClient]:
     # sent "T1" to the camera instead of the token its own login got. Only
     # when the planting test ran first, which the full run never does.
     collector._caches.clear()
+    # Picture answers are kept by widget id and path, and widget ids start at 1 too: a poster one test
+    # fetched stood in for the page another test made its Plex answer with.
+    from app.routers import widgets as widgets_router
+
+    widgets_router._images.clear()
     # The same holds for which lamp stands on which home page.
     from app.services.home_control import home_live
 

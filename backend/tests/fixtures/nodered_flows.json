@@ -1,0 +1,117 @@
+[
+  {
+    "id": "tab1",
+    "type": "tab",
+    "label": "Heating",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "tab2",
+    "type": "tab",
+    "label": "Old experiments",
+    "disabled": true,
+    "info": ""
+  },
+  {
+    "id": "inj1",
+    "type": "inject",
+    "z": "tab1",
+    "name": "Boost heating",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "boost",
+    "payloadType": "str",
+    "x": 150,
+    "y": 80,
+    "wires": [
+      [
+        "dbg1"
+      ]
+    ]
+  },
+  {
+    "id": "inj2",
+    "type": "inject",
+    "z": "tab1",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "x",
+    "payloadType": "str",
+    "x": 150,
+    "y": 140,
+    "wires": [
+      [
+        "dbg1"
+      ]
+    ]
+  },
+  {
+    "id": "inj3",
+    "type": "inject",
+    "z": "tab2",
+    "name": "Disabled one",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 80,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "dbg1",
+    "type": "debug",
+    "z": "tab1",
+    "name": "debug 1",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 380,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "fn1",
+    "type": "function",
+    "z": "tab1",
+    "name": "Calc",
+    "func": "return msg;",
+    "outputs": 1,
+    "x": 380,
+    "y": 140,
+    "wires": [
+      []
+    ]
+  }
+]

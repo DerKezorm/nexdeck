@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, del, get, patch, post, put } from '../api/client'
 import type { AdapterSpec, AppEntry, Integration } from '../api/types'
 import { tAdapter } from '../i18n/texts'
+import { deriveAlias } from '../lib/alias'
+import { failureText } from '../lib/appKeys'
 import type { LibraryCard } from '../lib/customCards'
 import { shownField } from '../lib/fields'
 import { inFigures, TILE_LINES } from '../lib/figures'
@@ -190,6 +192,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
   }
 
   const followedApp = isApp ? catalog.find((app) => app.id === Number(options.app_id)) : undefined
+  const derivedAlias = isApp ? deriveAlias(title || followedApp?.name || '') : ''
   /** Follow an app of the catalog, or stop following one. */
   const chooseApp = (value: string) => {
     const app = catalog.find((one) => String(one.id) === value)
@@ -268,7 +271,7 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
       onSaved()
       onClose()
     } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+      setError(failureText(failure, t))
     } finally {
       setBusy(false)
     }
@@ -336,6 +339,19 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
               {t('widget.app.saveAs')}
             </button>
           )}
+          {/* The short name of /go/<name>: taken from the name until one is typed in. */}
+          <Field label={t('widget.app.alias')} htmlFor="w-alias" help={t('widget.app.aliasHelp', { address: `${window.location.origin}/go/${String(options.alias || '') || derivedAlias || '…'}` })}>
+            <input
+              id="w-alias"
+              className="input"
+              value={String(options.alias ?? '')}
+              placeholder={derivedAlias}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={40}
+              onChange={(e) => setOptions((o) => ({ ...o, alias: e.target.value.toLowerCase() }))}
+            />
+          </Field>
         </div>
       )}
       <Field label={t('widget.title')} htmlFor="w-title" help={followedApp ? t('widget.app.titleHelp') : undefined}>
@@ -397,6 +413,13 @@ export function WidgetSettingsSheet({ widget, pages, onClose, onSaved, onDeleted
           onChange={(patch) => setOptions((o) => ({ ...o, ...patch }))}
         />
       )}
+      {/* Every card, in the same place: a phone shows a stack, and not every card belongs in it. */}
+      <div className="rounded-xl border border-line px-3 py-1 mb-3" data-testid="card-phone">
+        <Switch checked={options.phone_hide === true} onChange={(value) => setOptions((o) => ({ ...o, phone_hide: value }))} label={t('widget.phone.hide')} description={t('widget.phone.hideHelp')} />
+        {options.phone_hide === true && (
+          <Switch checked={options.phone_show_red !== false} onChange={(value) => setOptions((o) => ({ ...o, phone_show_red: value }))} label={t('widget.phone.showRed')} description={t('widget.phone.showRedHelp')} />
+        )}
+      </div>
       {isApp && admin && widget.id > 0 && (
         // Roadmap M5: what this tile's app runs on. Loaded with its words only when an administrator opens a tile.
         <Suspense fallback={null}>

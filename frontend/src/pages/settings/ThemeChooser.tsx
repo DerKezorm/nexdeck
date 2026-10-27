@@ -6,12 +6,15 @@
  * accent, because a name says nothing about how a theme looks. Colours that
  * would be hard to read are named before anything is saved.
  */
-import { Check, Download } from 'lucide-react'
-import { useState } from 'react'
+import { Check, Download, Palette as PaletteIcon } from 'lucide-react'
+import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { tAdapter } from '../../i18n/texts'
 import { readTheme, themeFile, weakSpots, type Palette, type Theme } from '../../lib/appearance'
+
+/** The editor with its fifteen pickers loads when it is opened. */
+const ThemeEditor = lazy(() => import('./ThemeEditor'))
 
 /** Two small cards, dark and light, painted with a palette. */
 function Swatch({ theme }: { theme: Theme | null }) {
@@ -48,6 +51,7 @@ export function ThemeChooser({ value, themes, onChange }: { value: Theme | null;
   const { t, i18n } = useTranslation()
   const [pasted, setPasted] = useState('')
   const [pasteError, setPasteError] = useState('')
+  const [editing, setEditing] = useState(false)
   const same = (one: Theme | null, other: Theme | null) => JSON.stringify(one) === JSON.stringify(other)
   const choices: { key: string; theme: Theme | null }[] = [{ key: 'own', theme: null }, ...Object.entries(themes).map(([key, theme]) => ({ key, theme }))]
   const custom = value && !Object.values(themes).some((theme) => same(theme, value))
@@ -113,6 +117,16 @@ export function ThemeChooser({ value, themes, onChange }: { value: Theme | null;
             ))}
           </ul>
         </div>
+      )}
+
+      {editing ? (
+        <Suspense fallback={null}>
+          <ThemeEditor value={value} onChange={onChange} onClose={() => setEditing(false)} />
+        </Suspense>
+      ) : (
+        <button type="button" className="btn mt-3" onClick={() => setEditing(true)}>
+          <PaletteIcon size={14} /> {t('settings.appearance.editor.open')}
+        </button>
       )}
 
       <details className="mt-3">

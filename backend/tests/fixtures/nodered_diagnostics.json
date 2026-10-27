@@ -1,0 +1,104 @@
+{
+  "report": "diagnostics",
+  "scope": "basic",
+  "time": {
+    "utc": "Tue, 27 Oct 2026 17:13:00 GMT",
+    "local": "10/27/2026, 5:13:00 PM"
+  },
+  "intl": {
+    "locale": "en-US",
+    "timeZone": "UTC"
+  },
+  "nodejs": {
+    "version": "v24.22.1",
+    "arch": "x64",
+    "platform": "linux",
+    "memoryUsage": {
+      "rss": 126578688,
+      "heapTotal": 40009728,
+      "heapUsed": 36084528,
+      "external": 4594711,
+      "arrayBuffers": 448813
+    }
+  },
+  "os": {
+    "containerised": true,
+    "wsl": false,
+    "totalmem": 8333967360,
+    "freemem": 3216121856,
+    "arch": "x64",
+    "loadavg": [
+      0.18,
+      0.3,
+      0.36
+    ],
+    "platform": "linux",
+    "release": "6.12.113+deb13-cloud-amd64",
+    "type": "Linux",
+    "uptime": 166922.71,
+    "version": "#1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15)"
+  },
+  "runtime": {
+    "version": "5.0.9",
+    "isStarted": true,
+    "flows": {
+      "state": "start",
+      "started": true
+    },
+    "modules": {
+      "node-red": "5.0.9"
+    },
+    "settings": {
+      "available": true,
+      "apiMaxLength": "UNSET",
+      "disableEditor": false,
+      "contextStorage": {},
+      "debugMaxLength": 1000,
+      "editorTheme": {
+        "palette": {},
+        "projects": {
+          "enabled": false,
+          "workflow": {
+            "mode": "manual"
+          }
+        },
+        "codeEditor": {
+          "lib": "monaco",
+          "options": {}
+        },
+        "markdownEditor": {
+          "mermaid": {
+            "enabled": true
+          }
+        },
+        "multiplayer": {
+          "enabled": false
+        }
+      },
+      "flowFile": "flows.json",
+      "mqttReconnectTime": 15000,
+      "serialReconnectTime": 15000,
+      "socketReconnectTime": "UNSET",
+      "socketTimeout": "UNSET",
+      "tcpMsgQueueSize": "UNSET",
+      "inboundWebSocketTimeout": "UNSET",
+      "runtimeState": {
+        "enabled": false,
+        "ui": false
+      },
+      "adminAuth": "SET",
+      "httpAdminRoot": "/",
+      "httpAdminCors": "UNSET",
+      "httpNodeAuth": "UNSET",
+      "httpNodeRoot": "/",
+      "httpNodeCors": "UNSET",
+      "httpStatic": "UNSET",
+      "httpStaticRoot": "UNSET",
+      "httpStaticCors": "UNSET",
+      "uiHost": "SET",
+      "uiPort": "SET",
+      "userDir": "SET",
+      "nodesDir": "UNSET"
+    }
+  }
+}

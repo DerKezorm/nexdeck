@@ -1,0 +1,95 @@
+[
+  {
+    "name": "homebridge-dummy",
+    "displayName": "Dummy",
+    "private": false,
+    "description": "Create accessories to help with HomeKit automation and control — scheduling, delays, sensors, commands, conditions, webhooks, and more",
+    "verifiedPlugin": true,
+    "verifiedPlusPlugin": false,
+    "supportsMatter": true,
+    "supportsHap": true,
+    "icon": "https://raw.githubusercontent.com/homebridge/plugins/latest/icons/homebridge-dummy.png",
+    "isHbScoped": false,
+    "isUnmaintained": false,
+    "installedVersion": "2.1.3",
+    "globalInstall": false,
+    "settingsSchema": true,
+    "engines": {
+      "homebridge": "^1.8.0 || ^2.0.0",
+      "node": "^22 || ^24 || ^26"
+    },
+    "installPath": "/var/lib/homebridge/node_modules",
+    "funding": [
+      {
+        "type": "github",
+        "url": "https://github.com/sponsors/mpatfield"
+      },
+      {
+        "type": "paypal",
+        "url": "https://paypal.me/mpatfield"
+      },
+      {
+        "type": "venmo",
+        "url": "https://venmo.com/u/mpatfield"
+      }
+    ],
+    "directories": {
+      "schemas": "schemas/"
+    },
+    "updateAvailable": false,
+    "updateTag": null,
+    "latestVersion": "2.1.3",
+    "updateEngines": null,
+    "publicPackage": true,
+    "links": {
+      "npm": "https://www.npmjs.com/package/homebridge-dummy",
+      "homepage": "https://github.com/mpatfield/homebridge-dummy#readme",
+      "bugs": "https://github.com/mpatfield/homebridge-dummy/issues"
+    },
+    "author": "mpatfield",
+    "disabled": false
+  },
+  {
+    "name": "homebridge-config-ui-x",
+    "displayName": "Homebridge UI",
+    "private": false,
+    "description": "A web based management, configuration and control platform for Homebridge.",
+    "verifiedPlugin": true,
+    "verifiedPlusPlugin": false,
+    "supportsMatter": false,
+    "supportsHap": false,
+    "icon": null,
+    "isHbScoped": false,
+    "isUnmaintained": false,
+    "installedVersion": "5.29.0",
+    "globalInstall": true,
+    "settingsSchema": false,
+    "engines": {
+      "node": "^22.12.0 || ^24.0.0 || ^26.0.0",
+      "homebridge": "^1.8.0 || ^2.0.0"
+    },
+    "installPath": "/opt/homebridge/lib/node_modules",
+    "funding": [
+      {
+        "type": "github",
+        "url": "https://github.com/sponsors/oznu"
+      },
+      {
+        "type": "paypal",
+        "url": "https://paypal.me/oznu"
+      }
+    ],
+    "updateAvailable": false,
+    "updateTag": null,
+    "latestVersion": "5.29.0",
+    "updateEngines": null,
+    "publicPackage": true,
+    "links": {
+      "npm": "https://www.npmjs.com/package/homebridge-config-ui-x",
+      "homepage": "https://github.com/homebridge/homebridge-config-ui-x#readme",
+      "bugs": "https://github.com/homebridge/homebridge-config-ui-x/issues"
+    },
+    "author": "oznu",
+    "disabled": false
+  }
+]

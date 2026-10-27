@@ -221,6 +221,11 @@ def _page_side_column(connection: Connection) -> None:
     _add_column(connection, "pages", "side", "JSON NOT NULL DEFAULT '{}'")
 
 
+def _token_scope_column(connection: Connection) -> None:
+    """Every token that exists keeps the full rights it was made with; new ones start at reading."""
+    _add_column(connection, "api_tokens", "scope", "VARCHAR(8) NOT NULL DEFAULT 'full'")
+
+
 def _problems_cards_stay_as_they_were(connection: Connection) -> None:
     """The problems card becomes the attention card; the ones that exist keep their old answers.
 
@@ -247,6 +252,14 @@ def _problems_cards_stay_as_they_were(connection: Connection) -> None:
             {"o": json.dumps(options, ensure_ascii=False), "i": widget_id},
         )
     logger.info("%d problems card(s) keep looking at their own board only.", len(rows))
+
+
+def _theme_schedule_columns(connection: Connection) -> None:
+    """An account and a wall display can follow the clock; a display made before stays dark, as it always was."""
+    for table in ("users", "kiosk_tokens"):
+        _add_column(connection, table, "light_from", "VARCHAR(5) NOT NULL DEFAULT '07:00'")
+        _add_column(connection, table, "dark_from", "VARCHAR(5) NOT NULL DEFAULT '20:00'")
+    _add_column(connection, "kiosk_tokens", "theme", "VARCHAR(8) NOT NULL DEFAULT 'dark'")
 
 
 def _card_editor_column(connection: Connection) -> None:
@@ -282,8 +295,10 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (22, "A page can be a surface of Home Assistant controls", _home_page_column),
     (23, "A card page can have a side bar", _page_side_column),
     (24, "Problems cards that exist keep looking at their own board only", _problems_cards_stay_as_they_were),
-    (25, "A custom card knows who saved it last", _card_editor_column),
-    (26, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
+    (25, "An API token can be one that only reads", _token_scope_column),
+    (26, "Light and dark can follow the clock, for an account and for a wall display", _theme_schedule_columns),
+    (27, "A custom card knows who saved it last", _card_editor_column),
+    (28, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
 ]
 
 

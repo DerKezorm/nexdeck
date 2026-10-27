@@ -187,8 +187,27 @@ def occurrences(event: dict[str, Any], start: date, end: date) -> list[date]:
     return days
 
 
-HIDE_PAST = Field("hide_past", "Hide what is over", type="bool", default=True,
+#: The week and month views need the days either side of today, not only what comes next: a month shows the days gone by,
+#: and the arrows on the card page through what was fetched. About two months back and four ahead, in one request.
+GRID_BACK, GRID_AHEAD, GRID_LIMIT = 62, 124, 2000
+
+VIEW = Field("view", "View", type="select", default="list", options=(("list", "List"), ("week", "Week"), ("month", "Month")),
+             help="A week or a month shows the days as a grid. Every viewer pages through it for themselves; nothing of that is saved.")
+# ⚠️ Days ahead, Entries and this option belong to the list. A grid shows every entry of its days, the ones that are over too.
+HIDE_PAST = Field("hide_past", "Hide what is over", type="bool", default=True, only_when=("view", "list"),
                   help="Today's appointments leave the card once they have ended. All-day entries stay the whole day.")
+
+
+def grid_view(options: dict[str, Any]) -> str | None:
+    """``week`` or ``month`` when the card draws a grid, else None: the list, as ever."""
+    view = str(options.get("view") or "list")
+    return view if view in ("week", "month") else None
+
+
+def grid_meta(view: str) -> dict[str, Any]:
+    """What the grid needs to know: which view, and how far the entries reach so the arrows stop there."""
+    today = _now().date()
+    return {"view": view, "range": {"from": (today - timedelta(days=GRID_BACK)).isoformat(), "to": (today + timedelta(days=GRID_AHEAD)).isoformat()}}
 
 
 #: Every event of a CalDAV calendar with its data, the question every server answers.
@@ -209,6 +228,47 @@ def calendar_data(xml: str) -> list[str]:
     return [html.unescape(one.strip()) for one in found if "BEGIN:VCALENDAR" in html.unescape(one)]
 
 
+#: (title, subtitle, source, slot, clock, first offset in days from today, repeat every n days, how many times; a one-off has an interval of 0)
+_DEMO_GRID: tuple[tuple[str, str, str, int, str | None, int, int, int], ...] = (
+    ("Team call", "", "Work", 1, "14:00", -21, 7, 22),
+    ("Dentist", "Main street 1", "Family", 0, "08:30", 3, 40, 3),
+    ("Garbage collection", "all day", "Family", 0, None, -4, 14, 12),
+    ("Birthday party", "Home", "Family", 0, "18:00", 9, 60, 2),
+    ("Choir", "Town hall", "Family", 0, "19:30", -13, 7, 26),
+    ("Parent evening", "School", "Family", 0, "19:00", 5, 90, 2),
+    ("Harbour Lights", "S03E05", "Sonarr", 2, None, -12, 7, 20),
+    ("Orbital Decay", "S01E09", "Sonarr", 2, None, -9, 7, 20),
+    ("Copper Sky", "Digital release", "Radarr", 3, None, -2, 17, 8),
+    ("Nightshift", "Digital release", "Radarr", 3, None, 6, 23, 5),
+    ("Quarterly review", "Room 4", "Work", 1, "10:00", 11, 45, 3),
+    ("Book club", "Library", "Family", 0, "20:00", 2, 21, 7),
+    # One crowded day, for the "+3".
+    ("Plumber", "Home", "Family", 0, "08:00", 4, 0, 1),
+    ("Lunch with Sam", "Corner cafe", "Family", 0, "12:30", 4, 0, 1),
+    ("Project sync", "", "Work", 1, "15:30", 4, 0, 1),
+    ("Football", "Sports hall", "Family", 0, "18:00", 4, 0, 1),
+    ("Grey Harbour", "S02E01", "Sonarr", 2, None, 4, 0, 1),
+)
+
+
+def demo_grid(today: date) -> list[dict[str, Any]]:
+    """A month or two of entries from four sources, some days full enough to need a "+3"."""
+    found: list[dict[str, Any]] = []
+    first, last = today - timedelta(days=GRID_BACK), today + timedelta(days=GRID_AHEAD)
+    for title, subtitle, source, slot, clock, offset, every, times in _DEMO_GRID:
+        for index in range(times):
+            day = today + timedelta(days=offset + index * every)
+            if day > last:
+                break
+            if day < first:
+                continue
+            release = source in ("Sonarr", "Radarr")
+            found.append({"date": day.isoformat(), "title": title, "subtitle": subtitle, "source": source, "slot": slot,
+                          "status": "warn" if release else "ok", **({"time": clock} if clock else {}), **({} if release else {"appointment": True})})
+    found.sort(key=in_order)
+    return found
+
+
 class IcalAdapter(Adapter):
     kind = "ical"
     label = "iCal feed"
@@ -224,7 +284,7 @@ class IcalAdapter(Adapter):
         Field("password", "Password", type="password", secret=True, help="For Nextcloud an app password, made under Settings > Security."),
     )
     widgets = (
-        WidgetType(kind="events", label="Events", description="Upcoming events of this calendar.", renderer="calendar", default_size=(3, 3), refresh_seconds=900, options=(Field("days", "Days ahead", type="number", default=14), Field("limit", "Entries", type="number", default=20), HIDE_PAST)),
+        WidgetType(kind="events", label="Events", description="Upcoming events of this calendar.", renderer="calendar", default_size=(3, 3), refresh_seconds=900, options=(VIEW, Field("days", "Days ahead", type="number", default=14, only_when=("view", "list")), Field("limit", "Entries", type="number", default=20, only_when=("view", "list")), HIDE_PAST)),
     )
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
@@ -268,11 +328,12 @@ class IcalAdapter(Adapter):
                                hint="Use the address of one calendar, not of the account or the server.")
         return parse_ics("\n".join(calendar_data(reported.text)))
 
-    async def upcoming(self, config: dict[str, Any], ctx: Context, days: int) -> list[dict[str, Any]]:
+    async def upcoming(self, config: dict[str, Any], ctx: Context, days: int, back: int = 0) -> list[dict[str, Any]]:
         # ⚠️ Today on this server's clock, not in UTC: between midnight and
         # two in the morning in Berlin, UTC is still on yesterday.
-        start = _now().date()
-        end = start + timedelta(days=max(1, days))
+        today = _now().date()
+        start = today - timedelta(days=back)
+        end = today + timedelta(days=max(1, days))
         items = []
         for event in await self._events(config, ctx):
             # A day either side: an evening in UTC can be tomorrow here, a morning in Sydney yesterday.
@@ -290,6 +351,9 @@ class IcalAdapter(Adapter):
         return items
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        if view := grid_view(options):
+            items = await self.upcoming(config, ctx, GRID_AHEAD, GRID_BACK)
+            return WidgetData(items=[{**item, "slot": 0} for item in items[:GRID_LIMIT]], meta=grid_meta(view))
         items = await self.upcoming(config, ctx, int(options.get("days") or 14))
         if options.get("hide_past", True):
             items = drop_what_is_over(items)
@@ -297,6 +361,8 @@ class IcalAdapter(Adapter):
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         today = datetime.now(UTC).date()
+        if view := grid_view(options):
+            return WidgetData(items=[item for item in demo_grid(today) if item["slot"] == 0], meta=grid_meta(view))
         names = [("Dentist", "Main street 1", "08:30"), ("Team call", "", "14:00"), ("Garbage collection", "all day", None), ("Birthday party", "Home", "18:00")]
         return WidgetData(items=[{"date": (today + timedelta(days=i * 2)).isoformat(), "title": n, "subtitle": s, "status": "ok", "source": "Family", "appointment": True, **({"time": c} if c else {})} for i, (n, s, c) in enumerate(names)])
 
@@ -319,8 +385,9 @@ class CalendarAdapter(Adapter):
             refresh_seconds=600,
             options=(
                 Field("sources", "Sources", type="integrations", options=(("ical", "iCal"), ("radarr", "Radarr"), ("sonarr", "Sonarr"), ("lidarr", "Lidarr"), ("readarr", "Readarr")), help="Pick the calendars and instances to merge.", default=[]),
-                Field("days", "Days ahead", type="number", default=7),
-                Field("limit", "Entries", type="number", default=20),
+                VIEW,
+                Field("days", "Days ahead", type="number", default=7, only_when=("view", "list")),
+                Field("limit", "Entries", type="number", default=20, only_when=("view", "list")),
                 HIDE_PAST,
             ),
         ),
@@ -339,25 +406,33 @@ class CalendarAdapter(Adapter):
             raise AdapterError("Sources cannot be resolved here.", code="no_resolver")
         # The numbers in here were checked when the card was saved. Anything
         # that is not a number is left alone rather than guessed at.
-        days = int(options.get("days") or 7)
+        view = grid_view(options)
+        days, back = (GRID_AHEAD, GRID_BACK) if view else (int(options.get("days") or 7), 0)
         items: list[dict[str, Any]] = []
         failures: list[str] = []
-        for source in sources:
+        for slot, source in enumerate(sources):
             try:
                 adapter, config_of, source_ctx = await ctx.resolve_integration(int(source))
                 upcoming = getattr(adapter, "upcoming", None)
                 if upcoming is None:
                     continue
-                items.extend(await upcoming(config_of, source_ctx, days))
+                found = await upcoming(config_of, source_ctx, days, back) if view else await upcoming(config_of, source_ctx, days)
+                # The colour of a source in the grid is its place in the card's list of sources: it does not move when another source has nothing this month.
+                items.extend({**item, "slot": slot} if view else item for item in found)
             except (AdapterError, ValueError, KeyError) as error:
                 failures.append(str(getattr(error, "message", error)))
         items.sort(key=in_order)
+        error_text = "; ".join(failures) if failures and not items else None
+        if view:
+            return WidgetData(status="warn" if failures else "ok", items=items[:GRID_LIMIT], meta=grid_meta(view), error=error_text)
         if options.get("hide_past", True):
             items = drop_what_is_over(items)
-        return WidgetData(status="warn" if failures else "ok", items=items[: int(options.get("limit") or 20)], error=("; ".join(failures) if failures and not items else None))
+        return WidgetData(status="warn" if failures else "ok", items=items[: int(options.get("limit") or 20)], error=error_text)
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         today = datetime.now(UTC).date()
+        if view := grid_view(options):
+            return WidgetData(items=demo_grid(today), meta=grid_meta(view))
         rows = [("Harbour Lights", "S03E05", "Sonarr", 0, None), ("Copper Sky", "Digital release", "Radarr", 0, None), ("Dentist", "Main street 1", "Family", 1, "08:30"), ("Orbital Decay", "S01E09", "Sonarr", 1, None), ("Nightshift", "Digital release", "Radarr", 2, None), ("Team call", "", "Work", 3, "14:00")]
         return WidgetData(items=[{"date": (today + timedelta(days=d)).isoformat(), "title": t, "subtitle": s, "source": src, "status": "ok" if src not in ("Sonarr", "Radarr") else "warn", **({"time": c} if c else {}), **({"appointment": True} if src not in ("Sonarr", "Radarr") else {})} for t, s, src, d, c in rows])
 

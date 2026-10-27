@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
 import { useAssistant } from '../lib/assistant'
+import { serviceLogo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -34,10 +35,12 @@ interface Props {
   onAction?: (widgetId: number, action: Action) => void
   /** What the cards show, for the links on them: bookmarks, link buttons, saved links. */
   data?: Record<number, WidgetData | undefined>
+  /** Words already in the bar when it opens: what was searched from the address bar (``/go?q=``). */
+  initial?: string
 }
 
 /** Ctrl+K: services, links, actions, boards, pages and settings, all from the keyboard. */
-export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data }: Props) {
+export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data, initial = '' }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -51,11 +54,11 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
 
   useEffect(() => {
     if (open) {
-      setQuery('')
+      setQuery(initial)
       setIndex(0)
       window.setTimeout(() => input.current?.focus(), 10)
     }
-  }, [open])
+  }, [open, initial])
 
   const entries = useMemo<Entry[]>(() => {
     const list: Entry[] = []
@@ -64,7 +67,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       // open, and the entry was offered anyway: pressing it opened a blank
       // window. Asked here, so an entry that cannot be opened is not offered.
       if (safeUrl(widget.link)) {
-        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
+        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
       }
     }
     for (const { widget, action } of actions) {

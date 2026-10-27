@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import type { User } from '../api/types'
 import { accountPair, guestPair, LANGUAGES, setLanguage } from '../i18n'
-import { applyTheme, currentTheme, useAuth } from '../stores/auth'
+import { useShownTheme } from '../lib/themeMode'
+import { applyTheme, useAuth } from '../stores/auth'
 import { usePicture } from '../lib/boardPicture'
 import { madeUp, useShowcase } from '../lib/showcase'
 import { usePlayer } from '../stores/player'
@@ -55,15 +56,16 @@ function NoticeButton({ unread, onClick }: { unread: number; onClick: () => void
  *
  * Two segments say which of the two is on; a single icon only says what a
  * click would do, and everyone reads that the other way round at least once.
- * "Follow the system" stays in the settings: it is a decision, not a switch.
+ * "Follow the system" and "by the clock" stay in the settings: they are
+ * decisions, not switches. The pill shows what is on screen, which with
+ * either of them changes by itself; pressing it fixes one.
  */
 function ThemePill({ signedIn }: { signedIn: boolean }) {
   const { t } = useTranslation()
   const update = useAuth((s) => s.update)
-  const [theme, setTheme] = useState(currentTheme())
+  const theme = useShownTheme()
   const choose = (next: 'dark' | 'light') => {
     if (next === theme) return
-    setTheme(next)
     applyTheme(next)
     if (signedIn) void update({ theme: next })
   }

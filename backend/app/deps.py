@@ -1,8 +1,9 @@
 """Request dependencies: who is calling, and what may they touch.
 
 Three ways in: the session cookie (browsers), a bearer API token (scripts
-and integrations) and a kiosk token (wall displays, read-only unless the
-token allows actions). Cookie sessions on unsafe methods must carry the
+and integrations; one that may only read, or one with the account's full
+rights) and a kiosk token (wall displays, read-only unless the token allows
+actions). Cookie sessions on unsafe methods must carry the
 ``X-Nexdeck-Request`` header, which a cross-site form cannot add.
 """
 
@@ -16,7 +17,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSessionType
 
-from .db import get_db
+from .db import db_session, get_db
 from .models import (
     ApiToken,
     Board,
@@ -38,6 +39,15 @@ CSRF_HEADER = "x-nexdeck-request"
 KIOSK_HEADER = "x-kiosk-token"
 
 DbSession = Annotated[DbSessionType, Depends(get_db)]
+
+#: The methods that only read. Everything else changes something.
+SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+#: What an API token may do: only read, or everything its account may.
+TOKEN_SCOPES = ("read", "full")
+READ_ONLY = {
+    "code": "token_read_only",
+    "message": "This API token may only read. Make a token with full access for a script that changes something.",
+}
 
 
 def error(code: str, message: str, status_code: int = status.HTTP_400_BAD_REQUEST) -> HTTPException:
@@ -80,16 +90,41 @@ def _user_from_cookie(request: Request, db: DbSessionType) -> User | None:
     return user
 
 
-def _user_from_bearer(request: Request, db: DbSessionType) -> User | None:
+def bearer_token(request: Request) -> str:
+    """The API token a request carries, or ``""``."""
     header = request.headers.get("authorization", "")
     if not header.lower().startswith("bearer "):
-        return None
+        return ""
     token = header[7:].strip()
-    if not token.startswith("nd_"):
+    return token if token.startswith("nd_") else ""
+
+
+def token_is_read_only(token: str) -> bool:
+    """Whether a token is one that may only read, withdrawn or not.
+
+    For the middleware in ``main.py``, which runs before any route and so
+    before any dependency: it opens its own session.
+    """
+    with db_session() as db:
+        return db.scalar(select(ApiToken.scope).where(ApiToken.token_hash == hash_token(token))) == "read"
+
+
+def read_only_refused() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=dict(READ_ONLY))
+
+
+def _user_from_bearer(request: Request, db: DbSessionType) -> User | None:
+    token = bearer_token(request)
+    if not token:
         return None
     row = db.scalar(select(ApiToken).where(ApiToken.token_hash == hash_token(token)))
     if row is None or not usable_token(row):
         return None
+    if row.scope == "read" and request.method not in SAFE_METHODS:
+        # ⚠️ The middleware in ``main.py`` refuses this before any route is
+        # reached. This is the second wall, for a route that ends up mounted
+        # past the middleware one day.
+        raise read_only_refused()
     user = db.get(User, row.user_id)
     if user is None or user.disabled:
         return None
@@ -103,6 +138,7 @@ def _user_from_bearer(request: Request, db: DbSessionType) -> User | None:
         row.last_used_at = utcnow()
         db.commit()
     request.state.auth_kind = "token"
+    request.state.token_scope = row.scope
     return user
 
 
@@ -195,6 +231,28 @@ def not_at_home(request: Request, user: CurrentUser) -> User:
 #: The signed-in account, but not from a session opened at home without a password.
 PasswordUser = Annotated[User, Depends(not_at_home)]
 OptionalUser = Annotated[User | None, Depends(optional_user)]
+
+
+def not_a_read_token(request: Request, user: OptionalUser) -> None:
+    """For a GET that does more than read.
+
+    A token that may only read is refused every method but GET, HEAD and
+    OPTIONS before any route is reached. A few GETs set something going all
+    the same: a media server starts a transcode for a track, the image proxy
+    fetches whatever path it is handed from the service with the server's
+    own credentials. Those ask here.
+    """
+    if user is not None and getattr(request.state, "token_scope", "") == "read":
+        raise read_only_refused()
+
+
+#: A GET with an effect: a token that may only read is refused it.
+NotReadOnly = Annotated[None, Depends(not_a_read_token)]
+
+
+def read_only_token(request: Request) -> bool:
+    """Whether the account of this request came in with a token that may only read."""
+    return getattr(request.state, "auth_kind", "") == "token" and getattr(request.state, "token_scope", "") == "read"
 
 
 def admin_user(user: CurrentUser) -> User:

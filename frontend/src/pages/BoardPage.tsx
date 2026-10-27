@@ -26,9 +26,12 @@ import { actionDoneText, actionFailureText } from '../lib/actionResult'
 import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
 import { useBoardCardStyle } from '../lib/appearance'
+import { failureText, useAppKeys } from '../lib/appKeys'
 import { closeGaps, Steps } from '../lib/arranging'
+import { copyNotes, type CopyAnswer } from '../lib/copying'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
+import { pageAfter, useSwipe } from '../lib/swipe'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
 import { withNews, type HomeAnswer } from '../lib/home'
 import { homeBoardPath } from '../lib/homeBoard'
@@ -86,6 +89,8 @@ export function BoardPage() {
   const [library, setLibrary] = useState(false)
   // The key figures a card added from the library goes into, or none.
   const [libraryInto, setLibraryInto] = useState<number | null>(null)
+  // What the library searches for when it opens: a service a connection was made for, sent from System, Integrations.
+  const [libraryQuery, setLibraryQuery] = useState('')
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   const [boardSettings, setBoardSettings] = useState(false)
   const [palette, setPalette] = useState(false)
@@ -139,6 +144,31 @@ export function BoardPage() {
     }, 100)
     return () => window.clearInterval(timer)
   }, [focus, activePage, navigate, location.pathname, location.search])
+
+  // ``?find=words``: a search from the address bar that named no tile (``/go?q=``). The bar opens with the
+  // words in it, and they leave the address, so a reload does not open it again.
+  const [paletteWords, setPaletteWords] = useState('')
+  const find = new URLSearchParams(location.search).get('find')
+  useEffect(() => {
+    if (find === null) return
+    setPaletteWords(find.slice(0, 200))
+    setPalette(true)
+    const rest = new URLSearchParams(location.search)
+    rest.delete('find')
+    const search = rest.toString()
+    navigate(`${location.pathname}${search ? `?${search}` : ''}`, { replace: true, state: location.state })
+  }, [find, navigate, location.pathname, location.search, location.state])
+
+  // "Build a card" on a connection without one leads here: the library, already searching for that service.
+  const libraryFor = (location.state as { library?: string } | null)?.library
+  useEffect(() => {
+    if (!libraryFor || !activePage || !data) return
+    if (canEdit) {
+      setLibraryQuery(libraryFor)
+      setLibrary(true)
+    }
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [libraryFor, activePage, data, canEdit, navigate, location.pathname, location.search])
 
   // Snapshot and history into the live store.
   useEffect(() => {
@@ -310,6 +340,7 @@ export function BoardPage() {
     const onKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
+        setPaletteWords('')
         setPalette((v) => !v)
         return
       }
@@ -329,6 +360,11 @@ export function BoardPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [editing, putBack])
+
+  // A number key opens the app tile that has it, on whichever page it stands; ? shows the keys.
+  // Not while the board is arranged or the search is open: there a digit is typed, not pressed.
+  const everyTile = useMemo(() => pages.flatMap((page) => page.widgets), [pages])
+  useAppKeys(!editing && !palette, everyTile, liveData)
 
   // The player's bar sits where the edit bar does; it steps aside while editing.
   useEffect(() => {
@@ -520,10 +556,31 @@ export function BoardPage() {
           setToast({ text: t('arrange.moved', { count: answer.moved, page: name ? (name.board ? `${name.board} › ${name.name}` : name.name) : '' }), level: 'ok' })
           void Promise.all([board.refetch(), boards.refetch()])
         })
-        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+        .catch((failure) => setToast({ text: failureText(failure, t), level: 'error' }))
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [flush, moveTargets, t],
+  )
+  /**
+   * Cards copied beside themselves or onto another page. The server says what
+   * did not come along (a holder's cards that stay with the original, or that
+   * this person could not have made there), and the toast says it in words.
+   */
+  const onCopy = useCallback(
+    (ids: number[], pageId: number) => {
+      flush()
+      const here = pageId === activePage?.id
+      const name = moveTargets.flatMap((target) => target.pages.map((page) => ({ ...page, board: target.current ? '' : target.boardName }))).find((page) => page.id === pageId)
+      post<CopyAnswer>('/widgets/copy', { ids, page_id: pageId })
+        .then((answer) => {
+          const said = here ? t('arrange.duplicated', { count: answer.copied }) : t('arrange.copied', { count: answer.copied, page: name ? (name.board ? `${name.board} › ${name.name}` : name.name) : '' })
+          setToast({ text: [said, ...copyNotes(answer.notes, t)].join(' '), level: answer.notes.length ? 'info' : 'ok' })
+          void Promise.all([board.refetch(), boards.refetch()])
+        })
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flush, moveTargets, activePage?.id, t],
   )
 
   // Showcase mode replaces every name under a domain the board's services live
@@ -608,7 +665,7 @@ export function BoardPage() {
     />
   )
   const tabBar = (
-    <div key="tab-bar" data-no-picture>
+    <div key="tab-bar" data-no-picture data-no-swipe>
       <MobileTabBar
         boards={menuBoards.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))}
         active={data?.id ?? listed?.id ?? -1}
@@ -629,6 +686,15 @@ export function BoardPage() {
 
   const topology = activePage?.kind === 'topology'
   const homePage = activePage?.kind === 'home'
+
+  // On a phone a sideways swipe turns to the next page or the one before; not
+  // while the board is arranged, where a finger moves cards. The first and the
+  // last page are the ends: a swipe past them does nothing.
+  const swipeArea = useRef<HTMLDivElement>(null)
+  useSwipe(swipeArea, !editing && pages.length > 1, (direction) => {
+    const next = pageAfter(pages, activePage?.id, direction)
+    if (next) navigate(`/b/${slug}/${next.slug}`)
+  })
 
   if (board.isLoading) {
     return (
@@ -666,7 +732,7 @@ export function BoardPage() {
     // edit bar takes, so the lowest card scrolls out from under it. With the
     // usual room the bar lay over that card's resize corner (issue #12).
     <>
-    <div className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
+    <div ref={swipeArea} className={`min-h-full ${topology ? 'pb-24 sm:pb-0' : editing ? 'pb-36 md:pb-28' : 'pb-24 md:pb-10'}`} data-board-page>
       <BackgroundLayer background={previewBackground ?? data.background} alarm={!editing && anyCardDown(widgets, liveData)} />
       {topBar}
       {homePage ? (
@@ -752,6 +818,9 @@ export function BoardPage() {
           onSide={canEdit ? onSide : undefined}
           moveTargets={moveTargets}
           onMove={onMove}
+          onCopy={onCopy}
+          here={{ id: activePage.id, name: activePage.name }}
+          phoneHides
           onAction={onAction}
           onRefresh={onRefresh}
           onSettings={onSettings}
@@ -800,12 +869,15 @@ export function BoardPage() {
         onClose={() => {
           setLibrary(false)
           setLibraryInto(null)
+          setLibraryQuery('')
         }}
         pageId={activePage.id}
         numbersOnly={libraryInto !== null}
+        initialQuery={libraryQuery}
         onCreated={(widgetId) => {
           setLibrary(false)
           setLibraryInto(null)
+          setLibraryQuery('')
           // Added from key figures, it becomes a tile there at once.
           if (libraryInto !== null) onPlace({ widget_id: widgetId, into: 'group', group_id: libraryInto })
           else void board.refetch()
@@ -845,7 +917,19 @@ export function BoardPage() {
         onChanged={() => void Promise.all([board.refetch(), boards.refetch()])}
       />
       <NoticeDrawer />
-      <CommandPalette open={palette} onClose={() => setPalette(false)} boards={boards.data ?? []} widgets={widgets} actions={allActions} onAction={onAction} data={liveData} />
+      <CommandPalette
+        open={palette}
+        onClose={() => {
+          setPalette(false)
+          setPaletteWords('')
+        }}
+        boards={boards.data ?? []}
+        widgets={widgets}
+        actions={allActions}
+        onAction={onAction}
+        data={liveData}
+        initial={paletteWords}
+      />
       {user && user.seen_version !== __NEXDECK_VERSION__ ? (
         <Suspense fallback={null}>
           <WhatsNewDialog />

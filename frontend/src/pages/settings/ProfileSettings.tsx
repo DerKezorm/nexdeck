@@ -6,6 +6,7 @@ import { ApiError, del, get, post, upload } from '../../api/client'
 import type { BoardSummary, User } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
+import { ThemePlanField } from '../../components/ThemePlanField'
 import { Confirm, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
 import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
@@ -142,12 +143,10 @@ export function ProfileSettings() {
           <Field label={t('settings.profile.language')} htmlFor="p-lang">
             <Select id="p-lang" value={user.locale} onChange={(locale) => void update({ locale })} options={languageOptions} />
           </Field>
-          <Field label={t('settings.profile.theme')} htmlFor="p-theme">
-            <Select id="p-theme" value={user.theme} onChange={(theme) => void update({ theme: theme as 'dark' | 'light' | 'system' })} options={[{ value: 'dark', label: t('settings.profile.theme_dark') }, { value: 'light', label: t('settings.profile.theme_light') }, { value: 'system', label: t('settings.profile.theme_system') }]} />
-          </Field>
           <Field label={t('settings.profile.startBoard')} htmlFor="p-start">
             <Select id="p-start" value={user.start_board_id ? String(user.start_board_id) : ''} onChange={(value) => void update({ start_board_id: value ? Number(value) : 0 })} options={[{ value: '', label: t('settings.profile.firstBoard') }, ...(boards.data ?? []).map((b) => ({ value: String(b.id), label: b.name }))]} />
           </Field>
+          <ThemePlanField id="p-theme" value={user} onChange={(plan) => void update(plan).catch(failed)} />
         </div>
         <Switch checked={user.tilt !== false} onChange={(tilt) => void update({ tilt })} label={t('settings.profile.tilt')} description={t('settings.profile.tiltHelp')} />
         <div className="grid sm:grid-cols-3 gap-3">

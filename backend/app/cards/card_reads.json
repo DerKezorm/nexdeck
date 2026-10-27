@@ -366,6 +366,15 @@
    ]
   }
  ],
+ "esphome": [
+  {
+   "path": "/devices",
+   "widgets": [
+    "overview",
+    "devices"
+   ]
+  }
+ ],
  "evcc": [
   {
    "path": "/api/state",
@@ -473,6 +482,15 @@
    "path": "/api/v2/monitor/system/ha-peer?vdom={vdom}",
    "widgets": [
     "ha"
+   ]
+  }
+ ],
+ "fronius": [
+  {
+   "path": "/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
+   "widgets": [
+    "production",
+    "flow"
    ]
   }
  ],
@@ -743,6 +761,51 @@
    ]
   }
  ],
+ "homebridge": [
+  {
+   "path": "/api/status/homebridge",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/status/homebridge-version",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/status/cpu",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/status/ram",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/status/uptime",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/plugins",
+   "widgets": [
+    "plugins"
+   ]
+  },
+  {
+   "path": "/api/accessories",
+   "widgets": [
+    "accessories",
+    "accessory"
+   ]
+  }
+ ],
  "immich": [
   {
    "path": "/api/server/statistics",
@@ -755,6 +818,15 @@
    "path": "/api/server/storage",
    "widgets": [
     "storage"
+   ]
+  }
+ ],
+ "jackett": [
+  {
+   "path": "/api/v2.0/indexers?configured=true",
+   "widgets": [
+    "overview",
+    "indexers"
    ]
   }
  ],
@@ -1180,6 +1252,21 @@
    "path": "/v1/entries?limit=1&order=published_at&direction=desc&status=unread",
    "widgets": [
     "summary"
+   ]
+  }
+ ],
+ "moonraker": [
+  {
+   "path": "/server/info",
+   "widgets": [
+    "printer",
+    "job"
+   ]
+  },
+  {
+   "path": "/server/history/totals",
+   "widgets": [
+    "history"
    ]
   }
  ],
@@ -1615,6 +1702,34 @@
    ]
   }
  ],
+ "nodered": [
+  {
+   "path": "/flows",
+   "widgets": [
+    "runtime",
+    "flows",
+    "injects"
+   ]
+  },
+  {
+   "path": "/flows/state",
+   "widgets": [
+    "runtime"
+   ]
+  },
+  {
+   "path": "/settings",
+   "widgets": [
+    "runtime"
+   ]
+  },
+  {
+   "path": "/diagnostics",
+   "widgets": [
+    "runtime"
+   ]
+  }
+ ],
  "nomad": [
   {
    "path": "/v1/jobs?namespace={namespace}&meta=false",
@@ -1678,6 +1793,57 @@
    ]
   }
  ],
+ "ombi": [
+  {
+   "path": "/api/v1/Request/count",
+   "widgets": [
+    "requests",
+    "counts"
+   ]
+  },
+  {
+   "path": "/api/v2/Requests/movie/pending/8/0/requestedDate/desc",
+   "widgets": [
+    "requests"
+   ]
+  },
+  {
+   "path": "/api/v2/Requests/tv/pending/8/0/requestedDate/desc",
+   "widgets": [
+    "requests"
+   ]
+  },
+  {
+   "path": "/api/v2/Requests/album/pending/8/0/requestedDate/desc",
+   "widgets": [
+    "requests"
+   ]
+  }
+ ],
+ "opendtu": [
+  {
+   "path": "/api/livedata/status",
+   "widgets": [
+    "power",
+    "inverters"
+   ]
+  }
+ ],
+ "openhab": [
+  {
+   "path": "/rest/things",
+   "widgets": [
+    "overview",
+    "trouble"
+   ]
+  },
+  {
+   "path": "/rest/items?fields=name%2Clabel%2Ctype%2Cstate%2Ccategory%2CgroupNames%2CstateDescription%2Ceditable",
+   "widgets": [
+    "items"
+   ]
+  }
+ ],
  "openwebui": [
   {
    "path": "/api/v1/auths/",
@@ -1725,6 +1891,20 @@
    "path": "/api/v1/request?filter=pending&take=8&sort=added",
    "widgets": [
     "requests"
+   ]
+  }
+ ],
+ "owncast": [
+  {
+   "path": "/api/status",
+   "widgets": [
+    "stream"
+   ]
+  },
+  {
+   "path": "/api/admin/status",
+   "widgets": [
+    "viewers"
    ]
   }
  ],
@@ -1809,6 +1989,63 @@
    "widgets": [
     "ups",
     "details"
+   ]
+  }
+ ],
+ "peertube": [
+  {
+   "path": "/api/v1/server/stats",
+   "widgets": [
+    "stats"
+   ]
+  },
+  {
+   "path": "/api/v1/videos?start=0&count=8&sort=-publishedAt&isLocal=true",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/v1/oauth-clients/local",
+   "widgets": [
+    "moderation",
+    "jobs"
+   ]
+  },
+  {
+   "path": "/api/v1/abuses?start=0&count=8&state=1&sort=-createdAt",
+   "widgets": [
+    "moderation"
+   ]
+  },
+  {
+   "path": "/api/v1/users/registrations?start=0&count=0&state=pending",
+   "widgets": [
+    "moderation"
+   ]
+  },
+  {
+   "path": "/api/v1/videos/blacklist?start=0&count=0&type=2",
+   "widgets": [
+    "moderation"
+   ]
+  },
+  {
+   "path": "/api/v1/jobs/waiting?start=0&count=0",
+   "widgets": [
+    "jobs"
+   ]
+  },
+  {
+   "path": "/api/v1/jobs/active?start=0&count=0",
+   "widgets": [
+    "jobs"
+   ]
+  },
+  {
+   "path": "/api/v1/jobs/failed?start=0&count=0",
+   "widgets": [
+    "jobs"
    ]
   }
  ],
@@ -2001,6 +2238,38 @@
    "path": "/api/alerts/active",
    "widgets": [
     "alerts"
+   ]
+  }
+ ],
+ "pyload": [
+  {
+   "path": "/api/status_server",
+   "widgets": [
+    "queue",
+    "speed",
+    "attention"
+   ]
+  },
+  {
+   "path": "/api/status_downloads",
+   "widgets": [
+    "queue",
+    "speed"
+   ]
+  },
+  {
+   "path": "/api/get_queue_data",
+   "widgets": [
+    "queue",
+    "speed",
+    "attention"
+   ]
+  },
+  {
+   "path": "/api/free_space",
+   "widgets": [
+    "queue",
+    "speed"
    ]
   }
  ],
@@ -2223,6 +2492,15 @@
    ]
   }
  ],
+ "shelly": [
+  {
+   "path": "/shelly",
+   "widgets": [
+    "power",
+    "switches"
+   ]
+  }
+ ],
  "shlink": [
   {
    "path": "/rest/v3/short-urls?itemsPerPage=10&orderBy=visits-DESC",
@@ -2234,6 +2512,28 @@
    "path": "/rest/v3/short-urls?itemsPerPage=1&orderBy=dateCreated-DESC",
    "widgets": [
     "summary"
+   ]
+  }
+ ],
+ "slskd": [
+  {
+   "path": "/api/v0/application",
+   "widgets": [
+    "status"
+   ]
+  },
+  {
+   "path": "/api/v0/transfers/downloads",
+   "widgets": [
+    "status",
+    "downloads"
+   ]
+  },
+  {
+   "path": "/api/v0/transfers/uploads",
+   "widgets": [
+    "status",
+    "uploads"
    ]
   }
  ],
@@ -2280,6 +2580,15 @@
    "path": "/api/v1/results?page=1",
    "widgets": [
     "history"
+   ]
+  }
+ ],
+ "spoolman": [
+  {
+   "path": "/api/v1/spool",
+   "widgets": [
+    "stock",
+    "spools"
    ]
   }
  ],
@@ -2350,6 +2659,15 @@
    "path": "/api/shopping-list-entry/?page_size=200",
    "widgets": [
     "shopping"
+   ]
+  }
+ ],
+ "tasmota": [
+  {
+   "path": "/cm?cmnd=Status%200",
+   "widgets": [
+    "relay",
+    "energy"
    ]
   }
  ],
@@ -2577,6 +2895,20 @@
    "widgets": [
     "updates",
     "summary"
+   ]
+  }
+ ],
+ "yourspotify": [
+  {
+   "path": "/spotify/listened_to",
+   "widgets": [
+    "stats"
+   ]
+  },
+  {
+   "path": "/spotify/gethistory?number=8&offset=0",
+   "widgets": [
+    "recent"
    ]
   }
  ]

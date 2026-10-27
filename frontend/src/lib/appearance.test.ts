@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, darker, lookFile, readLook, useLook } from './appearance'
+import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, onAccent, readLook, useLook } from './appearance'
 
 describe('the accent colour', () => {
   it('reads the three parts of a colour', () => {
@@ -21,11 +21,21 @@ describe('the accent colour', () => {
   it('turns one colour into the four variables the interface uses', () => {
     expect(accentVariables('#22d3ee')).toEqual({
       '--nd-accent': '#22d3ee',
+      '--nd-on-accent': '#041016',
       '--nd-accent-strong': '#1cadc3',
       '--nd-accent-soft': 'rgba(34, 211, 238, 0.14)',
       '--nd-accent-glow': 'rgba(34, 211, 238, 0.35)',
       '--nd-aurora-1': 'rgba(34, 211, 238, 0.16)',
     })
+  })
+
+  it('puts the ink that reads on the accent, not the white of the light theme, over a light colour', () => {
+    // A fresh installation: preset cyan, light theme. White on #22d3ee is 1.7:1.
+    for (const colour of ['#22d3ee', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#38bdf8', '#94a3b8']) {
+      expect(contrast(colour, onAccent(colour)), colour).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(onAccent('#0e7490')).toBe('#ffffff')
+    expect(onAccent('#22d3ee')).toBe('#041016')
   })
 
   it('hands back nothing for a colour it cannot read, so the shipped one stays', () => {
@@ -43,6 +53,13 @@ describe('painting it on', () => {
     applyAppearance({ preset: 'violet', accent: '', colour: '#a78bfa', css: '.card { border-radius: 4px; }' })
     expect(document.documentElement.style.getPropertyValue('--nd-accent')).toBe('#a78bfa')
     expect(document.getElementById('nexdeck-appearance')?.textContent).toBe('.card { border-radius: 4px; }')
+  })
+
+  it('paints the ink over the accent too, and gives it back with it', () => {
+    applyAppearance({ preset: 'cyan', accent: '', colour: '#22d3ee', css: '' })
+    expect(document.documentElement.style.getPropertyValue('--nd-on-accent')).toBe('#041016')
+    applyAppearance(null)
+    expect(document.documentElement.style.getPropertyValue('--nd-on-accent')).toBe('')
   })
 
   it('takes the style sheet away again when it is emptied', () => {
@@ -101,7 +118,16 @@ describe('a look to share', () => {
     const text = lookFile(base)
     expect(text).not.toContain('secret')
     const read = readLook(text)
-    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20 })
+    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20, font: 'inter', retro: { status: 'symbol', icons: 'colour', desk: 'dither', type: 'titles' } })
+  })
+
+  it('carries the calm cards and the font, and an older look leaves the font as it is', () => {
+    const read = readLook(lookFile({ ...base, card_style: 'calm', font: 'mono' }))
+    expect('look' in read && [read.look.card_style, read.look.font]).toEqual(['calm', 'mono'])
+    const older = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, card_style: 'flat', radius: 8, gap: 8 }))
+    expect('look' in older && 'font' in older.look).toBe(false)
+    const strange = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, font: 'comic' }))
+    expect('look' in strange && strange.look.font).toBe('inter')
   })
 
   it('takes a theme shared on its own, as before looks existed', () => {

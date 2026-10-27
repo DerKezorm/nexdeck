@@ -41,7 +41,12 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
   )
 }
 
-export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg' }) {
+/**
+ * A dialog over the page. ``alert`` marks a question that wants an answer
+ * before anything goes on (Confirm): a look may draw it as an alert box, as
+ * 1984 does, with its frame doubled and the default button ringed.
+ */
+export function Dialog({ open, onClose, title, children, footer, size = 'md', alert = false }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'sm' | 'md' | 'lg'; alert?: boolean }) {
   const { t } = useTranslation()
   const panel = useRef<HTMLDivElement>(null)
   const heading = useId()
@@ -68,7 +73,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
     // The title names the dialog, so a screen reader says what it is about when it opens.
     <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={heading}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`}>
+      <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`} data-alert={alert || undefined}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">
           <h2 id={heading} className="font-semibold text-[15px] flex-1 truncate">{title}</h2>
           <button className="btn btn-icon btn-flat" onClick={onClose} aria-label={t('common.close')}>
@@ -91,6 +96,7 @@ export function Confirm({ open, title, body, danger, onCancel, onConfirm, confir
       onClose={onCancel}
       title={title}
       size="sm"
+      alert
       footer={
         <>
           <button className="btn" onClick={onCancel}>
@@ -118,18 +124,26 @@ export function Switch({ checked, onChange, label, description, disabled }: { ch
         </span>
         {description && <span className="text-xs text-muted block">{description}</span>}
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-labelledby={id}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative flex-none w-10 h-6 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-[color-mix(in_srgb,var(--nd-text)_18%,transparent)]'} disabled:opacity-50`}
-      >
-        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
-      </button>
+      <Toggle checked={checked} onChange={onChange} disabled={disabled} labelledBy={id} />
     </div>
+  )
+}
+
+/** The switch alone, for a row that carries its own words; named by ``label`` or by the element ``labelledBy`` points at. */
+export function Toggle({ checked, onChange, disabled, label, labelledBy }: { checked: boolean; onChange: (value: boolean) => void; disabled?: boolean; label?: string; labelledBy?: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative flex-none w-10 h-6 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-[color-mix(in_srgb,var(--nd-text)_18%,transparent)]'} disabled:opacity-50`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
+    </button>
   )
 }
 

@@ -1,0 +1,132 @@
+{
+  "version": "8",
+  "locale": "en_US",
+  "measurementSystem": "SI",
+  "timezone": "Etc/UTC",
+  "runtimeInfo": {
+    "version": "5.2.3",
+    "buildString": "Release Build"
+  },
+  "links": [
+    {
+      "type": "spec",
+      "url": "http://openhab.example.com:8080/rest/spec"
+    },
+    {
+      "type": "uuid",
+      "url": "http://openhab.example.com:8080/rest/uuid"
+    },
+    {
+      "type": "addons",
+      "url": "http://openhab.example.com:8080/rest/addons"
+    },
+    {
+      "type": "services",
+      "url": "http://openhab.example.com:8080/rest/services"
+    },
+    {
+      "type": "discovery",
+      "url": "http://openhab.example.com:8080/rest/discovery"
+    },
+    {
+      "type": "templates",
+      "url": "http://openhab.example.com:8080/rest/templates"
+    },
+    {
+      "type": "things",
+      "url": "http://openhab.example.com:8080/rest/things"
+    },
+    {
+      "type": "auth",
+      "url": "http://openhab.example.com:8080/rest/auth"
+    },
+    {
+      "type": "transformations",
+      "url": "http://openhab.example.com:8080/rest/transformations"
+    },
+    {
+      "type": "iconsets",
+      "url": "http://openhab.example.com:8080/rest/iconsets"
+    },
+    {
+      "type": "rules",
+      "url": "http://openhab.example.com:8080/rest/rules"
+    },
+    {
+      "type": "profile-types",
+      "url": "http://openhab.example.com:8080/rest/profile-types"
+    },
+    {
+      "type": "tags",
+      "url": "http://openhab.example.com:8080/rest/tags"
+    },
+    {
+      "type": "sitemaps",
+      "url": "http://openhab.example.com:8080/rest/sitemaps"
+    },
+    {
+      "type": "events",
+      "url": "http://openhab.example.com:8080/rest/events"
+    },
+    {
+      "type": "ui",
+      "url": "http://openhab.example.com:8080/rest/ui"
+    },
+    {
+      "type": "items",
+      "url": "http://openhab.example.com:8080/rest/items"
+    },
+    {
+      "type": "systeminfo",
+      "url": "http://openhab.example.com:8080/rest/systeminfo"
+    },
+    {
+      "type": "inbox",
+      "url": "http://openhab.example.com:8080/rest/inbox"
+    },
+    {
+      "type": "audio",
+      "url": "http://openhab.example.com:8080/rest/audio"
+    },
+    {
+      "type": "channel-types",
+      "url": "http://openhab.example.com:8080/rest/channel-types"
+    },
+    {
+      "type": "persistence",
+      "url": "http://openhab.example.com:8080/rest/persistence"
+    },
+    {
+      "type": "voice",
+      "url": "http://openhab.example.com:8080/rest/voice"
+    },
+    {
+      "type": "actions",
+      "url": "http://openhab.example.com:8080/rest/actions"
+    },
+    {
+      "type": "logging",
+      "url": "http://openhab.example.com:8080/rest/logging"
+    },
+    {
+      "type": "thing-types",
+      "url": "http://openhab.example.com:8080/rest/thing-types"
+    },
+    {
+      "type": "module-types",
+      "url": "http://openhab.example.com:8080/rest/module-types"
+    },
+    {
+      "type": "config-descriptions",
+      "url": "http://openhab.example.com:8080/rest/config-descriptions"
+    },
+    {
+      "type": "file-format",
+      "url": "http://openhab.example.com:8080/rest/file-format"
+    },
+    {
+      "type": "links",
+      "url": "http://openhab.example.com:8080/rest/links"
+    }
+  ]
+}

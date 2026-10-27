@@ -50,8 +50,8 @@
         icon: https://example.com/odd.png
         href: https://odd.example.com
         widget:
-          type: moonraker
-          url: http://printer:7125
+          type: gamedig
+          url: http://game.example.com:27015
     - Network:
         - AdGuard:
             icon: adguard-home.png
