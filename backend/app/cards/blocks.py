@@ -9,6 +9,7 @@ nexdeck. A card can come from the shop, so the limits are narrow: 100 blocks, 6 
 
 from __future__ import annotations
 
+import math
 from typing import Annotated, Any, Literal
 
 from pydantic import BeforeValidator, Field, StringConstraints, field_validator, model_validator
@@ -146,7 +147,8 @@ class ProgressBlock(_Block):
     @field_validator("max")
     @classmethod
     def _above_zero(cls, found: Any) -> Any:
-        if isinstance(found, float | int) and not isinstance(found, bool) and not found > 0:
+        # ⚠️ Only a finite number: ``.inf`` in YAML is a number to Python and nothing a bar can be filled to.
+        if isinstance(found, float | int) and not isinstance(found, bool) and not (math.isfinite(found) and found > 0):
             raise PydanticCustomError("card_out_of_range", "This is outside what is allowed (above 0).", {"bound": 0})
         return found
 

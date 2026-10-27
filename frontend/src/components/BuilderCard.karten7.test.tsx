@@ -207,9 +207,11 @@ describe('a card put together from blocks', () => {
       { type: 'image', src: null, height: 'm' },
       { type: 'image', src: 'javascript:alert(1)', height: 's' },
       { type: 'image', src: 'mailto:someone@example.com', height: 's' },
+      // An address without a scheme leads to another host, and a path with a single slash stays on this one.
+      { type: 'image', src: '//evil.example.com/a.png', height: 's' },
       { type: 'image', src: 'https://example.com/a.png', height: 'l' },
     ] as Block[])
-    expect(screen.getAllByTestId('block-image-placeholder')).toHaveLength(3)
+    expect(screen.getAllByTestId('block-image-placeholder')).toHaveLength(4)
     expect(document.querySelectorAll('img')).toHaveLength(1)
     expect(document.querySelector('img')).toHaveAttribute('src', 'https://example.com/a.png')
   })

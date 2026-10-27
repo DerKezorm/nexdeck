@@ -128,6 +128,13 @@ def test_karten7_ac1_a_list_whose_template_is_still_empty_is_taken_like_an_empty
     assert load.load_definition(with_blocks({"type": "list"}, buttons=[], main=None)).definition.blocks[0].item == []
 
 
+@pytest.mark.parametrize("largest", [float("inf"), float("-inf"), float("nan"), 0, -5])
+def test_karten7_ac1_the_largest_value_of_a_bar_is_a_finite_number_above_zero(largest: Any) -> None:
+    block = {"type": "progress", "value": "x", "max": largest}
+    assert codes(refused(with_blocks(block, buttons=[], rows=None, main=None))) == ["card_out_of_range"]
+    assert load.load_definition(with_blocks({"type": "progress", "value": "x", "max": 250}, buttons=[], rows=None, main=None)).definition.blocks[0].max == 250
+
+
 def test_karten7_ac1_the_main_value_is_a_value_block_with_that_id() -> None:
     assert codes(refused(changed(main="nobody"))) == ["card_main_unknown"]
     # A progress bar with the id is no value; a value inside a list is a value of a row, not of the card.

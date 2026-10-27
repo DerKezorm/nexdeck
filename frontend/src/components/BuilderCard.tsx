@@ -52,7 +52,8 @@ function Pictured({ src, height }: { src: string | null; height: HeightStep }) {
   const [broken, setBroken] = useState(false)
   // Only an address nexdeck may link to; anything else, and a picture that does not load, is the placeholder (EC-7).
   const safe = src ? safeUrl(src) : ''
-  const usable = /^(https?:\/\/|\/)/i.test(safe) && !broken
+  // A path is one slash and no more: two lead to another host.
+  const usable = /^(https?:\/\/|\/(?!\/))/i.test(safe) && !broken
   return (
     <div className={`${IMAGE_HEIGHT[height]} w-full rounded-lg overflow-hidden bg-surface-hover grid place-items-center shrink-0`} data-testid="block-image">
       {usable ? (
