@@ -381,7 +381,8 @@
         "flat": "Flach",
         "outline": "Umriss",
         "neon": "Neonkante",
-        "liquid": "Liquid Glass"
+        "liquid": "Liquid Glass",
+        "calm": "Ruhig"
       },
       "radius": "Ecken",
       "gap": "Abstand zwischen Karten",
@@ -395,7 +396,8 @@
         "latte": "Latte-Papier",
         "castle": "Nachtschloss",
         "workshop": "Werkstatt",
-        "evening": "Rosé-Abend"
+        "evening": "Rosé-Abend",
+        "quiet": "Stiller Schreibtisch"
       },
       "lookShare": "Look teilen",
       "lookShareHelp": "Farbschema, eigene Farbe und Karten als kurzer Text: hier kopieren und in einem anderen nexdeck einfügen. Dein eigenes CSS bleibt draußen, es ist Code.",
@@ -405,7 +407,12 @@
       "lookTake": "Diesen Look übernehmen",
       "refraction": "Rand bricht das Licht",
       "refractionHelp": "Der Rand des Glases biegt, was dahinter liegt. Das kostet etwas Grafikleistung; für ein altes Wand-Tablet ausschalten.",
-      "refractionNotHere": "Dieser Browser kann das nicht: Chrome und Edge können es, Safari und Firefox zeigen das Glas ohne Biegung."
+      "refractionNotHere": "Dieser Browser kann das nicht: Chrome und Edge können es, Safari und Firefox zeigen das Glas ohne Biegung.",
+      "fontTitle": "Schrift",
+      "fontHelp": "Die Schrift der ganzen Oberfläche, für alle. Jede Schrift kommt mit nexdeck und wird nur von nexdeck geladen, wenn sie zu sehen ist.",
+      "fontSample": "Laufzeit 99,98 % · 21 °C",
+      "fontSystem": "Die des Systems",
+      "fontDefault": "ab Werk"
     },
     "journal": {
       "title": "Protokollstufe",

@@ -101,7 +101,16 @@ describe('a look to share', () => {
     const text = lookFile(base)
     expect(text).not.toContain('secret')
     const read = readLook(text)
-    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20 })
+    expect('look' in read && read.look).toEqual({ theme: { name: 'Dusk', dark: { bg: '#101010' }, light: undefined }, accent: '#ff00aa', card_style: 'neon', refraction: true, radius: 6, gap: 20, font: 'inter' })
+  })
+
+  it('carries the calm cards and the font, and an older look leaves the font as it is', () => {
+    const read = readLook(lookFile({ ...base, card_style: 'calm', font: 'mono' }))
+    expect('look' in read && [read.look.card_style, read.look.font]).toEqual(['calm', 'mono'])
+    const older = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, card_style: 'flat', radius: 8, gap: 8 }))
+    expect('look' in older && 'font' in older.look).toBe(false)
+    const strange = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, font: 'comic' }))
+    expect('look' in strange && strange.look.font).toBe('inter')
   })
 
   it('takes a theme shared on its own, as before looks existed', () => {

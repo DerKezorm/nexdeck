@@ -381,7 +381,8 @@
         "flat": "Flat",
         "outline": "Outline",
         "neon": "Neon edge",
-        "liquid": "Liquid glass"
+        "liquid": "Liquid glass",
+        "calm": "Calm"
       },
       "radius": "Corners",
       "gap": "Gap between cards",
@@ -395,7 +396,8 @@
         "latte": "Latte paper",
         "castle": "Night castle",
         "workshop": "Workshop",
-        "evening": "Rosé evening"
+        "evening": "Rosé evening",
+        "quiet": "Quiet desk"
       },
       "lookShare": "Share the look",
       "lookShareHelp": "The theme, a colour of your own and the cards as a short text: copy it here and paste it into another nexdeck. Your own style sheet stays out, it is code.",
@@ -405,7 +407,12 @@
       "lookTake": "Take this look",
       "refraction": "The edge bends the light",
       "refractionHelp": "The rim of the glass bends what lies behind it. It costs some graphics power; switch it off for an old wall tablet.",
-      "refractionNotHere": "This browser cannot do it: Chrome and Edge can, Safari and Firefox show the glass without the bend."
+      "refractionNotHere": "This browser cannot do it: Chrome and Edge can, Safari and Firefox show the glass without the bend.",
+      "fontTitle": "Type",
+      "fontHelp": "The type of the whole interface, for everyone. Every font ships with nexdeck and is loaded from nexdeck only when it is shown.",
+      "fontSample": "Uptime 99.98 % · 21 °C",
+      "fontSystem": "The system's own",
+      "fontDefault": "as shipped"
     },
     "journal": {
       "title": "Log level",

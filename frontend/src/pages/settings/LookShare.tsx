@@ -17,6 +17,8 @@ export interface Look {
   card_style: CardStyle
   radius: number
   gap: number
+  /** A font of its own; without one the look leaves the font as it is. */
+  font?: string
 }
 
 /** Looks that go together, tried on the demo board. The first is nexdeck as it ships. */
@@ -28,6 +30,7 @@ export const LOOKS: Look[] = [
   { key: 'castle', theme: 'dracula', card_style: 'glass', radius: 18, gap: 12 },
   { key: 'workshop', theme: 'gruvbox', card_style: 'flat', radius: 4, gap: 8 },
   { key: 'evening', theme: 'rosepine', card_style: 'glass', radius: 20, gap: 16 },
+  { key: 'quiet', theme: 'graphite', card_style: 'calm', radius: 10, gap: 14, font: 'geist' },
 ]
 
 function Sample({ form, look }: { form: Appearance; look: Look }) {
@@ -38,7 +41,7 @@ function Sample({ form, look }: { form: Appearance; look: Look }) {
   const card: React.CSSProperties = {
     borderRadius: Math.min(look.radius, 10),
     background: look.card_style === 'outline' ? 'transparent' : surface,
-    border: `1px solid ${look.card_style === 'neon' ? accent : look.card_style === 'outline' ? `${accent}66` : 'rgba(255,255,255,0.08)'}`,
+    border: `1px solid ${look.card_style === 'neon' ? accent : look.card_style === 'outline' ? `${accent}66` : look.card_style === 'calm' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)'}`,
     boxShadow: look.card_style === 'neon' ? `0 0 10px -3px ${accent}` : undefined,
   }
   return (
@@ -60,8 +63,8 @@ export function LookShare({ form, onChange, onSave }: { form: Appearance; onChan
   const [copied, setCopied] = useState(false)
   const chosen = (look: Look) =>
     (form.card_style ?? 'glass') === look.card_style && (form.radius ?? 16) === look.radius && (form.gap ?? 12) === look.gap &&
-    (look.theme ? form.theme?.name === form.themes?.[look.theme]?.name : !form.theme)
-  const take = (look: Look) => onChange({ ...form, theme: look.theme ? (form.themes?.[look.theme] ?? null) : null, accent: '', card_style: look.card_style, radius: look.radius, gap: look.gap })
+    (look.theme ? form.theme?.name === form.themes?.[look.theme]?.name : !form.theme) && (!look.font || (form.font ?? 'inter') === look.font)
+  const take = (look: Look) => onChange({ ...form, theme: look.theme ? (form.themes?.[look.theme] ?? null) : null, accent: '', card_style: look.card_style, radius: look.radius, gap: look.gap, ...(look.font ? { font: look.font } : {}) })
   const paste = () => {
     const read = readLook(pasted)
     if ('error' in read) {

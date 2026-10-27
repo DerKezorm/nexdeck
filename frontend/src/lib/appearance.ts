@@ -11,6 +11,8 @@
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
+import { DEFAULT_FONT, fontOf, setFont } from './fonts'
+
 export type Palette = Record<string, string>
 export interface Theme {
   name: string
@@ -42,10 +44,19 @@ export interface Appearance {
   card_styles?: CardStyle[]
   /** Liquid glass: whether its rim bends the background (Chromium only). */
   refraction?: boolean
+  /** The type of the interface (lib/fonts.ts), and the ones there are. */
+  font?: string
+  fonts?: string[]
 }
 
-/** How a card is drawn. Glass is nexdeck as it always looked. */
-export type CardStyle = 'glass' | 'liquid' | 'flat' | 'outline' | 'neon'
+/**
+ * How a card is drawn. Glass is nexdeck as it always looked. A new style is
+ * a name here, the same name in `appearance.CARD_STYLES` on the server, its
+ * rules under `:root[data-cards='…']` in the style sheet and a sample in the
+ * settings; the board, the kiosk and the settings take it from this list.
+ */
+export const CARD_STYLES = ['glass', 'liquid', 'flat', 'outline', 'neon', 'calm'] as const
+export type CardStyle = (typeof CARD_STYLES)[number]
 
 /**
  * The part of the look a component has to know rather than only paint: the
@@ -87,7 +98,7 @@ export function useBoardCardStyle(style: unknown): void {
 }
 
 const STYLE_ID = 'nexdeck-appearance'
-const STYLES: CardStyle[] = ['glass', 'liquid', 'flat', 'outline', 'neon']
+const STYLES: readonly CardStyle[] = CARD_STYLES
 const THEME_ID = 'nexdeck-theme'
 const HEX = /^#[0-9a-f]{6}$/i
 
@@ -206,6 +217,7 @@ export function applyAppearance(look: Appearance | null | undefined): void {
     refraction: look?.refraction !== false,
   })
   paintCards()
+  void setFont(look?.font ?? DEFAULT_FONT)
 }
 
 /** The contrast ratio of two #rrggbb colours, from 1 to 21, the way WCAG counts it. */
@@ -279,6 +291,7 @@ export function lookFile(look: Appearance): string {
     refraction: look.refraction !== false,
     radius: look.radius ?? 16,
     gap: look.gap ?? 12,
+    font: fontOf(look.font).key,
   })
 }
 
@@ -313,6 +326,8 @@ export function readLook(text: string): { look: Partial<Appearance> } | { error:
   const within = (number: unknown, low: number, high: number, fallback: number) => (typeof number === 'number' && Number.isInteger(number) && number >= low && number <= high ? number : fallback)
   look.radius = within(value.radius, 0, 28, 16)
   look.gap = within(value.gap, 4, 28, 12)
+  // A look shared before fonts could be chosen leaves the font as it is.
+  if (typeof value.font === 'string') look.font = fontOf(value.font).key
   return { look }
 }
 

@@ -381,7 +381,8 @@
         "flat": "Plate",
         "outline": "Contour",
         "neon": "Bord néon",
-        "liquid": "Verre liquide"
+        "liquid": "Verre liquide",
+        "calm": "Calme"
       },
       "radius": "Coins",
       "gap": "Espace entre les cartes",
@@ -395,7 +396,8 @@
         "latte": "Papier latte",
         "castle": "Château de nuit",
         "workshop": "Atelier",
-        "evening": "Soirée rosé"
+        "evening": "Soirée rosé",
+        "quiet": "Bureau calme"
       },
       "lookShare": "Partager le style",
       "lookShareHelp": "Le thème, une couleur à vous et les cartes en un court texte : copiez-le ici et collez-le dans un autre nexdeck. Votre feuille de style reste à part, c'est du code.",
@@ -405,7 +407,12 @@
       "lookTake": "Prendre ce style",
       "refraction": "Le bord courbe la lumière",
       "refractionHelp": "Le bord du verre courbe ce qui se trouve derrière. Cela coûte un peu de puissance graphique ; désactivez-le pour une vieille tablette murale.",
-      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure."
+      "refractionNotHere": "Ce navigateur ne le peut pas : Chrome et Edge le peuvent, Safari et Firefox montrent le verre sans courbure.",
+      "fontTitle": "Police",
+      "fontHelp": "La police de toute l’interface, pour tout le monde. Chaque police est livrée avec nexdeck et n’est chargée depuis nexdeck que lorsqu’elle s’affiche.",
+      "fontSample": "Disponibilité 99,98 % · 21 °C",
+      "fontSystem": "Celle du système",
+      "fontDefault": "d’origine"
     },
     "journal": {
       "title": "Niveau de journalisation",

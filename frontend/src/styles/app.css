@@ -106,7 +106,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  /* --nd-font is the type chosen under Appearance (lib/fonts.ts); unset, Inter. */
+  --font-sans: var(--nd-font, 'Inter Variable'), system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-bg: var(--nd-bg);
   --color-elev: var(--nd-bg-elev);
@@ -147,6 +148,12 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+}
+
+/* A monospaced interface runs wide: a step smaller keeps the titles on their cards. */
+:root[data-font='mono'] body {
+  font-size: 13px;
+  letter-spacing: -0.01em;
 }
 
 ::selection {
@@ -362,6 +369,35 @@ body {
 
 :root[data-cards='liquid'] .card.glass[data-status='warn']:not(.card-plain) {
   border-color: color-mix(in srgb, var(--nd-warn) 45%, transparent);
+}
+
+/* Calm: a quiet sheet, a shade off the page, with a hairline and nothing that
+   moves. Small titles in capitals, the small print a step softer (the faint
+   colour, which every theme keeps readable), more room around the content,
+   no glass, no shadow, no tipping, and a card that is down says so with a
+   steady red frame rather than a breath. */
+:root[data-cards='calm'] .card.glass:not(.card-plain) {
+  --nd-text-muted: var(--nd-text-faint);
+  background: color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg));
+  border-color: color-mix(in srgb, var(--nd-border) 75%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transition: border-color 160ms ease;
+}
+
+:root[data-cards='calm'] .card.glass:not(.card-plain):hover {
+  border-color: var(--nd-border);
+}
+
+:root[data-cards='calm'] .card.glass[data-status='bad']:not(.is-editing):not(.card-plain) {
+  animation: none;
+  border-color: color-mix(in srgb, var(--nd-bad) 60%, var(--nd-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--nd-bad) 25%, transparent);
+}
+
+:root[data-cards='calm'] .card.glass[data-status='warn']:not(.is-editing):not(.card-plain) {
+  border-color: color-mix(in srgb, var(--nd-warn) 50%, var(--nd-border));
 }
 
 /* A colour of a card's own (the card's settings, Look): a frame, a tint over
@@ -1911,6 +1947,36 @@ textarea.input {
  * After the utilities. Only what has to win over a utility on purpose.
  * ---------------------------------------------------------------------- */
 @layer overrides {
+/* The calm card style's head (see the card styles above): small capitals in
+   the faint colour, a smaller logo and dot, more room. Here because the head
+   is set with utilities, which win over the components layer. */
+:root[data-cards='calm'] .card.glass > header {
+  padding: 12px 14px 6px;
+  min-height: 0;
+  gap: 8px;
+}
+
+:root[data-cards='calm'] .card.glass > header > h3 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--nd-text-faint);
+}
+
+:root[data-cards='calm'] .card.glass > header > :first-child:is(img, svg) {
+  width: 14px !important;
+  height: 14px !important;
+  opacity: 0.85;
+}
+
+:root[data-cards='calm'] .card.glass > header .dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+  animation: none;
+}
+
 /* ⚠️ Issue #36, 11.10.2026: in the installed app the blur came back after every
    update. The window with what is new, like every dialog, sheet and the search,
    laid its dark veil over the whole page and the bar with it, and once the solid
@@ -2680,6 +2746,14 @@ body.has-player-bar main {
      names the same list for the bent edge and the tilt. */
   :root[data-cards='flat'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
     background: var(--nd-bg-elev);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  :root[data-cards='calm'] [data-home-page] :is(.lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile):not(.is-on):not(.is-open) {
+    background: color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg));
+    border-color: color-mix(in srgb, var(--nd-border) 75%, transparent);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow: none;

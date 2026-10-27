@@ -163,7 +163,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   }, [liquid, plain, filterId])
   // The card tips towards the pointer: not while the board is arranged, not on
   // a touch screen, not when the account or the system asks for less motion.
-  const tilts = useAuth((state) => state.user?.tilt !== false) && !editing && !plain
+  // Calm cards never move.
+  const calm = useLook((state) => shownStyle(state) === 'calm')
+  const tilts = useAuth((state) => state.user?.tilt !== false) && !editing && !plain && !calm
   const tiltsNow = useRef(tilts)
   useEffect(() => {
     tiltsNow.current = tilts

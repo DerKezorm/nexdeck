@@ -381,7 +381,8 @@
         "flat": "Piatta",
         "outline": "Contorno",
         "neon": "Bordo neon",
-        "liquid": "Vetro liquido"
+        "liquid": "Vetro liquido",
+        "calm": "Quieto"
       },
       "radius": "Angoli",
       "gap": "Spazio tra le schede",
@@ -395,7 +396,8 @@
         "latte": "Carta latte",
         "castle": "Castello notturno",
         "workshop": "Officina",
-        "evening": "Sera rosé"
+        "evening": "Sera rosé",
+        "quiet": "Scrivania quieta"
       },
       "lookShare": "Condividi lo stile",
       "lookShareHelp": "Il tema, un colore tuo e le schede come un breve testo: copialo qui e incollalo in un altro nexdeck. Il tuo foglio di stile resta fuori, è codice.",
@@ -405,7 +407,12 @@
       "lookTake": "Usa questo stile",
       "refraction": "Il bordo piega la luce",
       "refractionHelp": "Il bordo del vetro piega ciò che sta dietro. Costa un po' di potenza grafica; spegnilo per un vecchio tablet a parete.",
-      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura."
+      "refractionNotHere": "Questo browser non può: Chrome ed Edge sì, Safari e Firefox mostrano il vetro senza curvatura.",
+      "fontTitle": "Carattere",
+      "fontHelp": "Il carattere di tutta l’interfaccia, per tutti. Ogni carattere arriva con nexdeck e viene caricato da nexdeck solo quando si vede.",
+      "fontSample": "Attivo 99,98 % · 21 °C",
+      "fontSystem": "Quello del sistema",
+      "fontDefault": "di serie"
     },
     "journal": {
       "title": "Livello di log",

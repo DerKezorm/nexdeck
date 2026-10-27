@@ -5,14 +5,15 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Switch, Toast } from '../../components/ui'
-import { accentVariables, applyAppearance, type Appearance, type CardStyle } from '../../lib/appearance'
+import { accentVariables, applyAppearance, CARD_STYLES, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
 import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
+import { FontPicker } from './FontPicker'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
 
-const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true }
+const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true, font: 'inter' }
 
 /** What each style looks like in its button, drawn with the same colours the card will use. */
 const SAMPLE: Record<CardStyle, React.CSSProperties> = {
@@ -26,6 +27,7 @@ const SAMPLE: Record<CardStyle, React.CSSProperties> = {
   flat: { background: 'var(--nd-bg-elev)', border: '1px solid var(--nd-border)' },
   outline: { background: 'transparent', border: '1.5px solid var(--nd-border-strong)' },
   neon: { background: 'var(--nd-surface)', border: '1px solid color-mix(in srgb, var(--nd-accent) 45%, transparent)', boxShadow: '0 0 14px -4px var(--nd-accent-glow)' },
+  calm: { background: 'color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg))', border: '1px solid color-mix(in srgb, var(--nd-border) 75%, transparent)' },
 }
 
 /**
@@ -58,7 +60,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter' })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -102,8 +104,8 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
-        <ul className="grid gap-2 grid-cols-2 sm:grid-cols-5" aria-label={t('settings.appearance.cardsTitle')}>
-          {(form.card_styles ?? ['glass', 'liquid', 'flat', 'outline', 'neon']).map((style) => {
+        <ul className="grid gap-2 grid-cols-3 sm:grid-cols-6" aria-label={t('settings.appearance.cardsTitle')}>
+          {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE).map((style) => {
             const chosen = (form.card_style ?? 'glass') === style
             return (
               <li key={style}>
@@ -115,8 +117,9 @@ export function AppearanceSettings() {
                 >
                   <span className="block h-12 p-1.5" aria-hidden="true">
                     <span className="block h-full p-1.5" style={{ ...SAMPLE[style], borderRadius: Math.min(form.radius ?? 16, 14) }}>
-                      <span className="block h-1.5 w-2/3 rounded-full bg-ink/70" />
-                      <span className="block h-1.5 w-1/3 rounded-full bg-accent mt-1.5" />
+                      {/* Calm draws its title small and its small print soft, as its cards do. */}
+                      <span className={`block rounded-full ${style === 'calm' ? 'h-1 w-1/3 bg-faint/70' : 'h-1.5 w-2/3 bg-ink/70'}`} />
+                      <span className={`block h-1.5 rounded-full mt-1.5 ${style === 'calm' ? 'w-1/2 bg-ink/60' : 'w-1/3 bg-accent'}`} />
                     </span>
                   </span>
                   <span className="mt-1 flex items-center gap-1 text-xs font-medium">
@@ -153,6 +156,12 @@ export function AppearanceSettings() {
           </Field>
         </div>
         <button className="btn btn-accent mt-2" onClick={store}>
+          {t('common.save')}
+        </button>
+      </SettingsCard>
+      <SettingsCard title={t('settings.appearance.fontTitle')} description={t('settings.appearance.fontHelp')}>
+        <FontPicker value={form.font ?? 'inter'} onChange={(font) => setForm((current) => ({ ...current, font }))} />
+        <button className="btn btn-accent mt-4" onClick={store}>
           {t('common.save')}
         </button>
       </SettingsCard>
@@ -226,7 +235,7 @@ export function AppearanceSettings() {
           <button
             className="btn"
             onClick={() => {
-              setForm({ ...EMPTY, presets: form.presets, themes: form.themes, card_styles: form.card_styles })
+              setForm({ ...EMPTY, presets: form.presets, themes: form.themes, card_styles: form.card_styles, fonts: form.fonts })
             }}
           >
             {t('settings.appearance.reset')}

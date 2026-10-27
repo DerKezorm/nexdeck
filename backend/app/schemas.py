@@ -624,8 +624,10 @@ class AppearanceBody(BaseModel):
     #: A theme, ``{"name", "dark": {colour: "#rrggbb"}, "light": {...}}``, or null for nexdeck's own look.
     #: Loosely typed so that a pasted theme gets a sentence back, not a 422.
     theme: dict[str, Any] | None = None
-    #: How a card is drawn: glass, liquid, flat, outline or neon.
+    #: How a card is drawn: glass, liquid, flat, outline, neon or calm.
     card_style: str = Field(default="glass", max_length=20)
+    #: The type of the interface, one of ``appearance.FONTS``. Loose for the same reason as the accent.
+    font: str = Field(default="inter", max_length=20)
     #: The corners of a card and the room between two, in pixels. Loose for the same reason as the accent.
     radius: int | None = None
     gap: int | None = None
