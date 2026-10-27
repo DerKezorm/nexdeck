@@ -2088,7 +2088,20 @@
     "The web server of Kodi, switched on under Settings, Services, Control.": "El servidor web de Kodi, activado en Ajustes, Servicios, Control.",
     "What Kodi plays, whether it is playing or paused, the library, with play or pause, stop, mute and a library update.": "Lo que reproduce Kodi, si está en reproducción o en pausa, la biblioteca, con reproducir o pausa, parar, silenciar y actualización de la biblioteca.",
     "What Kodi plays, with its picture, progress and time left.": "Lo que reproduce Kodi, con su imagen, el progreso y el tiempo restante.",
-    "Whether Kodi plays, pauses or waits, the volume, and buttons for play or pause, stop, mute and a library update.": "Si Kodi reproduce, está en pausa o espera, el volumen, y botones de reproducir o pausa, parar, silenciar y actualización de la biblioteca."
+    "Whether Kodi plays, pauses or waits, the volume, and buttons for play or pause, stop, mute and a library update.": "Si Kodi reproduce, está en pausa o espera, el volumen, y botones de reproducir o pausa, parar, silenciar y actualización de la biblioteca.",
+    "An administrator or moderator. Without one only the public numbers and videos are shown.": "Un administrador o moderador. Sin él solo se muestran las cifras y los vídeos públicos.",
+    "Host name of the instance": "Nombre de host de la instancia",
+    "Instance": "Instancia",
+    "Job queue": "Cola de tareas",
+    "Jobs waiting, running and failed: transcoding, federation and the rest. Needs an administrator.": "Tareas en espera, en curso y fallidas: transcodificación, federación y el resto. Necesita un administrador.",
+    "Moderation": "Moderación",
+    "Newest videos": "Vídeos más recientes",
+    "Only videos of this instance": "Solo vídeos de esta instancia",
+    "Only when the URL uses another name than PeerTube was installed with, such as an internal address. Sent as the Host header; the sign-in needs it.": "Solo si la URL usa otro nombre distinto del de la instalación de PeerTube, como una dirección interna. Se envía como cabecera Host; el inicio de sesión la necesita.",
+    "Open reports, accounts waiting to be let in, and videos held back for a look. Needs a moderator.": "Denuncias abiertas, cuentas a la espera de entrar y vídeos retenidos para revisar. Necesita un moderador.",
+    "The videos published last, with channel, length and views.": "Los vídeos publicados más recientemente, con canal, duración y visualizaciones.",
+    "Videos, users and views of a PeerTube instance, the newest videos, the job queue and the reports waiting for a moderator.": "Vídeos, usuarios y visualizaciones de una instancia de PeerTube, los vídeos más recientes, la cola de tareas y las denuncias que esperan a un moderador.",
+    "Videos, views, users and storage of the instance. PeerTube keeps these numbers for a few minutes.": "Vídeos, visualizaciones, usuarios y almacenamiento de la instancia. PeerTube guarda estas cifras unos minutos."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3342,6 +3355,13 @@
     "Unmute": "Activar sonido",
     "Update the video library": "Actualizar la biblioteca de vídeo",
     "Mute": "Silenciar",
-    "Play": "Reproducir"
+    "Play": "Reproducir",
+    "Accounts waiting": "Cuentas en espera",
+    "Active this month": "Activos este mes",
+    "Reports": "Denuncias",
+    "Videos held back": "Vídeos retenidos",
+    "Views": "Visualizaciones",
+    "Nothing waits for a moderator.": "Nada espera a un moderador.",
+    "No video is published.": "No hay ningún vídeo publicado."
   }
 }
