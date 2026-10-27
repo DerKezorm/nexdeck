@@ -154,4 +154,5 @@ export const patterns: Pattern[] = [
   [/^seen (\d+ (?:min|h|d)) ago$/, 'visto hace $1'],
   [/^(\d+) users$/, '$1 usuarios'],
   [/^(\d+ (?:min|h|d)) ago$/, 'hace $1'],
+  [/^up ([\dhmsd ]+)$/, 'activo $1'],
 ]

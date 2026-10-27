@@ -17,6 +17,7 @@ that one of twenty-one renderers draws.
 | Docker | containers, summary, load, logs | start, stop, restart, pause, resume | socket or TCP |
 | Proxmox VE | node, guests, map, summary | start, shutdown, reboot | API token |
 | Portainer | containers, summary | container actions | access token |
+| Pterodactyl | overview (running, offline, suspended), servers (state, memory and processor use, uptime) | start, stop (stop asks first and is marked as dangerous) | a client API key (`ptlc_`) from Account > API Credentials; it sees the servers of that account. Built from the documentation, not run against a panel |
 | Nomad | jobs, nodes, cluster | stop a job, scale a task group up or down | none on a cluster without ACLs, else an ACL token with node:read and namespace:read-job; the buttons need namespace:scale-job or namespace:submit-job |
 | Cup | image updates, updates waiting | check now | none; Cup has no sign-in, so its port stays inside the network |
 | PatchMon | PatchMon overview, hosts, operating systems | | a key of usage type API with the scope host: get, from Settings > Integrations > Auto-Enrollment & API (a GetHomepage key is refused); the URL has to be one named in PatchMon's CORS_ORIGIN |

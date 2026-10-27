@@ -2329,7 +2329,15 @@
     "Switch on Events in each realm's settings, or its failed sign-ins stay invisible. Keycloak keeps none by default.": "Activez Events dans les réglages de chaque realm, sinon ses connexions échouées restent invisibles. Keycloak n'en garde aucune par défaut.",
     "The address of Keycloak, with its relative path if it has one, such as /auth.": "L'adresse de Keycloak, avec son chemin relatif s'il y en a un, comme /auth.",
     "The latest sign-ins that failed in the realms that keep events, with the user, the client, the address and the reason.": "Les dernières connexions échouées dans les realms qui gardent des événements, avec l'utilisateur, le client, l'adresse et la raison.",
-    "The realm the client below lives in. The client's service account is what signs in.": "Le realm où vit le client ci-dessous. C'est le compte de service du client qui se connecte."
+    "The realm the client below lives in. The client's service account is what signs in.": "Le realm où vit le client ci-dessous. C'est le compte de service du client qui se connecte.",
+    "A client key from Account > API Credentials, starting with ptlc_. It sees the servers of that account.": "Une clé client de Account > API Credentials, qui commence par ptlc_. Elle voit les serveurs de ce compte.",
+    "Every server with its state, memory and processor use, and buttons to start or stop it.": "Chaque serveur avec son état, son utilisation de la mémoire et du processeur, et des boutons pour le démarrer ou l'arrêter.",
+    "How many servers run, how many are off or suspended.": "Combien de serveurs tournent, combien sont éteints ou suspendus.",
+    "In the panel open your account's API Credentials and create a key. Pterodactyl shows it once.": "Dans le panneau, ouvrez les API Credentials de votre compte et créez une clé. Pterodactyl ne l'affiche qu'une fois.",
+    "It must be a client key (ptlc_), not an application key (ptla_). It sees and may power the servers of the account it was made in.": "Ce doit être une clé client (ptlc_), pas une clé application (ptla_). Elle voit les serveurs du compte où elle a été créée et peut les démarrer et les arrêter.",
+    "Servers": "Serveurs",
+    "The address of the panel.": "L'adresse du panneau.",
+    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "Les serveurs de jeu d'un compte Pterodactyl : lesquels tournent, combien ils utilisent, et des boutons pour les démarrer et les arrêter."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3690,6 +3698,7 @@
     "Expired code": "Code expiré",
     "Wrong code": "Code incorrect",
     "Unknown user": "Utilisateur inconnu",
-    "Events off": "Événements désactivés"
+    "Events off": "Événements désactivés",
+    "Suspended": "Suspendu"
   }
 }

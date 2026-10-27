@@ -2329,7 +2329,15 @@
     "Switch on Events in each realm's settings, or its failed sign-ins stay invisible. Keycloak keeps none by default.": "Attiva Events nelle impostazioni di ogni realm, altrimenti i suoi accessi falliti restano invisibili. Keycloak non ne conserva per impostazione predefinita.",
     "The address of Keycloak, with its relative path if it has one, such as /auth.": "L'indirizzo di Keycloak, con il suo percorso relativo se ne ha uno, come /auth.",
     "The latest sign-ins that failed in the realms that keep events, with the user, the client, the address and the reason.": "Gli ultimi accessi falliti nei realm che conservano eventi, con utente, client, indirizzo e motivo.",
-    "The realm the client below lives in. The client's service account is what signs in.": "Il realm in cui vive il client qui sotto. L'account di servizio del client è quello che accede."
+    "The realm the client below lives in. The client's service account is what signs in.": "Il realm in cui vive il client qui sotto. L'account di servizio del client è quello che accede.",
+    "A client key from Account > API Credentials, starting with ptlc_. It sees the servers of that account.": "Una chiave client da Account > API Credentials, che inizia con ptlc_. Vede i server di quell'account.",
+    "Every server with its state, memory and processor use, and buttons to start or stop it.": "Ogni server con il suo stato, l'uso di memoria e processore, e pulsanti per avviarlo o fermarlo.",
+    "How many servers run, how many are off or suspended.": "Quanti server sono in esecuzione, quanti spenti o sospesi.",
+    "In the panel open your account's API Credentials and create a key. Pterodactyl shows it once.": "Nel pannello apri le API Credentials del tuo account e crea una chiave. Pterodactyl la mostra una sola volta.",
+    "It must be a client key (ptlc_), not an application key (ptla_). It sees and may power the servers of the account it was made in.": "Deve essere una chiave client (ptlc_), non una chiave application (ptla_). Vede i server dell'account in cui è stata creata e può accenderli e spegnerli.",
+    "Servers": "Server",
+    "The address of the panel.": "L'indirizzo del pannello.",
+    "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them.": "I server di gioco di un account Pterodactyl: quali sono in esecuzione, quanto usano, e pulsanti per avviarli e fermarli."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3690,6 +3698,7 @@
     "Expired code": "Codice scaduto",
     "Wrong code": "Codice errato",
     "Unknown user": "Utente sconosciuto",
-    "Events off": "Eventi disattivati"
+    "Events off": "Eventi disattivati",
+    "Suspended": "Sospeso"
   }
 }
