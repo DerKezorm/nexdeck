@@ -1,0 +1,320 @@
+[
+  {
+    "aid": 1,
+    "iid": 2000000008,
+    "uuid": "000000A2-0000-1000-8000-0026BB765291",
+    "type": "ProtocolInformation",
+    "humanType": "Protocol Information",
+    "serviceName": "Homebridge 0001",
+    "serviceCharacteristics": [
+      {
+        "aid": 1,
+        "iid": 9,
+        "uuid": "00000037-0000-1000-8000-0026BB765291",
+        "type": "Version",
+        "serviceType": "ProtocolInformation",
+        "serviceName": "Homebridge 0001",
+        "description": "Version",
+        "value": "1.1.0",
+        "format": "string",
+        "perms": [
+          "pr"
+        ],
+        "canRead": true,
+        "canWrite": false,
+        "ev": false
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "homebridge.io",
+      "Model": "homebridge",
+      "Name": "Homebridge 0001",
+      "Serial Number": "0E:00:00:00:00:01",
+      "Firmware Revision": "2.4.0"
+    },
+    "values": {
+      "Version": "1.1.0"
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-bridge",
+    "nameBasedUniqueId": "name-bridge"
+  },
+  {
+    "aid": 2,
+    "iid": 9,
+    "uuid": "00000049-0000-1000-8000-0026BB765291",
+    "type": "Switch",
+    "humanType": "Switch",
+    "serviceName": "Test Switch",
+    "serviceCharacteristics": [
+      {
+        "aid": 2,
+        "iid": 10,
+        "uuid": "00000025-0000-1000-8000-0026BB765291",
+        "type": "On",
+        "serviceType": "Switch",
+        "serviceName": "Test Switch",
+        "description": "On",
+        "value": 0,
+        "format": "bool",
+        "perms": [
+          "ev",
+          "pr",
+          "pw"
+        ],
+        "canRead": true,
+        "canWrite": true,
+        "ev": true
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "Homebridge Dummy",
+      "Model": "Switch",
+      "Name": "Test Switch",
+      "Serial Number": "sw1",
+      "Firmware Revision": "2.1.3",
+      "Configured Name": "Test Switch"
+    },
+    "values": {
+      "On": 0
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-switch",
+    "nameBasedUniqueId": "name-switch"
+  },
+  {
+    "aid": 3,
+    "iid": 9,
+    "uuid": "00000043-0000-1000-8000-0026BB765291",
+    "type": "Lightbulb",
+    "humanType": "Lightbulb",
+    "serviceName": "Lamp",
+    "serviceCharacteristics": [
+      {
+        "aid": 3,
+        "iid": 10,
+        "uuid": "00000025-0000-1000-8000-0026BB765291",
+        "type": "On",
+        "serviceType": "Lightbulb",
+        "serviceName": "Lamp",
+        "description": "On",
+        "value": 0,
+        "format": "bool",
+        "perms": [
+          "ev",
+          "pr",
+          "pw"
+        ],
+        "canRead": true,
+        "canWrite": true,
+        "ev": true
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "Homebridge Dummy",
+      "Model": "Lightbulb",
+      "Name": "Lamp",
+      "Serial Number": "lamp",
+      "Firmware Revision": "2.1.3",
+      "Configured Name": "Lamp"
+    },
+    "values": {
+      "On": 0
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-lamp",
+    "nameBasedUniqueId": "name-lamp"
+  },
+  {
+    "aid": 4,
+    "iid": 9,
+    "uuid": "0000008A-0000-1000-8000-0026BB765291",
+    "type": "TemperatureSensor",
+    "humanType": "Temperature Sensor",
+    "serviceName": "Living Temp",
+    "serviceCharacteristics": [
+      {
+        "aid": 4,
+        "iid": 10,
+        "uuid": "00000011-0000-1000-8000-0026BB765291",
+        "type": "CurrentTemperature",
+        "serviceType": "TemperatureSensor",
+        "serviceName": "Living Temp",
+        "description": "Current Temperature",
+        "value": 0,
+        "format": "float",
+        "perms": [
+          "ev",
+          "pr"
+        ],
+        "unit": "celsius",
+        "maxValue": 100,
+        "minValue": -270,
+        "minStep": 0.1,
+        "canRead": true,
+        "canWrite": false,
+        "ev": true
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "Homebridge Dummy",
+      "Model": "TemperatureSensor",
+      "Name": "Living Temp",
+      "Serial Number": "temp",
+      "Firmware Revision": "2.1.3",
+      "Configured Name": "Living Temp"
+    },
+    "values": {
+      "CurrentTemperature": 0
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-temp",
+    "nameBasedUniqueId": "name-temp"
+  },
+  {
+    "aid": 5,
+    "iid": 9,
+    "uuid": "00000080-0000-1000-8000-0026BB765291",
+    "type": "ContactSensor",
+    "humanType": "Contact Sensor",
+    "serviceName": "Front Door",
+    "serviceCharacteristics": [
+      {
+        "aid": 5,
+        "iid": 10,
+        "uuid": "0000006A-0000-1000-8000-0026BB765291",
+        "type": "ContactSensorState",
+        "serviceType": "ContactSensor",
+        "serviceName": "Front Door",
+        "description": "Contact Sensor State",
+        "value": 0,
+        "format": "uint8",
+        "perms": [
+          "ev",
+          "pr"
+        ],
+        "maxValue": 1,
+        "minValue": 0,
+        "minStep": 1,
+        "validValues": [
+          0,
+          1
+        ],
+        "canRead": true,
+        "canWrite": false,
+        "ev": true
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "Homebridge Dummy",
+      "Model": "ContactSensor",
+      "Name": "Front Door",
+      "Serial Number": "door",
+      "Firmware Revision": "2.1.3",
+      "Configured Name": "Front Door"
+    },
+    "values": {
+      "ContactSensorState": 0
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-door",
+    "nameBasedUniqueId": "name-door"
+  },
+  {
+    "aid": 6,
+    "iid": 9,
+    "uuid": "00000047-0000-1000-8000-0026BB765291",
+    "type": "Outlet",
+    "humanType": "Outlet",
+    "serviceName": "Wall Outlet",
+    "serviceCharacteristics": [
+      {
+        "aid": 6,
+        "iid": 10,
+        "uuid": "00000025-0000-1000-8000-0026BB765291",
+        "type": "On",
+        "serviceType": "Outlet",
+        "serviceName": "Wall Outlet",
+        "description": "On",
+        "value": 0,
+        "format": "bool",
+        "perms": [
+          "ev",
+          "pr",
+          "pw"
+        ],
+        "canRead": true,
+        "canWrite": true,
+        "ev": true
+      }
+    ],
+    "accessoryInformation": {
+      "Manufacturer": "Homebridge Dummy",
+      "Model": "Outlet",
+      "Name": "Wall Outlet",
+      "Serial Number": "out",
+      "Firmware Revision": "2.1.3",
+      "Configured Name": "Wall Outlet"
+    },
+    "values": {
+      "On": 0
+    },
+    "instance": {
+      "name": "homebridge",
+      "username": "0E:00:00:00:00:01",
+      "ipAddress": "192.0.2.10",
+      "port": 51611,
+      "services": [],
+      "connectionFailedCount": 0,
+      "configurationNumber": "3",
+      "pinRefusalLogged": false
+    },
+    "uniqueId": "uniq-outlet",
+    "nameBasedUniqueId": "name-outlet"
+  }
+]

@@ -2072,7 +2072,19 @@
     "The state of your items, with a switch on those that are one. Name a group to show only its items.": "Der Zustand deiner Items, mit Schalter bei denen, die einer sind. Mit dem Namen einer Gruppe zeigt die Karte nur deren Items.",
     "The name of a group; empty shows every item that is not a group.": "Der Name einer Gruppe; leer zeigt jedes Item, das keine Gruppe ist.",
     "Item": "Item",
-    "One item as a big number with its history, or as a switch. Use it for power, temperature or a light.": "Ein Item als große Zahl mit Verlauf oder als Schalter. Für Leistung, Temperatur oder ein Licht."
+    "One item as a big number with its history, or as a switch. Use it for power, temperature or a light.": "Ein Item als große Zahl mit Verlauf oder als Schalter. Für Leistung, Temperatur oder ein Licht.",
+    "Whether Homebridge runs, which plugins have an update, and the state of the accessories it gives to HomeKit, with a switch where it is one.": "Ob Homebridge läuft, welche Plugins ein Update haben und der Zustand der Zubehöre, die es HomeKit gibt, mit Schalter, wo es einer ist.",
+    "The user of Homebridge's web interface. Empty if it runs without a sign-in.": "Der Benutzer der Weboberfläche von Homebridge. Leer, wenn sie ohne Anmeldung läuft.",
+    "Homebridge's two-factor sign-in is not spoken here; use a user that has none.": "Die Zwei-Faktor-Anmeldung von Homebridge wird hier nicht unterstützt; nimm einen Benutzer ohne.",
+    "Homebridge": "Homebridge",
+    "Whether Homebridge runs, its version, the load and memory of the machine it runs on, and how long it has been up.": "Ob Homebridge läuft, seine Version, Last und Speicher des Rechners, auf dem es läuft, und wie lange es schon läuft.",
+    "Up for": "Läuft seit",
+    "Plugins": "Plugins",
+    "The installed plugins, those with an update first.": "Die installierten Plugins, die mit Update zuerst.",
+    "Accessories": "Zubehör",
+    "The state of the accessories Homebridge gives to HomeKit, with a switch on those that are one. Needs insecure mode, which Homebridge's Docker image and hb-service use.": "Der Zustand des Zubehörs, das Homebridge an HomeKit gibt, mit Schalter bei denen, die einer sind. Braucht den unsicheren Modus, den das Docker-Abbild und hb-service von Homebridge nutzen.",
+    "Accessory": "Zubehör",
+    "One accessory as a big number with its history, or as a switch. Use it for a temperature, a humidity or a light.": "Ein Zubehör als große Zahl mit Verlauf oder als Schalter. Für eine Temperatur, eine Luftfeuchte oder ein Licht."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3299,6 +3311,17 @@
     "No item matches.": "Kein Item passt.",
     "Changed": "Geändert",
     "Turn on": "Einschalten",
-    "Turn off": "Ausschalten"
+    "Turn off": "Ausschalten",
+    "Occupied": "Besetzt",
+    "Empty": "Leer",
+    "Leak": "Leck",
+    "Dry": "Trocken",
+    "Smoke": "Rauch",
+    "Carbon monoxide": "Kohlenmonoxid",
+    "Carbon dioxide": "Kohlendioxid",
+    "Unlocked": "Entriegelt",
+    "Jammed": "Klemmt",
+    "No plugin installed.": "Kein Plugin installiert.",
+    "No accessory. Homebridge has to run in insecure mode for this card.": "Kein Zubehör. Homebridge muss für diese Karte im unsicheren Modus laufen."
   }
 }
