@@ -49,6 +49,7 @@ that one of twenty-one renderers draws.
 | Ollama | loaded models, installed models, models | unload a model | none; Ollama has no sign-in, so its port stays inside the network |
 | Open WebUI | users, models, accounts | | API key of an administrator from Settings > Account > API keys; API keys have to be switched on in the admin settings, they are off by default |
 | Watchtower | last update run | run now | API token (WATCHTOWER_HTTP_API_TOKEN), with metrics and update switched on in WATCHTOWER_HTTP_API_ENDPOINTS; the maintained fork nickfedor/watchtower |
+| ArchiveTeam Warrior | warrior (its state, the project it works on, the items in hand, receiving and sending) | | none, or the user name and password of the warrior's web interface (basic authentication). The warrior has no JSON API: the state is read from the SockJS stream its own page uses, over plain HTTP polling. Beta: the idle states were measured against seesaw-kit 0.10.3 with the network cut off; a warrior at work is built from the source of seesaw-kit |
 | What's Up Docker | container updates, updates waiting | update a container WUD has a Docker trigger for, check now | API token from My Profile, WUD 9 or newer; read for the cards, write for the buttons |
 | Zabbix | problems, open problems | acknowledge | API token of a user with read access to the host groups; the plain User role may acknowledge |
 | Pi-hole | summary, top blocked | pause 5 min, enable | app password (v6) |

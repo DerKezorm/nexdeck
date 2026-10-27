@@ -2303,7 +2303,11 @@
     "How much of the disks is in use. Needs dashdot's privileged mount of the host.": "Wie viel der Datenträger belegt ist. Braucht dashdots privilegierte Einbindung des Hosts.",
     "How much of the memory is in use.": "Wie viel des Arbeitsspeichers belegt ist.",
     "The load of the processor, with the busiest core.": "Die Last des Prozessors, mit dem am stärksten ausgelasteten Kern.",
-    "What the machine receives and sends, in megabits per second.": "Was der Rechner empfängt und sendet, in Megabit pro Sekunde."
+    "What the machine receives and sends, in megabits per second.": "Was der Rechner empfängt und sendet, in Megabit pro Sekunde.",
+    "Its state, the project it works on, the items in hand and the traffic.": "Sein Zustand, das Projekt, an dem er arbeitet, die Aufgaben in Arbeit und der Verkehr.",
+    "Only when the warrior's web interface has a user name and password (its Settings).": "Nur wenn die Weboberfläche des Warriors Benutzername und Passwort hat (in seinen Einstellungen).",
+    "Warrior": "Warrior",
+    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Was der ArchiveTeam Warrior tut: sein Zustand, das Projekt, an dem er arbeitet, und die Aufgaben in Arbeit."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3667,6 +3671,17 @@
     "None": "Keiner",
     "Busiest core": "Meistbelasteter Kern",
     "Cores": "Kerne",
-    "Needs the host mounted": "Host muss eingebunden sein"
+    "Needs the host mounted": "Host muss eingebunden sein",
+    "Items in hand": "Aufgaben in Arbeit",
+    "Receiving": "Empfang",
+    "Sending": "Versand",
+    "Project": "Projekt",
+    "Working": "Arbeitet",
+    "Switching project": "Wechselt das Projekt",
+    "No project": "Kein Projekt",
+    "Needs a nickname": "Braucht einen Spitznamen",
+    "Not connected to the tracker": "Nicht mit dem Tracker verbunden",
+    "Shutting down": "Fährt herunter",
+    "Rebooting": "Startet neu"
   }
 }
