@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { post } from '../api/client'
-import { tLabel } from '../i18n/texts'
+import { actionText } from '../lib/customCard'
 import { factText, type Fact } from '../lib/assistant'
 import type { Action, Pressed } from '../lib/types'
 import { numberProblem, unanswered } from '../lib/unanswered'
@@ -78,10 +78,10 @@ export function ActionSheet({
   return (
     <Confirm
       open={pending !== null}
-      title={pending ? (sure ? t('board.reallyTitle') : `${tLabel(pending.action.label)}?`) : ''}
-      body={pending && sure ? t('board.reallyBody', { name: tLabel(pending.action.label) }) : blanks.length ? t('board.chooseBeforeAction') : t('board.confirmAction')}
+      title={pending ? (sure ? t('board.reallyTitle') : `${actionText(pending.action, pending.action.label)}?`) : ''}
+      body={pending && sure ? t('board.reallyBody', { name: actionText(pending.action, pending.action.label) }) : blanks.length ? t('board.chooseBeforeAction') : t('board.confirmAction')}
       danger={pending?.action.danger}
-      confirmLabel={pending && sure ? tLabel(pending.action.label) : undefined}
+      confirmLabel={pending && sure ? actionText(pending.action, pending.action.label) : undefined}
       confirmDisabled={incomplete || running}
       onCancel={onCancel}
       onConfirm={() => {
@@ -119,7 +119,7 @@ export function ActionSheet({
             const wrong = numberProblem(blank, value)
             return (
               <label key={blank.name} className="flex flex-col gap-1 text-sm">
-                <span className="text-muted">{tLabel(blank.label)}</span>
+                <span className="text-muted">{actionText(pending.action, blank.label)}</span>
                 {blank.kind === 'choice' ? (
                   <select className="input" value={value} onChange={(event) => set(event.target.value)}>
                     {/* ⚠️ No silent first entry. "Nobody chose" must not turn

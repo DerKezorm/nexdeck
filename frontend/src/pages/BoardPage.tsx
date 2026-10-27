@@ -17,6 +17,7 @@ import { MobileTabBar } from '../components/MobileTabBar'
 import { NoticeDrawer } from '../components/NoticeDrawer'
 import { TopBar } from '../components/TopBar'
 import { Confirm, Dialog, Spinner, Toast } from '../components/ui'
+import { localizeCustom } from '../lib/customCard'
 import { focusCard } from '../lib/focusCard'
 import { WidgetLibrary } from '../components/WidgetLibrary'
 import { WidgetSettingsSheet, type WidgetDraft } from '../components/WidgetSettingsSheet'
@@ -559,7 +560,8 @@ export function BoardPage() {
     const list: { widget: WidgetView; action: Action }[] = []
     if (!canAct) return list
     for (const widget of widgets) {
-      for (const action of liveData[widget.id]?.actions ?? []) list.push({ widget, action })
+      // A card the administrator described brings its buttons in the viewer's language.
+      for (const action of localizeCustom(liveData[widget.id])?.actions ?? []) list.push({ widget, action })
     }
     return list
   }, [widgets, liveData, canAct])

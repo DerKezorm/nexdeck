@@ -52,6 +52,11 @@ export interface Action {
   danger?: boolean
   params?: Record<string, unknown>
   asks?: Ask[]
+  /**
+   * The texts of this action are the author's own words (a button of a custom card): shown as they are, not put
+   * through nexdeck's table of translations. Set on the way to the screen, never by the server.
+   */
+  verbatim?: boolean
 }
 
 export interface Primary {

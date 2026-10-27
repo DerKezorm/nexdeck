@@ -10,7 +10,7 @@ import i18next from 'i18next'
 
 import { tLabel } from '../i18n/texts'
 import { formatShown, pickText, type CardShown, type CardText } from './cardText'
-import type { Primary, Secondary, WidgetData } from './types'
+import type { Action, Primary, Secondary, WidgetData } from './types'
 
 /** Whether the data belongs to a card the administrator described (the server says so in `meta.custom`). */
 export function isCustom(data: WidgetData | null | undefined): boolean {
@@ -70,6 +70,29 @@ function inRow(cell: Cell, lang: string, zone?: string): string {
   return formatShown(shown, lang, { zone })
 }
 
+/** A text of an action as it is shown: the author's own words as they stand, nexdeck's own through the table. */
+export function actionText(action: Pick<Action, 'verbatim'>, text: string): string {
+  return action.verbatim ? text : tLabel(text)
+}
+
+/**
+ * The buttons of a custom card with their texts in the viewer's language. The server sends what the author wrote,
+ * one text or one per language (KARTEN-8); after this the label of a button, of its blanks and of their choices are
+ * plain strings, marked `verbatim` so that no table of translations touches them.
+ */
+function actionsOf(actions: Action[] | undefined, lang: string): Action[] | undefined {
+  return actions?.map((action) => ({
+    ...action,
+    label: pickText(action.label as CardText, lang),
+    verbatim: true,
+    asks: action.asks?.map((ask) => ({
+      ...ask,
+      label: pickText(ask.label as CardText, lang),
+      options: ask.options?.map((one) => ({ ...one, label: pickText(one.label as CardText, lang) })),
+    })),
+  }))
+}
+
 /**
  * The data of a custom card with every text in the viewer's language. Data of any other card comes back untouched.
  * Safe to apply twice: what is already plain text stays plain text.
@@ -78,9 +101,10 @@ export function localizeCustom(data: WidgetData | undefined, lang: string = i18n
   if (!data || !isCustom(data)) return data
   const items = data.items?.map((item) => {
     const cells = item.shown as Record<string, Cell> | undefined
-    if (!cells) return item
+    const actions = Array.isArray(item.actions) ? { actions: actionsOf(item.actions as Action[], lang) } : {}
+    if (!cells) return Array.isArray(item.actions) ? { ...item, ...actions } : item
     const { shown: _shown, ...rest } = item
-    const made: Record<string, unknown> = { ...rest }
+    const made: Record<string, unknown> = { ...rest, ...actions }
     for (const [name, cell] of Object.entries(cells)) made[name] = inRow(cell, lang, zone)
     return made
   })
@@ -89,6 +113,7 @@ export function localizeCustom(data: WidgetData | undefined, lang: string = i18n
     ...data,
     primary: data.primary ? primaryOf(data.primary, lang, zone) : data.primary,
     secondary: data.secondary?.map((row) => rowOf(row, lang, zone)),
+    actions: actionsOf(data.actions as Action[] | undefined, lang) ?? data.actions,
     items,
     meta: { ...data.meta, empty: empty ? pickText(empty as CardText, lang) : undefined },
   }

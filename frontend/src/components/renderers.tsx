@@ -32,7 +32,7 @@ import type { TFunction } from 'i18next'
 
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
-import { isCustom, labelOf, localizeCustom } from '../lib/customCard'
+import { actionText, isCustom, labelOf, localizeCustom } from '../lib/customCard'
 import { formatValue, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
@@ -312,11 +312,14 @@ function ActionButtons({
   onAction,
   canAct,
   compact,
+  labelled,
 }: {
   actions?: Action[] | Record<string, unknown>[]
   onAction?: RenderProps['onAction']
   canAct?: boolean
   compact?: boolean
+  /** On the card itself a button of a custom card carries its words; on a row it keeps to its symbol. */
+  labelled?: boolean
 }) {
   // ⚠️ A button stays shut from the press until the answer is in. The ref
   // answers a second click that lands before React has drawn the first one.
@@ -325,14 +328,16 @@ function ActionButtons({
   if (!actions?.length || !canAct || !onAction) return null
   const symbols: Record<string, ComponentType<LucideProps>> = { play: Play, square: Square, 'rotate-cw': RotateCw, pause: Pause, search: Search }
   return (
-    <div className={`flex items-center gap-1 ${compact ? '' : 'mt-2'}`}>
+    <div className={`flex items-center flex-wrap gap-1 min-w-0 ${compact ? '' : 'mt-2'}`}>
       {(actions as Action[]).map((action) => {
         const Known = action.icon ? symbols[action.icon] : undefined
-        const label = tLabel(action.label)
+        const label = actionText(action, action.label)
+        // ⚠️ A button with no symbol has nothing but its words to be found by.
+        const words = !compact || !action.icon || (labelled && action.verbatim)
         return (
           <button
             key={action.id}
-            className={`btn ${compact ? 'btn-icon h-6 w-6 btn-flat' : 'h-7 px-2 text-xs'} ${action.danger ? 'btn-danger' : ''}`}
+            className={`btn ${words ? 'h-7 px-2 text-xs max-w-full' : 'btn-icon h-6 w-6 btn-flat'} ${action.danger ? 'btn-danger' : ''}`}
             disabled={shut.includes(action.id)}
             onClick={(event) => {
               event.stopPropagation()
@@ -351,7 +356,7 @@ function ActionButtons({
             title={label}
           >
             {Known ? <Known size={13} /> : action.icon ? <LucideByName name={action.icon} size={13} /> : null}
-            {!compact && <span>{label}</span>}
+            {words && <span className="truncate">{label}</span>}
           </button>
         )
       })}
@@ -429,7 +434,7 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
       {hasFooter && (
         <div className="px-3 pb-2.5 pt-1 flex items-end justify-between gap-2 relative">
           <Chips items={data?.secondary} series={series} custom={isCustom(data)} />
-          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact labelled />
         </div>
       )}
     </div>
@@ -945,7 +950,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                 // to be pressed says so with `actions_visible`, because on a
                 // wall with a touchscreen there is no hovering and the buttons
                 // would never be seen at all.
-                <span className={`flex items-center gap-1 ${data?.meta?.actions_visible ? '' : 'opacity-0 group-hover/row:opacity-100 transition-opacity'}`}>
+                <span className={`flex items-center gap-1 ${data?.meta?.actions_visible || custom ? '' : 'opacity-0 group-hover/row:opacity-100 transition-opacity'}`}>
                   {/* Saving is not acting on the service, so it stays for a
                       viewer who may only look. */}
                   {item.file ? <SaveLink widgetId={widget.id} file={item.file as Saveable} /> : null}
@@ -976,7 +981,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
       {data?.secondary?.length || data?.actions?.length ? (
         <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
           <Chips items={data?.secondary} series={series} custom={custom} />
-          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact labelled />
         </div>
       ) : null}
     </div>
@@ -1180,31 +1185,45 @@ function PosterBand({ widget, items }: { widget: RenderProps['widget']; items: R
   )
 }
 
-export function PostersCard({ widget, data }: RenderProps) {
+export function PostersCard({ widget, data, canAct, onAction }: RenderProps) {
   const { t } = useTranslation()
   const disguise = useDisguise()
   const L = labelOf(data)
   const items = data?.items ?? []
   if (!items.length) return <Empty>{data?.meta?.empty ? L(String(data.meta.empty)) : t(isCustom(data) ? 'card.nothingHere' : 'card.nothing')}</Empty>
   if (data?.meta?.band) return <PosterBand widget={widget} items={items} />
+  // Buttons of a card the administrator described are there to be pressed, so they stay in sight; elsewhere on hover.
+  const kept = isCustom(data) || Boolean(data?.meta?.actions_visible)
   return (
+    <>
     <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {
         const art = mediaUrl(widget.id, item.art as string | undefined)
         const title = disguise.media(String(item.title ?? ''))
         const subtitle = item.subtitle ? disguise.free(L(String(item.subtitle))) : ''
         return (
-          <li key={String(item.id ?? index)} className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${title}${subtitle ? ` · ${subtitle}` : ''}`}>
+          <li key={String(item.id ?? index)} className="group/poster relative aspect-[2/3] rounded-lg overflow-hidden bg-gradient-to-br from-accent/30 to-indigo-500/30" title={`${title}${subtitle ? ` · ${subtitle}` : ''}`}>
             <Cover src={art} title={title} />
             <div className="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent">
               <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">{title}</div>
               {subtitle ? <div className="text-[10px] text-white/70 truncate">{subtitle}</div> : null}
             </div>
             <CoverLink item={item} title={title} />
+            {Array.isArray(item.actions) && item.actions.length > 0 && canAct && onAction ? (
+              <span className={`absolute top-1 right-1 rounded-md bg-black/60 p-0.5 text-white ${kept ? '' : 'opacity-0 group-hover/poster:opacity-100 focus-within:opacity-100 transition-opacity'}`}>
+                <ActionButtons actions={item.actions as Action[]} onAction={onAction} canAct={canAct} compact />
+              </span>
+            ) : null}
           </li>
         )
       })}
     </ul>
+    {data?.actions?.length ? (
+      <div className="px-3 pb-2.5 pt-1 flex items-center justify-end gap-2 border-t border-line">
+        <ActionButtons actions={data.actions} onAction={onAction} canAct={canAct} compact labelled />
+      </div>
+    ) : null}
+    </>
   )
 }
 
@@ -1377,7 +1396,7 @@ export function TextCard({ widget, data, canWrite, editing, canAct, onAction }: 
           ) : (
             <span />
           )}
-          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact labelled />
         </div>
       ) : null}
       {writable && (
@@ -2093,7 +2112,7 @@ export function BarsCard({ data, onAction, canAct, series }: RenderProps) {
       {data?.secondary?.length || data?.actions?.length ? (
         <div className="px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 border-t border-line">
           <Chips items={data?.secondary} series={series} />
-          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact />
+          <ActionButtons actions={data?.actions} onAction={onAction} canAct={canAct} compact labelled />
         </div>
       ) : null}
     </div>
