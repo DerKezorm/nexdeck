@@ -359,7 +359,13 @@
         "ok": "Good",
         "warn": "Warning",
         "bad": "Fault",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "bg": "Page",
+        "bg-elev": "Raised page",
+        "surface": "Card",
+        "surface-hover": "Card under the pointer",
+        "border": "Line",
+        "border-strong": "Strong line"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Paste a theme or take this one along",
@@ -412,7 +418,30 @@
       "fontHelp": "The type of the whole interface, for everyone. Every font ships with nexdeck and is loaded from nexdeck only when it is shown.",
       "fontSample": "Uptime 99.98 % · 21 °C",
       "fontSystem": "The system's own",
-      "fontDefault": "as shipped"
+      "fontDefault": "as shipped",
+      "editor": {
+        "open": "Make your own colours",
+        "title": "Your own colours",
+        "name": "Name",
+        "nameDefault": "My colours",
+        "brightness": "Which brightness to edit",
+        "groups": {
+          "ground": "Grounds and lines",
+          "text": "Text",
+          "accent": "Accent",
+          "status": "States"
+        },
+        "hex": "{{name}} as #rrggbb",
+        "sampleTitle": "Backups",
+        "sampleLine": "Last run finished at 03:12",
+        "sampleSmall": "Next one tonight",
+        "sampleButton": "Run now",
+        "sampleOther": "Log",
+        "allReadable": "Every text colour is easy to read on its grounds.",
+        "close": "Done",
+        "fromOwn": "Start again from nexdeck's colours",
+        "saveHint": "The page shows the colours as you choose them. Save keeps them for everyone; leaving the page without saving puts the stored ones back."
+      }
     },
     "journal": {
       "title": "Log level",

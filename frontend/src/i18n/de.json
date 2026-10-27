@@ -359,7 +359,13 @@
         "ok": "Gut",
         "warn": "Warnung",
         "bad": "Fehler",
-        "unknown": "Unbekannt"
+        "unknown": "Unbekannt",
+        "bg": "Seite",
+        "bg-elev": "Erhöhte Fläche",
+        "surface": "Karte",
+        "surface-hover": "Karte unter dem Zeiger",
+        "border": "Linie",
+        "border-strong": "Kräftige Linie"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Thema einfügen oder dieses mitnehmen",
@@ -412,7 +418,30 @@
       "fontHelp": "Die Schrift der ganzen Oberfläche, für alle. Jede Schrift kommt mit nexdeck und wird nur von nexdeck geladen, wenn sie zu sehen ist.",
       "fontSample": "Laufzeit 99,98 % · 21 °C",
       "fontSystem": "Die des Systems",
-      "fontDefault": "ab Werk"
+      "fontDefault": "ab Werk",
+      "editor": {
+        "open": "Eigene Farben machen",
+        "title": "Eigene Farben",
+        "name": "Name",
+        "nameDefault": "Meine Farben",
+        "brightness": "Welche Helligkeit bearbeiten",
+        "groups": {
+          "ground": "Flächen und Linien",
+          "text": "Text",
+          "accent": "Akzent",
+          "status": "Zustände"
+        },
+        "hex": "{{name}} als #rrggbb",
+        "sampleTitle": "Sicherungen",
+        "sampleLine": "Letzter Lauf fertig um 03:12",
+        "sampleSmall": "Die nächste heute Nacht",
+        "sampleButton": "Jetzt starten",
+        "sampleOther": "Protokoll",
+        "allReadable": "Jede Textfarbe ist auf ihren Flächen gut lesbar.",
+        "close": "Fertig",
+        "fromOwn": "Neu mit den Farben von nexdeck beginnen",
+        "saveHint": "Die Seite zeigt die Farben, während du wählst. Speichern behält sie für alle; wer die Seite ohne Speichern verlässt, bekommt die gespeicherten zurück."
+      }
     },
     "journal": {
       "title": "Protokollstufe",

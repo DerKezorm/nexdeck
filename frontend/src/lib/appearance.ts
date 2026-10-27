@@ -235,6 +235,30 @@ export function contrast(one: string, other: string): number {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
+/** The fifteen colours a theme sets, as the server names them (`themes.TOKENS`). */
+export const THEME_TOKENS = [
+  'bg', 'bg-elev', 'surface', 'surface-hover', 'border', 'border-strong',
+  'text', 'text-muted', 'text-faint', 'accent', 'on-accent', 'ok', 'warn', 'bad', 'unknown',
+] as const
+
+/**
+ * nexdeck's own look as fifteen plain colours, the start of a theme of one's
+ * own. The style sheet draws surfaces and lines see-through; here they are
+ * the colour they come out as over the page.
+ */
+export const OWN_PALETTES: { dark: Palette; light: Palette } = {
+  dark: {
+    bg: '#0a0d12', 'bg-elev': '#0f131a', surface: '#11161f', 'surface-hover': '#181f2b', border: '#1b1e23', 'border-strong': '#313337',
+    text: '#e7eaf0', 'text-muted': '#94a0b3', 'text-faint': '#8590a2', accent: '#22d3ee', 'on-accent': '#041016',
+    ok: '#34d399', warn: '#fbbf24', bad: '#fb7185', unknown: '#7f8b9e',
+  },
+  light: {
+    bg: '#eef1f5', 'bg-elev': '#ffffff', surface: '#ffffff', 'surface-hover': '#f6f8fa', border: '#dce0e5', 'border-strong': '#cacfd5',
+    text: '#0f172a', 'text-muted': '#55627a', 'text-faint': '#556072', accent: '#0e7490', 'on-accent': '#ffffff',
+    ok: '#047857', warn: '#a4560a', bad: '#be123c', unknown: '#556070',
+  },
+}
+
 const TEXT = ['text', 'text-muted', 'text-faint', 'accent', 'ok', 'warn', 'bad', 'unknown']
 const GROUNDS = ['bg', 'bg-elev', 'surface']
 

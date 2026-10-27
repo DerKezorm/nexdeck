@@ -359,7 +359,13 @@
         "ok": "Buono",
         "warn": "Avvertimento",
         "bad": "Guasto",
-        "unknown": "Sconosciuto"
+        "unknown": "Sconosciuto",
+        "bg": "Pagina",
+        "bg-elev": "Pagina rialzata",
+        "surface": "Scheda",
+        "surface-hover": "Scheda sotto il puntatore",
+        "border": "Linea",
+        "border-strong": "Linea marcata"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Incolla un tema o porta via questo",
@@ -412,7 +418,30 @@
       "fontHelp": "Il carattere di tutta l’interfaccia, per tutti. Ogni carattere arriva con nexdeck e viene caricato da nexdeck solo quando si vede.",
       "fontSample": "Attivo 99,98 % · 21 °C",
       "fontSystem": "Quello del sistema",
-      "fontDefault": "di serie"
+      "fontDefault": "di serie",
+      "editor": {
+        "open": "Crea i tuoi colori",
+        "title": "I tuoi colori",
+        "name": "Nome",
+        "nameDefault": "I miei colori",
+        "brightness": "Quale luminosità modificare",
+        "groups": {
+          "ground": "Sfondi e linee",
+          "text": "Testo",
+          "accent": "Accento",
+          "status": "Stati"
+        },
+        "hex": "{{name}} come #rrggbb",
+        "sampleTitle": "Backup",
+        "sampleLine": "Ultima esecuzione finita alle 03:12",
+        "sampleSmall": "La prossima stanotte",
+        "sampleButton": "Avvia ora",
+        "sampleOther": "Registro",
+        "allReadable": "Ogni colore del testo si legge bene sui suoi sfondi.",
+        "close": "Fatto",
+        "fromOwn": "Ricomincia dai colori di nexdeck",
+        "saveHint": "La pagina mostra i colori mentre li scegli. Salva li tiene per tutti; lasciare la pagina senza salvare rimette quelli salvati."
+      }
     },
     "journal": {
       "title": "Livello di log",

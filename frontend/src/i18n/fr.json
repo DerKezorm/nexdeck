@@ -359,7 +359,13 @@
         "ok": "Bon",
         "warn": "Avertissement",
         "bad": "Défaut",
-        "unknown": "Inconnu"
+        "unknown": "Inconnu",
+        "bg": "Page",
+        "bg-elev": "Page surélevée",
+        "surface": "Carte",
+        "surface-hover": "Carte sous le pointeur",
+        "border": "Ligne",
+        "border-strong": "Ligne marquée"
       },
       "ratio": "({{ratio}}:1)",
       "themeShare": "Coller un thème ou emporter celui-ci",
@@ -412,7 +418,30 @@
       "fontHelp": "La police de toute l’interface, pour tout le monde. Chaque police est livrée avec nexdeck et n’est chargée depuis nexdeck que lorsqu’elle s’affiche.",
       "fontSample": "Disponibilité 99,98 % · 21 °C",
       "fontSystem": "Celle du système",
-      "fontDefault": "d’origine"
+      "fontDefault": "d’origine",
+      "editor": {
+        "open": "Créer vos propres couleurs",
+        "title": "Vos propres couleurs",
+        "name": "Nom",
+        "nameDefault": "Mes couleurs",
+        "brightness": "Quelle luminosité modifier",
+        "groups": {
+          "ground": "Fonds et lignes",
+          "text": "Texte",
+          "accent": "Accent",
+          "status": "États"
+        },
+        "hex": "{{name}} en #rrggbb",
+        "sampleTitle": "Sauvegardes",
+        "sampleLine": "Dernière exécution terminée à 03:12",
+        "sampleSmall": "La prochaine cette nuit",
+        "sampleButton": "Lancer",
+        "sampleOther": "Journal",
+        "allReadable": "Chaque couleur de texte se lit bien sur ses fonds.",
+        "close": "Terminé",
+        "fromOwn": "Recommencer avec les couleurs de nexdeck",
+        "saveHint": "La page montre les couleurs pendant que vous les choisissez. Enregistrer les garde pour tout le monde ; quitter la page sans enregistrer remet celles enregistrées."
+      }
     },
     "journal": {
       "title": "Niveau de journalisation",
