@@ -570,15 +570,29 @@
   :root[data-cards='window'] .app-bar :is(.text-muted, .text-faint) {
     color: var(--r-ink);
   }
+  /* ⚠️ Pressed, open or hovered, the button turns black, and so must everything in it:
+     the name and the arrow of the account button carry text-muted and text-faint, which the
+     rule above makes black, and black on black showed only the avatar. */
+  :root[data-cards='window'] .app-bar :is(.btn, a, button):is(:hover, :active, [aria-expanded='true'], [aria-pressed='true'], [aria-current='page']):not(:has(kbd)) :is(.text-muted, .text-faint, .text-accent, .text-ink) {
+    color: var(--r-paper);
+  }
+  /* The count on the bell: paper with a frame, or it sinks into the black of the pressed button. */
+  :root[data-cards='window'] .app-bar :is(.btn, a, button):is(:hover, :active, [aria-expanded='true'], [aria-pressed='true']) > span.absolute {
+    background: var(--r-paper);
+    color: var(--r-ink);
+    border: 1px solid var(--r-ink);
+  }
   :root[data-cards='window'] .app-bar .bg-line-strong {
     background: var(--r-ink);
   }
-  /* The search in the bar stays a field. */
-  :root[data-cards='window'] .app-bar button.border-line {
+  /* The search in the bar stays a field: paper in every state, and so are its words (hence the :not(:has(kbd)) above).
+     ⚠️ Only the search: the account button carries border-line too, and these rules kept it paper
+     while its words turned paper as well, so the open menu left an empty box. */
+  :root[data-cards='window'] .app-bar button.border-line:has(kbd) {
     border: 1px solid var(--r-ink);
     background: var(--r-paper);
   }
-  :root[data-cards='window'] .app-bar button.border-line:hover {
+  :root[data-cards='window'] .app-bar button.border-line:has(kbd):hover {
     background: var(--r-paper);
     color: var(--r-ink);
   }

@@ -61,6 +61,13 @@ describe('the sheet of 1984', () => {
     expect(bodyOf(`${MARK} .card.glass > header`)).toMatch(/var\(--r-stripes\)/)
   })
 
+  it('turns the words in a pressed or open button of the bar with the button, so the account name does not vanish', () => {
+    const pressed = `${MARK} .app-bar :is(.btn, a, button):is(:hover, :active, [aria-expanded='true'], [aria-pressed='true'], [aria-current='page']):not(:has(kbd)) :is(.text-muted, .text-faint, .text-accent, .text-ink)`
+    expect(bodyOf(pressed)).toMatch(/color: var\(--r-paper\)/)
+    // After the rule that makes those words black, or it loses on order.
+    expect(sheet.indexOf(pressed)).toBeGreaterThan(sheet.indexOf(`${MARK} .app-bar :is(.text-muted, .text-faint)`))
+  })
+
   it('gives green, yellow and red a symbol of their own shape, and no colour at all in pattern only', () => {
     const shapes = ['ok', 'warn', 'bad'].map((status) => /--r-mark: url\(([^)]*)\)/.exec(bodyOf(`${MARK} .dot[data-status='${status}']`))?.[1])
     expect(shapes.every(Boolean)).toBe(true)
