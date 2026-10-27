@@ -107,7 +107,8 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
   const customCards = useMemo(() => {
     const needle = query.trim().toLowerCase()
     const list = (cardLibrary.data?.cards ?? []).filter((card) => {
-      if (numbersOnly && card.form !== 'value' && card.form !== 'stats') return false
+      // A card of blocks is a number only when it names its main value (KARTEN-7 AC-8).
+      if (numbersOnly && card.form !== 'value' && card.form !== 'stats' && !(card.form === 'builder' && card.main)) return false
       return !needle || `${pickText(card.name, i18n.language)} ${pickText(card.description, i18n.language)} ${card.slug} ${sourceLine(card)}`.toLowerCase().includes(needle)
     })
     return { ready: list.filter((card) => card.fits.length > 0), waiting: list.filter((card) => card.fits.length === 0) }

@@ -459,6 +459,48 @@ const VALUE: Shown = {
 }
 
 /**
+ * The blocks of the builder, to the deepest level a card may have (KARTEN-7): every block is a map whose settings the
+ * builder has fields for; a row, a column and a list hold blocks again. A key no block has is "Adjusted in YAML".
+ */
+function blocksShown(levels: number): Shown {
+  const inner: Shown = levels > 1 ? blocksShown(levels - 1) : 'any'
+  return {
+    items: {
+      keys: {
+        type: 'any',
+        id: 'any',
+        gap: 'any',
+        align: 'any',
+        wrap: 'any',
+        children: inner,
+        item: inner,
+        text: 'any',
+        value: VALUE,
+        size: 'any',
+        weight: 'any',
+        color: 'any',
+        icon: 'any',
+        src: VALUE,
+        height: 'any',
+        max: 'any',
+        button: 'any',
+        // A block of the kind "value" is a value itself: where it reads from, how it is shown, its colours by rule.
+        path: 'any',
+        formula: 'any',
+        template: 'any',
+        total: { keys: { fn: 'any', rows: ROWS, field: 'any' } },
+        label: 'any',
+        unit: 'any',
+        format: 'any',
+        digits: 'any',
+        rules: { items: RULE },
+      },
+    },
+  }
+}
+const BLOCKS: Shown = blocksShown(6)
+
+/**
  * Everything the editor of this version shows. A step that learns a new part adds it here; whatever is not here
  * is shown as "Adjusted in YAML" and is saved as it stands (KARTEN-9 AC-12).
  */
@@ -484,6 +526,9 @@ export const EDITOR_SHOWS: Shown = {
     rows: ROWS,
     item: { keys: { title: VALUE, subtitle: VALUE, value: VALUE, status: { items: RULE }, link: VALUE, image: VALUE } },
     empty: 'any',
+    // The blocks of the builder (KARTEN-7), and the one value among them that is the card's number for key figures.
+    blocks: BLOCKS,
+    main: 'any',
     buttons: {
       items: {
         keys: {

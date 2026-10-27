@@ -122,7 +122,7 @@ function changeSource(doc: Document, path: CardPath, to: SourceKind, lists: stri
  * One value of the card (AC-6, AC-7): where it comes from, its format, digits, unit and, outside a row, its label.
  * A value written short (`value: totalRecords`) stays short until something more is set on it.
  */
-export function ValueFields({ path, row, title, required }: { path: CardPath; row?: boolean; title: string; required?: boolean }) {
+export function ValueFields({ path, row, title, required, labelled }: { path: CardPath; row?: boolean; title: string; required?: boolean; labelled?: boolean }) {
   const { t } = useTranslation()
   const ids = useId()
   const hints = useHints()
@@ -224,7 +224,7 @@ export function ValueFields({ path, row, title, required }: { path: CardPath; ro
             <span className={LABEL}>{t('editor.look.unit')}</span>
             <input className="input" value={englishOf('unit')} disabled={!editable} onChange={(event) => writeText_('unit', event.target.value)} />
           </label>
-          {!row && (
+          {(!row || labelled) && (
             <label className="grid gap-1 min-w-0">
               <span className={LABEL}>{t('editor.look.label')}</span>
               <input className="input" value={englishOf('label')} disabled={!editable} onChange={(event) => writeText_('label', event.target.value)} />

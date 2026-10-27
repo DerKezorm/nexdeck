@@ -2446,7 +2446,8 @@
       "value": "Number",
       "stats": "Numbers",
       "list": "List",
-      "posters": "Pictures"
+      "posters": "Pictures",
+      "builder": "Builder"
     },
     "local": "Local",
     "fromShop": "Card shop · {{version}}",

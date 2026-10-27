@@ -137,7 +137,11 @@
       "rowUnit": "Unidad del valor de cada fila",
       "empty": "Cuando no hay filas",
       "buttonLabel": "Botón {{number}}",
-      "askLabel": "Entrada {{name}} del botón {{number}}"
+      "askLabel": "Entrada {{name}} del botón {{number}}",
+      "blockText": "Bloque {{number}}: texto",
+      "blockLabel": "Bloque {{number}}: etiqueta",
+      "blockUnit": "Bloque {{number}}: unidad",
+      "blockEmpty": "Bloque {{number}}: cuando no hay filas"
     },
     "slot": {
       "value": "Valor",
@@ -231,7 +235,8 @@
         "value": "Un número",
         "stats": "Números",
         "list": "Lista",
-        "posters": "Imágenes"
+        "posters": "Imágenes",
+        "builder": "Constructor"
       },
       "from": "Viene de",
       "source": {
@@ -457,7 +462,8 @@
         "openAll": "Abrir Todos los ajustes",
         "waiting": "La respuesta está en camino.",
         "noAnswer": "No hay ninguna integración a la que preguntar, así que no hay tabla que mostrar. La tarjeta se ha hecho a partir de la sugerencia y mostrará datos en cuanto haya una.",
-        "moreFields": "Más campos"
+        "moreFields": "Más campos",
+        "freeLayout": "Diseño libre: en Todos los ajustes"
       },
       "finish": {
         "title": "Últimos detalles",
@@ -885,6 +891,120 @@
       "down": "Bajar el botón",
       "remove": "Quitar el botón {{number}}",
       "askMost": "Un botón tiene como máximo {{count}} entradas."
+    },
+    "builder": {
+      "palette": "Bloques",
+      "groups": {
+        "layout": "Diseño",
+        "content": "Contenido",
+        "data": "Datos",
+        "action": "Acción"
+      },
+      "types": {
+        "row": "Fila",
+        "column": "Columna",
+        "divider": "Separador",
+        "text": "Texto",
+        "value": "Valor",
+        "badge": "Insignia",
+        "symbol": "Símbolo",
+        "image": "Imagen",
+        "progress": "Progreso",
+        "sparkline": "Tendencia",
+        "list": "Lista",
+        "button": "Botón"
+      },
+      "tree": "Estructura de la tarjeta",
+      "count": "{{have}} de {{max}} bloques",
+      "full": "Una tarjeta tiene como máximo {{max}} bloques.",
+      "overflow": "Con este tamaño el contenido es mayor que la tarjeta. Una lista se desplaza, todo lo demás se corta. Haz la tarjeta más grande o quita bloques.",
+      "empty": "Aún no hay bloques. Toca un bloque de la lista para añadirlo o arrástralo hasta aquí.",
+      "toolbar": "Mover o quitar el bloque elegido",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "remove": "Quitar",
+      "help": "Al tocar, se añade un bloque debajo del elegido, o dentro si es una fila, una columna o una lista. En el ordenador también se pueden arrastrar. Con el foco en un bloque, las flechas lo suben y lo bajan y Supr lo quita.",
+      "main": "Valor principal para las cifras clave",
+      "mainNone": "Ninguno",
+      "mainHelp": "Con un valor principal la tarjeta se puede llevar a las cifras clave. Sin él, no.",
+      "mainNeedsId": "Dale a un bloque de valor un nombre corto (id) para ofrecerlo como valor principal.",
+      "chooseOne": "Elige un bloque de la estructura para ajustarlo.",
+      "removeTitle": "Quitar el bloque",
+      "removes_one": "Quita {{count}} bloque",
+      "removes_other": "Quita {{count}} bloques",
+      "settings": "Ajustes: {{name}}",
+      "noSettings": "Un separador no tiene ajustes.",
+      "needButton": "Primero añade un botón en el paso Botones.",
+      "valueNeedsId": "Dale a este valor un nombre corto (id) para ofrecerlo como valor principal.",
+      "imageHelp": "Solo se dibuja una dirección http o https, o una ruta de la conexión. Todo lo demás muestra un marcador.",
+      "maxFromData": "El valor máximo se lee de los datos. Cámbialo en la vista YAML.",
+      "sparklineHelp": "Dibuja el historial de este número a partir de lo que la tarjeta ha registrado. Necesita un nombre corto (id).",
+      "listHelp": "Los bloques de la lista se repiten en cada fila, como máximo {{max}} filas. Abajo eliges de dónde vienen las filas.",
+      "buttonInList": "Aquí solo se ofrecen los botones que van en cada fila.",
+      "buttonOnCard": "Aquí solo se ofrecen los botones que van en la tarjeta.",
+      "containerHelp": "Para poner bloques dentro, elígelo y toca un bloque.",
+      "fields": {
+        "shows": "Muestra",
+        "fixed": "Un texto fijo",
+        "fromData": "Un valor de los datos",
+        "text": "Texto",
+        "value": "Valor",
+        "id": "Nombre corto (id)",
+        "gap": "Espacio entre ellos",
+        "align": "Alineación",
+        "wrap": "Pasar a otra línea si falta sitio",
+        "size": "Tamaño",
+        "weight": "Grosor",
+        "color": "Color",
+        "icon": "Símbolo",
+        "address": "Dirección de la imagen",
+        "height": "Altura",
+        "max": "Valor máximo",
+        "button": "Botón",
+        "pickButton": "Elegir un botón"
+      },
+      "options": {
+        "size": {
+          "xs": "Muy pequeño",
+          "s": "Pequeño",
+          "m": "Mediano",
+          "l": "Grande",
+          "xl": "Muy grande"
+        },
+        "gap": {
+          "none": "Ninguno",
+          "s": "Pequeño",
+          "m": "Mediano",
+          "l": "Grande"
+        },
+        "align": {
+          "start": "Al principio",
+          "center": "En el centro",
+          "end": "Al final",
+          "between": "Repartidos"
+        },
+        "weight": {
+          "normal": "Normal",
+          "bold": "Negrita"
+        },
+        "height": {
+          "s": "Pequeña",
+          "m": "Mediana",
+          "l": "Grande"
+        },
+        "color": {
+          "text": "Texto",
+          "accent": "Acento",
+          "green": "Verde",
+          "yellow": "Amarillo",
+          "red": "Rojo",
+          "muted": "Atenuado",
+          "blue": "Azul",
+          "violet": "Violeta",
+          "pink": "Rosa",
+          "orange": "Naranja"
+        }
+      }
     }
   },
   "integrationEditor": {

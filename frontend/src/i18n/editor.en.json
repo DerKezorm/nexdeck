@@ -137,7 +137,11 @@
       "rowUnit": "Unit of the value in each row",
       "empty": "When there are no rows",
       "buttonLabel": "Button {{number}}",
-      "askLabel": "Input {{name}} of button {{number}}"
+      "askLabel": "Input {{name}} of button {{number}}",
+      "blockText": "Block {{number}}: text",
+      "blockLabel": "Block {{number}}: label",
+      "blockUnit": "Block {{number}}: unit",
+      "blockEmpty": "Block {{number}}: when there are no rows"
     },
     "slot": {
       "value": "Value",
@@ -231,7 +235,8 @@
         "value": "A number",
         "stats": "Numbers",
         "list": "List",
-        "posters": "Pictures"
+        "posters": "Pictures",
+        "builder": "Builder"
       },
       "from": "Comes from",
       "source": {
@@ -457,7 +462,8 @@
         "openAll": "Open All settings",
         "waiting": "The answer is on its way.",
         "noAnswer": "There is no integration to ask, so there is no table to show. The card is made from the suggestion and shows data once there is one.",
-        "moreFields": "More fields"
+        "moreFields": "More fields",
+        "freeLayout": "Free layout: in All settings"
       },
       "finish": {
         "title": "Finish",
@@ -885,6 +891,120 @@
       "down": "Move button down",
       "remove": "Remove button {{number}}",
       "askMost": "A button has at most {{count}} inputs."
+    },
+    "builder": {
+      "palette": "Blocks",
+      "groups": {
+        "layout": "Layout",
+        "content": "Content",
+        "data": "Data",
+        "action": "Action"
+      },
+      "types": {
+        "row": "Row",
+        "column": "Column",
+        "divider": "Divider",
+        "text": "Text",
+        "value": "Value",
+        "badge": "Badge",
+        "symbol": "Symbol",
+        "image": "Image",
+        "progress": "Progress",
+        "sparkline": "Sparkline",
+        "list": "List",
+        "button": "Button"
+      },
+      "tree": "Layout of the card",
+      "count": "{{have}} of {{max}} blocks",
+      "full": "A card has at most {{max}} blocks.",
+      "overflow": "At this size the content is larger than the card. A list scrolls, everything else is cut off. Make the card larger or take blocks out.",
+      "empty": "No blocks yet. Tap a block in the list to add it, or drag it here.",
+      "toolbar": "Move or remove the chosen block",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove",
+      "help": "A tap adds a block under the chosen one, or into it when it is a row, a column or a list. On a computer blocks can be dragged as well. With a block focused, the arrow keys move it up and down and Delete removes it.",
+      "main": "Main value for key figures",
+      "mainNone": "None",
+      "mainHelp": "With a main value the card can be put into Key figures. Without one it cannot.",
+      "mainNeedsId": "Give a value block a short name (id) to offer it as the main value.",
+      "chooseOne": "Choose a block in the layout to set it up.",
+      "removeTitle": "Remove block",
+      "removes_one": "Removes {{count}} block",
+      "removes_other": "Removes {{count}} blocks",
+      "settings": "Settings: {{name}}",
+      "noSettings": "A divider has no settings.",
+      "needButton": "Add a button in the Buttons step first.",
+      "valueNeedsId": "Give this value a short name (id) to offer it as the main value.",
+      "imageHelp": "Only an http or https address, or a path on the connection, is drawn. Anything else shows a placeholder.",
+      "maxFromData": "The highest value is read from the data. Change it in the YAML view.",
+      "sparklineHelp": "Draws the history of this number from what the card has recorded. It needs a short name (id).",
+      "listHelp": "The blocks inside the list repeat for each row, at most {{max}} rows. Below you choose where the rows come from.",
+      "buttonInList": "Only buttons that stand on each row are offered here.",
+      "buttonOnCard": "Only buttons that stand on the card are offered here.",
+      "containerHelp": "To put blocks into it, choose it and tap a block.",
+      "fields": {
+        "shows": "Shows",
+        "fixed": "A fixed text",
+        "fromData": "A value of the data",
+        "text": "Text",
+        "value": "Value",
+        "id": "Short name (id)",
+        "gap": "Space between",
+        "align": "Alignment",
+        "wrap": "Break into lines when narrow",
+        "size": "Size",
+        "weight": "Weight",
+        "color": "Colour",
+        "icon": "Symbol",
+        "address": "Address of the picture",
+        "height": "Height",
+        "max": "Highest value",
+        "button": "Button",
+        "pickButton": "Choose a button"
+      },
+      "options": {
+        "size": {
+          "xs": "Extra small",
+          "s": "Small",
+          "m": "Medium",
+          "l": "Large",
+          "xl": "Extra large"
+        },
+        "gap": {
+          "none": "None",
+          "s": "Small",
+          "m": "Medium",
+          "l": "Large"
+        },
+        "align": {
+          "start": "At the start",
+          "center": "In the middle",
+          "end": "At the end",
+          "between": "Spread apart"
+        },
+        "weight": {
+          "normal": "Normal",
+          "bold": "Bold"
+        },
+        "height": {
+          "s": "Small",
+          "m": "Medium",
+          "l": "Large"
+        },
+        "color": {
+          "text": "Text",
+          "accent": "Accent",
+          "green": "Green",
+          "yellow": "Yellow",
+          "red": "Red",
+          "muted": "Muted",
+          "blue": "Blue",
+          "violet": "Violet",
+          "pink": "Pink",
+          "orange": "Orange"
+        }
+      }
     }
   },
   "integrationEditor": {

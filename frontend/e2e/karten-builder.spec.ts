@@ -1,0 +1,145 @@
+/**
+ * The builder of the card editor against a real server (KARTEN-7 EC-4, EC-5): at the width of a phone a block is
+ * added by tapping and moved with the arrows, nothing runs over the edge of the screen; and the whole job, choosing,
+ * moving and taking out a block, is done from the keyboard alone.
+ */
+import { expect, test, type Page } from '@playwright/test'
+
+const ACCOUNT = { username: 'e2e-admin', password: 'A-long-enough-password-1' }
+
+const CARD = `nexdeck-card: 1
+slug: e2e-builder
+name: Server at a glance for a very narrow phone screen
+version: "1.0.0"
+requires: [sonarr]
+requests:
+  - id: queue
+    path: /api/v3/queue
+form: builder
+blocks:
+  - {type: text, text: First block with a long text that cannot fit a phone}
+  - {type: text, text: Second}
+  - type: row
+    children:
+      - {type: text, text: Third}
+`
+
+async function signIn(page: Page) {
+  await page.goto('/')
+  await expect(page.getByLabel('User name')).toBeVisible()
+  await page.getByLabel('User name').fill(ACCOUNT.username)
+  await page.getByLabel('Password', { exact: true }).fill(ACCOUNT.password)
+  const confirm = page.getByLabel('Confirm password')
+  if (await confirm.isVisible()) {
+    await confirm.fill(ACCOUNT.password)
+    await page.getByRole('button', { name: 'Next' }).click()
+    await page.getByRole('button', { name: 'Next' }).click()
+    await page.getByRole('button', { name: 'Finish' }).click()
+  } else {
+    await page.getByRole('button', { name: 'Sign in' }).click()
+  }
+  await expect(page).toHaveURL(/\/b\//)
+}
+
+/**
+ * ⚠️ The server's check and its drawing of the card are answered here until the server knows the form "builder" (its
+ * part is built apart from this one): the subject is the editor in the browser, and the card it draws is the tree the
+ * server will send.
+ */
+async function standIn(page: Page) {
+  await page.route('**/api/v1/cards/check', (route) => route.fulfill({ json: { ok: true } }))
+  await page.route('**/api/v1/cards/preview', (route) =>
+    route.fulfill({
+      json: {
+        status: 'ok',
+        meta: {
+          custom: true,
+          renderer: 'builder',
+          blocks: [
+            { type: 'text', value: { text: 'First block with a long text that cannot fit a phone' }, size: 'm', weight: 'bold', color: 'text' },
+            { type: 'row', gap: 'm', align: 'between', wrap: true, children: [{ type: 'badge', value: { text: 'up' }, color: 'green' }, { type: 'value', label: 'CPU', value: { text: '42 %' }, size: 'l', color: 'accent' }] },
+          ],
+        },
+      },
+    }),
+  )
+}
+
+async function openBuilder(page: Page) {
+  await standIn(page)
+  await page.goto('/system/custom-cards/new')
+  await page.getByRole('button', { name: 'Paste a whole card (YAML)' }).click()
+  const field = page.locator('.cm-content')
+  await expect(field).toBeVisible()
+  await page.evaluate((text) => navigator.clipboard.writeText(text), CARD)
+  await field.click()
+  await page.keyboard.press('ControlOrMeta+V')
+  // A free layout is built in All settings, which is where a pasted builder card opens.
+  await expect(page.getByRole('navigation', { name: 'Steps' })).toBeVisible()
+  await page.getByRole('button', { name: '2 Look' }).click()
+  await expect(page.getByTestId('card-builder')).toBeVisible()
+}
+
+const order = (page: Page) => page.getByRole('tree', { name: 'Layout of the card' }).getByRole('treeitem').evaluateAll((items) => items.map((item) => item.textContent ?? ''))
+
+test('karten7: a block is added by tapping and moved with the arrows at the width of a phone', async ({ page, context }) => {
+  const trouble: string[] = []
+  page.on('pageerror', (error) => trouble.push(String(error)))
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.setViewportSize({ width: 375, height: 812 })
+  await signIn(page)
+  await openBuilder(page)
+
+  // The list of blocks, the tree and the settings stand one below the other, and nothing runs over the edge.
+  const wide = () =>
+    page.evaluate(() => {
+      const over = (element: Element) => element.getBoundingClientRect().right > window.innerWidth + 1
+      return { page: document.documentElement.scrollWidth > window.innerWidth, builder: [...document.querySelectorAll('[data-testid="card-builder"] *')].filter(over).length }
+    })
+  expect(await wide()).toEqual({ page: false, builder: 0 })
+
+  // Tap a block in the tree, then a block in the list: it stands under the one chosen.
+  await page.getByTestId('card-builder-tree').getByText('Second').click()
+  await page.getByRole('group', { name: 'Blocks' }).getByRole('button', { name: 'Divider' }).click()
+  expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir', 'TextSec', 'Divider', 'Row', 'TextThi'])
+  // The arrows move it; no dragging is needed.
+  await page.getByRole('button', { name: 'Move up' }).click()
+  expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir', 'Divider', 'TextSec', 'Row', 'TextThi'])
+  expect(await wide()).toEqual({ page: false, builder: 0 })
+  expect(trouble).toEqual([])
+})
+
+test('karten7: blocks are chosen with Tab and moved and removed with the keyboard alone', async ({ page, context }) => {
+  const trouble: string[] = []
+  page.on('pageerror', (error) => trouble.push(String(error)))
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await signIn(page)
+  await openBuilder(page)
+
+  const second = page.locator('[data-node="blocks[1]"]')
+  await page.locator('[data-node="blocks[0]"]').focus()
+  await page.keyboard.press('Tab')
+  await expect(second).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(second).toHaveAttribute('aria-selected', 'true')
+  await page.keyboard.press('ArrowUp')
+  expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextSec', 'TextFir', 'Row', 'TextThi'])
+  // The focus went with the block, so the next key acts on it.
+  await expect(page.locator('[data-node="blocks[0]"]')).toBeFocused()
+  await page.keyboard.press('Delete')
+  expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir', 'Row', 'TextThi'])
+
+  // A row with a block inside asks first, and the question is answered from the keyboard too.
+  await page.locator('[data-node="blocks[1]"]').focus()
+  await page.keyboard.press('Delete')
+  await expect(page.getByRole('dialog')).toContainText('Removes 2 blocks')
+  // The dialog keeps the focus inside it; Tab reaches "Remove" in a few steps.
+  const remove = page.getByRole('dialog').getByRole('button', { name: 'Remove' })
+  for (let step = 0; step < 4 && !(await remove.evaluate((element) => element === document.activeElement)); step += 1) await page.keyboard.press('Tab')
+  await expect(remove).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect((await order(page)).map((one) => one.slice(0, 7))).toEqual(['TextFir'])
+  expect(trouble).toEqual([])
+})

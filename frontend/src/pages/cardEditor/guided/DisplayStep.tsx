@@ -36,7 +36,7 @@ import { GuidedFrame, StepNav } from './GuidedWay'
 import { useReplaceGuard } from './ReplaceGuard'
 import { useAnswerTable, useGuidedAnswer } from './useGuided'
 
-const FORMS: { form: CardForm; glyph: string }[] = [
+const FORMS: { form: Exclude<CardForm, 'builder'>; glyph: string }[] = [
   { form: 'value', glyph: '12' },
   { form: 'stats', glyph: '3 · 7' },
   { form: 'list', glyph: '≡' },
@@ -376,6 +376,18 @@ export function DisplayStep() {
           )
         })}
       </div>
+      <p className="text-[13px] text-muted min-w-0 break-words hyphens-auto">
+        <button
+          type="button"
+          className="text-accent hover:underline text-left"
+          onClick={() => {
+            useCardEditor.getState().setStep('look')
+            useCardEditor.getState().setView('editor')
+          }}
+        >
+          {t('editor.guided.display.freeLayout')}
+        </button>
+      </p>
 
       {!table && probe?.status !== 'failed' && path && path !== '/' && chosen && <p className="text-sm text-muted">{t('editor.guided.display.waiting')}</p>}
       {!table && loaded && !chosen && path && path !== '/' && (

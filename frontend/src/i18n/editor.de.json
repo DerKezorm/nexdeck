@@ -137,7 +137,11 @@
       "rowUnit": "Einheit des Werts in jeder Zeile",
       "empty": "Wenn es keine Zeilen gibt",
       "buttonLabel": "Knopf {{number}}",
-      "askLabel": "Eingabe {{name}} von Knopf {{number}}"
+      "askLabel": "Eingabe {{name}} von Knopf {{number}}",
+      "blockText": "Baustein {{number}}: Text",
+      "blockLabel": "Baustein {{number}}: Beschriftung",
+      "blockUnit": "Baustein {{number}}: Einheit",
+      "blockEmpty": "Baustein {{number}}: wenn es keine Zeilen gibt"
     },
     "slot": {
       "value": "Wert",
@@ -231,7 +235,8 @@
         "value": "Eine Zahl",
         "stats": "Mehrere Zahlen",
         "list": "Liste",
-        "posters": "Bilder"
+        "posters": "Bilder",
+        "builder": "Baukasten"
       },
       "from": "Kommt aus",
       "source": {
@@ -457,7 +462,8 @@
         "openAll": "Alle Einstellungen öffnen",
         "waiting": "Die Antwort kommt gleich.",
         "noAnswer": "Es gibt keine Anbindung, die gefragt werden kann, darum gibt es keine Tabelle. Die Karte ist nach dem Vorschlag gebaut und zeigt Daten, sobald es eine gibt.",
-        "moreFields": "Weitere Felder"
+        "moreFields": "Weitere Felder",
+        "freeLayout": "Freies Layout: in Alle Einstellungen"
       },
       "finish": {
         "title": "Feinschliff",
@@ -885,6 +891,120 @@
       "down": "Knopf nach unten",
       "remove": "Knopf {{number}} entfernen",
       "askMost": "Ein Knopf hat höchstens {{count}} Eingaben."
+    },
+    "builder": {
+      "palette": "Bausteine",
+      "groups": {
+        "layout": "Layout",
+        "content": "Inhalt",
+        "data": "Daten",
+        "action": "Aktion"
+      },
+      "types": {
+        "row": "Zeile",
+        "column": "Spalte",
+        "divider": "Trennlinie",
+        "text": "Text",
+        "value": "Wert",
+        "badge": "Badge",
+        "symbol": "Symbol",
+        "image": "Bild",
+        "progress": "Fortschritt",
+        "sparkline": "Verlauf",
+        "list": "Liste",
+        "button": "Knopf"
+      },
+      "tree": "Aufbau der Karte",
+      "count": "{{have}} von {{max}} Bausteinen",
+      "full": "Eine Karte hat höchstens {{max}} Bausteine.",
+      "overflow": "Bei dieser Größe ist der Inhalt größer als die Karte. Eine Liste scrollt, alles andere wird abgeschnitten. Mach die Karte größer oder nimm Bausteine heraus.",
+      "empty": "Noch keine Bausteine. Tippe in der Liste auf einen Baustein, um ihn einzufügen, oder ziehe ihn hierher.",
+      "toolbar": "Gewählten Baustein verschieben oder entfernen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "remove": "Entfernen",
+      "help": "Antippen fügt einen Baustein unter dem gewählten ein, oder hinein, wenn der gewählte eine Zeile, Spalte oder Liste ist. Am Rechner lassen sich Bausteine auch ziehen. Mit dem Fokus auf einem Baustein verschieben die Pfeiltasten ihn nach oben und unten, Entf entfernt ihn.",
+      "main": "Hauptwert für Kennzahlen",
+      "mainNone": "Keiner",
+      "mainHelp": "Mit einem Hauptwert lässt sich die Karte in die Kennzahlen ziehen. Ohne geht das nicht.",
+      "mainNeedsId": "Gib einem Wert-Baustein einen Kurznamen (id), damit er als Hauptwert zur Wahl steht.",
+      "chooseOne": "Wähle im Aufbau einen Baustein, um ihn einzustellen.",
+      "removeTitle": "Baustein entfernen",
+      "removes_one": "Entfernt {{count}} Baustein",
+      "removes_other": "Entfernt {{count}} Bausteine",
+      "settings": "Einstellungen: {{name}}",
+      "noSettings": "Eine Trennlinie hat keine Einstellungen.",
+      "needButton": "Leg zuerst im Schritt Knöpfe einen Knopf an.",
+      "valueNeedsId": "Gib diesem Wert einen Kurznamen (id), damit er als Hauptwert zur Wahl steht.",
+      "imageHelp": "Gezeichnet wird nur eine http- oder https-Adresse oder ein Pfad der Verbindung. Alles andere zeigt einen Platzhalter.",
+      "maxFromData": "Der Höchstwert wird aus den Daten gelesen. Ändere ihn in der YAML-Ansicht.",
+      "sparklineHelp": "Zeichnet den Verlauf dieser Zahl aus dem, was die Karte aufgezeichnet hat. Er braucht einen Kurznamen (id).",
+      "listHelp": "Die Bausteine in der Liste wiederholen sich für jede Zeile, höchstens {{max}} Zeilen. Unten wählst du, woher die Zeilen kommen.",
+      "buttonInList": "Hier stehen nur Knöpfe zur Wahl, die an jeder Zeile sitzen.",
+      "buttonOnCard": "Hier stehen nur Knöpfe zur Wahl, die an der Karte sitzen.",
+      "containerHelp": "Um Bausteine hineinzusetzen, wähle ihn und tippe einen Baustein an.",
+      "fields": {
+        "shows": "Zeigt",
+        "fixed": "Einen festen Text",
+        "fromData": "Einen Wert aus den Daten",
+        "text": "Text",
+        "value": "Wert",
+        "id": "Kurzname (id)",
+        "gap": "Abstand dazwischen",
+        "align": "Ausrichtung",
+        "wrap": "Bei wenig Platz umbrechen",
+        "size": "Größe",
+        "weight": "Stärke",
+        "color": "Farbe",
+        "icon": "Symbol",
+        "address": "Adresse des Bildes",
+        "height": "Höhe",
+        "max": "Höchstwert",
+        "button": "Knopf",
+        "pickButton": "Knopf wählen"
+      },
+      "options": {
+        "size": {
+          "xs": "Sehr klein",
+          "s": "Klein",
+          "m": "Mittel",
+          "l": "Groß",
+          "xl": "Sehr groß"
+        },
+        "gap": {
+          "none": "Keiner",
+          "s": "Klein",
+          "m": "Mittel",
+          "l": "Groß"
+        },
+        "align": {
+          "start": "Am Anfang",
+          "center": "In der Mitte",
+          "end": "Am Ende",
+          "between": "Auseinander"
+        },
+        "weight": {
+          "normal": "Normal",
+          "bold": "Fett"
+        },
+        "height": {
+          "s": "Klein",
+          "m": "Mittel",
+          "l": "Groß"
+        },
+        "color": {
+          "text": "Text",
+          "accent": "Akzent",
+          "green": "Grün",
+          "yellow": "Gelb",
+          "red": "Rot",
+          "muted": "Gedämpft",
+          "blue": "Blau",
+          "violet": "Violett",
+          "pink": "Rosa",
+          "orange": "Orange"
+        }
+      }
     }
   },
   "integrationEditor": {

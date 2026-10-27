@@ -137,7 +137,11 @@
       "rowUnit": "Unité de la valeur de chaque ligne",
       "empty": "Quand il n'y a aucune ligne",
       "buttonLabel": "Bouton {{number}}",
-      "askLabel": "Saisie {{name}} du bouton {{number}}"
+      "askLabel": "Saisie {{name}} du bouton {{number}}",
+      "blockText": "Bloc {{number}} : texte",
+      "blockLabel": "Bloc {{number}} : libellé",
+      "blockUnit": "Bloc {{number}} : unité",
+      "blockEmpty": "Bloc {{number}} : quand il n’y a pas de lignes"
     },
     "slot": {
       "value": "Valeur",
@@ -231,7 +235,8 @@
         "value": "Un nombre",
         "stats": "Des nombres",
         "list": "Liste",
-        "posters": "Images"
+        "posters": "Images",
+        "builder": "Constructeur"
       },
       "from": "Vient de",
       "source": {
@@ -457,7 +462,8 @@
         "openAll": "Ouvrir Tous les réglages",
         "waiting": "La réponse arrive.",
         "noAnswer": "Il n'y a aucune intégration à interroger, donc pas de tableau à montrer. La carte est faite d'après la suggestion et montrera des données dès qu'il y en aura une.",
-        "moreFields": "Autres champs"
+        "moreFields": "Autres champs",
+        "freeLayout": "Mise en page libre : dans Tous les réglages"
       },
       "finish": {
         "title": "Finitions",
@@ -885,6 +891,120 @@
       "down": "Descendre le bouton",
       "remove": "Retirer le bouton {{number}}",
       "askMost": "Un bouton a au plus {{count}} saisies."
+    },
+    "builder": {
+      "palette": "Blocs",
+      "groups": {
+        "layout": "Mise en page",
+        "content": "Contenu",
+        "data": "Données",
+        "action": "Action"
+      },
+      "types": {
+        "row": "Ligne",
+        "column": "Colonne",
+        "divider": "Séparateur",
+        "text": "Texte",
+        "value": "Valeur",
+        "badge": "Pastille",
+        "symbol": "Symbole",
+        "image": "Image",
+        "progress": "Progression",
+        "sparkline": "Tendance",
+        "list": "Liste",
+        "button": "Bouton"
+      },
+      "tree": "Structure de la carte",
+      "count": "{{have}} sur {{max}} blocs",
+      "full": "Une carte a au plus {{max}} blocs.",
+      "overflow": "À cette taille, le contenu dépasse la carte. Une liste défile, tout le reste est coupé. Agrandis la carte ou retire des blocs.",
+      "empty": "Pas encore de blocs. Touche un bloc de la liste pour l’ajouter, ou fais-le glisser ici.",
+      "toolbar": "Déplacer ou retirer le bloc choisi",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Retirer",
+      "help": "Un toucher ajoute un bloc sous celui qui est choisi, ou dedans si c’est une ligne, une colonne ou une liste. Sur ordinateur, on peut aussi faire glisser les blocs. Avec le focus sur un bloc, les flèches le montent et le descendent, Suppr le retire.",
+      "main": "Valeur principale pour les chiffres clés",
+      "mainNone": "Aucune",
+      "mainHelp": "Avec une valeur principale, la carte peut aller dans les chiffres clés. Sans elle, non.",
+      "mainNeedsId": "Donne un nom court (id) à un bloc de valeur pour le proposer comme valeur principale.",
+      "chooseOne": "Choisis un bloc de la structure pour le régler.",
+      "removeTitle": "Retirer le bloc",
+      "removes_one": "Retire {{count}} bloc",
+      "removes_other": "Retire {{count}} blocs",
+      "settings": "Réglages : {{name}}",
+      "noSettings": "Un séparateur n’a pas de réglages.",
+      "needButton": "Ajoute d’abord un bouton à l’étape Boutons.",
+      "valueNeedsId": "Donne un nom court (id) à cette valeur pour la proposer comme valeur principale.",
+      "imageHelp": "Seule une adresse http ou https, ou un chemin de la connexion, est dessinée. Le reste affiche un espace réservé.",
+      "maxFromData": "La valeur maximale est lue dans les données. Modifie-la dans la vue YAML.",
+      "sparklineHelp": "Dessine l’historique de ce nombre à partir de ce que la carte a enregistré. Il lui faut un nom court (id).",
+      "listHelp": "Les blocs de la liste se répètent pour chaque ligne, au plus {{max}} lignes. Plus bas, tu choisis d’où viennent les lignes.",
+      "buttonInList": "Seuls les boutons placés sur chaque ligne sont proposés ici.",
+      "buttonOnCard": "Seuls les boutons placés sur la carte sont proposés ici.",
+      "containerHelp": "Pour y mettre des blocs, choisis-le et touche un bloc.",
+      "fields": {
+        "shows": "Affiche",
+        "fixed": "Un texte fixe",
+        "fromData": "Une valeur des données",
+        "text": "Texte",
+        "value": "Valeur",
+        "id": "Nom court (id)",
+        "gap": "Espace entre eux",
+        "align": "Alignement",
+        "wrap": "Passer à la ligne si la place manque",
+        "size": "Taille",
+        "weight": "Graisse",
+        "color": "Couleur",
+        "icon": "Symbole",
+        "address": "Adresse de l’image",
+        "height": "Hauteur",
+        "max": "Valeur maximale",
+        "button": "Bouton",
+        "pickButton": "Choisir un bouton"
+      },
+      "options": {
+        "size": {
+          "xs": "Très petit",
+          "s": "Petit",
+          "m": "Moyen",
+          "l": "Grand",
+          "xl": "Très grand"
+        },
+        "gap": {
+          "none": "Aucun",
+          "s": "Petit",
+          "m": "Moyen",
+          "l": "Grand"
+        },
+        "align": {
+          "start": "Au début",
+          "center": "Au milieu",
+          "end": "À la fin",
+          "between": "Répartis"
+        },
+        "weight": {
+          "normal": "Normal",
+          "bold": "Gras"
+        },
+        "height": {
+          "s": "Petite",
+          "m": "Moyenne",
+          "l": "Grande"
+        },
+        "color": {
+          "text": "Texte",
+          "accent": "Accent",
+          "green": "Vert",
+          "yellow": "Jaune",
+          "red": "Rouge",
+          "muted": "Atténué",
+          "blue": "Bleu",
+          "violet": "Violet",
+          "pink": "Rose",
+          "orange": "Orange"
+        }
+      }
     }
   },
   "integrationEditor": {

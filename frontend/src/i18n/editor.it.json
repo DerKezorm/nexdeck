@@ -137,7 +137,11 @@
       "rowUnit": "Unità del valore in ogni riga",
       "empty": "Quando non ci sono righe",
       "buttonLabel": "Pulsante {{number}}",
-      "askLabel": "Campo {{name}} del pulsante {{number}}"
+      "askLabel": "Campo {{name}} del pulsante {{number}}",
+      "blockText": "Blocco {{number}}: testo",
+      "blockLabel": "Blocco {{number}}: etichetta",
+      "blockUnit": "Blocco {{number}}: unità",
+      "blockEmpty": "Blocco {{number}}: quando non ci sono righe"
     },
     "slot": {
       "value": "Valore",
@@ -231,7 +235,8 @@
         "value": "Un numero",
         "stats": "Numeri",
         "list": "Elenco",
-        "posters": "Immagini"
+        "posters": "Immagini",
+        "builder": "Costruttore"
       },
       "from": "Viene da",
       "source": {
@@ -457,7 +462,8 @@
         "openAll": "Apri Tutte le impostazioni",
         "waiting": "La risposta sta arrivando.",
         "noAnswer": "Non c'è nessuna integrazione da interrogare, quindi non c'è una tabella da mostrare. La scheda è fatta dal suggerimento e mostrerà i dati appena ce ne sarà una.",
-        "moreFields": "Altri campi"
+        "moreFields": "Altri campi",
+        "freeLayout": "Layout libero: in Tutte le impostazioni"
       },
       "finish": {
         "title": "Ritocchi",
@@ -885,6 +891,120 @@
       "down": "Sposta il pulsante giù",
       "remove": "Rimuovi il pulsante {{number}}",
       "askMost": "Un pulsante ha al massimo {{count}} campi."
+    },
+    "builder": {
+      "palette": "Blocchi",
+      "groups": {
+        "layout": "Layout",
+        "content": "Contenuto",
+        "data": "Dati",
+        "action": "Azione"
+      },
+      "types": {
+        "row": "Riga",
+        "column": "Colonna",
+        "divider": "Divisore",
+        "text": "Testo",
+        "value": "Valore",
+        "badge": "Badge",
+        "symbol": "Simbolo",
+        "image": "Immagine",
+        "progress": "Avanzamento",
+        "sparkline": "Andamento",
+        "list": "Elenco",
+        "button": "Pulsante"
+      },
+      "tree": "Struttura della scheda",
+      "count": "{{have}} di {{max}} blocchi",
+      "full": "Una scheda ha al massimo {{max}} blocchi.",
+      "overflow": "A questa dimensione il contenuto è più grande della scheda. Un elenco scorre, tutto il resto viene tagliato. Ingrandisci la scheda o togli dei blocchi.",
+      "empty": "Ancora nessun blocco. Tocca un blocco dell’elenco per aggiungerlo o trascinalo qui.",
+      "toolbar": "Sposta o rimuovi il blocco scelto",
+      "moveUp": "Sposta su",
+      "moveDown": "Sposta giù",
+      "remove": "Rimuovi",
+      "help": "Un tocco aggiunge un blocco sotto quello scelto, o dentro se è una riga, una colonna o un elenco. Al computer i blocchi si possono anche trascinare. Con il focus su un blocco, le frecce lo spostano su e giù e Canc lo rimuove.",
+      "main": "Valore principale per le cifre chiave",
+      "mainNone": "Nessuno",
+      "mainHelp": "Con un valore principale la scheda può andare nelle cifre chiave. Senza, no.",
+      "mainNeedsId": "Dai a un blocco valore un nome breve (id) per offrirlo come valore principale.",
+      "chooseOne": "Scegli un blocco della struttura per impostarlo.",
+      "removeTitle": "Rimuovi il blocco",
+      "removes_one": "Rimuove {{count}} blocco",
+      "removes_other": "Rimuove {{count}} blocchi",
+      "settings": "Impostazioni: {{name}}",
+      "noSettings": "Un divisore non ha impostazioni.",
+      "needButton": "Prima aggiungi un pulsante nel passo Pulsanti.",
+      "valueNeedsId": "Dai a questo valore un nome breve (id) per offrirlo come valore principale.",
+      "imageHelp": "Viene disegnato solo un indirizzo http o https, o un percorso della connessione. Tutto il resto mostra un segnaposto.",
+      "maxFromData": "Il valore massimo viene letto dai dati. Modificalo nella vista YAML.",
+      "sparklineHelp": "Disegna lo storico di questo numero da ciò che la scheda ha registrato. Serve un nome breve (id).",
+      "listHelp": "I blocchi dell’elenco si ripetono per ogni riga, al massimo {{max}} righe. Sotto scegli da dove arrivano le righe.",
+      "buttonInList": "Qui sono offerti solo i pulsanti che stanno su ogni riga.",
+      "buttonOnCard": "Qui sono offerti solo i pulsanti che stanno sulla scheda.",
+      "containerHelp": "Per metterci dentro dei blocchi, sceglilo e tocca un blocco.",
+      "fields": {
+        "shows": "Mostra",
+        "fixed": "Un testo fisso",
+        "fromData": "Un valore dei dati",
+        "text": "Testo",
+        "value": "Valore",
+        "id": "Nome breve (id)",
+        "gap": "Spazio tra i blocchi",
+        "align": "Allineamento",
+        "wrap": "Andare a capo se manca spazio",
+        "size": "Dimensione",
+        "weight": "Spessore",
+        "color": "Colore",
+        "icon": "Simbolo",
+        "address": "Indirizzo dell’immagine",
+        "height": "Altezza",
+        "max": "Valore massimo",
+        "button": "Pulsante",
+        "pickButton": "Scegli un pulsante"
+      },
+      "options": {
+        "size": {
+          "xs": "Molto piccolo",
+          "s": "Piccolo",
+          "m": "Medio",
+          "l": "Grande",
+          "xl": "Molto grande"
+        },
+        "gap": {
+          "none": "Nessuno",
+          "s": "Piccolo",
+          "m": "Medio",
+          "l": "Grande"
+        },
+        "align": {
+          "start": "All’inizio",
+          "center": "Al centro",
+          "end": "Alla fine",
+          "between": "Distribuiti"
+        },
+        "weight": {
+          "normal": "Normale",
+          "bold": "Grassetto"
+        },
+        "height": {
+          "s": "Piccola",
+          "m": "Media",
+          "l": "Grande"
+        },
+        "color": {
+          "text": "Testo",
+          "accent": "Accento",
+          "green": "Verde",
+          "yellow": "Giallo",
+          "red": "Rosso",
+          "muted": "Attenuato",
+          "blue": "Blu",
+          "violet": "Viola",
+          "pink": "Rosa",
+          "orange": "Arancione"
+        }
+      }
     }
   },
   "integrationEditor": {

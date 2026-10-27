@@ -11,7 +11,7 @@ import type { Document } from 'yaml'
 import { deleteAt, readAt, readIn, setAt, type CardDoc, type CardPath } from '../../lib/cardDocument'
 import type { CardForm } from '../../lib/customCards'
 
-export const FORMS: CardForm[] = ['value', 'stats', 'list', 'posters']
+export const FORMS: CardForm[] = ['value', 'stats', 'list', 'posters', 'builder']
 export const MAX_STATS = 6
 export const MIN_STATS = 2
 
@@ -174,11 +174,18 @@ export function lostByForm(card: CardDoc, to: CardForm): CardPath[] {
   if (from === to) return []
   const lost: CardPath[] = []
   const has = (path: CardPath) => readAt(card, path) !== undefined
-  const rowsKept = to === 'list' || to === 'posters'
+  // The blocks of a builder card read their rows from `rows` too (a list block), so the rows stay with it.
+  const rowsKept = to === 'list' || to === 'posters' || to === 'builder'
   if (has(['value']) && to !== 'stats') lost.push(['value'])
   const stats = readAt(card, ['stats'])
   if (Array.isArray(stats)) stats.forEach((_, index) => (to !== 'value' || index > 0) && lost.push(['stats', index]))
   if (!rowsKept) for (const part of ['rows', 'item', 'empty']) if (has([part])) lost.push([part])
+  if (to === 'builder') for (const part of ['item', 'empty']) if (has([part])) lost.push([part])
+  if (from === 'builder') {
+    const blocks = readAt(card, ['blocks'])
+    if (Array.isArray(blocks) && blocks.length > 0) lost.push(['blocks'])
+    if (has(['main'])) lost.push(['main'])
+  }
   if (to === 'posters') for (const part of ['value', 'status']) if (has(['item', part])) lost.push(['item', part])
   return lost
 }
@@ -203,8 +210,11 @@ export function changeForm(doc: Document, to: CardForm, list?: string): void {
   if (to === 'list' || to === 'posters') {
     if (to === 'posters') for (const part of ['value', 'status']) deleteAt(doc, ['item', part])
     if (list !== undefined) setAt(doc, ['rows', 'select'], list)
+  } else if (to === 'builder') {
+    for (const part of ['item', 'empty']) deleteAt(doc, [part])
   } else {
     for (const part of ['rows', 'item', 'empty']) deleteAt(doc, [part])
   }
+  if (from === 'builder') for (const part of ['blocks', 'main']) deleteAt(doc, [part])
   setAt(doc, ['form'], to)
 }

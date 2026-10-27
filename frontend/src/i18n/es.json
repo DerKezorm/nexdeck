@@ -2446,7 +2446,8 @@
       "value": "Número",
       "stats": "Números",
       "list": "Lista",
-      "posters": "Imágenes"
+      "posters": "Imágenes",
+      "builder": "Constructor"
     },
     "local": "Local",
     "fromShop": "Tienda de tarjetas · {{version}}",

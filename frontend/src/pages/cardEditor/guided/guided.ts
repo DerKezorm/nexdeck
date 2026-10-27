@@ -314,6 +314,8 @@ export function refusalOf(card: CardDoc): Refusal | null {
   const form = readAt(card, ['form'])
   if (form === 'stats' && !STATS_RULES_ALIKE(readAt(card, ['stats']))) parts.push({ path: ['stats'], line: null })
   if (form === 'list' && readAt(card, ['item', 'image']) !== undefined) parts.push({ path: ['item', 'image'], line: null })
+  // A free layout is built in All settings; the guided way has no sentences for it.
+  if (form === 'builder') parts.unshift({ path: ['form'], line: null })
   const first = parts[0]?.path[0]
   if (first === undefined) return null
   if (first === 'requires') return 'kinds'
@@ -521,13 +523,13 @@ function titleColumn(table: Extract<AnswerTable, { kind: 'rows' }>, not: (string
 }
 
 /** Which forms the answer allows: pictures only when there are pictures, rows only when there are rows. */
-export function formsFor(table: AnswerTable | null, suggestion?: CardSuggestion | null): CardForm[] {
+export function formsFor(table: AnswerTable | null, suggestion?: CardSuggestion | null): Exclude<CardForm, 'builder'>[] {
   if (!table || table.kind === 'fields') return ['value', 'stats']
   return pictureColumn(table) || suggestion?.image ? ['value', 'stats', 'list', 'posters'] : ['value', 'stats', 'list']
 }
 
 /** The form the content suggests: a picture column makes a wall of pictures, rows a list, anything else a number. */
-export function suggestedForm(table: AnswerTable, suggestion?: CardSuggestion | null): CardForm {
+export function suggestedForm(table: AnswerTable, suggestion?: CardSuggestion | null): Exclude<CardForm, 'builder'> {
   if (suggestion?.preset) return suggestion.preset.form
   if (table.kind === 'fields') return 'value'
   return pictureColumn(table) || suggestion?.image ? 'posters' : 'list'
@@ -537,7 +539,7 @@ export function suggestedForm(table: AnswerTable, suggestion?: CardSuggestion | 
 const firstField = (table: Extract<AnswerTable, { kind: 'fields' }>) => (table.fields.find((one) => typeof one.value === 'number') ?? table.fields[0])?.path ?? '@'
 
 /** What a card of `form` starts as for this answer (U6), the suggestion's own start where it has one. */
-export function shapeFor(form: CardForm, table: AnswerTable, suggestion?: CardSuggestion | null): Shape {
+export function shapeFor(form: Exclude<CardForm, 'builder'>, table: AnswerTable, suggestion?: CardSuggestion | null): Shape {
   const preset = suggestion?.preset?.form === form ? suggestion.preset : null
   if (table.kind === 'fields') {
     const numbers = table.fields.filter((one) => typeof one.value === 'number').map((one) => one.path)

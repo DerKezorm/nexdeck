@@ -2446,7 +2446,8 @@
       "value": "Numero",
       "stats": "Numeri",
       "list": "Elenco",
-      "posters": "Immagini"
+      "posters": "Immagini",
+      "builder": "Costruttore"
     },
     "local": "Locale",
     "fromShop": "Negozio di schede · {{version}}",

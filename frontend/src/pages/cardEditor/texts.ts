@@ -8,6 +8,7 @@
 import type { Document } from 'yaml'
 
 import { deleteAt, expandValueRef, readAt, readIn, setAt, type CardDoc, type CardPath } from '../../lib/cardDocument'
+import { flatten } from './blocks'
 
 /** One text of the card: where it stands and what it is called on screen. */
 export interface TextSpot {
@@ -44,6 +45,21 @@ export function textSpots(card: CardDoc): TextSpot[] {
     spots.push({ id: 'item.value.unit', path: ['item', 'value', 'unit'], label: { key: 'editor.texts.rowUnit' }, valueRef: ['item', 'value'] })
   }
   if (form === 'list' || form === 'posters') spots.push({ id: 'empty', path: ['empty'], label: { key: 'editor.texts.empty' } })
+  // The words of a card put together from blocks (KARTEN-7): a fixed text, the label and unit of a value, an empty list.
+  if (form === 'builder') {
+    flatten(card).forEach((node, at) => {
+      const id = node.path.join('.')
+      const number = at + 1
+      if ((node.type === 'text' || node.type === 'badge') && node.block.text !== undefined) spots.push({ id: `${id}.text`, path: [...node.path, 'text'], label: { key: 'editor.texts.blockText', number }, required: true })
+      if (node.type === 'value') {
+        spots.push(
+          { id: `${id}.label`, path: [...node.path, 'label'], label: { key: 'editor.texts.blockLabel', number }, valueRef: node.path },
+          { id: `${id}.unit`, path: [...node.path, 'unit'], label: { key: 'editor.texts.blockUnit', number }, valueRef: node.path },
+        )
+      }
+      if (node.type === 'list') spots.push({ id: `${id}.empty`, path: [...node.path, 'empty'], label: { key: 'editor.texts.blockEmpty', number } })
+    })
+  }
   // The words of a button, and of what it asks first (KARTEN-8).
   const buttons = readAt(card, ['buttons'])
   if (Array.isArray(buttons)) {

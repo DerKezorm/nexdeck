@@ -9,7 +9,7 @@ import type { TFunction } from 'i18next'
 import { ApiError } from '../api/client'
 import type { CardText } from './cardText'
 
-export type CardForm = 'value' | 'stats' | 'list' | 'posters'
+export type CardForm = 'value' | 'stats' | 'list' | 'posters' | 'builder'
 
 /** A kind of connection a card reads through, as people read it. */
 /**
@@ -74,6 +74,8 @@ export interface LibraryCard {
   form: CardForm
   version: string
   requires: CardSource[]
+  /** A card of blocks: the block that is its number (KARTEN-7 AC-8). Only a card that has one goes into Key figures. */
+  main?: string | null
   fits: { id: number; name: string; kind: string }[]
 }
 

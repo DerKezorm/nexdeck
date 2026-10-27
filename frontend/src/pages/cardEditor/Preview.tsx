@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post } from '../../api/client'
+import { OverflowContext } from '../../components/BuilderCard'
 import { WidgetCard } from '../../components/WidgetCard'
 import { useBoardCardStyle, useLook, type CardStyle } from '../../lib/appearance'
 import { readAt } from '../../lib/cardDocument'
@@ -14,6 +15,7 @@ import { useConnections } from './connections'
 import { slotName } from './DataTree'
 import { FIELD_TYPE, placeDropped, readDragged } from './placing'
 import { partOfProblem } from './problems'
+import { useFit } from './fit'
 import { pathsOfValue, slotsOf } from './slots'
 import { useCardEditor } from './store'
 
@@ -28,6 +30,7 @@ const FORM_SIZES: Record<CardForm, { size: [number, number]; min: [number, numbe
   stats: { size: [3, 2], min: [2, 1] },
   list: { size: [3, 3], min: [2, 1] },
   posters: { size: [4, 3], min: [2, 2] },
+  builder: { size: [3, 3], min: [2, 2] },
 }
 /** A column and a row of the board on a wide screen, and the room between two, in pixels. */
 const COLUMN = 92
@@ -153,6 +156,8 @@ export function Preview({ guided = false }: { guided?: boolean }) {
   const sources = useQuery({ queryKey: ['cards-sources'], queryFn: () => get<CardSource[]>('/cards/sources'), staleTime: 60_000 })
 
   const { preview, mode, integrationId, chosen } = usePreviewQuery(!waiting)
+  // A card of blocks tells whether it fits; the builder shows the warning (KARTEN-7 AC-7).
+  const report = useFit((state) => state.report)
   const setWanted = (value: 'live' | 'demo') => useCardEditor.setState({ previewData: value })
   const shownTheme = theme ?? ground
   const shownStyle = style ?? installed
@@ -161,6 +166,7 @@ export function Preview({ guided = false }: { guided?: boolean }) {
 
   const plain = useMemo(() => (card ? (card.doc.toJS() as Record<string, unknown>) : {}), [card])
   const form = ((card ? readAt(card, ['form']) : undefined) ?? 'value') as CardForm
+  useEffect(() => () => report(false), [report, form])
   const sizes = sizesOf(plain)
   const size = sizes[Math.min(sizeIndex, sizes.length - 1)]
   const pixels = pixelsOf(size, phone)
@@ -264,7 +270,9 @@ export function Preview({ guided = false }: { guided?: boolean }) {
         ) : shown.kind === 'data' ? (
           <div style={{ width: pixels.width, height: pixels.height }} className="max-w-none" data-testid="card-preview-card">
             {/* Buttons are drawn, the way a board draws them, and do nothing here (KARTEN-8). */}
-            <WidgetCard widget={widget} data={shown.data} canAct onAction={() => setPressed(true)} />
+            <OverflowContext.Provider value={form === 'builder' ? report : null}>
+              <WidgetCard widget={widget} data={shown.data} canAct onAction={() => setPressed(true)} />
+            </OverflowContext.Provider>
           </div>
         ) : (
           <div style={{ width: pixels.width, height: pixels.height }} className="grid place-items-center text-[12px] text-muted">

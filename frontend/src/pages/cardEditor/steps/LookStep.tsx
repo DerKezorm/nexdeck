@@ -9,10 +9,11 @@ import { slotName } from '../DataTree'
 import { missingOf, treesOf } from '../hints'
 import { changeForm, FORMS, lostByForm, MAX_STATS, MIN_STATS, slotsOf } from '../slots'
 import { useCardEditor } from '../store'
+import { BuilderEditor } from './BuilderEditor'
 import { RowsFields, useHints, ValueFields } from './fields'
 import { StepFrame } from './StepFrame'
 
-const FORM_MARK: Record<CardForm, string> = { value: '12', stats: '3 · 7', list: '≡', posters: '▭▭' }
+const FORM_MARK: Record<CardForm, string> = { value: '12', stats: '3 · 7', list: '≡', posters: '▭▭', builder: '▤' }
 
 /**
  * Step 2, Look (KARTEN-9 AC-4 to AC-7): the form of the card, and exactly the fields that form has: one value, two to
@@ -49,7 +50,7 @@ export function LookStep() {
         <h3 className="text-sm font-semibold break-words hyphens-auto" id="card-look-form">
           {t('editor.look.form')}
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-labelledby="card-look-form">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2" role="group" aria-labelledby="card-look-form">
           {FORMS.map((one) => (
             <button
               key={one}
@@ -78,6 +79,8 @@ export function LookStep() {
           </p>
         </div>
       ))}
+
+      {form === 'builder' && <BuilderEditor />}
 
       {form === 'value' && <ValueFields path={['value']} title={t('editor.slot.value')} required />}
 

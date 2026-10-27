@@ -23,6 +23,7 @@ import {
   type AskType,
   type BodyRow,
 } from '../buttons'
+import { flatten } from '../blocks'
 import { languagesOf, textIn, textSpots, writeText, type TextSpot } from '../texts'
 import { useCardEditor, useCardField } from '../store'
 import { languageName } from './TextsStep'
@@ -30,6 +31,9 @@ import { FieldProblems } from './SourceStep'
 import { StepFrame } from './StepFrame'
 
 const LABEL = 'text-[12px] font-medium text-muted break-words hyphens-auto'
+
+/** A card of blocks can have a button on each row once it has a list block (KARTEN-7). */
+const holdsListBlock = (card: Parameters<typeof flatten>[0]) => flatten(card).some((node) => node.type === 'list')
 
 /**
  * Step 4, Buttons (KARTEN-8): what the card can do with the service. One form per button: its words and symbol,
@@ -50,7 +54,7 @@ export function ButtonsStep() {
     <StepFrame step="buttons">
       {buttons.length === 0 && <p className="text-sm text-muted break-words hyphens-auto">{t('editor.buttons.none')}</p>}
       {buttons.map((_, index) => (
-        <ButtonForm key={index} index={index} count={buttons.length} perRow={form === 'list' || form === 'posters'} />
+        <ButtonForm key={index} index={index} count={buttons.length} perRow={form === 'list' || form === 'posters' || (form === 'builder' && holdsListBlock(card))} />
       ))}
       <div className="flex flex-wrap items-center gap-2 min-w-0">
         <button type="button" className="btn" disabled={!editable || full} onClick={() => change((doc) => addButton(doc))}>

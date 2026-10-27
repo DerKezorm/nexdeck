@@ -2446,7 +2446,8 @@
       "value": "Zahl",
       "stats": "Zahlen",
       "list": "Liste",
-      "posters": "Bilder"
+      "posters": "Bilder",
+      "builder": "Baukasten"
     },
     "local": "Lokal",
     "fromShop": "Kartenladen · {{version}}",
