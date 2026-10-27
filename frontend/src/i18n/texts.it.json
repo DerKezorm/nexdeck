@@ -2053,7 +2053,14 @@
     "Links that failed or are offline, with the reason, and a captcha that waits for an answer.": "Link falliti o offline, con il motivo, e un captcha in attesa di risposta.",
     "Made in pyLoad under Settings, API keys. It starts with pl_.": "Si crea in pyLoad sotto Impostazioni, Chiavi API. Inizia con pl_.",
     "Queue, speed, failed links and a waiting captcha, pause or resume, retry the failed ones.": "Coda, velocità, link falliti e un captcha in attesa, pausa e ripresa, nuovo tentativo per i falliti.",
-    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La chiave agisce come l'utente per cui è stata creata; basta un utente che possa aggiungere e modificare i download."
+    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La chiave agisce come l'utente per cui è stata creata; basta un utente che possa aggiungere e modificare i download.",
+    "Admin password": "Password amministratore",
+    "Every indexer set up, failing ones first with the reason, each with a test button.": "Ogni indicizzatore configurato, prima quelli in errore con il motivo, ciascuno con un pulsante di prova.",
+    "Indexers set up, how many fail, and how many are public or private.": "Indicizzatori configurati, quanti sono in errore e quanti pubblici o privati.",
+    "Jackett overview": "Panoramica di Jackett",
+    "Only the failing ones": "Solo quelli in errore",
+    "Only when you set one under Jackett's Admin password. Leave it empty otherwise.": "Solo se ne hai impostata una in Jackett, sotto Admin password. Altrimenti lascia vuoto.",
+    "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Gli indicizzatori configurati in Jackett, quali falliscono e perché, e una prova per ciascuno."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3271,6 +3278,12 @@
     "Downloads of that host stand still until it is solved.": "I download di quell'host restano fermi finché non viene risolto.",
     "A captcha waits for an answer": "Un captcha attende una risposta",
     "Try the failed ones again": "Riprova i falliti",
-    "queued": "in coda"
+    "queued": "in coda",
+    "Public": "Pubblico",
+    "Semi-private": "Semiprivato",
+    "Test": "Prova",
+    "Works": "Funziona",
+    "No indexer fails.": "Nessun indicizzatore è in errore.",
+    "No indexer is set up.": "Nessun indicizzatore configurato."
   }
 }

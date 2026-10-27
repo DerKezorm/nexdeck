@@ -2053,7 +2053,14 @@
     "Links that failed or are offline, with the reason, and a captcha that waits for an answer.": "Liens échoués ou hors ligne, avec la raison, et un captcha qui attend une réponse.",
     "Made in pyLoad under Settings, API keys. It starts with pl_.": "Créée dans pyLoad sous Paramètres, Clés API. Elle commence par pl_.",
     "Queue, speed, failed links and a waiting captcha, pause or resume, retry the failed ones.": "File d'attente, vitesse, liens échoués et captcha en attente, pause et reprise, nouvel essai des échecs.",
-    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La clé agit comme l'utilisateur pour lequel elle a été créée ; un utilisateur autorisé à ajouter et modifier des téléchargements suffit."
+    "The key acts as the user it was made for; a user who may add and change downloads is enough.": "La clé agit comme l'utilisateur pour lequel elle a été créée ; un utilisateur autorisé à ajouter et modifier des téléchargements suffit.",
+    "Admin password": "Mot de passe administrateur",
+    "Every indexer set up, failing ones first with the reason, each with a test button.": "Chaque indexeur configuré, les défaillants d'abord avec la raison, chacun avec un bouton de test.",
+    "Indexers set up, how many fail, and how many are public or private.": "Indexeurs configurés, combien échouent, et combien sont publics ou privés.",
+    "Jackett overview": "Aperçu de Jackett",
+    "Only the failing ones": "Seulement les défaillants",
+    "Only when you set one under Jackett's Admin password. Leave it empty otherwise.": "Seulement si vous en avez défini un dans Jackett sous Admin password. Sinon laissez vide.",
+    "The indexers Jackett has set up, which of them fail and why, and a test for each.": "Les indexeurs configurés dans Jackett, lesquels échouent et pourquoi, et un test pour chacun."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3271,6 +3278,12 @@
     "Downloads of that host stand still until it is solved.": "Les téléchargements de cet hébergeur restent à l'arrêt tant qu'il n'est pas résolu.",
     "A captcha waits for an answer": "Un captcha attend une réponse",
     "Try the failed ones again": "Réessayer les échecs",
-    "queued": "en file"
+    "queued": "en file",
+    "Public": "Public",
+    "Semi-private": "Semi-privé",
+    "Test": "Tester",
+    "Works": "Fonctionne",
+    "No indexer fails.": "Aucun indexeur n'échoue.",
+    "No indexer is set up.": "Aucun indexeur n'est configuré."
   }
 }

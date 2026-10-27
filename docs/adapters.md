@@ -122,6 +122,7 @@ that one of twenty-one renderers draws.
 | M3U Editor | M3U Editor overview (streams the proxy carries, viewers, bandwidth, playlists, channels, guides; amber on a failed or old sync), active streams (channel, viewers by user name, running time, bandwidth; amber on a failover source or errors), playlists (channels, groups, last sync), guides (channels, last sync), recordings (running, planned, recent) | sync, on a playlist or a guide | an API token from API Tokens; the View ability is enough. The recordings need a DVR set up for the account. Custom, merged and alias playlists are listed but synced through their sources. Viewer addresses are never shown |
 | Radarr, Sonarr, Lidarr, Readarr | queue, status, calendar | search missing | API key |
 | Prowlarr | indexers, status | | API key |
+| Jackett | Jackett overview (indexers set up, failing, public and private), indexers (failing ones first with the first line of the reason) | test an indexer | none; the admin password only when one is set in Jackett |
 | autobrr | recent releases, grabbed | | API key from Settings > API keys |
 | NeutArr | NeutArr overview, hunted apps | | the API key from NeutArr's User page, sent as a header; NeutArr is the continuation of Huntarr |
 | SABnzbd, NZBGet, qBittorrent, Transmission, Deluge | queue, speed | pause, resume | key or password |
