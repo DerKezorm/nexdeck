@@ -2120,7 +2120,15 @@
     "The power the solar system makes now, with the energy of today, this year and in total, and how much of it the house uses itself.": "La puissance que produit l'installation solaire maintenant, avec l'énergie d'aujourd'hui, de cette année et au total, et la part que la maison consomme elle-même.",
     "Used by the house": "Utilisé par la maison",
     "Own supply": "Autosuffisance",
-    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solaire, maison, batterie et réseau en une image, avec la puissance qui circule entre eux. Nécessite un compteur, qui donne la consommation de la maison."
+    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solaire, maison, batterie et réseau en une image, avec la puissance qui circule entre eux. Nécessite un compteur, qui donne la consommation de la maison.",
+    "The power your Hoymiles micro inverters make now, the energy of the day, and which inverters answer.": "La puissance que produisent maintenant vos micro-onduleurs Hoymiles, l'énergie du jour et quels onduleurs répondent.",
+    "The address of OpenDTU's web interface.": "L'adresse de l'interface web d'OpenDTU.",
+    "Only if read-only access to the API is switched off in OpenDTU. The user is admin.": "Seulement si l'accès en lecture seule à l'API est désactivé dans OpenDTU. L'utilisateur est admin.",
+    "Solar power": "Puissance solaire",
+    "The power all inverters make together now, with the energy of today and in total, and how many of them are producing.": "La puissance que produisent maintenant tous les onduleurs ensemble, avec l'énergie d'aujourd'hui et au total, et combien d'entre eux produisent.",
+    "Producing": "En production",
+    "Inverters": "Onduleurs",
+    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Chaque onduleur avec sa puissance, s'il répond, et sa température et sa limite de puissance quand OpenDTU les indique."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3364,6 +3372,7 @@
     "No inject node in a flow that runs.": "Aucun nœud inject dans un flux qui tourne.",
     "Devices online": "Appareils en ligne",
     "No device in the dashboard.": "Aucun appareil dans le tableau de bord.",
-    "Solar power": "Puissance solaire"
+    "Solar power": "Puissance solaire",
+    "No inverter is set up in OpenDTU.": "Aucun onduleur n'est configuré dans OpenDTU."
   }
 }

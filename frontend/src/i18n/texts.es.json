@@ -2120,7 +2120,15 @@
     "The power the solar system makes now, with the energy of today, this year and in total, and how much of it the house uses itself.": "La potencia que produce ahora la instalación solar, con la energía de hoy, de este año y en total, y cuánta usa la propia casa.",
     "Used by the house": "Usado por la casa",
     "Own supply": "Autosuministro",
-    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solar, casa, batería y red en una imagen, con la potencia que se mueve entre ellos. Necesita un contador, que da el consumo de la casa."
+    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solar, casa, batería y red en una imagen, con la potencia que se mueve entre ellos. Necesita un contador, que da el consumo de la casa.",
+    "The power your Hoymiles micro inverters make now, the energy of the day, and which inverters answer.": "La potencia que producen ahora tus microinversores Hoymiles, la energía del día y qué inversores responden.",
+    "The address of OpenDTU's web interface.": "La dirección de la interfaz web de OpenDTU.",
+    "Only if read-only access to the API is switched off in OpenDTU. The user is admin.": "Solo si el acceso de solo lectura a la API está desactivado en OpenDTU. El usuario es admin.",
+    "Solar power": "Potencia solar",
+    "The power all inverters make together now, with the energy of today and in total, and how many of them are producing.": "La potencia que producen ahora todos los inversores juntos, con la energía de hoy y en total, y cuántos están produciendo.",
+    "Producing": "Produciendo",
+    "Inverters": "Inversores",
+    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Cada inversor con su potencia, si responde, y su temperatura y límite de potencia donde OpenDTU los indica."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3364,6 +3372,7 @@
     "No inject node in a flow that runs.": "Ningún nodo inject en un flujo en ejecución.",
     "Devices online": "Dispositivos en línea",
     "No device in the dashboard.": "Ningún dispositivo en el panel.",
-    "Solar power": "Potencia solar"
+    "Solar power": "Potencia solar",
+    "No inverter is set up in OpenDTU.": "No hay ningún inversor configurado en OpenDTU."
   }
 }

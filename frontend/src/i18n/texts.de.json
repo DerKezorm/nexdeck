@@ -2120,7 +2120,15 @@
     "The power the solar system makes now, with the energy of today, this year and in total, and how much of it the house uses itself.": "Die Leistung, die die Solaranlage gerade macht, mit der Energie von heute, diesem Jahr und insgesamt, und wie viel davon das Haus selbst nutzt.",
     "Used by the house": "Vom Haus genutzt",
     "Own supply": "Eigenversorgung",
-    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solar, Haus, Batterie und Netz als ein Bild, mit der Leistung, die zwischen ihnen fließt. Braucht einen Zähler, der den Verbrauch des Hauses liefert."
+    "Solar, house, battery and grid as one picture, with the power moving between them. Needs a meter, which gives the house's use.": "Solar, Haus, Batterie und Netz als ein Bild, mit der Leistung, die zwischen ihnen fließt. Braucht einen Zähler, der den Verbrauch des Hauses liefert.",
+    "The power your Hoymiles micro inverters make now, the energy of the day, and which inverters answer.": "Die Leistung deiner Hoymiles-Mikrowechselrichter jetzt, die Energie des Tages und welche Wechselrichter antworten.",
+    "The address of OpenDTU's web interface.": "Die Adresse der Weboberfläche von OpenDTU.",
+    "Only if read-only access to the API is switched off in OpenDTU. The user is admin.": "Nur nötig, wenn der Lesezugriff auf die API in OpenDTU ausgeschaltet ist. Der Benutzer ist admin.",
+    "Solar power": "Solarleistung",
+    "The power all inverters make together now, with the energy of today and in total, and how many of them are producing.": "Die Leistung aller Wechselrichter zusammen jetzt, mit der Energie von heute und insgesamt, und wie viele davon erzeugen.",
+    "Producing": "Erzeugen",
+    "Inverters": "Wechselrichter",
+    "Each inverter with its power, whether it answers, and its temperature and power limit where OpenDTU says them.": "Jeder Wechselrichter mit seiner Leistung, ob er antwortet, und seiner Temperatur und Leistungsgrenze, wo OpenDTU sie nennt."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3364,6 +3372,7 @@
     "No inject node in a flow that runs.": "Kein Inject-Node in einem laufenden Flow.",
     "Devices online": "Geräte online",
     "No device in the dashboard.": "Kein Gerät im Dashboard.",
-    "Solar power": "Solarleistung"
+    "Solar power": "Solarleistung",
+    "No inverter is set up in OpenDTU.": "In OpenDTU ist kein Wechselrichter eingerichtet."
   }
 }
