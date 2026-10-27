@@ -288,9 +288,12 @@ def as_text(value: Any) -> str:
 
 
 def fits_an_address(value: Any) -> bool:
-    """A value that may stand in the path of a button: not empty, one plain piece, nothing that ends or climbs a path."""
+    """A value that may stand in the path of a button: not empty, one plain piece, nothing that ends or climbs a path.
+
+    ⚠️ A single ``.`` is a segment the client drops when it builds the address: ``/torrents/.`` goes out as ``/torrents``.
+    """
     text = as_text(value)
-    return bool(text) and ".." not in text and not NOT_IN_AN_ADDRESS.search(text)
+    return bool(text) and text != "." and ".." not in text and not NOT_IN_AN_ADDRESS.search(text)
 
 
 def offered_values(button: Button, find: Any) -> dict[str, Any] | None:

@@ -268,7 +268,8 @@ def stays_underneath(path: str) -> bool:
     """A path that begins with a single /, names no host and climbs nowhere (KARTEN-2 AC-4).
 
     ⚠️ A segment ``..`` is refused in every spelling: the service would resolve it above the path the author wrote,
-    and the connection's credentials go with it.
+    and the connection's credentials go with it. A segment ``.`` is refused the same way: the client drops it, so the
+    request would go to another path than the one that was written.
     """
     if not path.startswith("/") or path.startswith("//") or "\\" in path or any(c.isspace() or ord(c) < 32 for c in path):
         return False
@@ -279,7 +280,7 @@ def stays_underneath(path: str) -> bool:
     lowered = before_query.lower()
     if ";" in lowered or any(coded in lowered for coded in ("%2f", "%5c", "%25")):
         return False
-    return not any(segment.replace("%2e", ".") == ".." for segment in lowered.split("/"))
+    return not any(segment.replace("%2e", ".") in (".", "..") for segment in lowered.split("/"))
 
 
 def spaces_are_the_only_fault(path: str) -> bool:

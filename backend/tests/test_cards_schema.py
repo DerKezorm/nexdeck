@@ -331,7 +331,7 @@ def test_karten1_yaml_no_anchors_no_duplicate_fields_and_no_surprises() -> None:
 
 
 def test_karten1_a_request_stays_underneath_the_connection() -> None:
-    for path in ("http://example.com/x", "//example.com/x", "api/v3/queue", "/a/../b c", "/a\\b", "/a\nb"):
+    for path in ("http://example.com/x", "//example.com/x", "api/v3/queue", "/a/../b c", "/a\\b", "/a\nb", "/a/./b", "/a/%2e/b", "/a/%2E"):
         assert refused(changed("path: /api/v3/queue", f"path: {json.dumps(path)}")).problems[0].code == "card_bad_path", path
     for every in ("5s", "2d", "0m", "100000s"):
         assert refused(changed("every: 30s", f"every: {every}")).problems, every

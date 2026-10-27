@@ -343,6 +343,13 @@ async def act(
 
     if not stays_underneath(path):
         raise AdapterError("The path of a button stays underneath the connection's address.", code="bad_path")
+    # ⚠️ The second wall: what the client makes of the address must be the path that was put together. A segment it drops
+    # (``.``, an encoded ``..``) would send the request, signed, to another path than the one written.
+    from .jsonapi import join_path
+
+    url = join_path(adapter.raw_base(config), path)
+    if httpx.URL(url).raw_path.split(b"?", 1)[0].count(b"/") != urlsplit(url).path.count("/"):
+        raise AdapterError("The path of a button stays underneath the connection's address.", code="bad_path")
     size = len(json.dumps(json_body, ensure_ascii=False).encode()) if json_body is not None else len(urlencode(form or {}).encode())
     if size > ACT_BODY_AT_MOST:
         raise AdapterError(

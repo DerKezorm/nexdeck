@@ -53,7 +53,7 @@ def test_karten8_ac2_a_value_keeps_its_type_and_a_dotted_path_reads_inside_the_r
     assert actions_of(item)["button:go"]["params"] == {"info.id": 7, "info.paused": False, "info.note": None}
 
 
-@pytest.mark.parametrize("value", ["../admin", "a/b", "a\\b", "a?b=1", "a#b", "%2e%2e", "a b", "", "tab\there", "..", None])
+@pytest.mark.parametrize("value", ["../admin", "a/b", "a\\b", "a?b=1", "a#b", "%2e%2e", "%2e", "%2E", "a b", "", "tab\there", "..", ".", None])
 def test_karten8_ec1_a_row_whose_value_cannot_go_into_the_path_gets_no_button_there(value: Any) -> None:
     rows = [{"name": "bad", "hash": value}, {"name": "good", "hash": "abc123"}]
     bad, good = (actions_of(item) for item in shown(DOWNLOADS, {"torrents": rows}).items)

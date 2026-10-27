@@ -337,12 +337,36 @@ def test_karten8_a_new_placeholder_since_it_was_shown_is_no_longer_offered(stand
 # -- EC-1: values in the path ----------------------------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("value", ["../admin", "a/b", "a\\b", "a?b", "a#b", "%2e", "a b", "", "\x00", None, ["x"]])
+@pytest.mark.parametrize("value", ["../admin", "a/b", "a\\b", "a?b", "a#b", "%2e", "%2E", "%2e%2e", ".", "..", "a b", "", "\x00", None, ["x"]])
 def test_karten8_ec1_a_value_that_cannot_go_into_the_path_is_refused_before_sending(value: Any) -> None:
     pressed = load.load_definition(DOWNLOADS).definition.buttons[2]
     with pytest.raises(AdapterError) as refused:
         buttons.press(pressed, {"hash": value})
     assert refused.value.code == "bad_value" and refused.value.message == "A value of this button cannot go into an address."
+
+
+@respx.mock
+def test_karten8_ec1_a_single_dot_from_the_data_is_not_offered_and_nothing_goes_out(stand: Stand) -> None:
+    shown = stand.refresh(rows=[{"name": "Evil", "hash": ".", "progress": 1}])
+    offered = [one["id"] for one in shown["items"][0].get("actions") or []]
+    sent = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))
+    answer = stand.press("button:delete", {"hash": "."})
+    assert "button:delete" not in offered and answer.status_code == 400 and sent.call_count == 0, (offered, answer.text)
+
+
+@pytest.mark.parametrize("path", ["/api/v2/torrents/.", "/api/./x", "/api/v2/torrents/./x/."])
+@respx.mock
+def test_karten8_ec1_the_path_that_goes_out_is_the_path_that_was_put_together(monkeypatch: pytest.MonkeyPatch, path: str) -> None:
+    # Even when the first check lets a path through, the second wall stops what the client would shorten.
+    from app.cards import schema
+
+    monkeypatch.setattr(schema, "stays_underneath", lambda _path: True)
+    sent = respx.route(method__in=["POST", "PUT", "PATCH", "DELETE"]).mock(return_value=httpx.Response(200))
+    adapter, config = get_adapter("qbittorrent"), {"url": BASE, "username": "admin", "password": "pw-Zk-1"}
+    ctx = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
+    with pytest.raises(AdapterError) as refused:
+        asyncio.run(adapter.raw_act("DELETE", path, config, ctx))
+    assert refused.value.code == "bad_path" and sent.call_count == 0
 
 
 @pytest.mark.parametrize(("value", "path"), [("abc123", "/api/v2/torrents/abc123"), (7, "/api/v2/torrents/7"), ("a&b=c", "/api/v2/torrents/a%26b%3Dc"), ("Ünï", "/api/v2/torrents/%C3%9Cn%C3%AF")])
