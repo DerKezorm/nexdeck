@@ -15,7 +15,13 @@ export const BLOCK_COLORS = ['text', 'accent', 'green', 'yellow', 'red', 'muted'
 export type BlockColor = (typeof BLOCK_COLORS)[number]
 
 /** One value, written out by the server. `null` is a value that is not there: the block keeps its place and stays empty. */
-export type ShownBlockValue = { text: string; number?: number | null; status?: 'ok' | 'warn' | 'error' | 'unknown' | null } | null
+export type ShownBlockValue = {
+  text: string
+  number?: number | null
+  status?: 'ok' | 'warn' | 'error' | 'unknown' | null
+  /** A fixed text the author wrote in several languages, one text for each; `text` is the first of them. */
+  local?: Record<string, string>
+} | null
 
 export interface BlockRow {
   blocks: Block[]

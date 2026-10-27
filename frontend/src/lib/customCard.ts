@@ -9,7 +9,7 @@
 import i18next from 'i18next'
 
 import { tLabel } from '../i18n/texts'
-import type { Block, BlockRow } from './blocks'
+import type { Block, BlockRow, ShownBlockValue } from './blocks'
 import { formatShown, pickText, type CardShown, type CardText } from './cardText'
 import type { Action, Primary, Secondary, WidgetData } from './types'
 
@@ -94,13 +94,21 @@ function actionsOf(actions: Action[] | undefined, lang: string): Action[] | unde
   }))
 }
 
+/** A value of a block: a fixed text written in several languages comes as one text per language; the viewer's is picked. */
+function valueIn(value: ShownBlockValue, lang: string): ShownBlockValue {
+  if (!value?.local) return value
+  const { local, ...rest } = value
+  return { ...rest, text: pickText(local as CardText, lang) || rest.text }
+}
+
 /**
- * The blocks of a card put together from blocks, with every text in the viewer's language: the label of a value, the
- * words of an empty list, the buttons (on the card and on each row of a list). Nothing else is touched.
+ * The blocks of a card put together from blocks, with every text in the viewer's language: the fixed texts and the label
+ * of a value, the words of an empty list, the buttons (on the card and on each row of a list). Nothing else is touched.
  */
 function blocksIn(blocks: Block[], lang: string): Block[] {
   return blocks.map((block): Block => {
     if (block.type === 'row' || block.type === 'column') return { ...block, children: blocksIn(block.children ?? [], lang) }
+    if (block.type === 'text' || block.type === 'badge') return { ...block, value: valueIn(block.value, lang) }
     if (block.type === 'value') return { ...block, label: block.label === undefined ? undefined : pickText(block.label as CardText, lang) }
     if (block.type === 'button') return { ...block, action: block.action ? (actionsOf([block.action], lang) as [Action])[0] : null }
     if (block.type === 'list') {

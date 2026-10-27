@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { DEMO_VIEWS } from '../demo/board'
+import backend from '../test/builderBackend.json'
 import type { Block } from '../lib/blocks'
 import { localizeCustom } from '../lib/customCard'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
@@ -101,6 +102,20 @@ describe('a card put together from blocks', () => {
     draw([{ type: 'value', label: { en: 'Load', de: 'Last' }, value: { text: '3' }, size: 'm', color: 'text' }, { type: 'list', rows: [], empty: { en: 'Empty', de: 'Leer' } }] as unknown as Block[], { lang: 'de' })
     expect(screen.getByText('Last')).toBeInTheDocument()
     expect(screen.getByText('Leer')).toBeInTheDocument()
+  })
+
+  it('karten7 ac6 writes a fixed text in several languages, as the server sends it, in the language of whoever looks', () => {
+    const data = backend as unknown as WidgetData
+    const german = render(<>{renderWidget({ widget, data: localizeCustom(data, 'de') as WidgetData, canAct: true })}</>)
+    expect(screen.getByText('Hallo')).toBeInTheDocument()
+    expect(screen.getByText('Fest')).toBeInTheDocument()
+    expect(screen.getByText('Plain')).toBeInTheDocument()
+    expect(screen.queryByText('Hello')).toBeNull()
+    german.unmount()
+    // A language the author did not write is English, the way every other text of a card falls back.
+    render(<>{renderWidget({ widget, data: localizeCustom(data, 'it') as WidgetData, canAct: true })}</>)
+    expect(screen.getByText('Hello')).toBeInTheDocument()
+    expect(screen.getByText('Fixed')).toBeInTheDocument()
   })
 
   it('karten7 ac6 shows the button of the card in the language of whoever looks, and nothing for a button that is not offered', async () => {

@@ -1,0 +1,114 @@
+{
+ "status": "ok",
+ "primary": null,
+ "secondary": [],
+ "items": [],
+ "actions": [],
+ "metrics": {},
+ "link": null,
+ "meta": {
+  "custom": true,
+  "blocks": [
+   {
+    "type": "text",
+    "value": {
+     "text": "Hello",
+     "local": {
+      "en": "Hello",
+      "de": "Hallo",
+      "fr": "Salut"
+     }
+    },
+    "color": "text",
+    "size": "m",
+    "weight": "normal"
+   },
+   {
+    "type": "badge",
+    "value": {
+     "text": "Fixed",
+     "local": {
+      "en": "Fixed",
+      "de": "Fest"
+     }
+    },
+    "color": "muted"
+   },
+   {
+    "type": "text",
+    "value": {
+     "text": "Plain"
+    },
+    "color": "text",
+    "size": "m",
+    "weight": "normal"
+   },
+   {
+    "type": "value",
+    "id": "big",
+    "value": {
+     "text": "1234567.89",
+     "number": 1234567.89
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "4.2 items",
+     "number": 4.2
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "12.5%",
+     "number": 12.5
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "5.0 GB",
+     "number": 5368709120
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "2025-10-27 23:20"
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "2025-10-27"
+    },
+    "size": "l",
+    "color": "text"
+   },
+   {
+    "type": "value",
+    "value": {
+     "text": "up"
+    },
+    "size": "l",
+    "color": "text"
+   }
+  ]
+ },
+ "error": null,
+ "updated_at": 1793135339.4991362,
+ "since": null,
+ "forecast": null,
+ "cause": null
+}
