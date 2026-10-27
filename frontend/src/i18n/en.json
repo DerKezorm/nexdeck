@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "API tokens",
-      "help": "A token carries the rights of your account. Use it in scripts and automations.",
+      "help": "A token reads what your account may see or, with full access, does everything your account may. Use it in scripts and automations.",
       "neverUsed": "never used",
       "created": "This is your token. It is shown only once.",
       "usage": "Example:",
-      "name": "Token name"
+      "name": "Token name",
+      "scope": "Access",
+      "scopeRead": "Read only",
+      "scopeFull": "Full access",
+      "scopeHelp": "A read-only token can look but never change anything: every request other than reading is refused. Give full access only to a script that has to change something."
     },
     "boards": {
       "title": "Boards",
@@ -555,6 +559,12 @@
       "at": "Time of the daily report",
       "goesAt": "The daily report goes out at {{time}}.",
       "saved": "The daily report goes out at {{time}} from now on."
+    },
+    "addressBar": {
+      "title": "From the address bar",
+      "tiles": "Every app tile answers to a short name, set in its settings: {{example}} opens the tile with the short name plex, on the boards you may open.",
+      "engines": "Chrome, Edge and Firefox can add nexdeck as a search engine. A short name typed there opens its tile, other words open the search bar here with the words in it, and the address bar suggests tiles and cards while you type. Chrome and Edge list it under Settings, Search engine, Manage search engines, where it can be switched on; Firefox offers it in the menu of the address bar.",
+      "safari": "Safari cannot add search engines this way. A bookmark to a short address works there."
     }
   },
   "menu": {
@@ -890,7 +900,9 @@
       "untitled": "App",
       "firstLabel": "Main",
       "titleHelp": "Empty: the name of the app.",
-      "linkFollows": "Empty: the address of the app. An address here wins over it."
+      "linkFollows": "Empty: the address of the app. An address here wins over it.",
+      "alias": "Short name",
+      "aliasHelp": "Opens this tile from the address bar: {{address}}. Empty takes it from the name. Lower-case letters, digits and hyphens."
     },
     "look": {
       "title": "Colour",

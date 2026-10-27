@@ -189,6 +189,11 @@ class ApiToken(Base):
     #: still say what happened to it.
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
     revoked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: ``read``: GET, HEAD and OPTIONS only (``deps.SAFE_METHODS``). ``full``:
+    #: every right of the account. ⚠️ New tokens start at ``read``; the column
+    #: default is ``full`` so that a token made before there were scopes keeps
+    #: doing what its script does, and an older nexdeck can still insert rows.
+    scope: Mapped[str] = mapped_column(String(8), default="read", server_default="full")
 
     user: Mapped[User] = relationship(back_populates="api_tokens")
 

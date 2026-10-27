@@ -167,6 +167,8 @@ export interface ApiToken {
   prefix: string
   created_at: string
   last_used_at: string | null
+  /** ``read``: GET, HEAD and OPTIONS only. ``full``: every right of the account. */
+  scope: 'read' | 'full'
   token?: string
 }
 

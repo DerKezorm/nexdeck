@@ -34,10 +34,12 @@ interface Props {
   onAction?: (widgetId: number, action: Action) => void
   /** What the cards show, for the links on them: bookmarks, link buttons, saved links. */
   data?: Record<number, WidgetData | undefined>
+  /** Words already in the bar when it opens: what was searched from the address bar (``/go?q=``). */
+  initial?: string
 }
 
 /** Ctrl+K: services, links, actions, boards, pages and settings, all from the keyboard. */
-export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data }: Props) {
+export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data, initial = '' }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -51,11 +53,11 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
 
   useEffect(() => {
     if (open) {
-      setQuery('')
+      setQuery(initial)
       setIndex(0)
       window.setTimeout(() => input.current?.focus(), 10)
     }
-  }, [open])
+  }, [open, initial])
 
   const entries = useMemo<Entry[]>(() => {
     const list: Entry[] = []

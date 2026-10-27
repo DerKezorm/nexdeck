@@ -599,6 +599,13 @@ def _validate_options(db: Session, kind: str, options: dict | None, user: User |
             known = False
         if not known:
             raise error("unknown_app", "There is no such app in the catalog.")
+    if kind == "core.app":
+        from . import aliases
+
+        try:
+            aliases.check(options.get("alias"))
+        except aliases.AliasRefused as refused:
+            raise error(refused.code, str(refused)) from None
     adapter, widget_kind = split_widget_kind(kind)
     for field in adapter.widget(widget_kind).options:
         if field.type != "integrations":

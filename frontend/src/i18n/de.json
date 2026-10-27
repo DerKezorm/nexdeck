@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "API-Token",
-      "help": "Ein Token trägt die Rechte deines Kontos. Für Skripte und Automationen.",
+      "help": "Ein Token liest, was dein Konto sehen darf, oder darf mit vollem Zugriff alles, was dein Konto darf. Für Skripte und Automationen.",
       "neverUsed": "nie benutzt",
       "created": "Das ist dein Token. Es wird nur einmal angezeigt.",
       "usage": "Beispiel:",
-      "name": "Name des Tokens"
+      "name": "Name des Tokens",
+      "scope": "Zugriff",
+      "scopeRead": "Nur lesen",
+      "scopeFull": "Voller Zugriff",
+      "scopeHelp": "Ein lesendes Token kann schauen, aber nichts ändern: Jede Anfrage außer Lesen wird abgelehnt. Vollen Zugriff nur für ein Skript, das etwas ändern muss."
     },
     "boards": {
       "title": "Boards",
@@ -555,6 +559,12 @@
       "at": "Uhrzeit des Tagesberichts",
       "goesAt": "Der Tagesbericht kommt um {{time}}.",
       "saved": "Der Tagesbericht kommt ab jetzt um {{time}}."
+    },
+    "addressBar": {
+      "title": "Aus der Adresszeile",
+      "tiles": "Jede App-Kachel hat einen Kurznamen, einstellbar in ihren Einstellungen: {{example}} öffnet die Kachel mit dem Kurznamen plex, auf den Boards, die du öffnen darfst.",
+      "engines": "Chrome, Edge und Firefox können nexdeck als Suchmaschine aufnehmen. Ein Kurzname dort öffnet seine Kachel, andere Wörter öffnen hier die Suche mit den Wörtern darin, und beim Tippen schlägt die Adresszeile Kacheln und Karten vor. Chrome und Edge führen es unter Einstellungen, Suchmaschine, Suchmaschinen verwalten, wo es eingeschaltet werden kann; Firefox bietet es im Menü der Adresszeile an.",
+      "safari": "Safari kann Suchmaschinen so nicht aufnehmen. Dort hilft ein Lesezeichen auf eine Kurzadresse."
     }
   },
   "menu": {
@@ -890,7 +900,9 @@
       "untitled": "App",
       "firstLabel": "Haupt",
       "titleHelp": "Leer: der Name der App.",
-      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor."
+      "linkFollows": "Leer: die Adresse der App. Eine Adresse hier geht vor.",
+      "alias": "Kurzname",
+      "aliasHelp": "Öffnet diese Kachel aus der Adresszeile: {{address}}. Leer nimmt ihn aus dem Namen. Kleinbuchstaben, Ziffern und Bindestriche."
     },
     "look": {
       "title": "Farbe",

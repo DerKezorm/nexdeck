@@ -51,6 +51,8 @@ export function applyBrand(brand: Brand): void {
   useBrand.setState(brand, true)
   relink('icon', brand.favicon)
   relink('apple-touch-icon', brand.app_icons?.['512'] ?? null)
+  // The name a browser offers nexdeck under as a search engine (``/opensearch.xml`` says the same).
+  document.head.querySelector('link[rel="search"]')?.setAttribute('title', shownName(brand))
   document.title = tabTitle(brand)
 }
 

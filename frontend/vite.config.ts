@@ -114,6 +114,9 @@ export default defineConfig({
     port: 5176,
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
+      // Answered by the server: the short addresses of app tiles and the search engine description.
+      '^/go(?:/|[?]|$)': { target: apiTarget, changeOrigin: true },
+      '/opensearch.xml': { target: apiTarget, changeOrigin: true },
       '/k/': { target: apiTarget, changeOrigin: true, bypass: (req) => (req.headers.accept?.includes('text/html') ? '/index.html' : undefined) },
     },
   },

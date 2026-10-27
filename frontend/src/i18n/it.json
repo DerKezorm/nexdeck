@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Token API",
-      "help": "Un token ha i permessi del tuo account. Usalo in script e automazioni.",
+      "help": "Un token legge ciò che il tuo account può vedere oppure, con accesso completo, fa tutto ciò che il tuo account può fare. Usalo in script e automazioni.",
       "neverUsed": "mai usato",
       "created": "Questo è il tuo token. Viene mostrato una sola volta.",
       "usage": "Esempio:",
-      "name": "Nome del token"
+      "name": "Nome del token",
+      "scope": "Accesso",
+      "scopeRead": "Sola lettura",
+      "scopeFull": "Accesso completo",
+      "scopeHelp": "Un token in sola lettura può guardare, ma non cambia mai nulla: ogni richiesta che non sia una lettura viene rifiutata. Dai l’accesso completo solo a uno script che deve cambiare qualcosa."
     },
     "boards": {
       "title": "Bacheche",
@@ -555,6 +559,12 @@
       "at": "Ora del rapporto giornaliero",
       "goesAt": "Il rapporto giornaliero parte alle {{time}}.",
       "saved": "D’ora in poi il rapporto giornaliero parte alle {{time}}."
+    },
+    "addressBar": {
+      "title": "Dalla barra degli indirizzi",
+      "tiles": "Ogni riquadro di app risponde a un nome breve, impostato nelle sue impostazioni: {{example}} apre il riquadro con il nome breve plex, nelle bacheche che puoi aprire.",
+      "engines": "Chrome, Edge e Firefox possono aggiungere nexdeck come motore di ricerca. Un nome breve digitato lì apre il suo riquadro, altre parole aprono qui la ricerca con quelle parole, e la barra degli indirizzi suggerisce riquadri e schede mentre scrivi. Chrome ed Edge lo mostrano in Impostazioni, Motore di ricerca, Gestisci motori di ricerca, dove si può attivare; Firefox lo offre nel menu della barra degli indirizzi.",
+      "safari": "Safari non può aggiungere motori di ricerca in questo modo. Lì basta un segnalibro a un indirizzo breve."
     }
   },
   "menu": {
@@ -890,7 +900,9 @@
       "untitled": "App",
       "firstLabel": "Principale",
       "titleHelp": "Vuoto: il nome dell'app.",
-      "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza."
+      "linkFollows": "Vuoto: l'indirizzo dell'app. Un indirizzo qui ha la precedenza.",
+      "alias": "Nome breve",
+      "aliasHelp": "Apre questo riquadro dalla barra degli indirizzi: {{address}}. Se vuoto, viene preso dal nome. Lettere minuscole, cifre e trattini."
     },
     "look": {
       "title": "Colore",

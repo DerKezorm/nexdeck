@@ -21,6 +21,7 @@ from ..deps import (
     AdminUser,
     CurrentUser,
     DbSession,
+    NotReadOnly,
     OptionalUser,
     board_for_viewer_id,
     error,
@@ -105,6 +106,15 @@ def _refuse_unless_cards(page: Page) -> None:
         raise error("home_page", "A home page holds controls, not cards. Add the card to another page.")
 
 
+def _refuse_a_taken_alias(db: DbSession, board_id: int, widget_id: int | None, kind: str, options: dict | None) -> None:
+    from ..services import aliases
+
+    try:
+        aliases.refuse_taken(db, board_id, widget_id, kind, options)
+    except aliases.AliasRefused as refused:
+        raise error(refused.code, str(refused), status.HTTP_409_CONFLICT if refused.code == "alias_taken" else 400) from None
+
+
 @router.post("/pages/{page_id}/widgets", status_code=status.HTTP_201_CREATED, summary="Add a widget to a page")
 def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSession) -> dict:
     page = db.get(Page, page_id)
@@ -115,6 +125,7 @@ def create_widget(page_id: int, body: WidgetCreate, user: CurrentUser, db: DbSes
     _validate_kind(db, body.kind, body.integration_id, user)
     _validate_options(db, body.kind, body.options, user)
     app_keys.refuse_twice(db, board.id, None, body.kind, body.options)
+    _refuse_a_taken_alias(db, board.id, None, body.kind, body.options)
     adapter, widget_kind = split_widget_kind(body.kind)
     widget_type = adapter.widget(widget_kind)
     # A tile that follows an app shows the app's name until it is given one of its own.
@@ -155,6 +166,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     if body.options is not None:
         _validate_options(db, widget.kind, body.options, user)
         app_keys.refuse_twice(db, board.id, widget.id, widget.kind, body.options)
+        _refuse_a_taken_alias(db, board.id, widget.id, widget.kind, body.options)
         widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
     if body.clear_refresh:
         widget.refresh_seconds = None
@@ -616,12 +628,18 @@ async def _service_of(widget: Widget) -> tuple[Any, dict[str, Any], Context]:
 
 
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
-async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession) -> Response:
+async def widget_image(widget_id: int, path: str, request: Request, user: OptionalUser, db: DbSession,
+                       _effect: NotReadOnly) -> Response:
     """Posters, thumbnails and snapshots come from the service with the server's credentials; the browser never sees a token.
 
     ``path`` is relative to the integration's address, so the server only ever
     fetches from the service the widget already talks to. The adapter may
     redirect a path (``/snap/0``) to the real request through ``image_source``.
+
+    ⚠️ Not for a token that only reads. The path is the caller's, and a GET
+    on a media server is not always a read: Plex marks a title as played on
+    ``/:/scrobble`` and scans a library on ``.../refresh``, both asked with
+    the server's credentials.
     """
     widget, page = _widget(db, widget_id)
     board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))

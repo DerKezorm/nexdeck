@@ -15,6 +15,7 @@ from ..deps import (
     board_for_viewer_id,
     error,
     kiosk_from_request,
+    read_only_token,
     require_board_id,
 )
 from ..models import Integration, Page
@@ -75,8 +76,10 @@ async def read_topology(page_id: int, request: Request, user: OptionalUser, db: 
         # device, or the gateway only. Later arrivals go to "found", never
         # onto the plan by themselves.
         layout = topology_service.seed(layout, data)
-        page.topology = layout
-        db.commit()
+        # A token that only reads sees the first arrangement and leaves it unwritten.
+        if not read_only_token(request):
+            page.topology = layout
+            db.commit()
     answer["layout"] = layout
     answer["data"] = topology_service.with_ages(data, time.time())
     return answer

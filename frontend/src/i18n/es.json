@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Tokens API",
-      "help": "Un token lleva los permisos de tu cuenta. Úsalo en scripts y automatizaciones.",
+      "help": "Un token lee lo que tu cuenta puede ver o, con acceso completo, hace todo lo que tu cuenta puede hacer. Úsalo en scripts y automatizaciones.",
       "neverUsed": "nunca usado",
       "created": "Este es tu token. Solo se muestra una vez.",
       "usage": "Ejemplo:",
-      "name": "Nombre del token"
+      "name": "Nombre del token",
+      "scope": "Acceso",
+      "scopeRead": "Solo lectura",
+      "scopeFull": "Acceso completo",
+      "scopeHelp": "Un token de solo lectura puede mirar, pero nunca cambia nada: se rechaza toda petición que no sea de lectura. Da acceso completo solo a un script que tenga que cambiar algo."
     },
     "boards": {
       "title": "Tableros",
@@ -555,6 +559,12 @@
       "at": "Hora del informe diario",
       "goesAt": "El informe diario sale a las {{time}}.",
       "saved": "A partir de ahora el informe diario sale a las {{time}}."
+    },
+    "addressBar": {
+      "title": "Desde la barra de direcciones",
+      "tiles": "Cada mosaico de app responde a un nombre corto, que se fija en sus ajustes: {{example}} abre el mosaico con el nombre corto plex, en los tableros que puedes abrir.",
+      "engines": "Chrome, Edge y Firefox pueden añadir nexdeck como buscador. Un nombre corto escrito allí abre su mosaico, otras palabras abren aquí la búsqueda con esas palabras, y la barra de direcciones sugiere mosaicos y tarjetas mientras escribes. Chrome y Edge lo muestran en Configuración, Buscador, Gestionar buscadores, donde se puede activar; Firefox lo ofrece en el menú de la barra de direcciones.",
+      "safari": "Safari no puede añadir buscadores de esta manera. Allí sirve un marcador a una dirección corta."
     }
   },
   "menu": {
@@ -890,7 +900,9 @@
       "untitled": "App",
       "firstLabel": "Principal",
       "titleHelp": "Vacío: el nombre de la app.",
-      "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad."
+      "linkFollows": "Vacío: la dirección de la app. Una dirección aquí tiene prioridad.",
+      "alias": "Nombre corto",
+      "aliasHelp": "Abre este mosaico desde la barra de direcciones: {{address}}. Si se deja vacío, se toma del nombre. Minúsculas, cifras y guiones."
     },
     "look": {
       "title": "Color",

@@ -20,7 +20,7 @@ logger = logging.getLogger("nexdeck.tokens")
 
 def _public(token: ApiToken) -> dict:
     return {"id": token.id, "name": token.name, "prefix": token.prefix, "created_at": token.created_at,
-            "last_used_at": token.last_used_at, "expires_at": token.expires_at}
+            "last_used_at": token.last_used_at, "expires_at": token.expires_at, "scope": token.scope}
 
 
 @router.get("", summary="List my API tokens")
@@ -31,7 +31,7 @@ def list_tokens(user: CurrentUser, db: DbSession) -> list[dict]:
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Create an API token")
 def create_token(body: TokenCreate, body_request: Request, user: MemberUser, db: DbSession) -> dict:
-    """The token is shown once. It carries the same rights as the account.
+    """The token is shown once. It reads only, unless it is asked for with the account's full rights.
 
     It also ends when the password changes, like every session does.
 
@@ -49,10 +49,12 @@ def create_token(body: TokenCreate, body_request: Request, user: MemberUser, db:
         )
     token, token_hash, prefix = new_opaque_token("nd")
     ends = utcnow() + timedelta(days=body.expires_days) if body.expires_days else None
-    row = ApiToken(user_id=user.id, name=body.name.strip(), token_hash=token_hash, prefix=prefix, expires_at=ends)
+    row = ApiToken(user_id=user.id, name=body.name.strip(), token_hash=token_hash, prefix=prefix, expires_at=ends,
+                   scope=body.scope)
     db.add(row)
     db.commit()
-    logger.info("API token %r (%s) created for %s%s.", row.name, row.prefix, user.username,
+    logger.info("API token %r (%s) created for %s, %s%s.", row.name, row.prefix, user.username,
+                "reading only" if row.scope == "read" else "with full access",
                 f", ending {ends:%Y-%m-%d}" if ends else ", with no end")
     return {**_public(row), "token": token}
 

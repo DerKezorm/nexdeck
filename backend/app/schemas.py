@@ -536,6 +536,8 @@ class TokenCreate(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     #: Days until the token stops working. 0 means it does not expire on its own.
     expires_days: int = Field(default=0, ge=0, le=3650)
+    #: ``read`` for GET, HEAD and OPTIONS only, ``full`` for every right of the account.
+    scope: Literal["read", "full"] = "read"
 
 
 class SettingsBody(BaseModel):

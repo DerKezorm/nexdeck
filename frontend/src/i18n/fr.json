@@ -267,11 +267,15 @@
     },
     "tokens": {
       "title": "Jetons API",
-      "help": "Un jeton porte les droits de votre compte. Utilisez-le dans des scripts et des automatisations.",
+      "help": "Un jeton lit ce que votre compte peut voir ou, avec un accès complet, fait tout ce que votre compte peut faire. Utilisez-le dans des scripts et des automatisations.",
       "neverUsed": "jamais utilisé",
       "created": "Voici votre jeton. Il n’est affiché qu’une seule fois.",
       "usage": "Exemple :",
-      "name": "Nom du jeton"
+      "name": "Nom du jeton",
+      "scope": "Accès",
+      "scopeRead": "Lecture seule",
+      "scopeFull": "Accès complet",
+      "scopeHelp": "Un jeton en lecture seule peut regarder, mais ne change jamais rien : toute requête autre qu’une lecture est refusée. Ne donnez un accès complet qu’à un script qui doit modifier quelque chose."
     },
     "boards": {
       "title": "Tableaux",
@@ -555,6 +559,12 @@
       "at": "Heure du rapport quotidien",
       "goesAt": "Le rapport quotidien part à {{time}}.",
       "saved": "Le rapport quotidien part désormais à {{time}}."
+    },
+    "addressBar": {
+      "title": "Depuis la barre d’adresse",
+      "tiles": "Chaque tuile d’app répond à un nom court, réglé dans ses paramètres : {{example}} ouvre la tuile au nom court plex, sur les tableaux que vous pouvez ouvrir.",
+      "engines": "Chrome, Edge et Firefox peuvent ajouter nexdeck comme moteur de recherche. Un nom court saisi là ouvre sa tuile, d’autres mots ouvrent ici la recherche avec ces mots, et la barre d’adresse propose des tuiles et des cartes pendant la saisie. Chrome et Edge l’affichent sous Paramètres, Moteur de recherche, Gérer les moteurs de recherche, où il peut être activé ; Firefox le propose dans le menu de la barre d’adresse.",
+      "safari": "Safari ne peut pas ajouter de moteurs de recherche de cette façon. Un signet vers une adresse courte y fait l’affaire."
     }
   },
   "menu": {
@@ -890,7 +900,9 @@
       "untitled": "App",
       "firstLabel": "Principale",
       "titleHelp": "Vide : le nom de l'app.",
-      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte."
+      "linkFollows": "Vide : l'adresse de l'app. Une adresse ici l'emporte.",
+      "alias": "Nom court",
+      "aliasHelp": "Ouvre cette tuile depuis la barre d’adresse : {{address}}. Vide, il est tiré du nom. Lettres minuscules, chiffres et traits d’union."
     },
     "look": {
       "title": "Couleur",
