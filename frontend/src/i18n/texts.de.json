@@ -2307,7 +2307,12 @@
     "Its state, the project it works on, the items in hand and the traffic.": "Sein Zustand, das Projekt, an dem er arbeitet, die Aufgaben in Arbeit und der Verkehr.",
     "Only when the warrior's web interface has a user name and password (its Settings).": "Nur wenn die Weboberfläche des Warriors Benutzername und Passwort hat (in seinen Einstellungen).",
     "Warrior": "Warrior",
-    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Was der ArchiveTeam Warrior tut: sein Zustand, das Projekt, an dem er arbeitet, und die Aufgaben in Arbeit."
+    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Was der ArchiveTeam Warrior tut: sein Zustand, das Projekt, an dem er arbeitet, und die Aufgaben in Arbeit.",
+    "Every slot, whether it is working and how far its answer has got. Needs the server's slots endpoint (on unless --no-slots).": "Jeder Slot, ob er arbeitet und wie weit seine Antwort ist. Braucht den Slots-Endpunkt des Servers (an, außer mit --no-slots).",
+    "Only when the server was started with --api-key. /health works without it, everything else needs it.": "Nur wenn der Server mit --api-key gestartet wurde. /health geht ohne, alles andere braucht ihn.",
+    "Slots": "Slots",
+    "The model a llama.cpp server serves, how many of its slots are busy and how many tokens a second it makes.": "Das Modell, das ein llama.cpp-Server bereitstellt, wie viele seiner Slots belegt sind und wie viele Token pro Sekunde er erzeugt.",
+    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "Das Modell, belegte Slots und Token pro Sekunde, gelb, solange jeder Slot belegt ist. Für die Geschwindigkeit ist --metrics nötig."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3682,6 +3687,11 @@
     "Needs a nickname": "Braucht einen Spitznamen",
     "Not connected to the tracker": "Nicht mit dem Tracker verbunden",
     "Shutting down": "Fährt herunter",
-    "Rebooting": "Startet neu"
+    "Rebooting": "Startet neu",
+    "Context per slot": "Kontext je Slot",
+    "Quantisation": "Quantisierung",
+    "Slots busy": "Slots belegt",
+    "Tokens a second": "Token pro Sekunde",
+    "No slots.": "Keine Slots."
   }
 }

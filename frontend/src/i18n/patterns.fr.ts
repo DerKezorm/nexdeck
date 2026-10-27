@@ -144,4 +144,6 @@ export const patterns: Pattern[] = [
   [/^(\d+) snapshots?$/, '$1 instantanés'],
   [/^checked (\d+ (?:min|h|d)) ago$/, 'vérifié il y a $1'],
   [/^Keeps (.+)$/, 'Conserve $1'],
+  [/^(\d+) tokens made$/, '$1 tokens produits'],
+  [/^(\d+) tokens$/, '$1 tokens'],
 ]

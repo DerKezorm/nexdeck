@@ -2307,7 +2307,12 @@
     "Its state, the project it works on, the items in hand and the traffic.": "Su estado, el proyecto en el que trabaja, los elementos en curso y el tráfico.",
     "Only when the warrior's web interface has a user name and password (its Settings).": "Solo si la interfaz web del warrior tiene usuario y contraseña (en sus ajustes).",
     "Warrior": "Warrior",
-    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Qué hace el ArchiveTeam Warrior: su estado, el proyecto en el que trabaja y los elementos en curso."
+    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Qué hace el ArchiveTeam Warrior: su estado, el proyecto en el que trabaja y los elementos en curso.",
+    "Every slot, whether it is working and how far its answer has got. Needs the server's slots endpoint (on unless --no-slots).": "Cada slot, si está trabajando y hasta dónde ha llegado su respuesta. Necesita el endpoint de slots del servidor (activo salvo con --no-slots).",
+    "Only when the server was started with --api-key. /health works without it, everything else needs it.": "Solo si el servidor se inició con --api-key. /health funciona sin ella, todo lo demás la necesita.",
+    "Slots": "Slots",
+    "The model a llama.cpp server serves, how many of its slots are busy and how many tokens a second it makes.": "El modelo que sirve un servidor llama.cpp, cuántos de sus slots están ocupados y cuántos tokens por segundo genera.",
+    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "El modelo, los slots ocupados y los tokens por segundo, en amarillo mientras todos los slots están ocupados. Para la velocidad hace falta --metrics."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3682,6 +3687,11 @@
     "Needs a nickname": "Necesita un apodo",
     "Not connected to the tracker": "Sin conexión con el tracker",
     "Shutting down": "Apagándose",
-    "Rebooting": "Reiniciando"
+    "Rebooting": "Reiniciando",
+    "Context per slot": "Contexto por slot",
+    "Quantisation": "Cuantización",
+    "Slots busy": "Slots ocupados",
+    "Tokens a second": "Tokens por segundo",
+    "No slots.": "Sin slots."
   }
 }

@@ -2307,7 +2307,12 @@
     "Its state, the project it works on, the items in hand and the traffic.": "Il suo stato, il progetto su cui lavora, gli elementi in corso e il traffico.",
     "Only when the warrior's web interface has a user name and password (its Settings).": "Solo se l'interfaccia web del warrior ha nome utente e password (nelle sue impostazioni).",
     "Warrior": "Warrior",
-    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Cosa fa l'ArchiveTeam Warrior: il suo stato, il progetto su cui lavora e gli elementi in corso."
+    "What the ArchiveTeam Warrior is doing: its state, the project it works on and the items in hand.": "Cosa fa l'ArchiveTeam Warrior: il suo stato, il progetto su cui lavora e gli elementi in corso.",
+    "Every slot, whether it is working and how far its answer has got. Needs the server's slots endpoint (on unless --no-slots).": "Ogni slot, se sta lavorando e a che punto è la sua risposta. Richiede l'endpoint degli slot del server (attivo salvo con --no-slots).",
+    "Only when the server was started with --api-key. /health works without it, everything else needs it.": "Solo se il server è stato avviato con --api-key. /health funziona senza, tutto il resto la richiede.",
+    "Slots": "Slot",
+    "The model a llama.cpp server serves, how many of its slots are busy and how many tokens a second it makes.": "Il modello servito da un server llama.cpp, quanti dei suoi slot sono occupati e quanti token al secondo produce.",
+    "The model, busy slots and tokens a second, yellow while every slot is busy. Needs --metrics for the speed.": "Il modello, gli slot occupati e i token al secondo, in giallo finché tutti gli slot sono occupati. Per la velocità serve --metrics."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3682,6 +3687,11 @@
     "Needs a nickname": "Richiede un soprannome",
     "Not connected to the tracker": "Non connesso al tracker",
     "Shutting down": "Spegnimento",
-    "Rebooting": "Riavvio"
+    "Rebooting": "Riavvio",
+    "Context per slot": "Contesto per slot",
+    "Quantisation": "Quantizzazione",
+    "Slots busy": "Slot occupati",
+    "Tokens a second": "Token al secondo",
+    "No slots.": "Nessuno slot."
   }
 }

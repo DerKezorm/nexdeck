@@ -174,6 +174,8 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) snapshots?$/, '$1 Snapshots'],
     [/^checked (\d+ (?:min|h|d)) ago$/, 'geprüft vor $1'],
     [/^Keeps (.+)$/, 'Behält $1'],
+    [/^(\d+) tokens made$/, '$1 Token erzeugt'],
+    [/^(\d+) tokens$/, '$1 Token'],
   ],
   es: spanish,
   fr: french,
