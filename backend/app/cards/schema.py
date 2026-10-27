@@ -5,7 +5,7 @@ editor and the YAML completion read, and what the assistant is told. Nothing
 here runs; a definition is data.
 
 A card is a header (who, which version, what it needs), up to five requests to
-the service, a form (``value``, ``stats``, ``list`` or ``posters``) that says
+the service, a form (``value``, ``stats``, ``list``, ``posters`` or ``builder``) that says
 which parts of the answers to show, rules that colour it, and demo answers.
 
 Texts are a string or ``{en: ..., de: ...}``. Whoever views the card gets
@@ -326,6 +326,7 @@ def every_seconds(text: str | None) -> int | None:
 
 
 # ⚠️ Here and not at the top: the models of a button are built from the parts above (``Part``, ``Label``, ``stays_underneath``).
+from .blocks import BlockId, Blocks, holds_list  # noqa: E402
 from .buttons import MAX_BUTTONS, Buttons  # noqa: E402
 
 Kind = Annotated[str, StringConstraints(pattern=r"^(custom:)?[a-z0-9][a-z0-9_-]{0,59}$")]
@@ -409,8 +410,22 @@ class PostersCard(CardBase):
     empty: Label | None = Field(default=None, description="What the card says when there are no rows. Left out, it says Nothing here.")
 
 
-CardDefinition = Annotated[ValueCard | StatsCard | ListCard | PostersCard, Field(discriminator="form")]
-ADAPTER: TypeAdapter[ValueCard | StatsCard | ListCard | PostersCard] = TypeAdapter(CardDefinition)
+class BuilderCard(CardBase):
+    """A card put together from blocks (KARTEN-7): the layout is the author's, the values come from the answers like on any form."""
+
+    form: Literal["builder"]
+    blocks: Blocks = Field(description="The blocks of the card, one under the other. Up to 100 in all, 6 levels deep.")
+    main: BlockId | None = Field(
+        default=None, description="The id of the value block that is the card's main value. With one, the card can be a tile of key figures."
+    )
+    rows: Rows | None = Field(default=None, description="The rows a list block repeats its blocks for (at most 50). Needed when the card has a list.")
+
+    def holds_list(self) -> bool:
+        return holds_list(self.blocks)
+
+
+CardDefinition = Annotated[ValueCard | StatsCard | ListCard | PostersCard | BuilderCard, Field(discriminator="form")]
+ADAPTER: TypeAdapter[ValueCard | StatsCard | ListCard | PostersCard | BuilderCard] = TypeAdapter(CardDefinition)
 
 
 def json_schema() -> dict[str, Any]:

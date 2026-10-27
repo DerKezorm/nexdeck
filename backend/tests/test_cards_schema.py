@@ -345,10 +345,11 @@ def test_karten1_a_value_can_be_just_its_path() -> None:
     assert loaded.data["value"] == {"path": "totalRecords", "rules": []}
 
 
-def test_karten1_t1_the_json_schema_describes_the_four_forms() -> None:
+def test_karten1_t1_the_json_schema_describes_the_forms() -> None:
     document = schema.json_schema()
     assert document["title"] == "nexdeck card"
-    assert len(document["oneOf"]) == 4 and document["discriminator"]["propertyName"] == "form"
+    # Value, stats, list, posters and, since KARTEN-7, builder.
+    assert len(document["oneOf"]) == 5 and document["discriminator"]["propertyName"] == "form"
     value_card = document["$defs"]["ValueCard"]
     assert "nexdeck-card" in value_card["properties"] and "nexdeck-card" in value_card["required"]
     assert value_card["properties"]["name"]["anyOf"][0]["maxLength"] == 60

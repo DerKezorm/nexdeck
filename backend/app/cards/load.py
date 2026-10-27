@@ -21,7 +21,7 @@ from pydantic import BaseModel, ValidationError
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from .. import __version__
-from . import buttons, credentials, schema
+from . import blocks, buttons, credentials, schema
 
 Path = tuple[str | int, ...]
 
@@ -243,14 +243,27 @@ EXPECTED = {
 _KINDS = frozenset({"str", "int", "float", "bool", "dict", "list", "none", "constrained-str"})
 
 
+def _without_block_tags(path: Path) -> Path:
+    """``blocks[0].row.children[1]`` is ``blocks[0].children[1]``: the name of the kind of a block is no field of the text."""
+    kept: list[str | int] = []
+    for index, part in enumerate(path):
+        if isinstance(part, str) and part in blocks.KINDS and index >= 2 and isinstance(path[index - 1], int) and path[index - 2] in ("blocks", "children", "item"):
+            continue
+        kept.append(part)
+    return tuple(kept)
+
+
 def _from_pydantic(error: Any, lines: dict[Path, int]) -> Problem:
     kind: str = error["type"]
     loc = tuple(error["loc"])
-    # The first place names the form that was chosen (value, stats, list, posters), which is not a field.
-    path: Path = loc[1:] if loc and loc[0] in ("value", "stats", "list", "posters") and kind != "union_tag_invalid" else loc
+    # The first place names the form that was chosen (value, stats, list, posters, builder), which is not a field.
+    # A block that is none of the twelve is a fault of that block, not of the form.
+    a_block = kind == "union_tag_invalid" and len(loc) > 1 and loc[0] == "builder"
+    path: Path = loc[1:] if loc and loc[0] in ("value", "stats", "list", "posters", "builder") and (kind != "union_tag_invalid" or a_block) else loc
+    path = _without_block_tags(path)
     # A value that may be one of several kinds names the kind it failed as (``name.str``); that is not a place either.
     path = tuple(part for part in path if not (isinstance(part, str) and (part in _KINDS or "[" in part or "(" in part)))
-    if kind == "union_tag_invalid":
+    if kind == "union_tag_invalid" and not a_block:
         path = ("form",)
     context = error.get("ctx") or {}
     name = str(path[-1]) if path else ""
@@ -284,7 +297,10 @@ def _from_pydantic(error: Any, lines: dict[Path, int]) -> Problem:
         expected = str(context.get("expected", ""))
         return Problem("card_not_allowed", f"This must be one of {expected}.", where, line, {"expected": expected})
     if kind == "union_tag_invalid":
-        expected = "value, stats, list, posters"
+        if a_block:
+            expected = ", ".join(blocks.KINDS)
+            return Problem("card_bad_block", f"type must be one of {expected}.", where, line, {"expected": expected})
+        expected = "value, stats, list, posters, builder"
         return Problem("card_bad_form", f"form must be one of {expected}.", where, line, {"expected": expected})
     if kind in ("greater_than_equal", "less_than_equal", "greater_than", "less_than"):
         bound = next(iter(context.values()), "")
@@ -346,6 +362,8 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
                 (*path, "formula" if shown.formula is not None else "template"),
             )
     for path, code, message, params in buttons.problems(definition):
+        add(code, message, path, **params)
+    for path, code, message, params in blocks.problems(definition):
         add(code, message, path, **params)
     for path, what, failure in pipeline.expression_problems(definition):
         where = f" (character {failure.position + 1})" if failure.position is not None else ""

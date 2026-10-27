@@ -234,6 +234,11 @@ def too_many(buttons: Any) -> Any:
 Buttons = Annotated[list[Button], BeforeValidator(too_many)]
 
 
+def has_rows(definition: Any) -> bool:
+    """Whether a card has rows a button can hang on: a list or pictures, or a card of blocks with a list in it."""
+    return definition.form in ROW_FORMS or (definition.form == "builder" and definition.holds_list())
+
+
 def problems(definition: Any) -> list[tuple[tuple[str | int, ...], str, str, dict[str, Any]]]:
     """What a schema cannot say about the buttons of a card: ``(place, code, message, params)``."""
     found: list[tuple[tuple[str | int, ...], str, str, dict[str, Any]]] = []
@@ -243,7 +248,7 @@ def problems(definition: Any) -> list[tuple[tuple[str | int, ...], str, str, dic
         if button.id in seen:
             found.append(((*here, "id"), "card_duplicate_button", f"Two buttons, or two blanks of one button, share the name {button.id}.", {"id": button.id}))
         seen.add(button.id)
-        if button.where == "row" and definition.form not in ROW_FORMS:
+        if button.where == "row" and not has_rows(definition):
             found.append(((*here, "where"), "card_button_no_rows", "A button on every row needs rows: a list or pictures.", {}))
         declared = {ask.name for ask in button.asks}
         for place, name in button.placeholders():
