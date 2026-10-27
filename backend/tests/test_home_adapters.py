@@ -178,6 +178,156 @@ async def test_fritzbox_says_so_when_the_address_is_not_a_box(ctx: Context) -> N
         await get_adapter("fritzbox").fetch("connection", config, {}, ctx)
 
 
+#: What a 6591 Cable answered to every IGD action with "Transmit status
+#: information over UPnP" switched off, measured on 27.10.2026.
+INVALID_ACTION = _soap(
+    "<s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring><detail>"
+    '<UPnPError xmlns="urn:schemas-upnp-org:control-1-0"><errorCode>401</errorCode>'
+    "<errorDescription>Invalid Action</errorDescription></UPnPError></detail></s:Fault>"
+)
+
+
+@respx.mock
+async def test_fritzbox_names_the_upnp_switch_when_the_box_keeps_its_status(ctx: Context) -> None:
+    """The old hint sent people to "allow access for applications", which was
+    already on, while the switch that mattered was another one."""
+    config = {"url": "http://fritz.box:49000"}
+    respx.post(url__startswith="http://fritz.box:49000/igdupnp/control/").mock(return_value=httpx.Response(500, text=INVALID_ACTION))
+    with pytest.raises(AdapterError) as caught:
+        await get_adapter("fritzbox").test(config, ctx)
+    assert caught.value.code == "upnp_off"
+    assert "Transmit status information over UPnP" in caught.value.hint
+
+
+async def test_fritzbox_says_that_port_49000_is_no_https(ctx: Context) -> None:
+    """The box answers a TLS greeting on 49000 with a plain 400, which httpx
+    reports as "could not be reached"."""
+    with respx.mock(assert_all_called=False) as router:
+        route = router.post(url__startswith="https://fritz.box:49000/")
+        with pytest.raises(AdapterError) as caught:
+            await get_adapter("fritzbox").fetch("connection", {"url": "https://fritz.box:49000"}, {}, ctx)
+    assert caught.value.code == "https_on_plain_port"
+    assert "http://" in caught.value.hint
+    assert not route.called
+
+
+BRIDGE_STATUS = _soap(
+    '<u:GetStatusInfoResponse xmlns:u="urn:schemas-upnp-org:service:WANIPConnection:1">'
+    "<NewConnectionStatus>Unconfigured</NewConnectionStatus>"
+    "<NewLastConnectionError>ERROR_NONE</NewLastConnectionError>"
+    "<NewUptime>0</NewUptime>"
+    "</u:GetStatusInfoResponse>"
+)
+
+
+@respx.mock
+async def test_fritzbox_in_bridge_mode_is_not_red_and_shows_no_uptime_of_zero(ctx: Context) -> None:
+    """Over IGD a box in front of another router says "Unconfigured" and an
+    uptime of 0. The line is fine; the card said "Uptime 0s" and painted it red."""
+    config = {"url": "http://fritz.box:49000"}
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        action = request.headers.get("SOAPAction", "")
+        for name, body in (("GetStatusInfo", BRIDGE_STATUS), ("GetExternalIPAddress", ADDRESS), ("GetAddonInfos", TRAFFIC)):
+            if action.endswith(f"#{name}"):
+                return httpx.Response(200, text=body)
+        return httpx.Response(500, text="")
+
+    respx.post(url__startswith="http://fritz.box:49000/igdupnp/control/").mock(side_effect=answer)
+    data = await get_adapter("fritzbox").fetch("connection", config, {}, ctx)
+    assert data.status == "unknown"
+    assert "Uptime" not in {entry["label"] for entry in data.secondary}
+    assert "FRITZ!Box user" in data.meta["status_reason"]
+
+
+# -- fritz!box with a user: TR-064 ----------------------------------------------
+
+SIGNED = {"url": "http://fritz.box:49000", "username": "dashboard", "password": "secret"}
+
+
+def _info(status: str, uptime: int, address: str = "203.0.113.77", urn: str = "WANIPConnection") -> str:
+    return _soap(
+        f'<u:GetInfoResponse xmlns:u="urn:dslforum-org:service:{urn}:1">'
+        f"<NewEnable>1</NewEnable><NewConnectionStatus>{status}</NewConnectionStatus>"
+        f"<NewUptime>{uptime}</NewUptime><NewExternalIPAddress>{address}</NewExternalIPAddress>"
+        "</u:GetInfoResponse>"
+    )
+
+
+MONITOR = _soap(
+    '<u:X_AVM-DE_GetOnlineMonitorResponse xmlns:u="urn:dslforum-org:service:WANCommonInterfaceConfig:1">'
+    "<NewTotalNumberSyncGroups>2</NewTotalNumberSyncGroups><NewSyncGroupName>sync_cable</NewSyncGroupName>"
+    "<Newds_current_bps>51809,30279,26004</Newds_current_bps><Newus_current_bps>56115,26920,33709</Newus_current_bps>"
+    "</u:X_AVM-DE_GetOnlineMonitorResponse>"
+)
+SIGNED_LINK = LINK.replace("urn:schemas-upnp-org:service:", "urn:dslforum-org:service:")
+
+
+def _tr064(answers: dict[str, str]):
+    """A box that asks for digest first and answers only with it, as the real one does."""
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        if not request.headers.get("Authorization", "").startswith("Digest "):
+            return httpx.Response(401, headers={"WWW-Authenticate": 'Digest realm="HTTPS Access",nonce="C9CA90BD834C69DA",algorithm=MD5,qop="auth"'})
+        if 'username="dashboard"' not in request.headers["Authorization"]:
+            return httpx.Response(401, headers={"WWW-Authenticate": 'Digest realm="HTTPS Access",nonce="EA8B75C06DD1B42D",algorithm=MD5,qop="auth"'})
+        action = request.headers.get("SOAPAction", "").rsplit("#", 1)[-1]
+        if action in answers:
+            return httpx.Response(200, text=answers[action])
+        return httpx.Response(500, text=INVALID_ACTION)
+
+    return answer
+
+
+@respx.mock
+async def test_fritzbox_with_a_user_reads_the_real_state_of_a_bridge(ctx: Context) -> None:
+    """Measured on one box in one minute: IGD said Unconfigured with uptime 0,
+    TR-064 with a user said Connected and the real uptime."""
+    igd = respx.post(url__startswith="http://fritz.box:49000/igdupnp/").mock(return_value=httpx.Response(200, text=BRIDGE_STATUS))
+    respx.post("http://fritz.box:49000/upnp/control/wanipconnection1").mock(side_effect=_tr064({"GetInfo": _info("Connected", 136777)}))
+    monitor = respx.post("http://fritz.box:49000/upnp/control/wancommonifconfig1").mock(side_effect=_tr064({"X_AVM-DE_GetOnlineMonitor": MONITOR}))
+    data = await get_adapter("fritzbox").fetch("connection", SIGNED, {}, ctx)
+    assert data.status == "ok"
+    values = {entry["label"]: entry["value"] for entry in data.secondary}
+    assert values["Uptime"] == "37h 59m"
+    assert values["Public address"] == "203.0.113.77"
+    # The newest of the twenty samples, which is the IGD rate to the byte.
+    assert data.metrics == {"down": 51809.0, "up": 56115.0}
+    assert not igd.called
+    assert b"<NewSyncGroupIndex>0</NewSyncGroupIndex>" in monitor.calls.last.request.content
+
+
+@respx.mock
+async def test_fritzbox_with_a_user_takes_the_dsl_dial_in_when_that_is_the_one(ctx: Context) -> None:
+    respx.post("http://fritz.box:49000/upnp/control/wanipconnection1").mock(side_effect=_tr064({"GetInfo": _info("Unconfigured", 0)}))
+    respx.post("http://fritz.box:49000/upnp/control/wanpppconn1").mock(
+        side_effect=_tr064({"GetInfo": _info("Connected", 3600, "198.51.100.4", "WANPPPConnection")}),
+    )
+    state = await get_adapter("fritzbox").test(SIGNED, ctx)
+    assert state == "The FRITZ!Box answers; the connection is connected."
+
+
+@respx.mock
+async def test_fritzbox_with_a_wrong_password_says_so(ctx: Context) -> None:
+    from app.adapters.base import AuthFailed
+
+    respx.post("http://fritz.box:49000/upnp/control/wanipconnection1").mock(side_effect=_tr064({"GetInfo": _info("Connected", 1)}))
+    with pytest.raises(AuthFailed):
+        await get_adapter("fritzbox").test({**SIGNED, "username": "someone"}, ctx)
+
+
+@respx.mock
+async def test_fritzbox_with_a_user_and_upnp_off_leaves_out_the_totals(ctx: Context) -> None:
+    """TR-064 counts in 32 bit and wraps every four gigabytes; the line card
+    shows no totals rather than wrong ones."""
+    respx.post(url__startswith="http://fritz.box:49000/igdupnp/").mock(return_value=httpx.Response(500, text=INVALID_ACTION))
+    respx.post("http://fritz.box:49000/upnp/control/wancommonifconfig1").mock(side_effect=_tr064({"GetCommonLinkProperties": SIGNED_LINK}))
+    data = await get_adapter("fritzbox").fetch("line", SIGNED, {}, ctx)
+    assert data.status == "ok"
+    assert [entry["label"] for entry in data.secondary] == ["Sync down", "Sync up"]
+    assert data.metrics == {"sync_down": 250_000_000.0, "sync_up": 50_000_000.0}
+
+
 # -- every one of them ---------------------------------------------------------
 
 
