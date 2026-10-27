@@ -44,6 +44,7 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
     "technitium": (["/api/zones/create", "/api/settings/set", "/api/cache/flush"], ["/api/dashboard/stats/get", "/api/zones/list", "/api/dashboard/stats/getTop"]),
     "blocky": (["/api/blocking/disable?duration=5m", "/api/blocking/enable"], ["/api/stats", "/api/blocking/status"]),
     "plex": (["/library/sections/1/refresh", "/:/scrobble?key=1", "/library/optimize"], ["/library/sections", "/status/sessions"]),
+    "owncast": (["/api/admin/disconnect"], ["/api/status", "/api/admin/status", "/api/admin/followers?limit=1"]),
 }
 
 

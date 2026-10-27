@@ -42,6 +42,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -73,6 +74,8 @@ class OwncastAdapter(Adapter):
     docs_url = "https://owncast.online/docs/api/"
     #: Measured against Owncast v0.3.0 in a container, live over RTMP for a minute; no real viewers.
     beta = True
+    #: The admin address of Owncast that cuts the broadcaster off does not look at the method, so a GET would do it.
+    raw_read_commands = ReadCommands(words=frozenset({"disconnect"}))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://owncast:8080"),
         Field("stream_key", "Admin password (stream key)", type="password", secret=True,
@@ -102,8 +105,13 @@ class OwncastAdapter(Adapter):
         ),
     )
 
+    def _auth(self, config: dict[str, Any]) -> tuple[str, str] | None:
+        """The administrator's login: the user ``admin`` with the stream key as the password."""
+        key = str(config.get("stream_key") or "")
+        return ("admin", key) if key else None
+
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, admin: bool = False) -> Any:
-        auth = ("admin", str(config.get("stream_key"))) if admin else None
+        auth = self._auth(config) if admin else None
         response = await ctx.request("GET", f"{base_url(config)}{path}", auth=auth, verify=not config.get("insecure"),
                                      cache_seconds=10, auth_errors=False)
         if response.status_code in (401, 403):
@@ -149,7 +157,7 @@ class OwncastAdapter(Adapter):
 
     async def _get_any(self, config: dict[str, Any], ctx: Context, path: str) -> dict[str, Any]:
         """An administrator's address whose answer does not carry ``online``."""
-        response = await ctx.request("GET", f"{base_url(config)}{path}", auth=("admin", str(config.get("stream_key"))),
+        response = await ctx.request("GET", f"{base_url(config)}{path}", auth=self._auth(config),
                                      verify=not config.get("insecure"), cache_seconds=60, auth_errors=False)
         if response.status_code >= 400:
             raise AdapterError(f"Owncast answered with HTTP {response.status_code}.", code="http_error")
@@ -224,7 +232,7 @@ class OwncastAdapter(Adapter):
             raise AdapterError("Unknown action.", code="no_such_action")
         if not config.get("stream_key"):
             raise AuthFailed("Disconnecting needs the stream key.")
-        response = await ctx.request("POST", f"{base_url(config)}/api/admin/disconnect", auth=("admin", str(config["stream_key"])),
+        response = await ctx.request("POST", f"{base_url(config)}/api/admin/disconnect", auth=self._auth(config),
                                      verify=not config.get("insecure"), auth_errors=False)
         ctx.forget_answers()
         if response.status_code in (401, 403):
