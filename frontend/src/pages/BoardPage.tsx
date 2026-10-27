@@ -26,6 +26,7 @@ import { nextPreview, type HeldPreview } from '../lib/previewHold'
 import { startingValue, unanswered } from '../lib/unanswered'
 import { useBoardCardStyle } from '../lib/appearance'
 import { closeGaps, Steps } from '../lib/arranging'
+import { copyNotes, type CopyAnswer } from '../lib/copying'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { sameSettings } from '../lib/savedYet'
 import type { Action, Breakpoint, LayoutItem, WidgetView } from '../lib/types'
@@ -525,6 +526,27 @@ export function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [flush, moveTargets, t],
   )
+  /**
+   * Cards copied beside themselves or onto another page. The server says what
+   * did not come along (a holder's cards that stay with the original, or that
+   * this person could not have made there), and the toast says it in words.
+   */
+  const onCopy = useCallback(
+    (ids: number[], pageId: number) => {
+      flush()
+      const here = pageId === activePage?.id
+      const name = moveTargets.flatMap((target) => target.pages.map((page) => ({ ...page, board: target.current ? '' : target.boardName }))).find((page) => page.id === pageId)
+      post<CopyAnswer>('/widgets/copy', { ids, page_id: pageId })
+        .then((answer) => {
+          const said = here ? t('arrange.duplicated', { count: answer.copied }) : t('arrange.copied', { count: answer.copied, page: name ? (name.board ? `${name.board} › ${name.name}` : name.name) : '' })
+          setToast({ text: [said, ...copyNotes(answer.notes, t)].join(' '), level: answer.notes.length ? 'info' : 'ok' })
+          void Promise.all([board.refetch(), boards.refetch()])
+        })
+        .catch((failure) => setToast({ text: failure instanceof ApiError ? failure.message : t('errors.network'), level: 'error' }))
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flush, moveTargets, activePage?.id, t],
+  )
 
   // Showcase mode replaces every name under a domain the board's services live
   // on, and the account's own names: both are read here, where they are known.
@@ -751,6 +773,8 @@ export function BoardPage() {
           onSide={canEdit ? onSide : undefined}
           moveTargets={moveTargets}
           onMove={onMove}
+          onCopy={onCopy}
+          here={{ id: activePage.id, name: activePage.name }}
           onAction={onAction}
           onRefresh={onRefresh}
           onSettings={onSettings}

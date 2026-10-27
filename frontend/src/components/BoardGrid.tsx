@@ -67,6 +67,9 @@ interface Props {
   /** Pages a card may be moved to from its menu; without them the menu offers sizes only. */
   moveTargets?: MoveTarget[]
   onMove?: (widgetIds: number[], pageId: number) => void
+  /** Copies cards onto a page; the page in view is offered as "duplicate here". */
+  onCopy?: (widgetIds: number[], pageId: number) => void
+  here?: { id: number; name: string }
   /** Counted up by the page when it puts an arrangement back itself, so the grid draws it fresh. */
   epoch?: number
   /** The page's side bar: where it stands and the cards in it. */
@@ -145,7 +148,7 @@ function plain({ i, x, y, w, h }: Layout | LayoutItem): LayoutItem {
 
 /** The board: one arrangement, drawn as it is on a wide screen and stacked on a narrow one. */
 export function BoardGrid(props: Props) {
-  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, side = NO_SIDE, onPlace, onHeldSize, onAddInto, onSide } = props
+  const { widgets: everyCard, layouts, data, series, editing, canAct, canWrite, onLayoutChange, onAction, onRefresh, onSettings, onRemove, compact, autoCompact, fitHeight, bottomSpace = 40, moveTargets, onMove, onCopy, here, side = NO_SIDE, onPlace, onHeldSize, onAddInto, onSide } = props
   // Cards that live inside a tabs card or a group, or in the side bar, are
   // not on the grid; the holder draws them, from the whole page handed down below.
   const sideIds = useMemo(() => (side.place === 'off' ? [] : side.cards), [side])
@@ -565,6 +568,12 @@ export function BoardGrid(props: Props) {
             setSelected(new Set())
             onMove?.(ids, pageId)
           }}
+          here={here}
+          onCopy={onCopy ? (pageId) => {
+            const ids = group(menuSpot.i) ? [...selected].map(Number) : [menuCard.id]
+            setSelected(new Set())
+            onCopy(ids, pageId)
+          } : undefined}
           onClose={() => setMenu(null)}
         />
       )}

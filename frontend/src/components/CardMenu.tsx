@@ -1,6 +1,7 @@
 /**
  * What a card can be told in edit mode besides being dragged: a size by
- * name, and another page to go to.
+ * name, another page to go to, and a page to be copied onto, its own
+ * included.
  *
  * ⚠️ Drawn at the body, not inside the card. A grid item clips what sticks
  * out of it, so a menu inside the card was cut at the card's edge, and a
@@ -29,15 +30,21 @@ interface Props {
   targets: MoveTarget[]
   onSize: (w: number, h: number) => void
   onMove: (pageId: number) => void
+  /** The page the card is on, offered first when copying: a copy beside the original. */
+  here?: { id: number; name: string }
+  /** Copies the card, or the selection, onto a page. Without it the menu only moves. */
+  onCopy?: (pageId: number) => void
   onClose: () => void
 }
 
 const WIDTH = 248
 
-export function CardMenu({ anchor, carrying, sizes, current, targets, onSize, onMove, onClose }: Props) {
+export function CardMenu({ anchor, carrying, sizes, current, targets, onSize, onMove, here, onCopy, onClose }: Props) {
   const { t } = useTranslation()
   const box = useRef<HTMLDivElement>(null)
   const [top, setTop] = useState(anchor.bottom + 4)
+  // Move or copy: the same pages either way, so one list and a switch above it.
+  const [copying, setCopying] = useState(false)
 
   // Below the button, or above it when the window ends first.
   useLayoutEffect(() => {
@@ -66,6 +73,12 @@ export function CardMenu({ anchor, carrying, sizes, current, targets, onSize, on
 
   const left = Math.max(8, Math.min(window.innerWidth - WIDTH - 8, anchor.right - WIDTH))
   const reachable = targets.filter((target) => target.pages.length > 0)
+  const go = (pageId: number) => {
+    if (copying) onCopy?.(pageId)
+    else onMove(pageId)
+    onClose()
+  }
+  const item = 'w-full text-left px-2 py-1.5 rounded-lg hover:bg-surface-hover focus-visible:bg-surface-hover truncate'
 
   return createPortal(
     <div ref={box} role="menu" aria-label={t('arrange.menu')} className="glass-strong fixed z-[60] rounded-xl p-2 shadow-2xl text-sm" style={{ top, left, width: WIDTH }}>
@@ -93,24 +106,40 @@ export function CardMenu({ anchor, carrying, sizes, current, targets, onSize, on
           )
         })}
       </div>
-      <p className="px-2 pt-1 pb-1 text-[11px] font-medium text-muted border-t border-line">
-        {carrying > 1 ? t('arrange.moveMany', { count: carrying }) : t('arrange.move')}
-      </p>
-      {reachable.length === 0 && <p className="px-2 py-1 text-[12px] text-faint">{t('arrange.nowhere')}</p>}
+      <div className="flex items-center gap-2 px-2 pt-1.5 pb-1 border-t border-line">
+        <p className="flex-1 min-w-0 text-[11px] font-medium text-muted truncate">
+          {copying
+            ? carrying > 1 ? t('arrange.copyMany', { count: carrying }) : t('arrange.copy')
+            : carrying > 1 ? t('arrange.moveMany', { count: carrying }) : t('arrange.move')}
+        </p>
+        {onCopy && (
+          <span className="inline-flex shrink-0 rounded-md bg-surface p-0.5 gap-0.5 text-[11px]" role="group" aria-label={t('arrange.moveOrCopy')}>
+            {([false, true] as const).map((copy) => (
+              <button
+                key={String(copy)}
+                type="button"
+                className={`px-2 py-0.5 rounded ${copying === copy ? 'bg-accent-soft text-ink' : 'text-muted'}`}
+                aria-pressed={copying === copy}
+                onClick={() => setCopying(copy)}
+              >
+                {copy ? t('arrange.copyMode') : t('arrange.moveMode')}
+              </button>
+            ))}
+          </span>
+        )}
+      </div>
+      {!copying && reachable.length === 0 && <p className="px-2 py-1 text-[12px] text-faint">{t('arrange.nowhere')}</p>}
       <div className="max-h-64 overflow-y-auto">
+        {copying && here && (
+          <button role="menuitem" className={`${item} font-medium`} onClick={() => go(here.id)}>
+            {t('arrange.duplicateHere')}
+          </button>
+        )}
         {reachable.map((target) => (
           <div key={target.boardName + String(target.current)}>
             {!target.current && <p className="px-2 pt-1.5 text-[10px] uppercase tracking-wide text-faint">{target.boardName}</p>}
             {target.pages.map((page) => (
-              <button
-                key={page.id}
-                role="menuitem"
-                className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-surface-hover focus-visible:bg-surface-hover truncate"
-                onClick={() => {
-                  onMove(page.id)
-                  onClose()
-                }}
-              >
+              <button key={page.id} role="menuitem" className={item} onClick={() => go(page.id)}>
                 {page.name}
               </button>
             ))}

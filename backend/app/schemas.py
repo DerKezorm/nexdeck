@@ -339,6 +339,13 @@ class WidgetMove(BaseModel):
     page_id: int
 
 
+class WidgetCopy(BaseModel):
+    """Cards to copy onto a page: the one they are on, or a page of another board."""
+
+    ids: list[int] = Field(min_length=1, max_length=300)
+    page_id: int
+
+
 class WidgetPreview(BaseModel):
     """Draft settings for a preview fetch. Nothing is saved."""
 
