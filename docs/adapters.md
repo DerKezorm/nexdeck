@@ -134,6 +134,7 @@ that one of twenty-one renderers draws.
 | Tube Archivist | download queue, latest videos, video archive | start downloads | API token from Settings > Application, sent as Token |
 | Home Assistant | entity, entity list; home pages (beta) with lamps, thermostats, covers, scenes, scripts, switches, sensors and statistics | turn on/off, scenes, scripts, covers, locks; on home pages only the services of lamps, thermostats, covers, scenes, scripts, switches and input booleans | long-lived token, of an administrator for home pages; live over WebSocket |
 | Uptime Kuma | monitors, summary (both by name or by status page) | | API key (metrics endpoint); a status page is read without one |
+| UptimeRobot | monitors (every monitor with its state, type, host and uptime of the last 30 days, down ones first), monitors up (how many, which are down, as a ring; a monitor that only "seems down" is yellow) | | an API key from My Settings > API Settings, a read-only one is enough; sent in the body of a POST to api.uptimerobot.com/v2. The free plan allows ten requests a minute for the whole account. Beta: built from the documentation of API v2, never run against an account |
 | Healthchecks | checks, checks up | | API key from the project settings; the read-only one is enough, and healthchecks.io works too |
 | ChangeDetection.io | recent changes, watches | check all now | API key from Settings > API |
 | n8n | workflows, last runs, summary | publish, unpublish | API key from Settings > n8n API |

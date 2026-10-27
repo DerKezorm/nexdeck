@@ -2072,7 +2072,14 @@
     "Version 2 only: the name of the organization the queries run in. Empty takes the first one the token can see.": "Solo versione 2: il nome dell'organizzazione in cui girano le query. Vuoto prende la prima che il token vede.",
     "Version 3 only: the database the query runs in.": "Solo versione 3: il database in cui gira la query.",
     "Whether InfluxDB is up, its buckets or databases, and one query as a number with its history. Version 2 and 3.": "Se InfluxDB è attivo, i suoi bucket o database e una query come numero con il suo storico. Versioni 2 e 3.",
-    "Whether it is ready, its version and how many buckets or databases it holds.": "Se è pronto, la sua versione e quanti bucket o database contiene."
+    "Whether it is ready, its version and how many buckets or databases it holds.": "Se è pronto, la sua versione e quanti bucket o database contiene.",
+    "A read-only API key or the main one, from My Settings > API Settings at uptimerobot.com. UptimeRobot allows ten requests a minute on the free plan.": "Una chiave API di sola lettura o quella principale, da My Settings > API Settings su uptimerobot.com. UptimeRobot consente dieci richieste al minuto nel piano gratuito.",
+    "Every monitor with its state and its uptime of the last 30 days, down ones first.": "Ogni monitor con il suo stato e la sua disponibilità degli ultimi 30 giorni, prima quelli non raggiungibili.",
+    "How many monitors are up, and which ones are down.": "Quanti monitor sono attivi e quali sono non raggiungibili.",
+    "Monitors up": "Monitor attivi",
+    "Name contains": "Il nome contiene",
+    "Only the monitors whose name has this text.": "Solo i monitor il cui nome contiene questo testo.",
+    "Which UptimeRobot monitors are up and which are down, with their uptime of the last 30 days.": "Quali monitor di UptimeRobot sono attivi e quali non raggiungibili, con la loro disponibilità degli ultimi 30 giorni."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3309,6 +3316,9 @@
     "System": "Sistema",
     "Databases": "Database",
     "No buckets yet.": "Ancora nessun bucket.",
-    "No databases yet.": "Ancora nessun database."
+    "No databases yet.": "Ancora nessun database.",
+    "Keyword": "Parola chiave",
+    "Heartbeat": "Heartbeat",
+    "No monitors yet.": "Ancora nessun monitor."
   }
 }
