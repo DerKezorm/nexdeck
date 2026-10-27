@@ -15,6 +15,7 @@ import re
 from typing import Annotated, Any, Literal
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     ConfigDict,
     Field,
@@ -32,6 +33,9 @@ MAX_INTEGRATIONS = 50
 MAX_TEXT = 64_000
 MAX_FIELDS = 12
 MAX_READS = 30
+#: The body of a sign-in: nesting (a level is a mapping) and the number of keys over all levels.
+MAX_BODY_DEPTH = 3
+MAX_BODY_KEYS = 20
 
 SHORT = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
 FIELD_NAME = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
@@ -115,12 +119,47 @@ class PassOn(Part):
         return self
 
 
+def _count_body(value: Any, depth: int) -> int:
+    """The keys of a body, all levels together; raises when it is nested too deep or holds anything but text and mappings."""
+    if depth > MAX_BODY_DEPTH:
+        raise PydanticCustomError("card_integration_body", "The body of a sign-in is nested at most {depth} levels deep.", {"depth": MAX_BODY_DEPTH})
+    keys = 0
+    for name, child in value.items():
+        if not isinstance(name, str) or not 1 <= len(name) <= 60:
+            raise PydanticCustomError("card_integration_body_key", "A name in the body is text of 1 to 60 characters.")
+        keys += 1
+        if isinstance(child, dict):
+            keys += _count_body(child, depth + 1)
+        elif not isinstance(child, str) or len(child) > 500:
+            raise PydanticCustomError("card_integration_body_value", "A value in the body is text of at most 500 characters, or a mapping of such values.")
+    return keys
+
+
+def _body_fits(value: dict[str, Any] | None) -> dict[str, Any] | None:
+    if value is not None and _count_body(value, 1) > MAX_BODY_KEYS:
+        raise PydanticCustomError("card_integration_body_keys", "The body of a sign-in has at most {limit} names, all levels together.", {"limit": MAX_BODY_KEYS})
+    return value
+
+
+#: What a sign-in sends: names with a text each, or with a mapping of the same one level down (Memos wants
+#: ``{"passwordCredentials": {"username": ..., "password": ...}}``).
+Body = Annotated[dict[str, Any], AfterValidator(_body_fits)]
+
+
+def body_texts(body: dict[str, Any], path: tuple[str, ...] = ()) -> list[tuple[tuple[str, ...], str]]:
+    """Every text of a body with the names that lead to it, nested ones included."""
+    found: list[tuple[tuple[str, ...], str]] = []
+    for name, child in body.items():
+        found += body_texts(child, (*path, name)) if isinstance(child, dict) else [((*path, name), child)]
+    return found
+
+
 class Session(Part):
     """Sign in once, keep the ticket, sign in again when the service says 401."""
 
     login: Path
     send: Literal["json", "form"] = "json"
-    body: dict[Annotated[str, StringConstraints(min_length=1, max_length=60)], Annotated[str, StringConstraints(max_length=500)]] = Field(default_factory=dict, max_length=20)
+    body: Body = Field(default_factory=dict)
     ticket: TicketAt
     pass_: PassOn = Field(alias="pass")
 
@@ -140,7 +179,7 @@ class Auth(Part):
     # session
     login: Path | None = None
     send: Literal["json", "form"] | None = None
-    body: dict[Annotated[str, StringConstraints(min_length=1, max_length=60)], Annotated[str, StringConstraints(max_length=500)]] | None = Field(default=None, max_length=20)
+    body: Body | None = None
     ticket: TicketAt | None = None
     pass_: PassOn | None = Field(default=None, alias="pass")
 

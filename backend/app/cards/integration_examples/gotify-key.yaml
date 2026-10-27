@@ -1,0 +1,26 @@
+nexdeck: integration
+short: gotify-key
+name: Gotify
+logo: gotify
+description: Push messages you send and receive yourself. The client token goes in the address.
+category: other
+fields:
+  - name: token
+    type: secret
+    label: Client token
+    help: Apps > Clients > Create client in Gotify, then copy its token.
+    required: true
+auth:
+  type: query
+  param: token
+  value: "{token}"
+test: /current/user
+test_expects: json
+reads:
+  - path: /message?limit=10
+    label: Latest messages
+  - path: /application
+    label: Applications
+check: /health
+version: {path: /version, at: version}
+github: gotify/server

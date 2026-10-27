@@ -61,8 +61,8 @@ def _templates(definition: sch.IntegrationDefinition) -> list[tuple[Path, str, b
         text = getattr(auth, name)
         if text:
             found.append((("auth", name), text, False))
-    for name, text in (auth.body or {}).items():
-        found.append((("auth", "body", name), text, False))
+    for names, text in sch.body_texts(auth.body or {}):
+        found.append((("auth", "body", *names), text, False))
     if auth.pass_ is not None and auth.pass_.value:
         found.append((("auth", "pass", "value"), auth.pass_.value, True))
     return found
@@ -109,6 +109,10 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
     auth = definition.auth
     if auth.type == "session" and auth.login and not stays_underneath(auth.login):
         add("card_integration_path", "A sign-in address is a path under the address of the connection and starts with a single /.", ("auth", "login"))
+    if auth.type == "session" and auth.send == "form":
+        for name, child in (auth.body or {}).items():
+            if isinstance(child, dict):
+                add("card_integration_body_form", f"A form has no nested names: {name} holds a mapping. Send JSON for a nested body.", ("auth", "body", name), name=name)
     if auth.type == "session" and auth.ticket is not None and auth.pass_ is not None:
         if auth.pass_.as_ == "cookie" and not (auth.pass_.name or auth.ticket.name):
             add("card_integration_pass_cookie", "Passing the ticket as a cookie needs name: the name of the cookie.", ("auth", "pass", "name"))

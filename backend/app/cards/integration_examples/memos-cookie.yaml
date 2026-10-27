@@ -2,7 +2,7 @@ nexdeck: integration
 short: memos-cookie
 name: Memos (cookie)
 logo: memos
-description: The same service, with the ticket kept in a cookie.
+description: For older Memos (0.22 to 0.24), which hands the ticket out in a cookie. A pattern for any service that does.
 category: other
 fields:
   - name: username

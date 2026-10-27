@@ -359,7 +359,7 @@ def test_karten3_ec11_a_restored_backup_brings_the_kinds_and_their_connections_w
         assert resolve_config(db.get(Integration, number))["token_secret"] == "s3cret-value-9"
 
 
-@pytest.mark.parametrize("name", ["wikijs", "bookstack", "apikey-in-address", "memos", "memos-cookie"])
+@pytest.mark.parametrize("name", ["wikijs", "bookstack", "apikey-in-address", "memos", "memos-cookie", "gotify-key", "gotify-basic"])
 def test_karten3_the_example_descriptions_are_valid_and_hold_no_key(admin: TestClient, name: str) -> None:  # noqa: F811
     assert make(admin, example(name)).status_code == 201
 
@@ -395,3 +395,29 @@ def test_karten3_ac6_the_sign_in_path_is_refused_when_it_names_a_word_that_acts(
         assert checked["ok"] is False and [one["code"] for one in checked["problems"]] == ["card_integration_path_acts"], login
         assert checked["problems"][0]["path"].startswith("auth.login"), checked
     assert admin.post(f"{API}/check", json={"yaml": MEMOS}, headers=CSRF).json()["ok"] is True
+
+
+def test_karten3_ac6_the_body_of_a_sign_in_may_be_nested_within_limits(admin: TestClient) -> None:  # noqa: F811
+    def checked(body: object, **more: object) -> dict[str, Any]:
+        return admin.post(f"{API}/check", json={"yaml": changed(MEMOS, short="nest", **{"auth.body": body}, **more)}, headers=CSRF).json()  # type: ignore[no-any-return]
+
+    assert checked({"a": {"b": {"c": "{username}"}}, "d": "{password}"})["ok"] is True
+    deep = checked({"a": {"b": {"c": {"d": "{username}"}}}})
+    assert [one["code"] for one in deep["problems"]] == ["card_integration_body"]
+    many = checked({f"k{n}": {"x": "{username}", "y": "{password}"} for n in range(7)})  # 7 + 14 names
+    assert [one["code"] for one in many["problems"]] == ["card_integration_body_keys"]
+    assert checked({f"k{n}": "{username}" for n in range(20)})["ok"] is True
+    assert checked({"a": {"b": 5}})["problems"][0]["code"] == "card_integration_body_value"
+    assert checked({"a": ["x"]})["problems"][0]["code"] == "card_integration_body_value"
+    unknown = checked({"a": {"b": "{nobody}"}})["problems"][0]
+    assert unknown["code"] == "card_integration_placeholder_unknown" and unknown["path"] == "auth.body.a.b" and unknown["line"]
+
+
+def test_karten3_ac6_a_form_cannot_be_nested_and_the_problem_has_its_line(admin: TestClient) -> None:  # noqa: F811
+    nested = {"passwordCredentials": {"username": "{username}", "password": "{password}"}}
+    form = admin.post(f"{API}/check", json={"yaml": changed(MEMOS, short="nest", **{"auth.send": "form", "auth.body": nested})}, headers=CSRF).json()
+    assert form["ok"] is False
+    found = form["problems"][0]
+    assert found["code"] == "card_integration_body_form" and found["path"] == "auth.body.passwordCredentials" and found["line"]
+    flat = {"username": "{username}", "password": "{password}"}
+    assert admin.post(f"{API}/check", json={"yaml": changed(MEMOS, short="nest", **{"auth.send": "form", "auth.body": flat})}, headers=CSRF).json()["ok"] is True

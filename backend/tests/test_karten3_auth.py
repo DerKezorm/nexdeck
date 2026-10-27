@@ -127,7 +127,7 @@ class Memos:
     def mount(self) -> Memos:
         respx.post(f"{BASE}/api/v1/auth/signin").mock(side_effect=self.sign_in)
         respx.get(f"{BASE}/api/v1/memos").mock(side_effect=self.read)
-        respx.get(f"{BASE}/api/v1/auth/status").mock(side_effect=self.read)
+        respx.get(f"{BASE}/api/v1/auth/me").mock(side_effect=self.read)
         return self
 
 
@@ -224,7 +224,8 @@ def test_karten3_ac6_memos_signs_in_once_keeps_the_ticket_and_passes_it_on(admin
     for _ in range(3):
         assert asked(admin, number).status_code == 200
     assert len(service.logins) == 1
-    assert json.loads(service.logins[0].content) == {"username": "ann", "password": PASSWORD}
+    # Memos 0.31 takes the user name and the password one level down
+    assert json.loads(service.logins[0].content) == {"passwordCredentials": {"username": "ann", "password": PASSWORD}}
     assert {call.headers["authorization"] for call in service.reads} == {"Bearer T1"}
 
 
@@ -239,7 +240,8 @@ def test_karten3_ac6_the_ticket_may_be_a_cookie_and_travel_as_one(admin: TestCli
 
 @respx.mock
 def test_karten3_ac6_the_sign_in_may_be_a_form_and_the_ticket_may_travel_in_the_address(admin: TestClient) -> None:  # noqa: F811
-    text = changed(MEMOS, short="form-app", **{"auth.send": "form", "auth.pass": {"as": "query", "param": "sid"}})
+    flat = {"username": "{username}", "password": "{password}"}
+    text = changed(MEMOS, short="form-app", **{"auth.send": "form", "auth.body": flat, "auth.pass": {"as": "query", "param": "sid"}})
     seen: list[httpx.Request] = []
 
     def sign_in(request: httpx.Request) -> httpx.Response:
@@ -675,3 +677,43 @@ def test_karten3_ac6_the_sign_in_itself_refuses_a_path_that_acts_before_it_posts
             return "sent"
 
     assert asyncio.run(run()) == "command_refused" and not posted.called
+
+
+@respx.mock
+def test_karten3_ac6_every_text_of_a_nested_body_is_filled_once(admin: TestClient) -> None:  # noqa: F811
+    body = {"outer": {"user": {"name": "{username}"}, "note": "x"}, "secret": "{password}"}
+    seen: list[httpx.Request] = []
+
+    def sign_in(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"accessToken": "T"})
+
+    respx.post(f"{BASE}/api/v1/auth/signin").mock(side_effect=sign_in)
+    respx.get(f"{BASE}/api/v1/memos").mock(return_value=httpx.Response(200, json={}))
+    number = own(admin, changed(MEMOS, short="nested", **{"auth.body": body}), username="{password}", password=PASSWORD)
+    assert asked(admin, number).status_code == 200
+    assert json.loads(seen[0].content) == {"outer": {"user": {"name": "{password}"}, "note": "x"}, "secret": PASSWORD}
+
+
+@respx.mock
+def test_karten3_the_gotify_examples_send_the_token_in_the_address_or_the_account_as_basic(admin: TestClient) -> None:  # noqa: F811
+    user = respx.get(f"{BASE}/current/user").mock(return_value=httpx.Response(200, json={"name": "admin"}))
+    by_key = own(admin, example("gotify-key"), token=KEY)
+    assert pressed(admin, by_key)["ok"] is True
+    assert user.calls.last.request.url.params["token"] == KEY
+    by_account = own(admin, example("gotify-basic"), username="ann", password=PASSWORD)
+    assert pressed(admin, by_account)["ok"] is True
+    assert base64.b64decode(user.calls.last.request.headers["authorization"].removeprefix("Basic ")).decode() == f"ann:{PASSWORD}"
+    assert "token" not in user.calls.last.request.url.params
+    reads = {one["path"] for one in admin.get("/api/v1/cards/sources/custom:gotify-key/reads").json()["reads"]}
+    assert reads == {"/message?limit=10", "/application"}
+
+
+@respx.mock
+def test_karten3_the_memos_example_is_the_one_for_0_31_and_the_cookie_example_says_it_is_for_older_ones(admin: TestClient) -> None:  # noqa: F811
+    from app.cards.integration import load_integration
+
+    memos = load_integration(MEMOS).definition
+    assert (memos.test, memos.check, memos.version.path, memos.version.at, memos.github) == ("/api/v1/auth/me", "/healthz", "/api/v1/instance/profile", "version", "usememos/memos")
+    assert memos.auth.login == "/api/v1/auth/signin" and "0.25 and later" in memos.description
+    assert "0.22 to 0.24" in load_integration(example("memos-cookie")).definition.description

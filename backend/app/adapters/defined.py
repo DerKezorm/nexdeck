@@ -199,6 +199,10 @@ class DefinedAdapter(Adapter):
 
         return sch.PLACEHOLDER.sub(one, template)
 
+    def _fill_body(self, body: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+        """The body of the sign-in with every text filled once; a mapping inside is filled the same way."""
+        return {name: self._fill_body(child, config) if isinstance(child, dict) else self._fill(child, config) for name, child in body.items()}
+
     def _fingerprint(self, config: dict[str, Any]) -> str:
         return hashlib.sha256(json.dumps([self._digest, config], sort_keys=True, default=str).encode()).hexdigest()
 
@@ -288,7 +292,7 @@ class DefinedAdapter(Adapter):
 
         refuse_a_command(self, session.login)
         url = join_path(self.raw_base(config), session.login)
-        body = {name: self._fill(text, config) for name, text in session.body.items()}
+        body = self._fill_body(session.body, config)
         response = await ctx.request(
             "POST", url,
             json_body=body if session.send == "json" else None,

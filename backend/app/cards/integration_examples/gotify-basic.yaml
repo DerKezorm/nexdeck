@@ -1,0 +1,29 @@
+nexdeck: integration
+short: gotify-basic
+name: Gotify (user and password)
+logo: gotify
+description: Push messages you send and receive yourself. Signs in with the user name and the password of an account.
+category: other
+fields:
+  - name: username
+    type: text
+    label: User name
+    required: true
+  - name: password
+    type: secret
+    label: Password
+    required: true
+auth:
+  type: basic
+  user: "{username}"
+  password: "{password}"
+test: /current/user
+test_expects: json
+reads:
+  - path: /message?limit=10
+    label: Latest messages
+  - path: /application
+    label: Applications
+check: /health
+version: {path: /version, at: version}
+github: gotify/server
