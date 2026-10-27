@@ -8,6 +8,7 @@ import { cardStatus } from '../lib/cardStatus'
 import { momentOf } from '../lib/chronicle'
 import { maintenanceTarget } from '../lib/maintenance'
 import { canRefract, refract } from '../lib/refraction'
+import { serviceLogo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
 import { useAuth } from '../stores/auth'
@@ -198,7 +199,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
     >
       {!bare && (
         <header className="flex items-center gap-2 px-3 pt-2.5 pb-1 min-h-9">
-          <ServiceIcon icon={widget.icon} size={18} />
+          <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={18} />
           <h3 className="text-[13px] font-medium truncate flex-1 text-ink/90" title={disguise.free(widget.title)}>
             {disguise.free(widget.title)}
           </h3>

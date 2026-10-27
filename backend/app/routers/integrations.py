@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,7 @@ from ..crypto import SecretUnreadable
 from ..deps import AdminUser, CurrentUser, DbSession, error, require_integration
 from ..models import Integration, Role, Widget
 from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
-from ..services import chronicle, versions
+from ..services import chronicle, favicons, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
 from ..services.integrations import public_config, resolve_config, store_config, validate_required
@@ -275,6 +275,23 @@ async def test_integration(body: IntegrationTest, user: AdminUser, db: DbSession
     finally:
         await hand_back(adapter, config, ctx)
     return {"ok": True, "message": message, **_demo_note()}
+
+
+@router.get("/integrations/{integration_id}/favicon", summary="Serve the logo a connection's service names for itself")
+async def integration_favicon(integration_id: int, user: CurrentUser, db: DbSession) -> Response:
+    """For a connection whose logo no collection has, in the list of connections: as for a card (``widget_favicon``)."""
+    integration = require_integration(db, integration_id, user)
+    try:
+        address = get_adapter(integration.kind).default_link(resolve_config(integration))
+    except (KeyError, ValueError):
+        address = ""
+    found = await favicons.favicon(address) if address else None
+    if found is None:
+        raise error("not_found", "The service names no logo of its own.", status.HTTP_404_NOT_FOUND)
+    from .widgets import _image_headers
+
+    content, content_type = found
+    return Response(content=content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=86400"))
 
 
 @router.get("/integrations/{integration_id}/choices/{field}", summary="What a widget field can be set to, asked of the service")

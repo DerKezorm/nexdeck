@@ -25,6 +25,17 @@ export function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value))
 }
 
+/**
+ * The service's own logo, for a card whose icon is missing or that no
+ * collection has: the server reads it from the address the card opens. Only
+ * for a card with such an address; the request names the card, not the
+ * address, so it cannot send the server anywhere else.
+ */
+export function serviceLogo(widget: { id: number; link?: string | null; service_link?: string | null }): string | null {
+  const address = widget.link || widget.service_link || ''
+  return widget.id > 0 && /^https?:\/\//i.test(address) ? `/api/v1/widgets/${widget.id}/favicon` : null
+}
+
 /** Where service logos come from: the server proxies and caches them. */
 export function iconUrl(icon: string | undefined | null, ground?: 'dark' | 'light'): string | null {
   if (!icon) return null

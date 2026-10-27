@@ -32,7 +32,7 @@ import type { TFunction } from 'i18next'
 
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
-import { formatValue, timeAgo } from '../lib/format'
+import { formatValue, serviceLogo, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
 import { recordedMetrics } from '../lib/recorded'
 import { safeUrl } from '../lib/safeUrl'
@@ -2172,7 +2172,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
       >
         <div className="text-[14px] font-semibold truncate max-w-full text-center">{widget.title}</div>
         <div className="app-big-icon flex-1 min-h-0 w-full grid place-items-center">
-          <ServiceIcon icon={widget.icon} size={96} />
+          <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={96} />
         </div>
         {asBars ? (
           <AvailabilityBars bars={bars} title={barsTitle} className="w-full" />
@@ -2190,7 +2190,7 @@ export function AppTile({ widget, data, link }: RenderProps) {
       className="flex-1 flex flex-col justify-center px-3 py-2 min-h-0 no-underline text-inherit"
     >
       <div className="flex items-center gap-3">
-        <ServiceIcon icon={widget.icon} size={30} />
+        <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={30} />
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold truncate">{widget.title}</div>
           {description && <div className="text-[11px] text-muted truncate">{description}</div>}

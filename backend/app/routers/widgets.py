@@ -37,7 +37,7 @@ from ..schemas import (
     WidgetPatch,
     WidgetPreview,
 )
-from ..services import chronicle, grid, history, holders, impact
+from ..services import chronicle, favicons, grid, history, holders, impact
 from ..services import health as health_service
 from ..services.boards import (
     _validate_options,
@@ -455,6 +455,28 @@ async def _service_of(widget: Widget) -> tuple[Any, dict[str, Any], Context]:
         return await collector.resolve_integration(widget.integration_id)
     except AdapterError as failure:
         raise error("not_found", str(failure), status.HTTP_404_NOT_FOUND) from failure
+
+
+@router.get("/widgets/{widget_id}/favicon", summary="Serve the logo the service of a card names for itself")
+async def widget_favicon(widget_id: int, request: Request, user: OptionalUser, db: DbSession) -> Response:
+    """For a card whose logo no collection has: the service's own, from the address the card opens.
+
+    Only for whoever may see the board, a wall display included, and only from
+    the address stored on the card, its app or its connection: the request
+    names no address, so it cannot point the server anywhere else.
+    """
+    widget, page = _widget(db, widget_id)
+    board_for_viewer_id(db, page.board_id, user, kiosk_from_request(request, db))
+    from ..services import apps as apps_service
+    from ..services.boards import service_link
+
+    _app, app_link = apps_service.tile_view(db, widget)
+    address = widget.link or app_link or service_link(widget)
+    found = await favicons.favicon(address) if address else None
+    if found is None:
+        raise error("not_found", "The service names no logo of its own.", status.HTTP_404_NOT_FOUND)
+    content, content_type = found
+    return Response(content=content, media_type=content_type, headers=_image_headers(content_type, "private, max-age=86400"))
 
 
 @router.get("/widgets/{widget_id}/image", summary="Serve an image of a widget's service through the server")
