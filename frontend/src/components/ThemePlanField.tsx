@@ -30,7 +30,7 @@ export function ThemePlanField({ id, value, onChange }: { id: string; value: The
         />
       </Field>
       {value.theme === 'schedule' && (
-        <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+        <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:col-start-2">
           <Field label={t('settings.profile.lightFrom')} htmlFor={`${id}-light`} help={t('settings.profile.scheduleHelp')}>
             <input id={`${id}-light`} className="input" type="time" required defaultValue={light} onChange={(event) => time('light_from', event.target.value)} />
           </Field>
