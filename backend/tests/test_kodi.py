@@ -71,8 +71,8 @@ async def test_an_episode_plays_with_its_show_and_number_its_progress_and_time_l
     data = await ADAPTER.fetch("nowplaying", CONFIG, {}, ctx)
     row = data.items[0]
     assert (row["title"], row["subtitle"], row["progress"], row["remaining"], row["state"]) == ("Departure", "Harbour Lights S03E04", 25.0, "1h 18m", "playing")
-    assert row["art"] == "proxy:/image/image%3A%2F%2Fposter.jpg%2F"
-    assert row["backdrop"] == "proxy:/image/image%3A%2F%2Ffanart.jpg%2F"
+    assert row["art"] == "proxy:/image/aW1hZ2U6Ly9wb3N0ZXIuanBnLw"
+    assert row["backdrop"] == "proxy:/image/aW1hZ2U6Ly9mYW5hcnQuanBnLw"
     assert data.metrics == {"players": 1.0}
     assert [call["method"] for call in seen] == ["Player.GetActivePlayers", "Player.GetItem", "Player.GetProperties"]
     assert seen[1]["params"] == {"playerid": 1, "properties": ["title", "showtitle", "season", "episode", "artist", "album", "year", "thumbnail", "art", "file"]}
@@ -85,7 +85,7 @@ async def test_a_song_names_the_artist_and_album_and_falls_back_to_the_thumbnail
     kodi(video(PAUSED, SONG))
     row = (await ADAPTER.fetch("nowplaying", CONFIG, {}, ctx)).items[0]
     assert (row["title"], row["subtitle"], row["state"]) == ("Signal", "Orbital Tide · Copper Sky", "paused")
-    assert row["art"] == "proxy:/image/image%3A%2F%2Fcover.jpg%2F"
+    assert row["art"] == "proxy:/image/aW1hZ2U6Ly9jb3Zlci5qcGcv"
 
 
 @respx.mock
@@ -182,6 +182,17 @@ async def test_the_test_names_the_version_and_sends_the_user_and_password_only_w
 async def test_the_picture_is_asked_for_with_the_password_and_not_the_browser(ctx: Context) -> None:
     headers = ADAPTER.image_headers(CONFIG)
     assert headers["Authorization"].startswith("Basic ") and ADAPTER.image_headers(OPEN) == {}
+
+
+async def test_a_picture_goes_back_to_kodi_in_its_own_form_and_only_when_it_is_an_image_address(ctx: Context) -> None:
+    source = await ADAPTER.image_source(CONFIG, "/image/aW1hZ2U6Ly9wb3N0ZXIuanBnLw", ctx)
+    assert source.url == f"{BASE}/image/image%3A%2F%2Fposter.jpg%2F"
+    assert source.headers["Authorization"].startswith("Basic ")
+    # "vfs://..." and "/etc/passwd" are what Kodi's web server would also serve; neither is a picture.
+    for token in ("dmZzOi8vL2V0Yy9wYXNzd2Q", "L2V0Yy9wYXNzd2Q", "!!"):
+        with pytest.raises(AdapterError) as refused:
+            await ADAPTER.image_source(CONFIG, f"/image/{token}", ctx)
+        assert refused.value.code == "bad_path"
 
 
 @respx.mock

@@ -22,6 +22,7 @@ import respx
 from fastapi.testclient import TestClient
 
 from app.adapters import all_adapters, get_adapter
+from app.adapters import kodi as kodi_module
 from app.adapters import nexcanvas as nexcanvas_module
 from app.adapters.base import Adapter, AdapterError, Context, ImagePath, WidgetData, image_path
 from app.routers import widgets as widgets_router
@@ -126,11 +127,15 @@ async def real_paths(kind: str) -> list[str]:
         nexcrate = get_adapter("nexcrate")
         return _proxied([nexcrate._art({"poster_path": "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"}),
                          nexcrate._art({"album": {"cover_url": f"https://coverartarchive.org/release-group/{UUID}/front-500"}})])
+    if kind == "kodi":
+        return [path[len("proxy:"):] for path in (kodi_module._art({"art": {"poster": "image://poster.jpg/"}}, "poster"),
+                                                    kodi_module._art({"thumbnail": "image://video@%2fmedia%2fshow.jpg/"}, "thumb"),
+                                                    kodi_module._art({"art": {"fanart": f"image://http%3a%2f%2fexample.com%2f{'a' * 200}.jpg/"}}, "fanart"))]
     return []
 
 
 #: The adapters that hand out pictures. A new one fails the guard below until it is named here with its real paths.
-PICTURE_ADAPTERS = {"plex", "jellyfin", "emby", "frigate", "reolink", "nexcanvas", "nexcrate"}
+PICTURE_ADAPTERS = {"plex", "jellyfin", "emby", "frigate", "reolink", "nexcanvas", "nexcrate", "kodi"}
 
 #: Paths that act on a service or lead somewhere else, refused by every adapter.
 DANGEROUS = [
@@ -165,6 +170,11 @@ KNOWN_HARM = {
     "frigate": [
         "/api/events/1726680000.5-ab12cd/retain", "/api/front_gate/latest.jpg", "/latest/front_gate/../../api/restart",
         "/latest/front_gate?h=99999", "/thumb/..", "/latest/.hidden", "/latest/front_gate/extra",
+    ],
+    "kodi": [
+        "/jsonrpc?request=%7B%22jsonrpc%22%3A%222.0%22%2C%22method%22%3A%22Application.Quit%22%2C%22id%22%3A1%7D", "/jsonrpc",
+        "/vfs/%2Fetc%2Fpasswd", "/vfs/aW1hZ2U6Ly9wb3N0ZXIuanBnLw", "/image/image%3A%2F%2Fposter.jpg%2F", "/image/aW1hZ2U6Ly9wb3N0ZXIuanBnLw/extra",
+        "/image/", "/image/" + "A" * 2049, "/image/aW1h?cmd=Quit",
     ],
     "reolink": ["/snap/1/main?cmd=Reboot", "/snap/1/../../cgi-bin/api.cgi", "/snap/1234", "/snap/1/MAIN", "/snap/-1"],
     "nexcanvas": [

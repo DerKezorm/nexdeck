@@ -28,11 +28,15 @@ reason the library and the playing card say so when the Kodi cannot answer.
 
 ⚠️ A picture is ``image://...`` in Kodi's own scheme and reaches a browser
 only through the web server's ``/image/<that, percent-encoded>``; it is handed
-out as ``proxy:`` so the password stays here.
+out as ``proxy:`` so the password stays here. The image route takes no percent
+sign in a path, so the picture travels as ``/image/<url-safe base64>`` and
+``image_source`` puts Kodi's own form back.
 """
 
 from __future__ import annotations
 
+import base64
+import binascii
 from typing import Any
 from urllib.parse import quote
 
@@ -44,6 +48,8 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ImagePath,
+    MediaSource,
     WidgetData,
     WidgetType,
     base_url,
@@ -85,7 +91,7 @@ def _text(*values: Any) -> str:
 def _art(item: dict[str, Any], *keys: str) -> str:
     art = item.get("art") if isinstance(item.get("art"), dict) else {}
     picture = _text(*(art.get(key) for key in keys), item.get("thumbnail") if "poster" in keys or "thumb" in keys else "")
-    return f"proxy:/image/{quote(picture, safe='')}" if picture else ""
+    return f"proxy:/image/{base64.urlsafe_b64encode(picture.encode()).decode().rstrip('=')}" if picture else ""
 
 
 def _row(item: dict[str, Any], properties: dict[str, Any]) -> dict[str, Any]:
@@ -171,6 +177,24 @@ class KodiAdapter(Adapter):
     )
 
     # -- the wire ------------------------------------------------------------
+
+    #: Kodi's pictures, and nothing else of the web server: the one segment is the picture's own address, encoded.
+    image_paths = (ImagePath(r"/image/[A-Za-z0-9_-]{1,2048}"),)
+
+    async def image_source(self, config: dict[str, Any], path: str, ctx: Context) -> MediaSource:
+        """``/image/<base64>`` back to Kodi's ``/image/<image://..., percent-encoded>``, fetched with the web user.
+
+        ⚠️ Only an ``image://`` address. Kodi's ``/vfs/`` serves any file it can
+        read, so a picture that decodes to anything else is refused.
+        """
+        try:
+            token = path[len("/image/"):]
+            picture = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4)).decode()
+        except (binascii.Error, ValueError) as failure:
+            raise AdapterError("That is not a picture Kodi hands out.", code="bad_path") from failure
+        if not picture.startswith("image://"):
+            raise AdapterError("That is not a picture Kodi hands out.", code="bad_path")
+        return MediaSource(url=f"{base_url(config)}/image/{quote(picture, safe='')}", headers=self.image_headers(config))
 
     def image_headers(self, config: dict[str, Any]) -> dict[str, str]:
         import base64
