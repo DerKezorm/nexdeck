@@ -2111,7 +2111,11 @@
     "Transfers": "Transferts",
     "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Utilisé quand rclone n'a pas de limite de bande passante, en MB/s. Laissez vide et la carte reste un nombre.",
     "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Ce que rclone déplace, les fichiers déplacés, les erreurs, la limite de bande passante et un moyen de la changer.",
-    "rclone overview": "Aperçu de rclone"
+    "rclone overview": "Aperçu de rclone",
+    "Scenes, images, galleries, how much space they take, and how much has been watched.": "Scènes, images, galeries, la place qu'elles prennent et ce qui a été regardé.",
+    "Settings > Security > Generate API Key; it needs a user name and password to be set first. Leave empty when Stash has no login.": "Settings > Security > Generate API Key ; il faut d'abord définir un nom d'utilisateur et un mot de passe. Laissez vide si Stash n'a pas de connexion.",
+    "The size of the library, the tasks Stash is running and a button to scan for new files.": "La taille de la bibliothèque, les tâches que Stash exécute et un bouton pour chercher de nouveaux fichiers.",
+    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Ce que Stash analyse, génère ou nettoie en ce moment, avec la progression, et des boutons pour analyser ou arrêter."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3382,6 +3386,13 @@
     "Reset the counters": "Réinitialiser les compteurs",
     "Set the limit": "Définir la limite",
     "Transferred": "Transféré",
-    "Nothing has been moved.": "Rien n'a été déplacé."
+    "Nothing has been moved.": "Rien n'a été déplacé.",
+    "Galleries": "Galeries",
+    "Length": "Durée",
+    "Scan for new files": "Chercher de nouveaux fichiers",
+    "Scenes": "Scènes",
+    "Stop all tasks": "Arrêter toutes les tâches",
+    "Watched": "Regardé",
+    "No task is running.": "Aucune tâche en cours."
   }
 }

@@ -2111,7 +2111,11 @@
     "Transfers": "Übertragungen",
     "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Gilt, wenn rclone kein Bandbreitenlimit hat, in MB/s. Leer lassen, dann bleibt die Karte eine Zahl.",
     "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Was rclone gerade bewegt, die Dateien, die es bewegt hat, Fehler, das Bandbreitenlimit und ein Weg, es zu ändern.",
-    "rclone overview": "rclone-Überblick"
+    "rclone overview": "rclone-Überblick",
+    "Scenes, images, galleries, how much space they take, and how much has been watched.": "Szenen, Bilder, Galerien, wie viel Platz sie brauchen und wie viel angesehen wurde.",
+    "Settings > Security > Generate API Key; it needs a user name and password to be set first. Leave empty when Stash has no login.": "Settings > Security > Generate API Key; vorher müssen Benutzername und Passwort gesetzt sein. Leer lassen, wenn Stash keine Anmeldung hat.",
+    "The size of the library, the tasks Stash is running and a button to scan for new files.": "Die Größe der Bibliothek, die Aufträge, die Stash gerade ausführt, und ein Knopf zum Einlesen neuer Dateien.",
+    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Was Stash gerade einliest, erzeugt oder aufräumt, mit Fortschritt, und Knöpfe zum Einlesen oder Stoppen."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3382,6 +3386,13 @@
     "Reset the counters": "Zähler zurücksetzen",
     "Set the limit": "Limit setzen",
     "Transferred": "Übertragen",
-    "Nothing has been moved.": "Nichts wurde bewegt."
+    "Nothing has been moved.": "Nichts wurde bewegt.",
+    "Galleries": "Galerien",
+    "Length": "Länge",
+    "Scan for new files": "Nach neuen Dateien suchen",
+    "Scenes": "Szenen",
+    "Stop all tasks": "Alle Aufträge stoppen",
+    "Watched": "Angesehen",
+    "No task is running.": "Kein Auftrag läuft."
   }
 }

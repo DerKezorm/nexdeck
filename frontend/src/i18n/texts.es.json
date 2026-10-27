@@ -2111,7 +2111,11 @@
     "Transfers": "Transferencias",
     "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Se usa cuando rclone no tiene límite de ancho de banda, en MB/s. Déjalo vacío y la tarjeta sigue siendo un número.",
     "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Lo que rclone mueve ahora, los archivos que movió, los errores, el límite de ancho de banda y una forma de cambiarlo.",
-    "rclone overview": "Resumen de rclone"
+    "rclone overview": "Resumen de rclone",
+    "Scenes, images, galleries, how much space they take, and how much has been watched.": "Escenas, imágenes, galerías, cuánto espacio ocupan y cuánto se ha visto.",
+    "Settings > Security > Generate API Key; it needs a user name and password to be set first. Leave empty when Stash has no login.": "Settings > Security > Generate API Key; antes hay que definir un nombre de usuario y una contraseña. Déjalo vacío si Stash no tiene inicio de sesión.",
+    "The size of the library, the tasks Stash is running and a button to scan for new files.": "El tamaño de la biblioteca, las tareas que ejecuta Stash y un botón para buscar archivos nuevos.",
+    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Lo que Stash está escaneando, generando o limpiando ahora, con el progreso, y botones para escanear o detener."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3382,6 +3386,13 @@
     "Reset the counters": "Reiniciar los contadores",
     "Set the limit": "Fijar el límite",
     "Transferred": "Transferido",
-    "Nothing has been moved.": "No se ha movido nada."
+    "Nothing has been moved.": "No se ha movido nada.",
+    "Galleries": "Galerías",
+    "Length": "Duración",
+    "Scan for new files": "Buscar archivos nuevos",
+    "Scenes": "Escenas",
+    "Stop all tasks": "Detener todas las tareas",
+    "Watched": "Visto",
+    "No task is running.": "Ninguna tarea en curso."
   }
 }

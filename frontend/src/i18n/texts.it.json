@@ -2111,7 +2111,11 @@
     "Transfers": "Trasferimenti",
     "Used when rclone has no bandwidth limit, in MB/s. Leave empty and the card stays a number.": "Usato quando rclone non ha un limite di banda, in MB/s. Lascia vuoto e la scheda resta un numero.",
     "What rclone moves right now, the files it moved, errors, the bandwidth limit and a way to change it.": "Cosa sposta rclone ora, i file spostati, gli errori, il limite di banda e un modo per cambiarlo.",
-    "rclone overview": "Panoramica di rclone"
+    "rclone overview": "Panoramica di rclone",
+    "Scenes, images, galleries, how much space they take, and how much has been watched.": "Scene, immagini, gallerie, quanto spazio occupano e quanto è stato guardato.",
+    "Settings > Security > Generate API Key; it needs a user name and password to be set first. Leave empty when Stash has no login.": "Settings > Security > Generate API Key; prima vanno impostati nome utente e password. Lascia vuoto se Stash non ha un accesso.",
+    "The size of the library, the tasks Stash is running and a button to scan for new files.": "La dimensione della libreria, le attività che Stash sta eseguendo e un pulsante per cercare nuovi file.",
+    "What Stash is scanning, generating or cleaning right now, with progress, and buttons to scan or stop.": "Cosa Stash sta scansionando, generando o pulendo ora, con l'avanzamento, e pulsanti per scansionare o fermare."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3382,6 +3386,13 @@
     "Reset the counters": "Azzera i contatori",
     "Set the limit": "Imposta il limite",
     "Transferred": "Trasferito",
-    "Nothing has been moved.": "Non è stato spostato nulla."
+    "Nothing has been moved.": "Non è stato spostato nulla.",
+    "Galleries": "Gallerie",
+    "Length": "Durata",
+    "Scan for new files": "Cerca nuovi file",
+    "Scenes": "Scene",
+    "Stop all tasks": "Ferma tutte le attività",
+    "Watched": "Guardato",
+    "No task is running.": "Nessuna attività in corso."
   }
 }
