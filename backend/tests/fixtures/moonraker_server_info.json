@@ -1,0 +1,50 @@
+{
+  "result": {
+    "klippy_connected": true,
+    "klippy_state": "ready",
+    "components": [
+      "secrets",
+      "template",
+      "klippy_connection",
+      "jsonrpc",
+      "internal_transport",
+      "application",
+      "websockets",
+      "database",
+      "dbus_manager",
+      "file_manager",
+      "authorization",
+      "klippy_apis",
+      "shell_command",
+      "machine",
+      "data_store",
+      "proc_stats",
+      "job_state",
+      "job_queue",
+      "history",
+      "http_client",
+      "announcements",
+      "webcam",
+      "extensions",
+      "octoprint_compat"
+    ],
+    "failed_components": [],
+    "registered_directories": [
+      "config",
+      "logs",
+      "gcodes",
+      "config_examples",
+      "docs"
+    ],
+    "warnings": [],
+    "websocket_count": 0,
+    "moonraker_version": "?",
+    "missing_klippy_requirements": [],
+    "api_version": [
+      1,
+      5,
+      0
+    ],
+    "api_version_string": "1.5.0"
+  }
+}

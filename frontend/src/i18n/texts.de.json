@@ -2048,7 +2048,20 @@
     "Running low below (%)": "Zur Neige unter (%)",
     "Spools": "Spulen",
     "Each spool with what is left of it, the emptiest first.": "Jede Spule mit ihrem Rest, die leerste zuerst.",
-    "Running low": "Zur Neige"
+    "Running low": "Zur Neige",
+    "What a Klipper 3D printer is doing, its temperatures, and how far the print has got.": "Was ein Klipper-3D-Drucker gerade tut, seine Temperaturen und wie weit der Druck ist.",
+    "The address Moonraker listens on, usually port 7125.": "Die Adresse, auf der Moonraker lauscht, meist Port 7125.",
+    "Only if Moonraker does not trust this address (trusted_clients in moonraker.conf). Mainsail and Fluidd show the key in their settings.": "Nur nötig, wenn Moonraker diese Adresse nicht vertraut (trusted_clients in moonraker.conf). Mainsail und Fluidd zeigen den Schlüssel in ihren Einstellungen.",
+    "Web interface": "Weboberfläche",
+    "Where Mainsail or Fluidd opens, for the link on the cards. Optional.": "Wo sich Mainsail oder Fluidd öffnet, für den Link auf den Karten. Optional.",
+    "Whether the printer is ready, printing, paused or in trouble, with the nozzle, bed and chamber temperatures.": "Ob der Drucker bereit ist, druckt, pausiert oder ein Problem hat, mit den Temperaturen von Düse, Bett und Kammer.",
+    "The file being printed, how far it is, the time it has taken, the time it still needs and the layer. Pause, resume or cancel it from here.": "Die Datei im Druck, wie weit er ist, die bisherige Dauer, die Restzeit und die Schicht. Von hier aus pausieren, fortsetzen oder abbrechen.",
+    "Print history": "Druckverlauf",
+    "How many prints Moonraker has recorded, the time spent printing and the filament used.": "Wie viele Drucke Moonraker festgehalten hat, die Druckzeit und das verbrauchte Filament.",
+    "Layer": "Schicht",
+    "Print time": "Druckzeit",
+    "Filament": "Filament",
+    "Longest print": "Längster Druck"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3262,6 +3275,10 @@
     "major version": "Hauptversion",
     "Task Photos": "Aufgabe Fotos",
     "Filament left": "Filament übrig",
-    "No spool in Spoolman.": "Keine Spule in Spoolman."
+    "No spool in Spoolman.": "Keine Spule in Spoolman.",
+    "Klipper is not running.": "Klipper läuft nicht.",
+    "Prints": "Drucke",
+    "Cancel print": "Druck abbrechen",
+    "Shutdown": "Abgeschaltet"
   }
 }

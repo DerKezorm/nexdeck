@@ -2048,7 +2048,20 @@
     "Running low below (%)": "In esaurimento sotto (%)",
     "Spools": "Bobine",
     "Each spool with what is left of it, the emptiest first.": "Ogni bobina con ciò che resta, la più vuota per prima.",
-    "Running low": "In esaurimento"
+    "Running low": "In esaurimento",
+    "What a Klipper 3D printer is doing, its temperatures, and how far the print has got.": "Cosa sta facendo una stampante 3D con Klipper, le sue temperature e a che punto è la stampa.",
+    "The address Moonraker listens on, usually port 7125.": "L'indirizzo su cui Moonraker è in ascolto, di solito la porta 7125.",
+    "Only if Moonraker does not trust this address (trusted_clients in moonraker.conf). Mainsail and Fluidd show the key in their settings.": "Solo se Moonraker non si fida di questo indirizzo (trusted_clients in moonraker.conf). Mainsail e Fluidd mostrano la chiave nelle loro impostazioni.",
+    "Web interface": "Interfaccia web",
+    "Where Mainsail or Fluidd opens, for the link on the cards. Optional.": "Dove si apre Mainsail o Fluidd, per il collegamento delle schede. Facoltativo.",
+    "Whether the printer is ready, printing, paused or in trouble, with the nozzle, bed and chamber temperatures.": "Se la stampante è pronta, sta stampando, è in pausa o ha un problema, con le temperature di ugello, piano e camera.",
+    "The file being printed, how far it is, the time it has taken, the time it still needs and the layer. Pause, resume or cancel it from here.": "Il file in stampa, a che punto è, il tempo trascorso, il tempo rimanente e il livello. Da qui si può mettere in pausa, riprendere o annullare.",
+    "Print history": "Cronologia di stampa",
+    "How many prints Moonraker has recorded, the time spent printing and the filament used.": "Quante stampe ha registrato Moonraker, il tempo di stampa e il filamento usato.",
+    "Layer": "Livello",
+    "Print time": "Tempo di stampa",
+    "Filament": "Filamento",
+    "Longest print": "Stampa più lunga"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3262,6 +3275,10 @@
     "major version": "versione principale",
     "Task Photos": "Attività Foto",
     "Filament left": "Filamento rimasto",
-    "No spool in Spoolman.": "Nessuna bobina in Spoolman."
+    "No spool in Spoolman.": "Nessuna bobina in Spoolman.",
+    "Klipper is not running.": "Klipper non è in esecuzione.",
+    "Prints": "Stampe",
+    "Cancel print": "Annulla stampa",
+    "Shutdown": "Arresto di emergenza"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "result": {
+    "job_totals": {
+      "total_jobs": 4.0,
+      "total_time": 0.5825624330027495,
+      "total_print_time": 0.0,
+      "total_filament_used": 0.0,
+      "longest_job": 0.5813130239839666,
+      "longest_print": 0.0
+    },
+    "auxiliary_totals": []
+  }
+}
