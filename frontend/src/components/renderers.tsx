@@ -41,6 +41,7 @@ import { pausedUntil } from '../lib/testResult'
 import { playingLine, useDisguise, type Disguise } from '../lib/showcase'
 import type { Action, Pressed, Primary, Saveable, Secondary, Status, WidgetData, WidgetView } from '../lib/types'
 import { AskCard } from './AskCard'
+import { BuilderCard } from './BuilderCard'
 import { ButtonCard } from './ButtonCard'
 import { HeadingCard } from './HeadingCard'
 import { FlowCard } from './FlowCard'
@@ -187,6 +188,8 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   attention: AttentionCard,
   chronicle: ChronicleCard,
   report: ReportCard,
+  // Wrapped for the same reason as the holders: it draws its buttons with `ActionButtons` of this file.
+  builder: (props: RenderProps) => <BuilderCard {...props} />,
 }
 
 export function renderWidget(props: RenderProps) {
@@ -307,7 +310,7 @@ function Empty({ children }: { children: ReactNode }) {
   return <div className="flex-1 flex items-center justify-center text-xs text-faint px-3 pb-3">{children}</div>
 }
 
-function ActionButtons({
+export function ActionButtons({
   actions,
   onAction,
   canAct,

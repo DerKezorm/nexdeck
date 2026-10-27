@@ -9,6 +9,7 @@
 import i18next from 'i18next'
 
 import { tLabel } from '../i18n/texts'
+import type { Block, BlockRow } from './blocks'
 import { formatShown, pickText, type CardShown, type CardText } from './cardText'
 import type { Action, Primary, Secondary, WidgetData } from './types'
 
@@ -94,6 +95,23 @@ function actionsOf(actions: Action[] | undefined, lang: string): Action[] | unde
 }
 
 /**
+ * The blocks of a card put together from blocks, with every text in the viewer's language: the label of a value, the
+ * words of an empty list, the buttons (on the card and on each row of a list). Nothing else is touched.
+ */
+function blocksIn(blocks: Block[], lang: string): Block[] {
+  return blocks.map((block): Block => {
+    if (block.type === 'row' || block.type === 'column') return { ...block, children: blocksIn(block.children ?? [], lang) }
+    if (block.type === 'value') return { ...block, label: block.label === undefined ? undefined : pickText(block.label as CardText, lang) }
+    if (block.type === 'button') return { ...block, action: block.action ? (actionsOf([block.action], lang) as [Action])[0] : null }
+    if (block.type === 'list') {
+      const rows: BlockRow[] = (block.rows ?? []).map((row) => ({ ...row, blocks: blocksIn(row.blocks ?? [], lang), actions: actionsOf(row.actions, lang) }))
+      return { ...block, rows, empty: block.empty === undefined ? undefined : pickText(block.empty as CardText, lang) }
+    }
+    return block
+  })
+}
+
+/**
  * The data of a custom card with every text in the viewer's language. Data of any other card comes back untouched.
  * Safe to apply twice: what is already plain text stays plain text.
  */
@@ -109,12 +127,13 @@ export function localizeCustom(data: WidgetData | undefined, lang: string = i18n
     return made
   })
   const empty = data.meta?.empty
+  const blocks = Array.isArray(data.meta?.blocks) ? { blocks: blocksIn(data.meta.blocks as Block[], lang) } : {}
   return {
     ...data,
     primary: data.primary ? primaryOf(data.primary, lang, zone) : data.primary,
     secondary: data.secondary?.map((row) => rowOf(row, lang, zone)),
     actions: actionsOf(data.actions as Action[] | undefined, lang) ?? data.actions,
     items,
-    meta: { ...data.meta, empty: empty ? pickText(empty as CardText, lang) : undefined },
+    meta: { ...data.meta, ...blocks, empty: empty ? pickText(empty as CardText, lang) : undefined },
   }
 }
