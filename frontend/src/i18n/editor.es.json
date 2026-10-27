@@ -20,14 +20,16 @@
       "source": "Origen",
       "look": "Aspecto",
       "rules": "Reglas",
-      "texts": "Textos"
+      "texts": "Textos",
+      "buttons": "Botones"
     },
     "stepNumber": "{{number}} {{name}}",
     "lead": {
       "source": "Dónde pregunta la tarjeta y qué vuelve.",
       "look": "La forma de la tarjeta y qué va en cada sitio.",
       "rules": "Cuándo cambia de color la tarjeta, un valor o una fila.",
-      "texts": "Cada texto de la tarjeta, en cada idioma que quieras ofrecer. Donde falta un idioma, la tarjeta muestra el texto en inglés."
+      "texts": "Cada texto de la tarjeta, en cada idioma que quieras ofrecer. Donde falta un idioma, la tarjeta muestra el texto en inglés.",
+      "buttons": "Lo que la tarjeta puede hacer en el servicio: un botón, una petición."
     },
     "preview": {
       "title": "Vista previa",
@@ -54,7 +56,8 @@
       "places": "Lugares de la tarjeta",
       "free": "libre",
       "worked": "calculado",
-      "dropHelp": "Arrastra un campo de la respuesta a un lugar, o usa «Usar como …» en la respuesta."
+      "dropHelp": "Arrastra un campo de la respuesta a un lugar, o usa «Usar como …» en la respuesta.",
+      "buttonsNothing": "Los botones no hacen nada en la vista previa."
     },
     "adjusted": {
       "title": "Ajustado en YAML",
@@ -132,7 +135,9 @@
       "labelOf": "Etiqueta del valor {{number}}",
       "unitOf": "Unidad del valor {{number}}",
       "rowUnit": "Unidad del valor de cada fila",
-      "empty": "Cuando no hay filas"
+      "empty": "Cuando no hay filas",
+      "buttonLabel": "Botón {{number}}",
+      "askLabel": "Entrada {{name}} del botón {{number}}"
     },
     "slot": {
       "value": "Valor",
@@ -171,7 +176,8 @@
       "shownAsList": "Mostrada como lista",
       "shownAsPictures": "Mostrada como imágenes",
       "pickAList": "Esta tarjeta muestra las filas de una lista. Elige un campo dentro de una lista, o elige otra forma en Aspecto.",
-      "nothingHere": "Esta forma no tiene lugar para este campo."
+      "nothingHere": "Esta forma no tiene lugar para este campo.",
+      "useInButton": "Usar en el botón {{number}}: {{placeholder}}"
     },
     "form": {
       "loseTitle": "¿Cambiar la forma?",
@@ -488,7 +494,10 @@
         "later": "Más tarde",
         "placed": "La tarjeta ya está en {{board}}.",
         "openBoard": "Abrir el tablero",
-        "noBoard": "No hay ningún tablero que puedas cambiar. Ponla más tarde con Añadir widget."
+        "noBoard": "No hay ningún tablero que puedas cambiar. Ponla más tarde con Añadir widget.",
+        "buttons_one": "{{count}} botón ·",
+        "buttons_other": "{{count}} botones ·",
+        "buttonsOpen": "editar en Todos los ajustes"
       },
       "why": {
         "text": "El modo guiado no puede mostrar toda esta tarjeta, porque {{why}}. Todo está aquí en Todos los ajustes y en el YAML.",
@@ -816,6 +825,66 @@
         "lineRed": "Línea en rojo",
         "ask": "Lo que pregunta la tarjeta"
       }
+    },
+    "buttons": {
+      "none": "Esta tarjeta aún no tiene botones.",
+      "add": "Añadir botón",
+      "most": "Una tarjeta tiene como máximo {{count}} botones.",
+      "button": "Botón {{number}}: {{name}}",
+      "label": "Etiqueta",
+      "symbol": "Símbolo",
+      "symbolNone": "ninguno",
+      "where": "Dónde",
+      "whereCard": "En la tarjeta",
+      "whereRow": "En cada fila",
+      "rowNeedsList": "Un botón en cada fila necesita una tarjeta con lista o imágenes.",
+      "id": "Nombre corto",
+      "method": "Método",
+      "path": "Dirección de la petición",
+      "send": "Enviar como",
+      "sendJson": "JSON",
+      "sendForm": "Formulario",
+      "pathHelp": "Una ruta bajo la dirección de la conexión. Entre llaves va un campo de los datos, como {hash}, o una entrada, como {ask.minutes}. Un campo de los datos se inserta desde el árbol del paso Origen con «Usar en el botón».",
+      "body": "Contenido enviado",
+      "bodyKey": "Nombre",
+      "bodyValue": "Valor de {{key}}",
+      "bodyAdd": "Añadir una línea",
+      "bodyRemove": "Quitar {{key}}",
+      "bodyNested": "El contenido tiene nombres dentro de nombres. El formulario no puede mostrarlo y lo deja como está.",
+      "bodyNestedOpen": "Editar en YAML",
+      "insertAsk": "Insertar una entrada:",
+      "insertWhere": "Haz clic antes en la dirección o en un valor.",
+      "confirm": "Preguntar antes",
+      "danger": "Peligroso",
+      "dangerHelp": "Un botón peligroso es rojo y pregunta dos veces.",
+      "asks": "Entradas",
+      "asksNone": "El botón no pregunta nada antes de ejecutarse.",
+      "askAdd": "Añadir una entrada",
+      "ask": "Entrada {{number}}",
+      "askName": "Nombre",
+      "askType": "Tipo",
+      "askTypes": {
+        "number": "Número",
+        "text": "Texto",
+        "choice": "Elección"
+      },
+      "askMin": "Mínimo",
+      "askMax": "Máximo",
+      "askStep": "Paso",
+      "askLength": "Texto más largo",
+      "askOptions": "Opciones",
+      "askOptionValue": "Valor de la opción {{number}}",
+      "askOptionLabel": "Texto de la opción {{number}}",
+      "askOptionRemove": "Quitar la opción {{number}}",
+      "askOptionAdd": "Añadir una opción",
+      "askRemove": "Quitar la entrada {{number}}",
+      "answer": "Mostrar de la respuesta",
+      "answerNone": "vacío: Hecho",
+      "answerHelp": "Un campo de la respuesta JSON del servicio, como data.message. Su valor aparece en lugar de «Hecho», cortado a 200 caracteres. Sin él, la tarjeta nunca muestra texto del servicio.",
+      "up": "Subir el botón",
+      "down": "Bajar el botón",
+      "remove": "Quitar el botón {{number}}",
+      "askMost": "Un botón tiene como máximo {{count}} entradas."
     }
   },
   "integrationEditor": {

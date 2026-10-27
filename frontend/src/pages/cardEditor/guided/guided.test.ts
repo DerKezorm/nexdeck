@@ -166,7 +166,7 @@ describe('umbau U1: whether the guided way can show all of a card', () => {
     expect(refusalOf(card(HEAD.replace('[homeassistant]', '[jellyfin, emby]') + 'form: value\nvalue: x\n'))).toBe('kinds')
     expect(refusalOf(card(`${HEAD}  - id: more\n    path: /api/config\nform: value\nvalue: x\n`))).toBe('requests')
     expect(refusalOf(card(`${HEAD}form: value\nvalue: x\nrules:\n  - {value: x, op: '>', than: 1, then: warn}\n`))).toBe('rules')
-    expect(refusalOf(card(`${HEAD}form: value\nvalue: x\nbuttons: []\n`))).toBe('parts')
+    expect(refusalOf(card(`${HEAD}form: value\nvalue: x\nextras: []\n`))).toBe('parts')
     expect(refusalOf(card(`${HEAD}form: list\nrows: {select: data, limit: 5}\nitem: {title: name}\n`))).toBe('expression')
     expect(refusalOf(card(`${HEAD}form: list\nrows: {select: data}\nitem: {title: {template: "{a} {b}"}}\n`))).toBe('expression')
   })

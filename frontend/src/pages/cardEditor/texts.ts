@@ -14,7 +14,7 @@ export interface TextSpot {
   id: string
   path: CardPath
   /** The key of the words that name it, and their blanks. */
-  label: { key: string; number?: number }
+  label: { key: string; number?: number; name?: string }
   required?: boolean
   /** A label or unit of a value: the value is written out long before the text can be set on it. */
   valueRef?: CardPath
@@ -44,6 +44,19 @@ export function textSpots(card: CardDoc): TextSpot[] {
     spots.push({ id: 'item.value.unit', path: ['item', 'value', 'unit'], label: { key: 'editor.texts.rowUnit' }, valueRef: ['item', 'value'] })
   }
   if (form === 'list' || form === 'posters') spots.push({ id: 'empty', path: ['empty'], label: { key: 'editor.texts.empty' } })
+  // The words of a button, and of what it asks first (KARTEN-8).
+  const buttons = readAt(card, ['buttons'])
+  if (Array.isArray(buttons)) {
+    buttons.forEach((button, index) => {
+      spots.push({ id: `buttons.${index}.label`, path: ['buttons', index, 'label'], label: { key: 'editor.texts.buttonLabel', number: index + 1 }, required: true })
+      const asks = (button as Record<string, unknown> | null)?.asks
+      if (!Array.isArray(asks)) return
+      asks.forEach((ask, at) => {
+        const name = String((ask as Record<string, unknown> | null)?.name ?? at + 1)
+        spots.push({ id: `buttons.${index}.asks.${at}.label`, path: ['buttons', index, 'asks', at, 'label'], label: { key: 'editor.texts.askLabel', number: index + 1, name }, required: true })
+      })
+    })
+  }
   return spots
 }
 

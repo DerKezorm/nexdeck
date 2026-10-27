@@ -254,27 +254,26 @@ describe('a new card', () => {
 })
 
 describe('the steps', () => {
-  it('karten9 AC-14: Source, Look, Rules and Texts can be opened in any order; Editor | YAML and Save stand on top', async () => {
+  it('karten9 AC-14: Source, Look, Rules, Buttons and Texts can be opened in any order; Editor | YAML and Save stand on top', async () => {
     await openQueue()
     const steps = screen.getByRole('navigation', { name: 'Steps' })
     const buttons = within(steps).getAllByRole('button').map((one) => one.textContent)
-    expect(buttons).toEqual(['1 Source', '2 Look', '3 Rules', '4 Texts'])
+    expect(buttons).toEqual(['1 Source', '2 Look', '3 Rules', '4 Buttons', '5 Texts'])
     expect(within(steps).getByRole('button', { name: '1 Source' })).toHaveAttribute('aria-current', 'step')
-    await userEvent.click(within(steps).getByRole('button', { name: '4 Texts' }))
+    await userEvent.click(within(steps).getByRole('button', { name: '5 Texts' }))
     expect(screen.getByRole('heading', { name: 'Texts', level: 2 })).toBeInTheDocument()
     await userEvent.click(within(steps).getByRole('button', { name: '2 Look' }))
     expect(screen.getByRole('heading', { name: 'Look', level: 2 })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'All settings' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'YAML' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
-    expect(screen.queryByText(/Buttons/)).toBeNull()
     expect(screen.queryByText(/Ask AI/)).toBeNull()
     expect(screen.getByTestId('card-preview')).toBeInTheDocument()
   })
 
   it('karten9 AC-8: every text has a field per language, English first and required, and a language can be added', async () => {
     await openQueue()
-    await userEvent.click(screen.getByRole('button', { name: '4 Texts' }))
+    await userEvent.click(screen.getByRole('button', { name: '5 Texts' }))
     const english = screen.getByRole('textbox', { name: 'Name, English (required)' })
     expect(english).toHaveValue('Queue')
     expect(screen.getByRole('textbox', { name: 'Label, English' })).toHaveValue('')
@@ -398,7 +397,7 @@ describe('saving', () => {
     expect(within(list).getByText('Line 4')).toBeInTheDocument()
     expect(within(list).getByText('A sentence only the server knows.')).toBeInTheDocument()
     expect(within(list).getByText('Line 9')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '4 Texts' }))
+    await userEvent.click(screen.getByRole('button', { name: '5 Texts' }))
     const name = screen.getByRole('group', { name: 'Name' })
     expect(within(name).getByText('This must not be empty.')).toBeInTheDocument()
     // A problem's line opens the YAML view there.
@@ -445,17 +444,17 @@ describe('saving', () => {
   })
 
   it('karten9 AC-12: the parts only the YAML view shows are named with their lines and saved as they stand', async () => {
-    const withButtons = `${CARD}buttons:\n  - {label: Restart, action: restart}  # comes with a later version\n`
+    const withButtons = `${CARD}extras:\n  - {label: Restart, action: restart}  # comes with a later version\n`
     stub({ 'GET /cards/queue': { status: 200, body: { slug: 'queue', yaml: withButtons, updated_at: '2026-10-25T10:00:00Z' } } })
     await openQueue()
     const block = screen.getByTestId('card-adjusted')
     expect(within(block).getByText('Adjusted in YAML')).toBeInTheDocument()
-    expect(within(block).getByText('buttons')).toBeInTheDocument()
+    expect(within(block).getByText('extras')).toBeInTheDocument()
     expect(within(block).getByText('line 12')).toBeInTheDocument()
     act(() => editor().set(['name'], 'Waiting'))
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(sent('PUT', '/cards/queue')).toHaveLength(1))
-    expect(String(sent('PUT', '/cards/queue')[0].body!.yaml)).toContain('buttons:\n  - {label: Restart, action: restart}  # comes with a later version\n')
+    expect(String(sent('PUT', '/cards/queue')[0].body!.yaml)).toContain('extras:\n  - {label: Restart, action: restart}  # comes with a later version\n')
     await userEvent.click(within(block).getByRole('button', { name: 'Open in YAML' }))
     expect(editor().view).toBe('yaml')
   })

@@ -198,6 +198,8 @@ export function FinishStep({ onSave, canSave, busy }: { onSave: () => void; canS
   const thresholds = numbers.length ? thresholdsOf(first && typeof first === 'object' ? (first as { rules?: unknown }).rules : undefined) : null
   const setThresholds = (warn: number | null, bad: number | null) => change((doc) => numbers.forEach((path) => writeThresholds(doc, path, warn, bad)), 'field:guided.colour')
   const free = OFFERED_LANGUAGES.filter((code) => code !== language && !others.includes(code))
+  const listed = readAt(card, ['buttons'])
+  const buttonCount = Array.isArray(listed) ? listed.length : 0
 
   return (
     <GuidedFrame id="finish" title={t('editor.guided.finish.title')} lead={t('editor.guided.finish.lead')}>
@@ -299,6 +301,22 @@ export function FinishStep({ onSave, canSave, busy }: { onSave: () => void; canS
           <span className="text-[12px] text-faint break-words hyphens-auto">{t('editor.guided.finish.exampleHint')}</span>
           {demoOpen && <DemoDialog open onClose={() => setDemoOpen(false)} integrationId={chosen.id} />}
         </div>
+      )}
+
+      {buttonCount > 0 && (
+        <p className="text-sm text-muted break-words hyphens-auto" data-testid="card-guided-buttons">
+          {t('editor.guided.finish.buttons', { count: buttonCount })}{' '}
+          <button
+            type="button"
+            className="text-accent font-medium"
+            onClick={() => {
+              useCardEditor.getState().setStep('buttons')
+              useCardEditor.getState().setView('editor')
+            }}
+          >
+            {t('editor.guided.finish.buttonsOpen')}
+          </button>
+        </p>
       )}
 
       {created && <PutOnBoard />}

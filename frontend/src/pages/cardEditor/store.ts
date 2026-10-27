@@ -17,9 +17,9 @@ import type { ProbeState } from './probe'
 
 /** The guided way, "All settings" (the steps below) and the YAML view: three ways into the same document (U1). */
 export type EditorView = 'guided' | 'editor' | 'yaml'
-/** The steps of this version; Buttons (KARTEN-8) comes with a later one. */
-export type EditorStep = 'source' | 'look' | 'rules' | 'texts'
-export const STEPS: EditorStep[] = ['source', 'look', 'rules', 'texts']
+/** The steps of this version; the builder (KARTEN-7) comes with a later one. */
+export type EditorStep = 'source' | 'look' | 'rules' | 'buttons' | 'texts'
+export const STEPS: EditorStep[] = ['source', 'look', 'rules', 'buttons', 'texts']
 
 /** How many steps back the editor keeps. A card is at most 60,000 characters, so this stays a few megabytes. */
 const HISTORY = 200

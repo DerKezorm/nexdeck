@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { Confirm } from '../../components/ui'
 import { pathText, readAt, type CardPath } from '../../lib/cardDocument'
 import type { CardForm } from '../../lib/customCards'
+import { buttonsOf, placeholderText, putPlaceholder, useButtonTarget } from './buttons'
 import { enclosingList, type ProbeNode } from './probe'
 import { FIELD_TYPE, fits, lostIfShownAs, place, showListAs } from './placing'
-import { cardPath, placesOf, slotsOf, usedOf, type Slot } from './slots'
+import { cardPath, insideRow, placesOf, slotsOf, usedOf, type Slot } from './slots'
 import { useCardEditor } from './store'
 
 /** How deep the tree opens by itself: the answer, its fields, the first row of a list and the objects in it. */
@@ -61,6 +62,7 @@ export function DataTree({ requestId, tree }: { requestId: string; tree: ProbeNo
   const [active, setActive] = useState(tree.path)
   const [menu, setMenu] = useState<string | null>(null)
   const [asking, setAsking] = useState<{ form: Extract<CardForm, 'list' | 'posters'>; list: ProbeNode; lost: CardPath[] } | null>(null)
+  const target = useButtonTarget((state) => state.target)
   const rowsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -121,6 +123,18 @@ export function DataTree({ requestId, tree }: { requestId: string; tree: ProbeNo
     }
   }
 
+  /** The field as the button last worked in names it in braces: a field of the row for a button on rows, of the answer otherwise. */
+  const forButton = (node: ProbeNode): string | null => {
+    const button = target ? buttonsOf(card)[target.index] : undefined
+    if (!target || !button) return null
+    if (button.where === 'row') {
+      const list = enclosingList(tree, node)
+      const inner = list ? insideRow(list.path, node.path) : null
+      return inner ? placeholderText(inner) : null
+    }
+    return placeholderText(cardPath(card, requestId, node.path))
+  }
+
   const closeMenu = (path: string) => {
     setMenu(null)
     rowsRef.current[path]?.focus()
@@ -155,6 +169,7 @@ export function DataTree({ requestId, tree }: { requestId: string; tree: ProbeNo
           const list = node.type === 'array' ? node : null
           const offered = slots.filter((slot) => fits(tree, node, slot) && (!slot.row || (form !== 'value' && form !== 'stats')))
           const inList = enclosingList(tree, node) !== null
+          const forTheButton = forButton(node)
           const label = [keyName(node), typeName(node), valueText(node), ...marks].join(', ')
           return (
             <div key={node.path} role="none">
@@ -256,7 +271,20 @@ export function DataTree({ requestId, tree }: { requestId: string; tree: ProbeNo
                       {t(slot.row ? 'editor.tree.useAsRow' : 'editor.tree.useAsPlace', { place: slotName(t, slot) })}
                     </button>
                   ))}
-                  {!list && offered.length === 0 && (
+                  {forTheButton && target && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="text-left px-2 py-1.5 rounded-md text-sm hover:bg-surface-hover focus:bg-surface-hover outline-none break-words hyphens-auto"
+                      onClick={() => {
+                        useCardEditor.getState().change((doc) => void putPlaceholder(doc, target, forTheButton))
+                        closeMenu(node.path)
+                      }}
+                    >
+                      {t('editor.tree.useInButton', { number: target.index + 1, placeholder: forTheButton })}
+                    </button>
+                  )}
+                  {!list && offered.length === 0 && !forTheButton && (
                     <p className="px-2 py-1.5 text-[12px] text-muted break-words hyphens-auto" role="none">
                       {inList ? t('editor.tree.nothingHere') : t('editor.tree.pickAList')}
                     </p>

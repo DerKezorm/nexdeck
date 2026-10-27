@@ -39,7 +39,7 @@ export function TextsStep() {
 
   if (!card) return <StepFrame step="texts" />
 
-  const label = (spot: TextSpot) => t(spot.label.key, { number: spot.label.number })
+  const label = (spot: TextSpot) => t(spot.label.key, { number: spot.label.number, name: spot.label.name })
   const write = (spot: TextSpot, language: string, text: string) => change((doc) => writeText(doc, spot, language, text), `text:${spot.id}:${language}`)
   const drop = (language: string) => {
     setAdded((now) => now.filter((code) => code !== language))

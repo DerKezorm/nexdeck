@@ -20,14 +20,16 @@
       "source": "Quelle",
       "look": "Aussehen",
       "rules": "Regeln",
-      "texts": "Texte"
+      "texts": "Texte",
+      "buttons": "Knöpfe"
     },
     "stepNumber": "{{number}} {{name}}",
     "lead": {
       "source": "Wo die Karte fragt und was zurückkommt.",
       "look": "Die Form der Karte und was wohin gehört.",
       "rules": "Wann die Karte, ein Wert oder eine Zeile die Farbe wechselt.",
-      "texts": "Jeder Text der Karte in jeder Sprache, die du anbieten willst. Wo eine Sprache fehlt, zeigt die Karte den englischen Text."
+      "texts": "Jeder Text der Karte in jeder Sprache, die du anbieten willst. Wo eine Sprache fehlt, zeigt die Karte den englischen Text.",
+      "buttons": "Was die Karte beim Dienst auslösen kann: ein Knopf, eine Anfrage."
     },
     "preview": {
       "title": "Vorschau",
@@ -54,7 +56,8 @@
       "places": "Plätze der Karte",
       "free": "frei",
       "worked": "ausgerechnet",
-      "dropHelp": "Zieh ein Feld der Antwort auf einen Platz, oder nimm „Verwenden als …“ in der Antwort."
+      "dropHelp": "Zieh ein Feld der Antwort auf einen Platz, oder nimm „Verwenden als …“ in der Antwort.",
+      "buttonsNothing": "Knöpfe tun in der Vorschau nichts."
     },
     "adjusted": {
       "title": "Im YAML angepasst",
@@ -132,7 +135,9 @@
       "labelOf": "Beschriftung von Wert {{number}}",
       "unitOf": "Einheit von Wert {{number}}",
       "rowUnit": "Einheit des Werts in jeder Zeile",
-      "empty": "Wenn es keine Zeilen gibt"
+      "empty": "Wenn es keine Zeilen gibt",
+      "buttonLabel": "Knopf {{number}}",
+      "askLabel": "Eingabe {{name}} von Knopf {{number}}"
     },
     "slot": {
       "value": "Wert",
@@ -171,7 +176,8 @@
       "shownAsList": "Als Liste gezeigt",
       "shownAsPictures": "Als Bilder gezeigt",
       "pickAList": "Diese Karte zeigt die Zeilen einer Liste. Wähle ein Feld in einer Liste, oder wähle unter Aussehen eine andere Form.",
-      "nothingHere": "Diese Form hat keinen Platz für dieses Feld."
+      "nothingHere": "Diese Form hat keinen Platz für dieses Feld.",
+      "useInButton": "In Knopf {{number}} verwenden: {{placeholder}}"
     },
     "form": {
       "loseTitle": "Form wechseln?",
@@ -488,7 +494,10 @@
         "later": "Später",
         "placed": "Die Karte steht jetzt auf {{board}}.",
         "openBoard": "Board öffnen",
-        "noBoard": "Es gibt kein Board, das du ändern darfst. Setz die Karte später mit „Widget hinzufügen“ auf eins."
+        "noBoard": "Es gibt kein Board, das du ändern darfst. Setz die Karte später mit „Widget hinzufügen“ auf eins.",
+        "buttons_one": "{{count}} Knopf ·",
+        "buttons_other": "{{count}} Knöpfe ·",
+        "buttonsOpen": "in Alle Einstellungen bearbeiten"
       },
       "why": {
         "text": "Der geführte Weg kann diese Karte nicht ganz zeigen, weil {{why}}. Unter Alle Einstellungen und im YAML ist alles da.",
@@ -816,6 +825,66 @@
         "lineRed": "Zeile rot",
         "ask": "Was die Karte fragt"
       }
+    },
+    "buttons": {
+      "none": "Diese Karte hat noch keine Knöpfe.",
+      "add": "Knopf hinzufügen",
+      "most": "Eine Karte hat höchstens {{count}} Knöpfe.",
+      "button": "Knopf {{number}}: {{name}}",
+      "label": "Beschriftung",
+      "symbol": "Symbol",
+      "symbolNone": "keins",
+      "where": "Wo",
+      "whereCard": "An der Karte",
+      "whereRow": "Je Zeile",
+      "rowNeedsList": "Ein Knopf je Zeile geht nur bei einer Karte mit Liste oder Bildern.",
+      "id": "Kurzname",
+      "method": "Methode",
+      "path": "Adresse der Anfrage",
+      "send": "Senden als",
+      "sendJson": "JSON",
+      "sendForm": "Formular",
+      "pathHelp": "Ein Pfad unterhalb der Adresse der Verbindung. In geschweiften Klammern steht ein Feld aus den Daten, etwa {hash}, oder eine Eingabe, etwa {ask.minutes}. Ein Feld der Daten lässt sich im Baum des Schritts Quelle über „In Knopf verwenden“ einsetzen.",
+      "body": "Gesendeter Inhalt",
+      "bodyKey": "Name",
+      "bodyValue": "Wert von {{key}}",
+      "bodyAdd": "Zeile hinzufügen",
+      "bodyRemove": "{{key}} entfernen",
+      "bodyNested": "Der Inhalt hat Namen in Namen. Das Formular kann das nicht zeigen und lässt es unverändert.",
+      "bodyNestedOpen": "Im YAML bearbeiten",
+      "insertAsk": "Eingabe einsetzen:",
+      "insertWhere": "Zuerst in die Adresse oder in einen Wert klicken.",
+      "confirm": "Vorher nachfragen",
+      "danger": "Gefährlich",
+      "dangerHelp": "Ein gefährlicher Knopf ist rot und fragt zweimal nach.",
+      "asks": "Eingaben",
+      "asksNone": "Der Knopf fragt vor dem Ausführen nichts ab.",
+      "askAdd": "Eingabe hinzufügen",
+      "ask": "Eingabe {{number}}",
+      "askName": "Name",
+      "askType": "Art",
+      "askTypes": {
+        "number": "Zahl",
+        "text": "Text",
+        "choice": "Auswahl"
+      },
+      "askMin": "Kleinster Wert",
+      "askMax": "Größter Wert",
+      "askStep": "Schritt",
+      "askLength": "Längster Text",
+      "askOptions": "Auswahlmöglichkeiten",
+      "askOptionValue": "Wert der Auswahl {{number}}",
+      "askOptionLabel": "Text der Auswahl {{number}}",
+      "askOptionRemove": "Auswahl {{number}} entfernen",
+      "askOptionAdd": "Auswahl hinzufügen",
+      "askRemove": "Eingabe {{number}} entfernen",
+      "answer": "Aus der Antwort anzeigen",
+      "answerNone": "leer: Erledigt",
+      "answerHelp": "Ein Feld der JSON-Antwort des Dienstes, etwa data.message. Sein Wert erscheint statt „Erledigt“, auf 200 Zeichen gekürzt. Ohne Angabe zeigt die Karte nie Text des Dienstes.",
+      "up": "Knopf nach oben",
+      "down": "Knopf nach unten",
+      "remove": "Knopf {{number}} entfernen",
+      "askMost": "Ein Knopf hat höchstens {{count}} Eingaben."
     }
   },
   "integrationEditor": {

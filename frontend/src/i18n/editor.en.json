@@ -20,14 +20,16 @@
       "source": "Source",
       "look": "Look",
       "rules": "Rules",
-      "texts": "Texts"
+      "texts": "Texts",
+      "buttons": "Buttons"
     },
     "stepNumber": "{{number}} {{name}}",
     "lead": {
       "source": "Where the card asks and what comes back.",
       "look": "The form of the card and what goes where.",
       "rules": "When the card, a value or a row changes colour.",
-      "texts": "Every text of the card, in each language you want to offer. Where a language is missing, the card shows the English text."
+      "texts": "Every text of the card, in each language you want to offer. Where a language is missing, the card shows the English text.",
+      "buttons": "What the card can do at the service: one button, one request."
     },
     "preview": {
       "title": "Preview",
@@ -54,7 +56,8 @@
       "places": "Places of the card",
       "free": "free",
       "worked": "worked out",
-      "dropHelp": "Drag a field of the answer onto a place, or use “Use as …” in the answer."
+      "dropHelp": "Drag a field of the answer onto a place, or use “Use as …” in the answer.",
+      "buttonsNothing": "Buttons do nothing in the preview."
     },
     "adjusted": {
       "title": "Adjusted in YAML",
@@ -132,7 +135,9 @@
       "labelOf": "Label of value {{number}}",
       "unitOf": "Unit of value {{number}}",
       "rowUnit": "Unit of the value in each row",
-      "empty": "When there are no rows"
+      "empty": "When there are no rows",
+      "buttonLabel": "Button {{number}}",
+      "askLabel": "Input {{name}} of button {{number}}"
     },
     "slot": {
       "value": "Value",
@@ -171,7 +176,8 @@
       "shownAsList": "Shown as list",
       "shownAsPictures": "Shown as pictures",
       "pickAList": "This card shows the rows of a list. Pick a field inside a list, or choose another form under Look.",
-      "nothingHere": "This form has no place for this field."
+      "nothingHere": "This form has no place for this field.",
+      "useInButton": "Use in button {{number}}: {{placeholder}}"
     },
     "form": {
       "loseTitle": "Change the form?",
@@ -488,7 +494,10 @@
         "later": "Later",
         "placed": "The card is on {{board}} now.",
         "openBoard": "Open the board",
-        "noBoard": "There is no board you may change. Put the card on one later with Add widget."
+        "noBoard": "There is no board you may change. Put the card on one later with Add widget.",
+        "buttons_one": "{{count}} button ·",
+        "buttons_other": "{{count}} buttons ·",
+        "buttonsOpen": "edit in All settings"
       },
       "why": {
         "text": "The guided way cannot show all of this card, because {{why}}. Everything is here under All settings and in the YAML.",
@@ -816,6 +825,66 @@
         "lineRed": "Line red",
         "ask": "What the card asks"
       }
+    },
+    "buttons": {
+      "none": "This card has no buttons yet.",
+      "add": "Add button",
+      "most": "A card has at most {{count}} buttons.",
+      "button": "Button {{number}}: {{name}}",
+      "label": "Label",
+      "symbol": "Symbol",
+      "symbolNone": "none",
+      "where": "Where",
+      "whereCard": "On the card",
+      "whereRow": "On each row",
+      "rowNeedsList": "A button on each row needs a card that shows a list or pictures.",
+      "id": "Short name",
+      "method": "Method",
+      "path": "Address of the request",
+      "send": "Send as",
+      "sendJson": "JSON",
+      "sendForm": "Form",
+      "pathHelp": "A path below the address of the connection. Braces take a field of the data, such as {hash}, or an input, such as {ask.minutes}. A field of the data can be inserted from the tree of the Source step with Use in button.",
+      "body": "Content sent",
+      "bodyKey": "Name",
+      "bodyValue": "Value of {{key}}",
+      "bodyAdd": "Add a line",
+      "bodyRemove": "Remove {{key}}",
+      "bodyNested": "The content has names inside names. The form cannot show that and leaves it as it is.",
+      "bodyNestedOpen": "Edit in YAML",
+      "insertAsk": "Insert an input:",
+      "insertWhere": "Click into the address or into a value first.",
+      "confirm": "Ask first",
+      "danger": "Dangerous",
+      "dangerHelp": "A dangerous button is red and asks twice.",
+      "asks": "Inputs",
+      "asksNone": "The button asks for nothing before it runs.",
+      "askAdd": "Add an input",
+      "ask": "Input {{number}}",
+      "askName": "Name",
+      "askType": "Kind",
+      "askTypes": {
+        "number": "Number",
+        "text": "Text",
+        "choice": "Choice"
+      },
+      "askMin": "Lowest",
+      "askMax": "Highest",
+      "askStep": "Step",
+      "askLength": "Longest text",
+      "askOptions": "Choices",
+      "askOptionValue": "Value of choice {{number}}",
+      "askOptionLabel": "Words of choice {{number}}",
+      "askOptionRemove": "Remove choice {{number}}",
+      "askOptionAdd": "Add a choice",
+      "askRemove": "Remove input {{number}}",
+      "answer": "Show this from the answer",
+      "answerNone": "empty: Done",
+      "answerHelp": "A field of the service’s JSON answer, such as data.message. Its value is shown instead of Done, cut to 200 characters. Without it the card never shows text of the service.",
+      "up": "Move button up",
+      "down": "Move button down",
+      "remove": "Remove button {{number}}",
+      "askMost": "A button has at most {{count}} inputs."
     }
   },
   "integrationEditor": {

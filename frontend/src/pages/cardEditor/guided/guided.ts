@@ -300,6 +300,8 @@ export const GUIDED_SHOWS: Shown = {
       },
     },
     empty: 'any',
+    // Buttons are a fine point (KARTEN-8): the guided way keeps them as they are and says where they are edited.
+    buttons: 'any',
   },
 }
 

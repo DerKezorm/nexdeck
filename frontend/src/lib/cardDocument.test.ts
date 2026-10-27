@@ -225,9 +225,9 @@ describe('karten10: what the local check refuses', () => {
 
 describe('karten9 AC-12: what the editor leaves to the YAML view', () => {
   it('names the parts it has no field for, with their lines, and nothing else', () => {
-    const text = `${COMMENTED}buttons:\n  - {label: Restart}\n`
+    const text = `${COMMENTED}extras:\n  - {label: Restart}\n`
     const parts = adjustedInYaml(card(text))
-    expect(parts).toEqual([{ path: ['buttons'], line: 26 }])
+    expect(parts).toEqual([{ path: ['extras'], line: 26 }])
   })
 
   it('karten9 AC-7: takes rows written as an expression, which the Look step shows in its field', () => {

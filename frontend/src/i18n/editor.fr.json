@@ -20,14 +20,16 @@
       "source": "Source",
       "look": "Apparence",
       "rules": "Règles",
-      "texts": "Textes"
+      "texts": "Textes",
+      "buttons": "Boutons"
     },
     "stepNumber": "{{number}} {{name}}",
     "lead": {
       "source": "Où la carte interroge et ce qui revient.",
       "look": "La forme de la carte et ce qui va où.",
       "rules": "Quand la carte, une valeur ou une ligne change de couleur.",
-      "texts": "Chaque texte de la carte, dans chaque langue que vous voulez proposer. Là où une langue manque, la carte affiche le texte anglais."
+      "texts": "Chaque texte de la carte, dans chaque langue que vous voulez proposer. Là où une langue manque, la carte affiche le texte anglais.",
+      "buttons": "Ce que la carte peut déclencher sur le service : un bouton, une requête."
     },
     "preview": {
       "title": "Aperçu",
@@ -54,7 +56,8 @@
       "places": "Emplacements de la carte",
       "free": "libre",
       "worked": "calculé",
-      "dropHelp": "Faites glisser un champ de la réponse sur un emplacement, ou utilisez « Utiliser comme … » dans la réponse."
+      "dropHelp": "Faites glisser un champ de la réponse sur un emplacement, ou utilisez « Utiliser comme … » dans la réponse.",
+      "buttonsNothing": "Les boutons ne font rien dans l’aperçu."
     },
     "adjusted": {
       "title": "Ajusté dans le YAML",
@@ -132,7 +135,9 @@
       "labelOf": "Libellé de la valeur {{number}}",
       "unitOf": "Unité de la valeur {{number}}",
       "rowUnit": "Unité de la valeur de chaque ligne",
-      "empty": "Quand il n'y a aucune ligne"
+      "empty": "Quand il n'y a aucune ligne",
+      "buttonLabel": "Bouton {{number}}",
+      "askLabel": "Saisie {{name}} du bouton {{number}}"
     },
     "slot": {
       "value": "Valeur",
@@ -171,7 +176,8 @@
       "shownAsList": "Affichée en liste",
       "shownAsPictures": "Affichée en images",
       "pickAList": "Cette carte affiche les lignes d’une liste. Choisissez un champ dans une liste, ou une autre forme sous Apparence.",
-      "nothingHere": "Cette forme n’a pas de place pour ce champ."
+      "nothingHere": "Cette forme n’a pas de place pour ce champ.",
+      "useInButton": "Utiliser dans le bouton {{number}} : {{placeholder}}"
     },
     "form": {
       "loseTitle": "Changer de forme ?",
@@ -488,7 +494,10 @@
         "later": "Plus tard",
         "placed": "La carte est maintenant sur {{board}}.",
         "openBoard": "Ouvrir le tableau",
-        "noBoard": "Il n’y a aucun tableau que tu peux modifier. Ajoute la carte plus tard avec Ajouter un widget."
+        "noBoard": "Il n’y a aucun tableau que tu peux modifier. Ajoute la carte plus tard avec Ajouter un widget.",
+        "buttons_one": "{{count}} bouton ·",
+        "buttons_other": "{{count}} boutons ·",
+        "buttonsOpen": "modifier dans Tous les réglages"
       },
       "why": {
         "text": "Le mode guidé ne peut pas montrer toute cette carte, car {{why}}. Tout est ici dans Tous les réglages et dans le YAML.",
@@ -816,6 +825,66 @@
         "lineRed": "Ligne en rouge",
         "ask": "Ce que la carte demande"
       }
+    },
+    "buttons": {
+      "none": "Cette carte n’a pas encore de bouton.",
+      "add": "Ajouter un bouton",
+      "most": "Une carte a au plus {{count}} boutons.",
+      "button": "Bouton {{number}} : {{name}}",
+      "label": "Libellé",
+      "symbol": "Symbole",
+      "symbolNone": "aucun",
+      "where": "Où",
+      "whereCard": "Sur la carte",
+      "whereRow": "Sur chaque ligne",
+      "rowNeedsList": "Un bouton par ligne demande une carte avec liste ou images.",
+      "id": "Nom court",
+      "method": "Méthode",
+      "path": "Adresse de la requête",
+      "send": "Envoyer en",
+      "sendJson": "JSON",
+      "sendForm": "Formulaire",
+      "pathHelp": "Un chemin sous l’adresse de la connexion. Les accolades prennent un champ des données, comme {hash}, ou une saisie, comme {ask.minutes}. Un champ des données s’insère depuis l’arbre de l’étape Source avec « Utiliser dans le bouton ».",
+      "body": "Contenu envoyé",
+      "bodyKey": "Nom",
+      "bodyValue": "Valeur de {{key}}",
+      "bodyAdd": "Ajouter une ligne",
+      "bodyRemove": "Retirer {{key}}",
+      "bodyNested": "Le contenu a des noms dans des noms. Le formulaire ne peut pas l’afficher et le laisse tel quel.",
+      "bodyNestedOpen": "Modifier dans le YAML",
+      "insertAsk": "Insérer une saisie :",
+      "insertWhere": "Cliquez d’abord dans l’adresse ou dans une valeur.",
+      "confirm": "Demander d’abord",
+      "danger": "Dangereux",
+      "dangerHelp": "Un bouton dangereux est rouge et demande deux fois.",
+      "asks": "Saisies",
+      "asksNone": "Le bouton ne demande rien avant de s’exécuter.",
+      "askAdd": "Ajouter une saisie",
+      "ask": "Saisie {{number}}",
+      "askName": "Nom",
+      "askType": "Type",
+      "askTypes": {
+        "number": "Nombre",
+        "text": "Texte",
+        "choice": "Choix"
+      },
+      "askMin": "Minimum",
+      "askMax": "Maximum",
+      "askStep": "Pas",
+      "askLength": "Texte le plus long",
+      "askOptions": "Choix possibles",
+      "askOptionValue": "Valeur du choix {{number}}",
+      "askOptionLabel": "Texte du choix {{number}}",
+      "askOptionRemove": "Retirer le choix {{number}}",
+      "askOptionAdd": "Ajouter un choix",
+      "askRemove": "Retirer la saisie {{number}}",
+      "answer": "Afficher depuis la réponse",
+      "answerNone": "vide : Terminé",
+      "answerHelp": "Un champ de la réponse JSON du service, comme data.message. Sa valeur remplace « Terminé », coupée à 200 caractères. Sans lui, la carte n’affiche jamais de texte du service.",
+      "up": "Monter le bouton",
+      "down": "Descendre le bouton",
+      "remove": "Retirer le bouton {{number}}",
+      "askMost": "Un bouton a au plus {{count}} saisies."
     }
   },
   "integrationEditor": {

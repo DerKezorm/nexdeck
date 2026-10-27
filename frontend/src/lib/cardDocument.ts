@@ -484,6 +484,25 @@ export const EDITOR_SHOWS: Shown = {
     rows: ROWS,
     item: { keys: { title: VALUE, subtitle: VALUE, value: VALUE, status: { items: RULE }, link: VALUE, image: VALUE } },
     empty: 'any',
+    buttons: {
+      items: {
+        keys: {
+          id: 'any',
+          label: 'any',
+          icon: 'any',
+          where: 'any',
+          method: 'any',
+          path: 'any',
+          send: 'any',
+          // Content with names inside names is not a row of the form; it stays as written and the step says so.
+          body: 'any',
+          confirm: 'any',
+          danger: 'any',
+          asks: { items: { keys: { name: 'any', label: 'any', type: 'any', min: 'any', max: 'any', step: 'any', max_length: 'any', options: 'any' } } },
+          answer: 'any',
+        },
+      },
+    },
   },
 }
 

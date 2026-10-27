@@ -20,14 +20,16 @@
       "source": "Origine",
       "look": "Aspetto",
       "rules": "Regole",
-      "texts": "Testi"
+      "texts": "Testi",
+      "buttons": "Pulsanti"
     },
     "stepNumber": "{{number}} {{name}}",
     "lead": {
       "source": "Dove chiede la scheda e cosa torna indietro.",
       "look": "La forma della scheda e cosa va dove.",
       "rules": "Quando la scheda, un valore o una riga cambia colore.",
-      "texts": "Ogni testo della scheda, in ogni lingua che vuoi offrire. Dove manca una lingua, la scheda mostra il testo inglese."
+      "texts": "Ogni testo della scheda, in ogni lingua che vuoi offrire. Dove manca una lingua, la scheda mostra il testo inglese.",
+      "buttons": "Cosa può fare la scheda sul servizio: un pulsante, una richiesta."
     },
     "preview": {
       "title": "Anteprima",
@@ -54,7 +56,8 @@
       "places": "Posti della scheda",
       "free": "libero",
       "worked": "calcolato",
-      "dropHelp": "Trascina un campo della risposta su un posto, oppure usa «Usa come …» nella risposta."
+      "dropHelp": "Trascina un campo della risposta su un posto, oppure usa «Usa come …» nella risposta.",
+      "buttonsNothing": "I pulsanti non fanno nulla nell’anteprima."
     },
     "adjusted": {
       "title": "Modificato nello YAML",
@@ -132,7 +135,9 @@
       "labelOf": "Etichetta del valore {{number}}",
       "unitOf": "Unità del valore {{number}}",
       "rowUnit": "Unità del valore in ogni riga",
-      "empty": "Quando non ci sono righe"
+      "empty": "Quando non ci sono righe",
+      "buttonLabel": "Pulsante {{number}}",
+      "askLabel": "Campo {{name}} del pulsante {{number}}"
     },
     "slot": {
       "value": "Valore",
@@ -171,7 +176,8 @@
       "shownAsList": "Mostrato come elenco",
       "shownAsPictures": "Mostrato come immagini",
       "pickAList": "Questa scheda mostra le righe di un elenco. Scegli un campo dentro un elenco, oppure un’altra forma in Aspetto.",
-      "nothingHere": "Questa forma non ha posto per questo campo."
+      "nothingHere": "Questa forma non ha posto per questo campo.",
+      "useInButton": "Usa nel pulsante {{number}}: {{placeholder}}"
     },
     "form": {
       "loseTitle": "Cambiare forma?",
@@ -488,7 +494,10 @@
         "later": "Più tardi",
         "placed": "La scheda ora è su {{board}}.",
         "openBoard": "Apri la bacheca",
-        "noBoard": "Non c’è nessuna bacheca che puoi modificare. Aggiungi la scheda più tardi con Aggiungi widget."
+        "noBoard": "Non c’è nessuna bacheca che puoi modificare. Aggiungi la scheda più tardi con Aggiungi widget.",
+        "buttons_one": "{{count}} pulsante ·",
+        "buttons_other": "{{count}} pulsanti ·",
+        "buttonsOpen": "modifica in Tutte le impostazioni"
       },
       "why": {
         "text": "Il percorso guidato non può mostrare tutta questa scheda, perché {{why}}. Tutto è qui in Tutte le impostazioni e nello YAML.",
@@ -816,6 +825,66 @@
         "lineRed": "Riga in rosso",
         "ask": "Cosa chiede la scheda"
       }
+    },
+    "buttons": {
+      "none": "Questa scheda non ha ancora pulsanti.",
+      "add": "Aggiungi pulsante",
+      "most": "Una scheda ha al massimo {{count}} pulsanti.",
+      "button": "Pulsante {{number}}: {{name}}",
+      "label": "Etichetta",
+      "symbol": "Simbolo",
+      "symbolNone": "nessuno",
+      "where": "Dove",
+      "whereCard": "Sulla scheda",
+      "whereRow": "Su ogni riga",
+      "rowNeedsList": "Un pulsante su ogni riga richiede una scheda con elenco o immagini.",
+      "id": "Nome breve",
+      "method": "Metodo",
+      "path": "Indirizzo della richiesta",
+      "send": "Invia come",
+      "sendJson": "JSON",
+      "sendForm": "Modulo",
+      "pathHelp": "Un percorso sotto l’indirizzo della connessione. Tra parentesi graffe va un campo dei dati, come {hash}, o un campo da compilare, come {ask.minutes}. Un campo dei dati si inserisce dall’albero del passo Origine con «Usa nel pulsante».",
+      "body": "Contenuto inviato",
+      "bodyKey": "Nome",
+      "bodyValue": "Valore di {{key}}",
+      "bodyAdd": "Aggiungi una riga",
+      "bodyRemove": "Rimuovi {{key}}",
+      "bodyNested": "Il contenuto ha nomi dentro altri nomi. Il modulo non può mostrarlo e lo lascia com’è.",
+      "bodyNestedOpen": "Modifica nello YAML",
+      "insertAsk": "Inserisci un campo:",
+      "insertWhere": "Fai prima clic nell’indirizzo o in un valore.",
+      "confirm": "Chiedi prima",
+      "danger": "Pericoloso",
+      "dangerHelp": "Un pulsante pericoloso è rosso e chiede due volte.",
+      "asks": "Campi",
+      "asksNone": "Il pulsante non chiede nulla prima di eseguire.",
+      "askAdd": "Aggiungi un campo",
+      "ask": "Campo {{number}}",
+      "askName": "Nome",
+      "askType": "Tipo",
+      "askTypes": {
+        "number": "Numero",
+        "text": "Testo",
+        "choice": "Scelta"
+      },
+      "askMin": "Minimo",
+      "askMax": "Massimo",
+      "askStep": "Passo",
+      "askLength": "Testo più lungo",
+      "askOptions": "Scelte",
+      "askOptionValue": "Valore della scelta {{number}}",
+      "askOptionLabel": "Testo della scelta {{number}}",
+      "askOptionRemove": "Rimuovi la scelta {{number}}",
+      "askOptionAdd": "Aggiungi una scelta",
+      "askRemove": "Rimuovi il campo {{number}}",
+      "answer": "Mostra dalla risposta",
+      "answerNone": "vuoto: Fatto",
+      "answerHelp": "Un campo della risposta JSON del servizio, come data.message. Il suo valore compare al posto di «Fatto», tagliato a 200 caratteri. Senza, la scheda non mostra mai testo del servizio.",
+      "up": "Sposta il pulsante su",
+      "down": "Sposta il pulsante giù",
+      "remove": "Rimuovi il pulsante {{number}}",
+      "askMost": "Un pulsante ha al massimo {{count}} campi."
     }
   },
   "integrationEditor": {

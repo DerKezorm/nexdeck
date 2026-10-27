@@ -146,6 +146,10 @@ export function Preview({ guided = false }: { guided?: boolean }) {
   const [sizeIndex, setSizeIndex] = useState(1)
   const [phone, setPhone] = useState(false)
   const [over, setOver] = useState<string | null>(null)
+  // A press on a button of the card: it does nothing here, and the card says so until it is changed.
+  const [pressed, setPressed] = useState(false)
+  const text = useCardEditor((state) => state.text)
+  useEffect(() => setPressed(false), [text])
   const sources = useQuery({ queryKey: ['cards-sources'], queryFn: () => get<CardSource[]>('/cards/sources'), staleTime: 60_000 })
 
   const { preview, mode, integrationId, chosen } = usePreviewQuery(!waiting)
@@ -259,7 +263,8 @@ export function Preview({ guided = false }: { guided?: boolean }) {
           </div>
         ) : shown.kind === 'data' ? (
           <div style={{ width: pixels.width, height: pixels.height }} className="max-w-none" data-testid="card-preview-card">
-            <WidgetCard widget={widget} data={shown.data} />
+            {/* Buttons are drawn, the way a board draws them, and do nothing here (KARTEN-8). */}
+            <WidgetCard widget={widget} data={shown.data} canAct onAction={() => setPressed(true)} />
           </div>
         ) : (
           <div style={{ width: pixels.width, height: pixels.height }} className="grid place-items-center text-[12px] text-muted">
@@ -267,6 +272,12 @@ export function Preview({ guided = false }: { guided?: boolean }) {
           </div>
         )}
       </div>
+
+      {pressed && (
+        <p className="text-[12px] text-muted break-words hyphens-auto" role="status" data-testid="card-preview-buttons">
+          {t('editor.preview.buttonsNothing')}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 min-w-0">
         <span className="text-[12px] text-muted break-words hyphens-auto">{t('editor.preview.style')}</span>

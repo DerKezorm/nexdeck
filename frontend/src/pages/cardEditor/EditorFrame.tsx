@@ -13,6 +13,7 @@ import { GuidedWay } from './guided/GuidedWay'
 import { Preview } from './Preview'
 import { ProblemList } from './ProblemList'
 import { LookStep } from './steps/LookStep'
+import { ButtonsStep } from './steps/ButtonsStep'
 import { RulesStep } from './steps/RulesStep'
 import { SourceStep } from './steps/SourceStep'
 import { TextsStep } from './steps/TextsStep'
@@ -31,6 +32,7 @@ const STEP_PAGES: Record<EditorStep, () => React.ReactElement> = {
   source: SourceStep,
   look: LookStep,
   rules: RulesStep,
+  buttons: ButtonsStep,
   texts: TextsStep,
 }
 
