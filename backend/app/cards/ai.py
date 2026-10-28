@@ -639,14 +639,17 @@ async def supervised(user_id: int, work: Coroutine[Any, Any, Any]) -> tuple[bool
 
 
 def cancel(user_id: int) -> bool:
+    """End the request of this administrator. The routes call it from a worker thread, the task lives on the loop: ask the loop to do it."""
     task = RUNNING.get(user_id)
     if task is None or task.done():
         return False
-    task.cancel()
+    try:
+        task.get_loop().call_soon_threadsafe(task.cancel)
+    except RuntimeError:  # the loop is closed, nothing is waiting any more
+        return False
     return True
 
 
 def cancel_all() -> int:
     """The provider was taken away: every request that waits for it ends (KARTEN-17 EC-6)."""
-    ended = [user for user in RUNNING if cancel(user)]
-    return len(ended)
+    return sum(cancel(user) for user in list(RUNNING))

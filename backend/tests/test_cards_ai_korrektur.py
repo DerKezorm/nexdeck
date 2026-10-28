@@ -245,7 +245,56 @@ def test_karten17_ac10_the_summary_names_the_methods_of_the_buttons(monkeypatch:
     assert plain.summary["buttons"] is False and plain.summary["methods"] == []
 
 
+@pytest.mark.parametrize("debug", [False, True])
+def test_karten17_ac8_the_routes_end_a_request_from_another_thread_than_the_one_it_runs_on(debug: bool) -> None:
+    """``DELETE /cards/ai`` and switching the provider off run in a worker thread; the task lives on the loop of the server."""
+    loop = asyncio.new_event_loop()
+    loop.set_debug(debug)
+    started = threading.Event()
+    outcome: dict[str, Any] = {}
+
+    async def hang() -> str:
+        await asyncio.Event().wait()
+        return "never"
+
+    async def main() -> None:
+        job = asyncio.ensure_future(ai.supervised(4711, hang()))
+        await asyncio.sleep(0)
+        started.set()
+        outcome["result"] = await job
+
+    runner = threading.Thread(target=loop.run_until_complete, args=(main(),), daemon=True)
+    runner.start()
+    assert started.wait(5)
+    assert ai.cancel(4711) is True, "nothing raises, in debug mode neither"
+    runner.join(5)
+    assert not runner.is_alive(), "the task ended by itself"
+    assert outcome["result"] == (False, None) and ai.RUNNING == {}
+    loop.close()
+    assert ai.cancel(4711) is False
 
 
+def test_karten17_ec6_the_provider_taken_away_ends_every_request_from_another_thread() -> None:
+    loop = asyncio.new_event_loop()
+    started = threading.Event()
+    results: list[Any] = []
+
+    async def hang() -> str:
+        await asyncio.Event().wait()
+        return "never"
+
+    async def main() -> None:
+        jobs = [asyncio.ensure_future(ai.supervised(number, hang())) for number in (1, 2)]
+        await asyncio.sleep(0)
+        started.set()
+        results.extend(await asyncio.gather(*jobs))
+
+    runner = threading.Thread(target=loop.run_until_complete, args=(main(),), daemon=True)
+    runner.start()
+    assert started.wait(5)
+    assert ai.cancel_all() == 2
+    runner.join(5)
+    assert not runner.is_alive() and results == [(False, None), (False, None)] and ai.RUNNING == {}
+    loop.close()
 
 
