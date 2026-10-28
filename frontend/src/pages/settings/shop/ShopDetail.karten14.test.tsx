@@ -114,6 +114,32 @@ describe('the preview', () => {
   })
 })
 
+describe('with the keyboard', () => {
+  it('karten14 ac5: a tile is reached with Tab and opened with Enter, and Escape closes the install dialog', async () => {
+    renderWith(<ShopTab />)
+    const tile = await screen.findByTestId('shop-tile-123/queue-size')
+    const button = within(tile).getByRole('button')
+    button.focus()
+    expect(button).toHaveFocus()
+    await userEvent.keyboard('{Enter}')
+    const page = await screen.findByTestId('shop-detail')
+    await userEvent.click(within(page).getByRole('button', { name: 'Install' }))
+    expect(await screen.findByRole('dialog', { name: 'Install Queue size' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+})
+
+describe('on a phone', () => {
+  it('karten14 ec10: "Install" is a big button that fills the width on a narrow screen', async () => {
+    const page = await open()
+    const install = within(page).getByRole('button', { name: 'Install' })
+    expect(install.className).toContain('max-sm:w-full')
+    expect(install.className).toContain('max-sm:h-12')
+    expect(within(page).getByTestId('shop-actions').className).toContain('max-sm:flex-col')
+  })
+})
+
 describe('installing', () => {
   const installDialog = async () => {
     const page = await open()

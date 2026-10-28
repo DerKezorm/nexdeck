@@ -130,7 +130,7 @@ export function ShopDetailPage({
         </p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="shop-actions">
+      <div className="mt-4 flex flex-wrap items-center gap-2 max-sm:flex-col max-sm:items-stretch" data-testid="shop-actions">
         {entry.type === 'card' && !recalled && (
           <>
             {entry.connections.length > 1 && (
@@ -142,7 +142,7 @@ export function ShopDetailPage({
           </>
         )}
         {!recalled && installed === null && !entry.needs_newer && (
-          <button className="btn btn-accent" onClick={() => setInstalling(true)}>
+          <button className="btn btn-accent max-sm:w-full max-sm:h-12 max-sm:text-base" onClick={() => setInstalling(true)}>
             {t('cards.shop.install.button')}
           </button>
         )}
