@@ -11,7 +11,7 @@ from sqlalchemy import select
 from app.db import db_session
 from app.models import CardRecord, Event, Notice, User
 from app.services.collector import collector
-from app.workshop import rounds
+from app.workshop import catalog, rounds, updates
 
 from .conftest import CSRF, create_user, login
 from .karten8_sample import DOWNLOADS, button, with_buttons
@@ -173,6 +173,8 @@ def test_karten15_ac4_accepting_changes_the_card_everywhere_at_once_and_writes_i
     # The card on the board fetches again, and the update is no longer waiting.
     assert widget in scheduled
     assert shop.get(UPDATES).json()["updates"] == []
+    # The card is the shop's again, not "changed here": the text it was installed with is the new one.
+    assert shop.get("/api/v1/workshop/catalog").json()["entries"][0]["installed"]["locally_changed"] is False
     with db_session() as db:
         lines = [one.detail for one in db.scalars(select(Event)) if one.name == SLUG]
     assert "updated from the Card shop to 1.1.0" in lines
@@ -304,6 +306,24 @@ def test_karten15_ec5_a_second_administrator_finds_it_up_to_date_already(shop: T
     login(shop, "second", "another-long-password")
     second = accept(shop, expected_version="1.1.0")
     assert (first.json()["status"], second.json()["status"]) == ("updated", "already_up_to_date")
+    with db_session() as db:
+        lines = [one.detail for one in db.scalars(select(Event)) if one.name == SLUG and "updated" in one.detail]
+    assert lines == ["updated from the Card shop to 1.1.0"]
+
+
+def test_karten15_ec5_the_card_is_looked_at_again_inside_the_lock(shop: TestClient, github: GitHub, clock: list[float]) -> None:
+    """Two administrators who both read the card as it was: the second finds it taken already, even though it came here after the check."""
+    install(shop, github)
+    github.publish(text("1.1.0"))
+    found = catalog.Entry.model_validate(github.entries[0])
+    with db_session() as first, db_session() as second:
+        stale = updates.row_of(first, SLUG)
+        late = updates.row_of(second, SLUG)
+        assert stale.shop_version == late.shop_version == "1.0.0"
+        done = updates.apply(second, late, found, text("1.1.0"), [], True, None, user_id=1)
+        second.commit()
+        again = updates.apply(first, stale, found, text("1.1.0"), [], True, None, user_id=1)
+    assert (done["status"], again["status"]) == ("updated", "already_up_to_date")
     with db_session() as db:
         lines = [one.detail for one in db.scalars(select(Event)) if one.name == SLUG and "updated" in one.detail]
     assert lines == ["updated from the Card shop to 1.1.0"]
