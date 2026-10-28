@@ -2883,10 +2883,15 @@
       "more": "Show {{count}} more",
       "list": "Entries of the Card shop",
       "back": "Back to the Card shop",
+      "thumb": {
+        "counted": "Counted once a day.",
+        "signIn": "Sign in to GitHub to put your thumb on this entry. It is set in your name.",
+        "noRight": "The Workshop app may not react to discussions yet. Rate it on GitHub instead."
+      },
       "facts": {
         "author": "Author",
         "thumbs": "Thumbs",
-        "discussion": "Discussion on GitHub",
+        "discussion": "Rate on GitHub",
         "version": "Version",
         "license": "License",
         "noLicense": "Not stated",

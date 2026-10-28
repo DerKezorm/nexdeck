@@ -2883,10 +2883,15 @@
       "more": "Mostrar {{count}} más",
       "list": "Entradas de la tienda de tarjetas",
       "back": "Volver a la tienda de tarjetas",
+      "thumb": {
+        "counted": "Se cuenta una vez al día.",
+        "signIn": "Inicia sesión en GitHub para dar tu pulgar a esta entrada. Se pone en tu nombre.",
+        "noRight": "Puede que la app del Workshop aún no pueda reaccionar a los debates. Valórala en GitHub."
+      },
       "facts": {
         "author": "Autor",
         "thumbs": "Pulgares",
-        "discussion": "Debate en GitHub",
+        "discussion": "Valorar en GitHub",
         "version": "Versión",
         "license": "Licencia",
         "noLicense": "No indicada",

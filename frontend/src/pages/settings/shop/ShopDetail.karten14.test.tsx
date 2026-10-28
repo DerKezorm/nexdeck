@@ -67,7 +67,7 @@ describe('what the page says', () => {
   it('karten14 ac14: author, thumbs, version, license and the day it last changed', async () => {
     const page = await open()
     const facts = within(page).getAllByRole('definition').map((one) => (one.textContent ?? '').trim())
-    expect(facts).toEqual(['someone', '12 · Discussion on GitHub', '1.2.0', 'MIT', 'October 20, 2026', 'Queue base'])
+    expect(facts).toEqual(['someone', '12 · Rate on GitHub', '1.2.0', 'MIT', 'October 20, 2026', 'Queue base'])
   })
 
   it('karten14 ac14: a license the catalog does not name is said to be not stated', async () => {
@@ -118,7 +118,7 @@ describe('with the keyboard', () => {
   it('karten14 ac5: a tile is reached with Tab and opened with Enter, and Escape closes the install dialog', async () => {
     renderWith(<ShopTab />)
     const tile = await screen.findByTestId('shop-tile-123/queue-size')
-    const button = within(tile).getByRole('button')
+    const button = within(tile).getByRole('button', { name: 'Queue size' })
     button.focus()
     expect(button).toHaveFocus()
     await userEvent.keyboard('{Enter}')

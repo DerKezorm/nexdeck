@@ -14,6 +14,7 @@ import { InstallDialog } from './InstallDialog'
 import { PlaceOnBoard } from './PlaceOnBoard'
 import { UpdateDialog } from './UpdateDialog'
 import { CheckedClass, ShopActs, useWarningText } from './ShopActs'
+import { hasDiscussion, ThumbButton, ThumbNotes, ThumbSignIn, useThumb } from './shopThumb'
 import { ShopBadges } from './ShopTile'
 
 const ShopPreview = lazy(() => import('./ShopPreview'))
@@ -68,6 +69,7 @@ export function ShopDetailPage({
   const connection = entry.connections.find((one) => String(one.id) === picked) ?? entry.connections[0] ?? null
   const basedOn = entry.based_on ? entries.find((one) => one.id === entry.based_on) : undefined
   const discussion = safeUrl(entry.discussion)
+  const thumb = useThumb(entry, true)
   // What it reads and presses comes from the checked file, never from the catalog's words (the list's entry).
   const checked: ShopEntry | undefined = detail.isError ? { ...entry, verified: false } : full
   const warningText = useWarningText()
@@ -97,9 +99,13 @@ export function ShopDetailPage({
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
             <Fact label={t('cards.shop.facts.author')}>{entry.author.login}</Fact>
             <Fact label={t('cards.shop.facts.thumbs')}>
-              <span className="inline-flex items-center gap-1">
-                <ThumbsUp size={13} aria-hidden="true" /> {entry.thumbs}
-              </span>
+              {hasDiscussion(entry) ? (
+                <ThumbButton entry={entry} thumb={thumb} onPress={() => void thumb.toggle()} />
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <ThumbsUp size={13} aria-hidden="true" /> {entry.thumbs}
+                </span>
+              )}
               {discussion && (
                 <>
                   {' · '}
@@ -108,6 +114,7 @@ export function ShopDetailPage({
                   </a>
                 </>
               )}
+              <ThumbNotes thumb={thumb} />
             </Fact>
             <Fact label={t('cards.shop.facts.version')}>{entry.version}</Fact>
             <Fact label={t('cards.shop.facts.license')}>{entry.license || t('cards.shop.facts.noLicense')}</Fact>
@@ -124,6 +131,7 @@ export function ShopDetailPage({
               </Fact>
             )}
           </dl>
+          <ThumbSignIn thumb={thumb} />
         </div>
       </div>
 

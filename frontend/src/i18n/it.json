@@ -2883,10 +2883,15 @@
       "more": "Mostra altre {{count}}",
       "list": "Voci del negozio di schede",
       "back": "Torna al negozio di schede",
+      "thumb": {
+        "counted": "Conteggiato una volta al giorno.",
+        "signIn": "Accedi a GitHub per mettere il tuo pollice su questa voce. Viene messo a tuo nome.",
+        "noRight": "L'app del Workshop potrebbe non poter ancora reagire alle discussioni. Valutala invece su GitHub."
+      },
       "facts": {
         "author": "Autore",
         "thumbs": "Pollici",
-        "discussion": "Discussione su GitHub",
+        "discussion": "Valuta su GitHub",
         "version": "Versione",
         "license": "Licenza",
         "noLicense": "Non indicata",

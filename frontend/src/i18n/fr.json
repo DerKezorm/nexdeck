@@ -2883,10 +2883,15 @@
       "more": "Afficher {{count}} de plus",
       "list": "Entrées de la boutique de cartes",
       "back": "Retour à la boutique de cartes",
+      "thumb": {
+        "counted": "Compté une fois par jour.",
+        "signIn": "Connecte-toi à GitHub pour mettre ton pouce sur cette entrée. Il est posé en ton nom.",
+        "noRight": "L'app du Workshop ne peut peut-être pas encore réagir aux discussions. Note-la plutôt sur GitHub."
+      },
       "facts": {
         "author": "Auteur",
         "thumbs": "Pouces",
-        "discussion": "Discussion sur GitHub",
+        "discussion": "Noter sur GitHub",
         "version": "Version",
         "license": "Licence",
         "noLicense": "Non indiquée",

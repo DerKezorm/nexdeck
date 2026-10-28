@@ -2883,10 +2883,15 @@
       "more": "{{count}} weitere zeigen",
       "list": "Einträge des Kartenladens",
       "back": "Zurück zum Kartenladen",
+      "thumb": {
+        "counted": "Wird einmal am Tag gezählt.",
+        "signIn": "Melde dich bei GitHub an, um deinen Daumen auf diesen Eintrag zu setzen. Er wird in deinem Namen gesetzt.",
+        "noRight": "Die Workshop-App darf vielleicht noch nicht auf Diskussionen reagieren. Bewerte stattdessen auf GitHub."
+      },
       "facts": {
         "author": "Autor",
         "thumbs": "Daumen",
-        "discussion": "Diskussion auf GitHub",
+        "discussion": "Auf GitHub bewerten",
         "version": "Fassung",
         "license": "Lizenz",
         "noLicense": "Nicht angegeben",
