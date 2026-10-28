@@ -449,6 +449,8 @@ class History:
 
     open: dict[str, Any] | None = None
     accepted: bool = False
+    #: The newest closed issue that the action took in: what the author wrote then, when the catalog does not have the entry.
+    accepted_issue: dict[str, Any] | None = None
     new_today: int = 0
     entry: catalog.Entry | None = None
 
@@ -468,6 +470,7 @@ async def history(ctx: Context, kind: str, slug: str) -> History:
         marker = last_marker(await ctx.comments(one))
         if marker and marker[0] == "accepted":
             found.accepted = True
+            found.accepted_issue = one
             break
     found.entry = await entry_of(ctx.db, f"{ctx.access.github_id}/{slug}")
     return found
@@ -482,6 +485,20 @@ async def entry_of(db: Session, entry_id: str) -> catalog.Entry | None:
     except catalog.CatalogError:
         return None
     return found.by_id.get(entry_id)
+
+
+def previous_words(past: History, one: Subject) -> dict[str, str]:
+    """The description and category of the earlier entry of this name, for an update to start from (N5): the catalog, else the issue it came in with.
+
+    What the earlier entry does not tell stays what the card says.
+    """
+    description, category = "", ""
+    if past.entry is not None:
+        description, category = plain(past.entry.description).strip(), past.entry.category
+    elif past.accepted_issue is not None:
+        fields = parse_body(str(past.accepted_issue.get("body") or ""))
+        description, category = fields.get("description", "").strip(), category_guess(fields.get("category", ""))
+    return {"description": description or one.description, "category": category or category_guess(one.category)}
 
 
 def lineage(one: Subject, github_id: str | None) -> tuple[str | None, str | None, list[dict[str, str]]]:
@@ -542,6 +559,8 @@ async def check(db: Session, user: User, kind: str, slug: str) -> dict[str, Any]
         return out
     update = past.entry is not None or past.accepted or own is not None
     out["mode"] = "update" if update else "new"
+    if update:
+        out["suggested"] = previous_words(past, one)
     if past.entry is not None:
         out["previous_version"] = past.entry.version
         if past.entry.removed is not None and past.entry.removed.level != "withdrawn":

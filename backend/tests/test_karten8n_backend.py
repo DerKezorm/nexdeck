@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from .cards_sample import VALUE_CARD
 from .conftest import CSRF
 from .karten3_sample import MEMOS
 from .karten14_sample import card_text
@@ -15,6 +16,7 @@ from .test_karten16_submit import (
     BASE,
     ME,
     SLUG,
+    accepted,
     add_card,
     check,
     codes,
@@ -104,3 +106,30 @@ def test_karten8n_w3_a_connection_of_your_own_is_not_called_changed(me: TestClie
     made = me.post("/api/v1/own-integrations", json={"yaml": MEMOS}, headers=CSRF)
     row = next(one for one in me.get("/api/v1/own-integrations").json() if one["short"] == made.json()["short"])
     assert row["shop_ref"] == "" and row["locally_changed"] is False
+
+
+# -- N5: an update starts from the words of the entry it updates ----------------------------------------------------
+
+
+def test_karten8n_n5_an_update_starts_from_the_description_and_category_of_the_shop_entry(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    share(me)
+    hub.accept(1, VALUE_CARD, description="Counts the items of the queue for the living room.", category="downloads")
+    clock[0] += 700
+    found = check(me)
+    assert found["mode"] == "update"
+    assert found["suggested"] == {"description": "Counts the items of the queue for the living room.", "category": "downloads"}
+
+
+def test_karten8n_n5_without_the_entry_in_the_catalog_the_accepted_issue_tells_the_words(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    share(me, category="smart_home", description="The words that went into the issue, a few of them.")
+    accepted(hub, clock, 1)
+    me.put(f"{BASE}/settings", json={"enabled": False}, headers=CSRF)
+    found = check(me)
+    assert found["mode"] == "update" and found["previous_version"] is None
+    assert found["suggested"] == {"description": "The words that went into the issue, a few of them.", "category": "smart_home"}
+
+
+def test_karten8n_n5_a_new_submission_starts_from_the_card(me: TestClient) -> None:
+    found = check(me)
+    assert found["mode"] == "new"
+    assert found["suggested"] == {"description": "How many items wait in the queue.", "category": "media"}
