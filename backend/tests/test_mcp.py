@@ -83,11 +83,22 @@ def test_a_message_may_weigh_one_megabyte_and_not_a_byte_more(ready: TestClient)
     assert over.status_code == 413 and over.json()["detail"]["code"] == "too_large"
 
 
-def test_a_body_without_a_length_is_weighed_too(ready: TestClient) -> None:
-    """Sent in chunks there is no Content-Length to look at before the body is read."""
+def test_a_body_without_a_length_is_weighed_too(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sent in chunks there is no Content-Length to look at before the body is read.
+
+    ⚠️ ``Request.body`` is the call that takes the whole body into memory before anyone can count it: here it
+    fails the test, so the endpoint must weigh the body as it reads it.
+    """
+    from starlette.requests import Request
+
     from app.routers.mcp import MAX_BODY
 
+    async def whole_body(_self: Request) -> bytes:
+        raise AssertionError("the whole body was taken into memory")
+
     _key, token = make_key(ready)
+    # After the key is made: that request is read the usual way, by the framework.
+    monkeypatch.setattr(Request, "body", whole_body)
 
     def chunks(total: int):  # noqa: ANN202
         sent = 0
