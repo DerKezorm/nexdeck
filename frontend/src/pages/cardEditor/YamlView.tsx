@@ -9,7 +9,7 @@
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete'
 import { defaultKeymap } from '@codemirror/commands'
 import { yaml } from '@codemirror/lang-yaml'
-import { bracketMatching, defaultHighlightStyle, indentUnit, syntaxHighlighting } from '@codemirror/language'
+import { bracketMatching, indentUnit, syntaxHighlighting } from '@codemirror/language'
 import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { Annotation, EditorState, type Transaction } from '@codemirror/state'
 import { drawSelection, EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view'
@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { get, post } from '../../api/client'
 import { suggestionsAt, type SchemaNode } from '../../lib/cardSchemaCompletion'
 import type { CardProblem } from '../../lib/customCards'
+import { yamlHighlight } from '../../lib/yamlHighlight'
 import { localProblemText, serverProblemText } from './problems'
 import { currentServerProblems, useCardEditor } from './store'
 
@@ -130,7 +131,7 @@ export default function YamlView({ onPastedValid }: { onPastedValid?: () => void
           EditorState.tabSize.of(2),
           indentUnit.of('  '),
           yaml(),
-          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          syntaxHighlighting(yamlHighlight),
           lintGutter(),
           autocompletion({ override: [complete], activateOnTyping: true }),
           // ⚠️ Tab writes two spaces: YAML refuses tabs for indenting (KARTEN-10 EC-7). Escape, then Tab, leaves the field.

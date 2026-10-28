@@ -5,13 +5,14 @@
  */
 import { defaultKeymap } from '@codemirror/commands'
 import { yaml } from '@codemirror/lang-yaml'
-import { bracketMatching, defaultHighlightStyle, indentUnit, syntaxHighlighting } from '@codemirror/language'
+import { bracketMatching, indentUnit, syntaxHighlighting } from '@codemirror/language'
 import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { Annotation, EditorState } from '@codemirror/state'
 import { drawSelection, EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { yamlHighlight } from '../../lib/yamlHighlight'
 import { localProblemText, serverProblemText } from '../cardEditor/problems'
 import { currentServerProblems, useIntegrationEditor } from './store'
 
@@ -61,7 +62,7 @@ export default function CodeField() {
           EditorState.tabSize.of(2),
           indentUnit.of('  '),
           yaml(),
-          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          syntaxHighlighting(yamlHighlight),
           lintGutter(),
           // ⚠️ Tab writes two spaces: YAML refuses tabs for indenting. Escape, then Tab, leaves the field.
           keymap.of([{ key: 'Tab', run: (target) => (target.dispatch(target.state.replaceSelection('  ')), true) }, ...defaultKeymap]),
