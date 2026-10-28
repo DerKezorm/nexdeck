@@ -2268,7 +2268,14 @@
     "Only in this folder": "Solo in questa cartella",
     "Show disabled jobs": "Mostra i job disattivati",
     "The full name of a folder, such as team or team/api. Empty for every job.": "Il nome completo di una cartella, per esempio team o team/api. Vuoto per tutti i job.",
-    "With the path it is served under, if any, such as /jenkins.": "Con il percorso con cui viene servito, se c'è, come /jenkins."
+    "With the path it is served under, if any, such as /jenkins.": "Con il percorso con cui viene servito, se c'è, come /jenkins.",
+    "Admin > API Keys. Reading needs no privilege; the button to run an event needs Run Events.": "Admin > API Keys. La lettura non richiede privilegi; il pulsante per avviare un evento richiede Run Events.",
+    "Cronicle overview": "Panoramica di Cronicle",
+    "Events whose last run failed, jobs running now, and the jobs completed and failed today.": "Eventi la cui ultima esecuzione è fallita, job in corso e job completati e falliti oggi.",
+    "Every scheduled event with its timing and how its last run ended, failing ones first, each with a button to run it.": "Ogni evento pianificato con il suo orario e l'esito dell'ultima esecuzione, prima quelli falliti, ciascuno con un pulsante per avviarlo.",
+    "Latest runs": "Ultime esecuzioni",
+    "Scheduled events of Cronicle, the jobs running now and how the latest runs ended, with a button to run an event.": "Eventi pianificati di Cronicle, job in corso e l'esito delle ultime esecuzioni, con un pulsante per avviare un evento.",
+    "The jobs running now with their progress, then the latest finished ones, failures with the reason Cronicle gives.": "I job in corso con l'avanzamento, poi gli ultimi terminati, i fallimenti con il motivo indicato da Cronicle."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3590,6 +3597,10 @@
     "This device has no relay.": "Questo dispositivo non ha un relè.",
     "Build now": "Avvia ora",
     "Executors busy": "Executor occupati",
-    "Nodes offline": "Nodi offline"
+    "Nodes offline": "Nodi offline",
+    "Completed today": "Completati oggi",
+    "On demand": "Su richiesta",
+    "Every hour": "Ogni ora",
+    "Every minute": "Ogni minuto"
   }
 }

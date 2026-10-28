@@ -2268,7 +2268,14 @@
     "Only in this folder": "Nur in diesem Ordner",
     "Show disabled jobs": "Deaktivierte Jobs zeigen",
     "The full name of a folder, such as team or team/api. Empty for every job.": "Der volle Name eines Ordners, etwa team oder team/api. Leer für alle Jobs.",
-    "With the path it is served under, if any, such as /jenkins.": "Mit dem Pfad, unter dem es läuft, falls es einen hat, etwa /jenkins."
+    "With the path it is served under, if any, such as /jenkins.": "Mit dem Pfad, unter dem es läuft, falls es einen hat, etwa /jenkins.",
+    "Admin > API Keys. Reading needs no privilege; the button to run an event needs Run Events.": "Admin > API Keys. Lesen braucht kein Recht; der Knopf zum Starten eines Events braucht Run Events.",
+    "Cronicle overview": "Cronicle-Übersicht",
+    "Events whose last run failed, jobs running now, and the jobs completed and failed today.": "Events, deren letzter Lauf fehlschlug, aktuell laufende Jobs und die heute abgeschlossenen und fehlgeschlagenen Jobs.",
+    "Every scheduled event with its timing and how its last run ended, failing ones first, each with a button to run it.": "Jedes geplante Event mit seinem Zeitplan und dem Ausgang des letzten Laufs, fehlgeschlagene zuerst, jeweils mit einem Knopf zum Starten.",
+    "Latest runs": "Letzte Läufe",
+    "Scheduled events of Cronicle, the jobs running now and how the latest runs ended, with a button to run an event.": "Geplante Events von Cronicle, aktuell laufende Jobs und der Ausgang der letzten Läufe, mit einem Knopf zum Starten eines Events.",
+    "The jobs running now with their progress, then the latest finished ones, failures with the reason Cronicle gives.": "Die gerade laufenden Jobs mit Fortschritt, dann die zuletzt beendeten, Fehler mit dem Grund, den Cronicle nennt."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3590,6 +3597,10 @@
     "This device has no relay.": "Dieses Gerät hat kein Relais.",
     "Build now": "Jetzt bauen",
     "Executors busy": "Executors belegt",
-    "Nodes offline": "Knoten offline"
+    "Nodes offline": "Knoten offline",
+    "Completed today": "Heute abgeschlossen",
+    "On demand": "Auf Abruf",
+    "Every hour": "Jede Stunde",
+    "Every minute": "Jede Minute"
   }
 }

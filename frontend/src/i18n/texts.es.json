@@ -2268,7 +2268,14 @@
     "Only in this folder": "Solo en esta carpeta",
     "Show disabled jobs": "Mostrar trabajos desactivados",
     "The full name of a folder, such as team or team/api. Empty for every job.": "El nombre completo de una carpeta, como team o team/api. Vacío para todos los trabajos.",
-    "With the path it is served under, if any, such as /jenkins.": "Con la ruta bajo la que se sirve, si la hay, como /jenkins."
+    "With the path it is served under, if any, such as /jenkins.": "Con la ruta bajo la que se sirve, si la hay, como /jenkins.",
+    "Admin > API Keys. Reading needs no privilege; the button to run an event needs Run Events.": "Admin > API Keys. La lectura no necesita ningún privilegio; el botón para ejecutar un evento necesita Run Events.",
+    "Cronicle overview": "Resumen de Cronicle",
+    "Events whose last run failed, jobs running now, and the jobs completed and failed today.": "Eventos cuya última ejecución falló, trabajos en curso y los trabajos completados y fallidos hoy.",
+    "Every scheduled event with its timing and how its last run ended, failing ones first, each with a button to run it.": "Cada evento programado con su horario y cómo terminó su última ejecución, los que fallan primero, cada uno con un botón para ejecutarlo.",
+    "Latest runs": "Últimas ejecuciones",
+    "Scheduled events of Cronicle, the jobs running now and how the latest runs ended, with a button to run an event.": "Eventos programados de Cronicle, los trabajos en curso y cómo terminaron las últimas ejecuciones, con un botón para ejecutar un evento.",
+    "The jobs running now with their progress, then the latest finished ones, failures with the reason Cronicle gives.": "Los trabajos en curso con su avance, luego los últimos terminados, los fallos con el motivo que da Cronicle."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3590,6 +3597,10 @@
     "This device has no relay.": "Este dispositivo no tiene relé.",
     "Build now": "Compilar ahora",
     "Executors busy": "Ejecutores ocupados",
-    "Nodes offline": "Nodos sin conexión"
+    "Nodes offline": "Nodos sin conexión",
+    "Completed today": "Completados hoy",
+    "On demand": "Bajo demanda",
+    "Every hour": "Cada hora",
+    "Every minute": "Cada minuto"
   }
 }
