@@ -25,7 +25,7 @@ from . import load
 #: How many cards of its own an installation keeps (KARTEN-11 AC-8).
 MAX_CARDS = 200
 #: Short names the address ``/api/v1/cards/<name>`` has for other things. A card called so could not be opened.
-RESERVED_SLUGS = frozenset({"library", "sources", "schema", "preview-image"})
+RESERVED_SLUGS = frozenset({"library", "sources", "schema", "preview-image", "ai"})
 
 
 class TooManyCards(Exception):

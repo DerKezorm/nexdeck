@@ -12,6 +12,7 @@ import logging
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
 
+from ..cards import ai as card_ai
 from ..deps import AdminUser, DbSession, error
 from ..models import Conversation
 from ..services.assistant import chat, providers, settings
@@ -78,6 +79,8 @@ def write_setting(body: AssistantSetting, user: AdminUser, db: DbSession) -> dic
         raise error(refused.code, refused.message) from None
     db.commit()
     value = settings.public(db)
+    if not value["ready"]:
+        card_ai.cancel_all()  # a card being written for the editor ends with the provider (KARTEN-17 EC-6)
     logger.info("The assistant uses %s (%s) from now on, set by %s.", value["provider"], value["model"] or "no model", user.username)
     return value
 
