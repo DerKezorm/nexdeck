@@ -727,6 +727,28 @@ class OwnIntegration(Base):
     shop_hash: Mapped[str] = mapped_column(String(64), default="")
 
 
+class GithubLogin(Base):
+    """The GitHub sign-in of one administrator, which lets nexdeck open issues in the Workshop in his name (KARTEN-16).
+
+    ⚠️ The tokens are encrypted under a context of this account (``workshop/github_login.py``), like the secrets of a
+    connection, and the row goes with the account (``ON DELETE CASCADE``): no sign-in outlives the person it belongs to.
+    """
+
+    __tablename__ = "github_logins"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    #: The number GitHub gives the account: what owns an entry of the Workshop, so it is what is compared.
+    github_id: Mapped[str] = mapped_column(String(20))
+    login: Mapped[str] = mapped_column(String(100))
+    access: Mapped[str] = mapped_column(Text, default="")
+    refresh: Mapped[str] = mapped_column(Text, default="")
+    #: When the access token stops working (about eight hours); empty when GitHub gave it no end.
+    access_until: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: When the sign-in ends for good (at most six months after it was made); after that the person signs in again.
+    until: Mapped[datetime] = mapped_column(Utc())
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class Conversation(Base):
     """A conversation with the assistant (roadmap M3), kept 30 days after its last turn."""
 

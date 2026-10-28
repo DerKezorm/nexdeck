@@ -25,7 +25,7 @@ def test_karten15_migration_30_adds_the_columns_to_an_older_database(data_dir: P
                  "VALUES ('old', 'card', 'x', '{}', 'local', '', '', 0, '2026-10-01 00:00:00', '2026-10-01 00:00:00')")
         )
     migrations.migrate()
-    assert migrations.schema_version() == 30
+    assert migrations.schema_version() == migrations.MIGRATIONS[-1][0]
     with engine.connect() as connection:
         columns = {row[1] for row in connection.execute(text("PRAGMA table_info(card_definitions)"))}
         pieces = {row[1] for row in connection.execute(text("PRAGMA table_info(own_integrations)"))}
@@ -35,4 +35,4 @@ def test_karten15_migration_30_adds_the_columns_to_an_older_database(data_dir: P
     assert [tuple(row) for row in kept] == [("old", "")]
     # Run again: nothing changes its mind.
     migrations.migrate()
-    assert migrations.schema_version() == 30
+    assert migrations.schema_version() == migrations.MIGRATIONS[-1][0]

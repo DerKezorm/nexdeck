@@ -281,6 +281,10 @@ def _shop_install_columns(connection: Connection) -> None:
     _add_column(connection, "own_integrations", "shop_hash", "VARCHAR(64) NOT NULL DEFAULT ''")
 
 
+def _github_logins_table(connection: Connection) -> None:
+    Base.metadata.tables["github_logins"].create(connection, checkfirst=True)
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -312,6 +316,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (28, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
     (29, "The assistant keeps the cards it drafted with the conversation", _conversation_drafts_table),
     (30, "A card or connection from the Card shop remembers the text it was installed with", _shop_install_columns),
+    (31, "An administrator can stay signed in to GitHub to share cards", _github_logins_table),
 ]
 
 
