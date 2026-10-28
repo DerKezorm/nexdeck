@@ -3039,7 +3039,6 @@
         "card_needs_english": "Every text in several languages needs the English one.",
         "entry_removed": "A maintainer took this entry out of the Card shop. Ask a maintainer to bring it back before you share an update.",
         "version_not_higher": "Raise the version of the card above the {{version}} that is in the Card shop.",
-        "not_yours": "This card came from the Card shop and is the work of somebody else. Change it first; then it can be shared as your own, based on theirs.",
         "description": "Add a description of a few sentences, in English.",
         "category": "Pick a category.",
         "license": "Tick the box for the MIT License.",

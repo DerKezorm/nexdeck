@@ -3039,7 +3039,6 @@
         "card_needs_english": "Jeder Text in mehreren Sprachen braucht den englischen.",
         "entry_removed": "Ein Pfleger hat diesen Eintrag aus dem Card shop genommen. Bitte einen Pfleger, ihn zurückzuholen, bevor du ein Update teilst.",
         "version_not_higher": "Setze die Version der Karte über die {{version}}, die im Card shop steht.",
-        "not_yours": "Diese Karte kam aus dem Card shop und ist die Arbeit von jemand anderem. Ändere sie zuerst; dann lässt sie sich als deine eigene teilen, basierend auf der anderen.",
         "description": "Schreibe eine Beschreibung in ein paar Sätzen, auf Englisch.",
         "category": "Wähle eine Kategorie.",
         "license": "Setze den Haken bei der MIT-Lizenz.",

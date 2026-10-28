@@ -123,7 +123,6 @@ export const SHARE_PROBLEMS = [
   'card_needs_english',
   'entry_removed',
   'version_not_higher',
-  'not_yours',
   'description',
   'category',
   'license',

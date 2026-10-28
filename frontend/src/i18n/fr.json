@@ -3039,7 +3039,6 @@
         "card_needs_english": "Chaque texte en plusieurs langues a besoin de l'anglais.",
         "entry_removed": "Un mainteneur a retiré cette entrée du Card shop. Demandez à un mainteneur de la rétablir avant de partager une mise à jour.",
         "version_not_higher": "Passez la version de la carte au-dessus de la {{version}} qui est dans le Card shop.",
-        "not_yours": "Cette carte vient du Card shop et c'est le travail de quelqu'un d'autre. Modifiez-la d'abord ; elle peut alors être partagée comme la vôtre, basée sur la sienne.",
         "description": "Écrivez une description de quelques phrases, en anglais.",
         "category": "Choisissez une catégorie.",
         "license": "Cochez la case de la licence MIT.",
