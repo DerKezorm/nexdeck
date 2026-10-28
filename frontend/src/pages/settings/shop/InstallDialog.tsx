@@ -188,8 +188,8 @@ export function InstallDialog({
               const key = documentKey(document)
               return (
                 <fieldset key={key} className="rounded-xl border border-line p-3" data-testid={`install-conflict-${key}`}>
-                  <legend className="text-[12px] text-warn px-1">{`${pickText(document.name, i18n.language) || key} · ${t(document.same ? 'cards.exchange.existsSame' : 'cards.exchange.exists')}`}</legend>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <legend className="text-[12px] text-warn float-left w-full mb-1.5">{`${pickText(document.name, i18n.language) || key} · ${t(document.same ? 'cards.exchange.existsSame' : 'cards.exchange.exists')}`}</legend>
+                  <div className="clear-both flex flex-wrap gap-x-4 gap-y-1">
                     {ANSWERS.map((answer) => (
                       <label key={answer} className="inline-flex items-center gap-1.5 text-sm">
                         <input type="radio" className="accent-accent" name={`install-${key}`} checked={answers[key] === answer} onChange={() => setAnswers((current) => ({ ...current, [key]: answer }))} />
