@@ -347,8 +347,7 @@ def outbound(ask: Ask) -> Outbound:
     if ask.path:
         parts.append(f"Path to read: {ask.path}")
     if ask.yaml.strip():
-        text, _removed = without_demo(ask.yaml) if not ask.include_values else (ask.yaml, "")
-        parts.append(f"The card now:\n{_quoted(text)}")
+        parts.append(f"The card now:\n{_quoted(for_the_wire(ask.yaml, include_values=ask.include_values))}")
     if ask.answer is not MISSING and ask.mode != "translate":
         if ask.include_values:
             parts.append(f"The answer of the service at that path, with its values, as paths, types and values:\n{shape(ask.answer, values=True)}")
@@ -360,24 +359,66 @@ def outbound(ask: Ask) -> Outbound:
 # -- the demo block --------------------------------------------------------------------------------
 
 
-def without_demo(text: str) -> tuple[str, str]:
-    """The text of a card without its top-level ``demo`` block, and that block: the examples are values."""
-    kept: list[str] = []
-    removed: list[str] = []
-    inside = False
-    for line in text.splitlines(keepends=True):
-        if re.match(r"^demo\s*:", line):
-            inside = True
-        elif inside and line.strip() and line[0] not in " \t-":
-            inside = False
-        (removed if inside else kept).append(line)
-    return "".join(kept), "".join(removed)
+def _dump(data: dict[str, Any]) -> str:
+    return yaml.safe_dump(data, allow_unicode=True, default_flow_style=False, sort_keys=False, width=10_000)
+
+
+def _parsed(text: str) -> dict[str, Any]:
+    try:
+        return load.parse(text)[0]
+    except load.CardInvalid:
+        raise AiError("bad_request", "The card cannot be sent while its text cannot be read as YAML.") from None
+
+
+def for_the_wire(text: str, *, include_values: bool) -> str:
+    """The text of a card as it goes out: read as YAML, the top-level ``demo`` (the examples are values) taken away, the rest written again.
+
+    ⚠️ Not a search for lines: a card may spell ``demo`` quoted, in a flow, on one line as JSON or with comments in the block.
+    With the tick the examples go through the filter of :func:`clean` and stay.
+    """
+    data = _parsed(text)
+    examples = data.pop("demo", None)
+    if include_values and examples:
+        data["demo"] = clean(examples)
+    return _dump(data)
 
 
 def with_demo(text: str, answers: dict[str, Any]) -> str:
     """The card with example answers (``request id -> answer``) under ``demo``."""
-    block = yaml.safe_dump({"demo": answers}, allow_unicode=True, default_flow_style=False, sort_keys=False, width=10_000)
-    return f"{text.rstrip()}\n{block}"
+    return f"{text.rstrip()}\n{_dump({'demo': answers})}"
+
+
+def restore_demo(ask: Ask, text: str) -> str:
+    """The examples of the card come back as they were: they are the author's, not the provider's.
+
+    A change keeps what the provider hands in only when it wrote examples of its own; those it was shown (the filtered ones of
+    the tick) are the old ones again. A translation never takes examples from the answer.
+    """
+    try:
+        old = load.parse(ask.yaml)[0]
+        new = load.parse(text)[0]
+    except load.CardInvalid:
+        return text
+    kept = old.get("demo")
+    wrote = "demo" in new
+    if wrote:
+        if ask.mode == "change" and not (ask.include_values and kept and new["demo"] == clean(kept)):
+            return text
+        if ask.mode == "translate" and new["demo"] == kept:
+            return text
+        new.pop("demo")
+    elif not kept:
+        return text
+    if not kept:
+        return _dump(new)
+    block = _dump({"demo": kept})
+    for combined in ([] if wrote else [f"{text.rstrip()}\n{block}"]) + [f"{_dump(new)}{block}"]:
+        try:
+            load.load_definition(combined)
+        except load.CardInvalid:
+            continue
+        return combined
+    return text
 
 
 # -- checking what comes back -----------------------------------------------------------------------
@@ -510,8 +551,8 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
         loaded, problems = check(ask, text)
         if loaded is not None:
             card = text
-            if ask.mode != "new" and not ask.include_values:
-                card = _restore_demo(ask, text)
+            if ask.mode != "new":
+                card = restore_demo(ask, text)
             return Outcome(True, card, last_text, [], summarize(ask, loaded), sent, loaded.definition)
         if attempt == 0:
             transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
@@ -521,19 +562,6 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
             else:
                 transcript.append({"role": "user", "text": feedback})
     return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], summarize(ask, None), sent)
-
-
-def _restore_demo(ask: Ask, text: str) -> str:
-    """The examples that were not sent come back as they were, when they still fit the new card."""
-    _kept, removed = without_demo(ask.yaml)
-    if not removed.strip() or re.search(r"(?m)^demo\s*:", text):
-        return text
-    both = f"{text.rstrip()}\n{removed}"
-    try:
-        load.load_definition(both)
-    except load.CardInvalid:
-        return text
-    return both
 
 
 # -- one request at a time per administrator -----------------------------------------------------------

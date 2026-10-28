@@ -123,7 +123,7 @@ def test_karten17_the_kind_of_the_connection_must_be_required_by_the_card(monkey
 def test_karten17_ac6_a_change_sends_the_card_without_its_examples_and_keeps_them(monkeypatch: pytest.MonkeyPatch) -> None:
     ask = ai.Ask(mode="change", description="make the numbers bigger", yaml=VALUE_CARD)
     changed = VALUE_CARD.replace("Example Author", "Another Author")
-    changed_without_demo = ai.without_demo(changed)[0]
+    changed_without_demo = ai.for_the_wire(changed, include_values=False)
     script = Script(card(changed_without_demo))
     result = run(ask, script, monkeypatch)
     assert result.ok and "Another Author" in result.yaml

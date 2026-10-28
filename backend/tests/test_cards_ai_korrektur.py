@@ -84,6 +84,17 @@ def test_karten17_ac3_a_key_with_a_secret_shape_is_replaced_by_the_scanner_of_th
     assert result.ok and not any(value in script.sent() for value in HARD.values())
 
 
+def test_karten17_ac3_the_examples_of_a_card_go_through_the_same_filter_with_the_tick() -> None:
+    data = yaml.safe_load(DOWNLOADS)
+    data["demo"] = {"torrents": [{"name": SOFT, "host": HARD["host"], "ip": HARD["ip"], "apiKey": HARD["credential"], "mail": HARD["mail"], "c0ffee00deadbeef12345678": 1}]}
+    text = yaml.safe_dump(data, sort_keys=False)
+    without = ai.outbound(ai.Ask(mode="change", description="x", yaml=text)).message
+    assert SOFT not in without and "demo" not in without
+    with_tick = ai.outbound(ai.Ask(mode="change", description="x", yaml=text, include_values=True)).message
+    assert SOFT in with_tick
+    for value in (*HARD.values(), "c0ffee00deadbeef12345678"):
+        assert value not in with_tick, value
+    assert "<key1>" in with_tick and "example.com" in with_tick and "user@example.com" in with_tick
 
 
 def test_karten17_ac6_the_keys_that_are_data_go_as_numbered_stand_ins_in_the_shape() -> None:
@@ -128,10 +139,43 @@ SPELLINGS = {
 }
 
 
+@pytest.mark.parametrize("spelling", list(SPELLINGS))
+def test_karten17_ac6_a_change_without_the_tick_takes_the_demo_out_in_every_spelling(spelling: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    text = SPELLINGS[spelling]
+    assert load.load_definition(text).definition.demo, "the card is valid"
+    sent = ai.outbound(ai.Ask(mode="change", description="x", yaml=text)).message
+    assert "DEMOWERT-Block-Eins" not in sent and "totalRecords: 4" not in sent
+    # The card that comes back has no examples; the old ones are put back, whatever the spelling was.
+    answer = yaml.safe_dump(yaml.safe_load(DEMO_CARD) | {"name": "Bigger"}, sort_keys=False)
+    answer = answer.split("demo:")[0]
+    result = run(ai.Ask(mode="change", description="x", yaml=text), Script(card(answer)), monkeypatch)
+    assert result.ok and "Bigger" in result.yaml
+    assert load.load_definition(result.yaml).definition.demo["queue"]["totalRecords"] == 4
 
 
+def test_karten17_ac6_a_card_that_cannot_be_read_as_yaml_is_not_sent_at_all(monkeypatch: pytest.MonkeyPatch) -> None:
+    broken = "demo: {a: [1,\nname: x"
+    script = Script()
+    with pytest.raises(ai.AiError) as caught:
+        run(ai.Ask(mode="change", description="x", yaml=broken), script, monkeypatch)
+    assert caught.value.code == "bad_request" and script.seen == []
 
 
+def test_karten17_ac6_with_the_tick_the_examples_that_came_back_unchanged_are_the_real_ones_again(monkeypatch: pytest.MonkeyPatch) -> None:
+    data = yaml.safe_load(DEMO_CARD)
+    data["demo"]["queue"]["apiKey"] = HARD["credential"]
+    text = yaml.safe_dump(data, sort_keys=False)
+    sent = ai.outbound(ai.Ask(mode="change", description="x", yaml=text, include_values=True)).message
+    echoed = sent.split("```yaml\n", 1)[1].split("```", 1)[0]
+    assert "'***'" in echoed or '"***"' in echoed
+    result = run(ai.Ask(mode="change", description="x", yaml=text, include_values=True), Script(card(echoed)), monkeypatch)
+    assert result.ok
+    assert load.load_definition(result.yaml).definition.demo["queue"]["apiKey"] == HARD["credential"], "not the stand-in"
+    # Examples the provider wrote itself stay.
+    own = yaml.safe_load(echoed)
+    own["demo"]["queue"]["title"] = "Written by the provider"
+    result = run(ai.Ask(mode="change", description="x", yaml=text, include_values=True), Script(card(yaml.safe_dump(own, sort_keys=False))), monkeypatch)
+    assert load.load_definition(result.yaml).definition.demo["queue"]["title"] == "Written by the provider"
 
 
 def dump(data: dict[str, Any]) -> str:
@@ -140,6 +184,14 @@ def dump(data: dict[str, Any]) -> str:
 
 
 
+def test_karten17_ac7_a_translation_never_takes_the_examples_of_the_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    changed = yaml.safe_load(DOWNLOADS)
+    changed["demo"] = {"torrents": [{"name": "VOM-ANBIETER-ERFUNDEN", "hash": "zz", "progress": 1}]}
+    changed["name"] = {**changed["name"], "fr": "Téléchargements"}
+    old_examples = load.load_definition(DOWNLOADS).definition.demo
+    result = run(ai.Ask(mode="translate", yaml=DOWNLOADS), Script(card(dump(changed))), monkeypatch)
+    assert result.ok and "VOM-ANBIETER-ERFUNDEN" not in result.yaml and "Téléchargements" in result.yaml
+    assert load.load_definition(result.yaml).definition.demo == old_examples
 
 
 
