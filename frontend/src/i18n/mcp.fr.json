@@ -1,0 +1,114 @@
+{
+  "mcp": {
+    "nav": "IA depuis l'extérieur (MCP)",
+    "palette": "Clés MCP",
+    "group": {
+      "read": "Lecture",
+      "act": "Actions des cartes",
+      "admin": "Administration"
+    },
+    "level": {
+      "read": "Lire",
+      "act": "Lire et agir"
+    },
+    "rights": {
+      "title": "Droits par outil",
+      "allow": "Autoriser",
+      "ask": "Me demander d'abord",
+      "deny": "Refuser",
+      "save": "Enregistrer les droits",
+      "for": "Droit pour {{tool}}",
+      "why": {
+        "blocked": "Bloqué par l'administrateur pour toutes les clés.",
+        "adminOnly": "Seuls les administrateurs peuvent utiliser cet outil.",
+        "level": "Demande le niveau « Lire et agir »."
+      }
+    },
+    "keys": {
+      "title": "IA depuis l'extérieur (MCP)",
+      "help": "Une clé permet à un programme comme Claude Code de regarder vos tableaux par MCP. Chaque clé a son propre niveau, ses propres tableaux et ses propres droits par outil. La clé n'est affichée qu'une seule fois, à sa création.",
+      "off": "MCP est désactivé sur cette installation. Seul un administrateur peut l'activer.",
+      "offAdmin": "MCP est désactivé sur cette installation.",
+      "offAdminLink": "Activez-le dans Système.",
+      "created": "Voici votre clé. Elle n'est affichée qu'une seule fois.",
+      "claudeCode": "Pour Claude Code",
+      "json": "En JSON, pour d'autres programmes",
+      "copyLine": "Copier : {{what}}",
+      "copied": "Je l'ai copiée",
+      "connected": "Programme connecté",
+      "revoked": "Révoquée",
+      "expired": "Expirée",
+      "revokeKey": "Révoquer {{name}}",
+      "boardsAll": "Tous les tableaux que vous pouvez voir, y compris les futurs",
+      "boardsSome": "Tableaux : {{names}}",
+      "lastUsed": "Dernière utilisation {{when}}",
+      "neverUsed": "jamais utilisée",
+      "expiresOn": "Expire le {{date}}",
+      "noExpiry": "n'expire jamais",
+      "revokeTitle": "Révoquer cette clé ?",
+      "revokeBody": "« {{name}} » cesse de fonctionner aussitôt. Cette action est irréversible.",
+      "revoke": "Révoquer"
+    },
+    "form": {
+      "name": "Nom de la clé",
+      "namePlaceholder": "Claude Code sur mon portable",
+      "level": "Niveau",
+      "levelHelp": {
+        "read": "Le programme peut regarder les cartes, la chronique et l'historique.",
+        "act": "Le programme peut aussi demander d'appuyer sur des boutons de cartes. Vous répondez à chaque appui dans la cloche, sauf si vous autorisez un outil sans question. Les boutons dangereux demandent toujours."
+      },
+      "expires": "Expire",
+      "never": "Jamais",
+      "days": "Après {{days}} jours",
+      "boards": "Tableaux",
+      "boardsAll": "Tous les tableaux que je peux voir, y compris les futurs",
+      "boardsPick": "Uniquement ces tableaux",
+      "create": "Créer la clé"
+    },
+    "admin": {
+      "title": "IA depuis l'extérieur (MCP)",
+      "help": "Des programmes comme Claude Code peuvent lire vos tableaux et, après une approbation, appuyer sur des boutons de cartes par MCP. Désactivé jusqu'à ce que vous l'activiez.",
+      "allowed": "Autoriser MCP",
+      "allowedHelp": "Désactivé, aucune clé ne fonctionne et l'accès répond comme s'il n'existait pas.",
+      "maxLevel": "Niveau maximal",
+      "maxLevelHelp": "Aucune clé ne le dépasse, y compris celles qui existent déjà.",
+      "oauth": "Autoriser les connecteurs",
+      "oauthHelp": "Un programme comme Claude peut demander l'accès à une personne connectée au lieu de recevoir une clé.",
+      "blocked": "Outils bloqués",
+      "blockedHelp": "Un outil bloqué disparaît pour toutes les clés : il ne figure dans aucune liste et répond comme un outil qui n'existe pas.",
+      "keysTitle": "Toutes les clés",
+      "keysHelp": "Les clés de tous les comptes. Révoquer une clé la termine aussitôt.",
+      "noKeys": "Aucune clé pour l'instant.",
+      "revokeKey": "Révoquer {{name}}",
+      "revokeBody": "« {{name}} » de {{user}} cesse de fonctionner aussitôt. Cette action est irréversible."
+    },
+    "request": {
+      "title": "Demande d'approbation",
+      "heading": "{{program}} veut appuyer sur un bouton",
+      "help": "Rien ne se passe tant que vous ne répondez pas. Autoriser exécute exactement ce qui est affiché ci-dessous. La demande expire au bout de dix minutes.",
+      "helpDone": "Cette demande est traitée.",
+      "gone": "Cette demande n'existe pas.",
+      "back": "Retour aux notifications",
+      "program": "Programme",
+      "tool": "Outil",
+      "card": "Carte",
+      "board": "Tableau",
+      "button": "Bouton",
+      "params": "Paramètres",
+      "until": "Répondre avant",
+      "impact": "Ce que cela toucherait",
+      "result": "Résultat",
+      "danger": "Bouton dangereux",
+      "allow": "Autoriser",
+      "decline": "Refuser",
+      "conflict": "Cette demande a déjà reçu une réponse ou a expiré.",
+      "status": {
+        "waiting": "En attente de votre réponse",
+        "approved": "Autorisée",
+        "declined": "Refusée",
+        "expired": "Expirée",
+        "failed": "Autorisée, mais sans succès"
+      }
+    }
+  }
+}

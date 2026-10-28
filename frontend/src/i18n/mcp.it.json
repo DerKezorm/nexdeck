@@ -1,0 +1,114 @@
+{
+  "mcp": {
+    "nav": "IA dall'esterno (MCP)",
+    "palette": "Chiavi MCP",
+    "group": {
+      "read": "Lettura",
+      "act": "Azioni delle schede",
+      "admin": "Amministrazione"
+    },
+    "level": {
+      "read": "Leggere",
+      "act": "Leggere e agire"
+    },
+    "rights": {
+      "title": "Permessi per strumento",
+      "allow": "Consenti",
+      "ask": "Chiedimi prima",
+      "deny": "Nega",
+      "save": "Salva i permessi",
+      "for": "Permesso per {{tool}}",
+      "why": {
+        "blocked": "Bloccato dall'amministratore per tutte le chiavi.",
+        "adminOnly": "Solo gli amministratori possono usare questo strumento.",
+        "level": "Richiede il livello \"Leggere e agire\"."
+      }
+    },
+    "keys": {
+      "title": "IA dall'esterno (MCP)",
+      "help": "Una chiave permette a un programma come Claude Code di guardare le tue bacheche tramite MCP. Ogni chiave ha un livello, bacheche e permessi per strumento propri. La chiave viene mostrata una sola volta, quando la crei.",
+      "off": "MCP è disattivato in questa installazione. Solo un amministratore può attivarlo.",
+      "offAdmin": "MCP è disattivato in questa installazione.",
+      "offAdminLink": "Attivalo in Sistema.",
+      "created": "Questa è la tua chiave. Viene mostrata una sola volta.",
+      "claudeCode": "Per Claude Code",
+      "json": "In JSON, per altri programmi",
+      "copyLine": "Copia: {{what}}",
+      "copied": "L'ho copiata",
+      "connected": "Programma collegato",
+      "revoked": "Revocata",
+      "expired": "Scaduta",
+      "revokeKey": "Revoca {{name}}",
+      "boardsAll": "Tutte le bacheche che puoi vedere, anche quelle future",
+      "boardsSome": "Bacheche: {{names}}",
+      "lastUsed": "Ultimo uso {{when}}",
+      "neverUsed": "mai usata",
+      "expiresOn": "Scade il {{date}}",
+      "noExpiry": "non scade mai",
+      "revokeTitle": "Revocare questa chiave?",
+      "revokeBody": "\"{{name}}\" smette subito di funzionare. L'operazione non si può annullare.",
+      "revoke": "Revoca"
+    },
+    "form": {
+      "name": "Nome della chiave",
+      "namePlaceholder": "Claude Code sul mio portatile",
+      "level": "Livello",
+      "levelHelp": {
+        "read": "Il programma può guardare le schede, la cronaca e lo storico.",
+        "act": "Il programma può anche chiedere di premere i pulsanti delle schede. Rispondi a ogni pressione nella campanella, a meno che tu non consenta uno strumento senza chiedere. I pulsanti pericolosi chiedono sempre."
+      },
+      "expires": "Scade",
+      "never": "Mai",
+      "days": "Dopo {{days}} giorni",
+      "boards": "Bacheche",
+      "boardsAll": "Tutte le bacheche che posso vedere, anche quelle future",
+      "boardsPick": "Solo queste bacheche",
+      "create": "Crea chiave"
+    },
+    "admin": {
+      "title": "IA dall'esterno (MCP)",
+      "help": "Programmi come Claude Code possono leggere le tue bacheche e, dopo un'approvazione, premere i pulsanti delle schede tramite MCP. Disattivato finché non lo attivi.",
+      "allowed": "Consenti MCP",
+      "allowedHelp": "Se è disattivato, nessuna chiave funziona e l'accesso risponde come se non esistesse.",
+      "maxLevel": "Livello massimo",
+      "maxLevelHelp": "Nessuna chiave lo supera, comprese quelle già esistenti.",
+      "oauth": "Consenti i connettori",
+      "oauthHelp": "Un programma come Claude può chiedere l'accesso a una persona che ha effettuato l'accesso, invece di ricevere una chiave.",
+      "blocked": "Strumenti bloccati",
+      "blockedHelp": "Uno strumento bloccato sparisce per tutte le chiavi: non compare in nessun elenco e risponde come uno strumento che non esiste.",
+      "keysTitle": "Tutte le chiavi",
+      "keysHelp": "Le chiavi di tutti gli account. Revocarne una la termina subito.",
+      "noKeys": "Ancora nessuna chiave.",
+      "revokeKey": "Revoca {{name}}",
+      "revokeBody": "\"{{name}}\" di {{user}} smette subito di funzionare. L'operazione non si può annullare."
+    },
+    "request": {
+      "title": "Richiesta di approvazione",
+      "heading": "{{program}} vuole premere un pulsante",
+      "help": "Non succede nulla finché non rispondi. Consenti esegue esattamente ciò che vedi qui sotto. La richiesta scade dopo dieci minuti.",
+      "helpDone": "Questa richiesta è stata gestita.",
+      "gone": "Questa richiesta non esiste.",
+      "back": "Torna agli avvisi",
+      "program": "Programma",
+      "tool": "Strumento",
+      "card": "Scheda",
+      "board": "Bacheca",
+      "button": "Pulsante",
+      "params": "Parametri",
+      "until": "Rispondi entro",
+      "impact": "Cosa colpirebbe",
+      "result": "Risultato",
+      "danger": "Pulsante pericoloso",
+      "allow": "Consenti",
+      "decline": "Rifiuta",
+      "conflict": "Questa richiesta ha già avuto risposta o è scaduta.",
+      "status": {
+        "waiting": "In attesa della tua risposta",
+        "approved": "Consentita",
+        "declined": "Rifiutata",
+        "expired": "Scaduta",
+        "failed": "Consentita, ma non ha funzionato"
+      }
+    }
+  }
+}

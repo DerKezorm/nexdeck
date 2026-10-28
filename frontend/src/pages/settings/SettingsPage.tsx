@@ -1,4 +1,5 @@
 import { Bell, Disc3, Images, KeyRound, LayoutDashboard, User } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
@@ -12,6 +13,9 @@ import { ProfileSettings } from './ProfileSettings'
 import { SettingsNav, type NavEntry } from './SettingsNav'
 import { TokensSettings } from './TokensSettings'
 import { AddressBarHelp } from './AddressBarHelp'
+
+// The MCP keys sit under the API tokens and load on their own, with their own words.
+const McpKeys = lazy(() => import('./McpKeys').then((m) => ({ default: m.McpKeys })))
 
 /**
  * The old address of a page that now lives under ``/system``.
@@ -62,7 +66,17 @@ export function SettingsPage() {
             <Route path="media" element={<MediaSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
             <Route path="player" element={<PlayerSettings />} />
-            <Route path="tokens" element={<TokensSettings />} />
+            <Route
+              path="tokens"
+              element={
+                <>
+                  <TokensSettings />
+                  <Suspense fallback={null}>
+                    <McpKeys />
+                  </Suspense>
+                </>
+              }
+            />
             {/* The three that moved to /system; old links and bookmarks keep working. */}
             <Route path="integrations" element={<Moved to="/system/integrations" />} />
             <Route path="users" element={<Moved to="/system/users" />} />

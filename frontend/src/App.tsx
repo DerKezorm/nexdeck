@@ -25,6 +25,7 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m)
 const SystemPage = lazy(() => import('./pages/settings/SystemPage').then((m) => ({ default: m.SystemPage })))
 const NoticesPage = lazy(() => import('./pages/NoticesPage').then((m) => ({ default: m.NoticesPage })))
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ default: m.ChroniclePage })))
+const McpRequestPage = lazy(() => import('./pages/McpRequestPage').then((m) => ({ default: m.McpRequestPage })))
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 
@@ -158,6 +159,14 @@ export function App() {
               element={
                 <Guard>
                   <DiagnosisPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/mcp/requests/:id"
+              element={
+                <Guard>
+                  <McpRequestPage />
                 </Guard>
               }
             />

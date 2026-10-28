@@ -1,0 +1,114 @@
+{
+  "mcp": {
+    "nav": "KI von außen (MCP)",
+    "palette": "MCP-Schlüssel",
+    "group": {
+      "read": "Lesen",
+      "act": "Kartenaktionen",
+      "admin": "Verwaltung"
+    },
+    "level": {
+      "read": "Lesen",
+      "act": "Lesen und handeln"
+    },
+    "rights": {
+      "title": "Rechte je Werkzeug",
+      "allow": "Erlauben",
+      "ask": "Erst fragen",
+      "deny": "Verbieten",
+      "save": "Rechte speichern",
+      "for": "Recht für {{tool}}",
+      "why": {
+        "blocked": "Vom Admin für alle Schlüssel gesperrt.",
+        "adminOnly": "Dieses Werkzeug dürfen nur Admins nutzen.",
+        "level": "Braucht die Stufe „Lesen und handeln“."
+      }
+    },
+    "keys": {
+      "title": "KI von außen (MCP)",
+      "help": "Mit einem Schlüssel kann ein Programm wie Claude Code über MCP in deine Boards schauen. Jeder Schlüssel hat eine eigene Stufe, eigene Boards und eigene Rechte je Werkzeug. Der Schlüssel wird nur einmal gezeigt, gleich nach dem Anlegen.",
+      "off": "MCP ist in dieser Installation ausgeschaltet. Nur ein Admin kann es einschalten.",
+      "offAdmin": "MCP ist in dieser Installation ausgeschaltet.",
+      "offAdminLink": "Unter System einschalten.",
+      "created": "Das ist dein Schlüssel. Er wird nur einmal angezeigt.",
+      "claudeCode": "Für Claude Code",
+      "json": "Als JSON, für andere Programme",
+      "copyLine": "Kopieren: {{what}}",
+      "copied": "Ich habe ihn kopiert",
+      "connected": "Verbundenes Programm",
+      "revoked": "Zurückgezogen",
+      "expired": "Abgelaufen",
+      "revokeKey": "{{name}} zurückziehen",
+      "boardsAll": "Alle Boards, die du sehen darfst, auch spätere",
+      "boardsSome": "Boards: {{names}}",
+      "lastUsed": "Zuletzt benutzt {{when}}",
+      "neverUsed": "nie benutzt",
+      "expiresOn": "Läuft ab am {{date}}",
+      "noExpiry": "läuft nie ab",
+      "revokeTitle": "Schlüssel zurückziehen?",
+      "revokeBody": "„{{name}}“ funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen.",
+      "revoke": "Zurückziehen"
+    },
+    "form": {
+      "name": "Name des Schlüssels",
+      "namePlaceholder": "Claude Code auf meinem Laptop",
+      "level": "Stufe",
+      "levelHelp": {
+        "read": "Das Programm kann Karten, die Chronik und den Verlauf ansehen.",
+        "act": "Das Programm kann auch darum bitten, Knöpfe auf Karten zu drücken. Jeden Druck beantwortest du in der Glocke, außer du erlaubst ein Werkzeug ohne Rückfrage. Gefährliche Knöpfe fragen immer."
+      },
+      "expires": "Läuft ab",
+      "never": "Nie",
+      "days": "Nach {{days}} Tagen",
+      "boards": "Boards",
+      "boardsAll": "Alle Boards, die ich sehen darf, auch spätere",
+      "boardsPick": "Nur diese Boards",
+      "create": "Schlüssel anlegen"
+    },
+    "admin": {
+      "title": "KI von außen (MCP)",
+      "help": "Programme wie Claude Code können über MCP deine Boards lesen und nach einer Freigabe Knöpfe auf Karten drücken. Aus, bis du es einschaltest.",
+      "allowed": "MCP erlauben",
+      "allowedHelp": "Ist es aus, funktioniert kein Schlüssel, und der Zugang antwortet, als gäbe es ihn nicht.",
+      "maxLevel": "Höchste Stufe",
+      "maxLevelHelp": "Kein Schlüssel geht darüber, auch bereits angelegte nicht.",
+      "oauth": "Connectoren erlauben",
+      "oauthHelp": "Ein Programm wie Claude kann eine angemeldete Person um Zugriff bitten, statt einen Schlüssel zu bekommen.",
+      "blocked": "Gesperrte Werkzeuge",
+      "blockedHelp": "Ein gesperrtes Werkzeug fehlt für alle Schlüssel: Es steht in keiner Liste und antwortet wie ein Werkzeug, das es nicht gibt.",
+      "keysTitle": "Alle Schlüssel",
+      "keysHelp": "Die Schlüssel aller Konten. Zurückziehen beendet einen Schlüssel sofort.",
+      "noKeys": "Noch keine Schlüssel.",
+      "revokeKey": "{{name}} zurückziehen",
+      "revokeBody": "„{{name}}“ von {{user}} funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen."
+    },
+    "request": {
+      "title": "Freigabe-Anfrage",
+      "heading": "{{program}} möchte einen Knopf drücken",
+      "help": "Solange du nicht antwortest, passiert nichts. Erlauben führt genau das aus, was unten steht. Die Anfrage verfällt nach zehn Minuten.",
+      "helpDone": "Diese Anfrage ist erledigt.",
+      "gone": "Diese Anfrage gibt es nicht.",
+      "back": "Zurück zu den Hinweisen",
+      "program": "Programm",
+      "tool": "Werkzeug",
+      "card": "Karte",
+      "board": "Board",
+      "button": "Knopf",
+      "params": "Parameter",
+      "until": "Antwort bis",
+      "impact": "Was es treffen würde",
+      "result": "Ergebnis",
+      "danger": "Gefährlicher Knopf",
+      "allow": "Erlauben",
+      "decline": "Ablehnen",
+      "conflict": "Diese Anfrage wurde schon beantwortet oder ist verfallen.",
+      "status": {
+        "waiting": "Wartet auf deine Antwort",
+        "approved": "Erlaubt",
+        "declined": "Abgelehnt",
+        "expired": "Verfallen",
+        "failed": "Erlaubt, hat aber nicht geklappt"
+      }
+    }
+  }
+}

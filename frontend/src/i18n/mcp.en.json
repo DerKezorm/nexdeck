@@ -1,0 +1,114 @@
+{
+  "mcp": {
+    "nav": "AI from outside (MCP)",
+    "palette": "MCP keys",
+    "group": {
+      "read": "Reading",
+      "act": "Card actions",
+      "admin": "Administration"
+    },
+    "level": {
+      "read": "Read",
+      "act": "Read and act"
+    },
+    "rights": {
+      "title": "Rights per tool",
+      "allow": "Allow",
+      "ask": "Ask me first",
+      "deny": "Deny",
+      "save": "Save rights",
+      "for": "Right for {{tool}}",
+      "why": {
+        "blocked": "Blocked by the administrator for every key.",
+        "adminOnly": "Only administrators can use this tool.",
+        "level": "Needs the level \"Read and act\"."
+      }
+    },
+    "keys": {
+      "title": "AI from outside (MCP)",
+      "help": "A key lets a program such as Claude Code look at your boards over MCP. Each key has its own level, its own boards and its own rights per tool. The key is shown once, when it is made.",
+      "off": "MCP is switched off on this installation. Only an administrator can switch it on.",
+      "offAdmin": "MCP is switched off on this installation.",
+      "offAdminLink": "Switch it on under System.",
+      "created": "This is your key. It is shown only once.",
+      "claudeCode": "For Claude Code",
+      "json": "As JSON, for other programs",
+      "copyLine": "Copy: {{what}}",
+      "copied": "I have copied it",
+      "connected": "Connected program",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "revokeKey": "Revoke {{name}}",
+      "boardsAll": "All boards you may see, later ones too",
+      "boardsSome": "Boards: {{names}}",
+      "lastUsed": "Last used {{when}}",
+      "neverUsed": "never used",
+      "expiresOn": "Expires {{date}}",
+      "noExpiry": "never expires",
+      "revokeTitle": "Revoke this key?",
+      "revokeBody": "\"{{name}}\" stops working at once. This cannot be undone.",
+      "revoke": "Revoke"
+    },
+    "form": {
+      "name": "Name of the key",
+      "namePlaceholder": "Claude Code on my laptop",
+      "level": "Level",
+      "levelHelp": {
+        "read": "The program can look at cards, the chronicle and history.",
+        "act": "The program can also ask to press card buttons. You answer each press in the bell, unless you allow a tool without asking. Dangerous buttons always ask."
+      },
+      "expires": "Expires",
+      "never": "Never",
+      "days": "After {{days}} days",
+      "boards": "Boards",
+      "boardsAll": "All boards I may see, later ones too",
+      "boardsPick": "Only these boards",
+      "create": "Create key"
+    },
+    "admin": {
+      "title": "AI from outside (MCP)",
+      "help": "Programs such as Claude Code can read your boards, and press card buttons after an approval, over MCP. Off until you switch it on.",
+      "allowed": "Allow MCP",
+      "allowedHelp": "When off, no key works and the endpoint answers as if it did not exist.",
+      "maxLevel": "Highest level",
+      "maxLevelHelp": "No key goes above it, keys that already exist included.",
+      "oauth": "Allow connectors",
+      "oauthHelp": "A program such as Claude can ask a signed-in person for access instead of being given a key.",
+      "blocked": "Blocked tools",
+      "blockedHelp": "A blocked tool is gone for every key: it is not listed, and it answers like a tool that does not exist.",
+      "keysTitle": "All keys",
+      "keysHelp": "The keys of every account. Revoking one ends it at once.",
+      "noKeys": "No keys yet.",
+      "revokeKey": "Revoke {{name}}",
+      "revokeBody": "\"{{name}}\" of {{user}} stops working at once. This cannot be undone."
+    },
+    "request": {
+      "title": "Approval request",
+      "heading": "{{program}} asks to press a button",
+      "help": "Nothing happens until you answer. Allow runs exactly what is shown below. The request runs out after ten minutes.",
+      "helpDone": "This request has been dealt with.",
+      "gone": "This request does not exist.",
+      "back": "Back to notices",
+      "program": "Program",
+      "tool": "Tool",
+      "card": "Card",
+      "board": "Board",
+      "button": "Button",
+      "params": "Parameters",
+      "until": "Answer until",
+      "impact": "What it would hit",
+      "result": "Result",
+      "danger": "Dangerous button",
+      "allow": "Allow",
+      "decline": "Decline",
+      "conflict": "This request was already answered or has run out.",
+      "status": {
+        "waiting": "Waiting for your answer",
+        "approved": "Allowed",
+        "declined": "Declined",
+        "expired": "Ran out",
+        "failed": "Allowed, but it did not work"
+      }
+    }
+  }
+}

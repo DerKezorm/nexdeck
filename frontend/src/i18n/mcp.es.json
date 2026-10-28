@@ -1,0 +1,114 @@
+{
+  "mcp": {
+    "nav": "IA desde fuera (MCP)",
+    "palette": "Claves MCP",
+    "group": {
+      "read": "Lectura",
+      "act": "Acciones de tarjetas",
+      "admin": "Administración"
+    },
+    "level": {
+      "read": "Leer",
+      "act": "Leer y actuar"
+    },
+    "rights": {
+      "title": "Permisos por herramienta",
+      "allow": "Permitir",
+      "ask": "Preguntarme antes",
+      "deny": "Denegar",
+      "save": "Guardar permisos",
+      "for": "Permiso para {{tool}}",
+      "why": {
+        "blocked": "Bloqueada por el administrador para todas las claves.",
+        "adminOnly": "Solo los administradores pueden usar esta herramienta.",
+        "level": "Necesita el nivel «Leer y actuar»."
+      }
+    },
+    "keys": {
+      "title": "IA desde fuera (MCP)",
+      "help": "Una clave permite que un programa como Claude Code mire tus tableros por MCP. Cada clave tiene su propio nivel, sus propios tableros y sus propios permisos por herramienta. La clave se muestra una sola vez, al crearla.",
+      "off": "MCP está desactivado en esta instalación. Solo un administrador puede activarlo.",
+      "offAdmin": "MCP está desactivado en esta instalación.",
+      "offAdminLink": "Actívalo en Sistema.",
+      "created": "Esta es tu clave. Solo se muestra una vez.",
+      "claudeCode": "Para Claude Code",
+      "json": "Como JSON, para otros programas",
+      "copyLine": "Copiar: {{what}}",
+      "copied": "Ya la he copiado",
+      "connected": "Programa conectado",
+      "revoked": "Revocada",
+      "expired": "Caducada",
+      "revokeKey": "Revocar {{name}}",
+      "boardsAll": "Todos los tableros que puedes ver, también los futuros",
+      "boardsSome": "Tableros: {{names}}",
+      "lastUsed": "Último uso {{when}}",
+      "neverUsed": "nunca usada",
+      "expiresOn": "Caduca el {{date}}",
+      "noExpiry": "no caduca nunca",
+      "revokeTitle": "¿Revocar esta clave?",
+      "revokeBody": "«{{name}}» deja de funcionar al instante. No se puede deshacer.",
+      "revoke": "Revocar"
+    },
+    "form": {
+      "name": "Nombre de la clave",
+      "namePlaceholder": "Claude Code en mi portátil",
+      "level": "Nivel",
+      "levelHelp": {
+        "read": "El programa puede mirar tarjetas, la crónica y el historial.",
+        "act": "El programa también puede pedir que se pulsen botones de las tarjetas. Respondes a cada pulsación en la campana, salvo que permitas una herramienta sin preguntar. Los botones peligrosos siempre preguntan."
+      },
+      "expires": "Caduca",
+      "never": "Nunca",
+      "days": "A los {{days}} días",
+      "boards": "Tableros",
+      "boardsAll": "Todos los tableros que puedo ver, también los futuros",
+      "boardsPick": "Solo estos tableros",
+      "create": "Crear clave"
+    },
+    "admin": {
+      "title": "IA desde fuera (MCP)",
+      "help": "Programas como Claude Code pueden leer tus tableros y, tras una aprobación, pulsar botones de tarjetas por MCP. Desactivado hasta que lo actives.",
+      "allowed": "Permitir MCP",
+      "allowedHelp": "Si está desactivado, ninguna clave funciona y el acceso responde como si no existiera.",
+      "maxLevel": "Nivel máximo",
+      "maxLevelHelp": "Ninguna clave pasa de aquí, tampoco las que ya existen.",
+      "oauth": "Permitir conectores",
+      "oauthHelp": "Un programa como Claude puede pedir acceso a una persona con sesión iniciada, en lugar de recibir una clave.",
+      "blocked": "Herramientas bloqueadas",
+      "blockedHelp": "Una herramienta bloqueada desaparece para todas las claves: no aparece en ninguna lista y responde como una herramienta que no existe.",
+      "keysTitle": "Todas las claves",
+      "keysHelp": "Las claves de todas las cuentas. Revocar una la termina al instante.",
+      "noKeys": "Aún no hay claves.",
+      "revokeKey": "Revocar {{name}}",
+      "revokeBody": "«{{name}}» de {{user}} deja de funcionar al instante. No se puede deshacer."
+    },
+    "request": {
+      "title": "Solicitud de aprobación",
+      "heading": "{{program}} quiere pulsar un botón",
+      "help": "No pasa nada hasta que respondas. Permitir ejecuta exactamente lo que se muestra abajo. La solicitud caduca a los diez minutos.",
+      "helpDone": "Esta solicitud ya está resuelta.",
+      "gone": "Esta solicitud no existe.",
+      "back": "Volver a los avisos",
+      "program": "Programa",
+      "tool": "Herramienta",
+      "card": "Tarjeta",
+      "board": "Tablero",
+      "button": "Botón",
+      "params": "Parámetros",
+      "until": "Responder antes de",
+      "impact": "Qué afectaría",
+      "result": "Resultado",
+      "danger": "Botón peligroso",
+      "allow": "Permitir",
+      "decline": "Rechazar",
+      "conflict": "Esta solicitud ya se respondió o ha caducado.",
+      "status": {
+        "waiting": "Esperando tu respuesta",
+        "approved": "Permitida",
+        "declined": "Rechazada",
+        "expired": "Caducada",
+        "failed": "Permitida, pero no funcionó"
+      }
+    }
+  }
+}

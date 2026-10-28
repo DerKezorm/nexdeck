@@ -1,11 +1,14 @@
 import { Check, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import type { Notice } from '../api/types'
 import { useNotices } from '../stores/notices'
 import { Confirm, Sheet, Toast } from './ui'
+
+// Allow and Decline for an approval request (MCP), fetched only when one is on screen.
+const McpNoticeActions = lazy(() => import('./mcp/McpNoticeActions'))
 
 const LEVEL_DOT: Record<string, string> = { info: 'ok', warn: 'warn', error: 'bad' }
 
@@ -21,6 +24,11 @@ export function NoticeList({ notices, onRead, onRemove }: { notices: Notice[]; o
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium">{notice.title}</div>
               {notice.body && <div className="text-xs text-muted mt-0.5 whitespace-pre-wrap">{notice.body}</div>}
+              {notice.event === 'mcp_request' && (
+                <Suspense fallback={null}>
+                  <McpNoticeActions notice={notice} />
+                </Suspense>
+              )}
               <div className="text-[11px] text-faint mt-1">
                 {new Date(notice.created_at).toLocaleString()}
                 {notice.link && (
