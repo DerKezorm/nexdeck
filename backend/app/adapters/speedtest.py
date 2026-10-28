@@ -70,8 +70,9 @@ class SpeedtestAdapter(Adapter):
     kind = "speedtest"
     #: Confirmed against a live Speedtest Tracker on 2026-09-08: the
     #: connection test, the latest result and the history card. ⚠️ Only two
-    #: measurements were in it, so the history was proved to page and to
-    #: find the newest end, not to look right over a long period.
+    #: measurements were in it, one page, so the history was never proved to
+    #: page against a real tracker. One with 93 pages showed that it did not:
+    #: the page number was sent as ``page``, which the tracker ignores (#54).
     beta = False
     label = "Speedtest Tracker"
     category = "network"
@@ -171,8 +172,13 @@ class SpeedtestAdapter(Adapter):
         cutoff = time.time() - days * 86400
 
         async def page_of(number: int) -> tuple[list[dict[str, Any]], int]:
+            # ⚠️ The tracker pages JSON:API style, ``page[number]=N``, and
+            # answers ``?page=N`` with page 1 and nothing to say so. With 93
+            # pages that is the oldest 25 measurements from months ago, and
+            # the card said "No measurement in this period" (#54). ``page``
+            # goes along for versions that read it.
             payload = await ctx.get_json(
-                f"{base_url(config)}/api/v1/results", params={"page": number},
+                f"{base_url(config)}/api/v1/results", params={"page[number]": number, "page": number},
                 headers=self._headers(config), verify=not config.get("insecure"), cache_seconds=300,
             )
             here = [one for one in (payload.get("data") or []) if isinstance(one, dict)]
