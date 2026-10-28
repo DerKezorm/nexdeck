@@ -140,4 +140,11 @@ export const patterns: Pattern[] = [
   [/^(.+) failed\.$/, '$1 falló.'],
   [/^Runs (\S+)$/, 'En uso: $1'],
   [/^Down: (.+)$/, 'Caídos: $1'],
+  [/^next in (\d+ (?:min|h|d))$/, 'próxima ejecución en $1'],
+  [/^(\d+) snapshots?$/, '$1 instantáneas'],
+  [/^checked (\d+ (?:min|h|d)) ago$/, 'comprobado hace $1'],
+  [/^Keeps (.+)$/, 'Conserva $1'],
+  [/^(\d+) tokens made$/, '$1 tokens generados'],
+  [/^(\d+) tokens$/, '$1 tokens'],
+  [/^Not running: (.+)$/, 'No funcionan: $1'],
 ]

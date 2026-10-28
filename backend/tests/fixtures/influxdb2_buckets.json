@@ -1,0 +1,81 @@
+{
+	"links": {
+		"self": "/api/v2/buckets?descending=false\u0026limit=20\u0026offset=0"
+	},
+	"buckets": [
+		{
+			"id": "0c78f13fbe37a210",
+			"orgID": "e23f1b66fd4335aa",
+			"type": "system",
+			"description": "System bucket for monitoring logs",
+			"name": "_monitoring",
+			"retentionRules": [
+				{
+					"type": "expire",
+					"everySeconds": 604800,
+					"shardGroupDurationSeconds": 86400
+				}
+			],
+			"createdAt": "2026-10-27T17:58:37.360747757Z",
+			"updatedAt": "2026-10-27T17:58:37.360747817Z",
+			"links": {
+				"labels": "/api/v2/buckets/0c78f13fbe37a210/labels",
+				"members": "/api/v2/buckets/0c78f13fbe37a210/members",
+				"org": "/api/v2/orgs/e23f1b66fd4335aa",
+				"owners": "/api/v2/buckets/0c78f13fbe37a210/owners",
+				"self": "/api/v2/buckets/0c78f13fbe37a210",
+				"write": "/api/v2/write?org=e23f1b66fd4335aa\u0026bucket=0c78f13fbe37a210"
+			},
+			"labels": []
+		},
+		{
+			"id": "2b47cd7f50481004",
+			"orgID": "e23f1b66fd4335aa",
+			"type": "user",
+			"name": "telemetry",
+			"retentionRules": [
+				{
+					"type": "expire",
+					"everySeconds": 0,
+					"shardGroupDurationSeconds": 604800
+				}
+			],
+			"createdAt": "2026-10-27T17:58:37.366278711Z",
+			"updatedAt": "2026-10-27T17:58:37.366278831Z",
+			"links": {
+				"labels": "/api/v2/buckets/2b47cd7f50481004/labels",
+				"members": "/api/v2/buckets/2b47cd7f50481004/members",
+				"org": "/api/v2/orgs/e23f1b66fd4335aa",
+				"owners": "/api/v2/buckets/2b47cd7f50481004/owners",
+				"self": "/api/v2/buckets/2b47cd7f50481004",
+				"write": "/api/v2/write?org=e23f1b66fd4335aa\u0026bucket=2b47cd7f50481004"
+			},
+			"labels": []
+		},
+		{
+			"id": "a79b03cf66a91e7e",
+			"orgID": "e23f1b66fd4335aa",
+			"type": "system",
+			"description": "System bucket for task logs",
+			"name": "_tasks",
+			"retentionRules": [
+				{
+					"type": "expire",
+					"everySeconds": 259200,
+					"shardGroupDurationSeconds": 86400
+				}
+			],
+			"createdAt": "2026-10-27T17:58:37.357639526Z",
+			"updatedAt": "2026-10-27T17:58:37.357639596Z",
+			"links": {
+				"labels": "/api/v2/buckets/a79b03cf66a91e7e/labels",
+				"members": "/api/v2/buckets/a79b03cf66a91e7e/members",
+				"org": "/api/v2/orgs/e23f1b66fd4335aa",
+				"owners": "/api/v2/buckets/a79b03cf66a91e7e/owners",
+				"self": "/api/v2/buckets/a79b03cf66a91e7e",
+				"write": "/api/v2/write?org=e23f1b66fd4335aa\u0026bucket=a79b03cf66a91e7e"
+			},
+			"labels": []
+		}
+	]
+}

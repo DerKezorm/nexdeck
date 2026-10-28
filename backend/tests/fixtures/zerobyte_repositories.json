@@ -1,0 +1,36 @@
+[
+  {
+    "id": "01a17e32-db68-73ae-af7a-3a9c6708cf88",
+    "shortId": "QSpOD8IY",
+    "provisioningId": null,
+    "name": "local-repo",
+    "type": "local",
+    "config": {
+      "backend": "local",
+      "path": "/var/lib/zerobyte/repos/QSpOD8IY"
+    },
+    "compressionMode": "auto",
+    "status": "healthy",
+    "lastChecked": 1793118627081,
+    "lastError": null,
+    "doctorResult": null,
+    "stats": {
+      "total_size": 1200906401,
+      "total_uncompressed_size": 1200904058,
+      "compression_ratio": 0.9999980489736768,
+      "compression_progress": 100,
+      "compression_space_saving": -0.00019510301296765675,
+      "snapshots_count": 4
+    },
+    "statsUpdatedAt": 1793118718697,
+    "uploadLimitEnabled": false,
+    "uploadLimitValue": 1,
+    "uploadLimitUnit": "Mbps",
+    "downloadLimitEnabled": false,
+    "downloadLimitValue": 1,
+    "downloadLimitUnit": "Mbps",
+    "autoCheckEnabled": true,
+    "createdAt": 1793118624000,
+    "updatedAt": 1793118624000
+  }
+]
