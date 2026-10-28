@@ -84,6 +84,19 @@ def test_tiles_by_their_short_name_come_first_then_cards(client: TestClient) -> 
     assert _suggest(client, "lex")[1] == [], "the start of a word, not any letters in it"
 
 
+def test_a_tile_that_only_follows_a_connection_is_offered_and_opened(client: TestClient) -> None:
+    setup_admin(client)
+    lab, wall = _board(client, "Lab"), _board(client, "Wall")
+    plex = client.post("/api/v1/integrations", json={"kind": "plex", "name": "Plex", "config": {"url": "https://plex.example.com", "token": "t"}}, headers=CSRF).json()
+    for board in (lab, wall):
+        client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets",
+                    json={"kind": "core.app", "title": "Plex", "integration_id": plex["id"]}, headers=CSRF)
+    assert _suggest(client, "pl")[1] == ["plex"]
+    # The browser sends the words typed and takes the redirect: one place, so straight there.
+    answer = client.get("/go", params={"q": "plex"}, follow_redirects=False)
+    assert answer.status_code == 302 and answer.headers["location"] == "https://plex.example.com"
+
+
 def test_nothing_without_a_session_and_nothing_from_a_board_one_may_not_open(client: TestClient) -> None:
     setup_admin(client)
     _made(_tile(client, _board(client, "Private"), "Vault", "https://vault.example.com"))
