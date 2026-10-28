@@ -393,6 +393,8 @@ const LinkItem = memo(function LinkItem(props: { id: string; ax: number; ay: num
   const d = pathOf(shape)
   return (
     <g style={{ opacity: dim ? 0.22 : 1, transition: 'opacity .25s' }} data-link-id={id}>
+      {/* A border of paper under the line, drawn only by 1984 (styles/retro.css): it keeps a line apart from the dots of the desk and, where two cross, the one in front from the one behind. Every other look leaves it without a stroke. */}
+      <path d={d} fill="none" className="nd-link-halo" />
       <path
         ref={(element) => engine.base(id, element)}
         d={d}

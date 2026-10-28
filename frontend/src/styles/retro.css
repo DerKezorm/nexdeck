@@ -1153,27 +1153,88 @@
     opacity: 1;
   }
 
-  /* -- Topology: devices on paper, links as one black line each -------------- */
+  /* -- Topology: devices on paper, links as black lines with a border of paper -- */
+  /* The plan sits on a calm grey, not on the dots of the desk, which swallowed a thin line. */
+  :root[data-cards='window'] [data-topology-canvas] {
+    background: color-mix(in srgb, var(--r-ink) 14%, var(--r-paper));
+  }
+  :root[data-cards='window'] [data-topology-canvas] rect[fill^='url(#topo-dots)'] {
+    display: none;
+  }
   /* The flow draws its lines and dots with colours and widths of its own,
-     written on the element; these win over them, as they have to. */
-  :root[data-cards='window'] [data-link-id] :is(path, polyline):not([data-link]) {
+     written on the element; these win over them, as they have to.
+     The load is in the width, 2, 3 and 4 pixels, so it reads without colour. */
+  :root[data-cards='window'] [data-link-id] :is(path, polyline):not([data-link], .nd-link-halo) {
     stroke: var(--r-ink) !important;
-    stroke-width: 1px !important;
+    stroke-width: 2px !important;
     stroke-opacity: 1 !important;
-    stroke-linecap: square;
+    stroke-linecap: butt;
+    stroke-linejoin: round;
+  }
+  :root[data-cards='window'] [data-link-id] path[data-level='busy'] {
+    stroke-width: 3px !important;
+  }
+  :root[data-cards='window'] [data-link-id] path[data-level='full'] {
+    stroke-width: 4px !important;
+  }
+  /* A line that is down is dashed, and its border stays whole so the gaps are paper. */
+  :root[data-cards='window'] [data-link-id] path[data-level='down'] {
+    stroke-dasharray: 8 5;
+  }
+  /* The border: two pixels of paper each side of the line, drawn beneath it, link by link,
+     so where two lines cross the one drawn later cuts the other and is the one in front. */
+  :root[data-cards='window'] [data-link-id] .nd-link-halo {
+    stroke: var(--r-paper);
+    stroke-width: 6px;
+    stroke-linecap: butt;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  :root[data-cards='window'] [data-link-id]:has(path[data-level='busy']) .nd-link-halo {
+    stroke-width: 7px;
+  }
+  :root[data-cards='window'] [data-link-id]:has(path[data-level='full']) .nd-link-halo {
+    stroke-width: 8px;
   }
   :root[data-cards='window'] [data-link-id] g[filter] {
     filter: none;
   }
+  /* A dot of traffic: paper with a black rim, so it shows on the black line it runs along. */
   :root[data-cards='window'] [data-link-id] circle {
-    fill: var(--r-ink) !important;
-    r: 1.5px;
+    fill: var(--r-paper) !important;
+    stroke: var(--r-ink);
+    stroke-width: 1px;
+    r: 3px;
   }
-  /* The legend of the lines: black as the lines are. */
+  /* The tag with the rate: square, one pixel rim, on paper. */
+  :root[data-cards='window'] [data-topology-label] rect {
+    rx: 0;
+    fill: var(--r-paper) !important;
+    stroke: var(--r-ink) !important;
+    stroke-width: 1px;
+  }
+  :root[data-cards='window'] [data-topology-label] text {
+    fill: var(--r-ink) !important;
+  }
+  /* The legend of the lines: black as the lines are, as wide as they are. */
   :root[data-cards='window'] .nd-topology-run,
   :root[data-cards='window'] .nd-flow-run,
   :root[data-cards='window'] .nd-flow-back {
     filter: none;
+  }
+  :root[data-cards='window'] [data-topology-page] i[data-swatch] {
+    border-radius: 0;
+    background: var(--r-ink) !important;
+    height: 2px;
+  }
+  :root[data-cards='window'] [data-topology-page] i[data-swatch='busy'] {
+    height: 3px;
+  }
+  :root[data-cards='window'] [data-topology-page] i[data-swatch='full'] {
+    height: 4px;
+  }
+  :root[data-cards='window'] [data-topology-page] i[data-swatch='down'] {
+    background: repeating-linear-gradient(90deg, var(--r-ink) 0 8px, transparent 8px 13px) !important;
   }
 
   /* -- Home: the page is a control panel, one window, the controls black on white -- */

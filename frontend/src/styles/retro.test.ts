@@ -85,6 +85,17 @@ describe('the sheet of 1984', () => {
     for (const token of ['--r-ok', '--r-warn', '--r-bad']) expect(pattern).toMatch(new RegExp(`${token}: var\\(--r-paper\\)`))
   })
 
+  it('draws a link of the plan as a solid black line with a border of paper, wider as it fills, on a grey ground', () => {
+    const line = `${MARK} [data-link-id] :is(path, polyline):not([data-link], .nd-link-halo)`
+    expect(bodyOf(line)).toMatch(/stroke-width: 2px !important/)
+    expect(bodyOf(`${MARK} [data-link-id] path[data-level='full']`)).toMatch(/stroke-width: 4px/)
+    expect(bodyOf(`${MARK} [data-link-id] path[data-level='down']`)).toMatch(/stroke-dasharray/)
+    expect(bodyOf(`${MARK} [data-link-id] .nd-link-halo`)).toMatch(/stroke: var\(--r-paper\)/)
+    expect(bodyOf(`${MARK} [data-link-id]:has(path[data-level='full']) .nd-link-halo`)).toMatch(/stroke-width: 8px/)
+    expect(bodyOf(`${MARK} [data-topology-label] rect`)).toMatch(/rx: 0/)
+    expect(bodyOf(`${MARK} [data-topology-canvas]`)).toMatch(/background: color-mix/)
+  })
+
   it('keeps glass, blur and shadows out, and the corners square except on buttons', () => {
     expect(bodyOf(`${MARK} *, ${MARK} *::before, ${MARK} *::after`)).toMatch(/backdrop-filter: none !important/)
     expect(bodyOf(`${MARK} .btn`)).toMatch(/border-radius: 6px/)
