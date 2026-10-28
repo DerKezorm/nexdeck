@@ -69,7 +69,7 @@ def read_state(user: AdminUser, db: DbSession) -> dict[str, Any]:
 @router.put("/settings", summary="Turn the Card shop on or off, or name another repository for its catalog")
 def change_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
     """Turning it on asks nothing yet; the first request comes with the first look at the catalog. Turning it off forgets the catalog (EC-5)."""
-    if body.repo is not None and not state.REPO.match(body.repo):
+    if body.repo is not None and not state.REPO.fullmatch(body.repo):
         raise error("bad_repo", "The repository is written owner/name, for example DerKezorm/nexdeck-workshop.")
     before = (state.enabled(db), state.repo(db))
     state.configure(db, enabled=body.enabled, repo=body.repo)
@@ -79,6 +79,7 @@ def change_settings(body: SettingsBody, user: AdminUser, db: DbSession) -> dict[
         logger.info("%s changed the Card shop: %s, %s.", user.username, "on" if after[0] else "off", after[1])
     if not after[0] or after[1] != before[1]:
         catalog.forget()
+        files.forget()
     return _state(db, user.id)
 
 

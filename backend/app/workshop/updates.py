@@ -94,7 +94,8 @@ def announce(found: catalog.Catalog) -> None:
         fresh: list[tuple[str, str, str]] = []
         for one in updates_and_recalls(db, found)["removed"]:
             key = f"{one['ref']}@{one['at']}"
-            if one["level"] == "harmful" and key not in already:
+            # A card installed twice (a copy) is one entry: the bell rings once for it.
+            if one["level"] == "harmful" and key not in already and all(key != other[0] for other in fresh):
                 fresh.append((key, plain(one["name"]) or one["slug"], one["reason"]))
         if fresh:
             state.mark_told(db, [key for key, _name, _reason in fresh])

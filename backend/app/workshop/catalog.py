@@ -20,7 +20,14 @@ from typing import Annotated, Any, Literal
 from urllib.parse import quote
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+)
 
 from ..adapters.base import outbound_client
 from . import state
@@ -70,9 +77,17 @@ SAFE_PATH = re.compile(r"^(?!/)(?!.*(^|/)\.\.?(/|$))[A-Za-z0-9._@+ -]+(/[A-Za-z0
 
 
 def _safe(path: str) -> str:
-    if not SAFE_PATH.match(path) or len(path) > 300:
+    if not SAFE_PATH.fullmatch(path) or len(path) > 300:
         raise ValueError("not a path inside the repository")
     return path
+
+
+CATEGORIES = ("media", "downloads", "network", "server", "smart_home", "other")
+
+
+def _known_category(value: Any) -> str:
+    """A category this nexdeck does not know is "other": a newer catalog must not make the whole shop unreadable."""
+    return value if isinstance(value, str) and value in CATEGORIES else "other"
 
 
 class Person(BaseModel):
@@ -130,7 +145,7 @@ class Entry(BaseModel):
     author: Person
     version: Version
     min_nexdeck: Version | None = None
-    category: Literal["media", "downloads", "network", "server", "smart_home", "other"] = "other"
+    category: Annotated[str, BeforeValidator(_known_category)] = "other"
     requires: list[Annotated[str, StringConstraints(pattern=r"^(custom:)?[a-z0-9][a-z0-9_-]{0,59}$")]] = Field(default_factory=list, max_length=10)
     class_: Literal["read", "buttons", "login"] = Field(default="read", alias="class")
     reads: list[Read] = Field(default_factory=list, max_length=50)
@@ -198,7 +213,7 @@ def parse(raw: bytes) -> Catalog:
             raise broken(f"entry {entry.id} is there twice")
         seen.add(entry.id)
         entries.append(entry)
-    return Catalog(entries, str(data.get("generated_at") or ""), now())
+    return Catalog(entries, str(data.get("generated_at") or "")[:40], now())
 
 
 # -- asking GitHub -------------------------------------------------------------------------------
@@ -210,7 +225,7 @@ def http_client() -> httpx.AsyncClient:
     """One client for the life of the process (building one loads the CA bundle on the event loop)."""
     global _client
     if _client is None or _client.is_closed:
-        _client = outbound_client(timeout=15, follow_redirects=True, headers={"User-Agent": "nexdeck", "Accept": ACCEPT})
+        _client = outbound_client(timeout=15, follow_redirects=False, headers={"User-Agent": "nexdeck", "Accept": ACCEPT})
     return _client
 
 
@@ -221,25 +236,47 @@ async def close_client() -> None:
     _client = None
 
 
+#: GitHub may send a request for a file to another address of its own API (a repository that was renamed); at most this many hops.
+MAX_HOPS = 3
+
+
 async def fetch(repo: str, path: str, limit: int) -> bytes:
     """A file of the repository, at most ``limit`` bytes."""
     url = f"{API}/repos/{repo}/contents/{quote(path, safe='/')}"
     headers = {"Authorization": f"Bearer {key}"} if (key := state.token()) else {}
     try:
-        async with http_client().stream("GET", url, headers=headers) as response:
-            if response.status_code != 200:
-                await response.aread()
-                raise _refused(response)
-            body = bytearray()
-            async for chunk in response.aiter_bytes():
-                body += chunk
-                if len(body) > limit:
-                    raise CatalogError("catalog_invalid", f"A file of the repository is larger than {limit // 1024} KB.")
-            return bytes(body)
+        for _hop in range(MAX_HOPS + 1):
+            async with http_client().stream("GET", url, headers=headers) as response:
+                if response.is_redirect:
+                    await response.aread()
+                    url = _own_address(response)
+                    continue
+                if response.status_code != 200:
+                    await response.aread()
+                    raise _refused(response)
+                body = bytearray()
+                async for chunk in response.aiter_bytes():
+                    body += chunk
+                    if len(body) > limit:
+                        raise CatalogError("catalog_invalid", f"A file of the repository is larger than {limit // 1024} KB.")
+                return bytes(body)
+        raise CatalogError("github_rejected", "GitHub sent the request around in a circle.", github_status=302)
     except httpx.HTTPError as failure:
         # ⚠️ The class of the failure only: the text of an httpx error can carry the address, and a log is not the place for more.
         logger.info("GitHub could not be reached for %s: %s", path, failure.__class__.__name__)
         raise CatalogError("github_unreachable", UNREACHABLE) from None
+
+
+def _own_address(response: httpx.Response) -> str:
+    """Where a redirect leads, when that is the API of GitHub itself. Anywhere else it is not followed (the key stays home)."""
+    where = response.headers.get("location", "")
+    try:
+        target = httpx.URL(where) if where else None
+    except httpx.InvalidURL:
+        target = None
+    if target is None or target.scheme != "https" or target.host != "api.github.com" or target.port not in (None, 443):
+        raise CatalogError("github_rejected", "GitHub sent the request to another address, which nexdeck does not follow.", github_status=response.status_code)
+    return str(target)
 
 
 UNREACHABLE = "GitHub cannot be reached. Cards you installed keep working."

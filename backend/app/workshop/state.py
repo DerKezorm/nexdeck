@@ -19,7 +19,8 @@ from ..models import Setting
 
 KEY = "workshop"
 DEFAULT_REPO = "DerKezorm/nexdeck-workshop"
-REPO = re.compile(r"^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$")
+#: ``owner/name``; neither part is ``.`` or ``..`` (the address would climb out of ``/repos``), and no line break ends it.
+REPO = re.compile(r"(?!\.{1,2}/)[A-Za-z0-9_.-]{1,100}/(?!\.{1,2}\Z)[A-Za-z0-9_.-]{1,100}")
 
 
 def token() -> str:
@@ -47,7 +48,7 @@ def enabled(db: Session) -> bool:
 
 def repo(db: Session) -> str:
     found = str(_read(db).get("repo") or "")
-    return found if REPO.match(found) else DEFAULT_REPO
+    return found if REPO.fullmatch(found) else DEFAULT_REPO
 
 
 def configure(db: Session, *, enabled: bool | None = None, repo: str | None = None) -> None:

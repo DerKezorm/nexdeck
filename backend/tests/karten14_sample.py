@@ -70,6 +70,11 @@ class GitHub:
         self.mode: str | int = "ok"
         self.requests: list[httpx.Request] = []
         self.catalog_override: bytes | None = None
+        #: Where every request is sent on with a redirect, when set; and what arrived at ``stranger.example.com`` meanwhile.
+        self.redirect: str | None = None
+        self.strangers: list[httpx.Request] = []
+        #: The repository was renamed: its old address answers with a redirect to ``/repositories/1/…`` on the same host.
+        self.renamed = False
 
     def publish(self, text: str, **more: Any) -> dict[str, Any]:
         """Put a definition in the repository with its texts and pictures, and list it in the catalog (replacing an older one)."""
@@ -89,16 +94,26 @@ class GitHub:
 
     def answer(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
+        if self.redirect is not None:
+            return httpx.Response(302, headers={"location": self.redirect})
         if self.mode == "down":
             raise httpx.ConnectError("no route to host")
         if isinstance(self.mode, int):
             return httpx.Response(self.mode, json={"message": "no"})
         prefix = f"/repos/{REPO}/contents/"
+        if self.renamed and request.url.path.startswith(prefix):
+            return httpx.Response(301, headers={"location": f"https://api.github.com/repositories/1/contents/{request.url.path[len(prefix):]}"})
+        if self.renamed and request.url.path.startswith("/repositories/1/contents/"):
+            prefix = "/repositories/1/contents/"
         if not request.url.path.startswith(prefix):
             return httpx.Response(404, json={"message": "Not Found"})
         path = unquote(request.url.path[len(prefix):])
         body = self.catalog_bytes() if path == "catalog.json" else self.files.get(path)
         return httpx.Response(200, content=body) if body is not None else httpx.Response(404, json={"message": "Not Found"})
+
+    def stranger(self, request: httpx.Request) -> httpx.Response:
+        self.strangers.append(request)
+        return httpx.Response(200, content=self.catalog_bytes())
 
     def count(self, path: str = "") -> int:
         return len([one for one in self.requests if unquote(one.url.path).endswith(path)])
@@ -109,6 +124,7 @@ def github() -> Iterator[GitHub]:
     fake = GitHub()
     with respx.mock(assert_all_mocked=True, assert_all_called=False) as network:
         network.route(host="api.github.com").mock(side_effect=fake.answer)
+        network.route(host="stranger.example.com").mock(side_effect=fake.stranger)
         catalog.forget()
         files.forget()
         yield fake

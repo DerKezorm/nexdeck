@@ -371,6 +371,8 @@ def _make_integration(db: Session, item: Item, action: str, new: str | None, use
             row = integrations.get(db, item.key or "")
             assert row is not None
             integrations.update(db, row, text, user_id=user_id, commit=False)
+            # An own connection that came from the shop is one of this installation from now on, as a card is (EC-6).
+            row.shop_ref, row.shop_version, row.shop_hash = "", "", ""
             outcome.integrations_replaced.append(row.short)
             chronicle.definition_saved(db, added=False, user_id=user_id, name=integrations.kind_of(row.short), detail=_said(outcome, "own connection replaced"))
             return
