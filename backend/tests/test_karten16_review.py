@@ -336,3 +336,16 @@ def test_karten16_b6_the_name_is_asked_for_once_in_a_round(me: TestClient, hub: 
     before = len([r for r in hub.requests if r.url.path == "/user"])
     assert share(me).status_code == 200
     assert len([r for r in hub.requests if r.url.path == "/user"]) - before == 1
+
+
+# -- M1: only the issues of the GitHub number of this account are its own -------------------------------------------------
+
+
+def test_karten16_m1_only_the_issues_of_the_github_number_of_this_account_are_its_own(me: TestClient, hub: Hub) -> None:
+    """Somebody else who now carries the old name of this account (another number) has issues the list by name finds too."""
+    put_issue(hub, SLUG, hub.person("someone", 999))
+    assert me.get(f"{BASE}/submissions").json()["items"] == []
+    sent = share(me)
+    assert sent.status_code == 200 and sent.json()["created"] is True
+    assert len(hub.issues) == 2 and hub.issues[0]["user"]["id"] == 999
+    assert [one["issue"] for one in me.get(f"{BASE}/submissions").json()["items"]] == [2]
