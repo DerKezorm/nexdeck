@@ -2,13 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, get, post } from '../../api/client'
+import { get, post } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Dialog, Field } from '../../components/ui'
 import {
   cardTextOf,
   documentKey,
   IMPORT_MAX_BYTES,
+  importFailure,
   sourceKind,
   type ImportCheck,
   type ImportChoice,
@@ -65,11 +66,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
   const result = checked && checked.text === text ? checked.result : null
   const documents = result?.documents ?? []
 
-  const fail = (failure: unknown) => {
-    if (failure instanceof ApiError && failure.code === 'too_many_cards') setError(t('cards.tooMany'))
-    else if (failure instanceof ApiError) setError(t(`cards.exchange.errors.${failure.code}`, { defaultValue: failure.message }))
-    else setError(t('errors.network'))
-  }
+  const fail = (failure: unknown) => setError(importFailure(t, failure))
 
   const pick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

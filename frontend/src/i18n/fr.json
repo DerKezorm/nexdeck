@@ -167,7 +167,9 @@
       "card_integration_header_own": "Cet en-tête appartient à la requête elle-même et ne peut pas être défini ici.",
       "card_integration_auth_needs": "Le type de connexion {{type}} demande {{what}}.",
       "card_integration_github": "Écrivez le projet sous la forme owner/name ou https://github.com/owner/name.",
-      "card_integration_logo": "Le logo est le nom d'un logo de la collection ou une image envoyée à nexdeck. Une image du web n'est pas permise."
+      "card_integration_logo": "Le logo est le nom d'un logo de la collection ou une image envoyée à nexdeck. Une image du web n'est pas permise.",
+      "import_unknown_document": "Ce n'est ni une carte (nexdeck-card: 1) ni une intégration (nexdeck: integration).",
+      "import_twice": "Ce nom court figure deux fois dans le fichier."
     },
     "cardTerms": {
       "text": "du texte",
@@ -2770,7 +2772,12 @@
         "import_choice_missing": "Choisissez Remplacer, Importer comme copie ou Annuler pour chaque élément qui existe déjà.",
         "import_too_large": "Le fichier dépasse 512 Ko. nexdeck ne le lit pas.",
         "import_too_many": "Le fichier contient plus de 20 documents. Un import en accepte 20 au plus.",
-        "import_empty": "Le fichier ne contient ni carte ni intégration."
+        "import_empty": "Le fichier ne contient ni carte ni intégration.",
+        "import_choice_invalid": "Un choix ne correspond pas à ce fichier. Vérifiez à nouveau le fichier.",
+        "import_invalid": "Le fichier a un problème. {{problem}}",
+        "no_free_name": "Aucun nom court n'est libre pour une copie. Renommez-la d'abord dans le fichier.",
+        "definitions_admin_only": "Seul un administrateur peut créer les cartes et intégrations personnalisées d'un fichier de tableau.",
+        "bad_import": "Le fichier ne peut pas être importé : {{message}}"
       },
       "board": {
         "title": "Cartes personnalisées de ce tableau",

@@ -163,5 +163,65 @@
    }
   ],
   "missing_integrations": []
+ },
+ "cards_import_invalid": {
+  "detail": {
+   "code": "import_invalid",
+   "message": "This is neither a card (nexdeck-card: 1) nor an own connection (nexdeck: integration). (line 1)",
+   "documents": [
+    {
+     "type": "unknown",
+     "id": "unknown:None",
+     "name": null,
+     "requires": [],
+     "buttons": [],
+     "form": "",
+     "problems": [
+      {
+       "code": "import_unknown_document",
+       "message": "This is neither a card (nexdeck-card: 1) nor an own connection (nexdeck: integration).",
+       "path": "",
+       "line": 1,
+       "params": {}
+      }
+     ],
+     "exists": false,
+     "same": false,
+     "line": 1,
+     "short": null
+    },
+    {
+     "type": "card",
+     "id": "card:other-one",
+     "name": {
+      "en": "Queue",
+      "de": "Warteschlange"
+     },
+     "requires": [
+      "sonarr",
+      "radarr"
+     ],
+     "buttons": [],
+     "form": "value",
+     "problems": [],
+     "exists": false,
+     "same": false,
+     "line": 3,
+     "slug": "other-one"
+    }
+   ]
+  }
+ },
+ "board_import_member_create": {
+  "detail": {
+   "code": "definitions_admin_only",
+   "message": "Only an administrator can create the custom cards and own connections a board file carries."
+  }
+ },
+ "board_import_bad": {
+  "detail": {
+   "code": "bad_import",
+   "message": "The card broken-one in this file cannot be made: form must be one of value, stats, list, posters, builder."
+  }
  }
 }

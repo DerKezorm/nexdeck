@@ -64,7 +64,12 @@ def answers(admin: TestClient) -> dict[str, Any]:
     )
     found["board_file"] = mixed
     found["board_check_admin"] = admin.post(f"{API}/import/check", json={"yaml_text": mixed}, headers=CSRF).json()
-    found["board_check_member"] = member_of(admin).post(f"{API}/import/check", json={"yaml_text": mixed}, headers=CSRF).json()
+    member = member_of(admin)
+    found["board_check_member"] = member.post(f"{API}/import/check", json={"yaml_text": mixed}, headers=CSRF).json()
+    # Refusals, as the dialogs get them.
+    found["cards_import_invalid"] = admin.post("/api/v1/cards/import", json={"text": "hello: world\n---\n" + card("other-one", PLAIN), "choices": {}}, headers=CSRF).json()
+    found["board_import_member_create"] = member.post(f"{API}/import", json={"yaml_text": mixed, "definitions": "create"}, headers=CSRF).json()
+    found["board_import_bad"] = admin.post(f"{API}/import", json={"yaml_text": mixed, "definitions": "create"}, headers=CSRF).json()
     return found
 
 

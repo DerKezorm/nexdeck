@@ -10,6 +10,7 @@ import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
 import { BoardDefinitions, useBoardDefinitions } from '../../components/BoardDefinitions'
 import { DashboardImport } from '../../components/DashboardImport'
+import { importFailure } from '../../lib/cardExchange'
 import { TemplatePicker } from '../../components/TemplatePicker'
 import { Confirm, Field, Toast } from '../../components/ui'
 import { useHandleReorder } from '../../lib/useHandleReorder'
@@ -207,7 +208,7 @@ export function BoardsSettings() {
             setError('')
             void post<{ slug: string }>('/boards/import', { yaml_text: yamlText, ...definitions.field })
               .then((created) => navigate(`/b/${created.slug}`))
-              .catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))
+              .catch((failure) => setError(importFailure(t, failure)))
           }}
         >
           {t('board.importRun')}

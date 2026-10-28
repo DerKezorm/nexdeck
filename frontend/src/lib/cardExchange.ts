@@ -5,8 +5,11 @@
  * back is the text of each document, so the preview cuts the file at its `---` lines itself and finds the document
  * of a card by its short name.
  */
+import type { TFunction } from 'i18next'
+
+import { ApiError } from '../api/client'
 import type { CardText } from './cardText'
-import type { CardForm, CardProblem } from './customCards'
+import { problemText, type CardForm, type CardProblem } from './customCards'
 
 /** The most the server reads of one file, in bytes. */
 export const IMPORT_MAX_BYTES = 512 * 1024
@@ -71,4 +74,27 @@ export function cardTextOf(text: string, slug: string): string | null {
 /** A name for a file this person saves, when the server does not give one. */
 export function exportName(short: string): string {
   return `${short}.nexdeck.yaml`
+}
+
+/** Refusals of an import that already have a sentence elsewhere: the limits the lists of cards and integrations name. */
+const OWN_SENTENCE: Record<string, string> = { too_many_cards: 'cards.tooMany', integration_limit: 'cards.integrations.tooMany' }
+
+/** The first problem a refused import carries, at the top or in one of its documents. */
+function firstProblem(detail: Record<string, unknown>): CardProblem | null {
+  const problems = Array.isArray(detail.problems) ? (detail.problems as CardProblem[]) : []
+  const documents = Array.isArray(detail.documents) ? (detail.documents as { problems?: CardProblem[] }[]) : []
+  return problems[0] ?? documents.flatMap((one) => one.problems ?? [])[0] ?? null
+}
+
+/**
+ * What a refused import of cards, integrations or a board says, as a sentence of the interface (`cards.exchange.errors`).
+ * A problem of the file is worded by its code like in the check; what has no text of its own keeps the server's words.
+ */
+export function importFailure(t: TFunction, failure: unknown): string {
+  if (!(failure instanceof ApiError)) return t('errors.network')
+  if (OWN_SENTENCE[failure.code]) return t(OWN_SENTENCE[failure.code])
+  const problem = firstProblem(failure.detail)
+  const line = problem && problem.line !== null && problem.line !== undefined ? `${t('cards.line', { line: problem.line })}: ` : ''
+  const worded = problem ? line + problemText(t, problem) : failure.message
+  return t(`cards.exchange.errors.${failure.code}`, { defaultValue: failure.message, message: failure.message, problem: worded })
 }

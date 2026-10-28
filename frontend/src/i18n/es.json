@@ -167,7 +167,9 @@
       "card_integration_header_own": "Esta cabecera pertenece a la propia petición y no se puede fijar aquí.",
       "card_integration_auth_needs": "El tipo de inicio de sesión {{type}} necesita {{what}}.",
       "card_integration_github": "Escribe el proyecto como owner/name o como https://github.com/owner/name.",
-      "card_integration_logo": "El logo es el nombre de un logo de la colección o una imagen subida a nexdeck. No se permite una imagen de la web."
+      "card_integration_logo": "El logo es el nombre de un logo de la colección o una imagen subida a nexdeck. No se permite una imagen de la web.",
+      "import_unknown_document": "Esto no es ni una tarjeta (nexdeck-card: 1) ni una integración (nexdeck: integration).",
+      "import_twice": "Este nombre corto aparece dos veces en el archivo."
     },
     "cardTerms": {
       "text": "texto",
@@ -2770,7 +2772,12 @@
         "import_choice_missing": "Elige Reemplazar, Importar como copia o Cancelar para cada elemento que ya existe.",
         "import_too_large": "El archivo pesa más de 512 KB. nexdeck no lo lee.",
         "import_too_many": "El archivo tiene más de 20 documentos. Una importación admite como máximo 20.",
-        "import_empty": "El archivo no contiene ninguna tarjeta ni ninguna integración."
+        "import_empty": "El archivo no contiene ninguna tarjeta ni ninguna integración.",
+        "import_choice_invalid": "Una elección no corresponde a este archivo. Vuelve a comprobar el archivo.",
+        "import_invalid": "El archivo tiene un problema. {{problem}}",
+        "no_free_name": "No queda ningún nombre corto libre para una copia. Cámbiale el nombre en el archivo primero.",
+        "definitions_admin_only": "Solo un administrador puede crear las tarjetas e integraciones propias de un archivo de tablero.",
+        "bad_import": "El archivo no se puede importar: {{message}}"
       },
       "board": {
         "title": "Tarjetas propias de este tablero",

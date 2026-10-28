@@ -167,7 +167,9 @@
       "card_integration_header_own": "This header belongs to the request itself and cannot be set here.",
       "card_integration_auth_needs": "The sign-in kind {{type}} needs {{what}}.",
       "card_integration_github": "Write the project as owner/name or as https://github.com/owner/name.",
-      "card_integration_logo": "The logo is the name of a logo from the collection, or an image uploaded to nexdeck. A picture from the web is not allowed."
+      "card_integration_logo": "The logo is the name of a logo from the collection, or an image uploaded to nexdeck. A picture from the web is not allowed.",
+      "import_unknown_document": "This is neither a card (nexdeck-card: 1) nor an integration (nexdeck: integration).",
+      "import_twice": "This short name stands twice in the file."
     },
     "cardTerms": {
       "text": "text",
@@ -2770,7 +2772,12 @@
         "import_choice_missing": "Choose Replace, Import as copy or Cancel for every item that exists already.",
         "import_too_large": "The file is larger than 512 KB. nexdeck does not read it.",
         "import_too_many": "The file has more than 20 documents. An import takes at most 20.",
-        "import_empty": "The file has no card and no integration in it."
+        "import_empty": "The file has no card and no integration in it.",
+        "import_choice_invalid": "A choice does not fit this file. Check the file again.",
+        "import_invalid": "The file has a problem. {{problem}}",
+        "no_free_name": "There is no free short name for a copy. Rename it in the file first.",
+        "definitions_admin_only": "Only an administrator can create the custom cards and integrations a board file carries.",
+        "bad_import": "{{message}}"
       },
       "board": {
         "title": "Custom cards in this board",

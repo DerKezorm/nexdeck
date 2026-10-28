@@ -167,7 +167,9 @@
       "card_integration_header_own": "Questa intestazione appartiene alla richiesta stessa e non si può impostare qui.",
       "card_integration_auth_needs": "Il tipo di accesso {{type}} richiede {{what}}.",
       "card_integration_github": "Scrivi il progetto come owner/name oppure come https://github.com/owner/name.",
-      "card_integration_logo": "Il logo è il nome di un logo della raccolta o un'immagine caricata su nexdeck. Un'immagine dal web non è ammessa."
+      "card_integration_logo": "Il logo è il nome di un logo della raccolta o un'immagine caricata su nexdeck. Un'immagine dal web non è ammessa.",
+      "import_unknown_document": "Non è né una scheda (nexdeck-card: 1) né un'integrazione (nexdeck: integration).",
+      "import_twice": "Questo nome breve compare due volte nel file."
     },
     "cardTerms": {
       "text": "testo",
@@ -2770,7 +2772,12 @@
         "import_choice_missing": "Scegli Sostituisci, Importa come copia o Annulla per ogni elemento che esiste già.",
         "import_too_large": "Il file supera 512 KB. nexdeck non lo legge.",
         "import_too_many": "Il file ha più di 20 documenti. Un'importazione ne accetta al massimo 20.",
-        "import_empty": "Il file non contiene né una scheda né un'integrazione."
+        "import_empty": "Il file non contiene né una scheda né un'integrazione.",
+        "import_choice_invalid": "Una scelta non corrisponde a questo file. Controlla di nuovo il file.",
+        "import_invalid": "Il file ha un problema. {{problem}}",
+        "no_free_name": "Non c'è un nome breve libero per una copia. Rinominala prima nel file.",
+        "definitions_admin_only": "Solo un amministratore può creare le schede e le integrazioni personali di un file di bacheca.",
+        "bad_import": "Il file non può essere importato: {{message}}"
       },
       "board": {
         "title": "Schede personali di questa bacheca",

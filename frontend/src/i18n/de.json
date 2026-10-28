@@ -167,7 +167,9 @@
       "card_integration_header_own": "Diese Kopfzeile gehört zur Anfrage selbst und lässt sich hier nicht setzen.",
       "card_integration_auth_needs": "Die Anmeldeart {{type}} braucht {{what}}.",
       "card_integration_github": "Schreibe das Projekt als owner/name oder als https://github.com/owner/name.",
-      "card_integration_logo": "Das Logo ist der Name eines Logos aus der Sammlung oder ein nach nexdeck hochgeladenes Bild. Ein Bild aus dem Netz ist nicht erlaubt."
+      "card_integration_logo": "Das Logo ist der Name eines Logos aus der Sammlung oder ein nach nexdeck hochgeladenes Bild. Ein Bild aus dem Netz ist nicht erlaubt.",
+      "import_unknown_document": "Das ist weder eine Karte (nexdeck-card: 1) noch eine Anbindung (nexdeck: integration).",
+      "import_twice": "Dieser Kurzname steht zweimal in der Datei."
     },
     "cardTerms": {
       "text": "Text",
@@ -2770,7 +2772,12 @@
         "import_choice_missing": "Wähle Ersetzen, Als Kopie importieren oder Abbrechen für alles, was es schon gibt.",
         "import_too_large": "Die Datei ist größer als 512 KB. nexdeck liest sie nicht.",
         "import_too_many": "Die Datei hat mehr als 20 Dokumente. Ein Import nimmt höchstens 20.",
-        "import_empty": "In der Datei steckt weder eine Karte noch eine Anbindung."
+        "import_empty": "In der Datei steckt weder eine Karte noch eine Anbindung.",
+        "import_choice_invalid": "Eine Wahl passt nicht zu dieser Datei. Prüfe die Datei noch einmal.",
+        "import_invalid": "Die Datei hat ein Problem. {{problem}}",
+        "no_free_name": "Für eine Kopie ist kein Kurzname mehr frei. Benenne sie zuerst in der Datei um.",
+        "definitions_admin_only": "Nur ein Admin kann die eigenen Karten und Anbindungen einer Board-Datei anlegen.",
+        "bad_import": "Die Datei lässt sich nicht importieren: {{message}}"
       },
       "board": {
         "title": "Eigene Karten in diesem Board",

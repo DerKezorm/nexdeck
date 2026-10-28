@@ -239,7 +239,7 @@ describe('a file that is not right', () => {
     stub({ 'POST /cards/import/check': { status: 200, body: { ok: false, documents: [{ type: 'unknown', id: 'unknown:null', name: null, requires: [], buttons: [], form: '', problems: [{ code: 'import_unknown_document', line: 3, path: '', message: 'This is neither a card nor an own connection.', params: {} }], exists: false, same: false, line: 3 }], missing_integrations: [] } } })
     show()
     await check('slug: x')
-    expect(await screen.findByTestId('import-problems')).toHaveTextContent('Line 3: This is neither a card nor an own connection.')
+    expect(await screen.findByTestId('import-problems')).toHaveTextContent('Line 3: This is neither a card (nexdeck-card: 1) nor an integration (nexdeck: integration).')
     expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled()
   })
 

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put, upload } from '../api/client'
 import type { BoardSummary, BoardWithLive, KioskToken } from '../api/types'
+import { importFailure } from '../lib/cardExchange'
 import { boardWidth, GRID_CHOICES, gridColumns, WIDTHS } from '../lib/grid'
 import { useHomeBoardPath } from '../lib/homeBoard'
 import { useHandleReorder } from '../lib/useHandleReorder'
@@ -417,7 +418,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
                   onClose()
                   navigate(`/b/${created.slug}`)
                 })
-                .catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))
+                .catch((failure) => setError(importFailure(t, failure)))
             }}
           >
             {t('board.importRun')}

@@ -364,6 +364,8 @@ def test_karten1_ac2_every_message_has_a_translation_in_every_language() -> None
     """The message is English; the interface shows the translation of its code, with the same blanks filled in."""
     sources = "".join(path.read_text(encoding="utf-8") for path in (Path(load.__file__).parent).glob("*.py"))
     found = set(re.findall(r'"(card_[a-z_]+)"', sources))
+    # The problems an import adds to a document of a file are shown the same way (KARTEN-12).
+    found |= set(re.findall(r'Problem\(\s*"(import_[a-z_]+)"', sources))
     assert len(found) >= 35, f"only {len(found)} codes were found, so this guard proves nothing"
     terms = {*load.EXPECTED, *credentials.PHRASES}
     for language in ("en", "de", "es", "fr", "it"):
