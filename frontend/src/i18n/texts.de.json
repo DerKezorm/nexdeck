@@ -2309,7 +2309,23 @@
     "One project: stars, forks, open issues and open pull requests, the newest release and the last push.": "Ein Projekt: Sterne, Forks, offene Issues und offene Pull Requests, das neueste Release und der letzte Push.",
     "Open milestones with how much of each is done and when it is due, overdue ones first.": "Offene Meilensteine mit dem erledigten Anteil und dem Fälligkeitstermin, überfällige zuerst.",
     "Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.": "Offene Pull Requests der verfolgten Projekte mit dem Stand ihrer Checks: fehlgeschlagen, laufend oder bestanden. Rote zuerst.",
-    "Show drafts": "Entwürfe zeigen"
+    "Show drafts": "Entwürfe zeigen",
+    "Browsers": "Browser",
+    "Countries": "Länder",
+    "Every website with its visitors in a period and how many are on it now.": "Jede Website mit ihren Besuchern in einem Zeitraum und wie viele gerade darauf sind.",
+    "Its name, its domain or its ID. Empty means the first one.": "Sein Name, seine Domain oder seine ID. Leer heißt: die erste.",
+    "Of that user. Not for Umami Cloud.": "Von diesem Benutzer. Nicht für Umami Cloud.",
+    "Of your own Umami. Not for Umami Cloud.": "Von deinem eigenen Umami. Nicht für Umami Cloud.",
+    "Pages": "Seiten",
+    "Referrers": "Herkunft",
+    "The pages, referrers, countries, browsers or devices with the most visitors on one website.": "Die Seiten, Herkunftsseiten, Länder, Browser oder Geräte mit den meisten Besuchern auf einer Website.",
+    "Top of a website": "Spitzenreiter einer Website",
+    "Umami Cloud only: Settings > API keys.": "Nur Umami Cloud: Einstellungen > API-Schlüssel.",
+    "Visitors, page views and live visitors of your websites in Umami, and their top pages, referrers and countries.": "Besucher, Seitenaufrufe und Live-Besucher deiner Websites in Umami und ihre beliebtesten Seiten, Herkunftsseiten und Länder.",
+    "Visitors, page views, visits, bounce rate and visit time of one website, and who is on it now.": "Besucher, Seitenaufrufe, Besuche, Absprungrate und Besuchsdauer einer Website und wer gerade darauf ist.",
+    "Website": "Website",
+    "Websites": "Websites",
+    "Your Umami, or https://api.umami.is for Umami Cloud.": "Dein Umami oder https://api.umami.is für Umami Cloud."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3661,6 +3677,14 @@
     "No checks": "Keine Checks",
     "None": "Keines",
     "Project": "Projekt",
-    "No issues yet": "Noch keine Issues"
+    "No issues yet": "Noch keine Issues",
+    "Bounce rate": "Absprungrate",
+    "No referrer": "Keine Herkunft",
+    "Online now": "Jetzt online",
+    "Page views": "Seitenaufrufe",
+    "Visit time": "Besuchsdauer",
+    "Visitors": "Besucher",
+    "Websites": "Websites",
+    "Direct": "Direkt"
   }
 }

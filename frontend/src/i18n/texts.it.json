@@ -2309,7 +2309,23 @@
     "One project: stars, forks, open issues and open pull requests, the newest release and the last push.": "Un progetto: stelle, fork, issue aperte e pull request aperte, la release più recente e l'ultimo push.",
     "Open milestones with how much of each is done and when it is due, overdue ones first.": "Milestone aperte con la quota completata e la scadenza, prima quelle in ritardo.",
     "Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.": "Pull request aperte dei progetti che segui, con lo stato dei controlli: falliti, in corso o superati. Prima quelle rosse.",
-    "Show drafts": "Mostra le bozze"
+    "Show drafts": "Mostra le bozze",
+    "Browsers": "Browser",
+    "Countries": "Paesi",
+    "Every website with its visitors in a period and how many are on it now.": "Ogni sito con i suoi visitatori in un periodo e quanti ci sono ora.",
+    "Its name, its domain or its ID. Empty means the first one.": "Il suo nome, il suo dominio o il suo ID. Vuoto significa il primo.",
+    "Of that user. Not for Umami Cloud.": "Di quell'utente. Non per Umami Cloud.",
+    "Of your own Umami. Not for Umami Cloud.": "Del tuo Umami. Non per Umami Cloud.",
+    "Pages": "Pagine",
+    "Referrers": "Provenienze",
+    "The pages, referrers, countries, browsers or devices with the most visitors on one website.": "Le pagine, provenienze, paesi, browser o dispositivi con più visitatori su un sito.",
+    "Top of a website": "I primi di un sito",
+    "Umami Cloud only: Settings > API keys.": "Solo Umami Cloud: Impostazioni > Chiavi API.",
+    "Visitors, page views and live visitors of your websites in Umami, and their top pages, referrers and countries.": "Visitatori, visualizzazioni di pagina e visitatori in tempo reale dei tuoi siti in Umami, con le pagine, provenienze e paesi principali.",
+    "Visitors, page views, visits, bounce rate and visit time of one website, and who is on it now.": "Visitatori, visualizzazioni di pagina, visite, frequenza di rimbalzo e durata della visita di un sito, e chi c'è ora.",
+    "Website": "Sito web",
+    "Websites": "Siti web",
+    "Your Umami, or https://api.umami.is for Umami Cloud.": "Il tuo Umami, o https://api.umami.is per Umami Cloud."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3661,6 +3677,14 @@
     "No checks": "Nessun controllo",
     "None": "Nessuna",
     "Project": "Progetto",
-    "No issues yet": "Ancora nessuna issue"
+    "No issues yet": "Ancora nessuna issue",
+    "Bounce rate": "Frequenza di rimbalzo",
+    "No referrer": "Nessuna provenienza",
+    "Online now": "Online ora",
+    "Page views": "Visualizzazioni di pagina",
+    "Visit time": "Durata della visita",
+    "Visitors": "Visitatori",
+    "Websites": "Siti web",
+    "Direct": "Diretto"
   }
 }
