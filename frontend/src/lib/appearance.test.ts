@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, OWN_PALETTES, onAccent, readableAccent, readLook, useLook } from './appearance'
+import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, OWN_PALETTES, onAccent, readableAccent, readLook, setBoardStyle, useLook } from './appearance'
 import { followTheme } from './themeMode'
 
 describe('the accent colour', () => {
@@ -217,5 +217,36 @@ describe('the accent in the brightness on screen', () => {
     expect(sum(own)).toBeLessThan(sum(readableAccent('#22d3ee', 'light', light)))
     applyAppearance({ ...cyan, theme })
     expect(shown()).toBe('')
+  })
+})
+
+describe('the style of everything that is not a card', () => {
+  const base = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee' }
+  const root = () => document.documentElement
+
+  afterEach(() => {
+    setBoardStyle(null)
+    applyAppearance(null)
+  })
+
+  it('follows the installation, leaves glass and 1984 unmarked', () => {
+    applyAppearance({ ...base, card_style: 'flat' })
+    expect(root().dataset.chrome).toBe('flat')
+    applyAppearance({ ...base, card_style: 'glass' })
+    expect(root().dataset.chrome).toBeUndefined()
+    applyAppearance({ ...base, card_style: 'window' })
+    expect(root().dataset.chrome).toBeUndefined()
+  })
+
+  it('keeps to the installation while a board draws its own cards', () => {
+    applyAppearance({ ...base, card_style: 'calm' })
+    setBoardStyle('neon')
+    expect(root().dataset.cards).toBe('neon')
+    expect(root().dataset.chrome).toBe('calm')
+    setBoardStyle('glass')
+    expect(root().dataset.cards).toBeUndefined()
+    expect(root().dataset.chrome).toBe('calm')
+    setBoardStyle(null)
+    expect(root().dataset.cards).toBe('calm')
   })
 })

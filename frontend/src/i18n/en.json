@@ -459,7 +459,7 @@
       "loadFailed": "The look could not be read from the server.",
       "retry": "Try again",
       "cardsTitle": "Cards",
-      "cardsHelp": "How every card is drawn, for everyone. A red or amber frame stays in every style.",
+      "cardsHelp": "How every card is drawn, and the boxes, sheets, dialogs and menus with it, for everyone. A red or amber frame stays in every style.",
       "cardStyle": {
         "glass": "Glass",
         "flat": "Flat",

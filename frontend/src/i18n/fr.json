@@ -459,7 +459,7 @@
       "loadFailed": "Impossible de lire l’apparence depuis le serveur.",
       "retry": "Réessayer",
       "cardsTitle": "Cartes",
-      "cardsHelp": "La façon dont chaque carte est dessinée, pour tout le monde. Un cadre rouge ou orange reste dans chaque style.",
+      "cardsHelp": "La façon dont chaque carte est dessinée, et avec elle les encadrés, volets, boîtes de dialogue et menus, pour tout le monde. Un cadre rouge ou orange reste dans chaque style.",
       "cardStyle": {
         "glass": "Verre",
         "flat": "Plate",
