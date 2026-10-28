@@ -26,11 +26,13 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import ipaddress
 import logging
 import re
 import secrets
 import threading
 import time
+import unicodedata
 from collections import defaultdict, deque
 from datetime import timedelta
 from typing import Any
@@ -52,7 +54,8 @@ CODE_PREFIX = "ndc"
 CODE_MINUTES = 10
 ACCESS_HOURS = 1
 REFRESH_DAYS = 30
-#: Registered programs kept at most; the ones used longest ago make room.
+#: Registered programs at most. Past it a new program is turned away, until an idle one has aged out:
+#: a program that is in use is never made to leave for a stranger's registration.
 MAX_CLIENTS = 500
 #: Registrations per minute for the whole server: registering needs no account.
 REGISTER_PER_MINUTE = 30
@@ -149,9 +152,27 @@ _registered: deque[float] = deque()
 _by_sender: dict[str, deque[float]] = defaultdict(deque)
 
 
+def sender_group(sender: str) -> str:
+    """Whom a sender counts as: an IPv4 address by itself, an IPv6 address by its /64, which is what one subscriber gets.
+
+    ⚠️ A whole /64 holds more addresses than there are people: counting each address would let one machine
+    register as often as it likes.
+    """
+    try:
+        address = ipaddress.ip_address(sender)
+    except ValueError:
+        return sender
+    if isinstance(address, ipaddress.IPv6Address):
+        if address.ipv4_mapped is not None:
+            return str(address.ipv4_mapped)
+        return str(ipaddress.ip_network((address, 64), strict=False))
+    return str(address)
+
+
 def may_register(sender: str, now: float | None = None) -> bool:
     """True while the sender stays under its hour and the server under its minute; counts this one."""
     now = time.monotonic() if now is None else now
+    sender = sender_group(sender)
     with _brake_lock:
         while _registered and now - _registered[0] >= 60:
             _registered.popleft()
@@ -174,6 +195,57 @@ def forget_registrations() -> None:
         _by_sender.clear()
 
 
+def _plain(text: str) -> str:
+    """A name a person reads on the consent page, without what hides or reorders text.
+
+    Format characters (category Cf: the right-to-left override, zero-width spaces, joiners) let a name read
+    as another program, or as another word than it is.
+    """
+    return "".join(char for char in text if unicodedata.category(char) != "Cf")
+
+
+def in_use(db: Session, client_id: str) -> bool:
+    """A program somebody uses: a living key, a refresh token that can still be traded, or a code not yet traded."""
+    now = utcnow()
+    if db.scalar(select(McpOAuthRefresh.token_hash).where(McpOAuthRefresh.client_id == client_id,
+                                                          McpOAuthRefresh.used_at.is_(None), McpOAuthRefresh.expires_at > now).limit(1)):
+        return True
+    if db.scalar(select(McpOAuthCode.client_id).where(McpOAuthCode.client_id == client_id, McpOAuthCode.used_at.is_(None),
+                                                      McpOAuthCode.expires_at > now).limit(1)):
+        return True
+    # A connector whose refresh token is spent still lives for the hour of its last access token.
+    keys = db.scalars(select(McpKey).join(McpOAuthRefresh, McpOAuthRefresh.key_id == McpKey.id)
+                      .where(McpOAuthRefresh.client_id == client_id)).all()
+    return any(mcp.counts(key) for key in keys)
+
+
+def make_room(db: Session) -> None:
+    """Room for one more program, or a refusal. Never at the cost of a program that is in use.
+
+    ⚠️ Registering needs no account. When the table was kept at its size by dropping the oldest programs,
+    a stranger who registered 500 of them pushed out the connectors people use. Now only a program that
+    nobody uses and that is older than an hour goes (the one made a minute ago may be on the consent page),
+    the least recently used first; if that is not enough, the new one is turned away.
+    """
+    count = db.scalar(select(func.count()).select_from(McpOAuthClient)) or 0
+    if count < MAX_CLIENTS:
+        return
+    idle = db.scalars(select(McpOAuthClient).where(McpOAuthClient.created_at < utcnow() - timedelta(hours=1))
+                      .order_by(McpOAuthClient.last_used_at.is_not(None), McpOAuthClient.last_used_at, McpOAuthClient.created_at)).all()
+    gone = []
+    for client in idle:
+        if count - len(gone) < MAX_CLIENTS:
+            break
+        if not in_use(db, client.id):
+            gone.append(client.id)
+    if gone:
+        db.execute(delete(McpOAuthClient).where(McpOAuthClient.id.in_(gone)))
+        db.commit()
+    if count - len(gone) >= MAX_CLIENTS:
+        logger.warning("MCP connector registration refused: %d programs are registered and all of them are in use or new.", MAX_CLIENTS)
+        raise OAuthError("temporarily_unavailable", "Too many programs are registered. Try again later.", 429)
+
+
 def register(db: Session, body: Any, sender: str) -> McpOAuthClient:
     if not isinstance(body, dict):
         raise OAuthError("invalid_client_metadata", "The body must be a JSON object.")
@@ -187,22 +259,13 @@ def register(db: Session, body: Any, sender: str) -> McpOAuthClient:
         raise OAuthError("invalid_client_metadata", "The program must use the grant type authorization_code.")
     if not may_register(sender):
         raise OAuthError("temporarily_unavailable", "Too many registrations. Try again later.", 429)
+    make_room(db)
     name = body.get("client_name") if isinstance(body.get("client_name"), str) else ""
-    name = " ".join(name.split())[:100] or "MCP client"
+    name = " ".join(_plain(name).split())[:100] or "MCP client"
     client = McpOAuthClient(id=secrets.token_urlsafe(24), name=name, redirect_uris=list(uris), created_at=utcnow(),
                             sender=sender[:64])
     db.add(client)
     db.commit()
-    count = db.scalar(select(func.count()).select_from(McpOAuthClient)) or 0
-    if count > MAX_CLIENTS:
-        # The ones used longest ago (never used first) make room. Not one made in the last hour: its person may be on
-        # the consent page right now. Their keys stay until they run out or are withdrawn.
-        oldest = db.scalars(select(McpOAuthClient.id).where(McpOAuthClient.created_at < utcnow() - timedelta(hours=1))
-                            .order_by(McpOAuthClient.last_used_at.is_not(None), McpOAuthClient.last_used_at,
-                                      McpOAuthClient.created_at)
-                            .limit(count - MAX_CLIENTS)).all()
-        db.execute(delete(McpOAuthClient).where(McpOAuthClient.id.in_(oldest)))
-        db.commit()
     logger.info("MCP connector %r registered from %s with %d return address(es).", name, sender, len(uris))
     return client
 

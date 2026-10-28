@@ -23,7 +23,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.db import db_session
-from app.models import ActionLog, McpKey, McpOAuthCode, McpOAuthRefresh, User, utcnow
+from app.models import (
+    ActionLog,
+    McpKey,
+    McpOAuthClient,
+    McpOAuthCode,
+    McpOAuthRefresh,
+    User,
+    utcnow,
+)
 from app.services import journal, mcp_oauth, two_factor
 
 from .conftest import CSRF, create_user, login, setup_admin
@@ -590,6 +598,102 @@ def test_registering_is_braked_for_the_whole_server(monkeypatch: pytest.MonkeyPa
     assert all(mcp_oauth.may_register(f"192.0.2.{number}", now=100.0) for number in range(4))
     assert not mcp_oauth.may_register("192.0.2.99", now=100.0)
     assert mcp_oauth.may_register("192.0.2.99", now=161.0)
+
+
+def test_an_ipv6_sender_counts_by_its_64_and_a_mapped_one_as_its_ipv4() -> None:
+    assert mcp_oauth.sender_group("2001:db8:1:2::1") == mcp_oauth.sender_group("2001:db8:1:2:ffff:ffff:ffff:ffff")
+    assert mcp_oauth.sender_group("2001:db8:1:2::1") != mcp_oauth.sender_group("2001:db8:1:3::1")
+    assert mcp_oauth.sender_group("::ffff:192.0.2.7") == mcp_oauth.sender_group("192.0.2.7") == "192.0.2.7"
+    assert mcp_oauth.sender_group("testclient") == "testclient"
+
+
+def test_one_machine_cannot_register_more_often_by_changing_the_end_of_its_ipv6_address(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "REGISTER_PER_SENDER", 3)
+    assert all(mcp_oauth.may_register(f"2001:db8:1:2::{number:x}", now=100.0) for number in range(1, 4))
+    assert not mcp_oauth.may_register("2001:db8:1:2:aaaa::1", now=100.0)
+    assert mcp_oauth.may_register("2001:db8:1:3::1", now=100.0), "another /64 is another sender"
+
+
+def _aged(*ids: str, hours: int = 2) -> None:
+    with db_session() as db:
+        for row in db.scalars(select(McpOAuthClient).where(McpOAuthClient.id.in_(ids))):
+            row.created_at = utcnow() - timedelta(hours=hours)
+
+
+def _programs() -> set[str]:
+    with db_session() as db:
+        return {row.name for row in db.scalars(select(McpOAuthClient))}
+
+
+@pytest.fixture
+def small_table(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 3)
+    monkeypatch.setattr(mcp_oauth, "REGISTER_PER_SENDER", 1000)
+    monkeypatch.setattr(mcp_oauth, "REGISTER_PER_MINUTE", 1000)
+
+
+def _full_registration(ready: TestClient, name: str):  # noqa: ANN202 - a response
+    return ready.post("/api/mcp/oauth/register", json={"client_name": name, "redirect_uris": [BACK]})
+
+
+def test_registering_pushes_out_an_idle_program_but_never_one_in_use(ready: TestClient, small_table: None) -> None:
+    used, _tokens = connect(ready, name="Used")
+    idle = [register(ready, name=f"Idle {number}") for number in range(2)]
+    _aged(used, *idle)
+    assert _full_registration(ready, "New").status_code == 201
+    names_now = _programs()
+    assert "Used" in names_now and "New" in names_now and len(names_now) == 3
+    assert _full_registration(ready, "Newer").status_code == 201
+    assert "Used" in _programs() and len(_programs()) == 3
+    # Nothing idle and old is left: the table is full of a program in use and two made a minute ago.
+    refused = _full_registration(ready, "Stranger")
+    assert refused.status_code == 429 and refused.json()["error"] == "temporarily_unavailable", refused.text
+    assert "Used" in _programs() and "Stranger" not in _programs() and len(_programs()) == 3
+
+
+def test_a_connector_whose_refresh_token_is_spent_but_whose_key_lives_is_not_pushed_out(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 1)
+    used, _tokens = connect(ready, name="Used")
+    _aged(used)
+    with db_session() as db:
+        for row in db.scalars(select(McpOAuthRefresh)):
+            row.used_at = utcnow()
+    assert _full_registration(ready, "Stranger").status_code == 429
+    assert _programs() == {"Used"}
+    # The hour of its last access token runs out: now nobody uses it.
+    with db_session() as db:
+        db.scalar(select(McpKey).where(McpKey.kind == "oauth")).expires_at = utcnow() - timedelta(seconds=1)
+    assert _full_registration(ready, "Stranger").status_code == 201
+    assert _programs() == {"Stranger"}
+
+
+def test_a_program_with_a_code_not_yet_traded_is_not_pushed_out(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 1)
+    waiting = register(ready, name="Waiting")
+    _verifier, challenge = pkce()
+    code_of(agree(ready, waiting, challenge))
+    _aged(waiting)
+    assert _full_registration(ready, "Stranger").status_code == 429
+    with db_session() as db:
+        db.scalar(select(McpOAuthCode)).expires_at = utcnow() - timedelta(seconds=1)
+    assert _full_registration(ready, "Stranger").status_code == 201
+
+
+def test_a_program_registered_a_minute_ago_is_not_pushed_out(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 1)
+    register(ready, name="Fresh")
+    assert _full_registration(ready, "Stranger").status_code == 429
+    assert _programs() == {"Fresh"}
+
+
+def test_the_name_of_a_program_loses_what_hides_or_reorders_text(ready: TestClient) -> None:
+    """Format characters (category Cf) let a name read as another: the right-to-left override, zero-width spaces."""
+    answer = _full_registration(ready, "Cl​au‮de⁦ ‍Code")
+    assert answer.status_code == 201 and answer.json()["client_name"] == "Claude Code"
+    with db_session() as db:
+        assert db.get(McpOAuthClient, answer.json()["client_id"]).name == "Claude Code"
+    # A name that is nothing but such characters is no name at all.
+    assert _full_registration(ready, "​‮").json()["client_name"] == "MCP client"
 
 
 # -- the consent page -----------------------------------------------------------------------------
