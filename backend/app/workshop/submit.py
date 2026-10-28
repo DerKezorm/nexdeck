@@ -69,7 +69,8 @@ UPDATE_TITLE = "Submit update: "
 BOT = "github-actions[bot]"
 MARKER = re.compile(r"<!-- workshop:(accepted|rejected|deferred):([0-9a-f]{64}) -->")
 _HEADING = re.compile(r"^### (.+?)[ \t]*$")
-_FENCE = re.compile(r"\A```[A-Za-z]*[ \t]*\n(.*?)\n?```[ \t]*\Z", re.DOTALL)
+_OPEN = re.compile(r"^(`{3,}|~{3,})(.*)$")
+_EDGE = ("#", "`", "~")
 _SLUG = re.compile(r"^(?:Submit update: |Submit: )([a-z0-9][a-z0-9_-]{0,59})$")
 
 
@@ -82,6 +83,40 @@ class SubmitError(Exception):
 
 
 # -- the body of the issue -------------------------------------------------------------------------
+
+
+def mask(text: str) -> str:
+    """A text of the author for one field of the issue: no line of it can be read as a heading or as the edge of a code block.
+
+    ⚠️ The Workshop reads the issue by its ``### heading`` lines and its code fences, and the author writes free text. A line
+    that starts with ``#``, a backtick or a tilde gets a backslash in front (so does a line that starts with a backslash and
+    one of those, which keeps :func:`unmask` exact). Markdown shows the sign itself, the reader of the Workshop takes the
+    backslash away again, and nothing can end a field early, open a code block, or write a field of its own.
+    """
+    out = []
+    for line in text.replace("\r\n", "\n").split("\n"):
+        bare = line.lstrip()
+        if bare[:1] in _EDGE or (bare[:1] == "\\" and bare[1:2] in (*_EDGE, "\\")):
+            line = line[: len(line) - len(bare)] + "\\" + bare
+        out.append(line)
+    return "\n".join(out)
+
+
+def unmask(text: str) -> str:
+    """What :func:`mask` made of a text, as the author wrote it."""
+    out = []
+    for line in text.split("\n"):
+        bare = line.lstrip()
+        if bare[:1] == "\\" and bare[1:2] in (*_EDGE, "\\"):
+            line = line[: len(line) - len(bare)] + bare[1:]
+        out.append(line)
+    return "\n".join(out)
+
+
+def fence_of(text: str) -> str:
+    """A code fence longer than any run of backticks in the text, so that nothing inside it can close it."""
+    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
+    return "`" * max(3, longest + 1)
 
 
 def build_body(
@@ -97,45 +132,77 @@ def build_body(
     version: str = __version__,
 ) -> str:
     """The body of the issue the way the form of the Workshop writes it, and the version of this nexdeck at the end."""
-    fenced = "```yaml\n" + definition.rstrip("\n") + "\n```"
+    fence = fence_of(definition)
+    fenced = f"{fence}yaml\n" + definition.rstrip("\n") + f"\n{fence}"
     box = f"- [{'x' if licensed else ' '}] {LICENSE_SENTENCE}"
     parts = [
         (LABELS["type"], TYPES[type]),
         (LABELS["category"], CATEGORIES[category]),
         (LABELS["definition"], fenced),
-        (LABELS["description"], description or NO_RESPONSE),
-        (LABELS["changes"], changes or NO_RESPONSE),
-        (LABELS["based_on"], based_on or NO_RESPONSE),
-        (LABELS["update_of"], update_of or NO_RESPONSE),
+        (LABELS["description"], mask(description) if description.strip() else NO_RESPONSE),
+        (LABELS["changes"], mask(changes) if changes.strip() else NO_RESPONSE),
+        (LABELS["based_on"], mask(based_on) if based_on.strip() else NO_RESPONSE),
+        (LABELS["update_of"], mask(update_of) if update_of.strip() else NO_RESPONSE),
         (LABELS["license"], box),
         (VERSION_LABEL, version),
     ]
     return "\n\n".join(f"### {label}\n\n{value}" for label, value in parts) + "\n"
 
 
-def parse_body(body: str) -> dict[str, str]:
-    """The fields of an issue body, as far as nexdeck needs them back (Fix and resend, "My submissions")."""
-    labels = {label: key for key, label in {**LABELS, "version": VERSION_LABEL}.items()}
-    found: dict[str, str] = {}
+def _opens(line: str) -> tuple[str, int] | None:
+    """``(sign, length)`` when the line opens a code block."""
+    found = _OPEN.match(line.lstrip())
+    if found is None or (found.group(1)[0] == "`" and "`" in found.group(2)):
+        return None
+    return found.group(1)[0], len(found.group(1))
+
+
+def _closes(line: str, fence: tuple[str, int]) -> bool:
+    bare = line.strip()
+    return len(bare) >= fence[1] and set(bare) == {fence[0]}
+
+
+def sections_of(body: str) -> list[tuple[str, list[str]]]:
+    """``(heading, lines)`` per ``### heading``; a heading inside a code block is part of the block (the rule of the Workshop)."""
     sections: list[tuple[str, list[str]]] = []
-    fenced = False
+    fence: tuple[str, int] | None = None
     for line in (body or "").replace("\r\n", "\n").split("\n"):
-        if line.lstrip().startswith("```"):
-            fenced = not fenced
-        heading = None if fenced else _HEADING.match(line)
+        heading = None
+        if fence is None:
+            fence = _opens(line)
+            heading = None if fence else _HEADING.match(line)
+        elif _closes(line, fence):
+            fence = None
         if heading:
             sections.append((heading.group(1).strip(), []))
         elif sections:
             sections[-1][1].append(line)
-    for label, lines in sections:
+    return sections
+
+
+def unfence(value: str) -> str:
+    """The text inside a code block that fills a whole field; any other text as it is."""
+    lines = value.split("\n")
+    fence = _opens(lines[0]) if len(lines) >= 2 else None
+    if fence and _closes(lines[-1], fence):
+        return "\n".join(lines[1:-1])
+    return value
+
+
+def parse_body(body: str) -> dict[str, str]:
+    """The fields of an issue body, as far as nexdeck needs them back (Fix and resend, "My submissions")."""
+    labels = {label: key for key, label in {**LABELS, "version": VERSION_LABEL}.items()}
+    found: dict[str, str] = {}
+    for label, lines in sections_of(body):
         key = labels.get(label)
         if key is None or key in found:
             continue
         value = "\n".join(lines).strip()
         value = "" if value == NO_RESPONSE else value
         if key == "definition":
-            inside = _FENCE.match(value)
-            value = (inside.group(1) if inside else value).strip("\n") + "\n"
+            value = unfence(value).strip("\n") + "\n"
+        elif key in ("description", "changes", "based_on", "update_of"):
+            value = unmask(value)
         found[key] = value
     return found
 
