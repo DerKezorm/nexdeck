@@ -191,6 +191,40 @@ def test_the_chronicle_follows_the_key_s_boards(ready: TestClient, two_boards: d
     assert [line["name"] for line in call(ready, kitchen, "chronicle", group="cards")["value"]["lines"]] == ["Kitchen host"]
 
 
+def _shared_connection(ready: TestClient) -> dict:
+    """One connection on a board Kim may open and on one she may not; each card turned red once."""
+    lab, private = board(ready, "Lab"), board(ready, "Private")
+    made = ready.post("/api/v1/integrations", json={"kind": "docker", "name": "Shared", "config": {}, "demo": True}, headers=CSRF).json()
+    ids = {}
+    for target, title in ((lab, "Lab card"), (private, "Secret card")):
+        answer = ready.post(f"/api/v1/pages/{target['pages'][0]['id']}/widgets",
+                            json={"kind": "docker.containers", "title": title, "integration_id": made["id"]}, headers=CSRF)
+        ids[title] = answer.json()["widget"]["id"]
+        chronicle.card_turned(ids[title], title, "ok", "bad", "down", integration_id=made["id"])
+    kim = create_user(ready, "kim")
+    shared = ready.put(f"/api/v1/boards/{lab['slug']}/shares", json={"shares": [{"user_id": kim["id"], "level": "view"}]}, headers=CSRF)
+    assert shared.status_code in (200, 201), shared.text
+    return {"lab": lab, "private": private, "ids": ids}
+
+
+def test_the_chronicle_names_no_card_of_a_board_the_account_may_not_open_though_a_connection_is_shared(ready: TestClient) -> None:
+    shared = _shared_connection(ready)
+    login(ready, "kim", "another-long-password")
+    _key, token = make_key(ready)
+    lines = call(ready, token, "chronicle", hours=24, group="cards")["value"]["lines"]
+    assert [line["name"] for line in lines] == ["Lab card"], lines
+    assert call(ready, token, "card_details", card_id=shared["ids"]["Secret card"])["value"] == {"error": "No such card."}
+
+
+def test_the_chronicle_of_a_limited_key_names_no_card_of_another_board_that_shares_its_connection(ready: TestClient) -> None:
+    shared = _shared_connection(ready)
+    _key, token = make_key(ready, boards=[shared["lab"]["id"]])
+    lines = call(ready, token, "chronicle", hours=24, group="cards")["value"]["lines"]
+    assert [line["name"] for line in lines] == ["Lab card"], lines
+    _key, whole = make_key(ready, name="whole")
+    assert sorted(line["name"] for line in call(ready, whole, "chronicle", hours=24, group="cards")["value"]["lines"]) == ["Lab card", "Secret card"]
+
+
 def test_a_board_lost_since_the_key_was_made_is_lost_to_the_key(ready: TestClient, two_boards: dict) -> None:
     key, token = make_key(ready, boards=[two_boards["first"]["id"], two_boards["second"]["id"]])
     login(ready, "admin", "correct-horse-battery")

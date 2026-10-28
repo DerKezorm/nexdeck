@@ -223,12 +223,18 @@ def _owner_boards(db: Session, owner_id: int | None, board_id: int) -> set[int]:
 
 
 def _within(boards: set[int], db: Session):  # noqa: ANN202 - an SQL condition
-    """Lines about these boards: a card on one of them, or a connection one of their cards uses."""
+    """Lines about these boards: a card on one of them, or a connection one of their cards uses.
+
+    ⚠️ A line about a card belongs to the card's board and to no other. It carries its
+    connection too, and a connection can be used on a second board that the reader may
+    not open: the way through the connection is only for lines that are about no card.
+    """
     integrations = set(db.scalars(
         select(Widget.integration_id).join(Page, Widget.page_id == Page.id)
         .where(Page.board_id.in_(list(boards) or [-1]), Widget.integration_id.is_not(None))
     ))
-    return or_(Event.board_id.in_(list(boards) or [-1]), Event.integration_id.in_(list(integrations) or [-1]))
+    return or_(Event.board_id.in_(list(boards) or [-1]),
+               and_(Event.widget_id.is_(None), Event.integration_id.in_(list(integrations) or [-1])))
 
 
 def query(db: Session, *, user: User | None = None, boards: set[int] | None = None, kinds: tuple[str, ...] | None = None,
