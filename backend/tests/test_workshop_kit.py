@@ -149,6 +149,7 @@ def test_karten13_integration_with_a_login_is_classed_login(made: Path, tmp_path
     assert code == 0, result["problems"]
     assert result["type"] == "integration" and result["class"] == "login" and result["slug"] == "example-box"
     assert result["reads"] == [{"kind": "custom:example-box", "path": "/api/items"}]
+    assert result["read_labels"] == ["Items"]
     code, result = _run(made, tmp_path, OPEN_INTEGRATION)
     assert code == 0, result["problems"]
     assert result["class"] == "read"

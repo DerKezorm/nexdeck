@@ -153,7 +153,8 @@ def inspect(text, wanted=None):
         out["problems"].append(problem("unknown_type", "The text is neither a card (nexdeck-card: 1) nor a connection (nexdeck: integration)."))
         return out
     if wanted and wanted != found:
-        out["problems"].append(problem("type_mismatch", f"The submission says it is a {wanted}, the text is a {found}."))
+        names = {"card": "a card", "integration": "a connection"}
+        out["problems"].append(problem("type_mismatch", f"The submission says it is {names[wanted]}, the text is {names[found]}."))
         return out
     out["type"] = found
     try:
@@ -215,6 +216,7 @@ def _integration(text, out):
         requires=[],
         reads=[{"kind": "custom:" + definition.short, "path": one.path} for one in definition.reads],
         buttons=[],
+        read_labels=[one.label for one in definition.reads],
         category_hint=definition.category,
     )
     out["class"] = "login" if definition.auth.type == "session" else "read"
