@@ -311,7 +311,8 @@ def test_karten18_the_table_of_drafts_is_made_by_migration_29(admin: TestClient)
     from app.db import get_engine
     from app.migrations import MIGRATIONS, schema_version
 
-    assert max(number for number, _name, _step in MIGRATIONS) == 29 and schema_version() == 29
+    # Later migrations may follow it; this one is about the table of drafts.
+    assert max(number for number, _name, _step in MIGRATIONS) >= 29 and schema_version() == max(number for number, _name, _step in MIGRATIONS)
     step = {number: function for number, _name, function in MIGRATIONS}[29]
     with get_engine().begin() as conn:
         conn.exec_driver_sql("DROP TABLE conversation_drafts")

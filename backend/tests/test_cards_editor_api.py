@@ -703,6 +703,8 @@ def test_karten9_the_database_of_an_earlier_build_gets_the_column_and_the_cards_
     with engine.begin() as connection_:
         step(connection_)
         step(connection_)
+        # The column of a later build (migration 30) is missing from this table as well.
+        {version: function for version, _description, function in MIGRATIONS}[30](connection_)
         columns = {row[1] for row in connection_.execute(text("PRAGMA table_info(card_definitions)"))}
     assert "updated_by" in columns
     store.invalidate()
