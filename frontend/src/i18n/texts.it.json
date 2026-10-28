@@ -2303,7 +2303,13 @@
     "Repositories whose last pipeline failed, pipelines running and waiting, and agents that are there.": "Repository la cui ultima pipeline è fallita, pipeline in corso e in attesa, e agent presenti.",
     "The last pipeline of each repository in Woodpecker, pipelines running and waiting, and the agents.": "L'ultima pipeline di ogni repository in Woodpecker, le pipeline in corso e in attesa, e gli agent.",
     "The latest pipeline of every repository, failing ones first, with the branch, the event and the commit message.": "La pipeline più recente di ogni repository, prima quelle fallite, con ramo, evento e messaggio del commit.",
-    "Woodpecker overview": "Panoramica di Woodpecker"
+    "Woodpecker overview": "Panoramica di Woodpecker",
+    "Each pull request shown costs one more request for its checks; without a token GitHub allows sixty an hour.": "Ogni pull request mostrata costa una richiesta in più per i suoi controlli; senza token GitHub ne consente sessanta all'ora.",
+    "Milestones": "Milestone",
+    "One project: stars, forks, open issues and open pull requests, the newest release and the last push.": "Un progetto: stelle, fork, issue aperte e pull request aperte, la release più recente e l'ultimo push.",
+    "Open milestones with how much of each is done and when it is due, overdue ones first.": "Milestone aperte con la quota completata e la scadenza, prima quelle in ritardo.",
+    "Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.": "Pull request aperte dei progetti che segui, con lo stato dei controlli: falliti, in corso o superati. Prima quelle rosse.",
+    "Show drafts": "Mostra le bozze"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3640,6 +3646,21 @@
     "No reason given": "Nessun motivo indicato",
     "Unnamed room": "Stanza senza nome",
     "Agents": "Agent",
-    "No pipeline yet": "Ancora nessuna pipeline"
+    "No pipeline yet": "Ancora nessuna pipeline",
+    "Failing checks": "Controlli falliti",
+    "Forks": "Fork",
+    "Last push": "Ultimo push",
+    "Latest release": "Ultima release",
+    "Open issues and pull requests": "Issue e pull request aperte",
+    "Open milestones": "Milestone aperte",
+    "Open pull requests": "Pull request aperte",
+    "Stars": "Stelle",
+    "Checks failed": "Controlli falliti",
+    "Checks running": "Controlli in corso",
+    "Checks passed": "Controlli superati",
+    "No checks": "Nessun controllo",
+    "None": "Nessuna",
+    "Project": "Progetto",
+    "No issues yet": "Ancora nessuna issue"
   }
 }

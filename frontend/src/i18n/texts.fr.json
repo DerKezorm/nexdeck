@@ -2303,7 +2303,13 @@
     "Repositories whose last pipeline failed, pipelines running and waiting, and agents that are there.": "Dépôts dont le dernier pipeline a échoué, pipelines en cours et en attente, et agents présents.",
     "The last pipeline of each repository in Woodpecker, pipelines running and waiting, and the agents.": "Le dernier pipeline de chaque dépôt dans Woodpecker, les pipelines en cours et en attente, et les agents.",
     "The latest pipeline of every repository, failing ones first, with the branch, the event and the commit message.": "Le pipeline le plus récent de chaque dépôt, les échecs d'abord, avec la branche, l'événement et le message du commit.",
-    "Woodpecker overview": "Aperçu de Woodpecker"
+    "Woodpecker overview": "Aperçu de Woodpecker",
+    "Each pull request shown costs one more request for its checks; without a token GitHub allows sixty an hour.": "Chaque pull request affiché coûte une requête de plus pour ses vérifications ; sans jeton, GitHub en autorise soixante par heure.",
+    "Milestones": "Jalons",
+    "One project: stars, forks, open issues and open pull requests, the newest release and the last push.": "Un projet : étoiles, forks, tickets ouverts et pull requests ouvertes, la dernière version et le dernier push.",
+    "Open milestones with how much of each is done and when it is due, overdue ones first.": "Jalons ouverts avec la part réalisée et l'échéance, les retards d'abord.",
+    "Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.": "Pull requests ouvertes des projets suivis, avec l'état de leurs vérifications : échouées, en cours ou réussies. Les rouges d'abord.",
+    "Show drafts": "Afficher les brouillons"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3640,6 +3646,21 @@
     "No reason given": "Aucun motif indiqué",
     "Unnamed room": "Salon sans nom",
     "Agents": "Agents",
-    "No pipeline yet": "Pas encore de pipeline"
+    "No pipeline yet": "Pas encore de pipeline",
+    "Failing checks": "Vérifications échouées",
+    "Forks": "Forks",
+    "Last push": "Dernier push",
+    "Latest release": "Dernière version",
+    "Open issues and pull requests": "Tickets et pull requests ouverts",
+    "Open milestones": "Jalons ouverts",
+    "Open pull requests": "Pull requests ouvertes",
+    "Stars": "Étoiles",
+    "Checks failed": "Vérifications échouées",
+    "Checks running": "Vérifications en cours",
+    "Checks passed": "Vérifications réussies",
+    "No checks": "Aucune vérification",
+    "None": "Aucune",
+    "Project": "Projet",
+    "No issues yet": "Pas encore de tickets"
   }
 }

@@ -2303,7 +2303,13 @@
     "Repositories whose last pipeline failed, pipelines running and waiting, and agents that are there.": "Repositorios cuyo último pipeline falló, pipelines en curso y en espera, y los agentes presentes.",
     "The last pipeline of each repository in Woodpecker, pipelines running and waiting, and the agents.": "El último pipeline de cada repositorio en Woodpecker, los pipelines en curso y en espera, y los agentes.",
     "The latest pipeline of every repository, failing ones first, with the branch, the event and the commit message.": "El pipeline más reciente de cada repositorio, los que fallan primero, con la rama, el evento y el mensaje del commit.",
-    "Woodpecker overview": "Resumen de Woodpecker"
+    "Woodpecker overview": "Resumen de Woodpecker",
+    "Each pull request shown costs one more request for its checks; without a token GitHub allows sixty an hour.": "Cada pull request mostrado cuesta una petición más por sus checks; sin token GitHub permite sesenta por hora.",
+    "Milestones": "Hitos",
+    "One project: stars, forks, open issues and open pull requests, the newest release and the last push.": "Un proyecto: estrellas, forks, issues abiertos y pull requests abiertos, la versión más reciente y el último push.",
+    "Open milestones with how much of each is done and when it is due, overdue ones first.": "Hitos abiertos con cuánto está hecho de cada uno y cuándo vencen, los vencidos primero.",
+    "Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.": "Pull requests abiertos de los proyectos que sigues, con el estado de sus checks: fallidos, en curso o superados. Los rojos primero.",
+    "Show drafts": "Mostrar borradores"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3640,6 +3646,21 @@
     "No reason given": "Sin motivo indicado",
     "Unnamed room": "Sala sin nombre",
     "Agents": "Agentes",
-    "No pipeline yet": "Aún sin pipeline"
+    "No pipeline yet": "Aún sin pipeline",
+    "Failing checks": "Checks fallidos",
+    "Forks": "Forks",
+    "Last push": "Último push",
+    "Latest release": "Última versión",
+    "Open issues and pull requests": "Issues y pull requests abiertos",
+    "Open milestones": "Hitos abiertos",
+    "Open pull requests": "Pull requests abiertos",
+    "Stars": "Estrellas",
+    "Checks failed": "Checks fallidos",
+    "Checks running": "Checks en curso",
+    "Checks passed": "Checks superados",
+    "No checks": "Sin checks",
+    "None": "Ninguna",
+    "Project": "Proyecto",
+    "No issues yet": "Aún sin issues"
   }
 }

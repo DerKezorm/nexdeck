@@ -201,7 +201,7 @@ that one of twenty-one renderers draws.
 | Linkwarden | recent links, links | | access token from Settings > Access Tokens |
 | Linkding | bookmarks, recent bookmarks | | REST API token from Settings > Integrations; each account sees its own bookmarks only |
 | YouTube | videos, subscriptions | | none for videos; subscriptions need a YouTube Data API v3 key and a public subscription list |
-| GitHub releases | releases | | none; sixty requests an hour per address |
+| GitHub releases | releases, issues and pull requests, workflow runs, repository (stars, forks, open issues and pull requests, the newest release, the last push), pull requests (with the state of their checks), milestones (how much is done, when due) | | none, or a personal access token that raises sixty requests an hour per address to five thousand; every pull request shown costs one more request for its checks |
 | Share prices | prices | | none |
 | Twitch | live | | client ID and secret of an application at dev.twitch.tv |
 | Wake-on-LAN | wake | wake | none; a MAC address and a network that carries the broadcast |
