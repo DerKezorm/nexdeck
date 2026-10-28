@@ -86,6 +86,17 @@ it('draws the devices on the plan with the traffic on their links and counts wha
   expect(document.querySelectorAll('[data-topology-label]').length).toBeGreaterThan(0)
 })
 
+it('draws a border of paper under every link and tells the line its load, for 1984 to draw in width', async () => {
+  show(ANSWER)
+  await card('Core switch')
+  const groups = [...document.querySelectorAll('[data-link-id]')]
+  expect(groups.length).toBeGreaterThan(1)
+  // The border comes first, so the line lies on it and, where two cross, the later link lies on the earlier.
+  for (const group of groups) expect(group.firstElementChild).toHaveClass('nd-link-halo')
+  const line = (id: string) => document.querySelector(`[data-link-id="${id}"] path[data-level]`)
+  await waitFor(() => expect(line('link:internet')).toHaveAttribute('data-level', 'calm'))
+})
+
 it('saves where everything stands on a new page once, and only for someone who may edit', async () => {
   const sent = show(ANSWER)
   await waitFor(() => expect(sent.some((one) => one.method === 'PUT')).toBe(true), { timeout: 4000 })

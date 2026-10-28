@@ -874,6 +874,11 @@ body {
   }
 }
 
+/* The border under a link of the plan: nothing here, a look may give it a stroke. */
+.nd-link-halo {
+  stroke: none;
+}
+
 /* A map: faint dots run down the lines to what is up. */
 .nd-topology-run {
   fill: none;

@@ -104,6 +104,8 @@ export class Flow {
     const tDown = known ? thickness(m.shownDown) : 1
     const tUp = known ? thickness(m.shownUp) : 1
     if (el.base) {
+      // For 1984, which draws the load in the width of the line and not in colour alone.
+      el.base.dataset.level = off ? 'down' : known ? levelOf(link.speed ? Math.max(m.shownDown, m.shownUp) / link.speed : null) : 'unknown'
       el.base.style.strokeWidth = off || !known ? '2' : (tDown + tUp + 5).toFixed(1)
       el.base.style.stroke = off ? 'var(--nd-unknown)' : known ? levelColour(Math.max(m.shownDown, m.shownUp), link.speed) : 'var(--nd-text-faint)'
     }
