@@ -84,7 +84,7 @@ export function DeleteAllNotices() {
   const [asking, setAsking] = useState(false)
   return (
     <>
-      <button className="btn btn-danger" onClick={() => setAsking(true)} disabled={!notices.length}>
+      <button className="btn btn-danger whitespace-nowrap" onClick={() => setAsking(true)} disabled={!notices.length}>
         {t('notices.deleteAll')}
       </button>
       <Confirm
@@ -114,15 +114,21 @@ export function NoticeDrawer() {
       open={open}
       onClose={() => setOpen(false)}
       title={t('notices.title')}
+      // ⚠️ Three labels in one row do not fit a narrow drawer or a phone in
+      // German ("Alle als gelesen markieren"): each wrapped inside its button
+      // and ran out of it. The two that act on the list stay together and
+      // drop to a second row under the link when the row is too short.
       footer={
         <>
-          <Link className="btn mr-auto" to="/notices" onClick={() => setOpen(false)}>
+          <Link className="btn mr-auto whitespace-nowrap" to="/notices" onClick={() => setOpen(false)}>
             {t('notices.all')}
           </Link>
-          <DeleteAllNotices />
-          <button className="btn btn-accent" onClick={() => void markAll()}>
-            {t('notices.markAllRead')}
-          </button>
+          <div className="flex flex-wrap justify-end gap-2" data-testid="notice-actions">
+            <DeleteAllNotices />
+            <button className="btn btn-accent whitespace-nowrap" onClick={() => void markAll()}>
+              {t('notices.markAllRead')}
+            </button>
+          </div>
         </>
       }
     >
