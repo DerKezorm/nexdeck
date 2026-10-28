@@ -33,6 +33,7 @@ from ..models import Board, CardRecord, Integration, Page, Role, User, Widget
 from ..services import chronicle
 from ..services.collector import collector, demo_flag
 from ..services.sse import board_topic, hub
+from ..workshop import real_values
 
 router = APIRouter(prefix="/api/v1/cards", tags=["cards"])
 logger = logging.getLogger("nexdeck.cards")
@@ -327,6 +328,7 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
         db.commit()
         raise _failed(failure) from failure
     tree = await asyncio.to_thread(probe.build, answer)
+    real_values.remember(user.id, answer)
     logger.info("%s probed %s at %s.", user.username, name or body.integration_id, body.path)
     chronicle.record("card_probe", user_id=user.id, integration_id=body.integration_id, name=name, detail=body.path, db=db)
     db.commit()

@@ -17,7 +17,7 @@ import httpx
 import pytest
 import respx
 
-from app.workshop import catalog, files, github_login
+from app.workshop import catalog, files, github_login, real_values, submit
 
 from .karten14_sample import REPO, GitHub, entry
 
@@ -86,6 +86,8 @@ class Hub(GitHub):
     # -- the answers -----------------------------------------------------------------------------
 
     def answer(self, request: httpx.Request) -> httpx.Response:
+        if self.mode == "down":
+            raise httpx.ConnectError("no route to host")
         if request.url.host == "github.com":
             return self.answer_login(request)
         if request.url.path == "/user":
@@ -212,15 +214,19 @@ def hub() -> Iterator[Hub]:
         catalog.forget()
         files.forget()
         github_login.forget()
+        submit.forget()
+        real_values.forget()
         yield fake
     catalog.forget()
     files.forget()
     github_login.forget()
+    submit.forget()
+    real_values.forget()
 
 
 @pytest.fixture
 def moment(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[float]]:
     """The clock of the sign-in, as a list of one number a test moves."""
-    clock = [1_800_000_000.0]
+    clock = [1_793_188_800.0]  # 28 October 2026, noon, the day of the issues of the pretend GitHub
     monkeypatch.setattr(github_login, "now", lambda: clock[0])
     yield clock
