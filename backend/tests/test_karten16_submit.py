@@ -616,7 +616,7 @@ def test_karten16_ac9_the_file_asks_for_the_same_things_as_the_issue(shop: TestC
 
 def test_karten16_ac9_a_description_longer_than_an_address_holds_is_cut_in_the_link_only(shop: TestClient) -> None:
     add_card(shop)
-    long = "word " * 700
+    long = "the word " * 350
     made = post(shop, "submit/file", description=long).json()
     assert len(dict(httpx.URL(made["link"]).params)["description"]) <= 1500 and long.strip() in made["text"]
 
