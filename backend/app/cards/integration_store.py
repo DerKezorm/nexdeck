@@ -54,8 +54,12 @@ def _taken(loaded: loader.LoadedIntegration) -> load.CardInvalid:
     return load.CardInvalid([load.Problem("card_integration_short_exists", f"An own connection called {short} exists already.", "short", loaded.lines.get(("short",)), {"short": short})])
 
 
-def create(db: Session, text: str, *, user_id: int | None = None) -> OwnIntegration:
-    """Check the text and keep it. Raises ``load.CardInvalid`` (or ``TooManyIntegrations``); nothing is written then."""
+def create(db: Session, text: str, *, user_id: int | None = None, commit: bool = True) -> OwnIntegration:
+    """Check the text and keep it. Raises ``load.CardInvalid`` (or ``TooManyIntegrations``); nothing is written then.
+
+    Without ``commit`` the row is only flushed and the registry stays as it is: an import of several documents commits
+    them together, or none, and registers the kinds itself afterwards.
+    """
     loaded = loader.load_integration(text)
     short = loaded.definition.short
     if get(db, short) is not None:
@@ -65,15 +69,16 @@ def create(db: Session, text: str, *, user_id: int | None = None) -> OwnIntegrat
     row = OwnIntegration(short=short, yaml_source=text, definition=loaded.data, created_by=user_id, updated_by=user_id)
     db.add(row)
     try:
-        db.commit()
+        db.commit() if commit else db.flush()
     except IntegrityError as failure:
         db.rollback()
         raise _taken(loaded) from failure
-    _register(row)
+    if commit:
+        _register(row)
     return row
 
 
-def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None = None) -> OwnIntegration:
+def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None = None, commit: bool = True) -> OwnIntegration:
     """Replace the text. The short name stays: connections refer to the kind by it.
 
     A field the new text no longer has loses its value in every connection of the kind, secrets included (EC-10); so
@@ -92,8 +97,11 @@ def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None =
     row.updated_by = user_id
     if dropped:
         forget_values(db, row.short, dropped)
-    db.commit()
-    _register(row)
+    if commit:
+        db.commit()
+        _register(row)
+    else:
+        db.flush()
     return row
 
 
@@ -117,6 +125,11 @@ def delete(db: Session, row: OwnIntegration) -> None:
     from ..adapters import unregister_custom
 
     unregister_custom(kind_of(short))
+
+
+def register(row: OwnIntegration) -> None:
+    """The kind of a saved row into the registry (after the commit that saved it)."""
+    _register(row)
 
 
 def _register(row: OwnIntegration) -> None:

@@ -51,6 +51,18 @@ class ReplaceBody(CardText):
     overwrite: bool = Field(default=False, description="Save over what somebody saved meanwhile.")
 
 
+class ImportCheckBody(BaseModel):
+    """The text of a file as it was read or pasted; the size is checked in :mod:`..cards.exchange`, which says why it refuses."""
+
+    text: str = Field(max_length=4_000_000)
+
+
+class ImportBody(ImportCheckBody):
+    """What to do with each document whose name is taken: ``card:<slug>`` or ``integration:<short>`` to replace, copy or skip."""
+
+    choices: dict[str, str] = Field(default_factory=dict, max_length=exchange.MAX_DOCUMENTS)
+
+
 class ProbeBody(BaseModel):
     integration_id: int
     path: str = Field(min_length=1, max_length=500)
@@ -495,6 +507,43 @@ def create_card(body: CardText, user: AdminUser, db: DbSession) -> dict[str, Any
     chronicle.record("card_definition_added", user_id=user.id, name=row.slug, detail="made", db=db)
     db.commit()
     return _view(row, {})
+
+
+def _refused(failure: exchange.Refused) -> HTTPException:
+    return HTTPException(failure.status, {"code": failure.code, "message": failure.message, **failure.more})
+
+
+@router.post("/import/check", summary="Read a file of cards and own connections and say what is in it, without making anything")
+def import_check(body: ImportCheckBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Per document its name, what it reads through, its buttons and the problems with their line in the file (KARTEN-12 AC-2).
+
+    A file pasted as text and a file read from disk come the same way (EC-7). Whether the file is too large, has too many
+    documents or is empty answers 400 with the reason (EC-1); a document that is wrong is a document with problems.
+    """
+    try:
+        return exchange.inspect(db, body.text).view()
+    except exchange.Refused as failure:
+        raise _refused(failure) from failure
+
+
+@router.post("/import", status_code=status.HTTP_201_CREATED, summary="Make the cards and own connections of a file, all of them or none")
+def import_cards(body: ImportBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """A name that is taken needs a choice (replace, copy or skip); without it nothing is made (KARTEN-12 AC-3, EC-5)."""
+    from ..cards import integration_store
+
+    with store.saving, integration_store.saving:
+        try:
+            outcome = exchange.run(db, body.text, body.choices, user_id=user.id)
+            db.commit()
+        except exchange.Refused as failure:
+            db.rollback()
+            raise _refused(failure) from failure
+        except BaseException:
+            db.rollback()
+            raise
+    exchange.finish(outcome)
+    logger.info("File imported by %s: %s.", user.username, outcome.view())
+    return outcome.view()
 
 
 @router.get("/{slug}/export", summary="A custom card as a file, with the own connections it needs")

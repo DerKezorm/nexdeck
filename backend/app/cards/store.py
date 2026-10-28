@@ -115,8 +115,13 @@ def create(
     origin: str = "local",
     shop_ref: str = "",
     shop_version: str = "",
+    commit: bool = True,
 ) -> CardRecord:
-    """Check the text and keep it. Raises ``load.CardInvalid`` (or ``TooManyCards``); nothing is written then."""
+    """Check the text and keep it. Raises ``load.CardInvalid`` (or ``TooManyCards``); nothing is written then.
+
+    Without ``commit`` the row is only flushed: an import of several documents commits them together, or none, and
+    empties the cache itself afterwards.
+    """
     loaded = load.load_definition(text)
     if loaded.definition.slug in RESERVED_SLUGS:
         raise load.CardInvalid(
@@ -147,15 +152,16 @@ def create(
     )
     db.add(row)
     try:
-        db.commit()
+        db.commit() if commit else db.flush()
     except IntegrityError as failure:
         db.rollback()
         raise _slug_taken(loaded) from failure
-    invalidate()
+    if commit:
+        invalidate()
     return row
 
 
-def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = None) -> CardRecord:
+def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = None, commit: bool = True) -> CardRecord:
     """Replace the text of a saved card. The short name stays: boards refer to the card by it.
 
     ⚠️ ``updated_at`` is what the editor compares to see that somebody saved meanwhile, so it differs after every save,
@@ -179,8 +185,11 @@ def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = Non
     now = utcnow()
     row.updated_at = max(now, row.updated_at + timedelta(microseconds=1)) if row.updated_at else now
     row.updated_by = user_id
-    db.commit()
-    invalidate()
+    if commit:
+        db.commit()
+        invalidate()
+    else:
+        db.flush()
     return row
 
 
