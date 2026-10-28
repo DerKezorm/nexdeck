@@ -2667,7 +2667,6 @@
     "lead": "Una tarjeta propia muestra lo que eliges de las respuestas de un servicio: un número, varios números, una lista o un muro de imágenes. Crea una tú mismo o toma una de la tienda de tarjetas.",
     "build": "Crear una tarjeta",
     "import": "Importar",
-    "importLater": "Importar una tarjeta llegará con una versión posterior de nexdeck.",
     "openShop": "Abrir la tienda de tarjetas",
     "tabs": {
       "cards": "Tarjetas",

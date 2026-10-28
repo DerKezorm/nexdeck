@@ -2667,7 +2667,6 @@
     "lead": "A custom card shows what you pick out of the answers of a service, as a number, a few numbers, a list or a wall of pictures. Build one yourself, or take one from the Card shop.",
     "build": "Build a card",
     "import": "Import",
-    "importLater": "Importing a card comes with a later version of nexdeck.",
     "openShop": "Open the Card shop",
     "tabs": {
       "cards": "Cards",

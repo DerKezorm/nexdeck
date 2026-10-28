@@ -117,9 +117,7 @@ describe('the list', () => {
     show()
     await screen.findByText('Queue')
     expect(screen.getByRole('button', { name: /build a card/i })).toBeInTheDocument()
-    const importing = screen.getByRole('button', { name: /^Import\./ })
-    expect(importing).toBeDisabled()
-    expect(importing).toHaveAttribute('title', 'Importing a card comes with a later version of nexdeck.')
+    expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled()
     expect(screen.getByRole('tab', { name: /^Cards\s*2$/ })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: /^Integrations\s*0$/ })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Card shop' })).toBeInTheDocument()
@@ -236,6 +234,21 @@ describe('the way into the editor', () => {
     expect(await screen.findByText('Editor at /system/custom-cards/queue-size/edit')).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /Card text/ })).toBeNull()
     expect(sent('GET', '/cards/queue-size')).toHaveLength(0)
+  })
+})
+
+describe('import', () => {
+  it('karten12 ac2: the Import button opens the dialog in the Cards and the Integrations tab, and is not there in the later tabs', async () => {
+    stub([card()])
+    show()
+    await screen.findByText('Queue')
+    await userEvent.click(screen.getByRole('button', { name: 'Import' }))
+    expect(screen.getByRole('dialog', { name: 'Import cards and integrations' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await userEvent.click(screen.getByRole('tab', { name: /^Integrations/ }))
+    expect(screen.getByRole('button', { name: 'Import' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: 'Card shop' }))
+    expect(screen.queryByRole('button', { name: 'Import' })).toBeNull()
   })
 })
 

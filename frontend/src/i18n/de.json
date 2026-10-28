@@ -2667,7 +2667,6 @@
     "lead": "Eine eigene Karte zeigt, was du aus den Antworten eines Dienstes herausholst: eine Zahl, ein paar Zahlen, eine Liste oder eine Bilderwand. Bau selbst eine oder nimm eine aus dem Kartenladen.",
     "build": "Karte bauen",
     "import": "Importieren",
-    "importLater": "Karten importieren kommt mit einer späteren Fassung von nexdeck.",
     "openShop": "Kartenladen öffnen",
     "tabs": {
       "cards": "Karten",

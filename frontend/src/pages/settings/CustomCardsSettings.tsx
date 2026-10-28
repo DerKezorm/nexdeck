@@ -10,6 +10,7 @@ import { Confirm, EmptyState } from '../../components/ui'
 import { exportName } from '../../lib/cardExchange'
 import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
+import { ImportDialog } from './ImportDialog'
 import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
 
 type Tab = 'cards' | 'integrations' | 'shop' | 'submissions'
@@ -40,6 +41,8 @@ export function CustomCardsSettings() {
   const [error, setError] = useState('')
   const [removing, setRemoving] = useState<CustomCardRow | null>(null)
   const [openBoards, setOpenBoards] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [notice, setNotice] = useState('')
 
   const rows = cards.data?.cards ?? []
   const limit = cards.data?.limit ?? 200
@@ -111,10 +114,11 @@ export function CustomCardsSettings() {
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h2 className="font-semibold text-[15px]">{t('cards.title')}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            {/* Importing a card comes with the shop (KARTEN-12); the button stands here already, closed, and says so (KARTEN-11 AC-10). */}
-            <button className="btn" disabled title={t('cards.importLater')} aria-label={`${t('cards.import')}. ${t('cards.importLater')}`}>
-              <Upload size={15} /> {t('cards.import')}
-            </button>
+            {(tab === 'cards' || tab === 'integrations') && (
+              <button className="btn" onClick={() => { setNotice(''); setImporting(true) }}>
+                <Upload size={15} /> {t('cards.import')}
+              </button>
+            )}
             <button className="btn btn-accent" onClick={openNew}>
               <Plus size={15} /> {t('cards.build')}
             </button>
@@ -138,6 +142,12 @@ export function CustomCardsSettings() {
         {error && (
           <p className="text-sm text-bad mb-3" role="alert">
             {error}
+          </p>
+        )}
+
+        {notice && (
+          <p className="text-sm text-ok mb-3" role="status">
+            {notice}
           </p>
         )}
 
@@ -254,6 +264,7 @@ export function CustomCardsSettings() {
         )}
       </div>
 
+      <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => setNotice(t('cards.exchange.done'))} />
       <Confirm
         open={removing !== null}
         title={t('cards.deleteTitle', { name: removing ? nameOf(removing) : '' })}
