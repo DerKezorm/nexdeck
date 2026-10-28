@@ -82,7 +82,7 @@ class ResendBody(BaseModel):
 async def check_submission(body: ShareBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
     """Asks GitHub only when the administrator is signed in, and then for the issues of his own account (KARTEN-16 AC-2, AC-7, AC-8, EC-4, EC-9)."""
     try:
-        return await submit.check(db, user, body.type, body.slug, body.form())
+        return await submit.check(db, user, body.type, body.slug)
     except (submit.SubmitError, github_login.GithubError) as problem:
         raise failure(problem) from problem
 

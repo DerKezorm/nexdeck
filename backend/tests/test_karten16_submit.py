@@ -148,6 +148,15 @@ def test_karten16_ac2_the_dialog_is_told_what_the_card_is_and_what_it_is_missing
     assert found["daily"] == {"used": 0, "max": 10, "reached": False} and found["login"] == "someone"
 
 
+
+def test_karten16_ac2_the_check_of_the_dialog_judges_the_card_not_the_words_still_empty(me: TestClient) -> None:
+    """The dialog asks before anything is typed, and again right after the sign-in: only which card, no words yet."""
+    found = me.post(f"{BASE}/submit/check", json={"type": "card", "slug": SLUG}, headers=CSRF)
+    assert found.status_code == 200, found.text
+    assert found.json()["signed_in"] is True and found.json()["problems"] == []
+    refused = me.post(f"{BASE}/submit", json={"type": "card", "slug": SLUG}, headers=CSRF)
+    assert {"category", "description", "license"} <= {one["code"] for one in refused.json()["detail"]["problems"]}
+
 @pytest.mark.parametrize(
     ("text", "code"),
     [

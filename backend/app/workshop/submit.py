@@ -499,8 +499,11 @@ def lineage(one: Subject, github_id: str | None) -> tuple[str | None, str | None
 # -- the check of the dialog ----------------------------------------------------------------------------
 
 
-async def check(db: Session, user: User, kind: str, slug: str, form: Form | None = None) -> dict[str, Any]:
-    """Everything the dialog shows before anything is sent: what is wrong, what to be warned of, new or update, how many today."""
+async def check(db: Session, user: User, kind: str, slug: str) -> dict[str, Any]:
+    """Everything the dialog shows before anything is sent: what is wrong, what to be warned of, new or update, how many today.
+
+    The words the administrator types are not judged here: the dialog asks for them while they are typed, sending judges them again.
+    """
     one = subject_of(db, kind, slug)
     problems = read_definition(one)
     signed = github_login.status(db, user.id)
@@ -549,8 +552,6 @@ async def check(db: Session, user: User, kind: str, slug: str, form: Form | None
     if not update:
         used = past.new_today if past.open is None else past.new_today - 1
         out["daily"] = {"used": max(0, used), "max": MAX_NEW_PER_DAY, "reached": used >= MAX_NEW_PER_DAY}
-    if form is not None:
-        problems += read_form(form, update=update)
     return out
 
 
