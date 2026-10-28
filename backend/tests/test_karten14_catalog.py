@@ -11,10 +11,13 @@ from fastapi.testclient import TestClient
 
 from .cards_sample import changed
 from .conftest import CSRF
-from .karten14_sample import AUTHOR, PNG, GitHub, card_text, clock, github, shop  # noqa: F401 - fixtures
+from .karten14_sample import AUTHOR, PNG, GitHub, card_text
 
 KEY = "ghp_example-key-0123456789"
 SONARR = {"kind": "sonarr", "name": "My Sonarr", "config": {"url": "http://svc.example.com:8989", "api_key": "k"}}
+
+#: The pretend GitHub, the clock of the shop and the signed-in administrator with the shop on.
+pytest_plugins = ["tests.karten14_sample"]
 
 
 def read(client: TestClient):  # noqa: ANN202

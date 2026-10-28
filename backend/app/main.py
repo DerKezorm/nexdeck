@@ -84,6 +84,7 @@ from .services.home_network import RecordPeer
 from .services.logs import log_tailer
 from .services.loop import set_main_loop
 from .vendor import nexoidc
+from .workshop import catalog as shop_catalog
 
 logger = logging.getLogger("nexdeck")
 
@@ -202,6 +203,7 @@ async def lifespan(app: FastAPI):
         await channel_service.close_client()
         await webpush_service.close_client()
         await system.close_client()
+        await shop_catalog.close_client()
         set_main_loop(None)
 
 

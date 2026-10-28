@@ -13,10 +13,13 @@ from app.models import CardRecord, Event, OwnIntegration, Setting
 from .cards_sample import changed
 from .conftest import CSRF, create_user, login
 from .karten12_sample import CARD, INTEGRATION, SHORT
-from .karten14_sample import AUTHOR, GitHub, card_text, clock, github, shop  # noqa: F401 - fixtures
+from .karten14_sample import AUTHOR, GitHub, card_text
 
 SLUG = "queue-size"
 BASE = f"/api/v1/workshop/entries/{AUTHOR}"
+
+#: The pretend GitHub, the clock of the shop and the signed-in administrator with the shop on.
+pytest_plugins = ["tests.karten14_sample"]
 
 
 def check(client: TestClient, slug: str = SLUG):  # noqa: ANN202

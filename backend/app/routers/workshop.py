@@ -13,10 +13,11 @@ from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 from .. import __version__
-from ..cards import exchange, store
+from ..cards import exchange, load, store
 from ..cards import integration_store as integrations
 from ..deps import AdminUser, DbSession, error
-from ..workshop import catalog, files, install, state, views
+from ..models import CardRecord
+from ..workshop import catalog, files, install, installed, state, updates, views
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
@@ -95,6 +96,7 @@ async def _catalog(db: DbSession) -> tuple[str, catalog.Catalog, catalog.Catalog
         found, warning = await catalog.load(repo)
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
+    updates.look(found)
     return repo, found, warning
 
 
@@ -238,3 +240,99 @@ async def install_entry(author: str, slug: str, body: InstallBody, user: AdminUs
         "missing_integrations": [*plan.missing, *(f"custom:{one.slug}" for one in plan.offered if one.id not in body.with_integrations)],
         "place_url": "/system/custom-cards",
     }
+
+
+# -- updates and recalls ---------------------------------------------------------------------------
+
+
+@router.get("/updates", summary="Which installed cards have an update waiting and which were taken out of the Card shop")
+def read_updates(user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Read from the catalog as it was last fetched; this asks nobody, and says nothing while the shop is off (KARTEN-15 AC-1, AC-6, EC-3)."""
+    if not state.enabled(db):
+        return {"enabled": False, "catalog_known": False, "updates": [], "removed": []}
+    found = catalog.known(state.repo(db))
+    return {"enabled": True, "catalog_known": found is not None, **updates.updates_and_recalls(db, found)}
+
+
+async def _installed_entry(db: DbSession, slug: str) -> tuple[str, CardRecord, catalog.Entry]:
+    repo, found, _warning = await _catalog(db)
+    row = updates.row_of(db, slug)
+    if row is None:
+        raise error("not_installed_from_shop", "This card did not come from the Card shop.", 404)
+    entry = found.by_id.get(row.shop_ref)
+    if entry is None:
+        raise error("no_such_entry", "The catalog has no such entry any more.", 404)
+    return repo, row, entry
+
+
+@router.get("/updates/{slug}", summary="What the update of an installed card changes: its list of changes, what it may ask and press now")
+async def read_update(slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """The new file is fetched and checked against the catalog; nothing is changed (KARTEN-15 AC-2, AC-3, EC-1, EC-6)."""
+    from . import cards as card_routes
+
+    repo, row, entry = await _installed_entry(db, slug)
+    try:
+        if entry.removed is not None:
+            raise catalog.CatalogError("entry_removed", "This entry was removed from the Card shop.", 409)
+        if not installed.newer(entry.version, row.shop_version):
+            raise catalog.CatalogError("no_update", "This card is up to date.", 409)
+        text = await files.definition(repo, entry)
+        changelog = await files.text(repo, entry.files.changelog)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    try:
+        # Read as if this nexdeck were new enough: a card that needs a newer one is shown, not refused (EC-1).
+        change = updates.permissions(row.definition or {}, load.load_definition(text, running_version="9999.0.0").data)
+    except load.CardInvalid as failure:
+        raise error("update_invalid", f"The new version cannot be read: {failure}") from failure
+    one = installed.Installed("card", row.slug, row.shop_ref, row.shop_version, row.yaml_source, row.shop_hash)
+    return {
+        "slug": row.slug,
+        "name": entry.name,
+        "ref": entry.id,
+        "installed_version": row.shop_version,
+        "new_version": entry.version,
+        "needs_newer": load.needs_newer(entry.min_nexdeck),
+        "min_nexdeck": entry.min_nexdeck,
+        "changelog": changelog,
+        "locally_changed": one.locally_changed,
+        "permissions": change,
+        "buttons_to_confirm": updates.to_confirm(change),
+        "connection_changed": updates.connection_changed(change),
+        "placed_on": len(card_routes._placed(db).get(row.slug, {})),  # noqa: SLF001
+    }
+
+
+class AcceptBody(BaseModel):
+    """The buttons the administrator confirmed, whether to keep his own changes as a copy, and the version he looked at."""
+
+    confirmed_buttons: list[str] = Field(default_factory=list, max_length=20)
+    keep_mine: bool = True
+    expected_version: str | None = Field(default=None, max_length=20)
+
+
+@router.post("/updates/{slug}/accept", summary="Take the update of an installed card: every board that shows it follows at once")
+async def accept_update(slug: str, body: AcceptBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Nothing is taken without an administrator: the server checks that every new or changed button was confirmed (KARTEN-15 AC-3, AC-4, EC-5)."""
+    from . import cards as card_routes
+
+    repo, row, entry = await _installed_entry(db, slug)
+    if not installed.newer(entry.version, row.shop_version) and entry.removed is None:
+        return {"status": "already_up_to_date", "slug": row.slug, "version": row.shop_version, "copy_slug": None}
+    try:
+        install.gate(entry)
+        text = await files.definition(repo, entry)
+        with store.saving:
+            try:
+                result = updates.apply(db, row, entry, text, body.confirmed_buttons, body.keep_mine, body.expected_version, user_id=user.id)
+                db.commit()
+            except BaseException:
+                db.rollback()
+                raise
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    if result["status"] == "updated":
+        store.invalidate()
+        card_routes._tell(db, row.slug)  # noqa: SLF001
+        logger.info("%s took the update of the card %s to %s.", user.username, row.slug, entry.version)
+    return result

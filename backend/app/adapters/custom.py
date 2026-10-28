@@ -500,7 +500,7 @@ class CustomAdapter(Adapter):
             )
         if real.kind not in definition.requires:
             raise AdapterError(
-                f"This card does not read through a {real.label} connection.",
+                f"The connection no longer fits this card, which does not read through a {real.label} connection.",
                 code="kind_mismatch",
                 hint="Pick a connection of a kind the card names.",
             )

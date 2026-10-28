@@ -249,4 +249,11 @@ async def rounds() -> None:
                 await read_versions()
             except Exception:  # noqa: BLE001
                 logger.exception("Reading the versions failed.")
+        try:
+            from ..workshop import rounds as shop_rounds
+
+            # Once a day, and only with the Card shop on: update and recall hints (KARTEN-14 AC-12, KARTEN-15).
+            await shop_rounds.once()
+        except Exception:  # noqa: BLE001
+            logger.exception("Looking at the Card shop catalog failed.")
 

@@ -490,9 +490,16 @@ def library(user: MemberUser, db: DbSession) -> dict[str, Any]:
 
 @router.get("", summary="List the custom cards")
 def list_cards(user: AdminUser, db: DbSession) -> dict[str, Any]:
+    from ..workshop import catalog as shop_catalog
+    from ..workshop import state as shop_state
+    from ..workshop import updates as shop_updates
+
     placed = _placed(db)
     rows = store.listing(db)
-    return {"cards": [_view(row, placed) for row in rows], "limit": store.MAX_CARDS}
+    # What the Card shop has to say about the cards from it (KARTEN-15 AC-1, AC-6); nothing while the shop is off (EC-3).
+    on = shop_state.enabled(db)
+    hints = shop_updates.card_hints(db, shop_catalog.known(shop_state.repo(db)) if on else None)
+    return {"cards": [{**_view(row, placed), "shop": hints.get(row.slug)} for row in rows], "limit": store.MAX_CARDS}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Save a new custom card from its text")
