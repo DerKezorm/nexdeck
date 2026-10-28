@@ -116,7 +116,7 @@ def check(db: Session, text: str, *, admin: bool) -> dict[str, Any]:
     }
 
 
-def apply(db: Session, text: str, *, user_id: int | None, replace_different: bool = False) -> tuple[exchange.Outcome, dict[str, list[str]]]:
+def apply(db: Session, text: str, *, user_id: int | None, replace_different: bool = False, source: str = "") -> tuple[exchange.Outcome, dict[str, list[str]]]:
     """Make the definitions of a board file that are not here yet, in the session and without committing.
 
     A definition here with the same short name and another text stays as it is (``kept``), unless ``replace_different``:
@@ -149,7 +149,7 @@ def apply(db: Session, text: str, *, user_id: int | None, replace_different: boo
             actions[item.id] = "skip"
             report["kept"].append(item.id)
     try:
-        outcome = exchange.make(db, seen.items, actions, user_id=user_id)
+        outcome = exchange.make(db, seen.items, actions, user_id=user_id, source=source)
     except exchange.Refused as refused:
         raise ImportError_(refused.message) from refused
     # ⚠️ The board that is imported next, in this same transaction, names connections of these kinds, and the import

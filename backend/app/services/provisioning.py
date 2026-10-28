@@ -13,9 +13,11 @@ from pathlib import Path
 
 from sqlalchemy import select
 
+from ..cards import exchange, integration_store
 from ..config import get_settings
 from ..db import db_session
 from ..models import Board, Page, Widget
+from . import board_definitions
 from .boards import ImportError_, import_board
 
 logger = logging.getLogger("nexdeck.provisioning")
@@ -62,9 +64,14 @@ def _load(path: Path) -> None:
     except OSError as error:
         logger.warning("Cannot read %s: %s", path.name, error)
         return
+    outcome: exchange.Outcome | None = None
     with db_session() as db:
         existing = db.scalar(select(Board).where(Board.source_file == path.name, Board.provisioned.is_(True)))
         try:
+            # The custom cards and own connections the file carries come first and without asking: what is missing is
+            # made, and what is here with another text is replaced, the file wins as it does for the board (KARTEN-12
+            # AC-8, EC-3). All in the transaction of the board: a file that fails leaves none of it behind.
+            outcome, report = board_definitions.apply(db, text, user_id=None, replace_different=True, source=f"boards/{path.name}")
             board = import_board(db, text, owner_id=None, provisioned=True, source_file=path.name, replace=existing,
                                  # A file the operator put on the server: it may read the
                                  # environment and set up the connections it names.
@@ -74,10 +81,12 @@ def _load(path: Path) -> None:
             # ends, so a file that failed after the old cards were deleted left
             # the board half replaced. Reproduced on 12.09.2026.
             db.rollback()
+            integration_store.load_all(db)  # the kinds made for this file were registered at once; the table says what is left
             _give_up_on(path, str(error))
             return
         except Exception:
             db.rollback()
+            integration_store.load_all(db)
             # ⚠️ Anything at all, and the reason is the start-up path. ``_load``
             # runs from ``load_all()`` inside the lifespan, so an AttributeError
             # from a file whose 'board' section is a string took uvicorn down
@@ -93,9 +102,21 @@ def _load(path: Path) -> None:
         db.flush()
         widget_ids = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
     _seen[path.name] = path.stat().st_mtime
+    if outcome is not None:
+        _say(path, report)
+        exchange.finish(outcome)
     for widget_id in widget_ids:
         collector.schedule(widget_id)
     logger.info("Board file %s loaded as %r.", path.name, board.slug)
+
+
+def _say(path: Path, report: dict[str, list[str]]) -> None:
+    """The journal names what the file made and, above all, what it replaced (EC-3)."""
+    words = {"card": "custom card", "integration": "own connection"}
+    for what, line in (("created", "%s %s made from boards/%s"), ("replaced", "%s %s replaced from boards/%s")):
+        for name in report[what]:
+            kind, _, short = name.partition(":")
+            (logger.warning if what == "replaced" else logger.info)(line, words[kind], short, path.name)
 
 
 def _remove_orphans() -> None:

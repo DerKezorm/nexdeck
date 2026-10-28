@@ -255,6 +255,8 @@ class Outcome:
     #: ``card:<slug>`` and ``integration:<short>`` of the file to the short name a copy got.
     copies: dict[str, str] = field(default_factory=dict)
     skipped: list[str] = field(default_factory=list)
+    #: Where the documents came from when it is not a person's file (``boards/<file>``); the chronicle says so.
+    source: str = ""
 
     def view(self) -> dict[str, Any]:
         return {
@@ -288,6 +290,13 @@ def _rewrite(item: Item, pattern: re.Pattern[str], new: str | None, renamed: dic
         if kind.startswith("custom:") and short in renamed and number is not None:
             lines[number - 1] = re.sub(rf"(?<![\w:.-])custom:{re.escape(short)}(?![\w-])", f"custom:{renamed[short]}", lines[number - 1])
     return "\n".join(lines)
+
+
+def _said(outcome: Outcome, what: str) -> str:
+    """The line of the chronicle: what was done, and where the document came from when it was not a person's file."""
+    if outcome.source:
+        return f"{what} from {outcome.source}"
+    return f"{what} by an import" if what.endswith("replaced") else what
 
 
 def _chosen(item: Item, choices: dict[str, str]) -> str:
@@ -324,9 +333,9 @@ def run(db: Session, text: str, choices: dict[str, str], *, user_id: int | None)
     return make(db, seen.items, {item.id: _chosen(item, choices) for item in seen.items}, user_id=user_id)
 
 
-def make(db: Session, items: list[Item], actions: dict[str, str], *, user_id: int | None) -> Outcome:
+def make(db: Session, items: list[Item], actions: dict[str, str], *, user_id: int | None, source: str = "") -> Outcome:
     """Do what ``actions`` say with each document (create, replace, copy, skip), connections first, without committing."""
-    outcome = Outcome()
+    outcome = Outcome(source=source)
     taken_cards = {row.slug for row in store.listing(db)} | set(store.RESERVED_SLUGS) | {item.key for item in items if item.type == "card" and item.key}
     taken_shorts = {row.short for row in integrations.listing(db)} | {item.key for item in items if item.type == "integration" and item.key}
     # An own connection copied under a new short name: the cards of the file that read through it follow the copy.
@@ -352,7 +361,7 @@ def _make_integration(db: Session, item: Item, action: str, new: str | None, use
             assert row is not None
             integrations.update(db, row, text, user_id=user_id, commit=False)
             outcome.integrations_replaced.append(row.short)
-            chronicle.record("card_definition_changed", user_id=user_id, name=integrations.kind_of(row.short), detail="own connection replaced by an import", db=db)
+            chronicle.record("card_definition_changed", user_id=user_id, name=integrations.kind_of(row.short), detail=_said(outcome, "own connection replaced"), db=db)
             return
         row = integrations.create(db, text, user_id=user_id, commit=False)
     except load.CardInvalid as failure:
@@ -363,7 +372,7 @@ def _make_integration(db: Session, item: Item, action: str, new: str | None, use
         outcome.copies[item.id] = row.short
     outcome.integrations_added.append(row.short)
     chronicle.record("card_definition_added", user_id=user_id, name=integrations.kind_of(row.short),
-                     detail=f"own connection imported as a copy of {item.key}" if action == "copy" else "own connection imported", db=db)
+                     detail=f"own connection imported as a copy of {item.key}" if action == "copy" else _said(outcome, "own connection imported"), db=db)
 
 
 def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: dict[str, str], user_id: int | None, outcome: Outcome) -> None:
@@ -379,7 +388,7 @@ def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: d
             # A card that came from the shop is a card of this installation from now on (EC-6).
             row.origin, row.shop_ref, row.shop_version = "local", "", ""
             outcome.cards_replaced.append(row.slug)
-            chronicle.record("card_definition_changed", user_id=user_id, name=row.slug, detail="replaced by an import", db=db)
+            chronicle.record("card_definition_changed", user_id=user_id, name=row.slug, detail=_said(outcome, "replaced"), db=db)
             return
         row = store.create(db, text, user_id=user_id, commit=False)
     except load.CardInvalid as failure:
@@ -394,7 +403,7 @@ def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: d
         outcome.copies[item.id] = row.slug
     outcome.cards_added.append(row.slug)
     chronicle.record("card_definition_added", user_id=user_id, name=row.slug,
-                     detail=f"imported as a copy of {item.key}" if action == "copy" else "imported", db=db)
+                     detail=f"imported as a copy of {item.key}" if action == "copy" else _said(outcome, "imported"), db=db)
 
 
 def finish(outcome: Outcome) -> None:
