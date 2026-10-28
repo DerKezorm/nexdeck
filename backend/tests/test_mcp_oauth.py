@@ -192,6 +192,10 @@ def test_a_request_without_pkce_s256_goes_back_to_the_program(ready: TestClient)
     assert parse_qs(back.query)["error"] == ["invalid_request"] and parse_qs(back.query)["state"] == ["s1"]
     refused = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, "x" * 43), "code_challenge_method": "plain"})
     assert refused.status_code == 400 and refused.json()["detail"]["code"] == "oauth_pkce"
+    _verifier, challenge = pkce()
+    implicit = ready.get("/api/mcp/oauth/authorize", params={**request_of(client_id, challenge), "response_type": "token"},
+                         follow_redirects=False)
+    assert parse_qs(urlsplit(implicit.headers["location"]).query)["error"] == ["unsupported_response_type"]
 
 
 def test_a_code_is_traded_once_and_the_second_time_ends_what_the_first_made(ready: TestClient) -> None:
@@ -331,6 +335,34 @@ def test_a_refresh_token_brought_again_ends_the_whole_chain(ready: TestClient) -
     assert renew(claude, client_id, second["refresh_token"]).status_code == 400
     assert rpc(claude, second["access_token"], "ping").status_code == 401
     assert ready.get("/api/v1/mcp/keys").json()[0]["revoked"] is True
+
+
+def test_a_refresh_token_brought_by_two_at_the_same_moment_ends_the_chain(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.models import McpOAuthRefresh
+
+    client_id, tokens = connect(ready)
+    checked = mcp_oauth._account_may
+
+    def the_other_request_was_quicker(db, user_id, since):  # noqa: ANN001, ANN202
+        # Between reading the token and using it up, another request used it: what two copies racing look like.
+        db.execute(McpOAuthRefresh.__table__.update().values(used_at=utcnow()))
+        db.commit()
+        return checked(db, user_id, since)
+
+    monkeypatch.setattr(mcp_oauth, "_account_may", the_other_request_was_quicker)
+    assert renew(ready, client_id, tokens["refresh_token"]).json()["error"] == "invalid_grant"
+    assert ready.get("/api/v1/mcp/keys").json()[0]["revoked"] is True
+
+
+def test_a_refresh_token_belongs_to_its_program_and_this_resource(ready: TestClient) -> None:
+    client_id, tokens = connect(ready)
+    other = register(ready, name="Other")
+    assert renew(ready, other, tokens["refresh_token"]).json()["error"] == "invalid_grant"
+    elsewhere = ready.post("/api/mcp/oauth/token", data={"grant_type": "refresh_token", "refresh_token": tokens["refresh_token"],
+                                                         "client_id": client_id, "resource": "https://other.example.com/api/mcp"})
+    assert elsewhere.status_code == 400 and elsewhere.json()["error"] == "invalid_target"
+    # Neither used the token up: the program itself still refreshes with it.
+    assert renew(ready, client_id, tokens["refresh_token"]).status_code == 200
 
 
 def test_an_access_token_runs_out_after_an_hour(ready: TestClient) -> None:

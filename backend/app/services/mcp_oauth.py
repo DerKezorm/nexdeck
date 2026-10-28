@@ -420,12 +420,6 @@ def refresh(db: Session, client: McpOAuthClient, form: dict[str, str], base: str
     row = db.get(McpOAuthRefresh, brought)
     if row is None or row.client_id != client.id:
         raise _invalid("The refresh token is not valid.")
-    if row.used_at is not None:
-        # Used up already: whoever brings it holds a copy. The whole chain ends, for the thief and the program alike;
-        # the account signs the program in again (OAuth 2.1, 4.3.1).
-        logger.warning("MCP connector key %s: a used refresh token came back, the chain ends.", row.key_id)
-        end_chain(db, row.key_id, "a used refresh token came back")
-        raise _invalid("The refresh token was used already.")
     now = utcnow()
     if mcp._aware(row.expires_at) <= now:
         raise _invalid("The refresh token ran out.")
@@ -440,12 +434,15 @@ def refresh(db: Session, client: McpOAuthClient, form: dict[str, str], base: str
         if for_good:
             end_chain(db, key.id, "its account may no longer hold it")
         raise _invalid("The account may not sign in a program now.")
+    # Used up in one step, and only here: brought a second time, or by two requests at the same moment, it is
+    # taken once. Whoever brings a used one holds a copy, so the whole chain ends, for the thief and the program
+    # alike; the account signs the program in again (OAuth 2.1, 4.3.1).
     taken = db.execute(update(McpOAuthRefresh).where(McpOAuthRefresh.token_hash == brought, McpOAuthRefresh.used_at.is_(None))
                        .values(used_at=now)).rowcount
     db.commit()
     if taken != 1:
-        # Another request used it in the same moment: the same as bringing it twice.
-        end_chain(db, key.id, "a refresh token was used twice at once")
+        logger.warning("MCP connector key %s: a used refresh token came back, the chain ends.", key.id)
+        end_chain(db, key.id, "a used refresh token came back")
         raise _invalid("The refresh token was used already.")
     answer = _issue(db, key, client)
     _tidy(db)
