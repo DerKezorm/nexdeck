@@ -314,3 +314,25 @@ def test_karten16_b5_a_code_that_ran_out_is_replaced_by_a_new_one(me: TestClient
     moment[0] += 901
     again = me.post(f"{BASE}/github/login", headers=CSRF).json()
     assert again["user_code"] != first["user_code"] and again["expires_in"] > 800
+
+
+# -- B6: a renamed GitHub account still finds its issues ----------------------------------------------------------------
+
+
+def test_karten16_b6_a_renamed_account_does_not_make_a_second_issue_for_the_same_card(me: TestClient, hub: Hub) -> None:
+    assert share(me).status_code == 200
+    for person in hub.tokens.values():
+        person["login"] = "someone-renamed"
+    hub.issues[0]["user"] = {**hub.issues[0]["user"], "login": "someone-renamed"}
+    again = share(me)
+    assert again.status_code == 200, again.text
+    assert len(hub.issues) == 1 and again.json()["created"] is False
+    assert me.get(f"{BASE}/github").json()["login"] == "someone-renamed"
+    listed = me.get(f"{BASE}/submissions").json()
+    assert [one["issue"] for one in listed["items"]] == [1] and listed["login"] == "someone-renamed"
+
+
+def test_karten16_b6_the_name_is_asked_for_once_in_a_round(me: TestClient, hub: Hub) -> None:
+    before = len([r for r in hub.requests if r.url.path == "/user"])
+    assert share(me).status_code == 200
+    assert len([r for r in hub.requests if r.url.path == "/user"]) - before == 1

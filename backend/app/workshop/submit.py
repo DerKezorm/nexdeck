@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
@@ -360,8 +360,23 @@ class Context:
         except ValueError:
             raise GithubError("github_rejected", "GitHub gave an answer nexdeck cannot read.") from None
 
+    async def name(self) -> None:
+        """The GitHub name of this account as it is now: it is stored when the administrator signs in, and a renamed account would find none of its issues."""
+        response = await github_login.call("GET", f"{github_login.API}/user", token=self.access.token)
+        if response.status_code == 401:
+            github_login.drop(self.db, self.user.id)
+            raise login_needed("revoked")
+        try:
+            who = response.json()
+        except ValueError:
+            who = None
+        if response.status_code == 200 and isinstance(who, dict) and who.get("login"):
+            github_login.rename(self.db, self.user.id, str(who["login"]))
+            self.access = replace(self.access, login=str(who["login"])[:100])
+
     async def mine(self, state_name: str = "all") -> list[dict[str, Any]]:
         """The issues of this account in the Workshop, the newest first (a pull request is none)."""
+        await self.name()
         found = await self.api("GET", "", params={"creator": self.access.login, "state": state_name, "per_page": 100, "sort": "created", "direction": "desc"})
         return [one for one in found if isinstance(one, dict) and "pull_request" not in one and (one.get("user") or {}).get("id") == _number(self.access.github_id)]
 

@@ -317,6 +317,14 @@ def status(db: Session, user_id: int) -> dict[str, Any]:
     }
 
 
+def rename(db: Session, user_id: int, login: str) -> None:
+    """The GitHub account was renamed: keep the new name (the number is what it is, and what ownership hangs on)."""
+    row = db.get(GithubLogin, user_id)
+    if row is not None and row.login != login:
+        row.login = login[:100]
+        db.commit()
+
+
 def drop(db: Session, user_id: int) -> None:
     """Sign out: the tokens are gone from here. (A token cannot be withdrawn at GitHub without a secret; it ends by itself.)"""
     row = db.get(GithubLogin, user_id)
