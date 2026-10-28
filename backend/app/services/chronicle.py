@@ -102,6 +102,11 @@ def record(kind: str, *, level: str = "info", widget_id: int | None = None, inte
         logger.exception("A line of the chronicle (%s, %r) could not be written.", kind, name)
 
 
+def definition_saved(db: Session, *, added: bool, user_id: int | None, name: str, detail: str) -> None:
+    """A custom card or own connection made (``added``) or changed by an import; the line goes into the session of the import."""
+    record("card_definition_added" if added else "card_definition_changed", user_id=user_id, name=name, detail=detail, db=db)
+
+
 def board_of(db: Session, widget_id: int) -> int | None:
     return db.scalar(select(Page.board_id).join(Widget, Widget.page_id == Page.id).where(Widget.id == widget_id))
 

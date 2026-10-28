@@ -361,7 +361,7 @@ def _make_integration(db: Session, item: Item, action: str, new: str | None, use
             assert row is not None
             integrations.update(db, row, text, user_id=user_id, commit=False)
             outcome.integrations_replaced.append(row.short)
-            chronicle.record("card_definition_changed", user_id=user_id, name=integrations.kind_of(row.short), detail=_said(outcome, "own connection replaced"), db=db)
+            chronicle.definition_saved(db, added=False, user_id=user_id, name=integrations.kind_of(row.short), detail=_said(outcome, "own connection replaced"))
             return
         row = integrations.create(db, text, user_id=user_id, commit=False)
     except load.CardInvalid as failure:
@@ -371,8 +371,8 @@ def _make_integration(db: Session, item: Item, action: str, new: str | None, use
     if action == "copy":
         outcome.copies[item.id] = row.short
     outcome.integrations_added.append(row.short)
-    chronicle.record("card_definition_added", user_id=user_id, name=integrations.kind_of(row.short),
-                     detail=f"own connection imported as a copy of {item.key}" if action == "copy" else _said(outcome, "own connection imported"), db=db)
+    chronicle.definition_saved(db, added=True, user_id=user_id, name=integrations.kind_of(row.short),
+                     detail=f"own connection imported as a copy of {item.key}" if action == "copy" else _said(outcome, "own connection imported"))
 
 
 def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: dict[str, str], user_id: int | None, outcome: Outcome) -> None:
@@ -388,7 +388,7 @@ def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: d
             # A card that came from the shop is a card of this installation from now on (EC-6).
             row.origin, row.shop_ref, row.shop_version = "local", "", ""
             outcome.cards_replaced.append(row.slug)
-            chronicle.record("card_definition_changed", user_id=user_id, name=row.slug, detail=_said(outcome, "replaced"), db=db)
+            chronicle.definition_saved(db, added=False, user_id=user_id, name=row.slug, detail=_said(outcome, "replaced"))
             return
         row = store.create(db, text, user_id=user_id, commit=False)
     except load.CardInvalid as failure:
@@ -402,8 +402,8 @@ def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: d
     if action == "copy":
         outcome.copies[item.id] = row.slug
     outcome.cards_added.append(row.slug)
-    chronicle.record("card_definition_added", user_id=user_id, name=row.slug,
-                     detail=f"imported as a copy of {item.key}" if action == "copy" else _said(outcome, "imported"), db=db)
+    chronicle.definition_saved(db, added=True, user_id=user_id, name=row.slug,
+                     detail=f"imported as a copy of {item.key}" if action == "copy" else _said(outcome, "imported"))
 
 
 def finish(outcome: Outcome) -> None:
