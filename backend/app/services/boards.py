@@ -458,6 +458,14 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
             {key: value for key, value in apps_service.app_view(app).items() if key != "id"}
             for app in followed_apps.values()
         ]
+    # ⚠️ Only for the one who may see the definitions at all (an administrator, as with the locked connections), and not
+    # for a board edited in place, whose text must stay the board. A board without custom cards stays as it always was.
+    if reveal_locked and not with_ids:
+        from . import board_definitions
+
+        shown = board_definitions.cards_on([widget for page in pages for widget in page.widgets])
+        if shown and board_definitions.attach(db, document, shown, [one.kind for one in integrations.values()]):
+            return board_definitions.dump(document)
     return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
 
 

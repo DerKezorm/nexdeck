@@ -1,0 +1,95 @@
+nexdeck: 1
+board:
+  name: Media
+  slug: media
+  icon: layout-dashboard
+  background:
+    kind: bundled
+    value: aurora
+  settings:
+    columns: 24
+pages:
+- name: Overview
+  slug: overview
+  icon: ''
+  widgets:
+  - kind: radarr.queue
+    title: Queue
+    icon: radarr
+    link: ''
+    integration: Movies
+    options: {}
+    refresh_seconds: null
+    layout:
+      lg:
+        x: 0
+        y: 0
+        w: 8
+        h: 3
+      md:
+        x: 0
+        y: 0
+        w: 3
+        h: 3
+      sm:
+        x: 0
+        y: 0
+        w: 2
+        h: 3
+  - kind: core.markdown
+    title: Notes
+    icon: ''
+    link: ''
+    integration: null
+    options:
+      content: 'hello
+
+        world'
+    refresh_seconds: null
+    layout:
+      lg:
+        x: 8
+        y: 0
+        w: 6
+        h: 2
+      md:
+        x: 3
+        y: 0
+        w: 2
+        h: 2
+      sm:
+        x: 2
+        y: 0
+        w: 2
+        h: 2
+  - kind: core.clock
+    title: Time
+    icon: ''
+    link: ''
+    integration: null
+    options: {}
+    refresh_seconds: null
+    layout:
+      lg:
+        x: 8
+        y: 0
+        w: 6
+        h: 2
+      md:
+        x: 3
+        y: 0
+        w: 2
+        h: 2
+      sm:
+        x: 2
+        y: 0
+        w: 2
+        h: 2
+integrations:
+- name: Movies
+  kind: radarr
+  demo: false
+  config:
+    url: http://radarr.example.com:7878
+    api_key: ${NEXDECK_RADARR_1_API_KEY}
+    insecure: false
