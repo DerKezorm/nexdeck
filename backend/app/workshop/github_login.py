@@ -168,7 +168,11 @@ def view_pending(one: Pending) -> dict[str, Any]:
 
 
 async def start(db: Session, user_id: int) -> dict[str, Any]:
-    """A code and a link for the administrator. Asking again hands out a new code (EC-1)."""
+    """A code and a link for the administrator. A code that still waits is handed out again, so that a second tab shows the
+    same code as the first and does not make it worthless; a new one comes when it ran out (EC-1)."""
+    waiting = _waiting(db, user_id)
+    if waiting is not None and now() < waiting.expires_at:
+        return view_pending(waiting)
     response = await call("POST", CODE_URL, data={"client_id": state.client_id()}, form=True)
     reply = _json(response)
     if reply.get("error") == "device_flow_disabled":

@@ -287,3 +287,30 @@ def test_karten16_b4_the_poll_that_waited_finds_the_sign_in_and_not_an_error(me:
     answers = asyncio.run(two_polls_at_once(monkeypatch))
     assert hub.token_calls - before == 1
     assert [one["status"] for one in answers] == ["signed_in", "signed_in"] and answers[1]["login"] == "someone"
+
+
+# -- B5: a second tab shows the code of the first and does not make it worthless -----------------------------------------
+
+
+def test_karten16_b5_a_second_tab_gets_the_code_that_waits(me: TestClient, hub: Hub, moment: list[float]) -> None:
+    me.delete(f"{BASE}/github", headers=CSRF)
+    hub.person_at_the_screen = None
+    before = hub.device_calls
+    first = me.post(f"{BASE}/github/login", headers=CSRF).json()
+    moment[0] += 100
+    second = me.post(f"{BASE}/github/login", headers=CSRF).json()
+    assert hub.device_calls - before == 1, "GitHub is asked for a code once"
+    assert second["user_code"] == first["user_code"] and second["expires_in"] == first["expires_in"] - 100
+    moment[0] += 6
+    assert me.post(f"{BASE}/github/login/poll", headers=CSRF).json()["status"] == "pending"
+    hub.sign_in_as(hub.person("someone", 4242))  # the code of tab 1 is typed on github.com: it still works
+    moment[0] += 6
+    assert me.post(f"{BASE}/github/login/poll", headers=CSRF).json()["status"] == "signed_in"
+
+
+def test_karten16_b5_a_code_that_ran_out_is_replaced_by_a_new_one(me: TestClient, hub: Hub, moment: list[float]) -> None:
+    me.delete(f"{BASE}/github", headers=CSRF)
+    first = me.post(f"{BASE}/github/login", headers=CSRF).json()
+    moment[0] += 901
+    again = me.post(f"{BASE}/github/login", headers=CSRF).json()
+    assert again["user_code"] != first["user_code"] and again["expires_in"] > 800
