@@ -2880,7 +2880,69 @@
       "count_one": "{{count}} Eintrag",
       "count_other": "{{count}} Einträge",
       "more": "{{count}} weitere zeigen",
-      "list": "Einträge des Kartenladens"
+      "list": "Einträge des Kartenladens",
+      "back": "Zurück zum Kartenladen",
+      "facts": {
+        "author": "Autor",
+        "thumbs": "Daumen",
+        "discussion": "Diskussion auf GitHub",
+        "version": "Fassung",
+        "license": "Lizenz",
+        "noLicense": "Nicht angegeben",
+        "changed": "Zuletzt geändert",
+        "basedOn": "Beruht auf"
+      },
+      "previewWithMine": "Vorschau mit meinen Daten",
+      "noPreviewConnection": "Für eine Vorschau braucht es eine Verbindung der Art, aus der die Karte liest.",
+      "needsNexdeck": "Braucht nexdeck {{version}}",
+      "installedVersion": "Installiert, Fassung {{version}}",
+      "sections": {
+        "description": "Beschreibung",
+        "changes": "Änderungen",
+        "reads": "Was gelesen wird",
+        "buttons": "Knöpfe"
+      },
+      "noChanges": "Der Autor hat keine Änderungsliste geschrieben.",
+      "noReads": "Es wird nichts aus einem Dienst gelesen.",
+      "install": {
+        "button": "Installieren",
+        "title": "{{name}} installieren",
+        "action": "Installieren",
+        "checking": "Die Karte und ihre Prüfsumme werden geprüft …",
+        "riskTitle": "Karten aus dem Kartenladen stammen von Fremden",
+        "riskBody": "nexdeck prüft sie, kann aber nicht für sie einstehen. Eine Karte kann aus deinen Diensten lesen, eine mit Knöpfen kann auch etwas in ihnen auslösen. Du installierst und nutzt sie auf eigenes Risiko.",
+        "riskCheck": "Ich habe verstanden und installiere auf eigenes Risiko",
+        "connection": "Zu verwendende Verbindung",
+        "connectionHelp": "Die Karte wird nach dem Installieren auf diese Verbindung gelegt.",
+        "connectionOne": "Sie liest über {{name}}.",
+        "noConnection": "Es gibt keine Verbindung der Art, aus der die Karte liest. Du kannst sie jetzt installieren und die Verbindung später anlegen.",
+        "offered": "Kommt mit",
+        "alsoAdd": "Auch die Anbindung {{name}} anlegen",
+        "problems": "Dieser Eintrag hat Probleme und lässt sich nicht installieren.",
+        "done": "Installiert."
+      },
+      "errors": {
+        "checksum_mismatch": "Die Datei passt nicht zur Prüfsumme im Katalog. Es wurde nichts installiert.",
+        "needs_newer_nexdeck": "Dieser Eintrag braucht nexdeck {{version}} oder neuer.",
+        "entry_removed": "Dieser Eintrag wurde aus dem Kartenladen entfernt und lässt sich nicht installieren.",
+        "risk_not_acknowledged": "Bestätige zuerst, dass du auf eigenes Risiko installierst.",
+        "no_such_entry": "Dieser Eintrag steht nicht mehr im Katalog.",
+        "github_unreachable": "GitHub ist nicht erreichbar. Installierte Karten laufen unverändert weiter.",
+        "github_rejected": "GitHub hat die Anfrage abgelehnt.",
+        "github_rate_limited": "GitHub meldet: zu viele Anfragen. Versuch es in ein paar Minuten noch einmal.",
+        "catalog_invalid": "Der Katalog ist kaputt."
+      },
+      "place": {
+        "title": "Auf einem Board platzieren",
+        "action": "Auf einem Board platzieren",
+        "later": "Jetzt nicht",
+        "board": "Board",
+        "connection": "Verbindung",
+        "noBoard": "Du hast kein Board, das du ändern darfst.",
+        "noConnection": "Es gibt noch keine Verbindung, zu der die Karte passt. Lege zuerst unter Verbindungen eine an.",
+        "done": "Die Karte liegt auf dem Board.",
+        "open": "Board öffnen"
+      }
     }
   }
 }

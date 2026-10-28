@@ -2880,7 +2880,69 @@
       "count_one": "{{count}} entrada",
       "count_other": "{{count}} entradas",
       "more": "Mostrar {{count}} más",
-      "list": "Entradas de la tienda de tarjetas"
+      "list": "Entradas de la tienda de tarjetas",
+      "back": "Volver a la tienda de tarjetas",
+      "facts": {
+        "author": "Autor",
+        "thumbs": "Pulgares",
+        "discussion": "Debate en GitHub",
+        "version": "Versión",
+        "license": "Licencia",
+        "noLicense": "No indicada",
+        "changed": "Último cambio",
+        "basedOn": "Basada en"
+      },
+      "previewWithMine": "Vista previa con mis datos",
+      "noPreviewConnection": "Una vista previa necesita una conexión del tipo del que lee la tarjeta.",
+      "needsNexdeck": "Necesita nexdeck {{version}}",
+      "installedVersion": "Instalada, versión {{version}}",
+      "sections": {
+        "description": "Descripción",
+        "changes": "Qué cambió",
+        "reads": "Qué lee",
+        "buttons": "Botones"
+      },
+      "noChanges": "El autor no escribió una lista de cambios.",
+      "noReads": "No lee nada de un servicio.",
+      "install": {
+        "button": "Instalar",
+        "title": "Instalar {{name}}",
+        "action": "Instalar",
+        "checking": "Se comprueban la tarjeta y su suma de verificación…",
+        "riskTitle": "Las tarjetas de la tienda vienen de desconocidos",
+        "riskBody": "nexdeck las revisa, pero no puede responder por ellas. Una tarjeta puede leer de tus servicios y una con botones puede actuar sobre ellos. La instalas y la usas bajo tu propio riesgo.",
+        "riskCheck": "Lo entiendo y la instalo bajo mi propio riesgo",
+        "connection": "Conexión que se usará",
+        "connectionHelp": "La tarjeta se coloca en esta conexión después de instalarla.",
+        "connectionOne": "Leerá a través de {{name}}.",
+        "noConnection": "No hay ninguna conexión del tipo del que lee la tarjeta. Puedes instalarla ahora y añadir la conexión más tarde.",
+        "offered": "Se incluye",
+        "alsoAdd": "Añadir también la integración {{name}}",
+        "problems": "Esta entrada tiene problemas y no se puede instalar.",
+        "done": "Instalada."
+      },
+      "errors": {
+        "checksum_mismatch": "El archivo no coincide con la suma de verificación del catálogo. No se instaló nada.",
+        "needs_newer_nexdeck": "Esta entrada necesita nexdeck {{version}} o posterior.",
+        "entry_removed": "Esta entrada se retiró de la tienda de tarjetas y no se puede instalar.",
+        "risk_not_acknowledged": "Confirma primero que instalas bajo tu propio riesgo.",
+        "no_such_entry": "Esta entrada ya no está en el catálogo.",
+        "github_unreachable": "No se puede llegar a GitHub. Las tarjetas instaladas siguen funcionando.",
+        "github_rejected": "GitHub rechazó la solicitud.",
+        "github_rate_limited": "GitHub indica: demasiadas solicitudes. Inténtalo de nuevo en unos minutos.",
+        "catalog_invalid": "El catálogo está dañado."
+      },
+      "place": {
+        "title": "Colocar en un tablero",
+        "action": "Colocar en un tablero",
+        "later": "Ahora no",
+        "board": "Tablero",
+        "connection": "Conexión",
+        "noBoard": "No tienes ningún tablero que puedas modificar.",
+        "noConnection": "Todavía no hay ninguna conexión a la que encaje esta tarjeta. Añade una antes en Conexiones.",
+        "done": "La tarjeta está en el tablero.",
+        "open": "Abrir el tablero"
+      }
     }
   }
 }

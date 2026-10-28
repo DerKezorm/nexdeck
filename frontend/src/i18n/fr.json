@@ -2880,7 +2880,69 @@
       "count_one": "{{count}} entrée",
       "count_other": "{{count}} entrées",
       "more": "Afficher {{count}} de plus",
-      "list": "Entrées de la boutique de cartes"
+      "list": "Entrées de la boutique de cartes",
+      "back": "Retour à la boutique de cartes",
+      "facts": {
+        "author": "Auteur",
+        "thumbs": "Pouces",
+        "discussion": "Discussion sur GitHub",
+        "version": "Version",
+        "license": "Licence",
+        "noLicense": "Non indiquée",
+        "changed": "Dernière modification",
+        "basedOn": "Basée sur"
+      },
+      "previewWithMine": "Aperçu avec mes données",
+      "noPreviewConnection": "Un aperçu demande une connexion du type que lit la carte.",
+      "needsNexdeck": "Nécessite nexdeck {{version}}",
+      "installedVersion": "Installée, version {{version}}",
+      "sections": {
+        "description": "Description",
+        "changes": "Ce qui a changé",
+        "reads": "Ce qui est lu",
+        "buttons": "Boutons"
+      },
+      "noChanges": "L'auteur n'a pas écrit de liste des changements.",
+      "noReads": "Elle ne lit rien d'un service.",
+      "install": {
+        "button": "Installer",
+        "title": "Installer {{name}}",
+        "action": "Installer",
+        "checking": "Vérification de la carte et de sa somme de contrôle…",
+        "riskTitle": "Les cartes de la boutique viennent d'inconnus",
+        "riskBody": "nexdeck les vérifie, mais ne peut pas s'en porter garant. Une carte peut lire vos services, et une carte avec des boutons peut agir dessus. Vous l'installez et l'utilisez à vos propres risques.",
+        "riskCheck": "J'ai compris et j'installe à mes risques",
+        "connection": "Connexion à utiliser",
+        "connectionHelp": "La carte est placée sur cette connexion après l'installation.",
+        "connectionOne": "Elle lira via {{name}}.",
+        "noConnection": "Il n'y a pas de connexion du type que lit la carte. Vous pouvez l'installer maintenant et ajouter la connexion plus tard.",
+        "offered": "Fournie avec",
+        "alsoAdd": "Ajouter aussi l'intégration {{name}}",
+        "problems": "Cette entrée a des problèmes et ne peut pas être installée.",
+        "done": "Installée."
+      },
+      "errors": {
+        "checksum_mismatch": "Le fichier ne correspond pas à la somme de contrôle du catalogue. Rien n'a été installé.",
+        "needs_newer_nexdeck": "Cette entrée nécessite nexdeck {{version}} ou plus récent.",
+        "entry_removed": "Cette entrée a été retirée de la boutique de cartes et ne peut pas être installée.",
+        "risk_not_acknowledged": "Confirmez d'abord que vous installez à vos risques.",
+        "no_such_entry": "Cette entrée n'est plus dans le catalogue.",
+        "github_unreachable": "GitHub est injoignable. Les cartes installées continuent de fonctionner.",
+        "github_rejected": "GitHub a refusé la requête.",
+        "github_rate_limited": "GitHub indique : trop de requêtes. Réessayez dans quelques minutes.",
+        "catalog_invalid": "Le catalogue est défectueux."
+      },
+      "place": {
+        "title": "Placer sur un tableau",
+        "action": "Placer sur un tableau",
+        "later": "Pas maintenant",
+        "board": "Tableau",
+        "connection": "Connexion",
+        "noBoard": "Vous n'avez aucun tableau que vous puissiez modifier.",
+        "noConnection": "Aucune connexion ne convient encore à cette carte. Ajoutez-en d'abord une sous Connexions.",
+        "done": "La carte est sur le tableau.",
+        "open": "Ouvrir le tableau"
+      }
     }
   }
 }

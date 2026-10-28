@@ -2880,7 +2880,69 @@
       "count_one": "{{count}} entry",
       "count_other": "{{count}} entries",
       "more": "Show {{count}} more",
-      "list": "Entries of the Card shop"
+      "list": "Entries of the Card shop",
+      "back": "Back to the Card shop",
+      "facts": {
+        "author": "Author",
+        "thumbs": "Thumbs",
+        "discussion": "Discussion on GitHub",
+        "version": "Version",
+        "license": "License",
+        "noLicense": "Not stated",
+        "changed": "Last changed",
+        "basedOn": "Based on"
+      },
+      "previewWithMine": "Preview with my data",
+      "noPreviewConnection": "A preview needs a connection of the kind this card reads from.",
+      "needsNexdeck": "Needs nexdeck {{version}}",
+      "installedVersion": "Installed, version {{version}}",
+      "sections": {
+        "description": "Description",
+        "changes": "What changed",
+        "reads": "What it reads",
+        "buttons": "Buttons"
+      },
+      "noChanges": "The author wrote no list of changes.",
+      "noReads": "It reads nothing from a service.",
+      "install": {
+        "button": "Install",
+        "title": "Install {{name}}",
+        "action": "Install",
+        "checking": "Checking the card and its checksum…",
+        "riskTitle": "Cards from the Card shop come from strangers",
+        "riskBody": "nexdeck checks them, but cannot vouch for them. A card can read from your services, and one with buttons can act on them. You install and run it at your own risk.",
+        "riskCheck": "I understand and install at my own risk",
+        "connection": "Connection to use",
+        "connectionHelp": "The card is placed on this connection after the install.",
+        "connectionOne": "It will read through {{name}}.",
+        "noConnection": "There is no connection of the kind this card reads from. You can install it now and add the connection later.",
+        "offered": "Comes with",
+        "alsoAdd": "Also add the integration {{name}}",
+        "problems": "This entry has problems and cannot be installed.",
+        "done": "Installed."
+      },
+      "errors": {
+        "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was installed.",
+        "needs_newer_nexdeck": "This entry needs nexdeck {{version}} or newer.",
+        "entry_removed": "This entry was removed from the Card shop and cannot be installed.",
+        "risk_not_acknowledged": "Confirm first that you install at your own risk.",
+        "no_such_entry": "This entry is no longer in the catalog.",
+        "github_unreachable": "GitHub cannot be reached. Cards you installed keep working.",
+        "github_rejected": "GitHub refused the request.",
+        "github_rate_limited": "GitHub says: too many requests. Try again in a few minutes.",
+        "catalog_invalid": "The catalog is broken."
+      },
+      "place": {
+        "title": "Place on a board",
+        "action": "Place on a board",
+        "later": "Not now",
+        "board": "Board",
+        "connection": "Connection",
+        "noBoard": "You have no board you may change.",
+        "noConnection": "There is no connection this card fits yet. Add one under Connections first.",
+        "done": "The card is on the board.",
+        "open": "Open the board"
+      }
     }
   }
 }

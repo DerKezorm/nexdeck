@@ -2880,7 +2880,69 @@
       "count_one": "{{count}} voce",
       "count_other": "{{count}} voci",
       "more": "Mostra altre {{count}}",
-      "list": "Voci del negozio di schede"
+      "list": "Voci del negozio di schede",
+      "back": "Torna al negozio di schede",
+      "facts": {
+        "author": "Autore",
+        "thumbs": "Pollici",
+        "discussion": "Discussione su GitHub",
+        "version": "Versione",
+        "license": "Licenza",
+        "noLicense": "Non indicata",
+        "changed": "Ultima modifica",
+        "basedOn": "Basata su"
+      },
+      "previewWithMine": "Anteprima con i miei dati",
+      "noPreviewConnection": "Un'anteprima richiede una connessione del tipo da cui legge la scheda.",
+      "needsNexdeck": "Richiede nexdeck {{version}}",
+      "installedVersion": "Installata, versione {{version}}",
+      "sections": {
+        "description": "Descrizione",
+        "changes": "Cosa è cambiato",
+        "reads": "Cosa legge",
+        "buttons": "Pulsanti"
+      },
+      "noChanges": "L'autore non ha scritto un elenco delle modifiche.",
+      "noReads": "Non legge nulla da un servizio.",
+      "install": {
+        "button": "Installa",
+        "title": "Installa {{name}}",
+        "action": "Installa",
+        "checking": "Controllo della scheda e della sua somma di controllo…",
+        "riskTitle": "Le schede del negozio arrivano da sconosciuti",
+        "riskBody": "nexdeck le controlla, ma non può garantirle. Una scheda può leggere dai tuoi servizi e una con pulsanti può agire su di essi. La installi e la usi a tuo rischio.",
+        "riskCheck": "Ho capito e installo a mio rischio",
+        "connection": "Connessione da usare",
+        "connectionHelp": "La scheda viene posizionata su questa connessione dopo l'installazione.",
+        "connectionOne": "Leggerà tramite {{name}}.",
+        "noConnection": "Non c'è nessuna connessione del tipo da cui legge la scheda. Puoi installarla ora e aggiungere la connessione più tardi.",
+        "offered": "Include",
+        "alsoAdd": "Aggiungi anche l'integrazione {{name}}",
+        "problems": "Questa voce ha dei problemi e non può essere installata.",
+        "done": "Installata."
+      },
+      "errors": {
+        "checksum_mismatch": "Il file non corrisponde alla somma di controllo del catalogo. Non è stato installato nulla.",
+        "needs_newer_nexdeck": "Questa voce richiede nexdeck {{version}} o successivo.",
+        "entry_removed": "Questa voce è stata rimossa dal negozio di schede e non può essere installata.",
+        "risk_not_acknowledged": "Conferma prima che installi a tuo rischio.",
+        "no_such_entry": "Questa voce non è più nel catalogo.",
+        "github_unreachable": "GitHub non è raggiungibile. Le schede installate continuano a funzionare.",
+        "github_rejected": "GitHub ha rifiutato la richiesta.",
+        "github_rate_limited": "GitHub segnala: troppe richieste. Riprova tra qualche minuto.",
+        "catalog_invalid": "Il catalogo è danneggiato."
+      },
+      "place": {
+        "title": "Posiziona su una board",
+        "action": "Posiziona su una board",
+        "later": "Non ora",
+        "board": "Board",
+        "connection": "Connessione",
+        "noBoard": "Non hai nessuna board che puoi modificare.",
+        "noConnection": "Non c'è ancora nessuna connessione adatta a questa scheda. Aggiungine prima una in Connessioni.",
+        "done": "La scheda è sulla board.",
+        "open": "Apri la board"
+      }
     }
   }
 }

@@ -4,7 +4,9 @@
  * The texts of an entry (name, description, reason) are the author's own and plain text (KARTEN-13 EC-8): they are picked
  * in the viewer's language with `pickText` and drawn as text, never as HTML.
  */
+import type { ImportDocument } from './cardExchange'
 import type { CardText } from './cardText'
+import type { CardForm } from './customCards'
 import { pickText } from './cardText'
 
 export type ShopCategory = 'media' | 'downloads' | 'network' | 'server' | 'smart_home' | 'other'
@@ -249,3 +251,31 @@ export function visible(entry: ShopEntry): boolean {
 
 /** The part of an entry's wording that names the kind of fault; the rest is the server's own sentence. */
 export const SHOP_PROBLEM_CODES = ['github_unreachable', 'github_rejected', 'github_rate_limited', 'catalog_invalid', 'catalog_empty'] as const
+
+/** What installing would do (`POST /workshop/entries/{author}/{slug}/install/check`). */
+export interface ShopInstallCheck {
+  entry: ShopEntry
+  ok: boolean
+  documents: ImportDocument[]
+  missing_integrations: string[]
+  offered_integrations: ShopEntry[]
+  risk_acknowledged: boolean
+}
+
+/** What an install answers (`POST /workshop/entries/{author}/{slug}/install`). */
+export interface ShopInstalledAnswer {
+  slug: string | null
+  integration: string | null
+  missing_integrations: string[]
+}
+
+/**
+ * The form a previewed card is drawn with. The answer of the preview carries the finished values and not the form, so it is
+ * read off them: blocks are a builder, rows are a list (a wall of pictures when a row has one), several numbers are
+ * stats, and a single number is a value.
+ */
+export function previewForm(data: { primary?: unknown; secondary?: unknown[]; items?: { art?: unknown }[]; meta?: Record<string, unknown> }): CardForm {
+  if (data.meta && 'blocks' in data.meta) return 'builder'
+  if (data.meta && 'empty' in data.meta) return (data.items ?? []).some((one) => Boolean(one.art)) ? 'posters' : 'list'
+  return (data.secondary ?? []).length > 0 ? 'stats' : 'value'
+}

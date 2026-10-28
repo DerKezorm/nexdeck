@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Spinner } from '../../../components/ui'
 import { SHOP_CATALOG_KEY } from '../../../lib/cardShop'
 import { codeOf, useShopCatalog, useShopState, useShopSwitch } from './hooks'
+import { ShopDetailPage } from './ShopDetailPage'
 import { ShopList } from './ShopList'
 
 /** The shop while it is off: one sentence, "Turn on", and what the shop sends (KARTEN-14 AC-2, AC-13). */
@@ -65,6 +66,8 @@ export function ShopTab() {
   const state = useShopState()
   const enabled = state.data?.enabled === true
   const catalog = useShopCatalog(enabled)
+  // Which entry is open is kept here, so "back" lands on the same list with the same search.
+  const [opened, setOpened] = useState<string | null>(null)
 
   if (state.isPending) return <Spinner />
   if (state.isError || !state.data) {
@@ -85,5 +88,13 @@ export function ShopTab() {
   if (catalog.isError || !catalog.data) {
     return <ShopProblem code={codeOf(catalog.error)} onAgain={() => void queryClient.invalidateQueries({ queryKey: SHOP_CATALOG_KEY })} />
   }
-  return <ShopList catalog={catalog.data} state={state.data} />
+  const current = opened ? catalog.data.entries.find((one) => one.id === opened) : undefined
+  return (
+    <>
+      {current && <ShopDetailPage entry={current} entries={catalog.data.entries} state={state.data} onBack={() => setOpened(null)} onOpenEntry={setOpened} />}
+      <div hidden={current !== undefined}>
+        <ShopList catalog={catalog.data} state={state.data} onOpen={(one) => setOpened(one.id)} />
+      </div>
+    </>
+  )
 }

@@ -95,6 +95,8 @@ export function stub() {
       if (key === 'GET /workshop/updates') return json(world.updates)
       if (key === 'GET /cards') return json({ cards: [], limit: 200 })
       if (key === 'GET /own-integrations') return json([])
+      if (key === 'GET /boards') return json([])
+      if (key === 'GET /cards/library') return json({ cards: [] })
       return json({}, method === 'POST' ? 201 : 200)
     }),
   )
