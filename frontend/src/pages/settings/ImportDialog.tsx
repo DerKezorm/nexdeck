@@ -1,8 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ApiError, post } from '../../api/client'
+import { ApiError, get, post } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Dialog, Field } from '../../components/ui'
 import {
@@ -16,7 +16,7 @@ import {
   type ImportSource,
 } from '../../lib/cardExchange'
 import { pickText } from '../../lib/cardText'
-import type { CardForm } from '../../lib/customCards'
+import { problemText, type CardForm, type CardSource } from '../../lib/customCards'
 
 const ImportPreview = lazy(() => import('./ImportPreview'))
 
@@ -30,14 +30,16 @@ const FORMS: CardForm[] = ['value', 'stats', 'list', 'posters', 'builder']
 const LISTS = [['custom-cards'], ['cards-library'], ['own-integrations'], ['adapters'], ['cards-sources'], ['integrations']]
 
 /** The icon of the first source of a document, if the check named one. */
-function firstIcon(document: ImportDocument): string {
+function firstIcon(document: ImportDocument, known: CardSource[]): string {
   const first = (document.requires ?? [])[0]
-  return first && typeof first === 'object' ? (first.icon ?? '') : ''
+  if (!first) return ''
+  return typeof first === 'object' ? (first.icon ?? '') : (known.find((one) => one.kind === first)?.icon ?? '')
 }
 
-function labelOf(source: ImportSource): string {
-  const kind = sourceKind(source)
-  return typeof source === 'object' && source.label ? source.label : kind.replace(/^custom:/, '')
+/** The kinds of connection the installation knows, to word the sources of a card as people read them. */
+function useKnownKinds() {
+  const known = useQuery({ queryKey: ['cards-sources'], queryFn: () => get<CardSource[]>('/cards/sources'), staleTime: 60_000 })
+  return Array.isArray(known.data) ? known.data : []
 }
 
 /**
@@ -56,12 +58,16 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
   const [error, setError] = useState('')
 
   const lang = i18n.language
+  const known = useKnownKinds()
+  const iconOf = (source: ImportSource) => (typeof source === 'object' && source.icon) || known.find((one) => one.kind === sourceKind(source))?.icon || sourceKind(source)
+  const labelOf = (source: ImportSource) => (typeof source === 'object' && source.label) || known.find((one) => one.kind === sourceKind(source))?.label || sourceKind(source).replace(/^custom:/, '')
   // A result belongs to the text it was made for; once the text changes it is stale and goes.
   const result = checked && checked.text === text ? checked.result : null
   const documents = result?.documents ?? []
 
   const fail = (failure: unknown) => {
-    if (failure instanceof ApiError) setError(t(`cards.exchange.errors.${failure.code}`, { defaultValue: failure.message }))
+    if (failure instanceof ApiError && failure.code === 'too_many_cards') setError(t('cards.tooMany'))
+    else if (failure instanceof ApiError) setError(t(`cards.exchange.errors.${failure.code}`, { defaultValue: failure.message }))
     else setError(t('errors.network'))
   }
 
@@ -148,7 +154,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
     >
       <p className="text-sm text-muted mb-3">{t('cards.exchange.lead')}</p>
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <label className="btn cursor-pointer">
+        <label className="btn cursor-pointer focus-within:border-accent focus-within:text-accent">
           {t('cards.exchange.pick')}
           <input type="file" accept=".yaml,.yml,.txt" className="sr-only" aria-label={t('cards.exchange.pick')} onChange={(event) => void pick(event)} />
         </label>
@@ -172,7 +178,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
 
       {documents.length > 0 && (
         <ul className="grid gap-3" aria-label={t('cards.exchange.documents')}>
-          {documents.map((document) => {
+          {documents.map((document, position) => {
             const key = documentKey(document)
             const name = pickText(document.name, lang) || (document.type === 'card' ? document.slug : document.short) || ''
             const own = document.problems ?? []
@@ -180,11 +186,11 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
             const yaml = document.type === 'card' && own.length === 0 && document.slug && result ? cardTextOf(text, document.slug) : null
             const buttons = document.buttons ?? []
             return (
-              <li key={key} className="rounded-xl border border-line p-3 min-w-0" data-testid={`import-doc-${key}`}>
+              <li key={`${key}-${position}`} className="rounded-xl border border-line p-3 min-w-0" data-testid={`import-doc-${key}`}>
                 <div className="flex flex-wrap items-center gap-2 min-w-0">
-                  <span className="chip !py-0">{t(document.type === 'card' ? 'cards.exchange.card' : 'cards.exchange.integration')}</span>
+                  {document.type !== 'unknown' && <span className="chip !py-0">{t(document.type === 'card' ? 'cards.exchange.card' : 'cards.exchange.integration')}</span>}
                   <span className="text-sm font-medium break-words min-w-0">{name}</span>
-                  <span className="text-[11px] text-muted break-all">{key.slice(key.indexOf(':') + 1)}</span>
+                  {document.type !== 'unknown' && <span className="text-[11px] text-muted break-all">{key.slice(key.indexOf(':') + 1)}</span>}
                 </div>
 
                 {(document.requires ?? []).length > 0 && (
@@ -193,7 +199,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
                     <ul className="inline-flex flex-wrap gap-x-3 gap-y-1">
                       {(document.requires ?? []).map((source) => (
                         <li key={sourceKind(source)} className="inline-flex items-center gap-1.5">
-                          <ServiceIcon icon={(typeof source === 'object' && source.icon) || sourceKind(source)} size={16} />
+                          <ServiceIcon icon={iconOf(source)} size={16} />
                           {labelOf(source)}
                           {comesAlong(document, source) && <span className="text-[11px] text-muted">{t('cards.exchange.comesAlong')}</span>}
                         </li>
@@ -224,7 +230,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
                     {own.map((problem, index) => (
                       <li key={index} className="text-[12px] text-bad break-words">
                         {problem.line !== null && problem.line !== undefined && <span className="font-mono">{t('cards.line', { line: problem.line })}: </span>}
-                        {problem.message}
+                        {problemText(t, problem)}
                       </li>
                     ))}
                   </ul>
@@ -234,7 +240,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
                   <div className="mt-3">
                     <p className="text-[11px] text-faint mb-1">{t('cards.exchange.preview')}</p>
                     <Suspense fallback={null}>
-                      <ImportPreview yaml={yaml} form={form} name={document.name} icon={firstIcon(document)} />
+                      <ImportPreview yaml={yaml} form={form} name={document.name} icon={firstIcon(document, known)} />
                     </Suspense>
                   </div>
                 )}

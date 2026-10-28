@@ -6,24 +6,25 @@
  * of a card by its short name.
  */
 import type { CardText } from './cardText'
-import type { CardForm } from './customCards'
+import type { CardForm, CardProblem } from './customCards'
 
 /** The most the server reads of one file, in bytes. */
 export const IMPORT_MAX_BYTES = 512 * 1024
 
 /** One thing wrong in a file; `line` counts from the top of the whole file. */
-export interface ImportProblem {
-  line: number | null
-  path?: string
-  message: string
-}
+export type ImportProblem = CardProblem
 
 /** A kind of connection a document reads through: a short name, or the object the card list uses. */
 export type ImportSource = string | { kind: string; label?: string; icon?: string }
 
 /** One document of a file, as the check describes it. */
 export interface ImportDocument {
-  type: 'card' | 'integration'
+  /** `unknown` is a document that is neither: it carries a problem and nothing else. */
+  type: 'card' | 'integration' | 'unknown'
+  /** `card:<slug>` or `integration:<short>`, the key of the choices. */
+  id?: string
+  /** The line of the file the document begins at. */
+  line?: number
   slug?: string
   short?: string
   name?: CardText | null
@@ -46,7 +47,7 @@ export type ImportChoice = 'replace' | 'copy' | 'skip'
 
 /** The key of a document in the choices the import takes: `card:<slug>` or `integration:<short>`. */
 export function documentKey(document: ImportDocument): string {
-  return `${document.type}:${document.type === 'card' ? document.slug : document.short}`
+  return document.id ?? `${document.type}:${document.type === 'card' ? document.slug : document.short}`
 }
 
 export function sourceKind(source: ImportSource): string {

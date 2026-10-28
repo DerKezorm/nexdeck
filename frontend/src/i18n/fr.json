@@ -2765,7 +2765,10 @@
       "chooseFirst": "Choisissez ce qu'il advient de chaque élément qui existe déjà.",
       "tooBig": "Ce fichier dépasse 512 Ko. nexdeck ne le lit pas.",
       "errors": {
-        "import_choice_missing": "Choisissez Remplacer, Importer comme copie ou Annuler pour chaque élément qui existe déjà."
+        "import_choice_missing": "Choisissez Remplacer, Importer comme copie ou Annuler pour chaque élément qui existe déjà.",
+        "import_too_large": "Le fichier dépasse 512 Ko. nexdeck ne le lit pas.",
+        "import_too_many": "Le fichier contient plus de 20 documents. Un import en accepte 20 au plus.",
+        "import_empty": "Le fichier ne contient ni carte ni intégration."
       },
       "board": {
         "title": "Cartes personnalisées de ce tableau",

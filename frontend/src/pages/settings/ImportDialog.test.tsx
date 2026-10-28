@@ -27,9 +27,10 @@ const FILE = `${CARD}---\n${INTEGRATION}`
 
 const DOCUMENT = (extra: Record<string, unknown> = {}) => ({
   type: 'card',
+  id: 'card:queue',
   slug: 'queue',
   name: 'Queue',
-  requires: [{ kind: 'custom:memos', label: 'Memos', icon: 'memos' }],
+  requires: ['custom:memos'],
   buttons: [{ label: 'Pause', method: 'POST', path: '/api/pause' }],
   form: 'value',
   problems: [],
@@ -37,7 +38,7 @@ const DOCUMENT = (extra: Record<string, unknown> = {}) => ({
   same: false,
   ...extra,
 })
-const INTEGRATION_DOCUMENT = (extra: Record<string, unknown> = {}) => ({ type: 'integration', short: 'memos', name: 'Memos', requires: [], buttons: [], form: null, problems: [], exists: false, same: false, ...extra })
+const INTEGRATION_DOCUMENT = (extra: Record<string, unknown> = {}) => ({ type: 'integration', id: 'integration:memos', short: 'memos', name: 'Memos', requires: [], buttons: [], form: null, problems: [], exists: false, same: false, ...extra })
 
 const SHOWN = { status: 'ok', primary: { value: 3, text: '3', format: 'number', label: 'Waiting' }, secondary: [], items: [], meta: { custom: true } }
 
@@ -53,6 +54,7 @@ function stub(answers: Record<string, { status: number; body: unknown }>) {
       const url = String(input).replace(/^.*\/api\/v1/, '')
       const method = init?.method ?? 'GET'
       world.sent.push({ url, method, body: init?.body ? JSON.parse(String(init.body)) : null })
+      if (method === 'GET' && url === '/cards/sources') return new Response(JSON.stringify([{ kind: 'custom:memos', label: 'Memos', icon: 'memos' }]), { status: 200, headers: { 'content-type': 'application/json' } })
       const given = world.answers[`${method} ${url}`]
       return new Response(JSON.stringify(given?.body ?? {}), { status: given?.status ?? 200, headers: { 'content-type': 'application/json' } })
     }),
@@ -165,6 +167,18 @@ describe('a short name that is taken', () => {
     await waitFor(() => expect(sent('POST', '/cards/import')[0]?.body).toEqual({ text: FILE, choices: { 'card:queue': 'replace' } }))
   })
 
+  it('karten12 ac3: the choice can be made with the keyboard alone', async () => {
+    show()
+    await check()
+    const conflict = await screen.findByTestId('import-conflict-card:queue')
+    within(conflict).getByRole('radio', { name: 'Replace' }).focus()
+    await userEvent.keyboard('[Space]')
+    expect(within(conflict).getByRole('radio', { name: 'Replace' })).toBeChecked()
+    await userEvent.keyboard('[ArrowRight]')
+    expect(within(conflict).getByRole('radio', { name: 'Import as copy' })).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled()
+  })
+
   it('karten12 ac3: Cancel stops the whole import: nothing is sent and the button stays closed', async () => {
     show()
     await check()
@@ -200,7 +214,7 @@ describe('an integration that is not there', () => {
 
 describe('a file that is not right', () => {
   it('karten12 ec1: shows each problem with its line in the file and does not allow the import', async () => {
-    stub({ 'POST /cards/import/check': { status: 200, body: { documents: [DOCUMENT({ problems: [{ line: 14, path: 'value.path', message: 'value.path is required.' }] })], missing_integrations: [] } } })
+    stub({ 'POST /cards/import/check': { status: 200, body: { documents: [DOCUMENT({ problems: [{ code: 'field_required', line: 14, path: 'value.path', message: 'value.path is required.', params: {} }] })], missing_integrations: [] } } })
     show()
     await check(CARD)
     const problems = await screen.findByTestId('import-problems')
@@ -218,7 +232,15 @@ describe('a file that is not right', () => {
     await userEvent.upload(screen.getByLabelText('Choose a file'), big)
     expect(await screen.findByRole('alert')).toHaveTextContent('This file is larger than 512 KB.')
     expect(screen.getByRole('textbox', { name: 'Or paste the text' })).toHaveValue('')
-    expect(world.sent).toHaveLength(0)
+    expect(world.sent.filter((one: Sent) => one.method === 'POST')).toHaveLength(0)
+  })
+
+  it('karten12 ec1: a document that is neither a card nor an integration shows its problem and holds the import back', async () => {
+    stub({ 'POST /cards/import/check': { status: 200, body: { ok: false, documents: [{ type: 'unknown', id: 'unknown:null', name: null, requires: [], buttons: [], form: '', problems: [{ code: 'import_unknown_document', line: 3, path: '', message: 'This is neither a card nor an own connection.', params: {} }], exists: false, same: false, line: 3 }], missing_integrations: [] } } })
+    show()
+    await check('slug: x')
+    expect(await screen.findByTestId('import-problems')).toHaveTextContent('Line 3: This is neither a card nor an own connection.')
+    expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled()
   })
 
   it('karten12 ec1: a refusal of the check is shown as the sentence the server gave', async () => {
