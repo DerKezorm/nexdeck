@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -496,3 +496,38 @@ def test_every_call_leaves_a_line_in_the_log(lab: dict, caplog: pytest.LogCaptur
     assert f"MCP tool press_button called by key {key['id']}." in caplog.text
     assert f"MCP tool request_status called by key {key['id']}: No such request." in caplog.text
     assert f"MCP tool find_cards called by key {key['id']}." in caplog.text
+
+
+# -- times --------------------------------------------------------------------------------------
+
+
+def test_the_program_hears_times_on_the_clock_of_the_house(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Abnahme 8: "+00:00" made the program tell its person "runs out at 19:02 UTC"."""
+    from app.services import mcp_calls
+
+    monkeypatch.setattr(mcp_calls, "ZONE", timezone(timedelta(hours=2)))
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    answer = call(client, token, "press_button", card_id=lab["card"]["id"], action="restart", params={"id": "c1"})["value"]
+    row = _requests()[0]
+    assert answer["expires_at"].endswith("+02:00"), answer
+    assert abs(datetime.fromisoformat(answer["expires_at"]) - row.expires_at) < timedelta(seconds=1), "the same moment"
+    status = call(client, token, "request_status", request=answer["request"])["value"]
+    assert status["expires_at"] == answer["expires_at"]
+    # The reading tools as well: the press above is a line in the chronicle.
+    client.post(f"/api/v1/mcp/requests/{answer['request']}/approve", headers=CSRF)
+    lines = call(client, token, "chronicle", hours=1)["value"]["lines"]
+    assert lines and all(line["at"].endswith("+02:00") for line in lines), lines
+
+
+def test_only_utc_times_are_told_again_and_as_exact_as_they_came() -> None:
+    from app.services import mcp_calls
+
+    mcp_calls.ZONE = timezone(timedelta(hours=1))
+    try:
+        told = mcp_calls.local_times({"a": "2026-10-28T18:02+00:00", "b": ["2026-10-28T18:02:05Z", "2026-10-28T18:02:05.250000+00:00"],
+                                      "c": "2026-10-28T18:02+05:00", "d": "plex", "e": "2026-10-28", "f": 3})
+    finally:
+        mcp_calls.ZONE = None
+    assert told == {"a": "2026-10-28T19:02+01:00", "b": ["2026-10-28T19:02:05+01:00", "2026-10-28T19:02:05.250000+01:00"],
+                    "c": "2026-10-28T18:02+05:00", "d": "plex", "e": "2026-10-28", "f": 3}

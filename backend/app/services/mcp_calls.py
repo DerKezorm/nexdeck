@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import json
 import logging
+import re
+from datetime import datetime, tzinfo
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -143,6 +145,35 @@ def check(schema: dict[str, Any], args: dict[str, Any]) -> str | None:
     return None
 
 
+#: The zone a time is told in. None is the clock of the house (``TZ``), as the daily report and the history read it.
+ZONE: tzinfo | None = None
+_UTC_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:\+00:00|Z)")
+
+
+def local(moment: datetime) -> str:
+    """A moment on the clock of the house, with its offset."""
+    return moment.astimezone(ZONE).isoformat(timespec="seconds")
+
+
+def local_times(value: Any) -> Any:
+    """Every UTC time in an answer, told on the clock of the house instead.
+
+    ⚠️ The program passes a time on as it gets it: given "+00:00" it told its
+    person a request "runs out at 19:02 UTC", an hour off the clock on the
+    wall. Same moment, other offset, so nothing that compares times breaks.
+    """
+    if isinstance(value, dict):
+        return {key: local_times(inner) for key, inner in value.items()}
+    if isinstance(value, list):
+        return [local_times(inner) for inner in value]
+    if isinstance(value, str) and _UTC_TIME.fullmatch(value):
+        clock = value[11:].removesuffix("Z").removesuffix("+00:00")
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(ZONE)
+        # As exact as it came: the chronicle and the history tell minutes.
+        return moment.isoformat(timespec="minutes" if len(clock) == 5 else "auto")
+    return value
+
+
 def result(value: Any, failed: bool = False) -> dict[str, Any]:
     text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
     answer: dict[str, Any] = {"content": [{"type": "text", "text": text}], "isError": failed}
@@ -180,7 +211,7 @@ async def call(db: Session, caller: Caller, name: Any, args: Any) -> dict[str, A
         else:
             text, failed = await tools.run(bench, name, args)
             logger.info("MCP tool %s called by key %s%s.", name, caller.key_id, " (failed)" if failed else "")
-            return result(json.loads(text), failed=failed)
+            return result(local_times(json.loads(text)), failed=failed)
     except ToolError as failure:
         logger.info("MCP tool %s called by key %s: %s", name, caller.key_id, failure)
         return result({"error": str(failure)}, failed=True)
@@ -290,7 +321,7 @@ async def press_button(db: Session, bench: tools.Bench, caller: Caller, right: s
     what = f"{label} ({row})" if row else label
     emit("mcp_request", f"{caller.key_name} asks to press {what} on {title}", f"Board {board.name}. Allow or decline in nexdeck.",
          level="warn" if danger else "info", link=f"/mcp/requests/{request.id}", user_ids=[caller.user_id])
-    return {"request": request.id, "status": "waiting", "expires_at": request.expires_at.isoformat(),
+    return {"request": request.id, "status": "waiting", "expires_at": local(request.expires_at),
             "note": (f"Waiting for approval in nexdeck, request {request.id}. It runs out in {mcp.REQUEST_MINUTES} minutes. "
                      f"Ask request_status with request {request.id} to learn what came of it.")}
 
@@ -306,7 +337,7 @@ def request_status(db: Session, caller: Caller, args: dict[str, Any]) -> dict[st
     # Only the key that asked learns about its request; any other number does not exist.
     if row is None or row.key_id != caller.key_id:
         raise ToolError("No such request.")
-    answer: dict[str, Any] = {"request": row.id, "status": row.status, "expires_at": row.expires_at.isoformat()}
+    answer: dict[str, Any] = {"request": row.id, "status": row.status, "expires_at": local(row.expires_at)}
     if row.result is not None:
         answer["result"] = row.result
     return answer
