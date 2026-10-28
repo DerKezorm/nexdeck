@@ -6,6 +6,7 @@ import logging
 
 from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from .. import languages
 from ..deps import AdminUser, CurrentUser, DbSession, error
@@ -14,6 +15,7 @@ from ..schemas import UserCreate, UserPatch, UserPublic
 from ..security import hash_password, now_ms
 from ..services import avatars, history, oidc_store
 from ..services.collector import collector
+from ..workshop import github_login, real_values
 from .auth import user_public
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
@@ -48,6 +50,12 @@ def create_user(body: UserCreate, admin: AdminUser, db: DbSession, request: Requ
     return user_public(user)
 
 
+def _forget_github(db: Session, user_id: int) -> None:
+    """What the account holds of the sharing in the Card shop goes with it: the sign-in, a code that waits, the texts of the probes (KARTEN-16 EC-8)."""
+    github_login.sign_out(db, user_id)
+    real_values.drop(user_id)
+
+
 @router.patch("/{user_id}", response_model=UserPublic, summary="Change a user")
 def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -> UserPublic:
     user = db.get(User, user_id)
@@ -64,6 +72,8 @@ def patch_user(user_id: int, body: UserPatch, admin: AdminUser, db: DbSession) -
         if body.role != user.role:
             changed.append(f"role {user.role} -> {body.role}")
         user.role = body.role
+        if body.role != Role.admin.value:
+            _forget_github(db, user.id)
     if body.display_name is not None:
         user.display_name = body.display_name.strip()
     if body.disabled is not None:
@@ -134,6 +144,7 @@ def delete_user(user_id: int, admin: AdminUser, db: DbSession, boards: str = "")
 
     avatars.remove(user.avatar)
     name = user.username
+    _forget_github(db, user.id)
     db.delete(user)
     db.commit()
     for widget_id in orphaned:

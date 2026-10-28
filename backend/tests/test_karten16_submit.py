@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
@@ -14,7 +15,7 @@ from app.workshop import real_values, submit
 from .cards_sample import DEMO_LINE, VALUE_CARD, changed
 from .conftest import CSRF, create_user, login
 from .karten14_sample import REPO, card_text
-from .karten16_sample import DAY, Hub
+from .karten16_sample import DAY, Hub, account
 
 pytest_plugins = ["tests.karten14_sample", "tests.karten16_sample"]
 
@@ -503,7 +504,7 @@ def card_with_demo(title: str) -> str:
 def test_karten16_ec4_demo_data_that_match_the_last_probe_are_warned_of_with_their_places(me: TestClient, hub: Hub) -> None:
     me.put(f"/api/v1/cards/{SLUG}", json={"yaml": card_with_demo("Peaky Blinders in my cellar"), "overwrite": True}, headers=CSRF)
     assert check(me)["warnings"]["real_values"] == []
-    real_values.remember(1, {"records": [{"title": "Peaky Blinders in my cellar", "id": 4}], "note": "ok"})
+    real_values.remember(account(1), {"records": [{"title": "Peaky Blinders in my cellar", "id": 4}], "note": "ok"})
     found = check(me)
     assert found["warnings"]["real_values"] == [{"path": "demo.queue.records[0].title", "value": "Peaky Blinders in my cellar"}]
     assert found["problems"] == [], "a warning, not a refusal"
@@ -512,9 +513,9 @@ def test_karten16_ec4_demo_data_that_match_the_last_probe_are_warned_of_with_the
 
 def test_karten16_ec4_a_probe_of_another_administrator_or_of_yesterday_is_no_reason_to_warn(me: TestClient, hub: Hub, monkeypatch: pytest.MonkeyPatch) -> None:
     me.put(f"/api/v1/cards/{SLUG}", json={"yaml": card_with_demo("Peaky Blinders in my cellar"), "overwrite": True}, headers=CSRF)
-    real_values.remember(2, {"title": "Peaky Blinders in my cellar"})
+    real_values.remember(account(2), {"title": "Peaky Blinders in my cellar"})
     assert check(me)["warnings"]["real_values"] == []
-    real_values.remember(1, {"title": "Peaky Blinders in my cellar"})
+    real_values.remember(account(1), {"title": "Peaky Blinders in my cellar"})
     assert len(check(me)["warnings"]["real_values"]) == 1
     later = real_values.now() + 25 * 3600
     monkeypatch.setattr(real_values, "now", lambda: later)
@@ -523,8 +524,9 @@ def test_karten16_ec4_a_probe_of_another_administrator_or_of_yesterday_is_no_rea
 
 def test_karten16_ec4_short_and_numeric_values_are_no_reason_to_warn() -> None:
     real_values.forget()
-    real_values.remember(1, {"state": "ok", "n": 12, "id": "12345", "version": "1.2.3", "name": "Living room lamp"})
-    found = real_values.places(1, {"a": {"state": "ok", "id": "12345", "version": "1.2.3", "name": "Living room lamp"}})
+    who = SimpleNamespace(id=1, username="a", created_at=None)
+    real_values.remember(who, {"state": "ok", "n": 12, "id": "12345", "version": "1.2.3", "name": "Living room lamp"})
+    found = real_values.places(who, {"a": {"state": "ok", "id": "12345", "version": "1.2.3", "name": "Living room lamp"}})
     assert found == [{"path": "demo.a.name", "value": "Living room lamp"}]
     real_values.forget()
 

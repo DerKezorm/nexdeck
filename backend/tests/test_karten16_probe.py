@@ -12,6 +12,7 @@ from app.workshop import real_values
 
 from .cards_sample import DEMO_LINE, VALUE_CARD, changed
 from .conftest import CSRF, setup_admin
+from .karten16_sample import account
 from .test_cards_router import BASE, add, connection
 
 SHARE = "/api/v1/workshop/submit/check"
@@ -50,4 +51,4 @@ def test_karten16_ec4_a_probe_that_failed_leaves_nothing_behind(admin: TestClien
     sonarr = connection(admin)
     respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(500, json={"title": "Not A Show Name"}))
     admin.post("/api/v1/cards/probe", json={"integration_id": sonarr, "path": "/api/v3/queue"}, headers=CSRF)
-    assert real_values._real(1) == frozenset()  # noqa: SLF001
+    assert real_values._real(account(1)) == frozenset()  # noqa: SLF001

@@ -14,6 +14,8 @@ import time
 from collections import deque
 from typing import Any
 
+from . import state
+
 #: How many probes are remembered for one administrator, how long, and how many texts of each.
 KEEP_PROBES = 5
 KEEP_SECONDS = 24 * 3600
@@ -22,7 +24,8 @@ MAX_TEXTS = 3000
 MIN_LENGTH = 4
 MAX_DEPTH = 12
 
-_kept: dict[int, deque[tuple[float, frozenset[str]]]] = {}
+#: Per account number: who it was (``state.account_of``) and the probes of that account. A new account with the same number starts empty.
+_kept: dict[int, tuple[str, deque[tuple[float, frozenset[str]]]]] = {}
 
 
 def now() -> float:
@@ -48,27 +51,36 @@ def texts(value: Any, found: set[str] | None = None, depth: int = 0) -> set[str]
     return found
 
 
-def remember(user_id: int, answer: Any) -> None:
-    """The texts of a probe, as the administrator saw them."""
-    kept = _kept.setdefault(user_id, deque(maxlen=KEEP_PROBES))
-    kept.append((now(), frozenset(texts(answer))))
+def remember(user: Any, answer: Any) -> None:
+    """The texts of a probe, as the administrator (a ``User``) saw them."""
+    who = state.account_of(user)
+    held = _kept.get(user.id)
+    if held is None or held[0] != who:
+        held = _kept[user.id] = (who, deque(maxlen=KEEP_PROBES))
+    held[1].append((now(), frozenset(texts(answer))))
 
 
 def forget() -> None:
     _kept.clear()
 
 
-def _real(user_id: int) -> frozenset[str]:
-    kept = _kept.get(user_id)
+def drop(user_id: int) -> None:
+    """The account is gone (or no longer an administrator): so are its texts (EC-8)."""
+    _kept.pop(user_id, None)
+
+
+def _real(user: Any) -> frozenset[str]:
+    held = _kept.get(user.id)
+    kept = held[1] if held is not None and held[0] == state.account_of(user) else None
     if not kept:
         return frozenset()
     fresh = [one for when, one in kept if now() - when < KEEP_SECONDS]
     return frozenset().union(*fresh) if fresh else frozenset()
 
 
-def places(user_id: int, demo: Any) -> list[dict[str, str]]:
+def places(user: Any, demo: Any) -> list[dict[str, str]]:
     """Where the demo data of a card hold a text one of the last probes returned: ``demo.<request>.<path>`` and the text."""
-    real = _real(user_id)
+    real = _real(user)
     if not real or not isinstance(demo, dict):
         return []
     found: list[dict[str, str]] = []

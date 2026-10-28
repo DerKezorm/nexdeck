@@ -484,7 +484,7 @@ async def check(db: Session, user: User, kind: str, slug: str, form: Form | None
         "name": one.name,
         "version": one.version,
         "problems": problems,
-        "warnings": {"real_values": real_values.places(user.id, one.demo) if one.type == "card" else []},
+        "warnings": {"real_values": real_values.places(user, one.demo) if one.type == "card" else []},
         "signed_in": signed["signed_in"],
         "login": signed["login"],
         "mode": "new",

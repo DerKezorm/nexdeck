@@ -33,10 +33,10 @@ def read_github(user: AdminUser, db: DbSession) -> dict[str, Any]:
 
 
 @router.post("/github/login", summary="Start signing in to GitHub: a code and a link")
-async def start_github_login(user: AdminUser) -> dict[str, Any]:
+async def start_github_login(user: AdminUser, db: DbSession) -> dict[str, Any]:
     """Every call hands out a new code, so a code that ran out after fifteen minutes is replaced by asking again (EC-1)."""
     try:
-        return await github_login.start(user.id)
+        return await github_login.start(db, user.id)
     except github_login.GithubError as problem:
         raise failure(problem) from problem
 

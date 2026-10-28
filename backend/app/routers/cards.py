@@ -328,7 +328,7 @@ async def probe_path(body: ProbeBody, user: AdminUser, db: DbSession) -> dict[st
         db.commit()
         raise _failed(failure) from failure
     tree = await asyncio.to_thread(probe.build, answer)
-    real_values.remember(user.id, answer)
+    real_values.remember(user, answer)
     logger.info("%s probed %s at %s.", user.username, name or body.integration_id, body.path)
     chronicle.record("card_probe", user_id=user.id, integration_id=body.integration_id, name=name, detail=body.path, db=db)
     db.commit()

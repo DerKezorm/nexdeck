@@ -24,7 +24,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from .. import crypto
-from ..models import GithubLogin
+from ..models import GithubLogin, User
 from . import catalog, state
 
 logger = logging.getLogger("nexdeck.workshop")
@@ -88,10 +88,26 @@ class Pending:
     expires_at: float
     interval: int
     next_at: float
+    #: Whose it is (``state.account_of``): a new account that got the number of a deleted one does not inherit the code.
+    account: str = ""
 
 
 _pending: dict[int, Pending] = {}
 _locks: dict[int, asyncio.Lock] = {}
+
+
+def _account(db: Session, user_id: int) -> str | None:
+    user = db.get(User, user_id)
+    return state.account_of(user) if user is not None else None
+
+
+def _waiting(db: Session, user_id: int) -> Pending | None:
+    """The code that waits for this account, if there is one that belongs to it."""
+    one = _pending.get(user_id)
+    if one is not None and one.account != _account(db, user_id):
+        _pending.pop(user_id, None)
+        return None
+    return one
 
 
 def forget() -> None:
@@ -149,7 +165,7 @@ def view_pending(one: Pending) -> dict[str, Any]:
     }
 
 
-async def start(user_id: int) -> dict[str, Any]:
+async def start(db: Session, user_id: int) -> dict[str, Any]:
     """A code and a link for the administrator. Asking again hands out a new code (EC-1)."""
     response = await call("POST", CODE_URL, data={"client_id": state.client_id()}, form=True)
     reply = _json(response)
@@ -163,6 +179,7 @@ async def start(user_id: int) -> dict[str, Any]:
             expires_at=now() + int(reply.get("expires_in") or 900),
             interval=max(MIN_INTERVAL, int(reply.get("interval") or MIN_INTERVAL)),
             next_at=0.0,
+            account=_account(db, user_id) or "",
         )
     except (KeyError, TypeError, ValueError):
         logger.info("GitHub did not hand out a code (status %s).", response.status_code)
@@ -174,7 +191,7 @@ async def start(user_id: int) -> dict[str, Any]:
 
 async def poll(db: Session, user_id: int) -> dict[str, Any]:
     """Whether the administrator has typed the code yet. Asks GitHub no faster than GitHub allows."""
-    one = _pending.get(user_id)
+    one = _waiting(db, user_id)
     if one is None:
         return {"status": "none"}
     if now() >= one.expires_at:
@@ -266,7 +283,7 @@ def status(db: Session, user_id: int) -> dict[str, Any]:
     if row is not None and _aware(row.until) <= _moment(now()):
         drop(db, user_id)
         row = None
-    waiting = _pending.get(user_id)
+    waiting = _waiting(db, user_id)
     if waiting is not None and now() >= waiting.expires_at:
         _pending.pop(user_id, None)
         waiting = None

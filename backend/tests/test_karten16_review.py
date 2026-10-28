@@ -13,11 +13,13 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from app.workshop import submit
+from app.db import db_session
+from app.models import GithubLogin, User
+from app.workshop import github_login, real_values, submit
 
-from .conftest import CSRF
+from .conftest import ADMIN, CSRF, create_user, login
 from .karten14_sample import card_text
-from .karten16_sample import Hub
+from .karten16_sample import Hub, account
 from .test_karten16_submit import (  # noqa: F401  (fixtures)
     BASE,
     SLUG,
@@ -27,6 +29,7 @@ from .test_karten16_submit import (  # noqa: F401  (fixtures)
     me,
     put_issue,
     share,
+    sign_in,
 )
 
 pytest_plugins = ["tests.karten14_sample", "tests.karten16_sample"]
@@ -143,3 +146,61 @@ def test_karten16_b1_the_file_without_signing_in_is_masked_too(me: TestClient) -
     out: Any = me.post(f"{BASE}/submit/file", json={"type": "card", "slug": SLUG, "category": "media", "description": INJECTIONS["tilde"], "changes": "", "license": True}, headers=CSRF)
     assert out.status_code == 200, out.text
     assert headings_of(out.json()["text"]) == HEADINGS
+
+
+# -- B2: the sign-in and the texts of the probes belong to the account, not to its number ------------------------------
+
+
+def second_admin_waits_for_a_code(me: TestClient) -> dict[str, Any]:
+    second = create_user(me, "second", role="admin")
+    login(me, "second", "another-long-password")
+    assert me.post(f"{BASE}/github/login", headers=CSRF).status_code == 200
+    login(me, ADMIN["username"], ADMIN["password"])
+    return second
+
+
+def test_karten16_b2_a_new_account_with_the_number_of_a_deleted_one_inherits_no_code(me: TestClient, hub: Hub, moment: list[float]) -> None:
+    second = second_admin_waits_for_a_code(me)
+    assert me.delete(f"/api/v1/users/{second['id']}", headers=CSRF).status_code == 204
+    third = create_user(me, "third", role="admin")
+    assert third["id"] == second["id"], "SQLite gives the number again"
+    login(me, "third", "another-long-password")
+    assert me.get(f"{BASE}/github").json()["pending"] is None
+    hub.sign_in_as(hub.person("second-on-github", 9001))  # the deleted person types the code on github.com
+    moment[0] += 6
+    assert me.post(f"{BASE}/github/login/poll", headers=CSRF).json() == {"status": "none"}
+    assert me.get(f"{BASE}/github").json()["signed_in"] is False
+
+
+def test_karten16_b2_deleting_the_account_deletes_its_code_and_its_probe_texts(me: TestClient) -> None:
+    second = second_admin_waits_for_a_code(me)
+    real_values.remember(account(second["id"]), {"title": "Private title of second"})
+    assert second["id"] in github_login._pending and second["id"] in real_values._kept  # noqa: SLF001
+    assert me.delete(f"/api/v1/users/{second['id']}", headers=CSRF).status_code == 204
+    assert second["id"] not in github_login._pending and second["id"] not in real_values._kept  # noqa: SLF001
+
+
+def test_karten16_b2_the_account_alone_tells_a_new_one_from_a_deleted_one(me: TestClient) -> None:
+    """Whatever left in memory is not read by an account that is not the one that put it there (the removal itself is not relied on)."""
+    second = second_admin_waits_for_a_code(me)
+    real_values.remember(account(second["id"]), {"title": "Private title of second"})
+    with db_session() as db:
+        db.delete(db.get(User, second["id"]))  # not through the router: nothing is cleaned up
+        db.commit()
+    third = create_user(me, "third", role="admin")
+    assert third["id"] == second["id"]
+    login(me, "third", "another-long-password")
+    assert me.get(f"{BASE}/github").json()["pending"] is None
+    assert real_values.places(account(third["id"]), {"q": {"title": "Private title of second"}}) == []
+
+
+def test_karten16_b2_taking_the_administrator_role_away_ends_the_sign_in(me: TestClient, hub: Hub, moment: list[float]) -> None:
+    second = create_user(me, "second", role="admin")
+    login(me, "second", "another-long-password")
+    sign_in(me, hub, moment, hub.person("second-on-github", 9001))
+    real_values.remember(account(second["id"]), {"title": "Private title of second"})
+    login(me, ADMIN["username"], ADMIN["password"])
+    assert me.patch(f"/api/v1/users/{second['id']}", json={"role": "user"}, headers=CSRF).status_code == 200
+    with db_session() as db:
+        assert db.get(GithubLogin, second["id"]) is None
+    assert second["id"] not in real_values._kept  # noqa: SLF001

@@ -23,6 +23,12 @@ DEFAULT_REPO = "DerKezorm/nexdeck-workshop"
 REPO = re.compile(r"(?!\.{1,2}/)[A-Za-z0-9_.-]{1,100}/(?!\.{1,2}\Z)[A-Za-z0-9_.-]{1,100}")
 
 
+def account_of(user: Any) -> str:
+    """Who an account is, beyond its number: SQLite hands out the number of a deleted account again, so a number alone
+    would give a new account what a deleted one left in memory (a code that waits, the texts of a probe)."""
+    return f"{user.id}:{user.username}:{user.created_at}"
+
+
 def token() -> str:
     """The key for the private test repository, or an empty text. Read from the environment each time, never kept."""
     return Settings().workshop_token.strip()

@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
+from types import SimpleNamespace
 from typing import Any
 from urllib.parse import parse_qs
 
@@ -17,6 +18,8 @@ import httpx
 import pytest
 import respx
 
+from app.db import db_session
+from app.models import User
 from app.workshop import catalog, files, github_login, real_values, submit
 
 from .karten14_sample import REPO, GitHub, entry
@@ -24,6 +27,13 @@ from .karten14_sample import REPO, GitHub, entry
 DAY = "2026-10-28"
 BOT = {"id": 41898282, "login": "github-actions[bot]", "type": "Bot"}
 CLIENT_ID = "Iv23lilswL5wrA1Z5D4T"
+
+
+def account(user_id: int) -> Any:
+    """The account with this number as ``real_values`` wants to know it (a number nobody has gets a name nobody has)."""
+    with db_session() as db:
+        row = db.get(User, user_id)
+        return SimpleNamespace(id=user_id, username=row.username if row else "nobody", created_at=row.created_at if row else None)
 
 
 class Hub(GitHub):
