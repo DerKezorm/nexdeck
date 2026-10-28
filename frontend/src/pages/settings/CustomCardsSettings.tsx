@@ -8,6 +8,7 @@ import { ApiError, del, downloadGet, get, post, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState, Switch } from '../../components/ui'
 import { exportName } from '../../lib/cardExchange'
+import { unchangedFromShop } from '../../lib/cardShare'
 import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
 import { ImportDialog } from './ImportDialog'
@@ -262,7 +263,13 @@ export function CustomCardsSettings() {
                     <button className="btn btn-icon btn-flat" onClick={() => void save(card)} aria-label={t('cards.exchange.exportNamed', { name: nameOf(card) })} title={t('cards.exchange.export')}>
                       <Download size={15} />
                     </button>
-                    <button className="btn btn-icon btn-flat" onClick={() => setSharing(card)} aria-label={t('cards.share.buttonNamed', { name: nameOf(card) })} title={t('cards.share.button')}>
+                    <button
+                      className="btn btn-icon btn-flat"
+                      onClick={() => setSharing(card)}
+                      aria-label={t('cards.share.buttonNamed', { name: nameOf(card) })}
+                      title={unchangedFromShop(card.shop) ? t('cards.share.problem.unchanged_from_shop') : t('cards.share.button')}
+                      disabled={unchangedFromShop(card.shop)}
+                    >
                       <Share2 size={15} />
                     </button>
                     <button className="btn btn-icon btn-flat" onClick={() => void copy(card)} aria-label={t('cards.copyNamed', { name: nameOf(card) })} title={t('cards.copy')}>

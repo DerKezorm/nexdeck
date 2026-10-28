@@ -60,7 +60,7 @@ export interface CustomCardRow {
   users_may_place: boolean
   updated_at: string
   /** For a card from the Card shop: whether a newer version waits and whether the shop took it back (KARTEN-15). */
-  shop?: { ref: string; update: boolean; removed: { level: 'harmful' | 'not_useful' | 'withdrawn'; reason: string; at: string } | null } | null
+  shop?: { ref: string; update: boolean; locally_changed?: boolean; removed: { level: 'harmful' | 'not_useful' | 'withdrawn'; reason: string; at: string } | null } | null
 }
 
 export interface CardList {

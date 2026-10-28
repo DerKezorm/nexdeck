@@ -130,7 +130,16 @@ export const SHARE_PROBLEMS = [
   'changes',
   'secret_in_text',
   'too_long',
+  'unchanged_from_shop',
 ] as const
+
+/**
+ * Whether a card or an own integration stands as it came from the Card shop, so there is nothing of one's own to share.
+ * Only an answer that says so counts: a server that does not tell leaves the button on, and the check says it then.
+ */
+export function unchangedFromShop(from: { locally_changed?: boolean } | null | undefined): boolean {
+  return from?.locally_changed === false
+}
 
 /** Where the card is to be changed again after a failed check: the editor of the card or of the connection. */
 export function editorPath(kind: ShareKind, slug: string, resend?: number): string {

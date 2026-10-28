@@ -3045,7 +3045,8 @@
         "license": "Seleziona la casella della licenza MIT.",
         "changes": "Un aggiornamento richiede un elenco delle modifiche.",
         "secret_in_text": "Il testo sembra contenere una chiave o una password. Toglila.",
-        "too_long": "L'invio è troppo lungo per GitHub. Accorcia la definizione o i suoi dati dimostrativi."
+        "too_long": "L'invio è troppo lungo per GitHub. Accorcia la definizione o i suoi dati dimostrativi.",
+        "unchanged_from_shop": "Questo arriva dal Card shop senza modifiche. Modificalo per condividere la tua versione."
       },
       "realValues": {
         "title": "Questi valori dimostrativi sembrano reali, dalla tua ultima prova",

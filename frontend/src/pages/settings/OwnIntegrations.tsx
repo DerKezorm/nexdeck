@@ -8,6 +8,7 @@ import { ApiError, del, downloadGet, get } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState } from '../../components/ui'
 import { exportName } from '../../lib/cardExchange'
+import { unchangedFromShop } from '../../lib/cardShare'
 import { ShareDialog } from './share/ShareDialog'
 
 /** One own integration in the list (`GET /own-integrations`). */
@@ -20,6 +21,9 @@ export interface OwnIntegrationRow {
   connections: number
   updated_at: string
   updated_by: string
+  /** Set when it came from the Card shop; with `locally_changed` false it is as the shop has it and is not shared again (KARTEN-16). */
+  shop_ref?: string
+  locally_changed?: boolean
 }
 
 /** The most own integrations an installation keeps (KARTEN-3 AC-12). */
@@ -35,6 +39,9 @@ export const OWN_INTEGRATIONS_KEY = ['own-integrations']
 export function useOwnIntegrations() {
   return useQuery({ queryKey: OWN_INTEGRATIONS_KEY, queryFn: () => get<OwnIntegrationRow[]>('/own-integrations') })
 }
+
+/** An integration that came from the Card shop and was not changed since has nothing of its own to share. */
+const sameAsShop = (row: OwnIntegrationRow) => Boolean(row.shop_ref) && unchangedFromShop(row)
 
 export function OwnIntegrations() {
   const { t } = useTranslation()
@@ -121,7 +128,13 @@ export function OwnIntegrations() {
                   <button className="btn btn-icon btn-flat" onClick={() => void save(row)} aria-label={t('cards.exchange.exportNamed', { name: row.name })} title={t('cards.exchange.export')}>
                     <Download size={15} />
                   </button>
-                  <button className="btn btn-icon btn-flat" onClick={() => setSharing(row)} aria-label={t('cards.share.buttonNamed', { name: row.name })} title={t('cards.share.button')}>
+                  <button
+                    className="btn btn-icon btn-flat"
+                    onClick={() => setSharing(row)}
+                    aria-label={t('cards.share.buttonNamed', { name: row.name })}
+                    title={sameAsShop(row) ? t('cards.share.problem.unchanged_from_shop') : t('cards.share.button')}
+                    disabled={sameAsShop(row)}
+                  >
                     <Share2 size={15} />
                   </button>
                   <button className="btn btn-icon btn-flat btn-danger" onClick={() => setRemoving(row)} aria-label={t('cards.deleteNamed', { name: row.name })} title={t('cards.delete')}>

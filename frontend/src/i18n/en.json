@@ -3045,7 +3045,8 @@
         "license": "Tick the box for the MIT License.",
         "changes": "An update needs a list of changes.",
         "secret_in_text": "The text seems to hold a key or a password. Take it out.",
-        "too_long": "The submission is too long for GitHub. Shorten the definition or its demo data."
+        "too_long": "The submission is too long for GitHub. Shorten the definition or its demo data.",
+        "unchanged_from_shop": "This came unchanged from the Card shop. Change it to share your own version."
       },
       "realValues": {
         "title": "These demo values look like real ones from your last probe",
