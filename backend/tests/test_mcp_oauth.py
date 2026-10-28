@@ -667,6 +667,25 @@ def test_a_connector_whose_refresh_token_is_spent_but_whose_key_lives_is_not_pus
     assert _programs() == {"Stranger"}
 
 
+def test_a_connector_between_two_hours_is_not_pushed_out_while_its_refresh_token_can_be_traded(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Its access token is long gone and no call has been made for a day: the program comes back with the refresh token."""
+    monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 1)
+    used, tokens = connect(ready, name="Used")
+    _aged(used)
+    with db_session() as db:
+        db.scalar(select(McpKey).where(McpKey.kind == "oauth")).expires_at = utcnow() - timedelta(hours=1)
+    assert _full_registration(ready, "Stranger").status_code == 429
+    assert _programs() == {"Used"}
+    assert renew(ready, used, tokens["refresh_token"]).status_code == 200
+    # Its refresh token runs out, too: now it is idle.
+    with db_session() as db:
+        for row in db.scalars(select(McpOAuthRefresh)):
+            row.expires_at = utcnow() - timedelta(seconds=1)
+        for key in db.scalars(select(McpKey)):
+            key.expires_at = utcnow() - timedelta(seconds=1)
+    assert _full_registration(ready, "Stranger").status_code == 201
+
+
 def test_a_program_with_a_code_not_yet_traded_is_not_pushed_out(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(mcp_oauth, "MAX_CLIENTS", 1)
     waiting = register(ready, name="Waiting")
