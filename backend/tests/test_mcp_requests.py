@@ -62,7 +62,8 @@ def test_allowed_a_harmless_button_is_pressed_at_once_and_logged_as_the_key(lab:
     assert _presses() == [("Claude (MCP)", "restart", {"id": "c1"})]
     with db_session() as db:
         line = db.scalar(select(Event).where(Event.kind == "mcp_call"))
-        assert (line.name, line.after, line.detail) == ("Host", "Restart", "Restart on Host by Claude (MCP)")
+        assert (line.name, line.before, line.after, line.detail) == ("Host", "Claude (MCP)", "Restart", "Restart on Host by Claude (MCP)")
+        assert line.user_id is None, "nobody allowed it: it ran because the key may"
         assert line.board_id == lab["board"]["id"]
     assert _requests() == []
 
@@ -106,7 +107,10 @@ def test_approving_presses_exactly_what_was_asked_and_says_who_allowed_it(lab: d
     assert answer.json() == {"status": "approved", "result": {"message": "Demo mode: restart would have run now."}}
     assert _presses() == [("Claude (MCP), approved by admin", "restart", {"id": "c1"})]
     with db_session() as db:
-        assert db.scalar(select(Event.detail).where(Event.kind == "mcp_call")) == "Restart on Host by Claude (MCP), approved by admin"
+        line = db.scalar(select(Event).where(Event.kind == "mcp_call"))
+        assert line.detail == "Restart on Host by Claude (MCP), approved by admin"
+        assert (line.name, line.before, line.after) == ("Host", "Claude (MCP)", "Restart")
+        assert line.user_id == db.scalar(select(User.id).where(User.username == "admin")), "the one who allowed it"
     status = call(client, token, "request_status", request=number)["value"]
     assert status["status"] == "approved" and status["result"] == {"message": "Demo mode: restart would have run now."}
     # Decided once, decided: a second click presses nothing.

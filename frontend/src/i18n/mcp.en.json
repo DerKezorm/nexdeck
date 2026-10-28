@@ -114,6 +114,10 @@
         "failed": "Allowed, but it did not work"
       }
     },
+    "chronicle": {
+      "pressed": "{{after}} on {{name}} by {{before}}",
+      "approved": "{{after}} on {{name}} by {{before}}, approved by {{user}}"
+    },
     "connect": {
       "title": "Connect a program",
       "heading": "{{program}} wants to connect to your nexdeck",

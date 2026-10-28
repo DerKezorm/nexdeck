@@ -52,8 +52,12 @@ export function lineText(line: ChronicleLine, t: Translate, language: string): s
     const time = until && !Number.isNaN(until.getTime()) ? until.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) : ''
     return t('chronicle.kind.maintenance', { ...values, until: time })
   }
-  // A press over MCP: the server wrote the whole sentence ("<button> on <card> by <key> (MCP), approved by <name>").
-  if (line.kind === 'mcp_call') return line.detail || line.name
+  // A press over MCP: name is the card, before the key, after the button, and user the person who allowed it
+  // (set only when somebody did). The words are in the MCP texts, fetched when such a line is on screen
+  // (``useChronicleWords``); until they are there, and in a language without them, the server's English sentence stands.
+  if (line.kind === 'mcp_call') {
+    return t(line.user ? 'mcp.chronicle.approved' : 'mcp.chronicle.pressed', { ...values, after: tLabel(line.after), defaultValue: line.detail || line.name })
+  }
   return t(`chronicle.kind.${line.kind}`, { ...values, defaultValue: line.name })
 }
 

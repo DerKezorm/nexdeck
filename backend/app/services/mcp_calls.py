@@ -262,8 +262,11 @@ async def _press(widget: Widget, board: Board, caller: Caller, action_id: str, p
         logger.warning("Action %r on %r failed for %s: %s", action_id, title, actor, failure.message)
         raise ToolError(failure.message) from failure
     logger.info("Action %r ran on %r by %s: %s", action_id, title, actor, message)
+    # name: the card, before: the key, after: the button, user: whoever allowed it, if anybody did. The interface
+    # words the line from these in the reader's language; ``detail`` is the same in English, for whoever reads it raw.
     chronicle.record("mcp_call", level="info", widget_id=widget.id, integration_id=widget.integration_id, board_id=board.id,
-                     user_id=caller.user_id, name=title, after=label, detail=f"{label} on {title} by {actor}")
+                     user_id=caller.user_id if approved_by else None, name=title, before=caller.actor, after=label,
+                     detail=f"{label} on {title} by {actor}")
     emit("action_done", f"{action_id} on {title}", message, user_ids=[caller.user_id], integration_id=widget.integration_id)
     return message
 

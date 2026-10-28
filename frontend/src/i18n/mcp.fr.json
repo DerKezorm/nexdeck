@@ -114,6 +114,10 @@
         "failed": "Autorisée, mais sans succès"
       }
     },
+    "chronicle": {
+      "pressed": "{{after}} sur {{name}} par {{before}}",
+      "approved": "{{after}} sur {{name}} par {{before}}, autorisé par {{user}}"
+    },
     "connect": {
       "title": "Connecter un programme",
       "heading": "{{program}} veut se connecter à ton nexdeck",

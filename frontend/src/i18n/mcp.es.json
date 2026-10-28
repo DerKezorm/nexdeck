@@ -114,6 +114,10 @@
         "failed": "Permitida, pero no funcionó"
       }
     },
+    "chronicle": {
+      "pressed": "{{after}} en {{name}} por {{before}}",
+      "approved": "{{after}} en {{name}} por {{before}}, permitido por {{user}}"
+    },
     "connect": {
       "title": "Conectar un programa",
       "heading": "{{program}} quiere conectarse a tu nexdeck",
