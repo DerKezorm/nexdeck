@@ -109,6 +109,29 @@
         "expired": "Ran out",
         "failed": "Allowed, but it did not work"
       }
+    },
+    "connect": {
+      "title": "Connect a program",
+      "heading": "{{program}} wants to connect to your nexdeck",
+      "help": "The program gets a key of its own. It sees only what you choose here, it shows in your list of keys under Settings, and you can revoke it there at any time.",
+      "program": "Program",
+      "returnsTo": "Returns to",
+      "account": "Account",
+      "level": "Level",
+      "boards": "Boards",
+      "check": "Only allow this if you started connecting in the program yourself and you recognise the address it returns to.",
+      "allow": "Allow",
+      "decline": "Decline",
+      "sending": "Back to the program …",
+      "error": {
+        "off": "Connectors are not allowed on this installation. Only an administrator can allow them.",
+        "client": "This program is not registered here. Start connecting again in the program.",
+        "redirect": "The program wants to return to an address it did not register. Nothing was sent to it.",
+        "request": "The request of the program is incomplete or meant for another server. Start connecting again in the program.",
+        "guest": "Guests cannot connect programs.",
+        "session": "Sign in with your password to connect a program.",
+        "tooMany": "Your account holds the most keys it may have. Revoke one under Settings first."
+      }
     }
   }
 }

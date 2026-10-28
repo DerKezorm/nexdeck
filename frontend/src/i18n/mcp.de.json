@@ -109,6 +109,29 @@
         "expired": "Verfallen",
         "failed": "Erlaubt, hat aber nicht geklappt"
       }
+    },
+    "connect": {
+      "title": "Programm verbinden",
+      "heading": "{{program}} möchte sich mit deinem nexdeck verbinden",
+      "help": "Das Programm bekommt einen eigenen Schlüssel. Es sieht nur, was du hier auswählst, steht in deiner Schlüsselliste unter Einstellungen, und du kannst es dort jederzeit zurückziehen.",
+      "program": "Programm",
+      "returnsTo": "Kehrt zurück zu",
+      "account": "Konto",
+      "level": "Stufe",
+      "boards": "Boards",
+      "check": "Erlaube das nur, wenn du das Verbinden selbst im Programm gestartet hast und die Adresse kennst, zu der es zurückkehrt.",
+      "allow": "Erlauben",
+      "decline": "Ablehnen",
+      "sending": "Zurück zum Programm …",
+      "error": {
+        "off": "Connectoren sind auf dieser Installation nicht erlaubt. Nur ein Admin kann sie erlauben.",
+        "client": "Dieses Programm ist hier nicht angemeldet. Starte das Verbinden im Programm neu.",
+        "redirect": "Das Programm will zu einer Adresse zurück, die es nicht angemeldet hat. Es wurde nichts dorthin geschickt.",
+        "request": "Die Anfrage des Programms ist unvollständig oder für einen anderen Server gedacht. Starte das Verbinden im Programm neu.",
+        "guest": "Gäste können keine Programme verbinden.",
+        "session": "Melde dich mit deinem Passwort an, um ein Programm zu verbinden.",
+        "tooMany": "Dein Konto hat schon so viele Schlüssel, wie es haben darf. Ziehe zuerst unter Einstellungen einen zurück."
+      }
     }
   }
 }

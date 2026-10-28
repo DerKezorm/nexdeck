@@ -28,6 +28,7 @@ const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ 
 const McpRequestPage = lazy(() => import('./pages/McpRequestPage').then((m) => ({ default: m.McpRequestPage })))
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
+const ConnectPage = lazy(() => import('./pages/ConnectPage').then((m) => ({ default: m.ConnectPage })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 5000 } } })
 
@@ -106,6 +107,8 @@ export function App() {
                 and a reloaded display comes back in on /k alone. */}
             <Route path="/k/:token?" element={<KioskPage />} />
             <Route path="/preview" element={<PreviewPage />} />
+            {/* An MCP connector's consent page: outside the frame like the sign-in, it sends a signed-out browser there itself. */}
+            <Route path="/connect" element={<ConnectPage />} />
             <Route
               path="/"
               element={

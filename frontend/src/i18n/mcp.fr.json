@@ -109,6 +109,29 @@
         "expired": "Expirée",
         "failed": "Autorisée, mais sans succès"
       }
+    },
+    "connect": {
+      "title": "Connecter un programme",
+      "heading": "{{program}} veut se connecter à ton nexdeck",
+      "help": "Le programme reçoit sa propre clé. Il ne voit que ce que tu choisis ici, il apparaît dans ta liste de clés sous Paramètres et tu peux l'y révoquer à tout moment.",
+      "program": "Programme",
+      "returnsTo": "Revient à",
+      "account": "Compte",
+      "level": "Niveau",
+      "boards": "Tableaux",
+      "check": "N'autorise cela que si tu as toi-même lancé la connexion dans le programme et que tu reconnais l'adresse à laquelle il revient.",
+      "allow": "Autoriser",
+      "decline": "Refuser",
+      "sending": "Retour au programme …",
+      "error": {
+        "off": "Les connecteurs ne sont pas autorisés sur cette installation. Seul un administrateur peut les autoriser.",
+        "client": "Ce programme n'est pas enregistré ici. Relance la connexion dans le programme.",
+        "redirect": "Le programme veut revenir à une adresse qu'il n'a pas enregistrée. Rien ne lui a été envoyé.",
+        "request": "La demande du programme est incomplète ou destinée à un autre serveur. Relance la connexion dans le programme.",
+        "guest": "Les invités ne peuvent pas connecter de programmes.",
+        "session": "Connecte-toi avec ton mot de passe pour connecter un programme.",
+        "tooMany": "Ton compte a déjà le nombre maximal de clés. Révoque d'abord une clé sous Paramètres."
+      }
     }
   }
 }

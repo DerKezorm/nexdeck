@@ -109,6 +109,29 @@
         "expired": "Caducada",
         "failed": "Permitida, pero no funcionó"
       }
+    },
+    "connect": {
+      "title": "Conectar un programa",
+      "heading": "{{program}} quiere conectarse a tu nexdeck",
+      "help": "El programa recibe una clave propia. Solo ve lo que elijas aquí, aparece en tu lista de claves en Ajustes y puedes revocarla allí en cualquier momento.",
+      "program": "Programa",
+      "returnsTo": "Vuelve a",
+      "account": "Cuenta",
+      "level": "Nivel",
+      "boards": "Tableros",
+      "check": "Permítelo solo si tú mismo empezaste la conexión en el programa y reconoces la dirección a la que vuelve.",
+      "allow": "Permitir",
+      "decline": "Rechazar",
+      "sending": "Volviendo al programa …",
+      "error": {
+        "off": "Los conectores no están permitidos en esta instalación. Solo un administrador puede permitirlos.",
+        "client": "Este programa no está registrado aquí. Vuelve a empezar la conexión en el programa.",
+        "redirect": "El programa quiere volver a una dirección que no registró. No se le ha enviado nada.",
+        "request": "La solicitud del programa está incompleta o es para otro servidor. Vuelve a empezar la conexión en el programa.",
+        "guest": "Los invitados no pueden conectar programas.",
+        "session": "Inicia sesión con tu contraseña para conectar un programa.",
+        "tooMany": "Tu cuenta ya tiene el máximo de claves. Revoca una en Ajustes primero."
+      }
     }
   }
 }
