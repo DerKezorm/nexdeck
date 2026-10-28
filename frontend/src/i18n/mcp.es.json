@@ -100,6 +100,10 @@
       "result": "Resultado",
       "danger": "Botón peligroso",
       "allow": "Permitir",
+      "review": "Revisar",
+      "confirmTitle": "¿Permitir un botón peligroso?",
+      "confirmBody": "{{button}} en {{card}} puede detener o eliminar algo. Se ejecuta en cuanto confirmes.",
+      "confirmAllow": "Sí, pulsarlo",
       "decline": "Rechazar",
       "conflict": "Esta solicitud ya se respondió o ha caducado.",
       "status": {

@@ -100,6 +100,10 @@
       "result": "Result",
       "danger": "Dangerous button",
       "allow": "Allow",
+      "review": "Review",
+      "confirmTitle": "Allow a dangerous button?",
+      "confirmBody": "{{button}} on {{card}} can stop or remove something. It runs as soon as you confirm.",
+      "confirmAllow": "Yes, press it",
       "decline": "Decline",
       "conflict": "This request was already answered or has run out.",
       "status": {

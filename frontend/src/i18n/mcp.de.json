@@ -100,6 +100,10 @@
       "result": "Ergebnis",
       "danger": "Gefährlicher Knopf",
       "allow": "Erlauben",
+      "review": "Ansehen",
+      "confirmTitle": "Gefährlichen Knopf erlauben?",
+      "confirmBody": "{{button}} auf {{card}} kann etwas anhalten oder entfernen. Er läuft, sobald du bestätigst.",
+      "confirmAllow": "Ja, drücken",
       "decline": "Ablehnen",
       "conflict": "Diese Anfrage wurde schon beantwortet oder ist verfallen.",
       "status": {

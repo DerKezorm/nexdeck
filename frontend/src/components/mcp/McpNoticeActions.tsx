@@ -28,7 +28,7 @@ export default function McpNoticeActions({ notice }: { notice: Notice }) {
           <DangerMark />
         </div>
       )}
-      <RequestAnswer request={request.data} />
+      <RequestAnswer request={request.data} inBell />
     </div>
   )
 }

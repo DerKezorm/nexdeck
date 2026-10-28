@@ -100,6 +100,10 @@
       "result": "Résultat",
       "danger": "Bouton dangereux",
       "allow": "Autoriser",
+      "review": "Examiner",
+      "confirmTitle": "Autoriser un bouton dangereux ?",
+      "confirmBody": "{{button}} sur {{card}} peut arrêter ou supprimer quelque chose. Il s'exécute dès que tu confirmes.",
+      "confirmAllow": "Oui, l'actionner",
       "decline": "Refuser",
       "conflict": "Cette demande a déjà reçu une réponse ou a expiré.",
       "status": {

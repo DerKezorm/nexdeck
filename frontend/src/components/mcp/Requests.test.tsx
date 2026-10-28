@@ -141,6 +141,27 @@ describe('an approval request in the bell', () => {
     expect(await screen.findByTestId('mcp-danger')).toHaveTextContent('Dangerous button')
   })
 
+  it('offers only Review and Decline for a dangerous button, so one click in the bell cannot allow it', async () => {
+    current = request({ danger: true })
+    start()
+    const user = userEvent.setup()
+    bell([notice()])
+    const box = await screen.findByTestId('mcp-notice-7')
+    expect(within(box).queryByRole('button', { name: 'Allow' })).toBeNull()
+    expect(within(box).getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/mcp/requests/7')
+    await user.click(within(box).getByRole('button', { name: 'Decline' }))
+    await waitFor(() => expect(calls.some((call) => call.path === '/mcp/requests/7/decline')).toBe(true))
+    expect(calls.some((call) => call.path.endsWith('/approve'))).toBe(false)
+  })
+
+  it('keeps Allow for a harmless button in the bell, with no Review', async () => {
+    start()
+    bell([notice()])
+    const box = await screen.findByTestId('mcp-notice-7')
+    expect(within(box).getByRole('button', { name: 'Allow' })).toBeEnabled()
+    expect(within(box).queryByRole('link', { name: 'Review' })).toBeNull()
+  })
+
   it('says so when the server found it answered meanwhile, and shows the state it has now', async () => {
     onApprove = () => {
       current = { ...current, status: 'declined' }
@@ -173,6 +194,34 @@ describe('the page of one request', () => {
     start()
     page()
     expect(await screen.findByTestId('mcp-danger')).toBeInTheDocument()
+  })
+
+  it('asks a second time before it allows a dangerous button, and only the second yes runs it', async () => {
+    current = request({ danger: true })
+    start()
+    const user = userEvent.setup()
+    page()
+    await user.click(await screen.findByRole('button', { name: 'Allow' }))
+    const question = await screen.findByRole('dialog')
+    expect(question).toHaveTextContent('Allow a dangerous button?')
+    expect(question).toHaveTextContent('Restart on Containers')
+    expect(calls.some((call) => call.path.endsWith('/approve'))).toBe(false)
+    // Backing out runs nothing.
+    await user.click(within(question).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(calls.some((call) => call.path.endsWith('/approve'))).toBe(false)
+    await user.click(screen.getByRole('button', { name: 'Allow' }))
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Yes, press it' }))
+    await waitFor(() => expect(calls.filter((call) => call.path === '/mcp/requests/7/approve')).toHaveLength(1))
+  })
+
+  it('allows a harmless button on the page at once, without a second question', async () => {
+    start()
+    const user = userEvent.setup()
+    page()
+    await user.click(await screen.findByRole('button', { name: 'Allow' }))
+    await waitFor(() => expect(calls.some((call) => call.path === '/mcp/requests/7/approve')).toBe(true))
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   it('shows the result after the request was allowed, and no buttons', async () => {

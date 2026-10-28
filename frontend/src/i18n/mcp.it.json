@@ -100,6 +100,10 @@
       "result": "Risultato",
       "danger": "Pulsante pericoloso",
       "allow": "Consenti",
+      "review": "Esamina",
+      "confirmTitle": "Consentire un pulsante pericoloso?",
+      "confirmBody": "{{button}} su {{card}} può fermare o rimuovere qualcosa. Viene eseguito appena confermi.",
+      "confirmAllow": "Sì, premilo",
       "decline": "Rifiuta",
       "conflict": "Questa richiesta ha già avuto risposta o è scaduta.",
       "status": {

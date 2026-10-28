@@ -2,11 +2,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { ApiError, get } from '../../api/client'
 import { factText } from '../../lib/assistant'
 import { decide, openRequest, resultText, type McpRequest } from '../../lib/mcp'
 import { tLabel } from '../../i18n/texts'
+import { Confirm } from '../ui'
 
 /** One request of the account, read from the server. A missing or foreign one answers the same way: not found. */
 export function useRequest(id: number | null) {
@@ -41,12 +43,18 @@ export function DangerMark() {
  * Allow and Decline for a request that is still waiting; for any other it
  * shows the state and nothing to press. The server decides again: a request
  * answered meanwhile, or run out, comes back as a conflict and is re-read.
+ *
+ * ⚠️ A dangerous button is never allowed with one click. In the bell, where
+ * the request is a line among others and shows little, there is only Review
+ * (to the page with every detail) and Decline. On the page, Allow asks once
+ * more, as the buttons of a card do.
  */
-export function RequestAnswer({ request }: { request: McpRequest }) {
+export function RequestAnswer({ request, inBell = false }: { request: McpRequest; inBell?: boolean }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState('')
+  const [sure, setSure] = useState(false)
   if (!openRequest(request)) {
     return (
       <p className="text-sm text-muted" data-testid="mcp-state">
@@ -57,6 +65,7 @@ export function RequestAnswer({ request }: { request: McpRequest }) {
   const answer = async (verb: 'approve' | 'decline') => {
     setBusy(true)
     setFailure('')
+    setSure(false)
     try {
       await decide(request.id, verb)
     } catch (error) {
@@ -66,12 +75,23 @@ export function RequestAnswer({ request }: { request: McpRequest }) {
       setBusy(false)
     }
   }
+  const review = request.danger && inBell
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        <button className={`btn ${request.danger ? 'btn-danger' : 'btn-accent'}`} disabled={busy} onClick={() => void answer('approve')}>
-          {t('mcp.request.allow')}
-        </button>
+        {review ? (
+          <Link className="btn btn-accent" to={`/mcp/requests/${request.id}`}>
+            {t('mcp.request.review')}
+          </Link>
+        ) : (
+          <button
+            className={`btn ${request.danger ? 'btn-danger' : 'btn-accent'}`}
+            disabled={busy}
+            onClick={() => (request.danger ? setSure(true) : void answer('approve'))}
+          >
+            {t('mcp.request.allow')}
+          </button>
+        )}
         <button className="btn" disabled={busy} onClick={() => void answer('decline')}>
           {t('mcp.request.decline')}
         </button>
@@ -81,6 +101,15 @@ export function RequestAnswer({ request }: { request: McpRequest }) {
           {failure}
         </p>
       )}
+      <Confirm
+        open={sure}
+        danger
+        title={t('mcp.request.confirmTitle')}
+        body={t('mcp.request.confirmBody', { button: tLabel(request.label), card: request.card })}
+        confirmLabel={t('mcp.request.confirmAllow')}
+        onCancel={() => setSure(false)}
+        onConfirm={() => void answer('approve')}
+      />
     </div>
   )
 }
