@@ -2799,6 +2799,46 @@
           "open": "Open the board"
         }
       }
+    },
+    "shop": {
+      "offTitle": "The Card shop is off",
+      "offLead": "Loads the catalog from GitHub. Until you turn it on, nexdeck asks GitHub nothing.",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off the Card shop",
+      "whatItSends": "What it sends",
+      "sendsBody": "The shop only loads the catalog and the files of cards from GitHub. Nothing from your installation goes out.",
+      "tryAgain": "Try again",
+      "loading": "Loading the catalog…",
+      "problem": {
+        "github_unreachable": {
+          "title": "GitHub not reachable",
+          "body": "The Card shop cannot load its catalog right now. Cards you installed keep working."
+        },
+        "github_rejected": {
+          "title": "GitHub refused the request",
+          "body": "The key is missing or wrong, or the catalog repository was not found. Ask whoever runs this installation. Cards you installed keep working."
+        },
+        "github_rate_limited": {
+          "title": "GitHub says: too many requests",
+          "body": "Try again in a few minutes. Cards you installed keep working."
+        },
+        "catalog_invalid": {
+          "title": "The catalog is broken",
+          "body": "The catalog could not be read, so nothing is shown. Cards you installed keep working."
+        },
+        "catalog_empty": {
+          "title": "The catalog is empty",
+          "body": "There is nothing in the catalog, which is not normal. Cards you installed keep working."
+        },
+        "other": {
+          "title": "The Card shop could not be loaded",
+          "body": "Something went wrong. Cards you installed keep working."
+        }
+      },
+      "stale": "GitHub could not be reached, so this is the catalog from {{time}}.",
+      "switchLabel": "Card shop",
+      "switchOn": "On. Loads the catalog from GitHub when you open the Card shop, and once a day to look for updates.",
+      "switchOff": "Off. nexdeck asks GitHub nothing, and there are no notices about updates or removed cards."
     }
   }
 }

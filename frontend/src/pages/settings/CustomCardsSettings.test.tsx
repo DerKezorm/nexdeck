@@ -125,11 +125,11 @@ describe('the list', () => {
     expect(screen.getByText('2 of 200 custom cards. A change to a card shows on every board at once.')).toBeInTheDocument()
   })
 
-  it('karten11 ac10: the tabs that come later say so in one sentence', async () => {
+  it('karten11 ac10: the tab that comes later says so in one sentence', async () => {
     stub([card()])
     show()
     await screen.findByText('Queue')
-    for (const name of ['Card shop', 'My submissions']) {
+    for (const name of ['My submissions']) {
       await userEvent.click(screen.getByRole('tab', { name: new RegExp(name) }))
       expect(screen.getByText('This part of Custom cards comes with a later version of nexdeck.')).toBeInTheDocument()
       expect(screen.queryByText('Queue')).toBeNull()

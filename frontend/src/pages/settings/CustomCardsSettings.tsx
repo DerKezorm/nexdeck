@@ -6,12 +6,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, del, downloadGet, get, post, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
-import { Confirm, EmptyState } from '../../components/ui'
+import { Confirm, EmptyState, Switch } from '../../components/ui'
 import { exportName } from '../../lib/cardExchange'
 import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
 import { ImportDialog } from './ImportDialog'
 import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
+import { useShopState, useShopSwitch } from './shop/hooks'
+import { ShopTab } from './shop/ShopTab'
 
 type Tab = 'cards' | 'integrations' | 'shop' | 'submissions'
 
@@ -43,6 +45,8 @@ export function CustomCardsSettings() {
   const [openBoards, setOpenBoards] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [notice, setNotice] = useState('')
+  const shopState = useShopState()
+  const shopSwitch = useShopSwitch()
 
   const rows = cards.data?.cards ?? []
   const limit = cards.data?.limit ?? 200
@@ -153,7 +157,9 @@ export function CustomCardsSettings() {
 
         {tab === 'integrations' && <OwnIntegrations />}
 
-        {(tab === 'shop' || tab === 'submissions') && <p className="text-sm text-muted">{t('cards.later')}</p>}
+        {tab === 'shop' && <ShopTab />}
+
+        {tab === 'submissions' && <p className="text-sm text-muted">{t('cards.later')}</p>}
 
         {tab === 'cards' && cards.isSuccess && rows.length === 0 && (
           <EmptyState
@@ -261,6 +267,23 @@ export function CustomCardsSettings() {
             </ul>
             <p className="text-xs text-muted mt-3">{t('cards.footer', { count: rows.length, limit })}</p>
           </>
+        )}
+
+        {tab === 'cards' && shopState.isSuccess && (
+          <div className="mt-4 pt-3 border-t border-line" data-testid="shop-switch">
+            <Switch
+              checked={shopState.data.enabled}
+              disabled={shopSwitch.busy}
+              onChange={(value) => void shopSwitch.set(value)}
+              label={t('cards.shop.switchLabel')}
+              description={t(shopState.data.enabled ? 'cards.shop.switchOn' : 'cards.shop.switchOff')}
+            />
+            {shopSwitch.error && (
+              <p className="text-sm text-bad" role="alert">
+                {shopSwitch.error}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
