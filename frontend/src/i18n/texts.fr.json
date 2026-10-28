@@ -2288,7 +2288,17 @@
     "Repositories and tags of a container registry, and the newest version of the images you run. zot, Distribution, Harbor, ghcr.io and Docker Hub.": "Dépôts et tags d'un registre de conteneurs, et la version la plus récente des images que vous utilisez. zot, Distribution, Harbor, ghcr.io et Docker Hub.",
     "The newest version of each image you name, how old it is, and whether it is newer than the tag you run.": "La version la plus récente de chaque image indiquée, son ancienneté, et si elle est plus récente que le tag utilisé.",
     "The registry itself, without /v2: https://ghcr.io, https://registry-1.docker.io, or your own.": "Le registre lui-même, sans /v2 : https://ghcr.io, https://registry-1.docker.io ou le vôtre.",
-    "The repositories the registry lists, with how many tags each has and its newest version.": "Les dépôts listés par le registre, avec le nombre de tags de chacun et sa version la plus récente."
+    "The repositories the registry lists, with how many tags each has and its newest version.": "Les dépôts listés par le registre, avec le nombre de tags de chacun et sa version la plus récente.",
+    "Access token of a server admin": "Jeton d'accès d'un administrateur du serveur",
+    "Largest rooms": "Plus grands salons",
+    "Of a user who is a server admin: in Element under All settings > Help & About > Advanced > Access Token. Logging that session out ends the token, so a session of its own is best.": "D'un utilisateur administrateur du serveur : dans Element sous Tous les paramètres > Aide et à propos > Avancé > Jeton d'accès. Fermer cette session met fin au jeton ; le mieux est une session dédiée.",
+    "Reported messages": "Messages signalés",
+    "Synapse overview": "Aperçu de Synapse",
+    "The newest reports with the room, the reason and who reported, until an admin deletes them.": "Les signalements les plus récents avec le salon, le motif et l'auteur, jusqu'à ce qu'un admin les supprime.",
+    "The rooms with the most members, and whether they are public or encrypted.": "Les salons avec le plus de membres et s'ils sont publics ou chiffrés.",
+    "Users, rooms, deactivated users, reported messages waiting for a moderator and servers that cannot be reached.": "Utilisateurs, salons, utilisateurs désactivés, messages signalés en attente d'un modérateur et serveurs injoignables.",
+    "Users, rooms, reported messages and unreachable servers of your Matrix homeserver, through Synapse's Admin API.": "Utilisateurs, salons, messages signalés et serveurs injoignables de votre serveur Matrix, via l'API d'administration de Synapse.",
+    "Where Synapse answers the client API, with its path if it is served under one. The Admin API has to be reachable there: a reverse proxy often hides /_synapse/admin.": "Là où Synapse répond à l'API client, avec son chemin s'il en a un. L'API d'administration doit y être joignable : un reverse proxy masque souvent /_synapse/admin."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3617,6 +3627,12 @@
     "Every minute": "Chaque minute",
     "Behind": "En retard",
     "No version tag": "Aucun tag de version",
-    "No tags": "Aucun tag"
+    "No tags": "Aucun tag",
+    "Deactivated": "Désactivés",
+    "Encrypted": "Chiffré",
+    "Rooms": "Salons",
+    "Servers unreachable": "Serveurs injoignables",
+    "No reason given": "Aucun motif indiqué",
+    "Unnamed room": "Salon sans nom"
   }
 }
