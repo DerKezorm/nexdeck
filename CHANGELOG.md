@@ -7,6 +7,7 @@ project uses semantic versioning.
 
 ### Fixed
 
+- **An updated service shows as current within the hour.** The version a service runs was kept for six hours, so after an update the card went on saying a newer release was out, next to the new version it already ran. A service behind the newest release is now asked again after half an hour, until it runs the newest; one that is current is still asked once per six hours, and so is GitHub.
 - **A device is no longer proposed in a container named after it.** The inventory proposed a FRITZ!Box in a container whose name began with "fritz", though it was a recorder that only talks to the box. Connections to devices of their own (FRITZ!Box, routers and firewalls, NAS systems, hypervisors, smart plugs, inverters, cameras, SNMP) are never proposed in a container. For any other service, a container that shares only part of its name is proposed only when its image names the same software.
 
 ## 0.51.0 (2026-10-28)
