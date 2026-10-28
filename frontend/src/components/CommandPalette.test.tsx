@@ -95,6 +95,7 @@ describe('CommandPalette', () => {
       card(2, 'core.button', 'Router'),
       card(3, 'linkding.recent', 'Saved'),
       card(4, 'radarr.queue', 'Downloads'),
+      card(5, 'readeck.recent', 'Reading list'),
     ]
     const DATA: Record<number, WidgetData> = {
       1: { status: 'ok', items: [
@@ -104,6 +105,10 @@ describe('CommandPalette', () => {
       2: { status: 'ok', meta: { kind: 'link', where: 'https://router.example.com', new_tab: true } },
       3: { status: 'ok', items: [{ title: 'DNS cheat sheet', url: 'https://wiki.example.org/dns' }] },
       4: { status: 'ok', items: [{ title: 'Some movie', url: 'https://radarr.example.com/movie/1' }] },
+      5: { status: 'ok', items: [
+        { title: 'ZFS on a small machine', url: 'https://readeck.example.com/bookmarks/a2' },
+        { title: 'Planted', url: 'javascript:alert(2)' },
+      ] },
     }
     let opened: string[]
 
@@ -139,6 +144,16 @@ describe('CommandPalette', () => {
       show(WIDGETS, DATA)
       await userEvent.type(screen.getByRole('textbox'), 'cheat sheet')
       expect(await screen.findByRole('option', { name: /DNS cheat sheet/ })).toBeTruthy()
+    })
+
+    it('offers what a Readeck card has loaded, and not an address nexdeck will not open', async () => {
+      show(WIDGETS, DATA)
+      const box = screen.getByRole('textbox')
+      await userEvent.type(box, 'small machine{Enter}')
+      expect(opened).toEqual(['https://readeck.example.com/bookmarks/a2'])
+      await userEvent.clear(box)
+      await userEvent.type(box, 'Planted')
+      await waitFor(() => expect(screen.getByText(/Nothing matches|Nichts passt/i)).toBeTruthy())
     })
 
     it('leaves out rows of other lists and addresses nexdeck will not open', async () => {

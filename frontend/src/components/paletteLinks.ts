@@ -10,7 +10,7 @@ export interface PaletteLink {
 }
 
 /** Cards whose rows are saved links: the services that keep bookmarks. */
-const BOOKMARK_LISTS = new Set(['karakeep.recent', 'linkwarden.recent', 'linkding.recent'])
+const BOOKMARK_LISTS = new Set(['karakeep.recent', 'linkwarden.recent', 'linkding.recent', 'readeck.recent'])
 
 /**
  * The addresses a card leads to beyond its own link (issue #46).
