@@ -2298,7 +2298,12 @@
     "The rooms with the most members, and whether they are public or encrypted.": "Les salons avec le plus de membres et s'ils sont publics ou chiffrés.",
     "Users, rooms, deactivated users, reported messages waiting for a moderator and servers that cannot be reached.": "Utilisateurs, salons, utilisateurs désactivés, messages signalés en attente d'un modérateur et serveurs injoignables.",
     "Users, rooms, reported messages and unreachable servers of your Matrix homeserver, through Synapse's Admin API.": "Utilisateurs, salons, messages signalés et serveurs injoignables de votre serveur Matrix, via l'API d'administration de Synapse.",
-    "Where Synapse answers the client API, with its path if it is served under one. The Admin API has to be reachable there: a reverse proxy often hides /_synapse/admin.": "Là où Synapse répond à l'API client, avec son chemin s'il en a un. L'API d'administration doit y être joignable : un reverse proxy masque souvent /_synapse/admin."
+    "Where Synapse answers the client API, with its path if it is served under one. The Admin API has to be reachable there: a reverse proxy often hides /_synapse/admin.": "Là où Synapse répond à l'API client, avec son chemin s'il en a un. L'API d'administration doit y être joignable : un reverse proxy masque souvent /_synapse/admin.",
+    "From the user's page in the web interface. An administrator's token also shows the queue and the agents.": "Depuis la page de l'utilisateur dans l'interface web. Le jeton d'un administrateur montre aussi la file d'attente et les agents.",
+    "Repositories whose last pipeline failed, pipelines running and waiting, and agents that are there.": "Dépôts dont le dernier pipeline a échoué, pipelines en cours et en attente, et agents présents.",
+    "The last pipeline of each repository in Woodpecker, pipelines running and waiting, and the agents.": "Le dernier pipeline de chaque dépôt dans Woodpecker, les pipelines en cours et en attente, et les agents.",
+    "The latest pipeline of every repository, failing ones first, with the branch, the event and the commit message.": "Le pipeline le plus récent de chaque dépôt, les échecs d'abord, avec la branche, l'événement et le message du commit.",
+    "Woodpecker overview": "Aperçu de Woodpecker"
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3633,6 +3638,8 @@
     "Rooms": "Salons",
     "Servers unreachable": "Serveurs injoignables",
     "No reason given": "Aucun motif indiqué",
-    "Unnamed room": "Salon sans nom"
+    "Unnamed room": "Salon sans nom",
+    "Agents": "Agents",
+    "No pipeline yet": "Pas encore de pipeline"
   }
 }
