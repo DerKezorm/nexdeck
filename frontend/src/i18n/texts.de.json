@@ -4108,6 +4108,8 @@
     "Reported comments": "Gemeldete Kommentare",
     "Reported posts": "Gemeldete Beiträge",
     "Reported messages": "Gemeldete Nachrichten",
-    "Unread replies": "Ungelesene Antworten"
+    "Unread replies": "Ungelesene Antworten",
+    "The service does not say which version it runs.": "Der Dienst nennt seine Version nicht.",
+    "The service did not answer within twenty seconds.": "Der Dienst hat nicht binnen zwanzig Sekunden geantwortet."
   }
 }

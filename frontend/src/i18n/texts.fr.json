@@ -4108,6 +4108,8 @@
     "Reported comments": "Commentaires signalés",
     "Reported posts": "Messages signalés",
     "Reported messages": "Messages privés signalés",
-    "Unread replies": "Réponses non lues"
+    "Unread replies": "Réponses non lues",
+    "The service does not say which version it runs.": "Le service n'indique pas la version qu'il exécute.",
+    "The service did not answer within twenty seconds.": "Le service n'a pas répondu en vingt secondes."
   }
 }

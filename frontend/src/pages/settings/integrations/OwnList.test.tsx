@@ -5,9 +5,12 @@
  */
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import i18next from 'i18next'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AdapterSpec, Integration } from '../../../api/types'
+import de from '../../../i18n/texts.de.json'
+import { registerTexts, type TextBundle } from '../../../i18n/texts'
 import { OwnList, type OwnListProps } from './OwnList'
 import type { VersionReading } from './own'
 
@@ -93,6 +96,19 @@ describe('the list', () => {
     expect(build).toHaveLength(1)
     await userEvent.click(build[0])
     expect(props.onBuildCard).toHaveBeenCalledWith(expect.objectContaining({ id: 3 }))
+  })
+
+  it('says in the language of the page why a version is not known', async () => {
+    registerTexts('de', de as TextBundle)
+    await i18next.changeLanguage('de')
+    try {
+      const silent: VersionReading = { running: null, newest: null, url: '', problem: 'The service does not say which version it runs.', state: 'unknown', major: false, upstream: '', unread: false, asked: true }
+      show({ versions: { ...VERSIONS, 3: silent } })
+      const row = screen.getAllByRole('listitem').find((item) => item.textContent?.includes('Plex Living Room'))
+      expect(row?.querySelector('[data-version] [title]')).toHaveAttribute('title', 'Der Dienst nennt seine Version nicht.')
+    } finally {
+      await i18next.changeLanguage('en')
+    }
   })
 
   it('has no buttons for somebody who may not change a connection', () => {

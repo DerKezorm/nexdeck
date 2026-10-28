@@ -151,6 +151,21 @@ describe('server texts', () => {
     }
   })
 
+  it('translate why the version of a service is not known in every language', async () => {
+    // The reasons as the version check writes them, the last one with the name of what went wrong.
+    const said = ['The service does not say which version it runs.', 'The service did not answer within twenty seconds.', 'The answer of the service could not be read (KeyError).']
+    const expected: Record<string, string[]> = {
+      de: ['Der Dienst nennt seine Version nicht.', 'Der Dienst hat nicht binnen zwanzig Sekunden geantwortet.', 'Die Antwort des Dienstes ließ sich nicht lesen (KeyError).'],
+      es: ['El servicio no indica qué versión ejecuta.', 'El servicio no respondió en veinte segundos.', 'No se pudo leer la respuesta del servicio (KeyError).'],
+      fr: ["Le service n'indique pas la version qu'il exécute.", "Le service n'a pas répondu en vingt secondes.", "La réponse du service n'a pas pu être lue (KeyError)."],
+      it: ['Il servizio non indica quale versione esegue.', 'Il servizio non ha risposto entro venti secondi.', 'Non è stato possibile leggere la risposta del servizio (KeyError).'],
+    }
+    for (const [code, words] of Object.entries(expected)) {
+      await i18next.changeLanguage(code)
+      expect(said.map((text) => translateText('labels', text)), code).toEqual(words)
+    }
+  })
+
   it('translate the M3U Editor phrases in every language', async () => {
     // The texts as the adapter writes them. "(.+) failed." from an older card
     // would catch the first reason if the M3U Editor patterns stood after it.

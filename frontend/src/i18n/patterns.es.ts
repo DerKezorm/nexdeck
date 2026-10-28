@@ -165,4 +165,5 @@ export const patterns: Pattern[] = [
   [/^(\d+) of (\d+) players$/, '$1 de $2 jugadores'],
   [/^(\d+) players$/, '$1 jugadores'],
   [/^(\d+) of (\d+) MB$/, '$1 de $2 MB'],
+  [/^The answer of the service could not be read \((\w+)\)\.$/, 'No se pudo leer la respuesta del servicio ($1).'],
 ]
