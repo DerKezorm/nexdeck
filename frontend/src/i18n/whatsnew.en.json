@@ -1773,6 +1773,39 @@
         "FRITZ!Box takes an optional user and is out of beta; behind a bridge it no longer turns red with an uptime of 0 seconds.",
         "Menus on home pages stay in view, and the text on the accent colour reads on a light accent too."
       ]
+    },
+    "0.51.0": {
+      "lead": "39 services join, and the card style you chose now reaches the whole of nexdeck. 1984 draws the network plan in bold lines, and the accent reads on the light theme.",
+      "sections": [
+        {
+          "title": "39 new integrations",
+          "body": "Zerobyte (backup schedules with a Run now button, yellow when the last good backup is too old), a UPS read from NUT itself, Caddy, Garage, Keycloak, Stalwart 1.0, SFTPGo, Jenkins, Woodpecker CI, a container registry, Synapse, BookStack, Wiki.js, Trilium, Memos, Readeck, KitchenOwl, LubeLogger, Planka, Traccar and many more, and three new GitHub cards: a repository, pull requests with their checks, and milestones. All of them start as beta.",
+          "path": "System > Integrations > Add an integration"
+        },
+        {
+          "title": "The card style follows you everywhere",
+          "body": "Flat, Outline, Calm, Neon edge and Liquid glass are now drawn on the boxes of the settings and System, on sheets, dialogs, menus, the search behind Ctrl K and the assistant too, not only on the cards. A board with a style of its own changes its own cards only.",
+          "path": "System > Appearance > Cards"
+        },
+        {
+          "title": "Light theme: an accent you can read",
+          "body": "On the light page the accent is darkened in its own hue until it reads as text, cyan becomes a deeper teal, and the same goes for colours of your own. The dark theme keeps what it had.",
+          "path": "System > Appearance"
+        },
+        {
+          "title": "1984: the network plan",
+          "body": "The links of the topology plan are solid black lines with a border of paper, thicker the busier the link is, dashed when it is down, on a calm grey instead of the dots of the desk.",
+          "path": "System > Appearance > 1984"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "/go/<name> and Ctrl K now find an app tile that opens the address of its connection, instead of falling back to the search.",
+        "The saved bookmarks of a Readeck card can be found in Ctrl K.",
+        "A UPS read through NUT sends a message when it runs on battery and when the mains are back.",
+        "30 more services say when their project has a newer release.",
+        "Security: the kept answers of a service are no longer shared between two sign-ins, and an error answer is not kept. The dependency audit lets one build-tool advisory pass until the end of the year, with its reason."
+      ]
     }
   }
 }
