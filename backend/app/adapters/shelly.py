@@ -32,6 +32,7 @@ Those rows have a power and no button, or a button and no power.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -41,9 +42,11 @@ from .base import (
     Action,
     Adapter,
     AdapterError,
+    Allowed,
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -53,6 +56,20 @@ from .base import (
 
 ADDRESS_HINT = "Check the URL; it is the address of the device, as its web interface opens."
 COMPONENT = re.compile(r"^(switch|pm1|em1):(\d+)$")
+
+
+@dataclass(frozen=True)
+class _Reads(Allowed):
+    """What a card may ask of a device: the three Gen1 pages that only tell, and a Gen2 call that only gets or lists.
+
+    ⚠️ A Shelly acts on a GET: ``/relay/0?turn=on`` switches Gen1, ``/rpc/Switch.Set?id=0&on=true`` and every other
+    ``/rpc/<Component>.<Method>`` do it on Gen2, which includes ``Shelly.Update`` and ``Shelly.SetAuth``.
+    """
+
+    def __contains__(self, value: object) -> bool:
+        text = str(value).strip().lower()
+        component, _, method = text.partition(".")
+        return text in self.exact or (bool(component) and method.startswith(("get", "list")) and "." not in method)
 
 
 def _number(value: Any) -> float | None:
@@ -66,6 +83,7 @@ class ShellyAdapter(Adapter):
     description = "A Shelly relay or plug, Gen1 or Gen2 and newer: whether it is on, a button to switch it, and the power it draws."
     icon = "shelly"
     beta = True
+    raw_read_commands = ReadCommands(last=_Reads(exact=frozenset({"shelly", "status", "settings"})), params={"turn": Allowed()})
     docs_url = "https://shelly-api-docs.shelly.cloud/gen2/"
     keywords = ("smart plug", "relay", "smart home", "energy", "Shelly Plus", "Shelly Pro")
     fields = (
@@ -115,6 +133,11 @@ class ShellyAdapter(Adapter):
             return (str(config.get("username") or "").strip() or "admin", password)
         # One Digest object for the connection: it remembers the device's nonce, which the device lets it reuse.
         return ctx.cache.setdefault("shelly_digest", httpx.DigestAuth("admin", password))
+
+    async def raw_signed(self, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any], Any]:
+        # ⚠️ Not ``raw_auth``: ``_auth`` here needs the generation of the device, which the helper of that name does not take.
+        generation, _ = await self._generation(config, ctx)
+        return {}, {}, self._auth(config, ctx, generation)
 
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, *, cache: float = 0, optional: bool = False) -> Any:
         generation, _ = await self._generation(config, ctx)

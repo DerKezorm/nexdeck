@@ -44,6 +44,11 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
     "technitium": (["/api/zones/create", "/api/settings/set", "/api/cache/flush"], ["/api/dashboard/stats/get", "/api/zones/list", "/api/dashboard/stats/getTop"]),
     "blocky": (["/api/blocking/disable?duration=5m", "/api/blocking/enable"], ["/api/stats", "/api/blocking/status"]),
     "plex": (["/library/sections/1/refresh", "/:/scrobble?key=1", "/library/optimize"], ["/library/sections", "/status/sessions"]),
+    "shelly": (
+        ["/relay/0?turn=on", "/relay/0?turn=toggle", "/light/0?turn=on", "/roller/0?go=open", "/settings/relay/0?name=x", "/ota?url=x",
+         "/rpc/Switch.Set?id=0&on=true", "/rpc/Switch.Toggle?id=0", "/rpc/Shelly.Update", "/rpc/Shelly.SetAuth", "/rpc/Script.Start?id=1", "/", "/rpc/Shelly.GetStatus?turn=on"],
+        ["/shelly", "/status", "/settings", "/rpc/Shelly.GetStatus", "/rpc/Shelly.GetConfig", "/rpc/Switch.GetStatus?id=0", "/rpc/Webhook.List"],
+    ),
     "owncast": (["/api/admin/disconnect"], ["/api/status", "/api/admin/status", "/api/admin/followers?limit=1"]),
 }
 

@@ -44,6 +44,7 @@ SIGNS_IN: dict[str, str] = {
     "openwrt": "session id in the body, from a POST",
     "ghostfolio": "token in a header, from a POST",
     "zabbix": "asks without a token first",
+    "shelly": "asks the device for its generation first, then Basic or Digest",
 }
 
 #: Configurations the plain filling-in would make contradictory.

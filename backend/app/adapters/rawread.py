@@ -115,8 +115,8 @@ def refuse_a_command(adapter: Adapter, path: str) -> None:
             command = segments[index + 1].removesuffix(".view")
             if command not in wanted:
                 raise refuse(command)
-    if rules.last is not None and segments and segments[-1].removesuffix(".view") not in rules.last:
-        raise refuse(segments[-1])
+    if rules.last is not None and (not segments or segments[-1].removesuffix(".view") not in rules.last):
+        raise refuse(segments[-1] if segments else "/")
 
 
 @dataclass
@@ -294,7 +294,7 @@ async def for_a_picture(adapter: Adapter, config: dict[str, Any], ctx: Context) 
 
     sent = await signed(adapter, config, ctx)
     headers = dict(sent.headers)
-    if sent.auth is not None and not any(name.lower() == "authorization" for name in headers):
+    if isinstance(sent.auth, tuple) and not any(name.lower() == "authorization" for name in headers):
         headers["Authorization"] = "Basic " + base64.b64encode(f"{sent.auth[0]}:{sent.auth[1]}".encode()).decode()
     return headers, dict(sent.params)
 
