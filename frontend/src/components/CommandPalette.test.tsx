@@ -86,6 +86,37 @@ describe('CommandPalette', () => {
     await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0))
   })
 
+  describe('app tiles without a link of their own', () => {
+    const tile = (id: number, link: string, service_link: string): WidgetView => ({
+      id, kind: 'core.app', title: 'Plex', icon: '', link, service_link, renderer: '', options: {}, integration_id: 1, refresh_seconds: null,
+    })
+
+    it('offers a tile bound to a connection and opens the address of the connection', async () => {
+      const opened: string[] = []
+      vi.stubGlobal('open', (url: string) => {
+        opened.push(url)
+        return null
+      })
+      show([tile(1, '', 'https://plex.example.com')])
+      await userEvent.type(screen.getByRole('textbox'), 'Plex{Enter}')
+      expect(opened).toEqual(['https://plex.example.com'])
+    })
+
+    it('prefers the link of the tile, and leaves out a tile with no web address at all', async () => {
+      const opened: string[] = []
+      vi.stubGlobal('open', (url: string) => {
+        opened.push(url)
+        return null
+      })
+      show([tile(1, 'https://mine.example.com', 'https://plex.example.com'), { ...tile(2, '', 'javascript:alert(1)'), title: 'Odd' }])
+      await userEvent.type(screen.getByRole('textbox'), 'Odd')
+      expect(screen.queryAllByRole('option').filter((row) => /^Odd\s*Open/.test(row.textContent ?? ''))).toEqual([])
+      await userEvent.clear(screen.getByRole('textbox'))
+      await userEvent.type(screen.getByRole('textbox'), 'Plex{Enter}')
+      expect(opened).toEqual(['https://mine.example.com'])
+    })
+  })
+
   describe('links on the board (issue #46)', () => {
     const card = (id: number, kind: string, title: string): WidgetView => ({
       id, kind, title, icon: '', link: '', renderer: '', options: {}, integration_id: null, refresh_seconds: null,
