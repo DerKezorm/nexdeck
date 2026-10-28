@@ -217,7 +217,7 @@ FORECAST_ROUND = 3600
 
 
 async def rounds() -> None:
-    """Once a minute: the daily report when it is due; every hour: the forecasts; every six hours: the versions."""
+    """Once a minute: the daily report when it is due and the MCP requests that ran out; every hour: the forecasts; every six hours: the versions."""
     last_versions = 0.0
     loop = asyncio.get_running_loop()
     # The first round once the cards have answered at least once.
@@ -243,6 +243,14 @@ async def rounds() -> None:
             await send_due()
         except Exception:  # noqa: BLE001
             logger.exception("The daily report failed.")
+        try:
+            from . import mcp
+
+            # Requests of AI programs that nobody answered run out after ten minutes, read or not.
+            with db_session() as db:
+                mcp.expire(db)
+        except Exception:  # noqa: BLE001
+            logger.exception("Ending the MCP requests that ran out failed.")
         if loop.time() - last_versions >= VERSION_ROUND:
             last_versions = loop.time()
             try:

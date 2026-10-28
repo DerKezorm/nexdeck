@@ -125,6 +125,9 @@ _SECRET_IN_QUERY = re.compile(
     r"([?&](?:" + "|".join(SECRET_PARAMS) + r")=)([^&\s\"']+)",
     re.IGNORECASE,
 )
+#: A key of an AI program (``services/mcp.py``), wherever it stands in a line: in a header a client
+#: printed, in a body, in an address somebody pasted it into although they were told not to.
+_MCP_KEY = re.compile(r"\bndm_[A-Za-z0-9_-]{8,}")
 
 
 def redact(text: str) -> str:
@@ -138,7 +141,7 @@ def redact(text: str) -> str:
     ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level exists
     precisely so somebody can download that file and attach it to an issue.
     """
-    return _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text)
+    return _MCP_KEY.sub("ndm_***", _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
 
 
 class _Context(logging.Filter):
@@ -151,7 +154,7 @@ class _Context(logging.Filter):
         if record.args:
             record.msg = record.getMessage()
             record.args = ()
-        if isinstance(record.msg, str) and "=" in record.msg:
+        if isinstance(record.msg, str) and ("=" in record.msg or "ndm_" in record.msg):
             record.msg = redact(record.msg)
         return True
 

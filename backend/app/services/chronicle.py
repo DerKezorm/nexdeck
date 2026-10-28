@@ -54,13 +54,14 @@ KINDS: dict[str, str] = {
     "card_removed": "A card was removed",
     "signed_in": "Somebody signed in",
     "sign_in_refused": "A sign-in was refused",
+    "mcp_call": "A program pressed a button over MCP",
 }
 
 #: The filters of the chronicle page and of the card.
 GROUPS: dict[str, tuple[str, ...]] = {
     "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end", "forecast"),
     "versions": ("version", "container_restarted", "container_recreated"),
-    "nexdeck": ("connection_added", "connection_changed", "connection_removed", "card_added", "card_copied", "card_removed", "signed_in", "sign_in_refused"),
+    "nexdeck": ("connection_added", "connection_changed", "connection_removed", "card_added", "card_copied", "card_removed", "signed_in", "sign_in_refused", "mcp_call"),
 }
 
 #: Lines only administrators see: they are about the installation, not about a board.

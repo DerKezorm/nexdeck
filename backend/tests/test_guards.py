@@ -62,6 +62,8 @@ PUBLIC: dict[str, str] = {
     "GET /go/{name}": "the same, for one short name",
     "GET /opensearch.xml": "a browser reads it to offer nexdeck as a search engine; a name, a logo and two addresses",
     "GET /api/v1/go/suggestions": "a browser asks it while somebody types; without a session the list is empty",
+    "POST /api/mcp": "MCP: takes only its own keys and keeps its walls itself (Origin, switch, key, brake)",
+    "GET /api/mcp": "MCP: answers 405 to everybody, there is no stream",
 }
 
 AUTH_DEPENDENCIES = {deps.optional_user, deps.current_user, deps.admin_user, deps.not_guest}
@@ -142,6 +144,8 @@ GUESTS_MAY_CHANGE: dict[str, str] = {
     "POST /api/v1/push/subscribe": "own browser notifications",
     "DELETE /api/v1/push/subscribe": "own browser notifications",
     "POST /api/v1/channels/{channel_id}/test": "own notification channel",
+    "DELETE /api/v1/mcp/keys/{key_id}": "one's own MCP key; the handler checks it belongs to the caller",
+    "POST /api/v1/mcp/requests/{request_id}/decline": "saying no to a program's own request; pressing needs a member",
 }
 
 

@@ -40,6 +40,11 @@ def _concrete(path: str) -> str:
     return re.sub(r"\{[^}]+\}", "1", path)
 
 
+#: Addresses that take no API token at all and keep their own walls, each with the reason. The middleware leaves
+#: them alone; they still must not let the token through.
+OWN_WALLS = {"POST /api/mcp": "MCP takes only its own keys: an API token is no key there (401, or 404 while MCP is off)"}
+
+
 def _refused(answer) -> bool:  # noqa: ANN001
     try:
         return answer.status_code == 403 and answer.json()["detail"]["code"] == "token_read_only"
@@ -82,6 +87,10 @@ def test_a_reading_token_writes_nowhere(lab: dict) -> None:
             key = f"{method} {route.path}"
             checked.append(key)
             answer = script.request(method, _concrete(route.path), headers=_bearer(lab["read"]), json={})
+            if key in OWN_WALLS:
+                if answer.status_code not in (401, 404):
+                    through.append(f"{key} -> {answer.status_code}")
+                continue
             if not _refused(answer):
                 through.append(f"{key} -> {answer.status_code}")
     assert len(checked) >= 120, "the route table shrank; is the app wired?"

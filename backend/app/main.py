@@ -47,6 +47,7 @@ from .routers import (
     logs,
     mail,
     maintenance,
+    mcp,
     music,
     nexcrate,
     notices,
@@ -234,8 +235,9 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (go, opensearch, system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, assistant, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (go, opensearch, system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, assistant, mcp, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
+app.include_router(mcp.api)
 
 
 #: What an ordinary request body may weigh. Comfortably above the largest
@@ -277,6 +279,9 @@ async def refuse_a_body_nobody_asked_for(request: Request, call_next):  # noqa: 
     return await call_next(request)
 
 
+MCP_PATH = "/api/mcp"
+
+
 @app.middleware("http")
 async def read_tokens_only_read(request: Request, call_next):  # noqa: ANN001
     """A token that may only read never reaches a route with any other method.
@@ -287,7 +292,9 @@ async def read_tokens_only_read(request: Request, call_next):  # noqa: ANN001
     ``deps.NotReadOnly`` on top. ``tests/test_read_only_tokens.py`` walks
     every route of the app to prove it.
     """
-    if request.method not in deps.SAFE_METHODS:
+    # ⚠️ Not the MCP endpoint: it takes only its own keys, never an API token
+    # or a cookie, and keeps its walls in their order itself (routers/mcp.py).
+    if request.method not in deps.SAFE_METHODS and request.url.path != MCP_PATH:
         token = deps.bearer_token(request)
         if token and await anyio.to_thread.run_sync(deps.token_is_read_only, token):
             return JSONResponse({"detail": dict(deps.READ_ONLY)}, status_code=403)

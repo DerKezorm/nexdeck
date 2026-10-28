@@ -50,6 +50,7 @@ EVENTS: dict[str, str] = {
     "daily_report": "The daily report",
     "software_update": "An update is waiting on a server",
     "update_available": "A new nexdeck version",
+    "mcp_request": "A program asks to press a button",
     "test": "Test message",
 }
 

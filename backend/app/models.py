@@ -811,3 +811,72 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+
+class McpKey(Base):
+    """A key an AI program uses to reach nexdeck over MCP (``services/mcp.py``).
+
+    Acts as its account and never sees more: the boards it may see are the
+    account's, cut down to ``boards`` when a choice was made. Only the hash of
+    the key is stored; the row stays when the key is withdrawn, so the same
+    hash never comes back and the list can still say what happened to it.
+    """
+
+    __tablename__ = "mcp_keys"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    #: ``key`` (made by hand on the account page) or ``oauth`` (a connector that signed in).
+    kind: Mapped[str] = mapped_column(String(8), default="key")
+    #: ``read`` or ``act``; never above what the administrator allows now.
+    level: Mapped[str] = mapped_column(String(8), default="read")
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    prefix: Mapped[str] = mapped_column(String(16))
+    #: Board ids the key may see, of those its account may see; None: every one, later ones too.
+    boards: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    #: The key's own right per tool, only where it differs from the group's default.
+    tool_rights: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: Who withdrew it, when it was not its own account (an administrator's lock).
+    revoked_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: The program's name, for a key of the kind ``oauth``.
+    client: Mapped[str] = mapped_column(String(200), default="")
+
+
+class McpRequest(Base):
+    """A tool call that waits for its account to allow it (right ``ask``, or a dangerous button).
+
+    The arguments are kept as one canonical text with its SHA-256: what the
+    account is shown is exactly what runs, and a row changed behind its back
+    is refused. Card, board and button are written down as they were asked,
+    so the request still reads right when the card has gone since.
+    """
+
+    __tablename__ = "mcp_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    key_id: Mapped[int] = mapped_column(ForeignKey("mcp_keys.id", ondelete="CASCADE"), index=True)
+    key_name: Mapped[str] = mapped_column(String(80))
+    tool: Mapped[str] = mapped_column(String(40))
+    arguments: Mapped[str] = mapped_column(Text)
+    digest: Mapped[str] = mapped_column(String(64))
+    widget_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    card: Mapped[str] = mapped_column(String(200), default="")
+    board: Mapped[str] = mapped_column(String(200), default="")
+    action: Mapped[str] = mapped_column(String(80), default="")
+    label: Mapped[str] = mapped_column(String(120), default="")
+    danger: Mapped[bool] = mapped_column(Boolean, default=False)
+    impact: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    #: waiting, approved, declined, expired or failed.
+    status: Mapped[str] = mapped_column(String(12), default="waiting", index=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    decided_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    decided_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
