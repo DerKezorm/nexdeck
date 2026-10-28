@@ -195,6 +195,7 @@ that one of twenty-one renderers draws.
 | Linkwarden | recent links, links | | access token from Settings > Access Tokens |
 | Linkding | bookmarks, recent bookmarks | | REST API token from Settings > Integrations; each account sees its own bookmarks only |
 | BookStack | library (pages, books, chapters, shelves), recently changed pages (with their book) | | an API token (ID and secret) from Profile > API Tokens; the role needs Access system API, and the cards count what that role may see. Beta: run against BookStack v26.09.2, not yet one in use |
+| Wiki.js | wiki (pages, active users, version, yellow while a newer one is out), recently changed pages | | an API key from Administration > API Access (switch the API on first), Wiki.js 2 only; a key with fewer rights fills the pages, the users and the version need administrator rights. Wiki.js answers every error with HTTP 200 and treats a wrong key as the guest, so the cards also ask for the key's own profile. Beta: run against Wiki.js 2.5.317, not yet one in use |
 | YouTube | videos, subscriptions | | none for videos; subscriptions need a YouTube Data API v3 key and a public subscription list |
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |

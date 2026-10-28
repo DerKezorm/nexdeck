@@ -2261,7 +2261,13 @@
     "Recently changed pages": "Pagine modificate di recente",
     "Shown once when the token is made.": "Mostrato una sola volta alla creazione del token.",
     "The pages changed last, with their book.": "Le pagine modificate per ultime, con il loro libro.",
-    "No pages yet.": "Ancora nessuna pagina."
+    "No pages yet.": "Ancora nessuna pagina.",
+    "Administration > API Access, after switching the API on. Wiki.js 2; the key needs the rights to read pages, and administrator rights for the version and the users.": "Amministrazione > Accesso API, dopo aver attivato l'API. Wiki.js 2; la chiave richiede il permesso di leggere le pagine e i diritti di amministratore per versione e utenti.",
+    "How many pages Wiki.js holds, the pages changed last, and whether a newer version is out.": "Quante pagine contiene Wiki.js, le pagine modificate per ultime e se è uscita una versione più recente.",
+    "How many pages there are, with the users and the version.": "Quante pagine ci sono, con gli utenti e la versione.",
+    "The pages changed last, with their path.": "Le pagine modificate per ultime, con il loro percorso.",
+    "Wiki": "Wiki",
+    "Newer version": "Versione più recente"
   },
   "labels": {
     "Private resources": "Risorse private",
