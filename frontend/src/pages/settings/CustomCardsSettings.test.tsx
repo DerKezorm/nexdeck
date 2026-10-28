@@ -125,15 +125,13 @@ describe('the list', () => {
     expect(screen.getByText('2 of 200 custom cards. A change to a card shows on every board at once.')).toBeInTheDocument()
   })
 
-  it('karten11 ac10: the tab that comes later says so in one sentence', async () => {
+  it('karten16 ac6: the tab My submissions opens the list of what was shared, in place of the cards', async () => {
     stub([card()])
     show()
     await screen.findByText('Queue')
-    for (const name of ['My submissions']) {
-      await userEvent.click(screen.getByRole('tab', { name: new RegExp(name) }))
-      expect(screen.getByText('This part of Custom cards comes with a later version of nexdeck.')).toBeInTheDocument()
-      expect(screen.queryByText('Queue')).toBeNull()
-    }
+    await userEvent.click(screen.getByRole('tab', { name: /My submissions/ }))
+    expect(await screen.findByTestId('submissions')).toBeInTheDocument()
+    expect(screen.queryByText('Queue')).toBeNull()
   })
 
   it('karten11 ec2: an empty list explains what custom cards are, with "Build a card" and "Open the Card shop"', async () => {
