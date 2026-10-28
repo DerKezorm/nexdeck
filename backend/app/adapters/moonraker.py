@@ -48,8 +48,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     duration_short,
     gauge_view_field,
@@ -101,6 +103,19 @@ class MoonrakerAdapter(Adapter):
     description = "What a Klipper 3D printer is doing, its temperatures, and how far the print has got."
     icon = "moonraker"
     beta = True
+    #: What Moonraker does is an address too (``/printer/print/pause``, ``/printer/emergency_stop``, ``/machine/services/stop``,
+    #: ``/server/job_queue/start``): under each of these a card may ask the pages that tell. ``/access`` hands out the API key.
+    raw_read_commands = ReadCommands(after={
+        "printer": allowed("info", "objects", "query_endstops", "gcode"),
+        "gcode": allowed("help"),
+        "update": allowed("status"),
+        "device_power": allowed("devices", "device", "status"),
+        "job_queue": allowed("status"),
+        "history": allowed("list", "totals", "job"),
+        "announcements": allowed("list", "feeds"),
+        "services": allowed(),
+        "access": allowed(),
+    })
     docs_url = "https://moonraker.readthedocs.io/en/latest/external_api/introduction/"
     keywords = ("Klipper", "3D printer", "Fluidd", "Mainsail")
     fields = (

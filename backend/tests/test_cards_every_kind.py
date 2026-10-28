@@ -51,7 +51,7 @@ SIGNS_IN: dict[str, str] = {
 }
 
 #: The path a card asks, for a kind that lets a card ask only one address (``raw_read_commands``).
-PROBES: dict[str, str] = {"tasmota": "/cm?cmnd=Status"}
+PROBES: dict[str, str] = {"tasmota": "/cm?cmnd=Status", "pyload": "/api/get_probe"}
 
 #: Configurations the plain filling-in would make contradictory.
 FIXES: dict[str, dict[str, Any]] = {"elasticsearch": {"username": ""}}

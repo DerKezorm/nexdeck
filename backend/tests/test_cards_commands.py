@@ -54,6 +54,32 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
          "/cm?cmnd=Backlog%20Status%200%3BPower%20On", "/cm?cmnd=SetOption1%201", "/cm?cmnd=Status%200&cmnd=Power%20Off", "/?o=1", "/", "/up", "/cm?cmnd=Status%200&o=1"],
         ["/cm?cmnd=Status%200", "/cm?cmnd=Status", "/cm?cmnd=Status%2010&user=admin&password=x", "/cm?cmnd=Power", "/cm?cmnd=power1", "/cm?cmnd=State"],
     ),
+    "kodi": (
+        ['/jsonrpc?request={"jsonrpc":"2.0","method":"Application.Quit","id":1}', '/jsonrpc?request={"jsonrpc":"2.0","method":"Player.PlayPause","id":1}',
+         '/jsonrpc?request={"jsonrpc":"2.0","method":"Input.ExecuteAction","params":{"action":"stop"},"id":1}', '/jsonrpc?request={"method":"Get.Nothing"}',
+         '/jsonrpc?request=[{"method":"Player.GetActivePlayers"},{"method":"VideoLibrary.Scan"}]', "/jsonrpc?request=not-json", '/jsonrpc?request={"method":"Application.SetMute"}',
+         '/jsonrpc?request={"method":"Get"}', "/jsonrpc?request=[]", '/jsonrpc?request={"method":"System.Shutdown"}'],
+        ['/jsonrpc?request={"jsonrpc":"2.0","method":"Player.GetActivePlayers","id":1}', '/jsonrpc?request={"jsonrpc":"2.0","method":"JSONRPC.Ping","id":1}',
+         '/jsonrpc?request=[{"method":"Application.GetProperties"},{"method":"XBMC.GetInfoLabels"}]', "/image/abc", "/vfs/abc"],
+    ),
+    "aria2": (
+        ["/jsonrpc?method=aria2.pause&id=1", "/jsonrpc?method=aria2.forceShutdown", "/jsonrpc?method=aria2.addUri&params=x", "/jsonrpc?method=system.multicall",
+         "/jsonrpc?method=aria2.getGlobalOption", "/jsonrpc?method=aria2.getOption", "/jsonrpc?method=aria2.changeGlobalOption", "/jsonrpc?method=aria2.removeDownloadResult"],
+        ["/jsonrpc?method=aria2.getGlobalStat", "/jsonrpc?method=aria2.tellActive", "/jsonrpc?method=aria2.getVersion", "/jsonrpc?method=system.listMethods"],
+    ),
+    "pyload": (
+        ["/api/pause_server", "/api/unpause_server", "/api/stop_all_downloads", "/api/restart_failed", "/api/kill", "/api/add_package", "/api/delete_finished",
+         "/api/get_config", "/api/get_config_value", "/api/get_accounts", "/api/check_urls", "/api/toggle_pause"],
+        ["/api/status_server", "/api/status_downloads", "/api/get_queue_data", "/api/free_space", "/api/get_server_version", "/api/is_time_download"],
+    ),
+    "moonraker": (
+        ["/printer/print/pause", "/printer/print/start?filename=x.gcode", "/printer/print/cancel", "/printer/emergency_stop", "/printer/gcode/script?script=G28",
+         "/printer/firmware_restart", "/machine/services/stop?service=klipper", "/machine/update/upgrade", "/machine/device_power/on", "/server/job_queue/start",
+         "/server/history/reset_totals", "/access/api_key", "/access/oneshot_token"],
+        ["/server/info", "/printer/info", "/printer/objects/list", "/printer/objects/query?extruder=temperature", "/printer/gcode/help", "/server/history/totals",
+         "/server/history/list?limit=5&start=0", "/server/files/list", "/server/files/metadata?filename=x.gcode", "/machine/update/status", "/server/job_queue/status",
+         "/machine/system_info", "/machine/device_power/devices"],
+    ),
     "owncast": (["/api/admin/disconnect"], ["/api/status", "/api/admin/status", "/api/admin/followers?limit=1"]),
 }
 
