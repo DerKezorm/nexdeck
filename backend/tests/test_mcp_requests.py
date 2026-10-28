@@ -151,6 +151,19 @@ def test_a_request_runs_out_after_ten_minutes(lab: dict) -> None:
     assert call(client, token, "request_status", request=number)["value"]["status"] == "expired"
 
 
+def test_a_request_past_its_time_cannot_be_claimed_even_before_it_was_marked(lab: dict) -> None:
+    """The time is checked in the same step that takes the request, not only by the sweep before it."""
+    _key, token = make_key(lab["client"], "act")
+    number = _ask(lab, token)
+    with db_session() as db:
+        db.get(McpRequest, number).expires_at = utcnow() - timedelta(seconds=1)
+    with db_session() as db:
+        row = db.get(McpRequest, number)
+        with pytest.raises(mcp.McpError):
+            mcp.claim(db, row, "approved", db.scalar(select(User)))
+    assert _requests()[0].status == "waiting"
+
+
 def test_the_minute_round_ends_requests_nobody_looked_at(lab: dict) -> None:
     _key, token = make_key(lab["client"], "act")
     number = _ask(lab, token)
