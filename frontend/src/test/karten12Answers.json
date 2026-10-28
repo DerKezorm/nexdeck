@@ -256,5 +256,28 @@
    ],
    "skipped": []
   }
+ },
+ "integration_renamed": "nexdeck: integration\nshort: bookstack-own\nname: BookStack\nlogo: bookstack\ndescription: Documentation in books, chapters and pages.\ncategory: other\nfields:\n  - name: token_id\n    type: text\n    label: Token ID\n    help: Profile > API Tokens > Create Token.\n    required: true\n  - name: token_renamed\n    type: secret\n    label: Token secret\n    required: true\nauth:\n  type: header\n  header: Authorization\n  value: \"Token {token_id}:{token_renamed}\"\ntest: /api/books?count=1\ntest_expects: json\nreads:\n  - path: /api/books?count=10\n    label: Books\n  - path: /api/pages?count=10&sort=-updated_at\n    label: Latest pages\ngithub: BookStackApp/BookStack\n",
+ "cards_check_dropped": {
+  "ok": true,
+  "documents": [
+   {
+    "type": "integration",
+    "id": "integration:bookstack-own",
+    "name": "BookStack",
+    "requires": [],
+    "buttons": [],
+    "form": "",
+    "problems": [],
+    "exists": true,
+    "same": false,
+    "line": 1,
+    "short": "bookstack-own",
+    "dropped_fields": [
+     "token_secret"
+    ]
+   }
+  ],
+  "missing_integrations": []
  }
 }

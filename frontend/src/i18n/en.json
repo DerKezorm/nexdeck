@@ -2760,6 +2760,7 @@
       "problems": "Problems",
       "exists": "This short name is taken already. What should happen?",
       "existsSame": "This short name is taken already, with the same content. What should happen?",
+      "dropsFields": "Replace throws away the fields {{fields}}: what the connections of this kind keep in them, secrets included, is deleted.",
       "replace": "Replace",
       "copy": "Import as copy",
       "cancel": "Cancel",

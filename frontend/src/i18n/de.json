@@ -2760,6 +2760,7 @@
       "problems": "Probleme",
       "exists": "Dieser Kurzname ist schon vergeben. Was soll geschehen?",
       "existsSame": "Dieser Kurzname ist schon vergeben, mit demselben Inhalt. Was soll geschehen?",
+      "dropsFields": "Ersetzen verwirft die Felder {{fields}}: Was die Verbindungen dieser Art darin speichern, auch Geheimnisse, wird gelöscht.",
       "replace": "Ersetzen",
       "copy": "Als Kopie importieren",
       "cancel": "Abbrechen",

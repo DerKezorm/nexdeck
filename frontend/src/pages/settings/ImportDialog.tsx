@@ -245,6 +245,11 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
                 {document.exists && (
                   <fieldset className="mt-3" data-testid={`import-conflict-${key}`}>
                     <legend className="text-[12px] text-warn mb-1">{t(document.same ? 'cards.exchange.existsSame' : 'cards.exchange.exists')}</legend>
+                    {(document.dropped_fields ?? []).length > 0 && (
+                      <p className={`text-[12px] mb-1 ${answers[key] === 'replace' ? 'text-bad font-medium' : 'text-warn'}`} role="note" data-testid={`import-drops-${key}`}>
+                        {t('cards.exchange.dropsFields', { fields: (document.dropped_fields ?? []).join(', ') })}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                       {ANSWERS.map((answer) => (
                         <label key={answer} className="inline-flex items-center gap-1.5 text-sm">

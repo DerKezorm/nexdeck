@@ -130,6 +130,8 @@ class Item:
     loaded: Any = None
     exists: bool = False
     same: bool = False
+    #: An own connection here with another text: the fields whose stored values replacing it throws away, secrets too.
+    dropped: list[str] = field(default_factory=list)
 
     @property
     def id(self) -> str:
@@ -142,6 +144,8 @@ class Item:
             "problems": [problem.as_dict() for problem in self.problems], "exists": self.exists, "same": self.same, "line": self.line,
         }
         found["slug" if self.type == "card" else "short"] = self.key
+        if self.type == "integration":
+            found["dropped_fields"] = self.dropped
         return found
 
 
@@ -207,6 +211,8 @@ def _read(db: Session, offset: int, text: str) -> Item:
         return item
     item.exists = row is not None
     item.same = row is not None and _same(row.yaml_source, text)
+    if item.type == "integration" and item.exists and not item.same:
+        item.dropped = integrations.dropped_fields(row, item.loaded)
     return item
 
 

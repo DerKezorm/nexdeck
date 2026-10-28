@@ -87,9 +87,7 @@ def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None =
     loaded = loader.load_integration(text)
     if loaded.definition.short != row.short:
         raise load.CardInvalid([load.Problem("card_integration_short_changed", f"The short name of a saved connection cannot change (it is {row.short}).", "short", loaded.lines.get(("short",)), {"short": row.short})])
-    before = {one["name"]: one["type"] for one in (row.definition or {}).get("fields", [])}
-    after = {one.name: one.type for one in loaded.definition.fields}
-    dropped = [name for name, kind in before.items() if after.get(name) != kind]
+    dropped = dropped_fields(row, loaded)
     row.yaml_source = text
     row.definition = loaded.data
     now = utcnow()
@@ -103,6 +101,13 @@ def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None =
     else:
         db.flush()
     return row
+
+
+def dropped_fields(row: OwnIntegration, loaded: loader.LoadedIntegration) -> list[str]:
+    """The fields whose stored values a new text throws away: gone from it, or of another type now (EC-10)."""
+    before = {one["name"]: one["type"] for one in (row.definition or {}).get("fields", [])}
+    after = {one.name: one.type for one in loaded.definition.fields}
+    return [name for name, kind in before.items() if after.get(name) != kind]
 
 
 def forget_values(db: Session, short: str, names: list[str]) -> int:

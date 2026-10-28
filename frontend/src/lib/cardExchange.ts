@@ -37,6 +37,8 @@ export interface ImportDocument {
   problems?: ImportProblem[]
   exists: boolean
   same: boolean
+  /** An integration here with another text: the fields whose stored values replacing it throws away, secrets too. */
+  dropped_fields?: string[]
 }
 
 /** The answer of `POST /cards/import/check`. */

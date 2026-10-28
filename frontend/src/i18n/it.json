@@ -2760,6 +2760,7 @@
       "problems": "Problemi",
       "exists": "Questo nome breve è già in uso. Cosa si fa?",
       "existsSame": "Questo nome breve è già in uso, con lo stesso contenuto. Cosa si fa?",
+      "dropsFields": "Sostituire elimina i campi {{fields}}: ciò che le connessioni di questo tipo vi conservano, segreti compresi, viene cancellato.",
       "replace": "Sostituisci",
       "copy": "Importa come copia",
       "cancel": "Annulla",

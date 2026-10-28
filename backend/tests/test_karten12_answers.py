@@ -77,6 +77,10 @@ def answers(admin: TestClient) -> dict[str, Any]:
         made = client.post(f"{API}/import", json={"yaml_text": good, **body}, headers=CSRF)
         assert made.status_code == 201, made.text
         found[f"board_import_{who}"] = {"slug": "example", "definitions": made.json()["definitions"]}
+    # The own integration of the file, now here, with a field renamed: replacing it throws the old one away.
+    renamed = INTEGRATION.replace("token_secret", "token_renamed")
+    found["integration_renamed"] = renamed
+    found["cards_check_dropped"] = admin.post("/api/v1/cards/import/check", json={"text": renamed}, headers=CSRF).json()
     return found
 
 
