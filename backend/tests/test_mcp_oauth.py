@@ -593,6 +593,37 @@ def test_registering_is_braked_per_sender(ready: TestClient, monkeypatch: pytest
     assert mcp_oauth.may_register("testclient", now=10**9)
 
 
+def _register_from(app, where: tuple[str, int], forwarded: str | None = None):  # noqa: ANN001, ANN202 - a response
+    headers = {"X-Forwarded-For": forwarded} if forwarded else None
+    return TestClient(app, client=where, headers=headers).post("/api/mcp/oauth/register", json={"redirect_uris": [BACK]})
+
+
+def test_behind_a_named_proxy_two_real_senders_are_counted_apart(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "REGISTER_PER_SENDER", 2)
+    monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", "10.0.0.2")
+    proxy = ("10.0.0.2", 50000)
+    assert [_register_from(ready.app, proxy, "203.0.113.5").status_code for _ in range(3)] == [201, 201, 429]
+    # Somebody else behind the same proxy has an allowance of their own ...
+    assert _register_from(ready.app, proxy, "203.0.113.6").status_code == 201
+    # ... and the addresses of one IPv6 /64 are one sender.
+    assert [_register_from(ready.app, proxy, f"2001:db8:1:2::{number}").status_code for number in (1, 2, 3)] == [201, 201, 429]
+
+
+def test_a_sender_nobody_named_counts_as_itself_whatever_it_writes_in_x_forwarded_for(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_oauth, "REGISTER_PER_SENDER", 2)
+    monkeypatch.setenv("NEXDECK_TRUSTED_PROXIES", "10.0.0.2")
+    stranger = ("198.51.100.7", 50000)
+    # A new address in every request would be a new allowance every time.
+    answers = [_register_from(ready.app, stranger, f"203.0.113.{number}").status_code for number in range(1, 5)]
+    assert answers == [201, 201, 429, 429]
+    # No header at all is the same sender, and another peer is another sender.
+    assert _register_from(ready.app, stranger).status_code == 429
+    assert _register_from(ready.app, ("198.51.100.8", 50000), "203.0.113.1").status_code == 201
+    # Without any proxy named, the header is not believed from anybody, not even the proxy's address.
+    monkeypatch.delenv("NEXDECK_TRUSTED_PROXIES")
+    assert [_register_from(ready.app, ("10.0.0.2", 50000), f"203.0.113.{number}").status_code for number in range(1, 4)] == [201, 201, 429]
+
+
 def test_registering_is_braked_for_the_whole_server(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(mcp_oauth, "REGISTER_PER_MINUTE", 4)
     assert all(mcp_oauth.may_register(f"192.0.2.{number}", now=100.0) for number in range(4))

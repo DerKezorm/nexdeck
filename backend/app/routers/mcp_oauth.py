@@ -27,7 +27,7 @@ from ..db import db_session
 from ..deps import DbSession, MemberUser, error, refuse_at_home
 from ..models import Board, McpOAuthClient
 from ..services import mcp, mcp_oauth
-from ..services.home_network import public_base
+from ..services.home_network import public_base, seen_address
 from ..services.mcp import McpError
 from ..services.mcp_oauth import OAuthError
 from ..services.public_url import public_url
@@ -104,6 +104,21 @@ def server_metadata(request: Request) -> Response:
 # -- registration ---------------------------------------------------------------------------------
 
 
+def sender_of(request: Request) -> str:
+    """Whom a registration counts against: the address behind a proxy that was named, else the peer itself.
+
+    ⚠️ Not the peer alone: behind a proxy that is the proxy, and everybody would share one hour's allowance.
+    Not the forwarded address alone: from a peer nobody named, ``X-Forwarded-For`` is the sender's own word and
+    would let it count as someone new each time. ``seen_address`` believes the header only from a named proxy;
+    where it knows no address, the peer stands in.
+    """
+    address, _how = seen_address(request)
+    if address:
+        return address
+    peer = request.scope.get("nexdeck.peer") or (request.client.host if request.client else "")
+    return str(peer) or "?"
+
+
 async def _read(request: Request) -> bytes | None:
     """The body, or None past ``MAX_BODY``; read in blocks, so a body without a length is weighed too."""
     taken = bytearray()
@@ -124,7 +139,7 @@ async def register(request: Request) -> Response:
         body = json.loads(raw) if raw is not None else None
     except (ValueError, UnicodeDecodeError, RecursionError):
         body = None
-    sender = request.client.host if request.client else "?"
+    sender = sender_of(request)
     with db_session() as db:
         try:
             client = mcp_oauth.register(db, body, sender)
