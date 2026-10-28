@@ -1,0 +1,19 @@
+[
+ {
+  "id": "7483c231-6dd1-453f-baed-b4379e8b8ebf",
+  "realm": "master",
+  "displayName": "Keycloak",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak</span></div>",
+  "enabled": true
+ },
+ {
+  "id": "e3a2d065-ca70-4f00-84e6-3f538cf3539d",
+  "realm": "lab",
+  "enabled": true
+ },
+ {
+  "id": "ef47ca72-78f4-4264-9cdd-049ce870425f",
+  "realm": "example",
+  "enabled": true
+ }
+]

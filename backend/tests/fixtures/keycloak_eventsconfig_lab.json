@@ -1,0 +1,16 @@
+{
+ "eventsEnabled": false,
+ "eventsListeners": [
+  "jboss-logging"
+ ],
+ "enabledEventTypes": [
+  "LOGIN",
+  "LOGIN_ERROR",
+  "REGISTER",
+  "REGISTER_ERROR",
+  "LOGOUT",
+  "LOGOUT_ERROR"
+ ],
+ "adminEventsEnabled": false,
+ "adminEventsDetailsEnabled": false
+}

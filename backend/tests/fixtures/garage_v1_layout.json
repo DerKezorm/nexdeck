@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "roles": [
+    {
+      "id": "3c9cc15ae30d8522",
+      "zone": "dc1",
+      "capacity": 10737418240,
+      "tags": [
+        "example"
+      ]
+    }
+  ],
+  "stagedRoleChanges": []
+}

@@ -1,0 +1,38 @@
+[
+ {
+  "username": "alice",
+  "connection_id": "SFTP_ab12cd34_1",
+  "client_version": "SSH-2.0-libssh2_1.11.1",
+  "remote_address": "192.0.2.10:36194",
+  "connection_time": 1793124579759,
+  "last_activity": 1793124592647,
+  "current_time": 1793124593733,
+  "protocol": "SFTP",
+  "active_transfers": [
+   {
+    "operation_type": "download",
+    "start_time": 1793124579760,
+    "size": 870000,
+    "path": "/blob1"
+   }
+  ]
+ },
+ {
+  "username": "bob",
+  "connection_id": "SFTP_ef56ab78_1",
+  "client_version": "SSH-2.0-libssh2_1.11.1",
+  "remote_address": "192.0.2.10:36196",
+  "connection_time": 1793124579807,
+  "last_activity": 1793124593197,
+  "current_time": 1793124593733,
+  "protocol": "SFTP",
+  "active_transfers": [
+   {
+    "operation_type": "upload",
+    "start_time": 1793124579807,
+    "size": 1441792,
+    "path": "/slow1"
+   }
+  ]
+ }
+]

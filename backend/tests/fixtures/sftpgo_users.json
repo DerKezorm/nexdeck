@@ -1,0 +1,139 @@
+[
+ {
+  "id": 1,
+  "status": 1,
+  "username": "alice",
+  "has_password": true,
+  "home_dir": "/srv/sftpgo/data/alice",
+  "uid": 0,
+  "gid": 0,
+  "max_sessions": 0,
+  "quota_size": 10485760,
+  "quota_files": 100,
+  "permissions": {
+   "/": [
+    "*"
+   ]
+  },
+  "used_quota_size": 4000000,
+  "used_quota_files": 1,
+  "last_quota_update": 1793124569446,
+  "upload_data_transfer": 0,
+  "download_data_transfer": 0,
+  "total_data_transfer": 0,
+  "last_login": 1793124569403,
+  "created_at": 1793124569231,
+  "updated_at": 1793124569231,
+  "first_download": 1793124604757,
+  "first_upload": 1793124569434,
+  "last_password_change": 1793124569231,
+  "filters": {
+   "hooks": {
+    "external_auth_disabled": false,
+    "pre_login_disabled": false,
+    "check_password_disabled": false
+   },
+   "totp_config": {
+    "secret": {}
+   }
+  },
+  "filesystem": {
+   "provider": 0,
+   "osconfig": {},
+   "s3config": {},
+   "gcsconfig": {},
+   "azblobconfig": {},
+   "cryptconfig": {},
+   "sftpconfig": {},
+   "httpconfig": {}
+  }
+ },
+ {
+  "id": 2,
+  "status": 1,
+  "username": "bob",
+  "has_password": true,
+  "home_dir": "/srv/sftpgo/data/bob",
+  "uid": 0,
+  "gid": 0,
+  "max_sessions": 0,
+  "quota_size": 0,
+  "quota_files": 0,
+  "permissions": {
+   "/": [
+    "*"
+   ]
+  },
+  "upload_data_transfer": 0,
+  "download_data_transfer": 0,
+  "total_data_transfer": 0,
+  "last_login": 1793124579801,
+  "created_at": 1793124569283,
+  "updated_at": 1793124569283,
+  "first_upload": 1793124604758,
+  "last_password_change": 1793124569283,
+  "filters": {
+   "hooks": {
+    "external_auth_disabled": false,
+    "pre_login_disabled": false,
+    "check_password_disabled": false
+   },
+   "totp_config": {
+    "secret": {}
+   }
+  },
+  "filesystem": {
+   "provider": 0,
+   "osconfig": {},
+   "s3config": {},
+   "gcsconfig": {},
+   "azblobconfig": {},
+   "cryptconfig": {},
+   "sftpconfig": {},
+   "httpconfig": {}
+  }
+ },
+ {
+  "id": 3,
+  "status": 0,
+  "username": "carol",
+  "has_password": true,
+  "home_dir": "/srv/sftpgo/data/carol",
+  "uid": 0,
+  "gid": 0,
+  "max_sessions": 0,
+  "quota_size": 1048576,
+  "quota_files": 0,
+  "permissions": {
+   "/": [
+    "*"
+   ]
+  },
+  "upload_data_transfer": 0,
+  "download_data_transfer": 0,
+  "total_data_transfer": 0,
+  "created_at": 1793124569336,
+  "updated_at": 1793124569336,
+  "last_password_change": 1793124569335,
+  "filters": {
+   "hooks": {
+    "external_auth_disabled": false,
+    "pre_login_disabled": false,
+    "check_password_disabled": false
+   },
+   "totp_config": {
+    "secret": {}
+   }
+  },
+  "filesystem": {
+   "provider": 0,
+   "osconfig": {},
+   "s3config": {},
+   "gcsconfig": {},
+   "azblobconfig": {},
+   "cryptconfig": {},
+   "sftpconfig": {},
+   "httpconfig": {}
+  }
+ }
+]

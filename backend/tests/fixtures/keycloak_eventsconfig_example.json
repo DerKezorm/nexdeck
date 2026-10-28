@@ -1,0 +1,14 @@
+{
+ "eventsEnabled": true,
+ "eventsExpiration": 604800,
+ "eventsListeners": [
+  "jboss-logging"
+ ],
+ "enabledEventTypes": [
+  "LOGOUT",
+  "LOGIN_ERROR",
+  "LOGIN"
+ ],
+ "adminEventsEnabled": false,
+ "adminEventsDetailsEnabled": false
+}

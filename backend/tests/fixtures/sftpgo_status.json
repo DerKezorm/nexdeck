@@ -1,0 +1,72 @@
+{
+ "ssh": {
+  "is_active": true,
+  "bindings": [
+   {
+    "address": "",
+    "port": 2022,
+    "apply_proxy_config": true
+   }
+  ],
+  "ssh_commands": [
+   "md5sum",
+   "sha1sum",
+   "sha256sum",
+   "cd",
+   "pwd",
+   "scp"
+  ],
+  "authentications": [
+   "password",
+   "publickey",
+   "keyboard-interactive",
+   "publickey+password",
+   "publickey+keyboard-interactive"
+  ],
+  "public_key_algorithms": [
+   "ssh-ed25519",
+   "ecdsa-sha2-nistp256",
+   "ecdsa-sha2-nistp384",
+   "ecdsa-sha2-nistp521",
+   "rsa-sha2-256",
+   "rsa-sha2-512"
+  ]
+ },
+ "ftp": {
+  "is_active": false,
+  "bindings": null,
+  "passive_port_range": {
+   "start": 0,
+   "end": 0
+  }
+ },
+ "webdav": {
+  "is_active": false,
+  "bindings": null
+ },
+ "data_provider": {
+  "driver": "sqlite",
+  "is_active": true,
+  "error": ""
+ },
+ "defender": {
+  "is_active": true
+ },
+ "mfa": {
+  "is_active": true,
+  "totp_configs": [
+   {
+    "name": "Default",
+    "issuer": "SFTPGo",
+    "algo": "sha1"
+   }
+  ]
+ },
+ "allow_list": {
+  "is_active": false
+ },
+ "rate_limiters": {
+  "is_active": false,
+  "protocols": null
+ }
+}

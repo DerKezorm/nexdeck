@@ -1,0 +1,97 @@
+[
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905375,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "ipAddress": "192.0.2.50",
+  "error": "user_not_found",
+  "details": {
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "nosuch"
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905350,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "ipAddress": "192.0.2.50",
+  "error": "invalid_user_credentials",
+  "details": {
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "carol"
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905323,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "ipAddress": "192.0.2.50",
+  "error": "invalid_user_credentials",
+  "details": {
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "carol"
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905297,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "ipAddress": "192.0.2.50",
+  "error": "invalid_user_credentials",
+  "details": {
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "carol"
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905268,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "ipAddress": "192.0.2.50",
+  "error": "resolve_required_actions",
+  "details": {
+   "reason": "Account is not fully set up",
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "bob"
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000000000",
+  "time": 1793139905237,
+  "type": "LOGIN_ERROR",
+  "realmId": "00000000-0000-0000-0000-000000000000",
+  "clientId": "app",
+  "ipAddress": "192.0.2.50",
+  "error": "resolve_required_actions",
+  "details": {
+   "reason": "Account is not fully set up",
+   "auth_method": "openid-connect",
+   "grant_type": "password",
+   "client_auth_method": "client-secret",
+   "username": "alice"
+  }
+ }
+]

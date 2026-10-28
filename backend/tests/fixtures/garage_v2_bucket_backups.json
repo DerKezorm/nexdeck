@@ -1,0 +1,31 @@
+{
+  "id": "d7c7a2811d963431",
+  "created": "2026-10-27T17:02:13.314Z",
+  "globalAliases": [
+    "backups"
+  ],
+  "websiteAccess": false,
+  "websiteConfig": null,
+  "keys": [
+    {
+      "accessKeyId": "GK63999718a9168d44e434a40b",
+      "name": "example-key",
+      "permissions": {
+        "read": true,
+        "write": true,
+        "owner": true
+      },
+      "bucketLocalAliases": []
+    }
+  ],
+  "objects": 3,
+  "bytes": 9000000,
+  "unfinishedUploads": 0,
+  "unfinishedMultipartUploads": 0,
+  "unfinishedMultipartUploadParts": 0,
+  "unfinishedMultipartUploadBytes": 0,
+  "quotas": {
+    "maxSize": 5368709120,
+    "maxObjects": 1000
+  }
+}
