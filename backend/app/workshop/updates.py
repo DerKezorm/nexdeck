@@ -30,6 +30,8 @@ BUTTON_ACTS = ("method", "path", "send", "body", "where", "confirm", "danger", "
 BUTTON_SHOWN = ("id", "label", *BUTTON_ACTS)
 SUFFIX = " (mine)"
 NAME_MAX = 60
+#: How much of the reason of a recall goes into the bell and onto the channels.
+REASON_MAX = 500
 
 
 def plain(text: Any) -> str:
@@ -98,7 +100,8 @@ def announce(found: catalog.Catalog) -> None:
             key = f"{one['ref']}@{one['at']}"
             # A card installed twice (a copy) is one entry: the bell rings once for it.
             if one["level"] == "harmful" and key not in already and all(key != other[0] for other in fresh):
-                fresh.append((key, plain(one["name"]) or one["slug"], one["reason"]))
+                # One line of text for the title (it becomes the subject of a mail) and a reason of a sensible length: both are the author's or a maintainer's words.
+                fresh.append((key, " ".join(plain(one["name"]).split()) or one["slug"], one["reason"][:REASON_MAX]))
         if fresh:
             state.mark_told(db, [key for key, _name, _reason in fresh])
             db.commit()

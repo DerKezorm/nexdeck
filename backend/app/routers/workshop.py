@@ -183,6 +183,8 @@ async def preview_entry(author: str, slug: str, body: PreviewBody, user: AdminUs
     if entry.type != "card":
         raise error("no_preview", "Only a card has a preview.")
     try:
+        # A card that was taken out of the shop, or needs a newer nexdeck, does not read through anybody's connection either.
+        install.gate(entry)
         text = await files.definition(repo, entry)
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
