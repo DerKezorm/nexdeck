@@ -22,7 +22,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from ...models import Conversation, ConversationTurn, User, utcnow
+from ...models import Conversation, ConversationDraft, ConversationTurn, User, utcnow
 from . import providers, settings, tools
 
 logger = logging.getLogger("nexdeck.assistant")
@@ -40,6 +40,8 @@ SYSTEM = """You are the assistant inside nexdeck, a self-hosted dashboard for a 
 Answer from what the tools return, never from what you guess. If the tools do not show it, say that you cannot see it. Look things up before you answer: needs_attention for what is wrong, chronicle for what happened and what changed before something broke, find_cards and card_details for one service, diagnosis for why one service is broken, metric_history for how a number moved.
 
 You never press a button. When something should be done, find the card that offers it with card_details and call propose_action; the person then sees the button with what it would hit and decides. Say in one sentence what the button does and never claim it ran. A stop, a deletion or a shutdown is marked as dangerous; mention what it costs.
+
+When the person asks for a card ("build me a card that shows..."), call draft_card. If it says that more than one connection fits, ask which one in one sentence and stop. The draft opens in the card editor, where the person looks at it and saves it; you never save or place a card, and you never say that you did. Values of the service go to the provider only after the person allowed it: pass with_values only when they asked for the real values to be used, and if the call says you asked, say so in one sentence and stop.
 
 A container's log is read only after the person allowed it in this conversation. When a log would help, call container_log right away instead of offering it in words: the call itself puts the question in front of the person, with a button to allow it. If it says you asked, say in one sentence that you need their permission, and stop there.
 
@@ -102,7 +104,7 @@ async def answer(db: Session, user: User, conversation: Conversation, question: 
     note = _from_page(db, about)
     # The note goes to the model with the question; the chat shows the question as it was typed.
     _add(db, conversation, "user", {"text": question, **({"about": about, "note": note} if note else {})})
-    bench = tools.Bench(db=db, user=user, grants=list(conversation.grants or []))
+    bench = tools.Bench(db=db, user=user, grants=list(conversation.grants or []), conversation_id=conversation.id)
     entries = transcript(db, conversation)
     text, refused, spent = "", False, [0, 0]
     for round_number in range(MAX_ROUNDS):
@@ -129,7 +131,7 @@ async def answer(db: Session, user: User, conversation: Conversation, question: 
             logger.info("The assistant used all %d rounds of tools for one answer.", MAX_ROUNDS)
     reply = {
         "text": text, "refused": refused,
-        "citations": list(bench.citations.values()), "proposals": bench.proposals, "permissions": bench.permissions,
+        "citations": list(bench.citations.values()), "proposals": bench.proposals, "permissions": bench.permissions, "drafts": bench.drafts,
     }
     _add(db, conversation, "answer", reply)
     logger.info("The assistant answered %s (%s, %d tokens in, %d out).", user.username, config["model"], spent[0], spent[1])
@@ -137,8 +139,8 @@ async def answer(db: Session, user: User, conversation: Conversation, question: 
 
 
 def allow(db: Session, conversation: Conversation, grant: str) -> None:
-    """What the person allowed in this conversation, such as reading one container's log."""
-    if not grant.startswith("log:"):
+    """What the person allowed in this conversation, such as reading one container's log or using real values for a card."""
+    if not grant.startswith(("log:", "values:")):
         raise providers.AssistantError("bad_grant", "Nothing like that can be allowed.")
     conversation.grants = sorted({*(conversation.grants or []), grant})
     db.commit()
@@ -164,6 +166,7 @@ def sweep(db: Session) -> int:
     """Conversations whose last turn is older than 30 days go, with their turns."""
     old = list(db.scalars(select(Conversation.id).where(Conversation.updated_at < utcnow() - timedelta(days=KEEP_DAYS))))
     if old:
+        db.execute(delete(ConversationDraft).where(ConversationDraft.conversation_id.in_(old)))
         db.execute(delete(ConversationTurn).where(ConversationTurn.conversation_id.in_(old)))
         db.execute(delete(Conversation).where(Conversation.id.in_(old)))
     return len(old)

@@ -270,6 +270,10 @@ def _own_integrations_table(connection: Connection) -> None:
     Base.metadata.tables["own_integrations"].create(connection, checkfirst=True)
 
 
+def _conversation_drafts_table(connection: Connection) -> None:
+    Base.metadata.tables["conversation_drafts"].create(connection, checkfirst=True)
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -299,6 +303,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (26, "Light and dark can follow the clock, for an account and for a wall display", _theme_schedule_columns),
     (27, "A custom card knows who saved it last", _card_editor_column),
     (28, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
+    (29, "The assistant keeps the cards it drafted with the conversation", _conversation_drafts_table),
 ]
 
 

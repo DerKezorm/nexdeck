@@ -54,6 +54,9 @@ class Bench:
     citations: dict[str, dict[str, Any]] = field(default_factory=dict)
     proposals: list[dict[str, Any]] = field(default_factory=list)
     permissions: list[dict[str, Any]] = field(default_factory=list)
+    #: The cards drafted in this answer, as the chat shows them (a chip that opens the editor, a small preview).
+    drafts: list[dict[str, Any]] = field(default_factory=list)
+    conversation_id: int | None = None
 
 
 TOOLS: list[dict[str, Any]] = [
@@ -110,6 +113,21 @@ TOOLS: list[dict[str, Any]] = [
             "type": "object",
             "properties": {"ref": {"type": "string"}, "card_id": {"type": "integer"}},
             "additionalProperties": False,
+        },
+    },
+    {
+        "name": "draft_card",
+        "description": "Draft a custom card for the card editor from one connection and one path of its service. The person opens the draft in the editor and saves it there; you never save or place it. Without integration_id, say which service the person means in 'service' (a name or kind): when more than one connection fits, this answers with the list and you ask the person which one. Without path it lists the paths nexdeck knows of that kind. The shape of the answer (field names and types) goes to the provider, never the values, unless the person allowed it and you pass with_values.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "description": "What the card should show, in the person's words."},
+                "service": {"type": "string", "description": "Part of the name or kind of the connection, such as 'sonarr'."},
+                "integration_id": {"type": "integer"},
+                "path": {"type": "string", "description": "The path to read underneath the connection, such as /api/v3/queue."},
+                "with_values": {"type": "boolean", "description": "Use the real values of the answer too. Asks the person first."},
+            },
+            "required": ["description"], "additionalProperties": False,
         },
     },
     {
@@ -409,9 +427,104 @@ def diagnose(bench: Bench, given: dict[str, Any]) -> str:
     return _json(diagnosis.summary(page))
 
 
+def _readable(kind: str) -> bool:
+    """Whether a card of its own can read through a connection of this kind."""
+    from ...adapters import get_adapter
+
+    try:
+        return bool(get_adapter(kind).raw_access)
+    except Exception:  # noqa: BLE001 - an own kind of connection reads like the JSON API
+        return kind.startswith("custom:")
+
+
+NO_OWN_CARDS = "cannot be read by a card of its own. Say so, and name the way out: a connection of the kind JSON API, or an own connection that describes the service."
+
+
+def _listed(rows: list[Any]) -> list[dict[str, Any]]:
+    return [{"integration_id": row.id, "name": row.name, "kind": row.kind} for row in rows][:20]
+
+
+async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
+    import hashlib
+
+    from ...adapters.base import AdapterError
+    from ...adapters.custom import plain
+    from ...cards import ai, card_reads, credentials, demo, load, schema
+    from ...models import ConversationDraft, Integration
+    from ...routers.cards import _ask, _connection
+    from . import chat, settings
+
+    description = str(given.get("description") or "").strip()[:2000]
+    if bench.conversation_id is None or not description:
+        return _json({"error": "Say what the card should show."})
+    rows = list(bench.db.scalars(select(Integration).order_by(Integration.id)))
+    chosen = next((row for row in rows if row.id == given.get("integration_id")), None)
+    if chosen is None:
+        words = str(given.get("service") or "").lower().strip()
+        found = [row for row in rows if not words or words in f"{row.name} {row.kind}".lower()]
+        usable = [row for row in found if _readable(row.kind)]
+        if not rows:
+            return _json({"error": "There is no connection yet. A card reads through one; add it under System first."})
+        if found and not usable:
+            return _json({"error": f"A {found[0].kind} connection {NO_OWN_CARDS}"})
+        if not usable:
+            return _json({"error": "No connection matches that. Ask the person which service they mean.", "connections": _listed([row for row in rows if _readable(row.kind)])})
+        if len(usable) > 1:
+            return _json({"ask": True, "note": "More than one connection fits. Ask the person which one, in one sentence, and do not guess.", "connections": _listed(usable)})
+        chosen = usable[0]
+    if not _readable(chosen.kind):
+        return _json({"error": f"A {chosen.kind} connection {NO_OWN_CARDS}"})
+    path = str(given.get("path") or "").strip()
+    if not path:
+        return _json({"error": "Name the path to read.", "known_paths": [read["path"] for read in card_reads.reads_of(chosen.kind)][:12]})
+    try:
+        request = schema.Request(id="probe", path=path)
+    except ValueError:
+        return _json({"error": "The path starts with a single / and names no host."})
+    if next(credentials.find(path), None) is not None:
+        return _json({"error": "The path holds something that looks like a key. A card holds no secrets."})
+    values = bool(given.get("with_values"))
+    grant = f"values:{chosen.id}:{hashlib.sha1(path.encode()).hexdigest()[:10]}"  # noqa: S324 - a name, not a secret
+    if values and grant not in bench.grants:
+        bench.permissions.append({"kind": "values", "integration_id": chosen.id, "integration": chosen.name, "path": path, "grant": grant})
+        return _json({"asked": True, "note": "The person has been asked whether the real values may go to the provider. Nothing was sent."})
+    config, key = settings.stored(bench.db), settings.key_of(bench.db)
+    integration_id, conversation_id = chosen.id, bench.conversation_id
+    bench.db.commit()
+    try:
+        adapter, connection, ctx = await _connection(integration_id)
+        answer = await _ask(adapter, connection, ctx, request)
+        outcome = await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key)
+    except AdapterError as failure:
+        return _json({"error": f"The service could not be read: {failure.message}"})
+    except ai.AiError as failure:
+        return _json({"error": failure.message})
+    if not outcome.ok:
+        return _json({"error": "The provider's card did not pass nexdeck's check, even after a second try.", "problems": [problem["message"] for problem in outcome.problems][:5]})
+    text = outcome.yaml
+    # The preview in the chat needs examples: the real answer, made up. They stay in nexdeck.
+    matching = {one.id: answer for one in outcome.definition.requests if one.path == path}
+    if matching and not outcome.definition.demo:
+        try:
+            made, _cut = demo.disguise(matching)
+            with_examples = ai.with_demo(text, made)
+            load.load_definition(with_examples)
+            text = with_examples
+        except (AdapterError, load.CardInvalid):
+            pass
+    name = plain(outcome.definition.name)
+    draft = ConversationDraft(conversation_id=conversation_id, name=name[:200], yaml=text, summary=outcome.summary, sent=outcome.sent)
+    bench.db.add(draft)
+    bench.db.commit()
+    bench.drafts.append({"id": draft.id, "name": name, "form": outcome.definition.form, "summary": outcome.summary, "sent": outcome.sent,
+                         "keep_days": chat.KEEP_DAYS, "url": f"/system/custom-cards/new?draft={draft.id}"})
+    return _json({"drafted": True, "draft_id": draft.id, "name": name, "form": outcome.definition.form,
+                  "note": "The draft is in front of the person with an Open in editor button. Say in a sentence or two what the card shows; it is not saved, and never say that it is."})
+
+
 HANDLERS = {
     "needs_attention": needs_attention, "find_cards": find_cards, "card_details": card_details, "chronicle": read_chronicle,
-    "metric_history": metric_history, "container_log": container_log, "diagnosis": diagnose, "propose_action": propose_action,
+    "metric_history": metric_history, "container_log": container_log, "diagnosis": diagnose, "propose_action": propose_action, "draft_card": draft_card,
 }
 
 

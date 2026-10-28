@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from ..cards import ai as card_ai
 from ..deps import AdminUser, DbSession, error
-from ..models import Conversation
+from ..models import Conversation, ConversationDraft
 from ..services.assistant import chat, providers, settings
 
 router = APIRouter(prefix="/api/v1", tags=["assistant"])
@@ -144,6 +144,15 @@ def delete_conversations(user: AdminUser, db: DbSession) -> None:
     for row in db.query(Conversation).filter(Conversation.user_id == user.id):
         db.delete(row)
     db.commit()
+
+
+@router.get("/assistant/drafts/{draft_id}", summary="A card the assistant drafted for you, as text")
+def draft(draft_id: int, user: AdminUser, db: DbSession) -> dict:
+    found = db.get(ConversationDraft, draft_id)
+    if found is None:
+        raise error("not_found", "No such draft.", status.HTTP_404_NOT_FOUND)
+    _mine(db, user.id, found.conversation_id)  # the draft of somebody else is no draft at all
+    return {"id": found.id, "name": found.name, "yaml": found.yaml, "summary": found.summary, "sent": found.sent, "conversation_id": found.conversation_id}
 
 
 @router.post("/assistant/conversations/{conversation_id}/allow", summary="Allow the assistant something in this conversation")

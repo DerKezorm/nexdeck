@@ -755,6 +755,24 @@ class ConversationTurn(Base):
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
+class ConversationDraft(Base):
+    """A card the assistant drafted in a conversation (KARTEN-18): kept as long as the conversation, opened in the editor by its number.
+
+    ``yaml`` carries invented example answers under ``demo``, made from the real ones here, so the chat can draw a small preview.
+    """
+
+    __tablename__ = "conversation_drafts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200), default="")
+    yaml: Mapped[str] = mapped_column(Text, default="")
+    #: What the card uses (connection kind, path, form, buttons) and what went to the provider (values or not).
+    summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    sent: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
 class LogLine(Base):
     __tablename__ = "log_lines"
     __table_args__ = (Index("ix_log_lines_source_ts", "source", "ts"),)
