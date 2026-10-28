@@ -244,13 +244,21 @@ def authenticate(db: Session, token: str | None) -> Caller | None:
 def caller_of_key(db: Session, key_id: int) -> Caller | None:
     """The caller behind a key as it stands now, for a request its account allows: the same checks as a call."""
     key = db.get(McpKey, key_id)
-    return None if key is None or not allowed(db) else _caller(db, key)
+    return None if key is None or not allowed(db) else _caller(db, key, pending=True)
 
 
-def _caller(db: Session, key: McpKey) -> Caller | None:
-    from . import two_factor
+def _caller(db: Session, key: McpKey, *, pending: bool = False) -> Caller | None:
+    """The caller behind a key, or None when something about it or its account stops it.
 
-    if not counts(key):
+    ``pending``: for an approval, not for a call. A connector's access token
+    runs out after an hour while the person reads the bell, and its refresh
+    token is good for thirty days: the connector is still there, only the
+    token of this hour is not. A call needs the token; an approval of what the
+    connector asked while it was valid does not.
+    """
+    from . import mcp_oauth, two_factor
+
+    if not (mcp_oauth.connector_alive(db, key) if pending and key.kind == "oauth" else counts(key)):
         return None
     setting = stored(db)
     if key.kind == "oauth" and not setting["oauth_allowed"]:

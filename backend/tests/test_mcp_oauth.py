@@ -23,11 +23,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.db import db_session
-from app.models import McpKey, McpOAuthCode, User, utcnow
+from app.models import ActionLog, McpKey, McpOAuthCode, McpOAuthRefresh, User, utcnow
 from app.services import journal, mcp_oauth, two_factor
 
 from .conftest import CSRF, create_user, login, setup_admin
-from .mcp_kit import _quiet, board, make_key, names, rpc, switch  # noqa: F401
+from .mcp_kit import _quiet, board, call, docker_card, make_key, names, rpc, switch  # noqa: F401
 
 BASE = "http://testserver"
 RESOURCE = f"{BASE}/api/mcp"
@@ -402,6 +402,54 @@ def test_an_access_token_runs_out_after_an_hour(ready: TestClient) -> None:
         key.expires_at = utcnow() - timedelta(seconds=1)
     assert rpc(program(ready), tokens["access_token"], "ping").status_code == 401
     assert renew(ready, client_id, tokens["refresh_token"]).status_code == 200
+
+
+def _waiting_press(ready: TestClient) -> tuple[str, dict, int]:
+    """A connector with the right to act has asked to press a button; its number, its tokens and the id of the key."""
+    card = docker_card(ready, board(ready)["pages"][0]["id"])
+    _client_id, tokens = connect(ready, level="act")
+    asked = call(program(ready), tokens["access_token"], "press_button", card_id=card["id"], action="restart", params={"id": "c1"})
+    assert asked["value"]["status"] == "waiting", asked
+    with db_session() as db:
+        key_id = db.scalar(select(McpKey.id).where(McpKey.kind == "oauth"))
+    return str(asked["value"]["request"]), tokens, key_id
+
+
+def _presses() -> list[tuple[str, str]]:
+    with db_session() as db:
+        return [(row.actor, row.action) for row in db.scalars(select(ActionLog))]
+
+
+def test_a_request_of_a_connector_can_be_allowed_after_its_access_hour_while_the_refresh_token_lives(ready: TestClient) -> None:
+    """⚠️ The person reads the bell an hour later: the token of the hour is gone, the connector is not."""
+    number, tokens, _key_id = _waiting_press(ready)
+    with db_session() as db:
+        db.scalar(select(McpKey).where(McpKey.kind == "oauth")).expires_at = utcnow() - timedelta(seconds=5)
+    # The token itself is spent: the program cannot call with it ...
+    assert rpc(program(ready), tokens["access_token"], "ping").status_code == 401
+    # ... but what it asked while the token was good can still be allowed, and runs.
+    approved = ready.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert approved.status_code == 200 and approved.json()["status"] == "approved", approved.text
+    assert [action for _actor, action in _presses()] == ["restart"]
+
+
+def test_a_request_of_a_connector_that_can_no_longer_refresh_is_not_allowed_to_run(ready: TestClient) -> None:
+    number, _tokens, _key_id = _waiting_press(ready)
+    with db_session() as db:
+        db.scalar(select(McpKey).where(McpKey.kind == "oauth")).expires_at = utcnow() - timedelta(seconds=5)
+        for row in db.scalars(select(McpOAuthRefresh)):
+            row.expires_at = utcnow() - timedelta(seconds=5)
+    approved = ready.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert approved.status_code == 200 and approved.json()["status"] == "failed", approved.text
+    assert _presses() == []
+
+
+def test_a_request_of_a_connector_that_was_withdrawn_is_not_allowed_to_run(ready: TestClient) -> None:
+    number, _tokens, key_id = _waiting_press(ready)
+    assert ready.delete(f"/api/v1/mcp/keys/{key_id}", headers=CSRF).status_code in (200, 204)
+    approved = ready.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert approved.status_code == 200 and approved.json()["status"] == "failed", approved.text
+    assert _presses() == []
 
 
 def test_a_refresh_token_runs_out(ready: TestClient) -> None:
