@@ -781,6 +781,8 @@ def test_an_allowed_log_of_a_synology_is_read_and_its_secrets_masked(client: Tes
     assert made.status_code == 201, made.text
     card = client.post(f"/api/v1/pages/{page}/widgets", json={"kind": "synology.containers", "integration_id": made.json()["id"]}, headers=CSRF).json()["widget"]
     collector.unschedule(card["id"])
+    # The card lists the container; a log is read only for one it lists.
+    live.set(card["id"], WidgetData(status="ok", items=[{"id": "abc123", "title": "immich_server"}]))
 
     async def log(_self: object, _config: dict, _ctx: object, container: str, lines: int) -> list[str]:
         return [f"10:00:00 {container} starting", "10:00:01 connecting with password=hunter2-secret"]

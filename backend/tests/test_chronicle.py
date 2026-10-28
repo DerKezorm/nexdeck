@@ -239,6 +239,42 @@ def test_a_member_reads_only_the_boards_she_may_open_and_nothing_about_the_insta
     assert card["target"]["widget"] == lab["nas"]["id"]
 
 
+def _shared_connection(client: TestClient) -> dict:
+    """One connection used on two boards: ``Lab``, which mia may open, and ``Private``, which she may not."""
+    setup_admin(client)
+    lab, private = _board(client, "Lab"), _board(client, "Private")
+    made = client.post("/api/v1/integrations", json={"kind": "docker", "name": "Shared", "config": {}, "demo": True}, headers=CSRF).json()
+    cards = {}
+    for target, title in ((lab, "Lab card"), (private, "Secret card")):
+        card = _widget(client, target["pages"][0]["id"], kind="docker.containers", title=title, integration_id=made["id"])
+        Collector._write_down(card["id"], title, "docker.containers", None, WidgetData(status="ok"), WidgetData(status="bad"))
+        cards[title] = card
+    # A line about the connection itself, which no card carries.
+    with db_session() as db:
+        chronicle.record("version", integration_id=made["id"], name="Shared", before="1", after="2", db=db)
+    mia = create_user(client, "mia")
+    shared = client.put(f"/api/v1/boards/{lab['slug']}/shares", json={"shares": [{"user_id": mia["id"], "level": "view"}]}, headers=CSRF)
+    assert shared.status_code in (200, 201), shared.text
+    return {"lab": lab, "private": private, "connection": made, "cards": cards}
+
+
+def test_a_line_about_a_card_on_another_board_stays_there_though_the_connection_is_shared(client: TestClient) -> None:
+    """⚠️ A card line carries its connection too; going through the connection let the secret board's line out."""
+    _shared_connection(client)
+    login(client, "mia", "another-long-password")
+    lines = client.get("/api/v1/chronicle").json()["events"]
+    cards = [line["name"] for line in lines if line["kind"] == "card"]
+    assert cards == ["Lab card"], lines
+    assert "Secret card" not in [line["name"] for line in lines]
+    # What is about the connection and no card still reaches her, through the board that uses it.
+    assert [line["name"] for line in lines if line["kind"] == "version"] == ["Shared"]
+    # The administrator reads both.
+    from .conftest import ADMIN
+
+    login(client, ADMIN["username"], ADMIN["password"])
+    assert sorted(line["name"] for line in client.get("/api/v1/chronicle").json()["events"] if line["kind"] == "card") == ["Lab card", "Secret card"]
+
+
 def test_the_page_filters_by_group_window_and_words_and_pages_back(client: TestClient) -> None:
     _write_some(client)
     with db_session() as db:

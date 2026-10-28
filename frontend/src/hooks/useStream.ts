@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { create } from 'zustand'
 
 import { ApiError, get, streamUrl } from '../api/client'
 import type { HomeNews } from '../lib/home'
 import type { WidgetData } from '../lib/types'
-import { forgetEverything } from '../stores/auth'
+import { forgetEverything, useAuth } from '../stores/auth'
 import { useLive } from '../stores/live'
 import { useNotices } from '../stores/notices'
 
@@ -20,7 +21,15 @@ interface Options {
 }
 
 /**
+ * How many streams that follow a board are open in this tab. A board's stream
+ * carries the bell's notices as well, so while one is open the stream of the
+ * bell alone (``NoticeStream``) stays shut: one connection per tab, never two.
+ */
+export const useBoardStreams = create<{ open: number }>(() => ({ open: 0 }))
+
+/**
  * Keeps one EventSource open for the board and feeds the live store.
+ * Without a board it carries only the notices of the person signed in.
  * Reconnects with a small backoff; the browser does most of that itself.
  */
 export function useStream({ board, onBoardChanged, onLayout, onHome, onConnected, enabled = true }: Options) {
@@ -32,9 +41,11 @@ export function useStream({ board, onBoardChanged, onLayout, onHome, onConnected
   const applyHealth = useLive((s) => s.applyHealth)
   const appendLog = useLive((s) => s.appendLog)
   const pushNotice = useNotices((s) => s.push)
+  const loadNotices = useNotices((s) => s.load)
 
   useEffect(() => {
     if (!enabled) return
+    if (board) useBoardStreams.setState((state) => ({ open: state.open + 1 }))
     let source: EventSource | null = null
     let closed = false
     let retry = 1000
@@ -47,7 +58,12 @@ export function useStream({ board, onBoardChanged, onLayout, onHome, onConnected
       })
       // The server's first event; widgets fetched between the board request
       // and this moment are only in a fresh snapshot.
-      source.addEventListener('hello', () => callbacks.current.onConnected?.())
+      source.addEventListener('hello', () => {
+        callbacks.current.onConnected?.()
+        // Notices from before this connection, or from while it was down, are
+        // only in the list: read it again, so the number on the bell is right.
+        if (useAuth.getState().user) void loadNotices().catch(() => undefined)
+      })
       source.addEventListener('widget', (event) => {
         const payload = JSON.parse((event as MessageEvent).data) as { id: number; data: WidgetData }
         applyWidget(payload.id, payload.data)
@@ -89,6 +105,7 @@ export function useStream({ board, onBoardChanged, onLayout, onHome, onConnected
     return () => {
       closed = true
       source?.close()
+      if (board) useBoardStreams.setState((state) => ({ open: state.open - 1 }))
     }
-  }, [board, enabled, applyWidget, applyHealth, appendLog, pushNotice])
+  }, [board, enabled, applyWidget, applyHealth, appendLog, pushNotice, loadNotices])
 }

@@ -66,6 +66,7 @@
     "A local account without two-factor authentication.": "Un account locale senza autenticazione a due fattori.",
     "A new media request": "Una nuova richiesta di contenuti",
     "A new nexdeck version": "Una nuova versione di nexdeck",
+    "A program asks to press a button": "Un programma chiede di premere un pulsante",
     "A port that is open while the machine runs. 22 for SSH, 3389 for remote desktop, 445 for file sharing.": "Una porta aperta mentre la macchina è in funzione. 22 per SSH, 3389 per il desktop remoto, 445 per la condivisione file.",
     "A query with several series, one row per label value.": "Una query con più serie, una riga per valore dell'etichetta.",
     "A ring": "Un anello",

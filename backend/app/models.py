@@ -776,6 +776,20 @@ class Notice(Base):
     read_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
 
+class NoticeFacts(Base):
+    """What a notice is about, as fields, for the bell to say in the reader's language.
+
+    The notice's own title and body stay English: a channel (push, mail) gets
+    those. Only some kinds of news carry facts; the rest have no row here. A
+    table of its own rather than a column on ``notices``, so no migration.
+    """
+
+    __tablename__ = "notice_facts"
+
+    notice_id: Mapped[int] = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"), primary_key=True)
+    facts: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
 class ActionLog(Base):
     __tablename__ = "action_log"
 
@@ -811,3 +825,136 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+
+class McpKey(Base):
+    """A key an AI program uses to reach nexdeck over MCP (``services/mcp.py``).
+
+    Acts as its account and never sees more: the boards it may see are the
+    account's, cut down to ``boards`` when a choice was made. Only the hash of
+    the key is stored; the row stays when the key is withdrawn, so the same
+    hash never comes back and the list can still say what happened to it.
+    """
+
+    __tablename__ = "mcp_keys"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    #: ``key`` (made by hand on the account page) or ``oauth`` (a connector that signed in).
+    kind: Mapped[str] = mapped_column(String(8), default="key")
+    #: ``read`` or ``act``; never above what the administrator allows now.
+    level: Mapped[str] = mapped_column(String(8), default="read")
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    prefix: Mapped[str] = mapped_column(String(16))
+    #: Board ids the key may see, of those its account may see; None: every one, later ones too.
+    boards: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    #: The key's own right per tool, only where it differs from the group's default.
+    tool_rights: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: Who withdrew it, when it was not its own account (an administrator's lock).
+    revoked_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: The program's name, for a key of the kind ``oauth``.
+    client: Mapped[str] = mapped_column(String(200), default="")
+
+
+class McpRequest(Base):
+    """A tool call that waits for its account to allow it (right ``ask``, or a dangerous button).
+
+    The arguments are kept as one canonical text with its SHA-256: what the
+    account is shown is exactly what runs, and a row changed behind its back
+    is refused. Card, board and button are written down as they were asked,
+    so the request still reads right when the card has gone since.
+    """
+
+    __tablename__ = "mcp_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    key_id: Mapped[int] = mapped_column(ForeignKey("mcp_keys.id", ondelete="CASCADE"), index=True)
+    key_name: Mapped[str] = mapped_column(String(80))
+    tool: Mapped[str] = mapped_column(String(40))
+    arguments: Mapped[str] = mapped_column(Text)
+    digest: Mapped[str] = mapped_column(String(64))
+    widget_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    card: Mapped[str] = mapped_column(String(200), default="")
+    board: Mapped[str] = mapped_column(String(200), default="")
+    action: Mapped[str] = mapped_column(String(80), default="")
+    label: Mapped[str] = mapped_column(String(120), default="")
+    #: The row of the card the button sits on (a container, a guest), empty for a button of the card itself.
+    row: Mapped[str] = mapped_column(String(200), default="")
+    danger: Mapped[bool] = mapped_column(Boolean, default=False)
+    impact: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    #: waiting, approved, declined, expired or failed.
+    status: Mapped[str] = mapped_column(String(12), default="waiting", index=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    decided_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    decided_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class McpOAuthClient(Base):
+    """A program that registered itself to sign in as a connector (RFC 7591, ``services/mcp_oauth.py``).
+
+    Registering needs no account, so a row says nothing about anybody: a name
+    the program chose, the addresses it may be sent back to, and the address
+    it registered from, for the brake and the log.
+    """
+
+    __tablename__ = "mcp_oauth_clients"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    redirect_uris: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    #: The address the registration came from.
+    sender: Mapped[str] = mapped_column(String(64), default="")
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+
+
+class McpOAuthCode(Base):
+    """A code an account handed a program on the consent page, traded for tokens once.
+
+    Only its SHA-256 is stored. The row stays until it runs out, used or not:
+    a code brought a second time ends the key the first trade made.
+    """
+
+    __tablename__ = "mcp_oauth_codes"
+
+    code_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    client_id: Mapped[str] = mapped_column(String(64))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The PKCE challenge (S256) the program sent with its request.
+    challenge: Mapped[str] = mapped_column(String(128))
+    #: The resource the program asked for (RFC 8707); None when it named none.
+    resource: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    redirect_uri: Mapped[str] = mapped_column(String(2048))
+    level: Mapped[str] = mapped_column(String(8))
+    boards: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: The key the trade made, so a second trade can end it.
+    key_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class McpOAuthRefresh(Base):
+    """One refresh token of a connector. Every refresh uses one up and leaves the next in the same chain.
+
+    The chain is the key (``key_id``): a used token brought again means two
+    hold a copy, and the whole chain ends together with its key.
+    """
+
+    __tablename__ = "mcp_oauth_refresh"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    key_id: Mapped[int] = mapped_column(ForeignKey("mcp_keys.id", ondelete="CASCADE"), index=True)
+    client_id: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select, update
 
 from ..deps import CurrentUser, DbSession, error
-from ..models import Notice, utcnow
+from ..models import Notice, NoticeFacts, utcnow
 from ..services.notify import notice_payload
 
 router = APIRouter(prefix="/api/v1/notices", tags=["notices"])
@@ -23,7 +23,9 @@ def list_notices(user: CurrentUser, db: DbSession, unread: bool = False, limit: 
     query = select(Notice).where(Notice.user_id == user.id).order_by(Notice.created_at.desc()).limit(max(1, min(500, limit)))
     if unread:
         query = query.where(Notice.read_at.is_(None))
-    return [notice_payload(n) for n in db.scalars(query)]
+    notices = list(db.scalars(query))
+    facts = {row.notice_id: row.facts for row in db.scalars(select(NoticeFacts).where(NoticeFacts.notice_id.in_([n.id for n in notices])))}
+    return [notice_payload(n, facts.get(n.id)) for n in notices]
 
 
 @router.post("/read", summary="Mark notices as read")

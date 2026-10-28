@@ -1,0 +1,170 @@
+{
+  "mcp": {
+    "nav": "KI von außen (MCP)",
+    "palette": "MCP-Schlüssel",
+    "group": {
+      "read": "Lesen",
+      "act": "Kartenaktionen",
+      "admin": "Verwaltung"
+    },
+    "level": {
+      "read": "Lesen",
+      "act": "Lesen und handeln"
+    },
+    "rights": {
+      "title": "Rechte je Werkzeug",
+      "allow": "Erlauben",
+      "ask": "Erst fragen",
+      "deny": "Verbieten",
+      "save": "Rechte speichern",
+      "for": "Recht für {{tool}}",
+      "why": {
+        "blocked": "Vom Admin für alle Schlüssel gesperrt.",
+        "adminOnly": "Dieses Werkzeug dürfen nur Admins nutzen.",
+        "level": "Braucht die Stufe „Lesen und handeln“."
+      }
+    },
+    "keys": {
+      "title": "KI von außen (MCP)",
+      "help": "Mit einem Schlüssel kann ein Programm wie Claude Code über MCP in deine Boards schauen. Jeder Schlüssel hat eine eigene Stufe, eigene Boards und eigene Rechte je Werkzeug. Der Schlüssel wird nur einmal gezeigt, gleich nach dem Anlegen.",
+      "off": "MCP ist in dieser Installation ausgeschaltet. Nur ein Admin kann es einschalten.",
+      "offAdmin": "MCP ist in dieser Installation ausgeschaltet.",
+      "offAdminLink": "Unter System einschalten.",
+      "created": "Das ist dein Schlüssel. Er wird nur einmal angezeigt.",
+      "claudeCode": "Für Claude Code",
+      "json": "Als JSON, für andere Programme",
+      "copyLine": "Kopieren: {{what}}",
+      "copied": "Ich habe ihn kopiert",
+      "connected": "Verbundenes Programm",
+      "revoked": "Zurückgezogen",
+      "expired": "Abgelaufen",
+      "revokeKey": "{{name}} zurückziehen",
+      "boardsAll": "Alle Boards, die du sehen darfst, auch spätere",
+      "boardsSome": "Boards: {{names}}",
+      "lastUsed": "Zuletzt benutzt {{when}}",
+      "neverUsed": "nie benutzt",
+      "expiresOn": "Läuft ab am {{date}}",
+      "noExpiry": "läuft nie ab",
+      "revokeTitle": "Schlüssel zurückziehen?",
+      "revokeBody": "„{{name}}“ funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen.",
+      "revoke": "Zurückziehen",
+      "tokensHint": "Programme wie Claude Code verbinden sich über MCP, mit eigenen Schlüsseln:"
+    },
+    "form": {
+      "name": "Name des Schlüssels",
+      "namePlaceholder": "Claude Code auf meinem Laptop",
+      "level": "Stufe",
+      "levelHelp": {
+        "read": "Das Programm kann Karten, die Chronik und den Verlauf ansehen.",
+        "act": "Das Programm kann auch darum bitten, Knöpfe auf Karten zu drücken. Jeden Druck beantwortest du in der Glocke, außer du erlaubst ein Werkzeug ohne Rückfrage. Gefährliche Knöpfe fragen immer."
+      },
+      "expires": "Läuft ab",
+      "never": "Nie",
+      "days": "Nach {{days}} Tagen",
+      "boards": "Boards",
+      "boardsAll": "Alle Boards, die ich sehen darf, auch spätere",
+      "boardsPick": "Nur diese Boards",
+      "create": "Schlüssel anlegen"
+    },
+    "admin": {
+      "title": "KI von außen (MCP)",
+      "help": "Programme wie Claude Code können über MCP deine Boards lesen und nach einer Freigabe Knöpfe auf Karten drücken. Aus, bis du es einschaltest.",
+      "allowed": "MCP erlauben",
+      "allowedHelp": "Ist es aus, funktioniert kein Schlüssel, und der Zugang antwortet, als gäbe es ihn nicht.",
+      "maxLevel": "Höchste Stufe",
+      "maxLevelHelp": "Kein Schlüssel geht darüber, auch bereits angelegte nicht.",
+      "oauth": "Connectoren erlauben",
+      "oauthHelp": "Ein Programm wie Claude kann eine angemeldete Person um Zugriff bitten, statt einen Schlüssel zu bekommen.",
+      "blocked": "Gesperrte Werkzeuge",
+      "blockedHelp": "Ein gesperrtes Werkzeug fehlt für alle Schlüssel: Es steht in keiner Liste und antwortet wie ein Werkzeug, das es nicht gibt.",
+      "keysTitle": "Alle Schlüssel",
+      "keysHelp": "Die Schlüssel aller Konten. Zurückziehen beendet einen Schlüssel sofort.",
+      "noKeys": "Noch keine Schlüssel.",
+      "revokeKey": "{{name}} zurückziehen",
+      "revokeBody": "„{{name}}“ von {{user}} funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen."
+    },
+    "request": {
+      "title": "Freigabe-Anfrage",
+      "heading": "{{program}} möchte einen Knopf drücken",
+      "help": "Solange du nicht antwortest, passiert nichts. Erlauben führt genau das aus, was unten steht. Die Anfrage verfällt nach zehn Minuten.",
+      "helpDone": "Diese Anfrage ist erledigt.",
+      "gone": "Diese Anfrage gibt es nicht.",
+      "back": "Zurück zu den Hinweisen",
+      "program": "Programm",
+      "tool": "Werkzeug",
+      "card": "Karte",
+      "board": "Board",
+      "button": "Knopf",
+      "params": "Parameter",
+      "until": "Antwort bis",
+      "impact": "Was es treffen würde",
+      "result": "Ergebnis",
+      "danger": "Gefährlicher Knopf",
+      "allow": "Erlauben",
+      "review": "Ansehen",
+      "confirmTitle": "Gefährlichen Knopf erlauben?",
+      "confirmBody": "{{button}} auf {{card}} kann etwas anhalten oder entfernen. Er läuft, sobald du bestätigst.",
+      "confirmAllow": "Ja, drücken",
+      "decline": "Ablehnen",
+      "conflict": "Diese Anfrage wurde schon beantwortet oder ist verfallen.",
+      "status": {
+        "waiting": "Wartet auf deine Antwort",
+        "approved": "Erlaubt",
+        "declined": "Abgelehnt",
+        "expired": "Verfallen",
+        "failed": "Erlaubt, hat aber nicht geklappt"
+      },
+      "row": "Zeile",
+      "up": "{{name}}: {{text}}"
+    },
+    "chronicle": {
+      "pressed": "{{after}} auf {{name}} durch {{before}}",
+      "approved": "{{after}} auf {{name}} durch {{before}}, erlaubt von {{user}}"
+    },
+    "connect": {
+      "title": "Programm verbinden",
+      "heading": "{{program}} möchte sich mit deinem nexdeck verbinden",
+      "help": "Das Programm bekommt einen eigenen Schlüssel. Es sieht nur, was du hier auswählst, steht in deiner Schlüsselliste unter Einstellungen, und du kannst es dort jederzeit zurückziehen.",
+      "program": "Programm",
+      "returnsTo": "Kehrt zurück zu",
+      "account": "Konto",
+      "level": "Stufe",
+      "boards": "Boards",
+      "check": "Erlaube das nur, wenn du das Verbinden selbst im Programm gestartet hast und die Adresse kennst, zu der es zurückkehrt.",
+      "allow": "Erlauben",
+      "decline": "Ablehnen",
+      "sending": "Zurück zum Programm …",
+      "back": "Zurück zum Programm",
+      "backHost": "Der Knopf öffnet {{host}}, die Adresse, die das Programm angemeldet hat.",
+      "error": {
+        "off": "Connectoren sind auf dieser Installation nicht erlaubt. Nur ein Admin kann sie erlauben.",
+        "client": "Dieses Programm ist hier nicht angemeldet. Starte das Verbinden im Programm neu.",
+        "redirect": "Das Programm will zu einer Adresse zurück, die es nicht angemeldet hat. Es wurde nichts dorthin geschickt.",
+        "request": "Die Anfrage des Programms ist unvollständig oder für einen anderen Server gedacht. Starte das Verbinden im Programm neu.",
+        "guest": "Gäste können keine Programme verbinden.",
+        "session": "Melde dich mit deinem Passwort an, um ein Programm zu verbinden.",
+        "tooMany": "Dein Konto hat schon so viele Schlüssel, wie es haben darf. Ziehe zuerst unter Einstellungen einen zurück."
+      }
+    },
+    "tool": {
+      "needs_attention": "Was gerade Aufmerksamkeit braucht: gelbe und rote Karten, fehlschlagende Prüfungen und ungelesene Warnungen.",
+      "find_cards": "Findet Karten nach Titel, Dienst, Art oder Board.",
+      "card_details": "Alles, was eine Karte zeigt: Farbe, Zahlen, Zeilen und die Knöpfe, die sie anbietet.",
+      "chronicle": "Was zuletzt geschah: Farbwechsel, Ausfälle, neue Versionen, Neustarts und Änderungen in nexdeck.",
+      "metric_history": "Wie sich eine Zahl einer Karte in den letzten Stunden bewegt hat.",
+      "diagnosis": "Warum ein Dienst Probleme hat, so wie es seine Diagnose-Seite zeigt.",
+      "container_log": "Die letzten Zeilen aus dem Log eines Containers, Geheimnisse maskiert.",
+      "press_button": "Drückt einen Knopf, den eine Karte anbietet. Fragt dich vorher, wenn nicht erlaubt; gefährliche Knöpfe fragen immer.",
+      "request_status": "Wie es um einen Druck steht, der auf deine Antwort wartet."
+    },
+    "notice": {
+      "asks": "{{program}} möchte {{button}} auf {{card}} drücken",
+      "board": "Board {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} auf {{card}}, durch {{program}} (MCP)",
+      "pressedApproved": "{{button}} auf {{card}}, durch {{program}} (MCP), erlaubt von {{user}}",
+      "failed": "{{button}} auf {{card}} fehlgeschlagen, durch {{program}} (MCP)",
+      "failedApproved": "{{button}} auf {{card}} fehlgeschlagen, durch {{program}} (MCP), erlaubt von {{user}}"
+    }
+  }
+}

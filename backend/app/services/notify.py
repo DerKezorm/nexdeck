@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy import select
 
 from ..db import db_session
-from ..models import Integration, Notice, NotificationChannel, Role, Subscription, User
+from ..models import Integration, Notice, NoticeFacts, NotificationChannel, Role, Subscription, User
 from .loop import spawn
 from .sse import hub, user_topic
 
@@ -50,6 +50,7 @@ EVENTS: dict[str, str] = {
     "daily_report": "The daily report",
     "software_update": "An update is waiting on a server",
     "update_available": "A new nexdeck version",
+    "mcp_request": "A program asks to press a button",
     "test": "Test message",
 }
 
@@ -64,13 +65,17 @@ class Message:
 
 
 def emit(event: str, title: str, body: str = "", *, level: str = "info", link: str = "",
-         user_ids: list[int] | None = None, integration_id: int | None = None, subject: str | None = None, held: bool = False) -> None:
+         user_ids: list[int] | None = None, integration_id: int | None = None, subject: str | None = None, held: bool = False,
+         facts: dict[str, Any] | None = None) -> None:
     """Create notices and dispatch channels. Safe to call from anywhere in the loop.
 
     ``integration_id`` names the connection the news is about. A muted one is
     told nowhere: not in the bell, not on a channel. Neither is one in
     maintenance, except for what ``maintenance.STAYS_LOUD`` names. One check
     here instead of one at every caller, so a new kind of news cannot forget it.
+
+    ``facts`` go with the notices in the bell only (``NoticeFacts``), never to
+    a channel. News that is held for its cause (``subject``) carries none.
     """
     from . import dependencies, maintenance
 
@@ -99,13 +104,16 @@ def emit(event: str, title: str, body: str = "", *, level: str = "info", link: s
             db.add(notice)
             notices.append(notice)
         db.flush()
-        payloads = [(n.user_id, notice_payload(n)) for n in notices]
+        if facts:
+            db.add_all(NoticeFacts(notice_id=notice.id, facts=facts) for notice in notices)
+        payloads = [(n.user_id, notice_payload(n, facts)) for n in notices]
     for user_id, payload in payloads:
         hub.publish(user_topic(user_id), "notice", payload)
     spawn(lambda: dispatch(message, targets), name="notify-dispatch")
 
 
-def notice_payload(notice: Notice) -> dict[str, Any]:
+def notice_payload(notice: Notice, facts: dict[str, Any] | None = None) -> dict[str, Any]:
+    extra = {"facts": facts} if facts else {}
     return {
         "id": notice.id,
         "event": notice.event,
@@ -115,6 +123,7 @@ def notice_payload(notice: Notice) -> dict[str, Any]:
         "link": notice.link,
         "created_at": notice.created_at.isoformat() if notice.created_at else None,
         "read_at": notice.read_at.isoformat() if notice.read_at else None,
+        **extra,
     }
 
 

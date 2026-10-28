@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { clockOf, lineDetail, lineStatus, lineText, type ChronicleLine } from '../lib/chronicle'
+import { useChronicleWords } from '../lib/chronicleWords'
 import { focusCard } from '../lib/focusCard'
 import { useDisguise } from '../lib/showcase'
 import { useAuth } from '../stores/auth'
@@ -16,6 +17,7 @@ const TROUBLE = ['card', 'outage', 'recovery', 'forecast']
 
 export function ChronicleRow({ line, compact = false }: { line: ChronicleLine; compact?: boolean }) {
   const { t, i18n } = useTranslation()
+  useChronicleWords([line])
   const disguise = useDisguise()
   const navigate = useNavigate()
   const signedIn = useAuth((state) => state.user != null)
