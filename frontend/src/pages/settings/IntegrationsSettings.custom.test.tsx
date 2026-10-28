@@ -46,6 +46,8 @@ function stub() {
       if (url === '/integrations/test') return json(world.test)
       if (url === '/about') return json({ version: '0.48.0', demo: false, demo_forced: false, demo_data: false })
       if (url === '/integrations/versions') return json(world.versions)
+      if (url === '/boards') return json([{ id: 3, slug: 'home', name: 'Home' }])
+      if (url === '/integrations/found') return json({ found: [], ignored: 0, looked_at: null })
       return json({})
     }),
   )
@@ -60,6 +62,12 @@ function show() {
       </MemoryRouter>
     </QueryClientProvider>,
   )
+}
+
+/** The way to a kind: the Add button opens the catalog, and a tile of it opens the form of that kind. */
+async function pick(kind: RegExp, add = 'Add an integration') {
+  await userEvent.click(await screen.findByRole('button', { name: add }))
+  await userEvent.click(await screen.findByRole('button', { name: kind }))
 }
 
 beforeEach(() => {
@@ -77,6 +85,7 @@ afterEach(async () => {
 describe('own integrations when a connection is added', () => {
   it('karten3 ac8: the own kind stands beside the built-in ones with the mark Custom; the built-in one has none', async () => {
     show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Add an integration' }))
     const own = await screen.findByRole('button', { name: /Memos/ })
     expect(within(own).getByText('Custom')).toBeInTheDocument()
     expect(within(screen.getByRole('button', { name: /Sonarr/ })).queryByText('Custom')).toBeNull()
@@ -84,7 +93,7 @@ describe('own integrations when a connection is added', () => {
 
   it('karten3 ac8: choosing it opens the form of its fields, the secret one hidden, with the mark', async () => {
     show()
-    await userEvent.click(await screen.findByRole('button', { name: /Memos/ }))
+    await pick(/Memos/)
     const sheet = await screen.findByRole('dialog')
     expect(within(sheet).getByText('Custom')).toBeInTheDocument()
     expect(within(sheet).getByText('Access token')).toBeInTheDocument()
@@ -101,7 +110,7 @@ describe('own integrations when a connection is added', () => {
   ])('karten3 ac9: the test says %s in a sentence and a hint', async (code, sentence, hint) => {
     world.test = { ok: false, code, message: 'server words', hint: 'server hint' }
     show()
-    await userEvent.click(await screen.findByRole('button', { name: /Memos/ }))
+    await pick(/Memos/)
     await userEvent.click(await screen.findByRole('button', { name: 'Test connection' }))
     const status = await screen.findByRole('status')
     expect(status).toHaveTextContent(sentence)
@@ -113,14 +122,14 @@ describe('own integrations when a connection is added', () => {
   it('karten3 ec4: a paused sign-in keeps the sentence of the server, which names the time', async () => {
     world.test = { ok: false, code: 'sign_in_paused', message: 'Signing in is paused until 14:05.', hint: '' }
     show()
-    await userEvent.click(await screen.findByRole('button', { name: /Memos/ }))
+    await pick(/Memos/)
     await userEvent.click(await screen.findByRole('button', { name: 'Test connection' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Signing in is paused until 14:05.')
   })
 
   it('karten3 ac9: a green test stays as the server says it', async () => {
     show()
-    await userEvent.click(await screen.findByRole('button', { name: /Memos/ }))
+    await pick(/Memos/)
     await userEvent.click(await screen.findByRole('button', { name: 'Test connection' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Connected.')
   })
@@ -130,7 +139,7 @@ describe('own integrations when a connection is added', () => {
     await i18next.changeLanguage('de')
     world.test = { ok: false, code: 'sign_in_no_ticket', message: 'x' }
     show()
-    await userEvent.click(await screen.findByRole('button', { name: /Memos/ }))
+    await pick(/Memos/, deScreen.settings.integrations.add)
     await userEvent.click(await screen.findByRole('button', { name: 'Verbindung testen' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Die Antwort auf die Anmeldung enthält kein Ticket.')
   })
@@ -142,10 +151,10 @@ describe('a connection whose kind was deleted', () => {
     show()
     const row = (await screen.findByText('Old notes')).closest('li')!
     expect(within(row).getByText('integration missing')).toBeInTheDocument()
-    expect(within(row).getByRole('button', { name: 'Edit' })).toBeDisabled()
-    const normal = screen.getAllByText('Sonarr', { selector: 'div' })[0].closest('li')!
+    expect(within(row).getByRole('button', { name: 'Edit Old notes' })).toBeDisabled()
+    const normal = screen.getAllByText('Sonarr', { selector: 'span' })[0].closest('li')!
     expect(within(normal).queryByText('integration missing')).toBeNull()
-    expect(within(normal).getByRole('button', { name: 'Edit' })).toBeEnabled()
+    expect(within(normal).getByRole('button', { name: 'Edit Sonarr' })).toBeEnabled()
   })
 
   it('karten3 ec6: the server may say it too', async () => {
@@ -158,7 +167,7 @@ describe('a connection whose kind was deleted', () => {
     world.connections = [CONNECTION({ id: 8, kind: 'custom:gone', name: 'Old notes' })]
     show()
     const row = (await screen.findByText('Old notes')).closest('li')!
-    expect(within(row).getByRole('button', { name: 'Delete' })).toBeEnabled()
+    expect(within(row).getByRole('button', { name: 'Remove Old notes' })).toBeEnabled()
   })
 })
 
