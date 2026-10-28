@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **A device is no longer proposed in a container named after it.** The inventory proposed a FRITZ!Box in a container whose name began with "fritz", though it was a recorder that only talks to the box. Connections to devices of their own (FRITZ!Box, routers and firewalls, NAS systems, hypervisors, smart plugs, inverters, cameras, SNMP) are never proposed in a container. For any other service, a container that shares only part of its name is proposed only when its image names the same software.
+
 ## 0.51.0 (2026-10-28)
 
 ### Added

@@ -47,6 +47,11 @@ logger = logging.getLogger("nexdeck.dependencies")
 ENGINES = ("docker", "portainer", "synology", "proxmox")
 #: Connections that are hosts in their own right: a service on their address hangs on them.
 HOSTS = ("synology", "proxmox", "unraid", "truenas", "openmediavault", "docker", "portainer")
+#: Connections to devices of their own that never run in a container: no container is
+#: proposed for them, however it is called (measured 28.10.2026: a FRITZ!Box was
+#: proposed in a container named after it, a recorder that only talks to the box).
+DEVICES = frozenset({"fritzbox", "fortigate", "mikrotik", "openwrt", "opnsense", "pfsense", "synology", "truenas", "unraid",
+                     "openmediavault", "proxmox", "shelly", "tasmota", "opendtu", "fronius", "reolink", "snmp"})
 #: Where a match is a guess: a reverse proxy listens here more often than the service.
 PROXY_PORTS = (80, 443)
 #: How long an outage waits for its cause before it is told.
@@ -332,8 +337,9 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
         containers: list[str] = []
         guests: list[str] = []
         guessed: list[str] = []
+        device = own is not None and kinds.get(int(own)) in DEVICES
         for thing in things if addresses else []:
-            if str(thing.integration_id) == own:
+            if str(thing.integration_id) == own or (device and thing.kind == "container"):
                 continue
             if thing.kind == "guest" and (addresses & set(thing.addresses) or (not thing.addresses and thing.name.lower() in called)):
                 if not behind_proxy:
@@ -351,12 +357,19 @@ def match(db: Session, hosts: dict[int, list[str]] | None = None) -> None:
             mine = _words(words)
             named: list[Thing] = []
             for thing in things:
-                if str(thing.integration_id) == own:
+                if str(thing.integration_id) == own or (device and thing.kind == "container"):
                     continue
                 # A guest's "image" is its type and node, not software: only a container's says what runs.
                 image = thing.image.split("/")[-1].split(":")[0] if thing.kind == "container" else ""
-                if mine & (_words(thing.name) | (_words(image) - BASE_IMAGES)):
-                    named.append(thing)
+                by_name = mine & _words(thing.name)
+                if not by_name and not mine & (_words(image) - BASE_IMAGES):
+                    continue
+                # A container that only shares part of its name with the service and is built
+                # from other software is something else (fritz-rekorder is not the FRITZ!Box).
+                if (by_name and thing.kind == "container" and thing.name.lower() not in mine and image and image not in BASE_IMAGES
+                        and not any(word in thing.image.lower() for word in by_name)):
+                    continue
+                named.append(thing)
             # One named exactly like the service beats its siblings (sabnzbd, not ndl-sabnzbd).
             guessed.extend(thing.ref for thing in _best(named, mine))
         for parent in guessed:
