@@ -208,6 +208,7 @@ that one of twenty-one renderers draws.
 | GitHub releases | releases | | none; sixty requests an hour per address |
 | Share prices | prices | | none |
 | Twitch | live | | client ID and secret of an application at dev.twitch.tv |
+| Steam | Steam (friends online, in a game, friends, hours played in two weeks), friends (those online with their game, the ones playing first), recently played (the last two weeks, with the hours) | | a Web API key from steamcommunity.com/dev/apikey and the 17-digit Steam ID; the friends list and the game details of the profile have to be public. Beta, and not measured at all: the key is tied to an account, so every answer is taken from Valve's Web API documentation |
 | Wake-on-LAN | wake | wake | none; a MAC address and a network that carries the broadcast |
 
 Adapters marked **beta** in the interface have not been confirmed against a
