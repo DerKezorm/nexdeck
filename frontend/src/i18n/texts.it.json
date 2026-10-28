@@ -2331,7 +2331,12 @@
     "Open reports and sign-ups waiting for approval, reports first, each with what it is about.": "Segnalazioni aperte e registrazioni in attesa di approvazione, prima le segnalazioni, ciascuna con il suo oggetto.",
     "Preferences > Development > New application, with the scope read for your account, and admin:read:reports and admin:read:accounts for the moderation. Not needed for the server figures.": "Preferenze > Sviluppo > Nuova applicazione, con l'ambito read per il tuo account e admin:read:reports e admin:read:accounts per la moderazione. Non serve per i dati del server.",
     "Users and posts of your own Mastodon server, reports and sign-ups waiting for a moderator, and your own account.": "Utenti e post del tuo server Mastodon, segnalazioni e registrazioni in attesa di un moderatore, e il tuo account.",
-    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Utenti, post, utenti attivi questo mese e server noti, e se ci si può registrare."
+    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Utenti, post, utenti attivi questo mese e server noti, e se ci si può registrare.",
+    "Of a moderator or an admin, for the card with reports. Not needed for the instance figures.": "Di un moderatore o di un amministratore, per la scheda delle segnalazioni. Non serve per i dati dell'istanza.",
+    "Of that user. Lemmy has no access tokens of its own, so nexdeck signs in and keeps the session.": "Di quell'utente. Lemmy non ha token di accesso propri, quindi nexdeck accede e mantiene la sessione.",
+    "Reported posts, comments and messages and applications to join that wait for you, and your unread replies.": "Post, commenti e messaggi segnalati e richieste di iscrizione che ti aspettano, e le tue risposte non lette.",
+    "Users, posts, comments and communities, how many users were active this month, and how people can sign up.": "Utenti, post, commenti e community, quanti utenti sono stati attivi questo mese e come ci si può registrare.",
+    "Users, posts, communities and active users of your Lemmy instance, and the reports and applications waiting for you.": "Utenti, post, community e utenti attivi della tua istanza Lemmy, e le segnalazioni e richieste che ti aspettano."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3701,6 +3706,14 @@
     "Unread notifications": "Notifiche non lette",
     "Rule violation": "Violazione delle regole",
     "Spam": "Spam",
-    "Legal": "Legale"
+    "Legal": "Legale",
+    "Active this week": "Attivi questa settimana",
+    "Applications waiting": "Richieste in attesa",
+    "Comments": "Commenti",
+    "Communities": "Community",
+    "Reported comments": "Commenti segnalati",
+    "Reported posts": "Post segnalati",
+    "Reported messages": "Messaggi segnalati",
+    "Unread replies": "Risposte non lette"
   }
 }

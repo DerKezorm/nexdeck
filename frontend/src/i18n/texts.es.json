@@ -2331,7 +2331,12 @@
     "Open reports and sign-ups waiting for approval, reports first, each with what it is about.": "Denuncias abiertas y registros a la espera de aprobación, las denuncias primero, cada una con su motivo.",
     "Preferences > Development > New application, with the scope read for your account, and admin:read:reports and admin:read:accounts for the moderation. Not needed for the server figures.": "Preferencias > Desarrollo > Nueva aplicación, con el ámbito read para tu cuenta y admin:read:reports y admin:read:accounts para la moderación. No hace falta para las cifras del servidor.",
     "Users and posts of your own Mastodon server, reports and sign-ups waiting for a moderator, and your own account.": "Usuarios y publicaciones de tu propio servidor Mastodon, denuncias y registros a la espera de un moderador, y tu propia cuenta.",
-    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Usuarios, publicaciones, usuarios activos este mes y servidores conocidos, y si se puede registrar la gente."
+    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Usuarios, publicaciones, usuarios activos este mes y servidores conocidos, y si se puede registrar la gente.",
+    "Of a moderator or an admin, for the card with reports. Not needed for the instance figures.": "De un moderador o un administrador, para la tarjeta de denuncias. No hace falta para las cifras de la instancia.",
+    "Of that user. Lemmy has no access tokens of its own, so nexdeck signs in and keeps the session.": "De ese usuario. Lemmy no tiene tokens de acceso propios, así que nexdeck inicia sesión y mantiene la sesión.",
+    "Reported posts, comments and messages and applications to join that wait for you, and your unread replies.": "Publicaciones, comentarios y mensajes denunciados y solicitudes de ingreso que te esperan, y tus respuestas sin leer.",
+    "Users, posts, comments and communities, how many users were active this month, and how people can sign up.": "Usuarios, publicaciones, comentarios y comunidades, cuántos usuarios estuvieron activos este mes y cómo se puede registrar la gente.",
+    "Users, posts, communities and active users of your Lemmy instance, and the reports and applications waiting for you.": "Usuarios, publicaciones, comunidades y usuarios activos de tu instancia de Lemmy, y las denuncias y solicitudes que te esperan."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3701,6 +3706,14 @@
     "Unread notifications": "Notificaciones sin leer",
     "Rule violation": "Infracción de las normas",
     "Spam": "Spam",
-    "Legal": "Legal"
+    "Legal": "Legal",
+    "Active this week": "Activos esta semana",
+    "Applications waiting": "Solicitudes en espera",
+    "Comments": "Comentarios",
+    "Communities": "Comunidades",
+    "Reported comments": "Comentarios denunciados",
+    "Reported posts": "Publicaciones denunciadas",
+    "Reported messages": "Mensajes denunciados",
+    "Unread replies": "Respuestas sin leer"
   }
 }
