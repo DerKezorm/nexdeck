@@ -2333,7 +2333,21 @@
     "Only offline devices": "Seulement les appareils hors ligne",
     "never": "jamais",
     "Every device is online.": "Tous les appareils sont en ligne.",
-    "No devices yet.": "Pas encore d'appareils."
+    "No devices yet.": "Pas encore d'appareils.",
+    "How many notes Anchor holds, the notes changed last, and the notes with a reminder.": "Combien de notes Anchor contient, les notes modifiées en dernier, et les notes avec un rappel.",
+    "How many notes there are, with those pinned, with a reminder and archived.": "Combien il y a de notes, avec les épinglées, celles avec un rappel et les archivées.",
+    "Pinned": "Épinglées",
+    "Profile > API token in Anchor (made with Regenerate). The one from signing in lasts fifteen minutes.": "Profil > Jeton d'API dans Anchor (créé avec Régénérer). Celui de la connexion dure quinze minutes.",
+    "Recent notes": "Notes récentes",
+    "Reminders": "Rappels",
+    "The notes changed last, with their first line.": "Les notes modifiées en dernier, avec leur première ligne.",
+    "The notes with a reminder, in the order of the reminder's time.": "Les notes avec un rappel, dans l'ordre de l'heure du rappel.",
+    "Untitled": "Sans titre",
+    "Daily": "Quotidien",
+    "Weekly": "Hebdomadaire",
+    "Monthly": "Mensuel",
+    "Yearly": "Annuel",
+    "No note has a reminder.": "Aucune note n'a de rappel."
   },
   "labels": {
     "Private resources": "Ressources privées",

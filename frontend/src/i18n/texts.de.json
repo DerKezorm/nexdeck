@@ -2333,7 +2333,21 @@
     "Only offline devices": "Nur Offline-Geräte",
     "never": "nie",
     "Every device is online.": "Alle Geräte sind online.",
-    "No devices yet.": "Noch keine Geräte."
+    "No devices yet.": "Noch keine Geräte.",
+    "How many notes Anchor holds, the notes changed last, and the notes with a reminder.": "Wie viele Notizen Anchor hat, die zuletzt geänderten Notizen, und die Notizen mit einer Erinnerung.",
+    "How many notes there are, with those pinned, with a reminder and archived.": "Wie viele Notizen es gibt, mit den angehefteten, den Notizen mit Erinnerung und den archivierten.",
+    "Pinned": "Angeheftet",
+    "Profile > API token in Anchor (made with Regenerate). The one from signing in lasts fifteen minutes.": "Profil > API-Token in Anchor (mit Neu erzeugen erstellt). Der von der Anmeldung gilt fünfzehn Minuten.",
+    "Recent notes": "Neueste Notizen",
+    "Reminders": "Erinnerungen",
+    "The notes changed last, with their first line.": "Die zuletzt geänderten Notizen, mit ihrer ersten Zeile.",
+    "The notes with a reminder, in the order of the reminder's time.": "Die Notizen mit Erinnerung, in der Reihenfolge der Erinnerungszeit.",
+    "Untitled": "Ohne Titel",
+    "Daily": "Täglich",
+    "Weekly": "Wöchentlich",
+    "Monthly": "Monatlich",
+    "Yearly": "Jährlich",
+    "No note has a reminder.": "Keine Notiz hat eine Erinnerung."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
