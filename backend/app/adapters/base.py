@@ -1348,6 +1348,26 @@ def _refuse_a_giant_answer(url: str, response: httpx.Response) -> None:
         )
 
 
+def _auth_fingerprint(auth: tuple[str, str] | httpx.Auth | None) -> str:
+    """Tell the answers kept for one sign-in from those kept for another, without keeping the secret.
+
+    ⚠️ ``auth=`` used to be left out of the key: two connections to one address with different accounts shared an
+    answer. A digest of the credentials, never the credentials. An auth object of a kind not known here gets its
+    identity, so that it shares nothing, and is at worst not remembered.
+    """
+    if auth is None:
+        return ""
+    if isinstance(auth, tuple):
+        parts: list[Any] = ["basic", *auth]
+    elif isinstance(auth, httpx.BasicAuth):
+        parts = ["basic", auth._auth_header]
+    elif isinstance(auth, httpx.DigestAuth):
+        parts = ["digest", auth._username, auth._password]
+    else:
+        parts = [type(auth).__name__, id(auth)]
+    return hashlib.sha256(json.dumps(parts, default=lambda value: value.decode("latin-1") if isinstance(value, bytes) else str(value)).encode()).hexdigest()
+
+
 class Context:
     """What an adapter gets besides its configuration.
 
@@ -1407,8 +1427,8 @@ class Context:
             guard_outbound(url)
         key = ""
         if method.upper() == "GET" and cache_seconds > 0:
-            key = CACHE_PREFIX + hashlib.sha1(
-                json.dumps([url, params, headers], sort_keys=True, default=str).encode()
+            key = CACHE_PREFIX + hashlib.sha256(
+                json.dumps([url, params, headers, _auth_fingerprint(auth)], sort_keys=True, default=str).encode()
             ).hexdigest()
             hit = self.cache.get(key)
             if hit and hit[0] > time.monotonic():
@@ -1440,7 +1460,9 @@ class Context:
         if auth_errors and response.status_code in (401, 403):
             raise AuthFailed()
         _refuse_a_giant_answer(url, response)
-        if key:
+        # ⚠️ Only an answer that worked is kept. A 401 or a 429 held for the seconds of the cache came back to the
+        # second try, the one made after signing in again, and the card stayed refused until it ran out.
+        if key and response.status_code < 400:
             self._remember(key, time.monotonic() + cache_seconds, response)
         return response
 
