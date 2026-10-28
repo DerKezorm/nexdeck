@@ -2258,7 +2258,17 @@
     "Top referrers": "Principales orígenes",
     "Visits to your sites, the pages people read and where they came from, from GoatCounter.": "Visitas a tus sitios, las páginas que se leen y de dónde vienen, desde GoatCounter.",
     "Visits today, yesterday and over the last week and month.": "Visitas de hoy, de ayer y de la última semana y del último mes.",
-    "Where visits came from in a period, and how many arrived without one.": "De dónde vinieron las visitas en un periodo y cuántas llegaron sin origen."
+    "Where visits came from in a period, and how many arrived without one.": "De dónde vinieron las visitas en un periodo y cuántas llegaron sin origen.",
+    "Empty if Jenkins lets anonymous users read.": "Vacío si Jenkins deja leer a usuarios anónimos.",
+    "Every job with its last build, failing ones first, running ones with how far they are, each with a button to build it.": "Cada trabajo con su última compilación, los que fallan primero, los que se ejecutan con su avance, cada uno con un botón para compilarlo.",
+    "From the user's own page under Security > API Token, not the password: with the password the build button is refused for want of a CSRF crumb. The user needs Overall/Read and Job/Read, and Job/Build for the button.": "De la página del propio usuario en Security > API Token, no la contraseña: con la contraseña se rechaza el botón de compilar por falta del crumb CSRF. El usuario necesita Overall/Read y Job/Read, y Job/Build para el botón.",
+    "Jenkins overview": "Resumen de Jenkins",
+    "Jobs and how their last build went, the queue and the executors of Jenkins, with a button to build a job.": "Los trabajos y cómo salió su última compilación, la cola y los ejecutores de Jenkins, con un botón para compilar un trabajo.",
+    "Jobs that fail, builds running, builds waiting in the queue and executors busy.": "Trabajos que fallan, compilaciones en curso, compilaciones en la cola y ejecutores ocupados.",
+    "Only in this folder": "Solo en esta carpeta",
+    "Show disabled jobs": "Mostrar trabajos desactivados",
+    "The full name of a folder, such as team or team/api. Empty for every job.": "El nombre completo de una carpeta, como team o team/api. Vacío para todos los trabajos.",
+    "With the path it is served under, if any, such as /jenkins.": "Con la ruta bajo la que se sirve, si la hay, como /jenkins."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3577,6 +3587,9 @@
     "Solar power": "Potencia solar",
     "No inverter is set up in OpenDTU.": "No hay ningún inversor configurado en OpenDTU.",
     "Switches on": "Interruptores encendidos",
-    "This device has no relay.": "Este dispositivo no tiene relé."
+    "This device has no relay.": "Este dispositivo no tiene relé.",
+    "Build now": "Compilar ahora",
+    "Executors busy": "Ejecutores ocupados",
+    "Nodes offline": "Nodos sin conexión"
   }
 }
