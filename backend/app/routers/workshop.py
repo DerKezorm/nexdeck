@@ -21,6 +21,7 @@ from ..workshop import catalog, derived, files, install, installed, state, updat
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
+MAX_PICTURE_VERSION = 64
 
 
 class SettingsBody(BaseModel):
@@ -154,14 +155,20 @@ async def read_entry(author: str, slug: str, user: AdminUser, db: DbSession) -> 
 
 
 @router.get("/entries/{author}/{slug}/image/{theme}", summary="A picture of an entry, fetched by the server and kept for an hour")
-async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: DbSession) -> Response:
-    """The browser asks this server and never GitHub, so opening the shop tells GitHub nothing about the visitor."""
+async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: DbSession, v: str = "") -> Response:
+    """The browser asks this server and never GitHub, so opening the shop tells GitHub nothing about the visitor.
+
+    ``v`` is the ``picture_version`` of the entry: the address changes with it, so the browser and this server keep the
+    pictures of an older version apart from the new ones.
+    """
     if theme not in ("light", "dark"):
         raise error("no_such_picture", "The theme is light or dark.", 404)
+    if len(v) > MAX_PICTURE_VERSION:
+        raise error("bad_picture_version", f"The version of the picture has at most {MAX_PICTURE_VERSION} characters.", 400)
     repo, found, _warning = await _catalog(db)
     entry = _entry(found, author, slug)
     try:
-        body = await files.image(repo, getattr(entry.files, theme))
+        body = await files.image(repo, getattr(entry.files, theme), v)
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
     if body is None:

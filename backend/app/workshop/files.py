@@ -94,11 +94,14 @@ async def text(repo: str, path: str | None) -> str | None:
     return body.decode("utf-8", errors="replace")
 
 
-async def image(repo: str, path: str | None) -> bytes | None:
-    """A picture of an entry, or ``None`` when it has none (or what came is not a PNG)."""
+async def image(repo: str, path: str | None, version: str = "") -> bytes | None:
+    """A picture of an entry, or ``None`` when it has none (or what came is not a PNG).
+
+    Kept by path and ``version`` (the ``picture_version`` of the entry): a new version is a new picture at once.
+    """
     if path is None:
         return None
-    key = (repo, path, "image")
+    key = (repo, path, f"image:{version}")
     body = _get(key)
     if body is None:
         body = await catalog.fetch(repo, path, MAX_IMAGE)

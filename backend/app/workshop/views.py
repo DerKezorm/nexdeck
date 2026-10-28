@@ -43,6 +43,11 @@ def requirement(kind: str) -> dict[str, str]:
     return _requirement(kind)
 
 
+def picture_version(entry: catalog.Entry) -> str:
+    """Changes when the pictures of the entry can: its version, else the time it was updated, else its checksum. The address of a picture carries it."""
+    return (entry.version or entry.updated_at or entry.sha256)[:64]
+
+
 def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None = None, *, unreadable: bool = False) -> dict[str, Any]:
     """The entry with its pictures, what it needs, the connections that fit and whether this nexdeck can run it.
 
@@ -91,4 +96,5 @@ def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None =
             "locally_changed": have[0].locally_changed,
         },
         "images": {"light": f"{base}/light", "dark": f"{base}/dark"},
+        "picture_version": picture_version(entry),
     }

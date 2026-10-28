@@ -161,3 +161,47 @@ def test_karten8n_n6_the_list_of_changes_of_an_update_needs_three_characters(me:
     short = share(me, changes=" a ")
     assert short.status_code == 400 and "changes" in [one["code"] for one in short.json()["detail"]["problems"]]
     assert share(me, changes="Fix").status_code == 200
+
+
+# -- N2: a new version of an entry shows its new pictures -----------------------------------------------------------
+
+IMAGE = f"{BASE}/entries/{ME}/{SLUG}/image"
+
+
+def test_karten8n_n2_the_entry_tells_the_version_of_its_pictures(me: TestClient, hub: Hub) -> None:
+    hub.publish(card_text(version="1.2.0"), author=str(ME))
+    hub.publish(MEMOS, author="777", version="", updated_at="2026-10-21T10:00:00Z")
+    short = hub.entries[-1]["slug"]
+    listed = {one["slug"]: one for one in me.get(f"{BASE}/catalog").json()["entries"]}
+    assert listed[SLUG]["picture_version"] == "1.2.0"
+    assert listed[short]["picture_version"] == "2026-10-21T10:00:00Z", "an entry without a version goes by the time it was updated"
+    assert me.get(f"{BASE}/entries/{ME}/{SLUG}").json()["picture_version"] == "1.2.0"
+
+
+def test_karten8n_n2_an_entry_with_neither_version_nor_time_goes_by_its_checksum(me: TestClient, hub: Hub) -> None:
+    found = hub.publish(MEMOS, author="777", version="", updated_at="")
+    listed = next(one for one in me.get(f"{BASE}/catalog").json()["entries"] if one["slug"] == found["slug"])
+    assert listed["picture_version"] == found["sha256"]
+
+
+def test_karten8n_n2_a_picture_is_kept_by_its_version_and_a_new_version_is_fetched(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    hub.publish(card_text(version="1.0.0"), author=str(ME))
+    hub.files[f"entries/{ME}/{SLUG}/preview-light.png"] = b"\x89PNG\r\n\x1a\nold"
+    assert me.get(f"{IMAGE}/light?v=1.0.0").content.endswith(b"old")
+    assert me.get(f"{IMAGE}/light?v=1.0.0").content.endswith(b"old")
+    assert hub.count("preview-light.png") == 1
+    hub.publish(card_text(version="1.1.0"), author=str(ME))
+    hub.files[f"entries/{ME}/{SLUG}/preview-light.png"] = b"\x89PNG\r\n\x1a\nnew"
+    clock[0] += 700
+    assert me.get(f"{IMAGE}/light?v=1.1.0").content.endswith(b"new"), "the same minute, the same server, a new address"
+    assert hub.count("preview-light.png") == 2
+    assert me.get(f"{IMAGE}/light?v=1.0.0").content.endswith(b"old"), "the old address still has its own picture"
+    assert hub.count("preview-light.png") == 2
+
+
+def test_karten8n_n2_the_version_of_a_picture_has_at_most_64_characters(me: TestClient, hub: Hub) -> None:
+    hub.publish(card_text(), author=str(ME))
+    assert me.get(f"{IMAGE}/light?v={'a' * 64}").status_code == 200
+    refused = me.get(f"{IMAGE}/light?v={'a' * 65}")
+    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "bad_picture_version"
+    assert me.get(f"{IMAGE}/light").status_code == 200, "without a version it works as before"
