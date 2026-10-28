@@ -348,6 +348,12 @@ async def container_log(bench: Bench, given: dict[str, Any]) -> str:
     widget = place[0]
     if not _gives_logs(widget.integration.kind):
         return _json({"error": f"A {widget.integration.kind} connection gives no container logs. Docker, Portainer and a Synology do."})
+    # ⚠️ One of the containers this card lists, not any container of its connection: the connection may serve cards
+    # on boards the key does not see, and the log of a container only they list is theirs.
+    shown = live.get(widget.id)
+    listed = {str(value) for item in (shown.items if shown is not None else []) if isinstance(item, dict) for value in (item.get("title"), item.get("id")) if value}
+    if container not in listed:
+        return _json({"error": "That container is not on this card. Name one that card_details lists."})
     grant = f"log:{widget.integration_id}:{container}"
     if not bench.mcp and grant not in bench.grants:
         bench.permissions.append({"kind": "log", "card_id": widget.id, "container": container, "grant": grant})
@@ -415,6 +421,11 @@ def diagnose(bench: Bench, given: dict[str, Any]) -> str:
     page = diagnosis.build(bench.db, ref) if ref else None
     if page is None:
         return _json({"error": "Name a service by its ref or one of its cards by card_id."})
+    # A service is shown on cards of several boards; the ones this bench may not see are not named, neither
+    # as cards nor in the lines and buttons that carry their titles.
+    page["cards"] = [card for card in page["cards"] if card["id"] in places]
+    page["buttons"] = [button for button in page["buttons"] if button["widget_id"] in places]
+    page["lines"] = [line for line in page["lines"] if "target" not in line or line["target"]["widget"] in places]
     for card in page["cards"]:
         if card["id"] in places:
             _cite(bench, *places[card["id"]])

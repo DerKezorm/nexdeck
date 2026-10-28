@@ -7,6 +7,8 @@ the key may not see answers exactly like one that does not exist.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -252,6 +254,69 @@ def test_a_limited_administrator_key_asks_no_diagnosis_about_a_service_off_its_b
     assert refused["value"] == {"error": "Name a service by its ref or one of its cards by card_id."}
     assert call(ready, token, "diagnosis", card_id=theirs["id"])["value"] == refused["value"]
     assert call(ready, token, "diagnosis", card_id=mine["id"])["error"] is False
+
+
+def test_a_limited_administrator_key_reads_nothing_of_a_card_on_another_board_in_a_diagnosis(client: TestClient) -> None:
+    """⚠️ A service is shown by cards on several boards; the diagnosis named all of them, their lines and their buttons."""
+    from app.adapters.base import WidgetData
+    from app.services.collector import collector
+
+    from .test_dependencies import _chain
+
+    _pve, engine, plex = _chain(client)
+    switch(client)
+    lab, other = board(client, "Lab"), board(client, "Other")
+
+    def card(target: dict, kind: str, integration: int, title: str) -> int:
+        made = client.post(f"/api/v1/pages/{target['pages'][0]['id']}/widgets",
+                           json={"kind": kind, "title": title, "integration_id": integration}, headers=CSRF)
+        assert made.status_code == 201, made.text
+        collector.unschedule(made.json()["widget"]["id"])
+        return made.json()["widget"]["id"]
+
+    mine = card(lab, "plex.nowplaying", plex, "Lab plex")
+    theirs = card(other, "plex.nowplaying", plex, "Secret plex")
+    engine_card = card(other, "docker.containers", engine, "Secret docker")
+    live.set(engine_card, WidgetData(status="ok", items=[{"title": "plex", "actions": [{"id": "restart", "label": "Restart", "params": {"id": "c1"}}]}]))
+    chronicle.card_turned(theirs, "Secret plex", "ok", "bad", "down", integration_id=plex)
+    _key, limited = make_key(client, "read", boards=[lab["id"]], rights={"diagnosis": "allow"})
+    _key, whole = make_key(client, "read", name="whole", rights={"diagnosis": "allow"})
+
+    # The same question to a key that sees both boards names what the limited one must not hear of.
+    everything = call(client, whole, "diagnosis", card_id=mine)["value"]
+    assert sorted(one["title"] for one in everything["cards"]) == ["Lab plex", "Secret plex"]
+    assert [one["card"] for one in everything["buttons"]] == ["Secret docker"]
+    assert "Secret plex" in json.dumps(everything["lines"])
+
+    answer = call(client, limited, "diagnosis", card_id=mine)
+    assert answer["error"] is False
+    assert [one["title"] for one in answer["value"]["cards"]] == ["Lab plex"]
+    assert answer["value"]["buttons"] == []
+    assert "Secret" not in json.dumps(answer["value"])
+
+
+def _listing_card(ready: TestClient) -> dict:
+    return docker_card(ready, board(ready, "Lab")["pages"][0]["id"])
+
+
+def test_a_container_log_is_read_only_for_a_container_the_card_lists(ready: TestClient) -> None:
+    """The connection serves other cards too; asking for a container only they list is asking for their log."""
+    card = _listing_card(ready)
+    _key, token = make_key(ready, rights={"container_log": "allow"})
+    foreign = call(ready, token, "container_log", card_id=card["id"], container="nginx")
+    assert foreign == {"error": True, "value": {"error": "That container is not on this card. Name one that card_details lists."}}
+    # By its name, or by the id the card gives it: past the question and on to the engine (a demo has none).
+    for listed in ("plex", "c1"):
+        answer = call(ready, token, "container_log", card_id=card["id"], container=listed)
+        assert answer["value"] == {"error": "This connection is in the demo and has no real log."}, listed
+
+
+def test_a_container_log_is_asked_of_no_card_that_lists_nothing_yet(ready: TestClient) -> None:
+    card = _listing_card(ready)
+    live.clear()
+    _key, token = make_key(ready, rights={"container_log": "allow"})
+    answer = call(ready, token, "container_log", card_id=card["id"], container="plex")
+    assert answer["error"] is True and "not on this card" in answer["value"]["error"]
 
 
 def test_a_container_log_over_mcp_needs_no_question_in_a_conversation_but_its_right(ready: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
