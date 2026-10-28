@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -22,6 +24,38 @@ ROOT = Path(__file__).resolve().parents[2]
 BATCH = "https://api.osv.dev/v1/querybatch"
 DETAIL = "https://api.osv.dev/v1/vulns/"
 CHUNK = 200
+
+
+@dataclass(frozen=True)
+class Accepted:
+    """An advisory looked at and let through, for one package and until one day."""
+
+    ecosystem: str
+    package: str
+    until: date
+    reason: str
+
+
+#: ⚠️ Only for an advisory that has no fixed version yet and cannot be reached
+#: from what nexdeck ships. Each entry names its package, so the same id on
+#: another package still counts, and ends on its day: after that the build is
+#: red again and somebody has to look a second time, not forget.
+ACCEPTED: dict[str, Accepted] = {
+    # deepmerge 4.3.1 lets __proto__ through mergeObject(). It is reached only
+    # while building: vite-plugin-pwa > workbox-build > @rollup/plugin-node-resolve,
+    # which merges its own options with ours. No input from outside, nothing of it
+    # in the image, and no fixed deepmerge exists (seen 28.10.2026).
+    "GHSA-gcqx-w48m-w2h4": Accepted("npm", "deepmerge", date(2026, 12, 31),
+                                    "build tool only, merges nexdeck's own options; no fixed version yet"),
+}
+
+
+def accepted(identifier: str, ecosystem: str, package: str, today: date) -> Accepted | None:
+    """The entry that lets this advisory through for this package today, if any."""
+    entry = ACCEPTED.get(identifier)
+    if entry is None or (entry.ecosystem, entry.package) != (ecosystem, package) or today > entry.until:
+        return None
+    return entry
 
 
 def python_packages() -> list[tuple[str, str]]:
@@ -75,15 +109,21 @@ def describe(identifier: str) -> str:
         return f"{(body.get('summary') or '').strip()[:110]}" + (f"  fixed in {', '.join(fixed)}" if fixed else "")
 
 
-def main() -> int:
+def main(today: date | None = None) -> int:
+    today = today or date.today()
     total = 0
     for ecosystem, packages in (("PyPI", python_packages()), ("npm", npm_packages())):
         hits = query(packages, ecosystem)
         print(f"\n{ecosystem}: {len(packages)} packages, {len(hits)} with an advisory")
         for where, ids in sorted(hits.items()):
-            total += len(ids)
             print(f"  {where}")
+            package = where.rsplit(" ", 1)[0]
             for identifier in ids:
+                let_through = accepted(identifier, ecosystem, package, today)
+                if let_through:
+                    print(f"      {identifier}  accepted until {let_through.until}: {let_through.reason}")
+                    continue
+                total += 1
                 print(f"      {identifier}  {describe(identifier)}")
     print(f"\n{total} advisories.")
     return 1 if total else 0
