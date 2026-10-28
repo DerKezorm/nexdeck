@@ -89,8 +89,10 @@ def _resolver(service: _Fake):  # noqa: ANN202
 
 
 @pytest.fixture
-def release(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    newest = {"tag": "v4.0.11.2680", "url": "https://github.com/Sonarr/Sonarr/releases/tag/v4.0.11.2680", "published": 1_700_000_000, "prerelease": False}
+def release(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> dict[str, Any]:
+    # ⚠️ ``client`` for its database: a reading writes a changed version into the
+    # chronicle. Without it these tests passed only after one that had made it.
+    newest ={"tag": "v4.0.11.2680", "url": "https://github.com/Sonarr/Sonarr/releases/tag/v4.0.11.2680", "published": 1_700_000_000, "prerelease": False}
 
     async def from_github(self: Any, config: dict[str, Any], ctx: Context, repo: str) -> dict[str, Any]:
         newest["asked"] = newest.get("asked", 0) + 1
