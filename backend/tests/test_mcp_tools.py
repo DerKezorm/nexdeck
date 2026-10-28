@@ -150,6 +150,10 @@ def test_a_card_on_a_board_the_account_may_not_see_answers_like_one_that_does_no
 
 
 def test_a_key_limited_to_a_board_sees_only_that_board(ready: TestClient, two_boards: dict) -> None:
+    from app.services.notify import emit
+
+    # An unread warning in the bell, so the empty list below is the key's limit and not an empty bell.
+    emit("widget_broken", "The garage card stopped working", level="warn", user_ids=[_kim_id()])
     _key, token = make_key(ready, boards=[two_boards["first"]["id"]])
     found = call(ready, token, "find_cards")["value"]["cards"]
     assert [card["title"] for card in found] == ["Kitchen host"]
@@ -160,14 +164,17 @@ def test_a_key_limited_to_a_board_sees_only_that_board(ready: TestClient, two_bo
     assert attention["unread_warnings"] == [], "the bell names every board; a limited key does not read it"
 
 
-def test_a_key_for_every_board_sees_the_bell_of_its_account(ready: TestClient, two_boards: dict) -> None:
-    from app.services.notify import emit
-
+def _kim_id() -> int:
     with db_session() as db:
         from app.models import User
 
-        kim = db.scalar(select(User).where(User.username == "kim"))
-    emit("widget_broken", "The garage card stopped working", level="warn", user_ids=[kim.id])
+        return db.scalar(select(User.id).where(User.username == "kim"))
+
+
+def test_a_key_for_every_board_sees_the_bell_of_its_account(ready: TestClient, two_boards: dict) -> None:
+    from app.services.notify import emit
+
+    emit("widget_broken", "The garage card stopped working", level="warn", user_ids=[_kim_id()])
     _key, token = make_key(ready)
     attention = call(ready, token, "needs_attention")["value"]
     assert [warning["title"] for warning in attention["unread_warnings"]] == ["The garage card stopped working"]
@@ -226,6 +233,20 @@ def test_a_looking_tool_set_to_ask_in_the_database_still_just_looks(ready: TestC
     """The routes refuse "ask" for a looking tool; a row that holds it anyway must not make the tool wait or vanish."""
     key, token = make_key(ready)
     with db_session() as db:
-        db.get(McpKey, key["id"]).tool_rights = {"find_cards": "ask", "chronicle": "whatever"}
+        # A right that is none of allow, ask, deny falls back to the default: the administrators' tool stays denied.
+        db.get(McpKey, key["id"]).tool_rights = {"find_cards": "ask", "chronicle": "whatever", "diagnosis": "whatever"}
     assert names(ready, token) == READING
     assert call(ready, token, "find_cards")["error"] is False
+
+
+def test_the_right_of_a_looking_tool_is_allow_never_ask() -> None:
+    """Only ``press_button`` reads what the right is beyond "there or not", so this is checked on ``Caller.right`` itself:
+    a looking tool must never come back as "ask", or the next tool that reads it would wait for nothing."""
+    from app.services.mcp import Caller
+    from app.services.mcp_calls import BY_NAME
+
+    caller = Caller(user_id=1, username="admin", role="admin", key_id=1, key_name="k", level="act",
+                    rights={"find_cards": "ask", "diagnosis": "ask", "press_button": "maybe"}, blocked=frozenset(), boards=None)
+    assert caller.right(BY_NAME["find_cards"]) == "allow"
+    assert caller.right(BY_NAME["diagnosis"]) == "allow"
+    assert caller.right(BY_NAME["press_button"]) == "ask", "an unknown right is the group's default"

@@ -106,6 +106,9 @@ def test_with_connectors_allowed_the_challenge_says_where_to_sign_in(ready: Test
 
 
 def test_an_api_token_is_no_key_here(ready: TestClient) -> None:
+    # A key exists and works, so a lookup that wrongly fell back to any key would let the token in.
+    _key, key = make_key(ready)
+    assert rpc(ready, key, "ping").status_code == 200
     for scope in ("read", "full"):
         token = ready.post("/api/v1/tokens", json={"name": scope, "scope": scope}, headers=CSRF).json()["token"]
         assert rpc(ready, token, "ping").status_code == 401, scope
@@ -180,6 +183,20 @@ def test_a_disabled_account_or_one_made_a_guest_holds_no_working_key(ready: Test
     # Disabling ends what the account had opened, keys like sessions; enabled again, it makes new ones.
     assert ready.patch(f"/api/v1/users/{kim['id']}", json={"disabled": False}, headers=CSRF).status_code == 200
     assert rpc(ready, token, "ping").status_code == 401
+
+
+def test_a_disabled_account_holds_no_working_key_even_without_a_new_password_stamp(ready: TestClient) -> None:
+    """Disabling through the interface also stamps a password change; the check of ``disabled`` must hold on its own."""
+    kim = create_user(ready, "kim")
+    login(ready, "kim", "another-long-password")
+    _key, token = make_key(ready)
+    login(ready, "admin", "correct-horse-battery")
+    with db_session() as db:
+        db.get(User, kim["id"]).disabled = True
+    assert rpc(ready, token, "ping").status_code == 401
+    with db_session() as db:
+        db.get(User, kim["id"]).disabled = False
+    assert rpc(ready, token, "ping").status_code == 200
 
 
 def test_a_key_waits_while_the_account_owes_a_second_factor(ready: TestClient) -> None:

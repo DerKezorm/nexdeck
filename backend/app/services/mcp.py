@@ -219,6 +219,8 @@ class Caller:
 
 def authenticate(db: Session, token: str | None) -> Caller | None:
     """The key and account behind a token, or None. MCP being on is the caller's question."""
+    # A shortcut, not a wall: a token that is no key is not even hashed and looked up. Without it the
+    # answer is the same (only hashes are compared), so no test can tell it is there.
     if not token or not token.startswith(f"{KEY_PREFIX}_") or len(token) > 200:
         return None
     key = db.scalar(select(McpKey).where(McpKey.token_hash == hash_token(token)))
@@ -265,7 +267,8 @@ def _caller(db: Session, key: McpKey) -> Caller | None:
     if not at_least(ceiling, level):
         # Lowered after the key was made, the ceiling holds for it all the same.
         level = ceiling
-    rights = {name: right for name, right in (key.tool_rights or {}).items() if isinstance(name, str) and right in RIGHTS}
+    # Whether a right is one of RIGHTS is ``Caller.right``'s question alone: one place decides what a stray value means.
+    rights = {name: right for name, right in (key.tool_rights or {}).items() if isinstance(name, str) and isinstance(right, str)}
     return Caller(user_id=user.id, username=user.username, role=user.role, key_id=key.id, key_name=key.name, level=level,
                   rights=rights, blocked=frozenset(setting["blocked_tools"]),
                   boards=None if key.boards is None else frozenset(int(number) for number in key.boards))
