@@ -185,6 +185,9 @@ def ctx() -> Context:
 
 @pytest.fixture
 def truenas(monkeypatch: pytest.MonkeyPatch):
+    # ⚠️ Set when the test runs, not when the module is collected: a full run
+    # can reach this file more than an hour after collecting it.
+    HOUR_AGO["$date"] = int((time.time() - 3600) * 1000)
     adapter = get_adapter("truenas")
     fake = FakeTruenas()
     monkeypatch.setattr(adapter, "_open_socket", fake.open)
