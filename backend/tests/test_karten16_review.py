@@ -12,6 +12,7 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -349,3 +350,27 @@ def test_karten16_m1_only_the_issues_of_the_github_number_of_this_account_are_it
     assert sent.status_code == 200 and sent.json()["created"] is True
     assert len(hub.issues) == 2 and hub.issues[0]["user"]["id"] == 999
     assert [one["issue"] for one in me.get(f"{BASE}/submissions").json()["items"]] == [2]
+
+
+# -- B7: a limit of GitHub is not "no access to the Workshop" -----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("headers", "message"),
+    [
+        ({"retry-after": "60"}, "Please wait a bit."),
+        ({}, "You have exceeded a secondary rate limit."),
+        ({"x-ratelimit-remaining": "0"}, "API rate limit exceeded"),
+    ],
+)
+def test_karten16_b7_a_limit_of_github_asks_to_wait(me: TestClient, hub: Hub, monkeypatch: pytest.MonkeyPatch, headers: dict[str, str], message: str) -> None:
+    monkeypatch.setattr(hub, "answer_issues", lambda request: httpx.Response(403, json={"message": message}, headers=headers))
+    sent = share(me)
+    assert sent.status_code == 502 and sent.json()["detail"]["code"] == "github_rate_limited"
+    assert "wait" in sent.json()["detail"]["message"]
+
+
+def test_karten16_b7_a_plain_refusal_stays_no_access(me: TestClient, hub: Hub, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(hub, "answer_issues", lambda request: httpx.Response(403, json={"message": "Resource not accessible by integration"}))
+    sent = share(me)
+    assert sent.status_code == 403 and sent.json()["detail"]["code"] == "repo_no_access"

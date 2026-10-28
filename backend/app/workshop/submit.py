@@ -341,8 +341,8 @@ class Context:
         if code == 401:
             github_login.drop(self.db, self.user.id)
             raise login_needed("revoked")
-        if code == 429 or (code == 403 and response.headers.get("x-ratelimit-remaining") == "0"):
-            raise GithubError("github_rate_limited", "GitHub allows no more requests for now. Try again later.")
+        if code == 429 or (code == 403 and _asks_to_wait(response)):
+            raise GithubError("github_rate_limited", "GitHub asks you to wait a moment before the next request. Try again shortly.")
         if code in (403, 404, 410):
             # The repository is private and this account was not asked in (EC-3), or the issues are turned off.
             raise GithubError(
@@ -388,6 +388,17 @@ class Context:
         page = max(1, -(-count // 100))
         found = await self.api("GET", f"/{issue['number']}/comments", params={"per_page": 100, "page": page})
         return [one for one in found if isinstance(one, dict)]
+
+
+def _asks_to_wait(response: Any) -> bool:
+    """A 403 that is a limit and no refusal: the primary limit is used up, or the secondary one (``retry-after``, "rate limit" in the message) was hit."""
+    if response.headers.get("x-ratelimit-remaining") == "0" or "retry-after" in response.headers:
+        return True
+    try:
+        message = str(response.json().get("message") or "")
+    except (ValueError, AttributeError):
+        return False
+    return "rate limit" in message.lower()
 
 
 def _number(text: str) -> int:
