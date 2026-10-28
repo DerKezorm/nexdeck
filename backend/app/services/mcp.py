@@ -43,7 +43,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from ..models import Board, McpKey, McpRequest, Role, Setting, User, utcnow
@@ -345,6 +345,13 @@ def expire(db: Session) -> int:
     if done.rowcount:
         logger.info("%d MCP request(s) ran out.", done.rowcount)
     return int(done.rowcount or 0)
+
+
+def sweep(db: Session, days: int) -> int:
+    """Decided requests older than ``days`` go; a waiting one never does (it runs out first)."""
+    cutoff = utcnow() - timedelta(days=days)
+    gone = db.execute(delete(McpRequest).where(McpRequest.status != "waiting", McpRequest.created_at < cutoff))
+    return int(gone.rowcount or 0)
 
 
 def arguments_of(row: McpRequest) -> dict[str, Any]:

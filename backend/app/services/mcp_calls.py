@@ -187,6 +187,12 @@ async def call(db: Session, caller: Caller, name: Any, args: Any) -> dict[str, A
     except McpError as failure:
         logger.info("MCP tool %s called by key %s: %s", name, caller.key_id, failure.code)
         return result({"error": failure.message}, failed=True)
+    except Exception as failure:  # noqa: BLE001 - the program hears that it failed, the log hears why
+        logger.exception("MCP tool %s failed for key %s.", name, caller.key_id)
+        # A failure inside the database leaves the session unusable for the rest of the request.
+        db.rollback()
+        return result({"error": f"The tool failed ({failure.__class__.__name__})."}, failed=True)
+    logger.info("MCP tool %s called by key %s.", name, caller.key_id)
     return result(answer)
 
 
@@ -329,10 +335,20 @@ async def approve(db: Session, user: User, row: McpRequest) -> None:
         mcp.finish(db, row, "failed", {"error": f"This is no longer possible: {failure}"})
         logger.info("MCP request %s is no longer possible: %s", row.id, failure)
         return
+    except Exception as failure:  # noqa: BLE001 - claimed already: it must not stay "approved" without an answer
+        logger.exception("MCP request %s failed while it was checked again.", row.id)
+        db.rollback()
+        mcp.finish(db, row, "failed", {"error": f"This is no longer possible ({failure.__class__.__name__})."})
+        return
     try:
         message = await _press(widget, board, caller, str(args["action"]), given, approved_by=name)
     except ToolError as failure:
         mcp.finish(db, row, "failed", {"error": str(failure)})
+        return
+    except Exception as failure:  # noqa: BLE001 - claimed already: it must not stay "approved" without an answer
+        logger.exception("MCP request %s failed while it ran.", row.id)
+        db.rollback()
+        mcp.finish(db, row, "failed", {"error": f"The button failed ({failure.__class__.__name__})."})
         return
     mcp.finish(db, row, "approved", {"message": message})
     logger.info("MCP request %s approved by %s and run.", row.id, user.username)

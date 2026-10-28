@@ -341,3 +341,69 @@ def test_the_list_filters_by_status_and_refuses_one_that_does_not_exist(lab: dic
     assert [row["id"] for row in client.get("/api/v1/mcp/requests?status=declined").json()] == [first]
     assert client.get("/api/v1/mcp/requests?status=whatever").status_code == 422
     assert live.get(lab["card"]["id"]) is not None
+
+
+def test_decided_requests_are_swept_with_the_action_log_and_waiting_ones_never(lab: dict) -> None:
+    from app.services import retention
+
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    old, young, waiting = _ask(lab, token), _ask(lab, token), _ask(lab, token)
+    for number in (old, young):
+        client.post(f"/api/v1/mcp/requests/{number}/decline", headers=CSRF)
+    with db_session() as db:
+        for number in (old, waiting):
+            db.get(McpRequest, number).created_at = utcnow() - timedelta(days=400)
+        db.get(McpRequest, waiting).expires_at = utcnow() + timedelta(minutes=5)
+    with db_session() as db:
+        gone = retention.prune_old_records(db)
+    assert gone["mcp_requests"] == 1
+    assert [row.id for row in _requests()] == [young, waiting]
+
+
+def test_a_press_that_breaks_unexpectedly_fails_the_request_instead_of_leaving_it_half_done(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services.collector import collector
+
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    number = _ask(lab, token)
+
+    async def broken(*_args: object, **_kwargs: object) -> str:
+        raise RuntimeError("socket gone")
+
+    monkeypatch.setattr(collector, "run_action", broken)
+    answer = client.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert answer.status_code == 200 and answer.json() == {"status": "failed", "result": {"error": "The button failed (RuntimeError)."}}
+    _key, allowed = make_key(client, "act", name="allowed", rights={"press_button": "allow"})
+    pressed = call(client, allowed, "press_button", card_id=lab["card"]["id"], action="restart", params={"id": "c1"})
+    assert pressed == {"error": True, "value": {"error": "The tool failed (RuntimeError)."}}
+
+
+def test_a_check_that_breaks_unexpectedly_fails_the_request_too(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Claimed already, a request must not stay "approved" with no answer when the check before the press breaks."""
+    from app.services.collector import collector
+
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    number = _ask(lab, token)
+
+    def broken(*_args: object, **_kwargs: object) -> dict:
+        raise RuntimeError("cache gone")
+
+    monkeypatch.setattr(collector, "_refuse_unless_offered", broken)
+    answer = client.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert answer.status_code == 200
+    assert answer.json() == {"status": "failed", "result": {"error": "This is no longer possible (RuntimeError)."}}
+    assert _presses() == []
+
+
+def test_every_call_leaves_a_line_in_the_log(lab: dict, caplog: pytest.LogCaptureFixture) -> None:
+    client = lab["client"]
+    key, token = make_key(client, "act", rights={"press_button": "allow"})
+    with caplog.at_level("INFO", logger="nexdeck.mcp"):
+        call(client, token, "press_button", card_id=lab["card"]["id"], action="restart", params={"id": "c1"})
+        call(client, token, "request_status", request=99999)
+        call(client, token, "find_cards")
+    assert f"MCP tool press_button called by key {key['id']}." in caplog.text
+    assert f"MCP tool request_status called by key {key['id']}: No such request." in caplog.text
+    assert f"MCP tool find_cards called by key {key['id']}." in caplog.text
