@@ -252,6 +252,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
         <div className={`card-error ${bare ? 'inset-0' : 'inset-x-0 bottom-0 top-9'}`} title={String(data?.meta?.hint ?? '')} data-testid="card-error">
           <AlertTriangle size={22} className="text-bad flex-none" aria-hidden="true" />
           <p className="text-[12px] font-medium text-bad leading-snug line-clamp-3">{errorText}</p>
+          {errorCode === 'definition_missing' ? <p className="text-[11px] text-ink/80 leading-snug" data-testid="card-definition-hint">{t('card.definitionMissingHint')}</p> : null}
           {data?.cause ? <p className="text-[11px] text-ink/80" data-testid="card-cause">{t('dependencies.because', { name: data.cause })}</p> : null}
           <WhyLink subject={subjectOf(widget)} name={widget.title || widget.kind} />
           {data?.meta?.stale_since ? <p className="text-[10px] text-muted">{t('card.staleData')}</p> : null}

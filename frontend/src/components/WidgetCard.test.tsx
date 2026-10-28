@@ -69,6 +69,20 @@ describe('WidgetCard', () => {
     expect(screen.queryByRole('contentinfo')).toBeNull()
   })
 
+  it('karten12 ac7: a card without its definition says so and that an administrator can create it', () => {
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
+    render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'Definition missing. The card is no longer saved.', meta: { code: 'definition_missing' } }} />)
+    const veil = screen.getByTestId('card-error')
+    expect(veil).toHaveTextContent('Definition missing. The card is no longer saved.')
+    expect(screen.getByTestId('card-definition-hint')).toHaveTextContent('An administrator can create it by importing the card file.')
+  })
+
+  it('karten12 ac7: another failure carries no such hint', () => {
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
+    render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'The service could not be reached.', meta: { code: 'unreachable' } }} />)
+    expect(screen.queryByTestId('card-definition-hint')).toBeNull()
+  })
+
   it('translates an error without a sentence of its own by its wording, keeping the name inside', async () => {
     registerTexts('de', de as TextBundle)
     i18next.addResourceBundle('de', 'translation', deScreen, true, true)

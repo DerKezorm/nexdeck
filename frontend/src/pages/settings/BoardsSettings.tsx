@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
+import { BoardDefinitions, useBoardDefinitions } from '../../components/BoardDefinitions'
 import { DashboardImport } from '../../components/DashboardImport'
 import { TemplatePicker } from '../../components/TemplatePicker'
 import { Confirm, Field, Toast } from '../../components/ui'
@@ -26,6 +27,7 @@ export function BoardsSettings() {
   const boards = useQuery({ queryKey: ['boards', showAll], queryFn: () => get<BoardSummary[]>(showAll ? '/boards?all_boards=true' : '/boards') })
   const [name, setName] = useState('')
   const [yamlText, setYamlText] = useState('')
+  const definitions = useBoardDefinitions(yamlText)
   const [error, setError] = useState('')
   const [removing, setRemoving] = useState<BoardSummary | null>(null)
   const [removingPage, setRemovingPage] = useState<{ board: BoardSummary; page: BoardSummary['pages'][number] } | null>(null)
@@ -192,6 +194,7 @@ export function BoardsSettings() {
       </SettingsCard>
       <SettingsCard title={t('board.import')} description={t('board.importHelp')}>
         <textarea className="input mb-2" rows={8} aria-label={t('board.import')} value={yamlText} onChange={(e) => setYamlText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />
+        <BoardDefinitions state={definitions} />
         {error && (
           <p className="text-sm text-bad mb-2" role="alert">
             {error}
@@ -202,7 +205,7 @@ export function BoardsSettings() {
           disabled={!yamlText.trim()}
           onClick={() => {
             setError('')
-            void post<{ slug: string }>('/boards/import', { yaml_text: yamlText })
+            void post<{ slug: string }>('/boards/import', { yaml_text: yamlText, ...definitions.field })
               .then((created) => navigate(`/b/${created.slug}`))
               .catch((failure) => setError(failure instanceof ApiError ? failure.message : t('errors.network')))
           }}

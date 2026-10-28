@@ -11,6 +11,7 @@ import { useHomeBoardPath } from '../lib/homeBoard'
 import { useHandleReorder } from '../lib/useHandleReorder'
 import { BOARD_STYLES } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
+import { BoardDefinitions, useBoardDefinitions } from './BoardDefinitions'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
 import { ThemePlanField } from './ThemePlanField'
@@ -50,6 +51,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [deletingPage, setDeletingPage] = useState<{ id: number; name: string; widgets: number } | null>(null)
   const [newBoard, setNewBoard] = useState('')
   const [importText, setImportText] = useState('')
+  const definitions = useBoardDefinitions(importText)
   const [editingYaml, setEditingYaml] = useState(false)
   const [kioskForm, setKioskForm] = useState({ name: 'Wall display', allow_actions: false, cycle_seconds: 0, dim_from: '', dim_to: '', rest_minutes: 0, theme: 'dark' as ThemeChoice, light_from: LIGHT_FROM, dark_from: DARK_FROM })
   const [freshToken, setFreshToken] = useState<KioskToken | null>(null)
@@ -403,12 +405,13 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           <Field label={t('board.import')} help={t('board.importHelp')}>
             <textarea className="input" rows={6} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder="nexdeck: 1&#10;board:&#10;  name: …" />
           </Field>
+          <BoardDefinitions state={definitions} />
           <button
             className="btn"
             disabled={!importText.trim()}
             onClick={() => {
               setError('')
-              void post<{ slug: string }>('/boards/import', { yaml_text: importText })
+              void post<{ slug: string }>('/boards/import', { yaml_text: importText, ...definitions.field })
                 .then((created) => {
                   onChanged()
                   onClose()
