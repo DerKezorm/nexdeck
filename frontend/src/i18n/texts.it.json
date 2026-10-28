@@ -2325,7 +2325,13 @@
     "Visitors, page views, visits, bounce rate and visit time of one website, and who is on it now.": "Visitatori, visualizzazioni di pagina, visite, frequenza di rimbalzo e durata della visita di un sito, e chi c'è ora.",
     "Website": "Sito web",
     "Websites": "Siti web",
-    "Your Umami, or https://api.umami.is for Umami Cloud.": "Il tuo Umami, o https://api.umami.is per Umami Cloud."
+    "Your Umami, or https://api.umami.is for Umami Cloud.": "Il tuo Umami, o https://api.umami.is per Umami Cloud.",
+    "Followers, accounts you follow, posts, your last post and your unread notifications.": "Follower, account che segui, post, il tuo ultimo post e le notifiche non lette.",
+    "My account": "Il mio account",
+    "Open reports and sign-ups waiting for approval, reports first, each with what it is about.": "Segnalazioni aperte e registrazioni in attesa di approvazione, prima le segnalazioni, ciascuna con il suo oggetto.",
+    "Preferences > Development > New application, with the scope read for your account, and admin:read:reports and admin:read:accounts for the moderation. Not needed for the server figures.": "Preferenze > Sviluppo > Nuova applicazione, con l'ambito read per il tuo account e admin:read:reports e admin:read:accounts per la moderazione. Non serve per i dati del server.",
+    "Users and posts of your own Mastodon server, reports and sign-ups waiting for a moderator, and your own account.": "Utenti e post del tuo server Mastodon, segnalazioni e registrazioni in attesa di un moderatore, e il tuo account.",
+    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Utenti, post, utenti attivi questo mese e server noti, e se ci si può registrare."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -3685,6 +3691,16 @@
     "Visit time": "Durata della visita",
     "Visitors": "Visitatori",
     "Websites": "Siti web",
-    "Direct": "Diretto"
+    "Direct": "Diretto",
+    "Following": "Seguiti",
+    "Last post": "Ultimo post",
+    "Open reports": "Segnalazioni aperte",
+    "Servers known": "Server noti",
+    "Sign-ups": "Registrazione",
+    "Sign-ups waiting": "Registrazioni in attesa",
+    "Unread notifications": "Notifiche non lette",
+    "Rule violation": "Violazione delle regole",
+    "Spam": "Spam",
+    "Legal": "Legale"
   }
 }

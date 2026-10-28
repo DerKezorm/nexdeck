@@ -2325,7 +2325,13 @@
     "Visitors, page views, visits, bounce rate and visit time of one website, and who is on it now.": "Besucher, Seitenaufrufe, Besuche, Absprungrate und Besuchsdauer einer Website und wer gerade darauf ist.",
     "Website": "Website",
     "Websites": "Websites",
-    "Your Umami, or https://api.umami.is for Umami Cloud.": "Dein Umami oder https://api.umami.is für Umami Cloud."
+    "Your Umami, or https://api.umami.is for Umami Cloud.": "Dein Umami oder https://api.umami.is für Umami Cloud.",
+    "Followers, accounts you follow, posts, your last post and your unread notifications.": "Follower, Konten, denen du folgst, Beiträge, dein letzter Beitrag und deine ungelesenen Benachrichtigungen.",
+    "My account": "Mein Konto",
+    "Open reports and sign-ups waiting for approval, reports first, each with what it is about.": "Offene Meldungen und Registrierungen, die auf Freigabe warten, Meldungen zuerst, jeweils mit dem Anlass.",
+    "Preferences > Development > New application, with the scope read for your account, and admin:read:reports and admin:read:accounts for the moderation. Not needed for the server figures.": "Einstellungen > Entwicklung > Neue Anwendung, mit dem Scope read für dein Konto und admin:read:reports und admin:read:accounts für die Moderation. Für die Serverzahlen nicht nötig.",
+    "Users and posts of your own Mastodon server, reports and sign-ups waiting for a moderator, and your own account.": "Benutzer und Beiträge deines eigenen Mastodon-Servers, Meldungen und Registrierungen, die auf einen Moderator warten, und dein eigenes Konto.",
+    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Benutzer, Beiträge, in diesem Monat aktive Benutzer und bekannte Server, und ob man sich registrieren kann."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -3685,6 +3691,16 @@
     "Visit time": "Besuchsdauer",
     "Visitors": "Besucher",
     "Websites": "Websites",
-    "Direct": "Direkt"
+    "Direct": "Direkt",
+    "Following": "Folgt",
+    "Last post": "Letzter Beitrag",
+    "Open reports": "Offene Meldungen",
+    "Servers known": "Bekannte Server",
+    "Sign-ups": "Registrierung",
+    "Sign-ups waiting": "Registrierungen wartend",
+    "Unread notifications": "Ungelesene Benachrichtigungen",
+    "Rule violation": "Regelverstoß",
+    "Spam": "Spam",
+    "Legal": "Rechtliches"
   }
 }

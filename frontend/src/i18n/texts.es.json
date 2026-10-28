@@ -2325,7 +2325,13 @@
     "Visitors, page views, visits, bounce rate and visit time of one website, and who is on it now.": "Visitantes, páginas vistas, visitas, tasa de rebote y duración de la visita de un sitio web, y quién está ahora.",
     "Website": "Sitio web",
     "Websites": "Sitios web",
-    "Your Umami, or https://api.umami.is for Umami Cloud.": "Tu Umami, o https://api.umami.is para Umami Cloud."
+    "Your Umami, or https://api.umami.is for Umami Cloud.": "Tu Umami, o https://api.umami.is para Umami Cloud.",
+    "Followers, accounts you follow, posts, your last post and your unread notifications.": "Seguidores, cuentas que sigues, publicaciones, tu última publicación y tus notificaciones sin leer.",
+    "My account": "Mi cuenta",
+    "Open reports and sign-ups waiting for approval, reports first, each with what it is about.": "Denuncias abiertas y registros a la espera de aprobación, las denuncias primero, cada una con su motivo.",
+    "Preferences > Development > New application, with the scope read for your account, and admin:read:reports and admin:read:accounts for the moderation. Not needed for the server figures.": "Preferencias > Desarrollo > Nueva aplicación, con el ámbito read para tu cuenta y admin:read:reports y admin:read:accounts para la moderación. No hace falta para las cifras del servidor.",
+    "Users and posts of your own Mastodon server, reports and sign-ups waiting for a moderator, and your own account.": "Usuarios y publicaciones de tu propio servidor Mastodon, denuncias y registros a la espera de un moderador, y tu propia cuenta.",
+    "Users, posts, users active this month and servers it knows, and whether people can sign up.": "Usuarios, publicaciones, usuarios activos este mes y servidores conocidos, y si se puede registrar la gente."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -3685,6 +3691,16 @@
     "Visit time": "Duración de la visita",
     "Visitors": "Visitantes",
     "Websites": "Sitios web",
-    "Direct": "Directo"
+    "Direct": "Directo",
+    "Following": "Siguiendo",
+    "Last post": "Última publicación",
+    "Open reports": "Denuncias abiertas",
+    "Servers known": "Servidores conocidos",
+    "Sign-ups": "Registro",
+    "Sign-ups waiting": "Registros en espera",
+    "Unread notifications": "Notificaciones sin leer",
+    "Rule violation": "Infracción de las normas",
+    "Spam": "Spam",
+    "Legal": "Legal"
   }
 }
