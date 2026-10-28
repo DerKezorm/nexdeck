@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from ..cards import exchange, load
 from ..cards import integration_store as integrations
 from ..models import CardRecord
-from . import catalog, files, state
+from . import catalog, derived, files, state
 from .installed import normalised_hash
 
 SOURCE = "the Card shop"
@@ -30,15 +30,15 @@ def gate(entry: catalog.Entry) -> None:
         raise catalog.CatalogError("needs_newer_nexdeck", f"This needs nexdeck {entry.min_nexdeck} or newer.", 409, min_nexdeck=entry.min_nexdeck)
 
 
-def offers(db: Session, found: catalog.Catalog, entry: catalog.Entry) -> tuple[list[catalog.Entry], list[str]]:
-    """The own connections a card needs that are not here: those the catalog has to offer, and those it has not (AC-8).
+def offers(db: Session, found: catalog.Catalog, entry: catalog.Entry, requires: list[str]) -> tuple[list[catalog.Entry], list[str]]:
+    """The own connections a card needs (``requires`` of its checked definition) that are not here: those the catalog has to offer, and those it has not (AC-8).
 
     Several kinds in ``requires`` mean any one of them, so a card that can read through a kind that is here misses nothing.
     """
-    if entry.type != "card" or any(not kind.startswith("custom:") for kind in entry.requires):
+    if entry.type != "card" or any(not kind.startswith("custom:") for kind in requires):
         return [], []
     here = set(integrations.shorts(db))
-    wanted = [kind.partition(":")[2] for kind in entry.requires]
+    wanted = [kind.partition(":")[2] for kind in requires]
     unmet = [short for short in wanted if short not in here]
     if len(unmet) < len(wanted):
         return [], []
@@ -64,18 +64,23 @@ class Plan:
 
     entry: catalog.Entry
     text: str
+    #: What the definition of the entry says it is, or ``None`` when it cannot be read.
+    facts: derived.Facts | None
     offered: list[catalog.Entry]
     missing: list[str]
     #: The definition of each offered connection, by entry id.
     offered_texts: dict[str, str] = field(default_factory=dict)
+    #: The same for each offered connection.
+    offered_facts: dict[str, derived.Facts | None] = field(default_factory=dict)
 
 
 async def prepare(db: Session, repo: str, found: catalog.Catalog, entry: catalog.Entry) -> Plan:
     gate(entry)
     text = await files.definition(repo, entry)
-    offered, missing = offers(db, found, entry)
+    facts = derived.of_text(text)
+    offered, missing = offers(db, found, entry, facts.requires if facts else [])
     texts = {one.id: await files.definition(repo, one) for one in offered}
-    return Plan(entry, text, offered, missing, texts)
+    return Plan(entry, text, facts, offered, missing, texts, {one.id: derived.of_text(texts[one.id]) for one in offered})
 
 
 def documents(plan: Plan, with_integrations: list[str]) -> list[tuple[int, str]]:
@@ -85,6 +90,25 @@ def documents(plan: Plan, with_integrations: list[str]) -> list[tuple[int, str]]
 
 def inspect(db: Session, plan: Plan, with_integrations: list[str]) -> exchange.Inspection:
     return exchange.inspect_parts(db, documents(plan, with_integrations))
+
+
+def drops(db: Session, plan: Plan, choices: dict[str, str], with_integrations: list[str]) -> list[dict[str, Any]]:
+    """The own connections that replacing would change so that stored values are thrown away, with the fields (EC-10 of KARTEN-12)."""
+    seen = inspect(db, plan, with_integrations)
+    return [
+        {"id": item.id, "fields": item.dropped}
+        for item in seen.items if item.type == "integration" and item.dropped and item.exists and choices.get(item.id) == "replace"
+    ]
+
+
+def confirm_drops(db: Session, plan: Plan, choices: dict[str, str], with_integrations: list[str], confirmed: bool) -> None:
+    """Replacing an own connection that loses fields needs a word of the administrator: the values go, secrets too."""
+    found = drops(db, plan, choices, with_integrations)
+    if found and not confirmed:
+        raise catalog.CatalogError(
+            "dropped_not_confirmed",
+            "Replacing this connection throws away what is stored in its fields, secrets included. Confirm that to go on.", 409, documents=found,
+        )
 
 
 def install(db: Session, plan: Plan, choices: dict[str, str], with_integrations: list[str], *, user_id: int) -> dict[str, Any]:

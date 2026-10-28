@@ -113,6 +113,13 @@ def split(text: str) -> list[tuple[int, str]]:
     return found
 
 
+def kind_of(text: str) -> str | None:
+    """``card`` or ``integration`` when the text says it is one, else ``None``."""
+    if _CARD.search(text):
+        return "card"
+    return "integration" if _INTEGRATION.search(text) else None
+
+
 @dataclass
 class Item:
     """One document of a file, read."""

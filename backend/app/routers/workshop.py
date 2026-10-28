@@ -17,7 +17,7 @@ from ..cards import exchange, load, store
 from ..cards import integration_store as integrations
 from ..deps import AdminUser, DbSession, error
 from ..models import CardRecord
-from ..workshop import catalog, files, install, installed, state, updates, views
+from ..workshop import catalog, derived, files, install, installed, state, updates, views
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
@@ -126,15 +126,30 @@ async def read_entry(author: str, slug: str, user: AdminUser, db: DbSession) -> 
     """A text that cannot be fetched is left out and said in ``files_warning``; the rest of the page still shows (AC-5)."""
     repo, found, _warning = await _catalog(db)
     entry = _entry(found, author, slug)
-    view = views.entry_view(entry, views.context(db))
-    view["readme"] = view["changelog"] = view["files_warning"] = None
+    ctx = views.context(db)
+    warning: catalog.CatalogError | None = None
+    facts: derived.Facts | None = None
+    try:
+        facts = derived.of_text(await files.definition(repo, entry))
+        if facts is None:
+            warning = catalog.CatalogError("definition_unreadable", "The definition of this entry cannot be read, so what it reads and presses is not shown.", 400)
+    except catalog.CatalogError as failure:
+        warning = failure
+    view = views.entry_view(entry, ctx, facts, unreadable=facts is None)
+    view["readme"] = view["changelog"] = None
     try:
         view["readme"] = await files.text(repo, entry.files.readme)
         view["changelog"] = await files.text(repo, entry.files.changelog)
     except catalog.CatalogError as failure:
-        view["files_warning"] = failure.view()
-    ctx = views.context(db)
-    view["offered_integrations"] = [views.entry_view(one, ctx) for one in install.offers(db, found, entry)[0]]
+        warning = warning or failure
+    view["files_warning"] = warning.view() if warning else None
+    offered: list[dict[str, Any]] = []
+    for one in install.offers(db, found, entry, facts.requires if facts else [])[0]:
+        try:
+            offered.append(views.entry_view(one, ctx, derived.of_text(await files.definition(repo, one)), unreadable=True))
+        except catalog.CatalogError:
+            offered.append(views.entry_view(one, ctx, unreadable=True))
+    view["offered_integrations"] = offered
     return view
 
 
@@ -183,6 +198,8 @@ class InstallBody(BaseModel):
     choices: dict[str, str] = Field(default_factory=dict, max_length=exchange.MAX_DOCUMENTS)
     with_integrations: list[str] = Field(default_factory=list, max_length=10)
     accept_risk: bool = False
+    #: The word that replacing an own connection may throw away stored values (``dropped_fields`` of the check).
+    confirm_dropped: bool = False
 
 
 async def _prepared(db: DbSession, author: str, slug: str) -> tuple[catalog.Entry, install.Plan, views.Context]:
@@ -200,11 +217,11 @@ async def check_install(author: str, slug: str, user: AdminUser, db: DbSession) 
     entry, plan, ctx = await _prepared(db, author, slug)
     seen = install.inspect(db, plan, [one.id for one in plan.offered])
     return {
-        "entry": views.entry_view(entry, ctx),
+        "entry": views.entry_view(entry, ctx, plan.facts, unreadable=plan.facts is None),
         "ok": seen.ok,
         "documents": [one.view() for one in seen.items],
         "missing_integrations": seen.missing,
-        "offered_integrations": [views.entry_view(one, ctx) for one in plan.offered],
+        "offered_integrations": [views.entry_view(one, ctx, plan.offered_facts[one.id], unreadable=True) for one in plan.offered],
         "risk_acknowledged": state.risk_acknowledged(db, user.id),
     }
 
@@ -220,6 +237,10 @@ async def install_entry(author: str, slug: str, body: InstallBody, user: AdminUs
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
     db.commit()
+    try:
+        install.confirm_drops(db, plan, body.choices, body.with_integrations, body.confirm_dropped)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
     with store.saving, integrations.saving:
         try:
             result = install.install(db, plan, body.choices, body.with_integrations, user_id=user.id)

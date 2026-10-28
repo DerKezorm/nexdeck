@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from ..adapters import get_adapter
 from ..cards import load
 from ..models import Integration
-from . import catalog, installed
+from . import catalog, derived, installed
 
 BASE = "/api/v1/workshop"
 
@@ -43,11 +43,24 @@ def requirement(kind: str) -> dict[str, str]:
     return _requirement(kind)
 
 
-def entry_view(entry: catalog.Entry, ctx: Context) -> dict[str, Any]:
-    """The entry with its pictures, what it needs, the connections that fit and whether this nexdeck can run it."""
-    connections = [one for kind in entry.requires for one in ctx.connections.get(kind, [])]
+def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None = None, *, unreadable: bool = False) -> dict[str, Any]:
+    """The entry with its pictures, what it needs, the connections that fit and whether this nexdeck can run it.
+
+    With the ``facts`` of its checked definition the class, the requests, the buttons and the kinds it needs are those of
+    the definition, and ``claims_differ`` names what the catalog said otherwise. Without them (the list, which does not
+    fetch every file) they are the catalog's words and ``verified`` is false; a definition that could not be read
+    (``unreadable``) shows no class, no requests and no buttons.
+    """
+    requires = facts.requires if facts is not None else entry.requires
+    connections = [one for kind in requires for one in ctx.connections.get(kind, [])]
     base = f"{BASE}/entries/{entry.id}/image"
     have = ctx.from_shop.get(entry.id, [])
+    if facts is not None:
+        shown: dict[str, Any] = {"class": facts.class_, "reads": facts.reads, "buttons": facts.buttons}
+    elif unreadable:
+        shown = {"class": "unknown", "reads": [], "buttons": []}
+    else:
+        shown = {"class": entry.class_, "reads": [one.model_dump() for one in entry.reads], "buttons": [one.model_dump() for one in entry.buttons]}
     return {
         "id": entry.id,
         "author_id": entry.author_id,
@@ -59,10 +72,10 @@ def entry_view(entry: catalog.Entry, ctx: Context) -> dict[str, Any]:
         "version": entry.version,
         "min_nexdeck": entry.min_nexdeck,
         "category": entry.category,
-        "requires": [requirement(kind) for kind in entry.requires],
-        "class": entry.class_,
-        "reads": [one.model_dump() for one in entry.reads],
-        "buttons": [one.model_dump() for one in entry.buttons],
+        "requires": [requirement(kind) for kind in requires],
+        **shown,
+        "verified": facts is not None,
+        "claims_differ": derived.differing(entry, facts) if facts is not None else [],
         "thumbs": entry.thumbs,
         "discussion": entry.discussion,
         "based_on": entry.based_on,

@@ -11,7 +11,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 
 from ..cards import schema
-from . import catalog
+from . import catalog, derived
 
 #: What each kind of file may weigh.
 MAX_DEFINITION = schema.MAX_DEFINITION * 4
@@ -60,7 +60,7 @@ def _put(key: tuple[str, str, str], body: bytes, keep_for: float | None) -> None
 
 
 async def definition(repo: str, entry: catalog.Entry) -> str:
-    """The text of ``definition.yaml``, which has the checksum the catalog names, or ``CatalogError`` (EC-1)."""
+    """The text of ``definition.yaml``, which has the checksum the catalog names and is what the entry says it is, or ``CatalogError`` (EC-1)."""
     key = (repo, entry.files.definition, entry.sha256)
     body = _get(key)
     if body is None:
@@ -73,9 +73,13 @@ async def definition(repo: str, entry: catalog.Entry) -> str:
             )
         _put(key, body, None)
     try:
-        return body.decode("utf-8")
+        text = body.decode("utf-8")
     except UnicodeDecodeError:
         raise catalog.CatalogError("catalog_invalid", "The definition of this entry is not text.") from None
+    # The file has the checksum, but the entry may call it something it is not (a card that is an own connection).
+    if (refusal := derived.wrong_type(entry, text)) is not None:
+        raise refusal
+    return text
 
 
 async def text(repo: str, path: str | None) -> str | None:
