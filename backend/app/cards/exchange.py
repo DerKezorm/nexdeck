@@ -212,7 +212,12 @@ def _read(db: Session, offset: int, text: str) -> Item:
 
 def inspect(db: Session, text: str) -> Inspection:
     """Every document read and checked, with what exists here already; nothing is written."""
-    items = [_read(db, offset, chunk) for offset, chunk in split(text)]
+    return inspect_parts(db, split(text))
+
+
+def inspect_parts(db: Session, parts: list[tuple[int, str]]) -> Inspection:
+    """The same for documents that are already apart, each with the number of lines in front of it."""
+    items = [_read(db, offset, chunk) for offset, chunk in parts]
     seen: set[str] = set()
     for item in items:
         if item.key is None or item.problems:
@@ -316,16 +321,20 @@ def run(db: Session, text: str, choices: dict[str, str], *, user_id: int | None)
     for key in choices:
         if not any(item.id == key for item in seen.items):
             raise Refused("import_choice_invalid", f"The file has no {key}.", key=key)
-    actions = {item.id: _chosen(item, choices) for item in seen.items}
+    return make(db, seen.items, {item.id: _chosen(item, choices) for item in seen.items}, user_id=user_id)
+
+
+def make(db: Session, items: list[Item], actions: dict[str, str], *, user_id: int | None) -> Outcome:
+    """Do what ``actions`` say with each document (create, replace, copy, skip), connections first, without committing."""
     outcome = Outcome()
-    taken_cards = {row.slug for row in store.listing(db)} | set(store.RESERVED_SLUGS) | {item.key for item in seen.items if item.type == "card" and item.key}
-    taken_shorts = {row.short for row in integrations.listing(db)} | {item.key for item in seen.items if item.type == "integration" and item.key}
+    taken_cards = {row.slug for row in store.listing(db)} | set(store.RESERVED_SLUGS) | {item.key for item in items if item.type == "card" and item.key}
+    taken_shorts = {row.short for row in integrations.listing(db)} | {item.key for item in items if item.type == "integration" and item.key}
     # An own connection copied under a new short name: the cards of the file that read through it follow the copy.
-    renamed = {item.key: _free(taken_shorts, item.key) for item in seen.items if item.type == "integration" and item.key and actions[item.id] == "copy"}
-    for item in seen.items:
+    renamed = {item.key: _free(taken_shorts, item.key) for item in items if item.type == "integration" and item.key and actions[item.id] == "copy"}
+    for item in items:
         if item.type == "integration":
             _make_integration(db, item, actions[item.id], renamed.get(item.key or ""), user_id, outcome)
-    for item in seen.items:
+    for item in items:
         if item.type == "card":
             new = _free(taken_cards, item.key) if actions[item.id] == "copy" and item.key else None
             _make_card(db, item, actions[item.id], new, renamed, user_id, outcome)

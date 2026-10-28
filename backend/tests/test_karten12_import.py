@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
-from app.adapters import get_adapter
+from app.adapters import forget_all_custom, get_adapter
 from app.cards import store
 from app.db import db_session
 from app.models import CardRecord, Event, OwnIntegration
@@ -24,10 +25,12 @@ VERSION = 'version: "1.0.0"'
 
 
 @pytest.fixture
-def admin(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def admin(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     setup_admin(client)
     monkeypatch.setattr(collector, "running", False)
-    return client
+    yield client
+    # An own kind made by a test stays in the registry of the process: the tests that count the kinds would see it.
+    forget_all_custom()
 
 
 def check(client: TestClient, text: str):  # noqa: ANN202

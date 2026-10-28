@@ -619,17 +619,22 @@ def _check_phone(options: dict) -> None:
             raise error("bad_phone", "Hiding a card on the phone is switched on or off, nothing else.")
 
 
-def refuse_unshared_card(db: Session, kind: str, options: dict | None, user: User | None) -> None:
+def refuse_unshared_card(db: Session, kind: str, options: dict | None, user: User | None, *, missing_ok: bool = False) -> None:
     """Only an administrator puts a custom card on a board, unless he released that card for users (KARTEN-11 AC-3, AC-4).
 
     ⚠️ Asked where a card is **placed**, never where an already placed one is changed or moved: taking the release back
     leaves the cards that stand on boards where they are (EC-1). A card that is not released answers like one that does
     not exist, so nobody learns the short names of the cards he cannot see.
+
+    ``missing_ok`` is for a board file: a card no definition is saved for may stand on the board, and shows "definition
+    missing" until an administrator makes it (KARTEN-12 AC-7). One that is saved and not released is still refused.
     """
     if not kind.startswith("custom.") or user is None or user.role == Role.admin.value:
         return
     slug = str((options or {}).get("card") or "").strip()
     entry = card_store.get(db, slug) if slug else None
+    if entry is None and missing_ok:
+        return
     if entry is None or not entry.users_may_place:
         raise error("unknown_card", "There is no card with that short name.")
 
@@ -802,7 +807,7 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
                 try:
                     # A card that stands on the board being edited keeps its place whether or not users may still place it (KARTEN-11 EC-1).
                     if str((options or {}).get("card") or "").strip() not in standing:
-                        refuse_unshared_card(db, kind, options, user)
+                        refuse_unshared_card(db, kind, options, user, missing_ok=True)
                     _validate_options(db, kind, options, user)
                 except HTTPException as refused:
                     detail = refused.detail if isinstance(refused.detail, dict) else {}
@@ -887,7 +892,8 @@ def import_board(
         try:
             get_adapter(entry["kind"])
         except KeyError as error:
-            raise ImportError_(f"Unknown integration kind {entry['kind']!r}.") from error
+            own = " If it is an own connection, an administrator has to create it first; a board file carries them as own_integrations." if str(entry["kind"]).startswith("custom:") else ""
+            raise ImportError_(f"Unknown integration kind {entry['kind']!r}.{own}") from error
         existing = db.scalar(select(Integration).where(Integration.name == str(entry.get("name")), Integration.kind == entry["kind"]))
         if existing is None:
             if not trusted:

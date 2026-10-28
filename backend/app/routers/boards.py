@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import logging
+from contextlib import ExitStack
 from datetime import timedelta
 
 from fastapi import APIRouter, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from ..cards import exchange, integration_store
+from ..cards import store as card_store
 from ..deps import (
     KIOSK_COOKIE,
     CurrentUser,
@@ -34,6 +37,7 @@ from ..schemas import (
     EditYamlBody,
     GridBody,
     ImportBody,
+    ImportCheckBody,
     KioskCreate,
     KioskLook,
     KioskSession,
@@ -45,8 +49,8 @@ from ..schemas import (
     SharesBody,
 )
 from ..security import create_kiosk_cookie, hash_token, new_opaque_token
+from ..services import board_definitions, grid, history, holders
 from ..services import boards as board_service
-from ..services import grid, history, holders
 from ..services import home as home_service
 from ..services import topology as topology_service
 from ..services.boards import (
@@ -516,6 +520,16 @@ def export_board(slug: str, user: CurrentUser, db: DbSession, ids: bool = False)
     return Response(content=text, media_type="application/yaml", headers={"Content-Disposition": f'attachment; filename="{board.slug}.yaml"'})
 
 
+@router.post("/boards/import/check", summary="Say which custom cards and own connections a board file carries and which of them are here")
+def check_board_import(body: ImportCheckBody, user: MemberUser, db: DbSession) -> dict:
+    """Per definition ``missing``, ``same`` or ``different`` (a different one stays as it is). Somebody who is not an administrator
+    learns no more than what his own file says: ``unknown`` and no way to ask for them to be made (KARTEN-12 AC-6, AC-7)."""
+    try:
+        return board_definitions.check(db, body.yaml_text, admin=user.role == Role.admin.value)
+    except ImportError_ as failure:
+        raise error("bad_import", str(failure)) from failure
+
+
 @router.post("/boards/import", status_code=status.HTTP_201_CREATED, summary="Import a board from YAML")
 def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
     # ⚠️ Synchronous on purpose, so FastAPI runs it in a worker thread. It used
@@ -523,21 +537,47 @@ def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
     # the parsing, the placement and every insert on the event loop: the whole
     # server stood still for the length of the import. ``collector.schedule``
     # is safe from a thread, it hands its work to the loop itself.
+    #
+    # ⚠️ ``definitions: create`` is for administrators only, and a member who asks gets 403 and no board, rather than a
+    # board without the definitions he thought he was making: the answer says what he may not do, nothing is done
+    # half. Without it (the default) no definition is made, whoever imports.
+    if body.definitions == "create" and user.role != Role.admin.value:
+        raise error("definitions_admin_only", "Only an administrator can create the custom cards and own connections a board file carries.", status.HTTP_403_FORBIDDEN)
+    outcome = None
+    report: dict[str, list[str]] = {"created": [], "replaced": [], "same": [], "kept": []}
     try:
-        board = board_service.import_board(
-            db, body.yaml_text, owner_id=user.id, slug=body.slug,
-            # Anybody may call this, so it reads no environment and makes
-            # no connections; a locked one is only allowed to an administrator.
-            trusted=False, allow_locked=user.role == "admin",
-        )
+        with ExitStack() as held:
+            if body.definitions == "create":
+                held.enter_context(card_store.saving)
+                held.enter_context(integration_store.saving)
+            try:
+                if body.definitions == "create":
+                    # In the transaction of the board: a board that fails leaves no definition behind (EC-5).
+                    outcome, report = board_definitions.apply(db, body.yaml_text, user_id=user.id)
+                board = board_service.import_board(
+                    db, body.yaml_text, owner_id=user.id, slug=body.slug,
+                    # Anybody may call this, so it reads no environment and makes
+                    # no connections; a locked one is only allowed to an administrator.
+                    trusted=False, allow_locked=user.role == "admin",
+                )
+                db.commit()
+            except BaseException:
+                db.rollback()
+                if body.definitions == "create":
+                    # The kinds made for this import were put in the registry before the board was read (``apply``).
+                    integration_store.load_all(db)
+                raise
     except ImportError_ as failure:
         raise error("bad_import", str(failure)) from failure
-    db.commit()
+    if outcome is not None:
+        exchange.finish(outcome)
     cards = list(db.scalars(select(Widget.id).join(Page).where(Page.board_id == board.id)))
     for widget_id in cards:
         collector.schedule(widget_id)
     logger.info("Board %r imported by %s with %d card(s).", board.name, user.username, len(cards))
-    return board_view(db, board, "owner")
+    view = board_view(db, board, "owner")
+    view["definitions"] = {**report, "skipped": board_definitions.skipped(body.yaml_text) if body.definitions == "skip" else []}
+    return view
 
 
 @router.put("/boards/{slug}/yaml", summary="Change a board by its YAML")

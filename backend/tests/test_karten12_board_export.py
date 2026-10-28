@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 import yaml
 from fastapi.testclient import TestClient
 
+from app.adapters import forget_all_custom
 from app.services.collector import collector
 
 from .cards_sample import changed
@@ -18,10 +20,12 @@ FIXTURE = Path(__file__).resolve().parent / "fixtures" / "karten12_board_export_
 
 
 @pytest.fixture
-def admin(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def admin(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     setup_admin(client)
     monkeypatch.setattr(collector, "running", False)
-    return client
+    yield client
+    # An own kind made by a test stays in the registry of the process: the tests that count the kinds would see it.
+    forget_all_custom()
 
 
 def plain_board(client: TestClient) -> str:
