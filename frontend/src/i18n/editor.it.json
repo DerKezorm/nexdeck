@@ -1,5 +1,57 @@
 {
   "editor": {
+    "ai": {
+      "button": "Chiedi all'IA",
+      "title": "Chiedi all'IA",
+      "describeNew": "Descrivi la scheda che vuoi",
+      "describeChange": "Descrivi cosa deve cambiare",
+      "placeholderNew": "Una scheda che mostra quanti episodi sono in attesa",
+      "placeholderChange": "Ingrandire i numeri",
+      "values": "Includi valori di esempio",
+      "hintOut": "La tua descrizione va a {{provider}} (modello {{model}}), insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
+      "hintHome": "La tua descrizione va al modello {{model}} ({{provider}}), che gira nella tua rete, insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
+      "create": "Crea una scheda",
+      "change": "Modifica la scheda",
+      "translate": "Traduci",
+      "working": "In attesa della risposta. Puoi annullare.",
+      "proposal": "Proposta",
+      "notValid": "La risposta non è una scheda valida",
+      "notValidBody": "La risposta non ha superato i controlli di nexdeck, nemmeno dopo aver chiesto ancora una volta. Non è stato preso nulla. Ecco cosa è tornato e cosa non va.",
+      "accept": "Accetta",
+      "takeAnyway": "Porta nell'editor",
+      "discard": "Scarta",
+      "sentValues": "Con questa richiesta sono partiti valori di esempio del servizio.",
+      "sentNoValues": "Non è partito nessun valore, solo nomi e tipi dei campi.",
+      "leaveBody": "Una risposta dell'IA è in attesa e non è stata né accettata né scartata. Se esci, va persa.",
+      "previewFailed": "Non è stato possibile disegnare l'anteprima di questa scheda.",
+      "summary": {
+        "connection": "Connessione",
+        "path": "Percorso",
+        "form": "Forma",
+        "buttons": "Pulsanti",
+        "withButtons": "Con pulsanti",
+        "readOnly": "Sola lettura",
+        "none": "Nessuna",
+        "forms": {
+          "value": "Un valore",
+          "stats": "Statistiche",
+          "list": "Elenco",
+          "posters": "Locandine",
+          "builder": "Layout libero"
+        }
+      },
+      "provider": {
+        "anthropic": "Anthropic",
+        "openai": "OpenAI"
+      },
+      "error": {
+        "unreachable": "Il servizio IA non è raggiungibile: {{message}}",
+        "limit": "Il servizio IA rifiuta la richiesta: {{message}}",
+        "busy": "Una tua richiesta è ancora in corso.",
+        "off": "Non c'è più nessun servizio IA configurato, quindi «Chiedi all'IA» è sparito.",
+        "failed": "La richiesta non è riuscita: {{message}}"
+      }
+    },
     "titleNew": "Nuova scheda",
     "crumb": "Schede personali",
     "back": "Torna a Schede personali",

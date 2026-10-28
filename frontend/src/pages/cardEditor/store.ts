@@ -87,6 +87,11 @@ export interface CardEditorState {
   open: (input: { slug: string | null; text: string; base: string | null; saved: string | null; view?: EditorView }) => void
   /** Replace the whole text, as the YAML view does. */
   setText: (text: string, group?: string) => void
+  /**
+   * Take a whole card as the text, from "Ask AI": one step back, the view kept where it can show the card (the guided
+   * way gives way to "All settings" when it cannot, an invalid text opens the YAML view to be mended).
+   */
+  adopt: (text: string) => void
   /** Change the document; the text follows with every untouched line as it was. Nothing happens while it is invalid. */
   change: (edit: (doc: Document) => void, group?: string) => void
   set: (path: CardPath, value: unknown, group?: string) => void
@@ -215,6 +220,26 @@ export const useCardEditor = create<CardEditorState>((set, get) => {
       const state = get()
       if (text === state.text) return
       step(reading(text, state.lastValid, state.now()), group)
+    },
+
+    adopt: (given) => {
+      get().flusher?.()
+      get().setText(given)
+      const state = get()
+      if (!state.card) return void set({ view: 'yaml', typing: null })
+      const refusal = refusalOf(state.card)
+      const path = readAt(state.card, ['requests', 0, 'path'])
+      const kinds = readAt(state.card, ['requires'])
+      const shaped = Array.isArray(kinds) && kinds.length > 0 && typeof path === 'string' ? path : null
+      set({
+        view: state.view === 'yaml' ? 'yaml' : refusal ? 'editor' : state.view,
+        refusal,
+        shapedPath: shaped,
+        pendingShape: null,
+        guidedStep: state.view === 'guided' && !refusal && shaped ? 'finish' : state.guidedStep,
+        replaced: null,
+        typing: null,
+      })
     },
 
     change: (edit, group) => {

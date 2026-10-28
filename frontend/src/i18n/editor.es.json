@@ -1,5 +1,57 @@
 {
   "editor": {
+    "ai": {
+      "button": "Preguntar a la IA",
+      "title": "Preguntar a la IA",
+      "describeNew": "Describe la tarjeta que quieres",
+      "describeChange": "Describe qué debe cambiar",
+      "placeholderNew": "Una tarjeta que muestre cuántos episodios esperan",
+      "placeholderChange": "Hacer los números más grandes",
+      "values": "Incluir valores de ejemplo",
+      "hintOut": "Tu descripción va a {{provider}} (modelo {{model}}), junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
+      "hintHome": "Tu descripción va al modelo {{model}} ({{provider}}), que funciona en tu propia red, junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
+      "create": "Crear tarjeta",
+      "change": "Cambiar la tarjeta",
+      "translate": "Traducir",
+      "working": "Esperando la respuesta. Puedes cancelar.",
+      "proposal": "Propuesta",
+      "notValid": "La respuesta no es una tarjeta válida",
+      "notValidBody": "La respuesta no superó las comprobaciones de nexdeck, ni siquiera tras preguntar una vez más. No se ha aplicado nada. Esto es lo que llegó y lo que falla.",
+      "accept": "Aceptar",
+      "takeAnyway": "Llevar al editor",
+      "discard": "Descartar",
+      "sentValues": "Con esta petición se enviaron valores de ejemplo del servicio.",
+      "sentNoValues": "No se envió ningún valor, solo nombres y tipos de campos.",
+      "leaveBody": "Hay una respuesta de la IA que no se ha aceptado ni descartado. Se pierde si te vas.",
+      "previewFailed": "No se pudo dibujar la vista previa de esta tarjeta.",
+      "summary": {
+        "connection": "Conexión",
+        "path": "Ruta",
+        "form": "Forma",
+        "buttons": "Botones",
+        "withButtons": "Con botones",
+        "readOnly": "Solo lectura",
+        "none": "Ninguna",
+        "forms": {
+          "value": "Un valor",
+          "stats": "Estadísticas",
+          "list": "Lista",
+          "posters": "Carteles",
+          "builder": "Diseño libre"
+        }
+      },
+      "provider": {
+        "anthropic": "Anthropic",
+        "openai": "OpenAI"
+      },
+      "error": {
+        "unreachable": "No se puede llegar al servicio de IA: {{message}}",
+        "limit": "El servicio de IA rechaza la petición: {{message}}",
+        "busy": "Una petición tuya sigue en marcha.",
+        "off": "Ya no hay ningún servicio de IA configurado, así que «Preguntar a la IA» ha desaparecido.",
+        "failed": "La petición ha fallado: {{message}}"
+      }
+    },
     "titleNew": "Tarjeta nueva",
     "crumb": "Tarjetas propias",
     "back": "Volver a Tarjetas propias",

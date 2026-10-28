@@ -1,5 +1,57 @@
 {
   "editor": {
+    "ai": {
+      "button": "Ask AI",
+      "title": "Ask AI",
+      "describeNew": "Describe the card you want",
+      "describeChange": "Describe what should change",
+      "placeholderNew": "A card that shows how many episodes are waiting",
+      "placeholderChange": "Make the numbers bigger",
+      "values": "Include sample values",
+      "hintOut": "Your description goes to {{provider}} (model {{model}}), together with the card format, the building blocks and the names and types of the fields in the answer of the service. Sample values only go along when the box is ticked, and only with this one request.",
+      "hintHome": "Your description goes to the model {{model}} ({{provider}}), which runs in your own network, together with the card format, the building blocks and the names and types of the fields in the answer of the service. Sample values only go along when the box is ticked, and only with this one request.",
+      "create": "Create a card",
+      "change": "Change the card",
+      "translate": "Translate",
+      "working": "Waiting for the answer. You can cancel.",
+      "proposal": "Proposal",
+      "notValid": "The answer is not a valid card",
+      "notValidBody": "The answer did not pass the checks of nexdeck, even after asking once more. Nothing was taken over. This is what came back and what is wrong with it.",
+      "accept": "Accept",
+      "takeAnyway": "Take into the editor",
+      "discard": "Discard",
+      "sentValues": "Sample values of the service went along with this request.",
+      "sentNoValues": "No values went along, only field names and types.",
+      "leaveBody": "An answer of the AI is waiting and has not been taken or discarded. It is lost when you leave.",
+      "previewFailed": "The preview of this card could not be drawn.",
+      "summary": {
+        "connection": "Connection",
+        "path": "Path",
+        "form": "Form",
+        "buttons": "Buttons",
+        "withButtons": "With buttons",
+        "readOnly": "Read only",
+        "none": "None",
+        "forms": {
+          "value": "One value",
+          "stats": "Statistics",
+          "list": "List",
+          "posters": "Posters",
+          "builder": "Free layout"
+        }
+      },
+      "provider": {
+        "anthropic": "Anthropic",
+        "openai": "OpenAI"
+      },
+      "error": {
+        "unreachable": "The AI service could not be reached: {{message}}",
+        "limit": "The AI service turns the request down: {{message}}",
+        "busy": "A request of yours is still running.",
+        "off": "No AI service is set up any more, so Ask AI is gone.",
+        "failed": "The request failed: {{message}}"
+      }
+    },
     "titleNew": "New card",
     "crumb": "Custom cards",
     "back": "Back to Custom cards",

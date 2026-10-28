@@ -1,5 +1,57 @@
 {
   "editor": {
+    "ai": {
+      "button": "Demander à l'IA",
+      "title": "Demander à l'IA",
+      "describeNew": "Décris la carte que tu veux",
+      "describeChange": "Décris ce qui doit changer",
+      "placeholderNew": "Une carte qui montre combien d'épisodes attendent",
+      "placeholderChange": "Agrandir les chiffres",
+      "values": "Inclure des valeurs d'exemple",
+      "hintOut": "Ta description part chez {{provider}} (modèle {{model}}), avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
+      "hintHome": "Ta description va au modèle {{model}} ({{provider}}), qui tourne dans ton propre réseau, avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
+      "create": "Créer une carte",
+      "change": "Modifier la carte",
+      "translate": "Traduire",
+      "working": "En attente de la réponse. Tu peux annuler.",
+      "proposal": "Proposition",
+      "notValid": "La réponse n'est pas une carte valide",
+      "notValidBody": "La réponse n'a pas passé les contrôles de nexdeck, même après une nouvelle demande. Rien n'a été repris. Voici ce qui est revenu et ce qui ne va pas.",
+      "accept": "Accepter",
+      "takeAnyway": "Reprendre dans l'éditeur",
+      "discard": "Rejeter",
+      "sentValues": "Des valeurs d'exemple du service sont parties avec cette demande.",
+      "sentNoValues": "Aucune valeur n'est partie, seulement des noms et des types de champs.",
+      "leaveBody": "Une réponse de l'IA attend, sans avoir été reprise ni rejetée. Elle est perdue si tu pars.",
+      "previewFailed": "L'aperçu de cette carte n'a pas pu être dessiné.",
+      "summary": {
+        "connection": "Connexion",
+        "path": "Chemin",
+        "form": "Forme",
+        "buttons": "Boutons",
+        "withButtons": "Avec boutons",
+        "readOnly": "Lecture seule",
+        "none": "Aucune",
+        "forms": {
+          "value": "Une valeur",
+          "stats": "Statistiques",
+          "list": "Liste",
+          "posters": "Affiches",
+          "builder": "Mise en page libre"
+        }
+      },
+      "provider": {
+        "anthropic": "Anthropic",
+        "openai": "OpenAI"
+      },
+      "error": {
+        "unreachable": "Le service d'IA est injoignable : {{message}}",
+        "limit": "Le service d'IA refuse la demande : {{message}}",
+        "busy": "Une de tes demandes est encore en cours.",
+        "off": "Aucun service d'IA n'est plus configuré, « Demander à l'IA » a donc disparu.",
+        "failed": "La demande a échoué : {{message}}"
+      }
+    },
     "titleNew": "Nouvelle carte",
     "crumb": "Cartes personnalisées",
     "back": "Retour aux cartes personnalisées",

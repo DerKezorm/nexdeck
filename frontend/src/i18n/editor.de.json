@@ -1,5 +1,57 @@
 {
   "editor": {
+    "ai": {
+      "button": "KI fragen",
+      "title": "KI fragen",
+      "describeNew": "Beschreibe die Karte, die du willst",
+      "describeChange": "Beschreibe, was sich ändern soll",
+      "placeholderNew": "Eine Karte, die zeigt, wie viele Folgen warten",
+      "placeholderChange": "Die Zahlen größer machen",
+      "values": "Beispielwerte mitschicken",
+      "hintOut": "Deine Beschreibung geht an {{provider}} (Modell {{model}}), zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
+      "hintHome": "Deine Beschreibung geht an das Modell {{model}} ({{provider}}), das in deinem eigenen Netz läuft, zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
+      "create": "Karte erstellen",
+      "change": "Karte ändern",
+      "translate": "Übersetzen",
+      "working": "Warte auf die Antwort. Du kannst abbrechen.",
+      "proposal": "Vorschlag",
+      "notValid": "Die Antwort ist keine gültige Karte",
+      "notValidBody": "Die Antwort hat die Prüfungen von nexdeck auch nach einer weiteren Nachfrage nicht bestanden. Es wurde nichts übernommen. Das ist zurückgekommen, und das stimmt daran nicht.",
+      "accept": "Übernehmen",
+      "takeAnyway": "In den Editor holen",
+      "discard": "Verwerfen",
+      "sentValues": "Beispielwerte des Dienstes sind bei dieser Anfrage mitgegangen.",
+      "sentNoValues": "Es sind keine Werte mitgegangen, nur Feldnamen und Typen.",
+      "leaveBody": "Eine Antwort der KI wartet und wurde weder übernommen noch verworfen. Wenn du gehst, ist sie weg.",
+      "previewFailed": "Die Vorschau dieser Karte konnte nicht gezeichnet werden.",
+      "summary": {
+        "connection": "Verbindung",
+        "path": "Pfad",
+        "form": "Form",
+        "buttons": "Knöpfe",
+        "withButtons": "Mit Knöpfen",
+        "readOnly": "Nur lesend",
+        "none": "Keine",
+        "forms": {
+          "value": "Ein Wert",
+          "stats": "Kennzahlen",
+          "list": "Liste",
+          "posters": "Plakate",
+          "builder": "Freier Aufbau"
+        }
+      },
+      "provider": {
+        "anthropic": "Anthropic",
+        "openai": "OpenAI"
+      },
+      "error": {
+        "unreachable": "Der KI-Dienst ist nicht erreichbar: {{message}}",
+        "limit": "Der KI-Dienst weist die Anfrage ab: {{message}}",
+        "busy": "Eine Anfrage von dir läuft noch.",
+        "off": "Es ist kein KI-Dienst mehr eingerichtet, deshalb ist „KI fragen“ weg.",
+        "failed": "Die Anfrage ist fehlgeschlagen: {{message}}"
+      }
+    },
     "titleNew": "Neue Karte",
     "crumb": "Eigene Karten",
     "back": "Zurück zu Eigene Karten",

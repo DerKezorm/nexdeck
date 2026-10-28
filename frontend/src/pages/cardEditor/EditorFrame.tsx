@@ -8,6 +8,8 @@ import { Confirm, Dialog, Spinner, Toast } from '../../components/ui'
 import { pickText, type CardText } from '../../lib/cardText'
 import { readAt } from '../../lib/cardDocument'
 import { AdjustedBlock } from './AdjustedBlock'
+import { useCardAi } from './ai'
+import { AiButton, AiPanel, useAiReady } from './AiPanel'
 import { dropDraft, writeDraft, type CardDraft } from './draft'
 import { GuidedWay } from './guided/GuidedWay'
 import { Preview } from './Preview'
@@ -68,7 +70,12 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
   const { text, card, lastValid, problems, view, step, slug, base, replaced, refusal } = editor
   // A new card nobody has touched yet holds nothing to lose: no draft, no question before leaving.
   const dirty = isDirty(editor) && !(slug === null && text === NEW_CARD)
-  const guard = useLeaveGuard(dirty)
+  // An answer of "Ask AI" nobody has taken or thrown away is as much to lose as an unsaved change (KARTEN-17 EC-5).
+  const aiReady = useAiReady()
+  const aiOpen = useCardAi((state) => state.open)
+  const proposed = useCardAi((state) => state.proposal !== null || state.running)
+  const guard = useLeaveGuard(dirty || proposed)
+  useEffect(() => () => useCardAi.getState().reset(), [])
   const { save, busy, trouble, clear } = useSaveCard()
   const [toast, setToast] = useState('')
   const [askReload, setAskReload] = useState(false)
@@ -185,6 +192,7 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
               </button>
             ))}
           </div>
+          {aiReady && <AiButton />}
           {trouble?.kind === 'gone' ? (
             <button type="button" className="btn btn-accent" onClick={() => void doSave({ asNew: true })} disabled={busy || !card}>
               {t('cards.saveAsNew')}
@@ -199,6 +207,8 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 grid gap-4 min-w-0">
+        {aiReady && aiOpen && <AiPanel />}
+
         {offer && (
           <div className="rounded-xl border border-accent/40 px-3 py-2 flex flex-wrap items-center gap-2" role="status">
             <div className="min-w-0 flex-1 basis-60">
@@ -305,7 +315,7 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
         )}
       </div>
 
-      <Confirm open={guard.asking} title={t('editor.leave.title')} body={t('editor.leave.body')} danger confirmLabel={t('editor.leave.leave')} onCancel={guard.stay} onConfirm={guard.leave} />
+      <Confirm open={guard.asking} title={t('editor.leave.title')} body={dirty ? t('editor.leave.body') : t('editor.ai.leaveBody')} danger confirmLabel={t('editor.leave.leave')} onCancel={guard.stay} onConfirm={guard.leave} />
 
       <Confirm
         open={askReload}
