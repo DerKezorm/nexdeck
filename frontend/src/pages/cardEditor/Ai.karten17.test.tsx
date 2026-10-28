@@ -190,7 +190,7 @@ describe('karten17 ac5, ac10: a proposal beside the text', () => {
 })
 
 describe('karten17 ac6: a card there is already', () => {
-  it('sends its text for a change, and a new card for a new one', async () => {
+  it('says what should change, and wants a description first', async () => {
     offer()
     await openCard('Queue')
     expect(editor().slug).toBe('queue')
@@ -199,17 +199,28 @@ describe('karten17 ac6: a card there is already', () => {
     expect(inside.getByRole('button', { name: 'Change the card' })).toBeDisabled()
   })
 
-  it('a card never saved is a new one: the description alone goes, no text', async () => {
+  it('a card never saved with a service and a path chosen is a new one: the description alone goes, no text', async () => {
     offer()
     await openNew()
+    act(() => editor().setText(editor().text.replace('requires: []', 'requires: [sonarr]').replace('path: /', 'path: /api/v3/queue')))
     const inside = await openPanel()
     expect(inside.getByText('Describe the card you want')).toBeInTheDocument()
     await typeDescription('episodes waiting')
     await userEvent.click(inside.getByRole('button', { name: 'Create a card' }))
     await screen.findByTestId('card-ai-proposal')
-    const body = sent('POST', '/cards/ai')[0].body!
-    expect(body.mode).toBe('new')
-    expect(body.yaml).toBeUndefined()
+    expect(sent('POST', '/cards/ai')[0].body).toMatchObject({ mode: 'new', kind: 'sonarr', connection_id: 7, path: '/api/v3/queue' })
+    expect(sent('POST', '/cards/ai')[0].body?.yaml).toBeUndefined()
+  })
+
+  it('without a service the description goes as a change of the text there is, never as a new card the server would refuse', async () => {
+    offer()
+    await openNew()
+    const inside = await openPanel()
+    await typeDescription('episodes waiting')
+    await userEvent.click(inside.getByRole('button', { name: 'Create a card' }))
+    await screen.findByTestId('card-ai-proposal')
+    expect(sent('POST', '/cards/ai')[0].body).toMatchObject({ mode: 'change' })
+    expect(typeof sent('POST', '/cards/ai')[0].body?.yaml).toBe('string')
   })
 })
 

@@ -110,14 +110,18 @@ export const useCardAi = create<AiState>((set, get) => ({
     const card = state.card
     const kind = card ? readAt(card, ['requires', 0]) : undefined
     const path = card ? readAt(card, ['requests', 0, 'path']) : undefined
+    const known = typeof path === 'string' && path !== '/'
+    // A new card needs the connection and the path of the Source step; without them the description goes as a change
+    // of the card there is (the server refuses `new` without both).
+    const wanted: AiMode = mode === 'new' && !(typeof kind === 'string' && kind && known && connectionId !== null) ? 'change' : mode
     const body: Record<string, unknown> = {
-      mode,
+      mode: wanted,
       description: get().description.trim(),
       include_values: get().values,
-      ...(mode !== 'new' ? { yaml: state.text } : {}),
+      ...(wanted !== 'new' ? { yaml: state.text } : {}),
       ...(typeof kind === 'string' && kind ? { kind } : {}),
       ...(connectionId !== null ? { connection_id: connectionId } : {}),
-      ...(typeof path === 'string' && path !== '/' ? { path } : {}),
+      ...(known ? { path } : {}),
     }
     const mine = {}
     flying = mine
@@ -125,7 +129,7 @@ export const useCardAi = create<AiState>((set, get) => ({
     try {
       const answer = await post<AiAnswer>('/cards/ai', body)
       if (flying !== mine) return
-      set({ proposal: { ...answer, mode }, values: false })
+      set({ proposal: { ...answer, mode: wanted }, values: false })
     } catch (failure) {
       if (flying !== mine) return
       // The provider went while the request ran (EC-6): the buttons go with it.
