@@ -283,13 +283,16 @@ async def _press(widget: Widget, board: Board, caller: Caller, action_id: str, p
     from .notify import emit
 
     actor = caller.actor + (f", approved by {approved_by}" if approved_by else "")
-    label = (_button(live.get(widget.id), action_id, params) or (action_id, True, ""))[0]
+    label, _danger, row = _button(live.get(widget.id), action_id, params) or (action_id, True, "")
     title = widget.title or widget.kind
+    what = f"{label} ({row})" if row else label
+    # The bell words the result from these in the reader's language; the title stays English for the channels.
+    facts = {"kind": "mcp_press", "program": caller.key_name, "label": label, "row": row, "card": title, "approved_by": approved_by}
     try:
         message = await collector.run_action(widget.id, action_id, params, actor=actor[:120], user_id=caller.user_id)
     except AdapterError as failure:
-        emit("action_failed", f"{action_id} on {title} failed", failure.message, level="warn", user_ids=[caller.user_id],
-             integration_id=widget.integration_id)
+        emit("action_failed", f"{what} on {title} failed, by {actor}", failure.message, level="warn", user_ids=[caller.user_id],
+             integration_id=widget.integration_id, facts={**facts, "failed": True})
         logger.warning("Action %r on %r failed for %s: %s", action_id, title, actor, failure.message)
         raise ToolError(failure.message) from failure
     logger.info("Action %r ran on %r by %s: %s", action_id, title, actor, message)
@@ -298,7 +301,8 @@ async def _press(widget: Widget, board: Board, caller: Caller, action_id: str, p
     chronicle.record("mcp_call", level="info", widget_id=widget.id, integration_id=widget.integration_id, board_id=board.id,
                      user_id=caller.user_id if approved_by else None, name=title, before=caller.actor, after=label,
                      detail=f"{label} on {title} by {actor}")
-    emit("action_done", f"{action_id} on {title}", message, user_ids=[caller.user_id], integration_id=widget.integration_id)
+    emit("action_done", f"{what} on {title}, by {actor}", message, user_ids=[caller.user_id], integration_id=widget.integration_id,
+         facts=facts)
     return message
 
 
@@ -317,10 +321,11 @@ async def press_button(db: Session, bench: tools.Bench, caller: Caller, right: s
     facts = await impact.facts(widget.id, action_id, given)
     shown = canonical_args(widget.id, action_id, params)
     request = mcp.add_request(db, caller, "press_button", shown, widget_id=widget.id, card=title, board=board.name,
-                              action=action_id, label=label, danger=danger, impact=facts)
+                              action=action_id, label=label, danger=danger, impact=facts, row=row)
     what = f"{label} ({row})" if row else label
     emit("mcp_request", f"{caller.key_name} asks to press {what} on {title}", f"Board {board.name}. Allow or decline in nexdeck.",
-         level="warn" if danger else "info", link=f"/mcp/requests/{request.id}", user_ids=[caller.user_id])
+         level="warn" if danger else "info", link=f"/mcp/requests/{request.id}", user_ids=[caller.user_id],
+         facts={"kind": "mcp_request", "program": caller.key_name, "label": label, "row": row, "card": title, "board": board.name})
     return {"request": request.id, "status": "waiting", "expires_at": local(request.expires_at),
             "note": (f"Waiting for approval in nexdeck, request {request.id}. It runs out in {mcp.REQUEST_MINUTES} minutes. "
                      f"Ask request_status with request {request.id} to learn what came of it.")}

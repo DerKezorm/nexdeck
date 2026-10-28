@@ -324,7 +324,7 @@ def digest(text: str) -> str:
 
 
 def add_request(db: Session, caller: Caller, tool: str, arguments: dict[str, Any], *, widget_id: int | None, card: str, board: str,
-                action: str, label: str, danger: bool, impact: list[Any]) -> McpRequest:
+                action: str, label: str, danger: bool, impact: list[Any], row: str = "") -> McpRequest:
     text = canonical(arguments)
     if len(text.encode("utf-8")) > MAX_REQUEST_BYTES:
         raise McpError("too_large", "The arguments of a request hold at most 64 kB.", 413)
@@ -340,7 +340,7 @@ def add_request(db: Session, caller: Caller, tool: str, arguments: dict[str, Any
     now = utcnow()
     row = McpRequest(user_id=caller.user_id, key_id=caller.key_id, key_name=caller.key_name, tool=tool, arguments=text,
                      digest=digest(text), widget_id=widget_id, card=card[:200], board=board[:200], action=action[:80],
-                     label=label[:120], danger=danger, impact=list(impact or []), status="waiting", created_at=now,
+                     label=label[:120], row=row[:200], danger=danger, impact=list(impact or []), status="waiting", created_at=now,
                      expires_at=now + timedelta(minutes=REQUEST_MINUTES))
     db.add(row)
     db.commit()

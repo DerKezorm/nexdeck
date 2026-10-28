@@ -776,6 +776,20 @@ class Notice(Base):
     read_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
 
 
+class NoticeFacts(Base):
+    """What a notice is about, as fields, for the bell to say in the reader's language.
+
+    The notice's own title and body stay English: a channel (push, mail) gets
+    those. Only some kinds of news carry facts; the rest have no row here. A
+    table of its own rather than a column on ``notices``, so no migration.
+    """
+
+    __tablename__ = "notice_facts"
+
+    notice_id: Mapped[int] = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"), primary_key=True)
+    facts: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
 class ActionLog(Base):
     __tablename__ = "action_log"
 
@@ -871,6 +885,8 @@ class McpRequest(Base):
     board: Mapped[str] = mapped_column(String(200), default="")
     action: Mapped[str] = mapped_column(String(80), default="")
     label: Mapped[str] = mapped_column(String(120), default="")
+    #: The row of the card the button sits on (a container, a guest), empty for a button of the card itself.
+    row: Mapped[str] = mapped_column(String(200), default="")
     danger: Mapped[bool] = mapped_column(Boolean, default=False)
     impact: Mapped[list[Any]] = mapped_column(JSON, default=list)
     #: waiting, approved, declined, expired or failed.

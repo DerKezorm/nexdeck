@@ -531,3 +531,69 @@ def test_only_utc_times_are_told_again_and_as_exact_as_they_came() -> None:
         mcp_calls.ZONE = None
     assert told == {"a": "2026-10-28T19:02+01:00", "b": ["2026-10-28T19:02:05+01:00", "2026-10-28T19:02:05.250000+01:00"],
                     "c": "2026-10-28T18:02+05:00", "d": "plex", "e": "2026-10-28", "f": 3}
+
+
+# -- what the bell and the request page are told ------------------------------------------------
+
+
+def _bell(client: TestClient, event: str) -> list[dict]:
+    return [notice for notice in client.get("/api/v1/notices").json() if notice["event"] == event]
+
+
+def test_a_request_names_the_row_its_button_sits_on_and_gives_the_bell_its_fields(lab: dict) -> None:
+    """Abnahme 2 and 4: the page said "Parameter id: c1" and nothing about plex; the bell was English."""
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    number = _ask(lab, token)
+    assert client.get(f"/api/v1/mcp/requests/{number}").json()["row"] == "plex"
+    [notice] = _bell(client, "mcp_request")
+    assert notice["title"] == "Claude asks to press Restart (plex) on Host", "the English line stays, for the channels"
+    assert notice["facts"] == {"kind": "mcp_request", "program": "Claude", "label": "Restart", "row": "plex", "card": "Host", "board": "Lab"}
+
+
+def test_the_result_of_a_press_names_the_button_the_row_and_the_program(lab: dict) -> None:
+    """Abnahme 3: the result said "restart on Running containers", the action id and nothing else."""
+    client = lab["client"]
+    _key, token = make_key(client, "act", rights={"press_button": "allow"})
+    call(client, token, "press_button", card_id=lab["card"]["id"], action="restart", params={"id": "c1"})
+    [done] = _bell(client, "action_done")
+    assert done["title"] == "Restart (plex) on Host, by Claude (MCP)"
+    assert done["body"] == "Demo mode: restart would have run now."
+    assert done["facts"] == {"kind": "mcp_press", "program": "Claude", "label": "Restart", "row": "plex", "card": "Host", "approved_by": ""}
+    # Allowed in the bell: who allowed it is part of it.
+    _key, asking = make_key(client, "act", name="Laptop")
+    number = _ask(lab, asking)
+    client.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    approved = [notice for notice in _bell(client, "action_done") if notice["facts"]["program"] == "Laptop"]
+    assert [notice["title"] for notice in approved] == ["Restart (plex) on Host, by Laptop (MCP), approved by admin"]
+    assert approved[0]["facts"]["approved_by"] == "admin"
+
+
+def test_a_press_that_fails_says_so_with_the_same_fields(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.adapters.base import AdapterError
+    from app.services.collector import collector
+
+    async def refused(*_args: object, **_kwargs: object) -> str:
+        raise AdapterError("The Docker engine answered with HTTP 500.")
+
+    monkeypatch.setattr(collector, "run_action", refused)
+    client = lab["client"]
+    _key, token = make_key(client, "act", rights={"press_button": "allow"})
+    assert call(client, token, "press_button", card_id=lab["card"]["id"], action="restart", params={"id": "c1"})["error"] is True
+    [failed] = _bell(client, "action_failed")
+    assert failed["title"] == "Restart (plex) on Host failed, by Claude (MCP)"
+    assert failed["facts"] == {"kind": "mcp_press", "program": "Claude", "label": "Restart", "row": "plex", "card": "Host",
+                               "approved_by": "", "failed": True}
+
+
+def test_the_fields_of_a_notice_go_with_it(lab: dict) -> None:
+    from app.models import NoticeFacts
+
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    _ask(lab, token)
+    with db_session() as db:
+        assert len(list(db.scalars(select(NoticeFacts)))) == 1
+    assert client.delete("/api/v1/notices?all=true", headers=CSRF).status_code == 204
+    with db_session() as db:
+        assert list(db.scalars(select(NoticeFacts))) == []

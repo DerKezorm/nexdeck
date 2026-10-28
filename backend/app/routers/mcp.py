@@ -290,7 +290,7 @@ def _request_out(row: McpRequest) -> dict[str, Any]:
     except McpError:
         arguments = {}
     return {"id": row.id, "key_name": row.key_name, "tool": row.tool, "card_id": row.widget_id, "card": row.card,
-            "board": row.board, "action": row.action, "label": row.label, "danger": row.danger,
+            "board": row.board, "action": row.action, "label": row.label, "row": row.row, "danger": row.danger,
             "params": arguments.get("params") if isinstance(arguments.get("params"), dict) else {},
             "impact": list(row.impact or []), "status": row.status, "created_at": row.created_at,
             "expires_at": row.expires_at, "result": row.result}
