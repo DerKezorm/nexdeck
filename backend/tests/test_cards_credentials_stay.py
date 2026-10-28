@@ -37,6 +37,7 @@ def everything_kept() -> str:
 SIGNED = (
     ("tautulli", {"url": BASE, "api_key": SECRET}, "a parameter of the address"),
     ("youtube", {"api_key": SECRET}, "a parameter of the address, on a fixed API host"),
+    ("steam", {"api_key": SECRET, "steam_id": "76561198000000000"}, "a parameter of the address, on a fixed API host"),
     ("kavita", {"url": BASE, "api_key": SECRET}, "a key that is exchanged for a token"),
     ("wallos", {"url": BASE, "api_key": SECRET}, "a field of the body of the kind's own request"),
     ("sonarr", {"url": BASE, "api_key": SECRET}, "a header"),

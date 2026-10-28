@@ -84,6 +84,12 @@ class SteamAdapter(Adapter):
                    options=(Field("limit", "Entries", type="number", default=8),)),
     )
 
+    #: The Web API has one address of its own, and the key travels in the query of every request.
+    raw_root = API
+
+    def raw_params(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {"key": str(config.get("api_key") or "")}
+
     def default_link(self, config: dict[str, Any]) -> str:
         return "https://steamcommunity.com/"
 

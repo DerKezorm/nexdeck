@@ -54,6 +54,8 @@ EXTRA: dict[str, list[dict[str, Any]]] = {
         {"path": "/api/states", "widgets": ["entities"]},
         {"path": "/api/config", "widgets": []},
     ],
+    # The cards ask it, but its name is that of a sign-in and the list leaves such addresses out.
+    "stalwart": [{"path": "/jmap/session", "widgets": []}],
 }
 NO_VALUE = ("integrations", "items", "choices", "board", "pictures", "cards", "date", "time", "timezone", "colour", "textarea")
 FIXES: dict[str, dict[str, Any]] = {"elasticsearch": {"username": ""}}
@@ -95,6 +97,7 @@ SIGN_IN = "opens a session first in a way the stand-in cannot answer, so no card
 #: Readable kinds for which the code gives no GET to offer, each with the reason. ``tests/test_cards_card_reads.py`` holds this
 #: list against the result: a kind that gains reads, or one that is new and has none, turns the test red until it is put right.
 GAPS: dict[str, str] = {
+    "amp": POST + " (JSON API)",
     "aria2": POST + " (JSON-RPC)",
     "backrest": POST + " (gRPC-web)",
     "bookorbit": SIGN_IN,
@@ -120,8 +123,11 @@ GAPS: dict[str, str] = {
     "truenas": "speaks WebSocket, which the stand-in does not answer",
     "twitch": "gets its token from another address (id.twitch.tv) than the connection's",
     "unraid": POST + " (GraphQL)",
+    "uptimerobot": POST + " (form, the key in the body)",
     "urbackup": POST,
     "wallos": POST,
+    "wikijs": POST + " (GraphQL)",
+    "warrior": POST + " (SockJS)",
     "xteve": POST + " (JSON body)",
     "youtube": "reads public pages of youtube.com, not an address of the connection",
     "zabbix": POST + " (JSON-RPC)",

@@ -145,6 +145,11 @@ class MastodonAdapter(Adapter):
         except ValueError as error:
             raise AdapterError("Mastodon did not answer with JSON.", code="not_json", hint="The URL probably points at a web page or a reverse proxy.") from error
 
+    async def raw_signed(self, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:
+        """The access token as a bearer token; the kind's own test asks the public instance first and is not needed for it."""
+        token = str(config.get("token") or "").strip()
+        return ({"Authorization": f"Bearer {token}"}, {}, None) if token else ({}, {}, None)
+
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         info = await self._get(config, ctx, "/api/v2/instance", signed=False, optional=True, cache=0) or await self._get(config, ctx, "/api/v1/instance", signed=False, cache=0)
         if not isinstance(info, dict) or "version" not in info:

@@ -3058,6 +3058,33 @@
    ]
   }
  ],
+ "stalwart": [
+  {
+   "path": "/jmap/session",
+   "widgets": []
+  }
+ ],
+ "steam": [
+  {
+   "path": "/ISteamUser/GetFriendList/v1?format=json&steamid={steam_id}&relationship=friend",
+   "widgets": [
+    "summary",
+    "friends"
+   ]
+  },
+  {
+   "path": "/IPlayerService/GetRecentlyPlayedGames/v1?format=json&steamid={steam_id}",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/IPlayerService/GetRecentlyPlayedGames/v1?format=json&steamid={steam_id}&count=8",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
  "synapse": [
   {
    "path": "/_synapse/admin/v2/users?limit=1&guests=false",

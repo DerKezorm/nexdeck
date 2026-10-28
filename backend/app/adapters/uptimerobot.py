@@ -65,6 +65,8 @@ class UptimeRobotAdapter(Adapter):
         Field("api_key", "API key", type="password", secret=True, required=True,
               help="A read-only API key or the main one, from My Settings > API Settings at uptimerobot.com. UptimeRobot allows ten requests a minute on the free plan."),
     )
+    #: The API has one address of its own; the key is in the body of a POST, which a card does not send.
+    raw_root = "https://api.uptimerobot.com"
     widgets = (
         WidgetType(kind="monitors", label="Monitors", description="Every monitor with its state and its uptime of the last 30 days, down ones first.",
                    renderer="list", default_size=(3, 3), refresh_seconds=120, metrics=("down",),

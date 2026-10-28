@@ -190,6 +190,14 @@ class RegistryAdapter(Adapter):
         user, password = str(config.get("user") or "").strip(), str(config.get("password") or "")
         return (user, password) if user else None
 
+    async def raw_signed(self, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:
+        """A card signs with the user name and the password of the connection, Basic, to the registry's own address.
+
+        A registry that hands out tokens (Docker Hub, ghcr.io) names a token service for every repository; a card does not
+        go there, so it can read such a registry only where it answers without a token.
+        """
+        return {}, {}, self._credentials(config)
+
     @staticmethod
     def _hub(config: dict[str, Any]) -> bool:
         return (urlsplit(base_url(config)).hostname or "").endswith("docker.io")

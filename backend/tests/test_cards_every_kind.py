@@ -48,10 +48,15 @@ SIGNS_IN: dict[str, str] = {
     "nodered": "token in a header, from a POST",
     "jackett": "cookie of a client of its own, a request without it is sent to the login page",
     "shelly": "asks the device for its generation first, then Basic or Digest",
+    "influxdb": "asks /ping for the version first, which sets the scheme of the token",
+    "amp": "session id in the body, from a POST",
+    "keycloak": "token in a header, from a POST with the client's credentials",
+    "lemmy": "token in a header, from a POST",
+    "wazuh": "token in a header, from a POST with Basic",
 }
 
 #: The path a card asks, for a kind that lets a card ask only one address (``raw_read_commands``).
-PROBES: dict[str, str] = {"tasmota": "/cm?cmnd=Status", "pyload": "/api/get_probe"}
+PROBES: dict[str, str] = {"tasmota": "/cm?cmnd=Status", "pyload": "/api/get_probe", "jenkins": "/api/json", "stalwart": "/jmap/session"}
 
 #: Configurations the plain filling-in would make contradictory.
 FIXES: dict[str, dict[str, Any]] = {"elasticsearch": {"username": ""}}
