@@ -947,7 +947,7 @@
     "kioskRestMinutes_other": "{{count}} Minuten",
     "cardStyle": "Karten",
     "cardStyleHelp": "Die Karten dieses Boards in einem eigenen Stil, für ein Wand-Display oder ein Board mit Bild dahinter.",
-    "cardStyleInstallation": "Wie unter Darstellung"
+    "cardStyleInstallation": "Wie unter Aussehen"
   },
   "widget": {
     "remove": {
