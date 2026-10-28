@@ -605,6 +605,8 @@ def test_behind_a_named_proxy_two_real_senders_are_counted_apart(ready: TestClie
     assert [_register_from(ready.app, proxy, "203.0.113.5").status_code for _ in range(3)] == [201, 201, 429]
     # Somebody else behind the same proxy has an allowance of their own ...
     assert _register_from(ready.app, proxy, "203.0.113.6").status_code == 201
+    # What a sender writes on the left of the proxy's own entry is its word and counts for nothing.
+    assert [_register_from(ready.app, proxy, f"198.51.100.{number}, 203.0.113.7").status_code for number in (1, 2, 3)] == [201, 201, 429]
     # ... and the addresses of one IPv6 /64 are one sender.
     assert [_register_from(ready.app, proxy, f"2001:db8:1:2::{number}").status_code for number in (1, 2, 3)] == [201, 201, 429]
 
