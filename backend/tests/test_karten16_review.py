@@ -8,6 +8,7 @@ which reads them with its own reader: the two repositories agree on them or one 
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 
@@ -249,3 +250,40 @@ def test_karten16_b3_things_that_only_look_like_addresses_are_no_reason_to_warn(
     probe = {"version": "1.2.3", "time": "at 12:30:45", "size": "10.5 GB", "mail": "someone@example.com"}
     demo = {"version": "1.2.3", "time": "since 12:30:45", "size": "about 10.5 GB", "domain": "example.com"}
     assert warned_of(probe, demo) == []
+
+
+# -- B4: one question to GitHub at a time for one account ---------------------------------------------------------------
+
+
+async def two_polls_at_once(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
+    original = github_login.call
+
+    async def over_the_network(*args: Any, **kwargs: Any) -> Any:
+        await asyncio.sleep(0)  # a real request gives the event loop away once, like this
+        return await original(*args, **kwargs)
+
+    monkeypatch.setattr(github_login, "call", over_the_network)
+    with db_session() as one, db_session() as two:
+        return list(await asyncio.gather(github_login.poll(one, 1), github_login.poll(two, 1)))
+
+
+def test_karten16_b4_two_polls_at_once_ask_github_once(me: TestClient, hub: Hub, moment: list[float], monkeypatch: pytest.MonkeyPatch) -> None:
+    me.delete(f"{BASE}/github", headers=CSRF)
+    hub.person_at_the_screen = None
+    assert me.post(f"{BASE}/github/login", headers=CSRF).status_code == 200
+    moment[0] += 6
+    before = hub.token_calls
+    answers = asyncio.run(two_polls_at_once(monkeypatch))
+    assert hub.token_calls - before == 1
+    assert [one["status"] for one in answers] == ["pending", "pending"]
+
+
+def test_karten16_b4_the_poll_that_waited_finds_the_sign_in_and_not_an_error(me: TestClient, hub: Hub, moment: list[float], monkeypatch: pytest.MonkeyPatch) -> None:
+    me.delete(f"{BASE}/github", headers=CSRF)
+    assert me.post(f"{BASE}/github/login", headers=CSRF).status_code == 200
+    hub.sign_in_as(hub.person("someone", 4242))
+    moment[0] += 6
+    before = hub.token_calls
+    answers = asyncio.run(two_polls_at_once(monkeypatch))
+    assert hub.token_calls - before == 1
+    assert [one["status"] for one in answers] == ["signed_in", "signed_in"] and answers[1]["login"] == "someone"

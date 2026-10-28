@@ -94,6 +94,7 @@ class Pending:
 
 _pending: dict[int, Pending] = {}
 _locks: dict[int, asyncio.Lock] = {}
+_asking: dict[int, asyncio.Lock] = {}
 
 
 def _account(db: Session, user_id: int) -> str | None:
@@ -114,6 +115,7 @@ def forget() -> None:
     """Start over (a test, or a new process)."""
     _pending.clear()
     _locks.clear()
+    _asking.clear()
 
 
 # -- asking GitHub ---------------------------------------------------------------------------------
@@ -190,15 +192,30 @@ async def start(db: Session, user_id: int) -> dict[str, Any]:
 
 
 async def poll(db: Session, user_id: int) -> dict[str, Any]:
-    """Whether the administrator has typed the code yet. Asks GitHub no faster than GitHub allows."""
+    """Whether the administrator has typed the code yet. Asks GitHub no faster than GitHub allows.
+
+    ⚠️ One question at a time for one account: two requests of the interface at the same moment (two tabs, a slow answer
+    and the next tick) would both reach GitHub inside one interval, GitHub would say ``slow_down``, and after the first
+    had signed in the second would ask for a code that is gone and report an error. The second waits for the first and
+    then finds the answer in its place.
+    """
+    async with _asking.setdefault(user_id, asyncio.Lock()):
+        db.expire_all()
+        return await _poll(db, user_id)
+
+
+async def _poll(db: Session, user_id: int) -> dict[str, Any]:
     one = _waiting(db, user_id)
     if one is None:
+        if db.get(GithubLogin, user_id) is not None:
+            return {"status": "signed_in", **status(db, user_id)}
         return {"status": "none"}
     if now() >= one.expires_at:
         _pending.pop(user_id, None)
         return {"status": "expired"}
     if now() < one.next_at:
         return {"status": "pending", "interval": one.interval}
+    one.next_at = now() + one.interval
     reply = _json(
         await call(
             "POST",
