@@ -43,8 +43,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     human_bytes,
 )
@@ -93,6 +95,10 @@ class Aria2Adapter(DownloadAdapter):
     docs_url = "https://aria2.github.io/manual/en/html/aria2c.html#rpc-interface"
     #: Measured against aria2 1.36.0 in a container; not yet on a long-lived instance.
     beta = True
+    #: aria2 takes a call in the address too (``/jsonrpc?method=aria2.pause&id=1``): only the ones that tell. The two that
+    #: list every option would show the RPC secret among them.
+    raw_read_commands = ReadCommands(params={"method": allowed(
+        prefixes=("aria2.get", "aria2.tell", "aria2.list", "system.list"), denied=("aria2.getoption", "aria2.getglobaloption"))})
     has_upload = True
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://aria2:6800",
