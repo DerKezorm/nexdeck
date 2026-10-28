@@ -1,0 +1,129 @@
+"""A pretend GitHub with a Workshop repository in it, for the tests of the Card shop (KARTEN-14, KARTEN-15).
+
+Nothing here reaches the network: ``respx`` answers every request to ``api.github.com`` from the files of the pretend
+repository, and fails the test for a request to any other address.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from collections.abc import Iterator
+from typing import Any
+from urllib.parse import unquote
+
+import httpx
+import pytest
+import respx
+from fastapi.testclient import TestClient
+
+from app.cards import load
+from app.services.collector import collector
+from app.workshop import catalog, files
+
+from .cards_sample import VALUE_CARD, changed
+from .conftest import CSRF, setup_admin
+
+REPO = "DerKezorm/nexdeck-workshop"
+AUTHOR = "4242"
+#: A PNG, as far as the shop looks: the signature and some bytes.
+PNG = b"\x89PNG\r\n\x1a\n" + b"picture"
+
+
+def card_text(slug: str = "queue-size", text: str = VALUE_CARD, version: str = "1.0.0") -> str:
+    return changed('version: "1.0.0"', f'version: "{version}"', changed("slug: queue-size", f"slug: {slug}", text))
+
+
+def entry(text: str, author: str = AUTHOR, **more: Any) -> dict[str, Any]:
+    """The catalog entry of a card text, with the checksum of exactly that text."""
+    data = load.load_definition(text).definition
+    short = data.slug
+    found: dict[str, Any] = {
+        "id": f"{author}/{short}", "type": "card", "slug": short, "name": "Name of " + short, "description": "A card for the tests.",
+        "author": {"id": author, "login": "someone"}, "version": data.version,
+        "min_nexdeck": data.min_nexdeck, "category": "media", "requires": list(data.requires),
+        "class": "buttons" if data.buttons else "read", "reads": [], "buttons": [],
+        "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "files": {
+            "definition": f"entries/{author}/{short}/definition.yaml", "readme": f"entries/{author}/{short}/README.md",
+            "changelog": f"entries/{author}/{short}/CHANGELOG.md", "light": f"entries/{author}/{short}/preview-light.png",
+            "dark": f"entries/{author}/{short}/preview-dark.png",
+        },
+        "thumbs": 3, "discussion": None, "based_on": None, "updated_at": "2026-10-20T10:00:00Z", "removed": None,
+    }
+    found.update(more)
+    return found
+
+
+class GitHub:
+    """The pretend repository: the files by path, what to do when asked, and what was asked."""
+
+    def __init__(self) -> None:
+        self.files: dict[str, bytes] = {}
+        self.entries: list[dict[str, Any]] = []
+        #: ``ok``, ``down`` (nothing answers), or an HTTP status that every request gets.
+        self.mode: str | int = "ok"
+        self.requests: list[httpx.Request] = []
+        self.catalog_override: bytes | None = None
+
+    def publish(self, text: str, **more: Any) -> dict[str, Any]:
+        """Put a definition in the repository with its texts and pictures, and list it in the catalog (replacing an older one)."""
+        found = entry(text, **more)
+        self.entries = [one for one in self.entries if one["id"] != found["id"]] + [found]
+        place = found["files"]
+        self.files[place["definition"]] = text.encode("utf-8")
+        self.files[place["readme"]] = f"About {found['slug']}.".encode()
+        self.files[place["changelog"]] = f"Changes of {found['version']}.".encode()
+        self.files[place["light"]] = self.files[place["dark"]] = PNG
+        return found
+
+    def catalog_bytes(self) -> bytes:
+        if self.catalog_override is not None:
+            return self.catalog_override
+        return json.dumps({"format": 1, "generated_at": "2026-10-28T00:00:00Z", "entries": self.entries}).encode()
+
+    def answer(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if self.mode == "down":
+            raise httpx.ConnectError("no route to host")
+        if isinstance(self.mode, int):
+            return httpx.Response(self.mode, json={"message": "no"})
+        prefix = f"/repos/{REPO}/contents/"
+        if not request.url.path.startswith(prefix):
+            return httpx.Response(404, json={"message": "Not Found"})
+        path = unquote(request.url.path[len(prefix):])
+        body = self.catalog_bytes() if path == "catalog.json" else self.files.get(path)
+        return httpx.Response(200, content=body) if body is not None else httpx.Response(404, json={"message": "Not Found"})
+
+    def count(self, path: str = "") -> int:
+        return len([one for one in self.requests if unquote(one.url.path).endswith(path)])
+
+
+@pytest.fixture
+def github() -> Iterator[GitHub]:
+    fake = GitHub()
+    with respx.mock(assert_all_mocked=True, assert_all_called=False) as network:
+        network.route(host="api.github.com").mock(side_effect=fake.answer)
+        catalog.forget()
+        files.forget()
+        yield fake
+    catalog.forget()
+    files.forget()
+
+
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[float]]:
+    """The clock of the shop, as a list of one number a test moves."""
+    now = [1_000_000.0]
+    monkeypatch.setattr(catalog, "now", lambda: now[0])
+    yield now
+
+
+@pytest.fixture
+def shop(client: TestClient, github: GitHub, clock: list[float], monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    """An administrator is signed in and the shop is on, in front of the pretend repository."""
+    setup_admin(client)
+    monkeypatch.setattr(collector, "running", False)
+    turned = client.put("/api/v1/workshop/settings", json={"enabled": True}, headers=CSRF)
+    assert turned.status_code == 200, turned.text
+    return client

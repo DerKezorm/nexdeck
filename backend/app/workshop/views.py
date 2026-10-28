@@ -1,0 +1,75 @@
+"""An entry of the catalog as the shop shows it: the entry itself and what this installation adds to it."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from ..adapters import get_adapter
+from ..cards import load
+from ..models import Integration
+from . import catalog
+
+BASE = "/api/v1/workshop"
+
+
+@dataclass
+class Context:
+    """What the views of one request share: the connections of this installation, by kind."""
+
+    connections: dict[str, list[dict[str, Any]]]
+
+
+def context(db: Session) -> Context:
+    found: dict[str, list[dict[str, Any]]] = {}
+    for one in db.scalars(select(Integration).order_by(Integration.name)):
+        try:
+            if not get_adapter(one.kind).raw_access:
+                continue
+        except KeyError:
+            continue
+        found.setdefault(one.kind, []).append({"id": one.id, "name": one.name, "kind": one.kind})
+    return Context(found)
+
+
+def requirement(kind: str) -> dict[str, str]:
+    from ..routers.cards import _requirement
+
+    return _requirement(kind)
+
+
+def entry_view(entry: catalog.Entry, ctx: Context) -> dict[str, Any]:
+    """The entry with its pictures, what it needs, the connections that fit and whether this nexdeck can run it."""
+    connections = [one for kind in entry.requires for one in ctx.connections.get(kind, [])]
+    base = f"{BASE}/entries/{entry.id}/image"
+    return {
+        "id": entry.id,
+        "author_id": entry.author_id,
+        "slug": entry.slug,
+        "type": entry.type,
+        "name": entry.name,
+        "description": entry.description,
+        "author": entry.author.model_dump(),
+        "version": entry.version,
+        "min_nexdeck": entry.min_nexdeck,
+        "category": entry.category,
+        "requires": [requirement(kind) for kind in entry.requires],
+        "class": entry.class_,
+        "reads": [one.model_dump() for one in entry.reads],
+        "buttons": [one.model_dump() for one in entry.buttons],
+        "thumbs": entry.thumbs,
+        "discussion": entry.discussion,
+        "based_on": entry.based_on,
+        "updated_at": entry.updated_at,
+        "license": entry.license or "MIT",
+        "removed": entry.removed.model_dump() if entry.removed else None,
+        "needs_newer": load.needs_newer(entry.min_nexdeck),
+        # An own connection has nothing to read through, so it is always something to install.
+        "fits": entry.type == "integration" or bool(connections),
+        "connections": connections,
+        "installed": None,
+        "images": {"light": f"{base}/light", "dark": f"{base}/dark"},
+    }
