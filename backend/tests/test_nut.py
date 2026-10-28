@@ -48,6 +48,7 @@ class Upsd:
         self.asked: list[str] = []
         self.connections = 0
         self.port = 0
+        self.finished = asyncio.Event()
 
     async def handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         self.connections += 1
@@ -61,6 +62,7 @@ class Upsd:
             writer.write(self.answers.get(command, "ERR UNKNOWN-COMMAND\n").encode())
             await writer.drain()
         writer.close()
+        self.finished.set()
 
 
 @pytest.fixture
@@ -100,6 +102,8 @@ async def test_the_ups_card_shows_charge_state_load_runtime_and_watts(upsd, ctx:
     assert data.secondary == [{"label": "State", "value": "On mains"}, {"label": "Load", "value": "18%"},
                               {"label": "Runtime", "value": "28m 30s"}, {"label": "Power", "value": "162 W"}]
     assert data.metrics == {"charge": 100.0, "load": 18.0, "runtime": 1710.0, "power": 162.0, "input_voltage": 231.0}
+    # ⚠️ The adapter closes right after LOGOUT; the fake may not have read it yet.
+    await asyncio.wait_for(fake.finished.wait(), 5)
     assert fake.asked == ["LIST UPS", "LIST VAR dummy", "LOGOUT"], "reading asks for nothing but the lists, and logs out"
 
 
