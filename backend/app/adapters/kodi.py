@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
+from dataclasses import dataclass
 from typing import Any
 from urllib.parse import quote
 
@@ -45,16 +47,41 @@ from .base import (
     Action,
     Adapter,
     AdapterError,
+    Allowed,
     AuthFailed,
     Context,
     Field,
     ImagePath,
     MediaSource,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
     duration_short,
 )
+
+
+@dataclass(frozen=True)
+class _JsonRpcReads(Allowed):
+    """The ``request`` of a GET to ``/jsonrpc`` when every call in it only gets: ``Player.GetActivePlayers``, ``JSONRPC.Ping``.
+
+    ⚠️ Kodi takes a whole JSON-RPC call in the address, ``/jsonrpc?request={"method":"Application.Quit"}``, so a GET can stop
+    a player or the application. The value is read as JSON, a batch included, and anything that is not plainly a getter is refused.
+    """
+
+    def __contains__(self, value: object) -> bool:
+        try:
+            calls = json.loads(str(value))
+        except ValueError:
+            return False
+        calls = calls if isinstance(calls, list) else [calls]
+        for call in calls:
+            method = str(call.get("method") or "") if isinstance(call, dict) else ""
+            space, _, name = method.partition(".")
+            if not (space and (name.startswith("Get") or method in self.exact)):
+                return False
+        return bool(calls)
+
 
 #: Kodi's players, by the id it gives them: audio, video, pictures.
 PICTURES = "picture"
@@ -131,6 +158,7 @@ class KodiAdapter(Adapter):
     docs_url = "https://kodi.wiki/view/JSON-RPC_API"
     #: Measured only as far as a headless Kodi 18.5 goes (sign-in, ping, properties, errors); a player was never seen.
     beta = True
+    raw_read_commands = ReadCommands(params={"request": _JsonRpcReads(exact=frozenset({"JSONRPC.Ping", "JSONRPC.Version", "JSONRPC.Permission"}))})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://kodi:8080",
               help="The web server of Kodi, switched on under Settings, Services, Control."),
