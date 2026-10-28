@@ -94,11 +94,14 @@ export function ShopList({ catalog, onOpen }: { catalog: ShopCatalog; state: Sho
           <p className="text-xs text-muted mb-2" role="status">
             {t('cards.shop.count', { count: shown.length })}
           </p>
-          <ul className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label={t('cards.shop.list')}>
-            {shown.slice(0, limit).map((entry) => (
-              <ShopTile key={entry.id} entry={entry} onOpen={onOpen} />
-            ))}
-          </ul>
+          {/* The columns follow the width of the list, not of the window: a tile keeps about 300 px or more, so its picture can be read. */}
+          <div className="@container">
+            <ul className="grid gap-3 grid-cols-1 @[620px]:grid-cols-2 @[920px]:grid-cols-3" aria-label={t('cards.shop.list')}>
+              {shown.slice(0, limit).map((entry) => (
+                <ShopTile key={entry.id} entry={entry} onOpen={onOpen} />
+              ))}
+            </ul>
+          </div>
           {shown.length > limit && (
             <div className="flex justify-center mt-4">
               <button className="btn" onClick={() => setLimit(limit + PAGE)}>

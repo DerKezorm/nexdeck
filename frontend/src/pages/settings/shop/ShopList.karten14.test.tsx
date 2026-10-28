@@ -185,8 +185,8 @@ describe('nothing found, many entries, the phone', () => {
     renderWith(<ShopTab />)
     await screen.findByTestId('shop-list')
     const grid = screen.getByRole('list', { name: 'Entries of the Card shop' })
-    // grid-cols-1 is the base; wider screens add columns with breakpoints only.
-    expect(grid.className.split(' ').filter((one) => /grid-cols-/.test(one) && !/^(sm|md|lg|xl):/.test(one))).toEqual(['grid-cols-1'])
+    // grid-cols-1 is the base; wider lists add columns with breakpoints on the width of the list only.
+    expect(grid.className.split(' ').filter((one) => /grid-cols-/.test(one) && !/^(sm|md|lg|xl|@\[\d+px\]):/.test(one))).toEqual(['grid-cols-1'])
   })
 
   it('karten14 ac3: a catalog served from memory because GitHub was not reachable says so', async () => {
