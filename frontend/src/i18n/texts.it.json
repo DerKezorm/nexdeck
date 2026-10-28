@@ -2250,7 +2250,18 @@
     "Only if the device has a sign-in set.": "Solo se il dispositivo ha un accesso impostato.",
     "The power all measuring channels of the device draw now, with the energy they have used, the temperature and the Wi-Fi signal.": "La potenza assorbita ora da tutti i canali con misura del dispositivo, con l'energia usata, la temperatura e il segnale Wi-Fi.",
     "Switches": "Interruttori",
-    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Ogni relè del dispositivo, acceso o spento con la potenza assorbita, e un pulsante per commutarlo dopo una domanda."
+    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Ogni relè del dispositivo, acceso o spento con la potenza assorbita, e un pulsante per commutarlo dopo una domanda.",
+    "Books": "Libri",
+    "Chapters": "Capitoli",
+    "Shelves": "Scaffali",
+    "Pages": "Pagine",
+    "How many pages, books, chapters and shelves BookStack holds, and the pages changed last.": "Quante pagine, libri, capitoli e scaffali contiene BookStack, e le pagine modificate per ultime.",
+    "How many pages there are, with the books, chapters and shelves.": "Quante pagine ci sono, con libri, capitoli e scaffali.",
+    "Profile > API Tokens > Create Token. The role needs the permission Access system API.": "Profilo > API Tokens > Crea token. Il ruolo richiede il permesso Access system API.",
+    "Recently changed pages": "Pagine modificate di recente",
+    "Shown once when the token is made.": "Mostrato una sola volta alla creazione del token.",
+    "The pages changed last, with their book.": "Le pagine modificate per ultime, con il loro libro.",
+    "No pages yet.": "Ancora nessuna pagina."
   },
   "labels": {
     "Private resources": "Risorse private",
