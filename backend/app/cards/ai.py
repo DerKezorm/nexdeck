@@ -561,12 +561,22 @@ async def _turn(config: dict[str, Any], key: str, system: str, transcript: list[
     return turn
 
 
-def summarize(ask: Ask, loaded: Any, text: str = "") -> dict[str, Any]:
-    """What the card uses, for the editor to show beside the preview (KARTEN-17 AC-10)."""
+def summarize(loaded: Any) -> dict[str, Any]:
+    """What the card that came back uses, for the editor to show beside the preview (KARTEN-17 AC-10).
+
+    ⚠️ From the card, not from the request: the provider may have changed the connection, the paths or the buttons.
+    ``connection_kind`` and ``path`` name all of them, one after the other.
+    """
     definition = loaded.definition if loaded is not None else None
-    kind = ask.connection_kind or (definition.requires[0] if definition is not None else "")
-    path = ask.path or (definition.requests[0].path if definition is not None else "")
-    return {"connection_kind": kind, "path": path, "form": definition.form if definition is not None else None, "buttons": bool(definition.buttons) if definition is not None else False}
+    if definition is None:
+        return {"connection_kind": None, "path": None, "form": None, "buttons": False, "requires": [], "paths": [], "methods": []}
+    requires = list(definition.requires)
+    paths = [request.path for request in definition.requests]
+    methods = sorted({button.method for button in definition.buttons})
+    return {
+        "connection_kind": ", ".join(requires) or None, "path": ", ".join(paths) or None, "form": definition.form, "buttons": bool(definition.buttons),
+        "requires": requires, "paths": paths, "methods": methods,
+    }
 
 
 async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
@@ -590,7 +600,7 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
             card = text
             if ask.mode != "new":
                 card = restore_demo(ask, text)
-            return Outcome(True, card, last_text, [], summarize(ask, loaded), sent, loaded.definition)
+            return Outcome(True, card, last_text, [], summarize(loaded), sent, loaded.definition)
         if attempt == 0:
             transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
             feedback = _feedback(problems)
@@ -598,7 +608,7 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
                 transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": True} for call in turn.calls]})
             else:
                 transcript.append({"role": "user", "text": feedback})
-    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], summarize(ask, None), sent)
+    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], summarize(None), sent)
 
 
 # -- one request at a time per administrator -----------------------------------------------------------

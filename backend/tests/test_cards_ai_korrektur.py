@@ -221,8 +221,28 @@ def test_karten17_ac7_a_plain_text_stays_the_english_one(monkeypatch: pytest.Mon
     assert run(ai.Ask(mode="translate", yaml=ai.EXAMPLE), Script(card(gone), card(gone)), monkeypatch).ok is False
 
 
+def test_karten17_ac10_the_summary_is_made_from_the_card_that_came_back_not_from_the_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    moved = ai.EXAMPLE.replace("requires: [sonarr]", "requires: [radarr]").replace("path: /api/v3/queue", "path: /api/v3/history")
+    ask = ai.Ask(mode="change", description="x", yaml=ai.EXAMPLE, connection_kind="sonarr", path="/api/v3/queue", answer={"records": []})
+    result = run(ask, Script(card(moved)), monkeypatch)
+    assert result.ok
+    assert result.summary["connection_kind"] == "radarr" and result.summary["path"] == "/api/v3/history"
+    assert result.summary["requires"] == ["radarr"] and result.summary["paths"] == ["/api/v3/history"]
+
+    two = ai.EXAMPLE.replace("requests:\n", "requests:\n  - id: more\n    path: /api/v3/series\n")
+    result = run(ask, Script(card(two)), monkeypatch)
+    assert result.ok and result.summary["paths"] == ["/api/v3/series", "/api/v3/queue"] and result.summary["path"] == "/api/v3/series, /api/v3/queue"
 
 
+def test_karten17_ac10_the_summary_names_the_methods_of_the_buttons(monkeypatch: pytest.MonkeyPatch) -> None:
+    data = yaml.safe_load(DOWNLOADS)
+    data.pop("demo")
+    start = ai.Ask(mode="new", description="downloads", connection_kind=data["requires"][0], path=data["requests"][0]["path"], answer=[{"name": "a", "hash": "b", "progress": 1}])
+    result = run(start, Script(card(dump(data))), monkeypatch)
+    assert result.ok and result.summary["buttons"] is True
+    assert result.summary["methods"] == sorted({button["method"] for button in data["buttons"]})
+    plain = run(start.__class__(mode="new", description="x", connection_kind="sonarr", path="/api/v3/queue", answer={}), Script(card()), monkeypatch)
+    assert plain.summary["buttons"] is False and plain.summary["methods"] == []
 
 
 

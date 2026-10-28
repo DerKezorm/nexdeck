@@ -70,7 +70,7 @@ def test_karten17_ac2_the_probe_is_asked_and_only_its_shape_leaves(admin: TestCl
     assert answer.status_code == 200, answer.text
     body = answer.json()
     assert body["ok"] is True and body["sent"] == {"values": False}
-    assert body["summary"] == {"connection_kind": "sonarr", "path": "/api/v3/queue", "form": "list", "buttons": False}
+    assert body["summary"] == {"connection_kind": "sonarr", "path": "/api/v3/queue", "form": "list", "buttons": False, "requires": ["sonarr"], "paths": ["/api/v3/queue"], "methods": []}
     sent = script.sent()
     for secret in (SECRET_TEXT, str(SECRET_NUMBER), SECRET_KEY):
         assert secret not in sent

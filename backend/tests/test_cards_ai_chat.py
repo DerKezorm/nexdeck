@@ -80,7 +80,7 @@ def test_karten18_ac2_ac5_a_clear_connection_is_probed_and_the_draft_comes_back_
     assert len(reply["drafts"]) == 1
     draft = reply["drafts"][0]
     assert draft["name"] == "Download queue" and draft["form"] == "list" and draft["keep_days"] == chat.KEEP_DAYS == 30
-    assert draft["summary"] == {"connection_kind": "sonarr", "path": "/api/v3/queue", "form": "list", "buttons": False}
+    assert draft["summary"] == {"connection_kind": "sonarr", "path": "/api/v3/queue", "form": "list", "buttons": False, "requires": ["sonarr"], "paths": ["/api/v3/queue"], "methods": []}
     assert draft["sent"] == {"values": False} and draft["url"] == f"/system/custom-cards/new?draft={draft['id']}"
     assert sonarr and tool_result(script, 2)["drafted"] is True
 
