@@ -2275,7 +2275,20 @@
     "Every scheduled event with its timing and how its last run ended, failing ones first, each with a button to run it.": "Chaque événement planifié avec son horaire et l'issue de sa dernière exécution, les échecs d'abord, chacun avec un bouton pour le lancer.",
     "Latest runs": "Dernières exécutions",
     "Scheduled events of Cronicle, the jobs running now and how the latest runs ended, with a button to run an event.": "Événements planifiés de Cronicle, jobs en cours et issue des dernières exécutions, avec un bouton pour lancer un événement.",
-    "The jobs running now with their progress, then the latest finished ones, failures with the reason Cronicle gives.": "Les jobs en cours avec leur avancement, puis les derniers terminés, les échecs avec la raison donnée par Cronicle."
+    "The jobs running now with their progress, then the latest finished ones, failures with the reason Cronicle gives.": "Les jobs en cours avec leur avancement, puis les derniers terminés, les échecs avec la raison donnée par Cronicle.",
+    "Empty for public images and for a registry without sign-in.": "Vide pour les images publiques et pour un registre sans connexion.",
+    "How many repositories the registry lists and how many tags the first of them carry.": "Combien de dépôts le registre liste et combien de tags portent les premiers.",
+    "Name contains": "Le nom contient",
+    "Newest versions": "Versions les plus récentes",
+    "Of a robot account or a read-only access token. Public images on ghcr.io and Docker Hub need none.": "D'un compte robot ou d'un jeton d'accès en lecture seule. Les images publiques de ghcr.io et Docker Hub n'en demandent pas.",
+    "One per line, as name or name:tag. With a tag the card says whether a newer one exists with the same ending, such as -alpine. At most ten.": "Une par ligne, sous la forme nom ou nom:tag. Avec un tag, la carte dit s'il en existe un plus récent avec la même terminaison, par exemple -alpine. Dix au plus.",
+    "Only repositories whose name has this in it.": "Seulement les dépôts dont le nom contient ceci.",
+    "Password or token": "Mot de passe ou jeton",
+    "Registry overview": "Aperçu du registre",
+    "Repositories and tags of a container registry, and the newest version of the images you run. zot, Distribution, Harbor, ghcr.io and Docker Hub.": "Dépôts et tags d'un registre de conteneurs, et la version la plus récente des images que vous utilisez. zot, Distribution, Harbor, ghcr.io et Docker Hub.",
+    "The newest version of each image you name, how old it is, and whether it is newer than the tag you run.": "La version la plus récente de chaque image indiquée, son ancienneté, et si elle est plus récente que le tag utilisé.",
+    "The registry itself, without /v2: https://ghcr.io, https://registry-1.docker.io, or your own.": "Le registre lui-même, sans /v2 : https://ghcr.io, https://registry-1.docker.io ou le vôtre.",
+    "The repositories the registry lists, with how many tags each has and its newest version.": "Les dépôts listés par le registre, avec le nombre de tags de chacun et sa version la plus récente."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -3601,6 +3614,9 @@
     "Completed today": "Terminés aujourd'hui",
     "On demand": "À la demande",
     "Every hour": "Chaque heure",
-    "Every minute": "Chaque minute"
+    "Every minute": "Chaque minute",
+    "Behind": "En retard",
+    "No version tag": "Aucun tag de version",
+    "No tags": "Aucun tag"
   }
 }
