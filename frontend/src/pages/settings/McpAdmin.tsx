@@ -82,7 +82,9 @@ function Panel() {
                   />
                   <span className="min-w-0">
                     <code className="num text-xs">{tool.name}</code>
-                    <span className="block text-[11.5px] text-muted">{tool.description}</span>
+                    <span className="block text-[11.5px] text-muted line-clamp-2" title={tool.description}>
+                      {tool.description}
+                    </span>
                   </span>
                 </label>
               </li>

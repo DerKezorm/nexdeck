@@ -48,7 +48,10 @@ export function RightsEditor({ keyRow, tools, admin, onSaved }: { keyRow: McpKey
                   <li key={tool.name} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <div className="min-w-0 flex-[1_1_220px]">
                       <code className="num text-xs">{tool.name}</code>
-                      <p className="text-[11.5px] text-muted">{tool.description}</p>
+                      {/* The server's descriptions are written for the program and run long; two lines here, the whole text on hover. */}
+                      <p className="text-[11.5px] text-muted line-clamp-2" title={tool.description}>
+                        {tool.description}
+                      </p>
                       {setting.reason && (
                         <p className="text-[11.5px] text-warn" data-testid={`why-${tool.name}`}>
                           {t(`mcp.rights.why.${setting.reason}`)}
