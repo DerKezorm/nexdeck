@@ -2250,7 +2250,15 @@
     "Only if the device has a sign-in set.": "Solo si el dispositivo tiene un inicio de sesión configurado.",
     "The power all measuring channels of the device draw now, with the energy they have used, the temperature and the Wi-Fi signal.": "La potencia que consumen ahora todos los canales con medición del dispositivo, con la energía usada, la temperatura y la señal Wi-Fi.",
     "Switches": "Interruptores",
-    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Cada relé del dispositivo, encendido o apagado con la potencia que consume, y un botón para conmutarlo tras una pregunta."
+    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Cada relé del dispositivo, encendido o apagado con la potencia que consume, y un botón para conmutarlo tras una pregunta.",
+    "Settings > API on the site. The permission to read statistics is the only one it needs.": "Ajustes > API del sitio. El permiso para leer estadísticas es el único que hace falta.",
+    "The address of the site in GoatCounter, the one it answers to; with GoatCounter's own hosting that is https://yourcode.goatcounter.com.": "La dirección del sitio en GoatCounter, la que responde; con el alojamiento de GoatCounter es https://sucodigo.goatcounter.com.",
+    "The pages with the most visits in a period.": "Las páginas con más visitas en un periodo.",
+    "Top pages": "Páginas principales",
+    "Top referrers": "Principales orígenes",
+    "Visits to your sites, the pages people read and where they came from, from GoatCounter.": "Visitas a tus sitios, las páginas que se leen y de dónde vienen, desde GoatCounter.",
+    "Visits today, yesterday and over the last week and month.": "Visitas de hoy, de ayer y de la última semana y del último mes.",
+    "Where visits came from in a period, and how many arrived without one.": "De dónde vinieron las visitas en un periodo y cuántas llegaron sin origen."
   },
   "labels": {
     "Private resources": "Recursos privados",

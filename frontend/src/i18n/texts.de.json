@@ -2250,7 +2250,15 @@
     "Only if the device has a sign-in set.": "Nur nötig, wenn das Gerät eine Anmeldung eingerichtet hat.",
     "The power all measuring channels of the device draw now, with the energy they have used, the temperature and the Wi-Fi signal.": "Die Leistung, die alle messenden Kanäle des Geräts gerade ziehen, mit der verbrauchten Energie, der Temperatur und dem WLAN-Signal.",
     "Switches": "Schalter",
-    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Jedes Relais des Geräts, an oder aus mit der Leistung, die es zieht, und ein Knopf zum Schalten nach einer Rückfrage."
+    "Each relay of the device, on or off with the power it draws, and a button to switch it after a question.": "Jedes Relais des Geräts, an oder aus mit der Leistung, die es zieht, und ein Knopf zum Schalten nach einer Rückfrage.",
+    "Settings > API on the site. The permission to read statistics is the only one it needs.": "Einstellungen > API der Site. Die Berechtigung, Statistiken zu lesen, ist die einzige, die gebraucht wird.",
+    "The address of the site in GoatCounter, the one it answers to; with GoatCounter's own hosting that is https://yourcode.goatcounter.com.": "Die Adresse der Site in GoatCounter, unter der es antwortet; beim Hosting von GoatCounter selbst ist das https://deincode.goatcounter.com.",
+    "The pages with the most visits in a period.": "Die Seiten mit den meisten Besuchen in einem Zeitraum.",
+    "Top pages": "Beliebteste Seiten",
+    "Top referrers": "Wichtigste Herkunft",
+    "Visits to your sites, the pages people read and where they came from, from GoatCounter.": "Besuche auf deinen Seiten, die gelesenen Seiten und woher die Besucher kamen, aus GoatCounter.",
+    "Visits today, yesterday and over the last week and month.": "Besuche heute, gestern und in der letzten Woche und im letzten Monat.",
+    "Where visits came from in a period, and how many arrived without one.": "Woher die Besuche in einem Zeitraum kamen und wie viele ohne Herkunft ankamen."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
