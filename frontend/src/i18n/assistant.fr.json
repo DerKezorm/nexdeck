@@ -1,5 +1,18 @@
 {
   "assistant": {
+    "mayShareValues": "Puis-je envoyer des valeurs d'exemple de {{integration}} ({{path}}) pour ce brouillon ?",
+    "valuesLeave": "Elles partent chez le fournisseur. Les valeurs peuvent contenir des noms, des adresses ou d'autres données privées.",
+    "valuesStay": "Elles restent sur le réseau local.",
+    "allowValues": "Autoriser pour ce brouillon",
+    "deniedValues": "Aucune valeur n'est envoyée. Je prépare la carte avec les seuls noms et types de champs.",
+    "allowedValuesFollowUp": "Oui, tu peux envoyer des valeurs d'exemple de {{integration}} pour ce brouillon.",
+    "draft": {
+      "open": "Ouvrir dans l'éditeur",
+      "untitled": "Brouillon",
+      "sentValues": "Des valeurs d'exemple du service sont parties, parce que tu l'as autorisé pour cette demande.",
+      "sentNoValues": "Seuls des noms et types de champs du service sont partis chez le fournisseur, aucune valeur.",
+      "keeps": "Le brouillon reste aussi longtemps que cette conversation, {{days}} jours au plus. Rien n'est enregistré avant que tu l'enregistres dans l'éditeur."
+    },
     "new": "Nouvelle",
     "history": "Historique",
     "hello": "Que veux-tu savoir ?",

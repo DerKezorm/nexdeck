@@ -7,7 +7,7 @@ import { problemText } from '../../lib/customCards'
 import { Spinner } from '../../components/ui'
 import { isFresh, useCardAi, type AiProposal } from './ai'
 import { useConnections } from './connections'
-import { DraftPreview } from './DraftPreview'
+import { DraftPreview, DraftSummary } from './DraftPreview'
 import { useCardEditor } from './store'
 
 /** Whether "Ask AI" is on offer: the provider of "Ask nexdeck" is set up (KARTEN-17 AC-1). Loads what it needs once. */
@@ -41,31 +41,6 @@ export function AiButton() {
   )
 }
 
-function Summary({ proposal }: { proposal: AiProposal }) {
-  const { t } = useTranslation()
-  const { summary } = proposal
-  return (
-    <dl className="grid gap-1 text-[13px] min-w-0" data-testid="card-ai-summary">
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.connection')}</dt>
-        <dd className="break-words">{summary.connection_kind ?? t('editor.ai.summary.none')}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.path')}</dt>
-        <dd className="font-mono break-all">{summary.path ?? t('editor.ai.summary.none')}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.form')}</dt>
-        <dd>{t(`editor.ai.summary.forms.${summary.form}`, { defaultValue: summary.form })}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.buttons')}</dt>
-        <dd>{summary.buttons ? t('editor.ai.summary.withButtons') : t('editor.ai.summary.readOnly')}</dd>
-      </div>
-    </dl>
-  )
-}
-
 function Proposed({ proposal }: { proposal: AiProposal }) {
   const { t } = useTranslation()
   return (
@@ -77,7 +52,7 @@ function Proposed({ proposal }: { proposal: AiProposal }) {
             <DraftPreview yaml={proposal.yaml} />
           </div>
           <div className="min-w-0 sm:flex-1 grid gap-2 content-start">
-            <Summary proposal={proposal} />
+            <DraftSummary summary={proposal.summary} />
           </div>
         </div>
       ) : (

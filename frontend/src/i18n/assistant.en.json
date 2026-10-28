@@ -1,5 +1,18 @@
 {
   "assistant": {
+    "mayShareValues": "May I send sample values of {{integration}} ({{path}}) along for this one draft?",
+    "valuesLeave": "They go to the provider. Values can hold names, addresses or other private details.",
+    "valuesStay": "They stay on the home network.",
+    "allowValues": "Allow for this draft",
+    "deniedValues": "No values go along. I draft the card from field names and types only.",
+    "allowedValuesFollowUp": "Yes, you may send sample values of {{integration}} for this draft.",
+    "draft": {
+      "open": "Open in editor",
+      "untitled": "Draft",
+      "sentValues": "Sample values of the service went along, because you allowed it for this request.",
+      "sentNoValues": "Only field names and types of the service went to the provider, no values.",
+      "keeps": "The draft stays as long as this conversation, {{days}} days at most. Nothing is saved before you save it in the editor."
+    },
     "new": "New",
     "history": "History",
     "hello": "What do you want to know?",

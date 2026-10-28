@@ -1,5 +1,18 @@
 {
   "assistant": {
+    "mayShareValues": "Posso inviare valori di esempio di {{integration}} ({{path}}) per questa bozza?",
+    "valuesLeave": "Vanno al fornitore. I valori possono contenere nomi, indirizzi o altri dati privati.",
+    "valuesStay": "Restano nella rete locale.",
+    "allowValues": "Consenti per questa bozza",
+    "deniedValues": "Nessun valore viene inviato. Preparo la scheda solo con nomi e tipi dei campi.",
+    "allowedValuesFollowUp": "Sì, puoi inviare valori di esempio di {{integration}} per questa bozza.",
+    "draft": {
+      "open": "Apri nell'editor",
+      "untitled": "Bozza",
+      "sentValues": "Sono partiti valori di esempio del servizio, perché lo hai consentito per questa richiesta.",
+      "sentNoValues": "Al fornitore sono arrivati solo nomi e tipi dei campi del servizio, nessun valore.",
+      "keeps": "La bozza resta quanto questa conversazione, al massimo {{days}} giorni. Non viene salvato nulla finché non salvi nell'editor."
+    },
     "new": "Nuova",
     "history": "Cronologia",
     "hello": "Cosa vuoi sapere?",

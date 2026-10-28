@@ -7,6 +7,7 @@ import { parseCard, readAt } from '../../lib/cardDocument'
 import { pickText, type CardText } from '../../lib/cardText'
 import type { CardForm } from '../../lib/customCards'
 import type { WidgetData, WidgetView } from '../../lib/types'
+import type { AiSummary } from './ai'
 import { pixelsOf, sizesOf } from './Preview'
 
 const FORMS: CardForm[] = ['value', 'stats', 'list', 'posters', 'builder']
@@ -71,5 +72,30 @@ export function DraftPreview({ yaml }: { yaml: string }) {
         )}
       </div>
     </div>
+  )
+}
+
+/** What a draft uses (KARTEN-17 AC-10): the connection, the path, the form, buttons or not. */
+export function DraftSummary({ summary }: { summary: AiSummary }) {
+  const { t } = useTranslation()
+  return (
+    <dl className="grid gap-1 text-[13px] min-w-0" data-testid="card-ai-summary">
+      <div className="flex flex-wrap gap-x-2">
+        <dt className="text-muted">{t('editor.ai.summary.connection')}</dt>
+        <dd className="break-words">{summary.connection_kind ?? t('editor.ai.summary.none')}</dd>
+      </div>
+      <div className="flex flex-wrap gap-x-2">
+        <dt className="text-muted">{t('editor.ai.summary.path')}</dt>
+        <dd className="font-mono break-all">{summary.path ?? t('editor.ai.summary.none')}</dd>
+      </div>
+      <div className="flex flex-wrap gap-x-2">
+        <dt className="text-muted">{t('editor.ai.summary.form')}</dt>
+        <dd>{t(`editor.ai.summary.forms.${summary.form}`, { defaultValue: summary.form })}</dd>
+      </div>
+      <div className="flex flex-wrap gap-x-2">
+        <dt className="text-muted">{t('editor.ai.summary.buttons')}</dt>
+        <dd>{summary.buttons ? t('editor.ai.summary.withButtons') : t('editor.ai.summary.readOnly')}</dd>
+      </div>
+    </dl>
   )
 }

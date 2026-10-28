@@ -1,5 +1,18 @@
 {
   "assistant": {
+    "mayShareValues": "Darf ich für diesen einen Entwurf Beispielwerte von {{integration}} ({{path}}) mitschicken?",
+    "valuesLeave": "Sie gehen an den Anbieter. Werte können Namen, Adressen oder andere private Angaben enthalten.",
+    "valuesStay": "Sie bleiben im Heimnetz.",
+    "allowValues": "Für diesen Entwurf erlauben",
+    "deniedValues": "Es gehen keine Werte mit. Ich entwerfe die Karte nur aus Feldnamen und Typen.",
+    "allowedValuesFollowUp": "Ja, du darfst für diesen Entwurf Beispielwerte von {{integration}} mitschicken.",
+    "draft": {
+      "open": "Im Editor öffnen",
+      "untitled": "Entwurf",
+      "sentValues": "Beispielwerte des Dienstes sind mitgegangen, weil du es für diese Anfrage erlaubt hast.",
+      "sentNoValues": "Nur Feldnamen und Typen des Dienstes sind an den Anbieter gegangen, keine Werte.",
+      "keeps": "Der Entwurf bleibt so lange wie diese Unterhaltung, höchstens {{days}} Tage. Gespeichert wird erst, wenn du im Editor speicherst."
+    },
     "new": "Neu",
     "history": "Verlauf",
     "hello": "Was willst du wissen?",

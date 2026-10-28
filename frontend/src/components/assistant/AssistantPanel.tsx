@@ -8,7 +8,7 @@
  * second time. Logs are read only after "Allow".
  */
 import { ArrowLeft, ArrowUpRight, Lock, Plus, Send, Sparkles, Trash2, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
@@ -20,6 +20,7 @@ import {
   type Citation,
   type ConversationRow,
   type ConversationView,
+  type DraftRef,
   type Permission,
   type Proposal,
   type Reply,
@@ -28,7 +29,12 @@ import {
 import { blocks, dayGroup, type Part } from '../../lib/assistantWords'
 import { useAssistantTexts } from '../../lib/assistantTexts'
 import { focusCard } from '../../lib/focusCard'
+import { useEditorTexts } from '../../pages/cardEditor/editorTexts'
 import { Confirm } from '../ui'
+
+// The little preview of a draft is the editor's own, drawn with its words.
+const DraftPreview = lazy(() => import('../../pages/cardEditor/DraftPreview').then((module) => ({ default: module.DraftPreview })))
+const DraftSummary = lazy(() => import('../../pages/cardEditor/DraftPreview').then((module) => ({ default: module.DraftSummary })))
 
 type Step = 'idle' | 'sure' | 'running' | 'done' | 'failed' | 'cancelled'
 interface Pressed {
@@ -116,25 +122,65 @@ function ProposalBox({ proposal, pressed, onPress }: { proposal: Proposal; press
 
 function PermissionBox({ permission, outside, answered, onAnswer }: { permission: Permission; outside: boolean; answered: 'allowed' | 'denied' | undefined; onAnswer: (allow: boolean) => void }) {
   const { t } = useTranslation()
+  const values = permission.kind === 'values'
   return (
     <div className="mt-2 rounded-xl border border-warn/50 p-3" data-testid="assistant-permission">
       <div className="flex items-center gap-2 text-sm font-semibold">
         <Lock size={14} className="text-warn" />
-        {t('assistant.mayReadLog', { container: permission.container })}
+        {permission.kind === 'values' ? t('assistant.mayShareValues', { integration: permission.integration, path: permission.path }) : t('assistant.mayReadLog', { container: permission.container })}
       </div>
-      <p className="mt-1 text-[12.5px] text-muted">{outside ? t('assistant.logLeaves') : t('assistant.logStays')}</p>
+      <p className="mt-1 text-[12.5px] text-muted">{outside ? t(values ? 'assistant.valuesLeave' : 'assistant.logLeaves') : t(values ? 'assistant.valuesStay' : 'assistant.logStays')}</p>
       {answered ? (
-        <p className="mt-2 text-[12px] text-muted">{answered === 'allowed' ? t('assistant.allowed') : t('assistant.denied')}</p>
+        <p className="mt-2 text-[12px] text-muted">{answered === 'allowed' ? t('assistant.allowed') : t(values ? 'assistant.deniedValues' : 'assistant.denied')}</p>
       ) : (
         <div className="mt-2 flex gap-1.5">
           <button type="button" className="btn btn-accent" onClick={() => onAnswer(true)}>
-            {t('assistant.allow')}
+            {t(values ? 'assistant.allowValues' : 'assistant.allow')}
           </button>
           <button type="button" className="btn" onClick={() => onAnswer(false)}>
             {t('assistant.deny')}
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+/** The words of the draft's preview and summary are the editor's; until they are there the box shows only the chip. */
+function DraftBox({ draft, onOpen }: { draft: DraftRef; onOpen: () => void }) {
+  const { t } = useTranslation()
+  const ready = useEditorTexts()
+  const [yaml, setYaml] = useState<string | null>(null)
+  useEffect(() => {
+    let gone = false
+    get<{ yaml: string }>(`/assistant/drafts/${draft.id}`)
+      .then((found) => {
+        if (!gone) setYaml(found.yaml)
+      })
+      .catch(() => undefined)
+    return () => {
+      gone = true
+    }
+  }, [draft.id])
+  return (
+    <div className="mt-2 rounded-xl border border-line-strong bg-surface-hover p-3" data-testid="assistant-draft">
+      <div className="text-sm font-semibold break-words">{draft.name || t('assistant.draft.untitled')}</div>
+      {ready && (
+        <Suspense fallback={null}>
+          <div className="mt-2">{yaml !== null ? <DraftPreview yaml={yaml} /> : null}</div>
+          <div className="mt-2">
+            <DraftSummary summary={draft.summary} />
+          </div>
+        </Suspense>
+      )}
+      <p className="mt-2 text-[12px] text-muted">{draft.sent.values ? t('assistant.draft.sentValues') : t('assistant.draft.sentNoValues')}</p>
+      <p className="mt-1 text-[12px] text-muted">{t('assistant.draft.keeps', { days: draft.keep_days })}</p>
+      <div className="mt-2">
+        <button type="button" className="btn btn-accent" onClick={onOpen}>
+          <ArrowUpRight size={14} />
+          {t('assistant.draft.open')}
+        </button>
+      </div>
     </div>
   )
 }
@@ -266,6 +312,12 @@ function Panel({ open }: { open: boolean }) {
     navigate(`/b/${target.board}/${target.page}`, { state: { focus: target.widget } })
   }
 
+  const openDraft = (draft: DraftRef) => {
+    // On a phone the chat covers the page; it steps aside for the editor. The address is built here from the id.
+    if (window.matchMedia?.('(max-width: 639px)').matches) setOpen(false)
+    navigate(`/system/custom-cards/new?draft=${draft.id}`)
+  }
+
   const press = async (key: string, proposal: Proposal, next: Step) => {
     setPressed((current) => ({ ...current, [key]: { step: next } }))
     if (next !== 'running') return
@@ -282,7 +334,7 @@ function Panel({ open }: { open: boolean }) {
     if (!allow || conversation === null) return
     try {
       await post(`/assistant/conversations/${conversation}/allow`, { grant: permission.grant })
-      await send(t('assistant.allowedFollowUp', { container: permission.container }))
+      await send(permission.kind === 'values' ? t('assistant.allowedValuesFollowUp', { integration: permission.integration }) : t('assistant.allowedFollowUp', { container: permission.container }))
     } catch (error) {
       setFailure(error instanceof ApiError ? error.message : t('errors.network'))
     }
@@ -387,6 +439,9 @@ function Panel({ open }: { open: boolean }) {
                     const key = `${index}-${at}`
                     return <ProposalBox key={key} proposal={proposal} pressed={pressed[key] ?? { step: 'idle' }} onPress={(next) => void press(key, proposal, next)} />
                   })}
+                  {(turn.drafts ?? []).map((draft) => (
+                    <DraftBox key={draft.id} draft={draft} onOpen={() => openDraft(draft)} />
+                  ))}
                   {turn.permissions.map((permission, at) => {
                     const key = `${index}-${at}`
                     return <PermissionBox key={key} permission={permission} outside={outside} answered={answers[key]} onAnswer={(allow) => void answer(key, permission, allow)} />

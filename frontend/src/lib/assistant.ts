@@ -45,11 +45,20 @@ export interface Proposal {
   impact: Fact[]
 }
 
-export interface Permission {
-  kind: 'log'
-  card_id: number
-  container: string
-  grant: string
+/** A question the chat may not answer for itself: a log (roadmap M3) or the sample values of a service (KARTEN-18). */
+export type Permission =
+  | { kind: 'log'; card_id: number; container: string; grant: string }
+  | { kind: 'values'; integration_id: number; integration: string; path: string; grant: string }
+
+/** A card the chat drafted; the editor opens it, nothing is saved before the administrator saves it there. */
+export interface DraftRef {
+  id: number
+  name: string
+  form: string
+  summary: { connection_kind: string | null; path: string | null; form: string; buttons: boolean }
+  sent: { values: boolean }
+  keep_days: number
+  url: string
 }
 
 export interface Reply {
@@ -58,6 +67,8 @@ export interface Reply {
   citations: Citation[]
   proposals: Proposal[]
   permissions: Permission[]
+  /** Absent in conversations from before drafts. */
+  drafts?: DraftRef[]
 }
 
 export type Turn = ({ me: true; text: string } | ({ me: false } & Reply))

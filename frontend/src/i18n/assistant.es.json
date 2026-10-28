@@ -1,5 +1,18 @@
 {
   "assistant": {
+    "mayShareValues": "¿Puedo enviar valores de ejemplo de {{integration}} ({{path}}) para este borrador?",
+    "valuesLeave": "Van al proveedor. Los valores pueden contener nombres, direcciones u otros datos privados.",
+    "valuesStay": "Se quedan en la red local.",
+    "allowValues": "Permitir para este borrador",
+    "deniedValues": "No se envía ningún valor. Preparo la tarjeta solo con nombres y tipos de campos.",
+    "allowedValuesFollowUp": "Sí, puedes enviar valores de ejemplo de {{integration}} para este borrador.",
+    "draft": {
+      "open": "Abrir en el editor",
+      "untitled": "Borrador",
+      "sentValues": "Se enviaron valores de ejemplo del servicio, porque lo permitiste para esta petición.",
+      "sentNoValues": "Al proveedor solo llegaron nombres y tipos de campos del servicio, ningún valor.",
+      "keeps": "El borrador dura lo que esta conversación, {{days}} días como máximo. No se guarda nada hasta que lo guardes en el editor."
+    },
     "new": "Nueva",
     "history": "Historial",
     "hello": "¿Qué quieres saber?",
