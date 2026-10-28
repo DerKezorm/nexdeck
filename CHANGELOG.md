@@ -5,8 +5,21 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Your boards for MCP programs.** nexdeck speaks the Model Context Protocol at `/api/mcp`, so Claude Code, claude.ai or another MCP program can read what needs a look, find cards, read a card, the chronicle and the history of a number, and press the buttons cards offer. Off until an administrator switches it on under System, AI from outside (MCP), where the highest level, connectors and tools blocked for everybody are set too, and every key of every account can be revoked. See [docs/mcp.md](docs/mcp.md).
+- **Keys per account.** Under My settings, AI from outside (MCP), every account that is not a guest makes keys of its own: a name, the level Read or Read and act, an end after 30, 90 or 365 days or none, and all boards the account may see or only some. A key acts as its account and never sees more; a card it may not see answers like one that does not exist. The key is shown once, with a line for Claude Code and one as JSON; nexdeck keeps only its hash. At most 20 keys and connectors per account. A new password, a disabled account, a guest role or a second factor still owed stops them, and the log masks every key.
+- **Rights per tool.** Each key sets Allow, Ask me first or Deny for every tool. Reading is allowed out of the box, pressing asks, and the administrators' tools (diagnosis, container logs) are denied until a key of an administrator allows them. Reading tools are never asked for. A denied or blocked tool is missing from the list and answers like one that does not exist.
+- **Presses wait for your answer.** A press that asks, and every dangerous button even where pressing is allowed, becomes a request in the bell, with Allow and Decline, and a page of its own with card, board, row, button, parameters and what it would hit; a channel can bring it as a message ("A program asks to press a button"). A dangerous button needs a second yes. Allow runs exactly what was asked, with the rights as they stand at that moment. A request runs out after ten minutes, and the program learns what came of it with `request_status`. Every press is in the action log and the chronicle with the key's name and who allowed it.
+- **Connectors over OAuth.** With connectors allowed, a program needs only the address: it registers itself, the account signs in on a consent page, picks level and boards, and the program gets a key of its own in the same list. PKCE with S256, access tokens for an hour, refresh tokens for 30 days that change with every refresh and end the whole connector when a used one comes back, return addresses only over HTTPS or to the own machine, and registration limited per sender.
+
+### Changed
+
+- **The bell counts on every page.** Only the live stream of a board brought new notices, so on the settings, System and every other page without a board the number stood still. Such a page now keeps a stream of its own for the bell, and the notices are read once whenever a stream connects, so a reload no longer shows 0 until the bell is opened.
+
 ### Fixed
 
+- **The foot of the bell on a narrow drawer and a phone.** Longer labels, such as the German ones, broke inside their buttons or did not fit them; now the row of buttons wraps and each label stays on one line.
 - **The chronicle showed the card lines of another board.** When a connection is used on two boards and an account may open only one of them, the chronicle also listed the lines about the cards of the other board, because those lines carry the connection too. A line about a card now reaches an account only through the card's own board.
 
 ## 0.51.0 (2026-10-28)
