@@ -545,6 +545,9 @@ def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
         raise error("definitions_admin_only", "Only an administrator can create the custom cards and own connections a board file carries.", status.HTTP_403_FORBIDDEN)
     outcome = None
     report: dict[str, list[str]] = {"created": [], "replaced": [], "same": [], "kept": []}
+    # ⚠️ Read before the commit: once the board is in, an error here was a 500 for a board that was made, and asking
+    # again made a second one.
+    skipped = board_definitions.skipped(body.yaml_text) if body.definitions == "skip" else []
     try:
         with ExitStack() as held:
             if body.definitions == "create":
@@ -576,7 +579,7 @@ def import_board(body: ImportBody, user: MemberUser, db: DbSession) -> dict:
         collector.schedule(widget_id)
     logger.info("Board %r imported by %s with %d card(s).", board.name, user.username, len(cards))
     view = board_view(db, board, "owner")
-    view["definitions"] = {**report, "skipped": board_definitions.skipped(body.yaml_text) if body.definitions == "skip" else []}
+    view["definitions"] = {**report, "skipped": skipped}
     return view
 
 

@@ -154,8 +154,10 @@ def parse(text: str, limit: int = schema.MAX_DEFINITION) -> tuple[dict[str, Any]
                 )
             ]
         )
-    loader = _Loader(text)
     try:
+        # ⚠️ Inside the ``try``: the reader refuses a control character (U+0001) as soon as it is made, with an error
+        # that is not a ``MarkedYAMLError``. Outside, it was a 500 on every route that reads a definition.
+        loader = _Loader(text)
         try:
             node = loader.get_single_node()
             if node is None:
@@ -171,6 +173,10 @@ def parse(text: str, limit: int = schema.MAX_DEFINITION) -> tuple[dict[str, Any]
         mark = failure.problem_mark or failure.context_mark
         reason = (failure.problem or failure.context or "the text is not valid YAML").strip()
         line = mark.line + 1 if mark else None
+        raise CardInvalid([Problem("card_yaml", f"The YAML cannot be read: {reason}.", "", line, {"reason": reason})]) from failure
+    except yaml.reader.ReaderError as failure:
+        reason = f"the character U+{failure.character:04X} cannot stand in a definition" if isinstance(failure.character, int) else "a character cannot stand in a definition"
+        line = text.count("\n", 0, failure.position) + 1 if isinstance(failure.position, int) else None
         raise CardInvalid([Problem("card_yaml", f"The YAML cannot be read: {reason}.", "", line, {"reason": reason})]) from failure
     except RecursionError as failure:
         raise CardInvalid([Problem("card_too_deep", "The definition is nested too deeply.")]) from failure

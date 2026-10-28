@@ -171,7 +171,7 @@ def skipped(text: str) -> list[str]:
     for _offset, part in parts:
         try:
             data, _lines = load.parse(part, 200_000)
-        except load.CardInvalid:
+        except Exception:  # noqa: BLE001 - a document that cannot be read is not named; the import has no say on it
             continue
         key = data.get("slug") if "nexdeck-card" in data else data.get("short")
         if key:
