@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **The chronicle showed the card lines of another board.** When a connection is used on two boards and an account may open only one of them, the chronicle also listed the lines about the cards of the other board, because those lines carry the connection too. A line about a card now reaches an account only through the card's own board.
+
 ## 0.51.0 (2026-10-28)
 
 ### Added
