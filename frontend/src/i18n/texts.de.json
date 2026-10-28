@@ -2286,7 +2286,12 @@
     "The memos written last, with their tags.": "Die zuletzt geschriebenen Memos, mit ihren Tags.",
     "The unticked boxes of your task lists, with the memo they stand in.": "Die offenen Kästchen deiner Aufgabenlisten, mit dem Memo, in dem sie stehen.",
     "No memos yet.": "Noch keine Memos.",
-    "No open tasks.": "Keine offenen Aufgaben."
+    "No open tasks.": "Keine offenen Aufgaben.",
+    "Favourites": "Favoriten",
+    "How many bookmarks Readeck holds, unread, favourites and archived, and the ones saved last.": "Wie viele Lesezeichen Readeck hat, ungelesene, Favoriten und archivierte, und die zuletzt gespeicherten.",
+    "How many bookmarks there are, with those unread, favourites and archived.": "Wie viele Lesezeichen es gibt, mit den ungelesenen, den Favoriten und den archivierten.",
+    "Settings > API Tokens > Create a new API token.": "Einstellungen > API Tokens > Neuen API-Token erstellen.",
+    "The bookmarks saved last, with their site and reading time.": "Die zuletzt gespeicherten Lesezeichen, mit ihrer Seite und Lesezeit."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
