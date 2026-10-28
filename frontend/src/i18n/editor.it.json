@@ -1,5 +1,9 @@
 {
   "editor": {
+    "chatDraft": {
+      "gone": "Questa bozza della chat non c'è più. Le bozze restano finché dura la loro conversazione, al massimo 30 giorni. Parti con una scheda nuova.",
+      "failed": "Non è stato possibile caricare la bozza della chat. Parti con una scheda nuova."
+    },
     "ai": {
       "button": "Chiedi all'IA",
       "title": "Chiedi all'IA",

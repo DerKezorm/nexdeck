@@ -1,5 +1,9 @@
 {
   "editor": {
+    "chatDraft": {
+      "gone": "Ce brouillon du chat n'existe plus. Les brouillons restent aussi longtemps que leur conversation, 30 jours au plus. Tu commences avec une nouvelle carte.",
+      "failed": "Le brouillon du chat n'a pas pu être chargé. Tu commences avec une nouvelle carte."
+    },
     "ai": {
       "button": "Demander à l'IA",
       "title": "Demander à l'IA",

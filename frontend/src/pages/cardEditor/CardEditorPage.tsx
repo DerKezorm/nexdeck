@@ -3,11 +3,12 @@
  * administrators only (KARTEN-9 AC-1; the server refuses everyone else as well).
  *
  * A new card begins in the guided way with nothing chosen (U3); a saved one is read with its text and the moment it
- * was last changed. A draft this browser kept is offered before anything is lost (EC-7).
+ * was last changed. A draft this browser kept is offered before anything is lost (EC-7). `?draft=<id>` opens a new card
+ * with the draft the chat made (KARTEN-18 AC-3): nothing is saved before the administrator saves it here.
  */
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { ApiError, get } from '../../api/client'
 import { AppShell } from '../../components/AppShell'
@@ -28,6 +29,10 @@ export function CardEditorPage() {
   const { slug: wanted } = useParams<{ slug?: string }>()
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
   const [offer, setOffer] = useState<CardDraft | null>(null)
+  const [params] = useSearchParams()
+  const chatDraft = wanted ? null : params.get('draft')
+  /** Why the draft of the chat did not open; the editor then begins with a new card. */
+  const [chatTrouble, setChatTrouble] = useState('')
   const admin = user?.role === 'admin'
 
   useEffect(() => {
@@ -35,7 +40,28 @@ export function CardEditorPage() {
     // Just saved as new and moved to its own address: the card on screen is this one already.
     if (wanted && useCardEditor.getState().slug === wanted && phase.kind === 'editing') return
     let gone = false
-    setOffer(readDraft(wanted ?? null))
+    setChatTrouble('')
+    // The draft of the chat is the card on screen; an older draft of this browser would only be in its way.
+    setOffer(chatDraft ? null : readDraft(wanted ?? null))
+    if (!wanted && chatDraft) {
+      setPhase({ kind: 'loading' })
+      get<{ yaml: string }>(`/assistant/drafts/${encodeURIComponent(chatDraft)}`)
+        .then((found) => {
+          if (gone) return
+          useCardEditor.getState().open({ slug: null, text: found.yaml, base: null, saved: null })
+          useCardEditor.setState({ guidedStep: 'finish' })
+          setPhase({ kind: 'editing' })
+        })
+        .catch((failure) => {
+          if (gone) return
+          useCardEditor.getState().open({ slug: null, text: NEW_CARD, base: null, saved: null })
+          setChatTrouble(failure instanceof ApiError && failure.status === 404 ? t('editor.chatDraft.gone') : t('editor.chatDraft.failed'))
+          setPhase({ kind: 'editing' })
+        })
+      return () => {
+        gone = true
+      }
+    }
     if (!wanted) {
       useCardEditor.getState().open({ slug: null, text: NEW_CARD, base: null, saved: null })
       setPhase({ kind: 'editing' })
@@ -64,7 +90,7 @@ export function CardEditorPage() {
     }
     // The phase is read only to notice the move after a first save.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wanted, admin])
+  }, [wanted, admin, chatDraft])
 
   if (!admin) return <Navigate to="/system" replace />
 
@@ -86,7 +112,16 @@ export function CardEditorPage() {
       </div>
     )
   } else {
-    body = <EditorFrame offer={offer} onOfferDone={() => setOffer(null)} />
+    body = (
+      <>
+        {chatTrouble && (
+          <p className="max-w-7xl mx-auto mt-3 px-3 sm:px-4 text-sm text-warn break-words hyphens-auto" role="status" data-testid="card-chat-draft-trouble">
+            {chatTrouble}
+          </p>
+        )}
+        <EditorFrame offer={offer} onOfferDone={() => setOffer(null)} />
+      </>
+    )
   }
 
   return <AppShell title={t('cards.title')}>{body}</AppShell>

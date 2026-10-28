@@ -1,5 +1,9 @@
 {
   "editor": {
+    "chatDraft": {
+      "gone": "Este borrador del chat ya no existe. Los borradores duran lo que su conversación, 30 días como máximo. Empiezas con una tarjeta nueva.",
+      "failed": "No se pudo cargar el borrador del chat. Empiezas con una tarjeta nueva."
+    },
     "ai": {
       "button": "Preguntar a la IA",
       "title": "Preguntar a la IA",

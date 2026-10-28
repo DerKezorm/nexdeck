@@ -1,5 +1,9 @@
 {
   "editor": {
+    "chatDraft": {
+      "gone": "Dieser Entwurf aus dem Chat ist nicht mehr da. Entwürfe bleiben so lange wie ihre Unterhaltung, höchstens 30 Tage. Du beginnst mit einer neuen Karte.",
+      "failed": "Der Entwurf aus dem Chat konnte nicht geladen werden. Du beginnst mit einer neuen Karte."
+    },
     "ai": {
       "button": "KI fragen",
       "title": "KI fragen",
