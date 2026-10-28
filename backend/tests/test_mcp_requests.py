@@ -9,6 +9,8 @@ it was asked with and with the rights as they stand at that moment.
 from __future__ import annotations
 
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 
 import pytest
@@ -296,6 +298,89 @@ def test_only_the_account_decides_and_only_the_key_that_asked_learns_the_answer(
     assert client.get(f"/api/v1/mcp/requests/{number}").status_code == 404
     assert client.get("/api/v1/mcp/requests").json() == []
     assert _presses() == []
+
+
+def _answer_together(lab: dict, monkeypatch: pytest.MonkeyPatch, paths: list[str]) -> list[int]:
+    """Send these answers at one moment, each from a browser of its own, and return their status codes.
+
+    Every request has read the row as "waiting" by the time any of them takes it: the barrier holds the
+    first one at the door of ``claim`` until the second stands there too. Only a claim that decides in one
+    step lets exactly one through.
+    """
+    original = mcp.claim
+    gate = threading.Barrier(len(paths), timeout=15)
+
+    def claim_together(db, row, status, user):  # noqa: ANN001, ANN202
+        gate.wait()
+        return original(db, row, status, user)
+
+    monkeypatch.setattr(mcp, "claim", claim_together)
+    browsers = []
+    for _ in paths:
+        other = TestClient(lab["client"].app)
+        other.cookies.update(lab["client"].cookies)
+        browsers.append(other)
+    with ThreadPoolExecutor(max_workers=len(paths)) as pool:
+        futures = [pool.submit(browser.post, path, headers=CSRF) for browser, path in zip(browsers, paths, strict=True)]
+        return sorted(future.result().status_code for future in futures)
+
+
+def test_two_approvals_at_the_same_moment_press_the_button_once(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    _key, token = make_key(lab["client"], "act")
+    number = _ask(lab, token)
+    path = f"/api/v1/mcp/requests/{number}/approve"
+    assert _answer_together(lab, monkeypatch, [path, path]) == [200, 409]
+    assert len(_presses()) == 1
+    assert _requests()[0].status == "approved"
+
+
+def test_an_approval_and_a_decline_at_the_same_moment_decide_once(lab: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    _key, token = make_key(lab["client"], "act")
+    number = _ask(lab, token)
+    base = f"/api/v1/mcp/requests/{number}"
+    assert _answer_together(lab, monkeypatch, [f"{base}/approve", f"{base}/decline"]) == [200, 409]
+    row = _requests()[0]
+    # Whichever was first stands, and the button ran if and only if it was the approval.
+    assert (row.status, len(_presses())) in (("approved", 1), ("declined", 0))
+
+
+def test_the_ceiling_lowered_between_asking_and_allowing_stops_the_press(lab: dict) -> None:
+    client = lab["client"]
+    _key, token = make_key(client, "act")
+    number = _ask(lab, token)
+    switch(client, max_level="read")
+    approved = client.post(f"/api/v1/mcp/requests/{number}/approve", headers=CSRF)
+    assert approved.status_code == 200 and approved.json()["status"] == "failed", approved.text
+    assert "no longer possible" in approved.json()["result"]["error"]
+    assert _presses() == []
+
+
+def _caller_of(key_id: int):  # noqa: ANN202
+    with db_session() as db:
+        return mcp.caller_of_key(db, key_id)
+
+
+def test_the_arguments_of_a_request_hold_at_most_64_kb(lab: dict) -> None:
+    key, _token = make_key(lab["client"], "act")
+    caller = _caller_of(key["id"])
+    base = {"card_id": 1, "action": "restart", "pad": ""}
+    room = mcp.MAX_REQUEST_BYTES - len(mcp.canonical(base).encode("utf-8"))
+    assert mcp.MAX_REQUEST_BYTES == 64 * 1024
+
+    def ask(arguments: dict) -> None:
+        with db_session() as db:
+            mcp.add_request(db, caller, "press_button", arguments, widget_id=None, card="Host", board="Lab", action="restart",
+                            label="Restart", danger=False, impact=[])
+
+    ask({**base, "pad": "x" * room})
+    assert len(_requests()) == 1
+    with pytest.raises(mcp.McpError) as refused:
+        ask({**base, "pad": "x" * (room + 1)})
+    assert refused.value.status == 413 and refused.value.code == "too_large"
+    assert len(_requests()) == 1
+    # Bytes, not characters: a character of two bytes counts for two.
+    with pytest.raises(mcp.McpError):
+        ask({**base, "pad": "é" * (room // 2 + 1)})
 
 
 def test_a_guest_cannot_approve_but_may_say_no(lab: dict) -> None:

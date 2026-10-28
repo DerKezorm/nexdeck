@@ -100,6 +100,20 @@ async def handle(db: Any, caller: mcp.Caller, message: Any) -> dict[str, Any] | 
     return _rpc_error(message_id, -32601, "Method not found.")
 
 
+async def _read(request: Request) -> bytes | None:
+    """The body, or None past ``MAX_BODY``.
+
+    ⚠️ Read in blocks and given up at the limit. ``request.body()`` takes all of it into memory first, and a
+    body sent in chunks has no length to check before: a key holder could make the server hold any amount.
+    """
+    taken = bytearray()
+    async for block in request.stream():
+        taken += block
+        if len(taken) > MAX_BODY:
+            return None
+    return bytes(taken)
+
+
 @router.post("/api/mcp", summary="MCP (JSON-RPC over HTTP) with a key in Authorization: Bearer")
 async def endpoint(request: Request) -> Response:
     if request.headers.get("origin"):
@@ -120,8 +134,8 @@ async def endpoint(request: Request) -> Response:
         asked = request.headers.get("mcp-protocol-version")
         if asked is not None and asked not in PROTOCOL_VERSIONS:
             return _refuse(status.HTTP_400_BAD_REQUEST, "protocol_version", "This MCP protocol version is not spoken here.")
-        body = await request.body()
-        if len(body) > MAX_BODY:
+        body = await _read(request)
+        if body is None:
             return _refuse(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "too_large", "One message holds at most 1 MB.")
         try:
             message = json.loads(body)
@@ -134,9 +148,12 @@ async def endpoint(request: Request) -> Response:
     return JSONResponse(answer)
 
 
-@router.get("/api/mcp", include_in_schema=False)
-def no_stream() -> Response:
-    # No server-sent stream: every answer comes with its request.
+@router.api_route("/api/mcp", methods=["GET", "PUT", "PATCH", "DELETE"], include_in_schema=False)
+def no_stream(db: DbSession) -> Response:
+    # No server-sent stream and no session to end: every answer comes with its request. But with MCP off this
+    # address does not exist for anybody, not even to say which method it would take.
+    if not mcp.allowed(db):
+        return _refuse(status.HTTP_404_NOT_FOUND, "not_found", "There is no such address.")
     return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, headers={"Allow": "POST"})
 
 

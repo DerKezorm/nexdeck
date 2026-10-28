@@ -50,7 +50,10 @@ def test_initialize_ping_and_a_notification(ready: TestClient) -> None:
 
 def test_no_stream_and_no_strange_versions_or_bodies(ready: TestClient) -> None:
     _key, token = make_key(ready)
-    assert ready.get("/api/mcp").status_code == 405
+    stream = ready.get("/api/mcp")
+    assert stream.status_code == 405 and stream.headers["allow"] == "POST"
+    for verb in ("put", "patch", "delete"):
+        assert getattr(ready, verb)("/api/mcp").status_code == 405, verb
     refused = rpc(ready, token, "ping", headers={"MCP-Protocol-Version": "2023-01-01"})
     assert refused.status_code == 400 and refused.json()["detail"]["code"] == "protocol_version"
     assert rpc(ready, token, "ping", headers={"MCP-Protocol-Version": "2025-06-18"}).status_code == 200
@@ -60,6 +63,65 @@ def test_no_stream_and_no_strange_versions_or_bodies(ready: TestClient) -> None:
     assert deep.status_code == 400
     batch = ready.post("/api/mcp", content='[{"jsonrpc": "2.0", "id": 1, "method": "ping"}]', headers={"Authorization": f"Bearer {token}"})
     assert batch.json()["error"]["code"] == -32600
+
+
+def _padded(size: int) -> bytes:
+    """A valid message of exactly ``size`` bytes: spaces after the JSON are whitespace."""
+    message = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
+    return message + b" " * (size - len(message))
+
+
+def test_a_message_may_weigh_one_megabyte_and_not_a_byte_more(ready: TestClient) -> None:
+    from app.routers.mcp import MAX_BODY
+
+    assert MAX_BODY == 1024 * 1024
+    _key, token = make_key(ready)
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    fits = ready.post("/api/mcp", content=_padded(MAX_BODY), headers=headers)
+    assert fits.status_code == 200 and fits.json()["result"] == {}
+    over = ready.post("/api/mcp", content=_padded(MAX_BODY + 1), headers=headers)
+    assert over.status_code == 413 and over.json()["detail"]["code"] == "too_large"
+
+
+def test_a_body_without_a_length_is_weighed_too(ready: TestClient) -> None:
+    """Sent in chunks there is no Content-Length to look at before the body is read."""
+    from app.routers.mcp import MAX_BODY
+
+    _key, token = make_key(ready)
+
+    def chunks(total: int):  # noqa: ANN202
+        sent = 0
+        while sent < total:
+            piece = min(64 * 1024, total - sent)
+            yield b" " * piece
+            sent += piece
+
+    headers = {"Authorization": f"Bearer {token}"}
+    over = ready.post("/api/mcp", content=chunks(MAX_BODY + 1), headers=headers)
+    assert over.status_code == 413 and over.json()["detail"]["code"] == "too_large"
+    fits = ready.post("/api/mcp", content=chunks(MAX_BODY - 5000), headers=headers)
+    assert fits.status_code == 400 and fits.json()["error"]["code"] == -32700, "weighed and let through: only spaces is no message"
+
+
+def test_the_body_is_given_up_at_the_limit_and_not_taken_whole_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ ``request.body()`` holds all of it in memory before anyone can count it."""
+    import asyncio
+
+    from app.routers import mcp as router
+
+    taken: list[int] = []
+
+    class Request:
+        async def stream(self):  # noqa: ANN202
+            for _ in range(100):
+                taken.append(1)
+                yield b"x" * (256 * 1024)
+
+        async def body(self) -> bytes:
+            raise AssertionError("the whole body was taken")
+
+    assert asyncio.run(router._read(Request())) is None  # type: ignore[arg-type]
+    assert len(taken) == 5, "stops at the block that took it past 1 MB"
 
 
 # -- the walls, in their order ----------------------------------------------------------------
@@ -86,6 +148,12 @@ def test_mcp_is_off_until_an_administrator_switches_it_on(client: TestClient) ->
     # Off answers like an address that is not there, before the key is even looked at.
     assert rpc(client, token, "ping").status_code == 404
     assert rpc(client, None, "ping").status_code == 404
+    # Every way to ask looks the same: there is nothing at this address. 405 would say there is.
+    for verb in ("get", "put", "patch", "delete"):
+        gone = getattr(client, verb)("/api/mcp")
+        assert gone.status_code == 404, verb
+        assert gone.json()["detail"]["code"] == "not_found"
+        assert "allow" not in gone.headers
 
 
 def test_without_a_valid_key_the_answer_is_401_with_a_bearer_challenge(ready: TestClient) -> None:
