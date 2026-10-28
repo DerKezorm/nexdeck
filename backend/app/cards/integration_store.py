@@ -37,6 +37,11 @@ def listing(db: Session) -> list[OwnIntegration]:
     return list(db.scalars(select(OwnIntegration).order_by(OwnIntegration.short)))
 
 
+def shorts(db: Session) -> list[str]:
+    """The short names kept so far; a check of a text lets these equal a built-in kind (see ``load_integration``)."""
+    return list(db.scalars(select(OwnIntegration.short)))
+
+
 def count(db: Session) -> int:
     return int(db.scalar(select(func.count(OwnIntegration.id))) or 0)
 
@@ -84,7 +89,7 @@ def update(db: Session, row: OwnIntegration, text: str, *, user_id: int | None =
     A field the new text no longer has loses its value in every connection of the kind, secrets included (EC-10); so
     does a field that changed its type, because what was stored for the old type means nothing for the new one.
     """
-    loaded = loader.load_integration(text)
+    loaded = loader.load_integration(text, saved=[row.short])
     if loaded.definition.short != row.short:
         raise load.CardInvalid([load.Problem("card_integration_short_changed", f"The short name of a saved connection cannot change (it is {row.short}).", "short", loaded.lines.get(("short",)), {"short": row.short})])
     dropped = dropped_fields(row, loaded)

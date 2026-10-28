@@ -119,8 +119,31 @@ def test_karten3_ec1_a_short_name_may_be_used_once_and_does_not_change(admin: Te
     assert make(admin, MEMOS).status_code == 201
     again = make(admin, MEMOS)
     assert again.status_code == 409 and again.json()["detail"]["code"] == "integration_exists"
-    other = admin.put(f"{API}/memos", json={"yaml": changed(MEMOS, short="other")}, headers=CSRF)
+    other = admin.put(f"{API}/memos-own", json={"yaml": changed(MEMOS, short="other")}, headers=CSRF)
     assert other.status_code == 400 and "card_integration_short_changed" in codes_of(other)
+
+def test_karten3_ec1_an_own_connection_saved_before_a_built_in_kind_took_its_name_keeps_running_and_stays_changeable(admin: TestClient) -> None:  # noqa: F811
+    from app.cards import integration, integration_store
+    from app.models import OwnIntegration
+
+    old = changed(MEMOS, short="memos")
+    with db_session() as db:
+        db.add(OwnIntegration(short="memos", yaml_source=old, definition=integration.load_integration(old, saved=["memos"]).data))
+        db.commit()
+        assert integration_store.load_all(db) == 1
+    # a new connection of the name is refused, the saved one is its own kind next to the built-in Memos and runs on
+    assert "card_integration_short_taken" in codes_of(make(admin, old))
+    assert get_adapter("custom:memos").label == "Memos" and get_adapter("memos") is not get_adapter("custom:memos")
+    number = connect(admin, "custom:memos", {"url": "http://svc.example.com", "username": "ann", "password": "pw-value-1"})
+    # it can be checked, changed and still has its short name and its connection
+    assert admin.post(f"{API}/check", json={"yaml": old}, headers=CSRF).json() == {"ok": True}
+    renamed = admin.put(f"{API}/memos", json={"yaml": changed(old, name="Notes")}, headers=CSRF)
+    assert renamed.status_code == 200 and renamed.json()["short"] == "memos" and get_adapter("custom:memos").label == "Notes"
+    with db_session() as db:
+        assert db.get(Integration, number).kind == "custom:memos"
+    # once deleted the name is the built-in one's again
+    assert admin.delete(f"{API}/memos", headers=CSRF).status_code == 204
+    assert "card_integration_short_taken" in codes_of(make(admin, old))
 
 
 def test_karten3_ac1_no_key_stands_in_a_description(admin: TestClient) -> None:  # noqa: F811
@@ -167,9 +190,9 @@ def test_karten3_only_administrators_describe_connections(client: TestClient) ->
     assert client.get(f"{API}/template").status_code == 403
     assert client.post(f"{API}/check", json={"yaml": MEMOS}, headers=CSRF).status_code == 403
     # the one description, to read, to change and to delete, is the administrators' as well
-    assert client.get(f"{API}/memos").status_code == 403
-    assert client.put(f"{API}/memos", json={"yaml": MEMOS}, headers=CSRF).status_code == 403
-    assert client.delete(f"{API}/memos", headers=CSRF).status_code == 403
+    assert client.get(f"{API}/memos-own").status_code == 403
+    assert client.put(f"{API}/memos-own", json={"yaml": MEMOS}, headers=CSRF).status_code == 403
+    assert client.delete(f"{API}/memos-own", headers=CSRF).status_code == 403
 
 
 def test_karten3_a_description_stays_within_30_reads_and_64_kb(admin: TestClient) -> None:  # noqa: F811
@@ -193,10 +216,10 @@ def test_karten3_the_template_and_the_check_and_the_listing(admin: TestClient) -
     made = make(admin, MEMOS)
     assert made.status_code == 201
     one = made.json()
-    assert one["short"] == "memos" and one["kind"] == "custom:memos" and one["connections"] == 0 and one["yaml"] == MEMOS
+    assert one["short"] == "memos-own" and one["kind"] == "custom:memos-own" and one["connections"] == 0 and one["yaml"] == MEMOS
     listed = admin.get(API).json()
-    assert [row["short"] for row in listed] == ["memos"] and "yaml" not in listed[0]
-    assert admin.get(f"{API}/memos").json()["yaml"] == MEMOS
+    assert [row["short"] for row in listed] == ["memos-own"] and "yaml" not in listed[0]
+    assert admin.get(f"{API}/memos-own").json()["yaml"] == MEMOS
     assert admin.get(f"{API}/nobody").status_code == 404
     assert admin.get(f"{API}/nobody").json()["detail"]["code"] == "integration_not_found"
 
@@ -341,13 +364,13 @@ def test_karten3_ec11_a_restored_backup_brings_the_kinds_and_their_connections_w
     number = connect(client, "custom:bookstack-own", {"url": "http://svc.example.com", "token_id": "abc", "token_secret": "s3cret-value-9"})
     blob = _archive(client, _make(client)["name"], PASSWORD)
     assert client.delete(f"{API}/bookstack-own", headers=CSRF).status_code == 204
-    assert client.put(f"{API}/memos", json={"yaml": MEMOS}, headers=CSRF).status_code == 404
+    assert client.put(f"{API}/memos-own", json={"yaml": MEMOS}, headers=CSRF).status_code == 404
     assert make(client, MEMOS).status_code == 201, "a kind that is not in the backup"
     assert "custom:bookstack-own" not in REGISTRY
 
     assert _upload(client, blob).status_code == 200
     # the running instance reads the restored descriptions without a restart
-    assert "custom:bookstack-own" in REGISTRY and "custom:memos" not in REGISTRY
+    assert "custom:bookstack-own" in REGISTRY and "custom:memos-own" not in REGISTRY
     after = TestClient(client.app)
     after.post("/api/v1/auth/login", json={"username": "admin", "password": "correct-horse-battery"})
     assert [row["short"] for row in after.get(API).json()] == ["bookstack-own"]
@@ -366,11 +389,11 @@ def test_karten3_the_example_descriptions_are_valid_and_hold_no_key(admin: TestC
 
 def test_karten3_the_reads_of_the_description_are_offered_for_the_data_step_and_the_kind_is_among_the_sources(admin: TestClient) -> None:  # noqa: F811
     assert make(admin, MEMOS).status_code == 201
-    reads = admin.get("/api/v1/cards/sources/custom:memos/reads")
+    reads = admin.get("/api/v1/cards/sources/custom:memos-own/reads")
     assert reads.status_code == 200
     assert reads.json() == {"reads": [{"path": "/api/v1/memos?pageSize=10", "label": "Latest notes", "widgets": []}]}
     sources = {one["kind"]: one for one in admin.get("/api/v1/cards/sources").json()}
-    assert sources["custom:memos"] == {"kind": "custom:memos", "label": "Memos", "icon": "memos", "category": "other", "custom": True}
+    assert sources["custom:memos-own"] == {"kind": "custom:memos-own", "label": "Memos", "icon": "memos", "category": "other", "custom": True}
     assert sources["sonarr"]["custom"] is False
     assert admin.get("/api/v1/cards/sources/custom:nobody/reads").status_code == 404
 

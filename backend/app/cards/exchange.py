@@ -195,7 +195,7 @@ def _read(db: Session, offset: int, text: str) -> Item:
                 )])
             row: Any = db.scalar(select(CardRecord).where(CardRecord.slug == item.key, CardRecord.kind == "card"))
         else:
-            item.loaded = integration_loader.load_integration(text)
+            item.loaded = integration_loader.load_integration(text, saved=integrations.shorts(db))
             item.key, item.name = item.loaded.definition.short, item.loaded.data.get("name")
             row = integrations.get(db, item.key)
     except load.CardInvalid as failure:

@@ -367,7 +367,7 @@ def test_karten3_ec8_ten_cards_that_need_a_session_together_sign_in_once_and_ten
     service = Memos().mount()
     service.delay = 0.05
     assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
-    adapter, config = adapter_and_config("memos", username="ann", password=PASSWORD)
+    adapter, config = adapter_and_config("memos-own", username="ann", password=PASSWORD)
 
     async def together() -> tuple[list[int], int, list[int], int]:
         async with httpx.AsyncClient() as client:
@@ -529,14 +529,14 @@ def test_karten3_ac11_a_change_of_the_description_makes_the_connection_sign_in_a
     assert asked(admin, number).status_code == 200
     assert len(service.logins) == 1
     other = changed(MEMOS, **{"auth.pass": {"as": "header", "header": "Authorization", "value": "Bearer {ticket}"}, "description": "Changed."})
-    assert admin.put(f"{API}/memos", json={"yaml": other}, headers=CSRF).status_code == 200
+    assert admin.put(f"{API}/memos-own", json={"yaml": other}, headers=CSRF).status_code == 200
     assert asked(admin, number).status_code == 200
     assert len(service.logins) == 2
 
 
 def test_karten3_ac10_the_switch_for_tls_errors_is_there_like_it_is_for_the_built_in_kinds(admin: TestClient) -> None:  # noqa: F811
     assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
-    adapter = get_adapter("custom:memos")
+    adapter = get_adapter("custom:memos-own")
     field = next(one for one in adapter.fields if one.name == "insecure")
     assert (field.label, field.type, field.default) == ("Ignore TLS errors", "bool", False)
     assert adapter.raw_verify({"url": BASE}) is True
@@ -643,7 +643,7 @@ def test_karten3_ac11_a_corrected_description_lifts_the_pause_of_its_connections
     for _ in range(3):
         asked(admin, number)
     assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
-    assert admin.put(f"{API}/memos", json={"yaml": MEMOS, "overwrite": True}, headers=CSRF).status_code == 200
+    assert admin.put(f"{API}/memos-own", json={"yaml": MEMOS, "overwrite": True}, headers=CSRF).status_code == 200
     after = asked(admin, number)
     assert after.status_code == 200, f"after the correction: {after.json()}"
     assert len(service.logins) == 1
@@ -657,7 +657,7 @@ def test_karten3_ac11_a_kind_deleted_and_described_again_starts_without_the_paus
     for _ in range(3):
         asked(admin, number)
     assert asked(admin, number).json()["detail"]["code"] == "sign_in_paused"
-    assert admin.delete(f"{API}/memos", headers=CSRF).status_code == 204
+    assert admin.delete(f"{API}/memos-own", headers=CSRF).status_code == 204
     service.login_status = 200
     assert admin.post(API, json={"yaml": MEMOS}, headers=CSRF).status_code == 201
     assert asked(admin, number).status_code == 200

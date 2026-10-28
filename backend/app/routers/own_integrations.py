@@ -96,9 +96,9 @@ def template(user: AdminUser) -> dict[str, str]:
 
 
 @router.post("/check", summary="Check a description without keeping it")
-def check(body: Text, user: AdminUser) -> dict[str, Any]:
+def check(body: Text, user: AdminUser, db: DbSession) -> dict[str, Any]:
     try:
-        integration.load_integration(body.yaml)
+        integration.load_integration(body.yaml, saved=store.shorts(db))
     except load.CardInvalid as failure:
         return {"ok": False, "problems": [problem.as_dict() for problem in failure.problems]}
     return {"ok": True}

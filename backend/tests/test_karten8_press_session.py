@@ -21,7 +21,7 @@ nexdeck-card: 1
 slug: notes
 name: Notes
 version: 1.0.0
-requires: ["custom:memos"]
+requires: ["custom:memos-own"]
 requests:
   - id: memos
     path: /api/v1/memos

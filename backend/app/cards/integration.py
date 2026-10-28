@@ -7,6 +7,7 @@ the address of the connection and only reads, and no key stands in the text.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import Any
@@ -78,7 +79,7 @@ def _expression(add: Any, path: Path, expression: str) -> None:
         add("card_integration_expression", f"This is not a path into the answer: {failure}.", path, reason=str(failure))
 
 
-def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> list[Problem]:
+def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int], saved: Collection[str] = ()) -> list[Problem]:
     from .. import adapters
 
     problems: list[Problem] = []
@@ -86,7 +87,7 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
     def add(code: str, message: str, path: Path, **params: Any) -> None:
         problems.append(Problem(code, message, load._key_name(path), load._line(lines, path), params))
 
-    if definition.short in adapters.builtin_kinds():
+    if definition.short in adapters.builtin_kinds() and definition.short not in saved:
         add("card_integration_short_taken", f"nexdeck has a built-in kind called {definition.short}. Pick another short name.", ("short",), short=definition.short)
     categories = adapters.builtin_categories()
     if definition.category not in categories:
@@ -150,8 +151,13 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int]) -> 
     return problems
 
 
-def load_integration(text: str) -> LoadedIntegration:
-    """Read, check and return a definition, or raise ``load.CardInvalid`` with everything that is wrong."""
+def load_integration(text: str, saved: Collection[str] = ()) -> LoadedIntegration:
+    """Read, check and return a definition, or raise ``load.CardInvalid`` with everything that is wrong.
+
+    ``saved`` are the short names of own connections that are kept already. A built-in kind that a later nexdeck brought
+    under the same name does not take them away: only a *new* connection must not equal a built-in kind (KARTEN-3 EC-1);
+    the saved one is its own kind (``custom:<short>``) and stays changeable.
+    """
     data, lines = load.parse(text, sch.MAX_TEXT)
     if data.get(sch.MARKER) != "integration":
         hint = "This is a card, not a connection." if "nexdeck-card" in data else "A connection starts with nexdeck: integration."
@@ -166,7 +172,7 @@ def load_integration(text: str) -> LoadedIntegration:
     except ValidationError as failure:
         found = {(problem.path, problem.code): problem for problem in (load._from_pydantic(error, lines) for error in reversed(failure.errors()))}
         raise load.CardInvalid(list(reversed(found.values()))) from failure
-    problems = _semantic(definition, lines)
+    problems = _semantic(definition, lines, saved)
     if problems:
         raise load.CardInvalid(problems)
     dumped = definition.model_dump(mode="json", by_alias=True, exclude_none=True)

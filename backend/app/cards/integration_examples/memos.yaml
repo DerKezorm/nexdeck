@@ -1,8 +1,8 @@
 nexdeck: integration
-short: memos
+short: memos-own
 name: Memos
 logo: memos
-description: Notes you keep for yourself. For Memos 0.25 and later, which signs in with a user name and a password.
+description: Notes you keep for yourself. An example of a sign-in with a session, for Memos 0.25 and later (nexdeck also has Memos built in).
 category: other
 fields:
   - name: username
