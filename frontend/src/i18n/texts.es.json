@@ -2313,7 +2313,17 @@
     "Vehicles": "Vehículos",
     "No reminders are due.": "Ningún recordatorio está vencido.",
     "No reminders yet.": "Aún no hay recordatorios.",
-    "No vehicles yet.": "Aún no hay vehículos."
+    "No vehicles yet.": "Aún no hay vehículos.",
+    "Cards": "Tarjetas",
+    "Due cards": "Tarjetas con vencimiento",
+    "Due in a week": "Vencen en una semana",
+    "How many cards are open, with those overdue and the boards.": "Cuántas tarjetas están abiertas, con las vencidas y los tableros.",
+    "Profile > API key (Planka 2). Sent as X-API-Key; the cards see the boards of that account.": "Perfil > Clave de API (Planka 2). Se envía como X-API-Key; las tarjetas ven los tableros de esa cuenta.",
+    "The cards with a due date, overdue ones first, with their board.": "Las tarjetas con fecha de vencimiento, las vencidas primero, con su tablero.",
+    "The lists of a board with the number of cards in each.": "Las listas de un tablero con el número de tarjetas en cada una.",
+    "The name of one board. Empty uses the first.": "El nombre de un tablero. Vacío usa el primero.",
+    "The open cards of your boards, those overdue or due soon, and the lists of a board.": "Las tarjetas abiertas de tus tableros, las vencidas o por vencer, y las listas de un tablero.",
+    "No card has a due date.": "Ninguna tarjeta tiene fecha de vencimiento."
   },
   "labels": {
     "Private resources": "Recursos privados",

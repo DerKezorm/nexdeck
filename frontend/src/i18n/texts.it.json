@@ -2313,7 +2313,17 @@
     "Vehicles": "Veicoli",
     "No reminders are due.": "Nessun promemoria è in scadenza.",
     "No reminders yet.": "Ancora nessun promemoria.",
-    "No vehicles yet.": "Ancora nessun veicolo."
+    "No vehicles yet.": "Ancora nessun veicolo.",
+    "Cards": "Schede",
+    "Due cards": "Schede in scadenza",
+    "Due in a week": "In scadenza in una settimana",
+    "How many cards are open, with those overdue and the boards.": "Quante schede sono aperte, con quelle scadute e le bacheche.",
+    "Profile > API key (Planka 2). Sent as X-API-Key; the cards see the boards of that account.": "Profilo > Chiave API (Planka 2). Inviata come X-API-Key; le schede vedono le bacheche di quell'account.",
+    "The cards with a due date, overdue ones first, with their board.": "Le schede con una scadenza, quelle scadute per prime, con la loro bacheca.",
+    "The lists of a board with the number of cards in each.": "Le liste di una bacheca con il numero di schede in ciascuna.",
+    "The name of one board. Empty uses the first.": "Il nome di una bacheca. Vuoto usa la prima.",
+    "The open cards of your boards, those overdue or due soon, and the lists of a board.": "Le schede aperte delle tue bacheche, quelle scadute o in scadenza e le liste di una bacheca.",
+    "No card has a due date.": "Nessuna scheda ha una scadenza."
   },
   "labels": {
     "Private resources": "Risorse private",
