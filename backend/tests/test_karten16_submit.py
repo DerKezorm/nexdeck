@@ -334,6 +334,21 @@ def test_karten16_ac7_a_card_that_is_in_the_shop_is_shared_again_as_an_update_wi
     assert issue["title"] == f"Submit update: {SLUG}" and submit.parse_body(issue["body"])["changes"] == "Added the unit."
 
 
+def test_karten16_ac7_an_entry_in_the_catalog_makes_it_an_update_even_when_no_issue_of_it_is_left(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    hub.publish(VALUE_CARD, author=str(ME))
+    clock[0] += 700
+    found = check(me)
+    assert found["mode"] == "update" and found["previous_version"] == "1.0.0"
+
+
+def test_karten16_ac7_an_accepted_issue_makes_it_an_update_while_the_shop_is_off(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    share(me)
+    accepted(hub, clock, 1)
+    me.put(f"{BASE}/settings", json={"enabled": False}, headers=CSRF)
+    found = check(me)
+    assert found["mode"] == "update" and found["previous_version"] is None, "the closed issue with the answer of the action is enough"
+
+
 def test_karten16_ac7_an_update_needs_a_higher_version(me: TestClient, hub: Hub, clock: list[float]) -> None:
     share(me)
     accepted(hub, clock, 1)
