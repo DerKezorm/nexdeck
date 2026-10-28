@@ -441,7 +441,8 @@ NO_OWN_CARDS = "cannot be read by a card of its own. Say so, and name the way ou
 
 
 def _listed(rows: list[Any]) -> list[dict[str, Any]]:
-    return [{"integration_id": row.id, "name": row.name, "kind": row.kind} for row in rows][:20]
+    # ⚠️ Kind and number, not the name: the name of a connection is the person's own and stays out of what the provider reads.
+    return [{"integration_id": row.id, "kind": row.kind} for row in rows][:20]
 
 
 async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
@@ -495,16 +496,26 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
         if held is not None:
             held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
-    integration_id, conversation_id = chosen.id, bench.conversation_id
+    integration_id, conversation_id, user_id = chosen.id, bench.conversation_id, bench.user.id
     bench.db.commit()
-    try:
+
+    async def work() -> tuple[Any, Any]:
         adapter, connection, ctx = await _connection(integration_id)
         answer = await _ask(adapter, connection, ctx, request)
-        outcome = await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key)
+        return answer, await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key)
+
+    # One request per administrator, like the editor's, and the one that ends when the provider is taken away (KARTEN-17 AC-8, EC-6).
+    try:
+        finished, done = await ai.supervised(user_id, work())
+    except ai.Busy:
+        return _json({"error": "A card is being written for this person already. Say so and try again in a moment."})
     except AdapterError as failure:
         return _json({"error": f"The service could not be read: {failure.message}"})
     except ai.AiError as failure:
         return _json({"error": failure.message})
+    if not finished:
+        return _json({"error": "The request for the card was cancelled."})
+    answer, outcome = done
     if not outcome.ok:
         return _json({"error": "The provider's card did not pass nexdeck's check, even after a second try.", "problems": [problem["message"] for problem in outcome.problems][:5]})
     text = outcome.yaml

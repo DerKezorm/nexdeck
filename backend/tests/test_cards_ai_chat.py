@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import threading
 from datetime import timedelta
 from typing import Any
 
@@ -20,7 +22,7 @@ from app.services.collector import collector
 
 from .conftest import CSRF, create_user, login, setup_admin
 from .test_cards_ai import ANSWER, SECRET_KEY, SECRET_NUMBER, SECRET_TEXT, Script, card
-from .test_cards_ai_routes import switch_on
+from .test_cards_ai_routes import API, switch_on
 from .test_cards_router import BASE, connection
 
 ASK = {"text": "Build me a card that shows my queue"}
@@ -67,7 +69,8 @@ def test_karten18_ac1_with_two_connections_that_fit_the_chat_is_told_to_ask(admi
     assert reply["drafts"] == [] and len(script.seen) == 2, "no draft, and the provider was not asked for a card"
     found = tool_result(script)
     assert found["ask"] is True and [one["kind"] for one in found["connections"]] == ["sonarr", "radarr"]
-    assert "My sonarr" in json.dumps(found), "the chat may name the connections to ask which one; the card request never does"
+    assert "My sonarr" not in script.sent(), "the name of a connection is the person's own: the provider reads kind and number"
+    assert [(one["integration_id"], one["kind"]) for one in found["connections"]] == [(1, "sonarr"), (2, "radarr")]
 
 
 @respx.mock
@@ -186,6 +189,75 @@ def test_karten18_ec3_each_draft_of_a_conversation_has_its_own_number(admin: Tes
     ids = [one["id"] for one in reply["drafts"]]
     assert len(ids) == 2 and ids[0] != ids[1]
     assert [admin.get(f"/api/v1/assistant/drafts/{one}").status_code for one in ids] == [200, 200]
+
+
+def _chat_with_a_hanging_card_request(admin: TestClient, monkeypatch: pytest.MonkeyPatch, hang_on: int) -> tuple[threading.Event, Script, threading.Thread, dict]:
+    """A chat answer in a thread whose ``hang_on``-th call to the provider never comes back."""
+    entered = threading.Event()
+    script = Script(chat_turn(draft_call(service="sonarr", path="/api/v3/queue")), providers.Turn(text="Done."))
+    calls = {"n": 0}
+
+    async def turn(*args: Any) -> providers.Turn:
+        calls["n"] += 1
+        if calls["n"] == hang_on:
+            entered.set()
+            await asyncio.Event().wait()
+        return await script(*args)
+
+    monkeypatch.setattr(providers, "turn", turn)
+    got: dict = {}
+
+    def go() -> None:
+        got["answer"] = admin.post("/api/v1/assistant/chat", json=ASK, headers=CSRF)
+
+    thread = threading.Thread(target=go)
+    thread.start()
+    return entered, script, thread, got
+
+
+@respx.mock
+def test_karten17_ac8_a_draft_in_the_chat_waits_for_the_card_being_written_in_the_editor(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from .cards_sample import VALUE_CARD
+
+    connection(admin, "sonarr")
+    serve()
+    entered = threading.Event()
+    script = Script(chat_turn(draft_call(service="sonarr", path="/api/v3/queue")), providers.Turn(text="One moment."))
+    first = {"n": 0}
+
+    async def turn(*args: Any) -> providers.Turn:
+        first["n"] += 1
+        if first["n"] == 1:  # the card of the editor
+            entered.set()
+            await asyncio.Event().wait()
+        return await script(*args)
+
+    monkeypatch.setattr(providers, "turn", turn)
+    editor: dict = {}
+    thread = threading.Thread(target=lambda: editor.update(answer=admin.post(API, json={"mode": "translate", "yaml": VALUE_CARD}, headers=CSRF)))
+    thread.start()
+    assert entered.wait(15)
+    reply = ask(admin)
+    assert reply["drafts"] == [] and "already" in tool_result(script)["error"]
+    assert admin.delete(API, headers=CSRF).json() == {"cancelled": True}
+    thread.join(15)
+    assert editor["answer"].status_code == 409
+
+
+@respx.mock
+def test_karten17_ec6_taking_the_provider_away_ends_the_card_the_chat_is_writing(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    connection(admin, "sonarr")
+    serve()
+    entered, script, thread, got = _chat_with_a_hanging_card_request(admin, monkeypatch, hang_on=2)
+    assert entered.wait(15)
+    assert admin.put("/api/v1/settings/assistant", json={"provider": "off"}, headers=CSRF).status_code == 200
+    thread.join(15)
+    assert not thread.is_alive() and got["answer"].status_code == 200
+    assert got["answer"].json()["drafts"] == []
+    assert "cancelled" in json.loads(script.seen[-1]["transcript"][-1]["results"][0]["content"])["error"]
+    from app.cards import ai
+
+    assert ai.RUNNING == {}
 
 
 def ai_example_other() -> str:
