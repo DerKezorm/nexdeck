@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, put } from '../../api/client'
 import { Confirm, Field, Select, Switch, Toast } from '../../components/ui'
-import { expiredKey, ownerOf, revokeKey, type McpAdminSettings, type McpKey, type McpLevel, type McpTool } from '../../lib/mcp'
+import { expiredKey, ownerOf, revokeKey, toolText, type McpAdminSettings, type McpKey, type McpLevel, type McpTool } from '../../lib/mcp'
 import { useMcpTexts } from '../../lib/mcpTexts'
 import { SettingsCard } from './SettingsCard'
 
@@ -82,9 +82,7 @@ function Panel() {
                   />
                   <span className="min-w-0">
                     <code className="num text-xs">{tool.name}</code>
-                    <span className="block text-[11.5px] text-muted line-clamp-2" title={tool.description}>
-                      {tool.description}
-                    </span>
+                    <span className="block text-[11.5px] text-muted">{toolText(t, tool)}</span>
                   </span>
                 </label>
               </li>

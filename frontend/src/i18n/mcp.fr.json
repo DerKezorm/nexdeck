@@ -142,6 +142,17 @@
         "session": "Connecte-toi avec ton mot de passe pour connecter un programme.",
         "tooMany": "Ton compte a déjà le nombre maximal de clés. Révoque d'abord une clé sous Paramètres."
       }
+    },
+    "tool": {
+      "needs_attention": "Ce qui demande de l'attention maintenant : cartes jaunes et rouges, vérifications en échec et alertes non lues.",
+      "find_cards": "Trouve des cartes par titre, service, type ou tableau.",
+      "card_details": "Tout ce qu'une carte affiche : couleur, chiffres, lignes et les boutons qu'elle propose.",
+      "chronicle": "Ce qui s'est passé récemment : changements de couleur, pannes, nouvelles versions, redémarrages et changements dans nexdeck.",
+      "metric_history": "Comment un chiffre d'une carte a évolué ces dernières heures.",
+      "diagnosis": "Pourquoi un service a des problèmes, comme le montre sa page de diagnostic.",
+      "container_log": "Les dernières lignes du journal d'un conteneur, secrets masqués.",
+      "press_button": "Appuie sur un bouton proposé par une carte. Vous demande d'abord sauf autorisation ; les boutons dangereux demandent toujours.",
+      "request_status": "Où en est un appui qui attend votre réponse."
     }
   }
 }

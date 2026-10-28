@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, put } from '../../api/client'
-import { GROUPS, rightsToStore, settingOf, type McpKey, type McpRight, type McpTool } from '../../lib/mcp'
+import { GROUPS, rightsToStore, settingOf, toolText, type McpKey, type McpRight, type McpTool } from '../../lib/mcp'
 import { Select } from '../ui'
 
 /**
@@ -48,10 +48,7 @@ export function RightsEditor({ keyRow, tools, admin, onSaved }: { keyRow: McpKey
                   <li key={tool.name} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <div className="min-w-0 flex-[1_1_220px]">
                       <code className="num text-xs">{tool.name}</code>
-                      {/* The server's descriptions are written for the program and run long; two lines here, the whole text on hover. */}
-                      <p className="text-[11.5px] text-muted line-clamp-2" title={tool.description}>
-                        {tool.description}
-                      </p>
+                      <p className="text-[11.5px] text-muted">{toolText(t, tool)}</p>
                       {setting.reason && (
                         <p className="text-[11.5px] text-warn" data-testid={`why-${tool.name}`}>
                           {t(`mcp.rights.why.${setting.reason}`)}

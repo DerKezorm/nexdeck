@@ -142,6 +142,17 @@
         "session": "Sign in with your password to connect a program.",
         "tooMany": "Your account holds the most keys it may have. Revoke one under Settings first."
       }
+    },
+    "tool": {
+      "needs_attention": "What needs a look right now: yellow and red cards, failing checks and unread warnings.",
+      "find_cards": "Finds cards by title, service, kind or board.",
+      "card_details": "Everything one card shows: colour, numbers, rows and the buttons it offers.",
+      "chronicle": "What happened lately: colour changes, outages, new versions, restarts and changes in nexdeck.",
+      "metric_history": "How one number of a card moved over the last hours.",
+      "diagnosis": "Why a service is in trouble, as its diagnosis page shows it.",
+      "container_log": "The last lines of a container's log, with secrets masked.",
+      "press_button": "Presses a button a card offers. Asks you first unless allowed; dangerous buttons always ask.",
+      "request_status": "How a press stands that waits for your answer."
     }
   }
 }

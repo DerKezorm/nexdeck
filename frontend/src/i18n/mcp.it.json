@@ -142,6 +142,17 @@
         "session": "Accedi con la tua password per collegare un programma.",
         "tooMany": "Il tuo account ha già il numero massimo di chiavi. Revocane prima una in Impostazioni."
       }
+    },
+    "tool": {
+      "needs_attention": "Ciò che richiede attenzione ora: schede gialle e rosse, controlli che falliscono e avvisi non letti.",
+      "find_cards": "Trova schede per titolo, servizio, tipo o bacheca.",
+      "card_details": "Tutto ciò che mostra una scheda: colore, numeri, righe e i pulsanti che offre.",
+      "chronicle": "Cosa è successo di recente: cambi di colore, interruzioni, nuove versioni, riavvii e modifiche in nexdeck.",
+      "metric_history": "Come si è mosso un numero di una scheda nelle ultime ore.",
+      "diagnosis": "Perché un servizio ha problemi, come lo mostra la sua pagina di diagnosi.",
+      "container_log": "Le ultime righe del log di un container, con i segreti mascherati.",
+      "press_button": "Preme un pulsante offerto da una scheda. Ti chiede prima se non è consentito; i pulsanti pericolosi chiedono sempre.",
+      "request_status": "A che punto è una pressione che attende la tua risposta."
     }
   }
 }

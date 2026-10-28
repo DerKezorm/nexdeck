@@ -142,6 +142,17 @@
         "session": "Inicia sesión con tu contraseña para conectar un programa.",
         "tooMany": "Tu cuenta ya tiene el máximo de claves. Revoca una en Ajustes primero."
       }
+    },
+    "tool": {
+      "needs_attention": "Lo que necesita atención ahora: tarjetas amarillas y rojas, comprobaciones que fallan y avisos sin leer.",
+      "find_cards": "Busca tarjetas por título, servicio, tipo o tablero.",
+      "card_details": "Todo lo que muestra una tarjeta: color, números, filas y los botones que ofrece.",
+      "chronicle": "Lo que pasó últimamente: cambios de color, caídas, versiones nuevas, reinicios y cambios en nexdeck.",
+      "metric_history": "Cómo se movió un número de una tarjeta en las últimas horas.",
+      "diagnosis": "Por qué un servicio tiene problemas, tal como lo muestra su página de diagnóstico.",
+      "container_log": "Las últimas líneas del registro de un contenedor, con los secretos ocultos.",
+      "press_button": "Pulsa un botón que ofrece una tarjeta. Te pregunta antes si no está permitido; los botones peligrosos siempre preguntan.",
+      "request_status": "Cómo va una pulsación que espera tu respuesta."
     }
   }
 }

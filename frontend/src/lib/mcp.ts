@@ -148,6 +148,15 @@ export function jsonConfig(endpoint: string, token: string): string {
   return JSON.stringify({ mcpServers: { nexdeck: { type: 'http', url: endpoint, headers: { Authorization: `Bearer ${token}` } } } }, null, 2)
 }
 
+/**
+ * What a tool does, said for a person in the language on screen. The server's
+ * text is written for the program, in English, and stays as it is there; it
+ * stands in for a tool this browser has no words for.
+ */
+export function toolText(t: (key: string, options?: Record<string, unknown>) => string, tool: McpTool): string {
+  return t(`mcp.tool.${tool.name}`, { defaultValue: tool.description })
+}
+
 /** The request a notice points at (`/mcp/requests/<id>`), or null for any other link. */
 export function requestIdOf(link: string): number | null {
   const match = /^\/mcp\/requests\/(\d+)$/.exec(link)

@@ -4,6 +4,7 @@
  * of answers (`test/mcpServer.ts`).
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import i18next from 'i18next'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -210,6 +211,29 @@ describe('MCP keys in the account settings', () => {
       expect(screen.getByLabelText('Right for diagnosis')).toBeDisabled()
       expect(screen.getByTestId('why-diagnosis')).toHaveTextContent('Only administrators')
       expect(screen.getByLabelText('Right for needs_attention')).toBeEnabled()
+    })
+
+    it('says what each tool does for a person, not in the words written for the program', async () => {
+      await open()
+      const row = screen.getByTestId('rights-1')
+      expect(row).toHaveTextContent('Presses a button a card offers.')
+      expect(row).not.toHaveTextContent('press_button description')
+    })
+
+    it('says it in the language on screen, and keeps the server words for a tool it has none for', async () => {
+      await i18next.changeLanguage('de')
+      try {
+        const user = userEvent.setup()
+        TOOLS.push({ ...TOOLS[0], name: 'brand_new', description: 'brand_new description' })
+        start()
+        await user.click(await screen.findByRole('button', { name: 'Rechte je Werkzeug' }))
+        const row = await screen.findByTestId('rights-1')
+        expect(row).toHaveTextContent('Drückt einen Knopf, den eine Karte anbietet.')
+        expect(row).toHaveTextContent('brand_new description')
+      } finally {
+        TOOLS.pop()
+        await i18next.changeLanguage('en')
+      }
     })
 
     it('stores only what differs from the defaults, and keeps what a greyed-out row already held', async () => {

@@ -66,6 +66,12 @@ describe('MCP under System', () => {
     expect(calls.find((call) => call.method === 'PUT')?.body).toEqual({ allowed: true, max_level: 'read', oauth_allowed: true, blocked_tools: ['container_log'] })
   })
 
+  it('says in the block list what each tool does, in words for a person', async () => {
+    start()
+    expect(await screen.findByText('Finds cards by title, service, kind or board.')).toBeInTheDocument()
+    expect(screen.queryByText('find_cards description')).toBeNull()
+  })
+
   it('shows a tool that is already blocked as ticked, and lets it go again', async () => {
     saved = { ...saved, blocked_tools: ['diagnosis'] }
     const user = userEvent.setup()

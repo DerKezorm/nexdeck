@@ -142,6 +142,17 @@
         "session": "Melde dich mit deinem Passwort an, um ein Programm zu verbinden.",
         "tooMany": "Dein Konto hat schon so viele Schlüssel, wie es haben darf. Ziehe zuerst unter Einstellungen einen zurück."
       }
+    },
+    "tool": {
+      "needs_attention": "Was gerade Aufmerksamkeit braucht: gelbe und rote Karten, fehlschlagende Prüfungen und ungelesene Warnungen.",
+      "find_cards": "Findet Karten nach Titel, Dienst, Art oder Board.",
+      "card_details": "Alles, was eine Karte zeigt: Farbe, Zahlen, Zeilen und die Knöpfe, die sie anbietet.",
+      "chronicle": "Was zuletzt geschah: Farbwechsel, Ausfälle, neue Versionen, Neustarts und Änderungen in nexdeck.",
+      "metric_history": "Wie sich eine Zahl einer Karte in den letzten Stunden bewegt hat.",
+      "diagnosis": "Warum ein Dienst Probleme hat, so wie es seine Diagnose-Seite zeigt.",
+      "container_log": "Die letzten Zeilen aus dem Log eines Containers, Geheimnisse maskiert.",
+      "press_button": "Drückt einen Knopf, den eine Karte anbietet. Fragt dich vorher, wenn nicht erlaubt; gefährliche Knöpfe fragen immer.",
+      "request_status": "Wie es um einen Druck steht, der auf deine Antwort wartet."
     }
   }
 }
