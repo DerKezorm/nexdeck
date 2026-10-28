@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, onAccent, readLook, useLook } from './appearance'
+import { accentVariables, applyAppearance, channels, contrast, darker, lookFile, OWN_PALETTES, onAccent, readableAccent, readLook, useLook } from './appearance'
+import { followTheme } from './themeMode'
 
 describe('the accent colour', () => {
   it('reads the three parts of a colour', () => {
@@ -139,5 +140,82 @@ describe('a look to share', () => {
     const read = readLook(JSON.stringify({ nexdeck_look: 1, theme: null, card_style: 'wood', radius: 99, gap: 2 }))
     expect('look' in read && [read.look.card_style, read.look.radius, read.look.gap]).toEqual(['glass', 16, 12])
     expect(readLook('nonsense')).toEqual({ error: 'json' })
+  })
+})
+
+describe('the accent in the brightness on screen', () => {
+  const cyan = { preset: 'cyan', accent: '', colour: '#22d3ee', css: '' }
+  const light = ['bg', 'bg-elev', 'surface'].map((ground) => OWN_PALETTES.light[ground])
+  const dark = ['bg', 'bg-elev', 'surface'].map((ground) => OWN_PALETTES.dark[ground])
+  const shown = () => document.documentElement.style.getPropertyValue('--nd-accent')
+  const hue = (colour: string) => {
+    const [r, g, b] = channels(colour)!
+    const high = Math.max(r, g, b)
+    const spread = high - Math.min(r, g, b)
+    const turn = high === r ? ((g - b) / spread + 6) % 6 : high === g ? (b - r) / spread + 2 : (r - g) / spread + 4
+    return turn * 60
+  }
+
+  beforeEach(() => {
+    document.documentElement.removeAttribute('style')
+    document.documentElement.dataset.theme = 'dark'
+  })
+  afterEach(() => {
+    applyAppearance(null)
+    delete document.documentElement.dataset.theme
+  })
+
+  it('reads cyan at 4.5:1 on every light ground, in its own hue and no darker than it has to be', () => {
+    const shade = readableAccent('#22d3ee', 'light', light)
+    for (const ground of light) expect(contrast(shade, ground)).toBeGreaterThanOrEqual(4.5)
+    expect(Math.abs(hue(shade) - hue('#22d3ee'))).toBeLessThan(2)
+    // One notch lighter would fall short again: the shade stops where the line is crossed.
+    const [r, g, b] = channels(shade)!
+    const lighter = `#${[r, g, b].map((value) => Math.min(255, value + 2).toString(16).padStart(2, '0')).join('')}`
+    expect(Math.min(...light.map((ground) => contrast(lighter, ground)))).toBeLessThan(4.6)
+  })
+
+  it('leaves a colour that already reads alone, and lightens one too dark for the dark page', () => {
+    expect(readableAccent('#0e7490', 'light', light)).toBe('#0e7490')
+    expect(readableAccent('#22d3ee', 'dark', dark)).toBe('#22d3ee')
+    const lifted = readableAccent('#1e3a8a', 'dark', dark)
+    for (const ground of dark) expect(contrast(lifted, ground)).toBeGreaterThanOrEqual(4.5)
+    expect(Math.abs(hue(lifted) - hue('#1e3a8a'))).toBeLessThan(3)
+  })
+
+  it('paints the darker cyan in the light look, with an ink that goes with it, and the colour itself in the dark one', () => {
+    document.documentElement.dataset.theme = 'light'
+    applyAppearance(cyan)
+    expect(shown()).not.toBe('#22d3ee')
+    for (const ground of light) expect(contrast(shown(), ground)).toBeGreaterThanOrEqual(4.5)
+    expect(document.documentElement.style.getPropertyValue('--nd-on-accent')).toBe(onAccent(shown()))
+    expect(document.documentElement.style.getPropertyValue('--nd-accent-strong')).toBe(darker(shown()))
+    document.documentElement.dataset.theme = 'dark'
+    applyAppearance(cyan)
+    expect(shown()).toBe('#22d3ee')
+  })
+
+  it('moves along when the brightness switches, without painting the look again', async () => {
+    applyAppearance(cyan)
+    expect(shown()).toBe('#22d3ee')
+    followTheme({ theme: 'light' }, { remember: false })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(shown()).toBe(readableAccent('#22d3ee', 'light', light))
+    followTheme({ theme: 'dark' }, { remember: false })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(shown()).toBe('#22d3ee')
+  })
+
+  it('reads a colour of one own against the grounds of the theme, and leaves the accent of a theme alone', () => {
+    const theme = { name: 'Slate', light: { bg: '#d0d4dc', 'bg-elev': '#d8dce4', surface: '#e0e4ec', accent: '#123456' } }
+    document.documentElement.dataset.theme = 'light'
+    applyAppearance({ ...cyan, accent: '#22d3ee', theme })
+    const own = shown()
+    for (const ground of ['#d0d4dc', '#d8dce4', '#e0e4ec']) expect(contrast(own, ground)).toBeGreaterThanOrEqual(4.5)
+    // The theme's page is darker than nexdeck's own, so the shade has to go further.
+    const sum = (colour: string) => channels(colour)!.reduce((all, part) => all + part, 0)
+    expect(sum(own)).toBeLessThan(sum(readableAccent('#22d3ee', 'light', light)))
+    applyAppearance({ ...cyan, theme })
+    expect(shown()).toBe('')
   })
 })
