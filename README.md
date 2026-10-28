@@ -7,14 +7,14 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 [![CI](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKezorm/nexdeck/actions/workflows/ci.yml)
 [![Container image](https://img.shields.io/badge/ghcr.io-derkezorm%2Fnexdeck-2496ed?logo=docker&logoColor=white)](https://github.com/DerKezorm/nexdeck/pkgs/container/nexdeck)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3fb6d4)](LICENSE)
-[![Integrations](https://img.shields.io/badge/integrations-214-3fb6d4)](#the-services-it-speaks-to)
+[![Integrations](https://img.shields.io/badge/integrations-223-3fb6d4)](#the-services-it-speaks-to)
 
 ![A nexdeck board in liquid glass: clock, weather, internet traffic, speed test, Pi-hole, charts of CPU and memory for Proxmox, TrueNAS and a NAS, app tiles, what is playing, downloads, AdGuard, containers, a UPS and uptime](docs/screenshot-overview.png)
 
 ## What it does
 
 - **Live, not polled by your browser.** The server asks every service in its own rhythm and pushes changes to every open browser. Ten tabs cost a service one request.
-- **214 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources and shows a list, a week or a month, a weather card with an hourly strip, air quality, UV and pollen, iframes, notes and bookmarks.
+- **223 integrations,** listed in full [further down](#the-services-it-speaks-to). Generic building blocks for everything else: a JSON API widget, a calendar that merges several sources and shows a list, a week or a month, a weather card with an hourly strip, air quality, UV and pollen, iframes, notes and bookmarks.
 - **A map of your network.** A page can be a live plan of your UniFi network: gateway, switches and access points as a tree, each on the port it hangs from, with the traffic of every link running in both directions. You pick which servers and devices join it, and nothing moves by itself.
 - **Your home, switched from the board.** A page can hold the lamps, thermostats, covers, scenes, switches, sensors and statistics of Home Assistant on a free surface, as small as a light switch, each in a style of its own, from a pill to a rocker switch, a dial, a window or a door. nexdeck calls nothing but their own services, and only for what stands on the page. A beta for now.
 - **Actions where the data is.** Restart a container, start a VM, pause downloads, approve a request, wake a machine, flip a light. Destructive actions confirm once. Everything is logged.
@@ -149,7 +149,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 ## The services it speaks to
 
-**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, ProxMenux, Kopia, Duplicati, Portainer, Pterodactyl, AMP, Nomad, Cup, Coolify, Gitea, Forgejo, GitLab, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, openmediavault, Glances, dashdot, Beszel, Prometheus, InfluxDB, Alertmanager, Grafana, Scrutiny, UPS through PeaNUT, NUT, Wake-on-LAN, Backrest, Zerobyte, Komodo, Arcane, Dockhand, Kubernetes, UrBackup, Elasticsearch and OpenSearch, Netdata, Pulse, Ollama, Garage, llama.cpp, Open WebUI, Watchtower, ArchiveTeam Warrior, What's Up Docker, Zabbix, nextrmnl, PatchMon.
+**Hosts and containers.** Docker, Proxmox VE, Proxmox Backup Server, ProxMenux, Kopia, Duplicati, Portainer, Pterodactyl, AMP, Nomad, Cup, Coolify, Gitea, Forgejo, GitLab, Semaphore UI, Meilisearch, Synology DSM, Unraid, TrueNAS, openmediavault, Glances, dashdot, Beszel, Prometheus, InfluxDB, Alertmanager, Grafana, Scrutiny, UPS through PeaNUT, NUT, Wake-on-LAN, Backrest, Zerobyte, Komodo, Arcane, Dockhand, Kubernetes, UrBackup, Elasticsearch and OpenSearch, Netdata, Pulse, Ollama, Garage, llama.cpp, Open WebUI, Watchtower, ArchiveTeam Warrior, What's Up Docker, Zabbix, nextrmnl, PatchMon, GoatCounter, Jenkins, Cronicle, Container registry, Synapse, Woodpecker CI, Umami.
 
 **Network.** Public IP address, Cloudflare, UniFi, MikroTik, SNMP (switches and network devices), FRITZ!Box, OPNsense, pfSense, FortiGate, OpenWrt, Traefik, Caddy, Nginx Proxy Manager, nginx ignition, Pi-hole, AdGuard Home, Technitium, NextDNS, Tailscale, Headscale, NetBird, Pangolin, wg-easy, NetBox, Gluetun, authentik, Keycloak, CrowdSec, Wazuh, Shlink, Speedtest Tracker, MySpeed, nexpulse, nexsift, Uptime Kuma, UptimeRobot, Healthchecks, ChangeDetection.io, n8n, Blocky, Gatus, NetAlertX, Pocket ID.
 
@@ -157,7 +157,7 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 **Home and files.** Home Assistant, Frigate, Reolink, evcc, Immich, Nextcloud, FileBrowser Quantum, Syncthing, SFTPGo, Syncthing Relay, Paperless-ngx, Papra, Firefly III, Actual Budget, Mealie, Grocy, Vikunja, nexlore, nexpaper, nexdiary, nexcanvas, nexbrand, Kimai, Dawarich, wger, Audiobookshelf, Navidrome, Komga, Kavita, Calibre-Web, BookOrbit, Ghostfolio, Homebox, PhotoPrism, Tandoor Recipes, Wallos, OctoPrint, Spoolman, Moonraker, openHAB, Homebridge, Node-RED, ESPHome, Tasmota, Fronius, OpenDTU, Shelly.
 
-**Feeds, weather and messages.** Hacker News, YouTube, GitHub, share prices, Twitch, RSS, Miniflux, FreshRSS, Karakeep, Linkwarden, Linkding, iCal and CalDAV, Weather, ntfy, Gotify, nexmail, IMAP, Mailpit, mailcow, Stalwart.
+**Feeds, weather and messages.** Hacker News, YouTube, GitHub, share prices, Twitch, RSS, Miniflux, FreshRSS, Karakeep, Linkwarden, Linkding, iCal and CalDAV, Weather, ntfy, Gotify, nexmail, IMAP, Mailpit, Mastodon, Lemmy, mailcow, Stalwart.
 
 Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
 
