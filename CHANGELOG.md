@@ -3,6 +3,16 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **Cards of one connection share a request that is on its way.** When several cards ask a service for the same address at the same time, nexdeck sends it once and hands the answer to all of them. Before, only an answer that had already come back was shared, so a slow or hanging service got the most requests: three Proxmox cards on a service that did not answer sent three requests every round. A card that is changed while it waits stops waiting without taking the answer from the others.
+
+### Fixed
+
+- **A card no longer shows an answer older than it asked for.** Two cards that read the same address with different freshness shared one kept answer for the longer of the two times. The Proxmox guest cards showed the same figures for a minute after the inventory (System, Inventory) had read the guest list, which it does about once an hour, although they ask every thirty seconds.
+
 ## 0.51.0 (2026-10-28)
 
 ### Added
