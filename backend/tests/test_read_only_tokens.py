@@ -42,7 +42,12 @@ def _concrete(path: str) -> str:
 
 #: Addresses that take no API token at all and keep their own walls, each with the reason. The middleware leaves
 #: them alone; they still must not let the token through.
-OWN_WALLS = {"POST /api/mcp": "MCP takes only its own keys: an API token is no key there (401, or 404 while MCP is off)"}
+OWN_WALLS = {
+    "POST /api/mcp": "MCP takes only its own keys: an API token is no key there (401, or 404 while MCP is off)",
+    "PUT /api/mcp": "MCP answers every method alike: 404 while it is off, 405 otherwise, whatever the token",
+    "PATCH /api/mcp": "MCP answers every method alike: 404 while it is off, 405 otherwise, whatever the token",
+    "DELETE /api/mcp": "MCP answers every method alike: 404 while it is off, 405 otherwise, whatever the token",
+}
 
 
 def _refused(answer) -> bool:  # noqa: ANN001
