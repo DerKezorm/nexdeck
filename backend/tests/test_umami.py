@@ -1,13 +1,18 @@
-"""Umami, against the answers its API documentation describes.
+"""Umami. The answers in ``fixtures/umami_v3_answers.json`` were recorded on
+28.10.2026 from Umami 3.4.1 with PostgreSQL (three made-up websites, a few
+visits sent to ``/api/send``; token and ids replaced).
 
-⚠️ Not recorded from a running Umami: it needs PostgreSQL, a second container,
-and only one measuring container was allowed. The answers below have the shape
-of Umami 2 (``{"value", "prev"}`` per figure, ``{"x": n}`` for the visitors
-online) and of Umami 3 (plain numbers, ``{"visitors": n}``), which is what the
-documentation says; the card is a beta until somebody runs it against one.
+⚠️ Umami 2 (``{"value", "prev"}`` per figure, ``{"x": n}`` for the visitors
+online, ``url`` instead of ``path``) and Umami Cloud (API key) were not run:
+their answers below are made up after the documentation, and the card stays a
+beta for that reason.
 """
 
 from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -16,6 +21,7 @@ import respx
 from app.adapters import get_adapter
 from app.adapters.base import AdapterError, AuthFailed, Context, Unreachable, outbound_client
 
+REC: dict[str, Any] = json.loads((Path(__file__).parent / "fixtures" / "umami_v3_answers.json").read_text(encoding="utf-8"))
 BASE = "https://umami.example.com"
 API = f"{BASE}/api"
 CONFIG = {"url": BASE, "username": "admin", "password": "made-up-password"}
@@ -23,6 +29,7 @@ ADAPTER = get_adapter("umami")
 SITES = {"data": [{"id": "11111111-2222-3333-4444-555555555555", "name": "Blog", "domain": "blog.example.com"},
                   {"id": "66666666-7777-8888-9999-000000000000", "name": "Docs", "domain": "docs.example.com"}], "count": 2}
 BLOG, DOCS = SITES["data"][0]["id"], SITES["data"][1]["id"]
+R_BLOG, R_DOCS, R_EMPTY = (one["id"] for one in REC["websites"]["data"])
 STATS_2 = {"pageviews": {"value": 900, "prev": 800}, "visitors": {"value": 300, "prev": 280}, "visits": {"value": 400, "prev": 0},
            "bounces": {"value": 100, "prev": 0}, "totaltime": {"value": 38000, "prev": 0}}
 STATS_3 = {"pageviews": 900, "visitors": 300, "visits": 400, "bounces": 100, "totaltime": 38000, "comparison": {"pageviews": 800}}
@@ -154,3 +161,76 @@ async def test_a_wrong_address_a_site_free_umami_and_an_unreachable_one(ctx: Con
     respx.get(f"{API}/websites").mock(side_effect=httpx.ConnectError("refused"))
     with pytest.raises(Unreachable):
         await ADAPTER.fetch("websites", CONFIG, {}, fresh())
+
+
+def umami_three() -> None:
+    """The recorded Umami 3.4.1, as it answers for its three websites."""
+    respx.post(f"{API}/auth/login").mock(return_value=httpx.Response(200, json=REC["login"]))
+    respx.get(f"{API}/websites").mock(return_value=httpx.Response(200, json=REC["websites"]))
+    respx.get(f"{API}/websites/{R_BLOG}/stats").mock(return_value=httpx.Response(200, json=REC["stats"]))
+    respx.get(f"{API}/websites/{R_BLOG}/active").mock(return_value=httpx.Response(200, json=REC["active"]))
+    for other in (R_DOCS, R_EMPTY):
+        respx.get(f"{API}/websites/{other}/stats").mock(return_value=httpx.Response(200, json=REC["stats_empty"] if other == R_EMPTY else {**REC["stats"], "visitors": 2, "pageviews": 3, "visits": 2, "bounces": 1}))
+        respx.get(f"{API}/websites/{other}/active").mock(return_value=httpx.Response(200, json=REC["active_empty"]))
+
+    def metrics(request: httpx.Request) -> httpx.Response:
+        wanted = request.url.params["type"]
+        if wanted not in ("path", "referrer", "country", "browser", "device"):
+            return httpx.Response(400, json=REC["metrics_url_refused"])
+        return httpx.Response(200, json=REC[f"metrics_{wanted}"])
+
+    respx.get(url__regex=rf"{API}/websites/[^/]+/metrics").mock(side_effect=metrics)
+
+
+@respx.mock
+async def test_the_site_card_against_the_recorded_umami_3(ctx: Context) -> None:
+    umami_three()
+    data = await ADAPTER.fetch("site", CONFIG, {}, ctx)
+    assert data.primary == {"label": "Visitors", "value": 5}
+    assert data.secondary == [{"label": "Page views", "value": 9}, {"label": "Visits", "value": 5}, {"label": "Online now", "value": 4},
+                              {"label": "Bounce rate", "value": "20%"}, {"label": "Visit time", "value": "1s"}]
+    assert data.metrics == {"visitors": 5.0, "pageviews": 9.0, "online": 4.0}
+    empty = await ADAPTER.fetch("site", CONFIG, {"website": "Leer"}, fresh())
+    assert empty.primary == {"label": "Visitors", "value": 0} and [row["label"] for row in empty.secondary] == ["Page views", "Visits", "Online now"]
+
+
+@respx.mock
+async def test_the_websites_card_against_the_recorded_umami_3(ctx: Context) -> None:
+    umami_three()
+    data = await ADAPTER.fetch("websites", CONFIG, {}, ctx)
+    assert [(row["title"], row["value"], row["progress"]) for row in data.items] == [("Blog", "5", 100.0), ("Docs", "2", 40.0), ("Leer", "0", 0.0)]
+    assert data.items[0]["subtitle"] == "blog.example.com · 9 views · 4 online" and data.secondary == [{"label": "Websites", "value": 3}]
+    assert respx.calls[1].request.url.params["pageSize"] == "100"
+
+
+@respx.mock
+async def test_every_ranking_against_the_recorded_umami_3(ctx: Context) -> None:
+    umami_three()
+    seen = {}
+    for what in ("pages", "referrers", "countries", "browsers", "devices"):
+        data = await ADAPTER.fetch("top", CONFIG, {"what": what, "limit": 2}, fresh())
+        seen[what] = [(row["title"], row["value"]) for row in data.items]
+    assert seen == {"pages": [("/", "3"), ("/blog/self-hosting", "3")], "referrers": [("news.example.org", "1"), ("search.example.net", "1")],
+                    "countries": [("US", "3"), ("AU", "1")], "browsers": [("chrome", "1"), ("firefox", "1")], "devices": [("laptop", "3"), ("mobile", "1")]}
+    # Umami 3 knows path, so the fallback to url is not needed: one request per ranking.
+    assert sum(1 for call in respx.calls if call.request.url.path.endswith("/metrics")) == 5
+    respx.get(url__regex=rf"{API}/websites/[^/]+/metrics").mock(return_value=httpx.Response(200, json=REC["metrics_empty"]))
+    nothing = await ADAPTER.fetch("top", CONFIG, {"website": "Leer"}, fresh())
+    assert nothing.items == [] and nothing.meta["empty"] == "No visits in this period."
+
+
+@respx.mock
+async def test_the_sign_in_errors_umami_3_gives(ctx: Context) -> None:
+    umami_three()
+    respx.post(f"{API}/auth/login").mock(return_value=httpx.Response(401, json=REC["login_wrong"]))
+    with pytest.raises(AuthFailed) as wrong:
+        await ADAPTER.test(CONFIG, ctx)
+    assert "rejected the user name" in wrong.value.message
+    respx.post(f"{API}/auth/login").mock(return_value=httpx.Response(404, text="<html>404</html>"))
+    with pytest.raises(AdapterError) as elsewhere:
+        await ADAPTER.test(CONFIG, fresh())
+    assert elsewhere.value.code == "not_umami"
+    respx.post(f"{API}/auth/login").mock(return_value=httpx.Response(200, json=REC["login"]))
+    respx.get(f"{API}/websites").mock(return_value=httpx.Response(401, json=REC["unauthorized"]))
+    with pytest.raises(AuthFailed):
+        await ADAPTER.test(CONFIG, fresh())

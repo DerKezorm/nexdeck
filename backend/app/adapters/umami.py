@@ -1,27 +1,35 @@
 """Umami: visitors, page views and live visitors of your websites, and what they read and where they came from.
 
-⚠️ **Not run against Umami.** Umami needs PostgreSQL, so a test instance is
-two containers, and only one measuring container is allowed at a time. This
-is built from Umami's API documentation, and the answers in the tests have
-the documented shape. The card is a beta for that reason.
+Measured on 28.10.2026 against Umami 3.4.1 (``ghcr.io/umami-software/umami``
+with PostgreSQL 15): the sign-in, the website list, the figures, the visitors
+online and the five rankings all answer as described below, and the answers in
+the tests are recorded from it. **Not run** against Umami 2, which is still
+read after its documentation, nor against Umami Cloud (no account). That is why
+the card stays a beta.
 
-What the documentation says and this relies on:
+What the documentation says, and Umami 3.4.1 confirmed except where noted:
 
 - Self-hosted: ``POST /api/auth/login`` with ``{"username", "password"}`` gives
-  ``{"token": ...}``, sent as ``Authorization: Bearer``. Umami Cloud has no
+  ``{"token": ..., "user": {...}}``, sent as ``Authorization: Bearer``; a wrong
+  password is 401 (an empty field 400), a token it does not know 401 as well,
+  and a path that is not Umami's a 404 page. Umami Cloud has no
   login but an API key in ``x-umami-api-key`` and its API under
   ``https://api.umami.is/v1``.
-- ``GET /websites`` gives ``{"data": [{"id", "name", "domain"}], "count": n}``.
+- ``GET /websites`` gives ``{"data": [{"id", "name", "domain", ...}], "count": n, "page", "pageSize"}``;
+  ``pageSize=100`` is accepted.
 - ``GET /websites/<id>/stats?startAt=<ms>&endAt=<ms>`` gives ``pageviews``,
-  ``visitors``, ``visits``, ``bounces`` and ``totaltime`` (in seconds). In
-  Umami 2 each is ``{"value": n, "prev": m}``, in Umami 3 a plain number with
-  a ``comparison`` beside them; both are read.
+  ``visitors``, ``visits``, ``bounces`` and ``totaltime`` (in seconds); without
+  both bounds it is 400, an unknown website gives zeros. In
+  Umami 2 each is ``{"value": n, "prev": m}``, in Umami 3 (measured) a plain
+  number with a ``comparison`` beside them; both are read.
 - ``GET /websites/<id>/active`` gives the visitors of the last five minutes:
   ``{"x": n}`` in Umami 2, ``{"visitors": n}`` in Umami 3.
 - ``GET /websites/<id>/metrics?type=...&startAt&endAt&limit`` gives
   ``[{"x": name, "y": count}]``. The type for pages is ``url`` in Umami 2 and
   ``path`` in Umami 3; the card asks for ``path`` and tries ``url`` when that
-  is refused with 400.
+  is refused with 400. Umami 3.4.1 refuses ``url`` and a wrong type with a bare
+  400, leaves visits without a referrer out of ``referrer``, and names the
+  devices ``laptop``, ``mobile`` and so on.
 """
 
 from __future__ import annotations
@@ -75,7 +83,7 @@ class UmamiAdapter(Adapter):
     description = "Visitors, page views and live visitors of your websites in Umami, and their top pages, referrers and countries."
     icon = "umami"
     docs_url = "https://umami.is/docs/api"
-    #: Built from the documentation; never run against Umami.
+    #: Measured against Umami 3.4.1; Umami 2 and Umami Cloud are built from the documentation.
     beta = True
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://umami.example.com",
@@ -131,6 +139,8 @@ class UmamiAdapter(Adapter):
             raise AuthFailed("Umami wants a user name and a password, or an API key for Umami Cloud.")
         response = await ctx.request("POST", f"{self._api(config)}/auth/login", json_body={"username": user, "password": password},
                                      verify=not config.get("insecure"), timeout=20, auth_errors=False)
+        if response.status_code == 404:
+            raise AdapterError("This address answers, but not the way Umami does.", code="not_umami", hint="The URL is the address of Umami itself, without /api.")
         if response.status_code in (400, 401, 403):
             failure = AuthFailed("Umami rejected the user name or the password.")
             failure.hint = "Use the name and password you sign in to Umami with."
