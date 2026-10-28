@@ -9,23 +9,27 @@ database, not in a reply, not in a log line. Only whether it is set is ever told
 
 from __future__ import annotations
 
-import os
 import re
 from typing import Any
 
 from sqlalchemy.orm import Session
 
+from ..config import Settings
 from ..models import Setting
 
 KEY = "workshop"
 DEFAULT_REPO = "DerKezorm/nexdeck-workshop"
 REPO = re.compile(r"^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$")
-TOKEN_VARIABLE = "NEXDECK_WORKSHOP_TOKEN"
 
 
 def token() -> str:
-    """The key for the private test repository, or an empty text."""
-    return os.environ.get(TOKEN_VARIABLE, "").strip()
+    """The key for the private test repository, or an empty text. Read from the environment each time, never kept."""
+    return Settings().workshop_token.strip()
+
+
+def client_id() -> str:
+    """The Client ID of the GitHub App that signs administrators in to GitHub."""
+    return Settings().workshop_client_id.strip()
 
 
 def _read(db: Session) -> dict[str, Any]:

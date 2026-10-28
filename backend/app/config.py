@@ -121,6 +121,12 @@ class Settings(BaseSettings):
     #: on every cloud. Set this only when a service really does live on
     #: localhost next to nexdeck.
     allow_loopback_targets: bool = False
+    #: A key that may read the private Workshop repository, for the test phase only. Once the repository is public no
+    #: key is needed. Never shown, never logged, never sent anywhere but ``api.github.com``.
+    workshop_token: str = ""
+    #: The Client ID of the GitHub App "nexdeck Workshop", which signs administrators in to GitHub to share cards. It is
+    #: public and there is no secret to go with it; another App is named here only to try one.
+    workshop_client_id: str = "Iv23lilswL5wrA1Z5D4T"
     #: Filled on the first read of the generated key file; not a setting.
     _remembered_key: str = ""
 

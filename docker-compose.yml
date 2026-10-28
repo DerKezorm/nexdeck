@@ -31,6 +31,10 @@ services:
       - NEXDECK_LOG_LEVEL=${NEXDECK_LOG_LEVEL:-}
       # Start every card with invented data, for a look around.
       - NEXDECK_DEMO=${NEXDECK_DEMO:-}
+      # Card shop: a key for the private Workshop repository (test phase only),
+      # and the Client ID of the GitHub App that signs administrators in.
+      - NEXDECK_WORKSHOP_TOKEN=${NEXDECK_WORKSHOP_TOKEN:-}
+      - NEXDECK_WORKSHOP_CLIENT_ID=${NEXDECK_WORKSHOP_CLIENT_ID:-}
     volumes:
       - ./data:/data
       # ⚠️ Optional, and worth a thought before you mount it. The Docker socket
