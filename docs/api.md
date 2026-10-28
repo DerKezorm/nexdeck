@@ -7,6 +7,7 @@ interactive documentation lives at `/api/docs` on every installation.
 
 - **Browser session:** a cookie, set by `POST /api/v1/auth/login`. Unsafe methods need the header `X-Nexdeck-Request: 1`, which a cross-site form cannot send.
 - **API token:** `Authorization: Bearer nd_…`. Create one under My settings > API tokens. A new token only reads: every method but `GET`, `HEAD` and `OPTIONS` is refused with `403` and the code `token_read_only`, and so are the few reads that set something going on a service (the image relay `GET /api/v1/widgets/{id}/image`, the track relay `GET /api/v1/widgets/{id}/audio/...`, `GET /api/v1/push/key`). Pick "Full access" for a script that has to change something; it then has the rights of its account. Tokens made before nexdeck had this choice keep full access.
+- **MCP key:** `Authorization: Bearer ndm_…`, for `POST /api/mcp` only, where API tokens and the session count for nothing. See [AI from outside: MCP](mcp.md).
 - **Kiosk token:** `X-Kiosk-Token: nk_…` or `?kiosk=nk_…`. Reads one board, nothing else.
 
 ## Useful addresses
