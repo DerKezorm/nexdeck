@@ -2776,7 +2776,8 @@
         "same": "già presente",
         "different": "è diversa, resta la tua",
         "create": "Crea quelle che mancano",
-        "askAdmin": "Un amministratore può creare quelle che mancano. Nel frattempo queste schede mostrano «Definizione mancante»."
+        "askAdmin": "Un amministratore può creare quelle che mancano. Nel frattempo queste schede mostrano «Definizione mancante».",
+        "unknown": "nel file"
       }
     }
   }

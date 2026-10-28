@@ -2776,7 +2776,8 @@
         "same": "already here",
         "different": "differs, yours is kept",
         "create": "Create the missing ones",
-        "askAdmin": "An administrator can create the missing ones. Until then these cards show “definition missing”."
+        "askAdmin": "An administrator can create the missing ones. Until then these cards show “definition missing”.",
+        "unknown": "in this file"
       }
     }
   }

@@ -15,17 +15,19 @@ import { BoardsSettings } from './BoardsSettings'
 const FILE = 'nexdeck: 1\nboard:\n  name: Shared\ncustom_cards: []\n'
 
 const DEFINITIONS = [
-  { type: 'card', id: 'queue', name: 'Queue', state: 'missing' },
-  { type: 'card', id: 'speed', name: { en: 'Speed', de: 'Tempo' }, state: 'same' },
-  { type: 'integration', id: 'memos', name: 'Memos', state: 'different' },
+  { type: 'card', id: 'card:queue', slug: 'queue', name: 'Queue', requires: [], problems: [], status: 'missing' },
+  { type: 'card', id: 'card:speed', slug: 'speed', name: { en: 'Speed', de: 'Tempo' }, requires: [], problems: [], status: 'same' },
+  { type: 'integration', id: 'integration:memos', short: 'memos', name: 'Memos', requires: [], problems: [], status: 'different' },
 ]
+/** What the server tells somebody who is not an administrator: no more than his own file says. */
+const UNKNOWN = DEFINITIONS.map((one) => ({ ...one, status: 'unknown' }))
 
 type Sent = { url: string; method: string; body: Record<string, unknown> | null }
 const world = vi.hoisted(() => ({ sent: [] as { url: string; method: string; body: Record<string, unknown> | null }[], check: { status: 200, body: {} as unknown } }))
 
-function stub(definitions: unknown[] | null) {
+function stub(definitions: unknown[] | null, canCreate = true) {
   world.sent = []
-  world.check = definitions === null ? { status: 400, body: { detail: { code: 'invalid_yaml', message: 'Not a board file.' } } } : { status: 200, body: { definitions } }
+  world.check = definitions === null ? { status: 400, body: { detail: { code: 'invalid_yaml', message: 'Not a board file.' } } } : { status: 200, body: { can_create: canCreate, definitions, missing_integrations: [] } }
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -96,19 +98,31 @@ describe('a board file with custom cards', () => {
 
   it('karten12 ac7: someone who is not an administrator is told an administrator can create them, and asks for none', async () => {
     as('user')
-    stub(DEFINITIONS)
+    stub(UNKNOWN, false)
     show()
     await paste()
     const section = await screen.findByTestId('board-definitions')
     expect(within(section).queryByRole('checkbox')).toBeNull()
+    expect(within(section).getAllByRole('listitem').map((one) => one.textContent)).toEqual(['CardQueuein this file', 'CardSpeedin this file', 'IntegrationMemosin this file'])
     expect(within(section).getByRole('note')).toHaveTextContent('An administrator can create the missing ones. Until then these cards show “definition missing”.')
     await userEvent.click(importButton())
     await waitFor(() => expect(sent('POST', '/boards/import')).toHaveLength(1))
     expect(sent('POST', '/boards/import')[0].body).toEqual({ yaml_text: FILE, definitions: 'skip' })
   })
 
+  it('karten12 ac7: when the server says this person may not create them, the tick is not offered even for an administrator', async () => {
+    stub(DEFINITIONS, false)
+    show()
+    await paste()
+    const section = await screen.findByTestId('board-definitions')
+    expect(within(section).queryByRole('checkbox')).toBeNull()
+    await userEvent.click(importButton())
+    await waitFor(() => expect(sent('POST', '/boards/import')).toHaveLength(1))
+    expect(sent('POST', '/boards/import')[0].body).toEqual({ yaml_text: FILE, definitions: 'skip' })
+  })
+
   it('karten12 ac6: when nothing is missing there is no tick, and nothing is created', async () => {
-    stub([{ type: 'card', id: 'speed', name: 'Speed', state: 'same' }])
+    stub([{ type: 'card', id: 'card:speed', slug: 'speed', name: 'Speed', requires: [], problems: [], status: 'same' }])
     show()
     await paste()
     const section = await screen.findByTestId('board-definitions')

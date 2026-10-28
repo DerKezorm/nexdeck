@@ -2776,7 +2776,8 @@
         "same": "schon vorhanden",
         "different": "weicht ab, deine bleibt",
         "create": "Fehlende anlegen",
-        "askAdmin": "Ein Admin kann die fehlenden anlegen. Bis dahin zeigen diese Karten „Definition fehlt“."
+        "askAdmin": "Ein Admin kann die fehlenden anlegen. Bis dahin zeigen diese Karten „Definition fehlt“.",
+        "unknown": "in der Datei"
       }
     }
   }

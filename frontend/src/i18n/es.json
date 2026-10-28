@@ -2776,7 +2776,8 @@
         "same": "ya está",
         "different": "es distinta, se conserva la tuya",
         "create": "Crear las que faltan",
-        "askAdmin": "Un administrador puede crear las que faltan. Mientras tanto, estas tarjetas muestran «Falta la definición»."
+        "askAdmin": "Un administrador puede crear las que faltan. Mientras tanto, estas tarjetas muestran «Falta la definición».",
+        "unknown": "en el archivo"
       }
     }
   }
