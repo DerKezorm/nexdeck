@@ -374,3 +374,11 @@ def test_karten16_b7_a_plain_refusal_stays_no_access(me: TestClient, hub: Hub, m
     monkeypatch.setattr(hub, "answer_issues", lambda request: httpx.Response(403, json={"message": "Resource not accessible by integration"}))
     sent = share(me)
     assert sent.status_code == 403 and sent.json()["detail"]["code"] == "repo_no_access"
+
+
+def test_karten16_b1_the_link_to_the_form_on_github_carries_the_description_masked(me: TestClient) -> None:
+    from urllib.parse import parse_qs, urlparse
+
+    out = me.post(f"{BASE}/submit/file", json={"type": "card", "slug": SLUG, "category": "media", "description": INJECTIONS["heading"], "changes": "", "license": True}, headers=CSRF).json()
+    sent = parse_qs(urlparse(out["link"]).query)["description"][0]
+    assert sent == submit.mask(INJECTIONS["heading"]) and "\n### Based on" not in sent

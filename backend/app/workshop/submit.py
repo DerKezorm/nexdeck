@@ -682,7 +682,7 @@ def form_link(repo: str, one: Subject, form: Form, based_on: str | None) -> str:
         "title": f"{NEW_TITLE}{one.slug}",
         "type": TYPES[one.type],
         "category": CATEGORIES.get(form.category, ""),
-        "description": form.description.strip()[:1500],
+        "description": mask(form.description.strip())[:1500],
         "based_on": based_on or "",
     }
     query = "&".join(f"{name}={quote(value, safe='')}" for name, value in parts.items() if value)
