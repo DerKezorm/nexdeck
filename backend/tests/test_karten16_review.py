@@ -8,6 +8,7 @@ which reads them with its own reader: the two repositories agree on them or one 
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -204,3 +205,47 @@ def test_karten16_b2_taking_the_administrator_role_away_ends_the_sign_in(me: Tes
     with db_session() as db:
         assert db.get(GithubLogin, second["id"]) is None
     assert second["id"] not in real_values._kept  # noqa: SLF001
+
+
+# -- B3: addresses, host names and e-mail addresses of the last probe are warned of too (EC-4) ---------------------------
+
+WHO = SimpleNamespace(id=1, username="a", created_at=None)
+
+
+def warned_of(probe: dict[str, Any], demo: dict[str, Any]) -> list[dict[str, str]]:
+    real_values.forget()
+    real_values.remember(WHO, probe)
+    found = real_values.places(WHO, {"q": demo})
+    real_values.forget()
+    return found
+
+
+def test_karten16_b3_an_ipv4_address_of_the_probe_is_warned_of() -> None:
+    found = warned_of({"host": "192.168.178.20", "name": "nas-of-example"}, {"host": "192.168.178.20", "name": "nas-of-example"})
+    assert found == [{"path": "demo.q.host", "value": "192.168.178.20"}, {"path": "demo.q.name", "value": "nas-of-example"}]
+
+
+def test_karten16_b3_an_address_inside_a_longer_text_is_found_on_both_sides() -> None:
+    found = warned_of({"url": "http://192.168.178.20:8989/api/v3/queue"}, {"note": "Reached at 192.168.178.20 over http."})
+    assert found == [{"path": "demo.q.note", "value": "192.168.178.20"}]
+
+
+def test_karten16_b3_an_ipv6_address_is_warned_of() -> None:
+    found = warned_of({"url": "http://[fd00::1a2b]:8989/"}, {"host": "FD00::1A2B", "other": "fd00::9"})
+    assert found == [{"path": "demo.q.host", "value": "fd00::1a2b"}]
+
+
+def test_karten16_b3_a_host_name_inside_a_text_is_warned_of() -> None:
+    found = warned_of({"url": "https://nas.homelab.example.net:8989/queue"}, {"server": "nas.homelab.example.net"})
+    assert found == [{"path": "demo.q.server", "value": "nas.homelab.example.net"}]
+
+
+def test_karten16_b3_an_e_mail_address_is_warned_of() -> None:
+    found = warned_of({"owner": "Owner: jane.roe@mail.example.org"}, {"contact": "write to jane.roe@mail.example.org"})
+    assert found == [{"path": "demo.q.contact", "value": "jane.roe@mail.example.org"}]
+
+
+def test_karten16_b3_things_that_only_look_like_addresses_are_no_reason_to_warn() -> None:
+    probe = {"version": "1.2.3", "time": "at 12:30:45", "size": "10.5 GB", "mail": "someone@example.com"}
+    demo = {"version": "1.2.3", "time": "since 12:30:45", "size": "about 10.5 GB", "domain": "example.com"}
+    assert warned_of(probe, demo) == []
