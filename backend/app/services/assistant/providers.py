@@ -33,10 +33,17 @@ ANTHROPIC_BASE_URL: str | None = None
 
 
 class AssistantError(Exception):
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(self, code: str, message: str, detail: str = "") -> None:
         super().__init__(message)
         self.code = code
         self.message = message
+        #: What the provider said itself, clipped: the card editor shows a limit or an empty account in these words.
+        self.detail = detail
+
+
+def said(error: Any) -> str:
+    """The provider's own sentence from an error of the SDK, clipped; empty when it gave none."""
+    return " ".join(str(getattr(error, "message", "") or "").split())[:300]
 
 
 @dataclass
@@ -99,10 +106,10 @@ async def anthropic_turn(settings: dict[str, Any], key: str, system: str, transc
         raise AssistantError("auth", "The key may not use this model.") from None
     except anthropic.NotFoundError:
         raise AssistantError("model", f"Anthropic does not know the model {model!r}.") from None
-    except anthropic.RateLimitError:
-        raise AssistantError("rate_limited", "Anthropic is busy or the account's limit is reached. Try again in a minute.") from None
+    except anthropic.RateLimitError as error:
+        raise AssistantError("rate_limited", "Anthropic is busy or the account's limit is reached. Try again in a minute.", said(error)) from None
     except anthropic.APIStatusError as error:
-        raise AssistantError("provider", f"Anthropic answered with HTTP {error.status_code}.") from None
+        raise AssistantError("provider", f"Anthropic answered with HTTP {error.status_code}.", said(error)) from None
     except anthropic.APIConnectionError:
         raise AssistantError("unreachable", "Anthropic could not be reached.") from None
     finally:
@@ -142,6 +149,16 @@ def to_openai(system: str, transcript: list[dict[str, Any]]) -> list[dict[str, A
     return messages
 
 
+def _error_text(response: Any) -> str:
+    """The sentence an OpenAI-shaped service puts in ``error.message``, clipped; empty when there is none."""
+    try:
+        error = response.json().get("error")
+        found = error.get("message") if isinstance(error, dict) else error
+    except (ValueError, AttributeError):
+        return ""
+    return " ".join(str(found or "").split())[:300]
+
+
 async def openai_turn(settings: dict[str, Any], key: str, system: str, transcript: list[dict[str, Any]],
                       tools: list[dict[str, Any]]) -> Turn:
     import httpx
@@ -163,7 +180,7 @@ async def openai_turn(settings: dict[str, Any], key: str, system: str, transcrip
     if response.status_code == 404:
         raise AssistantError("model", "The service does not know this address or model.")
     if response.status_code >= 400:
-        raise AssistantError("provider", f"The service answered with HTTP {response.status_code}.")
+        raise AssistantError("rate_limited" if response.status_code == 429 else "provider", f"The service answered with HTTP {response.status_code}.", _error_text(response))
     try:
         answer = response.json()
         choice = answer["choices"][0]
