@@ -2298,7 +2298,22 @@
     "Settings > Sessions > Add long-lived token, in the app or the web page.": "Einstellungen > Sitzungen > Langlebigen Token hinzufügen, in der App oder auf der Webseite.",
     "The name of one household. Empty uses the first.": "Der Name eines Haushalts. Leer nimmt den ersten.",
     "What is left to buy on the shopping list, the meals planned from today on, and how many recipes there are.": "Was auf der Einkaufsliste noch zu kaufen ist, die ab heute geplanten Mahlzeiten, und wie viele Rezepte es gibt.",
-    "What is on the list, with its amount.": "Was auf der Liste steht, mit der Menge."
+    "What is on the list, with its amount.": "Was auf der Liste steht, mit der Menge.",
+    "Each vehicle with its odometer, yellow or red while a reminder is due.": "Jedes Fahrzeug mit seinem Kilometerstand, gelb oder rot, solange eine Erinnerung fällig ist.",
+    "Empty while LubeLogger runs without authentication, which is how it starts.": "Leer, solange LubeLogger ohne Anmeldung läuft, so startet es.",
+    "Garage": "Garage",
+    "How many reminders are due or past due, with the vehicles and the reminders that are not yet due.": "Wie viele Erinnerungen fällig oder überfällig sind, mit den Fahrzeugen und den noch nicht fälligen Erinnerungen.",
+    "Instead of user and password: an API key made in LubeLogger's settings. Sent as x-api-key.": "Statt Benutzer und Passwort: ein API-Schlüssel aus den Einstellungen von LubeLogger. Wird als x-api-key gesendet.",
+    "Next services": "Nächste Wartungen",
+    "Not yet due": "Noch nicht fällig",
+    "Only those due soon or past due": "Nur bald fällige oder überfällige",
+    "Past due": "Überfällig",
+    "The next services of your vehicles, the vehicles with their odometer, and how many reminders are due.": "Die nächsten Wartungen deiner Fahrzeuge, die Fahrzeuge mit ihrem Kilometerstand, und wie viele Erinnerungen fällig sind.",
+    "The reminders of your vehicles, the most urgent first.": "Die Erinnerungen deiner Fahrzeuge, die dringendsten zuerst.",
+    "Vehicles": "Fahrzeuge",
+    "No reminders are due.": "Keine Erinnerung ist fällig.",
+    "No reminders yet.": "Noch keine Erinnerungen.",
+    "No vehicles yet.": "Noch keine Fahrzeuge."
   },
   "labels": {
     "Private resources": "Private Ressourcen",

@@ -2298,7 +2298,22 @@
     "Settings > Sessions > Add long-lived token, in the app or the web page.": "Paramètres > Sessions > Ajouter un jeton longue durée, dans l'application ou sur la page web.",
     "The name of one household. Empty uses the first.": "Le nom d'un foyer. Vide, il prend le premier.",
     "What is left to buy on the shopping list, the meals planned from today on, and how many recipes there are.": "Ce qu'il reste à acheter sur la liste de courses, les repas prévus à partir d'aujourd'hui, et combien il y a de recettes.",
-    "What is on the list, with its amount.": "Ce qui figure sur la liste, avec la quantité."
+    "What is on the list, with its amount.": "Ce qui figure sur la liste, avec la quantité.",
+    "Each vehicle with its odometer, yellow or red while a reminder is due.": "Chaque véhicule avec son compteur kilométrique, jaune ou rouge tant qu'un rappel est dû.",
+    "Empty while LubeLogger runs without authentication, which is how it starts.": "Vide tant que LubeLogger fonctionne sans authentification, ce qui est son démarrage par défaut.",
+    "Garage": "Garage",
+    "How many reminders are due or past due, with the vehicles and the reminders that are not yet due.": "Combien de rappels sont dus ou en retard, avec les véhicules et les rappels pas encore dus.",
+    "Instead of user and password: an API key made in LubeLogger's settings. Sent as x-api-key.": "Au lieu de l'utilisateur et du mot de passe : une clé d'API créée dans les paramètres de LubeLogger. Envoyée comme x-api-key.",
+    "Next services": "Prochains entretiens",
+    "Not yet due": "Pas encore dus",
+    "Only those due soon or past due": "Seulement ceux bientôt dus ou en retard",
+    "Past due": "En retard",
+    "The next services of your vehicles, the vehicles with their odometer, and how many reminders are due.": "Les prochains entretiens de vos véhicules, les véhicules avec leur compteur kilométrique, et combien de rappels sont dus.",
+    "The reminders of your vehicles, the most urgent first.": "Les rappels de vos véhicules, les plus urgents d'abord.",
+    "Vehicles": "Véhicules",
+    "No reminders are due.": "Aucun rappel n'est dû.",
+    "No reminders yet.": "Pas encore de rappels.",
+    "No vehicles yet.": "Pas encore de véhicules."
   },
   "labels": {
     "Private resources": "Ressources privées",

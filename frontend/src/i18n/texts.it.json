@@ -2298,7 +2298,22 @@
     "Settings > Sessions > Add long-lived token, in the app or the web page.": "Impostazioni > Sessioni > Aggiungi token di lunga durata, nell'app o nella pagina web.",
     "The name of one household. Empty uses the first.": "Il nome di una famiglia. Vuoto usa la prima.",
     "What is left to buy on the shopping list, the meals planned from today on, and how many recipes there are.": "Cosa resta da comprare nella lista della spesa, i pasti pianificati da oggi in poi e quante ricette ci sono.",
-    "What is on the list, with its amount.": "Cosa c'è nella lista, con la quantità."
+    "What is on the list, with its amount.": "Cosa c'è nella lista, con la quantità.",
+    "Each vehicle with its odometer, yellow or red while a reminder is due.": "Ogni veicolo con il suo contachilometri, giallo o rosso finché un promemoria è in scadenza.",
+    "Empty while LubeLogger runs without authentication, which is how it starts.": "Vuoto finché LubeLogger funziona senza autenticazione, come parte di default.",
+    "Garage": "Garage",
+    "How many reminders are due or past due, with the vehicles and the reminders that are not yet due.": "Quanti promemoria sono in scadenza o scaduti, con i veicoli e i promemoria non ancora in scadenza.",
+    "Instead of user and password: an API key made in LubeLogger's settings. Sent as x-api-key.": "Al posto di utente e password: una chiave API creata nelle impostazioni di LubeLogger. Inviata come x-api-key.",
+    "Next services": "Prossimi interventi",
+    "Not yet due": "Non ancora in scadenza",
+    "Only those due soon or past due": "Solo quelli in scadenza o scaduti",
+    "Past due": "Scaduti",
+    "The next services of your vehicles, the vehicles with their odometer, and how many reminders are due.": "I prossimi interventi dei tuoi veicoli, i veicoli con il loro contachilometri e quanti promemoria sono in scadenza.",
+    "The reminders of your vehicles, the most urgent first.": "I promemoria dei tuoi veicoli, i più urgenti per primi.",
+    "Vehicles": "Veicoli",
+    "No reminders are due.": "Nessun promemoria è in scadenza.",
+    "No reminders yet.": "Ancora nessun promemoria.",
+    "No vehicles yet.": "Ancora nessun veicolo."
   },
   "labels": {
     "Private resources": "Risorse private",

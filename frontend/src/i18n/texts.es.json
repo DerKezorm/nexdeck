@@ -2298,7 +2298,22 @@
     "Settings > Sessions > Add long-lived token, in the app or the web page.": "Ajustes > Sesiones > Añadir token de larga duración, en la app o en la web.",
     "The name of one household. Empty uses the first.": "El nombre de un hogar. Vacío usa el primero.",
     "What is left to buy on the shopping list, the meals planned from today on, and how many recipes there are.": "Lo que queda por comprar en la lista de la compra, las comidas planificadas desde hoy y cuántas recetas hay.",
-    "What is on the list, with its amount.": "Lo que hay en la lista, con su cantidad."
+    "What is on the list, with its amount.": "Lo que hay en la lista, con su cantidad.",
+    "Each vehicle with its odometer, yellow or red while a reminder is due.": "Cada vehículo con su cuentakilómetros, amarillo o rojo mientras haya un recordatorio vencido.",
+    "Empty while LubeLogger runs without authentication, which is how it starts.": "Vacío mientras LubeLogger funcione sin autenticación, que es como arranca.",
+    "Garage": "Garaje",
+    "How many reminders are due or past due, with the vehicles and the reminders that are not yet due.": "Cuántos recordatorios están vencidos o por vencer, con los vehículos y los recordatorios aún no vencidos.",
+    "Instead of user and password: an API key made in LubeLogger's settings. Sent as x-api-key.": "En lugar de usuario y contraseña: una clave de API creada en los ajustes de LubeLogger. Se envía como x-api-key.",
+    "Next services": "Próximos servicios",
+    "Not yet due": "Aún no vencidos",
+    "Only those due soon or past due": "Solo los próximos a vencer o vencidos",
+    "Past due": "Vencidos",
+    "The next services of your vehicles, the vehicles with their odometer, and how many reminders are due.": "Los próximos servicios de tus vehículos, los vehículos con su cuentakilómetros y cuántos recordatorios están vencidos.",
+    "The reminders of your vehicles, the most urgent first.": "Los recordatorios de tus vehículos, los más urgentes primero.",
+    "Vehicles": "Vehículos",
+    "No reminders are due.": "Ningún recordatorio está vencido.",
+    "No reminders yet.": "Aún no hay recordatorios.",
+    "No vehicles yet.": "Aún no hay vehículos."
   },
   "labels": {
     "Private resources": "Recursos privados",
