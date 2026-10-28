@@ -141,3 +141,54 @@ async def test_nach_merge_shelly_a_command_that_switches_never_leaves_the_server
     with pytest.raises(AdapterError) as refused:
         await get_adapter("shelly").raw_request("GET", "/relay/0?turn=on", {"url": BASE}, ctx())
     assert refused.value.code == "command_refused" and not asked
+
+
+# -- Jackett: the cookie of the web interface, in a client of its own; a request without it is sent to the login page ----
+
+
+class Jackett:
+    def __init__(self, password: str = PASSWORD) -> None:
+        self.password = password
+        self.logins = 0
+        self.session: str | None = None
+        self.asked: list[httpx.Request] = []
+
+    def sign_in(self, request: httpx.Request) -> httpx.Response:
+        self.logins += 1
+        if f"password={self.password}".encode() not in request.content:
+            return httpx.Response(302, headers={"location": "Dashboard"})  # the same answer, without the cookie
+        self.session = f"cookie-{self.logins}"
+        return httpx.Response(302, headers={"location": "Dashboard", "set-cookie": f"Jackett={self.session}; Path=/"})
+
+    def read(self, request: httpx.Request) -> httpx.Response:
+        self.asked.append(request)
+        if self.session is None or f"Jackett={self.session}" not in request.headers.get("cookie", ""):
+            return httpx.Response(302, headers={"location": "/UI/Login?ReturnUrl=%2Fapi"})
+        return httpx.Response(200, json={"app_version": "v0.24.2934"} if request.url.path.endswith("config") else [])
+
+
+@respx.mock
+async def test_nach_merge_jackett_a_card_signs_in_to_the_web_interface_and_keeps_its_cookie_when_it_ran_out() -> None:
+    service = Jackett()
+    respx.post(f"{BASE}/UI/Dashboard").mock(side_effect=service.sign_in)
+    respx.get(url__regex=rf"{BASE}/(api|UI/Dashboard).*").mock(side_effect=service.read)
+    adapter, config, held = get_adapter("jackett"), {"url": BASE, "password": PASSWORD}, ctx()
+    answer = await adapter.raw_request("GET", "/api/v2.0/indexers?configured=true", config, held)
+    assert answer.status_code == 200 and service.logins == 1
+    sent = service.asked[-1]
+    assert "Jackett=cookie-1" in sent.headers["cookie"] and PASSWORD not in str(sent.url) + str(sent.headers)
+    await adapter.raw_request("GET", "/api/v2.0/server/config", config, held)
+    assert service.logins == 1, "the cookie is the session of the kind's own cards too"
+    service.session = None  # the cookie ran out at the service
+    answer = await adapter.raw_request("GET", "/api/v2.0/indexers?configured=true", config, held)
+    assert answer.status_code == 200 and service.logins == 2
+
+
+@respx.mock
+async def test_nach_merge_jackett_a_wrong_password_is_told_to_the_card_and_not_tried_for_ever() -> None:
+    service = Jackett(password="Zk-other")
+    respx.post(f"{BASE}/UI/Dashboard").mock(side_effect=service.sign_in)
+    respx.get(url__regex=rf"{BASE}/(api|UI/Dashboard).*").mock(side_effect=service.read)
+    with pytest.raises(AuthFailed):
+        await get_adapter("jackett").raw_request("GET", "/api/v2.0/indexers", {"url": BASE, "password": PASSWORD}, ctx())
+    assert service.logins == 1

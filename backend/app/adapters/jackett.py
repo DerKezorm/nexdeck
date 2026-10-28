@@ -108,6 +108,16 @@ class JackettAdapter(Adapter):
             ctx.cache["jackett_client"] = client
         return client
 
+    def raw_client(self, config: dict[str, Any], ctx: Context) -> httpx.AsyncClient:
+        return self._client(config, ctx)
+
+    async def raw_sign_in(self, config: dict[str, Any], ctx: Context) -> None:
+        await self._sign_in(config, ctx)
+
+    def raw_expired(self, response: httpx.Response) -> bool:
+        """Jackett turns a request without its cookie away with a redirect to its login page, not with 401."""
+        return response.status_code in (301, 302, 303, 307) and "/UI/Login" in str(response.headers.get("location", ""))
+
     async def _sign_in(self, config: dict[str, Any], ctx: Context) -> None:
         client = self._client(config, ctx)
         try:

@@ -498,10 +498,11 @@ async def _through_the_clients_own_cookies(
             failure = Unreachable(f"The service could not be reached: {error.__class__.__name__}.")
             failure.__cause__ = error
             raise (_no_answer(failure) if acting else failure) from error
-        if response.status_code in (401, 403) and attempt == 0 and await renew(adapter, config, ctx, None) is not None:
+        refused = response.status_code in (401, 403) or adapter.raw_expired(response)
+        if refused and attempt == 0 and await renew(adapter, config, ctx, None) is not None:
             continue
         _refuse_a_giant_answer(url, response)
-        if attempt == 1 and response.status_code not in (401, 403):
+        if attempt == 1 and not refused:
             ctx.cache.pop(CHECKED, None)
         return response
     raise AdapterError("The service did not accept the sign-in.", code="auth_failed")  # pragma: no cover
