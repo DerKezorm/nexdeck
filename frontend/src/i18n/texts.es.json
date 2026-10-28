@@ -2323,7 +2323,17 @@
     "The lists of a board with the number of cards in each.": "Las listas de un tablero con el número de tarjetas en cada una.",
     "The name of one board. Empty uses the first.": "El nombre de un tablero. Vacío usa el primero.",
     "The open cards of your boards, those overdue or due soon, and the lists of a board.": "Las tarjetas abiertas de tus tableros, las vencidas o por vencer, y las listas de un tablero.",
-    "No card has a due date.": "Ninguna tarjeta tiene fecha de vencimiento."
+    "No card has a due date.": "Ninguna tarjeta tiene fecha de vencimiento.",
+    "Account > Token in the web interface. It is the user's own, and sees that user's devices.": "Cuenta > Token en la interfaz web. Es el del propio usuario y ve los dispositivos de ese usuario.",
+    "Devices online": "Dispositivos en línea",
+    "Each device with its battery and when it was last heard from, the offline ones first.": "Cada dispositivo con su batería y cuándo se supo de él por última vez, los desconectados primero.",
+    "How many devices are online, with those offline and those moving.": "Cuántos dispositivos están en línea, con los desconectados y los que se mueven.",
+    "How many tracked devices are online, which are moving, and when each was last heard from.": "Cuántos dispositivos rastreados están en línea, cuáles se mueven y cuándo se supo de cada uno por última vez.",
+    "Moving": "En movimiento",
+    "Only offline devices": "Solo dispositivos desconectados",
+    "never": "nunca",
+    "Every device is online.": "Todos los dispositivos están en línea.",
+    "No devices yet.": "Aún no hay dispositivos."
   },
   "labels": {
     "Private resources": "Recursos privados",
