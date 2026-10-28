@@ -2267,7 +2267,15 @@
     "How many pages there are, with the users and the version.": "Wie viele Seiten es gibt, mit den Benutzern und der Version.",
     "The pages changed last, with their path.": "Die zuletzt geänderten Seiten, mit ihrem Pfad.",
     "Wiki": "Wiki",
-    "Newer version": "Neuere Version"
+    "Newer version": "Neuere Version",
+    "Changed this week": "Diese Woche geändert",
+    "ETAPI token": "ETAPI-Token",
+    "How many notes Trilium holds, how many changed this week, and the notes changed last.": "Wie viele Notizen Trilium hat, wie viele diese Woche geändert wurden, und die zuletzt geänderten Notizen.",
+    "How many notes there are, and how many changed this week.": "Wie viele Notizen es gibt, und wie viele diese Woche geändert wurden.",
+    "Options > ETAPI > Create new ETAPI token.": "Optionen > ETAPI > Neuen ETAPI-Token erstellen.",
+    "Recently changed notes": "Zuletzt geänderte Notizen",
+    "The notes changed last.": "Die zuletzt geänderten Notizen.",
+    "No notes yet.": "Noch keine Notizen."
   },
   "labels": {
     "Private resources": "Private Ressourcen",
