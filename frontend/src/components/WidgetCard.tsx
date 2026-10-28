@@ -60,7 +60,10 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   const showFindings = widget.options?.show_findings === true
   const status = cardStatus(widget, data)
   const errorCode = String(data?.meta?.code ?? '')
-  const errorText = disguise.free(failed ? (i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: tLabel(String(data?.error)), ...pausedUntil(data?.error) })) : '')
+  // A custom card a member brought in a board file waits for an administrator (KARTEN-12 AC-7); the server says so
+  // only by its mark, the same whether the card is saved here or not.
+  const awaiting = errorCode === 'definition_missing' && widget.options?.awaiting_admin === true
+  const errorText = disguise.free(failed ? (awaiting ? t('card.awaitingAdmin') : i18n.language.split('-')[0] === 'en' ? String(data?.error) : t(`errors.widget.${errorCode}`, { defaultValue: tLabel(String(data?.error)), ...pausedUntil(data?.error) })) : '')
   // ⚠️ data?.link comes from the service, not from the operator. A
   // javascript: address here would run as part of nexdeck.
   const link = safeUrl(widget.link || data?.link || widget.service_link) || undefined
@@ -252,7 +255,7 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
         <div className={`card-error ${bare ? 'inset-0' : 'inset-x-0 bottom-0 top-9'}`} title={String(data?.meta?.hint ?? '')} data-testid="card-error">
           <AlertTriangle size={22} className="text-bad flex-none" aria-hidden="true" />
           <p className="text-[12px] font-medium text-bad leading-snug line-clamp-3">{errorText}</p>
-          {errorCode === 'definition_missing' ? <p className="text-[11px] text-ink/80 leading-snug" data-testid="card-definition-hint">{t('card.definitionMissingHint')}</p> : null}
+          {errorCode === 'definition_missing' ? <p className="text-[11px] text-ink/80 leading-snug" data-testid="card-definition-hint">{t(awaiting ? 'card.awaitingAdminHint' : 'card.definitionMissingHint')}</p> : null}
           {data?.cause ? <p className="text-[11px] text-ink/80" data-testid="card-cause">{t('dependencies.because', { name: data.cause })}</p> : null}
           <WhyLink subject={subjectOf(widget)} name={widget.title || widget.kind} />
           {data?.meta?.stale_since ? <p className="text-[10px] text-muted">{t('card.staleData')}</p> : null}

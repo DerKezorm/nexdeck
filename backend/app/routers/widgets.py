@@ -25,7 +25,7 @@ from ..adapters.base import (
     image_path,
     outbound_client,
 )
-from ..adapters.custom import MIN_REFRESH_SECONDS, name_of, sizes_of
+from ..adapters.custom import AWAITING, MIN_REFRESH_SECONDS, definition_of, name_of, sizes_of
 from ..cards import images as card_images
 from ..cards import store as card_store
 from ..db import db_session
@@ -60,6 +60,7 @@ from ..services.boards import (
     card_sizes,
     clean_cards,
     place_widget,
+    keep_awaiting,
     refuse_unshared_card,
     remove_from_layouts,
     widget_view,
@@ -210,6 +211,7 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
     widget, page = _widget(db, widget_id)
     board, _ = require_board_id(db, page.board_id, user, "edit")
     _refuse_other_card(db, widget, body.options, user)
+    before = dict(widget.options or {})
     if body.integration_id is not None or body.clear_integration:
         _validate_kind(db, widget.kind, None if body.clear_integration else body.integration_id, user)
     # What the card will be once this change is in, which is what a custom card is held to.
@@ -234,6 +236,9 @@ def patch_widget(widget_id: int, body: WidgetPatch, user: CurrentUser, db: DbSes
         app_keys.refuse_twice(db, board.id, widget.id, widget.kind, body.options)
         _refuse_a_taken_alias(db, board.id, widget.id, widget.kind, body.options)
         widget.options = clean_cards(db, page.id, widget.id, widget.kind, body.options)
+    if widget.kind.startswith("custom."):
+        # A card waiting for an administrator (KARTEN-12 AC-7) is let go by an administrator's save, by nobody else's.
+        widget.options = keep_awaiting(before, widget.options, user)
     if body.clear_refresh:
         widget.refresh_seconds = None
     elif body.refresh_seconds is not None:
@@ -565,7 +570,8 @@ async def preview_widget(widget_id: int, body: WidgetPreview, user: CurrentUser,
         integration_id = body.integration_id
     else:
         integration_id = widget.integration_id
-    data = await collector.preview(widget_id, body.options, integration_id)
+    # Draft options of a card that waits for an administrator wait as well, or the sheet would run it (KARTEN-12 AC-7).
+    data = await collector.preview(widget_id, keep_awaiting(widget.options, body.options, user) if widget.kind.startswith("custom.") else body.options, integration_id)
     return data.model_dump()
 
 
@@ -864,6 +870,12 @@ async def widget_image(widget_id: int, path: str, request: Request, user: Option
         raise refused
     if not widget.kind.startswith("custom."):
         path = _picture_path(db, widget, path)
+    elif (widget.options or {}).get(AWAITING):
+        # A card that waits for an administrator shows nothing of its definition, pictures included (KARTEN-12 AC-7).
+        try:
+            definition_of(widget.options or {})
+        except AdapterError as failure:
+            raise error("not_found", str(failure), status.HTTP_404_NOT_FOUND) from failure
     kept = cached_image((widget_id, path))
     if kept is not None:
         return kept

@@ -1431,7 +1431,9 @@
     "lowHigh": "da {{low}} a {{high}}",
     "collectingLong": "Raccolta in corso. Le prime ore appaiono dopo un'ora, i primi giorni dopo mezzanotte.",
     "nothingHere": "Niente qui",
-    "definitionMissingHint": "Un amministratore può crearla importando il file della scheda."
+    "definitionMissingHint": "Un amministratore può crearla importando il file della scheda.",
+    "awaitingAdmin": "Definizione mancante. Questa scheda attende un amministratore.",
+    "awaitingAdminHint": "Un amministratore può creare questa scheda o consentire agli utenti di posizionarla."
   },
   "player": {
     "title": "Musica",

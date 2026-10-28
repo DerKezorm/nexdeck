@@ -1431,7 +1431,9 @@
     "lowHigh": "{{low}} a {{high}}",
     "collectingLong": "Recopilando. Las primeras horas aparecen tras una hora, los primeros días tras la medianoche.",
     "nothingHere": "Aquí no hay nada",
-    "definitionMissingHint": "Un administrador puede crearla importando el archivo de la tarjeta."
+    "definitionMissingHint": "Un administrador puede crearla importando el archivo de la tarjeta.",
+    "awaitingAdmin": "Falta la definición. Esta tarjeta espera a un administrador.",
+    "awaitingAdminHint": "Un administrador puede crear esta tarjeta o permitir que los usuarios la coloquen."
   },
   "player": {
     "title": "Música",

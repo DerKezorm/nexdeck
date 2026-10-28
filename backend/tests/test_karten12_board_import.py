@@ -237,14 +237,17 @@ def test_karten12_ac7_the_check_tells_a_member_nothing_about_what_is_here_and_of
     assert [(one["id"], one["status"]) for one in answered["definitions"]] == [("card:queue-size", "unknown")]
 
 
-def test_karten12_ac7_a_card_that_is_saved_and_not_released_is_still_refused_to_a_member(admin: TestClient) -> None:
+def test_karten12_ac7_a_card_that_is_saved_and_not_released_waits_like_a_missing_one(admin: TestClient) -> None:
+    """The rest of this is in ``test_karten12_awaiting.py``."""
     text = shows_card(admin)
     other_instance(admin)
     admin.post("/api/v1/cards", json={"yaml": PLAIN}, headers=CSRF)
-    refused = import_file(member_of(admin), text)
-    assert refused.status_code == 400 and "no card with that short name" in refused.json()["detail"]["message"]
+    waiting = import_file(member_of(admin), text)
+    assert waiting.status_code == 201, waiting.text
+    assert waiting.json()["pages"][0]["widgets"][0]["options"].get("awaiting_admin") is True
     admin.put("/api/v1/cards/queue-size/users", json={"allowed": True}, headers=CSRF)
-    assert import_file(member_of(admin, "kim"), text).status_code == 201
+    released = import_file(member_of(admin, "kim"), text)
+    assert released.status_code == 201 and "awaiting_admin" not in released.json()["pages"][0]["widgets"][0]["options"]
 
 
 def test_karten12_a_board_file_that_is_wrong_about_its_definitions_is_refused_with_a_reason(admin: TestClient) -> None:

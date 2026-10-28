@@ -1431,7 +1431,9 @@
     "lowHigh": "{{low}} to {{high}}",
     "collectingLong": "Collecting. The first hours appear after an hour, the first days after midnight.",
     "nothingHere": "Nothing here",
-    "definitionMissingHint": "An administrator can create it by importing the card file."
+    "definitionMissingHint": "An administrator can create it by importing the card file.",
+    "awaitingAdmin": "Definition missing. This card waits for an administrator.",
+    "awaitingAdminHint": "An administrator can create this card or let users place it."
   },
   "player": {
     "title": "Music",

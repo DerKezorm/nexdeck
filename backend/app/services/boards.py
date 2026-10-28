@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..adapters import get_adapter, split_widget_kind
 from ..adapters.base import DEFAULT_MIN, RENDERER_MIN
+from ..adapters.custom import AWAITING
 from ..cards import store as card_store
 from ..deps import error, require_integration
 from ..models import Board, Integration, Page, Role, User, Widget
@@ -619,24 +620,40 @@ def _check_phone(options: dict) -> None:
             raise error("bad_phone", "Hiding a card on the phone is switched on or off, nothing else.")
 
 
-def refuse_unshared_card(db: Session, kind: str, options: dict | None, user: User | None, *, missing_ok: bool = False) -> None:
+def may_place(db: Session, kind: str, options: dict | None, user: User | None) -> bool:
+    """Whether this person may put this card on a board: anything but a custom card, and a custom card an administrator released."""
+    if not kind.startswith("custom.") or user is None or user.role == Role.admin.value:
+        return True
+    slug = str((options or {}).get("card") or "").strip()
+    entry = card_store.get(db, slug) if slug else None
+    return entry is not None and bool(entry.users_may_place)
+
+
+def refuse_unshared_card(db: Session, kind: str, options: dict | None, user: User | None) -> None:
     """Only an administrator puts a custom card on a board, unless he released that card for users (KARTEN-11 AC-3, AC-4).
 
     ⚠️ Asked where a card is **placed**, never where an already placed one is changed or moved: taking the release back
     leaves the cards that stand on boards where they are (EC-1). A card that is not released answers like one that does
     not exist, so nobody learns the short names of the cards he cannot see.
 
-    ``missing_ok`` is for a board file: a card no definition is saved for may stand on the board, and shows "definition
-    missing" until an administrator makes it (KARTEN-12 AC-7). One that is saved and not released is still refused.
+    A board file is not refused for it: the card is placed with :data:`AWAITING` instead (``import_board``).
     """
-    if not kind.startswith("custom.") or user is None or user.role == Role.admin.value:
-        return
-    slug = str((options or {}).get("card") or "").strip()
-    entry = card_store.get(db, slug) if slug else None
-    if entry is None and missing_ok:
-        return
-    if entry is None or not entry.users_may_place:
+    if not may_place(db, kind, options, user):
         raise error("unknown_card", "There is no card with that short name.")
+
+
+def keep_awaiting(before: dict | None, after: dict | None, user: User | None) -> dict | None:
+    """The options a placed card is saved with: an administrator's save takes :data:`AWAITING` away, nobody else's does.
+
+    ⚠️ The mark is the server's alone. What a member sends is never taken for it, either way: options without it would
+    otherwise switch on a card no administrator released for him.
+    """
+    if after is None:
+        return None
+    kept = {key: value for key, value in after.items() if key != AWAITING}
+    if (before or {}).get(AWAITING) and user is not None and user.role != Role.admin.value:
+        kept[AWAITING] = True
+    return kept
 
 
 def _validate_options(db: Session, kind: str, options: dict | None, user: User | None) -> None:
@@ -741,7 +758,7 @@ MAX_PAGES = 50
 MAX_WIDGETS = 300
 
 
-def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, allow_locked: bool, standing: frozenset[str] = frozenset()) -> None:
+def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, allow_locked: bool) -> None:
     """Every objection raised before anything is touched.
 
     ⚠️ The order used to be the other way round. Replacing a board deleted all
@@ -805,9 +822,8 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
                     raise ImportError_(f"The layout of {where} has to give lg an x, y, w and h as whole numbers.")
             if not allow_locked:
                 try:
-                    # A card that stands on the board being edited keeps its place whether or not users may still place it (KARTEN-11 EC-1).
-                    if str((options or {}).get("card") or "").strip() not in standing:
-                        refuse_unshared_card(db, kind, options, user, missing_ok=True)
+                    # A custom card this person may not place is not refused here: ``import_board`` marks it (``AWAITING``),
+                    # the same whether it exists or not, so the answer tells nobody which cards are saved (KARTEN-12 AC-7).
                     _validate_options(db, kind, options, user)
                 except HTTPException as refused:
                     detail = refused.detail if isinstance(refused.detail, dict) else {}
@@ -877,11 +893,15 @@ def import_board(
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
     _refuse_if_oversized(document)
+    user = _user_of(db, owner_id)
+    # A card that stands on the board being edited keeps its place whether or not users may still place it (KARTEN-11
+    # EC-1); one that waits for an administrator does not count, or editing the text would switch it on.
     standing = frozenset(
         str((one.options or {}).get("card") or "").strip()
         for one in (db.scalars(select(Widget).join(Page).where(Page.board_id == replace.id, Widget.kind.like("custom.%"))) if replace is not None else [])
+        if not (one.options or {}).get(AWAITING)
     )
-    _read_the_whole_thing_first(db, document, _user_of(db, owner_id), allow_locked, standing)
+    _read_the_whole_thing_first(db, document, user, allow_locked)
     meta = document.get("board") or {}
     name = str(meta.get("name") or "Imported board")
     # Integrations: matched by name, created when missing.
@@ -973,14 +993,14 @@ def import_board(
                 raise ImportError_(f"Unknown widget kind {kind!r}.") from error
             widget_type = adapter.widget(widget_kind)
             integration = by_name.get(str(widget_doc.get("integration"))) if widget_doc.get("integration") else None
+            widget = old_widgets.pop(_number(widget_doc.get("id")), None)
             fields = {
                 "kind": kind, "title": str(widget_doc.get("title") or widget_type.label), "icon": str(widget_doc.get("icon") or (adapter.icon if adapter.kind != "core" else "")),
                 "link": str(widget_doc.get("link") or ""), "integration_id": integration.id if integration else None,
-                "options": dict(widget_doc.get("options") or {}), "refresh_seconds": widget_doc.get("refresh_seconds"),
+                "options": _marked(db, kind, dict(widget_doc.get("options") or {}), user, standing, widget), "refresh_seconds": widget_doc.get("refresh_seconds"),
             }
             if kind == "core.app":
                 _follow_app(fields, widget_doc, apps_found, apps_written, widget_type.label)
-            widget = old_widgets.pop(_number(widget_doc.get("id")), None)
             if widget is not None:
                 for key, value in fields.items():
                     setattr(widget, key, value)
@@ -1021,6 +1041,24 @@ def import_board(
         db.add(Page(board_id=board.id, name="Overview", slug="overview", position=0, layouts={key: [] for key in COLUMNS}))
     db.flush()
     return board
+
+
+def _marked(db: Session, kind: str, options: dict[str, Any], user: User | None, standing: frozenset[str], before: Widget | None) -> dict[str, Any]:
+    """The options of a card from a file, with :data:`AWAITING` where this person could not have placed it (KARTEN-12 AC-7).
+
+    ⚠️ One answer for a card that is not here and for one that is here and not released: placed, marked, and never run
+    until an administrator saves it again or releases the card. Refusing the one and taking the other told a member
+    which short names are saved, and taking a card that is not here unmarked let it run on his board the moment an
+    administrator made it, released or not. What the file says about the mark counts for nothing; an administrator's
+    file (and the server's own) leaves it off, anybody else's keeps it on a card that had it.
+    """
+    options.pop(AWAITING, None)
+    if not kind.startswith("custom.") or user is None or user.role == Role.admin.value:
+        return options
+    slug = str(options.get("card") or "").strip()
+    if (before is not None and (before.options or {}).get(AWAITING)) or (slug not in standing and not may_place(db, kind, options, user)):
+        options[AWAITING] = True
+    return options
 
 
 def _topology_of(page_doc: dict, by_name: dict[str, Integration]) -> tuple[str, dict[str, Any]]:

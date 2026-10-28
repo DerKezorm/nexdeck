@@ -401,13 +401,15 @@ def board_text(client: TestClient, slug: str) -> dict:
 
 
 def test_karten11_ac3_a_card_that_is_not_released_does_not_come_in_through_a_board_file(admin: TestClient) -> None:
+    """Since KARTEN-12 AC-7 it comes in waiting for an administrator, and never runs (``test_karten12_awaiting.py``)."""
     add(admin)
     page = page_of(admin)
     place(admin, page, connection(admin))
     text = admin.get("/api/v1/boards/wall/export").text
     as_user(admin)
     answer = admin.post("/api/v1/boards/import", json={"yaml_text": text}, headers=CSRF)
-    assert answer.status_code == 400 and "no card with that short name" in answer.json()["detail"]["message"]
+    assert answer.status_code == 201, answer.text
+    assert [one["options"].get("awaiting_admin") for one in answer.json()["pages"][0]["widgets"]] == [True]
     as_admin(admin)
     admin.put("/api/v1/cards/queue-size/users", json={"allowed": True}, headers=CSRF)
     as_user(admin)
@@ -433,5 +435,8 @@ def test_karten11_ec1_a_board_edited_as_text_keeps_the_card_that_stands_and_take
     assert saved.status_code == 200, saved.text
     document["pages"][0]["widgets"].append({**card, "id": None, "options": {"card": "other"}})
     del document["pages"][0]["widgets"][-1]["id"]
-    refused = admin.put(f"/api/v1/boards/{board['slug']}/yaml", json={"yaml_text": yaml.safe_dump(document, sort_keys=False)}, headers=CSRF)
-    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "bad_import"
+    # Since KARTEN-12 AC-7 the new one comes in waiting for an administrator; the one that stands keeps running.
+    waiting = admin.put(f"/api/v1/boards/{board['slug']}/yaml", json={"yaml_text": yaml.safe_dump(document, sort_keys=False)}, headers=CSRF)
+    assert waiting.status_code == 200, waiting.text
+    marks = {one["options"]["card"]: one["options"].get("awaiting_admin") for one in admin.get(f"/api/v1/boards/{board['slug']}").json()["pages"][0]["widgets"]}
+    assert marks == {"queue-size": None, "other": True}

@@ -51,11 +51,31 @@ def _kind(kind: str, label: str, description: str, renderer: str, **more: Any) -
     return WidgetType(kind=kind, label=label, description=description, renderer=renderer, options=(CARD,), refresh_seconds=30, **more)
 
 
+#: The mark on a custom card a member brought onto a board in a file, where he could not have placed it: a card that is
+#: not here, or one that is not released for users (KARTEN-12 AC-7). It never runs while the mark stands.
+AWAITING = "awaiting_admin"
+
+
+def held_back(options: dict[str, Any], entry: Any) -> bool:
+    """Whether a card waits for an administrator: marked, and its definition not here or not released for users (KARTEN-12 AC-7)."""
+    return bool(options.get(AWAITING)) and (entry is None or not entry.users_may_place)
+
+
 def definition_of(options: dict[str, Any]) -> Any:
-    """The saved definition a widget points at, or the error the card shows (KARTEN-1 EC)."""
+    """The saved definition a widget points at, or the error the card shows (KARTEN-1 EC).
+
+    ⚠️ A card that waits for an administrator gets the same error whether its definition is saved or not, and nothing
+    of it runs: no fetch, no preview, no picture, no button, no metric. All of them come through here.
+    """
     slug = str(options.get("card") or "").strip()
     with db_session() as db:
         entry = store.get(db, slug) if slug else None
+    if held_back(options, entry):
+        raise AdapterError(
+            "Definition missing. The card waits for an administrator.",
+            code="definition_missing",
+            hint="An administrator can create this card or release it for users.",
+        )
     if entry is None:
         raise AdapterError(
             "Definition missing. The card is no longer saved.",

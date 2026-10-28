@@ -1431,7 +1431,9 @@
     "lowHigh": "{{low}} à {{high}}",
     "collectingLong": "Collecte en cours. Les premières heures apparaissent après une heure, les premiers jours après minuit.",
     "nothingHere": "Rien ici",
-    "definitionMissingHint": "Un administrateur peut la créer en important le fichier de la carte."
+    "definitionMissingHint": "Un administrateur peut la créer en important le fichier de la carte.",
+    "awaitingAdmin": "Définition manquante. Cette carte attend un administrateur.",
+    "awaitingAdminHint": "Un administrateur peut créer cette carte ou permettre aux utilisateurs de la placer."
   },
   "player": {
     "title": "Musique",

@@ -77,6 +77,13 @@ describe('WidgetCard', () => {
     expect(screen.getByTestId('card-definition-hint')).toHaveTextContent('An administrator can create it by importing the card file.')
   })
 
+  it('karten12 ac7: a card waiting for an administrator says that he can create it or let users place it', () => {
+    const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '', options: { card: 'queue-size', awaiting_admin: true } }
+    render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'Definition missing. The card waits for an administrator.', meta: { code: 'definition_missing' } }} />)
+    expect(screen.getByTestId('card-error')).toHaveTextContent('Definition missing. This card waits for an administrator.')
+    expect(screen.getByTestId('card-definition-hint')).toHaveTextContent('An administrator can create this card or let users place it.')
+  })
+
   it('karten12 ac7: another failure carries no such hint', () => {
     const view = { ...DEMO_VIEWS.find((v) => v.renderer === 'value')!, link: '' }
     render(<WidgetCard widget={view} data={{ status: 'unknown', error: 'The service could not be reached.', meta: { code: 'unreachable' } }} />)

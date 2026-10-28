@@ -1431,7 +1431,9 @@
     "lowHigh": "{{low}} bis {{high}}",
     "collectingLong": "Wird gesammelt. Die ersten Stunden erscheinen nach einer Stunde, die ersten Tage nach Mitternacht.",
     "nothingHere": "Hier ist nichts",
-    "definitionMissingHint": "Ein Admin kann sie anlegen, indem er die Kartendatei importiert."
+    "definitionMissingHint": "Ein Admin kann sie anlegen, indem er die Kartendatei importiert.",
+    "awaitingAdmin": "Definition fehlt. Diese Karte wartet auf einen Admin.",
+    "awaitingAdminHint": "Ein Admin kann die Karte anlegen oder Nutzern das Platzieren erlauben."
   },
   "player": {
     "title": "Musik",
