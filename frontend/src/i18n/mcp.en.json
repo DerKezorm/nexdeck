@@ -123,6 +123,8 @@
       "allow": "Allow",
       "decline": "Decline",
       "sending": "Back to the program …",
+      "back": "Back to the program",
+      "backHost": "The button opens {{host}}, the address the program registered.",
       "error": {
         "off": "Connectors are not allowed on this installation. Only an administrator can allow them.",
         "client": "This program is not registered here. Start connecting again in the program.",

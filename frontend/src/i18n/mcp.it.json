@@ -123,6 +123,8 @@
       "allow": "Consenti",
       "decline": "Rifiuta",
       "sending": "Ritorno al programma …",
+      "back": "Torna al programma",
+      "backHost": "Il pulsante apre {{host}}, l'indirizzo registrato dal programma.",
       "error": {
         "off": "I connettori non sono consentiti in questa installazione. Solo un amministratore può consentirli.",
         "client": "Questo programma non è registrato qui. Riavvia il collegamento nel programma.",

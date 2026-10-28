@@ -137,6 +137,39 @@ describe('the consent page of a connector', () => {
     expect(screen.queryByRole('button', { name: 'Allow' })).toBeNull()
   })
 
+  it('says what is wrong with a request of a registered program, and leads back only when the button is pressed', async () => {
+    const back = 'https://app.example.com/callback?error=unsupported_response_type&state=st-9'
+    start({
+      'GET /mcp/consent': () => new Response(
+        JSON.stringify({ detail: { code: 'oauth_response_type', message: 'Only response_type=code is spoken here.', host: 'app.example.com', back } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    })
+    expect(await screen.findByRole('alert')).toHaveTextContent('incomplete or meant for another server')
+    expect(screen.queryByRole('button', { name: 'Allow' })).toBeNull()
+    expect(screen.getByText(/opens app\.example\.com/)).toBeInTheDocument()
+    // Nothing leaves by itself; the person decides.
+    expect(went).toEqual([])
+    await userEvent.click(screen.getByRole('button', { name: 'Back to the program' }))
+    expect(went).toEqual([back])
+  })
+
+  it('offers no way back for a program or an address nobody registered', async () => {
+    start({ 'GET /mcp/consent': () => refusal(400, 'oauth_redirect', 'This return address is not registered for the program.') })
+    await screen.findByRole('alert')
+    expect(screen.queryByRole('button', { name: 'Back to the program' })).toBeNull()
+    expect(went).toEqual([])
+  })
+
+  it('asks the server about the response type and the state too, so a mistake can be explained', async () => {
+    start()
+    await screen.findByRole('heading', { name: /wants to connect/ })
+    const asked = calls.find((call) => call.method === 'GET' && call.path.startsWith('/mcp/consent'))!
+    const query = new URLSearchParams(asked.path.split('?')[1])
+    expect(query.get('response_type')).toBe('code')
+    expect(query.get('state')).toBe('st-9')
+  })
+
   it('sends a browser that is not signed in to the sign-in first, with the whole request to come back to', async () => {
     useAuth.setState({ user: null, loading: false })
     start()

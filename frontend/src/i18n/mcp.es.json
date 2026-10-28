@@ -123,6 +123,8 @@
       "allow": "Permitir",
       "decline": "Rechazar",
       "sending": "Volviendo al programa …",
+      "back": "Volver al programa",
+      "backHost": "El botón abre {{host}}, la dirección que el programa registró.",
       "error": {
         "off": "Los conectores no están permitidos en esta instalación. Solo un administrador puede permitirlos.",
         "client": "Este programa no está registrado aquí. Vuelve a empezar la conexión en el programa.",

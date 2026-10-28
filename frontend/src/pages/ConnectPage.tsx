@@ -38,12 +38,16 @@ interface ConsentInfo {
 /** What the server needs to see again with the answer: the request exactly as the program made it. */
 const ASKED = ['client_id', 'redirect_uri', 'code_challenge', 'code_challenge_method', 'resource'] as const
 
+/** What only the explanation needs: the response type (an empty one is a mistake to tell) and the state for the way back. */
+const EXPLAINED = ['response_type', 'state'] as const
+
 /** The server's refusals the page puts in its own words; anything else shows the server's sentence. */
 const PROBLEMS: Record<string, string> = {
   oauth_off: 'mcp.connect.error.off',
   oauth_client: 'mcp.connect.error.client',
   oauth_redirect: 'mcp.connect.error.redirect',
   oauth_pkce: 'mcp.connect.error.request',
+  oauth_response_type: 'mcp.connect.error.request',
   oauth_resource: 'mcp.connect.error.request',
   forbidden: 'mcp.connect.error.guest',
   session_required: 'mcp.connect.error.session',
@@ -83,7 +87,7 @@ function Consent({ search }: { search: string }) {
   const params = useMemo(() => new URLSearchParams(search), [search])
   const asked = useMemo(() => {
     const query = new URLSearchParams()
-    for (const name of ASKED) query.set(name, params.get(name) ?? '')
+    for (const name of [...ASKED, ...EXPLAINED]) query.set(name, params.get(name) ?? '')
     return query
   }, [params])
   const info = useQuery({
@@ -135,10 +139,24 @@ function Consent({ search }: { search: string }) {
       </div>
     )
   } else if (info.isError || !info.data) {
+    // A mistake of the program whose return address is registered: the way back is a button, never a redirect of ours.
+    const detail = info.error instanceof ApiError ? info.error.detail : {}
+    const back = typeof detail.back === 'string' ? detail.back : ''
+    const host = typeof detail.host === 'string' ? detail.host : ''
     content = (
-      <p className="text-sm text-bad" role="alert">
-        {explain(info.error)}
-      </p>
+      <>
+        <p className="text-sm text-bad" role="alert">
+          {explain(info.error)}
+        </p>
+        {back && (
+          <div className="mt-4">
+            <p className="text-xs text-muted mb-2">{t('mcp.connect.backHost', { host })}</p>
+            <button className="btn flex-1 h-9 w-full" type="button" onClick={() => leave.to(back)}>
+              {t('mcp.connect.back')}
+            </button>
+          </div>
+        )}
+      </>
     )
   } else if (leaving) {
     content = <p className="text-sm text-muted">{t('mcp.connect.sending')}</p>

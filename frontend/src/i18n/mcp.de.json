@@ -123,6 +123,8 @@
       "allow": "Erlauben",
       "decline": "Ablehnen",
       "sending": "Zurück zum Programm …",
+      "back": "Zurück zum Programm",
+      "backHost": "Der Knopf öffnet {{host}}, die Adresse, die das Programm angemeldet hat.",
       "error": {
         "off": "Connectoren sind auf dieser Installation nicht erlaubt. Nur ein Admin kann sie erlauben.",
         "client": "Dieses Programm ist hier nicht angemeldet. Starte das Verbinden im Programm neu.",
