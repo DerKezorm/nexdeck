@@ -5,6 +5,8 @@
 import i18next from 'i18next'
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import de from '../i18n/texts.de.json'
+import { registerTexts, type TextBundle } from '../i18n/texts'
 import { lineDetail, lineStatus, lineText, type ChronicleLine } from './chronicle'
 import { loadChronicleWords } from './chronicleWords'
 
@@ -40,6 +42,8 @@ describe('the chronicle line of a press over MCP', () => {
 describe('with the words fetched', () => {
   beforeAll(async () => {
     for (const language of ['en', 'de', 'es', 'fr', 'it']) await loadChronicleWords(language)
+    // The words of the buttons themselves, which the app fetches with its other texts.
+    registerTexts('de', de as TextBundle)
   })
 
   it('says it in English with the facts of the line', () => {
@@ -48,7 +52,7 @@ describe('with the words fetched', () => {
   })
 
   it.each([
-    ['de', 'auf Containers durch Laptop (MCP)', 'erlaubt von Sam'],
+    ['de', 'Neustarten auf Containers durch Laptop (MCP)', 'erlaubt von Sam'],
     ['es', 'en Containers por Laptop (MCP)', 'permitido por Sam'],
     ['fr', 'sur Containers par Laptop (MCP)', 'autorisé par Sam'],
     ['it', 'su Containers da Laptop (MCP)', 'consentito da Sam'],
