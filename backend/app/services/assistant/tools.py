@@ -450,7 +450,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     from ...adapters.base import AdapterError
     from ...adapters.custom import plain
     from ...cards import ai, card_reads, credentials, demo, load, schema
-    from ...models import ConversationDraft, Integration
+    from ...models import Conversation, ConversationDraft, Integration
     from ...routers.cards import _ask, _connection
     from . import chat, settings
 
@@ -488,6 +488,12 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     if values and grant not in bench.grants:
         bench.permissions.append({"kind": "values", "integration_id": chosen.id, "integration": chosen.name, "path": path, "grant": grant})
         return _json({"asked": True, "note": "The person has been asked whether the real values may go to the provider. Nothing was sent."})
+    if values:
+        # ⚠️ The permission is for this one request (KARTEN-18 AC-4): it is used up here, whether the request works or not.
+        bench.grants.remove(grant)
+        held = bench.db.get(Conversation, bench.conversation_id)
+        if held is not None:
+            held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
     integration_id, conversation_id = chosen.id, bench.conversation_id
     bench.db.commit()

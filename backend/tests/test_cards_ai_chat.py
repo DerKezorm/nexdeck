@@ -126,6 +126,42 @@ def test_karten18_ac4_the_card_request_carries_no_value_unless_the_person_allowe
     assert SECRET_TEXT not in json.dumps([script.seen[0], script.seen[2]]), "the chat itself still sees no value"
 
 
+@respx.mock
+def test_karten18_ac4_the_permission_is_for_one_request_and_a_failed_one_uses_it_up(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    connection(admin, "sonarr")
+    serve()
+    wish = draft_call(service="sonarr", path="/api/v3/queue", with_values=True)
+    monkeypatch.setattr(providers, "turn", Script(chat_turn(wish), providers.Turn(text="May I?")))
+    first = ask(admin)
+    conversation = first["conversation_id"]
+    grant = first["permissions"][0]["grant"]
+    assert admin.post(f"/api/v1/assistant/conversations/{conversation}/allow", json={"grant": grant}, headers=CSRF).status_code == 200
+
+    # The one request that uses it fails for the provider's own reasons (twice an invalid card): the permission is gone all the same.
+    broken = ai_example_other().replace("form: list", "form: carousel")
+    script = Script(chat_turn(wish), card(broken), card(broken), providers.Turn(text="It did not work."))
+    monkeypatch.setattr(providers, "turn", script)
+    used = ask(admin, conversation_id=conversation)
+    assert used["drafts"] == [] and SECRET_TEXT in json.dumps(script.seen[1])
+    with db_session() as db:
+        assert db.get(Conversation, conversation).grants == []
+
+    # The next draft of the same connection and path asks again and sends no value.
+    script = Script(chat_turn(wish), providers.Turn(text="May I?"))
+    monkeypatch.setattr(providers, "turn", script)
+    again = ask(admin, conversation_id=conversation)
+    assert [one["grant"] for one in again["permissions"]] == [grant] and again["drafts"] == []
+    assert len(script.seen) == 2 and SECRET_TEXT not in script.sent()
+
+    # Allowed once more, it carries exactly one draft: a second one in the same answer asks.
+    assert admin.post(f"/api/v1/assistant/conversations/{conversation}/allow", json={"grant": grant}, headers=CSRF).status_code == 200
+    script = Script(chat_turn(draft_call(1, service="sonarr", path="/api/v3/queue", with_values=True), draft_call(2, service="sonarr", path="/api/v3/queue", with_values=True)),
+                    card(), providers.Turn(text="One of two."))
+    monkeypatch.setattr(providers, "turn", script)
+    both = ask(admin, conversation_id=conversation)
+    assert [one["sent"] for one in both["drafts"]] == [{"values": True}] and len(both["permissions"]) == 1
+
+
 def test_karten18_ec2_a_connection_without_cards_of_its_own_gets_a_sentence_with_the_way_out(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     made = admin.post("/api/v1/integrations", json={"kind": "docker", "name": "Host", "config": {}, "demo": True}, headers=CSRF)
     assert made.status_code == 201, made.text
