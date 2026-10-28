@@ -52,6 +52,8 @@ export function lineText(line: ChronicleLine, t: Translate, language: string): s
     const time = until && !Number.isNaN(until.getTime()) ? until.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) : ''
     return t('chronicle.kind.maintenance', { ...values, until: time })
   }
+  // A press over MCP: the server wrote the whole sentence ("<button> on <card> by <key> (MCP), approved by <name>").
+  if (line.kind === 'mcp_call') return line.detail || line.name
   return t(`chronicle.kind.${line.kind}`, { ...values, defaultValue: line.name })
 }
 

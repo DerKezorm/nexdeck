@@ -111,6 +111,17 @@ describe('MCP keys in the account settings', () => {
     expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ name: 'Wall script', level: 'act', expires_days: null, boards: [2] })
   })
 
+  it('sends the number of days that was picked', async () => {
+    const user = userEvent.setup()
+    start()
+    await screen.findByText('Laptop')
+    await user.type(screen.getByLabelText('Name of the key'), 'Short')
+    await user.selectOptions(screen.getByLabelText('Expires'), '30')
+    await user.click(screen.getByRole('button', { name: 'Create key' }))
+    await screen.findByTestId('mcp-token')
+    expect((calls.find((call) => call.method === 'POST')?.body as { expires_days: number }).expires_days).toBe(30)
+  })
+
   it('offers no higher level than the administrator allows', async () => {
     status = { ...STATUS, max_level: 'read' }
     const user = userEvent.setup()

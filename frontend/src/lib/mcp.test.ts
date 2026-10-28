@@ -12,6 +12,11 @@ describe('settingOf', () => {
     expect(settingOf(press, key({ level: 'act' }), {}, false).options).toEqual(['allow', 'ask', 'deny'])
   })
 
+  it('does not offer ask for an administration tool either: the server refuses it for a tool that only looks', () => {
+    expect(settingOf(diagnosis, key(), {}, true).options).toEqual(['allow', 'deny'])
+    expect(settingOf(diagnosis, key(), { diagnosis: 'ask' }, true).value).toBe('deny')
+  })
+
   it('falls back to the default, and ignores a stored ask on a reading tool', () => {
     expect(settingOf(press, key({ level: 'act' }), {}, false).value).toBe('ask')
     expect(settingOf(attention, key(), { needs_attention: 'ask' }, false).value).toBe('allow')
@@ -70,6 +75,7 @@ describe('requests', () => {
     expect(resultText(null)).toBe('')
     expect(resultText('done')).toBe('done')
     expect(resultText({ message: 'Restarted' })).toBe('Restarted')
+    expect(resultText({ error: 'This is no longer possible: the card does not offer it.' })).toBe('This is no longer possible: the card does not offer it.')
     expect(resultText({ ok: true })).toBe('{\n  "ok": true\n}')
   })
 })

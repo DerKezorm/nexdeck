@@ -116,12 +116,13 @@ export interface Setting {
 /**
  * What one row of "Rights per tool" offers.
  *
- * Reading tools never ask: there is nothing to approve about looking, so the
- * choice is allow or deny. The shown value is the key's own entry, else the
+ * Only the tools that press something ask. A tool that merely looks (the
+ * reading ones and the administration ones) is allowed or denied: there is
+ * nothing to approve about looking, and the server refuses ``ask`` for them. The shown value is the key's own entry, else the
  * tool's default.
  */
 export function settingOf(tool: McpTool, key: McpKey, rights: Record<string, McpRight>, admin: boolean): Setting {
-  const options: McpRight[] = tool.group === 'read' ? ['allow', 'deny'] : ['allow', 'ask', 'deny']
+  const options: McpRight[] = tool.group === 'act' ? ['allow', 'ask', 'deny'] : ['allow', 'deny']
   const own = rights[tool.name]
   const value = own && options.includes(own) ? own : options.includes(tool.default_right) ? tool.default_right : 'deny'
   const reason: Reason = tool.blocked ? 'blocked' : tool.admin_only && !admin ? 'adminOnly' : tool.level === 'act' && key.level === 'read' ? 'level' : ''
@@ -162,7 +163,11 @@ export function openRequest(request: McpRequest, now = Date.now()): boolean {
 export function resultText(result: unknown): string {
   if (result === null || result === undefined || result === '') return ''
   if (typeof result === 'string') return result
-  if (typeof result === 'object' && typeof (result as { message?: unknown }).message === 'string') return (result as { message: string }).message
+  // A press that worked answers with a message, one that could not run with an error.
+  for (const field of ['message', 'error']) {
+    const text = typeof result === 'object' ? (result as Record<string, unknown>)[field] : undefined
+    if (typeof text === 'string') return text
+  }
   return JSON.stringify(result, null, 2)
 }
 
