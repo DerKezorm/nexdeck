@@ -7,11 +7,16 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from app.db import db_session
+from app.models import Widget
+from app.services.collector import collector
+
 from .cards_sample import VALUE_CARD, changed
-from .conftest import CSRF
+from .conftest import CSRF, setup_admin
 from .karten3_sample import MEMOS
 from .karten14_sample import card_text
 from .karten16_sample import Hub
+from .test_cards_placing import connection, page_of, place
 from .test_karten16_submit import (
     BASE,
     ME,
@@ -205,3 +210,79 @@ def test_karten8n_n2_the_version_of_a_picture_has_at_most_64_characters(me: Test
     refused = me.get(f"{IMAGE}/light?v={'a' * 65}")
     assert refused.status_code == 400 and refused.json()["detail"]["code"] == "bad_picture_version"
     assert me.get(f"{IMAGE}/light").status_code == 200, "without a version it works as before"
+
+
+# -- N3: the tiles follow the name of the card ----------------------------------------------------------------------
+
+NAME = "name: {en: Queue, de: Warteschlange}"
+
+
+@pytest.fixture
+def tiles(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+    """The sample card on a board in four tiles: called what the card is (English and German) and one named by somebody."""
+    setup_admin(client)
+    monkeypatch.setattr(collector, "running", False)
+    client.post("/api/v1/cards", json={"yaml": VALUE_CARD}, headers=CSRF)
+    page = page_of(client)
+    ids = {}
+    for key, title in (("english", "Queue"), ("german", "Warteschlange"), ("own", "My queue"), ("empty", "")):
+        made = place(client, page, connection(client, "sonarr"), title=title)
+        assert made.status_code == 201, made.text
+        ids[key] = made.json()["widget"]["id"]
+        client.patch(f"/api/v1/widgets/{ids[key]}", json={"title": title}, headers=CSRF)
+    return {"client": client, "ids": ids}
+
+
+def titles(world: dict[str, Any]) -> dict[str, str]:
+    found = {}
+    for key, number in world["ids"].items():
+        with db_session() as db:
+            found[key] = db.get(Widget, number).title
+    return found
+
+
+def test_karten8n_n3_before_anything_changes_the_tiles_carry_the_name_they_were_given(tiles: dict[str, Any]) -> None:
+    assert titles(tiles) == {"english": "Queue", "german": "Warteschlange", "own": "My queue", "empty": ""}
+
+
+def test_karten8n_n3_saving_in_the_editor_renames_the_tiles_that_carry_the_old_name_in_their_language(tiles: dict[str, Any]) -> None:
+    client: TestClient = tiles["client"]
+    newer = changed(NAME, "name: {en: Backlog, de: Rueckstau}")
+    assert client.put("/api/v1/cards/queue-size", json={"yaml": newer, "overwrite": True}, headers=CSRF).status_code == 200
+    assert titles(tiles) == {"english": "Backlog", "german": "Rueckstau", "own": "My queue", "empty": ""}
+
+
+def test_karten8n_n3_a_language_the_new_name_lacks_takes_the_english_one(tiles: dict[str, Any]) -> None:
+    client: TestClient = tiles["client"]
+    client.put("/api/v1/cards/queue-size", json={"yaml": changed(NAME, "name: Backlog"), "overwrite": True}, headers=CSRF)
+    assert titles(tiles) == {"english": "Backlog", "german": "Backlog", "own": "My queue", "empty": ""}
+
+
+def test_karten8n_n3_a_card_saved_with_the_same_name_changes_no_tile(tiles: dict[str, Any]) -> None:
+    client: TestClient = tiles["client"]
+    client.put("/api/v1/cards/queue-size", json={"yaml": VALUE_CARD + "# note\n", "overwrite": True}, headers=CSRF)
+    assert titles(tiles) == {"english": "Queue", "german": "Warteschlange", "own": "My queue", "empty": ""}
+
+
+def test_karten8n_n3_an_import_that_replaces_the_card_renames_its_tiles_too(tiles: dict[str, Any]) -> None:
+    client: TestClient = tiles["client"]
+    newer = changed(NAME, "name: {en: Backlog, de: Rueckstau}", changed('version: "1.0.0"', 'version: "2.0.0"'))
+    done = client.post("/api/v1/cards/import", json={"text": newer, "choices": {"card:queue-size": "replace"}}, headers=CSRF)
+    assert done.status_code == 201, done.text
+    assert titles(tiles) == {"english": "Backlog", "german": "Rueckstau", "own": "My queue", "empty": ""}
+
+
+def test_karten8n_n3_an_update_from_the_shop_renames_the_tiles_too(shop: TestClient, hub: Hub, clock: list[float]) -> None:
+    hub.publish(card_text(version="1.0.0"), author=str(ME))
+    assert shop.post(f"{BASE}/entries/{ME}/{SLUG}/install", json={"accept_risk": True}, headers=CSRF).status_code == 201
+    made = place(shop, page_of(shop), connection(shop, "sonarr"))
+    assert made.status_code == 201, made.text
+    number = made.json()["widget"]["id"]
+    assert made.json()["widget"]["title"] == "Queue"
+    hub.publish(changed(NAME, "name: {en: Backlog, de: Rueckstau}", card_text(version="1.1.0")), author=str(ME))
+    clock[0] += 700
+    assert shop.get(f"{BASE}/catalog").status_code == 200
+    done = shop.post(f"{BASE}/updates/{SLUG}/accept", json={}, headers=CSRF)
+    assert done.status_code == 200, done.text
+    with db_session() as db:
+        assert db.get(Widget, number).title == "Backlog"

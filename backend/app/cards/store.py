@@ -19,7 +19,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ..models import CardRecord, utcnow
+from ..models import CardRecord, Widget, utcnow
 from . import load
 
 #: How many cards of its own an installation keeps (KARTEN-11 AC-8).
@@ -161,6 +161,31 @@ def create(
     return row
 
 
+def _name_in(name: Any, language: str) -> str:
+    """The text of a name in a language; a language it lacks falls back to English, then to the first it has."""
+    if isinstance(name, dict):
+        return str(name.get(language) or name.get("en") or next(iter(name.values()), ""))
+    return str(name or "")
+
+
+def retitle(db: Session, slug: str, old: Any, new: Any) -> None:
+    """Tiles of the card that carry its old name take the new one, in the language they carried it in.
+
+    Every way of changing a card (editor, YAML, update from the shop, import that replaces) ends in :func:`update`, so
+    this is the one place that follows the name. A tile with another title (one somebody gave it) and a tile without a
+    title stay as they are.
+    """
+    if old == new:
+        return
+    texts = old.items() if isinstance(old, dict) else [("en", old)]
+    for widget in db.scalars(select(Widget).where(Widget.kind.like("custom.%"))):
+        if not widget.title or (widget.options or {}).get("card") != slug:
+            continue
+        language = next((language for language, text in texts if str(text) == widget.title), None)
+        if language is not None:
+            widget.title = _name_in(new, language)[: Widget.title.type.length or 120]
+
+
 def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = None, commit: bool = True) -> CardRecord:
     """Replace the text of a saved card. The short name stays: boards refer to the card by it.
 
@@ -180,6 +205,7 @@ def update(db: Session, row: CardRecord, text: str, *, user_id: int | None = Non
                 )
             ]
         )
+    retitle(db, row.slug, (row.definition or {}).get("name"), loaded.data.get("name"))
     row.yaml_source = text
     row.definition = loaded.data
     now = utcnow()
