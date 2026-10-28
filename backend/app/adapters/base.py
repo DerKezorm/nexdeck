@@ -1862,6 +1862,7 @@ NOT_READ_BY_CARDS: dict[str, str] = {
     "wol": "sends a Wake-on-LAN packet and checks a port, it is no HTTP service",
     "imap": "speaks the mail protocol, not HTTP",
     "minecraft": "speaks the Minecraft status protocol over TCP, not HTTP",
+    "nut": "speaks the NUT protocol of upsd over TCP, not HTTP",
 }
 
 
