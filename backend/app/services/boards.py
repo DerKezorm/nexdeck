@@ -846,9 +846,11 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
         raise ImportError_(f"Key {twice} is given to two app tiles. Each key opens one tile of a board.")
 
 
-#: How much a board file may grow once its anchors are resolved: twice its length and a little. A file without anchors
-#: never comes near it, its values are part of its text.
 def most_resolved(text: str) -> int:
+    """How much a board file may grow once its anchors are resolved: twice its length and a little.
+
+    A file without anchors never comes near it, its values are part of its text.
+    """
     return 2 * len(text) + 1000
 
 
