@@ -17,7 +17,18 @@ from ..cards import exchange, load, store
 from ..cards import integration_store as integrations
 from ..deps import AdminUser, DbSession, error
 from ..models import CardRecord
-from ..workshop import catalog, derived, files, install, installed, state, updates, views
+from ..workshop import (
+    catalog,
+    derived,
+    files,
+    github_login,
+    install,
+    installed,
+    state,
+    thumbs,
+    updates,
+    views,
+)
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
@@ -174,6 +185,34 @@ async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: D
     if body is None:
         raise error("no_such_picture", "This entry has no such picture.", 404)
     return Response(content=body, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
+
+
+class ThumbBody(BaseModel):
+    on: bool
+
+
+def _github_failure(problem: github_login.GithubError) -> HTTPException:
+    return HTTPException(problem.status, {"code": problem.code, "message": problem.message, **problem.more})
+
+
+@router.get("/entries/{author}/{slug}/thumb", summary="Whether you are signed in to GitHub and have put your thumb on the discussion of an entry")
+async def read_thumb(author: str, slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """For the page of one entry, never for the tiles. GitHub is asked only when you are signed in and the entry has a discussion; otherwise ``on`` is null."""
+    repo, found, _warning = await _catalog(db)
+    try:
+        return await thumbs.read(db, user, _entry(found, author, slug), repo)
+    except github_login.GithubError as problem:
+        raise _github_failure(problem) from problem
+
+
+@router.put("/entries/{author}/{slug}/thumb", summary="Put your thumb on the discussion of an entry, or take it away, in your GitHub name")
+async def put_thumb(author: str, slug: str, body: ThumbBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """The discussion is the one the catalog names for the entry, never one from the request. Needs your own sign-in to GitHub."""
+    repo, found, _warning = await _catalog(db)
+    try:
+        return await thumbs.put(db, user, _entry(found, author, slug), repo, body.on)
+    except github_login.GithubError as problem:
+        raise _github_failure(problem) from problem
 
 
 class PreviewBody(BaseModel):

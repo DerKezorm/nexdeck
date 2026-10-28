@@ -160,11 +160,23 @@ class Entry(BaseModel):
     sha256: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
     files: Files
     thumbs: int = Field(default=0, ge=0)
+    #: The address of the discussion; the catalog of the Workshop writes the address alone or ``{"id", "url"}``.
     discussion: Short | None = None
+    #: The id of the discussion for GraphQL (``D_kw…``), when the catalog names it.
+    discussion_id: Short | None = None
     based_on: Short | None = None
     license: Short | None = None
     updated_at: Short = ""
     removed: Removal | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _discussion_with_its_id(cls, data: Any) -> Any:
+        found = data.get("discussion") if isinstance(data, dict) else None
+        if isinstance(found, dict):
+            url, node = found.get("url"), found.get("id")
+            data = {**data, "discussion": url if isinstance(url, str) and url else None, "discussion_id": node if isinstance(node, str) and node else None}
+        return data
 
     @model_validator(mode="after")
     def _a_card_has_a_version(self) -> Entry:

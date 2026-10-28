@@ -65,6 +65,12 @@ class Hub(GitHub):
         self.created_at = f"{DAY}T10:00:00Z"
         #: The bodies of what was sent to the issues, in order.
         self.sent: list[dict[str, Any]] = []
+        #: The discussions of the Workshop by node id: the address and the logins that put a thumb on it.
+        self.discussions: dict[str, dict[str, Any]] = {}
+        #: Whether the App may react to discussions; without, GitHub says "Resource not accessible by integration".
+        self.discussion_rights = True
+        #: Every GraphQL request: the login behind the token (or none), the query and its variables.
+        self.graphql: list[dict[str, Any]] = []
 
     # -- people --------------------------------------------------------------------------------
 
@@ -107,7 +113,46 @@ class Hub(GitHub):
         if request.url.path.startswith(f"/repos/{REPO}/issues"):
             self.requests.append(request)
             return self.answer_issues(request)
+        if request.url.path == "/graphql":
+            self.requests.append(request)
+            return self.answer_graphql(request)
         return super().answer(request)
+
+    # -- the discussions -------------------------------------------------------------------------
+
+    def open_discussion(self, node: str = "D_kwDOtest1", number: int = 7) -> dict[str, Any]:
+        """A discussion of the Workshop; returns what the catalog names of it."""
+        url = f"https://github.com/{REPO}/discussions/{number}"
+        self.discussions[node] = {"url": url, "thumbs": set()}
+        return {"id": node, "url": url}
+
+    def answer_graphql(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        who = self.tokens.get(self.token_of(request))
+        self.graphql.append({"login": who["login"] if who else None, "token": self.token_of(request), "query": body["query"], "variables": body.get("variables", {})})
+        if who is None:
+            return httpx.Response(401, json={"message": "Bad credentials"})
+        if not self.discussion_rights:
+            return httpx.Response(200, json={"data": None, "errors": [{"type": "FORBIDDEN", "message": "Resource not accessible by integration"}]})
+        query, variables = body["query"], body.get("variables", {})
+        if "Reaction(" in query:
+            found = self.discussions.get(variables.get("id", ""))
+            if found is None:
+                return httpx.Response(200, json={"data": None, "errors": [{"type": "NOT_FOUND", "message": "Could not resolve to a node"}]})
+            (found["thumbs"].add if "addReaction" in query else found["thumbs"].discard)(who["login"])
+            return httpx.Response(200, json={"data": {"addReaction" if "addReaction" in query else "removeReaction": {"reaction": {"content": "THUMBS_UP"}}}})
+        if "resource(" in query:
+            node = next((key for key, one in self.discussions.items() if one["url"] == variables.get("url")), None)
+        else:
+            node = variables.get("id") if variables.get("id") in self.discussions else None
+        if node is None:
+            return httpx.Response(200, json={"data": {"resource": None, "node": None}})
+        groups = [
+            {"content": "THUMBS_UP", "viewerHasReacted": who["login"] in self.discussions[node]["thumbs"]},
+            {"content": "HEART", "viewerHasReacted": False},
+        ]
+        found = {"id": node, "reactionGroups": groups}
+        return httpx.Response(200, json={"data": {"resource": found, "node": found}})
 
     def answer_login(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
