@@ -39,8 +39,10 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
 )
 from .downloads_base import DownloadAdapter, QueueItem, Snapshot
@@ -66,6 +68,11 @@ class PyloadAdapter(DownloadAdapter):
     docs_url = "https://github.com/pyload/pyload/wiki"
     #: Measured against pyload-ng 0.5.0b3 in a container; no premium account or captcha plugin was set up.
     beta = True
+    #: ``/api/<function>`` runs the function on a GET as well as on a POST (``pause_server``, ``restart_failed``, ``kill``):
+    #: a card may ask the ones that tell, not the settings, which hold passwords.
+    raw_read_commands = ReadCommands(after={"api": allowed(
+        "free_space", "is_time_download", "is_time_reconnect", prefixes=("get_", "status_"),
+        denied=("get_config", "get_config_value", "get_plugin_config", "get_accounts", "get_account_info"))})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://pyload:8000"),
         Field("api_key", "API key", type="password", secret=True, required=True,
