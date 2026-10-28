@@ -467,7 +467,14 @@ def export_board(db: Session, board: Board, *, reveal_locked: bool = False, with
         shown = board_definitions.cards_on([widget for page in pages for widget in page.widgets])
         if shown and board_definitions.attach(db, document, shown, [one.kind for one in integrations.values()]):
             return board_definitions.dump(document)
-    return yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
+    return yaml.dump(document, Dumper=PlainDumper, sort_keys=False, allow_unicode=True)
+
+
+class PlainDumper(yaml.SafeDumper):
+    """Writes what is shared twice instead of as an anchor and an alias: a board file reads without them (KARTEN-12 EC-1)."""
+
+    def ignore_aliases(self, data: Any) -> bool:  # noqa: ARG002 - every value, whatever it is
+        return True
 
 
 def _apps_of(db: Session, document: dict[str, Any], trusted: bool) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
@@ -839,6 +846,65 @@ def _read_the_whole_thing_first(db: Session, document: dict, user: User | None, 
         raise ImportError_(f"Key {twice} is given to two app tiles. Each key opens one tile of a board.")
 
 
+#: How much a board file may grow once its anchors are resolved: twice its length and a little. A file without anchors
+#: never comes near it, its values are part of its text.
+def most_resolved(text: str) -> int:
+    return 2 * len(text) + 1000
+
+
+def resolved_size(node: yaml.Node) -> int:
+    """The size of a document with every alias written out: one for each node, and the length of each value.
+
+    Counted on the composed nodes, each shared one once (an alias is the same node again), so a file that names one
+    part a thousand times costs a thousand additions here and not a thousand copies.
+    """
+    sizes: dict[int, int] = {}
+    open_: set[int] = set()
+
+    def size(one: yaml.Node) -> int:
+        if id(one) in sizes:
+            return sizes[id(one)]
+        if id(one) in open_:
+            raise ImportError_("The file refers to itself through a YAML anchor.")
+        open_.add(id(one))
+        if isinstance(one, yaml.ScalarNode):
+            found = 1 + len(one.value)
+        elif isinstance(one, yaml.SequenceNode):
+            found = 1 + sum(size(child) for child in one.value)
+        else:
+            found = 1 + sum(size(key) + size(value) for key, value in one.value)
+        open_.discard(id(one))
+        sizes[id(one)] = found
+        return found
+
+    return size(node)
+
+
+def read_board_file(text: str) -> Any:
+    """A board file as data, or ``ImportError_`` with the reason.
+
+    ⚠️ Anchors and aliases are YAML, and an exported board has none (``PlainDumper``). Read as they came, a file of 50 KB
+    that names one card 250 times kept the server busy for seconds checking the same card again and again, and any
+    member may send one. A file that grows past :func:`most_resolved` is refused before anything is built from it.
+    """
+    loader: yaml.SafeLoader | None = None
+    try:
+        loader = yaml.SafeLoader(text)
+        node = loader.get_single_node()
+        if node is None:
+            return None
+        if resolved_size(node) > most_resolved(text):
+            raise ImportError_("This file repeats parts of itself through YAML anchors far more than a board needs. Write them out.")
+        return loader.construct_document(node)
+    except yaml.YAMLError as error:
+        raise ImportError_(f"The file is not valid YAML: {error}") from error
+    except RecursionError as error:
+        raise ImportError_("The file is nested too deeply to be a board.") from error
+    finally:
+        if loader is not None:
+            loader.dispose()
+
+
 def _refuse_if_oversized(document: dict) -> None:
     pages = document.get("pages")
     if not isinstance(pages, list):
@@ -886,10 +952,7 @@ def import_board(
     """
     import os
 
-    try:
-        document = yaml.safe_load(text)
-    except yaml.YAMLError as error:
-        raise ImportError_(f"The file is not valid YAML: {error}") from error
+    document = read_board_file(text)
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
     _refuse_if_oversized(document)

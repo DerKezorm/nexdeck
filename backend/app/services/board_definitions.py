@@ -16,13 +16,14 @@ from sqlalchemy.orm import Session
 from ..cards import exchange, load, store
 from ..cards import integration_store as integrations
 from ..models import CardRecord, Widget
+from .boards import ImportError_, PlainDumper, read_board_file
 
 
 class _Block(str):
     """A definition, written into the file as a block of text so its lines and comments stay readable."""
 
 
-class _Dumper(yaml.SafeDumper):
+class _Dumper(PlainDumper):
     pass
 
 
@@ -66,12 +67,7 @@ def attach(db: Session, document: dict[str, Any], slugs: list[str], connection_k
 
 def _document(text: str) -> dict[str, Any]:
     """The board file as a mapping, with the objections ``import_board`` makes first, in the same words."""
-    from .boards import ImportError_
-
-    try:
-        document = yaml.safe_load(text)
-    except yaml.YAMLError as error:
-        raise ImportError_(f"The file is not valid YAML: {error}") from error
+    document = read_board_file(text)
     if not isinstance(document, dict) or "board" not in document:
         raise ImportError_("The file has no 'board' section.")
     return document
@@ -79,8 +75,6 @@ def _document(text: str) -> dict[str, Any]:
 
 def parts_of(document: dict[str, Any]) -> list[tuple[int, str]]:
     """The texts of the definitions a board file carries, cards first; each text is its own file (lines count from its first)."""
-    from .boards import ImportError_
-
     texts: list[str] = []
     for key in ("custom_cards", "own_integrations"):
         listed = document.get(key)
@@ -122,8 +116,6 @@ def apply(db: Session, text: str, *, user_id: int | None, replace_different: boo
     A definition here with the same short name and another text stays as it is (``kept``), unless ``replace_different``:
     a file the operator put on the server wins (``replaced``). Anything wrong in any definition refuses the whole file.
     """
-    from .boards import ImportError_
-
     parts = parts_of(_document(text))
     report: dict[str, list[str]] = {"created": [], "replaced": [], "same": [], "kept": []}
     if not parts:
