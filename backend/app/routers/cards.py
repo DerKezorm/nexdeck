@@ -24,7 +24,7 @@ from ..adapters.base import AdapterError, Context, shape_for_display
 from ..adapters.custom import ADAPTER as CUSTOM
 from ..adapters.custom import present
 from ..adapters.defined import MissingAdapter
-from ..cards import card_reads, credentials, load, pipeline, probe, schema, source, store
+from ..cards import card_reads, credentials, exchange, load, pipeline, probe, schema, source, store
 from ..cards import demo as card_demo
 from ..config import get_settings
 from ..db import db_session
@@ -495,6 +495,17 @@ def create_card(body: CardText, user: AdminUser, db: DbSession) -> dict[str, Any
     chronicle.record("card_definition_added", user_id=user.id, name=row.slug, detail="made", db=db)
     db.commit()
     return _view(row, {})
+
+
+@router.get("/{slug}/export", summary="A custom card as a file, with the own connections it needs")
+def export_card(slug: str, user: AdminUser, db: DbSession) -> Response:
+    """The text of the card as it was saved, then of each own connection it names that exists here (KARTEN-12 AC-1, AC-4)."""
+    row = _row(db, slug)
+    logger.info("Custom card %r exported by %s.", slug, user.username)
+    return Response(
+        content=exchange.join(exchange.card_documents(db, row)), media_type=exchange.MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{exchange.file_name(slug)}"'},
+    )
 
 
 @router.get("/{slug}", summary="Read a custom card with its text")

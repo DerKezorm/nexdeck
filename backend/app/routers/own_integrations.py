@@ -11,12 +11,12 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..cards import integration, integration_schema, load
+from ..cards import exchange, integration, integration_schema, load
 from ..cards import integration_store as store
 from ..deps import AdminUser, DbSession, error
 from ..models import Integration, OwnIntegration, User, Widget
@@ -107,6 +107,17 @@ def check(body: Text, user: AdminUser) -> dict[str, Any]:
 @router.get("/{short}", summary="One own kind of connection, with its text")
 def read(short: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
     return _view(db, _row(db, short), text=True)
+
+
+@router.get("/{short}/export", summary="One own kind of connection as a file")
+def export(short: str, user: AdminUser, db: DbSession) -> Response:
+    """Only the description, word for word: no connection made from it, no value of a field (KARTEN-12 AC-1)."""
+    row = _row(db, short)
+    logger.info("Own connection %r exported by %s.", short, user.username)
+    return Response(
+        content=exchange.join([row.yaml_source]), media_type=exchange.MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{exchange.file_name(short)}"'},
+    )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Keep a new description")
