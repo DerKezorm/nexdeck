@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { post } from '../api/client'
 import { pickText, type CardText } from '../lib/cardText'
+import { problemText, type CardProblem } from '../lib/customCards'
 import { useAuth } from '../stores/auth'
 
 /** One custom card or own integration a board file carries, and how it stands against this installation. */
@@ -11,8 +12,13 @@ export interface BoardDefinition {
   /** `card:<slug>` or `integration:<short>`. */
   id: string
   name?: CardText | null
-  /** `unknown` for somebody who is not an administrator: the server tells him no more than his own file says. */
-  status: 'missing' | 'same' | 'different' | 'unknown'
+  /**
+   * `invalid` when the text of the definition has problems, for everybody; otherwise `unknown` for somebody who is not
+   * an administrator: the server tells him no more than his own file says.
+   */
+  status: 'missing' | 'same' | 'different' | 'invalid' | 'unknown'
+  /** What is wrong with the text, the lines counted from its first. */
+  problems?: CardProblem[]
 }
 
 /** How long a text rests before the server is asked what its definitions are. */
@@ -69,7 +75,17 @@ export function BoardDefinitions({ state }: { state: ReturnType<typeof useBoardD
           <li key={one.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm min-w-0">
             {one.type !== 'unknown' && <span className="chip !py-0">{t(one.type === 'card' ? 'cards.exchange.card' : 'cards.exchange.integration')}</span>}
             <span className="break-words min-w-0">{pickText(one.name, i18n.language) || one.id.slice(one.id.indexOf(':') + 1)}</span>
-            <span className="text-[12px] text-muted">{t(`cards.exchange.board.${one.status}`)}</span>
+            <span className={`text-[12px] ${one.status === 'invalid' ? 'text-bad' : 'text-muted'}`}>{t(`cards.exchange.board.${one.status}`)}</span>
+            {one.status === 'invalid' && (one.problems ?? []).length > 0 && (
+              <ul className="basis-full grid gap-0.5" aria-label={t('cards.exchange.problems')}>
+                {(one.problems ?? []).map((problem, index) => (
+                  <li key={index} className="text-[12px] text-bad break-words">
+                    {problem.line !== null && problem.line !== undefined && <span className="font-mono">{t('cards.line', { line: problem.line })}: </span>}
+                    {problemText(t, problem)}
+                  </li>
+                ))}
+              </ul>
+            )}
           </li>
         ))}
       </ul>

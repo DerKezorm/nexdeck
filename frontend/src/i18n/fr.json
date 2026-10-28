@@ -2779,7 +2779,8 @@
         "different": "différente, la vôtre est conservée",
         "create": "Créer celles qui manquent",
         "askAdmin": "Un administrateur peut créer celles qui manquent. D'ici là, ces cartes affichent « Définition manquante ».",
-        "unknown": "dans le fichier"
+        "unknown": "dans le fichier",
+        "invalid": "ne peut pas être créée"
       }
     }
   }
