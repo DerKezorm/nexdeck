@@ -234,6 +234,15 @@ describe('the page of one request', () => {
     expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull()
   })
 
+  it('names the state of a decided request once, in the badge', async () => {
+    current = request({ status: 'approved', result: { message: 'Restarted plex' } })
+    start()
+    page()
+    await screen.findByTestId('mcp-result')
+    expect(screen.getAllByText('Allowed')).toHaveLength(1)
+    expect(screen.queryByTestId('mcp-state')).toBeNull()
+  })
+
   it('shows a request that ran out with its state and no buttons', async () => {
     current = request({ status: 'expired' })
     start()

@@ -56,6 +56,8 @@ export function RequestAnswer({ request, inBell = false }: { request: McpRequest
   const [failure, setFailure] = useState('')
   const [sure, setSure] = useState(false)
   if (!openRequest(request)) {
+    // The page says the state once already, in the badge beside the heading.
+    if (!inBell) return null
     return (
       <p className="text-sm text-muted" data-testid="mcp-state">
         {statusText(t, request)}
