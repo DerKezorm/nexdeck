@@ -12,7 +12,8 @@ import { safeUrl } from '../../../lib/safeUrl'
 import { InstallDialog } from './InstallDialog'
 import { PlaceOnBoard } from './PlaceOnBoard'
 import { UpdateDialog } from './UpdateDialog'
-import { ClassChip, ShopBadges } from './ShopTile'
+import { CheckedClass, ShopActs, useWarningText } from './ShopActs'
+import { ShopBadges } from './ShopTile'
 
 const ShopPreview = lazy(() => import('./ShopPreview'))
 
@@ -66,7 +67,9 @@ export function ShopDetailPage({
   const connection = entry.connections.find((one) => String(one.id) === picked) ?? entry.connections[0] ?? null
   const basedOn = entry.based_on ? entries.find((one) => one.id === entry.based_on) : undefined
   const discussion = safeUrl(entry.discussion)
-  const labelOf = (kind: string) => entry.requires.find((need) => need.kind === kind)?.label ?? kind
+  // What it reads and presses comes from the checked file, never from the catalog's words (the list's entry).
+  const checked: ShopEntry | undefined = detail.isError ? { ...entry, verified: false } : full
+  const warningText = useWarningText()
   const installed = entry.installed
   const recalled = entry.removed
 
@@ -87,7 +90,7 @@ export function ShopDetailPage({
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="chip !py-0 text-[11px]">{t(`cards.shop.type.${entry.type}`)}</span>
-            <ClassChip entry={entry} />
+            <CheckedClass entry={checked} />
             <ShopBadges entry={entry} />
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -176,6 +179,12 @@ export function ShopDetailPage({
         </p>
       )}
 
+      {full?.files_warning && (
+        <p className="mt-3 text-sm text-warn" role="note" data-testid="shop-files-warning">
+          {t('cards.shop.filesWarning', { message: warningText(full.files_warning) })}
+        </p>
+      )}
+
       {previewing && connection && (
         <div className="mt-3">
           <Suspense fallback={null}>
@@ -203,35 +212,9 @@ export function ShopDetailPage({
         )}
       </section>
 
-      <section className="mt-4 grid gap-1" data-testid="shop-reads">
-        <h4 className="text-[11px] uppercase tracking-wide text-faint">{t('cards.shop.sections.reads')}</h4>
-        {entry.reads.length === 0 ? (
-          <p className="text-sm text-muted">{t('cards.shop.noReads')}</p>
-        ) : (
-          <ul className="grid gap-0.5">
-            {entry.reads.map((read, index) => (
-              <li key={index} className="text-sm break-words">
-                {labelOf(read.kind)} <span className="font-mono text-[12px] text-muted">{read.path}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="mt-4 grid gap-1" data-testid="shop-buttons">
-        <h4 className="text-[11px] uppercase tracking-wide text-faint">{t('cards.shop.sections.buttons')}</h4>
-        {entry.buttons.length === 0 ? (
-          <p className="text-sm text-muted">{t('cards.exchange.noButtons')}</p>
-        ) : (
-          <ul className="grid gap-0.5">
-            {entry.buttons.map((button, index) => (
-              <li key={index} className="text-sm break-words">
-                {pickText(button.label, lang)} <span className="font-mono text-[12px] text-muted">{button.method} {button.path}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="mt-4 grid gap-4">
+        <ShopActs entry={checked} />
+      </div>
 
       <InstallDialog
         entry={entry}

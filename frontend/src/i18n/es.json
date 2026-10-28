@@ -2845,7 +2845,8 @@
       "class": {
         "read": "Solo lee",
         "buttons": "Tiene botones",
-        "login": "Inicia sesión por sí misma"
+        "login": "Inicia sesión por sí misma",
+        "unknown": "Sin comprobar"
       },
       "type": {
         "card": "Tarjeta",
@@ -2917,9 +2918,12 @@
         "connectionOne": "Leerá a través de {{name}}.",
         "noConnection": "No hay ninguna conexión del tipo del que lee la tarjeta. Puedes instalarla ahora y añadir la conexión más tarde.",
         "offered": "Se incluye",
-        "alsoAdd": "Añadir también la integración {{name}}",
+        "alsoAdd": "Añadir también la integración {{name}} de {{author}}",
         "problems": "Esta entrada tiene problemas y no se puede instalar.",
-        "done": "Instalada."
+        "done": "Instalada.",
+        "dropped": "Al reemplazar {{name}} se pierde lo guardado en estos campos, secretos incluidos: {{fields}}.",
+        "droppedCheck": "Entiendo que estos valores se pierden",
+        "offeredStranger": "De otra persona distinta del autor de esta tarjeta. Revísala antes de añadirla."
       },
       "errors": {
         "checksum_mismatch": "El archivo no coincide con la suma de verificación del catálogo. No se instaló nada.",
@@ -2930,7 +2934,10 @@
         "github_unreachable": "No se puede llegar a GitHub. Las tarjetas instaladas siguen funcionando.",
         "github_rejected": "GitHub rechazó la solicitud.",
         "github_rate_limited": "GitHub indica: demasiadas solicitudes. Inténtalo de nuevo en unos minutos.",
-        "catalog_invalid": "El catálogo está dañado."
+        "catalog_invalid": "El catálogo está dañado.",
+        "type_mismatch": "El archivo no es lo que dice el catálogo (tarjeta o integración). No se usó nada.",
+        "definition_unreadable": "El archivo de esta entrada no se puede leer.",
+        "dropped_not_confirmed": "Confirma primero que los valores guardados pueden perderse."
       },
       "place": {
         "title": "Colocar en un tablero",
@@ -2978,9 +2985,31 @@
           "checksum_mismatch": "El archivo no coincide con la suma de verificación del catálogo. No se cambió nada.",
           "not_installed_from_shop": "Esta tarjeta no vino de la tienda de tarjetas.",
           "no_update": "Ya está actualizada.",
-          "github_unreachable": "No se puede llegar a GitHub. La tarjeta sigue funcionando como está."
+          "github_unreachable": "No se puede llegar a GitHub. La tarjeta sigue funcionando como está.",
+          "update_invalid": "La nueva versión no se puede leer. No se cambió nada.",
+          "too_many_cards": "Hay demasiadas tarjetas propias para guardar una copia de la tuya. Borra una primero.",
+          "copy_failed": "No se pudo hacer la copia de tus cambios. No se cambió nada.",
+          "github_rejected": "GitHub rechazó la solicitud.",
+          "github_rate_limited": "GitHub dice: demasiadas solicitudes. Inténtalo de nuevo en unos minutos.",
+          "catalog_invalid": "El catálogo está dañado.",
+          "type_mismatch": "El archivo no es lo que dice el catálogo (tarjeta o integración). No se cambió nada."
+        },
+        "flag": {
+          "confirm": "pregunta antes",
+          "danger": "marcado como peligroso",
+          "asks": "pide: {{names}}",
+          "answer": "muestra la respuesta"
         }
-      }
+      },
+      "unchecked": "No se pudo comprobar qué lee ni qué botones tiene, así que no se muestra nada de ello.",
+      "claimsDiffer": "El catálogo describe esta entrada de otro modo que su archivo ({{parts}}). Lo que ves aquí está leído del archivo.",
+      "claimPart": {
+        "class": "la clasificación",
+        "reads": "lo que lee",
+        "buttons": "sus botones",
+        "requires": "lo que necesita"
+      },
+      "filesWarning": "Una parte de esta entrada no se pudo usar: {{message}}"
     },
     "share": {
       "button": "Compartir en el Card shop",

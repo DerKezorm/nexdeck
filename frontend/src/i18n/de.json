@@ -2845,7 +2845,8 @@
       "class": {
         "read": "Liest nur",
         "buttons": "Hat Knöpfe",
-        "login": "Meldet sich selbst an"
+        "login": "Meldet sich selbst an",
+        "unknown": "Nicht geprüft"
       },
       "type": {
         "card": "Karte",
@@ -2917,9 +2918,12 @@
         "connectionOne": "Sie liest über {{name}}.",
         "noConnection": "Es gibt keine Verbindung der Art, aus der die Karte liest. Du kannst sie jetzt installieren und die Verbindung später anlegen.",
         "offered": "Kommt mit",
-        "alsoAdd": "Auch die Anbindung {{name}} anlegen",
+        "alsoAdd": "Auch die Anbindung {{name}} von {{author}} anlegen",
         "problems": "Dieser Eintrag hat Probleme und lässt sich nicht installieren.",
-        "done": "Installiert."
+        "done": "Installiert.",
+        "dropped": "Beim Ersetzen von {{name}} gehen die gespeicherten Werte dieser Felder verloren, Geheimnisse eingeschlossen: {{fields}}.",
+        "droppedCheck": "Ich weiß, dass diese Werte verloren gehen",
+        "offeredStranger": "Von jemand anderem als dem Autor dieser Karte. Sieh sie dir an, bevor du sie mitnimmst."
       },
       "errors": {
         "checksum_mismatch": "Die Datei passt nicht zur Prüfsumme im Katalog. Es wurde nichts installiert.",
@@ -2930,7 +2934,10 @@
         "github_unreachable": "GitHub ist nicht erreichbar. Installierte Karten laufen unverändert weiter.",
         "github_rejected": "GitHub hat die Anfrage abgelehnt.",
         "github_rate_limited": "GitHub meldet: zu viele Anfragen. Versuch es in ein paar Minuten noch einmal.",
-        "catalog_invalid": "Der Katalog ist kaputt."
+        "catalog_invalid": "Der Katalog ist kaputt.",
+        "type_mismatch": "Die Datei ist nicht das, was der Katalog behauptet (Karte oder Anbindung). Nichts wurde verwendet.",
+        "definition_unreadable": "Die Datei dieses Eintrags lässt sich nicht lesen.",
+        "dropped_not_confirmed": "Bestätige zuerst, dass die gespeicherten Werte verloren gehen dürfen."
       },
       "place": {
         "title": "Auf einem Board platzieren",
@@ -2978,9 +2985,31 @@
           "checksum_mismatch": "Die Datei passt nicht zur Prüfsumme im Katalog. Es wurde nichts geändert.",
           "not_installed_from_shop": "Diese Karte stammt nicht aus dem Kartenladen.",
           "no_update": "Schon auf dem neuesten Stand.",
-          "github_unreachable": "GitHub ist nicht erreichbar. Die Karte läuft unverändert weiter."
+          "github_unreachable": "GitHub ist nicht erreichbar. Die Karte läuft unverändert weiter.",
+          "update_invalid": "Die neue Fassung lässt sich nicht lesen. Nichts wurde geändert.",
+          "too_many_cards": "Es gibt zu viele eigene Karten, um eine Kopie deiner Fassung zu behalten. Lösche zuerst eine.",
+          "copy_failed": "Die Kopie deiner Änderungen ließ sich nicht anlegen. Nichts wurde geändert.",
+          "github_rejected": "GitHub hat die Anfrage abgelehnt.",
+          "github_rate_limited": "GitHub meldet: zu viele Anfragen. Versuche es in ein paar Minuten noch einmal.",
+          "catalog_invalid": "Der Katalog ist kaputt.",
+          "type_mismatch": "Die Datei ist nicht das, was der Katalog behauptet (Karte oder Anbindung). Nichts wurde geändert."
+        },
+        "flag": {
+          "confirm": "fragt vorher",
+          "danger": "als gefährlich markiert",
+          "asks": "fragt nach: {{names}}",
+          "answer": "zeigt die Antwort"
         }
-      }
+      },
+      "unchecked": "Was sie liest und welche Knöpfe sie hat, ließ sich nicht prüfen und wird deshalb nicht gezeigt.",
+      "claimsDiffer": "Der Katalog beschreibt diesen Eintrag anders als seine Datei ({{parts}}). Was hier steht, ist aus der Datei gelesen.",
+      "claimPart": {
+        "class": "die Einstufung",
+        "reads": "was sie liest",
+        "buttons": "ihre Knöpfe",
+        "requires": "was sie braucht"
+      },
+      "filesWarning": "Ein Teil dieses Eintrags ließ sich nicht verwenden: {{message}}"
     },
     "share": {
       "button": "Im Card shop teilen",

@@ -2845,7 +2845,8 @@
       "class": {
         "read": "Only reads",
         "buttons": "Has buttons",
-        "login": "Signs in itself"
+        "login": "Signs in itself",
+        "unknown": "Not checked"
       },
       "type": {
         "card": "Card",
@@ -2917,9 +2918,12 @@
         "connectionOne": "It will read through {{name}}.",
         "noConnection": "There is no connection of the kind this card reads from. You can install it now and add the connection later.",
         "offered": "Comes with",
-        "alsoAdd": "Also add the integration {{name}}",
+        "alsoAdd": "Also add the integration {{name}} by {{author}}",
         "problems": "This entry has problems and cannot be installed.",
-        "done": "Installed."
+        "done": "Installed.",
+        "dropped": "Replacing {{name}} throws away what is stored in these fields, secrets included: {{fields}}.",
+        "droppedCheck": "I understand that these values are lost",
+        "offeredStranger": "By someone other than the author of this card. Look at it before you take it along."
       },
       "errors": {
         "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was installed.",
@@ -2930,7 +2934,10 @@
         "github_unreachable": "GitHub cannot be reached. Cards you installed keep working.",
         "github_rejected": "GitHub refused the request.",
         "github_rate_limited": "GitHub says: too many requests. Try again in a few minutes.",
-        "catalog_invalid": "The catalog is broken."
+        "catalog_invalid": "The catalog is broken.",
+        "type_mismatch": "The file is not what the catalog says it is (a card or an integration). Nothing was used.",
+        "definition_unreadable": "The file of this entry cannot be read.",
+        "dropped_not_confirmed": "Confirm first that the stored values may be thrown away."
       },
       "place": {
         "title": "Place on a board",
@@ -2978,9 +2985,31 @@
           "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was changed.",
           "not_installed_from_shop": "This card did not come from the Card shop.",
           "no_update": "Already up to date.",
-          "github_unreachable": "GitHub cannot be reached. The card keeps working as it is."
+          "github_unreachable": "GitHub cannot be reached. The card keeps working as it is.",
+          "update_invalid": "The new version cannot be read. Nothing was changed.",
+          "too_many_cards": "There are too many custom cards to keep a copy of yours. Delete one first.",
+          "copy_failed": "The copy of your changes could not be made. Nothing was changed.",
+          "github_rejected": "GitHub refused the request.",
+          "github_rate_limited": "GitHub says: too many requests. Try again in a few minutes.",
+          "catalog_invalid": "The catalog is broken.",
+          "type_mismatch": "The file is not what the catalog says it is (a card or an integration). Nothing was changed."
+        },
+        "flag": {
+          "confirm": "asks first",
+          "danger": "marked dangerous",
+          "asks": "asks for: {{names}}",
+          "answer": "shows the answer"
         }
-      }
+      },
+      "unchecked": "What it reads and which buttons it has could not be checked, so none of it is shown.",
+      "claimsDiffer": "The catalog describes this entry differently from its file ({{parts}}). What you see here is read from the file.",
+      "claimPart": {
+        "class": "its class",
+        "reads": "what it reads",
+        "buttons": "its buttons",
+        "requires": "what it needs"
+      },
+      "filesWarning": "Part of this entry could not be used: {{message}}"
     },
     "share": {
       "button": "Share in the Card shop",

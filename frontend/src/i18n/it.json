@@ -2845,7 +2845,8 @@
       "class": {
         "read": "Legge soltanto",
         "buttons": "Ha dei pulsanti",
-        "login": "Accede da sé"
+        "login": "Accede da sé",
+        "unknown": "Non verificata"
       },
       "type": {
         "card": "Scheda",
@@ -2917,9 +2918,12 @@
         "connectionOne": "Leggerà tramite {{name}}.",
         "noConnection": "Non c'è nessuna connessione del tipo da cui legge la scheda. Puoi installarla ora e aggiungere la connessione più tardi.",
         "offered": "Include",
-        "alsoAdd": "Aggiungi anche l'integrazione {{name}}",
+        "alsoAdd": "Aggiungi anche l'integrazione {{name}} di {{author}}",
         "problems": "Questa voce ha dei problemi e non può essere installata.",
-        "done": "Installata."
+        "done": "Installata.",
+        "dropped": "Sostituire {{name}} elimina quanto è salvato in questi campi, segreti compresi: {{fields}}.",
+        "droppedCheck": "Capisco che questi valori vanno persi",
+        "offeredStranger": "Di una persona diversa dall'autore di questa scheda. Guardala prima di aggiungerla."
       },
       "errors": {
         "checksum_mismatch": "Il file non corrisponde alla somma di controllo del catalogo. Non è stato installato nulla.",
@@ -2930,7 +2934,10 @@
         "github_unreachable": "GitHub non è raggiungibile. Le schede installate continuano a funzionare.",
         "github_rejected": "GitHub ha rifiutato la richiesta.",
         "github_rate_limited": "GitHub segnala: troppe richieste. Riprova tra qualche minuto.",
-        "catalog_invalid": "Il catalogo è danneggiato."
+        "catalog_invalid": "Il catalogo è danneggiato.",
+        "type_mismatch": "Il file non è quello che dice il catalogo (scheda o integrazione). Non è stato usato nulla.",
+        "definition_unreadable": "Il file di questa voce non si può leggere.",
+        "dropped_not_confirmed": "Conferma prima che i valori salvati possono andare persi."
       },
       "place": {
         "title": "Posiziona su una board",
@@ -2978,9 +2985,31 @@
           "checksum_mismatch": "Il file non corrisponde alla somma di controllo del catalogo. Non è stato modificato nulla.",
           "not_installed_from_shop": "Questa scheda non viene dal negozio di schede.",
           "no_update": "Già aggiornata.",
-          "github_unreachable": "GitHub non è raggiungibile. La scheda continua a funzionare così com'è."
+          "github_unreachable": "GitHub non è raggiungibile. La scheda continua a funzionare così com'è.",
+          "update_invalid": "La nuova versione non si può leggere. Non è stato cambiato nulla.",
+          "too_many_cards": "Ci sono troppe schede personalizzate per tenere una copia della tua. Eliminane prima una.",
+          "copy_failed": "Non è stato possibile fare la copia delle tue modifiche. Non è stato cambiato nulla.",
+          "github_rejected": "GitHub ha rifiutato la richiesta.",
+          "github_rate_limited": "GitHub dice: troppe richieste. Riprova tra qualche minuto.",
+          "catalog_invalid": "Il catalogo è danneggiato.",
+          "type_mismatch": "Il file non è quello che dice il catalogo (scheda o integrazione). Non è stato cambiato nulla."
+        },
+        "flag": {
+          "confirm": "chiede prima",
+          "danger": "segnato come pericoloso",
+          "asks": "chiede: {{names}}",
+          "answer": "mostra la risposta"
         }
-      }
+      },
+      "unchecked": "Non è stato possibile verificare cosa legge e quali pulsanti ha, quindi non viene mostrato nulla.",
+      "claimsDiffer": "Il catalogo descrive questa voce in modo diverso dal suo file ({{parts}}). Quello che vedi qui è letto dal file.",
+      "claimPart": {
+        "class": "la classificazione",
+        "reads": "cosa legge",
+        "buttons": "i suoi pulsanti",
+        "requires": "di cosa ha bisogno"
+      },
+      "filesWarning": "Una parte di questa voce non è stata utilizzabile: {{message}}"
     },
     "share": {
       "button": "Condividi nel Card shop",

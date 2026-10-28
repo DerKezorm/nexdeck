@@ -2845,7 +2845,8 @@
       "class": {
         "read": "Lit seulement",
         "buttons": "A des boutons",
-        "login": "Se connecte elle-même"
+        "login": "Se connecte elle-même",
+        "unknown": "Non vérifiée"
       },
       "type": {
         "card": "Carte",
@@ -2917,9 +2918,12 @@
         "connectionOne": "Elle lira via {{name}}.",
         "noConnection": "Il n'y a pas de connexion du type que lit la carte. Vous pouvez l'installer maintenant et ajouter la connexion plus tard.",
         "offered": "Fournie avec",
-        "alsoAdd": "Ajouter aussi l'intégration {{name}}",
+        "alsoAdd": "Ajouter aussi l'intégration {{name}} de {{author}}",
         "problems": "Cette entrée a des problèmes et ne peut pas être installée.",
-        "done": "Installée."
+        "done": "Installée.",
+        "dropped": "Remplacer {{name}} supprime ce qui est enregistré dans ces champs, secrets compris : {{fields}}.",
+        "droppedCheck": "Je comprends que ces valeurs sont perdues",
+        "offeredStranger": "D'une autre personne que l'auteur de cette carte. Regardez-la avant de l'ajouter."
       },
       "errors": {
         "checksum_mismatch": "Le fichier ne correspond pas à la somme de contrôle du catalogue. Rien n'a été installé.",
@@ -2930,7 +2934,10 @@
         "github_unreachable": "GitHub est injoignable. Les cartes installées continuent de fonctionner.",
         "github_rejected": "GitHub a refusé la requête.",
         "github_rate_limited": "GitHub indique : trop de requêtes. Réessayez dans quelques minutes.",
-        "catalog_invalid": "Le catalogue est défectueux."
+        "catalog_invalid": "Le catalogue est défectueux.",
+        "type_mismatch": "Le fichier n'est pas ce que dit le catalogue (carte ou intégration). Rien n'a été utilisé.",
+        "definition_unreadable": "Le fichier de cette entrée est illisible.",
+        "dropped_not_confirmed": "Confirmez d'abord que les valeurs enregistrées peuvent être perdues."
       },
       "place": {
         "title": "Placer sur un tableau",
@@ -2978,9 +2985,31 @@
           "checksum_mismatch": "Le fichier ne correspond pas à la somme de contrôle du catalogue. Rien n'a été modifié.",
           "not_installed_from_shop": "Cette carte ne vient pas de la boutique de cartes.",
           "no_update": "Déjà à jour.",
-          "github_unreachable": "GitHub est injoignable. La carte continue de fonctionner telle quelle."
+          "github_unreachable": "GitHub est injoignable. La carte continue de fonctionner telle quelle.",
+          "update_invalid": "La nouvelle version est illisible. Rien n'a été modifié.",
+          "too_many_cards": "Il y a trop de cartes personnalisées pour garder une copie de la vôtre. Supprimez-en une d'abord.",
+          "copy_failed": "La copie de vos modifications n'a pas pu être faite. Rien n'a été modifié.",
+          "github_rejected": "GitHub a refusé la requête.",
+          "github_rate_limited": "GitHub indique : trop de requêtes. Réessayez dans quelques minutes.",
+          "catalog_invalid": "Le catalogue est défectueux.",
+          "type_mismatch": "Le fichier n'est pas ce que dit le catalogue (carte ou intégration). Rien n'a été modifié."
+        },
+        "flag": {
+          "confirm": "demande d'abord",
+          "danger": "marqué comme dangereux",
+          "asks": "demande : {{names}}",
+          "answer": "affiche la réponse"
         }
-      }
+      },
+      "unchecked": "Ce qu'elle lit et ses boutons n'ont pas pu être vérifiés, rien n'en est donc affiché.",
+      "claimsDiffer": "Le catalogue décrit cette entrée autrement que son fichier ({{parts}}). Ce que vous voyez ici est lu dans le fichier.",
+      "claimPart": {
+        "class": "le classement",
+        "reads": "ce qu'elle lit",
+        "buttons": "ses boutons",
+        "requires": "ce dont elle a besoin"
+      },
+      "filesWarning": "Une partie de cette entrée n'a pas pu être utilisée : {{message}}"
     },
     "share": {
       "button": "Partager dans le Card shop",

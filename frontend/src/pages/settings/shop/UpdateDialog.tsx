@@ -17,13 +17,25 @@ interface Accepted {
   copy_slug: string | null
 }
 
-/** A button as a line: its label and what it does to the service (method, address, and the content it sends). */
+/** What a button asks or shows besides what it sends, so that a change in it can be seen (KARTEN-15 AC-3). */
+function flags(t: (key: string, options?: Record<string, unknown>) => string, button: ShopButtonText): string[] {
+  const found: string[] = []
+  if (button.confirm) found.push(t('cards.shop.update.flag.confirm'))
+  if (button.danger) found.push(t('cards.shop.update.flag.danger'))
+  if (button.asks && button.asks.length > 0) found.push(t('cards.shop.update.flag.asks', { names: button.asks.map((one) => one.name).join(', ') }))
+  if (button.answer) found.push(t('cards.shop.update.flag.answer'))
+  return found
+}
+
+/** A button as a line: its label and what it does to the service (method, address, and the content it sends), and how it asks first. */
 function ButtonLine({ button }: { button: ShopButtonText }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const content = button.body === undefined || button.body === null ? '' : ` ${JSON.stringify(button.body)}`
+  const more = flags(t, button)
   return (
     <span className="break-words">
       {pickText(button.label, i18n.language) || button.id} <span className="font-mono text-[12px] text-muted">{`${button.method} ${button.path}${content}`}</span>
+      {more.length > 0 && <span className="text-[12px] text-muted">{` · ${more.join(' · ')}`}</span>}
     </span>
   )
 }
@@ -31,7 +43,10 @@ function ButtonLine({ button }: { button: ShopButtonText }) {
 /** What the server answered, as a sentence of the interface: its own words for the codes this dialog meets. */
 function failureText(t: (key: string, options?: Record<string, unknown>) => string, failure: unknown, version: string): string {
   if (!(failure instanceof ApiError)) return t('errors.network')
-  const own = ['update_changed', 'buttons_not_confirmed', 'needs_newer_nexdeck', 'entry_removed', 'checksum_mismatch', 'not_installed_from_shop', 'no_update', 'github_unreachable']
+  const own = [
+    'update_changed', 'buttons_not_confirmed', 'needs_newer_nexdeck', 'entry_removed', 'checksum_mismatch', 'not_installed_from_shop', 'no_update', 'github_unreachable',
+    'update_invalid', 'too_many_cards', 'copy_failed', 'github_rejected', 'github_rate_limited', 'catalog_invalid', 'type_mismatch',
+  ]
   if (own.includes(failure.code)) return t(`cards.shop.update.errors.${failure.code}`, { defaultValue: failure.message, version })
   return failure.message
 }

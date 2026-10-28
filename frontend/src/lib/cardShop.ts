@@ -13,7 +13,7 @@ export type ShopCategory = 'media' | 'downloads' | 'network' | 'server' | 'smart
 export const SHOP_CATEGORIES: ShopCategory[] = ['media', 'downloads', 'network', 'server', 'smart_home', 'other']
 
 /** What a card can do to the service: only read, press buttons, or sign in with its own login. */
-export type ShopClass = 'read' | 'buttons' | 'login'
+export type ShopClass = 'read' | 'buttons' | 'login' | 'unknown'
 
 export type ShopSort = 'thumbs' | 'new' | 'name'
 export const SHOP_SORTS: ShopSort[] = ['thumbs', 'new', 'name']
@@ -78,6 +78,13 @@ export interface ShopEntry {
   class: ShopClass
   reads: ShopRead[]
   buttons: ShopButton[]
+  /**
+   * `class`, `reads`, `buttons` and `requires` were read from the checked definition (the detail and the check before
+   * installing). In the list they are the words of the catalog, which the definition may contradict.
+   */
+  verified: boolean
+  /** What the catalog says differently from the definition: some of `class`, `reads`, `buttons`, `requires`. */
+  claims_differ: string[]
   thumbs: number
   discussion: string | null
   based_on: string | null
@@ -97,6 +104,8 @@ export interface ShopEntry {
 export interface ShopDetail extends ShopEntry {
   readme: string | null
   changelog: string | null
+  /** A file could not be fetched or read, or is not what the entry says it is: the page shows the rest. */
+  files_warning: { code: string; message: string } | null
   offered_integrations: ShopEntry[]
 }
 
@@ -212,6 +221,10 @@ export interface ShopButtonText {
   send?: string
   body?: unknown
   where?: string
+  confirm?: boolean
+  danger?: boolean
+  asks?: { name: string; label?: unknown; type?: string }[]
+  answer?: string | null
 }
 
 /** What an update changes (`GET /workshop/updates/{slug}`, KARTEN-15 AC-2). */

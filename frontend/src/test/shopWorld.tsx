@@ -42,6 +42,8 @@ export const entry = (over: Partial<ShopEntry> = {}): ShopEntry => ({
   class: 'read',
   reads: [{ kind: 'sonarr', path: '/api/v3/queue' }],
   buttons: [],
+  verified: true,
+  claims_differ: [],
   thumbs: 12,
   discussion: null,
   based_on: null,

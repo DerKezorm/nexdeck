@@ -167,14 +167,14 @@ describe('installing', () => {
     await userEvent.click(await within(dialog).findByRole('checkbox', { name: /at my own risk/ }))
     await userEvent.click(within(dialog).getByRole('button', { name: 'Install' }))
     await waitFor(() => expect(calls('POST', `${PATH}/install`)).toHaveLength(1))
-    expect(calls('POST', `${PATH}/install`)[0].body).toEqual({ choices: {}, with_integrations: [], accept_risk: true })
+    expect(calls('POST', `${PATH}/install`)[0].body).toEqual({ choices: {}, with_integrations: [], accept_risk: true, confirm_dropped: false })
     expect(await screen.findByRole('dialog', { name: 'Place on a board' })).toBeInTheDocument()
   })
 
   it('karten14 ac8: an own integration that is missing is offered along, and unticking it leaves it out', async () => {
     world.given[`POST ${PATH}/install/check`] = { status: 200, body: CHECK({ risk_acknowledged: true, offered_integrations: [lamp] }) }
     const dialog = await installDialog()
-    const take = await within(dialog).findByRole('checkbox', { name: 'Also add the integration Lamp driver' })
+    const take = await within(dialog).findByRole('checkbox', { name: 'Also add the integration Lamp driver by someone' })
     expect(take).toBeChecked()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Install' }))
     await waitFor(() => expect(calls('POST', `${PATH}/install`)).toHaveLength(1))
@@ -184,7 +184,7 @@ describe('installing', () => {
   it('karten14 ac8: unticked, the integration is not sent', async () => {
     world.given[`POST ${PATH}/install/check`] = { status: 200, body: CHECK({ risk_acknowledged: true, offered_integrations: [lamp] }) }
     const dialog = await installDialog()
-    await userEvent.click(await within(dialog).findByRole('checkbox', { name: 'Also add the integration Lamp driver' }))
+    await userEvent.click(await within(dialog).findByRole('checkbox', { name: 'Also add the integration Lamp driver by someone' }))
     await userEvent.click(within(dialog).getByRole('button', { name: 'Install' }))
     await waitFor(() => expect(calls('POST', `${PATH}/install`)).toHaveLength(1))
     expect(calls('POST', `${PATH}/install`)[0].body).toMatchObject({ with_integrations: [] })
