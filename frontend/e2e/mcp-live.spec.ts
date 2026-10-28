@@ -1,6 +1,6 @@
 /**
- * The way a program takes: a key made on the account page, a press asked for over HTTP (``POST /api/mcp``), the
- * question in the bell, and the answer there.
+ * The way a program takes: a key made on its own settings page, a press asked for over HTTP (``POST /api/mcp``), the
+ * question in the bell, which counts it on that settings page without a reload, and the answer there.
  *
  * Named to sort after `first-start.spec.ts`, which needs the empty installation. Whatever this file switches on it
  * switches off again, so the specs after it find MCP off, as it is by default.
@@ -47,7 +47,7 @@ async function offered(request: APIRequestContext): Promise<Offered | null> {
   return null
 }
 
-test('a key from the account page, a press over HTTP, the answer in the bell', async ({ page, request }) => {
+test('a key from its own settings page, a press over HTTP, the bell counting it there, the answer in the bell', async ({ page, request }) => {
   const trouble: string[] = []
   page.on('pageerror', (error) => trouble.push(String(error)))
   await signIn(page)
@@ -60,9 +60,14 @@ test('a key from the account page, a press over HTTP, the answer in the bell', a
   const on = await page.request.put('/api/v1/mcp/admin', { data: { allowed: true, max_level: 'act', oauth_allowed: false, blocked_tools: [] }, headers: CSRF })
   expect(on.status()).toBe(200)
 
-  // ... and the key is made on the account page: level "Read and act", shown once.
-  await page.goto('/settings/tokens#mcp')
+  // ... and the key is made on its own page, which the API tokens point to: level "Read and act", shown once.
+  await page.goto('/settings/tokens')
+  await page.getByTestId('mcp-hint').getByRole('link', { name: 'AI from outside (MCP)' }).click()
+  await expect(page).toHaveURL(/\/settings\/mcp$/)
   await expect(page.getByRole('heading', { name: 'AI from outside (MCP)' })).toBeVisible()
+  // The old address leads there too.
+  await page.goto('/settings/tokens#mcp')
+  await expect(page).toHaveURL(/\/settings\/mcp$/)
   await page.getByLabel('Name of the key').fill('E2E script')
   await page.getByLabel('Level').selectOption('act')
   await page.getByRole('button', { name: 'Create key' }).click()
@@ -82,19 +87,25 @@ test('a key from the account page, a press over HTTP, the answer in the bell', a
     const body = (await answer.json()) as { result: { content: { text: string }[]; isError?: boolean } }
     return { error: body.result.isError ?? false, text: body.result.content.map((part) => part.text).join('\n') }
   }
+  // The bell on this settings page, which follows no board, counts the question as it comes, without a reload.
+  const bell = page.getByRole('button', { name: 'Notices' })
+  const counted = async () => Number((await bell.textContent())?.replace(/\D/g, '') || 0)
+  const before = await counted()
   const asked = await call('press_button', { card_id: press!.card, action: press!.action, params: press!.params })
   expect(asked.error).toBe(false)
   expect(asked.text).toContain('waiting')
+  await expect.poll(counted).toBe(before + 1)
+  await expect(page).toHaveURL(/\/settings\/mcp$/)
 
   // The question is in the bell, with the buttons right there.
-  await page.goto('/')
-  await expect(page).toHaveURL(/\/b\//)
-  await page.getByRole('button', { name: 'Notices' }).click()
+  await bell.click()
   const sheet = page.getByRole('dialog')
   await expect(sheet.getByText(/asks to press/)).toBeVisible()
   await sheet.getByRole('button', { name: 'Allow' }).click()
   await expect(sheet.getByTestId(/^mcp-notice-/)).toContainText('Allowed')
   await expect(sheet.getByRole('button', { name: 'Allow' })).toHaveCount(0)
+  // The result comes into the open bell, with the button's name and the program, not the action id.
+  await expect(sheet.getByText(/ on .+, by E2E script \(MCP\), approved by /)).toBeVisible()
 
   // What the server holds: allowed, and the program learns it too.
   const listed = (await (await page.request.get('/api/v1/mcp/requests?status=approved')).json()) as { id: number; label: string }[]

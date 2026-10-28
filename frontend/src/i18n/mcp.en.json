@@ -47,7 +47,8 @@
       "noExpiry": "never expires",
       "revokeTitle": "Revoke this key?",
       "revokeBody": "\"{{name}}\" stops working at once. This cannot be undone.",
-      "revoke": "Revoke"
+      "revoke": "Revoke",
+      "tokensHint": "Programs such as Claude Code connect over MCP, with keys of their own:"
     },
     "form": {
       "name": "Name of the key",
@@ -161,9 +162,9 @@
       "board": "Board {{board}}.",
       "what": "{{button}} ({{row}})",
       "pressed": "{{button}} on {{card}}, by {{program}} (MCP)",
-      "pressedApproved": "{{button}} on {{card}}, by {{program}} (MCP), allowed by {{user}}",
+      "pressedApproved": "{{button}} on {{card}}, by {{program}} (MCP), approved by {{user}}",
       "failed": "{{button}} on {{card}} failed, by {{program}} (MCP)",
-      "failedApproved": "{{button}} on {{card}} failed, by {{program}} (MCP), allowed by {{user}}"
+      "failedApproved": "{{button}} on {{card}} failed, by {{program}} (MCP), approved by {{user}}"
     }
   }
 }

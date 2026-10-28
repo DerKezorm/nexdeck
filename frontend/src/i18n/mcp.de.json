@@ -47,7 +47,8 @@
       "noExpiry": "läuft nie ab",
       "revokeTitle": "Schlüssel zurückziehen?",
       "revokeBody": "„{{name}}“ funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen.",
-      "revoke": "Zurückziehen"
+      "revoke": "Zurückziehen",
+      "tokensHint": "Programme wie Claude Code verbinden sich über MCP, mit eigenen Schlüsseln:"
     },
     "form": {
       "name": "Name des Schlüssels",

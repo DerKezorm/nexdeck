@@ -47,7 +47,8 @@
       "noExpiry": "non scade mai",
       "revokeTitle": "Revocare questa chiave?",
       "revokeBody": "\"{{name}}\" smette subito di funzionare. L'operazione non si può annullare.",
-      "revoke": "Revoca"
+      "revoke": "Revoca",
+      "tokensHint": "I programmi come Claude Code si collegano tramite MCP, con chiavi proprie:"
     },
     "form": {
       "name": "Nome della chiave",

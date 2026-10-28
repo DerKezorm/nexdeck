@@ -41,12 +41,12 @@ describe('the MCP entry in Ctrl K', () => {
     await i18next.changeLanguage('en')
   })
 
-  it('opens the keys on the account page, found by "mcp"', async () => {
+  it('opens the page of the keys, found by "mcp"', async () => {
     const user = userEvent.setup()
     show()
     await user.type(screen.getByRole('textbox'), 'mcp')
     await user.click(await screen.findByText('MCP keys'))
-    expect(screen.getByTestId('where')).toHaveTextContent('/settings/tokens#mcp')
+    expect(screen.getByTestId('where')).toHaveTextContent('/settings/mcp')
   })
 
   it('is found by the word Claude as well', async () => {

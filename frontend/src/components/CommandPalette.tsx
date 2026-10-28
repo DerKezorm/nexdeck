@@ -113,7 +113,7 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
     }
     if (mcpWords === i18n.language) {
       const label = t('mcp.palette')
-      list.push({ id: 's/settings/tokens#mcp', title: label, subtitle: t('palette.settings'), icon: <KeyRound size={16} />, keywords: `${label} mcp claude`.toLowerCase(), run: () => navigate('/settings/tokens#mcp') })
+      list.push({ id: 's/settings/mcp', title: label, subtitle: t('palette.settings'), icon: <KeyRound size={16} />, keywords: `${label} mcp claude`.toLowerCase(), run: () => navigate('/settings/mcp') })
     }
     // Last, so an empty bar still opens on services and boards: a board with
     // forty bookmarks would otherwise fill the first screen with them.

@@ -47,7 +47,8 @@
       "noExpiry": "n'expire jamais",
       "revokeTitle": "Révoquer cette clé ?",
       "revokeBody": "« {{name}} » cesse de fonctionner aussitôt. Cette action est irréversible.",
-      "revoke": "Révoquer"
+      "revoke": "Révoquer",
+      "tokensHint": "Les programmes comme Claude Code se connectent par MCP, avec leurs propres clés :"
     },
     "form": {
       "name": "Nom de la clé",

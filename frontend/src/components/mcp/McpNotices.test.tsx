@@ -66,9 +66,9 @@ describe('the words of a notice about MCP', () => {
 
   it('says of a press the button, not its action id, the row, the card and the program, and who allowed it', () => {
     expect(noticeWords(words, pressed)).toEqual({ title: 'Restart (radarr) on Running containers, by Claude Code (MCP)' })
-    expect(noticeWords(words, { ...pressed, approved_by: 'Sam' }).title).toBe('Restart (radarr) on Running containers, by Claude Code (MCP), allowed by Sam')
+    expect(noticeWords(words, { ...pressed, approved_by: 'Sam' }).title).toBe('Restart (radarr) on Running containers, by Claude Code (MCP), approved by Sam')
     expect(noticeWords(words, { ...pressed, failed: true }).title).toBe('Restart (radarr) on Running containers failed, by Claude Code (MCP)')
-    expect(noticeWords(words, { ...pressed, failed: true, approved_by: 'Sam' }).title).toBe('Restart (radarr) on Running containers failed, by Claude Code (MCP), allowed by Sam')
+    expect(noticeWords(words, { ...pressed, failed: true, approved_by: 'Sam' }).title).toBe('Restart (radarr) on Running containers failed, by Claude Code (MCP), approved by Sam')
   })
 })
 

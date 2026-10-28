@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight, Copy, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { ApiError, get, post } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
@@ -46,7 +46,6 @@ function CopyLine({ label, text, testid }: { label: string; text: string; testid
 
 function Section({ admin }: { admin: boolean }) {
   const { t } = useTranslation()
-  const location = useLocation()
   const status = useQuery({ queryKey: ['mcp-status'], queryFn: () => get<McpStatus>('/mcp/status') })
   const tools = useQuery({ queryKey: ['mcp-tools'], queryFn: () => get<McpTool[]>('/mcp/tools') })
   const keys = useQuery({ queryKey: ['mcp-keys'], queryFn: () => get<McpKey[]>('/mcp/keys') })
@@ -61,12 +60,6 @@ function Section({ admin }: { admin: boolean }) {
   const [failure, setFailure] = useState('')
   const [open, setOpen] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<McpKey | null>(null)
-
-  // Ctrl K leads here with ``#mcp``; the card sits far down a page of other cards.
-  const settled = !!status.data
-  useEffect(() => {
-    if (settled && location.hash === '#mcp') document.getElementById('mcp')?.scrollIntoView?.({ block: 'start' })
-  }, [settled, location.hash])
 
   if (!status.data) return null
   const info = status.data
