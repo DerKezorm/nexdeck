@@ -20,11 +20,14 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import types
+import typing
 from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from typing import Any
 
 import yaml
+from pydantic import BaseModel
 
 from .. import credential_names
 from ..services.assistant import providers
@@ -36,8 +39,6 @@ MODES = ("new", "change", "translate")
 TIMEOUT_SECONDS = 150.0
 #: The languages a translation fills in.
 LANGUAGES = ("en", "de", "es", "fr", "it")
-#: The fields that hold a text of the author, which may be one text or one per language.
-TEXT_KEYS = frozenset({"name", "description", "label", "unit", "empty", "text"})
 #: Lines of the shape of an answer; the rest is counted.
 MAX_SHAPE_LINES = 400
 #: Fields of one object that are named; the rest is counted.
@@ -338,7 +339,8 @@ def outbound(ask: Ask) -> Outbound:
     else:
         parts.append(
             "Translate the card below. Every text of it (name, description, label, unit, empty, text) becomes a mapping with all of "
-            f"{', '.join(LANGUAGES)}. Keep the languages that are there word for word and change nothing else: not one other field."
+            f"{', '.join(LANGUAGES)}. A text that is plain, without languages, is English: keep it as en. Keep the languages that are there "
+            "word for word and change nothing else: not one other field, not a button, not a body, not an example."
         )
     if ask.description.strip():
         parts.append(f"The administrator says:\n{ask.description.strip()}")
@@ -429,22 +431,52 @@ def _lang_dict(value: Any) -> bool:
 
 
 def _text_grew(old: Any, new: Any) -> bool:
-    if isinstance(new, str):
-        return old == new
+    """A text may gain languages: a plain text stays as the English one, the languages that are there stay word for word."""
     if isinstance(old, str):
-        return old in new.values()
-    return all(new.get(key) == one for key, one in old.items())
+        return new == old if isinstance(new, str) else _lang_dict(new) and new.get("en") == old
+    return isinstance(old, dict) and _lang_dict(new) and all(new.get(language) == text for language, text in old.items())
 
 
-def same_but_texts(old: Any, new: Any, key: str = "") -> bool:
-    """Whether ``new`` is ``old`` with more languages in its texts and nothing else different."""
-    if key in TEXT_KEYS and (isinstance(old, str) or _lang_dict(old)) and (isinstance(new, str) or _lang_dict(new)):
-        return _text_grew(old, new)
-    if isinstance(old, dict):
-        return isinstance(new, dict) and old.keys() == new.keys() and all(same_but_texts(one, new[name], str(name)) for name, one in old.items())
-    if isinstance(old, list):
-        return isinstance(new, list) and len(old) == len(new) and all(same_but_texts(one, other) for one, other in zip(old, new, strict=True))
-    return bool(old == new) and type(old) is type(new)
+def _is_text(annotation: Any) -> bool:
+    """Whether a field of the schema is a text of the author, one text or one per language (``str | dict[lang, str]``)."""
+    origin = typing.get_origin(annotation)
+    if origin is dict:
+        return typing.get_args(annotation)[-1:] == (str,)
+    if origin in (typing.Union, types.UnionType, typing.Annotated):
+        return any(_is_text(one) for one in typing.get_args(annotation))
+    return False
+
+
+def _frame(node: Any, texts: list[Any], *, top: bool = False) -> Any:
+    """A checked card without its texts (a mark in their place, the texts collected in order) and without the examples."""
+    if isinstance(node, BaseModel):
+        out: dict[str, Any] = {"@": type(node).__name__}
+        for name, info in type(node).model_fields.items():
+            if top and name == "demo":
+                continue
+            value = getattr(node, name)
+            if _is_text(info.annotation) and isinstance(value, str | dict):
+                texts.append(value)
+                out[name] = "@text"
+            else:
+                out[name] = _frame(value, texts)
+        return out
+    if isinstance(node, list):
+        return [_frame(one, texts) for one in node]
+    if isinstance(node, dict):
+        return {key: _frame(one, texts) for key, one in node.items()}
+    return node
+
+
+def same_but_texts(old: Any, new: Any) -> bool:
+    """Whether the checked card ``new`` is ``old`` with more languages in the fields that are texts and nothing else different.
+
+    ⚠️ The fields are those the schema types as a text, not every key that is called ``text`` or ``name``: the body of a button
+    is what is sent to the service, and it is not translated.
+    """
+    before: list[Any] = []
+    after: list[Any] = []
+    return bool(_frame(old, before, top=True) == _frame(new, after, top=True)) and len(before) == len(after) and all(_text_grew(one, other) for one, other in zip(before, after, strict=True))
 
 
 def _data(text: str) -> dict[str, Any]:
@@ -469,8 +501,13 @@ def _extra_problems(ask: Ask, text: str, loaded: Any) -> list[Problem]:
             return found
         if old.get("slug") != definition.slug:
             found.append(_problem("ai_slug_changed", f"The slug stays {old.get('slug')}.", "slug"))
-        if ask.mode == "translate" and not same_but_texts(old, _data(text)):
-            found.append(_problem("ai_translate_changed", "Only the languages of the texts may be added; something else was changed.", ""))
+        if ask.mode == "translate":
+            try:
+                before = load.load_definition(ask.yaml).definition
+            except load.CardInvalid:
+                return found
+            if not same_but_texts(before, definition):
+                found.append(_problem("ai_translate_changed", "Only languages may be added to the texts: a plain text stays as en, the languages that are there stay word for word, nothing else changes, no button, no body.", ""))
     return found
 
 
@@ -538,7 +575,7 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
         raise AiError("bad_request", "Say whether to write a new card, change one or translate one.")
     if ask.mode == "translate":
         try:
-            _data(ask.yaml)
+            load.load_definition(ask.yaml)
         except load.CardInvalid:
             raise AiError("bad_request", "The card cannot be translated while its text has problems.") from None
     sent = {"values": ask.include_values}

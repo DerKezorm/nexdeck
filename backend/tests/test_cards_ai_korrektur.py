@@ -182,6 +182,21 @@ def dump(data: dict[str, Any]) -> str:
     return yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
 
 
+def test_karten17_ac7_a_translation_may_not_change_what_a_button_sends(monkeypatch: pytest.MonkeyPatch) -> None:
+    data = yaml.safe_load(DOWNLOADS)
+    data["buttons"][0]["send"] = "json"
+    data["buttons"][0]["body"] = {"hashes": "{hash}", "text": "pause now", "name": "x"}
+    old = dump(data)
+    load.load_definition(old)
+    changed = yaml.safe_load(old)
+    changed["buttons"][0]["body"]["text"] = {"en": "pause now", "de": "BODY-GEAENDERT"}
+    changed["buttons"][0]["body"]["name"] = {"en": "x", "it": "ALTRO"}
+    result = run(ai.Ask(mode="translate", yaml=old), Script(card(dump(changed)), card(dump(changed))), monkeypatch)
+    assert result.ok is False and result.problems[0]["code"] == "ai_translate_changed"
+    # The label of the same button is a text of the schema and may gain languages.
+    label = yaml.safe_load(old)
+    label["buttons"][0]["label"] = {**data["buttons"][0]["label"], "it": "Pausa"}
+    assert run(ai.Ask(mode="translate", yaml=old), Script(card(dump(label))), monkeypatch).ok
 
 
 def test_karten17_ac7_a_translation_never_takes_the_examples_of_the_provider(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -194,6 +209,16 @@ def test_karten17_ac7_a_translation_never_takes_the_examples_of_the_provider(mon
     assert load.load_definition(result.yaml).definition.demo == old_examples
 
 
+def test_karten17_ac7_a_plain_text_stays_the_english_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    old = ai.EXAMPLE.replace("name: {en: Download queue, de: Warteschlange}", "name: Download queue")
+    moved = ai.EXAMPLE.replace("name: {en: Download queue, de: Warteschlange}", "name: {en: Something else entirely, de: Download queue}")
+    result = run(ai.Ask(mode="translate", yaml=old), Script(card(moved), card(moved)), monkeypatch)
+    assert result.ok is False and result.problems[0]["code"] == "ai_translate_changed"
+    kept = ai.EXAMPLE.replace("name: {en: Download queue, de: Warteschlange}", "name: {en: Download queue, de: Warteschlange, fr: File}")
+    assert run(ai.Ask(mode="translate", yaml=old), Script(card(kept)), monkeypatch).ok
+    # A language that was there may not go either.
+    gone = ai.EXAMPLE.replace("name: {en: Download queue, de: Warteschlange}", "name: {en: Download queue}")
+    assert run(ai.Ask(mode="translate", yaml=ai.EXAMPLE), Script(card(gone), card(gone)), monkeypatch).ok is False
 
 
 
