@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Pencil, Plus, Share2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,7 @@ import { ApiError, del, downloadGet, get } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState } from '../../components/ui'
 import { exportName } from '../../lib/cardExchange'
+import { ShareDialog } from './share/ShareDialog'
 
 /** One own integration in the list (`GET /own-integrations`). */
 export interface OwnIntegrationRow {
@@ -41,6 +42,7 @@ export function OwnIntegrations() {
   const navigate = useNavigate()
   const list = useOwnIntegrations()
   const [removing, setRemoving] = useState<OwnIntegrationRow | null>(null)
+  const [sharing, setSharing] = useState<OwnIntegrationRow | null>(null)
   const [error, setError] = useState('')
   const rows = list.data ?? []
 
@@ -119,6 +121,9 @@ export function OwnIntegrations() {
                   <button className="btn btn-icon btn-flat" onClick={() => void save(row)} aria-label={t('cards.exchange.exportNamed', { name: row.name })} title={t('cards.exchange.export')}>
                     <Download size={15} />
                   </button>
+                  <button className="btn btn-icon btn-flat" onClick={() => setSharing(row)} aria-label={t('cards.share.buttonNamed', { name: row.name })} title={t('cards.share.button')}>
+                    <Share2 size={15} />
+                  </button>
                   <button className="btn btn-icon btn-flat btn-danger" onClick={() => setRemoving(row)} aria-label={t('cards.deleteNamed', { name: row.name })} title={t('cards.delete')}>
                     <Trash2 size={15} />
                   </button>
@@ -129,6 +134,7 @@ export function OwnIntegrations() {
           <p className="text-xs text-muted mt-3">{t('cards.integrations.footer', { count: rows.length, limit: MAX_OWN_INTEGRATIONS })}</p>
         </>
       )}
+      {sharing && <ShareDialog kind="integration" slug={sharing.short} name={sharing.name} open onClose={() => setSharing(null)} />}
       <Confirm
         open={removing !== null}
         title={t('cards.integrations.deleteTitle', { name: removing?.name ?? '' })}

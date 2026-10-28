@@ -1,12 +1,13 @@
 import { ArrowLeft } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { get, serverUrl } from '../../api/client'
 import { Confirm, Dialog, Spinner, Toast } from '../../components/ui'
 import { pickText, type CardText } from '../../lib/cardText'
 import { readAt } from '../../lib/cardDocument'
+import { resendIssue, resendNumber } from '../settings/share/resend'
 import { AdjustedBlock } from './AdjustedBlock'
 import { useCardAi } from './ai'
 import { AiButton, AiPanel, useAiReady } from './AiPanel'
@@ -66,6 +67,7 @@ function clock(at: number | string, language: string): string {
 export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; onOfferDone: () => void }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const editor = useCardEditor()
   const { text, card, lastValid, problems, view, step, slug, base, replaced, refusal } = editor
   // A new card nobody has touched yet holds nothing to lose: no draft, no question before leaving.
@@ -117,6 +119,12 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
     const saved = await save(options)
     if (!saved) return
     setToast(t('editor.saved'))
+    const resend = resendNumber(params)
+    if (resend > 0) {
+      const sent = await resendIssue(t, resend)
+      setToast(sent.message)
+      if (sent.ok) setParams({}, { replace: true })
+    }
     // The first save of a new card: the guided way offers to put it on a board, on its last step, wherever the
     // author saved from (Save at the top included).
     if (before === null) useCardEditor.setState((state) => ({ created: true, guidedStep: state.view === 'guided' ? 'finish' : state.guidedStep }))

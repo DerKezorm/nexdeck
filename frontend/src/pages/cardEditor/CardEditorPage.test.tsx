@@ -700,3 +700,42 @@ describe('karten10: the YAML view', () => {
     expect(view.state.doc.toString().endsWith('\n  ')).toBe(true)
   })
 })
+
+describe('Fix and resend (KARTEN-16 AC-10)', () => {
+  const edit = async (at: string) => {
+    show(at)
+    await screen.findByRole('heading', { name: 'Queue', level: 1 })
+    await userEvent.click(screen.getByRole('button', { name: /^All settings$/ }))
+    act(() => editor().set(['name'], 'Waiting'))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+  }
+
+  it('karten16 ac10: once saved, the corrected card goes into the issue named in the address', async () => {
+    stub({ 'POST /workshop/submit/resend': { status: 200, body: { issue: { number: 7, url: 'x', state: 'open' }, how: 'edited' } } })
+    await edit('/system/custom-cards/queue/edit?resend=7')
+    expect(await screen.findByText('Saved and sent again into issue 7.')).toBeInTheDocument()
+    expect(sent('PUT', '/cards/queue')).toHaveLength(1)
+    expect(sent('POST', '/workshop/submit/resend')).toHaveLength(1)
+    expect(sent('POST', '/workshop/submit/resend')[0].body).toEqual({ issue: 7 })
+  })
+
+  it('karten16 ac10: a card opened the usual way is not sent anywhere', async () => {
+    stub()
+    await edit('/system/custom-cards/queue/edit')
+    expect(await screen.findByText('Saved. Every board shows the new version.')).toBeInTheDocument()
+    expect(sent('POST', '/workshop/submit/resend')).toHaveLength(0)
+  })
+
+  it('karten16 ac10: a card the Workshop would still refuse is not sent, and what is wrong is said', async () => {
+    stub({ 'POST /workshop/submit/resend': { status: 400, body: { detail: { code: 'submission_invalid', message: 'x', problems: [{ code: 'card_needs_demo', message: 'A card for the shop needs demo data.', path: 'demo' }] } } } })
+    await edit('/system/custom-cards/queue/edit?resend=7')
+    expect(await screen.findByText('Saved, but not sent again: A card for the shop needs demo data.')).toBeInTheDocument()
+  })
+
+  it('karten16 ac10: when sending fails the save stands and the sentence says why', async () => {
+    stub({ 'POST /workshop/submit/resend': { status: 409, body: { detail: { code: 'github_login_needed', message: 'x' } } } })
+    await edit('/system/custom-cards/queue/edit?resend=7')
+    expect(await screen.findByText(/Saved, but not sent again: Your GitHub sign-in ended/)).toBeInTheDocument()
+    expect(sent('PUT', '/cards/queue')).toHaveLength(1)
+  })
+})

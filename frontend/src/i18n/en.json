@@ -2981,6 +2981,138 @@
           "github_unreachable": "GitHub cannot be reached. The card keeps working as it is."
         }
       }
+    },
+    "share": {
+      "button": "Share in the Card shop",
+      "buttonNamed": "Share {{name}} in the Card shop",
+      "title": "Share in the Card shop",
+      "lead": "Your card goes into the Card shop as an issue in the Workshop, under your GitHub name. The Workshop checks it, and if everything passes it is added by itself. Everything you send is public and under the MIT License.",
+      "checking": "Checking the card…",
+      "send": "Share",
+      "sendUpdate": "Submit update",
+      "signedInAs": "Signed in to GitHub as {{login}}",
+      "kind": {
+        "card": "Card",
+        "integration": "Connection"
+      },
+      "mode": {
+        "new": "A new entry in the Card shop.",
+        "update": "An update of your entry in the Card shop, which is at version {{version}} now.",
+        "basedOn": "Based on {{id}}. It is shared as a new card that names the original."
+      },
+      "daily": {
+        "used": "You have shared {{used}} of {{max}} new entries today.",
+        "reached": "You have shared {{max}} new entries today, which is the most the Workshop takes in a day. Try again tomorrow."
+      },
+      "problems": "This cannot be shared yet",
+      "problem": {
+        "card_needs_demo": "A card for the shop needs demo data. Add them in the editor.",
+        "card_needs_english": "Every text in several languages needs the English one.",
+        "entry_removed": "A maintainer took this entry out of the Card shop. Ask a maintainer to bring it back before you share an update.",
+        "version_not_higher": "Raise the version of the card above the {{version}} that is in the Card shop.",
+        "not_yours": "This card came from the Card shop and is the work of somebody else. Change it first; then it can be shared as your own, based on theirs.",
+        "description": "Add a description of a few sentences, in English.",
+        "category": "Pick a category.",
+        "license": "Tick the box for the MIT License.",
+        "changes": "An update needs a list of changes.",
+        "secret_in_text": "The text seems to hold a key or a password. Take it out.",
+        "too_long": "The submission is too long for GitHub. Shorten the definition or its demo data."
+      },
+      "realValues": {
+        "title": "These demo values look like real ones from your last probe",
+        "body": "Demo data are public. Look at these places and replace what is yours. You can still share."
+      },
+      "preview": "How it will look in the shop",
+      "reads_one": "Reads {{count}} address",
+      "reads_other": "Reads {{count}} addresses",
+      "description": "Description",
+      "descriptionHelp": "What it shows or reads, in English, in a few sentences. Plain text.",
+      "category": "Category",
+      "categoryPick": "Pick one",
+      "categories": {
+        "media": "Media",
+        "downloads": "Downloads",
+        "network": "Network",
+        "server": "Server",
+        "smart_home": "Smart home",
+        "other": "Other"
+      },
+      "changes": "What changed",
+      "changesHelp": "Needed for an update. In English, a few lines.",
+      "license": "I share this under the MIT License and I have the right to do so.",
+      "signIn": {
+        "title": "Sign in to GitHub",
+        "lead": "To share a card, nexdeck needs your GitHub account. Open the link, type the code there, and come back.",
+        "start": "Sign in to GitHub",
+        "code": "Type this code on github.com:",
+        "open": "Open github.com",
+        "waiting": "Waiting for you to confirm on github.com…",
+        "expired": "The code ran out.",
+        "denied": "GitHub said no.",
+        "newCode": "Get a new code",
+        "signOut": "Sign out of GitHub",
+        "until": "Stays signed in until {{date}}."
+      },
+      "offline": {
+        "title": "Rather not sign in?",
+        "body": "Download the submission as a file, open the form on GitHub, and paste the definition from the file into it.",
+        "file": "Download the file",
+        "form": "Open the form on GitHub"
+      },
+      "done": {
+        "new": "{{name}} was handed in. The Workshop checks it now.",
+        "update": "The update of {{name}} was handed in. The Workshop checks it now.",
+        "unchanged": "{{name}} was handed in before and has not changed.",
+        "open": "Open issue {{number}} on GitHub",
+        "where": "What comes of it shows under My submissions."
+      },
+      "errors": {
+        "github_login_needed": "Your GitHub sign-in ended. Sign in again; what you wrote is kept.",
+        "github_unreachable": "GitHub cannot be reached. Try again in a moment.",
+        "github_rate_limited": "GitHub allows no more requests for now. Try again later.",
+        "github_rejected": "GitHub did not take the request. Try again later.",
+        "github_login_failed": "GitHub did not complete the sign-in. Start again.",
+        "device_flow_off": "The GitHub App of the Workshop has the Device Flow turned off.",
+        "repo_no_access": "Your GitHub account cannot reach the Workshop repository. While it is private, only invited accounts can share cards.",
+        "daily_limit": "This GitHub account has made 10 new submissions today, which is the most the Workshop takes in a day. Try again tomorrow.",
+        "already_sending": "This submission is on its way. Wait a moment.",
+        "not_resendable": "This is not an open submission of yours.",
+        "no_such_card": "This card is not here any more."
+      },
+      "submissions": {
+        "lead": "What became of the cards you shared. This is read from your issues in the Workshop each time.",
+        "signedOut": "Sign in to GitHub to see what became of your submissions.",
+        "emptyTitle": "You have not shared anything yet",
+        "emptyBody": "Share a card from the list of cards with the share button. It shows up here once GitHub has it.",
+        "catalogOff": "Turn on the Card shop to see whether an entry was taken out later.",
+        "state": {
+          "checking": "In review",
+          "failed": "Needs a fix",
+          "waiting": "Waits for tomorrow",
+          "in_shop": "In the Card shop",
+          "removed": "Removed from the Card shop",
+          "closed": "Closed"
+        },
+        "reasons": "Why it did not pass:",
+        "removedFor": "Removed ({{level}}): {{reason}}",
+        "level": {
+          "harmful": "harmful",
+          "not_useful": "not useful",
+          "withdrawn": "withdrawn"
+        },
+        "waitingBody": "The Workshop takes 10 new entries a day from one account. This one is checked again tomorrow.",
+        "fix": "Fix and resend",
+        "submitUpdate": "Submit update",
+        "update": "Update",
+        "open": "Issue {{number}} on GitHub",
+        "version": "Version {{version}}",
+        "cardGone": "This card is not on this nexdeck any more."
+      },
+      "resend": {
+        "edited": "Saved and sent again into issue {{number}}.",
+        "recheck": "Saved. The text did not change, so the Workshop was asked to check issue {{number}} again.",
+        "failed": "Saved, but not sent again: {{message}}"
+      }
     }
   }
 }

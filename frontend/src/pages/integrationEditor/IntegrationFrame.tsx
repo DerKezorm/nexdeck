@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, get, post, serverUrl } from '../../api/client'
 import { Confirm, Dialog, Spinner, Toast } from '../../components/ui'
@@ -10,6 +10,7 @@ import type { CardProblem } from '../../lib/customCards'
 import { useLeaveGuard } from '../cardEditor/useLeaveGuard'
 import { localProblemText, serverProblemText } from '../cardEditor/problems'
 import { dropDraft, writeDraft, type IntegrationDraft } from './draft'
+import { resendIssue, resendNumber } from '../settings/share/resend'
 import { FormView, SetupPreview } from './FormView'
 import { currentServerProblems, isDirty, useIntegrationEditor, type IntegrationView } from './store'
 import { useSaveIntegration } from './useSaveIntegration'
@@ -73,6 +74,7 @@ function ProblemList() {
 export function IntegrationFrame({ offer, onOfferDone }: { offer: IntegrationDraft | null; onOfferDone: () => void }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const editor = useIntegrationEditor()
   const { text, card, lastValid, view, short, base } = editor
   const dirty = isDirty(editor)
@@ -116,6 +118,12 @@ export function IntegrationFrame({ offer, onOfferDone }: { offer: IntegrationDra
     const saved = await save(options)
     if (!saved) return
     setToast(t('integrationEditor.saved'))
+    const resend = resendNumber(params)
+    if (resend > 0) {
+      const sent = await resendIssue(t, resend)
+      setToast(sent.message)
+      if (sent.ok) setParams({}, { replace: true })
+    }
     if (saved.short !== before) {
       guard.allow()
       navigate(`/system/custom-cards/integrations/${encodeURIComponent(saved.short)}/edit`, { replace: true })

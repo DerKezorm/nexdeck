@@ -2981,6 +2981,138 @@
           "github_unreachable": "GitHub est injoignable. La carte continue de fonctionner telle quelle."
         }
       }
+    },
+    "share": {
+      "button": "Partager dans le Card shop",
+      "buttonNamed": "Partager {{name}} dans le Card shop",
+      "title": "Partager dans le Card shop",
+      "lead": "Votre carte arrive dans le Card shop sous forme de ticket dans le Workshop, sous votre nom GitHub. Le Workshop la vérifie et, si tout est bon, elle est ajoutée toute seule. Tout ce que vous envoyez est public et sous licence MIT.",
+      "checking": "Vérification de la carte…",
+      "send": "Partager",
+      "sendUpdate": "Envoyer la mise à jour",
+      "signedInAs": "Connecté à GitHub en tant que {{login}}",
+      "kind": {
+        "card": "Carte",
+        "integration": "Connexion"
+      },
+      "mode": {
+        "new": "Une nouvelle entrée dans le Card shop.",
+        "update": "Une mise à jour de votre entrée dans le Card shop, qui est maintenant à la version {{version}}.",
+        "basedOn": "Basée sur {{id}}. Elle est partagée comme une nouvelle carte qui nomme l'original."
+      },
+      "daily": {
+        "used": "Vous avez partagé {{used}} nouvelles entrées sur {{max}} aujourd'hui.",
+        "reached": "Vous avez partagé {{max}} nouvelles entrées aujourd'hui, ce qui est le maximum que le Workshop accepte par jour. Réessayez demain."
+      },
+      "problems": "Ce n'est pas encore partageable",
+      "problem": {
+        "card_needs_demo": "Une carte pour la boutique a besoin de données de démonstration. Ajoutez-les dans l'éditeur.",
+        "card_needs_english": "Chaque texte en plusieurs langues a besoin de l'anglais.",
+        "entry_removed": "Un mainteneur a retiré cette entrée du Card shop. Demandez à un mainteneur de la rétablir avant de partager une mise à jour.",
+        "version_not_higher": "Passez la version de la carte au-dessus de la {{version}} qui est dans le Card shop.",
+        "not_yours": "Cette carte vient du Card shop et c'est le travail de quelqu'un d'autre. Modifiez-la d'abord ; elle peut alors être partagée comme la vôtre, basée sur la sienne.",
+        "description": "Écrivez une description de quelques phrases, en anglais.",
+        "category": "Choisissez une catégorie.",
+        "license": "Cochez la case de la licence MIT.",
+        "changes": "Une mise à jour a besoin d'une liste de changements.",
+        "secret_in_text": "Le texte semble contenir une clé ou un mot de passe. Retirez-le.",
+        "too_long": "L'envoi est trop long pour GitHub. Raccourcissez la définition ou ses données de démonstration."
+      },
+      "realValues": {
+        "title": "Ces valeurs de démonstration ressemblent à de vraies valeurs de votre dernier essai",
+        "body": "Les données de démonstration sont publiques. Regardez ces endroits et remplacez ce qui vous appartient. Vous pouvez quand même partager."
+      },
+      "preview": "Voici à quoi elle ressemblera dans la boutique",
+      "reads_one": "Lit {{count}} adresse",
+      "reads_other": "Lit {{count}} adresses",
+      "description": "Description",
+      "descriptionHelp": "Ce qu'elle montre ou lit, en anglais, en quelques phrases. Texte simple.",
+      "category": "Catégorie",
+      "categoryPick": "Choisir",
+      "categories": {
+        "media": "Médias",
+        "downloads": "Téléchargements",
+        "network": "Réseau",
+        "server": "Serveur",
+        "smart_home": "Maison connectée",
+        "other": "Autre"
+      },
+      "changes": "Ce qui a changé",
+      "changesHelp": "Nécessaire pour une mise à jour. En anglais, quelques lignes.",
+      "license": "Je partage ceci sous licence MIT et j'en ai le droit.",
+      "signIn": {
+        "title": "Se connecter à GitHub",
+        "lead": "Pour partager, nexdeck a besoin de votre compte GitHub. Ouvrez le lien, saisissez-y le code et revenez.",
+        "start": "Se connecter à GitHub",
+        "code": "Saisissez ce code sur github.com :",
+        "open": "Ouvrir github.com",
+        "waiting": "En attente de votre confirmation sur github.com…",
+        "expired": "Le code a expiré.",
+        "denied": "GitHub a refusé.",
+        "newCode": "Obtenir un nouveau code",
+        "signOut": "Se déconnecter de GitHub",
+        "until": "Reste connecté jusqu'au {{date}}."
+      },
+      "offline": {
+        "title": "Plutôt ne pas se connecter ?",
+        "body": "Téléchargez l'envoi sous forme de fichier, ouvrez le formulaire sur GitHub et collez-y la définition du fichier.",
+        "file": "Télécharger le fichier",
+        "form": "Ouvrir le formulaire sur GitHub"
+      },
+      "done": {
+        "new": "{{name}} a été envoyée. Le Workshop la vérifie maintenant.",
+        "update": "La mise à jour de {{name}} a été envoyée. Le Workshop la vérifie maintenant.",
+        "unchanged": "{{name}} a déjà été envoyée et n'a pas changé.",
+        "open": "Ouvrir le ticket {{number}} sur GitHub",
+        "where": "Ce qu'il en advient apparaît sous Mes envois."
+      },
+      "errors": {
+        "github_login_needed": "Votre connexion à GitHub a pris fin. Reconnectez-vous ; ce que vous avez écrit est conservé.",
+        "github_unreachable": "GitHub est injoignable. Réessayez dans un instant.",
+        "github_rate_limited": "GitHub n'accepte plus de requêtes pour le moment. Réessayez plus tard.",
+        "github_rejected": "GitHub n'a pas accepté la requête. Réessayez plus tard.",
+        "github_login_failed": "GitHub n'a pas terminé la connexion. Recommencez.",
+        "device_flow_off": "L'application GitHub du Workshop a le Device Flow désactivé.",
+        "repo_no_access": "Votre compte GitHub n'accède pas au dépôt du Workshop. Tant qu'il est privé, seuls les comptes invités peuvent partager des cartes.",
+        "daily_limit": "Ce compte GitHub a fait 10 nouveaux envois aujourd'hui, ce qui est le maximum que le Workshop accepte par jour. Réessayez demain.",
+        "already_sending": "Cet envoi est en route. Patientez un instant.",
+        "not_resendable": "Ce n'est pas un envoi ouvert de votre part.",
+        "no_such_card": "Cette carte n'existe plus ici."
+      },
+      "submissions": {
+        "lead": "Ce que sont devenues les cartes que vous avez partagées. C'est relu à chaque fois dans vos tickets du Workshop.",
+        "signedOut": "Connectez-vous à GitHub pour voir ce que sont devenus vos envois.",
+        "emptyTitle": "Vous n'avez encore rien partagé",
+        "emptyBody": "Partagez une carte depuis la liste des cartes avec le bouton de partage. Elle apparaît ici dès que GitHub l'a reçue.",
+        "catalogOff": "Activez le Card shop pour voir si une entrée a été retirée plus tard.",
+        "state": {
+          "checking": "En cours de vérification",
+          "failed": "À corriger",
+          "waiting": "Attend demain",
+          "in_shop": "Dans le Card shop",
+          "removed": "Retirée du Card shop",
+          "closed": "Fermée"
+        },
+        "reasons": "Pourquoi elle n'est pas passée :",
+        "removedFor": "Retirée ({{level}}) : {{reason}}",
+        "level": {
+          "harmful": "nuisible",
+          "not_useful": "pas utile",
+          "withdrawn": "retirée"
+        },
+        "waitingBody": "Le Workshop accepte 10 nouvelles entrées par jour et par compte. Celle-ci sera revérifiée demain.",
+        "fix": "Corriger et renvoyer",
+        "submitUpdate": "Envoyer la mise à jour",
+        "update": "Mise à jour",
+        "open": "Ticket {{number}} sur GitHub",
+        "version": "Version {{version}}",
+        "cardGone": "Cette carte n'existe plus dans ce nexdeck."
+      },
+      "resend": {
+        "edited": "Enregistrée et renvoyée dans le ticket {{number}}.",
+        "recheck": "Enregistrée. Le texte n'a pas changé, le Workshop a donc été prié de revérifier le ticket {{number}}.",
+        "failed": "Enregistrée, mais pas renvoyée : {{message}}"
+      }
     }
   }
 }

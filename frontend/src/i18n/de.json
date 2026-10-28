@@ -2981,6 +2981,138 @@
           "github_unreachable": "GitHub ist nicht erreichbar. Die Karte läuft unverändert weiter."
         }
       }
+    },
+    "share": {
+      "button": "Im Card shop teilen",
+      "buttonNamed": "{{name}} im Card shop teilen",
+      "title": "Im Card shop teilen",
+      "lead": "Deine Karte geht als Issue im Workshop unter deinem GitHub-Namen in den Card shop. Der Workshop prüft sie, und wenn alles passt, wird sie von allein aufgenommen. Alles, was du sendest, ist öffentlich und steht unter der MIT-Lizenz.",
+      "checking": "Die Karte wird geprüft…",
+      "send": "Teilen",
+      "sendUpdate": "Update einreichen",
+      "signedInAs": "Bei GitHub angemeldet als {{login}}",
+      "kind": {
+        "card": "Karte",
+        "integration": "Anbindung"
+      },
+      "mode": {
+        "new": "Ein neuer Eintrag im Card shop.",
+        "update": "Ein Update deines Eintrags im Card shop, der jetzt bei Version {{version}} steht.",
+        "basedOn": "Basiert auf {{id}}. Sie wird als neue Karte geteilt, die das Original nennt."
+      },
+      "daily": {
+        "used": "Du hast heute {{used}} von {{max}} neuen Einträgen geteilt.",
+        "reached": "Du hast heute {{max}} neue Einträge geteilt, mehr nimmt der Workshop an einem Tag nicht an. Versuche es morgen wieder."
+      },
+      "problems": "Das lässt sich noch nicht teilen",
+      "problem": {
+        "card_needs_demo": "Eine Karte für den Shop braucht Demo-Daten. Trage sie im Editor ein.",
+        "card_needs_english": "Jeder Text in mehreren Sprachen braucht den englischen.",
+        "entry_removed": "Ein Pfleger hat diesen Eintrag aus dem Card shop genommen. Bitte einen Pfleger, ihn zurückzuholen, bevor du ein Update teilst.",
+        "version_not_higher": "Setze die Version der Karte über die {{version}}, die im Card shop steht.",
+        "not_yours": "Diese Karte kam aus dem Card shop und ist die Arbeit von jemand anderem. Ändere sie zuerst; dann lässt sie sich als deine eigene teilen, basierend auf der anderen.",
+        "description": "Schreibe eine Beschreibung in ein paar Sätzen, auf Englisch.",
+        "category": "Wähle eine Kategorie.",
+        "license": "Setze den Haken bei der MIT-Lizenz.",
+        "changes": "Ein Update braucht eine Liste der Änderungen.",
+        "secret_in_text": "Der Text scheint einen Schlüssel oder ein Passwort zu enthalten. Nimm es heraus.",
+        "too_long": "Die Einreichung ist für GitHub zu lang. Kürze die Definition oder ihre Demo-Daten."
+      },
+      "realValues": {
+        "title": "Diese Demo-Werte sehen aus wie echte aus deiner letzten Probe",
+        "body": "Demo-Daten sind öffentlich. Sieh dir diese Stellen an und ersetze, was dir gehört. Teilen ist trotzdem möglich."
+      },
+      "preview": "So sieht sie im Shop aus",
+      "reads_one": "Liest {{count}} Adresse",
+      "reads_other": "Liest {{count}} Adressen",
+      "description": "Beschreibung",
+      "descriptionHelp": "Was sie zeigt oder liest, auf Englisch, in ein paar Sätzen. Nur Text.",
+      "category": "Kategorie",
+      "categoryPick": "Auswählen",
+      "categories": {
+        "media": "Medien",
+        "downloads": "Downloads",
+        "network": "Netzwerk",
+        "server": "Server",
+        "smart_home": "Smart Home",
+        "other": "Sonstiges"
+      },
+      "changes": "Was sich geändert hat",
+      "changesHelp": "Für ein Update nötig. Auf Englisch, ein paar Zeilen.",
+      "license": "Ich teile das unter der MIT-Lizenz und habe das Recht dazu.",
+      "signIn": {
+        "title": "Bei GitHub anmelden",
+        "lead": "Zum Teilen braucht nexdeck dein GitHub-Konto. Öffne den Link, gib dort den Code ein und komm zurück.",
+        "start": "Bei GitHub anmelden",
+        "code": "Gib diesen Code auf github.com ein:",
+        "open": "github.com öffnen",
+        "waiting": "Warte darauf, dass du auf github.com bestätigst…",
+        "expired": "Der Code ist abgelaufen.",
+        "denied": "GitHub hat abgelehnt.",
+        "newCode": "Neuen Code holen",
+        "signOut": "Von GitHub abmelden",
+        "until": "Bleibt angemeldet bis {{date}}."
+      },
+      "offline": {
+        "title": "Lieber nicht anmelden?",
+        "body": "Lade die Einreichung als Datei herunter, öffne das Formular auf GitHub und füge die Definition aus der Datei dort ein.",
+        "file": "Datei herunterladen",
+        "form": "Formular auf GitHub öffnen"
+      },
+      "done": {
+        "new": "{{name}} wurde eingereicht. Der Workshop prüft sie jetzt.",
+        "update": "Das Update von {{name}} wurde eingereicht. Der Workshop prüft es jetzt.",
+        "unchanged": "{{name}} wurde schon eingereicht und hat sich nicht geändert.",
+        "open": "Issue {{number}} auf GitHub öffnen",
+        "where": "Was daraus wird, siehst du unter Meine Einreichungen."
+      },
+      "errors": {
+        "github_login_needed": "Deine GitHub-Anmeldung ist abgelaufen. Melde dich neu an; was du geschrieben hast, bleibt erhalten.",
+        "github_unreachable": "GitHub ist nicht erreichbar. Versuche es gleich noch einmal.",
+        "github_rate_limited": "GitHub nimmt vorerst keine weiteren Anfragen an. Versuche es später noch einmal.",
+        "github_rejected": "GitHub hat die Anfrage nicht angenommen. Versuche es später noch einmal.",
+        "github_login_failed": "GitHub hat die Anmeldung nicht abgeschlossen. Beginne neu.",
+        "device_flow_off": "Bei der GitHub App des Workshops ist der Device Flow ausgeschaltet.",
+        "repo_no_access": "Dein GitHub-Konto erreicht das Workshop-Repository nicht. Solange es privat ist, können nur eingeladene Konten Karten teilen.",
+        "daily_limit": "Dieses GitHub-Konto hat heute 10 neue Einreichungen gemacht, mehr nimmt der Workshop an einem Tag nicht an. Versuche es morgen wieder.",
+        "already_sending": "Diese Einreichung ist unterwegs. Warte einen Moment.",
+        "not_resendable": "Das ist keine offene Einreichung von dir.",
+        "no_such_card": "Diese Karte gibt es nicht mehr."
+      },
+      "submissions": {
+        "lead": "Was aus den Karten wurde, die du geteilt hast. Das wird jedes Mal aus deinen Issues im Workshop gelesen.",
+        "signedOut": "Melde dich bei GitHub an, um zu sehen, was aus deinen Einreichungen wurde.",
+        "emptyTitle": "Du hast noch nichts geteilt",
+        "emptyBody": "Teile eine Karte in der Kartenliste über den Teilen-Knopf. Sie erscheint hier, sobald GitHub sie hat.",
+        "catalogOff": "Schalte den Card shop ein, um zu sehen, ob ein Eintrag später herausgenommen wurde.",
+        "state": {
+          "checking": "In Prüfung",
+          "failed": "Muss korrigiert werden",
+          "waiting": "Wartet auf morgen",
+          "in_shop": "Im Card shop",
+          "removed": "Aus dem Card shop entfernt",
+          "closed": "Geschlossen"
+        },
+        "reasons": "Warum sie nicht durchging:",
+        "removedFor": "Entfernt ({{level}}): {{reason}}",
+        "level": {
+          "harmful": "schädlich",
+          "not_useful": "nicht nützlich",
+          "withdrawn": "zurückgezogen"
+        },
+        "waitingBody": "Der Workshop nimmt pro Konto 10 neue Einträge am Tag an. Diese wird morgen noch einmal geprüft.",
+        "fix": "Korrigieren und erneut senden",
+        "submitUpdate": "Update einreichen",
+        "update": "Update",
+        "open": "Issue {{number}} auf GitHub",
+        "version": "Version {{version}}",
+        "cardGone": "Diese Karte gibt es in diesem nexdeck nicht mehr."
+      },
+      "resend": {
+        "edited": "Gespeichert und erneut in Issue {{number}} gesendet.",
+        "recheck": "Gespeichert. Der Text hat sich nicht geändert, deshalb wurde der Workshop gebeten, Issue {{number}} noch einmal zu prüfen.",
+        "failed": "Gespeichert, aber nicht erneut gesendet: {{message}}"
+      }
     }
   }
 }

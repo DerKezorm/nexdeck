@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Download, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Copy, Download, Pencil, Plus, Search, Share2, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -12,6 +12,8 @@ import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
 import { ImportDialog } from './ImportDialog'
 import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
+import { ShareDialog } from './share/ShareDialog'
+import { Submissions } from './share/Submissions'
 import { useShopState, useShopSwitch } from './shop/hooks'
 import { ShopNote } from './shop/ShopNote'
 import { ShopTab } from './shop/ShopTab'
@@ -48,6 +50,7 @@ export function CustomCardsSettings() {
   const [importing, setImporting] = useState(false)
   const [notice, setNotice] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [sharing, setSharing] = useState<CustomCardRow | null>(null)
   const shopState = useShopState()
   const shopSwitch = useShopSwitch()
 
@@ -162,7 +165,7 @@ export function CustomCardsSettings() {
 
         {tab === 'shop' && <ShopTab />}
 
-        {tab === 'submissions' && <p className="text-sm text-muted">{t('cards.later')}</p>}
+        {tab === 'submissions' && <Submissions names={Object.fromEntries(rows.map((card) => [card.slug, nameOf(card)]))} />}
 
         {tab === 'cards' && cards.isSuccess && rows.length === 0 && (
           <EmptyState
@@ -259,6 +262,9 @@ export function CustomCardsSettings() {
                     <button className="btn btn-icon btn-flat" onClick={() => void save(card)} aria-label={t('cards.exchange.exportNamed', { name: nameOf(card) })} title={t('cards.exchange.export')}>
                       <Download size={15} />
                     </button>
+                    <button className="btn btn-icon btn-flat" onClick={() => setSharing(card)} aria-label={t('cards.share.buttonNamed', { name: nameOf(card) })} title={t('cards.share.button')}>
+                      <Share2 size={15} />
+                    </button>
                     <button className="btn btn-icon btn-flat" onClick={() => void copy(card)} aria-label={t('cards.copyNamed', { name: nameOf(card) })} title={t('cards.copy')}>
                       <Copy size={15} />
                     </button>
@@ -292,6 +298,7 @@ export function CustomCardsSettings() {
       </div>
 
       <UpdateDialog slug={updating ?? ''} name={updating ? nameOf(rows.find((one) => one.slug === updating) ?? ({ name: updating, slug: updating } as CustomCardRow)) : ''} open={updating !== null} onClose={() => setUpdating(null)} />
+      {sharing && <ShareDialog kind="card" slug={sharing.slug} name={nameOf(sharing)} form={sharing.form} open onClose={() => setSharing(null)} />}
       <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => setNotice(t('cards.exchange.done'))} />
       <Confirm
         open={removing !== null}

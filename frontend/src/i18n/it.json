@@ -2981,6 +2981,138 @@
           "github_unreachable": "GitHub non è raggiungibile. La scheda continua a funzionare così com'è."
         }
       }
+    },
+    "share": {
+      "button": "Condividi nel Card shop",
+      "buttonNamed": "Condividi {{name}} nel Card shop",
+      "title": "Condividi nel Card shop",
+      "lead": "La tua scheda arriva nel Card shop come issue nel Workshop, con il tuo nome GitHub. Il Workshop la controlla e, se tutto va bene, viene aggiunta da sola. Tutto ciò che invii è pubblico e sotto licenza MIT.",
+      "checking": "Controllo della scheda…",
+      "send": "Condividi",
+      "sendUpdate": "Invia aggiornamento",
+      "signedInAs": "Accesso a GitHub come {{login}}",
+      "kind": {
+        "card": "Scheda",
+        "integration": "Connessione"
+      },
+      "mode": {
+        "new": "Una nuova voce nel Card shop.",
+        "update": "Un aggiornamento della tua voce nel Card shop, che ora è alla versione {{version}}.",
+        "basedOn": "Basata su {{id}}. Viene condivisa come nuova scheda che nomina l'originale."
+      },
+      "daily": {
+        "used": "Oggi hai condiviso {{used}} voci nuove su {{max}}.",
+        "reached": "Oggi hai condiviso {{max}} voci nuove, il massimo che il Workshop accetta in un giorno. Riprova domani."
+      },
+      "problems": "Per ora non si può condividere",
+      "problem": {
+        "card_needs_demo": "Una scheda per il negozio richiede dati dimostrativi. Aggiungili nell'editor.",
+        "card_needs_english": "Ogni testo in più lingue richiede quello inglese.",
+        "entry_removed": "Un responsabile ha tolto questa voce dal Card shop. Chiedi a un responsabile di ripristinarla prima di condividere un aggiornamento.",
+        "version_not_higher": "Porta la versione della scheda sopra la {{version}} che è nel Card shop.",
+        "not_yours": "Questa scheda viene dal Card shop ed è opera di un altro. Modificala prima; poi si può condividere come tua, basata sulla sua.",
+        "description": "Scrivi una descrizione di qualche frase, in inglese.",
+        "category": "Scegli una categoria.",
+        "license": "Seleziona la casella della licenza MIT.",
+        "changes": "Un aggiornamento richiede un elenco delle modifiche.",
+        "secret_in_text": "Il testo sembra contenere una chiave o una password. Toglila.",
+        "too_long": "L'invio è troppo lungo per GitHub. Accorcia la definizione o i suoi dati dimostrativi."
+      },
+      "realValues": {
+        "title": "Questi valori dimostrativi sembrano reali, dalla tua ultima prova",
+        "body": "I dati dimostrativi sono pubblici. Guarda questi punti e sostituisci ciò che è tuo. Puoi comunque condividere."
+      },
+      "preview": "Così apparirà nel negozio",
+      "reads_one": "Legge {{count}} indirizzo",
+      "reads_other": "Legge {{count}} indirizzi",
+      "description": "Descrizione",
+      "descriptionHelp": "Cosa mostra o legge, in inglese, in qualche frase. Solo testo.",
+      "category": "Categoria",
+      "categoryPick": "Scegli",
+      "categories": {
+        "media": "Media",
+        "downloads": "Download",
+        "network": "Rete",
+        "server": "Server",
+        "smart_home": "Casa intelligente",
+        "other": "Altro"
+      },
+      "changes": "Cosa è cambiato",
+      "changesHelp": "Serve per un aggiornamento. In inglese, qualche riga.",
+      "license": "Condivido questo sotto licenza MIT e ne ho il diritto.",
+      "signIn": {
+        "title": "Accedi a GitHub",
+        "lead": "Per condividere, nexdeck ha bisogno del tuo account GitHub. Apri il link, scrivi lì il codice e torna.",
+        "start": "Accedi a GitHub",
+        "code": "Scrivi questo codice su github.com:",
+        "open": "Apri github.com",
+        "waiting": "In attesa della tua conferma su github.com…",
+        "expired": "Il codice è scaduto.",
+        "denied": "GitHub ha detto di no.",
+        "newCode": "Ottieni un nuovo codice",
+        "signOut": "Esci da GitHub",
+        "until": "Resti connesso fino al {{date}}."
+      },
+      "offline": {
+        "title": "Preferisci non accedere?",
+        "body": "Scarica l'invio come file, apri il modulo su GitHub e incollaci la definizione del file.",
+        "file": "Scarica il file",
+        "form": "Apri il modulo su GitHub"
+      },
+      "done": {
+        "new": "{{name}} è stata inviata. Il Workshop la controlla ora.",
+        "update": "L'aggiornamento di {{name}} è stato inviato. Il Workshop lo controlla ora.",
+        "unchanged": "{{name}} è già stata inviata e non è cambiata.",
+        "open": "Apri l'issue {{number}} su GitHub",
+        "where": "Cosa ne risulta lo vedi in I miei invii."
+      },
+      "errors": {
+        "github_login_needed": "Il tuo accesso a GitHub è terminato. Accedi di nuovo; ciò che hai scritto resta.",
+        "github_unreachable": "GitHub non è raggiungibile. Riprova tra un momento.",
+        "github_rate_limited": "GitHub per ora non accetta altre richieste. Riprova più tardi.",
+        "github_rejected": "GitHub non ha accettato la richiesta. Riprova più tardi.",
+        "github_login_failed": "GitHub non ha completato l'accesso. Ricomincia.",
+        "device_flow_off": "L'app GitHub del Workshop ha il Device Flow disattivato.",
+        "repo_no_access": "Il tuo account GitHub non raggiunge il repository del Workshop. Finché è privato, solo gli account invitati possono condividere schede.",
+        "daily_limit": "Questo account GitHub oggi ha fatto 10 nuovi invii, il massimo che il Workshop accetta in un giorno. Riprova domani.",
+        "already_sending": "Questo invio è in corso. Attendi un momento.",
+        "not_resendable": "Questo non è un tuo invio aperto.",
+        "no_such_card": "Questa scheda non c'è più."
+      },
+      "submissions": {
+        "lead": "Cosa è successo alle schede che hai condiviso. Viene letto ogni volta dalle tue issue nel Workshop.",
+        "signedOut": "Accedi a GitHub per vedere cosa è successo ai tuoi invii.",
+        "emptyTitle": "Non hai ancora condiviso nulla",
+        "emptyBody": "Condividi una scheda dall'elenco delle schede con il pulsante di condivisione. Compare qui appena GitHub l'ha ricevuta.",
+        "catalogOff": "Attiva il Card shop per vedere se una voce è stata tolta in seguito.",
+        "state": {
+          "checking": "In controllo",
+          "failed": "Da correggere",
+          "waiting": "Aspetta domani",
+          "in_shop": "Nel Card shop",
+          "removed": "Tolta dal Card shop",
+          "closed": "Chiusa"
+        },
+        "reasons": "Perché non è passata:",
+        "removedFor": "Tolta ({{level}}): {{reason}}",
+        "level": {
+          "harmful": "dannosa",
+          "not_useful": "non utile",
+          "withdrawn": "ritirata"
+        },
+        "waitingBody": "Il Workshop accetta 10 voci nuove al giorno per account. Questa viene ricontrollata domani.",
+        "fix": "Correggi e reinvia",
+        "submitUpdate": "Invia aggiornamento",
+        "update": "Aggiornamento",
+        "open": "Issue {{number}} su GitHub",
+        "version": "Versione {{version}}",
+        "cardGone": "Questa scheda non è più in questo nexdeck."
+      },
+      "resend": {
+        "edited": "Salvata e inviata di nuovo nell'issue {{number}}.",
+        "recheck": "Salvata. Il testo non è cambiato, quindi è stato chiesto al Workshop di ricontrollare l'issue {{number}}.",
+        "failed": "Salvata, ma non reinviata: {{message}}"
+      }
     }
   }
 }
