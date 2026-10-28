@@ -9,6 +9,7 @@ import { entryPath, pictureSrc, type ShopDetail, type ShopEntry, type ShopInstal
 import { pickText } from '../../../lib/cardText'
 import { useGround } from '../../../lib/ground'
 import { safeUrl } from '../../../lib/safeUrl'
+import { Changelog } from './Changelog'
 import { InstallDialog } from './InstallDialog'
 import { PlaceOnBoard } from './PlaceOnBoard'
 import { UpdateDialog } from './UpdateDialog'
@@ -203,9 +204,7 @@ export function ShopDetailPage({
         {detail.isPending ? (
           <p className="text-sm text-muted">{t('cards.shop.loading')}</p>
         ) : full?.changelog ? (
-          <p className="text-sm whitespace-pre-wrap break-words" data-testid="shop-changelog">
-            {full.changelog}
-          </p>
+          <Changelog text={full.changelog} testId="shop-changelog" />
         ) : (
           <p className="text-sm text-muted">{t('cards.shop.noChanges')}</p>
         )}
