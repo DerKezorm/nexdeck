@@ -291,3 +291,49 @@ def test_a_service_that_runs_another_version_is_a_line_of_the_chronicle(client: 
     with db_session() as db:
         lines = [(line.name, line.before, line.after) for line in db.scalars(select(Event).where(Event.kind == "version"))]
     assert lines == [("Series", "4.0.9", "4.0.11.2680")]
+
+
+#: The services added from 0.50 on: their project, the tag of its latest release as GitHub showed it on 28.10.2026,
+#: and the version the service reports about itself, as its adapter reads it.
+NEW_UPSTREAM = [
+    ("anchor", "ZhFahim/anchor", "v0.17.2", "0.17.2"),
+    ("aria2", "aria2/aria2", "release-1.37.0", "1.37.0"),
+    ("bookstack", "BookStackApp/BookStack", "v26.09.2", "v26.09.2"),
+    ("dashdot", "MauriceNino/dashdot", "v6.3.4", "6.3.4"),
+    ("esphome", "esphome/esphome", "2026.10.1", "2026.10.1"),
+    ("homebridge", "homebridge/homebridge", "v2.4.0", "2.4.0"),
+    ("jackett", "Jackett/Jackett", "v0.24.2934", "0.24.2934"),
+    ("kodi", "xbmc/xbmc", "21.3-Omega", "21.3"),
+    ("lemmy", "LemmyNet/lemmy", "0.19.21", "0.19.21"),
+    ("lubelogger", "hargata/lubelog", "v1.7.4", "1.7.4"),
+    ("mastodon", "mastodon/mastodon", "v4.7.3", "4.7.3"),
+    ("memos", "usememos/memos", "v0.31.0", "0.31.0"),
+    ("myspeed", "gnmyt/MySpeed", "v1.0.9", "1.0.9"),
+    ("nodered", "node-red/node-red", "5.0.9", "5.0.9"),
+    ("ombi", "Ombi-app/Ombi", "v4.53.10", "4.53.10.0"),
+    ("owncast", "owncast/owncast", "v0.3.0", "0.3.0"),
+    ("peertube", "Chocobozzz/PeerTube", "v8.3.2", "8.3.2"),
+    ("rclone", "rclone/rclone", "v1.75.2", "1.75.2"),
+    ("sftpgo", "drakkan/sftpgo", "v2.7.6", "2.7.6"),
+    ("slskd", "slskd/slskd", "0.26.2", "0.26.2.0"),
+    ("spoolman", "Donkie/Spoolman", "v0.27.0", "0.27.0"),
+    ("stalwart", "stalwartlabs/stalwart", "v1.0.0", "1.0.0"),
+    ("stash", "stashapp/stash", "v0.31.1", "v0.31.1"),
+    ("synapse", "element-hq/synapse", "v1.164.0", "1.164.0"),
+    ("syncthingrelay", "syncthing/syncthing", "v2.1.7", "2.1.7"),
+    ("tasmota", "arendst/Tasmota", "v16.0.0", "16.0.0"),
+    ("traccar", "traccar/traccar", "v6.16.0", "6.16.0"),
+    ("trilium", "TriliumNext/Trilium", "v0.106.1", "0.106.1"),
+    ("wazuh", "wazuh/wazuh", "v4.14.9", "4.14.9"),
+    ("woodpecker", "woodpecker-ci/woodpecker", "v3.19.0", "3.19.0"),
+]
+
+
+@pytest.mark.parametrize(("kind", "repo", "tag", "reported"), NEW_UPSTREAM)
+def test_a_new_service_is_compared_with_the_tag_of_its_project(kind: str, repo: str, tag: str, reported: str) -> None:
+    assert versions.UPSTREAM[kind] == repo
+    newest = versions.version_in(tag)
+    assert newest is not None, "the tag names a version"
+    # The version the service reports is the one this release carries, and a much older one is behind it.
+    assert versions.compare(versions.version_in(reported), newest) == "current"
+    assert versions.compare("0.0.1", newest) == "behind"
