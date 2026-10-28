@@ -18,7 +18,7 @@ import logging
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlsplit
 
-from fastapi import APIRouter, Query, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -151,33 +151,23 @@ def authorize(
     resource: str = Query("", max_length=2048),
     scope: str = Query("", max_length=200),
 ) -> Response:
-    """Mistakes the program can be told of go back to it; a request that cannot even say where it came from goes on
-    to the consent page, which explains it to the person (never a redirect to an address nobody registered)."""
+    """Always on to the consent page, whatever is wrong with the request.
+
+    ⚠️ Never straight back to the program. Anybody may register a return address
+    without an account, so a redirect from here for a mistake (``response_type=x``)
+    would send a visitor of this address to a page of the registrant's choosing,
+    with this server's name on the link. The page explains the mistake to the
+    person, and offers a way back to the program only for a registered address.
+    """
     with db_session() as db:
         if not mcp_oauth.is_open(db):
             return _gone()
-        root = base(request, db)
-        try:
-            mcp_oauth.client_for(db, client_id, redirect_uri)
-            known = True
-        except McpError:
-            known = False
-    if known:
-        problem = ""
-        if response_type != "code":
-            problem, text = "unsupported_response_type", "Only response_type=code is spoken here."
-        else:
-            try:
-                mcp_oauth.check_request_shape(code_challenge, code_challenge_method, resource, root)
-            except OAuthError as failure:
-                problem, text = failure.code, failure.description
-        if problem:
-            return RedirectResponse(mcp_oauth.back_to(redirect_uri, {"error": problem, "error_description": text,
-                                                                     "state": state, "iss": root}), status_code=302)
-    query = {"client_id": client_id, "redirect_uri": redirect_uri, "code_challenge": code_challenge,
+    # The response type travels even when empty: the page must see that it was missing.
+    query = {"client_id": client_id, "redirect_uri": redirect_uri, "response_type": response_type, "code_challenge": code_challenge,
              "code_challenge_method": code_challenge_method, "state": state, "resource": resource, "scope": scope}
     page = str(request.scope.get("root_path") or "") + "/connect"
-    return RedirectResponse(f"{page}?{urlencode({key: value for key, value in query.items() if value})}", status_code=302)
+    kept = {key: value for key, value in query.items() if value or key == "response_type"}
+    return RedirectResponse(f"{page}?{urlencode(kept)}", status_code=302)
 
 
 # -- tokens -----------------------------------------------------------------------------------------
@@ -265,15 +255,30 @@ def consent_info(
     code_challenge: str = Query("", max_length=128),
     code_challenge_method: str = Query("", max_length=16),
     resource: str = Query("", max_length=2048),
+    response_type: str = Query("code", max_length=32),
+    state: str = Query("", max_length=1024),
 ) -> dict:
     _session_only(request)
     _open_or_refuse(db)
+    root = base(request, db)
     try:
-        client = mcp_oauth.check_request(db, base(request, db), client_id=client_id, redirect_uri=redirect_uri,
-                                         code_challenge=code_challenge, code_challenge_method=code_challenge_method,
-                                         resource=resource)
+        # A program that is not known, or a return address it did not register, gets no way back at all.
+        client = mcp_oauth.client_for(db, client_id, redirect_uri)
     except McpError as failure:
         raise _refused(failure) from None
+    try:
+        if response_type != "code":
+            raise McpError("oauth_response_type", "Only response_type=code is spoken here.", status.HTTP_400_BAD_REQUEST)
+        mcp_oauth.check_request(db, root, client_id=client_id, redirect_uri=redirect_uri, code_challenge=code_challenge,
+                                code_challenge_method=code_challenge_method, resource=resource)
+    except McpError as failure:
+        # The mistake is the program's, and its address is registered: the page may offer a button back, never a redirect.
+        problem = {"oauth_response_type": "unsupported_response_type", "oauth_pkce": "invalid_request", "oauth_resource": "invalid_target"}
+        raise HTTPException(status_code=failure.status, detail={
+            "code": failure.code, "message": failure.message, "host": urlsplit(redirect_uri).netloc,
+            "back": mcp_oauth.back_to(redirect_uri, {"error": problem.get(failure.code, "invalid_request"),
+                                                     "error_description": failure.message, "state": state, "iss": root}),
+        }) from None
     visible = mcp.visible_boards(db, user)
     boards = [{"id": board.id, "name": board.name} for board in db.scalars(select(Board).order_by(Board.name)) if board.id in visible]
     return {"client_name": client.name, "redirect_host": urlsplit(redirect_uri).netloc, "max_level": mcp.stored(db)["max_level"],

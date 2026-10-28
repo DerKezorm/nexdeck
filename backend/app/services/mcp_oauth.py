@@ -230,16 +230,6 @@ def check_request(db: Session, base: str, *, client_id: str, redirect_uri: str, 
     return client
 
 
-def check_request_shape(code_challenge: str, code_challenge_method: str, resource: str, base: str) -> None:
-    """The mistakes of a sign-in request that go back to the program, in OAuth's words."""
-    try:
-        _check_challenge(code_challenge, code_challenge_method)
-    except McpError:
-        raise OAuthError("invalid_request", "PKCE with S256 is required.") from None
-    if resource and not same_resource(resource, resource_of(base)):
-        raise OAuthError("invalid_target", "The resource is not this nexdeck's MCP endpoint.")
-
-
 def back_to(redirect_uri: str, values: dict[str, str]) -> str:
     joiner = "&" if "?" in redirect_uri else "?"
     return redirect_uri + joiner + urlencode({key: value for key, value in values.items() if value})

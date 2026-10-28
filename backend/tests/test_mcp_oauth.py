@@ -181,21 +181,26 @@ def test_a_wrong_verifier_gets_no_token(ready: TestClient) -> None:
     assert ready.get("/api/v1/mcp/keys").json() == []
 
 
-def test_a_request_without_pkce_s256_goes_back_to_the_program(ready: TestClient) -> None:
+def test_a_request_without_pkce_s256_is_explained_by_the_page_that_may_lead_back(ready: TestClient) -> None:
     client_id = register(ready)
-    sent = ready.get("/api/mcp/oauth/authorize", params={"client_id": client_id, "redirect_uri": BACK, "response_type": "code",
-                                                         "code_challenge": "x" * 43, "code_challenge_method": "plain", "state": "s1"},
-                     follow_redirects=False)
-    assert sent.status_code == 302
-    back = urlsplit(sent.headers["location"])
+    wrong = {"client_id": client_id, "redirect_uri": BACK, "response_type": "code", "code_challenge": "x" * 43,
+             "code_challenge_method": "plain", "state": "s1"}
+    sent = ready.get("/api/mcp/oauth/authorize", params=wrong, follow_redirects=False)
+    assert sent.status_code == 302 and urlsplit(sent.headers["location"]).path == "/connect"
+    refused = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, "x" * 43), "code_challenge_method": "plain", "state": "s1"})
+    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "oauth_pkce"
+    # The way back is offered, to the registered address and with the mistake in OAuth's words.
+    back = urlsplit(refused.json()["detail"]["back"])
     assert f"{back.scheme}://{back.netloc}{back.path}" == BACK
     assert parse_qs(back.query)["error"] == ["invalid_request"] and parse_qs(back.query)["state"] == ["s1"]
-    refused = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, "x" * 43), "code_challenge_method": "plain"})
-    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "oauth_pkce"
+    assert refused.json()["detail"]["host"] == "app.example.com"
     _verifier, challenge = pkce()
-    implicit = ready.get("/api/mcp/oauth/authorize", params={**request_of(client_id, challenge), "response_type": "token"},
-                         follow_redirects=False)
-    assert parse_qs(urlsplit(implicit.headers["location"]).query)["error"] == ["unsupported_response_type"]
+    implicit = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, challenge), "response_type": "token", "state": "s1"})
+    assert implicit.status_code == 400 and implicit.json()["detail"]["code"] == "oauth_response_type"
+    assert parse_qs(urlsplit(implicit.json()["detail"]["back"]).query)["error"] == ["unsupported_response_type"]
+    # A response type that was never sent is no "code" either.
+    empty = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, challenge), "response_type": ""})
+    assert empty.status_code == 400 and empty.json()["detail"]["code"] == "oauth_response_type"
 
 
 def test_a_code_is_traded_once_and_the_second_time_ends_what_the_first_made(ready: TestClient) -> None:
@@ -244,11 +249,9 @@ def test_another_resource_is_refused_everywhere(ready: TestClient) -> None:
     client_id = register(ready)
     verifier, challenge = pkce()
     elsewhere = "https://other.example.com/api/mcp"
-    sent = ready.get("/api/mcp/oauth/authorize", params={**request_of(client_id, challenge, resource=elsewhere), "response_type": "code"},
-                     follow_redirects=False)
-    assert parse_qs(urlsplit(sent.headers["location"]).query)["error"] == ["invalid_target"]
     shown = ready.get("/api/v1/mcp/consent", params=request_of(client_id, challenge, resource=elsewhere))
     assert shown.status_code == 400 and shown.json()["detail"]["code"] == "oauth_resource"
+    assert parse_qs(urlsplit(shown.json()["detail"]["back"]).query)["error"] == ["invalid_target"]
     assert agree(ready, client_id, challenge, resource=elsewhere).status_code == 400
     code = code_of(agree(ready, client_id, challenge))
     refused = trade(ready, client_id, code, verifier, resource=elsewhere)
@@ -302,9 +305,35 @@ def test_an_address_the_program_did_not_register_is_never_sent_to(ready: TestCli
     assert urlsplit(sent.headers["location"]).path == "/connect"
     shown = ready.get("/api/v1/mcp/consent", params={**request_of(client_id, challenge), "redirect_uri": stolen})
     assert shown.status_code == 400 and shown.json()["detail"]["code"] == "oauth_redirect"
+    assert "back" not in shown.json()["detail"], "no way back to an address nobody registered"
     posted = ready.post("/api/v1/mcp/consent", json={**request_of(client_id, challenge), "redirect_uri": stolen, "allow": True,
                                                      "level": "read"}, headers=CSRF)
     assert posted.status_code == 400 and posted.json()["detail"]["code"] == "oauth_redirect"
+
+
+@pytest.mark.parametrize("mistake", [
+    {"response_type": "x"}, {"response_type": ""}, {"response_type": "token"}, {"code_challenge_method": "plain"},
+    {"code_challenge": ""}, {"resource": "https://other.example.com/api/mcp"}, {"redirect_uri": "https://thief.example.com/cb"},
+    {"client_id": "nobody"}, {"client_id": ""},
+], ids=lambda mistake: ",".join(f"{key}={value or 'empty'}" for key, value in mistake.items()))
+def test_authorize_leads_nowhere_but_to_its_own_page_whatever_is_wrong(ready: TestClient, mistake: dict[str, str]) -> None:
+    """⚠️ Anybody may register a return address without an account; a redirect to it for a mistake was an open redirect."""
+    stranger = program(ready)
+    client_id = register(stranger, "https://phish.example/login")
+    _verifier, challenge = pkce()
+    params = {"client_id": client_id, "redirect_uri": "https://phish.example/login", "response_type": "code", "code_challenge": challenge,
+              "code_challenge_method": "S256", "state": "s", "resource": RESOURCE, **mistake}
+    sent = stranger.get("/api/mcp/oauth/authorize", params=params, follow_redirects=False)
+    assert sent.status_code == 302
+    where = urlsplit(sent.headers["location"])
+    assert (where.scheme, where.netloc, where.path) == ("", "", "/connect"), sent.headers["location"]
+    # The request is kept whole for the page, the empty response type included.
+    assert "response_type" in parse_qs(where.query, keep_blank_values=True)
+
+
+def test_authorize_with_nothing_at_all_goes_to_the_page_too(ready: TestClient) -> None:
+    sent = program(ready).get("/api/mcp/oauth/authorize", follow_redirects=False)
+    assert sent.status_code == 302 and urlsplit(sent.headers["location"]).path == "/connect"
 
 
 # -- refreshing -----------------------------------------------------------------------------------
