@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { get, serverUrl } from '../../../api/client'
 import { Select } from '../../../components/ui'
-import { entryPath, type ShopDetail, type ShopEntry, type ShopInstalledAnswer, type ShopState } from '../../../lib/cardShop'
+import { entryPath, pictureSrc, type ShopDetail, type ShopEntry, type ShopInstalledAnswer, type ShopState } from '../../../lib/cardShop'
 import { pickText } from '../../../lib/cardText'
 import { useGround } from '../../../lib/ground'
 import { safeUrl } from '../../../lib/safeUrl'
@@ -81,7 +81,7 @@ export function ShopDetailPage({
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[color-mix(in_srgb,var(--nd-text)_6%,transparent)] flex items-center justify-center">
-          <img src={serverUrl(entry.images[ground])} alt="" className="w-full h-full object-contain" onError={(event) => (event.currentTarget.style.visibility = 'hidden')} />
+          <img src={serverUrl(pictureSrc(entry, ground))} alt="" className="w-full h-full object-contain" onError={(event) => (event.currentTarget.style.visibility = 'hidden')} />
         </div>
         <div className="min-w-0 grid gap-3 content-start">
           <div>

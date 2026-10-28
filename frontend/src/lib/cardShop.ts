@@ -98,6 +98,15 @@ export interface ShopEntry {
   connections: ShopConnection[]
   installed: ShopInstalled | null
   images: { light: string; dark: string }
+  /** Changes when the picture may have changed; the address of the picture carries it so a new picture is not hidden by the cache. */
+  picture_version?: string
+}
+
+/** The address of an entry's preview picture for the light or dark ground, with the version of the picture when the server told one. */
+export function pictureSrc(entry: Pick<ShopEntry, 'images' | 'picture_version'>, ground: 'light' | 'dark'): string {
+  const address = entry.images[ground]
+  if (!entry.picture_version) return address
+  return `${address}${address.includes('?') ? '&' : '?'}v=${encodeURIComponent(entry.picture_version)}`
 }
 
 /** The detail of one entry (`GET /workshop/entries/{author}/{slug}`): the entry with the texts that are not in the list. */

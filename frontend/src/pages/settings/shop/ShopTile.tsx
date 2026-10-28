@@ -5,7 +5,7 @@ import { serverUrl } from '../../../api/client'
 import { ServiceIcon } from '../../../components/ServiceIcon'
 import { useGround } from '../../../lib/ground'
 import { pickText } from '../../../lib/cardText'
-import type { ShopEntry } from '../../../lib/cardShop'
+import { pictureSrc, type ShopEntry } from '../../../lib/cardShop'
 
 /** The state of an entry beside this installation, as a short word: what the tile and the detail page show first. */
 export function ShopBadges({ entry }: { entry: ShopEntry }) {
@@ -55,7 +55,7 @@ export function ShopTile({ entry, onOpen }: { entry: ShopEntry; onOpen?: (entry:
     <>
         <div className="aspect-[4/3] rounded-lg overflow-hidden bg-[color-mix(in_srgb,var(--nd-text)_6%,transparent)] flex items-center justify-center">
           <img
-            src={serverUrl(entry.images[ground])}
+            src={serverUrl(pictureSrc(entry, ground))}
             alt=""
             loading="lazy"
             decoding="async"
