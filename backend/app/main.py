@@ -48,6 +48,7 @@ from .routers import (
     mail,
     maintenance,
     mcp,
+    mcp_oauth,
     music,
     nexcrate,
     notices,
@@ -235,9 +236,10 @@ if _cors:
 # past the point where compressing costs more than it saves for a small answer.
 app.add_middleware(GZipMiddleware, minimum_size=700)
 
-for module in (go, opensearch, system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, assistant, mcp, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
+for module in (go, opensearch, system, setup, auth, users, avatars, backups, boards, widgets, music, integrations, apps, maintenance, chronicle, assistant, mcp, mcp_oauth, inventory, diagnosis, stream, notices, channels, push, tokens, icons, assets, discovery, logs, journal_router, mail, oidc, plex, search, appearance, brand, templates, imports, nexcrate, home_network, topology, home):
     app.include_router(module.router)
 app.include_router(mcp.api)
+app.include_router(mcp_oauth.api)
 
 
 #: What an ordinary request body may weigh. Comfortably above the largest

@@ -64,6 +64,13 @@ PUBLIC: dict[str, str] = {
     "GET /api/v1/go/suggestions": "a browser asks it while somebody types; without a session the list is empty",
     "POST /api/mcp": "MCP: takes only its own keys and keeps its walls itself (Origin, switch, key, brake)",
     "GET /api/mcp": "MCP: answers 405 to everybody, there is no stream",
+    "GET /.well-known/oauth-protected-resource": "MCP connectors: where a program learns to sign in (RFC 9728); 404 while connectors are off",
+    "GET /.well-known/oauth-protected-resource/api/mcp": "the same document at the address derived from the endpoint",
+    "GET /.well-known/oauth-authorization-server": "MCP connectors: the sign-in addresses (RFC 8414); 404 while connectors are off",
+    "POST /api/mcp/oauth/register": "a program registers before anybody signs it in (RFC 7591); braked per sender and for the server",
+    "GET /api/mcp/oauth/authorize": "hands the browser on to the consent page, which needs a session",
+    "POST /api/mcp/oauth/token": "the code with its PKCE verifier, or a refresh token, is the credential",
+    "POST /api/mcp/oauth/revoke": "holding the token is enough to end it (RFC 7009)",
 }
 
 AUTH_DEPENDENCIES = {deps.optional_user, deps.current_user, deps.admin_user, deps.not_guest}

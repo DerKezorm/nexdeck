@@ -126,8 +126,11 @@ _SECRET_IN_QUERY = re.compile(
     re.IGNORECASE,
 )
 #: A key of an AI program (``services/mcp.py``), wherever it stands in a line: in a header a client
-#: printed, in a body, in an address somebody pasted it into although they were told not to.
-_MCP_KEY = re.compile(r"\bndm_[A-Za-z0-9_-]{8,}")
+#: printed, in a body, in an address somebody pasted it into although they were told not to. The same
+#: for what a connector holds (``services/mcp_oauth.py``): its access token ``ndo_``, its refresh token
+#: ``ndr_`` and the code ``ndc_`` it trades for both.
+_MCP_KEY = re.compile(r"\b(nd[mocr])_[A-Za-z0-9_-]{8,}")
+_MCP_MARKS = ("ndm_", "ndo_", "ndr_", "ndc_")
 
 
 def redact(text: str) -> str:
@@ -141,7 +144,7 @@ def redact(text: str) -> str:
     ``data/logs/nexdeck.log`` and in ``docker logs``, and the deep level exists
     precisely so somebody can download that file and attach it to an issue.
     """
-    return _MCP_KEY.sub("ndm_***", _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
+    return _MCP_KEY.sub(r"\1_***", _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
 
 
 class _Context(logging.Filter):
@@ -154,7 +157,7 @@ class _Context(logging.Filter):
         if record.args:
             record.msg = record.getMessage()
             record.args = ()
-        if isinstance(record.msg, str) and ("=" in record.msg or "ndm_" in record.msg):
+        if isinstance(record.msg, str) and ("=" in record.msg or any(mark in record.msg for mark in _MCP_MARKS)):
             record.msg = redact(record.msg)
         return True
 

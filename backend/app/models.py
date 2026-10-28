@@ -880,3 +880,65 @@ class McpRequest(Base):
     expires_at: Mapped[datetime] = mapped_column(Utc())
     decided_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
     decided_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class McpOAuthClient(Base):
+    """A program that registered itself to sign in as a connector (RFC 7591, ``services/mcp_oauth.py``).
+
+    Registering needs no account, so a row says nothing about anybody: a name
+    the program chose, the addresses it may be sent back to, and the address
+    it registered from, for the brake and the log.
+    """
+
+    __tablename__ = "mcp_oauth_clients"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    redirect_uris: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    #: The address the registration came from.
+    sender: Mapped[str] = mapped_column(String(64), default="")
+    last_used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+
+
+class McpOAuthCode(Base):
+    """A code an account handed a program on the consent page, traded for tokens once.
+
+    Only its SHA-256 is stored. The row stays until it runs out, used or not:
+    a code brought a second time ends the key the first trade made.
+    """
+
+    __tablename__ = "mcp_oauth_codes"
+
+    code_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    client_id: Mapped[str] = mapped_column(String(64))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The PKCE challenge (S256) the program sent with its request.
+    challenge: Mapped[str] = mapped_column(String(128))
+    #: The resource the program asked for (RFC 8707); None when it named none.
+    resource: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    redirect_uri: Mapped[str] = mapped_column(String(2048))
+    level: Mapped[str] = mapped_column(String(8))
+    boards: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)
+    #: The key the trade made, so a second trade can end it.
+    key_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class McpOAuthRefresh(Base):
+    """One refresh token of a connector. Every refresh uses one up and leaves the next in the same chain.
+
+    The chain is the key (``key_id``): a used token brought again means two
+    hold a copy, and the whole chain ends together with its key.
+    """
+
+    __tablename__ = "mcp_oauth_refresh"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    key_id: Mapped[int] = mapped_column(ForeignKey("mcp_keys.id", ondelete="CASCADE"), index=True)
+    client_id: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(Utc())
+    used_at: Mapped[datetime | None] = mapped_column(Utc(), nullable=True)

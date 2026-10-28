@@ -28,7 +28,7 @@ from .. import __version__
 from ..db import db_session
 from ..deps import AdminUser, CurrentUser, DbSession, MemberUser, error, refuse_at_home
 from ..models import McpKey, McpRequest, User, utcnow
-from ..services import journal, mcp, mcp_calls
+from ..services import journal, mcp, mcp_calls, mcp_oauth
 from ..services.mcp import McpError
 from ..services.public_url import public_url
 
@@ -170,9 +170,11 @@ def _key_out(db: Any, row: McpKey, owner: User | None = None) -> dict[str, Any]:
         owner = owner or db.get(User, row.user_id)
         visible = mcp.visible_boards(db, owner) if owner is not None else set()
         boards = [number for number in row.boards if number in visible]
+    # A connector's access token lasts an hour; what the list says is when it stops unless it refreshes.
+    expires = mcp_oauth.connector_end(db, row) if row.kind == "oauth" else row.expires_at
     return {"id": row.id, "name": row.name, "prefix": row.prefix, "kind": row.kind, "level": row.level, "boards": boards,
             "tool_rights": dict(row.tool_rights or {}), "created_at": row.created_at, "last_used_at": row.last_used_at,
-            "expires_at": row.expires_at, "revoked": row.revoked, "client": row.client if row.kind == "oauth" else None}
+            "expires_at": expires, "revoked": row.revoked, "client": row.client if row.kind == "oauth" else None}
 
 
 class KeyIn(BaseModel):
@@ -337,11 +339,16 @@ def admin_setting(user: AdminUser, db: DbSession) -> dict:
 
 @api.put("/admin", summary="Switch MCP on or off, set its ceiling and block tools")
 def write_admin_setting(body: AdminIn, user: AdminUser, db: DbSession) -> dict:
+    connectors_were_open = mcp_oauth.is_open(db)
     try:
         value = mcp.store(db, allowed=body.allowed, max_level=body.max_level, oauth_allowed=body.oauth_allowed,
                           blocked_tools=body.blocked_tools)
     except McpError as failure:
         raise _refused(failure) from None
+    if connectors_were_open and not mcp_oauth.is_open(db):
+        # Off means over: a connector does not come back with the switch, its account signs it in again.
+        ended = mcp_oauth.end_all(db, "connectors were switched off")
+        logger.info("%d MCP connector(s) ended because connectors were switched off.", ended)
     logger.info("MCP is %s (highest level %s, connectors %s, %d tool(s) blocked), set by %s.", "on" if value["allowed"] else "off",
                 value["max_level"], "allowed" if value["oauth_allowed"] else "not allowed", len(value["blocked_tools"]), user.username)
     return value

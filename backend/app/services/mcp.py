@@ -59,6 +59,8 @@ DEFAULT_RIGHT = {"read": "allow", "act": "ask", "admin": "deny"}
 #: Groups whose tools only look: allowed or denied, never asked for.
 LOOKING = ("read", "admin")
 KEY_PREFIX = "ndm"
+#: What a token MCP takes begins with: a key made by hand, or a connector's access token.
+TOKEN_PREFIXES = (f"{KEY_PREFIX}_", "ndo_")
 #: Keys an account may hold; withdrawn and run-out ones do not count.
 MAX_KEYS = 20
 #: The lifetimes a key can be made with; None: it does not run out on its own.
@@ -159,8 +161,10 @@ def make_key(db: Session, user: User, name: str, level: str, expires_days: int |
         boards = sorted(set(boards))
     if not at_least(stored(db)["max_level"], level):
         raise McpError("level_not_allowed", "The administrator does not allow keys of this level.", 403)
-    held = [row for row in db.scalars(select(McpKey).where(McpKey.user_id == user.id)) if counts(row)]
-    if len(held) >= MAX_KEYS:
+    from .mcp_oauth import holds
+
+    # Connectors count while they can still refresh, not only for the hour their access token lasts.
+    if holds(db, user.id) >= MAX_KEYS:
         raise McpError("too_many_keys", f"An account holds at most {MAX_KEYS} keys. Withdraw one first.", 409)
     token, token_hash, prefix = new_opaque_token(KEY_PREFIX)
     row = McpKey(user_id=user.id, name=name.strip()[:80] or "MCP", kind="key", level=level, token_hash=token_hash, prefix=prefix,
@@ -219,9 +223,10 @@ class Caller:
 
 def authenticate(db: Session, token: str | None) -> Caller | None:
     """The key and account behind a token, or None. MCP being on is the caller's question."""
-    # A shortcut, not a wall: a token that is no key is not even hashed and looked up. Without it the
-    # answer is the same (only hashes are compared), so no test can tell it is there.
-    if not token or not token.startswith(f"{KEY_PREFIX}_") or len(token) > 200:
+    # A shortcut, not a wall: a token that is no key (``ndm_``) and no connector's access token (``ndo_``,
+    # ``services/mcp_oauth.py``) is not even hashed and looked up. Without it the answer is the same (only hashes
+    # are compared), so no test can tell it is there.
+    if not token or not token.startswith(TOKEN_PREFIXES) or len(token) > 200:
         return None
     key = db.scalar(select(McpKey).where(McpKey.token_hash == hash_token(token)))
     if key is None:
