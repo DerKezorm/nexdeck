@@ -11,6 +11,7 @@ import { useGround } from '../../../lib/ground'
 import { safeUrl } from '../../../lib/safeUrl'
 import { InstallDialog } from './InstallDialog'
 import { PlaceOnBoard } from './PlaceOnBoard'
+import { UpdateDialog } from './UpdateDialog'
 import { ClassChip, ShopBadges } from './ShopTile'
 
 const ShopPreview = lazy(() => import('./ShopPreview'))
@@ -58,6 +59,7 @@ export function ShopDetailPage({
   const [installing, setInstalling] = useState(false)
   const [placing, setPlacing] = useState<{ slug: string; connection: number | null } | null>(null)
   const [done, setDone] = useState(false)
+  const [updating, setUpdating] = useState(false)
 
   const name = pickText(entry.name, lang) || entry.slug
   const full = detail.data
@@ -154,6 +156,11 @@ export function ShopDetailPage({
             <span className="chip" data-testid="shop-installed-version">
               {t('cards.shop.installedVersion', { version: installed.version })}
             </span>
+            {installed.update && !recalled && (
+              <button className="btn btn-accent" onClick={() => setUpdating(true)}>
+                {t('cards.shop.update.button')}
+              </button>
+            )}
             {entry.type === 'card' && (
               <button className="btn" onClick={() => setPlacing({ slug: installed.slug, connection: connection?.id ?? null })}>
                 {t('cards.shop.place.action')}
@@ -237,6 +244,7 @@ export function ShopDetailPage({
           if (answer.slug && entry.type === 'card') setPlacing({ slug: answer.slug, connection: chosen })
         }}
       />
+      <UpdateDialog slug={installed?.slug ?? ''} name={name} open={updating} onClose={() => setUpdating(false)} />
       <PlaceOnBoard slug={placing?.slug ?? ''} prefer={placing?.connection ?? null} open={placing !== null} onClose={() => setPlacing(null)} />
     </div>
   )

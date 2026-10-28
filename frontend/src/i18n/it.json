@@ -63,7 +63,7 @@
       "too_slow": "Il calcolo ha richiesto troppo tempo.",
       "definition_missing": "Definizione mancante. La scheda non è più salvata.",
       "form_changed": "La scheda ha cambiato forma da quando è stata posizionata.",
-      "kind_mismatch": "Questa scheda non legge tramite questo tipo di connessione.",
+      "kind_mismatch": "La connessione non è più adatta a questa scheda.",
       "no_raw_access": "Una scheda personalizzata non può ancora leggere tramite questo tipo di connessione.",
       "no_demo_data": "Nessun dato dimostrativo. La scheda non ha risposte di esempio.",
       "redirected": "Reindirizzato, non seguito. Il servizio ha risposto con un reindirizzamento, che una scheda personalizzata non segue.",
@@ -2942,6 +2942,44 @@
         "noConnection": "Non c'è ancora nessuna connessione adatta a questa scheda. Aggiungine prima una in Connessioni.",
         "done": "La scheda è sulla board.",
         "open": "Apri la board"
+      },
+      "update": {
+        "button": "Aggiorna",
+        "title": "Aggiorna {{name}}",
+        "later": "Più tardi",
+        "accept": "Aggiorna ora",
+        "loading": "Recupero della nuova versione e controllo della sua somma di controllo…",
+        "upToDate": "Già aggiornata.",
+        "done": "Aggiornata alla versione {{version}}. Ogni board che mostra la scheda ce l'ha già.",
+        "copyMade": "La tua versione è stata conservata come copia, {{slug}}. Non è posizionata su nessuna board.",
+        "versions": "Dalla versione {{from}} alla versione {{to}}.",
+        "placedOn_one": "È su {{count}} board e la segue subito.",
+        "placedOn_other": "È su {{count}} board e la segue subito.",
+        "localWarning": "Hai modificato questa scheda qui. L'aggiornamento sostituisce le tue modifiche.",
+        "keepMine": "Conserva la mia come copia",
+        "rights": "Cosa può fare la nuova versione",
+        "noRights": "Legge le stesse cose e ha gli stessi pulsanti di prima.",
+        "connectionChanged": "L'aggiornamento cambia quale connessione serve alla scheda. Una scheda su una connessione non adatta lo segnala finché non ne scegli una adatta.",
+        "needsNow": "Ora legge anche tramite {{kind}}",
+        "needsNoMore": "Non legge più tramite {{kind}}",
+        "readsNew": "Nuovo indirizzo letto:",
+        "readsChanged": "Indirizzo cambiato:",
+        "readsGone": "Non più letto:",
+        "buttonNew": "Nuovo pulsante:",
+        "buttonChanged": "Pulsante modificato:",
+        "buttonGone": "Pulsante rimosso:",
+        "confirmButtons": "Conferma ogni pulsante nuovo o modificato",
+        "confirmHelp": "Un pulsante agisce su un servizio quando qualcuno lo preme. Aggiorna ora resta bloccato finché non li spunti tutti.",
+        "errors": {
+          "update_changed": "Nel frattempo è arrivata una versione ancora più recente. Rileggi le modifiche.",
+          "buttons_not_confirmed": "Conferma prima ogni pulsante nuovo o modificato.",
+          "needs_newer_nexdeck": "Questa versione richiede nexdeck {{version}} o successivo.",
+          "entry_removed": "Questa scheda è stata rimossa dal negozio di schede. Continua a funzionare, ma non c'è un aggiornamento.",
+          "checksum_mismatch": "Il file non corrisponde alla somma di controllo del catalogo. Non è stato modificato nulla.",
+          "not_installed_from_shop": "Questa scheda non viene dal negozio di schede.",
+          "no_update": "Già aggiornata.",
+          "github_unreachable": "GitHub non è raggiungibile. La scheda continua a funzionare così com'è."
+        }
       }
     }
   }

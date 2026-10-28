@@ -63,7 +63,7 @@
       "too_slow": "Le calcul a pris trop de temps.",
       "definition_missing": "Définition manquante. La carte n'est plus enregistrée.",
       "form_changed": "La carte a changé de forme depuis qu'elle a été placée.",
-      "kind_mismatch": "Cette carte ne lit pas à travers ce type de connexion.",
+      "kind_mismatch": "La connexion ne convient plus à cette carte.",
       "no_raw_access": "Une carte personnalisée ne peut pas encore lire à travers ce type de connexion.",
       "no_demo_data": "Pas de données de démonstration. La carte n'a pas de réponses d'exemple.",
       "redirected": "Redirigé, non suivi. Le service a répondu par une redirection, qu'une carte personnalisée ne suit pas.",
@@ -2942,6 +2942,44 @@
         "noConnection": "Aucune connexion ne convient encore à cette carte. Ajoutez-en d'abord une sous Connexions.",
         "done": "La carte est sur le tableau.",
         "open": "Ouvrir le tableau"
+      },
+      "update": {
+        "button": "Mettre à jour",
+        "title": "Mettre à jour {{name}}",
+        "later": "Plus tard",
+        "accept": "Mettre à jour maintenant",
+        "loading": "Récupération de la nouvelle version et vérification de sa somme de contrôle…",
+        "upToDate": "Déjà à jour.",
+        "done": "Mise à jour vers la version {{version}}. Chaque tableau qui montre la carte l'a déjà.",
+        "copyMade": "Votre propre version a été conservée comme copie, {{slug}}. Elle n'est placée sur aucun tableau.",
+        "versions": "De la version {{from}} à la version {{to}}.",
+        "placedOn_one": "Elle est sur {{count}} tableau et suit tout de suite.",
+        "placedOn_other": "Elle est sur {{count}} tableaux et suit tout de suite.",
+        "localWarning": "Vous avez modifié cette carte ici. La mise à jour remplace vos modifications.",
+        "keepMine": "Garder la mienne comme copie",
+        "rights": "Ce que la nouvelle version peut faire",
+        "noRights": "Elle lit la même chose et a les mêmes boutons qu'avant.",
+        "connectionChanged": "La mise à jour change la connexion dont la carte a besoin. Une carte sur une connexion qui ne convient plus le signale jusqu'à ce que vous en choisissiez une qui convient.",
+        "needsNow": "Lit désormais aussi via {{kind}}",
+        "needsNoMore": "Ne lit plus via {{kind}}",
+        "readsNew": "Nouvelle adresse lue :",
+        "readsChanged": "Adresse modifiée :",
+        "readsGone": "N'est plus lue :",
+        "buttonNew": "Nouveau bouton :",
+        "buttonChanged": "Bouton modifié :",
+        "buttonGone": "Bouton supprimé :",
+        "confirmButtons": "Confirmez chaque bouton nouveau ou modifié",
+        "confirmHelp": "Un bouton agit sur un service quand quelqu'un l'appuie. La mise à jour reste bloquée tant que vous n'avez pas coché chacun d'eux.",
+        "errors": {
+          "update_changed": "Une version encore plus récente est arrivée entre-temps. Relisez les changements.",
+          "buttons_not_confirmed": "Confirmez d'abord chaque bouton nouveau ou modifié.",
+          "needs_newer_nexdeck": "Cette version nécessite nexdeck {{version}} ou plus récent.",
+          "entry_removed": "Cette carte a été retirée de la boutique de cartes. Elle continue de fonctionner, mais il n'y a pas de mise à jour.",
+          "checksum_mismatch": "Le fichier ne correspond pas à la somme de contrôle du catalogue. Rien n'a été modifié.",
+          "not_installed_from_shop": "Cette carte ne vient pas de la boutique de cartes.",
+          "no_update": "Déjà à jour.",
+          "github_unreachable": "GitHub est injoignable. La carte continue de fonctionner telle quelle."
+        }
       }
     }
   }

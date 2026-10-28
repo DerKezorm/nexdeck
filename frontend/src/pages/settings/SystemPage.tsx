@@ -64,6 +64,8 @@ export function SystemPage() {
             <Route path="integrations" element={<IntegrationsSettings />} />
             <Route path="apps" element={forAdmin(<AppsSettings />)} />
             <Route path="cards" element={forAdmin(<CustomCardsSettings />)} />
+            {/* Where the bell leads after a card of the Card shop was taken back (KARTEN-15 AC-7). */}
+            <Route path="custom-cards" element={<Navigate to="/system/cards" replace />} />
             <Route path="inventory" element={forAdmin(<InventorySettings />)} />
             <Route path="users" element={forAdmin(<UsersSettings />)} />
             <Route path="address" element={forAdmin(<AddressSettings />)} />

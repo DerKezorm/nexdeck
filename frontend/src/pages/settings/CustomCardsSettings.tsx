@@ -13,7 +13,9 @@ import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customC
 import { ImportDialog } from './ImportDialog'
 import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
 import { useShopState, useShopSwitch } from './shop/hooks'
+import { ShopNote } from './shop/ShopNote'
 import { ShopTab } from './shop/ShopTab'
+import { UpdateDialog } from './shop/UpdateDialog'
 
 type Tab = 'cards' | 'integrations' | 'shop' | 'submissions'
 
@@ -45,6 +47,7 @@ export function CustomCardsSettings() {
   const [openBoards, setOpenBoards] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [notice, setNotice] = useState('')
+  const [updating, setUpdating] = useState<string | null>(null)
   const shopState = useShopState()
   const shopSwitch = useShopSwitch()
 
@@ -213,6 +216,7 @@ export function CustomCardsSettings() {
                     <span className="md:hidden text-[11px] text-faint mr-1.5">{t('cards.col.from')}</span>
                     {card.origin === 'shop' ? t('cards.fromShop', { version: card.shop_version || card.version }) : t('cards.local')}
                     {card.author && <span className="block text-[11px] text-muted truncate">{card.author}</span>}
+                    {card.shop && <ShopNote update={card.shop.update} removed={card.shop.removed} onUpdate={() => setUpdating(card.slug)} />}
                   </div>
                   <div className="min-w-0 text-sm">
                     <span className="md:hidden text-[11px] text-faint mr-1.5">{t('cards.col.placed')}</span>
@@ -287,6 +291,7 @@ export function CustomCardsSettings() {
         )}
       </div>
 
+      <UpdateDialog slug={updating ?? ''} name={updating ? nameOf(rows.find((one) => one.slug === updating) ?? ({ name: updating, slug: updating } as CustomCardRow)) : ''} open={updating !== null} onClose={() => setUpdating(null)} />
       <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => setNotice(t('cards.exchange.done'))} />
       <Confirm
         open={removing !== null}

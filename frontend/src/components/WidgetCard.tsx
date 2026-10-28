@@ -19,6 +19,7 @@ import type { Action, Pressed, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { ForecastLine } from './ForecastLine'
 import { ServiceIcon } from './ServiceIcon'
+import { ShopCardNote } from './ShopCardNote'
 import { WhyLink } from './WhyLink'
 import { subjectOf } from '../lib/diagnosis'
 
@@ -217,6 +218,8 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
           {/* Roadmap M6: from the reason to the page that says why, for administrators. */}
           {!failed && (status === 'warn' || status === 'bad') ? <WhyLink subject={subjectOf(widget)} name={widget.title || widget.kind} className="hidden @min-[300px]:inline" /> : null}
           {awayChip}
+          {/* A card from the Card shop that has an update waiting or was taken back, for administrators (KARTEN-15 AC-6). */}
+          {admin && data?.meta?.custom === true && typeof widget.options?.card === 'string' ? <ShopCardNote slug={widget.options.card} /> : null}
           {/* In the head, beside the dot and the beta mark rather than over them. */}
           {showControls && <div className="card-controls in-head">{controls}</div>}
           <span className="dot" data-status={status} role="img" aria-label={statusTitle} title={statusTitle} />

@@ -63,7 +63,7 @@
       "too_slow": "Das Berechnen hat zu lange gedauert.",
       "definition_missing": "Definition fehlt. Die Karte ist nicht mehr gespeichert.",
       "form_changed": "Die Karte hat seit dem Platzieren eine andere Form bekommen.",
-      "kind_mismatch": "Diese Karte liest nicht über diese Art von Verbindung.",
+      "kind_mismatch": "Die Verbindung passt nicht mehr zu dieser Karte.",
       "no_raw_access": "Eine eigene Karte kann über diese Art von Verbindung noch nicht lesen.",
       "no_demo_data": "Keine Demo-Daten. Die Karte hat keine Beispielantworten.",
       "redirected": "Weitergeleitet, nicht gefolgt. Der Dienst hat mit einer Weiterleitung geantwortet, der eine eigene Karte nicht folgt.",
@@ -2942,6 +2942,44 @@
         "noConnection": "Es gibt noch keine Verbindung, zu der die Karte passt. Lege zuerst unter Verbindungen eine an.",
         "done": "Die Karte liegt auf dem Board.",
         "open": "Board öffnen"
+      },
+      "update": {
+        "button": "Aktualisieren",
+        "title": "{{name}} aktualisieren",
+        "later": "Später",
+        "accept": "Jetzt aktualisieren",
+        "loading": "Die neue Fassung wird geholt und ihre Prüfsumme geprüft …",
+        "upToDate": "Schon auf dem neuesten Stand.",
+        "done": "Auf Fassung {{version}} aktualisiert. Jedes Board, das die Karte zeigt, hat sie schon.",
+        "copyMade": "Deine eigene Fassung blieb als Kopie erhalten, {{slug}}. Sie liegt auf keinem Board.",
+        "versions": "Von Fassung {{from}} auf Fassung {{to}}.",
+        "placedOn_one": "Sie liegt auf {{count}} Board und folgt sofort.",
+        "placedOn_other": "Sie liegt auf {{count}} Boards und folgt sofort.",
+        "localWarning": "Du hast diese Karte hier geändert. Das Update ersetzt deine Änderungen.",
+        "keepMine": "Meine Fassung als Kopie behalten",
+        "rights": "Was die neue Fassung darf",
+        "noRights": "Sie liest dasselbe und hat dieselben Knöpfe wie bisher.",
+        "connectionChanged": "Das Update ändert, welche Verbindung die Karte braucht. Eine Karte auf einer Verbindung, die nicht mehr passt, sagt das, bis du eine passende wählst.",
+        "needsNow": "Liest jetzt auch über {{kind}}",
+        "needsNoMore": "Liest nicht mehr über {{kind}}",
+        "readsNew": "Neue Adresse wird gelesen:",
+        "readsChanged": "Adresse geändert:",
+        "readsGone": "Wird nicht mehr gelesen:",
+        "buttonNew": "Neuer Knopf:",
+        "buttonChanged": "Geänderter Knopf:",
+        "buttonGone": "Knopf entfällt:",
+        "confirmButtons": "Jeden neuen oder geänderten Knopf bestätigen",
+        "confirmHelp": "Ein Knopf löst etwas in einem Dienst aus, wenn jemand ihn drückt. Aktualisieren bleibt gesperrt, bis du jeden angehakt hast.",
+        "errors": {
+          "update_changed": "Inzwischen kam eine noch neuere Fassung. Lies die Änderungen noch einmal.",
+          "buttons_not_confirmed": "Bestätige zuerst jeden neuen oder geänderten Knopf.",
+          "needs_newer_nexdeck": "Diese Fassung braucht nexdeck {{version}} oder neuer.",
+          "entry_removed": "Diese Karte wurde aus dem Kartenladen entfernt. Sie läuft weiter, aber es gibt kein Update.",
+          "checksum_mismatch": "Die Datei passt nicht zur Prüfsumme im Katalog. Es wurde nichts geändert.",
+          "not_installed_from_shop": "Diese Karte stammt nicht aus dem Kartenladen.",
+          "no_update": "Schon auf dem neuesten Stand.",
+          "github_unreachable": "GitHub ist nicht erreichbar. Die Karte läuft unverändert weiter."
+        }
       }
     }
   }

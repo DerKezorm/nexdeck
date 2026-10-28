@@ -59,6 +59,8 @@ export interface CustomCardRow {
   boards: CardBoard[]
   users_may_place: boolean
   updated_at: string
+  /** For a card from the Card shop: whether a newer version waits and whether the shop took it back (KARTEN-15). */
+  shop?: { ref: string; update: boolean; removed: { level: 'harmful' | 'not_useful' | 'withdrawn'; reason: string; at: string } | null } | null
 }
 
 export interface CardList {

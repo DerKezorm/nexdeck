@@ -63,7 +63,7 @@
       "too_slow": "El cálculo tardó demasiado.",
       "definition_missing": "Falta la definición. La tarjeta ya no está guardada.",
       "form_changed": "La tarjeta cambió de forma desde que se colocó.",
-      "kind_mismatch": "Esta tarjeta no lee a través de este tipo de conexión.",
+      "kind_mismatch": "La conexión ya no encaja con esta tarjeta.",
       "no_raw_access": "Una tarjeta propia aún no puede leer a través de este tipo de conexión.",
       "no_demo_data": "Sin datos de demostración. La tarjeta no tiene respuestas de ejemplo.",
       "redirected": "Redirigido, no seguido. El servicio respondió con una redirección, que una tarjeta propia no sigue.",
@@ -2942,6 +2942,44 @@
         "noConnection": "Todavía no hay ninguna conexión a la que encaje esta tarjeta. Añade una antes en Conexiones.",
         "done": "La tarjeta está en el tablero.",
         "open": "Abrir el tablero"
+      },
+      "update": {
+        "button": "Actualizar",
+        "title": "Actualizar {{name}}",
+        "later": "Más tarde",
+        "accept": "Actualizar ahora",
+        "loading": "Se obtiene la nueva versión y se comprueba su suma de verificación…",
+        "upToDate": "Ya está actualizada.",
+        "done": "Actualizada a la versión {{version}}. Todos los tableros que muestran la tarjeta ya la tienen.",
+        "copyMade": "Tu propia versión se conservó como copia, {{slug}}. No está colocada en ningún tablero.",
+        "versions": "De la versión {{from}} a la versión {{to}}.",
+        "placedOn_one": "Está en {{count}} tablero y lo sigue al instante.",
+        "placedOn_other": "Está en {{count}} tableros y los sigue al instante.",
+        "localWarning": "Cambiaste esta tarjeta aquí. La actualización sustituye tus cambios.",
+        "keepMine": "Conservar la mía como copia",
+        "rights": "Qué puede hacer la nueva versión",
+        "noRights": "Lee lo mismo y tiene los mismos botones que antes.",
+        "connectionChanged": "La actualización cambia qué conexión necesita la tarjeta. Una tarjeta en una conexión que no encaja lo indica hasta que elijas una que sí.",
+        "needsNow": "Ahora también lee a través de {{kind}}",
+        "needsNoMore": "Ya no lee a través de {{kind}}",
+        "readsNew": "Nueva dirección leída:",
+        "readsChanged": "Dirección cambiada:",
+        "readsGone": "Ya no se lee:",
+        "buttonNew": "Botón nuevo:",
+        "buttonChanged": "Botón cambiado:",
+        "buttonGone": "Botón eliminado:",
+        "confirmButtons": "Confirma cada botón nuevo o cambiado",
+        "confirmHelp": "Un botón actúa sobre un servicio cuando alguien lo pulsa. Actualizar ahora sigue bloqueado hasta que marques todos.",
+        "errors": {
+          "update_changed": "Mientras tanto llegó una versión aún más nueva. Lee los cambios de nuevo.",
+          "buttons_not_confirmed": "Confirma primero cada botón nuevo o cambiado.",
+          "needs_newer_nexdeck": "Esta versión necesita nexdeck {{version}} o posterior.",
+          "entry_removed": "Esta tarjeta se retiró de la tienda de tarjetas. Sigue funcionando, pero no hay actualización.",
+          "checksum_mismatch": "El archivo no coincide con la suma de verificación del catálogo. No se cambió nada.",
+          "not_installed_from_shop": "Esta tarjeta no vino de la tienda de tarjetas.",
+          "no_update": "Ya está actualizada.",
+          "github_unreachable": "No se puede llegar a GitHub. La tarjeta sigue funcionando como está."
+        }
       }
     }
   }

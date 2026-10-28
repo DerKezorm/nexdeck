@@ -63,7 +63,7 @@
       "too_slow": "The calculation took too long.",
       "definition_missing": "Definition missing. The card is no longer saved.",
       "form_changed": "The card was changed to another form since it was placed.",
-      "kind_mismatch": "This card does not read through this kind of connection.",
+      "kind_mismatch": "The connection no longer fits this card.",
       "no_raw_access": "A custom card cannot read through this kind of connection yet.",
       "no_demo_data": "No demo data. The card has no example answers.",
       "redirected": "Redirected, not followed. The service answered with a redirect, which a custom card does not follow.",
@@ -2942,6 +2942,44 @@
         "noConnection": "There is no connection this card fits yet. Add one under Connections first.",
         "done": "The card is on the board.",
         "open": "Open the board"
+      },
+      "update": {
+        "button": "Update",
+        "title": "Update {{name}}",
+        "later": "Later",
+        "accept": "Update now",
+        "loading": "Fetching the new version and checking its checksum…",
+        "upToDate": "Already up to date.",
+        "done": "Updated to version {{version}}. Every board that shows the card has it already.",
+        "copyMade": "Your own version was kept as a copy, {{slug}}. It is not placed on any board.",
+        "versions": "From version {{from}} to version {{to}}.",
+        "placedOn_one": "It stands on {{count}} board and follows at once.",
+        "placedOn_other": "It stands on {{count}} boards and follows at once.",
+        "localWarning": "You changed this card here. The update replaces your changes.",
+        "keepMine": "Keep mine as a copy",
+        "rights": "What the new version may do",
+        "noRights": "It reads the same and has the same buttons as before.",
+        "connectionChanged": "The update changes which connection the card needs. A card on a connection that does not fit says so until you choose one that does.",
+        "needsNow": "Now also reads through {{kind}}",
+        "needsNoMore": "No longer reads through {{kind}}",
+        "readsNew": "New address read:",
+        "readsChanged": "Address changed:",
+        "readsGone": "No longer read:",
+        "buttonNew": "New button:",
+        "buttonChanged": "Changed button:",
+        "buttonGone": "Button removed:",
+        "confirmButtons": "Confirm each new or changed button",
+        "confirmHelp": "A button acts on a service when somebody presses it. Update now stays locked until you have ticked every one.",
+        "errors": {
+          "update_changed": "A newer version came in meanwhile. Read the changes again.",
+          "buttons_not_confirmed": "Confirm every new or changed button first.",
+          "needs_newer_nexdeck": "This version needs nexdeck {{version}} or newer.",
+          "entry_removed": "This card was removed from the Card shop. It keeps running, but there is no update.",
+          "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was changed.",
+          "not_installed_from_shop": "This card did not come from the Card shop.",
+          "no_update": "Already up to date.",
+          "github_unreachable": "GitHub cannot be reached. The card keeps working as it is."
+        }
       }
     }
   }
