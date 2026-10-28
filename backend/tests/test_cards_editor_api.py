@@ -699,7 +699,7 @@ def test_karten9_the_database_of_an_earlier_build_gets_the_column_and_the_cards_
         connection_.execute(text("DROP TABLE card_old"))
         columns = {row[1] for row in connection_.execute(text("PRAGMA table_info(card_definitions)"))}
     assert "updated_by" not in columns
-    step = {version: function for version, _description, function in MIGRATIONS}[25]
+    step = {version: function for version, _description, function in MIGRATIONS}[27]
     with engine.begin() as connection_:
         step(connection_)
         step(connection_)
