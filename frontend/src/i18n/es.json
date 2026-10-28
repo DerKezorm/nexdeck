@@ -2838,7 +2838,49 @@
       "stale": "No se pudo llegar a GitHub, así que este es el catálogo de {{time}}.",
       "switchLabel": "Tienda de tarjetas",
       "switchOn": "Activada. Carga el catálogo desde GitHub al abrir la tienda de tarjetas y una vez al día para buscar actualizaciones.",
-      "switchOff": "Apagada. nexdeck no le pregunta nada a GitHub y no hay avisos de actualizaciones ni de tarjetas retiradas."
+      "switchOff": "Apagada. nexdeck no le pregunta nada a GitHub y no hay avisos de actualizaciones ni de tarjetas retiradas.",
+      "by": "de {{author}}",
+      "thumbs_one": "{{count}} pulgar arriba",
+      "thumbs_other": "{{count}} pulgares arriba",
+      "class": {
+        "read": "Solo lee",
+        "buttons": "Tiene botones",
+        "login": "Inicia sesión por sí misma"
+      },
+      "type": {
+        "card": "Tarjeta",
+        "integration": "Integración",
+        "cards": "Tarjetas",
+        "integrations": "Integraciones"
+      },
+      "allTypes": "Tarjetas e integraciones",
+      "installed": "Instalada",
+      "updateAvailable": "Actualización disponible",
+      "removed": "Retirada de la tienda de tarjetas",
+      "needs": "Necesita",
+      "noConnection": "aún sin conexión",
+      "search": "Buscar por nombre, autor o servicio",
+      "allCategories": "Todas las categorías",
+      "category": {
+        "media": "Medios",
+        "downloads": "Descargas",
+        "network": "Red",
+        "server": "Servidor",
+        "smart_home": "Hogar inteligente",
+        "other": "Otros"
+      },
+      "sort": {
+        "thumbs": "Más pulgares",
+        "new": "Más recientes",
+        "name": "Nombre"
+      },
+      "fits": "Encaja con mis conexiones",
+      "noMatch": "Ninguna tarjeta coincide",
+      "clear": "Quitar los filtros",
+      "count_one": "{{count}} entrada",
+      "count_other": "{{count}} entradas",
+      "more": "Mostrar {{count}} más",
+      "list": "Entradas de la tienda de tarjetas"
     }
   }
 }

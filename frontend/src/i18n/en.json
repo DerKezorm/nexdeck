@@ -2838,7 +2838,49 @@
       "stale": "GitHub could not be reached, so this is the catalog from {{time}}.",
       "switchLabel": "Card shop",
       "switchOn": "On. Loads the catalog from GitHub when you open the Card shop, and once a day to look for updates.",
-      "switchOff": "Off. nexdeck asks GitHub nothing, and there are no notices about updates or removed cards."
+      "switchOff": "Off. nexdeck asks GitHub nothing, and there are no notices about updates or removed cards.",
+      "by": "by {{author}}",
+      "thumbs_one": "{{count}} thumb up",
+      "thumbs_other": "{{count}} thumbs up",
+      "class": {
+        "read": "Only reads",
+        "buttons": "Has buttons",
+        "login": "Signs in itself"
+      },
+      "type": {
+        "card": "Card",
+        "integration": "Integration",
+        "cards": "Cards",
+        "integrations": "Integrations"
+      },
+      "allTypes": "Cards and integrations",
+      "installed": "Installed",
+      "updateAvailable": "Update available",
+      "removed": "Removed from the Card shop",
+      "needs": "Needs",
+      "noConnection": "no connection yet",
+      "search": "Search by name, author or service",
+      "allCategories": "All categories",
+      "category": {
+        "media": "Media",
+        "downloads": "Downloads",
+        "network": "Network",
+        "server": "Server",
+        "smart_home": "Smart home",
+        "other": "Other"
+      },
+      "sort": {
+        "thumbs": "Most thumbs",
+        "new": "Newest",
+        "name": "Name"
+      },
+      "fits": "Fits my connections",
+      "noMatch": "No cards match",
+      "clear": "Clear filters",
+      "count_one": "{{count}} entry",
+      "count_other": "{{count}} entries",
+      "more": "Show {{count}} more",
+      "list": "Entries of the Card shop"
     }
   }
 }

@@ -2838,7 +2838,49 @@
       "stale": "GitHub war nicht erreichbar, darum ist das der Katalog von {{time}}.",
       "switchLabel": "Kartenladen",
       "switchOn": "An. Lädt den Katalog von GitHub, wenn du den Kartenladen öffnest, und einmal am Tag, um nach Updates zu sehen.",
-      "switchOff": "Aus. nexdeck fragt GitHub nichts, und es gibt keine Hinweise auf Updates oder entfernte Karten."
+      "switchOff": "Aus. nexdeck fragt GitHub nichts, und es gibt keine Hinweise auf Updates oder entfernte Karten.",
+      "by": "von {{author}}",
+      "thumbs_one": "{{count}} Daumen",
+      "thumbs_other": "{{count}} Daumen",
+      "class": {
+        "read": "Liest nur",
+        "buttons": "Hat Knöpfe",
+        "login": "Meldet sich selbst an"
+      },
+      "type": {
+        "card": "Karte",
+        "integration": "Anbindung",
+        "cards": "Karten",
+        "integrations": "Anbindungen"
+      },
+      "allTypes": "Karten und Anbindungen",
+      "installed": "Installiert",
+      "updateAvailable": "Update verfügbar",
+      "removed": "Aus dem Kartenladen entfernt",
+      "needs": "Braucht",
+      "noConnection": "noch keine Verbindung",
+      "search": "Nach Name, Autor oder Dienst suchen",
+      "allCategories": "Alle Kategorien",
+      "category": {
+        "media": "Medien",
+        "downloads": "Downloads",
+        "network": "Netzwerk",
+        "server": "Server",
+        "smart_home": "Smart Home",
+        "other": "Sonstiges"
+      },
+      "sort": {
+        "thumbs": "Meiste Daumen",
+        "new": "Neueste",
+        "name": "Name"
+      },
+      "fits": "Passt zu meinen Verbindungen",
+      "noMatch": "Keine Karten passen",
+      "clear": "Filter zurücksetzen",
+      "count_one": "{{count}} Eintrag",
+      "count_other": "{{count}} Einträge",
+      "more": "{{count}} weitere zeigen",
+      "list": "Einträge des Kartenladens"
     }
   }
 }

@@ -2838,7 +2838,49 @@
       "stale": "GitHub était injoignable, voici donc le catalogue de {{time}}.",
       "switchLabel": "Boutique de cartes",
       "switchOn": "Activée. Charge le catalogue depuis GitHub à l'ouverture de la boutique de cartes, et une fois par jour pour chercher des mises à jour.",
-      "switchOff": "Désactivée. nexdeck ne demande rien à GitHub, et il n'y a pas d'avis de mises à jour ou de cartes retirées."
+      "switchOff": "Désactivée. nexdeck ne demande rien à GitHub, et il n'y a pas d'avis de mises à jour ou de cartes retirées.",
+      "by": "par {{author}}",
+      "thumbs_one": "{{count}} pouce levé",
+      "thumbs_other": "{{count}} pouces levés",
+      "class": {
+        "read": "Lit seulement",
+        "buttons": "A des boutons",
+        "login": "Se connecte elle-même"
+      },
+      "type": {
+        "card": "Carte",
+        "integration": "Intégration",
+        "cards": "Cartes",
+        "integrations": "Intégrations"
+      },
+      "allTypes": "Cartes et intégrations",
+      "installed": "Installée",
+      "updateAvailable": "Mise à jour disponible",
+      "removed": "Retirée de la boutique de cartes",
+      "needs": "Nécessite",
+      "noConnection": "pas encore de connexion",
+      "search": "Rechercher par nom, auteur ou service",
+      "allCategories": "Toutes les catégories",
+      "category": {
+        "media": "Médias",
+        "downloads": "Téléchargements",
+        "network": "Réseau",
+        "server": "Serveur",
+        "smart_home": "Maison connectée",
+        "other": "Autres"
+      },
+      "sort": {
+        "thumbs": "Plus de pouces",
+        "new": "Plus récentes",
+        "name": "Nom"
+      },
+      "fits": "Convient à mes connexions",
+      "noMatch": "Aucune carte ne correspond",
+      "clear": "Effacer les filtres",
+      "count_one": "{{count}} entrée",
+      "count_other": "{{count}} entrées",
+      "more": "Afficher {{count}} de plus",
+      "list": "Entrées de la boutique de cartes"
     }
   }
 }

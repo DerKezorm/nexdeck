@@ -2838,7 +2838,49 @@
       "stale": "GitHub non era raggiungibile, quindi questo è il catalogo di {{time}}.",
       "switchLabel": "Negozio di schede",
       "switchOn": "Attivo. Carica il catalogo da GitHub quando apri il negozio di schede e una volta al giorno per cercare aggiornamenti.",
-      "switchOff": "Spento. nexdeck non chiede nulla a GitHub e non ci sono avvisi su aggiornamenti o schede rimosse."
+      "switchOff": "Spento. nexdeck non chiede nulla a GitHub e non ci sono avvisi su aggiornamenti o schede rimosse.",
+      "by": "di {{author}}",
+      "thumbs_one": "{{count}} pollice in su",
+      "thumbs_other": "{{count}} pollici in su",
+      "class": {
+        "read": "Legge soltanto",
+        "buttons": "Ha dei pulsanti",
+        "login": "Accede da sé"
+      },
+      "type": {
+        "card": "Scheda",
+        "integration": "Integrazione",
+        "cards": "Schede",
+        "integrations": "Integrazioni"
+      },
+      "allTypes": "Schede e integrazioni",
+      "installed": "Installata",
+      "updateAvailable": "Aggiornamento disponibile",
+      "removed": "Rimossa dal negozio di schede",
+      "needs": "Richiede",
+      "noConnection": "ancora nessuna connessione",
+      "search": "Cerca per nome, autore o servizio",
+      "allCategories": "Tutte le categorie",
+      "category": {
+        "media": "Media",
+        "downloads": "Download",
+        "network": "Rete",
+        "server": "Server",
+        "smart_home": "Casa intelligente",
+        "other": "Altro"
+      },
+      "sort": {
+        "thumbs": "Più pollici",
+        "new": "Più recenti",
+        "name": "Nome"
+      },
+      "fits": "Adatto alle mie connessioni",
+      "noMatch": "Nessuna scheda corrisponde",
+      "clear": "Azzera i filtri",
+      "count_one": "{{count}} voce",
+      "count_other": "{{count}} voci",
+      "more": "Mostra altre {{count}}",
+      "list": "Voci del negozio di schede"
     }
   }
 }
