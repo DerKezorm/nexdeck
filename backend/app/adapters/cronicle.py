@@ -40,9 +40,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
     duration_short,
 )
@@ -99,6 +101,8 @@ class CronicleAdapter(Adapter):
               help="Admin > API Keys. Reading needs no privilege; the button to run an event needs Run Events."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
+    # Cronicle runs any of its calls from a GET (run_event, abort_job, delete_event): a card may ask the get_ ones.
+    raw_read_commands = ReadCommands(after={"app": allowed(prefixes=("get_",))})
     widgets = (
         WidgetType(
             kind="overview",

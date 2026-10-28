@@ -34,9 +34,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
     duration_short,
 )
@@ -96,6 +98,8 @@ class JenkinsAdapter(Adapter):
               help="From the user's own page under Security > API Token, not the password: with the password the build button is refused for want of a CSRF crumb. The user needs Overall/Read and Job/Read, and Job/Build for the button."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
+    # A GET of /job/<name>/build starts a build for an account that may; a card reads the api/json pages and the console text.
+    raw_read_commands = ReadCommands(last=allowed("json", "xml", "consoletext", "buildnumber"))
     widgets = (
         WidgetType(
             kind="overview",

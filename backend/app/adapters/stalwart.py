@@ -34,8 +34,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     human_bytes,
     percent,
@@ -102,6 +104,8 @@ class StalwartAdapter(Adapter):
         "Create a key and copy it right away; Stalwart shows the secret once. It starts with API_.",
         "Needs Stalwart 1.0 or newer: older versions manage the server with a different interface.",
     )
+    # The management API reloads and purges from a GET; a card reads the JMAP session.
+    raw_read_commands = ReadCommands(last=allowed("session"))
     widgets = (
         WidgetType(
             kind="overview",

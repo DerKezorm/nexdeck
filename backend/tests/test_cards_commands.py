@@ -80,6 +80,34 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
          "/server/history/list?limit=5&start=0", "/server/files/list", "/server/files/metadata?filename=x.gcode", "/machine/update/status", "/server/job_queue/status",
          "/machine/system_info", "/machine/device_power/devices"],
     ),
+    "cronicle": (
+        ["/api/app/run_event/v1?id=e1", "/api/app/abort_job/v1?id=j1", "/api/app/delete_event/v1?id=e1", "/api/app/update_event/v1?id=e1&enabled=0", "/api/app/create_event/v1"],
+        ["/api/app/get_schedule/v1", "/api/app/get_active_jobs/v1", "/api/app/get_master_state/v1", "/api/app/get_history/v1?offset=0&limit=5"],
+    ),
+    "mailcow": (
+        ["/api/v1/add/mailbox", "/api/v1/edit/mailq", "/api/v1/delete/mailbox", "/api/v1/edit/domain"],
+        ["/api/v1/get/mailq/all", "/api/v1/get/status/containers", "/api/v1/get/mailbox/all", "/api/v1/get/domain/all"],
+    ),
+    "jenkins": (
+        ["/job/api-tests/build", "/job/api-tests/buildWithParameters?x=1", "/job/api-tests/lastBuild/stop", "/quietDown", "/exit", "/job/api-tests/disable", "/scriptText", "/"],
+        ["/api/json?tree=jobs[name,color]", "/queue/api/json", "/computer/api/json", "/job/api-tests/lastBuild/api/json", "/job/api-tests/lastBuild/consoleText"],
+    ),
+    "stalwart": (
+        ["/api/reload", "/api/queue/messages", "/api/store/purge/data", "/jmap/"],
+        ["/jmap/session"],
+    ),
+    "garage": (
+        ["/v1/key?id=GK1&showSecretKey=true", "/v2/GetKeyInfo?id=GK1&showSecretKey=true"],
+        ["/v1/status", "/v1/health", "/v2/GetClusterHealth", "/v1/key?id=GK1", "/v2/ListBuckets"],
+    ),
+    "influxdb": (
+        ["/api/v2/authorizations", "/api/v2/authorizations?org=x"],
+        ["/api/v2/buckets?limit=100", "/health", "/api/v2/orgs", "/api/v3/configure/database?format=json"],
+    ),
+    "keycloak": (
+        ["/admin/realms/master/clients/abc/client-secret", "/admin/realms/master/clients/abc/client-secret/rotated"],
+        ["/admin/realms/master/users/count", "/admin/realms/master/clients", "/admin/realms/master/events?type=LOGIN_ERROR"],
+    ),
     "owncast": (["/api/admin/disconnect"], ["/api/status", "/api/admin/status", "/api/admin/followers?limit=1"]),
 }
 

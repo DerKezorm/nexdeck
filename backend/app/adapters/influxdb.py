@@ -45,6 +45,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -79,6 +80,8 @@ class InfluxdbAdapter(Adapter):
         Field("org", "Organization", help="Version 2 only: the name of the organization the queries run in. Empty takes the first one the token can see."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
+    # The list of authorizations shows the tokens themselves.
+    raw_read_commands = ReadCommands(words=frozenset({"authorizations"}))
     widgets = (
         WidgetType(kind="status", label="InfluxDB",
                    description="Whether it is ready, its version and how many buckets or databases it holds.",
@@ -107,16 +110,21 @@ class InfluxdbAdapter(Adapter):
     # -- talking to it -------------------------------------------------------
 
     @staticmethod
-    def _headers(config: dict[str, Any], flavour: str) -> dict[str, str]:
+    def _signed_headers(config: dict[str, Any], flavour: str) -> dict[str, str]:
         scheme = "Bearer" if flavour == "3" else "Token"
         return {"Authorization": f"{scheme} {config.get('token') or ''}"}
+
+    async def raw_signed(self, config: dict[str, Any], ctx: Context) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:
+        """What signs a request of a card: the scheme of the token depends on the version, which ``/ping`` tells."""
+        flavour, _ = await self._flavour(config, ctx)
+        return self._signed_headers(config, flavour), {}, None
 
     async def _flavour(self, config: dict[str, Any], ctx: Context) -> tuple[str, str]:
         """``("2", "2.7.12")`` or ``("3", "3.12.1")``, found by ``/ping`` and kept."""
         kept = ctx.cache.get(FLAVOUR)
         if isinstance(kept, tuple):
             return kept
-        response = await ctx.request("GET", f"{base_url(config)}/ping", headers=self._headers(config, "3"),
+        response = await ctx.request("GET", f"{base_url(config)}/ping", headers=self._signed_headers(config, "3"),
                                      verify=not config.get("insecure"), auth_errors=False, timeout=10.0)
         if response.status_code in (401, 403):
             raise AuthFailed("InfluxDB rejected the token.")
@@ -136,7 +144,7 @@ class InfluxdbAdapter(Adapter):
         return found
 
     async def _call(self, config: dict[str, Any], ctx: Context, flavour: str, method: str, path: str, **more: Any) -> Any:
-        headers = {**self._headers(config, flavour), **(more.pop("headers", None) or {})}
+        headers = {**self._signed_headers(config, flavour), **(more.pop("headers", None) or {})}
         response = await ctx.request(method, f"{base_url(config)}{path}", headers=headers, verify=not config.get("insecure"),
                                      auth_errors=False, **more)
         if response.status_code in (401, 403):

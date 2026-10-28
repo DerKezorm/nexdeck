@@ -36,6 +36,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
@@ -91,6 +92,8 @@ class KeycloakAdapter(Adapter):
         "On its Service accounts roles tab assign view-realm, view-users, view-events and view-clients of the realm-management client of each realm nexdeck should show. From the master realm one client can reach all of them.",
         "Switch on Events in each realm's settings, or its failed sign-ins stay invisible. Keycloak keeps none by default.",
     )
+    # The client-secret of a client is a secret, not a read.
+    raw_read_commands = ReadCommands(words=frozenset({"secret"}))
     widgets = (
         WidgetType(
             kind="overview",

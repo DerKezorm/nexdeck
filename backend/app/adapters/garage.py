@@ -29,8 +29,10 @@ from . import demo as fake
 from .base import (
     Adapter,
     AdapterError,
+    Allowed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -81,6 +83,8 @@ class GarageAdapter(Adapter):
         "In garage.toml, the [admin] section needs api_bind_addr and an admin_token.",
         "Publish the admin port to your own network only; the token can change the whole cluster, and nexdeck only reads.",
     )
+    # The key listing shows the secret of an S3 key on request; a card does not ask for it.
+    raw_read_commands = ReadCommands(params={"showsecretkey": Allowed()})
     widgets = (
         WidgetType(
             kind="cluster",

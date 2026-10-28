@@ -31,9 +31,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
     human_bytes,
     percent,
@@ -88,6 +90,8 @@ class MailcowAdapter(Adapter):
         "Switch the API on, add the address nexdeck connects from to the allowed addresses, and copy the read-only key.",
         "A call from an address that is not on the list is refused, whatever key it carries.",
     )
+    # The API changes things under /add, /edit and /delete: a card reads under /get.
+    raw_read_commands = ReadCommands(after={"v1": allowed("get")})
     widgets = (
         WidgetType(
             kind="overview",
