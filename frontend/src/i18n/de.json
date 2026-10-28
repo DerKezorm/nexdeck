@@ -1430,7 +1430,8 @@
     "rangeYear": "1 J",
     "lowHigh": "{{low}} bis {{high}}",
     "collectingLong": "Wird gesammelt. Die ersten Stunden erscheinen nach einer Stunde, die ersten Tage nach Mitternacht.",
-    "nothingHere": "Hier ist nichts"
+    "nothingHere": "Hier ist nichts",
+    "definitionMissingHint": "Ein Admin kann sie anlegen, indem er die Kartendatei importiert."
   },
   "player": {
     "title": "Musik",
@@ -2731,6 +2732,50 @@
       "deleteBody_other": "{{count}} Verbindungen nutzen sie. Die Verbindungen und die Karten darauf zeigen dann \"integration missing\", und eine Anbindung mit demselben Kurznamen bringt sie zurück.",
       "tooMany": "Es gibt schon 50 eigene Anbindungen, mehr hält nexdeck nicht. Lösche zuerst eine.",
       "exists": "Eine Anbindung mit diesem Kurznamen gibt es schon."
+    },
+    "exchange": {
+      "export": "Exportieren",
+      "exportNamed": "{{name}} exportieren",
+      "done": "Import abgeschlossen.",
+      "title": "Karten und Anbindungen importieren",
+      "lead": "Wähle eine Datei mit einer Karte oder Anbindung oder füge den Text ein. Vor dem Klick auf Importieren wird nichts angelegt.",
+      "pick": "Datei wählen",
+      "paste": "Oder Text einfügen",
+      "check": "Prüfen",
+      "run": "Importieren",
+      "empty": "In diesem Text steckt nichts zum Importieren.",
+      "documents": "In dieser Datei",
+      "card": "Karte",
+      "integration": "Anbindung",
+      "source": "Quelle",
+      "comesAlong": "(kommt in dieser Datei mit)",
+      "buttons": "Knöpfe",
+      "noButtons": "Keine",
+      "preview": "Vorschau mit Beispieldaten",
+      "previewLoading": "Vorschau wird geladen…",
+      "noPreview": "Keine Vorschau für diese Karte.",
+      "problems": "Probleme",
+      "exists": "Dieser Kurzname ist schon vergeben. Was soll geschehen?",
+      "existsSame": "Dieser Kurzname ist schon vergeben, mit demselben Inhalt. Was soll geschehen?",
+      "replace": "Ersetzen",
+      "copy": "Als Kopie importieren",
+      "cancel": "Abbrechen",
+      "missing": "Fehlt: {{kinds}}. Diese Anbindungen stehen weder in der Datei noch auf dieser Installation. Die Karte wird importiert, funktioniert aber erst, wenn es eine Anbindung dieser Art gibt.",
+      "stopped": "Du hast Abbrechen gewählt, deshalb wird nichts importiert.",
+      "fixFirst": "Behebe zuerst die Probleme in der Datei.",
+      "chooseFirst": "Wähle für alles, was es schon gibt, was damit geschehen soll.",
+      "tooBig": "Diese Datei ist größer als 512 KB. nexdeck liest sie nicht.",
+      "errors": {
+        "import_choice_missing": "Wähle Ersetzen, Als Kopie importieren oder Abbrechen für alles, was es schon gibt."
+      },
+      "board": {
+        "title": "Eigene Karten in diesem Board",
+        "missing": "fehlt",
+        "same": "schon vorhanden",
+        "different": "weicht ab, deine bleibt",
+        "create": "Fehlende anlegen",
+        "askAdmin": "Ein Admin kann die fehlenden anlegen. Bis dahin zeigen diese Karten „Definition fehlt“."
+      }
     }
   }
 }

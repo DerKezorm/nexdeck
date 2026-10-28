@@ -10,6 +10,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import deScreen from '../../i18n/de.json'
+import { answerWithFile, catchDownloads } from '../../test/downloads'
 import type { CustomCardRow } from '../../lib/customCards'
 import { CustomCardsSettings } from './CustomCardsSettings'
 
@@ -235,5 +236,51 @@ describe('the way into the editor', () => {
     expect(await screen.findByText('Editor at /system/custom-cards/queue-size/edit')).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /Card text/ })).toBeNull()
     expect(sent('GET', '/cards/queue-size')).toHaveLength(0)
+  })
+})
+
+describe('export', () => {
+  const asked = (mock: ReturnType<typeof answerWithFile>, address: string) => mock.mock.calls.filter(([input]) => String(input).endsWith(address))
+
+  it('karten12 ac1: the export of a card asks for its file and saves it under the name the server gave', async () => {
+    const saved = catchDownloads()
+    stub([card()])
+    const fetched = answerWithFile('/cards/queue-size/export', 'nexdeck-card: 1\nslug: queue-size\n', { 'Content-Type': 'text/yaml', 'Content-Disposition': 'attachment; filename="queue-today.nexdeck.yaml"' })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export Queue' }))
+    await waitFor(() => expect(saved.names).toEqual(['queue-today.nexdeck.yaml']))
+    expect(asked(fetched, '/cards/queue-size/export')).toHaveLength(1)
+    saved.restore()
+  })
+
+  it('karten12 ac1: a file without a name from the server is saved as <short name>.nexdeck.yaml', async () => {
+    const saved = catchDownloads()
+    stub([card()])
+    answerWithFile('/cards/queue-size/export', 'nexdeck-card: 1\n', { 'Content-Type': 'text/yaml' })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export Queue' }))
+    await waitFor(() => expect(saved.names).toEqual(['queue-size.nexdeck.yaml']))
+    saved.restore()
+  })
+
+  it('karten12 ac1: a name from the server with a path in it is cut down to the file name', async () => {
+    const saved = catchDownloads()
+    stub([card()])
+    answerWithFile('/cards/queue-size/export', 'x', { 'Content-Disposition': 'attachment; filename="..\\..\\evil/queue.nexdeck.yaml"' })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export Queue' }))
+    await waitFor(() => expect(saved.names).toEqual(['queue.nexdeck.yaml']))
+    saved.restore()
+  })
+
+  it('karten12 ac1: a refused export says why and saves nothing', async () => {
+    const saved = catchDownloads()
+    stub([card()])
+    answerWithFile('/cards/queue-size/export', JSON.stringify({ detail: { code: 'forbidden', message: 'Only administrators may export.' } }), { 'Content-Type': 'application/json' }, 403)
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export Queue' }))
+    expect(await screen.findByText('Only administrators may export.')).toBeInTheDocument()
+    expect(saved.names).toEqual([])
+    saved.restore()
   })
 })

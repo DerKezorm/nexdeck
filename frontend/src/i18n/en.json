@@ -1430,7 +1430,8 @@
     "rangeYear": "1 y",
     "lowHigh": "{{low}} to {{high}}",
     "collectingLong": "Collecting. The first hours appear after an hour, the first days after midnight.",
-    "nothingHere": "Nothing here"
+    "nothingHere": "Nothing here",
+    "definitionMissingHint": "An administrator can create it by importing the card file."
   },
   "player": {
     "title": "Music",
@@ -2731,6 +2732,50 @@
       "deleteBody_other": "{{count}} connections use it. The connections and the cards on them will say \"integration missing\", and saving an integration with the same short name brings them back.",
       "tooMany": "There are 50 integrations of your own already, which is the most nexdeck keeps. Delete one first.",
       "exists": "An integration with this short name exists already."
+    },
+    "exchange": {
+      "export": "Export",
+      "exportNamed": "Export {{name}}",
+      "done": "Import done.",
+      "title": "Import cards and integrations",
+      "lead": "Choose a file with a card or an integration, or paste its text. Nothing is created before you press Import.",
+      "pick": "Choose a file",
+      "paste": "Or paste the text",
+      "check": "Check",
+      "run": "Import",
+      "empty": "There is nothing to import in this text.",
+      "documents": "In this file",
+      "card": "Card",
+      "integration": "Integration",
+      "source": "Source",
+      "comesAlong": "(comes along in this file)",
+      "buttons": "Buttons",
+      "noButtons": "None",
+      "preview": "Preview with example data",
+      "previewLoading": "Loading the preview…",
+      "noPreview": "No preview for this card.",
+      "problems": "Problems",
+      "exists": "This short name is taken already. What should happen?",
+      "existsSame": "This short name is taken already, with the same content. What should happen?",
+      "replace": "Replace",
+      "copy": "Import as copy",
+      "cancel": "Cancel",
+      "missing": "Missing: {{kinds}}. These integrations are neither in the file nor on this installation. The card is imported, but it works only once an integration of that kind exists.",
+      "stopped": "You chose Cancel, so nothing will be imported.",
+      "fixFirst": "Fix the problems in the file first.",
+      "chooseFirst": "Choose what happens to each item that exists already.",
+      "tooBig": "This file is larger than 512 KB. nexdeck does not read it.",
+      "errors": {
+        "import_choice_missing": "Choose Replace, Import as copy or Cancel for every item that exists already."
+      },
+      "board": {
+        "title": "Custom cards in this board",
+        "missing": "missing",
+        "same": "already here",
+        "different": "differs, yours is kept",
+        "create": "Create the missing ones",
+        "askAdmin": "An administrator can create the missing ones. Until then these cards show “definition missing”."
+      }
     }
   }
 }

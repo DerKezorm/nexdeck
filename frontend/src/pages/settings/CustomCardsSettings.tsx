@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Copy, Download, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { ApiError, del, get, post, put } from '../../api/client'
+import { ApiError, del, downloadGet, get, post, put } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState } from '../../components/ui'
+import { exportName } from '../../lib/cardExchange'
 import { pickText } from '../../lib/cardText'
 import { sourceLine, type CardList, type CustomCardRow } from '../../lib/customCards'
 import { OwnIntegrations, useOwnIntegrations } from './OwnIntegrations'
@@ -78,6 +79,15 @@ export function CustomCardsSettings() {
     try {
       await post(`/cards/${encodeURIComponent(card.slug)}/copy`)
       await changed()
+    } catch (failure) {
+      fail(failure)
+    }
+  }
+
+  const save = async (card: CustomCardRow) => {
+    setError('')
+    try {
+      await downloadGet(`/cards/${encodeURIComponent(card.slug)}/export`, exportName(card.slug))
     } catch (failure) {
       fail(failure)
     }
@@ -225,6 +235,9 @@ export function CustomCardsSettings() {
                   <div className="flex items-center justify-end gap-0.5">
                     <button className="btn btn-icon btn-flat" onClick={() => openEdit(card)} aria-label={t('cards.editNamed', { name: nameOf(card) })} title={t('cards.edit')}>
                       <Pencil size={15} />
+                    </button>
+                    <button className="btn btn-icon btn-flat" onClick={() => void save(card)} aria-label={t('cards.exchange.exportNamed', { name: nameOf(card) })} title={t('cards.exchange.export')}>
+                      <Download size={15} />
                     </button>
                     <button className="btn btn-icon btn-flat" onClick={() => void copy(card)} aria-label={t('cards.copyNamed', { name: nameOf(card) })} title={t('cards.copy')}>
                       <Copy size={15} />

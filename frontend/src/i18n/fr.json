@@ -1430,7 +1430,8 @@
     "rangeYear": "1 an",
     "lowHigh": "{{low}} à {{high}}",
     "collectingLong": "Collecte en cours. Les premières heures apparaissent après une heure, les premiers jours après minuit.",
-    "nothingHere": "Rien ici"
+    "nothingHere": "Rien ici",
+    "definitionMissingHint": "Un administrateur peut la créer en important le fichier de la carte."
   },
   "player": {
     "title": "Musique",
@@ -2731,6 +2732,50 @@
       "deleteBody_other": "{{count}} connexions l'utilisent. Les connexions et les cartes dessus afficheront \"integration missing\", et enregistrer une intégration au même nom court les rétablit.",
       "tooMany": "Il y a déjà 50 intégrations personnelles, c'est le maximum que nexdeck garde. Supprimez-en une d'abord.",
       "exists": "Une intégration portant ce nom court existe déjà."
+    },
+    "exchange": {
+      "export": "Exporter",
+      "exportNamed": "Exporter {{name}}",
+      "done": "Import terminé.",
+      "title": "Importer des cartes et des intégrations",
+      "lead": "Choisissez un fichier contenant une carte ou une intégration, ou collez son texte. Rien n'est créé avant que vous cliquiez sur Importer.",
+      "pick": "Choisir un fichier",
+      "paste": "Ou collez le texte",
+      "check": "Vérifier",
+      "run": "Importer",
+      "empty": "Il n'y a rien à importer dans ce texte.",
+      "documents": "Dans ce fichier",
+      "card": "Carte",
+      "integration": "Intégration",
+      "source": "Source",
+      "comesAlong": "(fournie dans ce fichier)",
+      "buttons": "Boutons",
+      "noButtons": "Aucun",
+      "preview": "Aperçu avec des données d'exemple",
+      "previewLoading": "Chargement de l'aperçu…",
+      "noPreview": "Pas d'aperçu pour cette carte.",
+      "problems": "Problèmes",
+      "exists": "Ce nom court est déjà pris. Que faire ?",
+      "existsSame": "Ce nom court est déjà pris, avec le même contenu. Que faire ?",
+      "replace": "Remplacer",
+      "copy": "Importer comme copie",
+      "cancel": "Annuler",
+      "missing": "Manquant : {{kinds}}. Ces intégrations ne sont ni dans le fichier ni sur cette installation. La carte est importée, mais elle ne fonctionne qu'une fois qu'une intégration de ce type existe.",
+      "stopped": "Vous avez choisi Annuler, rien ne sera donc importé.",
+      "fixFirst": "Corrigez d'abord les problèmes du fichier.",
+      "chooseFirst": "Choisissez ce qu'il advient de chaque élément qui existe déjà.",
+      "tooBig": "Ce fichier dépasse 512 Ko. nexdeck ne le lit pas.",
+      "errors": {
+        "import_choice_missing": "Choisissez Remplacer, Importer comme copie ou Annuler pour chaque élément qui existe déjà."
+      },
+      "board": {
+        "title": "Cartes personnalisées de ce tableau",
+        "missing": "manquante",
+        "same": "déjà présente",
+        "different": "différente, la vôtre est conservée",
+        "create": "Créer celles qui manquent",
+        "askAdmin": "Un administrateur peut créer celles qui manquent. D'ici là, ces cartes affichent « Définition manquante »."
+      }
     }
   }
 }

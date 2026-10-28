@@ -1430,7 +1430,8 @@
     "rangeYear": "1 a",
     "lowHigh": "{{low}} a {{high}}",
     "collectingLong": "Recopilando. Las primeras horas aparecen tras una hora, los primeros días tras la medianoche.",
-    "nothingHere": "Aquí no hay nada"
+    "nothingHere": "Aquí no hay nada",
+    "definitionMissingHint": "Un administrador puede crearla importando el archivo de la tarjeta."
   },
   "player": {
     "title": "Música",
@@ -2731,6 +2732,50 @@
       "deleteBody_other": "{{count}} conexiones la usan. Las conexiones y las tarjetas sobre ellas mostrarán \"integration missing\", y guardar una integración con el mismo nombre corto las devuelve.",
       "tooMany": "Ya hay 50 integraciones propias, que es el máximo que guarda nexdeck. Elimina una primero.",
       "exists": "Ya existe una integración con este nombre corto."
+    },
+    "exchange": {
+      "export": "Exportar",
+      "exportNamed": "Exportar {{name}}",
+      "done": "Importación terminada.",
+      "title": "Importar tarjetas e integraciones",
+      "lead": "Elige un archivo con una tarjeta o una integración, o pega su texto. No se crea nada hasta que pulses Importar.",
+      "pick": "Elegir un archivo",
+      "paste": "O pega el texto",
+      "check": "Comprobar",
+      "run": "Importar",
+      "empty": "No hay nada que importar en este texto.",
+      "documents": "En este archivo",
+      "card": "Tarjeta",
+      "integration": "Integración",
+      "source": "Origen",
+      "comesAlong": "(viene en este archivo)",
+      "buttons": "Botones",
+      "noButtons": "Ninguno",
+      "preview": "Vista previa con datos de ejemplo",
+      "previewLoading": "Cargando la vista previa…",
+      "noPreview": "No hay vista previa de esta tarjeta.",
+      "problems": "Problemas",
+      "exists": "Este nombre corto ya está en uso. ¿Qué debe pasar?",
+      "existsSame": "Este nombre corto ya está en uso, con el mismo contenido. ¿Qué debe pasar?",
+      "replace": "Reemplazar",
+      "copy": "Importar como copia",
+      "cancel": "Cancelar",
+      "missing": "Falta: {{kinds}}. Estas integraciones no están en el archivo ni en esta instalación. La tarjeta se importa, pero solo funciona cuando exista una integración de ese tipo.",
+      "stopped": "Elegiste Cancelar, así que no se importará nada.",
+      "fixFirst": "Corrige primero los problemas del archivo.",
+      "chooseFirst": "Elige qué pasa con cada elemento que ya existe.",
+      "tooBig": "Este archivo pesa más de 512 KB. nexdeck no lo lee.",
+      "errors": {
+        "import_choice_missing": "Elige Reemplazar, Importar como copia o Cancelar para cada elemento que ya existe."
+      },
+      "board": {
+        "title": "Tarjetas propias de este tablero",
+        "missing": "falta",
+        "same": "ya está",
+        "different": "es distinta, se conserva la tuya",
+        "create": "Crear las que faltan",
+        "askAdmin": "Un administrador puede crear las que faltan. Mientras tanto, estas tarjetas muestran «Falta la definición»."
+      }
     }
   }
 }

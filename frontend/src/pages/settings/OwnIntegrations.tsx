@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
-import { ApiError, del, get } from '../../api/client'
+import { ApiError, del, downloadGet, get } from '../../api/client'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import { Confirm, EmptyState } from '../../components/ui'
+import { exportName } from '../../lib/cardExchange'
 
 /** One own integration in the list (`GET /own-integrations`). */
 export interface OwnIntegrationRow {
@@ -44,6 +45,15 @@ export function OwnIntegrations() {
   const rows = list.data ?? []
 
   const openNew = () => navigate('/system/custom-cards/integrations/new')
+  const save = async (row: OwnIntegrationRow) => {
+    setError('')
+    try {
+      await downloadGet(`/own-integrations/${encodeURIComponent(row.short)}/export`, exportName(row.short))
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    }
+  }
+
   const remove = async (row: OwnIntegrationRow) => {
     setError('')
     try {
@@ -105,6 +115,9 @@ export function OwnIntegrations() {
                 <div className="flex items-center justify-end gap-0.5">
                   <button className="btn btn-icon btn-flat" onClick={() => navigate(`/system/custom-cards/integrations/${encodeURIComponent(row.short)}/edit`)} aria-label={t('cards.editNamed', { name: row.name })} title={t('cards.edit')}>
                     <Pencil size={15} />
+                  </button>
+                  <button className="btn btn-icon btn-flat" onClick={() => void save(row)} aria-label={t('cards.exchange.exportNamed', { name: row.name })} title={t('cards.exchange.export')}>
+                    <Download size={15} />
                   </button>
                   <button className="btn btn-icon btn-flat btn-danger" onClick={() => setRemoving(row)} aria-label={t('cards.deleteNamed', { name: row.name })} title={t('cards.delete')}>
                     <Trash2 size={15} />

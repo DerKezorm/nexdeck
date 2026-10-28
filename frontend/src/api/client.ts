@@ -161,19 +161,21 @@ export function readFailure(
   }
 }
 
-export async function downloadPost(path: string, filename: string, json: unknown): Promise<void> {
-  const response = await api<Response>(path, { method: 'POST', json, raw: true })
-  if (!response.ok) {
-    const text = await response.text()
-    let data: { detail?: { code?: string; message?: string } } | null
-    try {
-      data = text ? JSON.parse(text) : null
-    } catch {
-      data = null
-    }
-    const failure = readFailure(data, response.status)
-    throw new ApiError(response.status, failure.code, failure.message, failure.hint, failure.detail)
+/** The answer of a failed download as the error the rest of the app knows. */
+async function failedDownload(response: Response): Promise<ApiError> {
+  const text = await response.text()
+  let data: { detail?: { code?: string; message?: string } } | null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = null
   }
+  const failure = readFailure(data, response.status)
+  return new ApiError(response.status, failure.code, failure.message, failure.hint, failure.detail)
+}
+
+/** Hand a downloaded answer to the browser as a file. */
+async function saveAnswer(response: Response, filename: string): Promise<void> {
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -183,6 +185,36 @@ export async function downloadPost(path: string, filename: string, json: unknown
   anchor.click()
   anchor.remove()
   URL.revokeObjectURL(url)
+}
+
+export async function downloadPost(path: string, filename: string, json: unknown): Promise<void> {
+  const response = await api<Response>(path, { method: 'POST', json, raw: true })
+  if (!response.ok) throw await failedDownload(response)
+  await saveAnswer(response, filename)
+}
+
+/** The file name a `Content-Disposition` header asks for, cut down to a plain name; `null` when it names none. */
+export function dispositionName(header: string | null): string | null {
+  if (!header) return null
+  const encoded = /filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/.exec(header)
+  const plain = /filename\s*=\s*"?([^";]+)"?/.exec(header)
+  let name = plain ? plain[1] : null
+  if (encoded) {
+    try {
+      name = decodeURIComponent(encoded[1].trim())
+    } catch {
+      // keep the plain name
+    }
+  }
+  name = (name ?? '').trim().replace(/^.*[\\/]/, '')
+  return name || null
+}
+
+/** Ask for a file with a GET and save it under the name the server gave it, else under `fallback`. */
+export async function downloadGet(path: string, fallback: string): Promise<void> {
+  const response = await api<Response>(path, { raw: true })
+  if (!response.ok) throw await failedDownload(response)
+  await saveAnswer(response, dispositionName(response.headers.get('Content-Disposition')) ?? fallback)
 }
 
 export const get = <T>(path: string) => api<T>(path)

@@ -1430,7 +1430,8 @@
     "rangeYear": "1 a",
     "lowHigh": "da {{low}} a {{high}}",
     "collectingLong": "Raccolta in corso. Le prime ore appaiono dopo un'ora, i primi giorni dopo mezzanotte.",
-    "nothingHere": "Niente qui"
+    "nothingHere": "Niente qui",
+    "definitionMissingHint": "Un amministratore può crearla importando il file della scheda."
   },
   "player": {
     "title": "Musica",
@@ -2731,6 +2732,50 @@
       "deleteBody_other": "{{count}} connessioni la usano. Le connessioni e le schede sopra mostreranno \"integration missing\", e salvare un'integrazione con lo stesso nome breve le ripristina.",
       "tooMany": "Ci sono già 50 integrazioni proprie, il massimo che nexdeck conserva. Eliminane prima una.",
       "exists": "Esiste già un'integrazione con questo nome breve."
+    },
+    "exchange": {
+      "export": "Esporta",
+      "exportNamed": "Esporta {{name}}",
+      "done": "Importazione terminata.",
+      "title": "Importa schede e integrazioni",
+      "lead": "Scegli un file con una scheda o un'integrazione, oppure incolla il testo. Non viene creato nulla finché non premi Importa.",
+      "pick": "Scegli un file",
+      "paste": "Oppure incolla il testo",
+      "check": "Verifica",
+      "run": "Importa",
+      "empty": "In questo testo non c'è nulla da importare.",
+      "documents": "In questo file",
+      "card": "Scheda",
+      "integration": "Integrazione",
+      "source": "Origine",
+      "comesAlong": "(arriva con questo file)",
+      "buttons": "Pulsanti",
+      "noButtons": "Nessuno",
+      "preview": "Anteprima con dati di esempio",
+      "previewLoading": "Caricamento dell'anteprima…",
+      "noPreview": "Nessuna anteprima per questa scheda.",
+      "problems": "Problemi",
+      "exists": "Questo nome breve è già in uso. Cosa si fa?",
+      "existsSame": "Questo nome breve è già in uso, con lo stesso contenuto. Cosa si fa?",
+      "replace": "Sostituisci",
+      "copy": "Importa come copia",
+      "cancel": "Annulla",
+      "missing": "Manca: {{kinds}}. Queste integrazioni non sono né nel file né in questa installazione. La scheda viene importata, ma funziona solo quando esiste un'integrazione di quel tipo.",
+      "stopped": "Hai scelto Annulla, quindi non verrà importato nulla.",
+      "fixFirst": "Correggi prima i problemi del file.",
+      "chooseFirst": "Scegli cosa fare con ogni elemento che esiste già.",
+      "tooBig": "Questo file supera 512 KB. nexdeck non lo legge.",
+      "errors": {
+        "import_choice_missing": "Scegli Sostituisci, Importa come copia o Annulla per ogni elemento che esiste già."
+      },
+      "board": {
+        "title": "Schede personali di questa bacheca",
+        "missing": "manca",
+        "same": "già presente",
+        "different": "è diversa, resta la tua",
+        "create": "Crea quelle che mancano",
+        "askAdmin": "Un amministratore può creare quelle che mancano. Nel frattempo queste schede mostrano «Definizione mancante»."
+      }
     }
   }
 }

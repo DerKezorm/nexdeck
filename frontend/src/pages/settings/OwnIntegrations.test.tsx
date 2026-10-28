@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { answerWithFile, catchDownloads } from '../../test/downloads'
 import { CustomCardsSettings } from './CustomCardsSettings'
 
 const ROW = (extra: Record<string, unknown> = {}) => ({
@@ -135,5 +136,17 @@ describe('the Integrations tab', () => {
     show()
     await screen.findByTestId('own-integrations')
     for (const button of screen.getAllByRole('button', { name: 'Describe an integration' })) expect(button).toBeDisabled()
+  })
+})
+
+describe('export', () => {
+  it('karten12 ac1: the export of an integration asks for its file and saves it under the name the server gave', async () => {
+    const saved = catchDownloads()
+    const fetched = answerWithFile('/own-integrations/memos/export', 'nexdeck: integration\n', { 'Content-Disposition': "attachment; filename*=UTF-8''memos%20today.nexdeck.yaml" })
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export Memos' }))
+    await waitFor(() => expect(saved.names).toEqual(['memos today.nexdeck.yaml']))
+    expect(fetched.mock.calls.filter(([input]) => String(input).endsWith('/own-integrations/memos/export'))).toHaveLength(1)
+    saved.restore()
   })
 })
