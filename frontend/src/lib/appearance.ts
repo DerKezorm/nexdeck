@@ -90,13 +90,23 @@ export function shownStyle(look: { cards: CardStyle; board: CardStyle | null }):
   return look.board && look.board !== 'window' ? look.board : look.cards
 }
 
-/** The style onto the page: the board's own, else the installation's. Glass needs no mark. */
+/**
+ * The style onto the page: the board's own, else the installation's. Glass needs no mark.
+ *
+ * ``data-cards`` is what the cards are drawn in. ``data-chrome`` is the installation's
+ * style alone, for everything that is not a card (the boxes of the settings, sheets,
+ * dialogs, menus, the search, the assistant): a board that chooses a style of its own
+ * changes its cards and leaves the rest of the app as it was. 1984 draws all of it
+ * itself (``data-cards='window'``), so it leaves no second mark.
+ */
 function paintCards(): void {
   const look = useLook.getState()
   const style = shownStyle(look)
   const root = document.documentElement
   if (style !== 'glass') root.dataset.cards = style
   else delete root.dataset.cards
+  if (look.cards !== 'glass' && look.cards !== 'window') root.dataset.chrome = look.cards
+  else delete root.dataset.chrome
   root.dataset.refract = look.refraction ? 'on' : 'off'
   paintRetro(style === 'window', look.retro)
 }

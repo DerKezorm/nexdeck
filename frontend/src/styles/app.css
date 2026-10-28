@@ -492,6 +492,116 @@ body {
   background: linear-gradient(140deg, var(--nd-tone), color-mix(in srgb, var(--nd-tone) 25%, transparent) 45%, var(--nd-tone));
 }
 
+/* The card style of Appearance on everything that is not a card: the boxes of
+   the settings, sheets, dialogs, menus, the search and the assistant, as 1984
+   draws them all. ``data-chrome`` is the installation's style alone (lib/appearance.ts):
+   a board with a style of its own changes its cards, not these. Glass has no
+   rule, it is what they are.
+
+   Three things hold in every style. A surface that stands over other content
+   (.glass-strong: a sheet, a dialog, a menu, the search, the assistant, a toast)
+   has a ground that covers, never the thin fill a card may have. The cards
+   (.card), the round buttons (.btn), the small bar on a card (.card-controls)
+   and the surfaces of a home page (lib Felt SURFACES) keep the rules of their
+   own above and below. The bar in bare dress (sign-in) stays empty. All of it
+   sits in `:where()`, so it adds no weight to the selector and every rule above
+   and below, a utility included, still wins over it.
+
+   Liquid draws no bend and no glare that follows the pointer here: the bend is
+   an SVG filter made per card in script (lib/refraction.ts), and the sheets
+   and dialogs are too big and too many to give one each. It is the thick glass
+   with its lit edge and the lifted small print, from the CSS alone. The bar of
+   the app stays as it is in liquid: in the installed app it must be one solid
+   colour (issue #27, above). */
+:root[data-chrome='flat'] :is(.glass, .glass-strong):where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  background: var(--nd-bg-elev);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-chrome='flat'] .glass:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)) {
+  box-shadow: none;
+}
+
+/* A box inside a sheet or a dialog is a well in the page's own colour, or it
+   would be one more sheet on the same ground. */
+:root[data-chrome='flat'] .glass-strong .glass:where(:not(.card, .btn, .card-controls)),
+:root[data-chrome='outline'] .glass-strong .glass:where(:not(.card, .btn, .card-controls)),
+:root[data-chrome='calm'] .glass-strong .glass:where(:not(.card, .btn, .card-controls)) {
+  background: var(--nd-bg);
+}
+
+:root[data-chrome='outline'] :is(.glass, .glass-strong):where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  border-width: 1.5px;
+  border-color: var(--nd-border-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* The frame on next to nothing, as the cards have it. */
+:root[data-chrome='outline'] .glass:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  background: color-mix(in srgb, var(--nd-bg) 35%, transparent);
+  box-shadow: none;
+}
+
+/* Over other content there is no frame on nothing: the page's own colour. */
+:root[data-chrome='outline'] .glass-strong:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  background: var(--nd-bg);
+}
+
+:root[data-chrome='calm'] :is(.glass, .glass-strong):where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  --nd-text-muted: var(--nd-text-faint);
+  background: color-mix(in srgb, var(--nd-bg-elev) 82%, var(--nd-bg));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-chrome='calm'] .glass:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  border-color: color-mix(in srgb, var(--nd-border) 75%, transparent);
+  box-shadow: none;
+}
+
+/* Neon: the rim in the accent. A sheet or a dialog has its shadow from a
+   utility, which would replace a glow, so its second ring is an outline. The
+   ground is the glass of every other style, which already covers. */
+:root[data-chrome='neon'] :is(.glass, .glass-strong):where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  border-color: color-mix(in srgb, var(--nd-accent) 45%, transparent);
+}
+
+:root[data-chrome='neon'] .glass:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nd-accent) 18%, transparent),
+    0 0 28px -8px var(--nd-accent-glow);
+}
+
+:root[data-chrome='neon'] .glass-strong:where(:not(.card, .btn, .card-controls, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile, [data-look='bare'])) {
+  outline: 1px solid color-mix(in srgb, var(--nd-accent) 18%, transparent);
+}
+
+/* Liquid: thick glass, its edge lit from the top, the small print lifted. */
+:root[data-chrome='liquid'] :is(.glass, .glass-strong):where(:not(.card, .btn, .card-controls, .app-bar, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)) {
+  border-color: color-mix(in srgb, var(--nd-lg-rim-far) 80%, transparent);
+  backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.06);
+}
+
+:root[data-chrome='liquid'] .glass:where(:not(.card, .btn, .card-controls, .app-bar, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)) {
+  --nd-text-muted: color-mix(in srgb, var(--nd-text) 80%, transparent);
+  --nd-text-faint: color-mix(in srgb, var(--nd-text) 68%, transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%), var(--nd-lg-fill);
+  box-shadow:
+    var(--nd-lg-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 24px rgba(255, 255, 255, 0.04);
+}
+
+/* Over other content the ground is the strong glass, which covers. */
+:root[data-chrome='liquid'] .glass-strong:where(:not(.card, .btn, .card-controls, .app-bar, .lamp-pill, .lamp-chip, .lamp-tile, .lamp-slide, .climate-tile, .climate-digits, .stat-card, .sensor-pill, .sensor-chip, .sensor-tile)) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 35%), var(--nd-surface-strong);
+  border-top-color: var(--nd-lg-rim);
+}
+
 /* The app tile as a big icon: the logo grows with the tile, by the smaller of
    its width and height, so a square tile shows it large and a wide one still
    whole. The card is a size container (container: card / size). */
