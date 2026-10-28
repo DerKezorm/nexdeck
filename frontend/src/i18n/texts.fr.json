@@ -2291,7 +2291,14 @@
     "How many bookmarks Readeck holds, unread, favourites and archived, and the ones saved last.": "Combien de marque-pages Readeck contient, non lus, favoris et archivés, et les derniers enregistrés.",
     "How many bookmarks there are, with those unread, favourites and archived.": "Combien il y a de marque-pages, avec les non lus, les favoris et les archivés.",
     "Settings > API Tokens > Create a new API token.": "Paramètres > API Tokens > Créer un nouveau jeton d'API.",
-    "The bookmarks saved last, with their site and reading time.": "Les marque-pages enregistrés en dernier, avec leur site et leur temps de lecture."
+    "The bookmarks saved last, with their site and reading time.": "Les marque-pages enregistrés en dernier, avec leur site et leur temps de lecture.",
+    "Household": "Foyer",
+    "Items to buy, meals planned and recipes.": "Articles à acheter, repas prévus et recettes.",
+    "Long-lived token": "Jeton longue durée",
+    "Settings > Sessions > Add long-lived token, in the app or the web page.": "Paramètres > Sessions > Ajouter un jeton longue durée, dans l'application ou sur la page web.",
+    "The name of one household. Empty uses the first.": "Le nom d'un foyer. Vide, il prend le premier.",
+    "What is left to buy on the shopping list, the meals planned from today on, and how many recipes there are.": "Ce qu'il reste à acheter sur la liste de courses, les repas prévus à partir d'aujourd'hui, et combien il y a de recettes.",
+    "What is on the list, with its amount.": "Ce qui figure sur la liste, avec la quantité."
   },
   "labels": {
     "Private resources": "Ressources privées",

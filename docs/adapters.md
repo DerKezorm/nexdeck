@@ -161,6 +161,7 @@ that one of twenty-one renderers draws.
 | Paperless-ngx | archive, latest documents | | API token from the user profile |
 | Papra | documents (count, size, trash), latest documents (with tags), organizations | | an API key from API keys in the user menu with Read organizations and Read documents; the organization by name or ID, or the first the key can see. Beta: run against a fresh Papra, not yet one in use |
 | Mealie | meal plan, shopping list, kitchen | | API token from Profile > Manage your API tokens |
+| KitchenOwl | shopping list (every item on it, with its amount; one list or all), meal plan (from today on, undated meals last), kitchen (items to buy, meals planned, recipes) | | a long-lived token from Settings > Sessions in the app (the token of signing in lasts fifteen minutes); the household by name, else the first. Beta: run against KitchenOwl API version 124, not yet one in use; the cards link to the server only |
 | Grocy | stock to watch, pantry | | API key from Manage API keys |
 | Vikunja | due tasks, tasks | | API token with read_all for tasks and projects; the time zone for "today" is a field, because a token cannot read the user's own |
 | Kimai | time entries, booked time | stop a running timer | API token from Profile > API access |
