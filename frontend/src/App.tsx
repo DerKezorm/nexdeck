@@ -7,6 +7,7 @@ import { AssistantHost } from './components/assistant/AssistantHost'
 import { BackgroundLayer } from './components/BackgroundLayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
+import { NoticeStream } from './components/NoticeStream'
 import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
@@ -178,6 +179,7 @@ export function App() {
         </Suspense>
         </AppBarFrame>
         <NoticeToast />
+        <NoticeStream />
         {/* Beside the routes, not inside a page: music carries on when the board changes. */}
         <PlayerHost />
         {/* Beside the routes as well: a conversation carries on from board to board. */}
