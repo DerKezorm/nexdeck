@@ -487,7 +487,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     values = bool(given.get("with_values"))
     grant = f"values:{chosen.id}:{hashlib.sha1(path.encode()).hexdigest()[:10]}"  # noqa: S324 - a name, not a secret
     if values and grant not in bench.grants:
-        bench.permissions.append({"kind": "values", "integration_id": chosen.id, "integration": chosen.name, "path": path, "grant": grant})
+        bench.permissions.append({"kind": "values", "integration_id": chosen.id, "integration": chosen.name, "integration_kind": chosen.kind, "path": path, "grant": grant})
         return _json({"asked": True, "note": "The person has been asked whether the real values may go to the provider. Nothing was sent."})
     if values:
         # ⚠️ The permission is for this one request (KARTEN-18 AC-4): it is used up here, whether the request works or not.

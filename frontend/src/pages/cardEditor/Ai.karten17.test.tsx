@@ -111,7 +111,8 @@ describe('karten17 ac2, ac9: what goes out', () => {
     offer()
     await openCard('Queue')
     const inside = await openPanel()
-    expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('Anthropic')
+    expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('Claude')
+    expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('its text goes along too, without the sample values')
     expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('claude-sonnet-5-5')
     expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('names and types of the fields')
     await typeDescription('show the waiting episodes')
@@ -119,6 +120,14 @@ describe('karten17 ac2, ac9: what goes out', () => {
     await screen.findByTestId('card-ai-proposal')
     expect(sent('POST', '/cards/ai')).toHaveLength(1)
     expect(sent('POST', '/cards/ai')[0].body).toMatchObject({ mode: 'change', description: 'show the waiting episodes', include_values: false, kind: 'sonarr', connection_id: 7, path: '/api/v3/queue', yaml: CARD })
+  })
+
+  it('names the service of the setting, not OpenAI, when the provider is another one in the OpenAI form', async () => {
+    offer({ 'GET /assistant': { status: 200, body: { ...PROVIDER, provider: 'openai', model: 'mistral-small', leaves_the_house: true, service: 'api.mistral.example.com' } } })
+    await openCard('Queue')
+    const inside = await openPanel()
+    expect(inside.getByTestId('card-ai-hint')).toHaveTextContent('api.mistral.example.com')
+    expect(inside.getByTestId('card-ai-hint')).not.toHaveTextContent('OpenAI')
   })
 
   it('says that the model runs in the own network when it does', async () => {
@@ -139,6 +148,20 @@ describe('karten17 ac3: sample values', () => {
     await typeDescription('x')
     await userEvent.click(inside.getByRole('button', { name: 'Change the card' }))
     await screen.findByTestId('card-ai-proposal')
+    expect(sent('POST', '/cards/ai')[0].body?.include_values).toBe(true)
+    expect(inside.getByRole('checkbox', { name: 'Include sample values' })).not.toBeChecked()
+  })
+})
+
+describe('karten17 ac3: the box is for the one request, even when it fails', () => {
+  it('is empty again after a failure', async () => {
+    offer({ 'POST /cards/ai': { status: 502, body: { detail: { code: 'ai_unreachable', message: 'Connection refused.' } } } })
+    await openCard('Queue')
+    const inside = await openPanel()
+    await userEvent.click(inside.getByRole('checkbox', { name: 'Include sample values' }))
+    await typeDescription('x')
+    await userEvent.click(inside.getByRole('button', { name: 'Change the card' }))
+    await screen.findByTestId('card-ai-error')
     expect(sent('POST', '/cards/ai')[0].body?.include_values).toBe(true)
     expect(inside.getByRole('checkbox', { name: 'Include sample values' })).not.toBeChecked()
   })
@@ -186,6 +209,19 @@ describe('karten17 ac5, ac10: a proposal beside the text', () => {
     await typeDescription('add a pause button')
     await userEvent.click(inside.getByRole('button', { name: 'Change the card' }))
     expect(await within(await screen.findByTestId('card-ai-summary')).findByText('With buttons')).toBeInTheDocument()
+  })
+
+  it('names the methods of the buttons and every path the card reads (ac10)', async () => {
+    const summary = { ...ANSWER.summary, connection_kind: 'sonarr, radarr', path: '/api/v3/queue, /api/v3/movie', buttons: true, methods: ['DELETE', 'POST'] }
+    offer({ 'POST /cards/ai': { status: 200, body: { ...ANSWER, summary } } })
+    await openCard('Queue')
+    const inside = await openPanel()
+    await typeDescription('add buttons')
+    await userEvent.click(inside.getByRole('button', { name: 'Change the card' }))
+    const box = within(await screen.findByTestId('card-ai-summary'))
+    expect(box.getByText('With buttons (DELETE, POST)')).toBeInTheDocument()
+    expect(box.getByText('sonarr, radarr')).toBeInTheDocument()
+    expect(box.getByText('/api/v3/queue, /api/v3/movie')).toBeInTheDocument()
   })
 })
 

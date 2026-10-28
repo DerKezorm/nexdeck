@@ -13,12 +13,16 @@ import { useCardEditor, type CardEditorState } from './store'
 
 export type AiMode = 'new' | 'change' | 'translate'
 
-/** What the draft uses, as the server tells it (AC-10): the connection's kind, the path, the form, buttons or not. */
+/**
+ * What the card that came back uses, as the server tells it (AC-10): the kinds of connection and the paths it reads (all of
+ * them, one after the other), the form, and the buttons with the methods they use.
+ */
 export interface AiSummary {
   connection_kind: string | null
   path: string | null
   form: string
   buttons: boolean
+  methods?: string[]
 }
 
 export interface AiAnswer {
@@ -125,11 +129,12 @@ export const useCardAi = create<AiState>((set, get) => ({
     }
     const mine = {}
     flying = mine
-    set({ running: true, error: '', proposal: null })
+    // The tick is for this one request: it is used up when the request goes, whatever comes of it (AC-3).
+    set({ running: true, error: '', proposal: null, values: false })
     try {
       const answer = await post<AiAnswer>('/cards/ai', body)
       if (flying !== mine) return
-      set({ proposal: { ...answer, mode: wanted }, values: false })
+      set({ proposal: { ...answer, mode: wanted } })
     } catch (failure) {
       if (flying !== mine) return
       // The provider went while the request ran (EC-6): the buttons go with it.

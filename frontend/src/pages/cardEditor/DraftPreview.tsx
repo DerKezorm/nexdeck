@@ -94,7 +94,7 @@ export function DraftSummary({ summary }: { summary: AiSummary }) {
       </div>
       <div className="flex flex-wrap gap-x-2">
         <dt className="text-muted">{t('editor.ai.summary.buttons')}</dt>
-        <dd>{summary.buttons ? t('editor.ai.summary.withButtons') : t('editor.ai.summary.readOnly')}</dd>
+        <dd>{summary.buttons ? `${t('editor.ai.summary.withButtons')}${summary.methods?.length ? ` (${summary.methods.join(', ')})` : ''}` : t('editor.ai.summary.readOnly')}</dd>
       </div>
     </dl>
   )

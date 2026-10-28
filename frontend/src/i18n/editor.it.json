@@ -12,8 +12,8 @@
       "placeholderNew": "Una scheda che mostra quanti episodi sono in attesa",
       "placeholderChange": "Ingrandire i numeri",
       "values": "Includi valori di esempio",
-      "hintOut": "La tua descrizione va a {{provider}} (modello {{model}}), insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
-      "hintHome": "La tua descrizione va al modello {{model}} ({{provider}}), che gira nella tua rete, insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
+      "hintOut": "La tua descrizione va a {{provider}} (modello {{model}}), insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. Quando cambi o traduci una scheda, parte anche il testo della scheda, senza i valori di esempio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
+      "hintHome": "La tua descrizione va al modello {{model}} ({{provider}}), che gira nella tua rete, insieme al formato della scheda, ai blocchi e ai nomi e tipi dei campi della risposta del servizio. Quando cambi o traduci una scheda, parte anche il testo della scheda, senza i valori di esempio. I valori di esempio partono solo se la casella è spuntata, e solo con questa richiesta.",
       "create": "Crea una scheda",
       "change": "Modifica la scheda",
       "translate": "Traduci",
@@ -45,7 +45,7 @@
         }
       },
       "provider": {
-        "anthropic": "Anthropic",
+        "anthropic": "Claude",
         "openai": "OpenAI"
       },
       "error": {

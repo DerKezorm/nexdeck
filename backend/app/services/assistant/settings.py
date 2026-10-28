@@ -82,6 +82,15 @@ def leaves_the_house(provider: str, base_url: str) -> bool:
         return not ("." not in host or host.endswith((".local", ".lan", ".home.arpa", ".internal")))
 
 
+def service_of(provider: str, base_url: str) -> str:
+    """Where the questions go, for a sentence that names it: the host (and port) of an OpenAI-shaped service, nothing for Claude."""
+    if provider != "openai":
+        return ""
+    parts = urlsplit(base_url)
+    host = parts.hostname or ""
+    return f"{host}:{parts.port}" if host and parts.port else host
+
+
 def public(db: Session) -> dict[str, Any]:
     value = stored(db)
     return {

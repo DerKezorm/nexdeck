@@ -100,7 +100,8 @@ export function AiPanel() {
 
   const ask = (mode: 'new' | 'change' | 'translate') => void useCardAi.getState().ask(mode, chosen?.id ?? null, t)
   const main = fresh ? 'new' : 'change'
-  const providerName = state?.provider === 'anthropic' ? t('editor.ai.provider.anthropic') : t('editor.ai.provider.openai')
+  // Who is asked: Claude, or the service the address of the setting points to (not every OpenAI-shaped service is OpenAI).
+  const providerName = state?.provider === 'anthropic' ? t('editor.ai.provider.anthropic') : state?.service || t('editor.ai.provider.openai')
 
   return (
     <section id="card-ai" className="glass rounded-2xl p-4 sm:p-5 min-w-0 grid gap-3" aria-labelledby="card-ai-title" data-testid="card-ai">

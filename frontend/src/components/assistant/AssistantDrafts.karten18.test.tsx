@@ -140,7 +140,7 @@ describe('karten18 ac3, ec3: Open in editor', () => {
 describe('karten18 ac4: sample values only after the administrator allowed them', () => {
   it('asks first, and goes on by itself after "Allow for this draft"', async () => {
     replies.push(
-      reply('May I send sample values?', { permissions: [{ kind: 'values', integration_id: 2, integration: 'Sonarr (NAS)', path: '/api/v3/queue', grant: 'values:2:abc' }] }),
+      reply('May I send sample values?', { permissions: [{ kind: 'values', integration_id: 2, integration: 'Sonarr (NAS)', integration_kind: 'sonarr', path: '/api/v3/queue', grant: 'values:2:abc' }] }),
       reply('Here is the card.', { drafts: [draft(12, 'Next episodes', { sent: { values: true } })] }),
     )
     panel()
@@ -153,7 +153,8 @@ describe('karten18 ac4: sample values only after the administrator allowed them'
       fireEvent.click(screen.getByRole('button', { name: 'Allow for this draft' }))
     })
     expect(sent.find((one) => one.path === '/assistant/conversations/7/allow')?.body).toEqual({ grant: 'values:2:abc' })
-    expect(sent.filter((one) => one.path === '/assistant/chat').at(-1)?.body).toEqual({ text: 'Yes, you may send sample values of Sonarr (NAS) for this draft.', conversation_id: 7 })
+    expect(sent.filter((one) => one.path === '/assistant/chat').at(-1)?.body).toEqual({ text: 'Yes, you may send sample values of sonarr #2 for this draft.', conversation_id: 7 })
+    expect(JSON.stringify(sent.filter((one) => one.path === '/assistant/chat').at(-1))).not.toContain('NAS')
     expect(await screen.findByTestId('assistant-draft')).toBeInTheDocument()
   })
 

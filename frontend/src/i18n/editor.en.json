@@ -12,8 +12,8 @@
       "placeholderNew": "A card that shows how many episodes are waiting",
       "placeholderChange": "Make the numbers bigger",
       "values": "Include sample values",
-      "hintOut": "Your description goes to {{provider}} (model {{model}}), together with the card format, the building blocks and the names and types of the fields in the answer of the service. Sample values only go along when the box is ticked, and only with this one request.",
-      "hintHome": "Your description goes to the model {{model}} ({{provider}}), which runs in your own network, together with the card format, the building blocks and the names and types of the fields in the answer of the service. Sample values only go along when the box is ticked, and only with this one request.",
+      "hintOut": "Your description goes to {{provider}} (model {{model}}), together with the card format, the building blocks and the names and types of the fields in the answer of the service. When you change or translate a card, its text goes along too, without the sample values. Sample values only go along when the box is ticked, and only with this one request.",
+      "hintHome": "Your description goes to the model {{model}} ({{provider}}), which runs in your own network, together with the card format, the building blocks and the names and types of the fields in the answer of the service. When you change or translate a card, its text goes along too, without the sample values. Sample values only go along when the box is ticked, and only with this one request.",
       "create": "Create a card",
       "change": "Change the card",
       "translate": "Translate",
@@ -45,7 +45,7 @@
         }
       },
       "provider": {
-        "anthropic": "Anthropic",
+        "anthropic": "Claude",
         "openai": "OpenAI"
       },
       "error": {

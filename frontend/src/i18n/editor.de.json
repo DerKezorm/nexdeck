@@ -12,8 +12,8 @@
       "placeholderNew": "Eine Karte, die zeigt, wie viele Folgen warten",
       "placeholderChange": "Die Zahlen größer machen",
       "values": "Beispielwerte mitschicken",
-      "hintOut": "Deine Beschreibung geht an {{provider}} (Modell {{model}}), zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
-      "hintHome": "Deine Beschreibung geht an das Modell {{model}} ({{provider}}), das in deinem eigenen Netz läuft, zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
+      "hintOut": "Deine Beschreibung geht an {{provider}} (Modell {{model}}), zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beim Ändern und Übersetzen geht auch der Text der Karte mit, ohne die Beispielwerte. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
+      "hintHome": "Deine Beschreibung geht an das Modell {{model}} ({{provider}}), das in deinem eigenen Netz läuft, zusammen mit dem Kartenformat, den Bausteinen sowie den Namen und Typen der Felder in der Antwort des Dienstes. Beim Ändern und Übersetzen geht auch der Text der Karte mit, ohne die Beispielwerte. Beispielwerte gehen nur mit, wenn das Häkchen gesetzt ist, und nur für diese eine Anfrage.",
       "create": "Karte erstellen",
       "change": "Karte ändern",
       "translate": "Übersetzen",
@@ -45,7 +45,7 @@
         }
       },
       "provider": {
-        "anthropic": "Anthropic",
+        "anthropic": "Claude",
         "openai": "OpenAI"
       },
       "error": {

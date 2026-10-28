@@ -16,6 +16,8 @@ export interface AssistantState {
   model: string
   leaves_the_house: boolean
   keep_days: number
+  /** The address of the service of an OpenAI-shaped provider (host and port), empty for Claude. */
+  service?: string
 }
 
 /** Where a chip under an answer leads: a card, or the chronicle. */
@@ -48,14 +50,14 @@ export interface Proposal {
 /** A question the chat may not answer for itself: a log (roadmap M3) or the sample values of a service (KARTEN-18). */
 export type Permission =
   | { kind: 'log'; card_id: number; container: string; grant: string }
-  | { kind: 'values'; integration_id: number; integration: string; path: string; grant: string }
+  | { kind: 'values'; integration_id: number; integration: string; integration_kind?: string; path: string; grant: string }
 
 /** A card the chat drafted; the editor opens it, nothing is saved before the administrator saves it there. */
 export interface DraftRef {
   id: number
   name: string
   form: string
-  summary: { connection_kind: string | null; path: string | null; form: string; buttons: boolean }
+  summary: { connection_kind: string | null; path: string | null; form: string; buttons: boolean; methods?: string[] }
   sent: { values: boolean }
   keep_days: number
   url: string

@@ -12,8 +12,8 @@
       "placeholderNew": "Una tarjeta que muestre cuántos episodios esperan",
       "placeholderChange": "Hacer los números más grandes",
       "values": "Incluir valores de ejemplo",
-      "hintOut": "Tu descripción va a {{provider}} (modelo {{model}}), junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
-      "hintHome": "Tu descripción va al modelo {{model}} ({{provider}}), que funciona en tu propia red, junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
+      "hintOut": "Tu descripción va a {{provider}} (modelo {{model}}), junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Al cambiar o traducir una tarjeta, también va el texto de la tarjeta, sin los valores de ejemplo. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
+      "hintHome": "Tu descripción va al modelo {{model}} ({{provider}}), que funciona en tu propia red, junto con el formato de la tarjeta, los bloques y los nombres y tipos de los campos de la respuesta del servicio. Al cambiar o traducir una tarjeta, también va el texto de la tarjeta, sin los valores de ejemplo. Los valores de ejemplo solo van si marcas la casilla, y solo con esta petición.",
       "create": "Crear tarjeta",
       "change": "Cambiar la tarjeta",
       "translate": "Traducir",
@@ -45,7 +45,7 @@
         }
       },
       "provider": {
-        "anthropic": "Anthropic",
+        "anthropic": "Claude",
         "openai": "OpenAI"
       },
       "error": {

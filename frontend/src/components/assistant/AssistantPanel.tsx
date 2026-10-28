@@ -334,7 +334,7 @@ function Panel({ open }: { open: boolean }) {
     if (!allow || conversation === null) return
     try {
       await post(`/assistant/conversations/${conversation}/allow`, { grant: permission.grant })
-      await send(permission.kind === 'values' ? t('assistant.allowedValuesFollowUp', { integration: permission.integration }) : t('assistant.allowedFollowUp', { container: permission.container }))
+      await send(permission.kind === 'values' ? t('assistant.allowedValuesFollowUp', { integration: `${permission.integration_kind || 'connection'} #${permission.integration_id}` }) : t('assistant.allowedFollowUp', { container: permission.container }))
     } catch (error) {
       setFailure(error instanceof ApiError ? error.message : t('errors.network'))
     }

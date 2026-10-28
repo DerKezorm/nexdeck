@@ -115,7 +115,7 @@ def test_karten18_ac4_the_card_request_carries_no_value_unless_the_person_allowe
     reply = ask(admin)
     assert len(script.seen) == 2 and reply["drafts"] == []
     wanted = reply["permissions"][0]
-    assert wanted["kind"] == "values" and wanted["path"] == "/api/v3/queue" and wanted["integration"] == "My sonarr" and wanted["grant"].startswith("values:")
+    assert wanted["kind"] == "values" and wanted["path"] == "/api/v3/queue" and wanted["integration"] == "My sonarr" and wanted["integration_kind"] == "sonarr" and wanted["grant"].startswith("values:")
     assert SECRET_TEXT not in script.sent()
 
     allowed = admin.post(f"/api/v1/assistant/conversations/{reply['conversation_id']}/allow", json={"grant": wanted["grant"]}, headers=CSRF)

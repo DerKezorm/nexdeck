@@ -117,7 +117,7 @@ async def list_models(body: ModelsAsked, user: AdminUser, db: DbSession) -> list
 def assistant_state(user: AdminUser, db: DbSession) -> dict:
     value = settings.public(db)
     return {"ready": value["ready"], "provider": value["provider"], "model": value["model"],
-            "leaves_the_house": value["leaves_the_house"], "keep_days": chat.KEEP_DAYS}
+            "leaves_the_house": value["leaves_the_house"], "service": settings.service_of(value["provider"], value["base_url"]), "keep_days": chat.KEEP_DAYS}
 
 
 # -- the chat ------------------------------------------------------------------------------

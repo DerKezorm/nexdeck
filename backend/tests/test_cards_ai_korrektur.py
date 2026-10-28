@@ -298,3 +298,11 @@ def test_karten17_ec6_the_provider_taken_away_ends_every_request_from_another_th
     loop.close()
 
 
+def test_karten17_ac9_the_state_of_the_assistant_names_the_service_the_questions_go_to(admin: TestClient) -> None:
+    switch_on(admin)
+    assert admin.get("/api/v1/assistant").json()["service"] == "", "Claude is Claude"
+    done = admin.put("/api/v1/settings/assistant", json={"provider": "openai", "base_url": "https://llm.example.org:8443/v1", "model": "m", "key": "k"}, headers=CSRF)
+    assert done.status_code == 200, done.text
+    state = admin.get("/api/v1/assistant").json()
+    assert state["service"] == "llm.example.org:8443" and "k" != state["service"]
+    assert "base_url" not in state and "key" not in json.dumps(state)

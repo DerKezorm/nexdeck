@@ -12,8 +12,8 @@
       "placeholderNew": "Une carte qui montre combien d'épisodes attendent",
       "placeholderChange": "Agrandir les chiffres",
       "values": "Inclure des valeurs d'exemple",
-      "hintOut": "Ta description part chez {{provider}} (modèle {{model}}), avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
-      "hintHome": "Ta description va au modèle {{model}} ({{provider}}), qui tourne dans ton propre réseau, avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
+      "hintOut": "Ta description part chez {{provider}} (modèle {{model}}), avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. En cas de modification ou de traduction, le texte de la carte part aussi, sans les valeurs d'exemple. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
+      "hintHome": "Ta description va au modèle {{model}} ({{provider}}), qui tourne dans ton propre réseau, avec le format de la carte, les blocs ainsi que les noms et types des champs de la réponse du service. En cas de modification ou de traduction, le texte de la carte part aussi, sans les valeurs d'exemple. Les valeurs d'exemple ne partent que si la case est cochée, et seulement avec cette demande.",
       "create": "Créer une carte",
       "change": "Modifier la carte",
       "translate": "Traduire",
@@ -45,7 +45,7 @@
         }
       },
       "provider": {
-        "anthropic": "Anthropic",
+        "anthropic": "Claude",
         "openai": "OpenAI"
       },
       "error": {
