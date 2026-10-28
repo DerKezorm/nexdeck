@@ -6,6 +6,7 @@ import json
 import re
 import threading
 import time
+from datetime import timedelta
 from typing import Any
 
 import httpx
@@ -442,7 +443,6 @@ REAL = {
     ],
     "total": 12345, "name": "Anna's Server", "version": "1.41.3.9314", "stamp": 1_761_998_400,
 }
-KEPT_STRINGS = {"2026-10-01T12:30:00Z", "2026-10-02"}
 
 
 def leaves(value: Any, path: str = "") -> list[tuple[str, Any]]:
@@ -469,7 +469,7 @@ def test_karten9_ac10_nothing_of_a_text_or_a_number_comes_out_as_it_went_in() ->
     assert [path for path, _ in before] == [path for path, _ in after], "the same places"
     checked = 0
     for (path, old), (_same, new) in zip(before, after, strict=True):
-        if isinstance(old, bool) or old is None or old in KEPT_STRINGS or old == REAL["stamp"]:
+        if isinstance(old, bool) or old is None or old == REAL["stamp"]:
             assert new == old, path
         else:
             assert new != old, (path, old)
@@ -480,14 +480,13 @@ def test_karten9_ac10_nothing_of_a_text_or_a_number_comes_out_as_it_went_in() ->
         assert word not in text_out, word
 
 
-def test_karten9_ac10_keys_the_shape_booleans_null_and_dates_stay() -> None:
+def test_karten9_ac10_keys_the_shape_booleans_null_and_epoch_numbers_stay() -> None:
     made, _cut = demo.disguise({"queue": REAL})
     shape = keys_of(made["queue"])
     assert list(shape) == list(keys_of(REAL)) and set(shape["records"][0]) == set(keys_of(REAL["records"][0]))
     first = made["queue"]["records"][0]
     assert first["nothing"] is None and first["ok"] is True and made["queue"]["records"][1]["ok"] is False
-    assert first["added"] == "2026-10-01T12:30:00Z" and first["on"] == "2026-10-02"
-    assert made["queue"]["stamp"] == REAL["stamp"], "a moment in time is a date"
+    assert made["queue"]["stamp"] == REAL["stamp"], "a number of epoch seconds under a key of a time stays"
     assert isinstance(first["size"], int) and isinstance(first["ratio"], float) and isinstance(first["tags"][0], str)
 
 
@@ -513,7 +512,8 @@ def test_karten9_ac10_the_same_value_is_the_same_stand_in_everywhere_and_two_val
     assert made["other"]["deep"][0]["name"] == made["queue"]["records"][3]["title"]
     assert made["other"]["deep"][0]["n"] == made["queue"]["total"]
     assert made["x"][0]["name"] != made["other"]["deep"][0]["name"]
-    assert demo.disguise({"queue": REAL}) == demo.disguise({"queue": REAL}), "the same input, the same examples"
+    week = timedelta(days=7)
+    assert demo.disguise({"queue": REAL}, week) == demo.disguise({"queue": REAL}, week), "the same input and the same shift, the same examples"
 
 
 @pytest.mark.parametrize("number", [0, 1, -2, 3, 4, 7, 50, 99, 100, 365, 1080, 5_368_709_120, -17, 0.5, 4.25, 99.9, 100.0, 1e-5, 12345.678, 10**30])
@@ -534,7 +534,7 @@ def test_karten9_ac10_every_kind_of_text_changes_and_keeps_its_punctuation(word:
 
 
 @pytest.mark.parametrize("word", ["", " ", "---", "·", "%", "2026-10-01", "2026-10-01T12:30:00+02:00", "12:30", "Mon, 02 Jan 2006 15:04:05 GMT"])
-def test_karten9_ac10_a_date_a_time_and_a_text_without_letters_or_digits_stay(word: str) -> None:
+def test_karten9_ac10_a_date_a_time_and_a_text_without_letters_or_digits_stay_when_nothing_moves(word: str) -> None:
     assert demo.disguise_text(word) == word
 
 

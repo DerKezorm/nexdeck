@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.cards import demo
 from app.db import db_session
 from app.models import Widget
 from app.services.collector import collector
@@ -286,3 +288,54 @@ def test_karten8n_n3_an_update_from_the_shop_renames_the_tiles_too(shop: TestCli
     assert done.status_code == 200, done.text
     with db_session() as db:
         assert db.get(Widget, number).title == "Backlog"
+
+
+# -- N7: the demo data move their dates ------------------------------------------------------------------------------
+
+SHIFT = timedelta(days=100, minutes=15)
+
+
+@pytest.mark.parametrize(
+    ("moment", "moved"),
+    [
+        ("2026-10-01", "2026-06-23"),
+        ("2026-10-01T12:30:00Z", "2026-06-23T12:15:00Z"),
+        ("2026-10-01T12:30:00.250+02:00", "2026-06-23T12:15:00.250+02:00"),
+        ("2026-10-01 00:10:05", "2026-06-22 23:55:05"),
+        ("2026-10-01T12:30", "2026-06-23T12:15"),
+        (" 2026-10-01 ", " 2026-06-23 "),
+    ],
+)
+def test_karten8n_n7_a_date_or_time_stamp_moves_back_and_keeps_its_form(moment: str, moved: str) -> None:
+    assert demo.disguise_text(moment, SHIFT) == moved
+
+
+@pytest.mark.parametrize("text", ["12:30", "Mon, 02 Jan 2006 15:04:05 GMT", "2026-13-45", "2026-10-01T25:00:00Z", "0001-01-02", "on 2026-10-01 at noon"])
+def test_karten8n_n7_what_is_no_iso_moment_is_not_moved_as_one(text: str) -> None:
+    moved = demo.disguise_text(text, SHIFT)
+    if text in ("12:30", "Mon, 02 Jan 2006 15:04:05 GMT", "2026-13-45", "2026-10-01T25:00:00Z", "0001-01-02"):
+        assert moved == text
+    else:
+        assert moved != text and "2026-10-01" not in moved
+
+
+def test_karten8n_n7_the_dates_of_the_demo_move_by_the_same_time_and_keep_their_order() -> None:
+    answers = {"q": {"items": [{"createdAt": f"2026-10-0{n}T12:30:00Z", "day": f"2026-10-0{n}", "n": 7, "stamp": 1_761_998_400} for n in (1, 2, 3)]}}
+    made, _cut = demo.disguise(answers, SHIFT)
+    items = made["q"]["items"]
+    assert [one["createdAt"] for one in items] == ["2026-06-23T12:15:00Z", "2026-06-24T12:15:00Z", "2026-06-25T12:15:00Z"]
+    assert [one["day"] for one in items] == ["2026-06-23", "2026-06-24", "2026-06-25"]
+    assert all(one["stamp"] == 1_761_998_400 for one in items), "a number of seconds stays as it is"
+
+
+def test_karten8n_n7_each_demo_draws_a_shift_of_30_to_400_days() -> None:
+    seen = set()
+    for _ in range(40):
+        made, _cut = demo.disguise({"q": {"day": "2026-10-01"}})
+        days = (datetime(2026, 10, 1) - datetime.fromisoformat(made["q"]["day"])).days
+        assert 30 <= days <= 400
+        seen.add(days)
+    assert len(seen) > 5, "drawn each time, not one fixed number"
+    for _ in range(40):
+        shift = demo.draw_shift()
+        assert timedelta(days=30) <= shift <= timedelta(days=400, minutes=59)

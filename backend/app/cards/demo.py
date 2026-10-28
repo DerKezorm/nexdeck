@@ -4,8 +4,12 @@ A card from the shop or from a friend carries example answers, and answers copie
 many films he has and what they are called. This makes them harmless the way the showcase mode of the board does
 (``frontend/src/lib/showcase.ts``), but for data of any shape, where nothing says which text is a name:
 
-- Kept: the keys (the paths of a card run through them), the structure, true and false, null, and anything that is a date or a time (a card reads those): a text
-  in a date form, and a number in the range of epoch seconds or milliseconds under a key that names a time (``addedAt``).
+- Kept: the keys (the paths of a card run through them), the structure, true and false, null, a time of day and a date in
+  the form of a web server, and a number in the range of epoch seconds or milliseconds under a key that names a time
+  (``addedAt``).
+- Moved: a date or a time stamp in the form of ISO 8601 (``2026-10-01``, ``2026-10-01T12:30:00Z``) by a number of whole days
+  between 30 and 400 (and some minutes), the same for all of the examples, so the form and the order of the moments stay
+  and the day does not.
 - Cut: lists to a few entries and long texts to a few hundred characters, so the answers fit into a definition.
 - Changed, the same way every time for the same value, so one title is one stand-in in all requests: a number to
   another of about the same size (a percentage stays a percentage), a text word for word to another word of the same
@@ -25,6 +29,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import secrets
+from datetime import datetime, timedelta
 from typing import Any
 
 from ..adapters.base import AdapterError
@@ -49,6 +55,7 @@ _WORDS = (
 ).split()
 
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}(?::?\d{2})?)?)?$")
+_ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:([T ])(\d{2}):(\d{2})(?::(\d{2})([.,]\d+)?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$")
 _TIME = re.compile(r"^\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?$")
 _HTTP_DATE = re.compile(r"^(?:[A-Z][a-z]{2},\s)?\d{1,2}\s[A-Z][a-z]{2}\s\d{4}(?:\s\d{2}:\d{2}(?::\d{2})?(?:\s(?:GMT|UTC|[+-]\d{4}))?)?$")
 _URL = re.compile(r"^https?://", re.I)
@@ -76,6 +83,40 @@ _TIME_WORDS = frozenset(
     "started finished seen scheduled aired airdate published released day ctime mtime atime login checked synced heartbeat".split()
 )
 _KEY_WORD = re.compile(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])")
+
+
+#: How far the moments of the examples move back, in whole days, and the minutes on top of that.
+SHIFT_DAYS = (30, 400)
+SHIFT_MINUTES = 59
+
+
+def draw_shift() -> timedelta:
+    """A time to move the moments of one set of examples back by: the same for all of them, different for each set."""
+    days = SHIFT_DAYS[0] + secrets.randbelow(SHIFT_DAYS[1] - SHIFT_DAYS[0] + 1)
+    return timedelta(days=days, minutes=secrets.randbelow(SHIFT_MINUTES + 1))
+
+
+def shift_moment(text: str, shift: timedelta) -> str:
+    """A date or a time stamp of ISO 8601 moved back by ``shift``, in the form it had; any other text as it is.
+
+    A date without a time moves by the whole days only. The fraction of a second and the zone stay, so does the order of the moments.
+    """
+    stripped = text.strip()
+    found = _ISO.match(stripped)
+    if found is None:
+        return text
+    year, month, day, separator, hour, minute, second, fraction, zone = found.groups()
+    try:
+        moved = datetime(int(year), int(month), int(day), int(hour or 0), int(minute or 0), int(second or 0)) - (shift if separator else timedelta(days=shift.days))
+    except (ValueError, OverflowError):
+        return text
+    out = f"{moved.year:04d}-{moved.month:02d}-{moved.day:02d}"
+    if separator:
+        out += f"{separator}{moved.hour:02d}:{moved.minute:02d}"
+        if second is not None:
+            out += f":{moved.second:02d}{fraction or ''}"
+        out += zone or ""
+    return text.replace(stripped, out)
 
 
 def _digest(kind: str, value: str) -> bytes:
@@ -278,11 +319,16 @@ def _stand_for(kind: str, text: str, taken: set[str] | frozenset[str] = frozense
     return made
 
 
-def disguise_text(text: str) -> str:
-    """One text of an answer, made up (or kept, when it is a moment in time or has no letter or digit in it)."""
+def disguise_text(text: str, shift: timedelta | None = None) -> str:
+    """One text of an answer, made up (or kept, when it is a time of day or has no letter or digit in it).
+
+    A date or a time stamp of ISO 8601 moves back by ``shift``; without one it stays.
+    """
     stripped = text.strip()
-    if not any(char.isalnum() for char in stripped) or _is_moment(stripped):
+    if not any(char.isalnum() for char in stripped):
         return text
+    if _is_moment(stripped):
+        return shift_moment(text, shift) if shift is not None else text
     kind = data_kind(stripped, paths=True)
     if kind is not None:
         return _stand_for(kind, stripped)
@@ -368,17 +414,17 @@ def _cut(value: Any, entries: int, depth: int, cut: list[bool]) -> Any:
     return value
 
 
-def _made_up(value: Any, key: str | None = None) -> Any:
-    """``key`` is the name the value stands under (a list takes the name of its own key)."""
+def _made_up(value: Any, key: str | None = None, shift: timedelta | None = None) -> Any:
+    """``key`` is the name the value stands under (a list takes the name of its own key); ``shift`` moves the moments."""
     if isinstance(value, bool) or value is None:
         return value
     if isinstance(value, int | float):
         return disguise_number(value, moment=names_a_time(key))
     if isinstance(value, str):
         # A made-up word can be longer than the one it stands for.
-        return disguise_text(value)[:TEXT_CHARS]
+        return disguise_text(value, shift)[:TEXT_CHARS]
     if isinstance(value, list):
-        return [_made_up(one, key) for one in value]
+        return [_made_up(one, key, shift) for one in value]
     if isinstance(value, dict):
         # ⚠️ A key that is data (a hash, a host name) is made up like a value; the other keys stay, since the paths of a card run through them.
         made: dict[str, Any] = {}
@@ -386,19 +432,22 @@ def _made_up(value: Any, key: str | None = None) -> Any:
         for name, one in value.items():
             new_name = disguise_key(name, taken)
             taken.add(new_name)
-            made[new_name] = _made_up(one, name)
+            made[new_name] = _made_up(one, name, shift)
         return made
     return value
 
 
-def disguise(answers: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+def disguise(answers: dict[str, Any], shift: timedelta | None = None) -> tuple[dict[str, Any], bool]:
     """The example answers for the real ones, and whether anything was cut to make them fit.
+
+    The moments in them move back by ``shift``, one time for all of them (drawn here when none is given).
 
     Raises ``AdapterError`` with the code ``demo_too_large`` when even one entry of every list is more than a card keeps.
     """
+    shift = shift if shift is not None else draw_shift()
     for entries in ENTRIES:
         cut = [False]
-        made = {key: _made_up(_cut(one, entries, 0, cut)) for key, one in answers.items()}
+        made = {key: _made_up(_cut(one, entries, 0, cut), None, shift) for key, one in answers.items()}
         if len(json.dumps(made, ensure_ascii=False)) <= MAX_CHARS:
             return made, cut[0] or entries != ENTRIES[0]
     raise AdapterError(
