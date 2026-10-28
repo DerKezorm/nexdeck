@@ -44,14 +44,20 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     duration_short,
     measured,
 )
 
 ADDRESS_HINT = "Check the URL; it is the address Tasmota's web interface opens at, usually the device's IP address."
+#: The commands that only tell: the status blocks, and a relay's name alone (``Power`` without a value asks, with one it switches).
+READS = allowed(
+    "status", "state", "uptime", *(f"status {number}" for number in range(12)), "power", *(f"power{number}" for number in range(1, 9)),
+)
 POWER_KEY = re.compile(r"^POWER(\d*)$")
 
 
@@ -95,6 +101,9 @@ class TasmotaAdapter(Adapter):
     description = "A Tasmota plug or relay: whether it is on, a button to switch it, and the power it draws with the energy of the day."
     icon = "tasmota"
     beta = True
+    #: Every command of Tasmota is a GET (``/cm?cmnd=Power On``, ``/cm?cmnd=Restart 1``, and the web page's ``/?o=1``), so a card
+    #: may ask the one address ``/cm`` and only for the commands that tell.
+    raw_read_commands = ReadCommands(last=allowed("cm"), params={"cmnd": READS, "o": allowed(), "d": allowed(), "t": allowed()})
     docs_url = "https://tasmota.github.io/docs/Commands/"
     keywords = ("smart plug", "Sonoff", "smart home", "energy")
     fields = (

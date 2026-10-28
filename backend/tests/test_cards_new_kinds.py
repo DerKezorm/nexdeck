@@ -7,7 +7,9 @@ in properly or asks who it talks to first. These kinds are listed there and play
 from __future__ import annotations
 
 import base64
+import json
 import time
+from pathlib import Path
 
 import httpx
 import pytest
@@ -15,9 +17,11 @@ import respx
 
 from app.adapters import get_adapter
 from app.adapters.base import AdapterError, AuthFailed, Context
+from app.adapters.rawread import refuse_a_command
 
 BASE = "http://svc.example.com:8080"
 PASSWORD = "Zk-password-1"
+CARD_READS = Path(__file__).resolve().parent.parent / "app" / "cards" / "card_reads.json"
 
 
 def ctx() -> Context:
@@ -296,3 +300,12 @@ async def test_nach_merge_nodered_without_a_sign_in_the_card_asks_without_a_toke
     respx.get(url__regex=rf"{BASE}/.*").mock(side_effect=answer)
     response = await get_adapter("nodered").raw_request("GET", "/flows", {"url": BASE}, ctx())
     assert response.status_code == 200 and "authorization" not in asked[-1].headers
+
+
+def test_nach_merge_every_read_nexdeck_offers_for_a_kind_is_one_the_rule_of_the_kind_lets_through() -> None:
+    """The paths the editor offers (``card_reads.json``) are what the built-in cards ask; a rule that refused one would offer a dead end."""
+    reads = json.loads(CARD_READS.read_text(encoding="utf-8"))
+    for kind, offered in reads.items():
+        adapter = get_adapter(kind)
+        for one in offered:
+            refuse_a_command(adapter, one["path"])

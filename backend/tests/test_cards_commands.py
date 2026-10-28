@@ -49,6 +49,11 @@ BY_KIND: dict[str, tuple[list[str], list[str]]] = {
          "/rpc/Switch.Set?id=0&on=true", "/rpc/Switch.Toggle?id=0", "/rpc/Shelly.Update", "/rpc/Shelly.SetAuth", "/rpc/Script.Start?id=1", "/", "/rpc/Shelly.GetStatus?turn=on"],
         ["/shelly", "/status", "/settings", "/rpc/Shelly.GetStatus", "/rpc/Shelly.GetConfig", "/rpc/Switch.GetStatus?id=0", "/rpc/Webhook.List"],
     ),
+    "tasmota": (
+        ["/cm?cmnd=Power%20On", "/cm?cmnd=Power%20Toggle", "/cm?cmnd=Power1%20Off", "/cm?cmnd=Restart%201", "/cm?cmnd=Upgrade%201",
+         "/cm?cmnd=Backlog%20Status%200%3BPower%20On", "/cm?cmnd=SetOption1%201", "/cm?cmnd=Status%200&cmnd=Power%20Off", "/?o=1", "/", "/up", "/cm?cmnd=Status%200&o=1"],
+        ["/cm?cmnd=Status%200", "/cm?cmnd=Status", "/cm?cmnd=Status%2010&user=admin&password=x", "/cm?cmnd=Power", "/cm?cmnd=power1", "/cm?cmnd=State"],
+    ),
     "owncast": (["/api/admin/disconnect"], ["/api/status", "/api/admin/status", "/api/admin/followers?limit=1"]),
 }
 

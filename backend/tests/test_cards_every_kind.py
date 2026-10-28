@@ -50,6 +50,9 @@ SIGNS_IN: dict[str, str] = {
     "shelly": "asks the device for its generation first, then Basic or Digest",
 }
 
+#: The path a card asks, for a kind that lets a card ask only one address (``raw_read_commands``).
+PROBES: dict[str, str] = {"tasmota": "/cm?cmnd=Status"}
+
 #: Configurations the plain filling-in would make contradictory.
 FIXES: dict[str, dict[str, Any]] = {"elasticsearch": {"username": ""}}
 
@@ -122,10 +125,11 @@ async def test_jede2_every_kind_asks_a_card_s_path_with_the_credentials_of_its_c
     posts_only = bool(route.calls) and all(
         call.request.method == "POST" and not any(one in what_travelled(call.request) for one in markers(config)) for call in route.calls
     )
-    await source.fetch_source(adapter, config, ctx(), Request(id="probe", path="/api/getprobe"))
+    probe = PROBES.get(kind, "/api/getprobe")
+    await source.fetch_source(adapter, config, ctx(), Request(id="probe", path=probe))
     sent = route.calls.last.request
     assert sent.method == "GET"
-    assert str(sent.url.path) == httpx.URL(adapter.raw_base(config)).path.rstrip("/") + "/api/getprobe"
+    assert str(sent.url.path) == httpx.URL(adapter.raw_base(config)).path.rstrip("/") + probe.split("?")[0]
     assert sent.url.host == httpx.URL(adapter.raw_base(config)).host, "the credentials stay with the address of the connection"
     carried = what_travelled(sent)
     given = markers(config)
