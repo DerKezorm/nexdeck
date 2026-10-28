@@ -70,7 +70,7 @@ def test_karten17_ac2_without_the_tick_no_value_of_the_probe_leaves(monkeypatch:
     for secret in (SECRET_TEXT, str(SECRET_NUMBER), SECRET_KEY):
         assert secret not in sent
     outgoing = ai.outbound(new()).message
-    assert "records[0].title: string" in outgoing and "records: array (1 entries)" in outgoing and "byHash.<key>: object" in outgoing
+    assert "records[0].title: string" in outgoing and "records: array (1 entries)" in outgoing and "byHash.<key1>: object" in outgoing
     assert "Show my queue" in outgoing and "sonarr" in outgoing and "/api/v3/queue" in outgoing
 
 
@@ -123,7 +123,7 @@ def test_karten17_the_kind_of_the_connection_must_be_required_by_the_card(monkey
 def test_karten17_ac6_a_change_sends_the_card_without_its_examples_and_keeps_them(monkeypatch: pytest.MonkeyPatch) -> None:
     ask = ai.Ask(mode="change", description="make the numbers bigger", yaml=VALUE_CARD)
     changed = VALUE_CARD.replace("Example Author", "Another Author")
-    changed_without_demo, _ = ai.without_demo(changed)
+    changed_without_demo = ai.without_demo(changed)[0]
     script = Script(card(changed_without_demo))
     result = run(ask, script, monkeypatch)
     assert result.ok and "Another Author" in result.yaml

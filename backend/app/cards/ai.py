@@ -5,7 +5,10 @@ the schema of a card (shortened), the forms and blocks, the administrator's own 
 chosen path, and the **shape** of the service's answer: for every node its path, its type and, for a list, its length.
 No values. A key that is data itself (a hash, a host name, a number) becomes ``<key>``. Values of the answer go only
 with the administrator's tick for this one request, cut like the examples of a card (10 entries, 200 characters).
-Never: the address or the name of the connection, a credential, a host name or an address of the network.
+Never: the address or the name of the connection, a credential, a host name or an address of the network: even with the tick
+the values of fields named like a credential and anything that reads as a key are replaced by ``***``, addresses of the network
+by ``192.0.2.1``, host names and the host of an address by ``example.com``, mail addresses by ``user@example.com``
+(:func:`sendable`).
 
 The provider is the one of the assistant (``providers.turn``); a card has none of its own. Its answer is checked like a
 saved card (``load.load_definition``: schema, secrets, paths, limits). A card that fails is sent back once with its
@@ -23,8 +26,9 @@ from typing import Any
 
 import yaml
 
+from .. import credential_names
 from ..services.assistant import providers
-from . import demo, load, schema
+from . import credentials, demo, load, schema
 from .load import Problem
 
 MODES = ("new", "change", "translate")
@@ -45,7 +49,12 @@ VALUE_CHARS = 200
 
 MISSING: Any = object()
 
-_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,40}$")
+_ADDRESS = re.compile(r"\b(https?)://[^\s/?#\"'<>]*([^\s?#\"'<>]*)(?:[?#][^\s\"'<>]*)?", re.IGNORECASE)
+_MAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+_IPV4 = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w])")
+#: What stands in the place of a credential that would have gone with the tick.
+MASK = "***"
 _FENCE = re.compile(r"```(?:ya?ml)?[ \t]*\r?\n(.*?)```", re.DOTALL)
 _LANG = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
 #: Words with which a provider says that the account is at its limit or empty.
@@ -174,19 +183,53 @@ def _type(value: Any) -> str:
 
 
 def _is_a_name(key: str) -> bool:
-    """A field name that reads as one; a hash, a number, a host name or a token as a key is data and stays out."""
-    return bool(_NAME.match(key)) and demo.data_kind(key) is None
+    """A field name that reads as one; a hash, a host name, a token or a person as a key is data and stays out."""
+    return bool(_NAME.match(key)) and demo.data_kind(key) is None and next(credentials.find(key), None) is None
+
+
+def _credential_field(key: str) -> bool:
+    return credential_names.is_credential_name(key) or credentials.bad_name(key)
+
+
+def sendable(value: Any, *, secret: bool = False) -> Any:
+    """A value as it may go with the tick: a credential, an address of the network or a host name never goes as it is.
+
+    ``secret`` is set for the value of a field that is named like a credential (``apiKey``, ``password``).
+    """
+    if value is None or isinstance(value, bool):
+        return value
+    if secret:
+        return MASK
+    if not isinstance(value, str):
+        return value
+    if next(credentials.find(value), None) is not None:
+        return MASK
+    kind = demo.data_kind(value)
+    if kind in ("ipv4", "ipv6"):
+        return "192.0.2.1"
+    if kind == "host":
+        return "example.com"
+    if kind == "mail":
+        return "user@example.com"
+    text = _ADDRESS.sub(lambda found: f"{found.group(1).lower()}://example.com{found.group(2)}", value)
+    return _IPV4.sub("192.0.2.1", _MAIL.sub("user@example.com", text))
+
+
+def _stand_ins(node: dict[Any, Any]) -> dict[Any, bool]:
+    """Which keys of an object are data (a hash, a name with spaces, a key): they go as ``<key1>``, ``<key2>``."""
+    return {key: not _is_a_name(str(key)) for key in node}
 
 
 def shape(answer: Any, *, values: bool = False) -> str:
     """The answer of a service as lines ``path: type``, a list with its length, no values unless ``values``.
 
     Paths are JMESPath from the root (``@``). A list shows its first entry, which has the fields of all the others;
-    with ``values``, ten entries and the values themselves.
+    with ``values``, ten entries and the values themselves (through :func:`sendable`). A key that is data
+    is ``<key1>``: the first one stands for all of them, with ``values`` ten of them show.
     """
     lines: list[str] = []
 
-    def walk(path: str, node: Any, depth: int) -> None:
+    def walk(path: str, node: Any, depth: int, secret: bool) -> None:
         if len(lines) >= MAX_SHAPE_LINES:
             return
         kind = _type(node)
@@ -196,29 +239,50 @@ def shape(answer: Any, *, values: bool = False) -> str:
         elif isinstance(node, dict):
             line += f" ({len(node)} fields)"
         elif values and kind != "null":
-            line += " = " + json.dumps(node[:VALUE_CHARS] if isinstance(node, str) else node, ensure_ascii=False)
+            shown = sendable(node, secret=secret)
+            line += " = " + json.dumps(shown[:VALUE_CHARS] if isinstance(shown, str) else shown, ensure_ascii=False)
         lines.append(line)
         if depth >= MAX_SHAPE_DEPTH:
             return
         if isinstance(node, list):
             for index, one in enumerate(node[: VALUE_ENTRIES if values else 1]):
-                walk(f"{path}[{index}]", one, depth + 1)
+                walk(f"{path}[{index}]", one, depth + 1, secret)
         elif isinstance(node, dict):
-            stand_in = False
+            stand_ins = 0
             for key, one in list(node.items())[:MAX_SHAPE_FIELDS]:
                 name = str(key)
                 if _is_a_name(name):
-                    walk(f"{path}.{name}" if path else name, one, depth + 1)
-                elif not stand_in:
-                    stand_in = True  # the first of them shows what the others are
-                    walk(f"{path}.<key>" if path else "<key>", one, depth + 1)
+                    walk(f"{path}.{name}" if path else name, one, depth + 1, secret or _credential_field(name))
+                else:
+                    stand_ins += 1
+                    if stand_ins <= (VALUE_ENTRIES if values else 1):  # the first of them shows what the others are
+                        walk(f"{path}.<key{stand_ins}>" if path else f"<key{stand_ins}>", one, depth + 1, secret)
             if len(node) > MAX_SHAPE_FIELDS:
                 lines.append(f"{path or '@'}: {len(node) - MAX_SHAPE_FIELDS} more fields not shown")
 
-    walk("", answer, 0)
+    walk("", answer, 0, False)
     if len(lines) >= MAX_SHAPE_LINES:
         lines.append("(more not shown)")
     return "\n".join(lines)
+
+
+def clean(node: Any, *, secret: bool = False) -> Any:
+    """A tree of values (the ``demo`` of a card) the way the tick sends it: :func:`sendable` for every value, keys that are data as ``<keyN>``."""
+    if isinstance(node, dict):
+        out: dict[str, Any] = {}
+        stand_ins = 0
+        for key, one in node.items():
+            name = str(key)
+            if _is_a_name(name):
+                out[name] = clean(one, secret=secret or _credential_field(name))
+            else:
+                stand_ins += 1
+                out[f"<key{stand_ins}>"] = clean(one, secret=secret)
+        return out
+    if isinstance(node, list):
+        return [clean(one, secret=secret) for one in node[:VALUE_ENTRIES]]
+    shown = sendable(node, secret=secret)
+    return shown[:VALUE_CHARS] if isinstance(shown, str) else shown
 
 
 def _without(value: Any) -> Any:
