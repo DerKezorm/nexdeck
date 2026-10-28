@@ -196,7 +196,6 @@ export function ShopDetailPage({
       <section className="mt-6 grid gap-1">
         <h4 className="text-[11px] uppercase tracking-wide text-faint">{t('cards.shop.sections.description')}</h4>
         <p className="text-sm whitespace-pre-wrap break-words">{entry.description}</p>
-        {full?.readme && full.readme.trim() !== entry.description.trim() && <p className="text-sm whitespace-pre-wrap break-words text-muted mt-2">{full.readme}</p>}
       </section>
 
       <section className="mt-4 grid gap-1">

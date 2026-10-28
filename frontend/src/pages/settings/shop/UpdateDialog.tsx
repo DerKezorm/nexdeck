@@ -6,6 +6,7 @@ import { ApiError, get, post } from '../../../api/client'
 import { Dialog } from '../../../components/ui'
 import { SHOP_CATALOG_KEY, SHOP_UPDATES_KEY, type ShopButtonText, type ShopUpdate } from '../../../lib/cardShop'
 import { pickText } from '../../../lib/cardText'
+import { newerSections } from '../../../lib/changelog'
 
 /** The queries that show cards and the shop, refreshed when a card took a new version; the boards follow at once. */
 const LISTS = [['custom-cards'], ['cards-library'], ['workshop-entry'], ['board'], SHOP_CATALOG_KEY, SHOP_UPDATES_KEY]
@@ -15,6 +16,35 @@ interface Accepted {
   slug: string
   version: string
   copy_slug: string | null
+}
+
+/** What the author wrote since the installed version, set as small headings, text and lists; plain text all the way. */
+function Changes({ text, installed }: { text: string; installed: string }) {
+  const { t } = useTranslation()
+  const sections = newerSections(text, installed)
+  if (sections.length === 0) return <p className="text-sm text-muted">{t('cards.shop.noChanges')}</p>
+  return (
+    <div className="grid gap-3" data-testid="update-changelog">
+      {sections.map((section, at) => (
+        <div key={`${section.heading}-${at}`} className="grid gap-1">
+          {section.heading && <h5 className="text-[12px] font-semibold text-muted break-words">{section.heading}</h5>}
+          {section.blocks.map((block, index) =>
+            block.kind === 'text' ? (
+              <p key={index} className="text-sm break-words">
+                {block.text}
+              </p>
+            ) : (
+              <ul key={index} className="list-disc pl-5 grid gap-0.5 text-sm break-words">
+                {block.items.map((item, place) => (
+                  <li key={place}>{item}</li>
+                ))}
+              </ul>
+            ),
+          )}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /** What a button asks or shows besides what it sends, so that a change in it can be seen (KARTEN-15 AC-3). */
@@ -182,9 +212,7 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
           <section className="grid gap-1">
             <h4 className="text-[11px] uppercase tracking-wide text-faint">{t('cards.shop.sections.changes')}</h4>
             {data.changelog ? (
-              <p className="text-sm whitespace-pre-wrap break-words" data-testid="update-changelog">
-                {data.changelog}
-              </p>
+              <Changes text={data.changelog} installed={data.installed_version} />
             ) : (
               <p className="text-sm text-muted">{t('cards.shop.noChanges')}</p>
             )}
