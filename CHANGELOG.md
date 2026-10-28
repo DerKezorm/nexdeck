@@ -5,6 +5,10 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Wiki.js: recent comments** (#52). A new card lists the newest comments with their page, who wrote them, how long ago and the start of the text, and each row opens the discussion on its page. Wiki.js has no list of all comments, only the comments of one page, so the card asks the pages in rounds: the 50 pages changed last every round and the others in turn, at most 100 pages in two requests every five minutes, and it keeps what it has read. On a wiki with more pages a new comment on an older page shows up within a few rounds, and the card says so until every page has been read once. The API key needs the right to read comments. Run against Wiki.js 2.5.317.
+
 ### Fixed
 
 - **Calendar entries are on your own day** (#56). The calendar cards listed an episode by its day in UTC, so a show at 7 PM in Chicago, already past midnight in UTC, stood under the next day. Entries with a time of day (Sonarr episodes, Sportarr events, iCal appointments written in a time zone) now carry their moment, and the card puts them on the day and clock of the browser that shows it, in the list and in the week and month. Release dates and all-day entries keep their day. Sonarr, Radarr, Lidarr and Readarr are asked for a day more on either side, so an evening show is no longer missing from today once UTC has passed midnight, and the list leaves out days that are already over where you are.
