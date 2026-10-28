@@ -23,9 +23,11 @@ from .installed import Installed
 
 logger = logging.getLogger("nexdeck.workshop")
 
-#: The part of a button that decides what it does at the service; a change in one of these needs a new confirmation.
-BUTTON_ACTS = ("method", "path", "send", "body")
-BUTTON_SHOWN = ("id", "label", "method", "path", "send", "body", "where")
+#: The part of a button that decides what it does at the service and how it asks first; a change in one of these needs a new
+#: confirmation. The questions before it runs (``confirm``, ``danger``, ``asks``) and what it shows afterwards (``answer``)
+#: count too: a button that no longer asks "Really?" acts differently for the person who presses it, which is stricter than KARTEN-15 AC-3.
+BUTTON_ACTS = ("method", "path", "send", "body", "where", "confirm", "danger", "asks", "answer")
+BUTTON_SHOWN = ("id", "label", *BUTTON_ACTS)
 SUFFIX = " (mine)"
 NAME_MAX = 60
 
