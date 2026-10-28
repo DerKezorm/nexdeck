@@ -95,6 +95,7 @@ SIGN_IN = "opens a session first in a way the stand-in cannot answer, so no card
 #: Readable kinds for which the code gives no GET to offer, each with the reason. ``tests/test_cards_card_reads.py`` holds this
 #: list against the result: a kind that gains reads, or one that is new and has none, turns the test red until it is put right.
 GAPS: dict[str, str] = {
+    "aria2": POST + " (JSON-RPC)",
     "backrest": POST + " (gRPC-web)",
     "bookorbit": SIGN_IN,
     "calibreweb": SIGN_IN,
@@ -105,12 +106,15 @@ GAPS: dict[str, str] = {
     "fritzbox": POST + " (SOAP)",
     "ghostfolio": SIGN_IN,
     "ical": "the address of the connection is the calendar file itself, there is nothing under it to ask",
+    "kodi": POST + " (JSON-RPC)",
     "komodo": POST,
     "nzbget": POST + " (JSON-RPC)",
     "openmediavault": POST + " (JSON-RPC)",
     "openwrt": POST + " (ubus)",
+    "rclone": POST + " (remote control)",
     "reolink": SIGN_IN,
     "rtorrent": POST + " (XML-RPC)",
+    "stash": POST + " (GraphQL)",
     "synology": SIGN_IN + " (the session id travels in every address)",
     "transmission": POST + " (JSON-RPC)",
     "truenas": "speaks WebSocket, which the stand-in does not answer",
@@ -118,6 +122,7 @@ GAPS: dict[str, str] = {
     "unraid": POST + " (GraphQL)",
     "urbackup": POST,
     "wallos": POST,
+    "xteve": POST + " (JSON body)",
     "youtube": "reads public pages of youtube.com, not an address of the connection",
     "zabbix": POST + " (JSON-RPC)",
 }
