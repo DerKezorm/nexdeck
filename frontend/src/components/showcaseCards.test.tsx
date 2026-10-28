@@ -6,6 +6,7 @@ import { render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { DEMO_VIEWS } from '../demo/board'
+import { isoOf } from '../lib/calendarDay'
 import { forgetGivenNames, useShowcase } from '../lib/showcase'
 import type { WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
@@ -86,8 +87,8 @@ describe('a calendar in showcase mode', () => {
         {renderWidget({
           widget: view('calendar.upcoming', 'calendar'),
           data: data([
-            { date: '2026-10-02', title: 'Therapy', subtitle: 'Hauptstraße 3', appointment: true },
-            { date: '2026-10-02', title: 'Harbour Lights', subtitle: 'S03E05' },
+            { date: isoOf(new Date()), title: 'Therapy', subtitle: 'Hauptstraße 3', appointment: true },
+            { date: isoOf(new Date()), title: 'Harbour Lights', subtitle: 'S03E05' },
           ]),
         })}
       </>,

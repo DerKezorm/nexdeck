@@ -2,7 +2,11 @@
  * A board full of invented data, used by the design preview and by the
  * screenshots on the project page. Nothing here is real.
  */
+import { isoOf } from '../lib/calendarDay'
 import type { Breakpoint, LayoutItem, WidgetData, WidgetView } from '../lib/types'
+
+/** A day from today on: the calendar card leaves out the days gone by. */
+const inDays = (days: number, now = new Date()) => isoOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() + days))
 
 function wave(count: number, base: number, amplitude: number, seed = 1): number[] {
   const out: number[] = []
@@ -198,11 +202,11 @@ export const DEMO_WIDGETS: DemoWidget[] = [
     data: {
       status: 'ok',
       items: [
-        { date: '2026-09-04', title: 'Harbour Lights', subtitle: 'S03E05', status: 'warn' },
-        { date: '2026-09-04', title: 'Copper Sky', subtitle: 'Digital release', status: 'ok' },
-        { date: '2026-09-05', title: 'Orbital Decay', subtitle: 'S01E09', status: 'warn' },
-        { date: '2026-09-06', title: 'Nightshift', subtitle: 'Digital release', status: 'warn' },
-        { date: '2026-09-07', title: 'Northern Shore', subtitle: 'S01E04', status: 'warn' },
+        { date: inDays(0), title: 'Harbour Lights', subtitle: 'S03E05', status: 'warn' },
+        { date: inDays(0), title: 'Copper Sky', subtitle: 'Digital release', status: 'ok' },
+        { date: inDays(1), title: 'Orbital Decay', subtitle: 'S01E09', status: 'warn' },
+        { date: inDays(2), title: 'Nightshift', subtitle: 'Digital release', status: 'warn' },
+        { date: inDays(3), title: 'Northern Shore', subtitle: 'S01E04', status: 'warn' },
       ],
     },
     layout: { lg: [9, 6, 3, 3], md: [4, 11, 4, 3], sm: [0, 27, 4, 3] },

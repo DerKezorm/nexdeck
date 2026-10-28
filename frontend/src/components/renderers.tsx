@@ -56,6 +56,7 @@ import { LucideByName, ServiceIcon } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 import type { Air, Hourly } from './WeatherExtras'
 import type { Entry, Range } from '../lib/calendarGrid'
+import { onViewersDay, upcomingByDay } from '../lib/calendarDay'
 
 export interface RenderProps {
   widget: WidgetView
@@ -1171,7 +1172,7 @@ export function CalendarCard({ widget, data }: RenderProps) {
     return (
       <Suspense fallback={<div className="flex-1" />}>
         <LazyCalendarGrid
-          items={items as Entry[]}
+          items={items.map(onViewersDay) as Entry[]}
           view={grid}
           range={data?.meta?.range as Range | undefined}
           nameOf={(entry) => (appointment(entry) ? disguise.as('event', String(entry.title ?? '')) : disguise.media(String(entry.title ?? '')))}
@@ -1181,9 +1182,10 @@ export function CalendarCard({ widget, data }: RenderProps) {
       </Suspense>
     )
   }
-  if (!items.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
+  const upcoming = upcomingByDay(items)
+  if (!upcoming.length) return <Empty>{t('card.nothingUpcoming')}</Empty>
   const groups = new Map<string, Record<string, unknown>[]>()
-  for (const item of items) {
+  for (const item of upcoming) {
     const key = String(item.date ?? '')
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push(item)

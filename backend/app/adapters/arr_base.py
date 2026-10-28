@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from . import demo as fake
+from . import ical
 from .base import (
     Action,
     Adapter,
@@ -187,17 +188,22 @@ class ArrAdapter(Adapter):
         return self.noun + "s"
 
     async def upcoming(self, config: dict[str, Any], ctx: Context, days: int, back: int = 0) -> list[dict[str, Any]]:
-        today = datetime.now(UTC).date()
+        # ⚠️ Today on this server's clock, and a day more on either side in the
+        # question: the service reads its days in UTC, and an episode at seven
+        # in the evening in Chicago is already tomorrow there (#56).
+        today = ical._now().date()
         start = today - timedelta(days=back)
         end = today + timedelta(days=max(1, days))
-        entries = await self.api(config, ctx, "calendar", params={"start": start.isoformat(), "end": end.isoformat(), "includeSeries": "true", "includeArtist": "true", "includeAuthor": "true"}, cache_seconds=300)
+        params = {"start": (start - timedelta(days=1)).isoformat(), "end": (end + timedelta(days=1)).isoformat(),
+                  "includeSeries": "true", "includeArtist": "true", "includeAuthor": "true"}
+        entries = await self.api(config, ctx, "calendar", params=params, cache_seconds=300)
         items = []
         for entry in entries if isinstance(entries, list) else []:
             item = self.calendar_item(entry)
-            if item:
+            if item and start.isoformat() <= str(item.get("date") or "") <= end.isoformat():
                 item["source"] = self.label
                 items.append(item)
-        items.sort(key=lambda i: i.get("date") or "")
+        items.sort(key=lambda i: (str(i.get("date") or ""), str(i.get("at") or "")))
         return items
 
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any],
