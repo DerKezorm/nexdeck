@@ -1,0 +1,227 @@
+{
+ "_about": "Recorded from Umami 3.4.1 (ghcr.io/umami-software/umami, PostgreSQL 15) with three made-up websites and a handful of visits sent to /api/send. Token and ids replaced.",
+ "login": {
+  "token": "made-up-token",
+  "user": {
+   "id": "00000000-0000-4000-8000-000000000001",
+   "username": "admin",
+   "role": "admin",
+   "createdAt": "2026-10-28T04:16:27.910Z",
+   "isAdmin": true,
+   "teams": []
+  }
+ },
+ "login_wrong": {
+  "error": {
+   "message": "Unauthorized",
+   "code": "incorrect-username-password",
+   "status": 401
+  }
+ },
+ "login_missing": {
+  "error": {
+   "message": "Bad request",
+   "code": "bad-request",
+   "status": 400,
+   "errors": [],
+   "properties": {
+    "username": {
+     "errors": [
+      "Invalid input: expected string, received undefined"
+     ]
+    },
+    "password": {
+     "errors": [
+      "Invalid input: expected string, received undefined"
+     ]
+    }
+   }
+  }
+ },
+ "unauthorized": {
+  "error": {
+   "message": "Unauthorized",
+   "code": "unauthorized",
+   "status": 401
+  }
+ },
+ "websites": {
+  "data": [
+   {
+    "id": "11111111-2222-4333-8444-555555555555",
+    "name": "Blog",
+    "domain": "blog.example.com",
+    "resetAt": null,
+    "userId": "00000000-0000-4000-8000-000000000001",
+    "teamId": null,
+    "createdBy": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-10-28T04:17:14.416Z",
+    "updatedAt": "2026-10-28T04:17:14.416Z",
+    "deletedAt": null,
+    "recorderEnabled": false,
+    "replayConfig": null,
+    "user": {
+     "username": "admin",
+     "id": "00000000-0000-4000-8000-000000000001"
+    },
+    "shareId": null
+   },
+   {
+    "id": "66666666-7777-4888-9999-000000000000",
+    "name": "Docs",
+    "domain": "docs.example.com",
+    "resetAt": null,
+    "userId": "00000000-0000-4000-8000-000000000001",
+    "teamId": null,
+    "createdBy": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-10-28T04:17:14.434Z",
+    "updatedAt": "2026-10-28T04:17:14.434Z",
+    "deletedAt": null,
+    "recorderEnabled": false,
+    "replayConfig": null,
+    "user": {
+     "username": "admin",
+     "id": "00000000-0000-4000-8000-000000000001"
+    },
+    "shareId": null
+   },
+   {
+    "id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+    "name": "Leer",
+    "domain": "leer.example.com",
+    "resetAt": null,
+    "userId": "00000000-0000-4000-8000-000000000001",
+    "teamId": null,
+    "createdBy": "00000000-0000-4000-8000-000000000001",
+    "createdAt": "2026-10-28T04:17:14.450Z",
+    "updatedAt": "2026-10-28T04:17:14.450Z",
+    "deletedAt": null,
+    "recorderEnabled": false,
+    "replayConfig": null,
+    "user": {
+     "username": "admin",
+     "id": "00000000-0000-4000-8000-000000000001"
+    },
+    "shareId": null
+   }
+  ],
+  "count": 3,
+  "page": 1,
+  "pageSize": 20,
+  "orderBy": "name"
+ },
+ "stats": {
+  "pageviews": 9,
+  "visitors": 5,
+  "visits": 5,
+  "bounces": 1,
+  "totaltime": 7,
+  "comparison": {
+   "pageviews": 0,
+   "visitors": 0,
+   "visits": 0,
+   "bounces": 0,
+   "totaltime": 0
+  }
+ },
+ "stats_empty": {
+  "pageviews": 0,
+  "visitors": 0,
+  "visits": 0,
+  "bounces": 0,
+  "totaltime": 0,
+  "comparison": {
+   "pageviews": 0,
+   "visitors": 0,
+   "visits": 0,
+   "bounces": 0,
+   "totaltime": 0
+  }
+ },
+ "stats_without_window": {
+  "error": {
+   "message": "Bad request",
+   "code": "bad-request",
+   "status": 400,
+   "errors": [
+    "Either startAt+endAt or startDate+endDate must be provided"
+   ]
+  }
+ },
+ "active": {
+  "visitors": 4
+ },
+ "active_empty": {
+  "visitors": 0
+ },
+ "metrics_path": [
+  {
+   "x": "/",
+   "y": 3
+  },
+  {
+   "x": "/blog/self-hosting",
+   "y": 3
+  },
+  {
+   "x": "/about",
+   "y": 1
+  }
+ ],
+ "metrics_referrer": [
+  {
+   "x": "news.example.org",
+   "y": 1
+  },
+  {
+   "x": "search.example.net",
+   "y": 1
+  }
+ ],
+ "metrics_country": [
+  {
+   "x": "US",
+   "y": 3
+  },
+  {
+   "x": "AU",
+   "y": 1
+  }
+ ],
+ "metrics_browser": [
+  {
+   "x": "chrome",
+   "y": 1
+  },
+  {
+   "x": "firefox",
+   "y": 1
+  },
+  {
+   "x": "ios",
+   "y": 1
+  },
+  {
+   "x": "safari",
+   "y": 1
+  }
+ ],
+ "metrics_device": [
+  {
+   "x": "laptop",
+   "y": 3
+  },
+  {
+   "x": "mobile",
+   "y": 1
+  }
+ ],
+ "metrics_empty": [],
+ "metrics_url_refused": {
+  "error": {
+   "message": "Bad request",
+   "code": "bad-request",
+   "status": 400
+  }
+ }
+}
