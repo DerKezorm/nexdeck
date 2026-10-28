@@ -485,14 +485,14 @@ async def entry_of(db: Session, entry_id: str) -> catalog.Entry | None:
 
 
 def lineage(one: Subject, github_id: str | None) -> tuple[str | None, str | None, list[dict[str, str]]]:
-    """``(based_on, own entry, problems)``: a card of the shop by somebody else is shared as a new card that is based on it (AC-8)."""
+    """``(based_on, own entry, problems)``: what came unchanged from the shop is not shared again; a changed card of somebody else is shared as a new card that is based on it (AC-8)."""
     if one.origin != "shop" or not one.shop_ref:
         return None, None, []
+    if not one.locally_changed:
+        return None, None, [problem("unchanged_from_shop", "This came unchanged from the Card shop. Change it to share your own version.")]
     author = one.shop_ref.partition("/")[0]
     if github_id and author == github_id:
         return None, one.shop_ref, []
-    if not one.locally_changed:
-        return None, None, [problem("not_yours", "This came from the Card shop and is the work of somebody else. Change it first; then it can be shared as your own, based on theirs.")]
     return one.shop_ref, None, []
 
 

@@ -69,8 +69,9 @@ def card_hints(db: Session, found: catalog.Catalog | None) -> dict[str, dict[str
     """What ``GET /cards`` adds to each card that came from the shop."""
     told = updates_and_recalls(db, found)
     out: dict[str, dict[str, Any]] = {}
-    for row in db.query(CardRecord.slug, CardRecord.shop_ref).filter(CardRecord.kind == "card", CardRecord.origin == "shop", CardRecord.shop_ref != ""):
-        out[row.slug] = {"ref": row.shop_ref, "update": False, "removed": None}
+    for row in db.query(CardRecord).filter(CardRecord.kind == "card", CardRecord.origin == "shop", CardRecord.shop_ref != ""):
+        changed = installed.Installed("card", row.slug, row.shop_ref, row.shop_version, row.yaml_source, row.shop_hash).locally_changed
+        out[row.slug] = {"ref": row.shop_ref, "update": False, "removed": None, "locally_changed": changed}
     for one in told["updates"]:
         if one["slug"] in out:
             out[one["slug"]]["update"] = True

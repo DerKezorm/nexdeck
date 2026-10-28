@@ -81,7 +81,7 @@ def test_karten15_ac1_a_newer_version_in_the_catalog_is_an_update_available(shop
     entry = shop.get("/api/v1/workshop/catalog").json()["entries"][0]
     assert entry["installed"] == {"slug": SLUG, "version": "1.0.0", "update": True, "locally_changed": False}
     listed = shop.get("/api/v1/cards").json()["cards"][0]
-    assert listed["shop"] == {"ref": f"{AUTHOR}/{SLUG}", "update": True, "removed": None}
+    assert listed["shop"] == {"ref": f"{AUTHOR}/{SLUG}", "update": True, "removed": None, "locally_changed": False}
 
 
 def test_karten15_ac1_the_hints_are_read_from_what_is_known_and_ask_nobody(shop: TestClient, github: GitHub, clock: list[float]) -> None:
@@ -413,7 +413,7 @@ def test_karten15_ec3_with_the_shop_off_there_are_no_hints_and_nobody_is_asked(s
     shop.put("/api/v1/workshop/settings", json={"enabled": False}, headers=CSRF)
     before = len(github.requests)
     assert shop.get(UPDATES).json() == {"enabled": False, "catalog_known": False, "updates": [], "removed": []}
-    assert shop.get("/api/v1/cards").json()["cards"][0]["shop"] == {"ref": f"{AUTHOR}/{SLUG}", "update": False, "removed": None}
+    assert shop.get("/api/v1/cards").json()["cards"][0]["shop"] == {"ref": f"{AUTHOR}/{SLUG}", "update": False, "removed": None, "locally_changed": False}
     assert shop.get(f"/api/v1/workshop/updates/{SLUG}").status_code == 409
     assert accept(shop).status_code == 409
     clock[0] += 3 * 24 * 3600

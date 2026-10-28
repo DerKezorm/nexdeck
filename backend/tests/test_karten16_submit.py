@@ -422,7 +422,7 @@ def test_karten16_ac8_a_card_made_from_somebody_elses_is_a_new_card_based_on_the
 
 def test_karten16_ac8_somebody_elses_card_as_it_came_is_not_shared_in_the_name_of_this_account(me: TestClient, hub: Hub, clock: list[float]) -> None:
     slug = install_from_another(me, hub, clock)
-    assert "not_yours" in codes(check(me, slug=slug))
+    assert "unchanged_from_shop" in codes(check(me, slug=slug))
     refused = share(me, slug=slug)
     assert refused.status_code == 400 and hub.issues == []
 

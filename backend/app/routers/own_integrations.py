@@ -22,6 +22,7 @@ from ..deps import AdminUser, DbSession, error
 from ..models import Integration, OwnIntegration, User, Widget
 from ..services import chronicle
 from ..services.collector import collector
+from ..workshop import installed
 
 router = APIRouter(prefix="/api/v1/own-integrations", tags=["own-integrations"])
 logger = logging.getLogger("nexdeck.own_integrations")
@@ -71,6 +72,9 @@ def _view(db: Session, row: OwnIntegration, *, text: bool) -> dict[str, Any]:
         "connections": store.connections(db, row.short),
         "updated_at": row.updated_at,
         "updated_by": _name_of(db, row.updated_by if row.updated_by is not None else row.created_by),
+        # Whether it came from the Card shop, and whether it was changed since (KARTEN-15, nothing to share while it is as it came).
+        "shop_ref": row.shop_ref,
+        "locally_changed": installed.Installed("integration", row.short, row.shop_ref, row.shop_version, row.yaml_source, row.shop_hash).locally_changed if row.shop_ref else False,
     }
     if text:
         view["yaml"] = row.yaml_source
