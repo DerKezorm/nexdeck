@@ -12,7 +12,7 @@ import { useHomeBoardPath } from '../lib/homeBoard'
 import { useHandleReorder } from '../lib/useHandleReorder'
 import { BOARD_STYLES } from '../lib/appearance'
 import { BUNDLED, LIVING } from './BackgroundLayer'
-import { BoardDefinitions, useBoardDefinitions } from './BoardDefinitions'
+import { BoardDefinitions, BoardImportReport, hasReport, useBoardDefinitions, type BoardImported } from './BoardDefinitions'
 import { BoardYamlDialog } from './BoardYamlDialog'
 import { Confirm, Field, Select, Sheet, Switch } from './ui'
 import { ThemePlanField } from './ThemePlanField'
@@ -41,6 +41,7 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
   const [background, setBackground] = useState(board.background)
   const [settings, setSettings] = useState<Record<string, unknown>>(board.settings ?? {})
   const [error, setError] = useState('')
+  const [imported, setImported] = useState<BoardImported | null>(null)
   // The order of the pages, by a handle as in the list of boards (issue #50): the whole order in one call.
   const pageOrder = useHandleReorder(board.pages, (page) => String(page.id), (order) =>
     put(`/boards/${board.slug}/pages/order`, { ids: order.map((page) => page.id) })
@@ -412,9 +413,14 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
             disabled={!importText.trim()}
             onClick={() => {
               setError('')
-              void post<{ slug: string }>('/boards/import', { yaml_text: importText, ...definitions.field })
+              setImported(null)
+              void post<BoardImported>('/boards/import', { yaml_text: importText, ...definitions.field })
                 .then((created) => {
                   onChanged()
+                  if (hasReport(created)) {
+                    setImported(created)
+                    return
+                  }
                   onClose()
                   navigate(`/b/${created.slug}`)
                 })
@@ -423,6 +429,15 @@ export function BoardSettingsSheet({ open, board, boards, canEdit, onClose, onCh
           >
             {t('board.importRun')}
           </button>
+          {imported && (
+            <BoardImportReport
+              answer={imported}
+              onOpen={() => {
+                onClose()
+                navigate(`/b/${imported.slug}`)
+              }}
+            />
+          )}
           {board.permission === 'owner' && !board.provisioned && (
             <div className="mt-6 pt-4 border-t border-line">
               <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>

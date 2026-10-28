@@ -2787,7 +2787,16 @@
         "create": "Crea quelle che mancano",
         "askAdmin": "Un amministratore può creare quelle che mancano. Nel frattempo queste schede mostrano «Definizione mancante».",
         "unknown": "nel file",
-        "invalid": "non può essere creata"
+        "invalid": "non può essere creata",
+        "report": {
+          "title": "Bacheca importata",
+          "created": "Create: {{names}}",
+          "replaced": "Sostituite: {{names}}",
+          "same": "Già presenti: {{names}}",
+          "kept": "Già presenti con un altro contenuto, resta la tua: {{names}}",
+          "skipped": "Non create: {{names}}",
+          "open": "Apri la bacheca"
+        }
       }
     }
   }

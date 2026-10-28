@@ -2787,7 +2787,16 @@
         "create": "Créer celles qui manquent",
         "askAdmin": "Un administrateur peut créer celles qui manquent. D'ici là, ces cartes affichent « Définition manquante ».",
         "unknown": "dans le fichier",
-        "invalid": "ne peut pas être créée"
+        "invalid": "ne peut pas être créée",
+        "report": {
+          "title": "Tableau importé",
+          "created": "Créées : {{names}}",
+          "replaced": "Remplacées : {{names}}",
+          "same": "Déjà présentes : {{names}}",
+          "kept": "Déjà présentes avec un autre contenu, la vôtre est conservée : {{names}}",
+          "skipped": "Non créées : {{names}}",
+          "open": "Ouvrir le tableau"
+        }
       }
     }
   }

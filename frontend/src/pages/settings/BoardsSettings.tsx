@@ -8,7 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, del, get, patch, post, put } from '../../api/client'
 import type { BoardSummary } from '../../api/types'
-import { BoardDefinitions, useBoardDefinitions } from '../../components/BoardDefinitions'
+import { BoardDefinitions, BoardImportReport, hasReport, useBoardDefinitions, type BoardImported } from '../../components/BoardDefinitions'
 import { DashboardImport } from '../../components/DashboardImport'
 import { importFailure } from '../../lib/cardExchange'
 import { TemplatePicker } from '../../components/TemplatePicker'
@@ -30,6 +30,7 @@ export function BoardsSettings() {
   const [yamlText, setYamlText] = useState('')
   const definitions = useBoardDefinitions(yamlText)
   const [error, setError] = useState('')
+  const [imported, setImported] = useState<BoardImported | null>(null)
   const [removing, setRemoving] = useState<BoardSummary | null>(null)
   const [removingPage, setRemovingPage] = useState<{ board: BoardSummary; page: BoardSummary['pages'][number] } | null>(null)
   const [reordering, setReordering] = useState(false)
@@ -206,13 +207,15 @@ export function BoardsSettings() {
           disabled={!yamlText.trim()}
           onClick={() => {
             setError('')
-            void post<{ slug: string }>('/boards/import', { yaml_text: yamlText, ...definitions.field })
-              .then((created) => navigate(`/b/${created.slug}`))
+            setImported(null)
+            void post<BoardImported>('/boards/import', { yaml_text: yamlText, ...definitions.field })
+              .then((created) => (hasReport(created) ? setImported(created) : navigate(`/b/${created.slug}`)))
               .catch((failure) => setError(importFailure(t, failure)))
           }}
         >
           {t('board.importRun')}
         </button>
+        {imported && <BoardImportReport answer={imported} onOpen={() => navigate(`/b/${imported.slug}`)} />}
         <p className="text-[11px] text-faint mt-3">{t('settings.boards.provisioning')}</p>
       </SettingsCard>
       <Confirm

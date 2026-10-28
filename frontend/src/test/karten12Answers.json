@@ -223,5 +223,38 @@
    "code": "bad_import",
    "message": "The card broken-one in this file cannot be made: form must be one of value, stats, list, posters, builder."
   }
+ },
+ "board_file_good": "board:\n  name: Example\npages:\n- name: P\n  widgets:\n  - kind: core.clock\ncustom_cards:\n- \"# A comment on top stays where it is.\\nnexdeck-card: 1\\nslug: exists-same\\nname:\\\n  \\ {en: Queue, de: Warteschlange}   # trailing comment\\nversion: \\\"1.0.0\\\"\\nmin_nexdeck:\\\n  \\ \\\"0.40.0\\\"\\nauthor: Example Author\\ndescription: How many items wait in the queue.\\n\\\n  category: media\\nrequires: [sonarr, radarr]   # either one\\nrequests:\\n  - id: queue\\n\\\n  \\    path: /api/v3/queue\\n    every: 30s\\nform: value\\nvalue:\\n  path: totalRecords\\n\\\n  \\  label: {en: Waiting, de: Wartend}\\n  unit: items\\nrules:\\n  - {value: totalRecords,\\\n  \\ op: \\\">=\\\", than: 10, then: warn}\\ndemo:\\n  queue: {totalRecords: 4, records:\\\n  \\ [{title: \\\"A\\\", size: 100}]}\\n\"\n- \"# A comment on top stays where it is.\\nnexdeck-card: 1\\nslug: exists-diff\\nname:\\\n  \\ {en: Queue, de: Warteschlange}   # trailing comment\\nversion: \\\"5.0.0\\\"\\nmin_nexdeck:\\\n  \\ \\\"0.40.0\\\"\\nauthor: Example Author\\ndescription: How many items wait in the queue.\\n\\\n  category: media\\nrequires: [sonarr, radarr]   # either one\\nrequests:\\n  - id: queue\\n\\\n  \\    path: /api/v3/queue\\n    every: 30s\\nform: value\\nvalue:\\n  path: totalRecords\\n\\\n  \\  label: {en: Waiting, de: Wartend}\\n  unit: items\\nrules:\\n  - {value: totalRecords,\\\n  \\ op: \\\">=\\\", than: 10, then: warn}\\ndemo:\\n  queue: {totalRecords: 4, records:\\\n  \\ [{title: \\\"A\\\", size: 100}]}\\n\"\n- \"# A comment on top stays where it is.\\nnexdeck-card: 1\\nslug: brand-new\\nname:\\\n  \\ {en: Queue, de: Warteschlange}   # trailing comment\\nversion: \\\"1.0.0\\\"\\nmin_nexdeck:\\\n  \\ \\\"0.40.0\\\"\\nauthor: Example Author\\ndescription: How many items wait in the queue.\\n\\\n  category: media\\nrequires: [sonarr, radarr]   # either one\\nrequests:\\n  - id: queue\\n\\\n  \\    path: /api/v3/queue\\n    every: 30s\\nform: value\\nvalue:\\n  path: totalRecords\\n\\\n  \\  label: {en: Waiting, de: Wartend}\\n  unit: items\\nrules:\\n  - {value: totalRecords,\\\n  \\ op: \\\">=\\\", than: 10, then: warn}\\ndemo:\\n  queue: {totalRecords: 4, records:\\\n  \\ [{title: \\\"A\\\", size: 100}]}\\n\"\nown_integrations:\n- \"nexdeck: integration\\nshort: bookstack-own\\nname: BookStack\\nlogo: bookstack\\n\\\n  description: Documentation in books, chapters and pages.\\ncategory: other\\nfields:\\n\\\n  \\  - name: token_id\\n    type: text\\n    label: Token ID\\n    help: Profile > API\\\n  \\ Tokens > Create Token.\\n    required: true\\n  - name: token_secret\\n    type:\\\n  \\ secret\\n    label: Token secret\\n    required: true\\nauth:\\n  type: header\\n \\\n  \\ header: Authorization\\n  value: \\\"Token {token_id}:{token_secret}\\\"\\ntest: /api/books?count=1\\n\\\n  test_expects: json\\nreads:\\n  - path: /api/books?count=10\\n    label: Books\\n  -\\\n  \\ path: /api/pages?count=10&sort=-updated_at\\n    label: Latest pages\\ngithub: BookStackApp/BookStack\\n\"\n",
+ "board_import_member": {
+  "slug": "example",
+  "definitions": {
+   "created": [],
+   "replaced": [],
+   "same": [],
+   "kept": [],
+   "skipped": [
+    "card:exists-same",
+    "card:exists-diff",
+    "card:brand-new",
+    "integration:bookstack-own"
+   ]
+  }
+ },
+ "board_import_admin": {
+  "slug": "example",
+  "definitions": {
+   "created": [
+    "card:brand-new",
+    "integration:bookstack-own"
+   ],
+   "replaced": [],
+   "same": [
+    "card:exists-same"
+   ],
+   "kept": [
+    "card:exists-diff"
+   ],
+   "skipped": []
+  }
  }
 }

@@ -2787,7 +2787,16 @@
         "create": "Fehlende anlegen",
         "askAdmin": "Ein Admin kann die fehlenden anlegen. Bis dahin zeigen diese Karten „Definition fehlt“.",
         "unknown": "in der Datei",
-        "invalid": "kann nicht angelegt werden"
+        "invalid": "kann nicht angelegt werden",
+        "report": {
+          "title": "Board importiert",
+          "created": "Angelegt: {{names}}",
+          "replaced": "Ersetzt: {{names}}",
+          "same": "Schon vorhanden: {{names}}",
+          "kept": "Mit anderem Inhalt vorhanden, deine bleibt: {{names}}",
+          "skipped": "Nicht angelegt: {{names}}",
+          "open": "Board öffnen"
+        }
       }
     }
   }

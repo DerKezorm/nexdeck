@@ -70,6 +70,13 @@ def answers(admin: TestClient) -> dict[str, Any]:
     found["cards_import_invalid"] = admin.post("/api/v1/cards/import", json={"text": "hello: world\n---\n" + card("other-one", PLAIN), "choices": {}}, headers=CSRF).json()
     found["board_import_member_create"] = member.post(f"{API}/import", json={"yaml_text": mixed, "definitions": "create"}, headers=CSRF).json()
     found["board_import_bad"] = admin.post(f"{API}/import", json={"yaml_text": mixed, "definitions": "create"}, headers=CSRF).json()
+    # What a board import reports about the definitions of its file, without what differs from run to run.
+    good = board_file([card("exists-same", PLAIN), changed('version: "1.0.0"', 'version: "5.0.0"', card("exists-diff", PLAIN)), card("brand-new", PLAIN)], [INTEGRATION])
+    found["board_file_good"] = good
+    for who, client, body in (("member", member, {}), ("admin", admin, {"definitions": "create"})):
+        made = client.post(f"{API}/import", json={"yaml_text": good, **body}, headers=CSRF)
+        assert made.status_code == 201, made.text
+        found[f"board_import_{who}"] = {"slug": "example", "definitions": made.json()["definitions"]}
     return found
 
 

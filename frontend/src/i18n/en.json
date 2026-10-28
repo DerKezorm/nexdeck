@@ -2787,7 +2787,16 @@
         "create": "Create the missing ones",
         "askAdmin": "An administrator can create the missing ones. Until then these cards show “definition missing”.",
         "unknown": "in this file",
-        "invalid": "cannot be created"
+        "invalid": "cannot be created",
+        "report": {
+          "title": "Board imported",
+          "created": "Created: {{names}}",
+          "replaced": "Replaced: {{names}}",
+          "same": "Already here: {{names}}",
+          "kept": "Already here with other content, yours is kept: {{names}}",
+          "skipped": "Not created: {{names}}",
+          "open": "Open the board"
+        }
       }
     }
   }

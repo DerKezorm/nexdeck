@@ -2787,7 +2787,16 @@
         "create": "Crear las que faltan",
         "askAdmin": "Un administrador puede crear las que faltan. Mientras tanto, estas tarjetas muestran «Falta la definición».",
         "unknown": "en el archivo",
-        "invalid": "no se puede crear"
+        "invalid": "no se puede crear",
+        "report": {
+          "title": "Tablero importado",
+          "created": "Creadas: {{names}}",
+          "replaced": "Reemplazadas: {{names}}",
+          "same": "Ya estaban: {{names}}",
+          "kept": "Ya estaban con otro contenido, se conserva la tuya: {{names}}",
+          "skipped": "No creadas: {{names}}",
+          "open": "Abrir el tablero"
+        }
       }
     }
   }

@@ -21,6 +21,21 @@ export interface BoardDefinition {
   problems?: CardProblem[]
 }
 
+/** What a board import did with each definition of its file, by `card:<slug>` and `integration:<short>`. */
+export const REPORT = ['created', 'replaced', 'same', 'kept', 'skipped'] as const
+export type BoardReport = Partial<Record<(typeof REPORT)[number], string[]>>
+
+/** The answer of `POST /boards/import`, as far as the import reads it. */
+export interface BoardImported {
+  slug: string
+  definitions?: BoardReport
+}
+
+/** Whether the import has something to say about definitions; without, it goes straight to the new board. */
+export function hasReport(answer: BoardImported): boolean {
+  return REPORT.some((key) => (answer.definitions?.[key] ?? []).length > 0)
+}
+
 /** How long a text rests before the server is asked what its definitions are. */
 export const CHECK_MS = 500
 
@@ -100,6 +115,34 @@ export function BoardDefinitions({ state }: { state: ReturnType<typeof useBoardD
             {t('cards.exchange.board.askAdmin')}
           </p>
         ))}
+    </section>
+  )
+}
+
+/**
+ * What the import did with the custom cards and own integrations of the file (KARTEN-12 AC-6, AC-7): created, replaced,
+ * already here, kept as they are here, or not created; then the way to the new board.
+ */
+export function BoardImportReport({ answer, onOpen }: { answer: BoardImported; onOpen: () => void }) {
+  const { t } = useTranslation()
+  const names = (ids: string[]) => ids.map((id) => id.slice(id.indexOf(':') + 1)).join(', ')
+  const skipped = (answer.definitions?.skipped ?? []).length > 0
+  return (
+    <section className="mt-3 mb-3 rounded-xl border border-line p-3" role="status" aria-labelledby="board-import-report-title" data-testid="board-import-report">
+      <h3 id="board-import-report-title" className="text-sm font-medium mb-2">
+        {t('cards.exchange.board.report.title')}
+      </h3>
+      <ul className="grid gap-1 text-sm">
+        {REPORT.filter((key) => (answer.definitions?.[key] ?? []).length > 0).map((key) => (
+          <li key={key} className="break-words">
+            {t(`cards.exchange.board.report.${key}`, { names: names(answer.definitions?.[key] ?? []) })}
+          </li>
+        ))}
+      </ul>
+      {skipped && <p className="mt-2 text-[12px] text-muted">{t('cards.exchange.board.askAdmin')}</p>}
+      <button className="btn btn-accent mt-3" onClick={onOpen}>
+        {t('cards.exchange.board.report.open')}
+      </button>
     </section>
   )
 }
