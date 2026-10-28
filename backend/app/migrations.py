@@ -274,6 +274,13 @@ def _conversation_drafts_table(connection: Connection) -> None:
     Base.metadata.tables["conversation_drafts"].create(connection, checkfirst=True)
 
 
+def _shop_install_columns(connection: Connection) -> None:
+    _add_column(connection, "card_definitions", "shop_hash", "VARCHAR(64) NOT NULL DEFAULT ''")
+    _add_column(connection, "own_integrations", "shop_ref", "VARCHAR(200) NOT NULL DEFAULT ''")
+    _add_column(connection, "own_integrations", "shop_version", "VARCHAR(20) NOT NULL DEFAULT ''")
+    _add_column(connection, "own_integrations", "shop_hash", "VARCHAR(64) NOT NULL DEFAULT ''")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -304,6 +311,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (27, "A custom card knows who saved it last", _card_editor_column),
     (28, "Own kinds of connection are kept in a table of their own", _own_integrations_table),
     (29, "The assistant keeps the cards it drafted with the conversation", _conversation_drafts_table),
+    (30, "A card or connection from the Card shop remembers the text it was installed with", _shop_install_columns),
 ]
 
 

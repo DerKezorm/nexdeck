@@ -17,7 +17,9 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
-from app.cards import load
+from app.adapters import forget_all_custom
+from app.cards import exchange, load
+from app.cards import integration as integration_loader
 from app.services.collector import collector
 from app.workshop import catalog, files
 
@@ -36,13 +38,16 @@ def card_text(slug: str = "queue-size", text: str = VALUE_CARD, version: str = "
 
 def entry(text: str, author: str = AUTHOR, **more: Any) -> dict[str, Any]:
     """The catalog entry of a card text, with the checksum of exactly that text."""
-    data = load.load_definition(text).definition
-    short = data.slug
+    if exchange._INTEGRATION.search(text):  # noqa: SLF001
+        short, version, minimum, requires, buttons, kind = integration_loader.load_integration(text, saved=[]).definition.short, "1.0.0", None, [], False, "integration"
+    else:
+        data = load.load_definition(text).definition
+        short, version, minimum, requires, buttons, kind = data.slug, data.version, data.min_nexdeck, list(data.requires), bool(data.buttons), "card"
     found: dict[str, Any] = {
-        "id": f"{author}/{short}", "type": "card", "slug": short, "name": "Name of " + short, "description": "A card for the tests.",
-        "author": {"id": author, "login": "someone"}, "version": data.version,
-        "min_nexdeck": data.min_nexdeck, "category": "media", "requires": list(data.requires),
-        "class": "buttons" if data.buttons else "read", "reads": [], "buttons": [],
+        "id": f"{author}/{short}", "type": kind, "slug": short, "name": "Name of " + short, "description": "A card for the tests.",
+        "author": {"id": author, "login": "someone"}, "version": version,
+        "min_nexdeck": minimum, "category": "media", "requires": requires,
+        "class": "buttons" if buttons else "read", "reads": [], "buttons": [],
         "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         "files": {
             "definition": f"entries/{author}/{short}/definition.yaml", "readme": f"entries/{author}/{short}/README.md",
@@ -120,10 +125,12 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[float]]:
 
 
 @pytest.fixture
-def shop(client: TestClient, github: GitHub, clock: list[float], monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def shop(client: TestClient, github: GitHub, clock: list[float], monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     """An administrator is signed in and the shop is on, in front of the pretend repository."""
     setup_admin(client)
     monkeypatch.setattr(collector, "running", False)
     turned = client.put("/api/v1/workshop/settings", json={"enabled": True}, headers=CSRF)
     assert turned.status_code == 200, turned.text
-    return client
+    yield client
+    # An own kind made by a test stays in the registry of the process: the tests that count the kinds would see it.
+    forget_all_custom()

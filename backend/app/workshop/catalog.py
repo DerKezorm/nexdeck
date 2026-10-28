@@ -64,7 +64,7 @@ Text = Annotated[str, StringConstraints(max_length=2000)]
 Short = Annotated[str, StringConstraints(max_length=200)]
 LocalText = Short | Annotated[dict[str, Short], Field(max_length=20)]
 VERSION = r"^\d{1,6}(\.\d{1,6}){0,3}$"
-Version = Annotated[str, StringConstraints(pattern=VERSION)]
+Version = Annotated[str, StringConstraints(pattern=VERSION, max_length=20)]
 #: A path inside the repository: no leading slash, no ``..``, plain characters.
 SAFE_PATH = re.compile(r"^(?!/)(?!.*(^|/)\.\.?(/|$))[A-Za-z0-9._@+ -]+(/[A-Za-z0-9._@+ -]+)*$")
 

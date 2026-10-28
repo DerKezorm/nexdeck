@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from ..adapters import get_adapter
 from ..cards import load
 from ..models import Integration
-from . import catalog
+from . import catalog, installed
 
 BASE = "/api/v1/workshop"
 
@@ -21,6 +21,8 @@ class Context:
     """What the views of one request share: the connections of this installation, by kind."""
 
     connections: dict[str, list[dict[str, Any]]]
+    #: What this installation has from the shop, by entry.
+    from_shop: dict[str, list[installed.Installed]]
 
 
 def context(db: Session) -> Context:
@@ -32,7 +34,7 @@ def context(db: Session) -> Context:
         except KeyError:
             continue
         found.setdefault(one.kind, []).append({"id": one.id, "name": one.name, "kind": one.kind})
-    return Context(found)
+    return Context(found, installed.listing(db))
 
 
 def requirement(kind: str) -> dict[str, str]:
@@ -45,6 +47,7 @@ def entry_view(entry: catalog.Entry, ctx: Context) -> dict[str, Any]:
     """The entry with its pictures, what it needs, the connections that fit and whether this nexdeck can run it."""
     connections = [one for kind in entry.requires for one in ctx.connections.get(kind, [])]
     base = f"{BASE}/entries/{entry.id}/image"
+    have = ctx.from_shop.get(entry.id, [])
     return {
         "id": entry.id,
         "author_id": entry.author_id,
@@ -70,6 +73,9 @@ def entry_view(entry: catalog.Entry, ctx: Context) -> dict[str, Any]:
         # An own connection has nothing to read through, so it is always something to install.
         "fits": entry.type == "integration" or bool(connections),
         "connections": connections,
-        "installed": None,
+        "installed": None if not have else {
+            "slug": have[0].slug, "version": have[0].version, "update": installed.update_available(entry, have[0]),
+            "locally_changed": have[0].locally_changed,
+        },
         "images": {"light": f"{base}/light", "dark": f"{base}/dark"},
     }

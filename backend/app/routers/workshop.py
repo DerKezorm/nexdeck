@@ -9,12 +9,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Response, status
+from pydantic import BaseModel, Field
 
 from .. import __version__
+from ..cards import exchange, store
+from ..cards import integration_store as integrations
 from ..deps import AdminUser, DbSession, error
-from ..workshop import catalog, files, state, views
+from ..workshop import catalog, files, install, state, views
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
@@ -128,7 +130,8 @@ async def read_entry(author: str, slug: str, user: AdminUser, db: DbSession) -> 
         view["changelog"] = await files.text(repo, entry.files.changelog)
     except catalog.CatalogError as failure:
         view["files_warning"] = failure.view()
-    view["offered_integrations"] = []
+    ctx = views.context(db)
+    view["offered_integrations"] = [views.entry_view(one, ctx) for one in install.offers(db, found, entry)[0]]
     return view
 
 
@@ -166,3 +169,72 @@ async def preview_entry(author: str, slug: str, body: PreviewBody, user: AdminUs
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
     return await card_routes.preview(card_routes.PreviewBody(yaml=text, integration_id=body.integration_id), user)
+
+
+# -- installing ----------------------------------------------------------------------------------
+
+
+class InstallBody(BaseModel):
+    """What to do with a name that is taken (``card:<slug>``, ``integration:<short>``), which offered own connections to take along, and the word about the risk."""
+
+    choices: dict[str, str] = Field(default_factory=dict, max_length=exchange.MAX_DOCUMENTS)
+    with_integrations: list[str] = Field(default_factory=list, max_length=10)
+    accept_risk: bool = False
+
+
+async def _prepared(db: DbSession, author: str, slug: str) -> tuple[catalog.Entry, install.Plan, views.Context]:
+    repo, found, _warning = await _catalog(db)
+    entry = _entry(found, author, slug)
+    try:
+        return entry, await install.prepare(db, repo, found, entry), views.context(db)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+
+
+@router.post("/entries/{author}/{slug}/install/check", summary="Say what installing an entry of the Card shop would make, without making anything")
+async def check_install(author: str, slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """The documents of the entry (and the own connections on offer) read the way an import reads a file: what exists here already needs a choice (KARTEN-14 AC-7, AC-8, EC-4)."""
+    entry, plan, ctx = await _prepared(db, author, slug)
+    seen = install.inspect(db, plan, [one.id for one in plan.offered])
+    return {
+        "entry": views.entry_view(entry, ctx),
+        "ok": seen.ok,
+        "documents": [one.view() for one in seen.items],
+        "missing_integrations": seen.missing,
+        "offered_integrations": [views.entry_view(one, ctx) for one in plan.offered],
+        "risk_acknowledged": state.risk_acknowledged(db, user.id),
+    }
+
+
+@router.post("/entries/{author}/{slug}/install", status_code=status.HTTP_201_CREATED, summary="Install an entry of the Card shop, with the own connections it needs if you accept them")
+async def install_entry(author: str, slug: str, body: InstallBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Every document or none. The first installation of an administrator needs his word that cards of the shop run at his own risk (AC-9)."""
+    from . import cards as card_routes
+
+    entry, plan, _ctx = await _prepared(db, author, slug)
+    try:
+        install.acknowledge(db, user.id, body.accept_risk)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    db.commit()
+    with store.saving, integrations.saving:
+        try:
+            result = install.install(db, plan, body.choices, body.with_integrations, user_id=user.id)
+            db.commit()
+        except exchange.Refused as failure:
+            db.rollback()
+            raise card_routes._refused(failure) from failure  # noqa: SLF001
+        except BaseException:
+            db.rollback()
+            raise
+    exchange.finish(result["outcome"])
+    made: dict[str, str] = result["made"]
+    logger.info("%s installed %s %s from the Card shop.", user.username, entry.type, entry.id)
+    return {
+        "slug": made.get(entry.id) if entry.type == "card" else None,
+        "integration": made.get(entry.id) if entry.type == "integration" else None,
+        "integrations": [made[one.id] for one in plan.offered if one.id in made and entry.type == "card"],
+        "outcome": result["outcome"].view(),
+        "missing_integrations": [*plan.missing, *(f"custom:{one.slug}" for one in plan.offered if one.id not in body.with_integrations)],
+        "place_url": "/system/custom-cards",
+    }

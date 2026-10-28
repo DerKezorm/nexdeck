@@ -329,14 +329,19 @@ def run(db: Session, text: str, choices: dict[str, str], *, user_id: int | None)
     ⚠️ Every document or none (EC-5): nothing here commits, and the registry of own connections and the cache of cards
     are left alone until :func:`finish` runs after the commit.
     """
-    seen = inspect(db, text)
+    return run_parts(db, split(text), choices, user_id=user_id)[0]
+
+
+def run_parts(db: Session, parts: list[tuple[int, str]], choices: dict[str, str], *, user_id: int | None, source: str = "") -> tuple[Outcome, list[Item]]:
+    """The same for documents that are apart already (the Card shop hands in the files it fetched): what was made, and the documents read."""
+    seen = inspect_parts(db, parts)
     if not seen.ok:
         first = next(item for item in seen.items if item.problems)
         raise Refused("import_invalid", str(load.CardInvalid(first.problems)), documents=[item.view() for item in seen.items])
     for key in choices:
         if not any(item.id == key for item in seen.items):
             raise Refused("import_choice_invalid", f"The file has no {key}.", key=key)
-    return make(db, seen.items, {item.id: _chosen(item, choices) for item in seen.items}, user_id=user_id)
+    return make(db, seen.items, {item.id: _chosen(item, choices) for item in seen.items}, user_id=user_id, source=source), seen.items
 
 
 def make(db: Session, items: list[Item], actions: dict[str, str], *, user_id: int | None, source: str = "") -> Outcome:
@@ -392,7 +397,7 @@ def _make_card(db: Session, item: Item, action: str, new: str | None, renamed: d
             assert row is not None
             store.update(db, row, text, user_id=user_id, commit=False)
             # A card that came from the shop is a card of this installation from now on (EC-6).
-            row.origin, row.shop_ref, row.shop_version = "local", "", ""
+            row.origin, row.shop_ref, row.shop_version, row.shop_hash = "local", "", "", ""
             outcome.cards_replaced.append(row.slug)
             chronicle.definition_saved(db, added=False, user_id=user_id, name=row.slug, detail=_said(outcome, "replaced"))
             return

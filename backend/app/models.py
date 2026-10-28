@@ -692,6 +692,9 @@ class CardRecord(Base):
     origin: Mapped[str] = mapped_column(String(10), default="local")
     shop_ref: Mapped[str] = mapped_column(String(200), default="")
     shop_version: Mapped[str] = mapped_column(String(20), default="")
+    #: The checksum of the text as it was installed from the shop (``workshop/install.normalised_hash``): a text that no
+    #: longer has it was changed here (KARTEN-15 EC-2). Empty for a card that did not come from the shop.
+    shop_hash: Mapped[str] = mapped_column(String(64), default="")
     #: Whether users may put this card on a board; administrators always may.
     users_may_place: Mapped[bool] = mapped_column(Boolean, default=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -718,6 +721,10 @@ class OwnIntegration(Base):
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
     updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    #: Where it came from when it was installed from the Card shop: the entry, its version and the checksum of the text then.
+    shop_ref: Mapped[str] = mapped_column(String(200), default="")
+    shop_version: Mapped[str] = mapped_column(String(20), default="")
+    shop_hash: Mapped[str] = mapped_column(String(64), default="")
 
 
 class Conversation(Base):
